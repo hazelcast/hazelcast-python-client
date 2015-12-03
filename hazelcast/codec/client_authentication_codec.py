@@ -1,3 +1,4 @@
+from hazelcast.codec.util import decode_address
 from hazelcast.message import ClientMessageBuilder
 
 MESSAGE_TYPE = 0x2
@@ -27,7 +28,7 @@ def decode_response(parser):
     resp["status"] = parser.read_byte()
     address_is_null = parser.read_bool()
     if not address_is_null:
-        resp["address"] = (parser.read_str(), parser.read_int())
+        resp["address"] = decode_address(parser)
 
     uuid_is_null = parser.read_bool()
     if not uuid_is_null:

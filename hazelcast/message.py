@@ -1,9 +1,12 @@
 import struct
 
+# constants
 VERSION = 0
 BEGIN_FLAG = 0x80
 END_FLAG = 0x40
 BEGIN_END_FLAG = BEGIN_FLAG | END_FLAG
+LISTENER_FLAG = 0x01
+
 PAYLOAD_OFFSET = 18
 SIZE_OFFSET = 0
 VERSION_OFFSET = 4
@@ -12,6 +15,7 @@ MESSAGE_TYPE_OFFSET = FLAG_OFFSET + 1
 CORRELATION_ID_OFFSET = MESSAGE_TYPE_OFFSET + 2
 PARTITION_ID_OFFSET = CORRELATION_ID_OFFSET + 4
 DATA_OFFSET_FIELD_OFFSET = PARTITION_ID_OFFSET + 4
+
 
 class ClientMessageBuilder(object):
     """
@@ -25,16 +29,13 @@ class ClientMessageBuilder(object):
     the message header extension isn't used yet)
     -The rest of the message is the payload.
     """
-
-    # constants
-    _correlation_id = 0
-    _partition_id = -1
-    _payload = []
-    _message_type = None
-    _format_str = "<IBBHIiH"
-
     def __init__(self):
-        pass
+        self._payload = []
+        self._correlation_id = 0
+        self._partition_id = -1
+        self._message_type = 0
+        self._flags = BEGIN_END_FLAG
+        self._format_str = "<IBBHIiH"
 
     def set_correlation_id(self, val):
         self._correlation_id = val
@@ -42,6 +43,10 @@ class ClientMessageBuilder(object):
 
     def set_payload(self, val):
         self._payload = val
+        return self
+
+    def set_flags(self, val):
+        self._flags = val
         return self
 
     def set_partition_id(self, val):
@@ -68,7 +73,7 @@ class ClientMessageBuilder(object):
 
     def to_bytes(self):
         total_len = struct.calcsize(self._format_str)
-        args = [total_len, VERSION, BEGIN_END_FLAG, self._message_type,
+        args = [total_len, VERSION, self._flags, self._message_type,
                 self._correlation_id,
                 self._partition_id, PAYLOAD_OFFSET] + self._payload
         return struct.pack(self._format_str,  *args)
@@ -77,16 +82,15 @@ class ClientMessageParser(object):
     def __init__(self, buf):
         self._buffer = buf
         self._offset = self.get_data_offset()
-
         import binascii
-        print("ClientMessageParser", binascii.hexlify(buf))
+        print("ClientMessageParser", binascii.hexlify(self._buffer))
         print("get_correlation_id", self.get_correlation_id())
         print("get_message_type", self.get_message_type())
         print("get_flags", self.get_flags())
-        print("offset", self._offset)
+        print("offset", self.get_data_offset())
 
     def get_data_offset(self):
-        return struct.unpack_from("<I", self._buffer, DATA_OFFSET_FIELD_OFFSET)[0]
+        return struct.unpack_from("<H", self._buffer, DATA_OFFSET_FIELD_OFFSET)[0]
 
     def get_correlation_id(self):
         return struct.unpack_from("<I", self._buffer, CORRELATION_ID_OFFSET)[0]

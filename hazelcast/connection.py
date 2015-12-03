@@ -1,6 +1,25 @@
 import socket
 from hazelcast.message import ClientMessageParser
 
+class Address(object):
+    def __init__(self, host, port):
+        self._host = host
+        self._port = port
+
+    @property
+    def host(self):
+        return self._host
+
+    @property
+    def port(self):
+        return self._port
+
+    def __repr__(self):
+        return "%s:%s" % (self._host, self._port)
+
+    def __str__(self):
+        return self.__repr__()
+
 class ConnectionManager(object):
     _connections = {}
 
