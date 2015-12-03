@@ -16,6 +16,7 @@ CORRELATION_ID_OFFSET = MESSAGE_TYPE_OFFSET + 2
 PARTITION_ID_OFFSET = CORRELATION_ID_OFFSET + 4
 DATA_OFFSET_FIELD_OFFSET = PARTITION_ID_OFFSET + 4
 
+
 class ClientMessageBuilder(object):
     """
     -The first four bytes are the total size of the message
@@ -78,7 +79,8 @@ class ClientMessageBuilder(object):
         args = [total_len, VERSION, self._flags, self._message_type,
                 self._correlation_id,
                 self._partition_id, PAYLOAD_OFFSET] + self._payload
-        return struct.pack(self._format_str,  *args)
+        return struct.pack(self._format_str, *args)
+
 
 class ClientMessageParser(object):
     def __init__(self, buf):
