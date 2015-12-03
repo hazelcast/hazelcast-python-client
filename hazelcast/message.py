@@ -16,7 +16,6 @@ CORRELATION_ID_OFFSET = MESSAGE_TYPE_OFFSET + 2
 PARTITION_ID_OFFSET = CORRELATION_ID_OFFSET + 4
 DATA_OFFSET_FIELD_OFFSET = PARTITION_ID_OFFSET + 4
 
-
 class ClientMessageBuilder(object):
     """
     -The first four bytes are the total size of the message
@@ -40,6 +39,9 @@ class ClientMessageBuilder(object):
     def set_correlation_id(self, val):
         self._correlation_id = val
         return self
+
+    def get_correlation_id(self):
+        return self._correlation_id;
 
     def set_payload(self, val):
         self._payload = val
@@ -82,12 +84,12 @@ class ClientMessageParser(object):
     def __init__(self, buf):
         self._buffer = buf
         self._offset = self.get_data_offset()
-        import binascii
-        print("ClientMessageParser", binascii.hexlify(self._buffer))
-        print("get_correlation_id", self.get_correlation_id())
-        print("get_message_type", self.get_message_type())
-        print("get_flags", self.get_flags())
-        print("offset", self.get_data_offset())
+        # import binascii
+        # print("ClientMessageParser", binascii.hexlify(self._buffer))
+        # print("get_correlation_id", self.get_correlation_id())
+        # print("get_message_type", self.get_message_type())
+        # print("get_flags", self.get_flags())
+        # print("offset", self.get_data_offset())
 
     def get_data_offset(self):
         return struct.unpack_from("<H", self._buffer, DATA_OFFSET_FIELD_OFFSET)[0]
@@ -100,6 +102,9 @@ class ClientMessageParser(object):
 
     def get_flags(self):
         return struct.unpack_from("<B", self._buffer, FLAG_OFFSET)[0]
+
+    def is_listener_message(self):
+        return self.get_flags() & LISTENER_FLAG
 
     def read_str(self):
         size = self._read_fmt("<I")

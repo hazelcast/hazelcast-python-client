@@ -4,39 +4,39 @@ from hazelcast.message import ClientMessageBuilder
 MESSAGE_TYPE = 0x2
 
 def encode_request(username, password, uuid, owner_uuid, is_owner_connection, client_type, serialization_version):
-    builder = ClientMessageBuilder()\
+    message = ClientMessageBuilder()\
         .set_message_type(MESSAGE_TYPE)\
         .set_str(username)\
         .set_str(password)
 
     if uuid is None:
-        builder.set_bool(True)
+        message.set_bool(True)
     else:
-        builder.set_bool(False).set_str(uuid)
+        message.set_bool(False).set_str(uuid)
 
     if owner_uuid is None:
-        builder.set_bool(True)
+        message.set_bool(True)
     else:
-        builder.set_bool(False).set_str(owner_uuid)
+        message.set_bool(False).set_str(owner_uuid)
 
-    return builder.set_bool(is_owner_connection)\
+    return message.set_bool(is_owner_connection)\
         .set_str(client_type)\
         .set_byte(serialization_version)
 
-def decode_response(parser):
+def decode_response(message):
     resp = {}
-    resp["status"] = parser.read_byte()
-    address_is_null = parser.read_bool()
+    resp["status"] = message.read_byte()
+    address_is_null = message.read_bool()
     if not address_is_null:
-        resp["address"] = decode_address(parser)
+        resp["address"] = decode_address(message)
 
-    uuid_is_null = parser.read_bool()
+    uuid_is_null = message.read_bool()
     if not uuid_is_null:
-        resp["uuid"] = parser.read_str()
+        resp["uuid"] = message.read_str()
 
-    owner_uuid_is_null = parser.read_bool()
+    owner_uuid_is_null = message.read_bool()
     if not owner_uuid_is_null:
-        resp["owner_uuid"] = parser.read_str()
+        resp["owner_uuid"] = message.read_str()
 
-    resp["serialization_version"] = parser.read_byte()
+    resp["serialization_version"] = message.read_byte()
     return resp
