@@ -1,4 +1,5 @@
 from Queue import Queue
+import logging
 import socket, asyncore
 from hazelcast.message import ClientMessageParser
 import threading
@@ -14,13 +15,15 @@ event_thread.setDaemon(True)
 event_thread.start()
 
 class ConnectionManager(object):
+
+    logger = logging.getLogger("ConnectionManager")
+
     def __init__(self):
         self._io_thread = None
         self.connections = {}
         pass
 
     def get_connection(self, address):
-        print(self.connections)
         if address in self.connections:
             return self.connections[address]
         return None
@@ -43,7 +46,7 @@ class ConnectionManager(object):
 
     def io_loop(self):
         asyncore.loop(count=None)
-        print("IO Thread has exited.")
+        self.logger.warn("IO Thread has exited.")
 
 
 BUFFER_SIZE = 4096
@@ -51,11 +54,11 @@ BUFFER_SIZE = 4096
 class Connection(asyncore.dispatcher):
     def __init__(self, address):
         asyncore.dispatcher.__init__(self)
+        self.logger = logging.getLogger("Connection{%s:%d}" % address)
         self._address = address
         self._correlation_id = 0
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.endpoint = None
-        print("Connecting to", address)
         self.connect(address)
         self._write_queue = Queue()
         self._write_queue.put("CB2")
@@ -63,24 +66,24 @@ class Connection(asyncore.dispatcher):
         self._listeners = {}
 
     def handle_connect(self):
-        print("Connected to ", self._address)
+        self.logger.debug("Connected to %s", self._address)
 
     def handle_read(self):
         data = self.recv(BUFFER_SIZE)
-
+        self.logger.debug("Read %d bytes", len(data))
         if len(data) == BUFFER_SIZE:  # TODO: more to read
             raise NotImplementedError()
 
         message = ClientMessageParser(data)
         correlation_id = message.get_correlation_id()
         if correlation_id not in self._pending:
-            print("Got message with unknown correlation id", correlation_id)
+            self.logger.warn("Got message with unknown correlation id", correlation_id)
             return
 
         if message.is_listener_message():
-            print("Got event message")
+            self.logger.debug("Got event message")
             if correlation_id not in self._listeners:
-                print("Got event message with unknown correlation id", correlation_id)
+                self.logger.warn("Got event message with unknown correlation id", correlation_id)
                 return
             invocation = self._listeners[correlation_id]
             event_queue.put((invocation.handler, message))
@@ -95,7 +98,7 @@ class Connection(asyncore.dispatcher):
         self._initiate_send()
 
     def handle_close(self):
-        print("handle_close")
+        self.logger.debug("handle_close")
         self.close()
 
     def writable(self):
@@ -108,7 +111,7 @@ class Connection(asyncore.dispatcher):
     def _initiate_send(self):
         item = self._write_queue.get_nowait()
         sent = self.send(item)
-        print("Written " + str(sent) + " bytes")
+        self.logger.debug("Written " + str(sent) + " bytes")
         # TODO: check if everything was sent
 
     def send_and_receive(self, message):

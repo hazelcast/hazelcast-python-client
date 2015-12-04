@@ -1,7 +1,11 @@
 from time import sleep
 import hazelcast
+import logging
 
 if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s', datefmt="%H:%M%:%S,")
+    logging.getLogger().setLevel(logging.DEBUG)
+    logger = logging.getLogger("main")
 
     config = hazelcast.Config()
     config.username = "dev"
@@ -12,6 +16,7 @@ if __name__ == '__main__':
 
     #map = client.get_map("map")
     #map.put("key", "value")
-    # print(map.get("key"))
-
+    #print(map.get("key"))
+    #
     sleep(30)
+    #
