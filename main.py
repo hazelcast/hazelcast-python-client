@@ -10,7 +10,7 @@ if __name__ == '__main__':
     config = hazelcast.Config()
     config.username = "dev"
     config.password = "dev-pass"
-    config.add_address("127.0.0.1:5701")
+    config.addresses.append("127.0.0.1:5701")
 
     client = hazelcast.HazelcastClient(config)
 

@@ -1,27 +1,101 @@
-from Queue import Queue
+import asyncore
 import logging
-import socket, asyncore
-from hazelcast.message import ClientMessageParser
+from Queue import Queue
+import socket
 import threading
 
-#TODO: wrap this in something
-event_queue = Queue()
-def event_loop():
-    while True:
-        event = event_queue.get()
-        event[0](event[1])
-event_thread = threading.Thread(target=event_loop)
-event_thread.setDaemon(True)
-event_thread.start()
+from hazelcast.message import ClientMessageParser
+
+BUFFER_SIZE = 4096
+INVOCATION_TIMEOUT = 120
+PROTOCOL_VERSION = 1
+
+
+class Invoker(object):
+    logger = logging.getLogger("InvocationService")
+
+    def __init__(self, client):
+        self._pending = {}
+        self._listeners = {}
+        self._next_correlation_id = 1
+        self._client = client
+        self._event_queue = Queue()
+
+    def _start_event_thread(self):
+        def event_loop():
+            while True:
+                event = self._event_queue.get()
+                event[0](event[1])
+
+        self._event_thread = threading.Thread(target=event_loop)
+        self._event_thread.setDaemon(True)
+        self._event_thread.start()
+
+    def invoke_on_connection(self, message, connection, event_handler=None):
+        invocation = Invocation(message, connection=connection)
+        if event_handler is not None:
+            invocation.handler = event_handler
+        self._invoke(invocation)
+        return invocation
+
+    def invoke_on_partition(self, message, partition_id):
+        invocation = Invocation(message, partition_id=partition_id)
+        # get connection for partition
+        pass
+
+    def invoke_on_random_target(self, message):
+        invocation = Invocation(message)
+        # get random connection
+        pass
+
+    def invoke_on_target(self, message, address):
+        invocation = Invocation(message, address=address)
+        pass
+
+    def _invoke(self, invocation):
+        if invocation.has_connection():
+            self._send(invocation, invocation.connection)
+            # TODO: rest of the cases
+
+    def _send(self, invocation, connection):
+        correlation_id = self._next_correlation_id  # TODO: atomic integer equivalent
+        self._next_correlation_id += 1
+        invocation.message.set_correlation_id(correlation_id)
+        self._pending[correlation_id] = invocation
+
+        if invocation.has_handler():
+            self._listeners[correlation_id] = invocation
+
+        connection.send_message(invocation.message)
+
+    def handle_client_message(self, message):
+        correlation_id = message.get_correlation_id()
+        if correlation_id not in self._pending:
+            self.logger.warn("Got message with unknown correlation id: %d", correlation_id)
+            return
+
+        if message.is_listener_message():
+            self.logger.debug("Got event message with type %d", message.get_message_type())
+            if correlation_id not in self._listeners:
+                self.logger.warn("Got event message with unknown correlation id: %d", correlation_id)
+                return
+            invocation = self._listeners[correlation_id]
+            self._event_queue.put((invocation.handler, message))
+            return
+
+        invocation = self._pending[correlation_id]
+        invocation.response = message
+        self._pending.pop(correlation_id)
+        invocation.event.set()
+
 
 class ConnectionManager(object):
-
     logger = logging.getLogger("ConnectionManager")
 
-    def __init__(self):
+    def __init__(self, message_handler):
         self._io_thread = None
         self.connections = {}
-        pass
+        self._message_handler = message_handler
 
     def get_connection(self, address):
         if address in self.connections:
@@ -32,7 +106,7 @@ class ConnectionManager(object):
         if address in self.connections:
             return self.connections[address]
 
-        connection = Connection(address)
+        connection = Connection(address, self._message_handler)
         self._ensure_io()
         authenticator(connection)
         self.connections[connection.endpoint] = connection
@@ -49,21 +123,18 @@ class ConnectionManager(object):
         self.logger.warn("IO Thread has exited.")
 
 
-BUFFER_SIZE = 4096
-
 class Connection(asyncore.dispatcher):
-    def __init__(self, address):
+    def __init__(self, address, message_handler):
         asyncore.dispatcher.__init__(self)
         self.logger = logging.getLogger("Connection{%s:%d}" % address)
         self._address = address
         self._correlation_id = 0
+        self._message_handler = message_handler
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.endpoint = None
         self.connect(address)
         self._write_queue = Queue()
         self._write_queue.put("CB2")
-        self._pending = {}
-        self._listeners = {}
 
     def handle_connect(self):
         self.logger.debug("Connected to %s", self._address)
@@ -75,24 +146,7 @@ class Connection(asyncore.dispatcher):
             raise NotImplementedError()
 
         message = ClientMessageParser(data)
-        correlation_id = message.get_correlation_id()
-        if correlation_id not in self._pending:
-            self.logger.warn("Got message with unknown correlation id", correlation_id)
-            return
-
-        if message.is_listener_message():
-            self.logger.debug("Got event message")
-            if correlation_id not in self._listeners:
-                self.logger.warn("Got event message with unknown correlation id", correlation_id)
-                return
-            invocation = self._listeners[correlation_id]
-            event_queue.put((invocation.handler, message))
-            return
-
-        invocation = self._pending[correlation_id]
-        invocation.response = message
-        self._pending.pop(correlation_id)
-        invocation.event.set()
+        self._message_handler(message)
 
     def handle_write(self):
         self._initiate_send()
@@ -104,46 +158,34 @@ class Connection(asyncore.dispatcher):
     def writable(self):
         return not self._write_queue.empty()
 
-    def _send(self, data):
-        self._write_queue.put(data)
-        self._initiate_send()
-
     def _initiate_send(self):
         item = self._write_queue.get_nowait()
         sent = self.send(item)
         self.logger.debug("Written " + str(sent) + " bytes")
         # TODO: check if everything was sent
 
-    def send_and_receive(self, message):
-        self.set_correlation_id(message)
-        invocation = Invocation(message)
-        self._invoke(invocation)
-        if invocation.event.wait(120):
-            return invocation.response
-        raise RuntimeError("Request timed out")
+    def send_message(self, message):
+        self._write_queue.put(message.to_bytes())
+        self._initiate_send()
 
-    def _invoke(self, invocation):
-        self._pending[invocation.message.get_correlation_id()] = invocation
-        self._send(invocation.message.to_bytes())
 
-    def start_listening(self, message, handler):
-        invocation = Invocation(message)
-        invocation.handler = handler
-        correlation_id = self.set_correlation_id(message)
-        self._listeners[correlation_id] = invocation
-        self._invoke(invocation)
-        if invocation.event.wait(120):
-            return invocation.response
-
-    def set_correlation_id(self, message):
-        curr = self._correlation_id
-        message.set_correlation_id(curr)
-        self._correlation_id += 1
-        return curr
-
-class Invocation:
-    def __init__(self, message):
+class Invocation(object):
+    def __init__(self, message, partition_id=-1, address=None, connection=None):
         self.message = message
         self.event = threading.Event()
         self.response = None
         self.handler = None
+        self.partition_id = partition_id
+        self.address = address
+        self.connection = connection
+
+    def has_connection(self):
+        return self.connection is not None
+
+    def has_handler(self):
+        return self.handler is not None
+
+    def result(self, timeout=INVOCATION_TIMEOUT):
+        if self.event.wait(timeout):
+            return self.response
+        raise RuntimeError("Request timed out after %s seconds" % INVOCATION_TIMEOUT)

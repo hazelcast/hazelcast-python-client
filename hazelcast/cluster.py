@@ -1,13 +1,14 @@
 import logging
 import threading
+
 from hazelcast.codec import client_authentication_codec, \
     client_add_membership_listener_codec, \
     client_get_partitions_codec
 
 
-class ClusterManager(object):
+class ClusterService(object):
 
-    logger = logging.getLogger("ClusterManager")
+    logger = logging.getLogger("ClusterService")
 
     def __init__(self, config, client):
         self._config = config
@@ -24,13 +25,13 @@ class ClusterManager(object):
         return host, int(port)
 
     def connect_to_cluster(self):
-        address = self._parse_addr(self._config.get_addresses()[0])
+        address = self._parse_addr(self._config.addresses[0])
         self.logger.info("Connecting to address %s", address)
 
         def authenticate_manager(conn):
             request = client_authentication_codec.encode_request(
                 self._config.username, self._config.password, None, None, True, "PHY", 1)
-            response = conn.send_and_receive(request)
+            response = self._client.invoker.invoke_on_connection(request, conn).result()
             parameters = client_authentication_codec.decode_response(response)
             if parameters["status"] != 0:
                 raise RuntimeError("Authentication failed")
@@ -47,7 +48,7 @@ class ClusterManager(object):
         def handler(m):
             client_add_membership_listener_codec.handle(m, self.handle_member, self.handle_member_list)
 
-        response = connection.start_listening(request, handler)
+        response = self._client.invoker.invoke_on_connection(request, connection, handler).result()
         registration_id = client_add_membership_listener_codec.decode_response(response)["response"]
         self.logger.debug("Registered membership listener with ID " + registration_id)
 
@@ -64,10 +65,9 @@ class PartitionService(object):
 
     logger = logging.getLogger("PartitionService")
 
-    def __init__(self, cluster, connection_manager):
+    def __init__(self, client):
         self.partitions = {}
-        self._cluster = cluster
-        self._connection_manager = connection_manager
+        self._client = client
         self.t = None
 
     def start(self):
@@ -90,13 +90,13 @@ class PartitionService(object):
 
     def _do_refresh(self):
         self.logger.debug("Start updating partitions")
-        address = self._cluster.owner_connection_address
-        connection = self._connection_manager.get_connection(address)
+        address = self._client.cluster.owner_connection_address
+        connection = self._client.connection_manager.get_connection(address)
         if connection is None:
             self.logger.debug("Could not update partition thread as owner connection is not established yet.")
             return
         request = client_get_partitions_codec.encode_request()
-        response = connection.send_and_receive(request)
+        response = self._client.invoker.invoke_on_connection(request, connection).result()
         partitions = client_get_partitions_codec.decode_response(response)["partitions"]
         # TODO: needs sync
         self.partitions = {}
