@@ -14,19 +14,26 @@ event_thread.setDaemon(True)
 event_thread.start()
 
 class ConnectionManager(object):
-    _connections = {}
-
     def __init__(self):
         self._io_thread = None
+        self.connections = {}
         pass
 
+    def get_connection(self, address):
+        print(self.connections)
+        if address in self.connections:
+            return self.connections[address]
+        return None
+
     def get_or_connect(self, address, authenticator):
-        if address not in self._connections:
-            connection = Connection(address)
-            self._ensure_io()
-            authenticator(connection)
-            self._connections[address] = connection
-        return self._connections[address]
+        if address in self.connections:
+            return self.connections[address]
+
+        connection = Connection(address)
+        self._ensure_io()
+        authenticator(connection)
+        self.connections[connection.endpoint] = connection
+        return connection
 
     def _ensure_io(self):
         if self._io_thread is None:
@@ -47,17 +54,13 @@ class Connection(asyncore.dispatcher):
         self._address = address
         self._correlation_id = 0
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        print("Connecting to", self._address)
-        self.connect(self._parse_addr(address))
+        self.endpoint = None
+        print("Connecting to", address)
+        self.connect(address)
         self._write_queue = Queue()
         self._write_queue.put("CB2")
         self._pending = {}
         self._listeners = {}
-
-    @staticmethod
-    def _parse_addr(addr):
-        (host, port) = addr.split(":")
-        return host, int(port)
 
     def handle_connect(self):
         print("Connected to ", self._address)
@@ -96,7 +99,6 @@ class Connection(asyncore.dispatcher):
         self.close()
 
     def writable(self):
-        print("writable ", not self._write_queue.empty())
         return not self._write_queue.empty()
 
     def _send(self, data):

@@ -1,15 +1,3 @@
-class Address(object):
-    def __init__(self, host, port):
-        self.host = host
-        self.port = port
-
-    def __repr__(self):
-        return "%s:%s" % (self.host, self.port)
-
-    def __str__(self):
-        return self.__repr__()
-
-
 class Member(object):
     def __init__(self, address, uuid, is_lite_member, attributes):
         self.address = address
@@ -24,8 +12,7 @@ class Member(object):
         return repr(self.address)
 
 def decode_address(message):
-    return Address(message.read_str(), message.read_int())
-
+    return message.read_str(), message.read_int()
 
 def decode_member(message):
     address = decode_address(message)

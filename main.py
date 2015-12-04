@@ -13,3 +13,5 @@ if __name__ == '__main__':
     #map = client.get_map("map")
     #map.put("key", "value")
     # print(map.get("key"))
+
+    sleep(30)

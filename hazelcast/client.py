@@ -1,13 +1,18 @@
 from connection import ConnectionManager
-from cluster import ClusterManager
+from cluster import ClusterManager, PartitionService
+
 
 class HazelcastClient(object):
     _config = None
 
     def __init__(self, config=None):
         self._config = config
-        self._connection_manager = ConnectionManager()
-        self._cluster = ClusterManager(config, self._connection_manager)
+        self.connection_manager = ConnectionManager()
+        self.cluster = ClusterManager(config, self)
+        self.partition_service = PartitionService(self.cluster, self.connection_manager)
+
+        self.cluster.start()
+        self.partition_service.start()
 
     def get_map(self, name):
         pass
