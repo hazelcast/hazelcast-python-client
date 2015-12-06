@@ -24,6 +24,8 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(1545424565, self._data.hash_code())
         self.assertEqual(0x12345678, self._data.get_partition_hash())
 
+    def test_data_len(self):
+        self.assertEqual(10, len(Data("1"* 10)))
 
 if __name__ == '__main__':
     unittest.main()
