@@ -58,3 +58,7 @@ target/
 
 # IDEA
 .idea
+
+#MAC
+.DS_Store
+.directory

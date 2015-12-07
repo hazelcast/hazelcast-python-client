@@ -29,6 +29,12 @@ class Address(object):
     def __repr__(self):
         return str(self)
 
+    def __hash__(self):
+        return hash((self.address, self.port))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.host == other.host and self.port == other.port
+
 
 class DistributedObjectInfo(object):
     def __init__(self, name, service_name):

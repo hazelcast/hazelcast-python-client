@@ -191,6 +191,10 @@ class ClientMessage(object):
         self.set_flags(self.get_flags() | flags)
         return self
 
+    def update_frame_length(self):
+        self.set_frame_length(self.__write_offset())
+        return self
+
     def __repr__(self):
         return binascii.hexlify(self._buffer)
 
