@@ -11,7 +11,7 @@ INVOCATION_TIMEOUT = 120
 PROTOCOL_VERSION = 1
 
 
-class Invoker(object):
+class InvocationService(object):
     logger = logging.getLogger("InvocationService")
 
     def __init__(self, client):
@@ -20,6 +20,7 @@ class Invoker(object):
         self._next_correlation_id = 1
         self._client = client
         self._event_queue = Queue()
+        self._start_event_thread()
 
     def _start_event_thread(self):
         def event_loop():
@@ -167,7 +168,6 @@ class Connection(asyncore.dispatcher):
     def send_message(self, message):
         self._write_queue.put(message.to_bytes())
         self._initiate_send()
-
 
 class Invocation(object):
     def __init__(self, message, partition_id=-1, address=None, connection=None):

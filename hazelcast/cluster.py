@@ -1,5 +1,6 @@
 import logging
 import threading
+from time import sleep
 
 from hazelcast.codec import client_authentication_codec, \
     client_add_membership_listener_codec, \
@@ -53,11 +54,11 @@ class ClusterService(object):
         self.logger.debug("Registered membership listener with ID " + registration_id)
 
     def handle_member(self, member_event):
-        self.logger.debug("got member event")
+        self.logger.debug("Got member event")
         self.logger.debug(member_event)
 
     def handle_member_list(self, member_list):
-        self.logger.debug("got member list")
+        self.logger.debug("Got member list")
         self._client.partition_service.refresh()
 
 
@@ -88,6 +89,21 @@ class PartitionService(object):
         t.start()
         return t
 
+    def get_partition_owner(self, partition_id):
+        if partition_id not in self.partitions:
+            self._do_refresh()
+        return self.partitions[partition_id]
+
+    def get_partition_id(self, data):
+        count = self._get_partition_count()
+        return data.get_partition_hash() % count
+
+    def _get_partition_count(self):
+        if len(self.partitions) == 0:
+            self._do_refresh()
+
+        return len(self.partitions)
+
     def _do_refresh(self):
         self.logger.debug("Start updating partitions")
         address = self._client.cluster.owner_connection_address
@@ -105,3 +121,4 @@ class PartitionService(object):
                 self.partitions[partition] = addr
         self.logger.debug("Finished updating partitions")
         # TODO: exception handling
+

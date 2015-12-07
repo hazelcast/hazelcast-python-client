@@ -1,21 +1,23 @@
-from connection import ConnectionManager, Invoker
+from connection import ConnectionManager, InvocationService
 from cluster import ClusterService, PartitionService
+from proxy import ProxyManager, MAP_SERVICE
+
 
 class HazelcastClient(object):
     _config = None
 
     def __init__(self, config=None):
         self._config = config
-        self.invoker = Invoker(self)
+        self.invoker = InvocationService(self)
         self.connection_manager = ConnectionManager(self.invoker.handle_client_message)
         self.cluster = ClusterService(config, self)
         self.partition_service = PartitionService(self)
-
+        self.proxy = ProxyManager(self)
         self.cluster.start()
         self.partition_service.start()
 
     def get_map(self, name):
-        pass
+        return self.proxy.get_or_create(MAP_SERVICE, name)
 
 class Config:
     def __init__(self):

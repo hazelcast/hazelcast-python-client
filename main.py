@@ -14,7 +14,9 @@ if __name__ == '__main__':
 
     client = hazelcast.HazelcastClient(config)
 
-    #map = client.get_map("map")
+    print("Creating proxy")
+    my_map = client.get_map("map")
+    print(my_map)
     #map.put("key", "value")
     #print(map.get("key"))
     #
