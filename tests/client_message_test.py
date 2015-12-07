@@ -1,7 +1,7 @@
 # coding: utf-8
 import unittest
 
-from hazelcast.client_message import *
+from hazelcast.protocol.client_message import *
 
 READ_HEADER = "00" * 16 + "1200"
 
