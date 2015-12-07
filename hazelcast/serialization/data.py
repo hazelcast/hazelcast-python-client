@@ -1,6 +1,7 @@
-from _struct import *
+from struct import *
 
-from hazelcast.serialization import *
+from bits import *
+from serialization_const import *
 
 PARTITION_HASH_OFFSET = 0
 TYPE_OFFSET = 4
