@@ -51,7 +51,6 @@ class InvocationService(object):
         if invocation.has_connection():
             self._send(invocation, invocation.connection)
         elif invocation.has_partition_id():
-            pass
             # TODO: set partition id on message
             addr = self._client.partition_service.get_partition_owner(invocation.partition_id)
             self._send_to_address(invocation, addr)

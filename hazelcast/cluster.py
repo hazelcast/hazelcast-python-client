@@ -1,11 +1,10 @@
 import logging
 import random
-import threading
 
 from hazelcast.codec import client_authentication_codec, \
-    client_add_membership_listener_codec, \
-    client_get_partitions_codec
+    client_add_membership_listener_codec
 from hazelcast.core import CLIENT_TYPE, SERIALIZATION_VERSION
+
 
 # Membership Event Types
 MEMBER_ADDED = 1
@@ -79,8 +78,6 @@ class ClusterService(object):
         self.member_list = member_list
         self.logger.info("New member list is: %s", member_list)
         self._client.partition_service.refresh()
-
-
 
 
 class RandomLoadBalancer(object):

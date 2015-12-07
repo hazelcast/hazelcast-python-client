@@ -2,6 +2,7 @@
 Serialization Module
 """
 from bits import *
+from service import SerializationService
 
 # Serialization Constants
 CONSTANT_TYPE_NULL = 0
