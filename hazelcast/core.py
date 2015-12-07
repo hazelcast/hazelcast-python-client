@@ -1,5 +1,7 @@
 """Hazelcast Core objects"""
 
+SERIALIZATION_VERSION = 1
+CLIENT_TYPE = "PHY"
 
 class Member(object):
     def __init__(self, address, uuid, is_lite_member, attributes):

@@ -1,7 +1,7 @@
 from connection import ConnectionManager, InvocationService
-from cluster import ClusterService, PartitionService
+from cluster import ClusterService, RandomLoadBalancer
+from partition import PartitionService
 from proxy import ProxyManager, MAP_SERVICE
-
 
 class HazelcastClient(object):
     _config = None
@@ -9,10 +9,12 @@ class HazelcastClient(object):
     def __init__(self, config=None):
         self._config = config
         self.invoker = InvocationService(self)
-        self.connection_manager = ConnectionManager(self.invoker.handle_client_message)
+        self.connection_manager = ConnectionManager(self, self.invoker.handle_client_message)
         self.cluster = ClusterService(config, self)
         self.partition_service = PartitionService(self)
         self.proxy = ProxyManager(self)
+        self.load_balancer = RandomLoadBalancer(self)
+
         self.cluster.start()
         self.partition_service.start()
 

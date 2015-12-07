@@ -3,6 +3,7 @@ import logging
 from Queue import Queue
 import socket
 import threading
+from hazelcast.codec import client_authentication_codec
 
 from hazelcast.message import ClientMessageParser
 
@@ -33,30 +34,38 @@ class InvocationService(object):
         self._event_thread.start()
 
     def invoke_on_connection(self, message, connection, event_handler=None):
-        invocation = Invocation(message, connection=connection)
+        return self._invoke(Invocation(message, connection=connection), event_handler)
+
+    def invoke_on_partition(self, message, partition_id, event_handler=None):
+        return self._invoke(Invocation(message, partition_id=partition_id), event_handler)
+
+    def invoke_on_random_target(self, message, event_handler=None):
+        return self._invoke(Invocation(message), event_handler)
+
+    def invoke_on_target(self, message, address, event_handler=None):
+        return self._invoke(Invocation(message, address=address), event_handler)
+
+    def _invoke(self, invocation, event_handler):
         if event_handler is not None:
             invocation.handler = event_handler
-        self._invoke(invocation)
-        return invocation
-
-    def invoke_on_partition(self, message, partition_id):
-        invocation = Invocation(message, partition_id=partition_id)
-        # get connection for partition
-        pass
-
-    def invoke_on_random_target(self, message):
-        invocation = Invocation(message)
-        # get random connection
-        pass
-
-    def invoke_on_target(self, message, address):
-        invocation = Invocation(message, address=address)
-        pass
-
-    def _invoke(self, invocation):
         if invocation.has_connection():
             self._send(invocation, invocation.connection)
-            # TODO: rest of the cases
+        elif invocation.has_partition_id():
+            pass
+            # TODO: set partition id on message
+            addr = self._client.partition_service.get_partition_owner(invocation.partition_id)
+            self._send_to_address(invocation, addr)
+        elif invocation.has_address():
+            self._send_to_address(invocation, invocation.address)
+        else:  # send to random address
+            addr = self._client.load_balancer.next_address()
+            self._send_to_address(invocation, addr)
+
+        return invocation
+
+    def _send_to_address(self, invocation, address):
+        conn = self._client.connection_manager.get_or_connect(address)
+        self._send(invocation, conn)
 
     def _send(self, invocation, connection):
         correlation_id = self._next_correlation_id  # TODO: atomic integer equivalent
@@ -71,9 +80,6 @@ class InvocationService(object):
 
     def handle_client_message(self, message):
         correlation_id = message.get_correlation_id()
-        if correlation_id not in self._pending:
-            self.logger.warn("Got message with unknown correlation id: %d", correlation_id)
-            return
 
         if message.is_listener_message():
             self.logger.debug("Got event message with type %d", message.get_message_type())
@@ -82,6 +88,10 @@ class InvocationService(object):
                 return
             invocation = self._listeners[correlation_id]
             self._event_queue.put((invocation.handler, message))
+            return
+
+        if correlation_id not in self._pending:
+            self.logger.warn("Got message with unknown correlation id: %d", correlation_id)
             return
 
         invocation = self._pending[correlation_id]
@@ -93,8 +103,9 @@ class InvocationService(object):
 class ConnectionManager(object):
     logger = logging.getLogger("ConnectionManager")
 
-    def __init__(self, message_handler):
+    def __init__(self, client, message_handler):
         self._io_thread = None
+        self._client = client
         self.connections = {}
         self._message_handler = message_handler
 
@@ -103,13 +114,36 @@ class ConnectionManager(object):
             return self.connections[address]
         return None
 
-    def get_or_connect(self, address, authenticator):
+    def _cluster_authenticator(self, conn):
+        uuid = self._client.cluster.uuid
+        owner_uuid = self._client.cluster.owner_uuid
+
+        request = client_authentication_codec.encode_request(
+            username=self._client.config.username,
+            password=self._client.config.password,
+            uuid=uuid,
+            owner_uuid=owner_uuid,
+            is_owner_connection=False,
+            client_type="PHY",
+            serialization_version=1)
+
+        response = self._client.invoker.invoke_on_connection(request, conn).result()
+        parameters = client_authentication_codec.decode_response(response)
+        if parameters["status"] != 0:
+            raise RuntimeError("Authentication failed")
+        conn.endpoint = parameters["address"]
+        self.owner_uuid = parameters["owner_uuid"]
+        self.uuid = parameters["uuid"]
+        pass
+
+    def get_or_connect(self, address, authenticator=None):
         if address in self.connections:
             return self.connections[address]
-
+        authenticator = authenticator or self._cluster_authenticator
         connection = Connection(address, self._message_handler)
         self._ensure_io()
         authenticator(connection)
+        self.logger.info("Authenticated with %s", address)
         self.connections[connection.endpoint] = connection
         return connection
 
@@ -169,6 +203,7 @@ class Connection(asyncore.dispatcher):
         self._write_queue.put(message.to_bytes())
         self._initiate_send()
 
+
 class Invocation(object):
     def __init__(self, message, partition_id=-1, address=None, connection=None):
         self.message = message
@@ -184,6 +219,12 @@ class Invocation(object):
 
     def has_handler(self):
         return self.handler is not None
+
+    def has_partition_id(self):
+        return self.partition_id >= 0
+
+    def has_address(self):
+        return self.address is not None
 
     def result(self, timeout=INVOCATION_TIMEOUT):
         if self.event.wait(timeout):
