@@ -13,8 +13,7 @@ class Member(object):
             .format(self.address.host, self.address.port, self.uuid, self.is_lite_member, self.attributes)
 
     def __repr__(self):
-        return "Member {{ host:{}, port:{}, uuid:{}, liteMember:{}, attributes:{} }}" \
-            .format(self.address.host, self.address.port, self.uuid, self.is_lite_member, self.attributes)
+        return str(self)
 
 
 class Address(object):
@@ -26,7 +25,7 @@ class Address(object):
         return "Address {{ host:{}, port:{} }}".format(self.host, self.port)
 
     def __repr__(self):
-        return "Address {{ host:{}, port:{} }}".format(self.host, self.port)
+        return str(self)
 
 
 class DistributedObjectInfo(object):
@@ -38,7 +37,7 @@ class DistributedObjectInfo(object):
         return "DistributedObjectInfo {{ name:{}, serviceName:{} }}".format(self.name, self.service_name)
 
     def __repr__(self):
-        return "DistributedObjectInfo {{ name:{}, serviceName:{} }}".format(self.name, self.service_name)
+        return str(self)
 
 
 class EntryView(object):
