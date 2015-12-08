@@ -63,3 +63,12 @@ class EntryView(object):
         self.version = None
         self.evictionCriteriaNumber = None
         self.ttl = None
+
+def enum(**enums):
+    """
+    Utility method for defining enums
+    :param enums:
+    :return:
+    """
+    enums['reverse'] = dict((value, key) for key, value in enums.iteritems())
+    return type('Enum', (), enums)
