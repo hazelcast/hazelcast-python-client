@@ -24,7 +24,7 @@ import binascii
 import ctypes
 import struct
 
-from hazelcast.serialization import *
+from hazelcast.serialization.data import *
 
 # constants
 VERSION = 0
@@ -134,6 +134,10 @@ class ClientMessage(object):
 
     def append_str(self, val):
         self.append_byte_array(val.encode("utf-8"))
+        return self
+
+    def append_data(self, val):
+        self.append_byte_array(val.to_bytes())
         return self
 
     def append_byte_array(self, arr):
