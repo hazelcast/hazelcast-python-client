@@ -4,6 +4,7 @@ Python client implementation for [Hazelcast](https://github.com/hazelcast/hazelc
 
 Python client is implemented using the [Hazelcast Open Binary Client Protocol](http://hazelcast.org/docs/protocol/1.0-developer-preview/client-protocol.html) 
 
+**This client is a work in progress, and not yet functional.**
 
 ## Mail Group
 
