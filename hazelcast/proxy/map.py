@@ -1,4 +1,5 @@
 from hazelcast.protocol.codec import map_put_codec
+from hazelcast.protocol.codec import map_size_codec
 from hazelcast.proxy.base import Proxy, check_not_none
 
 
@@ -37,3 +38,9 @@ class MapProxy(Proxy):
         :return:
         '''
         check_not_none("key can't be None")
+
+    def size(self):
+        request = map_size_codec.encode_request(self.name)
+        response = self.invoke(request)
+        return map_size_codec.decode_response(response)["response"]
+
