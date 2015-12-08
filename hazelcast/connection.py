@@ -3,9 +3,9 @@ import logging
 from Queue import Queue
 import socket
 import threading
-from hazelcast.codec import client_authentication_codec
 
-from hazelcast.message import ClientMessageParser
+from hazelcast.protocol.client_message import ClientMessage, BEGIN_END_FLAG, LISTENER_FLAG
+from hazelcast.protocol.codec import client_authentication_codec
 
 BUFFER_SIZE = 4096
 INVOCATION_TIMEOUT = 120
@@ -69,18 +69,22 @@ class InvocationService(object):
     def _send(self, invocation, connection):
         correlation_id = self._next_correlation_id  # TODO: atomic integer equivalent
         self._next_correlation_id += 1
-        invocation.message.set_correlation_id(correlation_id)
+        message = invocation.message
+        message.set_correlation_id(correlation_id)
         self._pending[correlation_id] = invocation
 
         if invocation.has_handler():
             self._listeners[correlation_id] = invocation
 
-        connection.send_message(invocation.message)
+        self.logger.debug("Sending message with correlation id %s and type %s", correlation_id,
+                          message.get_message_type())
+        connection.send_message(message)
 
     def handle_client_message(self, message):
         correlation_id = message.get_correlation_id()
-
-        if message.is_listener_message():
+        self.logger.debug("Received message with correlation id %s and type %s", correlation_id,
+                          message.get_message_type())
+        if message.has_flags(LISTENER_FLAG):
             self.logger.debug("Got event message with type %d", message.get_message_type())
             if correlation_id not in self._listeners:
                 self.logger.warn("Got event message with unknown correlation id: %d", correlation_id)
@@ -179,8 +183,12 @@ class Connection(asyncore.dispatcher):
         if len(data) == BUFFER_SIZE:  # TODO: more to read
             raise NotImplementedError()
 
-        message = ClientMessageParser(data)
-        self._message_handler(message)
+        # split frames
+        while len(data) > 0:
+            message = ClientMessage(data)
+            self._message_handler(message)
+            frame_length = message.get_frame_length()
+            data = data[frame_length:]
 
     def handle_write(self):
         self._initiate_send()
@@ -199,7 +207,8 @@ class Connection(asyncore.dispatcher):
         # TODO: check if everything was sent
 
     def send_message(self, message):
-        self._write_queue.put(message.to_bytes())
+        message.add_flag(BEGIN_END_FLAG)
+        self._write_queue.put(message.buffer)
         self._initiate_send()
 
 

@@ -1,12 +1,12 @@
 import logging
 import random
 
-from hazelcast.codec import client_authentication_codec, \
-    client_add_membership_listener_codec
 from hazelcast.core import CLIENT_TYPE, SERIALIZATION_VERSION
 
 
 # Membership Event Types
+from hazelcast.protocol.codec import client_add_membership_listener_codec, client_authentication_codec
+
 MEMBER_ADDED = 1
 MEMBER_REMOVED = 2
 

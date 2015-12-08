@@ -53,66 +53,69 @@ def copy_bytes_into(src_buf, dst_buf, offset, length):
 class ClientMessage(object):
     def __init__(self, buff=None, payload_size=0):
         if buff:
-            self._buffer = buff
+            self.buffer = buff
             self._read_index = 0
         else:
-            self._buffer = ctypes.create_string_buffer(HEADER_SIZE + payload_size)
+            self.buffer = ctypes.create_string_buffer(HEADER_SIZE + payload_size)
             self.set_data_offset(HEADER_SIZE)
             self._write_index = 0
         self._retrable = False
 
     # HEADER ACCESSORS
     def get_correlation_id(self):
-        return struct.unpack_from(FMT_LE_INT, self._buffer, CORRELATION_ID_FIELD_OFFSET)[0]
+        return struct.unpack_from(FMT_LE_INT, self.buffer, CORRELATION_ID_FIELD_OFFSET)[0]
 
     def set_correlation_id(self, val):
-        struct.pack_into(FMT_LE_INT, self._buffer, CORRELATION_ID_FIELD_OFFSET, val)
+        struct.pack_into(FMT_LE_INT, self.buffer, CORRELATION_ID_FIELD_OFFSET, val)
         return self
 
     def get_partition_id(self):
-        return struct.unpack_from(FMT_LE_INT, self._buffer, PARTITION_ID_FIELD_OFFSET)[0]
+        return struct.unpack_from(FMT_LE_INT, self.buffer, PARTITION_ID_FIELD_OFFSET)[0]
 
     def set_partition_id(self, val):
-        struct.pack_into(FMT_LE_INT, self._buffer, PARTITION_ID_FIELD_OFFSET, val)
+        struct.pack_into(FMT_LE_INT, self.buffer, PARTITION_ID_FIELD_OFFSET, val)
         return self
 
     def get_message_type(self):
-        return struct.unpack_from(FMT_LE_UINT16, self._buffer, TYPE_FIELD_OFFSET)[0]
+        return struct.unpack_from(FMT_LE_UINT16, self.buffer, TYPE_FIELD_OFFSET)[0]
 
     def set_message_type(self, val):
-        struct.pack_into(FMT_LE_UINT16, self._buffer, TYPE_FIELD_OFFSET, val)
+        struct.pack_into(FMT_LE_UINT16, self.buffer, TYPE_FIELD_OFFSET, val)
         return self
 
     def get_flags(self):
-        return struct.unpack_from(FMT_LE_UINT8, self._buffer, FLAGS_FIELD_OFFSET)[0]
+        return struct.unpack_from(FMT_LE_UINT8, self.buffer, FLAGS_FIELD_OFFSET)[0]
 
     def set_flags(self, val):
-        struct.pack_into(FMT_LE_UINT8, self._buffer, FLAGS_FIELD_OFFSET, val)
+        struct.pack_into(FMT_LE_UINT8, self.buffer, FLAGS_FIELD_OFFSET, val)
         return self
 
+    def has_flags(self, flags):
+        return self.get_flags() & flags
+
     def get_frame_length(self):
-        return struct.unpack_from(FMT_LE_INT, self._buffer, FRAME_LENGTH_FIELD_OFFSET)[0]
+        return struct.unpack_from(FMT_LE_INT, self.buffer, FRAME_LENGTH_FIELD_OFFSET)[0]
 
     def set_frame_length(self, val):
-        struct.pack_into(FMT_LE_INT, self._buffer, FRAME_LENGTH_FIELD_OFFSET, val)
+        struct.pack_into(FMT_LE_INT, self.buffer, FRAME_LENGTH_FIELD_OFFSET, val)
         return self
 
     def get_data_offset(self):
-        return struct.unpack_from(FMT_LE_UINT16, self._buffer, DATA_OFFSET_FIELD_OFFSET)[0]
+        return struct.unpack_from(FMT_LE_UINT16, self.buffer, DATA_OFFSET_FIELD_OFFSET)[0]
 
     def set_data_offset(self, val):
-        struct.pack_into(FMT_LE_UINT16, self._buffer, DATA_OFFSET_FIELD_OFFSET, val)
+        struct.pack_into(FMT_LE_UINT16, self.buffer, DATA_OFFSET_FIELD_OFFSET, val)
         return self
 
-    def __write_offset(self):
+    def _write_offset(self):
         return self.get_data_offset() + self._write_index
 
-    def __read_offset(self):
+    def _read_offset(self):
         return self.get_data_offset() + self._read_index
 
     # PAYLOAD
     def append_byte(self, val):
-        struct.pack_into(FMT_LE_UINT8, self._buffer, self.__write_offset(), val)
+        struct.pack_into(FMT_LE_UINT8, self.buffer, self._write_offset(), val)
         self._write_index += BYTE_SIZE_IN_BYTES
         return self
 
@@ -120,12 +123,12 @@ class ClientMessage(object):
         return self.append_byte(1 if val else 0)
 
     def append_int(self, val):
-        struct.pack_into(FMT_LE_INT, self._buffer, self.__write_offset(), val)
+        struct.pack_into(FMT_LE_INT, self.buffer, self._write_offset(), val)
         self._write_index += INT_SIZE_IN_BYTES
         return self
 
     def append_long(self, val):
-        struct.pack_into(FMT_LE_LONG, self._buffer, self.__write_offset(), val)
+        struct.pack_into(FMT_LE_LONG, self.buffer, self._write_offset(), val)
         self._write_index += LONG_SIZE_IN_BYTES
         return self
 
@@ -138,12 +141,12 @@ class ClientMessage(object):
         # length
         self.append_int(length)
         # copy content
-        copy_bytes_into(arr, self._buffer, self.__write_offset(), length)
+        copy_bytes_into(arr, self.buffer, self._write_offset(), length)
         self._write_index += length
 
     # PAYLOAD READ
     def _read_from_buff(self, fmt, size):
-        val = struct.unpack_from(fmt, self._buffer, self.__read_offset())
+        val = struct.unpack_from(fmt, self.buffer, self._read_offset())
         self._read_index += size
         return val[0]
 
@@ -164,7 +167,7 @@ class ClientMessage(object):
 
     def read_byte_array(self):
         length = self.read_int()
-        result = self._buffer[self.__read_offset(): self.__read_offset() + length]
+        result = self.buffer[self._read_offset(): self._read_offset() + length]
         self._read_index += length
         return result
 
@@ -179,7 +182,7 @@ class ClientMessage(object):
 
     def is_complete(self):
         try:
-            return (self.__read_offset() >= HEADER_SIZE) and (self.__read_offset() == self.get_frame_length())
+            return (self._read_offset() >= HEADER_SIZE) and (self._read_offset() == self.get_frame_length())
         except AttributeError:
             return False
 
@@ -192,11 +195,11 @@ class ClientMessage(object):
         return self
 
     def update_frame_length(self):
-        self.set_frame_length(self.__write_offset())
+        self.set_frame_length(self._write_offset())
         return self
 
     def __repr__(self):
-        return binascii.hexlify(self._buffer)
+        return binascii.hexlify(self.buffer)
 
     def __str__(self):
         return "ClientMessage:{{" \

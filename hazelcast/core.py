@@ -11,11 +11,12 @@ class Member(object):
         self.attributes = attributes
 
     def __str__(self):
-        return "Member {{ host:{}, port:{}, uuid:{}, liteMember:{}, attributes:{} }}" \
-            .format(self.address.host, self.address.port, self.uuid, self.is_lite_member, self.attributes)
+        return "Member(host={}, port={})" \
+            .format(self.address.host, self.address.port)
 
     def __repr__(self):
-        return str(self)
+        return "Member(host={}, port={}, uuid={}, liteMember={}, attributes={})" \
+            .format(self.address.host, self.address.port, self.uuid, self.is_lite_member, self.attributes)
 
 
 class Address(object):
@@ -24,16 +25,16 @@ class Address(object):
         self.port = port
 
     def __str__(self):
-        return "Address {{ host:{}, port:{} }}".format(self.host, self.port)
+        return "Address(host=%s, port=%d)" % (self.host, self.port)
 
     def __repr__(self):
         return str(self)
 
     def __hash__(self):
-        return hash((self.address, self.port))
+        return hash((self.host, self.port))
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.host == other.host and self.port == other.port
+        return isinstance(other, self.__class__) and (self.host, self.port ) == (other.host, other.port)
 
 
 class DistributedObjectInfo(object):
@@ -42,7 +43,7 @@ class DistributedObjectInfo(object):
         self.service_name = service_name
 
     def __str__(self):
-        return "DistributedObjectInfo {{ name:{}, serviceName:{} }}".format(self.name, self.service_name)
+        return "DistributedObjectInfo(name={}, serviceName={})".format(self.name, self.service_name)
 
     def __repr__(self):
         return str(self)

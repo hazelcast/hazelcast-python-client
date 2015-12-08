@@ -1,3 +1,5 @@
+import logging
+
 from connection import ConnectionManager, InvocationService
 from cluster import ClusterService, RandomLoadBalancer
 from hazelcast.serialization import SerializationService
@@ -5,6 +7,7 @@ from partition import PartitionService
 from proxy import ProxyManager, MAP_SERVICE
 
 class HazelcastClient(object):
+    logger = logging.getLogger("HazelcastClient")
     _config = None
 
     def __init__(self, config=None):
@@ -19,6 +22,7 @@ class HazelcastClient(object):
 
         self.cluster.start()
         self.partition_service.start()
+        self.logger.info("Client started.")
 
     def get_map(self, name):
         return self.proxy.get_or_create(MAP_SERVICE, name)

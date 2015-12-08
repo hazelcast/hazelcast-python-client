@@ -1,6 +1,7 @@
 import logging
 import threading
-from hazelcast.codec import client_get_partitions_codec
+from hazelcast.protocol.codec import client_get_partitions_codec
+
 
 class PartitionService(object):
     logger = logging.getLogger("PartitionService")
