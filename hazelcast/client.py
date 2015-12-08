@@ -17,7 +17,7 @@ class HazelcastClient(object):
         self.cluster = ClusterService(config, self)
         self.partition_service = PartitionService(self)
         self.proxy = ProxyManager(self)
-        self.load_balancer = RandomLoadBalancer(self)
+        self.load_balancer = RandomLoadBalancer(self.cluster)
         self.serializer = SerializationService(self)
 
         self.cluster.start()

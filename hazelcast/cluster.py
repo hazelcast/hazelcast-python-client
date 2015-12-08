@@ -1,7 +1,7 @@
 import logging
 import random
 
-from hazelcast.core import CLIENT_TYPE, SERIALIZATION_VERSION
+from hazelcast.core import CLIENT_TYPE, SERIALIZATION_VERSION, Address
 
 
 # Membership Event Types
@@ -23,16 +23,19 @@ class ClusterService(object):
         self.uuid = None
 
     def start(self):
-        self.connect_to_cluster()
+        self._connect_to_cluster()
+
+    def size(self):
+        return len(self.member_list)
 
     @staticmethod
     def _parse_addr(addr):
         (host, port) = addr.split(":")
-        return host, int(port)
+        return Address(host, int(port))
 
-    def connect_to_cluster(self):
+    def _connect_to_cluster(self):
         address = self._parse_addr(self._config.addresses[0])
-        self.logger.info("Connecting to address %s", address)
+        self.logger.info("Connecting to %s", address)
 
         def authenticate_manager(conn):
             request = client_authentication_codec.encode_request(
@@ -50,19 +53,19 @@ class ClusterService(object):
         connection = self._client.connection_manager.get_or_connect(address, authenticate_manager)
 
         self.owner_connection_address = connection.endpoint
-        self.init_membership_listener(connection)
+        self._init_membership_listener(connection)
 
-    def init_membership_listener(self, connection):
+    def _init_membership_listener(self, connection):
         request = client_add_membership_listener_codec.encode_request(False)
 
         def handler(m):
-            client_add_membership_listener_codec.handle(m, self.handle_member, self.handle_member_list)
+            client_add_membership_listener_codec.handle(m, self._handle_member, self._handle_member_list)
 
         response = self._client.invoker.invoke_on_connection(request, connection, handler).result()
         registration_id = client_add_membership_listener_codec.decode_response(response)["response"]
         self.logger.debug("Registered membership listener with ID " + registration_id)
 
-    def handle_member(self, member, event_type):
+    def _handle_member(self, member, event_type):
         self.logger.debug("Got member event: %s, %s", member, event_type)
         if event_type == MEMBER_ADDED:
             self.member_list.append(member)
@@ -73,7 +76,7 @@ class ClusterService(object):
         self.logger.info("New member list is: %s", self.member_list)
         self._client.partition_service.refresh()
 
-    def handle_member_list(self, member_list):
+    def _handle_member_list(self, member_list):
         self.logger.debug("Got member list")
         self.member_list = member_list
         self.logger.info("New member list is: %s", member_list)
@@ -85,4 +88,4 @@ class RandomLoadBalancer(object):
         self._cluster = cluster
 
     def next_address(self):
-        return random.choice(self._cluster.member_list()).address
+        return random.choice(self._cluster.member_list).address

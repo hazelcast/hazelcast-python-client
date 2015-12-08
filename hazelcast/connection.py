@@ -51,7 +51,6 @@ class InvocationService(object):
         if invocation.has_connection():
             self._send(invocation, invocation.connection)
         elif invocation.has_partition_id():
-            # TODO: set partition id on message
             addr = self._client.partition_service.get_partition_owner(invocation.partition_id)
             self._send_to_address(invocation, addr)
         elif invocation.has_address():
@@ -71,6 +70,7 @@ class InvocationService(object):
         self._next_correlation_id += 1
         message = invocation.message
         message.set_correlation_id(correlation_id)
+        message.set_partition_id(invocation.partition_id)
         self._pending[correlation_id] = invocation
 
         if invocation.has_handler():
@@ -164,13 +164,13 @@ class ConnectionManager(object):
 class Connection(asyncore.dispatcher):
     def __init__(self, address, message_handler):
         asyncore.dispatcher.__init__(self)
-        self.logger = logging.getLogger("Connection{%s:%d}" % address)
-        self._address = address
+        self._address = (address.host, address.port)
+        self.logger = logging.getLogger("Connection{%s:%d}" % self._address)
         self._correlation_id = 0
         self._message_handler = message_handler
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.endpoint = None
-        self.connect(address)
+        self.connect(self._address)
         self._write_queue = Queue()
         self._write_queue.put("CB2")
 
