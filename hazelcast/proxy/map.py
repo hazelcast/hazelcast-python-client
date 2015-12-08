@@ -39,7 +39,7 @@ class MapProxy(Proxy):
         :param key:
         :return:
         '''
-        check_not_none("key can't be None")
+        check_not_none(key, "key can't be None")
 
         key_data = self.to_data(key)
         request = map_get_codec.encode_request(self.name, key_data, thread_id=self.thread_id())

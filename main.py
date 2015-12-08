@@ -18,8 +18,8 @@ if __name__ == '__main__':
     my_map = client.get_map("map")
     print(my_map)
     print my_map.size()
-    #map.put("key", "value")
-    #print(map.get("key"))
+    my_map.put("key", "value")
+    print my_map.get("key")
     #
     sleep(30)
     #

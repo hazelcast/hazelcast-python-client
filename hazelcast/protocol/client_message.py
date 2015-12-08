@@ -169,6 +169,9 @@ class ClientMessage(object):
     def read_str(self):
         return self.read_byte_array().decode("utf-8")
 
+    def read_data(self):
+        return Data(self.read_byte_array())
+
     def read_byte_array(self):
         length = self.read_int()
         result = self.buffer[self._read_offset(): self._read_offset() + length]
