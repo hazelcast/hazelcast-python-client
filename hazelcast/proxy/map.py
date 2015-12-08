@@ -32,7 +32,7 @@ class MapProxy(Proxy):
         request = map_put_codec.encode_request(self.name, key_data, value_data, thread_id=self.thread_id(), ttl=ttl)
         response = self.invoke_on_key(request, key_data)
         result_data = map_put_codec.decode_response(response)['response']
-        return self.from_data(result_data)
+        return self.to_object(result_data)
 
     def get(self, key):
         '''
@@ -45,7 +45,7 @@ class MapProxy(Proxy):
         request = map_get_codec.encode_request(self.name, key_data, thread_id=self.thread_id())
         response = self.invoke_on_key(request, key_data)
         result_data = map_get_codec.decode_response(response)['response']
-        return self.from_data(result_data)
+        return self.to_object(result_data)
 
     def size(self):
         request = map_size_codec.encode_request(self.name)
