@@ -4,6 +4,9 @@ def check_not_none(val, message):
     if val is None:
         raise AssertionError(message)
 
+def thread_id():
+    return threading.currentThread().ident
+
 class Proxy(object):
     def __init__(self, client, service_name, name):
         self.service_name = service_name
@@ -17,18 +20,19 @@ class Proxy(object):
     def __str__(self):
         return '%s(name="%s")' % (type(self), self.name)
 
-    def to_data(self, val):
+    def _to_data(self, val):
         return self._client.serializer.to_data(val)
 
-    def to_object(self, data):
+    def _to_object(self, data):
         return self._client.serializer.to_object(data)
 
-    def thread_id(self):
-        return threading.currentThread().ident
-
-    def invoke(self, request):
+    def _invoke(self, request):
         return self._client.invoker.invoke_on_random_target(request).result()
 
-    def invoke_on_key(self, request, key_data):
+    def _invoke_on_key(self, request, key_data):
         partition_id = self._client.partition_service.get_partition_id(key_data)
         return self._client.invoker.invoke_on_partition(request, partition_id).result()
+
+    def _start_listening(self, request, event_handler):
+        return self._client.invoker.invoke_on_random_target(request, event_handler=event_handler).result()
+

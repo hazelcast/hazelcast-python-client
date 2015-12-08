@@ -18,4 +18,6 @@ class SerializationService(object):
         return Data(buff)
 
     def to_object(self, data):
+        if data is None:
+            return None
         return marshal.loads(data.to_bytes()[8:])
