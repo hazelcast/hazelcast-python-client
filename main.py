@@ -17,9 +17,10 @@ if __name__ == '__main__':
     print("Creating proxy")
     my_map = client.get_map("map")
     print(my_map)
-    print my_map.size()
-    my_map.put("key", "value")
-    print my_map.get("key")
+    print(my_map.size())
+    print(my_map.put("key", "value"))
+    print(my_map.get("key"))
+    print(my_map.size())
     #
     sleep(30)
     #

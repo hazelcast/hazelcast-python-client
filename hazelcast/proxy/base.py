@@ -21,7 +21,7 @@ class Proxy(object):
         return self._client.serializer.to_data(val)
 
     def to_object(self, data):
-        self._client.serializer.to_object(data)
+        return self._client.serializer.to_object(data)
 
     def thread_id(self):
         return threading.currentThread().ident
