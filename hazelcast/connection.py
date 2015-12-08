@@ -1,8 +1,9 @@
 import asyncore
 import logging
-from Queue import Queue
+from Queue import Queue, Empty
 import socket
 import threading
+import traceback
 
 from hazelcast.protocol.client_message import ClientMessage, BEGIN_END_FLAG, LISTENER_FLAG
 from hazelcast.protocol.codec import client_authentication_codec
@@ -201,7 +202,10 @@ class Connection(asyncore.dispatcher):
         return not self._write_queue.empty()
 
     def _initiate_send(self):
-        item = self._write_queue.get_nowait()
+        try:
+            item = self._write_queue.get_nowait()
+        except Empty:
+            return
         sent = self.send(item)
         self.logger.debug("Written " + str(sent) + " bytes")
         # TODO: check if everything was sent
