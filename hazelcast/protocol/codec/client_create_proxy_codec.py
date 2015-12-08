@@ -25,7 +25,7 @@ def encode_request(name, service_name, target):
     client_message.set_retryable(RETRYABLE)
     client_message.append_str(name)
     client_message.append_str(service_name)
-    AddressCodec.encode(target, client_message)
+    AddressCodec.encode(client_message, target)
     client_message.update_frame_length()
     return client_message
 

@@ -24,7 +24,7 @@ def encode_request(uuid, address, interrupt):
     client_message.set_message_type(REQUEST_TYPE)
     client_message.set_retryable(RETRYABLE)
     client_message.append_str(uuid)
-    AddressCodec.encode(address, client_message)
+    AddressCodec.encode(client_message, address)
     client_message.append_bool(interrupt)
     client_message.update_frame_length()
     return client_message

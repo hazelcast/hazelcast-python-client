@@ -27,7 +27,7 @@ def encode_request(name, uuid, callable, address):
     client_message.append_str(name)
     client_message.append_str(uuid)
     client_message.append_data(callable)
-    AddressCodec.encode(address, client_message)
+    AddressCodec.encode(client_message, address)
     client_message.update_frame_length()
     return client_message
 

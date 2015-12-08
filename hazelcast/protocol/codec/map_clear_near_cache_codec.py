@@ -23,7 +23,7 @@ def encode_request(name, target):
     client_message.set_message_type(REQUEST_TYPE)
     client_message.set_retryable(RETRYABLE)
     client_message.append_str(name)
-    AddressCodec.encode(target, client_message)
+    AddressCodec.encode(client_message, target)
     client_message.update_frame_length()
     return client_message
 
