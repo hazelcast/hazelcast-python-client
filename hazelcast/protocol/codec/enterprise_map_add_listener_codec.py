@@ -38,18 +38,17 @@ def decode_response(client_message):
 
 def handle(client_message, handle_event_querycachesingle = None, handle_event_querycachebatch = None):
     """ Event handler """
-    messageType = client_message.get_message_type()
-    if messageType == EVENT_QUERYCACHESINGLE and handle_event_querycachesingle is not None:
+    message_type = client_message.get_message_type()
+    if message_type == EVENT_QUERYCACHESINGLE and handle_event_querycachesingle is not None:
         data = QueryCacheEventDataCodec.decode(client_message)
-        handle_event_querycachesingle(client_message, data)
-    if messageType == EVENT_QUERYCACHEBATCH and handle_event_querycachebatch is not None:
+        handle_event_querycachesingle(data)
+    if message_type == EVENT_QUERYCACHEBATCH and handle_event_querycachebatch is not None:
         events_size = client_message.read_int()
         events = []
         for events_index in xrange(0, events_size):
             events_item = QueryCacheEventDataCodec.decode(client_message)
             events.append(events_item)
-        parameters['events'] = events
         source = client_message.read_str()
         partition_id = client_message.read_int()
-        handle_event_querycachebatch(client_message, events, source, partition_id)
+        handle_event_querycachebatch(events, source, partition_id)
 

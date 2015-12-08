@@ -38,9 +38,9 @@ def decode_response(client_message):
 
 def handle(client_message, handle_event_mappartitionlost = None):
     """ Event handler """
-    messageType = client_message.get_message_type()
-    if messageType == EVENT_MAPPARTITIONLOST and handle_event_mappartitionlost is not None:
+    message_type = client_message.get_message_type()
+    if message_type == EVENT_MAPPARTITIONLOST and handle_event_mappartitionlost is not None:
         partition_id = client_message.read_int()
         uuid = client_message.read_str()
-        handle_event_mappartitionlost(client_message, partition_id, uuid)
+        handle_event_mappartitionlost(partition_id, uuid)
 

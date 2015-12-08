@@ -38,10 +38,10 @@ def decode_response(client_message):
 
 def handle(client_message, handle_event_topic = None):
     """ Event handler """
-    messageType = client_message.get_message_type()
-    if messageType == EVENT_TOPIC and handle_event_topic is not None:
+    message_type = client_message.get_message_type()
+    if message_type == EVENT_TOPIC and handle_event_topic is not None:
         item = client_message.read_data()
         publish_time = client_message.read_long()
         uuid = client_message.read_str()
-        handle_event_topic(client_message, item, publish_time, uuid)
+        handle_event_topic(item, publish_time, uuid)
 

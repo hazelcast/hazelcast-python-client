@@ -36,24 +36,24 @@ def decode_response(client_message):
 
 def handle(client_message, handle_event_member = None, handle_event_memberlist = None, handle_event_memberattributechange = None):
     """ Event handler """
-    messageType = client_message.get_message_type()
-    if messageType == EVENT_MEMBER and handle_event_member is not None:
+    message_type = client_message.get_message_type()
+    if message_type == EVENT_MEMBER and handle_event_member is not None:
         member = MemberCodec.decode(client_message)
         event_type = client_message.read_int()
-        handle_event_member(client_message, member, event_type)
-    if messageType == EVENT_MEMBERLIST and handle_event_memberlist is not None:
+        handle_event_member(member, event_type)
+    if message_type == EVENT_MEMBERLIST and handle_event_memberlist is not None:
         members_size = client_message.read_int()
         members = []
         for members_index in xrange(0, members_size):
             members_item = MemberCodec.decode(client_message)
             members.append(members_item)
-        parameters['members'] = members
-        handle_event_memberlist(client_message, members)
-    if messageType == EVENT_MEMBERATTRIBUTECHANGE and handle_event_memberattributechange is not None:
+        handle_event_memberlist(members)
+    if message_type == EVENT_MEMBERATTRIBUTECHANGE and handle_event_memberattributechange is not None:
         uuid = client_message.read_str()
         key = client_message.read_str()
         operation_type = client_message.read_int()
+        value=None
         if not client_message.read_bool():
             value = client_message.read_str()
-        handle_event_memberattributechange(client_message, uuid, key, operation_type, value)
+        handle_event_memberattributechange(uuid, key, operation_type, value)
 

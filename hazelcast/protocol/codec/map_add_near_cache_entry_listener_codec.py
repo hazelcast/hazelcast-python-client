@@ -40,17 +40,17 @@ def decode_response(client_message):
 
 def handle(client_message, handle_event_imapinvalidation = None, handle_event_imapbatchinvalidation = None):
     """ Event handler """
-    messageType = client_message.get_message_type()
-    if messageType == EVENT_IMAPINVALIDATION and handle_event_imapinvalidation is not None:
+    message_type = client_message.get_message_type()
+    if message_type == EVENT_IMAPINVALIDATION and handle_event_imapinvalidation is not None:
+        key=None
         if not client_message.read_bool():
             key = client_message.read_data()
-        handle_event_imapinvalidation(client_message, key)
-    if messageType == EVENT_IMAPBATCHINVALIDATION and handle_event_imapbatchinvalidation is not None:
+        handle_event_imapinvalidation(key)
+    if message_type == EVENT_IMAPBATCHINVALIDATION and handle_event_imapbatchinvalidation is not None:
         keys_size = client_message.read_int()
         keys = []
         for keys_index in xrange(0, keys_size):
             keys_item = client_message.read_data()
             keys.append(keys_item)
-        parameters['keys'] = keys
-        handle_event_imapbatchinvalidation(client_message, keys)
+        handle_event_imapbatchinvalidation(keys)
 

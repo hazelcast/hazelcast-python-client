@@ -36,11 +36,12 @@ def decode_response(client_message):
 
 def handle(client_message, handle_event_partitionlost = None):
     """ Event handler """
-    messageType = client_message.get_message_type()
-    if messageType == EVENT_PARTITIONLOST and handle_event_partitionlost is not None:
+    message_type = client_message.get_message_type()
+    if message_type == EVENT_PARTITIONLOST and handle_event_partitionlost is not None:
         partition_id = client_message.read_int()
         lost_backup_count = client_message.read_int()
+        source=None
         if not client_message.read_bool():
             source = AddressCodec.decode(client_message)
-        handle_event_partitionlost(client_message, partition_id, lost_backup_count, source)
+        handle_event_partitionlost(partition_id, lost_backup_count, source)
 

@@ -27,7 +27,7 @@ def encode_request():
 def decode_response(client_message):
     """ Decode response from client message"""
     parameters = dict(partitions=None)
-    partitions_size = client_message.getInt()
+    partitions_size = client_message.read_int()
     partitions = {}
     for partitions_index in xrange(0,partitions_size):
         partitions_key = AddressCodec.decode(client_message)
@@ -36,8 +36,7 @@ def decode_response(client_message):
         for partitions_val_index in xrange(0, partitions_val_size):
             partitions_val_item = client_message.read_int()
             partitions_val.append(partitions_val_item)
-        parameters['partitions_val'] = partitions_val
-        partitions['partitions_key'] = partitions_val
+        partitions[partitions_key] = partitions_val
     parameters['partitions'] = partitions
     return parameters
 

@@ -50,10 +50,13 @@ def decode_response(client_message):
     """ Decode response from client message"""
     parameters = dict(status=None, address=None, uuid=None, owner_uuid=None, serialization_version=None)
     parameters['status'] = client_message.read_byte()
+    address=None
     if not client_message.read_bool():
         parameters['address'] = AddressCodec.decode(client_message)
+    uuid=None
     if not client_message.read_bool():
         parameters['uuid'] = client_message.read_str()
+    owner_uuid=None
     if not client_message.read_bool():
         parameters['owner_uuid'] = client_message.read_str()
     parameters['serialization_version'] = client_message.read_byte()

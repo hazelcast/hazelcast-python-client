@@ -46,18 +46,22 @@ def decode_response(client_message):
 
 def handle(client_message, handle_event_entry = None):
     """ Event handler """
-    messageType = client_message.get_message_type()
-    if messageType == EVENT_ENTRY and handle_event_entry is not None:
+    message_type = client_message.get_message_type()
+    if message_type == EVENT_ENTRY and handle_event_entry is not None:
+        key=None
         if not client_message.read_bool():
             key = client_message.read_data()
+        value=None
         if not client_message.read_bool():
             value = client_message.read_data()
+        old_value=None
         if not client_message.read_bool():
             old_value = client_message.read_data()
+        merging_value=None
         if not client_message.read_bool():
             merging_value = client_message.read_data()
         event_type = client_message.read_int()
         uuid = client_message.read_str()
         number_of_affected_entries = client_message.read_int()
-        handle_event_entry(client_message, key, value, old_value, merging_value, event_type, uuid, number_of_affected_entries)
+        handle_event_entry(key, value, old_value, merging_value, event_type, uuid, number_of_affected_entries)
 

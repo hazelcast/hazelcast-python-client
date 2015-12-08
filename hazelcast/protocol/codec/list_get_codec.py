@@ -31,6 +31,7 @@ def encode_request(name, index):
 def decode_response(client_message):
     """ Decode response from client message"""
     parameters = dict(response=None)
+    response=None
     if not client_message.read_bool():
         parameters['response'] = client_message.read_data()
     return parameters

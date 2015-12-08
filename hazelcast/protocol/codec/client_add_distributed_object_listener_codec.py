@@ -36,10 +36,10 @@ def decode_response(client_message):
 
 def handle(client_message, handle_event_distributedobject = None):
     """ Event handler """
-    messageType = client_message.get_message_type()
-    if messageType == EVENT_DISTRIBUTEDOBJECT and handle_event_distributedobject is not None:
+    message_type = client_message.get_message_type()
+    if message_type == EVENT_DISTRIBUTEDOBJECT and handle_event_distributedobject is not None:
         name = client_message.read_str()
         service_name = client_message.read_str()
         event_type = client_message.read_str()
-        handle_event_distributedobject(client_message, name, service_name, event_type)
+        handle_event_distributedobject(name, service_name, event_type)
 
