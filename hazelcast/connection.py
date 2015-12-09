@@ -16,13 +16,24 @@ INVOCATION_TIMEOUT = 120
 PROTOCOL_VERSION = 1
 
 
+class AtomicInteger(object):
+    def __init__(self, initial=0):
+        self.lock = threading.Lock()
+        self.initial = initial
+
+    def increment_and_get(self):
+        with self.lock:
+            self.initial += 1
+            return self.initial
+
+
 class InvocationService(object):
     logger = logging.getLogger("InvocationService")
 
     def __init__(self, client):
         self._pending = {}
         self._listeners = {}
-        self._next_correlation_id = 1
+        self._next_correlation_id = AtomicInteger(1)
         self._client = client
         self._event_queue = Queue()
         self._start_event_thread()
@@ -71,8 +82,7 @@ class InvocationService(object):
         self._send(invocation, conn)
 
     def _send(self, invocation, connection):
-        correlation_id = self._next_correlation_id  # TODO: atomic integer equivalent
-        self._next_correlation_id += 1
+        correlation_id = self._next_correlation_id.increment_and_get()
         message = invocation.message
         message.set_correlation_id(correlation_id)
         message.set_partition_id(invocation.partition_id)
@@ -103,7 +113,8 @@ class InvocationService(object):
                 self.logger.warn("Got message with unknown correlation id: %d", correlation_id)
                 return
             invocation = self._pending.pop(correlation_id)
-        invocation.queue.put(message)
+        invocation.response = message
+        invocation.event.set()
 
 
 class ConnectionManager(object):
@@ -194,37 +205,32 @@ class Connection(asyncore.dispatcher):
             self._message_handler(message)
 
     def handle_write(self):
-        self._initiate_send()
-
-    def handle_close(self):
-        self.logger.debug("handle_close")
-        self.close()
-
-    def writable(self):
-        return not self._write_queue.empty()
-
-    def _initiate_send(self):
         try:
             item = self._write_queue.get_nowait()
         except Empty:
             return
         sent = self.send(item)
         self.logger.debug("Written " + str(sent) + " bytes")
-        # TODO: check if everything was sent
+        if sent < len(item):
+            self.logger.warn("%d bytes were not written", len(item) - sent)
+
+    def handle_close(self):
+        self.logger.debug("handle_close")
+        self.close()
 
     def send_message(self, message):
         message.add_flag(BEGIN_END_FLAG)
         self._write_queue.put(message.buffer)
-        self._initiate_send()
 
 
 class Invocation(object):
     def __init__(self, message, partition_id=-1, address=None, connection=None):
         self.message = message
-        self.queue = Queue()
+        self.event = threading.Event()
         self.handler = None
         self.partition_id = partition_id
         self.address = address
+        self.response = None
         self.connection = connection
 
     def has_connection(self):
@@ -240,7 +246,5 @@ class Invocation(object):
         return self.address is not None
 
     def result(self, timeout=INVOCATION_TIMEOUT):
-        try:
-            return self.queue.get(timeout=timeout)
-        except Empty:
-            raise RuntimeError("Request timed out after %d seconds" % timeout)
+        self.event.wait()  # TODO: adding timeout has large performance impact
+        return self.response
