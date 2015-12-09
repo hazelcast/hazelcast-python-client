@@ -1,14 +1,17 @@
+from __future__ import with_statement
+
 import asyncore
 import logging
 from Queue import Queue, Empty
 import socket
 import threading
-import traceback
+import struct
 
 from hazelcast.protocol.client_message import ClientMessage, BEGIN_END_FLAG, LISTENER_FLAG
 from hazelcast.protocol.codec import client_authentication_codec
+from hazelcast.serialization import FMT_LE_INT
 
-BUFFER_SIZE = 4096
+BUFFER_SIZE = 8192
 INVOCATION_TIMEOUT = 120
 PROTOCOL_VERSION = 1
 
@@ -23,6 +26,7 @@ class InvocationService(object):
         self._client = client
         self._event_queue = Queue()
         self._start_event_thread()
+        self._pending_lock = threading.Lock()
 
     def _start_event_thread(self):
         def event_loop():
@@ -72,7 +76,8 @@ class InvocationService(object):
         message = invocation.message
         message.set_correlation_id(correlation_id)
         message.set_partition_id(invocation.partition_id)
-        self._pending[correlation_id] = invocation
+        with self._pending_lock:
+            self._pending[correlation_id] = invocation
 
         if invocation.has_handler():
             self._listeners[correlation_id] = invocation
@@ -93,15 +98,12 @@ class InvocationService(object):
             invocation = self._listeners[correlation_id]
             self._event_queue.put((invocation.handler, message))
             return
-
-        if correlation_id not in self._pending:
-            self.logger.warn("Got message with unknown correlation id: %d", correlation_id)
-            return
-
-        invocation = self._pending[correlation_id]
-        invocation.response = message
-        self._pending.pop(correlation_id)
-        invocation.event.set()
+        with self._pending_lock:
+            if correlation_id not in self._pending:
+                self.logger.warn("Got message with unknown correlation id: %d", correlation_id)
+                return
+            invocation = self._pending.pop(correlation_id)
+        invocation.queue.put(message)
 
 
 class ConnectionManager(object):
@@ -167,29 +169,30 @@ class Connection(asyncore.dispatcher):
         asyncore.dispatcher.__init__(self)
         self._address = (address.host, address.port)
         self.logger = logging.getLogger("Connection{%s:%d}" % self._address)
-        self._correlation_id = 0
         self._message_handler = message_handler
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.endpoint = None
         self.connect(self._address)
         self._write_queue = Queue()
         self._write_queue.put("CB2")
+        self._read_buffer = ""
 
     def handle_connect(self):
         self.logger.debug("Connected to %s", self._address)
 
     def handle_read(self):
-        data = self.recv(BUFFER_SIZE)
-        self.logger.debug("Read %d bytes", len(data))
-        if len(data) == BUFFER_SIZE:  # TODO: more to read
-            raise NotImplementedError()
+        self._read_buffer += self.recv(BUFFER_SIZE)
 
+        self.logger.debug("Read %d bytes", len(self._read_buffer))
         # split frames
-        while len(data) > 0:
-            message = ClientMessage(data)
+        while len(self._read_buffer) >= 4:
+            frame_length = struct.unpack_from(FMT_LE_INT, self._read_buffer, 0)[0]
+            while frame_length > len(self._read_buffer):
+                self._read_buffer += self.recv(BUFFER_SIZE)
+                self.logger.debug("Read %d bytes", len(self._read_buffer))
+            message = ClientMessage(self._read_buffer)
+            self._read_buffer = self._read_buffer[frame_length:]
             self._message_handler(message)
-            frame_length = message.get_frame_length()
-            data = data[frame_length:]
 
     def handle_write(self):
         self._initiate_send()
@@ -219,8 +222,7 @@ class Connection(asyncore.dispatcher):
 class Invocation(object):
     def __init__(self, message, partition_id=-1, address=None, connection=None):
         self.message = message
-        self.event = threading.Event()
-        self.response = None
+        self.queue = Queue()
         self.handler = None
         self.partition_id = partition_id
         self.address = address
@@ -239,6 +241,4 @@ class Invocation(object):
         return self.address is not None
 
     def result(self, timeout=INVOCATION_TIMEOUT):
-        if self.event.wait(timeout):
-            return self.response
-        raise RuntimeError("Request timed out after %s seconds" % INVOCATION_TIMEOUT)
+        return self.queue.get(timeout)
