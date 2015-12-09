@@ -1,8 +1,5 @@
 import threading
 
-def check_not_none(val, message):
-    if val is None:
-        raise AssertionError(message)
 
 def thread_id():
     return threading.currentThread().ident

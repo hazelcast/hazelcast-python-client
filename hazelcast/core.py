@@ -3,6 +3,7 @@
 SERIALIZATION_VERSION = 1
 CLIENT_TYPE = "PHY"
 
+
 class Member(object):
     def __init__(self, address, uuid, is_lite_member, attributes):
         self.address = address
@@ -34,7 +35,7 @@ class Address(object):
         return hash((self.host, self.port))
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and (self.host, self.port ) == (other.host, other.port)
+        return isinstance(other, self.__class__) and (self.host, self.port) == (other.host, other.port)
 
 
 class DistributedObjectInfo(object):
@@ -64,6 +65,7 @@ class EntryView(object):
         self.evictionCriteriaNumber = None
         self.ttl = None
 
+
 def enum(**enums):
     """
     Utility method for defining enums
@@ -72,3 +74,22 @@ def enum(**enums):
     """
     enums['reverse'] = dict((value, key) for key, value in enums.iteritems())
     return type('Enum', (), enums)
+
+
+class HazelcastException(Exception):
+    def __init__(self, cause):
+        self._cause = cause
+
+    @property
+    def cause(self):
+        return self._cause
+
+    def __str__(self):
+        return str(self._cause)
+
+    def __repr__(self):
+        return repr(self._cause)
+
+
+class HazelcastInstanceNotActiveException(HazelcastException):
+    pass

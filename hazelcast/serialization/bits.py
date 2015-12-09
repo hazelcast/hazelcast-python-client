@@ -20,12 +20,17 @@ FMT_BE_UINT8 = ">B"
 FMT_BE_UINT16 = ">H"
 FMT_BE_LONG = ">q"
 
+BIG_ENDIAN = 2
+LITTLE_ENDIAN = 1
+
 
 def calculate_size_str(val):
     return len(val) + INT_SIZE_IN_BYTES
 
+
 def calculate_size_data(val):
     return len(val) + INT_SIZE_IN_BYTES
+
 
 def calculate_size_address(val):
     return calculate_size_str(val.host) + INT_SIZE_IN_BYTES

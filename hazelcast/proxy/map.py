@@ -2,7 +2,9 @@ from collections import namedtuple
 from hazelcast.core import enum
 from hazelcast.protocol.codec import map_add_entry_listener_codec, map_contains_key_codec, map_get_codec, map_put_codec, \
     map_size_codec, map_remove_codec
-from hazelcast.proxy.base import Proxy, check_not_none, thread_id
+from hazelcast.proxy.base import Proxy, thread_id
+from hazelcast.util import check_not_none
+
 
 EntryEventType = enum(added=1,
                       removed=1 << 1,
