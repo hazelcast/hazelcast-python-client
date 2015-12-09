@@ -52,7 +52,7 @@ def copy_bytes_into(src_buf, dst_buf, offset, length):
 
 class ClientMessage(object):
     def __init__(self, buff=None, payload_size=0):
-        if buff:
+        if buff is not None:
             self.buffer = buff
             self._read_index = 0
         else:

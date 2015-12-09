@@ -12,8 +12,8 @@ import hazelcast
 
 THREAD_COUNT = 1
 ENTRY_COUNT = 10 * 1000
-VALUE_SIZE = 100
-GET_PERCENTAGE = 40
+VALUE_SIZE = 10097
+GET_PERCENTAGE = 60
 PUT_PERCENTAGE = 40
 
 logging.basicConfig(format='%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s', datefmt="%H:%M%:%S,")

@@ -2,14 +2,13 @@ from __future__ import with_statement
 
 import asyncore
 import logging
-from Queue import Queue, Empty
 import socket
 import threading
-import struct
+from Queue import Queue, Empty
 
 from hazelcast.protocol.client_message import ClientMessage, BEGIN_END_FLAG, LISTENER_FLAG
 from hazelcast.protocol.codec import client_authentication_codec
-from hazelcast.serialization import FMT_LE_INT
+from hazelcast.serialization import INT_SIZE_IN_BYTES
 
 BUFFER_SIZE = 8192
 INVOCATION_TIMEOUT = 120
@@ -175,24 +174,45 @@ class Connection(asyncore.dispatcher):
         self.connect(self._address)
         self._write_queue = Queue()
         self._write_queue.put("CB2")
-        self._read_buffer = ""
+        self.input_buffer = ""
+        self.message = ClientMessage(buff="")
 
     def handle_connect(self):
         self.logger.debug("Connected to %s", self._address)
 
     def handle_read(self):
-        self._read_buffer += self.recv(BUFFER_SIZE)
-
-        self.logger.debug("Read %d bytes", len(self._read_buffer))
+        self.input_buffer += self.recv(BUFFER_SIZE)
+        self.logger.debug("Read %d bytes", len(self.input_buffer))
         # split frames
-        while len(self._read_buffer) >= 4:
-            frame_length = struct.unpack_from(FMT_LE_INT, self._read_buffer, 0)[0]
-            while frame_length > len(self._read_buffer):
-                self._read_buffer += self.recv(BUFFER_SIZE)
-                self.logger.debug("Read %d bytes", len(self._read_buffer))
-            message = ClientMessage(self._read_buffer)
-            self._read_buffer = self._read_buffer[frame_length:]
-            self._message_handler(message)
+        while len(self.input_buffer) > 0:
+            self.logger.debug("Reading the message")
+            complete = self.read_from()
+            if not complete:
+                self.logger.debug("message is not complete")
+                break
+            self._message_handler(self.message)
+            self.message = ClientMessage(buff="")
+
+    def read_from(self):
+        if len(self.input_buffer) < INT_SIZE_IN_BYTES:
+            self.logger.debug("Frame size couldn't be read")
+            return False
+        self.message.buffer += self.input_buffer[0:INT_SIZE_IN_BYTES]
+        self.input_buffer = self.input_buffer[INT_SIZE_IN_BYTES:]
+        while len(self.input_buffer) > 0 and not self.message_complete():
+            to_read = self.message.get_frame_length() - len(self.message.buffer)
+            self.logger.debug("Data to be read %s ,  buffer size : %s ", to_read, len(self.input_buffer))
+            if to_read > len(self.input_buffer):
+                self.message.buffer += self.input_buffer
+                self.input_buffer = ""
+                return False
+            else:
+                self.message.buffer += self.input_buffer[:to_read]
+                self.input_buffer = self.input_buffer[to_read:]
+                return True
+
+    def message_complete(self):
+        return len(self.message.buffer) == self.message.get_frame_length()
 
     def handle_write(self):
         self._initiate_send()
