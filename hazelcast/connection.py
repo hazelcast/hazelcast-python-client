@@ -241,4 +241,7 @@ class Invocation(object):
         return self.address is not None
 
     def result(self, timeout=INVOCATION_TIMEOUT):
-        return self.queue.get(timeout)
+        try:
+            return self.queue.get(timeout=timeout)
+        except Empty:
+            raise RuntimeError("Invocation timed out")
