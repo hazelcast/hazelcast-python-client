@@ -9,7 +9,7 @@ import struct
 
 from hazelcast.protocol.client_message import ClientMessage, BEGIN_END_FLAG, LISTENER_FLAG
 from hazelcast.protocol.codec import client_authentication_codec
-from hazelcast.serialization import FMT_LE_INT
+from hazelcast.serialization import FMT_LE_INT, INT_SIZE_IN_BYTES
 
 BUFFER_SIZE = 8192
 INVOCATION_TIMEOUT = 120
@@ -182,15 +182,14 @@ class Connection(asyncore.dispatcher):
 
     def handle_read(self):
         self._read_buffer += self.recv(BUFFER_SIZE)
-
         self.logger.debug("Read %d bytes", len(self._read_buffer))
         # split frames
-        while len(self._read_buffer) >= 4:
+        while len(self._read_buffer) >= INT_SIZE_IN_BYTES:
             frame_length = struct.unpack_from(FMT_LE_INT, self._read_buffer, 0)[0]
-            while frame_length > len(self._read_buffer):
-                self._read_buffer += self.recv(BUFFER_SIZE)
-                self.logger.debug("Read %d bytes", len(self._read_buffer))
-            message = ClientMessage(self._read_buffer)
+            if frame_length > len(self._read_buffer):
+                self.logger.debug("Message is not yet complete")
+                return
+            message = ClientMessage(buffer(self._read_buffer, 0, frame_length))
             self._read_buffer = self._read_buffer[frame_length:]
             self._message_handler(message)
 
@@ -244,4 +243,4 @@ class Invocation(object):
         try:
             return self.queue.get(timeout=timeout)
         except Empty:
-            raise RuntimeError("Invocation timed out")
+            raise RuntimeError("Request timed out after %d seconds" % timeout)
