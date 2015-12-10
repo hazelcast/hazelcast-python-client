@@ -1,8 +1,8 @@
 """
 Serialization Module
 """
-from bits import *
+from hazelcast.serialization.bits import *
 from hazelcast.core import HazelcastException
-from service import SerializationService
+from hazelcast.serialization.service import SerializationService
 
 

@@ -1,7 +1,6 @@
-from struct import *
-
-from bits import *
-from serialization_const import *
+from struct import unpack_from
+from hazelcast.serialization.bits import *
+from hazelcast.serialization.serialization_const import *
 
 PARTITION_HASH_OFFSET = 0
 TYPE_OFFSET = 4
@@ -105,18 +104,18 @@ def murmur_hash3_x86_32(data, offset, size, seed=0x01000193):
         h ^= h >> 13
         h = (h * 0xc2b2ae35) & 0xFFFFFFFF
         h ^= h >> 16
-        return h;
+        return h
 
     length = len(key)
     nblocks = int(length / 4)
 
-    h1 = seed;
+    h1 = seed
 
     c1 = 0xcc9e2d51
     c2 = 0x1b873593
 
     # body
-    for block_start in xrange(0, nblocks * 4, 4):
+    for block_start in range(0, nblocks * 4, 4):
         # ??? big endian?
         k1 = key[block_start + 3] << 24 | \
              key[block_start + 2] << 16 | \
@@ -125,7 +124,7 @@ def murmur_hash3_x86_32(data, offset, size, seed=0x01000193):
 
         k1 = c1 * k1 & 0xFFFFFFFF
         k1 = (k1 << 15 | k1 >> 17) & 0xFFFFFFFF  # inlined ROTL32
-        k1 = (c2 * k1) & 0xFFFFFFFF;
+        k1 = (c2 * k1) & 0xFFFFFFFF
 
         h1 ^= k1
         h1 = (h1 << 13 | h1 >> 19) & 0xFFFFFFFF  # inlined _ROTL32

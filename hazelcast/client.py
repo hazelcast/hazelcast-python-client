@@ -1,10 +1,10 @@
 import logging
 
-from connection import ConnectionManager, InvocationService
-from cluster import ClusterService, RandomLoadBalancer
+from hazelcast.connection import ConnectionManager, InvocationService
+from hazelcast.cluster import ClusterService, RandomLoadBalancer
 from hazelcast.serialization import SerializationService
-from partition import PartitionService
-from proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE
+from hazelcast.partition import PartitionService
+from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE
 
 class HazelcastClient(object):
     logger = logging.getLogger("HazelcastClient")

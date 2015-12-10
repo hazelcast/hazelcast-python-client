@@ -1,2 +1,2 @@
-from client import Config, HazelcastClient
-from config import ClientConfig
+from hazelcast.client import Config, HazelcastClient
+from hazelcast.config import ClientConfig
