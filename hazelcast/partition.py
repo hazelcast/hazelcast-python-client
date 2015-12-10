@@ -9,16 +9,19 @@ class PartitionService(object):
     def __init__(self, client):
         self.partitions = {}
         self._client = client
-        self.t = None
+        self.timer = None
 
     def start(self):
         def partition_updater():
             self._do_refresh()
-            self.t = self._schedule_refresh(10)
+            self.timer = self._schedule_refresh(10)
 
-        self.t = threading.Timer(10, partition_updater)
-        self.t.setDaemon(True)
-        self.t.start()  # TODO: find a better scheduling option
+        self.timer = threading.Timer(10, partition_updater)
+        self.timer.setDaemon(True)
+        self.timer.start()  # TODO: find a better scheduling option
+
+    def shutdown(self):
+        self.timer.cancel()
 
     def refresh(self):
         self._schedule_refresh(0)
@@ -61,3 +64,6 @@ class PartitionService(object):
                 self.partitions[partition] = addr
         self.logger.debug("Finished updating partitions")
         # TODO: exception handling
+
+    def shutdown(self):
+        pass

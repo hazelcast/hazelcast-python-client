@@ -36,5 +36,5 @@ if __name__ == '__main__':
     print("map.size", my_map.size())
     print("map.contains_key", my_map.contains_key(key))
     #
-    sleep(30)
+    client.shutdown()
     #

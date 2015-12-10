@@ -6,7 +6,7 @@ import sys
 
 from os.path import dirname
 
-sys.path.append(dirname(dirname(__file__)))
+sys.path.append(dirname(dirname(dirname(__file__))))
 
 import hazelcast
 
@@ -51,7 +51,7 @@ class ClientThread(threading.Thread):
                 self.removes += 1
 
 
-threads = [ClientThread("client-thread-%d" % i) for i in xrange(0, THREAD_COUNT)]
+threads = [ClientThread("client-thread-%d" % i) for i in range(0, THREAD_COUNT)]
 for t in threads:
     t.start()
 
@@ -59,8 +59,8 @@ start = time.time()
 counter = 1
 while counter < 1000:
     time.sleep(5)
-    print "ops per second : " + \
-          str(sum([t.gets + t.puts + t.removes for t in threads]) / (time.time() - start))
+    print("ops per second : " + \
+          str(sum([t.gets + t.puts + t.removes for t in threads]) / (time.time() - start)))
     for t in threads:
         print ("%s: put: %d get: %d: remove: %d" % (t.name, t.puts, t.gets, t.removes))
     counter += 1

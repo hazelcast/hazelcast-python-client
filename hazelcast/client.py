@@ -20,6 +20,7 @@ class HazelcastClient(object):
         self.load_balancer = RandomLoadBalancer(self.cluster)
         self.serializer = SerializationService(self)
 
+        self.invoker.start()
         self.cluster.start()
         self.partition_service.start()
         self.logger.info("Client started.")
@@ -29,6 +30,12 @@ class HazelcastClient(object):
 
     def get_queue(self, name):
         return self.proxy.get_or_create(QUEUE_SERVICE, name)
+
+    def shutdown(self):
+        self.invoker.shutdown()
+        self.cluster.shutdown()
+        self.partition_service.shutdown()
+        self.logger.info("Client shutdown.")
 
 class Config:
     def __init__(self):

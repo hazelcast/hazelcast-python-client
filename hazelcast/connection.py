@@ -31,19 +31,29 @@ class InvocationService(object):
     logger = logging.getLogger("InvocationService")
 
     def __init__(self, client):
+        self._is_live = False
         self._pending = {}
         self._listeners = {}
         self._next_correlation_id = AtomicInteger(1)
         self._client = client
         self._event_queue = Queue()
-        self._start_event_thread()
         self._pending_lock = threading.Lock()
+
+    def start(self):
+        self._is_live = True
+        self._start_event_thread()
+
+    def shutdown(self):
+        self._is_live = False
 
     def _start_event_thread(self):
         def event_loop():
-            while True:
-                event = self._event_queue.get()
-                event[0](event[1])
+            while True and self._is_live:
+                try:
+                    event = self._event_queue.get(timeout=0.1)
+                    event[0](event[1])
+                except Empty:
+                    pass
 
         self._event_thread = threading.Thread(target=event_loop)
         self._event_thread.setDaemon(True)
@@ -116,6 +126,9 @@ class InvocationService(object):
         invocation.response = message
         invocation.event.set()
 
+    def shutdown(self):
+        self._event_thread
+
 
 class ConnectionManager(object):
     logger = logging.getLogger("ConnectionManager")
@@ -178,8 +191,9 @@ class ConnectionManager(object):
 
     def io_loop(self):
         asyncore.loop(count=None, map=self._socket_map)
-        self.logger.warn("IO Thread has exited.")
 
+    def close_all(self):
+        asyncore.close_all(self._socket_map)
 
 class Connection(asyncore.dispatcher):
     def __init__(self, address, message_handler, socket_map):
