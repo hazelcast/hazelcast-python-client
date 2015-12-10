@@ -124,6 +124,7 @@ class ConnectionManager(object):
         self._io_thread = None
         self._client = client
         self.connections = {}
+        self._socket_map = {}
         self._message_handler = message_handler
 
     def get_connection(self, address):
@@ -157,7 +158,7 @@ class ConnectionManager(object):
         if address in self.connections:
             return self.connections[address]
         authenticator = authenticator or self._cluster_authenticator
-        connection = Connection(address, self._message_handler)
+        connection = Connection(address, self._message_handler, socket_map=self._socket_map)
         self._ensure_io()
         authenticator(connection)
         self.logger.info("Authenticated with %s", address)
@@ -171,13 +172,13 @@ class ConnectionManager(object):
             self._io_thread.start()
 
     def io_loop(self):
-        asyncore.loop(count=None)
+        asyncore.loop(count=None, map=self._socket_map)
         self.logger.warn("IO Thread has exited.")
 
 
 class Connection(asyncore.dispatcher):
-    def __init__(self, address, message_handler):
-        asyncore.dispatcher.__init__(self)
+    def __init__(self, address, message_handler, socket_map):
+        asyncore.dispatcher.__init__(self, map=socket_map)
         self._address = (address.host, address.port)
         self.logger = logging.getLogger("Connection{%s:%d}" % self._address)
         self._message_handler = message_handler
