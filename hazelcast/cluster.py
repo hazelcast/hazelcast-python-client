@@ -1,5 +1,6 @@
 import logging
 import random
+import threading
 
 from hazelcast.core import CLIENT_TYPE, SERIALIZATION_VERSION, Address
 
@@ -20,6 +21,7 @@ class ClusterService(object):
         self.owner_connection_address = None
         self.owner_uuid = None
         self.uuid = None
+        self._initial_list_fetched = threading.Event()
 
     def start(self):
         self._connect_to_cluster()
@@ -63,6 +65,7 @@ class ClusterService(object):
         response = self._client.invoker.invoke_on_connection(request, connection, handler).result()
         registration_id = client_add_membership_listener_codec.decode_response(response)["response"]
         self.logger.debug("Registered membership listener with ID " + registration_id)
+        self._initial_list_fetched.wait()
 
     def _handle_member(self, member, event_type):
         self.logger.debug("Got member event: %s, %s", member, event_type)
@@ -80,6 +83,7 @@ class ClusterService(object):
         self.member_list = member_list
         self.logger.info("New member list is: %s", member_list)
         self._client.partition_service.refresh()
+        self._initial_list_fetched.set()
 
 
 class RandomLoadBalancer(object):

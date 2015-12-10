@@ -121,6 +121,7 @@ class ConnectionManager(object):
     logger = logging.getLogger("ConnectionManager")
 
     def __init__(self, client, message_handler):
+        self._new_connection_mutex = threading.Lock()
         self._io_thread = None
         self._client = client
         self.connections = {}
@@ -157,13 +158,17 @@ class ConnectionManager(object):
     def get_or_connect(self, address, authenticator=None):
         if address in self.connections:
             return self.connections[address]
-        authenticator = authenticator or self._cluster_authenticator
-        connection = Connection(address, self._message_handler, socket_map=self._socket_map)
-        self._ensure_io()
-        authenticator(connection)
-        self.logger.info("Authenticated with %s", address)
-        self.connections[connection.endpoint] = connection
-        return connection
+        else:
+            with self._new_connection_mutex:
+                if address in self.connections:
+                    return self.connections[address]
+                authenticator = authenticator or self._cluster_authenticator
+                connection = Connection(address, self._message_handler, socket_map=self._socket_map)
+                self._ensure_io()
+                authenticator(connection)
+                self.logger.info("Authenticated with %s", address)
+                self.connections[connection.endpoint] = connection
+                return connection
 
     def _ensure_io(self):
         if self._io_thread is None:
