@@ -4,7 +4,7 @@ from connection import ConnectionManager, InvocationService
 from cluster import ClusterService, RandomLoadBalancer
 from hazelcast.serialization import SerializationService
 from partition import PartitionService
-from proxy import ProxyManager, MAP_SERVICE
+from proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE
 
 class HazelcastClient(object):
     logger = logging.getLogger("HazelcastClient")
@@ -26,6 +26,9 @@ class HazelcastClient(object):
 
     def get_map(self, name):
         return self.proxy.get_or_create(MAP_SERVICE, name)
+
+    def get_queue(self, name):
+        return self.proxy.get_or_create(QUEUE_SERVICE, name)
 
 class Config:
     def __init__(self):

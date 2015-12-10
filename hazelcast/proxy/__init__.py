@@ -1,9 +1,11 @@
 from hazelcast.protocol.codec import client_create_proxy_codec
 from hazelcast.proxy.map import MapProxy
+from hazelcast.proxy.queue import QueueProxy
 
 MAP_SERVICE = "hz:impl:mapService"
+QUEUE_SERVICE = "hz:impl:queueService"
 
-_proxy_init = {MAP_SERVICE: MapProxy}
+_proxy_init = {MAP_SERVICE: MapProxy, QUEUE_SERVICE: QueueProxy}
 
 
 class ProxyManager(object):

@@ -30,6 +30,9 @@ class Proxy(object):
         partition_id = self._client.partition_service.get_partition_id(key_data)
         return self._client.invoker.invoke_on_partition(request, partition_id).result()
 
+    def _invoke_on_partition(self, request, partition_id):
+        return self._client.invoker.invoke_on_partition(request, partition_id).result()
+
     def _start_listening(self, request, event_handler):
         return self._client.invoker.invoke_on_random_target(request, event_handler=event_handler).result()
 
