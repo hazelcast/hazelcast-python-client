@@ -1,7 +1,8 @@
 import logging
 
-from hazelcast.connection import ConnectionManager, InvocationService
+from hazelcast.connection import ConnectionManager
 from hazelcast.cluster import ClusterService, RandomLoadBalancer
+from hazelcast.invocation import InvocationService
 from hazelcast.serialization import SerializationService
 from hazelcast.partition import PartitionService
 from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE
