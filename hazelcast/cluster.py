@@ -86,7 +86,7 @@ class ClusterService(object):
         self._initial_list_fetched.set()
 
     def shutdown(self):
-        self._client.connection_manager.close_all()
+        pass
 
 class RandomLoadBalancer(object):
     def __init__(self, cluster):

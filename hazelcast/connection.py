@@ -6,10 +6,13 @@ from Queue import Queue, Empty
 import socket
 import threading
 import struct
+import time
 
 from hazelcast.protocol.client_message import ClientMessage, BEGIN_END_FLAG, LISTENER_FLAG
 from hazelcast.protocol.codec import client_authentication_codec
 from hazelcast.serialization import FMT_LE_INT, INT_SIZE_IN_BYTES
+
+EVENT_LOOP_COUNT = 100
 
 BUFFER_SIZE = 8192
 INVOCATION_TIMEOUT = 120
@@ -45,17 +48,37 @@ class InvocationService(object):
 
     def shutdown(self):
         self._is_live = False
+        self._event_thread.join()
 
     def _start_event_thread(self):
-        def event_loop():
-            while True and self._is_live:
-                try:
-                    event = self._event_queue.get(timeout=0.1)
-                    event[0](event[1])
-                except Empty:
-                    pass
+        def handle_event(event):
+            try:
+                event[0](event[1])
+            except:
+                self.logger.warn("Error handling event %s", event, exc_info=True)
 
-        self._event_thread = threading.Thread(target=event_loop)
+        def service_timeouts():
+            now = time.time()
+            for correlation_id, invocation in dict(self._pending).iteritems():
+                if invocation.check_timer(now):
+                    try:
+                        self._pending.pop(correlation_id)
+                    except KeyError:
+                        pass
+
+        def event_loop():
+            self.logger.debug("Starting event thread")
+            while True and self._is_live:
+                for _ in xrange(0, EVENT_LOOP_COUNT):
+                    try:
+                        event = self._event_queue.get(timeout=0.01)
+                        handle_event(event)
+                    except Empty:
+                        break
+                service_timeouts()
+
+        self.logger.debug("Event thread exited.")
+        self._event_thread = threading.Thread(target=event_loop, name="hazelcast-event-handler-loop")
         self._event_thread.setDaemon(True)
         self._event_thread.start()
 
@@ -93,7 +116,7 @@ class InvocationService(object):
 
     def _send(self, invocation, connection):
         correlation_id = self._next_correlation_id.increment_and_get()
-        message = invocation.message
+        message = invocation.request
         message.set_correlation_id(correlation_id)
         message.set_partition_id(invocation.partition_id)
         with self._pending_lock:
@@ -123,12 +146,7 @@ class InvocationService(object):
                 self.logger.warn("Got message with unknown correlation id: %d", correlation_id)
                 return
             invocation = self._pending.pop(correlation_id)
-        invocation.response = message
-        invocation.event.set()
-
-    def shutdown(self):
-        self._event_thread
-
+        invocation.set_response(message)
 
 class ConnectionManager(object):
     logger = logging.getLogger("ConnectionManager")
@@ -140,6 +158,11 @@ class ConnectionManager(object):
         self.connections = {}
         self._socket_map = {}
         self._message_handler = message_handler
+        self._is_live = False
+
+    def start(self):
+        self._is_live = True
+        self._start_io_loop()
 
     def get_connection(self, address):
         if address in self.connections:
@@ -177,23 +200,29 @@ class ConnectionManager(object):
                     return self.connections[address]
                 authenticator = authenticator or self._cluster_authenticator
                 connection = Connection(address, self._message_handler, socket_map=self._socket_map)
-                self._ensure_io()
                 authenticator(connection)
                 self.logger.info("Authenticated with %s", address)
                 self.connections[connection.endpoint] = connection
                 return connection
 
-    def _ensure_io(self):
-        if self._io_thread is None:
-            self._io_thread = threading.Thread(target=self.io_loop)
-            self._io_thread.daemon = True
-            self._io_thread.start()
+    def _start_io_loop(self):
+        self._io_thread = threading.Thread(target=self.io_loop, name="hazelcast-io-loop")
+        self._io_thread.daemon = True
+        self._io_thread.start()
 
     def io_loop(self):
-        asyncore.loop(count=None, map=self._socket_map)
+        self.logger.debug("Starting IO Thread")
+        while self._is_live:
+            try:
+                asyncore.loop(count=100, timeout=0.01, map=self._socket_map)
+            except:
+                self.logger.warn("IO Thread exited unexpectedly", exc_info=True)
+        self.logger.debug("IO Thread exited.")
 
-    def close_all(self):
+    def shutdown(self):
         asyncore.close_all(self._socket_map)
+        self._is_live = False
+        self._io_thread.join()
 
 class Connection(asyncore.dispatcher):
     def __init__(self, address, message_handler, socket_map):
@@ -201,12 +230,13 @@ class Connection(asyncore.dispatcher):
         self._address = (address.host, address.port)
         self.logger = logging.getLogger("Connection{%s:%d}" % self._address)
         self._message_handler = message_handler
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.endpoint = None
-        self.connect(self._address)
         self._write_queue = Queue()
         self._write_queue.put("CB2")
         self._read_buffer = ""
+        self.endpoint = None
+
+        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.connect(self._address)
 
     def handle_connect(self):
         self.logger.debug("Connected to %s", self._address)
@@ -244,13 +274,15 @@ class Connection(asyncore.dispatcher):
 
 
 class Invocation(object):
-    def __init__(self, message, partition_id=-1, address=None, connection=None):
-        self.message = message
-        self.event = threading.Event()
+    def __init__(self, request, partition_id=-1, address=None, connection=None, timeout=INVOCATION_TIMEOUT):
+        self._event = threading.Event()
+        self._response = None
+        self._exception = None
+        self._timeout = timeout + time.time()
+        self.request = request
         self.handler = None
         self.partition_id = partition_id
         self.address = address
-        self.response = None
         self.connection = connection
 
     def has_connection(self):
@@ -265,6 +297,26 @@ class Invocation(object):
     def has_address(self):
         return self.address is not None
 
-    def result(self, timeout=INVOCATION_TIMEOUT):
-        self.event.wait()  # TODO: adding timeout has large performance impact
-        return self.response
+    def check_timer(self, now):
+        if self.completed or now < self._timeout:
+            return False
+        self.set_exception(RuntimeError("Request timed out."))
+        return True
+
+    def set_response(self, response):
+        self._response = response
+        self._event.set()
+
+    def set_exception(self, exception):
+        self._exception = exception
+        self._event.set()
+
+    def result(self):
+        self._event.wait()
+        if self._response is not None:
+            return self._response
+        raise self._exception
+
+    @property
+    def completed(self):
+        return self._response is not None or self._exception is not None

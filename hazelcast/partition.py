@@ -12,6 +12,8 @@ class PartitionService(object):
         self.timer = None
 
     def start(self):
+        self.logger.debug("Starting partition service")
+
         def partition_updater():
             self._do_refresh()
             self.timer = self._schedule_refresh(10)
@@ -65,5 +67,3 @@ class PartitionService(object):
         self.logger.debug("Finished updating partitions")
         # TODO: exception handling
 
-    def shutdown(self):
-        pass
