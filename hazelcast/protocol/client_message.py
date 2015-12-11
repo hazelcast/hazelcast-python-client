@@ -21,7 +21,6 @@ Any request parameter, response or event data will be carried in the payload.
 
 """
 import binascii
-import ctypes
 import struct
 
 from hazelcast.serialization.data import *
@@ -46,17 +45,13 @@ DATA_OFFSET_FIELD_OFFSET = PARTITION_ID_FIELD_OFFSET + INT_SIZE_IN_BYTES
 HEADER_SIZE = DATA_OFFSET_FIELD_OFFSET + SHORT_SIZE_IN_BYTES
 
 
-def copy_bytes_into(src_buf, dst_buf, offset, length):
-    ctypes.memmove(ctypes.byref(dst_buf, offset), src_buf, length)
-
-
 class ClientMessage(object):
     def __init__(self, buff=None, payload_size=0):
         if buff:
             self.buffer = buff
             self._read_index = 0
         else:
-            self.buffer = ctypes.create_string_buffer(HEADER_SIZE + payload_size)
+            self.buffer = bytearray(HEADER_SIZE + payload_size)
             self.set_data_offset(HEADER_SIZE)
             self._write_index = 0
         self._retrable = False
@@ -145,7 +140,7 @@ class ClientMessage(object):
         # length
         self.append_int(length)
         # copy content
-        copy_bytes_into(arr, self.buffer, self._write_offset(), length)
+        self.buffer[self._write_offset(): self._write_offset() + length] = arr[:]
         self._write_index += length
 
     # PAYLOAD READ

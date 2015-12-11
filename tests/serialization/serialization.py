@@ -3,7 +3,7 @@ import unittest
 from hazelcast.serialization.service import SerializationService
 
 
-class MyTestCase(unittest.TestCase):
+class SerializationTestCase(unittest.TestCase):
     def test_test_dummy_encode_decode(self):
         service = SerializationService(None)
         obj = "Test obj"

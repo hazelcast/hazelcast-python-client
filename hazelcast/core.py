@@ -76,7 +76,7 @@ def enum(**enums):
     return type('Enum', (), enums)
 
 
-class HazelcastException(Exception):
+class HazelcastError(Exception):
     def __init__(self, cause):
         self._cause = cause
 
@@ -91,5 +91,5 @@ class HazelcastException(Exception):
         return repr(self._cause)
 
 
-class HazelcastInstanceNotActiveException(HazelcastException):
+class HazelcastInstanceNotActiveError(HazelcastError):
     pass

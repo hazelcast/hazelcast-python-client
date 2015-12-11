@@ -1,32 +1,36 @@
 from threading import RLock
 
+from api import *
 from data import *
-from serializer import *
 from hazelcast.core import *
+from serializer import *
 
 EMPTY_PARTITIONING_STRATEGY = lambda key: None
 
 
 def handle_exception(e):
     if isinstance(e, MemoryError):
+        # TODO
         print("OUT OF MEMORY")
         raise e
-    elif isinstance(e, HazelcastSerializationException):
+    elif isinstance(e, HazelcastSerializationError):
         raise e
     else:
-        raise HazelcastSerializationException(e)
+        raise HazelcastSerializationError(e)
 
 
-class HazelcastSerializationException(HazelcastException):
+class HazelcastSerializationError(HazelcastError):
     def __init__(self, message):
         self.message = message
 
 
 def create_data_output():
+    # TODO
     return None
 
 
 def create_data_input():
+    # TODO
     return None
 
 
@@ -39,20 +43,18 @@ def index_for_default_type(type_id):
 
 
 def is_dataserializable(obj_type):
-    # TODO
-    return False
+    return isinstance(obj_type, IdentifiedDataSerializable)
 
 
 def is_portable(obj_type):
-    # TODO
-    return False
+    return isinstance(obj_type, Portable)
 
 
-def create_serializer_adaptor(serializer, service):
-    if isinstance(serializer, StreamSerializer):
-        return StreamSerializerAdapter(service, serializer)
-    elif isinstance(serializer, ByteArraySerializer):
-        return ByteArraySerializerAdaptor(service, serializer)
+def create_buffer_serializer_wrapper(serializer):
+    if isinstance(serializer, BufferSerializer):
+        return BufferSerializerWrapper(serializer)
+    elif isinstance(serializer, StreamSerializer):
+        return serializer
     else:
         raise ValueError("Serializer must be instance of either StreamSerializer or ByteArraySerializer!")
 
@@ -61,23 +63,11 @@ class BaseSerializationService(object):
     _global_partition_strategy = None
 
     def __init__(self, version, global_partition_strategy, output_buffer_size):
+        self._registry = SerializerRegistry()
         self._version = version
         self._global_partition_strategy = global_partition_strategy
         self._output_buffer_size = output_buffer_size
-
         self._active = True
-        self._global_serializer_adaptor = None
-        self._data_serializer_adaptor = None
-        self._null_serializer_adapter = None
-        self._python_serializer_adapter = None
-
-        self._constant_type_ids = []  # array of serializer_adaptor
-        self._constant_type_dict = {}  # dict of class:serializer_adaptor
-
-        self._id_dic = {}  # dict of type_id:serializer_adaptor
-        self._type_dict = {}  # dict of class:serializer_adaptor
-
-        self._registration_lock = RLock()
 
     def to_data(self, obj, partitioning_strategy=_global_partition_strategy):
         """
@@ -121,9 +111,9 @@ class BaseSerializationService(object):
             serializer = self.serializer_by_type_id(type_id)
             if serializer is None:
                 if self._active:
-                    raise HazelcastSerializationException("Missing Serializer for type-id:{}".format(type_id))
+                    raise HazelcastSerializationError("Missing Serializer for type-id:{}".format(type_id))
                 else:
-                    raise HazelcastInstanceNotActiveException()
+                    raise HazelcastInstanceNotActiveError()
             return serializer.read(inp)
         except Exception as e:
             handle_exception(e)
@@ -133,7 +123,7 @@ class BaseSerializationService(object):
 
     def write_object(self, out, obj):
         if isinstance(obj, Data):
-            raise HazelcastSerializationException("Cannot write a Data instance! Use write_data(out, data) instead.")
+            raise HazelcastSerializationError("Cannot write a Data instance! Use write_data(out, data) instead.")
         try:
             serializer = self.serializer_for(obj)
             out.write_int(serializer.get_type_id())
@@ -147,9 +137,9 @@ class BaseSerializationService(object):
             serializer = self.serializer_by_type_id(type_id)
             if serializer is None:
                 if self._active:
-                    raise HazelcastSerializationException("Missing Serializer for type-id:{}".format(type_id))
+                    raise HazelcastSerializationError("Missing Serializer for type-id:{}".format(type_id))
                 else:
-                    raise HazelcastInstanceNotActiveException()
+                    raise HazelcastInstanceNotActiveError()
             return serializer.read(inp)
         except Exception as e:
             handle_exception(e)
@@ -161,6 +151,22 @@ class BaseSerializationService(object):
             partitioning_key = self.to_data(pk, EMPTY_PARTITIONING_STRATEGY)
             partitioning_hash = 0 if partitioning_key is None else partitioning_key.get_partition_hash()
         return partitioning_hash
+
+
+class SerializerRegistry(object):
+    def __init__(self):
+        self._global_serializer = None
+        self._data_serializer = None
+        self._null_serializer = None
+        self._python_serializer = None
+
+        self._constant_type_ids = []  # array of serializer
+        self._constant_type_dict = {}  # dict of class:serializer
+
+        self._id_dic = {}  # dict of type_id:serializer
+        self._type_dict = {}  # dict of class:serializer
+
+        self._registration_lock = RLock()
 
     def serializer_by_type_id(self, type_id):
         """
@@ -212,9 +218,9 @@ class BaseSerializationService(object):
 
         if serializer is not None:
             if self._active:
-                raise HazelcastSerializationException("There is no suitable serializer for:" + str(obj_type))
+                raise HazelcastSerializationError("There is no suitable serializer for:" + str(obj_type))
             else:
-                raise HazelcastInstanceNotActiveException()
+                raise HazelcastInstanceNotActiveError()
         return serializer
 
     def lookup_default_serializer(self, obj_type):
@@ -241,7 +247,7 @@ class BaseSerializationService(object):
         return self._global_serializer_adaptor
 
     def register_constant_serializer(self, obj_type, serializer):
-        serializer_adaptor = create_serializer_adaptor(serializer)
+        serializer_adaptor = create_buffer_serializer_wrapper(serializer)
         self.register_constant_serializer_adaptor(obj_type, serializer_adaptor)
 
     def register_constant_serializer_adaptor(self, obj_type, serializer_adaptor):
@@ -249,26 +255,23 @@ class BaseSerializationService(object):
         self._constant_type_ids[index_for_default_type(serializer_adaptor.get_type_id())] = serializer_adaptor
 
     def safe_register_serializer(self, obj_type, serializer):
-        serializer_adaptor = create_serializer_adaptor(serializer)
-        self.safe_register_serializer_adaptor(obj_type, serializer_adaptor)
-
-    def safe_register_serializer_adaptor(self, obj_type, serializer_adaptor):
+        stream_serializer = create_buffer_serializer_wrapper(serializer)
         with self._registration_lock:
             if self._constant_type_dict.has_key(obj_type):
                 raise ValueError("[{}] serializer cannot be overridden!".format(obj_type))
             current = self._type_dict[obj_type]
-            if current is not None and current.get_implementation().__class__ != serializer_adaptor.get_implementation().__class__:
+            if current is not None and current.get_implementation().__class__ != stream_serializer.get_implementation().__class__:
                 raise ValueError(
                     "Serializer[{}] has been already registered for type: {}".format(current.get_implementation(), obj_type))
             else:
-                self._constant_type_dict[obj_type] = serializer_adaptor
-            current = self._id_dic[serializer_adaptor.get_type_id()]
-            if current is not None and current.get_implementation().__class__ != serializer_adaptor.get_implementation().__class__:
+                self._constant_type_dict[obj_type] = stream_serializer
+            current = self._id_dic[stream_serializer.get_type_id()]
+            if current is not None and current.get_implementation().__class__ != stream_serializer.get_implementation().__class__:
                 raise ValueError(
                     "Serializer[{}] has been already registered for type-id: {}".format(current.get_implementation(),
-                                                                                        serializer_adaptor.get_type_id()))
+                                                                                        stream_serializer.get_type_id()))
             else:
-                self._id_dic[serializer_adaptor.get_type_id()] = serializer_adaptor
+                self._id_dic[stream_serializer.get_type_id()] = stream_serializer
             return current is None
 
     def register_from_super_type(self, obj_type, super_type):
@@ -276,4 +279,3 @@ class BaseSerializationService(object):
         if serializer_adaptor is not None:
             self.safe_register_serializer_adaptor(obj_type, serializer_adaptor)
         return serializer_adaptor
-
