@@ -4,7 +4,7 @@ from api import *
 from bits import *
 
 
-class ObjectDataOutput(ObjectDataOutput):
+class _ObjectDataOutput(ObjectDataOutput):
     def __init__(self, init_size, serialization_service, is_big_endian=True):
         self._init_size = init_size
         self._buffer = bytearray(init_size)
@@ -20,7 +20,7 @@ class ObjectDataOutput(ObjectDataOutput):
         self._FMT_DOUBLE = FMT_BE_DOUBLE if self._is_big_endian else FMT_LE_DOUBLE
 
     def __write(self, val):
-        self.__ensure_available(BYTE_SIZE_IN_BYTES)
+        self._ensure_available(BYTE_SIZE_IN_BYTES)
         self._buffer[self._pos] = val
         self._pos += BYTE_SIZE_IN_BYTES
 
@@ -31,8 +31,8 @@ class ObjectDataOutput(ObjectDataOutput):
             raise IndexError()
         elif length == 0:
             return
-        self.__ensure_available()
-        self._buffer[self._write_offset(): self._write_offset() + length] = buff[:]
+        self._ensure_available(_len)
+        self._buffer[self._pos: self._pos + _len] = buff[:]
         self._pos += _len
 
     def write_boolean(self, bool):
@@ -42,37 +42,45 @@ class ObjectDataOutput(ObjectDataOutput):
         self.__write(val)
 
     def write_short(self, val):
+        self._ensure_available(SHORT_SIZE_IN_BYTES)
         struct.pack_into(self._FMT_INT, self._buffer, self._pos, val)
         self._pos += SHORT_SIZE_IN_BYTES
 
     def write_char(self, val):
+        self._ensure_available(CHAR_SIZE_IN_BYTES)
         struct.pack_into(self._FMT_CHAR, self._buffer, self._pos, val)
         self._pos += CHAR_SIZE_IN_BYTES
 
     def write_int(self, val):
+        self._ensure_available(INT_SIZE_IN_BYTES)
         struct.pack_into(self._FMT_INT, self._buffer, self._pos, val)
         self._pos += INT_SIZE_IN_BYTES
 
+    def write_int_big_endian(self, val):
+        self._ensure_available(INT_SIZE_IN_BYTES)
+        struct.pack_into(FMT_BE_INT, self._buffer, self._pos, val)
+        self._pos += INT_SIZE_IN_BYTES
+
     def write_long(self, val):
+        self._ensure_available(LONG_SIZE_IN_BYTES)
         struct.pack_into(self._FMT_LONG, self._buffer, self._pos, val)
         self._pos += LONG_SIZE_IN_BYTES
 
     def write_float(self, val):
+        self._ensure_available(FLOAT_SIZE_IN_BYTES)
         struct.pack_into(self._FMT_FLOAT, self._buffer, self._pos, val)
         self._pos += FLOAT_SIZE_IN_BYTES
 
     def write_double(self, val):
+        self._ensure_available(DOUBLE_SIZE_IN_BYTES)
         struct.pack_into(self._FMT_DOUBLE, self._buffer, self._pos, val)
         self._pos += DOUBLE_SIZE_IN_BYTES
 
-    # def write_bytes(self, string):
-    #     raise NotImplementedError()
-    #
-    # def write_chars(self, val):
-    #     raise NotImplementedError()
-
     def write_utf(self, val):
-        self.append_byte_array(val.encode("utf-8"))
+        _len = len(val.encode("utf-8")) if val is not None else NULL_ARRAY_LENGTH
+        self.write_int(_len)
+        if _len > 0:
+            self.write_from(val)
 
     def write_byte_array(self, val):
         _len = len(val) if val is not None else NULL_ARRAY_LENGTH
@@ -81,28 +89,28 @@ class ObjectDataOutput(ObjectDataOutput):
             self.write_from(val)
 
     def write_boolean_array(self, val):
-        self.__write_array_fnc(val, self.write_boolean)
+        self._write_array_fnc(val, self.write_boolean)
 
     def write_char_array(self, val):
-        self.__write_array_fnc(val, self.write_char)
+        self._write_array_fnc(val, self.write_char)
 
     def write_int_array(self, val):
-        self.__write_array_fnc(val, self.write_int)
+        self._write_array_fnc(val, self.write_int)
 
     def write_long_array(self, val):
-        self.__write_array_fnc(val, self.write_long)
+        self._write_array_fnc(val, self.write_long)
 
     def write_double_array(self, val):
-        self.__write_array_fnc(val, self.write_double)
+        self._write_array_fnc(val, self.write_double)
 
     def write_float_array(self, val):
-        self.__write_array_fnc(val, self.write_float)
+        self._write_array_fnc(val, self.write_float)
 
     def write_short_array(self, val):
-        self.__write_array_fnc(val, self.write_short)
+        self._write_array_fnc(val, self.write_short)
 
     def write_utf_array(self, val):
-        self.__write_array_fnc(val, self.write_utf)
+        self._write_array_fnc(val, self.write_utf)
 
     def write_object(self, val):
         self._service.write_object(self, val)
@@ -115,22 +123,22 @@ class ObjectDataOutput(ObjectDataOutput):
         if self._buffer is None or self._pos == 0:
             return bytearray()
         new_buffer = bytearray(self._pos)
-        new_buffer[:] = self._buffer[:]
+        new_buffer[:] = self._buffer[:self._pos]
         return new_buffer
 
     def is_big_endian(self):
         return self._is_big_endian
 
     # HELPERS
-    def __write_array_fnc(self, val, item_write_fnc):
+    def _write_array_fnc(self, val, item_write_fnc):
         _len = len(val) if val is not None else NULL_ARRAY_LENGTH
         self.write_int(_len)
         if _len > 0:
             for item in val:
                 item_write_fnc(item)
 
-    def __ensure_available(self, length):
-        if self.__available() < length:
+    def _ensure_available(self, length):
+        if self._available() < length:
             if self._buffer is None:
                 buffer_length = len(self._buffer)
                 new_length = max(buffer_length << 1, buffer_length + length)
@@ -138,8 +146,8 @@ class ObjectDataOutput(ObjectDataOutput):
                 new_buffer[self._pos: self._pos + buffer_length] = self._buffer[:]
                 self._buffer = new_buffer
             else:
-                new_length = length * 2 if length > self._initialSize / 2 else self._initialSize
+                new_length = length * 2 if length > self._init_size / 2 else self._init_size
                 self._buffer = bytearray(new_length)
 
-    def __available(self):
+    def _available(self):
         return len(self._buffer) if self._buffer is not None else 0

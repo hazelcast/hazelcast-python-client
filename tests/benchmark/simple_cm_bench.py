@@ -3,7 +3,7 @@ import threading
 import time
 from os.path import dirname
 
-from codec_bench import Bench
+from tests.benchmark.codec_bench import Bench
 
 sys.path.append(dirname(dirname(__file__)))
 

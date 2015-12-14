@@ -77,18 +77,17 @@ def enum(**enums):
 
 
 class HazelcastError(Exception):
-    def __init__(self, cause):
+    def __init__(self, cause=None):
         self._cause = cause
 
-    @property
     def cause(self):
         return self._cause
 
-    def __str__(self):
-        return str(self._cause)
-
-    def __repr__(self):
-        return repr(self._cause)
+    # def __str__(self):
+    #     return str(self._cause)
+    #
+    # def __repr__(self):
+    #     return repr(self._cause)
 
 
 class HazelcastInstanceNotActiveError(HazelcastError):

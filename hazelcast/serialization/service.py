@@ -1,23 +1,54 @@
-import binascii
 import logging
-import marshal
 
-from hazelcast.serialization.data import Data
+from hazelcast.serialization.base import *
+from hazelcast.serialization.serializer import *
 
-DATA_HEADER = binascii.unhexlify("0000000000000066")
+DEFAULT_OUT_BUFFER_SIZE = 4 * 1024
 
 
-class SerializationService(object):
+def default_partition_strategy(key):
+    if hasattr(key, "get_partition_key"):
+        return key.get_partition_key()
+    return None
+
+
+class SerializationServiceV1(BaseSerializationService):
     logger = logging.getLogger("SerializationService")
 
-    def __init__(self, client):
-        self._client = client
+    def __init__(self, version=1, global_partition_strategy=default_partition_strategy,
+                 output_buffer_size=DEFAULT_OUT_BUFFER_SIZE,
+                 is_big_endian=True):
+        super(SerializationServiceV1, self).__init__(version, global_partition_strategy, output_buffer_size, is_big_endian)
+        self._register_constant_serializers()
 
-    def to_data(self, obj):
-        buff = DATA_HEADER + marshal.dumps(obj)
-        return Data(buff)
+    def _register_constant_serializers(self):
+        self._registry.register_constant_serializer(self._registry._null_serializer, type(None))
+        self._registry.register_constant_serializer(ByteSerializer())
+        self._registry.register_constant_serializer(BooleanSerializer(), bool)
+        self._registry.register_constant_serializer(CharSerializer())
+        self._registry.register_constant_serializer(ShortSerializer())
+        self._registry.register_constant_serializer(IntegerSerializer())
+        self._registry.register_constant_serializer(LongSerializer())
+        self._registry.register_constant_serializer(FloatSerializer())
+        self._registry.register_constant_serializer(DoubleSerializer())
+        self._registry.register_constant_serializer(StringSerializer())
+        # Arrays of primitives and String
+        self._registry.register_constant_serializer(ByteArraySerializer())
+        self._registry.register_constant_serializer(BooleanArraySerializer())
+        self._registry.register_constant_serializer(CharArraySerializer())
+        self._registry.register_constant_serializer(ShortArraySerializer())
+        self._registry.register_constant_serializer(IntegerArraySerializer())
+        self._registry.register_constant_serializer(LongArraySerializer())
+        self._registry.register_constant_serializer(FloatArraySerializer())
+        self._registry.register_constant_serializer(DoubleArraySerializer())
+        self._registry.register_constant_serializer(StringArraySerializer())
+        # EXTENSIONS
+        self._registry.register_constant_serializer(DateTimeSerializer(), datetime)
+        self._registry.register_constant_serializer(BigIntegerSerializer())
+        self._registry.register_constant_serializer(BigDecimalSerializer())
+        self._registry.register_constant_serializer(JavaClassSerializer())
+        self._registry.register_constant_serializer(JavaEnumSerializer())
+        self._registry.register_constant_serializer(ArrayListSerializer(), list)
+        self._registry.register_constant_serializer(LinkedListSerializer())
 
-    def to_object(self, data):
-        if data is None:
-            return None
-        return marshal.loads(data.to_bytes()[8:])
+        self._registry.safe_register_serializer(self._registry._python_serializer)

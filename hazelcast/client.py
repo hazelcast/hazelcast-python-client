@@ -3,7 +3,7 @@ import logging
 from hazelcast.connection import ConnectionManager
 from hazelcast.cluster import ClusterService, RandomLoadBalancer
 from hazelcast.invocation import InvocationService
-from hazelcast.serialization import SerializationService
+from hazelcast.serialization import SerializationServiceV1
 from hazelcast.partition import PartitionService
 from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE
 
@@ -19,7 +19,7 @@ class HazelcastClient(object):
         self.partition_service = PartitionService(self)
         self.proxy = ProxyManager(self)
         self.load_balancer = RandomLoadBalancer(self.cluster)
-        self.serializer = SerializationService(self)
+        self.serializer = SerializationServiceV1(self)
 
         self.connection_manager.start()
         self.invoker.start()

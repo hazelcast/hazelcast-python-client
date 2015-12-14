@@ -189,3 +189,32 @@ class Portable(object):
 
     def get_class_id(self):
         pass
+
+
+class StreamSerializer(object):
+    def write(self, out, obj):
+        pass
+
+    def read(self, inp):
+        return None
+
+    def get_type_id(self):
+        pass
+
+    def destroy(self):
+        pass
+
+
+class BufferSerializer(object):
+    def write(self, obj):
+        pass
+
+    def read(self, buff):
+        return None
+
+    def get_type_id(self):
+        pass
+
+    def destroy(self):
+        pass
+

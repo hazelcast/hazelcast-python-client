@@ -5,12 +5,12 @@ from bits import *
 from hazelcast.serialization.data import Data
 
 
-class ObjectDataInput(ObjectDataInput):
-    def __init__(self, buff, serialization_service, is_big_endian=True):
+class _ObjectDataInput(ObjectDataInput):
+    def __init__(self, buff, offset=0, serialization_service=None, is_big_endian=True):
         self._buffer = buff
         self._service = serialization_service
         self._is_big_endian = is_big_endian
-        self._pos = 0
+        self._pos = offset
         self._size = len(buff)
         # Local cache struct formats according to endianness
         self._FMT_INT8 = FMT_BE_INT8 if self._is_big_endian else FMT_LE_INT8
@@ -43,39 +43,59 @@ class ObjectDataInput(ObjectDataInput):
         return self.read_byte() != 0
 
     def read_byte(self):
-        self.__check_available(self._pos, BYTE_SIZE_IN_BYTES)
+        self._check_available(self._pos, BYTE_SIZE_IN_BYTES)
         return self._read_from_buff(self._FMT_INT8, BYTE_SIZE_IN_BYTES)
 
     def read_unsigned_byte(self):
-        self.__check_available(self._pos, BYTE_SIZE_IN_BYTES)
+        self._check_available(self._pos, BYTE_SIZE_IN_BYTES)
         return self._read_from_buff(self._FMT_UINT8, BYTE_SIZE_IN_BYTES)
 
     def read_short(self):
-        self.__check_available(self._pos, SHORT_SIZE_IN_BYTES)
+        self._check_available(self._pos, SHORT_SIZE_IN_BYTES)
         return self._read_from_buff(self._FMT_SHORT, SHORT_SIZE_IN_BYTES)
 
     def read_unsigned_short(self):
-        self.__check_available(self._pos, SHORT_SIZE_IN_BYTES)
+        self._check_available(self._pos, SHORT_SIZE_IN_BYTES)
         return self._read_from_buff(self._FMT_CHAR, SHORT_SIZE_IN_BYTES)
 
     def read_int(self):
-        self.__check_available(self._pos, INT_SIZE_IN_BYTES)
+        self._check_available(self._pos, INT_SIZE_IN_BYTES)
         return self._read_from_buff(self._FMT_INT, INT_SIZE_IN_BYTES)
 
     def read_long(self):
-        self.__check_available(self._pos, LONG_SIZE_IN_BYTES)
+        self._check_available(self._pos, LONG_SIZE_IN_BYTES)
         return self._read_from_buff(self._FMT_LONG, LONG_SIZE_IN_BYTES)
 
     def read_float(self):
-        self.__check_available(self._pos, FLOAT_SIZE_IN_BYTES)
+        self._check_available(self._pos, FLOAT_SIZE_IN_BYTES)
         return self._read_from_buff(self._FMT_FLOAT, FLOAT_SIZE_IN_BYTES)
 
     def read_double(self):
-        self.__check_available(self._pos, DOUBLE_SIZE_IN_BYTES)
+        self._check_available(self._pos, DOUBLE_SIZE_IN_BYTES)
         return self._read_from_buff(self._FMT_DOUBLE, DOUBLE_SIZE_IN_BYTES)
 
     def read_utf(self):
-        self.read_byte_array().decode("utf-8")
+        length = self.read_int()
+        if length == NULL_ARRAY_LENGTH:
+            return None
+        result = bytearray()
+        for i in xrange(0, length):
+            _first_byte = self.read_byte()
+            b = _first_byte >> 4
+            if 0 <= b <= 7:
+                result.append(_first_byte)
+                continue
+            if 12 <= b <= 13:
+                result.append((b & 0x01F) << 6)
+                result.append(self.read_byte() & 0x3F)
+                continue
+            if b == 14:
+                result.append((b & 0x01F) << 12)
+                result.append((self.read_byte() & 0x3F) << 6)
+                result.append(self.read_byte() & 0x3F)
+                continue
+            raise UnicodeDecodeError("Malformed utf-8 content")
+        return result
 
     def read_byte_array(self):
         length = self.read_int()
@@ -87,31 +107,31 @@ class ObjectDataInput(ObjectDataInput):
         return result
 
     def read_boolean_array(self):
-        return self.__read_array_fnc(self.read_boolean)
+        return self._read_array_fnc(self.read_boolean)
 
     def read_char_array(self):
-        return self.__read_array_fnc(self.read_char)
+        return self._read_array_fnc(self.read_char)
 
     def read_int_array(self):
-        return self.__read_array_fnc(self.read_int)
+        return self._read_array_fnc(self.read_int)
 
     def read_long_array(self):
-        return self.__read_array_fnc(self.read_long)
+        return self._read_array_fnc(self.read_long)
 
     def read_double_array(self):
-        return self.__read_array_fnc(self.read_double)
+        return self._read_array_fnc(self.read_double)
 
     def read_float_array(self):
-        return self.__read_array_fnc(self.read_float)
+        return self._read_array_fnc(self.read_float)
 
     def read_short_array(self):
-        return self.__read_array_fnc(self.read_short)
+        return self._read_array_fnc(self.read_short)
 
     def read_utf_array(self):
-        return self.__read_array_fnc(self.read_utf)
+        return self._read_array_fnc(self.read_utf)
 
     def read_object(self):
-        return self._service.read_objec()
+        return self._service.read_object(self)
 
     def read_data(self):
         buff = self.read_byte_array()
@@ -121,7 +141,7 @@ class ObjectDataInput(ObjectDataInput):
         return self._is_big_endian
 
     # HELPERS
-    def __check_available(self, pos, size):
+    def _check_available(self, pos, size):
         if pos < 0:
             raise ValueError
         if self._size - pos < size:
@@ -132,7 +152,7 @@ class ObjectDataInput(ObjectDataInput):
         self._pos += size
         return val[0]
 
-    def __read_array_fnc(self, read_item_fnc):
+    def _read_array_fnc(self, read_item_fnc):
         length = self.read_int()
         if length == NULL_ARRAY_LENGTH:
             return None

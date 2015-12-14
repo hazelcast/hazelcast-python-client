@@ -33,6 +33,21 @@ LITTLE_ENDIAN = 1
 
 NULL_ARRAY_LENGTH = -1
 
+# LIMITS
+MAX_BYTE = 127
+MIN_BYTE = -128
+
+MAX_SHORT = 2 ** 16 - 1
+MIN_SHORT = -2 ** 15
+
+MAX_INT = 2 ** 32 - 1
+MIN_INT = -2 ** 31
+
+MAX_LONG = 2 ** 64 - 1
+MIN_LONG = -2 ** 63
+
+MAX_FLOAT32 = 3.4028235e+38
+MIN_FLOAT32 = 1.4e-45
 
 def calculate_size_str(val):
     return len(val) + INT_SIZE_IN_BYTES
