@@ -34,10 +34,14 @@ class Invocation(object):
         return self.address is not None
 
     def check_timer(self, now):
-        if self.completed or now < self._timeout:
-            return False
-        self.set_exception(RuntimeError("Request timed out."))
-        return True
+        if self.completed:
+            return True
+
+        if now >= self._timeout:
+            self.set_exception(RuntimeError("Request timed out."))
+            return True
+
+        return False
 
     def set_response(self, response):
         self._response = response
@@ -67,7 +71,6 @@ class InvocationService(object):
         self._next_correlation_id = AtomicInteger(1)
         self._client = client
         self._event_queue = Queue()
-        self._pending_lock = threading.Lock()
 
     def start(self):
         self._is_live = True
@@ -146,8 +149,7 @@ class InvocationService(object):
         message = invocation.request
         message.set_correlation_id(correlation_id)
         message.set_partition_id(invocation.partition_id)
-        with self._pending_lock:
-            self._pending[correlation_id] = invocation
+        self._pending[correlation_id] = invocation
 
         if invocation.has_handler():
             self._listeners[correlation_id] = invocation
@@ -168,9 +170,8 @@ class InvocationService(object):
             invocation = self._listeners[correlation_id]
             self._event_queue.put((invocation.handler, message))
             return
-        with self._pending_lock:
-            if correlation_id not in self._pending:
-                self.logger.warn("Got message with unknown correlation id: %d", correlation_id)
-                return
-            invocation = self._pending.pop(correlation_id)
+        if correlation_id not in self._pending:
+            self.logger.warn("Got message with unknown correlation id: %d", correlation_id)
+            return
+        invocation = self._pending.pop(correlation_id)
         invocation.set_response(message)
