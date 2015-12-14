@@ -73,7 +73,7 @@ class BaseSerializationService(object):
         out = self._create_data_output()
         try:
             serializer = self._registry.serializer_for(obj)
-            partitioning_hash = 0#self._calculate_partitioning_hash(obj, partitioning_strategy)
+            partitioning_hash = self._calculate_partitioning_hash(obj, partitioning_strategy)
 
             out.write_int_big_endian(partitioning_hash)
             out.write_int_big_endian(serializer.get_type_id())
