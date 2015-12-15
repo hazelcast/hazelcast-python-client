@@ -1,8 +1,6 @@
 from __future__ import with_statement
-from collections import deque
 
 import logging
-from Queue import Queue
 import threading
 import struct
 
@@ -82,16 +80,13 @@ class Connection(object):
         self.logger = logging.getLogger("Connection{%s:%d}" % self._address)
         self._connection_closed_cb = connection_closed_cb
         self._read_buffer = ""
-        self._write_queue = deque()
-        self._write_queue.append("CB2")
-        self._pending = {}
 
     def send_message(self, message):
         if self._closed:
             raise RuntimeError("Connection is not live.")
 
         message.add_flag(BEGIN_END_FLAG)
-        self._write_queue.append(message.buffer)
+        self.write(message.buffer)
 
     def receive_message(self):
         # split frames
@@ -103,3 +98,7 @@ class Connection(object):
             message = ClientMessage(buffer(self._read_buffer, 0, frame_length))
             self._read_buffer = self._read_buffer[frame_length:]
             self.callback(message)
+
+    def write(self, data):
+        # must be implemented by subclass
+        pass

@@ -10,9 +10,9 @@ sys.path.append(dirname(dirname(dirname(__file__))))
 
 import hazelcast
 
-THREAD_COUNT = 10
+PROCESS_COUNT = 100
 ENTRY_COUNT = 10 * 1000
-VALUE_SIZE = 100
+VALUE_SIZE = 10000
 GET_PERCENTAGE = 40
 PUT_PERCENTAGE = 40
 
@@ -23,7 +23,7 @@ logger = logging.getLogger("main")
 config = hazelcast.ClientConfig()
 config.group_config.name = "dev"
 config.group_config.password = "dev-pass"
-config.network_config.addresses.append("192.168.2.82:5701")
+config.network_config.addresses.append("127.0.0.1:5701")
 
 
 class ClientProcess(multiprocessing.Process):
@@ -51,7 +51,7 @@ class ClientProcess(multiprocessing.Process):
 
 
 processes = [ClientProcess("client-process-%d" % i, config, multiprocessing.Array('i', 3)) for i in
-           xrange(0, THREAD_COUNT)]
+           xrange(0, PROCESS_COUNT)]
 for p in processes:
     p.start()
 

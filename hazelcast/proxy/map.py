@@ -5,7 +5,6 @@ from hazelcast.protocol.codec import map_add_entry_listener_codec, map_contains_
 from hazelcast.proxy.base import Proxy, thread_id
 from hazelcast.util import check_not_none
 
-
 EntryEventType = enum(added=1,
                       removed=1 << 1,
                       updated=1 << 2,
@@ -18,6 +17,7 @@ EntryEventType = enum(added=1,
 EntryEvent = namedtuple("EntryEvent",
                         ["key", "value", "old_value", "merging_value", "event_type", "uuid",
                          "number_of_affected_entries"])
+
 
 class MapProxy(Proxy):
     def contains_key(self, key):
@@ -51,6 +51,35 @@ class MapProxy(Proxy):
         result_data = map_put_codec.decode_response(response)['response']
         return self._to_object(result_data)
 
+    def put_async(self, key, value, ttl=-1, callback=None):
+        check_not_none(key, "key can't be None")
+        check_not_none(value, "value can't be None")
+
+        key_data = self._to_data(key)
+        value_data = self._to_data(value)
+
+        def put_callback(response):
+            result_data = map_put_codec.decode_response(response)['response']
+            callback(self._to_object(result_data))
+
+        request = map_put_codec.encode_request(self.name, key_data, value_data, thread_id=thread_id(), ttl=ttl)
+        self._invoke_on_key_async(request, key_data, put_callback)
+
+    def get_async(self, key, callback):
+        """
+        :param key:
+        :return:
+        """
+        check_not_none(key, "key can't be None")
+
+        def get_callback(response):
+            result_data = map_get_codec.decode_response(response)['response']
+            callback(self._to_object(result_data))
+
+        key_data = self._to_data(key)
+        request = map_get_codec.encode_request(self.name, key_data, thread_id=thread_id())
+        self._invoke_on_key_async(request, key_data, get_callback)
+
     def get(self, key):
         """
         :param key:
@@ -63,6 +92,16 @@ class MapProxy(Proxy):
         response = self._invoke_on_key(request, key_data)
         result_data = map_get_codec.decode_response(response)['response']
         return self._to_object(result_data)
+
+    def remove_async(self, key, callback):
+
+        def remove_callback(response):
+            result_data = map_remove_codec.decode_response(response)['response']
+            callback(self._to_object(result_data))
+
+        key_data = self._to_data(key)
+        request = map_remove_codec.encode_request(self.name, key_data, thread_id())
+        self._invoke_on_key_async(request, key_data, remove_callback)
 
     def remove(self, key):
         key_data = self._to_data(key)

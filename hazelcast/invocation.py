@@ -156,24 +156,22 @@ class InvocationService(object):
         invocation = self._pending.pop(correlation_id)
         invocation.set_response(message)
 
+    def handle_exception(self, invocation, error):
+        self.logger.debug("Got exception for request with correlation id %d: %s", invocation.get_correlation_id(),
+                          error)
+        if isinstance(error, IOError):
+            pass
+            # TODO: retry
 
-def handle_exception(self, invocation, error):
-    self.logger.debug("Got exception for request with correlation id %d: %s", invocation.get_correlation_id(),
-                      error)
-    if isinstance(error, IOError):
-        pass
-        # TODO: retry
+        invocation.set_exception(error)
 
-    invocation.set_exception(error)
+    def connection_closed(self, connection):
+        for correlation_id, invocation in dict(self._pending).iteritems():
+            if invocation.connection == connection:
+                invocation.set_exception(IOError("Connection to server was closed."))
+                # fail invocation
 
-
-def connection_closed(self, connection):
-    for correlation_id, invocation in dict(self._pending).iteritems():
-        if invocation.connection == connection:
-            invocation.set_exception(IOError("Connection to server was closed."))
-            # fail invocation
-
-    for correlation_id, invocation in dict(self._listeners).iteritems():
-        if invocation.connection == connection:
-            self._listeners.pop(correlation_id)
-            # TODO: re-register listener
+        for correlation_id, invocation in dict(self._listeners).iteritems():
+            if invocation.connection == connection:
+                self._listeners.pop(correlation_id)
+                # TODO: re-register listener

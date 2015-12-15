@@ -6,17 +6,16 @@ import sys
 
 from os.path import dirname
 
+
 sys.path.append(dirname(dirname(dirname(__file__))))
 
 import hazelcast
 
-THREAD_COUNT = 1
+REQ_COUNT = 20000
 ENTRY_COUNT = 10 * 1000
 VALUE_SIZE = 10000
 GET_PERCENTAGE = 40
 PUT_PERCENTAGE = 40
-
-VALUE = "x" * VALUE_SIZE
 
 logging.basicConfig(format='%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s', datefmt="%H:%M%:%S,")
 logging.getLogger().setLevel(logging.INFO)
@@ -28,41 +27,32 @@ config.group_config.password = "dev-pass"
 config.network_config.addresses.append("127.0.0.1:5701")
 client = hazelcast.HazelcastClient(config)
 
+class Test(object):
+    ops = 0
 
-class ClientThread(threading.Thread):
-    def __init__(self, name):
-        threading.Thread.__init__(self, name=name)
-        self.gets = 0
-        self.puts = 0
-        self.removes = 0
-        self.setDaemon(True)
+    def get_cb(self, _):
+        self.ops += 1
+
+    def put_cb(self, _):
+        self.ops += 1
+
+    def remove_cb(self, _):
+        self.ops += 1
 
     def run(self):
         my_map = client.get_map("default")
-        while True:
+        for _ in xrange(0, REQ_COUNT):
             key = int(random.random() * ENTRY_COUNT)
             operation = int(random.random() * 100)
             if operation < GET_PERCENTAGE:
-                my_map.get(key)
-                self.gets += 1
+                my_map.get_async(key, self.get_cb)
             elif operation < GET_PERCENTAGE + PUT_PERCENTAGE:
-                my_map.put(key, VALUE)
-                self.puts += 1
+                my_map.put_async(key, "x" * VALUE_SIZE, -1, self.put_cb)
             else:
-                my_map.remove(key)
-                self.removes += 1
-
-
-threads = [ClientThread("client-thread-%d" % i) for i in range(0, THREAD_COUNT)]
-for t in threads:
-    t.start()
-
+                my_map.remove_async(key, self.remove_cb)
+t = Test()
 start = time.time()
-counter = 1
-while counter < 1000:
-    time.sleep(5)
-    print("ops per second : " + \
-          str(sum([t.gets + t.puts + t.removes for t in threads]) / (time.time() - start)))
-    for t in threads:
-         print ("%s: put: %d get: %d: remove: %d" % (t.name, t.puts, t.gets, t.removes))
-    counter += 1
+t.run()
+while t.ops != REQ_COUNT:
+    time.sleep(0.01)
+print("ops per second: %d" % (t.ops/(time.time()-start)))

@@ -1,5 +1,6 @@
 from Queue import Empty, PriorityQueue
 import asyncore
+from collections import deque
 import logging
 import socket
 import threading
@@ -26,7 +27,7 @@ class AsyncoreReactor(object):
         self.logger.debug("Starting IO Thread")
         while self._is_live:
             try:
-                asyncore.loop(count=10000, timeout=1)
+                asyncore.loop(count=10000, timeout=0.1)
                 self._check_timers()
             except:
                 self.logger.exception("Error in IO Thread")
@@ -58,8 +59,11 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         asyncore.dispatcher.__init__(self)
         Connection.__init__(self, address, connection_closed_cb)
 
+        self._write_queue = deque()
+        self._write_lock = threading.Lock()
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect(self._address)
+        self.write("CB2")
 
     def handle_connect(self):
         self.logger.debug("Connected to %s", self._address)
@@ -67,18 +71,19 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
     def handle_read(self):
         self._read_buffer += self.recv(BUFFER_SIZE)
         self.logger.debug("Read %d bytes", len(self._read_buffer))
-
         self.receive_message()
 
     def handle_write(self):
         try:
-            item = self._write_queue.popleft()
+            with self._write_lock:
+                item = self._write_queue.popleft()
         except IndexError:
             return
         sent = self.send(item)
         self.logger.debug("Written " + str(sent) + " bytes")
         if sent < len(item):
-            self.logger.warn("%d bytes were not written", len(item) - sent)
+            with self._write_lock:
+                self._write_queue.appendleft(item[sent:])
 
     def handle_close(self):
         self.logger.debug("Connection closed by server.")
@@ -87,6 +92,13 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
     def handle_error(self):
         self.logger.exception("Received error")
         self.close_connection()
+
+    def readable(self):
+        return not self._closed
+
+    def write(self, data):
+        with self._write_lock:
+            self._write_queue.append(data)
 
     def close_connection(self):
         self._closed = True
