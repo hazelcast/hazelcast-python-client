@@ -2,12 +2,12 @@ import timeit
 
 from hazelcast.protocol.client_message import ClientMessage
 from hazelcast.protocol.codec import map_get_codec
-from hazelcast.serialization import SerializationService, calculate_size_data
+from hazelcast.serialization import SerializationServiceV1, calculate_size_data
 
 
 class Bench(object):
     def __init__(self):
-        service = SerializationService(None)
+        service = SerializationServiceV1(None)
         key = "Test" * 1000
         self.name = "name" * 10
         self.key = service.to_data(key)
