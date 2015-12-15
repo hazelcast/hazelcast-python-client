@@ -65,18 +65,19 @@ class ConnectionManager(object):
                 if address in self.connections:
                     return self.connections[address]
                 authenticator = authenticator or self._cluster_authenticator
-                connection = Connection(address, self._message_handler, socket_map=self._socket_map)
+                connection = Connection(address, self._message_handler, socket_map=self._socket_map,
+                                        connection_closed=self.connection_closed)
                 authenticator(connection)
                 self.logger.info("Authenticated with %s", address)
                 self.connections[connection.endpoint] = connection
                 return connection
 
     def _start_io_loop(self):
-        self._io_thread = threading.Thread(target=self.io_loop, name="hazelcast-io-loop")
+        self._io_thread = threading.Thread(target=self._io_loop, name="hazelcast-io-loop")
         self._io_thread.daemon = True
         self._io_thread.start()
 
-    def io_loop(self):
+    def _io_loop(self):
         self.logger.debug("Starting IO Thread")
         while self._is_live:
             try:
@@ -90,19 +91,27 @@ class ConnectionManager(object):
         self._is_live = False
         self._io_thread.join()
 
+    def connection_closed(self, connection):
+        if connection.endpoint:
+            self.connections.pop(connection.endpoint)
+        self._client.invoker.connection_closed(connection)
+
 class Connection(asyncore.dispatcher):
-    def __init__(self, address, message_handler, socket_map):
+
+    _closed = False
+
+    def __init__(self, address, message_handler, socket_map, connection_closed):
         asyncore.dispatcher.__init__(self, map=socket_map)
         self._address = (address.host, address.port)
         self.logger = logging.getLogger("Connection{%s:%d}" % self._address)
+        self._connection_closed = connection_closed
         self._message_handler = message_handler
+        self._read_buffer = ""
         self._write_queue = Queue()
         self._write_queue.put("CB2")
-        self._read_buffer = ""
-        self.endpoint = None
-
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect(self._address)
+        self.endpoint = None
 
     def handle_connect(self):
         self.logger.debug("Connected to %s", self._address)
@@ -131,9 +140,21 @@ class Connection(asyncore.dispatcher):
             self.logger.warn("%d bytes were not written", len(item) - sent)
 
     def handle_close(self):
-        self.logger.debug("handle_close")
-        self.close()
+        self.logger.debug("Connection closed by server.")
+        self.close_connection()
+
+    def handle_error(self):
+        self.logger.exception("Received error")
+        self.close_connection()
 
     def send_message(self, message):
+        if self._closed:
+            raise RuntimeError("Connection is not live.")
+
         message.add_flag(BEGIN_END_FLAG)
         self._write_queue.put(message.buffer)
+
+    def close_connection(self):
+        self._closed = True
+        self.close()
+        self._connection_closed(self)
