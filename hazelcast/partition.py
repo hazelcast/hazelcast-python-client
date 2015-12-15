@@ -2,37 +2,31 @@ import logging
 import threading
 from hazelcast.protocol.codec import client_get_partitions_codec
 
+PARTITION_UPDATE_INTERVAL = 10
+
 
 class PartitionService(object):
     logger = logging.getLogger("PartitionService")
+    timer = None
 
     def __init__(self, client):
         self.partitions = {}
         self._client = client
-        self.timer = None
 
     def start(self):
         self.logger.debug("Starting partition service")
 
         def partition_updater():
             self._do_refresh()
-            self.timer = self._schedule_refresh(10)
+            self.timer = self._client.reactor.add_timer(PARTITION_UPDATE_INTERVAL, partition_updater)
 
-        self.timer = threading.Timer(10, partition_updater)
-        self.timer.setDaemon(True)
-        self.timer.start()  # TODO: find a better scheduling option
+        self.timer = self._client.reactor.add_timer(PARTITION_UPDATE_INTERVAL, partition_updater)
 
     def shutdown(self):
         self.timer.cancel()
 
     def refresh(self):
-        self._schedule_refresh(0)
-
-    def _schedule_refresh(self, delay):
-        t = threading.Timer(delay, self._do_refresh)
-        t.setDaemon(True)
-        t.start()
-        return t
+        timer = self._client.reactor.add_timer(0, self._do_refresh)
 
     def get_partition_owner(self, partition_id):
         if partition_id not in self.partitions:
@@ -44,12 +38,14 @@ class PartitionService(object):
         return data.get_partition_hash() % count
 
     def _get_partition_count(self):
-        if len(self.partitions) == 0:
-            self._do_refresh()
+        if not self.partitions:
+            event = threading.Event()
+            self._do_refresh(callback=lambda: event.set())
+            event.wait()
 
         return len(self.partitions)
 
-    def _do_refresh(self):
+    def _do_refresh(self, callback=None):
         self.logger.debug("Start updating partitions")
         address = self._client.cluster.owner_connection_address
         connection = self._client.connection_manager.get_connection(address)
@@ -57,13 +53,18 @@ class PartitionService(object):
             self.logger.debug("Could not update partition thread as owner connection is not established yet.")
             return
         request = client_get_partitions_codec.encode_request()
-        response = self._client.invoker.invoke_on_connection(request, connection).result()
-        partitions = client_get_partitions_codec.decode_response(response)["partitions"]
+
+        def cb(message):
+            self.process_partition_response(message)
+            if callback:
+                callback()
+        self._client.invoker.invoke_on_connection(request, connection, callback=cb)
+
+    def process_partition_response(self, message):
+        partitions = client_get_partitions_codec.decode_response(message)["partitions"]
         # TODO: needs sync
         self.partitions = {}
         for addr, partition_list in partitions.iteritems():
             for partition in partition_list:
                 self.partitions[partition] = addr
         self.logger.debug("Finished updating partitions")
-        # TODO: exception handling
-
