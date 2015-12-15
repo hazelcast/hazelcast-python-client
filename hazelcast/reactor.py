@@ -72,8 +72,8 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
     def handle_write(self):
         try:
-            item = self._write_queue.get_nowait()
-        except Empty:
+            item = self._write_queue.popleft()
+        except IndexError:
             return
         sent = self.send(item)
         self.logger.debug("Written " + str(sent) + " bytes")

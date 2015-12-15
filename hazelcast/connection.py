@@ -1,4 +1,5 @@
 from __future__ import with_statement
+from collections import deque
 
 import logging
 from Queue import Queue
@@ -81,8 +82,8 @@ class Connection(object):
         self.logger = logging.getLogger("Connection{%s:%d}" % self._address)
         self._connection_closed_cb = connection_closed_cb
         self._read_buffer = ""
-        self._write_queue = Queue()
-        self._write_queue.put("CB2")
+        self._write_queue = deque()
+        self._write_queue.append("CB2")
         self._pending = {}
 
     def send_message(self, message):
@@ -90,7 +91,7 @@ class Connection(object):
             raise RuntimeError("Connection is not live.")
 
         message.add_flag(BEGIN_END_FLAG)
-        self._write_queue.put(message.buffer)
+        self._write_queue.append(message.buffer)
 
     def receive_message(self):
         # split frames
