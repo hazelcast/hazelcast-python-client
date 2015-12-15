@@ -4,6 +4,7 @@ from time import time
 
 from bits import *
 from hazelcast.serialization.api import StreamSerializer
+# from hazelcast.serialization.base import HazelcastSerializationError
 from hazelcast.serialization.serialization_const import *
 
 
@@ -349,3 +350,33 @@ class PythonObjectSerializer(StreamSerializer):
 
     def get_type_id(self):
         return PYTHON_TYPE_PICKLE
+
+
+class IdentifiedDataSerializer(StreamSerializer):
+    def __init__(self, factories):
+        self._factories = factories
+
+    def write(self, out, obj):
+        out.write_boolean(True)  # Always identified
+        out.write_int(obj.get_factory_id())
+        out.write_int(obj.get_class_id())
+        obj.write_data(out)
+
+    def read(self, inp):
+        factory_id = inp.read_int()
+        class_id = inp.read_int()
+
+        factory = self._factories.get(factory_id, None)
+        if factory is None:
+            from hazelcast.serialization.base import HazelcastSerializationError
+            raise HazelcastSerializationError("No DataSerializerFactory registered for namespace: {}".format(factory_id))
+        identified = factory.get(class_id, None)
+        if identified is None:
+            raise HazelcastSerializationError(
+                    "{} is not be able to create an instance for id: {} on factoryId: {}".format(factory, class_id, factory_id))
+        instance = identified()
+        instance.read_data(inp)
+        return instance
+
+    def get_type_id(self):
+        return CONSTANT_TYPE_DATA_SERIALIZABLE

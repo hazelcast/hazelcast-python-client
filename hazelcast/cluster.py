@@ -35,12 +35,12 @@ class ClusterService(object):
         return Address(host, int(port))
 
     def _connect_to_cluster(self):
-        address = self._parse_addr(self._config.addresses[0])
+        address = self._parse_addr(self._config.network_config.addresses[0])
         self.logger.info("Connecting to %s", address)
 
         def authenticate_manager(conn):
             request = client_authentication_codec.encode_request(
-                username=self._config.username, password=self._config.password,
+                username=self._config.group_config.name, password=self._config.group_config.password,
                 uuid=None, owner_uuid=None, is_owner_connection=True, client_type=CLIENT_TYPE,
                 serialization_version=SERIALIZATION_VERSION)
             response = self._client.invoker.invoke_on_connection(request, conn).result()

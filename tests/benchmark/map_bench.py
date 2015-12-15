@@ -20,10 +20,10 @@ logging.basicConfig(format='%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(m
 logging.getLogger().setLevel(logging.INFO)
 logger = logging.getLogger("main")
 
-config = hazelcast.Config()
-config.username = "dev"
-config.password = "dev-pass"
-config.addresses.append("127.0.0.1:5701")
+config = hazelcast.ClientConfig()
+config.group_config.name = "dev"
+config.group_config.password = "dev-pass"
+config.network_config.addresses.append("127.0.0.1:5701")
 client = hazelcast.HazelcastClient(config)
 my_map = client.get_map("default")
 for i in xrange(0, 1000):

@@ -8,10 +8,10 @@ if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO)
     logger = logging.getLogger("main")
 
-    config = hazelcast.Config()
-    config.username = "dev"
-    config.password = "dev-pass"
-    config.addresses.append("127.0.0.1:5701")
+    config = hazelcast.ClientConfig()
+    config.group_config.name = "dev"
+    config.group_config.password = "dev-pass"
+    config.network_config.addresses.append("127.0.0.1:5701")
 
     client = hazelcast.HazelcastClient(config)
 

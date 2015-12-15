@@ -9,7 +9,7 @@ class ClientConfig(object):
         self.properties = {}
         self.group_config = GroupConfig()
         self.network_config = ClientNetworkConfig()
-        # self.load_balancer = LoadBalancer()
+        self.load_balancer = None
         self.listener_configs = []
         self.executor_pool_size = -1
         self.instance_name = None
@@ -17,7 +17,7 @@ class ClientConfig(object):
         self.reliable_topic_configs = {}
         self.query_cache_configs = {}
         self.serialization_config = SerializationConfig()
-        self.proxy_factory_configs = {}
+        # self.proxy_factory_configs = {}
 
 
 class GroupConfig(object):
@@ -28,7 +28,7 @@ class GroupConfig(object):
 
 class ClientNetworkConfig(object):
     def __init__(self):
-        self.address_list = []
+        self.addresses = []
         self.connection_attempt_limit = 2
         self.connection_attempt_period = 3000
         self.connection_timeout = 5000
@@ -53,7 +53,7 @@ class SerializationConfig(object):
         self.serializer_configs = []
         self.check_class_def_errors = True
         self.use_native_byte_order = False
-        # self.byte_order = BIG_ENDIAN
+        self.is_big_endian = True
         self.enable_compression = False
         self.enable_shared_object = True
         self.class_definitions = set()

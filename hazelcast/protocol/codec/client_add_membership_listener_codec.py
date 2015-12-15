@@ -1,4 +1,4 @@
-from hazelcast.serialization.data import *
+# from hazelcast.serialization.data import *
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import ClientMessage
 from hazelcast.protocol.custom_codec import *

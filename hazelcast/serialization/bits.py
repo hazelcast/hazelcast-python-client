@@ -49,6 +49,7 @@ MIN_LONG = -2 ** 63
 MAX_FLOAT32 = 3.4028235e+38
 MIN_FLOAT32 = 1.4e-45
 
+
 def calculate_size_str(val):
     return len(val) + INT_SIZE_IN_BYTES
 

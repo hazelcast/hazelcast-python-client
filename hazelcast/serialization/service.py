@@ -1,6 +1,6 @@
 import logging
 
-from hazelcast.serialization.base import *
+from hazelcast.serialization.base import BaseSerializationService
 from hazelcast.serialization.serializer import *
 
 DEFAULT_OUT_BUFFER_SIZE = 4 * 1024
@@ -23,6 +23,8 @@ class SerializationServiceV1(BaseSerializationService):
 
     def _register_constant_serializers(self):
         self._registry.register_constant_serializer(self._registry._null_serializer, type(None))
+        # self._registry.register_constant_serializer(self._registry._data_serializer)
+        # self._registry.register_constant_serializer(self._registry._portable_serializer)
         self._registry.register_constant_serializer(ByteSerializer())
         self._registry.register_constant_serializer(BooleanSerializer(), bool)
         self._registry.register_constant_serializer(CharSerializer())

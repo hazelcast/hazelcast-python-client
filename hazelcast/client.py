@@ -1,12 +1,14 @@
 import logging
 
-from hazelcast.connection import ConnectionManager
 from hazelcast.cluster import ClusterService, RandomLoadBalancer
+from hazelcast.connection import ConnectionManager
 from hazelcast.invocation import InvocationService
 from hazelcast.reactor import AsyncoreConnection, AsyncoreReactor
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.partition import PartitionService
 from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE
+from hazelcast.serialization import SerializationServiceV1
+
 
 class HazelcastClient(object):
     logger = logging.getLogger("HazelcastClient")
@@ -40,8 +42,3 @@ class HazelcastClient(object):
         self.reactor.shutdown()
         self.logger.info("Client shutdown.")
 
-class Config:
-    def __init__(self):
-        self.username = "dev"
-        self.password = "dev-pass"
-        self.addresses = []
