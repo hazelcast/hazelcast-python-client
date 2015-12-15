@@ -9,7 +9,9 @@ Any request parameter, response or event data will be carried in the payload.
 +-------------+---------------+---------------------------------+
 |  Version    |B|E|  Flags    |               Type              |
 +-------------+---------------+---------------------------------+
-|                       CorrelationId                           |
+|                                                               |
++                       CorrelationId                           +
+|                                                               |
 +---------------------------------------------------------------+
 |                        PartitionId                            |
 +-----------------------------+---------------------------------+
@@ -40,7 +42,7 @@ VERSION_FIELD_OFFSET = FRAME_LENGTH_FIELD_OFFSET + INT_SIZE_IN_BYTES
 FLAGS_FIELD_OFFSET = VERSION_FIELD_OFFSET + BYTE_SIZE_IN_BYTES
 TYPE_FIELD_OFFSET = FLAGS_FIELD_OFFSET + BYTE_SIZE_IN_BYTES
 CORRELATION_ID_FIELD_OFFSET = TYPE_FIELD_OFFSET + SHORT_SIZE_IN_BYTES
-PARTITION_ID_FIELD_OFFSET = CORRELATION_ID_FIELD_OFFSET + INT_SIZE_IN_BYTES
+PARTITION_ID_FIELD_OFFSET = CORRELATION_ID_FIELD_OFFSET + LONG_SIZE_IN_BYTES
 DATA_OFFSET_FIELD_OFFSET = PARTITION_ID_FIELD_OFFSET + INT_SIZE_IN_BYTES
 HEADER_SIZE = DATA_OFFSET_FIELD_OFFSET + SHORT_SIZE_IN_BYTES
 
@@ -58,10 +60,10 @@ class ClientMessage(object):
 
     # HEADER ACCESSORS
     def get_correlation_id(self):
-        return struct.unpack_from(FMT_LE_INT, self.buffer, CORRELATION_ID_FIELD_OFFSET)[0]
+        return struct.unpack_from(FMT_LE_LONG, self.buffer, CORRELATION_ID_FIELD_OFFSET)[0]
 
     def set_correlation_id(self, val):
-        struct.pack_into(FMT_LE_INT, self.buffer, CORRELATION_ID_FIELD_OFFSET, val)
+        struct.pack_into(FMT_LE_LONG, self.buffer, CORRELATION_ID_FIELD_OFFSET, val)
         return self
 
     def get_partition_id(self):
