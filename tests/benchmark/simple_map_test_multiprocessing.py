@@ -20,10 +20,10 @@ logging.basicConfig(format='%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(m
 logging.getLogger().setLevel(logging.INFO)
 logger = logging.getLogger("main")
 
-client_config = hazelcast.Config()
-client_config.username = "dev"
-client_config.password = "dev-pass"
-client_config.addresses.append("127.0.0.1:5701")
+config = hazelcast.ClientConfig()
+config.group_config.name = "dev"
+config.group_config.password = "dev-pass"
+config.network_config.addresses.append("192.168.2.82:5701")
 
 
 class ClientProcess(multiprocessing.Process):
@@ -34,7 +34,7 @@ class ClientProcess(multiprocessing.Process):
         self.daemon = True
 
     def run(self):
-        client = hazelcast.HazelcastClient(client_config)
+        client = hazelcast.HazelcastClient(config)
         my_map = client.get_map("default")
         while True:
             key = int(random.random() * ENTRY_COUNT)
@@ -50,7 +50,7 @@ class ClientProcess(multiprocessing.Process):
                 self.counts[2] += 1
 
 
-processes = [ClientProcess("client-process-%d" % i, client_config, multiprocessing.Array('i', 3)) for i in
+processes = [ClientProcess("client-process-%d" % i, config, multiprocessing.Array('i', 3)) for i in
            xrange(0, THREAD_COUNT)]
 for p in processes:
     p.start()
@@ -61,6 +61,6 @@ while counter < 1000:
     time.sleep(5)
     print "ops per second : " + \
           str(sum([sum(p.counts) for p in processes]) / (time.time() - start))
-    for p in processes:
-        print ("%s: put: %d get: %d: remove: %d" % (p.name, p.counts[0], p.counts[1], p.counts[2]))
+    # for p in processes:
+    #     print ("%s: put: %d get: %d: remove: %d" % (p.name, p.counts[0], p.counts[1], p.counts[2]))
     counter += 1

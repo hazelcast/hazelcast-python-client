@@ -10,11 +10,13 @@ sys.path.append(dirname(dirname(dirname(__file__))))
 
 import hazelcast
 
-THREAD_COUNT = 10
+THREAD_COUNT = 1
 ENTRY_COUNT = 10 * 1000
 VALUE_SIZE = 10000
 GET_PERCENTAGE = 40
 PUT_PERCENTAGE = 40
+
+VALUE = "x" * VALUE_SIZE
 
 logging.basicConfig(format='%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s', datefmt="%H:%M%:%S,")
 logging.getLogger().setLevel(logging.INFO)
@@ -23,7 +25,7 @@ logger = logging.getLogger("main")
 config = hazelcast.ClientConfig()
 config.group_config.name = "dev"
 config.group_config.password = "dev-pass"
-config.network_config.addresses.append("127.0.0.1:5701")
+config.network_config.addresses.append("192.168.2.82:5701")
 client = hazelcast.HazelcastClient(config)
 
 
@@ -44,7 +46,7 @@ class ClientThread(threading.Thread):
                 my_map.get(key)
                 self.gets += 1
             elif operation < GET_PERCENTAGE + PUT_PERCENTAGE:
-                my_map.put(key, "x" * VALUE_SIZE)
+                my_map.put(key, VALUE)
                 self.puts += 1
             else:
                 my_map.remove(key)

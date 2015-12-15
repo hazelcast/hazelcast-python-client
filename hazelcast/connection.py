@@ -35,8 +35,8 @@ class ConnectionManager(object):
         owner_uuid = self._client.cluster.owner_uuid
 
         request = client_authentication_codec.encode_request(
-            username=self._client.config.username,
-            password=self._client.config.password,
+            username=self._client.config.group_config.name,
+            password=self._client.config.group_config.password,
             uuid=uuid,
             owner_uuid=owner_uuid,
             is_owner_connection=False,
