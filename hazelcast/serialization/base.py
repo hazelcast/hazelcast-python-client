@@ -1,4 +1,5 @@
 from threading import RLock
+import traceback,sys
 
 from api import *
 from data import *
@@ -11,6 +12,7 @@ EMPTY_PARTITIONING_STRATEGY = lambda key: None
 
 
 def handle_exception(e):
+    traceback.print_exc(file=sys.stderr)
     if isinstance(e, MemoryError):
         # TODO
         print("OUT OF MEMORY")
@@ -34,12 +36,12 @@ def index_for_default_type(type_id):
     return -type_id
 
 
-def is_dataserializable(obj_type):
-    return isinstance(obj_type, IdentifiedDataSerializable)
+def is_dataserializable(obj):
+    return isinstance(obj, IdentifiedDataSerializable)
 
 
-def is_portable(obj_type):
-    return isinstance(obj_type, Portable)
+def is_portable(obj):
+    return isinstance(obj, Portable)
 
 
 def create_buffer_serializer_wrapper(serializer):
@@ -227,9 +229,9 @@ class SerializerRegistry(object):
         return serializer
 
     def lookup_default_serializer(self, obj_type, obj):
-        if is_dataserializable(obj_type):
+        if is_dataserializable(obj):
             return self._data_serializer
-        if is_portable(obj_type):
+        if is_portable(obj):
             raise NotImplementedError("Portable serializer not implemented yet!")
         type_id = None
         if isinstance(obj, basestring):
@@ -254,7 +256,7 @@ class SerializerRegistry(object):
         return self.serializer_by_type_id(type_id) if type_id is not None else  self._constant_type_dict.get(obj_type, None)
 
     def lookup_custom_serializer(self, obj_type):
-        serializer = self._type_dict[obj_type]
+        serializer = self._type_dict.get(obj_type, None)
         if serializer is not None:
             return serializer
         for super_type in obj_type.__subclasses__():

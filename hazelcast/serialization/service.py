@@ -15,15 +15,18 @@ def default_partition_strategy(key):
 class SerializationServiceV1(BaseSerializationService):
     logger = logging.getLogger("SerializationService")
 
-    def __init__(self, version=1, global_partition_strategy=default_partition_strategy,
+    def __init__(self, serialization_config=None, version=1, global_partition_strategy=default_partition_strategy,
                  output_buffer_size=DEFAULT_OUT_BUFFER_SIZE,
                  is_big_endian=True):
         super(SerializationServiceV1, self).__init__(version, global_partition_strategy, output_buffer_size, is_big_endian)
+        self.serialization_config = serialization_config
+
+        self._registry._data_serializer = IdentifiedDataSerializer(self.serialization_config.data_serializable_factories)
         self._register_constant_serializers()
 
     def _register_constant_serializers(self):
         self._registry.register_constant_serializer(self._registry._null_serializer, type(None))
-        # self._registry.register_constant_serializer(self._registry._data_serializer)
+        self._registry.register_constant_serializer(self._registry._data_serializer)
         # self._registry.register_constant_serializer(self._registry._portable_serializer)
         self._registry.register_constant_serializer(ByteSerializer())
         self._registry.register_constant_serializer(BooleanSerializer(), bool)

@@ -43,13 +43,14 @@ class _ObjectDataOutput(ObjectDataOutput):
 
     def write_short(self, val):
         self._ensure_available(SHORT_SIZE_IN_BYTES)
-        struct.pack_into(self._FMT_INT, self._buffer, self._pos, val)
+        struct.pack_into(self._FMT_SHORT, self._buffer, self._pos, val)
         self._pos += SHORT_SIZE_IN_BYTES
 
     def write_char(self, val):
-        self._ensure_available(CHAR_SIZE_IN_BYTES)
-        struct.pack_into(self._FMT_CHAR, self._buffer, self._pos, val)
-        self._pos += CHAR_SIZE_IN_BYTES
+        raise NotImplementedError("Single char not implemented")
+        # self._ensure_available(CHAR_SIZE_IN_BYTES)
+        # struct.pack_into(self._FMT_CHAR, self._buffer, self._pos, val)
+        # self._pos += CHAR_SIZE_IN_BYTES
 
     def write_int(self, val):
         self._ensure_available(INT_SIZE_IN_BYTES)
@@ -151,3 +152,9 @@ class _ObjectDataOutput(ObjectDataOutput):
 
     def _available(self):
         return len(self._buffer) if self._buffer is not None else 0
+
+    def __repr__(self):
+        from binascii import hexlify
+        buf = hexlify(self._buffer)
+        pos_ = self._pos * 2
+        return buf[:pos_] + "[" + buf[pos_] + "]" + buf[pos_+1:]

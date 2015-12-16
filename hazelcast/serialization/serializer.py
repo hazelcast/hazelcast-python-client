@@ -363,6 +363,9 @@ class IdentifiedDataSerializer(StreamSerializer):
         obj.write_data(out)
 
     def read(self, inp):
+        is_identified = inp.read_boolean()
+        if not is_identified:
+            raise HazelcastSerializationError("Native clients only support IdentifiedDataSerializable!")
         factory_id = inp.read_int()
         class_id = inp.read_int()
 

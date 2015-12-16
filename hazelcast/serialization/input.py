@@ -50,6 +50,9 @@ class _ObjectDataInput(ObjectDataInput):
         self._check_available(self._pos, BYTE_SIZE_IN_BYTES)
         return self._read_from_buff(self._FMT_UINT8, BYTE_SIZE_IN_BYTES)
 
+    def read_char(self):
+        raise NotImplementedError("Char not implemented yet.")
+
     def read_short(self):
         self._check_available(self._pos, SHORT_SIZE_IN_BYTES)
         return self._read_from_buff(self._FMT_SHORT, SHORT_SIZE_IN_BYTES)
@@ -159,3 +162,9 @@ class _ObjectDataInput(ObjectDataInput):
         if length > 0:
             return [read_item_fnc() for _ in xrange(0, length)]
         return []
+
+    def __repr__(self):
+        from binascii import hexlify
+        buf = hexlify(self._buffer)
+        pos_ = self._pos * 2
+        return buf[:pos_] + "[" + buf[pos_] + "]" + buf[pos_+1:]
