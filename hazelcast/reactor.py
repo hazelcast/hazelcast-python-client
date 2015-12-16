@@ -60,7 +60,6 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         Connection.__init__(self, address, connection_closed_cb)
 
         self._write_queue = deque()
-        self._write_lock = threading.Lock()
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect(self._address)
         self.write("CB2")
@@ -75,15 +74,13 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
     def handle_write(self):
         try:
-            with self._write_lock:
-                item = self._write_queue.popleft()
+            item = self._write_queue.popleft()
         except IndexError:
             return
         sent = self.send(item)
         self.logger.debug("Written " + str(sent) + " bytes")
         if sent < len(item):
-            with self._write_lock:
-                self._write_queue.appendleft(item[sent:])
+            self._write_queue.appendleft(item[sent:])
 
     def handle_close(self):
         self.logger.debug("Connection closed by server.")
@@ -97,8 +94,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         return not self._closed
 
     def write(self, data):
-        with self._write_lock:
-            self._write_queue.append(data)
+        self._write_queue.append(data)
 
     def close_connection(self):
         self._closed = True
