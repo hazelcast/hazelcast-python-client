@@ -11,7 +11,7 @@ sys.path.append(dirname(dirname(dirname(__file__))))
 
 import hazelcast
 
-REQ_COUNT = 20000
+REQ_COUNT = 50000
 ENTRY_COUNT = 10 * 1000
 VALUE_SIZE = 10000
 GET_PERCENTAGE = 40
@@ -28,16 +28,15 @@ config.network_config.addresses.append("127.0.0.1:5701")
 client = hazelcast.HazelcastClient(config)
 
 class Test(object):
-    ops = 0
 
-    def get_cb(self, _):
-        self.ops += 1
+    def __init__(self):
+        self.ops = 0
+        self.event = threading.Event()
 
-    def put_cb(self, _):
+    def incr(self, _):
         self.ops += 1
-
-    def remove_cb(self, _):
-        self.ops += 1
+        if self.ops == REQ_COUNT:
+            self.event.set()
 
     def run(self):
         my_map = client.get_map("default")
@@ -45,14 +44,15 @@ class Test(object):
             key = int(random.random() * ENTRY_COUNT)
             operation = int(random.random() * 100)
             if operation < GET_PERCENTAGE:
-                my_map.get_async(key, self.get_cb)
+                my_map.get_async(key, self.incr)
             elif operation < GET_PERCENTAGE + PUT_PERCENTAGE:
-                my_map.put_async(key, "x" * VALUE_SIZE, -1, self.put_cb)
+                my_map.put_async(key, "x" * VALUE_SIZE, -1, self.incr)
             else:
-                my_map.remove_async(key, self.remove_cb)
+                my_map.remove_async(key, self.incr)
 t = Test()
 start = time.time()
 t.run()
-while t.ops != REQ_COUNT:
-    time.sleep(0.01)
-print("ops per second: %d" % (t.ops/(time.time()-start)))
+t.event.wait()
+time_taken = time.time() - start
+print("Took %s seconds for %d requests" % (time_taken, REQ_COUNT))
+print("ops per second: %s" % (t.ops/time_taken))
