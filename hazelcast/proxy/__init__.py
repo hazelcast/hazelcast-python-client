@@ -24,7 +24,7 @@ class ProxyManager(object):
     def create_proxy(self, service_name, name):
         message = client_create_proxy_codec.encode_request(name=name, service_name=service_name,
                                                            target=self._find_next_proxy_address())
-        self._client.invoker.invoke_on_random_target(message).result()
+        self._client.invoker.invoke_on_random_target(message).future.result()
         return _proxy_init[service_name](client=self._client, service_name=service_name, name=name)
 
     def _find_next_proxy_address(self):

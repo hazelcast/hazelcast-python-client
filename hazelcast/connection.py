@@ -41,7 +41,7 @@ class ConnectionManager(object):
             client_type="PHY",
             serialization_version=1)
 
-        response = self._client.invoker.invoke_on_connection(request, conn).result()
+        response = self._client.invoker.invoke_on_connection(request, conn).future.result()
         parameters = client_authentication_codec.decode_response(response)
         if parameters["status"] != 0:
             raise RuntimeError("Authentication failed")

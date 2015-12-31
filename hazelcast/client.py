@@ -1,10 +1,10 @@
 import logging
 
+from hazelcast.config import ClientConfig
 from hazelcast.cluster import ClusterService, RandomLoadBalancer
 from hazelcast.connection import ConnectionManager
 from hazelcast.invocation import InvocationService
 from hazelcast.reactor import AsyncoreConnection, AsyncoreReactor
-from hazelcast.serialization import SerializationServiceV1
 from hazelcast.partition import PartitionService
 from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE
 from hazelcast.serialization import SerializationServiceV1
@@ -15,7 +15,7 @@ class HazelcastClient(object):
     _config = None
 
     def __init__(self, config=None):
-        self.config = config
+        self.config = config or ClientConfig()
         self.invoker = InvocationService(self)
         self.reactor = AsyncoreReactor()
         self.connection_manager = ConnectionManager(self, AsyncoreConnection)
@@ -23,7 +23,7 @@ class HazelcastClient(object):
         self.partition_service = PartitionService(self)
         self.proxy = ProxyManager(self)
         self.load_balancer = RandomLoadBalancer(self.cluster)
-        self.serializer = SerializationServiceV1(self)
+        self.serializer = SerializationServiceV1(serialization_config=config.serialization_config)
 
         self.reactor.start()
         self.cluster.start()

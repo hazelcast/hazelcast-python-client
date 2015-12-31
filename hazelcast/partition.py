@@ -54,11 +54,12 @@ class PartitionService(object):
             return
         request = client_get_partitions_codec.encode_request()
 
-        def cb(message):
-            self.process_partition_response(message)
+        def cb(f):
+            self.process_partition_response(f.result())
             if callback:
                 callback()
-        self._client.invoker.invoke_on_connection(request, connection, callback=cb)
+        future = self._client.invoker.invoke_on_connection(request, connection).future
+        future.add_done_callback(cb)
 
     def process_partition_response(self, message):
         partitions = client_get_partitions_codec.decode_response(message)["partitions"]

@@ -35,6 +35,20 @@ if __name__ == '__main__':
     print("map.remove", my_map.remove(key))
     print("map.size", my_map.size())
     print("map.contains_key", my_map.contains_key(key))
+
+
+    def put_async_cb(f):
+        print("map.put_async", f.result())
+    my_map.put_async(key, "async_val").add_done_callback(put_async_cb)
+
+    def get_async_cb(f):
+        print("map.get_async", f.result())
+    my_map.get_async(key).add_done_callback(get_async_cb)
+
+    def remove_async_cb(f):
+        print("map.remove_async", f.result())
+    my_map.remove_async(key).add_done_callback(remove_async_cb)
     #
+    sleep(10)
     client.shutdown()
     #

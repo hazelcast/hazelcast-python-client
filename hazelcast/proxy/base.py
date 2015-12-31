@@ -24,19 +24,19 @@ class Proxy(object):
         return self._client.serializer.to_object(data)
 
     def _invoke(self, request):
-        return self._client.invoker.invoke_on_random_target(request).result()
+        return self._client.invoker.invoke_on_random_target(request).future.result()
 
     def _invoke_on_key(self, request, key_data):
         partition_id = self._client.partition_service.get_partition_id(key_data)
-        return self._client.invoker.invoke_on_partition(request, partition_id).result()
+        return self._client.invoker.invoke_on_partition(request, partition_id).future.result()
 
-    def _invoke_on_key_async(self, request, key_data, callback):
+    def _invoke_on_key_async(self, request, key_data):
         partition_id = self._client.partition_service.get_partition_id(key_data)
-        return self._client.invoker.invoke_on_partition(request, partition_id, callback=callback)
+        return self._client.invoker.invoke_on_partition(request, partition_id).future
 
     def _invoke_on_partition(self, request, partition_id):
-        return self._client.invoker.invoke_on_partition(request, partition_id).result()
+        return self._client.invoker.invoke_on_partition(request, partition_id).future.result()
 
     def _start_listening(self, request, event_handler):
-        return self._client.invoker.invoke_on_random_target(request, event_handler=event_handler).result()
+        return self._client.invoker.invoke_on_random_target(request, event_handler=event_handler).future.result()
 

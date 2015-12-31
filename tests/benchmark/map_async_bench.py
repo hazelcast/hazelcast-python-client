@@ -44,11 +44,11 @@ class Test(object):
             key = int(random.random() * ENTRY_COUNT)
             operation = int(random.random() * 100)
             if operation < GET_PERCENTAGE:
-                my_map.get_async(key, self.incr)
+                my_map.get_async(key).add_done_callback(self.incr)
             elif operation < GET_PERCENTAGE + PUT_PERCENTAGE:
-                my_map.put_async(key, "x" * VALUE_SIZE, -1, self.incr)
+                my_map.put_async(key, "x" * VALUE_SIZE).add_done_callback(self.incr)
             else:
-                my_map.remove_async(key, self.incr)
+                my_map.remove_async(key).add_done_callback(self.incr)
 t = Test()
 start = time.time()
 t.run()

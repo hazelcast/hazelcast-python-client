@@ -51,34 +51,42 @@ class MapProxy(Proxy):
         result_data = map_put_codec.decode_response(response)['response']
         return self._to_object(result_data)
 
-    def put_async(self, key, value, ttl=-1, callback=None):
+    def put_async(self, key, value, ttl=-1):
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
 
         key_data = self._to_data(key)
         value_data = self._to_data(value)
 
-        def put_callback(response):
-            result_data = map_put_codec.decode_response(response)['response']
-            callback(self._to_object(result_data))
+        def put_func(f):
+            response = f.result()
+            if response:
+                result_data = map_put_codec.decode_response(response)['response']
+                return self._to_object(result_data)
+            if f.exception():
+                raise f.exception()
 
         request = map_put_codec.encode_request(self.name, key_data, value_data, thread_id=thread_id(), ttl=ttl)
-        self._invoke_on_key_async(request, key_data, put_callback)
+        return self._invoke_on_key_async(request, key_data).continue_with(put_func)
 
-    def get_async(self, key, callback):
+    def get_async(self, key):
         """
         :param key:
         :return:
         """
         check_not_none(key, "key can't be None")
 
-        def get_callback(response):
-            result_data = map_get_codec.decode_response(response)['response']
-            callback(self._to_object(result_data))
+        def get_func(f):
+            response = f.result()
+            if response:
+                result_data = map_get_codec.decode_response(response)['response']
+                return self._to_object(result_data)
+            if f.exception():
+                raise f.exception()
 
         key_data = self._to_data(key)
         request = map_get_codec.encode_request(self.name, key_data, thread_id=thread_id())
-        self._invoke_on_key_async(request, key_data, get_callback)
+        return self._invoke_on_key_async(request, key_data).continue_with(get_func)
 
     def get(self, key):
         """
@@ -93,15 +101,19 @@ class MapProxy(Proxy):
         result_data = map_get_codec.decode_response(response)['response']
         return self._to_object(result_data)
 
-    def remove_async(self, key, callback):
+    def remove_async(self, key):
 
-        def remove_callback(response):
-            result_data = map_remove_codec.decode_response(response)['response']
-            callback(self._to_object(result_data))
+        def remove_func(f):
+            response = f.result()
+            if response:
+                result_data = map_remove_codec.decode_response(response)['response']
+                return self._to_object(result_data)
+            if f.exception():
+                raise f.exception()
 
         key_data = self._to_data(key)
         request = map_remove_codec.encode_request(self.name, key_data, thread_id())
-        self._invoke_on_key_async(request, key_data, remove_callback)
+        return self._invoke_on_key_async(request, key_data).continue_with(remove_func)
 
     def remove(self, key):
         key_data = self._to_data(key)

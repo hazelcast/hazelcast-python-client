@@ -1,5 +1,6 @@
 from Queue import Queue, Empty
 import logging
+import sys
 import threading
 import time
 
@@ -10,24 +11,88 @@ EVENT_LOOP_COUNT = 100
 INVOCATION_TIMEOUT = 120
 
 
-class Invocation(object):
-
-    _response = None
+class Future(object):
+    _result = None
     _exception = None
-    timer = None
+    logger = logging.getLogger("Future")
+
+    def __init__(self):
+        self._callbacks = []
+        self._event = threading.Event()
+        pass
+
+    def set_result(self, result):
+        self._result = result
+        self._event.set()
+
+        self._invoke_callbacks()
+
+    def set_exception(self, exception):
+        self._exception = exception
+        self._event.set()
+        self._invoke_callbacks()
+
+    def result(self):
+        self._event.wait()
+        return self._result
+
+    def done(self):
+        return self._event.isSet()
+
+    def running(self):
+        return not self.done()
+
+    def exception(self):
+        self._event.wait()
+        return self._exception
+
+    def add_done_callback(self, callback):
+        self._callbacks.append(callback)
+        if self.done():
+            self._invoke_cb(callback)
+
+    def _invoke_callbacks(self):
+        for callback in self._callbacks:
+            self._invoke_cb(callback)
+
+    def _invoke_cb(self, callback):
+        try:
+            callback(self)
+        except:
+            logging.exception("Exception when invoking callback")
+
+    def continue_with(self, continuation_func):
+        """
+        Create a continuation that executes when the future is completed
+        :param continuation_func: A function which takes the future as the only parameter. Return value of the function
+        will be set as the result of the continuation future
+        :return: A new future which will be completed when the continuation is done
+        """
+        future = Future()
+
+        def callback(f):
+            try:
+                future.set_result(continuation_func(f))
+            except:
+                future.set_exception(sys.exc_info()[1])
+
+        self.add_done_callback(callback)
+        return future
+
+
+class Invocation(object):
     handler = None
     sent_connection = None
+    timer = None
 
-    def __init__(self, request, partition_id=-1, address=None, connection=None, timeout=INVOCATION_TIMEOUT,
-                 callback=None, error_callback=None):
+    def __init__(self, request, partition_id=-1, address=None, connection=None, timeout=INVOCATION_TIMEOUT):
         self._event = threading.Event()
         self.timeout = timeout + time.time()
         self.address = address
-        self.callback = callback
-        self.error_callback = error_callback
         self.connection = connection
         self.partition_id = partition_id
         self.request = request
+        self.future = Future()
 
     def has_connection(self):
         return self.connection is not None
@@ -42,33 +107,17 @@ class Invocation(object):
         return self.address is not None
 
     def set_response(self, response):
-        self._response = response
-        self._event.set()
         if self.timer:
             self.timer.cancel()
-        if self.callback:
-            self.callback(response)
+        self.future.set_result(response)
 
     def set_exception(self, exception):
-        self._exception = exception
-        self._event.set()
         if self.timer:
             self.timer.cancel()
-        if self.error_callback:
-            self.error_callback(exception)
-
-    def result(self):
-        self._event.wait()
-        if self._response is not None:
-            return self._response
-        raise self._exception
+        self.future.set_exception(exception)
 
     def on_timeout(self):
         self.set_exception(RuntimeError("Requested timed out."))
-
-    @property
-    def completed(self):
-        return self._response is not None or self._exception is not None
 
 
 class InvocationService(object):
@@ -87,17 +136,17 @@ class InvocationService(object):
         except:
             self.logger.warn("Error handling event %s", message, exc_info=True)
 
-    def invoke_on_connection(self, message, connection, event_handler=None, callback=None):
-        return self._invoke(Invocation(message, connection=connection, callback=callback), event_handler)
+    def invoke_on_connection(self, message, connection, event_handler=None):
+        return self._invoke(Invocation(message, connection=connection), event_handler)
 
-    def invoke_on_partition(self, message, partition_id, event_handler=None, callback=None):
-        return self._invoke(Invocation(message, partition_id=partition_id, callback=callback), event_handler)
+    def invoke_on_partition(self, message, partition_id, event_handler=None):
+        return self._invoke(Invocation(message, partition_id=partition_id), event_handler)
 
-    def invoke_on_random_target(self, message, event_handler=None, callback=None):
-        return self._invoke(Invocation(message, callback=callback), event_handler)
+    def invoke_on_random_target(self, message, event_handler=None):
+        return self._invoke(Invocation(message), event_handler)
 
-    def invoke_on_target(self, message, address, event_handler=None, callback=None):
-        return self._invoke(Invocation(message, address=address, callback=callback), event_handler)
+    def invoke_on_target(self, message, address, event_handler=None):
+        return self._invoke(Invocation(message, address=address), event_handler)
 
     def _invoke(self, invocation, event_handler):
         if event_handler is not None:
@@ -132,7 +181,7 @@ class InvocationService(object):
             self._listeners[correlation_id] = invocation
 
         self.logger.debug("Sending message with correlation id %s and type %s", correlation_id,
-        message.get_message_type())
+                          message.get_message_type())
 
         if not connection.callback:
             connection.callback = self.handle_client_message

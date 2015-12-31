@@ -43,7 +43,7 @@ class ClusterService(object):
                 username=self._config.group_config.name, password=self._config.group_config.password,
                 uuid=None, owner_uuid=None, is_owner_connection=True, client_type=CLIENT_TYPE,
                 serialization_version=SERIALIZATION_VERSION)
-            response = self._client.invoker.invoke_on_connection(request, conn).result()
+            response = self._client.invoker.invoke_on_connection(request, conn).future.result()
             parameters = client_authentication_codec.decode_response(response)
             if parameters["status"] != 0:
                 raise RuntimeError("Authentication failed")
@@ -62,7 +62,7 @@ class ClusterService(object):
         def handler(m):
             client_add_membership_listener_codec.handle(m, self._handle_member, self._handle_member_list)
 
-        response = self._client.invoker.invoke_on_connection(request, connection, handler).result()
+        response = self._client.invoker.invoke_on_connection(request, connection, handler).future.result()
         registration_id = client_add_membership_listener_codec.decode_response(response)["response"]
         self.logger.debug("Registered membership listener with ID " + registration_id)
         self._initial_list_fetched.wait()
