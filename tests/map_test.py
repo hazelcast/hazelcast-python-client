@@ -2,12 +2,12 @@ import unittest
 import hazelcast
 from util import random_string
 
-class ClientMapTest(unittest.TestCase):
 
+class ClientMapTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        config = hazelcast.Config()
-        config.addresses.append("127.0.0.1:5701")
+        config = hazelcast.ClientConfig()
+        config.network_config.addresses.append("127.0.0.1:5701")
         cls.client = hazelcast.HazelcastClient(config)
 
     @classmethod
@@ -22,12 +22,12 @@ class ClientMapTest(unittest.TestCase):
 
     def fill_map(self, map):
         for i in xrange(0, 10):
-            map.put("key-%d" % i, "value-%d" %i)
+            map.put("key-%d" % i, "value-%d" % i)
 
     def test_put_get(self):
         self.fill_map(self.map)
         for i in xrange(0, 10):
-            self.assertEqual("value-%d" %i, self.map.get("key-%d" % i))
+            self.assertEqual("value-%d" % i, self.map.get("key-%d" % i))
 
     def test_contains_key(self):
         self.fill_map(self.map)

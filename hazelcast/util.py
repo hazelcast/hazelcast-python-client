@@ -15,3 +15,12 @@ class AtomicInteger(object):
         with self.lock:
             self.initial += 1
             return self.initial
+
+def enum(**enums):
+    """
+    Utility method for defining enums
+    :param enums:
+    :return:
+    """
+    enums['reverse'] = dict((value, key) for key, value in enums.iteritems())
+    return type('Enum', (), enums)

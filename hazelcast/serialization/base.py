@@ -1,9 +1,10 @@
+import sys
+import traceback
 from threading import RLock
-import traceback,sys
 
 from api import *
 from data import *
-from hazelcast.core import *
+from hazelcast.exception import HazelcastError, HazelcastInstanceNotActiveError
 from hazelcast.serialization.input import _ObjectDataInput
 from hazelcast.serialization.output import _ObjectDataOutput
 from hazelcast.serialization.serializer import *

@@ -1,11 +1,15 @@
 """
 Hazelcast client protocol codecs
 """
-from hazelcast.core import *
+
+from collections import namedtuple
+
+from hazelcast.core import Member, DistributedObjectInfo, EntryView, Address
+
+EXCEPTION_MESSAGE_TYPE = 109
 
 
-# Custom Codec encoder/decoder functions used from codecs
-class MemberCodec:
+class MemberCodec(object):
     @classmethod
     def encode(cls, client_message, member):
         AddressCodec.encode(client_message, member.address)
@@ -30,7 +34,7 @@ class MemberCodec:
         return Member(address, uuid, attributes, lite_member)
 
 
-class AddressCodec:
+class AddressCodec(object):
     @classmethod
     def encode(cls, client_message, obj):
         client_message.append_str(obj.host).append_int(obj.port)
@@ -42,7 +46,7 @@ class AddressCodec:
         return Address(host, port)
 
 
-class DistributedObjectInfoCodec:
+class DistributedObjectInfoCodec(object):
     @classmethod
     def encode(cls, client_message, obj):
         client_message.append_str(obj.service_name).append_str(obj.name)
@@ -54,7 +58,7 @@ class DistributedObjectInfoCodec:
         return DistributedObjectInfo(name, service_name)
 
 
-class EntryViewCodec:
+class EntryViewCodec(object):
     @classmethod
     def encode(cls, client_message, entry_view):
         client_message.append_data(entry_view.key)
@@ -90,7 +94,7 @@ class EntryViewCodec:
         return entry_view
 
 
-class QueryCacheEventDataCodec:
+class QueryCacheEventDataCodec(object):
     @classmethod
     def encode(cls, client_message, obj):
         pass
@@ -98,3 +102,41 @@ class QueryCacheEventDataCodec:
     @classmethod
     def decode(cls, client_message):
         pass
+
+
+StackTraceElement = namedtuple('StackTraceElement', ['declaring_class', 'method_name', 'file_name', 'line_number'])
+
+
+class ErrorCodec(object):
+    message = None
+    cause_class_name = None
+
+    def __init__(self, client_message):
+        self.error_code = client_message.read_int()
+        self.class_name = client_message.read_str()
+        if not client_message.read_bool():
+            self.message = client_message.read_str()
+
+        self.stack_trace = []
+        stack_trace_count = client_message.read_int()
+        for _ in xrange(stack_trace_count):
+            self.stack_trace.append(self.decode_stack_trace(client_message))
+
+        self.cause_error_code = client_message.read_int()
+        if not client_message.read_bool():
+            self.cause_class_name = client_message.read_str()
+
+    @staticmethod
+    def decode_stack_trace(client_message):
+        declaring_class = client_message.read_str()
+        method_name = client_message.read_str()
+        if not client_message.read_bool():
+            file_name = client_message.read_str()
+        line_number = client_message.read_int()
+        return StackTraceElement(declaring_class=declaring_class,
+                                 method_name=method_name, file_name=file_name, line_number=line_number)
+
+    def __str__(self):
+        return 'ErrorCodec(error_code="%s", class_name="%s", message="%s", cause_error_code="%s", ' \
+               'cause_class_name="%s' % (self.error_code, self.class_name, self.message, self.cause_error_code,
+                                         self.cause_class_name)

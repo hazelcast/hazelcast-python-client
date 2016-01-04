@@ -1,9 +1,8 @@
 from collections import namedtuple
-from hazelcast.core import enum
 from hazelcast.protocol.codec import map_add_entry_listener_codec, map_contains_key_codec, map_get_codec, map_put_codec, \
     map_size_codec, map_remove_codec
 from hazelcast.proxy.base import Proxy, thread_id
-from hazelcast.util import check_not_none
+from hazelcast.util import check_not_none, enum
 
 EntryEventType = enum(added=1,
                       removed=1 << 1,
@@ -17,7 +16,6 @@ EntryEventType = enum(added=1,
 EntryEvent = namedtuple("EntryEvent",
                         ["key", "value", "old_value", "merging_value", "event_type", "uuid",
                          "number_of_affected_entries"])
-
 
 class MapProxy(Proxy):
     def contains_key(self, key):

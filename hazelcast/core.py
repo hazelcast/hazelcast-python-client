@@ -3,7 +3,6 @@
 SERIALIZATION_VERSION = 1
 CLIENT_TYPE = "PHY"
 
-
 class Member(object):
     def __init__(self, address, uuid, is_lite_member, attributes):
         self.address = address
@@ -64,31 +63,3 @@ class EntryView(object):
         self.version = None
         self.evictionCriteriaNumber = None
         self.ttl = None
-
-
-def enum(**enums):
-    """
-    Utility method for defining enums
-    :param enums:
-    :return:
-    """
-    enums['reverse'] = dict((value, key) for key, value in enums.iteritems())
-    return type('Enum', (), enums)
-
-
-class HazelcastError(Exception):
-    def __init__(self, cause=None):
-        self._cause = cause
-
-    def cause(self):
-        return self._cause
-
-    # def __str__(self):
-    #     return str(self._cause)
-    #
-    # def __repr__(self):
-    #     return repr(self._cause)
-
-
-class HazelcastInstanceNotActiveError(HazelcastError):
-    pass

@@ -1,10 +1,12 @@
-from Queue import Queue, Empty
 import logging
 import sys
 import threading
 import time
+from Queue import Queue
 
+from hazelcast.exception import create_exception
 from hazelcast.protocol.client_message import LISTENER_FLAG
+from hazelcast.protocol.custom_codec import EXCEPTION_MESSAGE_TYPE, ErrorCodec
 from hazelcast.util import AtomicInteger
 
 EVENT_LOOP_COUNT = 100
@@ -34,6 +36,8 @@ class Future(object):
 
     def result(self):
         self._event.wait()
+        if self._exception:
+            raise self._exception
         return self._result
 
     def done(self):
@@ -203,10 +207,15 @@ class InvocationService(object):
             self.logger.warn("Got message with unknown correlation id: %d", correlation_id)
             return
         invocation = self._pending.pop(correlation_id)
+
+        if message.get_message_type() == EXCEPTION_MESSAGE_TYPE:
+            error = create_exception(ErrorCodec(message))
+            return self.handle_exception(invocation, error)
+
         invocation.set_response(message)
 
     def handle_exception(self, invocation, error):
-        self.logger.debug("Got exception for request with correlation id %d: %s", invocation.get_correlation_id(),
+        self.logger.debug("Got exception for request %s: %s", invocation.request,
                           error)
         if isinstance(error, IOError):
             pass
