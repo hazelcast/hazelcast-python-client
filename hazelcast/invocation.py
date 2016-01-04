@@ -4,13 +4,15 @@ import threading
 import time
 from Queue import Queue
 
-from hazelcast.exception import create_exception
+import functools
+
+from hazelcast.exception import create_exception, HazelcastInstanceNotActiveError, is_retryable_error
 from hazelcast.protocol.client_message import LISTENER_FLAG
 from hazelcast.protocol.custom_codec import EXCEPTION_MESSAGE_TYPE, ErrorCodec
 from hazelcast.util import AtomicInteger
 
-EVENT_LOOP_COUNT = 100
 INVOCATION_TIMEOUT = 120
+RETRY_WAIT_TIME_IN_SECONDS = 1
 
 
 class Future(object):
@@ -85,24 +87,25 @@ class Future(object):
 
 
 class Invocation(object):
-    handler = None
     sent_connection = None
     timer = None
 
-    def __init__(self, request, partition_id=-1, address=None, connection=None, timeout=INVOCATION_TIMEOUT):
+    def __init__(self, request, partition_id=-1, address=None, connection=None, event_handler=None,
+                 timeout=INVOCATION_TIMEOUT):
         self._event = threading.Event()
         self.timeout = timeout + time.time()
         self.address = address
         self.connection = connection
         self.partition_id = partition_id
         self.request = request
+        self.event_handler = event_handler
         self.future = Future()
 
     def has_connection(self):
         return self.connection is not None
 
-    def has_handler(self):
-        return self.handler is not None
+    def has_event_handler(self):
+        return self.event_handler is not None
 
     def has_partition_id(self):
         return self.partition_id >= 0
@@ -133,28 +136,27 @@ class InvocationService(object):
         self._next_correlation_id = AtomicInteger(1)
         self._client = client
         self._event_queue = Queue()
+        self._is_redo_operation = False  # TODO: set from config
 
     def handle_event(self, invocation, message):
         try:
-            invocation.handler(message)
+            invocation.event_handler(message)
         except:
             self.logger.warn("Error handling event %s", message, exc_info=True)
 
     def invoke_on_connection(self, message, connection, event_handler=None):
-        return self._invoke(Invocation(message, connection=connection), event_handler)
+        return self._invoke(Invocation(message, connection=connection, event_handler=event_handler))
 
     def invoke_on_partition(self, message, partition_id, event_handler=None):
-        return self._invoke(Invocation(message, partition_id=partition_id), event_handler)
+        return self._invoke(Invocation(message, partition_id=partition_id, event_handler=event_handler))
 
     def invoke_on_random_target(self, message, event_handler=None):
-        return self._invoke(Invocation(message), event_handler)
+        return self._invoke(Invocation(message, event_handler=event_handler))
 
     def invoke_on_target(self, message, address, event_handler=None):
-        return self._invoke(Invocation(message, address=address), event_handler)
+        return self._invoke(Invocation(message, address=address, event_handler=event_handler))
 
-    def _invoke(self, invocation, event_handler):
-        if event_handler is not None:
-            invocation.handler = event_handler
+    def _invoke(self, invocation):
         if invocation.has_connection():
             self._send(invocation, invocation.connection)
         elif invocation.has_partition_id():
@@ -181,7 +183,7 @@ class InvocationService(object):
         if not invocation.timer:
             invocation.timer = self._client.reactor.add_timer(invocation.timeout, invocation.on_timeout)
 
-        if invocation.has_handler():
+        if invocation.has_event_handler():
             self._listeners[correlation_id] = invocation
 
         self.logger.debug("Sending message with correlation id %s and type %s", correlation_id,
@@ -217,11 +219,27 @@ class InvocationService(object):
     def handle_exception(self, invocation, error):
         self.logger.debug("Got exception for request %s: %s", invocation.request,
                           error)
-        if isinstance(error, IOError):
-            pass
-            # TODO: retry
+        if isinstance(error, (IOError, HazelcastInstanceNotActiveError)):
+            if self.try_retry(invocation):
+                return
+
+        if is_retryable_error(error):
+            if invocation.request.is_retryable() or self._is_redo_operation:
+                if self.try_retry(invocation):
+                    return
 
         invocation.set_exception(error)
+
+    def try_retry(self, invocation):
+        if invocation.connection:
+            return False
+        if invocation.timeout > time.time():
+            return False
+
+        invoke_func = functools.partial(self._invoke, invocation)
+        self.logger.debug("Rescheduling request %s to be retried in %s seconds", invocation.request,
+                          RETRY_WAIT_TIME_IN_SECONDS)
+        self._client.reactor.add_timer(RETRY_WAIT_TIME_IN_SECONDS, invoke_func)
 
     def connection_closed(self, connection):
         for correlation_id, invocation in dict(self._pending).iteritems():

@@ -1,10 +1,11 @@
 import logging
 import random
 import threading
+import time
 
 from hazelcast.core import CLIENT_TYPE, SERIALIZATION_VERSION, Address
-
 # Membership Event Types
+from hazelcast.exception import HazelcastError
 from hazelcast.protocol.codec import client_add_membership_listener_codec, client_authentication_codec
 
 MEMBER_ADDED = 1
@@ -35,24 +36,39 @@ class ClusterService(object):
         return Address(host, int(port))
 
     def _connect_to_cluster(self):
-        address = self._parse_addr(self._config.network_config.addresses[0])
+        address = self._parse_addr(self._config.network_config.addresses[0]) #TODO: try all addresses
         self.logger.info("Connecting to %s", address)
 
-        def authenticate_manager(conn):
-            request = client_authentication_codec.encode_request(
-                username=self._config.group_config.name, password=self._config.group_config.password,
-                uuid=None, owner_uuid=None, is_owner_connection=True, client_type=CLIENT_TYPE,
-                serialization_version=SERIALIZATION_VERSION)
-            response = self._client.invoker.invoke_on_connection(request, conn).future.result()
-            parameters = client_authentication_codec.decode_response(response)
-            if parameters["status"] != 0:
-                raise RuntimeError("Authentication failed")
-            conn.endpoint = parameters["address"]
-            self.owner_uuid = parameters["owner_uuid"]
-            self.uuid = parameters["uuid"]
+        current_attempt = 1
+        attempt_limit = self._config.network_config.connection_attempt_limit
+        retry_delay = self._config.network_config.connection_attempt_period
+        while current_attempt <= self._config.network_config.connection_attempt_limit:
+            try:
+                self._connect_to_address(address)
+                return
+            except:
+                self.logger.warning("Error connecting to %s, attempt %d of %d, trying again in %d seconds",
+                                    address, current_attempt, attempt_limit, retry_delay, exc_info=True)
+                time.sleep(retry_delay)
+                current_attempt += 1
 
-        connection = self._client.connection_manager.get_or_connect(address, authenticate_manager)
+        raise HazelcastError("Could not connect to the given addresses after %d tries" % (attempt_limit,))
 
+    def _authenticate_manager(self, connection):
+        request = client_authentication_codec.encode_request(
+            username=self._config.group_config.name, password=self._config.group_config.password,
+            uuid=None, owner_uuid=None, is_owner_connection=True, client_type=CLIENT_TYPE,
+            serialization_version=SERIALIZATION_VERSION)
+        response = self._client.invoker.invoke_on_connection(request, connection).future.result()
+        parameters = client_authentication_codec.decode_response(response)
+        if parameters["status"] != 0:
+            raise RuntimeError("Authentication failed")
+        connection.endpoint = parameters["address"]
+        self.owner_uuid = parameters["owner_uuid"]
+        self.uuid = parameters["uuid"]
+
+    def _connect_to_address(self, address):
+        connection = self._client.connection_manager.get_or_connect(address, self._authenticate_manager)
         self.owner_connection_address = connection.endpoint
         self._init_membership_listener(connection)
 
@@ -87,6 +103,7 @@ class ClusterService(object):
 
     def shutdown(self):
         pass
+
 
 class RandomLoadBalancer(object):
     def __init__(self, cluster):
