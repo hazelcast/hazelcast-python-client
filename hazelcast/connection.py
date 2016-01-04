@@ -38,7 +38,7 @@ class ConnectionManager(object):
             uuid=uuid,
             owner_uuid=owner_uuid,
             is_owner_connection=False,
-            client_type="PHY",
+            client_type="PYH",
             serialization_version=1)
 
         response = self._client.invoker.invoke_on_connection(request, conn).future.result()
