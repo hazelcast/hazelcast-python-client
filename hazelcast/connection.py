@@ -4,6 +4,7 @@ import logging
 import threading
 import struct
 
+from hazelcast.core import CLIENT_TYPE
 from hazelcast.protocol.client_message import BEGIN_END_FLAG, ClientMessage
 from hazelcast.protocol.codec import client_authentication_codec
 from hazelcast.serialization import INT_SIZE_IN_BYTES, FMT_LE_INT
@@ -38,7 +39,7 @@ class ConnectionManager(object):
             uuid=uuid,
             owner_uuid=owner_uuid,
             is_owner_connection=False,
-            client_type="PYH",
+            client_type=CLIENT_TYPE,
             serialization_version=1)
 
         response = self._client.invoker.invoke_on_connection(request, conn).future.result()
