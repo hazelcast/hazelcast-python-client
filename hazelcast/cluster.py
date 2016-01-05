@@ -5,7 +5,7 @@ import time
 
 from hazelcast.core import CLIENT_TYPE, SERIALIZATION_VERSION, Address
 # Membership Event Types
-from hazelcast.exception import HazelcastError
+from hazelcast.exception import HazelcastError, AuthenticationError
 from hazelcast.protocol.codec import client_add_membership_listener_codec, client_authentication_codec
 
 MEMBER_ADDED = 1
@@ -62,7 +62,7 @@ class ClusterService(object):
         response = self._client.invoker.invoke_on_connection(request, connection).future.result()
         parameters = client_authentication_codec.decode_response(response)
         if parameters["status"] != 0:
-            raise RuntimeError("Authentication failed")
+            raise AuthenticationError("Authentication failed")
         connection.endpoint = parameters["address"]
         self.owner_uuid = parameters["owner_uuid"]
         self.uuid = parameters["uuid"]

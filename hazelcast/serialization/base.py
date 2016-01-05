@@ -1,10 +1,9 @@
 import sys
 import traceback
 from threading import RLock
-
 from api import *
 from data import *
-from hazelcast.exception import HazelcastError, HazelcastInstanceNotActiveError
+from hazelcast.exception import HazelcastError, HazelcastInstanceNotActiveError, HazelcastSerializationError
 from hazelcast.serialization.input import _ObjectDataInput
 from hazelcast.serialization.output import _ObjectDataOutput
 from hazelcast.serialization.serializer import *
@@ -22,11 +21,6 @@ def handle_exception(e):
         raise e
     else:
         raise HazelcastSerializationError(e.message)
-
-
-class HazelcastSerializationError(HazelcastError):
-    def __init__(self, message):
-        self.message = message
 
 
 def is_null_data(data):
@@ -254,7 +248,8 @@ class SerializerRegistry(object):
                 type_id = JAVA_DEFAULT_TYPE_BIG_INTEGER
         elif obj_type is float:
             type_id = CONSTANT_TYPE_FLOAT if MIN_FLOAT32 <= obj <= MAX_FLOAT32 else CONSTANT_TYPE_DOUBLE
-        return self.serializer_by_type_id(type_id) if type_id is not None else  self._constant_type_dict.get(obj_type, None)
+        return self.serializer_by_type_id(type_id) if type_id is not None else  self._constant_type_dict.get(obj_type,
+                                                                                                             None)
 
     def lookup_custom_serializer(self, obj_type):
         serializer = self._type_dict.get(obj_type, None)
@@ -291,7 +286,8 @@ class SerializerRegistry(object):
                 current = self._type_dict.get(obj_type, None)
                 if current is not None and _serializer_eq(current, stream_serializer):
                     raise ValueError(
-                        "Serializer[{}] has been already registered for type: {}".format(current.get_implementation(), obj_type))
+                        "Serializer[{}] has been already registered for type: {}".format(current.get_implementation(),
+                                                                                         obj_type))
                 else:
                     self._constant_type_dict[obj_type] = stream_serializer
 

@@ -1,10 +1,10 @@
-from Queue import Empty, PriorityQueue
 import asyncore
-from collections import deque
 import logging
 import socket
 import threading
 import time
+from Queue import PriorityQueue
+from collections import deque
 
 from hazelcast.connection import Connection, BUFFER_SIZE
 
@@ -43,10 +43,13 @@ class AsyncoreReactor(object):
             else:
                 return
 
-    def add_timer(self, timeout, callback):
+    def add_timer_absolute(self, timeout, callback):
         timer = Timer(timeout, callback)
         self._timers.put_nowait((timer.end, timer))
         return timer
+
+    def add_timer(self, delay, callback):
+        self.add_timer_absolute(delay + time.time(), callback)
 
     def shutdown(self):
         asyncore.close_all()
@@ -69,7 +72,6 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
     def handle_read(self):
         self._read_buffer += self.recv(BUFFER_SIZE)
-        self.logger.debug("Read %d bytes", len(self._read_buffer))
         self.receive_message()
 
     def handle_write(self):
@@ -78,7 +80,6 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         except IndexError:
             return
         sent = self.send(item)
-        self.logger.debug("Written " + str(sent) + " bytes")
         if sent < len(item):
             self._write_queue.appendleft(item[sent:])
 
@@ -105,8 +106,8 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 class Timer(object):
     canceled = False
 
-    def __init__(self, timeout, timer_ended_cb):
-        self.end = time.time() + timeout
+    def __init__(self, end, timer_ended_cb):
+        self.end = end
         self.timer_ended_cb = timer_ended_cb
 
     def cancel(self):

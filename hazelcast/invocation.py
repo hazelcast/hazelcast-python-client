@@ -6,7 +6,7 @@ from Queue import Queue
 
 import functools
 
-from hazelcast.exception import create_exception, HazelcastInstanceNotActiveError, is_retryable_error
+from hazelcast.exception import create_exception, HazelcastInstanceNotActiveError, is_retryable_error, TimeoutError
 from hazelcast.protocol.client_message import LISTENER_FLAG
 from hazelcast.protocol.custom_codec import EXCEPTION_MESSAGE_TYPE, ErrorCodec
 from hazelcast.util import AtomicInteger
@@ -124,7 +124,7 @@ class Invocation(object):
         self.future.set_exception(exception)
 
     def on_timeout(self):
-        self.set_exception(RuntimeError("Requested timed out."))
+        self.set_exception(TimeoutError("Request timed out after %d seconds." % INVOCATION_TIMEOUT))
 
 
 class InvocationService(object):
@@ -181,13 +181,12 @@ class InvocationService(object):
         message.set_partition_id(invocation.partition_id)
         self._pending[correlation_id] = invocation
         if not invocation.timer:
-            invocation.timer = self._client.reactor.add_timer(invocation.timeout, invocation.on_timeout)
+            invocation.timer = self._client.reactor.add_timer_absolute(invocation.timeout, invocation.on_timeout)
 
         if invocation.has_event_handler():
             self._listeners[correlation_id] = invocation
 
-        self.logger.debug("Sending message with correlation id %s and type %s", correlation_id,
-                          message.get_message_type())
+        self.logger.debug("Sending %s", message)
 
         if not connection.callback:
             connection.callback = self.handle_client_message
@@ -195,18 +194,16 @@ class InvocationService(object):
 
     def handle_client_message(self, message):
         correlation_id = message.get_correlation_id()
-        self.logger.debug("Received message with correlation id %s and type %s", correlation_id,
-                          message.get_message_type())
+        self.logger.debug("Received %s", message)
         if message.has_flags(LISTENER_FLAG):
-            self.logger.debug("Got event message with type %d", message.get_message_type())
             if correlation_id not in self._listeners:
-                self.logger.warn("Got event message with unknown correlation id: %d", correlation_id)
+                self.logger.warn("Got event message with unknown correlation id: %s", message)
                 return
             invocation = self._listeners[correlation_id]
             self.handle_event(invocation, message)
             return
         if correlation_id not in self._pending:
-            self.logger.warn("Got message with unknown correlation id: %d", correlation_id)
+            self.logger.warn("Got message with unknown correlation id: %s", message)
             return
         invocation = self._pending.pop(correlation_id)
 
@@ -233,13 +230,14 @@ class InvocationService(object):
     def try_retry(self, invocation):
         if invocation.connection:
             return False
-        if invocation.timeout > time.time():
+        if invocation.timeout < time.time():
             return False
 
         invoke_func = functools.partial(self._invoke, invocation)
         self.logger.debug("Rescheduling request %s to be retried in %s seconds", invocation.request,
                           RETRY_WAIT_TIME_IN_SECONDS)
         self._client.reactor.add_timer(RETRY_WAIT_TIME_IN_SECONDS, invoke_func)
+        return True
 
     def connection_closed(self, connection):
         for correlation_id, invocation in dict(self._pending).iteritems():

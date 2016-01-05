@@ -94,7 +94,6 @@ class Connection(object):
         while len(self._read_buffer) >= INT_SIZE_IN_BYTES:
             frame_length = struct.unpack_from(FMT_LE_INT, self._read_buffer, 0)[0]
             if frame_length > len(self._read_buffer):
-                self.logger.debug("Message is not yet complete")
                 return
             message = ClientMessage(buffer(self._read_buffer, 0, frame_length))
             self._read_buffer = self._read_buffer[frame_length:]
