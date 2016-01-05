@@ -41,5 +41,5 @@ def handle(client_message, handle_event_distributedobject = None):
         name = client_message.read_str()
         service_name = client_message.read_str()
         event_type = client_message.read_str()
-        handle_event_distributedobject(name, service_name, event_type)
+        handle_event_distributedobject(name=name, service_name=service_name, event_type=event_type)
 

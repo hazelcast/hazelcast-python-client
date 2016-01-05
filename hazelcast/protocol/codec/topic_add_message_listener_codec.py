@@ -43,5 +43,5 @@ def handle(client_message, handle_event_topic = None):
         item = client_message.read_data()
         publish_time = client_message.read_long()
         uuid = client_message.read_str()
-        handle_event_topic(item, publish_time, uuid)
+        handle_event_topic(item=item, publish_time=publish_time, uuid=uuid)
 

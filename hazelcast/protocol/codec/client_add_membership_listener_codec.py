@@ -1,4 +1,4 @@
-# from hazelcast.serialization.data import *
+from hazelcast.serialization.data import *
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import ClientMessage
 from hazelcast.protocol.custom_codec import *
@@ -40,14 +40,14 @@ def handle(client_message, handle_event_member = None, handle_event_memberlist =
     if message_type == EVENT_MEMBER and handle_event_member is not None:
         member = MemberCodec.decode(client_message)
         event_type = client_message.read_int()
-        handle_event_member(member, event_type)
+        handle_event_member(member=member, event_type=event_type)
     if message_type == EVENT_MEMBERLIST and handle_event_memberlist is not None:
         members_size = client_message.read_int()
         members = []
         for members_index in xrange(0, members_size):
             members_item = MemberCodec.decode(client_message)
             members.append(members_item)
-        handle_event_memberlist(members)
+        handle_event_memberlist(members=members)
     if message_type == EVENT_MEMBERATTRIBUTECHANGE and handle_event_memberattributechange is not None:
         uuid = client_message.read_str()
         key = client_message.read_str()
@@ -55,5 +55,5 @@ def handle(client_message, handle_event_member = None, handle_event_memberlist =
         value=None
         if not client_message.read_bool():
             value = client_message.read_str()
-        handle_event_memberattributechange(uuid, key, operation_type, value)
+        handle_event_memberattributechange(uuid=uuid, key=key, operation_type=operation_type, value=value)
 

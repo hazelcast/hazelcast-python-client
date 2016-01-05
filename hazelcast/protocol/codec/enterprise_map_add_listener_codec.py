@@ -41,7 +41,7 @@ def handle(client_message, handle_event_querycachesingle = None, handle_event_qu
     message_type = client_message.get_message_type()
     if message_type == EVENT_QUERYCACHESINGLE and handle_event_querycachesingle is not None:
         data = QueryCacheEventDataCodec.decode(client_message)
-        handle_event_querycachesingle(data)
+        handle_event_querycachesingle(data=data)
     if message_type == EVENT_QUERYCACHEBATCH and handle_event_querycachebatch is not None:
         events_size = client_message.read_int()
         events = []
@@ -50,5 +50,5 @@ def handle(client_message, handle_event_querycachesingle = None, handle_event_qu
             events.append(events_item)
         source = client_message.read_str()
         partition_id = client_message.read_int()
-        handle_event_querycachebatch(events, source, partition_id)
+        handle_event_querycachebatch(events=events, source=source, partition_id=partition_id)
 

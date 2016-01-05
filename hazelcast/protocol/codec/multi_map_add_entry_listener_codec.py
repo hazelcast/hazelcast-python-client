@@ -57,5 +57,5 @@ def handle(client_message, handle_event_entry = None):
         event_type = client_message.read_int()
         uuid = client_message.read_str()
         number_of_affected_entries = client_message.read_int()
-        handle_event_entry(key, value, old_value, merging_value, event_type, uuid, number_of_affected_entries)
+        handle_event_entry(key=key, value=value, old_value=old_value, merging_value=merging_value, event_type=event_type, uuid=uuid, number_of_affected_entries=number_of_affected_entries)
 

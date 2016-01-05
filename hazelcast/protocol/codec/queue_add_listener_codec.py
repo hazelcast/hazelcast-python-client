@@ -47,5 +47,5 @@ def handle(client_message, handle_event_item = None):
             item = client_message.read_data()
         uuid = client_message.read_str()
         event_type = client_message.read_int()
-        handle_event_item(item, uuid, event_type)
+        handle_event_item(item=item, uuid=uuid, event_type=event_type)
 
