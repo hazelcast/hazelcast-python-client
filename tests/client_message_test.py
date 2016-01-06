@@ -3,7 +3,7 @@ import unittest
 
 from hazelcast.protocol.client_message import *
 
-READ_HEADER = "00" * 16 + "1200"
+READ_HEADER = "00" * 20 + "1600"
 
 
 class ClientMessageTest(unittest.TestCase):
@@ -38,28 +38,32 @@ class ClientMessageTest(unittest.TestCase):
         message.append_byte(0xF2)
         message.append_byte(0x34)
 
-        self.assertEqual("21f234", binascii.hexlify(message.buffer[18:21]))
+        data_offset = message.get_data_offset()
+        self.assertEqual("21f234", binascii.hexlify(message.buffer[data_offset:data_offset+3]))
 
     def test_append_bool(self):
         message = ClientMessage(payload_size=30)
 
         message.append_bool(True)
 
-        self.assertEqual("01", binascii.hexlify(message.buffer[18:19]))
+        data_offset = message.get_data_offset()
+        self.assertEqual("01", binascii.hexlify(message.buffer[data_offset:data_offset+1]))
 
     def test_append_int(self):
         message = ClientMessage(payload_size=30)
 
         message.append_int(0x1feeddcc)
 
-        self.assertEqual("ccddee1f", binascii.hexlify(message.buffer[18:22]))
+        data_offset = message.get_data_offset()
+        self.assertEqual("ccddee1f", binascii.hexlify(message.buffer[data_offset:data_offset+4]))
 
     def test_append_long(self):
         message = ClientMessage(payload_size=30)
 
         message.append_long(0x1feeddccbbaa8765)
 
-        self.assertEqual("6587aabbccddee1f", binascii.hexlify(message.buffer[18:26]))
+        data_offset = message.get_data_offset()
+        self.assertEqual("6587aabbccddee1f", binascii.hexlify(message.buffer[data_offset:data_offset+8]))
 
     def test_append_str(self):
         message = ClientMessage(payload_size=30)
@@ -79,16 +83,16 @@ class ClientMessageTest(unittest.TestCase):
         message.append_str("abc")
 
         # buffer content should be
-        # 01000000 00 02 0300 04000000 05000000 1200 03000000 616263 0000000000000000000000000000000000000000000000
+        # 01000000 00 02 0300 0400000000000000 05000000 1600 03000000 616263 0000000000000000000000000000000000000000000000
         self.assertEqual("01000000", binascii.hexlify(message.buffer[0:4]))
         self.assertEqual("00", binascii.hexlify(message.buffer[4:5]))
         self.assertEqual("02", binascii.hexlify(message.buffer[5:6]))
         self.assertEqual("0300", binascii.hexlify(message.buffer[6:8]))
-        self.assertEqual("04000000", binascii.hexlify(message.buffer[8:12]))
-        self.assertEqual("05000000", binascii.hexlify(message.buffer[12:16]))
-        self.assertEqual("1200", binascii.hexlify(message.buffer[16:18]))
-        self.assertEqual("03000000", binascii.hexlify(message.buffer[18:22]))
-        self.assertEqual("616263", binascii.hexlify(message.buffer[22:25]))
+        self.assertEqual("0400000000000000", binascii.hexlify(message.buffer[8:16]))
+        self.assertEqual("05000000", binascii.hexlify(message.buffer[16:20]))
+        self.assertEqual("1600", binascii.hexlify(message.buffer[20:22]))
+        self.assertEqual("03000000", binascii.hexlify(message.buffer[22:26]))
+        self.assertEqual("616263", binascii.hexlify(message.buffer[26:29]))
 
         print message
 
