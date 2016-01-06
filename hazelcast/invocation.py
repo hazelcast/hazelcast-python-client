@@ -1,92 +1,17 @@
 import logging
-import sys
 import threading
 import time
 from Queue import Queue
-
 import functools
-
-from hazelcast.exception import create_exception, HazelcastInstanceNotActiveError, is_retryable_error, TimeoutError
+from hazelcast.exception import create_exception, HazelcastInstanceNotActiveError, is_retryable_error, TimeoutError, \
+    AuthenticationError
+from hazelcast.future import Future
 from hazelcast.protocol.client_message import LISTENER_FLAG
 from hazelcast.protocol.custom_codec import EXCEPTION_MESSAGE_TYPE, ErrorCodec
 from hazelcast.util import AtomicInteger
 
 INVOCATION_TIMEOUT = 120
 RETRY_WAIT_TIME_IN_SECONDS = 1
-
-
-class Future(object):
-    _result = None
-    _exception = None
-    logger = logging.getLogger("Future")
-
-    def __init__(self):
-        self._callbacks = []
-        self._event = threading.Event()
-        pass
-
-    def set_result(self, result):
-        self._result = result
-        self._event.set()
-
-        self._invoke_callbacks()
-
-    def set_exception(self, exception):
-        self._exception = exception
-        self._event.set()
-        self._invoke_callbacks()
-
-    def result(self):
-        self._event.wait()
-        if self._exception:
-            raise self._exception
-        return self._result
-
-    def is_success(self):
-        return self._result is not None
-
-    def done(self):
-        return self._event.isSet()
-
-    def running(self):
-        return not self.done()
-
-    def exception(self):
-        self._event.wait()
-        return self._exception
-
-    def add_done_callback(self, callback):
-        self._callbacks.append(callback)
-        if self.done():
-            self._invoke_cb(callback)
-
-    def _invoke_callbacks(self):
-        for callback in self._callbacks:
-            self._invoke_cb(callback)
-
-    def _invoke_cb(self, callback):
-        try:
-            callback(self)
-        except:
-            logging.exception("Exception when invoking callback")
-
-    def continue_with(self, continuation_func):
-        """
-        Create a continuation that executes when the future is completed
-        :param continuation_func: A function which takes the future as the only parameter. Return value of the function
-        will be set as the result of the continuation future
-        :return: A new future which will be completed when the continuation is done
-        """
-        future = Future()
-
-        def callback(f):
-            try:
-                future.set_result(continuation_func(f))
-            except:
-                future.set_exception(sys.exc_info()[1])
-
-        self.add_done_callback(callback)
-        return future
 
 
 class Invocation(object):
@@ -126,6 +51,9 @@ class Invocation(object):
 
 
 class ListenerInvocation(Invocation):
+    # used for storing the original registration id across re-registrations
+    registration_id = None
+
     def __init__(self, request, event_handler, response_decoder=None, **kwargs):
         Invocation.__init__(self, request, **kwargs)
         self.event_handler = event_handler
@@ -143,28 +71,45 @@ class ListenerService(object):
     def start_listening(self, request, event_handler, decode_add_listener, key=None):
         if key:
             partition_id = self._client.partition_service.get_partition_id(key)
-            future = self._client.invoker.invoke(ListenerInvocation(request, event_handler, decode_add_listener,
-                                                                    partition_id=partition_id))
+            invocation = ListenerInvocation(request, event_handler, decode_add_listener, partition_id=partition_id)
         else:
-            future = self._client.invoker.invoke(ListenerInvocation(request, event_handler, decode_add_listener))
+            invocation = ListenerInvocation(request, event_handler, decode_add_listener)
 
+        future = self._client.invoker.invoke(invocation)
         registration_id = decode_add_listener(future.result())
+        invocation.registration_id = registration_id  # store the original registration id for future reference
         self.registrations[registration_id] = (registration_id, request.get_correlation_id())
         return registration_id
 
     def stop_listening(self, registration_id, encode_remove_listener):
         try:
             actual_id, correlation_id = self.registrations.pop(registration_id)
-            self._client.invoker.remove_event_handler(correlation_id)
+            self._client.invoker._remove_event_handler(correlation_id)
             # TODO: should be invoked on same node as registration?
             self._client.invoker.invoke_on_random_target(encode_remove_listener(actual_id)).result()
             return True
         except KeyError:
             return False
 
-    def update_registration(self, reg_id, new_id):
-        (_, correlation_id) = self.registrations[reg_id]
-        self.registrations[reg_id] = (new_id, correlation_id)
+    def re_register_listener(self, invocation):
+        registration_id = invocation.registration_id
+        new_invocation = ListenerInvocation(invocation.request, invocation.event_handler, invocation.response_decoder,
+                                            partition_id=invocation.partition_id)
+        new_invocation.registration_id = registration_id
+
+        # re-send the request
+        def callback(f):
+            if f.is_success():
+                new_id = new_invocation.response_decoder(f.result())
+                self.logger.debug("Re-registered listener with id %s for request %s",
+                                 registration_id, new_invocation.request)
+                self.registrations[registration_id] = (new_id, new_invocation.request.get_correlation_id())
+            else:
+                logging.warn("Re-registration for listener with id %s failed.", registration_id, exc_info=True)
+
+        self.logger.debug("Re-registering listener %s for request %s", registration_id,
+                         new_invocation.request)
+        self._client.invoker.invoke(new_invocation).add_done_callback(callback)
 
 
 class InvocationService(object):
@@ -177,12 +122,7 @@ class InvocationService(object):
         self._client = client
         self._event_queue = Queue()
         self._is_redo_operation = client.config.network_config.redo_operation
-
-    def handle_event(self, invocation, message):
-        try:
-            invocation.event_handler(message)
-        except:
-            self.logger.warn("Error handling event %s", message, exc_info=True)
+        self._client.connection_manager.add_listener(on_connection_closed=self._connection_closed)
 
     def invoke_on_connection(self, message, connection):
         return self.invoke(Invocation(message, connection=connection))
@@ -210,9 +150,22 @@ class InvocationService(object):
 
         return invocation.future
 
+    def _remove_event_handler(self, correlation_id):
+        self._event_handlers.pop(correlation_id)
+
     def _send_to_address(self, invocation, address):
-        conn = self._client.connection_manager.get_or_connect(address)
-        self._send(invocation, conn)
+        try:
+            conn = self._client.connection_manager.connections[address]
+            self._send(invocation, conn)
+        except KeyError:
+            def on_connect(f):
+                if f.is_success():
+                    self._send(invocation, f.result())
+                    return True
+                else:
+                    return self._handle_exception(invocation, f.exception())
+
+            self._client.connection_manager.get_or_connect(address).continue_with(on_connect)
 
     def _send(self, invocation, connection):
         correlation_id = self._next_correlation_id.increment_and_get()
@@ -229,10 +182,11 @@ class InvocationService(object):
         self.logger.debug("Sending %s", message)
 
         if not connection.callback:
-            connection.callback = self.handle_client_message
+            connection.callback = self._handle_client_message
+        invocation.sent_connection = connection
         connection.send_message(message)
 
-    def handle_client_message(self, message):
+    def _handle_client_message(self, message):
         correlation_id = message.get_correlation_id()
         self.logger.debug("Received %s", message)
         if message.has_flags(LISTENER_FLAG):
@@ -240,7 +194,7 @@ class InvocationService(object):
                 self.logger.warn("Got event message with unknown correlation id: %s", message)
                 return
             invocation = self._event_handlers[correlation_id]
-            self.handle_event(invocation, message)
+            self._handle_event(invocation, message)
             return
         if correlation_id not in self._pending:
             self.logger.warn("Got message with unknown correlation id: %s", message)
@@ -249,26 +203,33 @@ class InvocationService(object):
 
         if message.get_message_type() == EXCEPTION_MESSAGE_TYPE:
             error = create_exception(ErrorCodec(message))
-            return self.handle_exception(invocation, error)
+            return self._handle_exception(invocation, error)
 
         invocation.set_response(message)
 
-    def handle_exception(self, invocation, error):
+    def _handle_event(self, invocation, message):
+        try:
+            invocation.event_handler(message)
+        except:
+            self.logger.warn("Error handling event %s", message, exc_info=True)
+
+    def _handle_exception(self, invocation, error):
         if self.logger.isEnabledFor(logging.DEBUG):
             self.logger.debug("Got exception for request %s: %s: %s", invocation.request,
                               type(error).__name__, error)
-        if isinstance(error, (IOError, HazelcastInstanceNotActiveError)):
-            if self.try_retry(invocation):
-                return
+        if isinstance(error, (AuthenticationError, IOError, HazelcastInstanceNotActiveError)):
+            if self._try_retry(invocation):
+                return True
 
         if is_retryable_error(error):
             if invocation.request.is_retryable() or self._is_redo_operation:
-                if self.try_retry(invocation):
-                    return
+                if self._try_retry(invocation):
+                    return True
 
         invocation.set_exception(error)
+        return False
 
-    def try_retry(self, invocation):
+    def _try_retry(self, invocation):
         if invocation.connection:
             return False
         if invocation.timeout < time.time():
@@ -280,20 +241,11 @@ class InvocationService(object):
         self._client.reactor.add_timer(RETRY_WAIT_TIME_IN_SECONDS, invoke_func)
         return True
 
-    def connection_closed(self, connection):
+    def _connection_closed(self, connection):
         for correlation_id, invocation in dict(self._pending).iteritems():
             if invocation.sent_connection == connection:
                 invocation.set_exception(IOError("Connection to server was closed."))
 
         for correlation_id, invocation in dict(self._event_handlers).iteritems():
-            if invocation.sent_connection == connection:
-                self._event_handlers.pop(correlation_id)
-
-    def _re_register_listener(self, invocation):
-        if not invocation.done() or not invocation.future.is_success():
-            return
-        # re-send the request
-        self.invoke(invocation)
-
-    def remove_event_handler(self, correlation_id):
-        self._event_handlers.pop(correlation_id)
+            if invocation.sent_connection == connection and invocation.connection is None:
+                self._client.listener.re_register_listener(invocation)

@@ -84,7 +84,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
             self._write_queue.appendleft(item[sent:])
 
     def handle_close(self):
-        self.logger.debug("Connection closed by server.")
+        self.logger.warn("Connection closed by server.")
         self.close_connection()
 
     def handle_error(self):

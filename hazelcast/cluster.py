@@ -2,7 +2,6 @@ import logging
 import random
 import threading
 import time
-
 from hazelcast.core import CLIENT_TYPE, SERIALIZATION_VERSION, Address
 # Membership Event Types
 from hazelcast.exception import HazelcastError, AuthenticationError
@@ -24,6 +23,7 @@ class ClusterService(object):
         self.owner_uuid = None
         self.uuid = None
         self._initial_list_fetched = threading.Event()
+        self._client.connection_manager.add_listener(on_connection_closed=self._connection_closed)
 
     def start(self):
         self._connect_to_cluster()
@@ -35,6 +35,14 @@ class ClusterService(object):
     def _parse_addr(addr):
         (host, port) = addr.split(":")
         return Address(host, int(port))
+
+    def _reconnect(self):
+        try:
+            self.logger.warn("Connection closed to owner node. Trying to reconnect.")
+            self._connect_to_cluster()
+        except:
+            logging.exception("Could not reconnect to cluster. Shutting down client.")
+            self._client.shutdown()
 
     def _connect_to_cluster(self):
         address = self._parse_addr(self._config.network_config.addresses[0])  # TODO: try all addresses
@@ -60,16 +68,23 @@ class ClusterService(object):
             username=self._config.group_config.name, password=self._config.group_config.password,
             uuid=None, owner_uuid=None, is_owner_connection=True, client_type=CLIENT_TYPE,
             serialization_version=SERIALIZATION_VERSION)
-        response = self._client.invoker.invoke_on_connection(request, connection).result()
-        parameters = client_authentication_codec.decode_response(response)
-        if parameters["status"] != 0:
-            raise AuthenticationError("Authentication failed")
-        connection.endpoint = parameters["address"]
-        self.owner_uuid = parameters["owner_uuid"]
-        self.uuid = parameters["uuid"]
+
+        def callback(f):
+            if f.is_success():
+                parameters = client_authentication_codec.decode_response(f.result())
+                if parameters["status"] != 0:
+                    raise AuthenticationError("Authentication failed.")
+                connection.endpoint = parameters["address"]
+                self.owner_uuid = parameters["owner_uuid"]
+                self.uuid = parameters["uuid"]
+                return connection
+            else:
+                raise f.exception()
+
+        return self._client.invoker.invoke_on_connection(request, connection).continue_with(callback)
 
     def _connect_to_address(self, address):
-        connection = self._client.connection_manager.get_or_connect(address, self._authenticate_manager)
+        connection = self._client.connection_manager.get_or_connect(address, self._authenticate_manager).result()
         self.owner_connection_address = connection.endpoint
         self._init_membership_listener(connection)
 
@@ -102,6 +117,13 @@ class ClusterService(object):
         self.logger.info("New member list is: %s", members)
         self._client.partition_service.refresh()
         self._initial_list_fetched.set()
+
+    def _connection_closed(self, connection):
+        if connection.endpoint and connection.endpoint == self.owner_connection_address:
+            # try to reconnect, on new thread
+            reconnect_thread = threading.Thread(target=self._reconnect, name="hazelcast-cluster-reconnect")
+            reconnect_thread.daemon = True
+            reconnect_thread.start()
 
     def shutdown(self):
         pass

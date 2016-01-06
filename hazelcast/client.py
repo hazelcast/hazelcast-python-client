@@ -16,10 +16,10 @@ class HazelcastClient(object):
 
     def __init__(self, config=None):
         self.config = config or ClientConfig()
-        self.invoker = InvocationService(self)
-        self.listener = ListenerService(self)
         self.reactor = AsyncoreReactor()
         self.connection_manager = ConnectionManager(self, AsyncoreConnection)
+        self.invoker = InvocationService(self)
+        self.listener = ListenerService(self)
         self.cluster = ClusterService(config, self)
         self.partition_service = PartitionService(self)
         self.proxy = ProxyManager(self)
@@ -27,8 +27,13 @@ class HazelcastClient(object):
         self.serializer = SerializationServiceV1(serialization_config=config.serialization_config)
 
         self.reactor.start()
-        self.cluster.start()
-        self.partition_service.start()
+        try:
+            self.cluster.start()
+            self.partition_service.start()
+        except:
+            import sys
+            self.reactor.shutdown()
+            raise sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]
         self.logger.info("Client started.")
 
     def get_map(self, name):
@@ -42,4 +47,5 @@ class HazelcastClient(object):
         self.cluster.shutdown()
         self.reactor.shutdown()
         self.logger.info("Client shutdown.")
+
 
