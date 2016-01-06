@@ -6,6 +6,7 @@ import time
 from hazelcast.core import CLIENT_TYPE, SERIALIZATION_VERSION, Address
 # Membership Event Types
 from hazelcast.exception import HazelcastError, AuthenticationError
+from hazelcast.invocation import ListenerInvocation
 from hazelcast.protocol.codec import client_add_membership_listener_codec, client_authentication_codec
 
 MEMBER_ADDED = 1
@@ -36,12 +37,12 @@ class ClusterService(object):
         return Address(host, int(port))
 
     def _connect_to_cluster(self):
-        address = self._parse_addr(self._config.network_config.addresses[0]) #TODO: try all addresses
+        address = self._parse_addr(self._config.network_config.addresses[0])  # TODO: try all addresses
         self.logger.info("Connecting to %s", address)
 
         current_attempt = 1
         attempt_limit = self._config.network_config.connection_attempt_limit
-        retry_delay = self._config.network_config.connection_attempt_period
+        retry_delay = self._config.network_config.connection_attempt_period / 1000
         while current_attempt <= self._config.network_config.connection_attempt_limit:
             try:
                 self._connect_to_address(address)
@@ -59,7 +60,7 @@ class ClusterService(object):
             username=self._config.group_config.name, password=self._config.group_config.password,
             uuid=None, owner_uuid=None, is_owner_connection=True, client_type=CLIENT_TYPE,
             serialization_version=SERIALIZATION_VERSION)
-        response = self._client.invoker.invoke_on_connection(request, connection).future.result()
+        response = self._client.invoker.invoke_on_connection(request, connection).result()
         parameters = client_authentication_codec.decode_response(response)
         if parameters["status"] != 0:
             raise AuthenticationError("Authentication failed")
@@ -78,7 +79,8 @@ class ClusterService(object):
         def handler(m):
             client_add_membership_listener_codec.handle(m, self._handle_member, self._handle_member_list)
 
-        response = self._client.invoker.invoke_on_connection(request, connection, handler).future.result()
+        response = self._client.invoker.invoke(
+            ListenerInvocation(request, handler, connection=connection)).result()
         registration_id = client_add_membership_listener_codec.decode_response(response)["response"]
         self.logger.debug("Registered membership listener with ID " + registration_id)
         self._initial_list_fetched.wait()
@@ -94,10 +96,10 @@ class ClusterService(object):
         self.logger.info("New member list is: %s", self.member_list)
         self._client.partition_service.refresh()
 
-    def _handle_member_list(self, member_list):
+    def _handle_member_list(self, members):
         self.logger.debug("Got member list")
-        self.member_list = member_list
-        self.logger.info("New member list is: %s", member_list)
+        self.member_list = members
+        self.logger.info("New member list is: %s", members)
         self._client.partition_service.refresh()
         self._initial_list_fetched.set()
 

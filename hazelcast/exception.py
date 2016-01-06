@@ -1,4 +1,5 @@
-from hazelcast.protocol.error_codes import HAZELCAST_INSTANCE_NOT_ACTIVE, AUTHENTICATION
+from hazelcast.protocol.error_codes import HAZELCAST_INSTANCE_NOT_ACTIVE, AUTHENTICATION, TARGET_DISCONNECTED, \
+    TARGET_NOT_MEMBER
 
 
 def retryable(cls):
@@ -23,13 +24,25 @@ class HazelcastSerializationError(HazelcastError):
     pass
 
 
+@retryable
+class TargetNotMemberError(HazelcastError):
+    pass
+
+
+@retryable
+class TargetDisconnectedError(HazelcastError):
+    pass
+
+
 class TimeoutError(HazelcastError):
     pass
 
 
 ERROR_CODE_TO_ERROR = {
+    AUTHENTICATION: AuthenticationError,
     HAZELCAST_INSTANCE_NOT_ACTIVE: HazelcastInstanceNotActiveError,
-    AUTHENTICATION: AuthenticationError
+    TARGET_DISCONNECTED: TargetDisconnectedError,
+    TARGET_NOT_MEMBER: TargetNotMemberError
 }
 
 

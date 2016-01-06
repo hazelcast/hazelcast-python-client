@@ -1,6 +1,6 @@
 from collections import namedtuple
 from hazelcast.protocol.codec import map_add_entry_listener_codec, map_contains_key_codec, map_get_codec, map_put_codec, \
-    map_size_codec, map_remove_codec
+    map_size_codec, map_remove_codec, map_remove_entry_listener_codec
 from hazelcast.proxy.base import Proxy, thread_id
 from hazelcast.util import check_not_none, enum
 
@@ -16,6 +16,7 @@ EntryEventType = enum(added=1,
 EntryEvent = namedtuple("EntryEvent",
                         ["key", "value", "old_value", "merging_value", "event_type", "uuid",
                          "number_of_affected_entries"])
+
 
 class MapProxy(Proxy):
     def contains_key(self, key):
@@ -140,17 +141,19 @@ class MapProxy(Proxy):
 
         handler_list = locals()
 
-        def handle_event_entry(key, value, old_value, merging_value, event_type, uuid, number_of_affected_entries):
-            # TODO: this should be called directly with kwargs
-            event = EntryEvent(key=self._to_object(key), value=self._to_object(value),
-                               old_value=self._to_object(old_value), merging_value=self._to_object(merging_value),
-                               event_type=event_type, uuid=uuid, number_of_affected_entries=number_of_affected_entries)
-
-            event_name = EntryEventType.reverse[event_type]
+        def handle_event_entry(**kwargs):
+            event = EntryEvent(**kwargs)
+            event_name = EntryEventType.reverse[event.event_type]
             handler_list[event_name](event)
 
-        response = self._start_listening(request, lambda m: map_add_entry_listener_codec.handle(m, handle_event_entry))
-        return map_add_entry_listener_codec.decode_response(response)['response']
+        registration_id = self._start_listening(request,
+                                                lambda m: map_add_entry_listener_codec.handle(m, handle_event_entry),
+                                                lambda r: map_add_entry_listener_codec.decode_response(r)['response'])
+        return registration_id
+
+    def remove_entry_listener(self, registration_id):
+        return self._stop_listening(registration_id,
+                                    lambda i: map_remove_entry_listener_codec.encode_request(self.name, i))
 
     @staticmethod
     def _get_listener_flags(**kwargs):

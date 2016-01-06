@@ -42,6 +42,9 @@ class Future(object):
             raise self._exception
         return self._result
 
+    def is_success(self):
+        return self._result is not None
+
     def done(self):
         return self._event.isSet()
 
@@ -90,22 +93,17 @@ class Invocation(object):
     sent_connection = None
     timer = None
 
-    def __init__(self, request, partition_id=-1, address=None, connection=None, event_handler=None,
-                 timeout=INVOCATION_TIMEOUT):
+    def __init__(self, request, partition_id=-1, address=None, connection=None, timeout=INVOCATION_TIMEOUT):
         self._event = threading.Event()
         self.timeout = timeout + time.time()
         self.address = address
         self.connection = connection
         self.partition_id = partition_id
         self.request = request
-        self.event_handler = event_handler
         self.future = Future()
 
     def has_connection(self):
         return self.connection is not None
-
-    def has_event_handler(self):
-        return self.event_handler is not None
 
     def has_partition_id(self):
         return self.partition_id >= 0
@@ -127,16 +125,58 @@ class Invocation(object):
         self.set_exception(TimeoutError("Request timed out after %d seconds." % INVOCATION_TIMEOUT))
 
 
+class ListenerInvocation(Invocation):
+    def __init__(self, request, event_handler, response_decoder=None, **kwargs):
+        Invocation.__init__(self, request, **kwargs)
+        self.event_handler = event_handler
+        self.response_decoder = response_decoder
+
+
+class ListenerService(object):
+    logger = logging.getLogger("ListenerService")
+
+    def __init__(self, client):
+        self._client = client
+        self.registrations = {}
+        pass
+
+    def start_listening(self, request, event_handler, decode_add_listener, key=None):
+        if key:
+            partition_id = self._client.partition_service.get_partition_id(key)
+            future = self._client.invoker.invoke(ListenerInvocation(request, event_handler, decode_add_listener,
+                                                                    partition_id=partition_id))
+        else:
+            future = self._client.invoker.invoke(ListenerInvocation(request, event_handler, decode_add_listener))
+
+        registration_id = decode_add_listener(future.result())
+        self.registrations[registration_id] = (registration_id, request.get_correlation_id())
+        return registration_id
+
+    def stop_listening(self, registration_id, encode_remove_listener):
+        try:
+            actual_id, correlation_id = self.registrations.pop(registration_id)
+            self._client.invoker.remove_event_handler(correlation_id)
+            # TODO: should be invoked on same node as registration?
+            self._client.invoker.invoke_on_random_target(encode_remove_listener(actual_id)).result()
+            return True
+        except KeyError:
+            return False
+
+    def update_registration(self, reg_id, new_id):
+        (_, correlation_id) = self.registrations[reg_id]
+        self.registrations[reg_id] = (new_id, correlation_id)
+
+
 class InvocationService(object):
     logger = logging.getLogger("InvocationService")
 
     def __init__(self, client):
         self._pending = {}
-        self._listeners = {}
+        self._event_handlers = {}
         self._next_correlation_id = AtomicInteger(1)
         self._client = client
         self._event_queue = Queue()
-        self._is_redo_operation = False  # TODO: set from config
+        self._is_redo_operation = client.config.network_config.redo_operation
 
     def handle_event(self, invocation, message):
         try:
@@ -144,19 +184,19 @@ class InvocationService(object):
         except:
             self.logger.warn("Error handling event %s", message, exc_info=True)
 
-    def invoke_on_connection(self, message, connection, event_handler=None):
-        return self._invoke(Invocation(message, connection=connection, event_handler=event_handler))
+    def invoke_on_connection(self, message, connection):
+        return self.invoke(Invocation(message, connection=connection))
 
-    def invoke_on_partition(self, message, partition_id, event_handler=None):
-        return self._invoke(Invocation(message, partition_id=partition_id, event_handler=event_handler))
+    def invoke_on_partition(self, message, partition_id):
+        return self.invoke(Invocation(message, partition_id=partition_id))
 
-    def invoke_on_random_target(self, message, event_handler=None):
-        return self._invoke(Invocation(message, event_handler=event_handler))
+    def invoke_on_random_target(self, message):
+        return self.invoke(Invocation(message))
 
-    def invoke_on_target(self, message, address, event_handler=None):
-        return self._invoke(Invocation(message, address=address, event_handler=event_handler))
+    def invoke_on_target(self, message, address):
+        return self.invoke(Invocation(message, address=address))
 
-    def _invoke(self, invocation):
+    def invoke(self, invocation):
         if invocation.has_connection():
             self._send(invocation, invocation.connection)
         elif invocation.has_partition_id():
@@ -168,7 +208,7 @@ class InvocationService(object):
             addr = self._client.load_balancer.next_address()
             self._send_to_address(invocation, addr)
 
-        return invocation
+        return invocation.future
 
     def _send_to_address(self, invocation, address):
         conn = self._client.connection_manager.get_or_connect(address)
@@ -183,8 +223,8 @@ class InvocationService(object):
         if not invocation.timer:
             invocation.timer = self._client.reactor.add_timer_absolute(invocation.timeout, invocation.on_timeout)
 
-        if invocation.has_event_handler():
-            self._listeners[correlation_id] = invocation
+        if isinstance(invocation, ListenerInvocation):
+            self._event_handlers[correlation_id] = invocation
 
         self.logger.debug("Sending %s", message)
 
@@ -196,10 +236,10 @@ class InvocationService(object):
         correlation_id = message.get_correlation_id()
         self.logger.debug("Received %s", message)
         if message.has_flags(LISTENER_FLAG):
-            if correlation_id not in self._listeners:
+            if correlation_id not in self._event_handlers:
                 self.logger.warn("Got event message with unknown correlation id: %s", message)
                 return
-            invocation = self._listeners[correlation_id]
+            invocation = self._event_handlers[correlation_id]
             self.handle_event(invocation, message)
             return
         if correlation_id not in self._pending:
@@ -214,8 +254,9 @@ class InvocationService(object):
         invocation.set_response(message)
 
     def handle_exception(self, invocation, error):
-        self.logger.debug("Got exception for request %s: %s", invocation.request,
-                          error)
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug("Got exception for request %s: %s: %s", invocation.request,
+                              type(error).__name__, error)
         if isinstance(error, (IOError, HazelcastInstanceNotActiveError)):
             if self.try_retry(invocation):
                 return
@@ -233,7 +274,7 @@ class InvocationService(object):
         if invocation.timeout < time.time():
             return False
 
-        invoke_func = functools.partial(self._invoke, invocation)
+        invoke_func = functools.partial(self.invoke, invocation)
         self.logger.debug("Rescheduling request %s to be retried in %s seconds", invocation.request,
                           RETRY_WAIT_TIME_IN_SECONDS)
         self._client.reactor.add_timer(RETRY_WAIT_TIME_IN_SECONDS, invoke_func)
@@ -241,11 +282,18 @@ class InvocationService(object):
 
     def connection_closed(self, connection):
         for correlation_id, invocation in dict(self._pending).iteritems():
-            if invocation.connection == connection:
+            if invocation.sent_connection == connection:
                 invocation.set_exception(IOError("Connection to server was closed."))
-                # fail invocation
 
-        for correlation_id, invocation in dict(self._listeners).iteritems():
-            if invocation.connection == connection:
-                self._listeners.pop(correlation_id)
-                # TODO: re-register listener
+        for correlation_id, invocation in dict(self._event_handlers).iteritems():
+            if invocation.sent_connection == connection:
+                self._event_handlers.pop(correlation_id)
+
+    def _re_register_listener(self, invocation):
+        if not invocation.done() or not invocation.future.is_success():
+            return
+        # re-send the request
+        self.invoke(invocation)
+
+    def remove_event_handler(self, correlation_id):
+        self._event_handlers.pop(correlation_id)

@@ -3,7 +3,7 @@ import logging
 from hazelcast.config import ClientConfig
 from hazelcast.cluster import ClusterService, RandomLoadBalancer
 from hazelcast.connection import ConnectionManager
-from hazelcast.invocation import InvocationService
+from hazelcast.invocation import InvocationService, ListenerService
 from hazelcast.reactor import AsyncoreConnection, AsyncoreReactor
 from hazelcast.partition import PartitionService
 from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE
@@ -17,6 +17,7 @@ class HazelcastClient(object):
     def __init__(self, config=None):
         self.config = config or ClientConfig()
         self.invoker = InvocationService(self)
+        self.listener = ListenerService(self)
         self.reactor = AsyncoreReactor()
         self.connection_manager = ConnectionManager(self, AsyncoreConnection)
         self.cluster = ClusterService(config, self)

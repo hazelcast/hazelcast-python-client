@@ -4,6 +4,7 @@ import threading
 def thread_id():
     return threading.currentThread().ident
 
+
 class Proxy(object):
     def __init__(self, client, service_name, name):
         self.service_name = service_name
@@ -24,19 +25,21 @@ class Proxy(object):
         return self._client.serializer.to_object(data)
 
     def _invoke(self, request):
-        return self._client.invoker.invoke_on_random_target(request).future.result()
+        return self._client.invoker.invoke_on_random_target(request).result()
 
     def _invoke_on_key(self, request, key_data):
         partition_id = self._client.partition_service.get_partition_id(key_data)
-        return self._client.invoker.invoke_on_partition(request, partition_id).future.result()
+        return self._client.invoker.invoke_on_partition(request, partition_id).result()
 
     def _invoke_on_key_async(self, request, key_data):
         partition_id = self._client.partition_service.get_partition_id(key_data)
-        return self._client.invoker.invoke_on_partition(request, partition_id).future
+        return self._client.invoker.invoke_on_partition(request, partition_id)
 
     def _invoke_on_partition(self, request, partition_id):
-        return self._client.invoker.invoke_on_partition(request, partition_id).future.result()
+        return self._client.invoker.invoke_on_partition(request, partition_id).result()
 
-    def _start_listening(self, request, event_handler):
-        return self._client.invoker.invoke_on_random_target(request, event_handler=event_handler).future.result()
+    def _start_listening(self, request, event_handler, response_decoder, key=None):
+        return self._client.listener.start_listening(request, event_handler, response_decoder, key)
 
+    def _stop_listening(self, registration_id, request_encoder):
+        return self._client.listener.stop_listening(registration_id, request_encoder)

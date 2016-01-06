@@ -1,9 +1,7 @@
 from __future__ import with_statement
-
 import logging
 import threading
 import struct
-
 from hazelcast.core import CLIENT_TYPE
 from hazelcast.protocol.client_message import BEGIN_END_FLAG, ClientMessage
 from hazelcast.protocol.codec import client_authentication_codec
@@ -69,6 +67,10 @@ class ConnectionManager(object):
         if connection.endpoint:
             self.connections.pop(connection.endpoint)
         self._client.invoker.connection_closed(connection)
+
+    def heartbeat(self):
+        # TODO
+        pass
 
 
 class Connection(object):

@@ -23,10 +23,11 @@ class PartitionService(object):
         self.timer = self._client.reactor.add_timer(PARTITION_UPDATE_INTERVAL, partition_updater)
 
     def shutdown(self):
-        self.timer.cancel()
+        if self.timer:
+            self.timer.cancel()
 
     def refresh(self):
-        timer = self._client.reactor.add_timer(0, self._do_refresh)
+        self._client.reactor.add_timer(0, self._do_refresh)
 
     def get_partition_owner(self, partition_id):
         if partition_id not in self.partitions:
@@ -58,7 +59,7 @@ class PartitionService(object):
             self.process_partition_response(f.result())
             if callback:
                 callback()
-        future = self._client.invoker.invoke_on_connection(request, connection).future
+        future = self._client.invoker.invoke_on_connection(request, connection)
         future.add_done_callback(cb)
 
     def process_partition_response(self, message):
