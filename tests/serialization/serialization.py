@@ -1,50 +1,45 @@
 import unittest
 
-from hazelcast.serialization.service import *
+from hazelcast.config import SerializationConfig
+from hazelcast.serialization.service import SerializationServiceV1
 
 
 class SerializationTestCase(unittest.TestCase):
-    def test_test_dummy_encode_decode(self):
-        service = SerializationServiceV1()
-        obj = "Test obj"
-        data = service.to_data(obj)
+    def setUp(self):
+        self.service = SerializationServiceV1(serialization_config=SerializationConfig())
 
-        obj2 = service.to_object(data)
+    def test_test_dummy_encode_decode(self):
+        obj = "Test obj"
+        data = self.service.to_data(obj)
+
+        obj2 = self.service.to_object(data)
         self.assertEqual(obj, obj2)
 
     def test_service_int(self):
-        service = SerializationServiceV1()
-
         obj = 10
-        data = service.to_data(obj)
+        data = self.service.to_data(obj)
 
-        obj2 = service.to_object(data)
+        obj2 = self.service.to_object(data)
         self.assertEqual(obj, obj2)
         self.assertEqual(type(obj), type(obj2))
 
     def test_service_int_array(self):
-        service = SerializationServiceV1()
-
         obj = [10, 20, 30]
-        data = service.to_data(obj)
+        data = self.service.to_data(obj)
 
-        obj2 = service.to_object(data)
+        obj2 = self.service.to_object(data)
         self.assertEqual(obj, obj2)
 
     def test_service_str(self):
-        service = SerializationServiceV1()
-
         obj = "TEST"
-        data = service.to_data(obj)
+        data = self.service.to_data(obj)
 
-        obj2 = service.to_object(data)
+        obj2 = self.service.to_object(data)
         self.assertEqual(obj, obj2)
 
     def test_service_data(self):
-        service = SerializationServiceV1()
-
         obj = "TEST"
-        data = service.to_data(obj)
+        data = self.service.to_data(obj)
 
         self.assertEqual(16, len(data.to_bytes()))
 
