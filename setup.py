@@ -15,8 +15,8 @@ setup(
         long_description=long_description,
         url='https://github.com/hazelcast/hazelcast-python-client',
 
-        author='The Python Packaging Authority',
-        author_email='pypa-dev@googlegroups.com',
+        author='Hazelcast Inc. Developers',
+        author_email='hazelcast@googlegroups.com',
 
         classifiers=[
             #   3 - Alpha
@@ -37,7 +37,7 @@ setup(
             'Topic :: Software Development :: Libraries :: Python Modules'
 
         ],
-        packages=find_packages(exclude=['examples', 'docs', 'tests']),
+        packages=find_packages(exclude=['examples', 'docs', 'tests', 'benchmark']),
         package_dir={'hazelcast': 'hazelcast'},
         install_requires=[],
         tests_require=['hazelcast-remote-controller'],
