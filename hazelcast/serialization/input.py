@@ -83,22 +83,22 @@ class _ObjectDataInput(ObjectDataInput):
             return None
         result = bytearray()
         for i in xrange(0, length):
-            _first_byte = self.read_byte()
+            _first_byte = self.read_byte() & 0xFF
             b = _first_byte >> 4
             if 0 <= b <= 7:
                 result.append(_first_byte)
                 continue
             if 12 <= b <= 13:
-                result.append((b & 0x01F) << 6)
-                result.append(self.read_byte() & 0x3F)
+                result.append(_first_byte)
+                result.append(self.read_byte() & 0xFF)
                 continue
             if b == 14:
-                result.append((b & 0x01F) << 12)
-                result.append((self.read_byte() & 0x3F) << 6)
-                result.append(self.read_byte() & 0x3F)
+                result.append(_first_byte)
+                result.append(self.read_byte() & 0xFF)
+                result.append(self.read_byte() & 0xFF)
                 continue
             raise UnicodeDecodeError("Malformed utf-8 content")
-        return result
+        return result.decode("utf-8")
 
     def read_byte_array(self):
         length = self.read_int()
