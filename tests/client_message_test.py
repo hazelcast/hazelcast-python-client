@@ -94,8 +94,6 @@ class ClientMessageTest(unittest.TestCase):
         self.assertEqual("03000000", binascii.hexlify(message.buffer[22:26]))
         self.assertEqual("616263", binascii.hexlify(message.buffer[26:29]))
 
-        print message
-
     def test_read_byte(self):
         hexstr = READ_HEADER + "78"
         buf = binascii.unhexlify(hexstr)

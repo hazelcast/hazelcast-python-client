@@ -3,11 +3,11 @@ import binascii
 import struct
 import unittest
 
-from hazelcast.serialization.bits import *
 from hazelcast.config import SerializationConfig
+from hazelcast.serialization.bits import *
+from hazelcast.serialization.data import Data
 from hazelcast.serialization.serialization_const import CONSTANT_TYPE_STRING
 from hazelcast.serialization.service import SerializationServiceV1
-from hazelcast.serialization.data import Data
 
 TEST_DATA_TURKISH = u"Pijamalı hasta, yağız şoföre çabucak güvendi."
 TEST_DATA_JAPANESE = u"イロハニホヘト チリヌルヲ ワカヨタレソ ツネナラム"
@@ -19,11 +19,11 @@ TEST_DATA_BYTES_ALL = TEST_DATA_ALL.encode("utf8")
 
 def to_data_byte(inp, length):
     # 4 byte partition hashcode -  4 byte of type id - 4 byte string length
-    bf = bytearray( 12)
+    bf = bytearray(12)
     struct.pack_into(FMT_BE_INT, bf, 0, 0)
     struct.pack_into(FMT_BE_INT, bf, 4, CONSTANT_TYPE_STRING)
     struct.pack_into(FMT_BE_INT, bf, 8, length)
-    return bf+bytearray(inp.encode("utf-8"))
+    return bf + bytearray(inp.encode("utf-8"))
 
 
 class StringSerializationTestCase(unittest.TestCase):
