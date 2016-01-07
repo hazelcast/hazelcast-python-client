@@ -6,7 +6,10 @@ import time
 from Queue import PriorityQueue
 from collections import deque
 
+import sys
+
 from hazelcast.connection import Connection, BUFFER_SIZE
+from hazelcast.exception import HazelcastError
 
 
 class AsyncoreReactor(object):
@@ -16,6 +19,7 @@ class AsyncoreReactor(object):
 
     def __init__(self):
         self._timers = PriorityQueue()
+        self._map = {}
 
     def start(self):
         self._is_live = True
@@ -27,7 +31,7 @@ class AsyncoreReactor(object):
         self.logger.debug("Starting IO Thread")
         while self._is_live:
             try:
-                asyncore.loop(count=10000, timeout=0.1)
+                asyncore.loop(count=10000, timeout=0.1, map=self._map)
                 self._check_timers()
             except:
                 self.logger.exception("Error in IO Thread")
@@ -52,14 +56,24 @@ class AsyncoreReactor(object):
         self.add_timer_absolute(delay + time.time(), callback)
 
     def shutdown(self):
-        asyncore.close_all()
+        for connection in self._map.values():
+            try:
+                connection.close(HazelcastError("Client is shutting down"))
+            except OSError, connection:
+                if connection.args[0] == socket.EBADF:
+                    pass
+                else:
+                    raise
+        self._map.clear()
         self._is_live = False
         self._thread.join()
 
+    def new_connection(self, address, callback):
+        return AsyncoreConnection(self._map, address, callback)
 
 class AsyncoreConnection(Connection, asyncore.dispatcher):
-    def __init__(self, address, connection_closed_cb):
-        asyncore.dispatcher.__init__(self)
+    def __init__(self, map, address, connection_closed_cb):
+        asyncore.dispatcher.__init__(self, map=map)
         Connection.__init__(self, address, connection_closed_cb)
 
         self._write_queue = deque()
@@ -85,11 +99,11 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
     def handle_close(self):
         self.logger.warn("Connection closed by server.")
-        self.close_connection()
+        self.close(IOError("Connection closed by server."))
 
     def handle_error(self):
         self.logger.exception("Received error")
-        self.close_connection()
+        self.close(IOError(sys.exc_info()[1]))
 
     def readable(self):
         return not self._closed
@@ -97,10 +111,10 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
     def write(self, data):
         self._write_queue.append(data)
 
-    def close_connection(self):
+    def close(self, cause):
         self._closed = True
-        self.close()
-        self._connection_closed_cb(self)
+        asyncore.dispatcher.close(self)
+        self._connection_closed_cb(self, cause)
 
 
 class Timer(object):

@@ -21,7 +21,6 @@ class Future(object):
         else:
             self._result = result
         self._event.set()
-
         self._invoke_callbacks()
 
     def set_exception(self, exception):

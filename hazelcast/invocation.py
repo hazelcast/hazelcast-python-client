@@ -122,7 +122,7 @@ class InvocationService(object):
         self._client = client
         self._event_queue = Queue()
         self._is_redo_operation = client.config.network_config.redo_operation
-        self._client.connection_manager.add_listener(on_connection_closed=self._connection_closed)
+        self._client.connection_manager.add_listener(on_connection_closed=self.cleanup_connection)
 
     def invoke_on_connection(self, message, connection):
         return self.invoke(Invocation(message, connection=connection))
@@ -161,9 +161,8 @@ class InvocationService(object):
             def on_connect(f):
                 if f.is_success():
                     self._send(invocation, f.result())
-                    return True
                 else:
-                    return self._handle_exception(invocation, f.exception())
+                    self._handle_exception(invocation, f.exception())
 
             self._client.connection_manager.get_or_connect(address).continue_with(on_connect)
 
@@ -219,15 +218,14 @@ class InvocationService(object):
                               type(error).__name__, error)
         if isinstance(error, (AuthenticationError, IOError, HazelcastInstanceNotActiveError)):
             if self._try_retry(invocation):
-                return True
+                return
 
         if is_retryable_error(error):
             if invocation.request.is_retryable() or self._is_redo_operation:
                 if self._try_retry(invocation):
-                    return True
+                    return
 
         invocation.set_exception(error)
-        return False
 
     def _try_retry(self, invocation):
         if invocation.connection:
@@ -241,10 +239,10 @@ class InvocationService(object):
         self._client.reactor.add_timer(RETRY_WAIT_TIME_IN_SECONDS, invoke_func)
         return True
 
-    def _connection_closed(self, connection):
+    def cleanup_connection(self, connection, cause):
         for correlation_id, invocation in dict(self._pending).iteritems():
             if invocation.sent_connection == connection:
-                invocation.set_exception(IOError("Connection to server was closed."))
+                invocation.set_exception(cause)
 
         for correlation_id, invocation in dict(self._event_handlers).iteritems():
             if invocation.sent_connection == connection and invocation.connection is None:

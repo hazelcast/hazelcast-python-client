@@ -18,6 +18,9 @@ class Member(object):
         return "Member(host={}, port={}, uuid={}, liteMember={}, attributes={})" \
             .format(self.address.host, self.address.port, self.uuid, self.is_lite_member, self.attributes)
 
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.address == other.address
+
 
 class Address(object):
     def __init__(self, host, port):

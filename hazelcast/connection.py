@@ -17,23 +17,24 @@ PROTOCOL_VERSION = 1
 class ConnectionManager(object):
     logger = logging.getLogger("ConnectionManager")
 
-    def __init__(self, client, new_connection_type):
+    def __init__(self, client, new_connection_func):
         self._new_connection_mutex = threading.Lock()
         self._io_thread = None
         self._client = client
         self.connections = {}
         self._pending_connections = {}
         self._socket_map = {}
-        self._new_connection = new_connection_type
+        self._new_connection_func = new_connection_func
         self._connnection_listeners = []
 
     def add_listener(self, on_connection_opened=None, on_connection_closed=None):
         self._connnection_listeners.append((on_connection_opened, on_connection_closed))
 
     def get_connection(self, address):
-        if address in self.connections:
+        try:
             return self.connections[address]
-        return None
+        except KeyError:
+            return None
 
     def _cluster_authenticator(self, connection):
         uuid = self._client.cluster.uuid
@@ -84,18 +85,31 @@ class ConnectionManager(object):
                             self._pending_connections.pop(address)
                             raise f.exception()
                 authenticator = authenticator or self._cluster_authenticator
-                connection = self._new_connection(address, connection_closed_cb=self._connection_closed)
+                connection = self._new_connection_func(address, self._connection_closed)
                 future = authenticator(connection).continue_with(on_auth)
                 self._pending_connections[address] = future
                 return future
 
-    def _connection_closed(self, connection):
+    def _connection_closed(self, connection, cause):
+        print("_connection_closed", connection, cause)
+        # if connection was authenticated, fire event
         if connection.endpoint:
+            print(self.connections)
             self.connections.pop(connection.endpoint)
+            for _, on_connection_closed in self._connnection_listeners:
+                if on_connection_closed:
+                    on_connection_closed(connection, cause)
+        else:
+            # clean-up unauthenticated connection
+            self._client.invoker.cleanup_connection(connection, cause)
 
-        for _, on_connection_closed in self._connnection_listeners:
-            if on_connection_closed:
-                on_connection_closed(connection)
+    def close_connection(self, address, cause):
+        try:
+            connection = self.connections[address]
+            connection.close(cause)
+        except KeyError:
+            logging.debug("No connection with " + address + " was found to close.")
+            return False
 
     def heartbeat(self):
         # TODO
@@ -132,4 +146,7 @@ class Connection(object):
 
     def write(self, data):
         # must be implemented by subclass
+        pass
+
+    def close(self, cause):
         pass

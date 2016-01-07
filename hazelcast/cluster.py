@@ -4,7 +4,7 @@ import threading
 import time
 from hazelcast.core import CLIENT_TYPE, SERIALIZATION_VERSION, Address
 # Membership Event Types
-from hazelcast.exception import HazelcastError, AuthenticationError
+from hazelcast.exception import HazelcastError, AuthenticationError, TargetDisconnectedError
 from hazelcast.invocation import ListenerInvocation
 from hazelcast.protocol.codec import client_add_membership_listener_codec, client_authentication_codec
 
@@ -103,26 +103,44 @@ class ClusterService(object):
     def _handle_member(self, member, event_type):
         self.logger.debug("Got member event: %s, %s", member, event_type)
         if event_type == MEMBER_ADDED:
-            self.member_list.append(member)
+            self._member_added(member)
         elif event_type == MEMBER_REMOVED:
-            self.member_list.remove(member)
-            # TODO, check owner connection, destroy connection
+            self._member_removed(member)
 
         self._log_member_list()
         self._client.partition_service.refresh()
 
     def _handle_member_list(self, members):
-        self.logger.debug("Got member list")
+        self.logger.debug("Got initial member list")
+
+        for m in list(self.member_list):
+            try:
+                members.remove(m)
+            except ValueError:
+                self._member_removed(m)
+        for m in members:
+            self._member_added(m)
+
         self.member_list = members
         self._log_member_list()
         self._client.partition_service.refresh()
         self._initial_list_fetched.set()
 
+    def _member_added(self, member):
+        self.member_list.append(member)
+        # TODO: membership listener
+
+    def _member_removed(self, member):
+        self.member_list.remove(member)
+        self._client.connection_manager.close_connection(member.address, TargetDisconnectedError(
+            "%s is no longer a member of the cluster" % member))
+        # TODO: membership listener
+
     def _log_member_list(self):
         self.logger.info("New member list:\n\nMembers [%d] {\n%s\n}\n", len(self.member_list),
                          "\n".join(["\t" + str(x) for x in self.member_list]))
 
-    def _connection_closed(self, connection):
+    def _connection_closed(self, connection, _):
         if connection.endpoint and connection.endpoint == self.owner_connection_address:
             # try to reconnect, on new thread
             reconnect_thread = threading.Thread(target=self._reconnect, name="hazelcast-cluster-reconnect")
