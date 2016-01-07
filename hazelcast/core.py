@@ -3,6 +3,7 @@
 SERIALIZATION_VERSION = 1
 CLIENT_TYPE = "PYH"
 
+
 class Member(object):
     def __init__(self, address, uuid, is_lite_member, attributes):
         self.address = address
@@ -11,8 +12,7 @@ class Member(object):
         self.attributes = attributes
 
     def __str__(self):
-        return "Member(host={}, port={})" \
-            .format(self.address.host, self.address.port)
+        return "Member [{}]:{}".format(self.address.host, self.address.port)
 
     def __repr__(self):
         return "Member(host={}, port={}, uuid={}, liteMember={}, attributes={})" \

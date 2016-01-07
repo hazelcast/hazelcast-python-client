@@ -108,15 +108,19 @@ class ClusterService(object):
             self.member_list.remove(member)
             # TODO, check owner connection, destroy connection
 
-        self.logger.info("New member list is: %s", self.member_list)
+        self._log_member_list()
         self._client.partition_service.refresh()
 
     def _handle_member_list(self, members):
         self.logger.debug("Got member list")
         self.member_list = members
-        self.logger.info("New member list is: %s", members)
+        self._log_member_list()
         self._client.partition_service.refresh()
         self._initial_list_fetched.set()
+
+    def _log_member_list(self):
+        self.logger.info("New member list:\n\nMembers [%d] {\n%s\n}\n", len(self.member_list),
+                         "\n".join(["\t" + str(x) for x in self.member_list]))
 
     def _connection_closed(self, connection):
         if connection.endpoint and connection.endpoint == self.owner_connection_address:
