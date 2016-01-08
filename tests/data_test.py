@@ -4,7 +4,7 @@ import unittest
 from hazelcast.serialization.data import *
 
 
-class MyTestCase(unittest.TestCase):
+class DataTestCase(unittest.TestCase):
     def setUp(self):
         #    PARTITION HASH -    TYPE    -      DATA
         hexstr = "12345678" + "01020304" + "12345678"
