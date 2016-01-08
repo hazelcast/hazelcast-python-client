@@ -3,6 +3,8 @@
 DEFAULT_GROUP_NAME = "dev"
 DEFAULT_GROUP_PASSWORD = "dev-pass"
 
+PROPERTY_HEARTBEAT_INTERVAL = "hazelcast.client.heartbeat.interval"
+PROPERTY_HEARTBEAT_TIMEOUT = "hazelcast.client.heartbeat.timeout"
 
 class ClientConfig(object):
     def __init__(self):
@@ -18,6 +20,12 @@ class ClientConfig(object):
         self.query_cache_configs = {}
         self.serialization_config = SerializationConfig()
         # self.proxy_factory_configs = {}
+
+    def get_property_or_default(self, key, default):
+        try:
+            return self.properties[key]
+        except KeyError:
+            return default
 
 
 class GroupConfig(object):

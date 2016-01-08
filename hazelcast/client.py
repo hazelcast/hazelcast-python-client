@@ -1,12 +1,12 @@
 import logging
 
-from hazelcast.config import ClientConfig
 from hazelcast.cluster import ClusterService, RandomLoadBalancer
-from hazelcast.connection import ConnectionManager
+from hazelcast.config import ClientConfig
+from hazelcast.connection import ConnectionManager, Heartbeat
 from hazelcast.invocation import InvocationService, ListenerService
-from hazelcast.reactor import AsyncoreConnection, AsyncoreReactor
 from hazelcast.partition import PartitionService
 from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE
+from hazelcast.reactor import AsyncoreReactor
 from hazelcast.serialization import SerializationServiceV1
 
 
@@ -18,6 +18,7 @@ class HazelcastClient(object):
         self.config = config or ClientConfig()
         self.reactor = AsyncoreReactor()
         self.connection_manager = ConnectionManager(self, self.reactor.new_connection)
+        self.heartbeat = Heartbeat(self)
         self.invoker = InvocationService(self)
         self.listener = ListenerService(self)
         self.cluster = ClusterService(config, self)
@@ -25,9 +26,14 @@ class HazelcastClient(object):
         self.proxy = ProxyManager(self)
         self.load_balancer = RandomLoadBalancer(self.cluster)
         self.serializer = SerializationServiceV1(serialization_config=config.serialization_config)
+
+        self._start()
+
+    def _start(self):
         self.reactor.start()
         try:
             self.cluster.start()
+            self.heartbeat.start()
             self.partition_service.start()
         except:
             self.reactor.shutdown()
@@ -42,6 +48,7 @@ class HazelcastClient(object):
 
     def shutdown(self):
         self.partition_service.shutdown()
+        self.heartbeat.shutdown()
         self.cluster.shutdown()
         self.reactor.shutdown()
         self.logger.info("Client shutdown.")

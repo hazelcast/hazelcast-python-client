@@ -53,7 +53,7 @@ class AsyncoreReactor(object):
         return timer
 
     def add_timer(self, delay, callback):
-        self.add_timer_absolute(delay + time.time(), callback)
+        return self.add_timer_absolute(delay + time.time(), callback)
 
     def shutdown(self):
         for connection in self._map.values():
@@ -68,13 +68,14 @@ class AsyncoreReactor(object):
         self._is_live = False
         self._thread.join()
 
-    def new_connection(self, address, callback):
-        return AsyncoreConnection(self._map, address, callback)
+    def new_connection(self, address, connection_closed_callback, message_callback):
+        return AsyncoreConnection(self._map, address, connection_closed_callback, message_callback)
+
 
 class AsyncoreConnection(Connection, asyncore.dispatcher):
-    def __init__(self, map, address, connection_closed_cb):
+    def __init__(self, map, address, connection_closed_callback, message_callback):
         asyncore.dispatcher.__init__(self, map=map)
-        Connection.__init__(self, address, connection_closed_cb)
+        Connection.__init__(self, address, connection_closed_callback, message_callback)
 
         self._write_queue = deque()
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -114,7 +115,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
     def close(self, cause):
         self._closed = True
         asyncore.dispatcher.close(self)
-        self._connection_closed_cb(self, cause)
+        self._connection_closed_callback(self, cause)
 
 
 class Timer(object):

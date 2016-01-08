@@ -4,7 +4,7 @@ import time
 from Queue import Queue
 import functools
 from hazelcast.exception import create_exception, HazelcastInstanceNotActiveError, is_retryable_error, TimeoutError, \
-    AuthenticationError
+    AuthenticationError, TargetDisconnectedError
 from hazelcast.future import Future
 from hazelcast.protocol.client_message import LISTENER_FLAG
 from hazelcast.protocol.custom_codec import EXCEPTION_MESSAGE_TYPE, ErrorCodec
@@ -102,13 +102,13 @@ class ListenerService(object):
             if f.is_success():
                 new_id = new_invocation.response_decoder(f.result())
                 self.logger.debug("Re-registered listener with id %s for request %s",
-                                 registration_id, new_invocation.request)
+                                  registration_id, new_invocation.request)
                 self.registrations[registration_id] = (new_id, new_invocation.request.get_correlation_id())
             else:
                 logging.warn("Re-registration for listener with id %s failed.", registration_id, exc_info=True)
 
         self.logger.debug("Re-registering listener %s for request %s", registration_id,
-                         new_invocation.request)
+                          new_invocation.request)
         self._client.invoker.invoke(new_invocation).add_done_callback(callback)
 
 
@@ -124,8 +124,10 @@ class InvocationService(object):
         self._is_redo_operation = client.config.network_config.redo_operation
         self._client.connection_manager.add_listener(on_connection_closed=self.cleanup_connection)
 
-    def invoke_on_connection(self, message, connection):
-        return self.invoke(Invocation(message, connection=connection))
+        client.heartbeat.add_listener(on_heartbeat_stopped=self._heartbeat_stopped)
+
+    def invoke_on_connection(self, message, connection, ignore_heartbeat=False):
+        return self.invoke(Invocation(message, connection=connection), ignore_heartbeat)
 
     def invoke_on_partition(self, message, partition_id):
         return self.invoke(Invocation(message, partition_id=partition_id))
@@ -136,9 +138,9 @@ class InvocationService(object):
     def invoke_on_target(self, message, address):
         return self.invoke(Invocation(message, address=address))
 
-    def invoke(self, invocation):
+    def invoke(self, invocation, ignore_heartbeat=False):
         if invocation.has_connection():
-            self._send(invocation, invocation.connection)
+            self._send(invocation, invocation.connection, ignore_heartbeat)
         elif invocation.has_partition_id():
             addr = self._client.partition_service.get_partition_owner(invocation.partition_id)
             self._send_to_address(invocation, addr)
@@ -150,23 +152,38 @@ class InvocationService(object):
 
         return invocation.future
 
+    def cleanup_connection(self, connection, cause):
+        for correlation_id, invocation in dict(self._pending).iteritems():
+            if invocation.sent_connection == connection:
+                self._handle_exception(invocation, cause)
+
+        for correlation_id, invocation in dict(self._event_handlers).iteritems():
+            if invocation.sent_connection == connection and invocation.connection is None:
+                self._client.listener.re_register_listener(invocation)
+
+    def _heartbeat_stopped(self, connection):
+        for correlation_id, invocation in dict(self._pending).iteritems():
+            if invocation.sent_connection == connection:
+                self._handle_exception(invocation,
+                                       TargetDisconnectedError("%s has stopped heart beating." % connection))
+
     def _remove_event_handler(self, correlation_id):
         self._event_handlers.pop(correlation_id)
 
-    def _send_to_address(self, invocation, address):
+    def _send_to_address(self, invocation, address, ignore_heartbeat=False):
         try:
             conn = self._client.connection_manager.connections[address]
-            self._send(invocation, conn)
+            self._send(invocation, conn, ignore_heartbeat)
         except KeyError:
             def on_connect(f):
                 if f.is_success():
-                    self._send(invocation, f.result())
+                    self._send(invocation, f.result(), ignore_heartbeat)
                 else:
                     self._handle_exception(invocation, f.exception())
 
             self._client.connection_manager.get_or_connect(address).continue_with(on_connect)
 
-    def _send(self, invocation, connection):
+    def _send(self, invocation, connection, ignore_heartbeat):
         correlation_id = self._next_correlation_id.increment_and_get()
         message = invocation.request
         message.set_correlation_id(correlation_id)
@@ -178,12 +195,17 @@ class InvocationService(object):
         if isinstance(invocation, ListenerInvocation):
             self._event_handlers[correlation_id] = invocation
 
-        self.logger.debug("Sending %s", message)
+        self.logger.debug("Sending %s to %s", message, connection)
 
-        if not connection.callback:
-            connection.callback = self._handle_client_message
+        if not ignore_heartbeat and not connection.heartbeating:
+            self._handle_exception(invocation, TargetDisconnectedError("%s has stopped heart beating." % connection))
+            return
+
         invocation.sent_connection = connection
-        connection.send_message(message)
+        try:
+            connection.send_message(message)
+        except IOError as e:
+            self._handle_exception(invocation, e)
 
     def _handle_client_message(self, message):
         correlation_id = message.get_correlation_id()
@@ -238,12 +260,3 @@ class InvocationService(object):
                           RETRY_WAIT_TIME_IN_SECONDS)
         self._client.reactor.add_timer(RETRY_WAIT_TIME_IN_SECONDS, invoke_func)
         return True
-
-    def cleanup_connection(self, connection, cause):
-        for correlation_id, invocation in dict(self._pending).iteritems():
-            if invocation.sent_connection == connection:
-                invocation.set_exception(cause)
-
-        for correlation_id, invocation in dict(self._event_handlers).iteritems():
-            if invocation.sent_connection == connection and invocation.connection is None:
-                self._client.listener.re_register_listener(invocation)

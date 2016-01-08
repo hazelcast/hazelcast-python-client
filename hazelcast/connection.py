@@ -1,17 +1,22 @@
 from __future__ import with_statement
 import logging
-import threading
 import struct
+import threading
+import time
+
+from hazelcast.config import PROPERTY_HEARTBEAT_INTERVAL, PROPERTY_HEARTBEAT_TIMEOUT
 from hazelcast.core import CLIENT_TYPE
 from hazelcast.exception import AuthenticationError
 from hazelcast.future import ImmediateFuture
-from hazelcast.invocation import Future
 from hazelcast.protocol.client_message import BEGIN_END_FLAG, ClientMessage
-from hazelcast.protocol.codec import client_authentication_codec
+from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
 from hazelcast.serialization import INT_SIZE_IN_BYTES, FMT_LE_INT
 
 BUFFER_SIZE = 8192
 PROTOCOL_VERSION = 1
+
+DEFAULT_HEARTBEAT_INTERVAL = 5000
+DEFAULT_HEARTBEAT_TIMEOUT = 60000
 
 
 class ConnectionManager(object):
@@ -25,10 +30,10 @@ class ConnectionManager(object):
         self._pending_connections = {}
         self._socket_map = {}
         self._new_connection_func = new_connection_func
-        self._connnection_listeners = []
+        self._connection_listeners = []
 
     def add_listener(self, on_connection_opened=None, on_connection_closed=None):
-        self._connnection_listeners.append((on_connection_opened, on_connection_closed))
+        self._connection_listeners.append((on_connection_opened, on_connection_closed))
 
     def get_connection(self, address):
         try:
@@ -77,7 +82,7 @@ class ConnectionManager(object):
                             with self._new_connection_mutex:
                                 self.connections[connection.endpoint] = connection
                                 self._pending_connections.pop(address)
-                            for on_connection_opened, _ in self._connnection_listeners:
+                            for on_connection_opened, _ in self._connection_listeners:
                                 if on_connection_opened:
                                     on_connection_opened(connection)
                             return connection
@@ -85,18 +90,18 @@ class ConnectionManager(object):
                             self._pending_connections.pop(address)
                             raise f.exception()
                 authenticator = authenticator or self._cluster_authenticator
-                connection = self._new_connection_func(address, self._connection_closed)
+                connection = self._new_connection_func(address,
+                                                       connection_closed_callback=self._connection_closed,
+                                                       message_callback=self._client.invoker._handle_client_message)
                 future = authenticator(connection).continue_with(on_auth)
                 self._pending_connections[address] = future
                 return future
 
     def _connection_closed(self, connection, cause):
-        print("_connection_closed", connection, cause)
         # if connection was authenticated, fire event
         if connection.endpoint:
-            print(self.connections)
             self.connections.pop(connection.endpoint)
-            for _, on_connection_closed in self._connnection_listeners:
+            for _, on_connection_closed in self._connection_listeners:
                 if on_connection_closed:
                     on_connection_closed(connection, cause)
         else:
@@ -108,24 +113,83 @@ class ConnectionManager(object):
             connection = self.connections[address]
             connection.close(cause)
         except KeyError:
-            logging.debug("No connection with " + address + " was found to close.")
+            logging.warn("No connection with %s was found to close.", address)
             return False
 
-    def heartbeat(self):
-        # TODO
-        pass
+
+class Heartbeat(object):
+    logger = logging.getLogger("ConnectionManager")
+    _heartbeat_timer = None
+
+    def __init__(self, client):
+        self._client = client
+        self._listeners = []
+
+        self._heartbeat_timeout = client.config.get_property_or_default(PROPERTY_HEARTBEAT_TIMEOUT,
+                                                                        DEFAULT_HEARTBEAT_TIMEOUT) / 1000
+        self._heartbeat_interval = client.config.get_property_or_default(PROPERTY_HEARTBEAT_INTERVAL,
+                                                                         DEFAULT_HEARTBEAT_INTERVAL) / 1000
+
+    def start(self):
+        def _heartbeat():
+            self._heartbeat()
+            self._heartbeat_timer = self._client.reactor.add_timer(self._heartbeat_interval, _heartbeat)
+
+        self._heartbeat_timer = self._client.reactor.add_timer(self._heartbeat_interval, _heartbeat)
+
+    def shutdown(self):
+        if self._heartbeat():
+            self._heartbeat_timer.cancel()
+
+    def add_listener(self, on_heartbeat_restored=None, on_heartbeat_stopped=None):
+        self._listeners.append((on_heartbeat_restored, on_heartbeat_stopped))
+
+    def _heartbeat(self):
+        now = time.time()
+        for connection in self._client.connection_manager.connections.values():
+            time_since_last_read = now - connection.last_read
+            if time_since_last_read > self._heartbeat_timeout:
+                if connection.heartbeating:
+                    self.logger.warn(
+                        "Heartbeat: Did not hear back after %ss from %s" % (time_since_last_read, connection))
+                    self._on_heartbeat_stopped(connection)
+
+            if time_since_last_read > self._heartbeat_interval:
+                request = client_ping_codec.encode_request()
+                self._client.invoker.invoke_on_connection(request, connection, ignore_heartbeat=True)
+            else:
+                if not connection.heartbeating:
+                    self._on_heartbeat_restored(connection)
+
+    def _on_heartbeat_restored(self, connection):
+        self.logger.info("Heartbeat: Heartbeat restored for connection %s" % connection)
+        connection.heartbeating = True
+        for callback, _ in self._listeners:
+            if callback:
+                callback(connection)
+
+    def _on_heartbeat_stopped(self, connection):
+        connection.heartbeating = False
+        for _, callback in self._listeners:
+            if callback:
+                callback(connection)
 
 
 class Connection(object):
     _closed = False
-    callback = None
     endpoint = None
+    heartbeating = True
 
-    def __init__(self, address, connection_closed_cb):
+    def __init__(self, address, connection_closed_callback, message_callback):
         self._address = (address.host, address.port)
         self.logger = logging.getLogger("Connection{%s:%d}" % self._address)
-        self._connection_closed_cb = connection_closed_cb
+        self._connection_closed_callback = connection_closed_callback
+        self._message_callback = message_callback
         self._read_buffer = ""
+        self.last_read = 0
+
+    def live(self):
+        return not self._closed
 
     def send_message(self, message):
         if self._closed:
@@ -135,6 +199,7 @@ class Connection(object):
         self.write(message.buffer)
 
     def receive_message(self):
+        self.last_read = time.time()
         # split frames
         while len(self._read_buffer) >= INT_SIZE_IN_BYTES:
             frame_length = struct.unpack_from(FMT_LE_INT, self._read_buffer, 0)[0]
@@ -142,7 +207,7 @@ class Connection(object):
                 return
             message = ClientMessage(buffer(self._read_buffer, 0, frame_length))
             self._read_buffer = self._read_buffer[frame_length:]
-            self.callback(message)
+            self._message_callback(message)
 
     def write(self, data):
         # must be implemented by subclass
@@ -150,3 +215,6 @@ class Connection(object):
 
     def close(self, cause):
         pass
+
+    def __str__(self):
+        return "Connection%s" % (self._address,)

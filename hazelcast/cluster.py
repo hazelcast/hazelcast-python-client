@@ -24,9 +24,13 @@ class ClusterService(object):
         self.uuid = None
         self._initial_list_fetched = threading.Event()
         self._client.connection_manager.add_listener(on_connection_closed=self._connection_closed)
+        self._client.heartbeat.add_listener(on_heartbeat_stopped=self._heartbeat_stopped)
 
     def start(self):
         self._connect_to_cluster()
+
+    def shutdown(self):
+        pass
 
     def size(self):
         return len(self.member_list)
@@ -44,7 +48,7 @@ class ClusterService(object):
             logging.exception("Could not reconnect to cluster. Shutting down client.")
             self._client.shutdown()
 
-    def _connect_to_cluster(self):
+    def _connect_to_cluster(self):  # TODO: can be made async
         address = self._parse_addr(self._config.network_config.addresses[0])  # TODO: try all addresses
         self.logger.info("Connecting to %s", address)
 
@@ -72,7 +76,7 @@ class ClusterService(object):
         def callback(f):
             if f.is_success():
                 parameters = client_authentication_codec.decode_response(f.result())
-                if parameters["status"] != 0:
+                if parameters["status"] != 0:  # TODO: handle other statuses
                     raise AuthenticationError("Authentication failed.")
                 connection.endpoint = parameters["address"]
                 self.owner_uuid = parameters["owner_uuid"]
@@ -111,7 +115,7 @@ class ClusterService(object):
         self._client.partition_service.refresh()
 
     def _handle_member_list(self, members):
-        self.logger.debug("Got initial member list")
+        self.logger.debug("Got initial member list: %s", members)
 
         for m in list(self.member_list):
             try:
@@ -121,7 +125,6 @@ class ClusterService(object):
         for m in members:
             self._member_added(m)
 
-        self.member_list = members
         self._log_member_list()
         self._client.partition_service.refresh()
         self._initial_list_fetched.set()
@@ -143,12 +146,15 @@ class ClusterService(object):
     def _connection_closed(self, connection, _):
         if connection.endpoint and connection.endpoint == self.owner_connection_address:
             # try to reconnect, on new thread
+            # TODO: can we avoid having a thread here?
             reconnect_thread = threading.Thread(target=self._reconnect, name="hazelcast-cluster-reconnect")
             reconnect_thread.daemon = True
             reconnect_thread.start()
 
-    def shutdown(self):
-        pass
+    def _heartbeat_stopped(self, connection):
+        if connection.endpoint == self.owner_connection_address:
+            self._client.connection_manager.close_connection(connection.endpoint, TargetDisconnectedError(
+                "%s stopped heart beating." % connection))
 
 
 class RandomLoadBalancer(object):
