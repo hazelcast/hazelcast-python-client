@@ -122,8 +122,13 @@ class InvocationService(object):
         self._client = client
         self._event_queue = Queue()
         self._is_redo_operation = client.config.network_config.redo_operation
-        self._client.connection_manager.add_listener(on_connection_closed=self.cleanup_connection)
 
+        if client.config.network_config.smart_routing:
+            self.invoke = self.invoke_smart
+        else:
+            self.invoke = self.invoke_non_smart
+
+        self._client.connection_manager.add_listener(on_connection_closed=self.cleanup_connection)
         client.heartbeat.add_listener(on_heartbeat_stopped=self._heartbeat_stopped)
 
     def invoke_on_connection(self, message, connection, ignore_heartbeat=False):
@@ -138,7 +143,7 @@ class InvocationService(object):
     def invoke_on_target(self, message, address):
         return self.invoke(Invocation(message, address=address))
 
-    def invoke(self, invocation, ignore_heartbeat=False):
+    def invoke_smart(self, invocation, ignore_heartbeat=False):
         if invocation.has_connection():
             self._send(invocation, invocation.connection, ignore_heartbeat)
         elif invocation.has_partition_id():
@@ -150,6 +155,14 @@ class InvocationService(object):
             addr = self._client.load_balancer.next_address()
             self._send_to_address(invocation, addr)
 
+        return invocation.future
+
+    def invoke_non_smart(self, invocation, ignore_heartbeat=False):
+        if invocation.has_connection():
+            self._send(invocation, invocation.connection, ignore_heartbeat)
+        else:
+            addr = self._client.cluster.owner_connection_address
+            self._send_to_address(invocation, addr)
         return invocation.future
 
     def cleanup_connection(self, connection, cause):
@@ -260,3 +273,10 @@ class InvocationService(object):
                           RETRY_WAIT_TIME_IN_SECONDS)
         self._client.reactor.add_timer(RETRY_WAIT_TIME_IN_SECONDS, invoke_func)
         return True
+
+class SmartInvocationService(InvocationService):
+    pass
+
+
+class NonSmartInvocationService(InvocationService):
+    pass

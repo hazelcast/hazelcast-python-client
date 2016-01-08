@@ -87,6 +87,7 @@ class ClusterService(object):
 
     def _connect_to_address(self, address):
         connection = self._client.connection_manager.get_or_connect(address, self._authenticate_manager).result()
+        # TODO: promote to owner if necessary
         self.owner_connection_address = connection.endpoint
         self._init_membership_listener(connection)
 
