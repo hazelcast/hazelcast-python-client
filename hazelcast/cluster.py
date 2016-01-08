@@ -7,6 +7,7 @@ from hazelcast.core import CLIENT_TYPE, SERIALIZATION_VERSION, Address
 from hazelcast.exception import HazelcastError, AuthenticationError, TargetDisconnectedError
 from hazelcast.invocation import ListenerInvocation
 from hazelcast.protocol.codec import client_add_membership_listener_codec, client_authentication_codec
+from hazelcast.util import get_possible_addresses
 
 MEMBER_ADDED = 1
 MEMBER_REMOVED = 2
@@ -35,11 +36,6 @@ class ClusterService(object):
     def size(self):
         return len(self.member_list)
 
-    @staticmethod
-    def _parse_addr(addr):
-        (host, port) = addr.split(":")
-        return Address(host, int(port))
-
     def _reconnect(self):
         try:
             self.logger.warn("Connection closed to owner node. Trying to reconnect.")
@@ -49,23 +45,25 @@ class ClusterService(object):
             self._client.shutdown()
 
     def _connect_to_cluster(self):  # TODO: can be made async
-        address = self._parse_addr(self._config.network_config.addresses[0])  # TODO: try all addresses
-        self.logger.info("Connecting to %s", address)
+        addresses = get_possible_addresses(self._config.network_config.addresses, self.member_list)
 
         current_attempt = 1
         attempt_limit = self._config.network_config.connection_attempt_limit
         retry_delay = self._config.network_config.connection_attempt_period / 1000
         while current_attempt <= self._config.network_config.connection_attempt_limit:
-            try:
-                self._connect_to_address(address)
-                return
-            except:
-                self.logger.warning("Error connecting to %s, attempt %d of %d, trying again in %d seconds",
-                                    address, current_attempt, attempt_limit, retry_delay, exc_info=True)
-                time.sleep(retry_delay)
-                current_attempt += 1
+            for address in addresses:
+                try:
+                    self.logger.info("Connecting to %s", address)
+                    self._connect_to_address(address)
+                    return
+                except:
+                    self.logger.warning("Error connecting to %s, attempt %d of %d, trying again in %d seconds",
+                                        address, current_attempt, attempt_limit, retry_delay, exc_info=True)
+                    time.sleep(retry_delay)
+            current_attempt += 1
 
-        raise HazelcastError("Could not connect to the given addresses after %d tries" % (attempt_limit,))
+        error_msg = "Could not connect to any of %s after %d tries" % (addresses, attempt_limit)
+        raise HazelcastError(error_msg)
 
     def _authenticate_manager(self, connection):
         request = client_authentication_codec.encode_request(

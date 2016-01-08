@@ -4,6 +4,9 @@ from util import random_string
 
 
 class ClientMapTest(unittest.TestCase):
+
+    client = None
+
     @classmethod
     def setUpClass(cls):
         config = hazelcast.ClientConfig()

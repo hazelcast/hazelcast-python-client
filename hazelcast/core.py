@@ -5,7 +5,7 @@ CLIENT_TYPE = "PYH"
 
 
 class Member(object):
-    def __init__(self, address, uuid, is_lite_member, attributes):
+    def __init__(self, address, uuid, is_lite_member=False, attributes={}):
         self.address = address
         self.uuid = uuid
         self.is_lite_member = is_lite_member
