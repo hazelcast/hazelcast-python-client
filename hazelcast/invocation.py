@@ -273,10 +273,3 @@ class InvocationService(object):
                           RETRY_WAIT_TIME_IN_SECONDS)
         self._client.reactor.add_timer(RETRY_WAIT_TIME_IN_SECONDS, invoke_func)
         return True
-
-class SmartInvocationService(InvocationService):
-    pass
-
-
-class NonSmartInvocationService(InvocationService):
-    pass
