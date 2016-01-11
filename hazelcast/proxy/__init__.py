@@ -1,11 +1,53 @@
 from hazelcast.protocol.codec import client_create_proxy_codec
-from hazelcast.proxy.map import MapProxy
-from hazelcast.proxy.queue import QueueProxy
+from hazelcast.proxy.atomic_long import AtomicLong
+from hazelcast.proxy.atomic_reference import AtomicReference
+from hazelcast.proxy.count_down_latch import CountDownLatch
+from hazelcast.proxy.id_generator import IdGenerator
+from hazelcast.proxy.list import List
+from hazelcast.proxy.lock import Lock
+from hazelcast.proxy.map import Map
+from hazelcast.proxy.multi_map import MultiMap
+from hazelcast.proxy.queue import Queue
+from hazelcast.proxy.reliable_topic import ReliableTopic
+from hazelcast.proxy.replicated_map import ReplicatedMap
+from hazelcast.proxy.ringbuffer import Ringbuffer
+from hazelcast.proxy.semaphore import Semaphore
+from hazelcast.proxy.set import Set
+from hazelcast.proxy.topic import Topic
 
+ATOMIC_LONG_SERVICE = "hz:impl:atomicLongService"
+ATOMIC_REFERENCE_SERVICE = "hz:impl:atomicReferenceService"
+COUNT_DOWN_LATCH_SERVICE = "hz:impl:countDownLatchService"
+ID_GENERATOR_SERVICE = "hz:impl:idGeneratorService"
+LOCK_SERVICE = "hz:impl:lockService"
+LIST_SERVICE = "hz:impl:listService"
+MULTI_MAP_SERVICE = "hz:impl:multiMapService"
 MAP_SERVICE = "hz:impl:mapService"
+RELIABLE_TOPIC_SERVICE = "hz:impl:reliableTopicService"
+REPLICATED_MAP_SERVICE = "hz:impl:replicatedMapService"
+RINGBUFFER_SERIVCE = "hz:impl:ringbufferService"
+SEMAPHORE_SERVICE = "hz:impl:semaphoreService"
+SET_SERVICE = "hz:impl:setService"
 QUEUE_SERVICE = "hz:impl:queueService"
+TOPIC_SERVICE = "hz:impl:topicService"
 
-_proxy_init = {MAP_SERVICE: MapProxy, QUEUE_SERVICE: QueueProxy}
+_proxy_init = {
+    ATOMIC_LONG_SERVICE: AtomicLong,
+    ATOMIC_REFERENCE_SERVICE: AtomicReference,
+    COUNT_DOWN_LATCH_SERVICE: CountDownLatch,
+    ID_GENERATOR_SERVICE: IdGenerator,
+    LIST_SERVICE: List,
+    LOCK_SERVICE: Lock,
+    MAP_SERVICE: Map,
+    MULTI_MAP_SERVICE: MultiMap,
+    QUEUE_SERVICE: Queue,
+    RELIABLE_TOPIC_SERVICE: ReliableTopic,
+    REPLICATED_MAP_SERVICE: ReplicatedMap,
+    RINGBUFFER_SERIVCE: Ringbuffer,
+    SEMAPHORE_SERVICE: Semaphore,
+    SET_SERVICE: Set,
+    TOPIC_SERVICE: Topic
+}
 
 
 class ProxyManager(object):
