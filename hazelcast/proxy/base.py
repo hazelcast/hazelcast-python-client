@@ -1,10 +1,3 @@
-import threading
-
-
-def thread_id():
-    return threading.currentThread().ident
-
-
 class Proxy(object):
     def __init__(self, client, service_name, name):
         self.service_name = service_name

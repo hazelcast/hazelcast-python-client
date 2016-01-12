@@ -1,8 +1,8 @@
 from collections import namedtuple
 from hazelcast.protocol.codec import map_add_entry_listener_codec, map_contains_key_codec, map_get_codec, map_put_codec, \
     map_size_codec, map_remove_codec, map_remove_entry_listener_codec
-from hazelcast.proxy.base import Proxy, thread_id
-from hazelcast.util import check_not_none, enum
+from hazelcast.proxy.base import Proxy
+from hazelcast.util import check_not_none, enum, thread_id
 
 EntryEventType = enum(added=1,
                       removed=1 << 1,
