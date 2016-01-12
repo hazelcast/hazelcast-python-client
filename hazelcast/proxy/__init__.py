@@ -1,4 +1,4 @@
-from hazelcast.protocol.codec import client_create_proxy_codec
+from hazelcast.protocol.codec import client_create_proxy_codec, client_destroy_proxy_codec
 from hazelcast.proxy.atomic_long import AtomicLong
 from hazelcast.proxy.atomic_reference import AtomicReference
 from hazelcast.proxy.count_down_latch import CountDownLatch
@@ -56,11 +56,12 @@ class ProxyManager(object):
         self._proxies = {}
 
     def get_or_create(self, service_name, name):
-        if name in self._proxies:
-            return self._proxies[name]
+        ns = (service_name, name)
+        if ns in self._proxies:
+            return self._proxies[ns]
 
         proxy = self.create_proxy(service_name, name)
-        self._proxies[name] = proxy
+        self._proxies[ns] = proxy
         return proxy
 
     def create_proxy(self, service_name, name):
@@ -68,6 +69,16 @@ class ProxyManager(object):
                                                            target=self._find_next_proxy_address())
         self._client.invoker.invoke_on_random_target(message).result()
         return _proxy_init[service_name](client=self._client, service_name=service_name, name=name)
+
+    def destroy_proxy(self, service_name, name):
+        ns = (service_name, name)
+        try:
+            self._proxies.pop(ns)
+            message = client_destroy_proxy_codec.encode_request(name=name, service_name=service_name)
+            self._client.invoker.invoke_on_random_target(message).result()
+            return True
+        except KeyError:
+            return False
 
     def _find_next_proxy_address(self):
         # TODO: filter out lite members

@@ -5,8 +5,7 @@ class Proxy(object):
         self._client = client
 
     def destroy(self):
-        pass
-        # TODO
+        return self._client.proxy.destroy_proxy(self.service_name, self.name)
 
     def __str__(self):
         return '%s(name="%s")' % (type(self), self.name)
