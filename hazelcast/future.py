@@ -38,7 +38,7 @@ class Future(object):
         self._reactor_check()
         self._event.wait()
         if self._exception:
-            raise self._exception
+            raise self._exception, None, self._traceback
         if self._result == NONE_RESULT:
             return None
         else:

@@ -1,5 +1,5 @@
 import sys
-
+import traceback
 import unittest
 from threading import Thread, Event
 
@@ -21,9 +21,8 @@ class FutureTest(unittest.TestCase):
         exc = []
 
         def set_exception():
-            map = {}
             try:
-                a = map["invalid_key"]
+                {}["invalid_key"]
             except KeyError as e:
                 exc.append(sys.exc_info())
                 f.set_exception(e, sys.exc_info()[2])
@@ -32,6 +31,28 @@ class FutureTest(unittest.TestCase):
         exc = exc[0]
         self.assertEqual(exc[1], f.exception())
         self.assertEqual(exc[2], f.traceback())
+
+    def test_result_raises_exception_with_traceback(self):
+        f = Future()
+        exc_info = None
+        try:
+            {}["invalid_key"]
+        except KeyError as e:
+            exc_info = sys.exc_info()
+            f.set_exception(e, sys.exc_info()[2])
+
+        try:
+            f.result()
+            self.fail("Future.result() should raise exception")
+        except:
+            info = sys.exc_info()
+            self.assertEqual(info[1], exc_info[1])
+
+            original_tb = traceback.extract_tb(exc_info[2])
+            # shift traceback by one to discard the last frame
+            actual_tb = traceback.extract_tb(info[2])[1:]
+
+            self.assertEqual(original_tb, actual_tb)
 
     def test_add_callback_with_success(self):
         f = Future()
