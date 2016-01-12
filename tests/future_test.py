@@ -175,3 +175,48 @@ class FutureTest(unittest.TestCase):
 
         result = f.continue_with(continuation).result()
         self.assertEqual(1, result)
+
+    def test_callback_called_exactly_once(self):
+        for _ in xrange(0, 1000):
+            f = Future()
+
+            def set_result():
+                f.set_result("done")
+
+            t = Thread(target=set_result)
+            t.start()
+
+            i = [0]
+
+            def callback(c):
+                i[0] += 1
+
+            f.add_done_callback(callback)
+            t.join()
+            self.assertEqual(i[0], 1)
+
+    def test_callback_called_exactly_once_when_exception(self):
+        for _ in xrange(0, 1000):
+            f = Future()
+
+            def set_exception():
+                f.set_exception(RuntimeError("error"))
+
+            t = Thread(target=set_exception)
+            t.start()
+
+            i = [0]
+
+            def callback(c):
+                i[0] += 1
+
+            f.add_done_callback(callback)
+            t.join()
+            self.assertEqual(i[0], 1)
+
+    def test_set_exception_with_non_exception(self):
+
+        def func():
+            f = Future()
+            f.set_exception("non-exception")
+        self.assertRaises(RuntimeError, func)

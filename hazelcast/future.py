@@ -70,9 +70,10 @@ class Future(object):
         return self._traceback
 
     def add_done_callback(self, callback):
-        self._callbacks.append(callback)
         if self.done():
             self._invoke_cb(callback)
+        else:
+            self._callbacks.append(callback)
 
     def _invoke_callbacks(self):
         for callback in self._callbacks:
