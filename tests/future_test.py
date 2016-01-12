@@ -28,9 +28,11 @@ class FutureTest(unittest.TestCase):
                 f.set_exception(e, sys.exc_info()[2])
 
         Thread(target=set_exception).start()
+        exception = f.exception()
+        traceback = f.traceback()
         exc = exc[0]
-        self.assertEqual(exc[1], f.exception())
-        self.assertEqual(exc[2], f.traceback())
+        self.assertEqual(exc[1], exception)
+        self.assertEqual(exc[2], traceback)
 
     def test_result_raises_exception_with_traceback(self):
         f = Future()
