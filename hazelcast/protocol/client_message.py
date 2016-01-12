@@ -56,7 +56,7 @@ class ClientMessage(object):
             self.buffer = bytearray(HEADER_SIZE + payload_size)
             self.set_data_offset(HEADER_SIZE)
             self._write_index = 0
-        self._retrable = False
+        self._retryable = False
 
     # HEADER ACCESSORS
     def get_correlation_id(self):
@@ -178,10 +178,10 @@ class ClientMessage(object):
     # helpers
 
     def is_retryable(self):
-        return self._retrable
+        return self._retryable
 
     def set_retryable(self, val):
-        self._retrable = val
+        self._retryable = val
         return self
 
     def is_complete(self):
