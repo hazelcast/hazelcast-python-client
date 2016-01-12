@@ -10,6 +10,7 @@ import sys
 
 from hazelcast.connection import Connection, BUFFER_SIZE
 from hazelcast.exception import HazelcastError
+from hazelcast.future import Future
 
 
 class AsyncoreReactor(object):
@@ -28,15 +29,17 @@ class AsyncoreReactor(object):
         self._thread.start()
 
     def _loop(self):
-        self.logger.debug("Starting IO Thread")
+        self.logger.debug("Starting Reactor Thread")
+        Future._threading_locals.is_reactor_thread = True
         while self._is_live:
             try:
                 asyncore.loop(count=10000, timeout=0.1, map=self._map)
                 self._check_timers()
             except:
-                self.logger.exception("Error in IO Thread")
+                self.logger.exception("Error in Reactor Thread")
+                # TODO: shutdown client
                 return
-        self.logger.debug("IO Thread exited.")
+        self.logger.debug("Reactor Thread exited.")
 
     def _check_timers(self):
         now = time.time()

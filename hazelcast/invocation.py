@@ -41,10 +41,10 @@ class Invocation(object):
             self.timer.cancel()
         self.future.set_result(response)
 
-    def set_exception(self, exception):
+    def set_exception(self, exception, traceback=None):
         if self.timer:
             self.timer.cancel()
-        self.future.set_exception(exception)
+        self.future.set_exception(exception, traceback)
 
     def on_timeout(self):
         self.set_exception(TimeoutError("Request timed out after %d seconds." % INVOCATION_TIMEOUT))
@@ -192,7 +192,7 @@ class InvocationService(object):
                 if f.is_success():
                     self._send(invocation, f.result(), ignore_heartbeat)
                 else:
-                    self._handle_exception(invocation, f.exception())
+                    self._handle_exception(invocation, f.exception(), f.traceback())
 
             self._client.connection_manager.get_or_connect(address).continue_with(on_connect)
 
@@ -247,7 +247,7 @@ class InvocationService(object):
         except:
             self.logger.warn("Error handling event %s", message, exc_info=True)
 
-    def _handle_exception(self, invocation, error):
+    def _handle_exception(self, invocation, error, traceback=None):
         if self.logger.isEnabledFor(logging.DEBUG):
             self.logger.debug("Got exception for request %s: %s: %s", invocation.request,
                               type(error).__name__, error)
@@ -260,7 +260,7 @@ class InvocationService(object):
                 if self._try_retry(invocation):
                     return
 
-        invocation.set_exception(error)
+        invocation.set_exception(error, traceback)
 
     def _try_retry(self, invocation):
         if invocation.connection:

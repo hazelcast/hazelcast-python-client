@@ -1,6 +1,7 @@
 import logging
 import threading
 import sys
+from hazelcast.util import thread_id
 
 NONE_RESULT = object()
 
@@ -8,6 +9,8 @@ NONE_RESULT = object()
 class Future(object):
     _result = None
     _exception = None
+    _traceback = None
+    _threading_locals = threading.local()
     logger = logging.getLogger("Future")
 
     def __init__(self):
@@ -23,14 +26,16 @@ class Future(object):
         self._event.set()
         self._invoke_callbacks()
 
-    def set_exception(self, exception):
+    def set_exception(self, exception, traceback=None):
         if not isinstance(exception, BaseException):
             raise RuntimeError("Exception must be of BaseException type")
         self._exception = exception
+        self._traceback = traceback
         self._event.set()
         self._invoke_callbacks()
 
     def result(self):
+        self._reactor_check()
         self._event.wait()
         if self._exception:
             raise self._exception
@@ -38,6 +43,12 @@ class Future(object):
             return None
         else:
             return self._result
+
+    def _reactor_check(self):
+        if not self._event.isSet() and hasattr(self._threading_locals, 'is_reactor_thread'):
+            raise RuntimeError(
+                "Synchronous result for incomplete operation must not be called from Reactor thread. "
+                "Use add_done_callback instead.")
 
     def is_success(self):
         return self._result is not None
@@ -49,8 +60,14 @@ class Future(object):
         return not self.done()
 
     def exception(self):
+        self._reactor_check()
         self._event.wait()
         return self._exception
+
+    def traceback(self):
+        self._reactor_check()
+        self._event.wait()
+        return self._traceback
 
     def add_done_callback(self, callback):
         self._callbacks.append(callback)
@@ -80,7 +97,7 @@ class Future(object):
             try:
                 future.set_result(continuation_func(f))
             except:
-                future.set_exception(sys.exc_info()[1])
+                future.set_exception(sys.exc_info()[1], sys.exc_info()[2])
 
         self.add_done_callback(callback)
         return future
