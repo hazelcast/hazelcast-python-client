@@ -67,6 +67,9 @@ class BaseSerializationService(object):
         if obj is None:
             return None
 
+        if isinstance(obj, Data):
+            return obj
+
         out = self._create_data_output()
         try:
             serializer = self._registry.serializer_for(obj)

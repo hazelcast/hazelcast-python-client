@@ -3,9 +3,12 @@ import unittest
 from hazelcast.config import SerializationConfig
 from hazelcast.serialization.service import SerializationServiceV1
 
+from ..util import random_string
+
 
 class SerializationTestCase(unittest.TestCase):
     def setUp(self):
+        n = random_string()
         self.service = SerializationServiceV1(serialization_config=SerializationConfig())
 
     def test_test_dummy_encode_decode(self):

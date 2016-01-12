@@ -1,3 +1,7 @@
+HAS_RESP = True
+VOID_RESP = False
+
+
 class Proxy(object):
     def __init__(self, client, service_name, name):
         self.service_name = service_name
@@ -35,3 +39,12 @@ class Proxy(object):
 
     def _stop_listening(self, registration_id, request_encoder):
         return self._client.listener.stop_listening(registration_id, request_encoder)
+
+
+class PartitionSpecificClientProxy(Proxy):
+    def __init__(self, client, service_name, name):
+        super(PartitionSpecificClientProxy, self).__init__(client, service_name, name)
+        self._partition_id = self._client.partition_service.get_partition_id(name)
+
+    def _invoke_on_partition(self, request):
+        return self._client.invoker.invoke_on_partition(request, self._partition_id)

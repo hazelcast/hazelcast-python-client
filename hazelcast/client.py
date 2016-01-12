@@ -5,7 +5,7 @@ from hazelcast.config import ClientConfig
 from hazelcast.connection import ConnectionManager, Heartbeat
 from hazelcast.invocation import InvocationService, ListenerService
 from hazelcast.partition import PartitionService
-from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE
+from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE, LIST_SERVICE
 from hazelcast.reactor import AsyncoreReactor
 from hazelcast.serialization import SerializationServiceV1
 
@@ -45,6 +45,9 @@ class HazelcastClient(object):
 
     def get_queue(self, name):
         return self.proxy.get_or_create(QUEUE_SERVICE, name)
+
+    def get_list(self, name):
+        return self.proxy.get_or_create(LIST_SERVICE, name)
 
     def shutdown(self):
         self.partition_service.shutdown()

@@ -85,7 +85,7 @@ class Future(object):
         except:
             logging.exception("Exception when invoking callback")
 
-    def continue_with(self, continuation_func):
+    def continue_with(self, continuation_func, *args):
         """
         Create a continuation that executes when the future is completed
         :param continuation_func: A function which takes the future as the only parameter. Return value of the function
@@ -96,7 +96,7 @@ class Future(object):
 
         def callback(f):
             try:
-                future.set_result(continuation_func(f))
+                future.set_result(continuation_func(f, *args))
             except:
                 future.set_exception(sys.exc_info()[1], sys.exc_info()[2])
 
