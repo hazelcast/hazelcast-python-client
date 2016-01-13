@@ -77,9 +77,9 @@ class ClusterService(object):
                 if parameters["status"] != 0:  # TODO: handle other statuses
                     raise AuthenticationError("Authentication failed.")
                 connection.endpoint = parameters["address"]
+                connection.is_owner = True
                 self.owner_uuid = parameters["owner_uuid"]
                 self.uuid = parameters["uuid"]
-                return connection
             else:
                 raise f.exception()
 
@@ -87,7 +87,8 @@ class ClusterService(object):
 
     def _connect_to_address(self, address):
         connection = self._client.connection_manager.get_or_connect(address, self._authenticate_manager).result()
-        # TODO: promote to owner if necessary
+        if not connection.is_owner:
+            self._authenticate_manager(connection).result()
         self.owner_connection_address = connection.endpoint
         self._init_membership_listener(connection)
 

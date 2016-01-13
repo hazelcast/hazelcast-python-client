@@ -179,6 +179,7 @@ class Connection(object):
     _closed = False
     endpoint = None
     heartbeating = True
+    is_owner = False
 
     def __init__(self, address, connection_closed_callback, message_callback):
         self._address = (address.host, address.port)
