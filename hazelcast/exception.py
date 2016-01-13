@@ -38,6 +38,10 @@ class TimeoutError(HazelcastError):
     pass
 
 
+class TransactionError(HazelcastError):
+    pass
+
+
 ERROR_CODE_TO_ERROR = {
     AUTHENTICATION: AuthenticationError,
     HAZELCAST_INSTANCE_NOT_ACTIVE: HazelcastInstanceNotActiveError,

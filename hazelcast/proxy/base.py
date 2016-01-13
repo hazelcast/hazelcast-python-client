@@ -48,3 +48,25 @@ class PartitionSpecificClientProxy(Proxy):
 
     def _invoke_on_partition(self, request):
         return self._client.invoker.invoke_on_partition(request, self._partition_id)
+
+
+class TransactionalProxy(object):
+    def __init__(self, name, transaction):
+        self.name = name
+        self.transaction = transaction
+
+    def destroy(self):
+        raise NotImplementedError
+
+    def transaction_id(self):
+        return self.transaction.transaction_id
+
+    def invoke(self, request):
+        return self.transaction.client.invoker.invoke_on_connection(request, self.transaction.connection)
+
+    def _to_data(self, val):
+        return self.transaction.client.serializer.to_data(val)
+
+    def _to_object(self, data):
+        return self.transaction.client.serializer.to_object(data)
+

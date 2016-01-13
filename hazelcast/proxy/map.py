@@ -174,12 +174,15 @@ class Map(Proxy):
     def put_transient(self, key, value, ttl=-1):
         raise NotImplementedError
 
-    def remove(self, key, value=None):
+    def remove(self, key):
         key_data = self._to_data(key)
         request = map_remove_codec.encode_request(self.name, key_data, thread_id())
         response = self._invoke_on_key(request, key_data)
         result_data = map_remove_codec.decode_response(response)['response']
         return self._to_object(result_data)
+
+    def remove_if_same(self, key, value):
+        raise NotImplementedError
 
     def _remove_func(self, f):
         response = f.result()

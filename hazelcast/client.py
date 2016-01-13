@@ -8,6 +8,7 @@ from hazelcast.partition import PartitionService
 from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE, LIST_SERVICE
 from hazelcast.reactor import AsyncoreReactor
 from hazelcast.serialization import SerializationServiceV1
+from hazelcast.transaction import TWO_PHASE, TransactionManager
 
 
 class HazelcastClient(object):
@@ -21,12 +22,12 @@ class HazelcastClient(object):
         self.heartbeat = Heartbeat(self)
         self.invoker = InvocationService(self)
         self.listener = ListenerService(self)
-        self.cluster = ClusterService(config, self)
+        self.cluster = ClusterService(self.config, self)
         self.partition_service = PartitionService(self)
         self.proxy = ProxyManager(self)
         self.load_balancer = RandomLoadBalancer(self.cluster)
-        self.serializer = SerializationServiceV1(serialization_config=config.serialization_config)
-
+        self.serializer = SerializationServiceV1(serialization_config=self.config.serialization_config)
+        self.transaction_manager = TransactionManager(self)
         self._start()
 
     def _start(self):
@@ -49,11 +50,13 @@ class HazelcastClient(object):
     def get_list(self, name):
         return self.proxy.get_or_create(LIST_SERVICE, name)
 
+    def new_transaction(self, timeout=120, durability=1, type=TWO_PHASE):
+        return self.transaction_manager.new_transaction(timeout, durability, type)
+
     def shutdown(self):
         self.partition_service.shutdown()
         self.heartbeat.shutdown()
         self.cluster.shutdown()
         self.reactor.shutdown()
         self.logger.info("Client shutdown.")
-
 

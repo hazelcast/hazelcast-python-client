@@ -45,7 +45,7 @@ class Future(object):
             return self._result
 
     def _reactor_check(self):
-        if not self._event.isSet() and hasattr(self._threading_locals, 'is_reactor_thread'):
+        if not self.done() and hasattr(self._threading_locals, 'is_reactor_thread'):
             raise RuntimeError(
                 "Synchronous result for incomplete operation must not be called from Reactor thread. "
                 "Use add_done_callback instead.")
@@ -107,7 +107,6 @@ class Future(object):
 class ImmediateFuture(Future):
     def __init__(self, result):
         self._result = result
-        pass
 
     def set_exception(self, exception):
         raise NotImplementedError()
@@ -123,3 +122,6 @@ class ImmediateFuture(Future):
 
     def exception(self):
         return None
+
+    def result(self):
+        return self._result
