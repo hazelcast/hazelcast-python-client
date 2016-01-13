@@ -1,12 +1,11 @@
 import asyncore
 import logging
 import socket
+import sys
 import threading
 import time
 from Queue import PriorityQueue
 from collections import deque
-
-import sys
 
 from hazelcast.connection import Connection, BUFFER_SIZE
 from hazelcast.exception import HazelcastError
@@ -44,14 +43,14 @@ class AsyncoreReactor(object):
     def _check_timers(self):
         now = time.time()
         while not self._timers.empty():
-            _, timer = self._timers.queue[0]  # TODO: possible race condition
+            _, timer = self._timers.queue[0]
             if timer.check_timer(now):
                 self._timers.get_nowait()
             else:
                 return
 
     def add_timer_absolute(self, timeout, callback):
-        timer = Timer(timeout, callback)
+        timer = Timer(timeout, callback, self._cleanup_timer)
         self._timers.put_nowait((timer.end, timer))
         return timer
 
@@ -74,6 +73,8 @@ class AsyncoreReactor(object):
     def new_connection(self, address, connection_closed_callback, message_callback):
         return AsyncoreConnection(self._map, address, connection_closed_callback, message_callback)
 
+    def _cleanup_timer(self, timer):
+        self._timers.queue.remove((timer.end, timer))
 
 class AsyncoreConnection(Connection, asyncore.dispatcher):
     def __init__(self, map, address, connection_closed_callback, message_callback):
@@ -124,12 +125,14 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 class Timer(object):
     canceled = False
 
-    def __init__(self, end, timer_ended_cb):
+    def __init__(self, end, timer_ended_cb, timer_canceled_cb):
         self.end = end
         self.timer_ended_cb = timer_ended_cb
+        self.timer_canceled_cb = timer_canceled_cb
 
     def cancel(self):
         self.canceled = True
+        self.timer_canceled_cb(self)
 
     def check_timer(self, now):
         if self.canceled:
