@@ -1,5 +1,8 @@
 import unittest
 from threading import Thread
+
+import time
+
 import hazelcast
 import hazelcast.transaction
 from hazelcast.exception import TransactionError
@@ -102,3 +105,10 @@ class TransactionTest(unittest.TestCase):
             nested_transaction.begin()
 
         transaction.rollback()
+
+    def test_timeout(self):
+        transaction = self.client.new_transaction(timeout=0.001)
+        transaction.begin()
+        time.sleep(0.001)
+        with self.assertRaises(TransactionError):
+            transaction.commit()

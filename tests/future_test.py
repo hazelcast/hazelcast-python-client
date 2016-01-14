@@ -2,7 +2,7 @@ import sys
 import traceback
 import unittest
 from threading import Thread, Event
-from hazelcast.future import Future
+from hazelcast.future import Future, ImmediateFuture
 
 
 class FutureTest(unittest.TestCase):
@@ -213,7 +213,87 @@ class FutureTest(unittest.TestCase):
             t.join()
             self.assertEqual(i[0], 1)
 
+    def test_done(self):
+        f = Future()
+
+        self.assertFalse(f.done())
+
+        f.set_result("done")
+
+        self.assertTrue(f.done())
+
+    def test_running(self):
+        f = Future()
+
+        self.assertTrue(f.running())
+
+        f.set_result("done")
+
+        self.assertFalse(f.running())
+
     def test_set_exception_with_non_exception(self):
         f = Future()
         with self.assertRaises(RuntimeError):
             f.set_exception("non-exception")
+
+    def test_callback_throws_exception(self):
+        f = Future()
+
+        def invalid_func():
+            raise RuntimeError("error!")
+
+        f.add_done_callback(invalid_func)
+        f.set_result("done")  # should not throw exception
+
+    def test_continue_with_throws_exception(self):
+        f = Future()
+        e = RuntimeError("error")
+
+        def continue_func(f):
+            raise e
+
+        n = f.continue_with(continue_func)
+        f.set_result("done")
+
+        self.assertFalse(n.is_success())
+        self.assertEqual(n.exception(), e)
+
+
+class ImmediateFutureTest(unittest.TestCase):
+    f = None
+
+    def setUp(self):
+        self.f = ImmediateFuture("done")
+
+    def test_result(self):
+        self.assertEqual("done", self.f.result())
+
+    def test_exception(self):
+        self.assertIsNone(self.f.exception())
+
+    def test_set_result(self):
+        with self.assertRaises(NotImplementedError):
+            self.f.set_result("done")
+
+    def test_set_exception(self):
+        with self.assertRaises(NotImplementedError):
+            self.f.set_exception(RuntimeError())
+
+    def test_is_succcess(self):
+        self.assertTrue(self.f.is_success())
+
+    def test_is_done(self):
+        self.assertTrue(self.f.done())
+
+    def test_is_not_running(self):
+        self.assertFalse(self.f.running())
+
+    def test_callback(self):
+        n = [0]
+
+        def callback(f):
+            n[0] += 1
+
+        self.f.add_done_callback(callback)
+
+        self.assertEqual(n[0], 1)
