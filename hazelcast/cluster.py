@@ -2,7 +2,8 @@ import logging
 import random
 import threading
 import time
-from hazelcast.core import CLIENT_TYPE, SERIALIZATION_VERSION, Address
+
+from hazelcast.core import CLIENT_TYPE, SERIALIZATION_VERSION
 # Membership Event Types
 from hazelcast.exception import HazelcastError, AuthenticationError, TargetDisconnectedError
 from hazelcast.invocation import ListenerInvocation

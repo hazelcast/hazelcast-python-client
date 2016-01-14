@@ -14,6 +14,7 @@ _STATE_ACTIVE = "active"
 _STATE_NOT_STARTED = "not_started"
 _STATE_COMMITTED = "committed"
 _STATE_ROLLED_BACK = "rolled_back"
+_STATE_PARTIAL_COMMIT = "rolling_back"
 
 """
 The two phase commit is separated in 2 parts. First it tries to execute the prepare; if there are any conflicts,
@@ -54,7 +55,7 @@ class TransactionManager(object):
 
     def new_transaction(self, timeout, durability, transaction_type):
         connection = self._connect()
-        return Transaction(self._client, connection, timeout, durability, transaction_type, thread_id())
+        return Transaction(self._client, connection, timeout, durability, transaction_type)
 
 
 class Transaction(object):
@@ -63,23 +64,24 @@ class Transaction(object):
     start_time = None
     _locals = threading.local()
     logger = logging.getLogger("Transaction")
+    thread_id = None
 
-    def __init__(self, client, connection, timeout, durability, transaction_type, thread_id):
+    def __init__(self, client, connection, timeout, durability, transaction_type):
         self.connection = connection
         self.timeout = timeout
         self.durability = durability
         self.transaction_type = transaction_type
-        self.thread_id = thread_id
         self.client = client
         self._objects = {}
 
     def begin(self):
+        if hasattr(self._locals, 'transaction_exists') and self._locals.transaction_exists:
+            raise TransactionError("Nested transactions are not allowed.")
         if self.state != _STATE_NOT_STARTED:
             raise TransactionError("Transaction has already been started.")
-        if hasattr(self._locals, 'transaction_exists'):
-            raise TransactionError("Nested transactions are not allowed.")
-        self._locals.transaction_exits = True
+        self._locals.transaction_exists = True
         self.start_time = time.time()
+        self.thread_id = thread_id()
         try:
             request = transaction_create_codec.encode_request(timeout=self.timeout * 1000, durability=self.durability,
                                                               transaction_type=self.transaction_type,
@@ -88,32 +90,35 @@ class Transaction(object):
             self.transaction_id = transaction_create_codec.decode_response(response)["response"]
             self.state = _STATE_ACTIVE
         except:
-            self._locals.transaction_exits = False
+            self._locals.transaction_exists = False
             raise
 
     def commit(self):
-        active = _STATE_ACTIVE
-        if self.state != active:
-            raise TransactionError("Transaction is not active.")
         self._check_thread()
-        self._check_timeout()
+        if self.state != _STATE_ACTIVE:
+            raise TransactionError("Transaction is not active.")
         try:
+            self._check_timeout()
             request = transaction_commit_codec.encode_request(self.transaction_id, self.thread_id)
             self.client.invoker.invoke_on_connection(request, self.connection).result()
             self.state = _STATE_COMMITTED
+        except:
+            self.state = _STATE_PARTIAL_COMMIT
+            raise
         finally:
-            self._locals.transaction_exits = False
+            self._locals.transaction_exists = False
 
     def rollback(self):
-        if self.state != _STATE_ACTIVE:
-            raise TransactionError("Transaction is not active.")
         self._check_thread()
+        if self.state != _STATE_ACTIVE and self.state != _STATE_PARTIAL_COMMIT:
+            raise TransactionError("Transaction is not active.")
         try:
-            request = transaction_rollback_codec.encode_request(self.transaction_id, self.thread_id)
-            self.client.invoker.invoke_on_connection(request, self.connection).result()
+            if self.state != _STATE_PARTIAL_COMMIT:
+                request = transaction_rollback_codec.encode_request(self.transaction_id, self.thread_id)
+                self.client.invoker.invoke_on_connection(request, self.connection).result()
             self.state = _STATE_ROLLED_BACK
         finally:
-            self._locals.transaction_exits = False
+            self._locals.transaction_exists = False
 
     def get_list(self, name):
         return self._get_or_create_object(name, TransactionalList)

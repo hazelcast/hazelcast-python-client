@@ -1,6 +1,6 @@
 import unittest
 import hazelcast
-from util import random_string
+from tests.util import random_string
 
 
 class ClientMapTest(unittest.TestCase):

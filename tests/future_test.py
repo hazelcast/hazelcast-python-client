@@ -2,7 +2,6 @@ import sys
 import traceback
 import unittest
 from threading import Thread, Event
-
 from hazelcast.future import Future
 
 
@@ -215,8 +214,6 @@ class FutureTest(unittest.TestCase):
             self.assertEqual(i[0], 1)
 
     def test_set_exception_with_non_exception(self):
-
-        def func():
-            f = Future()
+        f = Future()
+        with self.assertRaises(RuntimeError):
             f.set_exception("non-exception")
-        self.assertRaises(RuntimeError, func)
