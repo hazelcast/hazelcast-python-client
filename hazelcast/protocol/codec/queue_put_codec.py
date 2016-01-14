@@ -1,4 +1,3 @@
-from hazelcast.serialization.data import *
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import ClientMessage
 from hazelcast.protocol.custom_codec import *
@@ -28,10 +27,6 @@ def encode_request(name, value):
     return client_message
 
 
-def decode_response(client_message):
-    """ Decode response from client message"""
-    parameters = dict()
-    return parameters
-
+# Empty decode_response(client_message), this message has no parameters to decode
 
 

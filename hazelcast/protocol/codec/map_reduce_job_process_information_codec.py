@@ -1,4 +1,3 @@
-from hazelcast.serialization.data import *
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import ClientMessage
 from hazelcast.protocol.custom_codec import *
@@ -28,7 +27,7 @@ def encode_request(name, job_id):
     return client_message
 
 
-def decode_response(client_message):
+def decode_response(client_message, to_object=None):
     """ Decode response from client message"""
     parameters = dict(job_partition_states=None, process_records=None)
     job_partition_states_size = client_message.read_int()
@@ -39,6 +38,5 @@ def decode_response(client_message):
     parameters['job_partition_states'] = job_partition_states
     parameters['process_records'] = client_message.read_int()
     return parameters
-
 
 

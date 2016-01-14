@@ -1,4 +1,3 @@
-from hazelcast.serialization.data import *
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import ClientMessage
 from hazelcast.protocol.custom_codec import *
@@ -46,7 +45,7 @@ def encode_request(username, password, uuid, owner_uuid, is_owner_connection, cl
     return client_message
 
 
-def decode_response(client_message):
+def decode_response(client_message, to_object=None):
     """ Decode response from client message"""
     parameters = dict(status=None, address=None, uuid=None, owner_uuid=None, serialization_version=None)
     parameters['status'] = client_message.read_byte()
@@ -61,6 +60,5 @@ def decode_response(client_message):
         parameters['owner_uuid'] = client_message.read_str()
     parameters['serialization_version'] = client_message.read_byte()
     return parameters
-
 
 

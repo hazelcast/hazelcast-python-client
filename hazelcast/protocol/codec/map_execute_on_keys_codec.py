@@ -1,4 +1,3 @@
-from hazelcast.serialization.data import *
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import ClientMessage
 from hazelcast.protocol.custom_codec import *
@@ -34,16 +33,15 @@ def encode_request(name, entry_processor, keys):
     return client_message
 
 
-def decode_response(client_message):
+def decode_response(client_message, to_object=None):
     """ Decode response from client message"""
     parameters = dict(response=None)
     response_size = client_message.read_int()
     response = []
     for response_index in xrange(0, response_size):
-        response_item = client_message.read_map_entry()
+        response_item = (client_message.read_data(), client_message.read_data())
         response.append(response_item)
     parameters['response'] = response
     return parameters
-
 
 

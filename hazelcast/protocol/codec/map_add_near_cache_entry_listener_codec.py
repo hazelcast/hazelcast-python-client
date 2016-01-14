@@ -1,4 +1,3 @@
-from hazelcast.serialization.data import *
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import ClientMessage
 from hazelcast.protocol.custom_codec import *
@@ -31,12 +30,11 @@ def encode_request(name, listener_flags, local_only):
     return client_message
 
 
-def decode_response(client_message):
+def decode_response(client_message, to_object=None):
     """ Decode response from client message"""
     parameters = dict(response=None)
     parameters['response'] = client_message.read_str()
     return parameters
-
 
 def handle(client_message, handle_event_imapinvalidation = None, handle_event_imapbatchinvalidation = None):
     """ Event handler """
