@@ -2,31 +2,30 @@ from hazelcast.proxy.base import TransactionalProxy
 
 
 class TransactionalMap(TransactionalProxy):
-    
     def contains_key(self, key):
         raise NotImplementedError
-    
+
     def get(self, key):
         raise NotImplementedError
-    
+
     def get_for_update(self, key):
         raise NotImplementedError
-    
+
     def size(self):
         raise NotImplementedError
-    
+
     def is_empty(self):
         raise NotImplementedError
-    
+
     def put(self, key, value, ttl=None):
         raise NotImplementedError
-    
+
     def set(self, key, value):
-        raise NotImplementedError    
-    
+        raise NotImplementedError
+
     def put_if_absent(self, key, value):
         raise NotImplementedError
-    
+
     def replace(self, key, value):
         raise NotImplementedError
 
