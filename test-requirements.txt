@@ -1,1 +1,3 @@
 hazelcast-remote-controller==0.1
+nose==1.3.7
+coverage==4.0.3

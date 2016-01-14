@@ -40,5 +40,5 @@ setup(
         packages=find_packages(exclude=['examples', 'docs', 'tests', 'benchmark']),
         package_dir={'hazelcast': 'hazelcast'},
         install_requires=[],
-        tests_require=['hazelcast-remote-controller'],
+        tests_require=['hazelcast-remote-controller', 'nose', 'coverage'],
 )
