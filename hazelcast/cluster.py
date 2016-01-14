@@ -2,14 +2,15 @@ import logging
 import random
 import threading
 import time
+import uuid
 
 from hazelcast.core import CLIENT_TYPE, SERIALIZATION_VERSION
-# Membership Event Types
 from hazelcast.exception import HazelcastError, AuthenticationError, TargetDisconnectedError
 from hazelcast.invocation import ListenerInvocation
 from hazelcast.protocol.codec import client_add_membership_listener_codec, client_authentication_codec
 from hazelcast.util import get_possible_addresses
 
+# Membership Event Types
 MEMBER_ADDED = 1
 MEMBER_REMOVED = 2
 
@@ -20,10 +21,15 @@ class ClusterService(object):
     def __init__(self, config, client):
         self._config = config
         self._client = client
-        self.member_list = []
+        self.members = []
         self.owner_connection_address = None
         self.owner_uuid = None
         self.uuid = None
+        self.listeners = {}
+
+        for listener in config.membership_listeners:
+            self.add_listener(*listener)
+
         self._initial_list_fetched = threading.Event()
         self._client.connection_manager.add_listener(on_connection_closed=self._connection_closed)
         self._client.heartbeat.add_listener(on_heartbeat_stopped=self._heartbeat_stopped)
@@ -35,7 +41,19 @@ class ClusterService(object):
         pass
 
     def size(self):
-        return len(self.member_list)
+        return len(self.members)
+
+    def add_listener(self, member_added=None, member_removed=None):
+        registration_id = str(uuid.uuid4())
+        self.listeners[registration_id] = (member_added, member_removed)
+        return registration_id
+
+    def remove_listener(self, registration_id):
+        try:
+            self.listeners.pop(registration_id)
+            return True
+        except KeyError:
+            return False
 
     def _reconnect(self):
         try:
@@ -46,7 +64,7 @@ class ClusterService(object):
             self._client.shutdown()
 
     def _connect_to_cluster(self):  # TODO: can be made async
-        addresses = get_possible_addresses(self._config.network_config.addresses, self.member_list)
+        addresses = get_possible_addresses(self._config.network_config.addresses, self.members)
 
         current_attempt = 1
         attempt_limit = self._config.network_config.connection_attempt_limit
@@ -118,7 +136,7 @@ class ClusterService(object):
     def _handle_member_list(self, members):
         self.logger.debug("Got initial member list: %s", members)
 
-        for m in list(self.member_list):
+        for m in list(self.members):
             try:
                 members.remove(m)
             except ValueError:
@@ -131,18 +149,28 @@ class ClusterService(object):
         self._initial_list_fetched.set()
 
     def _member_added(self, member):
-        self.member_list.append(member)
-        # TODO: membership listener
+        self.members.append(member)
+        for added, _ in self.listeners.values():
+            if added:
+                try:
+                    added(member)
+                except:
+                    logging.exception("Exception in membership listener")
 
     def _member_removed(self, member):
-        self.member_list.remove(member)
+        self.members.remove(member)
         self._client.connection_manager.close_connection(member.address, TargetDisconnectedError(
             "%s is no longer a member of the cluster" % member))
-        # TODO: membership listener
+        for _, removed in self.listeners.values():
+            if removed:
+                try:
+                    removed(member)
+                except:
+                    logging.exception("Exception in membership listener")
 
     def _log_member_list(self):
-        self.logger.info("New member list:\n\nMembers [%d] {\n%s\n}\n", len(self.member_list),
-                         "\n".join(["\t" + str(x) for x in self.member_list]))
+        self.logger.info("New member list:\n\nMembers [%d] {\n%s\n}\n", len(self.members),
+                         "\n".join(["\t" + str(x) for x in self.members]))
 
     def _connection_closed(self, connection, _):
         if connection.endpoint and connection.endpoint == self.owner_connection_address:
@@ -163,4 +191,4 @@ class RandomLoadBalancer(object):
         self._cluster = cluster
 
     def next_address(self):
-        return random.choice(self._cluster.member_list).address
+        return random.choice(self._cluster.members).address

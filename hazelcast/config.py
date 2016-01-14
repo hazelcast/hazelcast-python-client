@@ -12,7 +12,7 @@ class ClientConfig(object):
         self.group_config = GroupConfig()
         self.network_config = ClientNetworkConfig()
         self.load_balancer = None
-        self.listener_configs = []
+        self.membership_listeners = []
         self.executor_pool_size = -1
         self.instance_name = None
         self.near_cache_configs = {}
