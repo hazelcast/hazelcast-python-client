@@ -3,28 +3,11 @@ import unittest
 from hzrc.client import HzRemoteController
 
 import hazelcast
+from tests.base import SingleMemberTestCase
 from tests.util import random_string
 
 
-class ListTestCase(unittest.TestCase):
-    client = None
-    rc = None
-
-    @classmethod
-    def setUpClass(cls):
-        cls.rc = HzRemoteController('127.0.0.1', 9701)
-        rc_cluster = cls.rc.createCluster(None, None)
-        rc_member = cls.rc.startMember(rc_cluster.id)
-
-        config = hazelcast.ClientConfig()
-        config.network_config.addresses.append("{}:{}".format(rc_member.host, rc_member.port))
-        cls.client = hazelcast.HazelcastClient(config)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.client.shutdown()
-        cls.rc.exit()
-
+class ListTestCase(SingleMemberTestCase):
     def setUp(self):
         self.list = self.client.get_list(random_string())
 

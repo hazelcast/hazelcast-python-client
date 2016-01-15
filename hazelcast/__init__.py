@@ -1,2 +1,2 @@
 from hazelcast.client import HazelcastClient
-from hazelcast.config import *
+from hazelcast.config import ClientConfig, ClientNetworkConfig, SerializationConfig, GroupConfig, GlobalSerializerConfig

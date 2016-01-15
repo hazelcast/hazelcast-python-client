@@ -1,24 +1,16 @@
 import unittest
 from threading import Thread
-
 import time
+
+from hzrc.client import HzRemoteController
 
 import hazelcast
 import hazelcast.transaction
 from hazelcast.exception import TransactionError
+from tests.base import SingleMemberTestCase
 
 
-class TransactionTest(unittest.TestCase):
-    client = None
-
-    @classmethod
-    def setUpClass(cls):
-        cls.client = hazelcast.HazelcastClient()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.client.shutdown()
-
+class TransactionTest(SingleMemberTestCase):
     def test_begin_and_commit_transaction(self):
         transaction = self.client.new_transaction()
         transaction.begin()
