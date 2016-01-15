@@ -1,8 +1,8 @@
 from threading import Thread
-from time import sleep
 
 from hazelcast import ClientConfig
 from hazelcast.exception import HazelcastError
+from hazelcast.lifecycle import LIFECYCLE_STATE_DISCONNECTED, LIFECYCLE_STATE_CONNECTED
 from tests.base import HazelcastTestCase
 from tests.util import configure_logging
 
@@ -31,10 +31,20 @@ class ReconnectTest(HazelcastTestCase):
         Thread(target=self.cluster.start_member).start()
         self.create_client()
 
-    # def test_restart_member(self):
-    #     member = self.cluster.start_member()
-    #     self.create_client()
-    #
-    #     member.terminate()
-    #     self.cluster.start_member()
-    #     sleep(10)
+    def test_restart_member(self):
+        member = self.cluster.start_member()
+        client = self.create_client()
+
+        state = [None]
+
+        def listener(s):
+            state[0] = s
+
+        client.lifecycle.add_listener(listener)
+
+        member.shutdown()
+        self.assertTrueEventually(lambda: self.assertEqual(state[0], LIFECYCLE_STATE_DISCONNECTED))
+        self.cluster.start_member()
+        self.assertTrueEventually(lambda: self.assertEqual(state[0], LIFECYCLE_STATE_CONNECTED))
+
+

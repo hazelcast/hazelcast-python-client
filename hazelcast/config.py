@@ -13,6 +13,7 @@ class ClientConfig(object):
         self.network_config = ClientNetworkConfig()
         self.load_balancer = None
         self.membership_listeners = []
+        self.lifecycle_listeners = []
         self.executor_pool_size = -1
         self.instance_name = None
         self.near_cache_configs = {}

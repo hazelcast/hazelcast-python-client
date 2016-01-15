@@ -1,7 +1,6 @@
 import logging
-import threading
 import sys
-from hazelcast.util import thread_id
+import threading
 
 NONE_RESULT = object()
 

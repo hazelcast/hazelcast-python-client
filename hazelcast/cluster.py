@@ -6,6 +6,7 @@ import uuid
 from hazelcast.core import CLIENT_TYPE, SERIALIZATION_VERSION
 from hazelcast.exception import HazelcastError, AuthenticationError, TargetDisconnectedError
 from hazelcast.invocation import ListenerInvocation
+from hazelcast.lifecycle import LIFECYCLE_STATE_CONNECTED, LIFECYCLE_STATE_DISCONNECTED
 from hazelcast.protocol.codec import client_add_membership_listener_codec, client_authentication_codec
 from hazelcast.util import get_possible_addresses
 
@@ -114,6 +115,7 @@ class ClusterService(object):
             self._authenticate_manager(connection).result()
         self.owner_connection_address = connection.endpoint
         self._init_membership_listener(connection)
+        self._client.lifecycle.fire_lifecycle_event(LIFECYCLE_STATE_CONNECTED)
 
     def _init_membership_listener(self, connection):
         request = client_add_membership_listener_codec.encode_request(False)
@@ -177,7 +179,9 @@ class ClusterService(object):
                          "\n".join(["\t" + str(x) for x in self.members]))
 
     def _connection_closed(self, connection, _):
-        if connection.endpoint and connection.endpoint == self.owner_connection_address:
+        if connection.endpoint and connection.endpoint == self.owner_connection_address \
+                and self._client.lifecycle.is_live:
+            self._client.lifecycle.fire_lifecycle_event(LIFECYCLE_STATE_DISCONNECTED)
             # try to reconnect, on new thread
             # TODO: can we avoid having a thread here?
             reconnect_thread = threading.Thread(target=self._reconnect, name="hazelcast-cluster-reconnect")

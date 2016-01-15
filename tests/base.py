@@ -14,7 +14,7 @@ class _Member(object):
         self.uuid = member.uuid
         self.address = Address(member.host, member.port)
 
-    def terminate(self):
+    def shutdown(self):
         self.rc.terminateMember(self.cluster.id, self.member.uuid)
 
 

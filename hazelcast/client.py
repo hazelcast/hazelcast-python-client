@@ -4,6 +4,7 @@ from hazelcast.cluster import ClusterService, RandomLoadBalancer
 from hazelcast.config import ClientConfig
 from hazelcast.connection import ConnectionManager, Heartbeat
 from hazelcast.invocation import InvocationService, ListenerService
+from hazelcast.lifecycle import LifecycleService, LIFECYCLE_STATE_SHUTTING_DOWN, LIFECYCLE_STATE_SHUTDOWN
 from hazelcast.partition import PartitionService
 from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE, LIST_SERVICE
 from hazelcast.reactor import AsyncoreReactor
@@ -17,6 +18,7 @@ class HazelcastClient(object):
 
     def __init__(self, config=None):
         self.config = config or ClientConfig()
+        self.lifecycle = LifecycleService(self.config)
         self.reactor = AsyncoreReactor()
         self.connection_manager = ConnectionManager(self, self.reactor.new_connection)
         self.heartbeat = Heartbeat(self)
@@ -54,9 +56,12 @@ class HazelcastClient(object):
         return self.transaction_manager.new_transaction(timeout, durability, type)
 
     def shutdown(self):
-        self.partition_service.shutdown()
-        self.heartbeat.shutdown()
-        self.cluster.shutdown()
-        self.reactor.shutdown()
-        self.logger.info("Client shutdown.")
+        if self.lifecycle.is_live:
+            self.lifecycle.fire_lifecycle_event(LIFECYCLE_STATE_SHUTTING_DOWN)
+            self.partition_service.shutdown()
+            self.heartbeat.shutdown()
+            self.cluster.shutdown()
+            self.reactor.shutdown()
+            self.lifecycle.fire_lifecycle_event(LIFECYCLE_STATE_SHUTDOWN)
+            self.logger.info("Client shutdown.")
 

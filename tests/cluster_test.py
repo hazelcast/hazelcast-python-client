@@ -1,11 +1,5 @@
-import unittest
-
-from hzrc.client import HzRemoteController
-
 import hazelcast
-from hazelcast.core import Address
-from tests.base import SingleMemberTestCase, HazelcastTestCase
-from tests.util import configure_logging
+from tests.base import HazelcastTestCase
 
 
 class ClusterTest(HazelcastTestCase):
@@ -84,7 +78,7 @@ class ClusterTest(HazelcastTestCase):
 
         client.cluster.add_listener(member_removed=member_removed)
 
-        member_to_remove.terminate()
+        member_to_remove.shutdown()
 
         def assertion():
             self.assertEqual(len(events), 1)
@@ -92,3 +86,12 @@ class ClusterTest(HazelcastTestCase):
             self.assertEqual(events[0].address, member_to_remove.address)
 
         self.assertTrueEventually(assertion)
+
+    def test_exception_in_membership_listener(self):
+        def listener(e):
+            raise RuntimeError("error")
+
+        config = hazelcast.ClientConfig()
+        config.membership_listeners.append((listener, listener))
+        self.cluster.start_member()
+        self.create_client(config)

@@ -12,4 +12,11 @@ def configure_logging(log_level=logging.INFO):
     logging.getLogger().setLevel(log_level)
 
 
+def event_collector():
+    events = []
 
+    def collector(e):
+        events.append(e)
+
+    collector.events = events
+    return collector
