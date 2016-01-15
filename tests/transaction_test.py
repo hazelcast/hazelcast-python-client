@@ -88,6 +88,15 @@ class TransactionTest(SingleMemberTestCase):
             with self.assertRaises(TransactionError):
                 op("name")
 
+    def test_operations_before_transaction_started(self):
+        transaction = self.client.new_transaction()
+        ops = [transaction.get_map, transaction.get_list, transaction.get_multi_map, transaction.get_queue,
+               transaction.get_set]
+
+        for op in ops:
+            with self.assertRaises(TransactionError):
+                op("name")
+
     def test_nested_transactions_not_allowed(self):
         transaction = self.client.new_transaction()
         transaction.begin()
