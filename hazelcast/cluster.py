@@ -3,7 +3,6 @@ import random
 import threading
 import time
 import uuid
-
 from hazelcast.core import CLIENT_TYPE, SERIALIZATION_VERSION
 from hazelcast.exception import HazelcastError, AuthenticationError, TargetDisconnectedError
 from hazelcast.invocation import ListenerInvocation
@@ -43,9 +42,14 @@ class ClusterService(object):
     def size(self):
         return len(self.members)
 
-    def add_listener(self, member_added=None, member_removed=None):
+    def add_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
         registration_id = str(uuid.uuid4())
         self.listeners[registration_id] = (member_added, member_removed)
+
+        if fire_for_existing:
+            for member in self.members:
+                member_added(member)
+
         return registration_id
 
     def remove_listener(self, registration_id):

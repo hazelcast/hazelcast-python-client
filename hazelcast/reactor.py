@@ -74,7 +74,10 @@ class AsyncoreReactor(object):
         return AsyncoreConnection(self._map, address, connection_closed_callback, message_callback)
 
     def _cleanup_timer(self, timer):
-        self._timers.queue.remove((timer.end, timer))
+        try:
+            self._timers.queue.remove((timer.end, timer))
+        except ValueError:
+            pass
 
 class AsyncoreConnection(Connection, asyncore.dispatcher):
     def __init__(self, map, address, connection_closed_callback, message_callback):

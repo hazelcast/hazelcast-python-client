@@ -4,27 +4,33 @@ import unittest
 from hzrc.client import HzRemoteController
 
 import hazelcast
+from hazelcast.core import Address
 from tests.util import configure_logging
 
 
 class _Member(object):
     def __init__(self, rc, cluster, member):
         self.rc, self.cluster, self.member = rc, cluster, member
+        self.uuid = member.uuid
+        self.address = Address(member.host, member.port)
 
     def terminate(self):
-        self.rc.terminateMember(self.cluster.id, self.member.id)
+        self.rc.terminateMember(self.cluster.id, self.member.uuid)
 
 
 class _Cluster(object):
     def __init__(self, rc, cluster):
         self.cluster = cluster
         self.rc = rc
+        self.id = cluster.id
 
     def start_member(self):
         return _Member(self.rc, self, self.rc.startMember(self.cluster.id))
 
 
 class HazelcastTestCase(unittest.TestCase):
+    clients = []
+
     @staticmethod
     def create_rc():
         return HzRemoteController('127.0.0.1', 9701)
@@ -32,6 +38,16 @@ class HazelcastTestCase(unittest.TestCase):
     @classmethod
     def create_cluster(cls, rc, config=None):
         return _Cluster(rc, rc.createCluster(None, config))
+
+    def create_client(self, config=None):
+        client = hazelcast.HazelcastClient(config)
+        self.clients.append(client)
+        return client
+
+    def shutdown_all_clients(self):
+        for c in self.clients:
+            c.shutdown()
+        self.clients = []
 
     def assertTrueEventually(self, assertion, timeout=30):
         timeout_time = time.time() + timeout
