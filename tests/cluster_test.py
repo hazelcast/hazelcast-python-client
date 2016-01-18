@@ -16,8 +16,8 @@ class ClusterTest(HazelcastTestCase):
     def test_initial_membership_listener(self):
         events = []
 
-        def member_added(member):
-            events.append(member)
+        def member_added(m):
+            events.append(m)
 
         config = hazelcast.ClientConfig()
         config.membership_listeners.append((member_added, None))

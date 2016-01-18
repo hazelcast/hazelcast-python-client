@@ -1,5 +1,4 @@
 from collections import namedtuple
-
 from hazelcast.protocol.codec import map_add_entry_listener_codec, map_contains_key_codec, map_get_codec, map_put_codec, \
     map_size_codec, map_remove_codec, map_remove_entry_listener_codec
 from hazelcast.proxy.base import Proxy
@@ -14,17 +13,14 @@ EntryEventType = enum(added=1,
                       merged=1 << 6,
                       expired=1 << 7)
 
-EntryEvent = namedtuple("EntryEvent",
-                        ["key", "value", "old_value", "merging_value", "event_type", "uuid",
-                         "number_of_affected_entries"])
 
-
-class DataAwareEntryEvent(object):
-    def __init__(self, member, key_data, value_data, merging_value_data, event_type, uuid, number_of_affected_entries, to_object):
-        self.member = member
-        self._key_data = key_data
-        self._value_data = value_data
-        self._merging_value_data = merging_value_data
+class EntryEvent(object):
+    def __init__(self, to_object, key, old_value, value, merging_value, event_type, uuid,
+                 number_of_affected_entries):
+        self._key_data = key
+        self._value_data = value
+        self._old_value_data = old_value
+        self._merging_value_data = merging_value
         self.event_type = event_type
         self.uuid = uuid
         self.number_of_affected_entries = number_of_affected_entries
@@ -35,6 +31,10 @@ class DataAwareEntryEvent(object):
         return self._to_object(self._key_data)
 
     @property
+    def old_value(self):
+        return self._to_object(self._old_value_data)
+
+    @property
     def value(self):
         return self._to_object(self._value_data)
 
@@ -42,20 +42,37 @@ class DataAwareEntryEvent(object):
     def merging_value(self):
         return self._to_object(self._merging_value_data)
 
+    def __repr__(self):
+        return "EntryEvent(key=%s, old_value=%s, value=%s, merging_value=%s, event_type=%s, uuid=%s, " \
+               "number_of_affected_entries=%s)" % (
+                   self.key, self.old_value, self.value, self.merging_value, self.event_type, self.uuid,
+                   self.number_of_affected_entries)
+
 
 class Map(Proxy):
     def add_entry_listener(self, include_value=False, key=None, predicate=None, **kwargs):
+        """
+        added=,removed=,updated=,evicted=,evict_all=,clear_all,merged=,expired=
+        :param include_value:
+        :param key:
+        :param predicate:
+        :param kwargs:
+
+        :return:
+        """
         flags = self._get_listener_flags(**kwargs)
         request = map_add_entry_listener_codec.encode_request(self.name, include_value, flags, False)
 
         def handle_event_entry(**_kwargs):
-            event = EntryEvent(**_kwargs)
+            event = EntryEvent(self._to_object, **_kwargs)
             event_name = EntryEventType.reverse[event.event_type]
             kwargs[event_name](event)
 
         registration_id = self._start_listening(request,
-                                                lambda m: map_add_entry_listener_codec.handle(m, handle_event_entry),
-                                                lambda r: map_add_entry_listener_codec.decode_response(r)['response'])
+                                                lambda m: map_add_entry_listener_codec.handle(m,
+                                                                                              handle_event_entry),
+                                                lambda r: map_add_entry_listener_codec.decode_response(r)[
+                                                    'response'])
         return registration_id
 
     def add_index(self, attribute, ordered=False):
@@ -139,7 +156,8 @@ class Map(Proxy):
         check_not_none(value, "value can't be None")
         key_data = self._to_data(key)
         value_data = self._to_data(value)
-        return self._encode_invoke_on_key(map_put_codec, key_data, self.name, key_data, value_data, thread_id(), ttl)
+        return self._encode_invoke_on_key(map_put_codec, key_data, self.name, key_data, value_data, thread_id(),
+                                          int(ttl*1000))
 
     def put_all(self, map):
         raise NotImplementedError
