@@ -1,4 +1,5 @@
 from collections import namedtuple
+
 from hazelcast.protocol.codec import map_add_entry_listener_codec, map_contains_key_codec, map_get_codec, map_put_codec, \
     map_size_codec, map_remove_codec, map_remove_entry_listener_codec
 from hazelcast.proxy.base import Proxy
@@ -16,6 +17,30 @@ EntryEventType = enum(added=1,
 EntryEvent = namedtuple("EntryEvent",
                         ["key", "value", "old_value", "merging_value", "event_type", "uuid",
                          "number_of_affected_entries"])
+
+
+class DataAwareEntryEvent(object):
+    def __init__(self, member, key_data, value_data, merging_value_data, event_type, uuid, number_of_affected_entries, to_object):
+        self.member = member
+        self._key_data = key_data
+        self._value_data = value_data
+        self._merging_value_data = merging_value_data
+        self.event_type = event_type
+        self.uuid = uuid
+        self.number_of_affected_entries = number_of_affected_entries
+        self._to_object = to_object
+
+    @property
+    def key(self):
+        return self._to_object(self._key_data)
+
+    @property
+    def value(self):
+        return self._to_object(self._value_data)
+
+    @property
+    def merging_value(self):
+        return self._to_object(self._merging_value_data)
 
 
 class Map(Proxy):

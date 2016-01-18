@@ -1,5 +1,5 @@
 from hazelcast.protocol.codec import list_add_codec, list_get_codec, list_add_with_index_codec, list_add_all_codec, \
-    list_add_all_with_index_codec
+    list_add_all_with_index_codec, list_add_listener_codec
 from hazelcast.proxy.base import PartitionSpecificClientProxy
 from hazelcast.util import check_not_none
 
@@ -31,8 +31,23 @@ class List(PartitionSpecificClientProxy):
             data_items.append(self._to_data(item))
         return self._encode_invoke_on_partition(list_add_all_with_index_codec, self.name, index, data_items)
 
-    def add_listener(self, item_added=None, item_removed=None):
+    def add_listener(self, include_value=False, item_added=None, item_removed=None):
         raise NotImplementedError
+        # flags = self._get_listener_flags(**kwargs)
+        # request = list_add_listener_codec.encode_request(self.name, include_value, local_only)
+        # return _start_listening(request, lambda m:list_add_listener_codec.decode_response(m)['response'], GetPartitionKey(), handler)
+
+    def HandleItemListener(self, itemData, uuid, eventType, listener, includeValue):
+        # item = includeValue        ? ToObject<T>(itemData)         : default(T)
+
+        member = self._client.cluster.get_member_by_uuid(uuid)
+
+        # var itemEvent = new ItemEvent<T>(GetName(), eventType, item, member);
+        if eventType == ItemEventType.Added:
+            listener.ItemAdded(itemEvent)
+        else:
+            listener.ItemRemoved(itemEvent)
+
 
     def clear(self):
         raise NotImplementedError

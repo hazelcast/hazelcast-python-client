@@ -193,6 +193,10 @@ class ClusterService(object):
             self._client.connection_manager.close_connection(connection.endpoint, TargetDisconnectedError(
                 "%s stopped heart beating." % connection))
 
+    def get_member_by_uuid(self, member_uuid):
+        for member in self.members:
+            if member.uuid == member_uuid:
+                return member
 
 class RandomLoadBalancer(object):
     def __init__(self, cluster):

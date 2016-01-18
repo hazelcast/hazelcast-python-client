@@ -37,13 +37,16 @@ class Proxy(object):
 
     def _handle_response(self, future, codec):
         response = future.result()
-        try:
+        if response:
+            try:
+                codec.decode_response
+            except AttributeError:
+                return
             decoded_response = codec.decode_response(response, self._to_object)
-            return decoded_response['response']
-        except TypeError:
-            pass
-        except AttributeError:
-            pass
+            try:
+                return decoded_response['response']
+            except AttributeError:
+                pass
 
 
 class PartitionSpecificClientProxy(Proxy):
