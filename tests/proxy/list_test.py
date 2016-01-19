@@ -70,6 +70,3 @@ class ListTestCase(SingleMemberTestCase):
     def test_add_all_at_null_elements(self):
         with self.assertRaises(AssertionError):
             self.list.add_all_at(0, None)
-
-if __name__ == '__main__':
-    unittest.main()

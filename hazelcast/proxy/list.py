@@ -8,12 +8,13 @@ class List(PartitionSpecificClientProxy):
     def add(self, item):
         check_not_none(item, "Value can't be None")
         element_data = self._to_data(item)
-        return self._encode_invoke_on_partition(list_add_codec, self.name, element_data)
+        return self._encode_invoke_on_partition(list_add_codec, name=self.name, value=element_data)
 
     def add_at(self, index, item):
         check_not_none(item, "Value can't be None")
         element_data = self._to_data(item)
-        return self._encode_invoke_on_partition(list_add_with_index_codec, self.name, index, element_data)
+        return self._encode_invoke_on_partition(list_add_with_index_codec, name=self.name, index=index,
+                                                value=element_data)
 
     def add_all(self, items):
         check_not_none(items, "Value can't be None")
@@ -21,7 +22,7 @@ class List(PartitionSpecificClientProxy):
         for item in items:
             check_not_none(item, "Value can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke_on_partition(list_add_all_codec, self.name, data_items)
+        return self._encode_invoke_on_partition(list_add_all_codec, name=self.name, value_list=data_items)
 
     def add_all_at(self, index, items):
         check_not_none(items, "Value can't be None")
@@ -29,7 +30,8 @@ class List(PartitionSpecificClientProxy):
         for item in items:
             check_not_none(item, "Value can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke_on_partition(list_add_all_with_index_codec, self.name, index, data_items)
+        return self._encode_invoke_on_partition(list_add_all_with_index_codec, name=self.name, index=index,
+                                                value_list=data_items)
 
     def add_listener(self, include_value=False, item_added=None, item_removed=None):
         raise NotImplementedError
@@ -37,17 +39,16 @@ class List(PartitionSpecificClientProxy):
         # request = list_add_listener_codec.encode_request(self.name, include_value, local_only)
         # return _start_listening(request, lambda m:list_add_listener_codec.decode_response(m)['response'], GetPartitionKey(), handler)
 
-    def HandleItemListener(self, itemData, uuid, eventType, listener, includeValue):
-        # item = includeValue        ? ToObject<T>(itemData)         : default(T)
-
-        member = self._client.cluster.get_member_by_uuid(uuid)
-
-        # var itemEvent = new ItemEvent<T>(GetName(), eventType, item, member);
-        if eventType == ItemEventType.Added:
-            listener.ItemAdded(itemEvent)
-        else:
-            listener.ItemRemoved(itemEvent)
-
+    # def HandleItemListener(self, itemData, uuid, eventType, listener, includeValue):
+    #     # item = includeValue        ? ToObject<T>(itemData)         : default(T)
+    #
+    #     member = self._client.cluster.get_member_by_uuid(uuid)
+    #
+    #     # var itemEvent = new ItemEvent<T>(GetName(), eventType, item, member);
+    #     if eventType == ItemEventType.Added:
+    #         listener.ItemAdded(itemEvent)
+    #     else:
+    #         listener.ItemRemoved(itemEvent)
 
     def clear(self):
         raise NotImplementedError
@@ -59,7 +60,7 @@ class List(PartitionSpecificClientProxy):
         raise NotImplementedError
 
     def get(self, index):
-        return self._encode_invoke_on_partition(list_get_codec, self.name, index)
+        return self._encode_invoke_on_partition(list_get_codec, name=self.name, index=index)
 
     def get_all(self):
         raise NotImplementedError

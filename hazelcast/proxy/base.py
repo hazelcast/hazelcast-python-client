@@ -22,18 +22,20 @@ class Proxy(object):
     def _stop_listening(self, registration_id, request_encoder):
         return self._client.listener.stop_listening(registration_id, request_encoder)
 
-    def _encode_invoke(self, codec, *args):
-        request = codec.encode_request(*args)
+    def _encode_invoke(self, codec, **kwargs):
+        request = codec.encode_request(**kwargs)
         return self._client.invoker.invoke_on_random_target(request).continue_with(self._handle_response, codec)
 
-    def _encode_invoke_on_key(self, codec, key_data, *args):
+    def _encode_invoke_on_key(self, codec, key_data, **kwargs):
         partition_id = self._client.partition_service.get_partition_id(key_data)
-        request = codec.encode_request(*args)
-        return self._client.invoker.invoke_on_partition(request, partition_id).continue_with(self._handle_response, codec)
+        request = codec.encode_request(**kwargs)
+        return self._client.invoker.invoke_on_partition(request, partition_id).continue_with(self._handle_response,
+                                                                                             codec)
 
-    def _encode_invoke_on_partition(self, codec, partition_id, *args):
-        request = codec.encode_request(*args)
-        return self._client.invoker.invoke_on_partition(request, partition_id).continue_with(self._handle_response, codec)
+    def _encode_invoke_on_partition(self, codec, partition_id, **kwargs):
+        request = codec.encode_request(**kwargs)
+        return self._client.invoker.invoke_on_partition(request, partition_id).continue_with(self._handle_response,
+                                                                                             codec)
 
     def _handle_response(self, future, codec):
         response = future.result()
@@ -54,8 +56,9 @@ class PartitionSpecificClientProxy(Proxy):
         super(PartitionSpecificClientProxy, self).__init__(client, service_name, name)
         self._partition_id = self._client.partition_service.get_partition_id(name)
 
-    def _encode_invoke_on_partition(self, codec, *args):
-        return super(PartitionSpecificClientProxy, self)._encode_invoke_on_partition(codec, self._partition_id, *args)
+    def _encode_invoke_on_partition(self, codec, **kwargs):
+        return super(PartitionSpecificClientProxy, self)._encode_invoke_on_partition(codec, self._partition_id,
+                                                                                     **kwargs)
 
 
 class TransactionalProxy(object):

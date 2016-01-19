@@ -1,6 +1,9 @@
-from collections import namedtuple
-from hazelcast.protocol.codec import map_add_entry_listener_codec, map_contains_key_codec, map_get_codec, map_put_codec, \
-    map_size_codec, map_remove_codec, map_remove_entry_listener_codec
+from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_index_codec, map_clear_codec, \
+    map_contains_key_codec, map_contains_value_codec, map_delete_codec, map_entry_set_codec, \
+    map_entries_with_predicate_codec, map_evict_codec, map_evict_all_codec, map_flush_codec, map_force_unlock_codec, \
+    map_get_codec, map_get_all_codec, map_get_entry_view_codec, map_put_codec, map_size_codec, \
+    map_remove_codec, \
+    map_remove_entry_listener_codec
 from hazelcast.proxy.base import Proxy
 from hazelcast.util import check_not_none, enum, thread_id
 
@@ -76,13 +79,13 @@ class Map(Proxy):
         return registration_id
 
     def add_index(self, attribute, ordered=False):
-        raise NotImplementedError
+        return self._encode_invoke(map_add_index_codec, name=self.name, attribute=attribute, ordered=ordered)
 
     def add_interceptor(self, interceptor):
         raise NotImplementedError
 
     def clear(self):
-        raise NotImplementedError
+        return self._encode_invoke(map_clear_codec, name=self.name)
 
     def contains_key(self, key):
         """
@@ -92,28 +95,42 @@ class Map(Proxy):
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
         return self._encode_invoke_on_key(map_contains_key_codec, key_data,
-                                          self.name, key_data, thread_id())
+                                          name=self.name, key=key_data, thread_id=thread_id())
 
     def contains_value(self, value):
-        raise NotImplementedError
+        check_not_none(value, "value can't be None")
+        value_data = self._to_data(value)
+        return self._encode_invoke(map_contains_value_codec, name=self.name, value=value_data)
 
     def delete(self, key):
-        raise NotImplementedError
+        check_not_none(key, "key can't be None")
+        key_data = self._to_data(key)
+        return self._encode_invoke_on_key(map_delete_codec, key_data, name=self.name, key=key_data,
+                                          thread_id=thread_id())
 
     def entry_set(self, predicate=None):
-        raise NotImplementedError
+        if predicate:
+            predicate_data = self._to_data(predicate)
+            return self._encode_invoke(map_entries_with_predicate_codec, name=self.name, predicate=predicate_data)
+        else:
+            return self._encode_invoke(map_entry_set_codec, name=self.name)
 
     def evict(self, key):
-        raise NotImplementedError
+        check_not_none(key, "key can't be None")
+        key_data = self._to_object(key)
+        return self._encode_invoke_on_key(map_evict_codec, key_data, name=self.name, key=key_data,
+                                          thread_id=thread_id())
 
     def evict_all(self):
-        raise NotImplementedError
+        return self._encode_invoke(map_evict_all_codec, name=self.name)
 
     def flush(self):
-        raise NotImplementedError
+        return self._encode_invoke(map_flush_codec, name=self.name)
 
     def force_unlock(self, key):
-        raise NotImplementedError
+        check_not_none(key, "key can't be None")
+        key_data = self._to_object(key)
+        return self._encode_invoke_on_key(map_force_unlock_codec, key_data, name=self.name, key=key_data)
 
     def get(self, key):
         """
@@ -122,10 +139,12 @@ class Map(Proxy):
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(map_get_codec, key_data, self.name, key_data, thread_id())
+        return self._encode_invoke_on_key(map_get_codec, key_data, name=self.name, key=key_data, thread_id=thread_id())
 
     def get_all(self, keys):
-        raise NotImplementedError
+        check_not_none(keys, "None")
+        if not keys:
+            return {}
 
     def get_entry_view(self, key):
         raise NotImplementedError
@@ -156,8 +175,9 @@ class Map(Proxy):
         check_not_none(value, "value can't be None")
         key_data = self._to_data(key)
         value_data = self._to_data(value)
-        return self._encode_invoke_on_key(map_put_codec, key_data, self.name, key_data, value_data, thread_id(),
-                                          int(ttl*1000))
+        return self._encode_invoke_on_key(map_put_codec, key_data, name=self.name, key=key_data, value=value_data,
+                                          thread_id=thread_id(),
+                                          ttl=int(ttl * 1000))
 
     def put_all(self, map):
         raise NotImplementedError
@@ -170,7 +190,8 @@ class Map(Proxy):
 
     def remove(self, key):
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(map_remove_codec, key_data, self.name, key_data, thread_id())
+        return self._encode_invoke_on_key(map_remove_codec, key_data, name=self.name, key=key_data,
+                                          thread_id=thread_id())
 
     def remove_if_same(self, key, value):
         raise NotImplementedError
@@ -186,7 +207,7 @@ class Map(Proxy):
         raise NotImplementedError
 
     def size(self):
-        return self._encode_invoke(map_size_codec, self.name)
+        return self._encode_invoke(map_size_codec, name=self.name)
 
     def try_lock(self, key, timeout=-1):
         raise NotImplementedError
