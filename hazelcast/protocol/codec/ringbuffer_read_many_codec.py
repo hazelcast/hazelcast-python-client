@@ -44,7 +44,7 @@ def decode_response(client_message, to_object=None):
     items_size = client_message.read_int()
     items = []
     for items_index in xrange(0, items_size):
-        items_item = client_message.read_data()
+        items_item = to_object(client_message.read_data())
         items.append(items_item)
     parameters['items'] = items
     return parameters
