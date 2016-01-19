@@ -96,16 +96,13 @@ class ClusterService(object):
             serialization_version=SERIALIZATION_VERSION)
 
         def callback(f):
-            if f.is_success():
-                parameters = client_authentication_codec.decode_response(f.result())
-                if parameters["status"] != 0:  # TODO: handle other statuses
-                    raise AuthenticationError("Authentication failed.")
-                connection.endpoint = parameters["address"]
-                connection.is_owner = True
-                self.owner_uuid = parameters["owner_uuid"]
-                self.uuid = parameters["uuid"]
-            else:
-                raise f.exception()
+            parameters = client_authentication_codec.decode_response(f.result())
+            if parameters["status"] != 0:  # TODO: handle other statuses
+                raise AuthenticationError("Authentication failed.")
+            connection.endpoint = parameters["address"]
+            connection.is_owner = True
+            self.owner_uuid = parameters["owner_uuid"]
+            self.uuid = parameters["uuid"]
 
         return self._client.invoker.invoke_on_connection(request, connection).continue_with(callback)
 
@@ -197,6 +194,7 @@ class ClusterService(object):
         for member in self.members:
             if member.uuid == member_uuid:
                 return member
+
 
 class RandomLoadBalancer(object):
     def __init__(self, cluster):

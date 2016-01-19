@@ -3,7 +3,6 @@ import logging
 import struct
 import threading
 import time
-
 from hazelcast.config import PROPERTY_HEARTBEAT_INTERVAL, PROPERTY_HEARTBEAT_TIMEOUT
 from hazelcast.core import CLIENT_TYPE
 from hazelcast.exception import AuthenticationError
@@ -55,16 +54,13 @@ class ConnectionManager(object):
             serialization_version=1)
 
         def callback(f):
-            if f.is_success():
-                parameters = client_authentication_codec.decode_response(f.result())
-                if parameters["status"] != 0:
-                    raise AuthenticationError("Authentication failed.")
-                connection.endpoint = parameters["address"]
-                self.owner_uuid = parameters["owner_uuid"]
-                self.uuid = parameters["uuid"]
-                return connection
-            else:
-                raise f.exception()
+            parameters = client_authentication_codec.decode_response(f.result())
+            if parameters["status"] != 0:
+                raise AuthenticationError("Authentication failed.")
+            connection.endpoint = parameters["address"]
+            self.owner_uuid = parameters["owner_uuid"]
+            self.uuid = parameters["uuid"]
+            return connection
 
         return self._client.invoker.invoke_on_connection(request, connection).continue_with(callback)
 
@@ -88,7 +84,7 @@ class ConnectionManager(object):
                             return connection
                         else:
                             self._pending_connections.pop(address)
-                            raise f.exception()
+                            raise f.exception(), None, f.traceback()
                 authenticator = authenticator or self._cluster_authenticator
                 connection = self._new_connection_func(address,
                                                        connection_closed_callback=self._connection_closed,
