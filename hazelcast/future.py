@@ -2,6 +2,8 @@ import logging
 import sys
 import threading
 
+from hazelcast.util import AtomicInteger
+
 NONE_RESULT = object()
 
 
@@ -124,3 +126,24 @@ class ImmediateFuture(Future):
 
     def result(self):
         return self._result
+
+
+def combine_futures(*futures):
+    expected = len(futures)
+    results = []
+    completed = AtomicInteger()
+    combined = Future()
+
+    def done(f):
+        if not combined.done():
+            if f.is_success():  # TODO: ensure ordering of results as original list
+                results.append(f.result())
+                if completed.increment_and_get() == expected:
+                    combined.set_result(results)
+            else:
+                combined.set_exception(f.exception(), f.traceback())
+
+    for future in futures:
+        future.add_done_callback(done)
+
+    return combined

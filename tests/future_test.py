@@ -2,7 +2,7 @@ import sys
 import traceback
 import unittest
 from threading import Thread, Event
-from hazelcast.future import Future, ImmediateFuture
+from hazelcast.future import Future, ImmediateFuture, combine_futures
 
 
 class FutureTest(unittest.TestCase):
@@ -297,3 +297,31 @@ class ImmediateFutureTest(unittest.TestCase):
         self.f.add_done_callback(callback)
 
         self.assertEqual(n[0], 1)
+
+
+class CombineFutureTest(unittest.TestCase):
+    def test_combine_futures(self):
+        f1, f2, f3 = Future(), Future(), Future()
+
+        combined = combine_futures(f1, f2, f3)
+
+        f1.set_result("done1")
+        self.assertFalse(combined.done())
+
+        f2.set_result("done2")
+        self.assertFalse(combined.done())
+
+        f3.set_result("done3")
+        self.assertEqual(combined.result(), ["done1", "done2", "done3"])
+
+    def test_combine_futures_exception(self):
+        f1, f2, f3 = Future(), Future(), Future()
+
+        combined = combine_futures(f1, f2, f3)
+
+        e = RuntimeError("error")
+        f1.set_result("done")
+        f2.set_result("done")
+        f3.set_exception(e)
+
+        self.assertEqual(e, combined.exception())
