@@ -28,9 +28,7 @@ class Proxy(object):
 
     def _encode_invoke_on_key(self, codec, key_data, **kwargs):
         partition_id = self._client.partition_service.get_partition_id(key_data)
-        request = codec.encode_request(**kwargs)
-        return self._client.invoker.invoke_on_partition(request, partition_id).continue_with(self._handle_response,
-                                                                                             codec)
+        return self._encode_invoke_on_partition(codec, partition_id, **kwargs)
 
     def _encode_invoke_on_partition(self, codec, partition_id, **kwargs):
         request = codec.encode_request(**kwargs)

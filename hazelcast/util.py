@@ -16,15 +16,18 @@ def thread_id():
     return threading.currentThread().ident
 
 
+def to_millis(seconds):
+    if seconds >= 0:
+        return int(seconds * 1000)
+    return seconds
+
+
 class AtomicInteger(object):
     def __init__(self, initial=0):
-        self.lock = threading.Lock()
-        self.initial = initial
+        self.count = itertools.count(start=initial + 1)
 
     def increment_and_get(self):
-        with self.lock:
-            self.initial += 1
-            return self.initial
+        return self.count.next()
 
 
 def enum(**enums):

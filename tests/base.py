@@ -1,5 +1,6 @@
 import time
 import unittest
+from threading import Thread
 
 from hzrc.client import HzRemoteController
 
@@ -59,6 +60,10 @@ class HazelcastTestCase(unittest.TestCase):
                 time.sleep(0.1)
         raise
 
+    def start_new_thread(self, target):
+        t = Thread(target=target)
+        t.start()
+        return t
 
 class SingleMemberTestCase(HazelcastTestCase):
     """
@@ -70,16 +75,16 @@ class SingleMemberTestCase(HazelcastTestCase):
     @classmethod
     def setUpClass(cls):
         configure_logging()
-        cls.rc = cls.create_rc()
-        cls.cluster = cls.create_cluster(cls.rc, cls.configure_cluster())
-        cls.member = cls.cluster.start_member()
+        #cls.rc = cls.create_rc()
+        #cls.cluster = cls.create_cluster(cls.rc, cls.configure_cluster())
+        #cls.member = cls.cluster.start_member()
 
         cls.client = hazelcast.HazelcastClient(cls.configure_client())
 
     @classmethod
     def tearDownClass(cls):
         cls.client.shutdown()
-        cls.rc.exit()
+        #cls.rc.exit()
 
     @classmethod
     def configure_client(cls):
