@@ -1,5 +1,5 @@
 import itertools
-from hazelcast.future import combine_futures
+from hazelcast.future import combine_futures, ImmediateFuture
 from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_entry_listener_to_key_codec, \
     map_add_entry_listener_with_predicate_codec, map_add_entry_listener_to_key_with_predicate_codec, \
     map_add_index_codec, map_clear_codec, map_contains_key_codec, map_contains_value_codec, map_delete_codec, \
@@ -8,7 +8,7 @@ from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_entry
     map_is_locked_codec, map_key_set_codec, map_key_set_with_predicate_codec, map_load_all_codec, \
     map_load_given_keys_codec, map_lock_codec, map_put_codec, map_put_all_codec, map_put_if_absent_codec, \
     map_put_transient_codec, map_size_codec, map_remove_codec, map_remove_if_same_codec, \
-    map_remove_entry_listener_codec, map_replace_codec, map_replace_if_same_codec, map_try_lock_codec, \
+    map_remove_entry_listener_codec, map_replace_codec, map_replace_if_same_codec, map_set_codec, map_try_lock_codec, \
     map_try_put_codec, map_try_remove_codec, map_unlock_codec, map_values_codec, map_values_with_predicate_codec
 from hazelcast.proxy.base import Proxy
 from hazelcast.util import check_not_none, enum, thread_id, to_millis
@@ -173,7 +173,7 @@ class Map(Proxy):
     def get_all(self, keys):
         check_not_none(keys, "keys can't be None")
         if not keys:
-            return {}
+            return ImmediateFuture({})
 
         partition_service = self._client.partition_service
         partition_to_keys = {}
@@ -194,6 +194,7 @@ class Map(Proxy):
 
         def merge(f):
             return dict(itertools.chain(*f.result()))
+
         return combine_futures(*futures).continue_with(merge)
 
     def get_entry_view(self, key):
@@ -227,6 +228,7 @@ class Map(Proxy):
                                        replace_existing_values=replace_existing_values)
 
     def lock(self, key, ttl=-1):
+        check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
         return self._encode_invoke_on_key(map_lock_codec, key_data, name=self.name, key=key_data, thread_id=thread_id(),
                                           ttl=to_millis(ttl))
@@ -249,7 +251,7 @@ class Map(Proxy):
     def put_all(self, map):
         check_not_none(map, "map can't be None")
         if not map:
-            return
+            return ImmediateFuture(None)
 
         partition_service = self._client.partition_service
         partition_map = {}
@@ -332,6 +334,21 @@ class Map(Proxy):
         return self._encode_invoke_on_key(map_replace_if_same_codec, key_data, name=self.name, key=key_data,
                                           test_value=old_value_data,
                                           value=new_value_data, thread_id=thread_id())
+
+    def set(self, key, value, ttl=-1):
+        """
+        :param key:
+        :param value:
+        :param ttl:
+        :return:
+        """
+        check_not_none(key, "key can't be None")
+        check_not_none(value, "value can't be None")
+        key_data = self._to_data(key)
+        value_data = self._to_data(value)
+        return self._encode_invoke_on_key(map_set_codec, key_data, name=self.name, key=key_data, value=value_data,
+                                          thread_id=thread_id(),
+                                          ttl=to_millis(ttl))
 
     def size(self):
         return self._encode_invoke(map_size_codec, name=self.name)

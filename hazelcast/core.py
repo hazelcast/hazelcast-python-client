@@ -53,16 +53,22 @@ class DistributedObjectInfo(object):
 
 
 class EntryView(object):
-    def __init__(self, key, value):
-        self.key = key
-        self.value = value
-        self.cost = None
-        self.creationTime = None
-        self.expirationTime = None
-        self.hits = None
-        self.lastAccessTime = None
-        self.lastStoredTime = None
-        self.lastUpdateTime = None
-        self.version = None
-        self.evictionCriteriaNumber = None
-        self.ttl = None
+    key = None
+    value = None
+    cost = None
+    creation_time = None
+    expiration_time = None
+    hits = None
+    last_access_time = None
+    last_stored_time = None
+    last_update_time = None
+    version = None
+    eviction_criteria_number = None
+    ttl = None
+
+    def __repr__(self):
+        return "EntryView(key=%s, value=%s, cost=%s, creation_time=%s, expiration_time=%s, hits=%s, last_access_time=%s, " \
+               "last_stored_time=%s, last_update_time=%s, version=%s, eviction_criteria_number=%s, ttl=%s" % (
+                   self.key, self.value, self.cost, self.creation_time, self.expiration_time, self.hits,
+                   self.last_access_time, self.last_stored_time, self.last_update_time, self.version,
+                   self.eviction_criteria_number, self.ttl)

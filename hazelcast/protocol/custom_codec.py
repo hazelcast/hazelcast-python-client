@@ -76,23 +76,25 @@ class EntryViewCodec(object):
         client_message.append_long(entry_view.ttl)
 
     @classmethod
-    def decode(cls, client_message, to_object=None):
+    def decode(cls, client_message, to_object):
         entry_view = EntryView()
-        entry_view.key = client_message.read_data()
-        entry_view.value = client_message.read_data()
+        entry_view.key = to_object(client_message.read_data())
+        entry_view.value = to_object(client_message.read_data())
         entry_view.cost = client_message.read_long()
-        entry_view.cost = client_message.read_long()
-        entry_view.creationTime = client_message.read_long()
-        entry_view.expirationTime = client_message.read_long()
+        entry_view.creation_time = client_message.read_long()
+        entry_view.expiration_time = client_message.read_long()
         entry_view.hits = client_message.read_long()
-        entry_view.lastAccessTime = client_message.read_long()
-        entry_view.lastStoredTime = client_message.read_long()
-        entry_view.lastUpdateTime = client_message.read_long()
+        entry_view.last_access_time = client_message.read_long()
+        entry_view.last_stored_time = client_message.read_long()
+        entry_view.last_update_time = client_message.read_long()
         entry_view.version = client_message.read_long()
-        entry_view.evictionCriteriaNumber = client_message.read_long()
+        entry_view.eviction_criteria_number = client_message.read_long()
         entry_view.ttl = client_message.read_long()
         return entry_view
 
+
+class QueryCacheEventDataCodec(object):
+    @class
 
 class QueryCacheEventDataCodec(object):
     @classmethod
