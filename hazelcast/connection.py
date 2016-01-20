@@ -83,7 +83,10 @@ class ConnectionManager(object):
                                     on_connection_opened(connection)
                             return connection
                         else:
-                            self._pending_connections.pop(address)
+                            try:
+                                self._pending_connections.pop(address)
+                            except KeyError:
+                                pass
                             raise f.exception(), None, f.traceback()
                 authenticator = authenticator or self._cluster_authenticator
                 connection = self._new_connection_func(address,

@@ -5,7 +5,7 @@ from tests.base import HazelcastTestCase
 from tests.util import configure_logging, event_collector
 
 
-class ReconnectTest(HazelcastTestCase):
+class LifecycleTest(HazelcastTestCase):
     rc = None
 
     def setUp(self):
