@@ -1,5 +1,7 @@
 import logging
 import threading
+
+from hazelcast.hash import hash_to_index
 from hazelcast.protocol.codec import client_get_partitions_codec
 
 PARTITION_UPDATE_INTERVAL = 10
@@ -37,7 +39,7 @@ class PartitionService(object):
     def get_partition_id(self, key):
         data = self._client.serializer.to_data(key)
         count = self._get_partition_count()
-        return data.get_partition_hash() % count
+        return hash_to_index(data.get_partition_hash(), count)
 
     def _get_partition_count(self):
         if not self.partitions:
@@ -52,7 +54,7 @@ class PartitionService(object):
         address = self._client.cluster.owner_connection_address
         connection = self._client.connection_manager.get_connection(address)
         if connection is None:
-            self.logger.debug("Could not update partition thread as owner connection is not established yet.")
+            self.logger.debug("Could not update partition thread as owner connection is not available.")
             return
         request = client_get_partitions_codec.encode_request()
 
