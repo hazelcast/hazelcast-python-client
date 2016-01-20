@@ -48,6 +48,9 @@ class Proxy(object):
             except AttributeError:
                 pass
 
+    def get_partition_key(self):
+        return StringPartitionStrategy.get_partition_key(self.name)
+
 
 class PartitionSpecificClientProxy(Proxy):
     def __init__(self, client, service_name, name):
@@ -78,3 +81,25 @@ class TransactionalProxy(object):
 
     def _to_object(self, data):
         return self.transaction.client.serializer.to_object(data)
+
+
+class StringPartitionStrategy(object):
+    @staticmethod
+    def get_base_name(key):
+        if key is None:
+            return None
+        try:
+            index_of = key.index('@')
+            return key[:index_of]
+        except ValueError:
+            return key
+
+    @staticmethod
+    def get_partition_key(key):
+        if key is None:
+            return None
+        try:
+            index_of = key.index('@')
+            return key[index_of + 1:]
+        except ValueError:
+            return key
