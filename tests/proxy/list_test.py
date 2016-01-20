@@ -63,14 +63,16 @@ class ListTestCase(SingleMemberTestCase):
 
     def test_remove_entry_listener_item_added(self):
         collector = event_collector()
-        self.list.add_listener(include_value=False, item_added=collector)
+        reg_id = self.list.add_listener(include_value=False, item_added=collector)
+        self.list.remove_listener(reg_id)
         self.list.add('item-value')
 
         def assert_event():
-            self.assertEqual(len(collector.events), 1)
-            event = collector.events[0]
-            self.assertEqual(event.item, None)
-            self.assertEqual(event.event_type, ItemEventType.added)
+            self.assertEqual(len(collector.events), 0)
+            if len(collector.events) > 0:
+                event = collector.events[0]
+                self.assertEqual(event.item, None)
+                self.assertEqual(event.event_type, ItemEventType.added)
 
         self.assertTrueEventually(assert_event, 5)
 
