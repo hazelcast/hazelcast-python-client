@@ -3,7 +3,6 @@ Hazelcast client protocol codecs
 """
 
 from collections import namedtuple
-
 from hazelcast.core import Member, DistributedObjectInfo, EntryView, Address
 
 EXCEPTION_MESSAGE_TYPE = 109
@@ -129,6 +128,7 @@ class ErrorCodec(object):
     def decode_stack_trace(client_message):
         declaring_class = client_message.read_str()
         method_name = client_message.read_str()
+        file_name = None
         if not client_message.read_bool():
             file_name = client_message.read_str()
         line_number = client_message.read_int()
