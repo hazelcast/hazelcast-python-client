@@ -40,6 +40,6 @@ def handle(client_message, handle_event_partitionlost = None):
         lost_backup_count = client_message.read_int()
         source=None
         if not client_message.read_bool():
-            source = AddressCodec.decode(client_message)
+            source = AddressCodec.decode(client_message, to_object)
         handle_event_partitionlost(partition_id=partition_id, lost_backup_count=lost_backup_count, source=source)
 

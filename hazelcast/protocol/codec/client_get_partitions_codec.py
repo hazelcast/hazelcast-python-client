@@ -29,7 +29,7 @@ def decode_response(client_message, to_object=None):
     partitions_size = client_message.read_int()
     partitions = {}
     for partitions_index in xrange(0,partitions_size):
-        partitions_key = AddressCodec.decode(client_message)
+        partitions_key = AddressCodec.decode(client_message, to_object)
         partitions_val_size = client_message.read_int()
         partitions_val = []
         for partitions_val_index in xrange(0, partitions_val_size):

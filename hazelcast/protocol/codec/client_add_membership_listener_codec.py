@@ -36,14 +36,14 @@ def handle(client_message, handle_event_member = None, handle_event_memberlist =
     """ Event handler """
     message_type = client_message.get_message_type()
     if message_type == EVENT_MEMBER and handle_event_member is not None:
-        member = MemberCodec.decode(client_message)
+        member = MemberCodec.decode(client_message, to_object)
         event_type = client_message.read_int()
         handle_event_member(member=member, event_type=event_type)
     if message_type == EVENT_MEMBERLIST and handle_event_memberlist is not None:
         members_size = client_message.read_int()
         members = []
         for members_index in xrange(0, members_size):
-            members_item = MemberCodec.decode(client_message)
+            members_item = MemberCodec.decode(client_message, to_object)
             members.append(members_item)
         handle_event_memberlist(members=members)
     if message_type == EVENT_MEMBERATTRIBUTECHANGE and handle_event_memberattributechange is not None:

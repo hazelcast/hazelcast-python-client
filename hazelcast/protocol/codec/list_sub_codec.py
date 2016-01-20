@@ -8,7 +8,7 @@ RESPONSE_TYPE = 106
 RETRYABLE = True
 
 
-def calculate_size(name, from, to):
+def calculate_size(name, from_, to):
     """ Calculates the request payload size"""
     data_size = 0
     data_size += calculate_size_str(name)
@@ -17,13 +17,13 @@ def calculate_size(name, from, to):
     return data_size
 
 
-def encode_request(name, from, to):
+def encode_request(name, from_, to):
     """ Encode request into client_message"""
-    client_message = ClientMessage(payload_size=calculate_size(name, from, to))
+    client_message = ClientMessage(payload_size=calculate_size(name, from_, to))
     client_message.set_message_type(REQUEST_TYPE)
     client_message.set_retryable(RETRYABLE)
     client_message.append_str(name)
-    client_message.append_int(from)
+    client_message.append_int(from_)
     client_message.append_int(to)
     client_message.update_frame_length()
     return client_message

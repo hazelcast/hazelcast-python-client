@@ -49,7 +49,7 @@ def decode_response(client_message, to_object=None):
     parameters['status'] = client_message.read_byte()
     address=None
     if not client_message.read_bool():
-        parameters['address'] = AddressCodec.decode(client_message)
+        parameters['address'] = AddressCodec.decode(client_message, to_object)
     uuid=None
     if not client_message.read_bool():
         parameters['uuid'] = client_message.read_str()

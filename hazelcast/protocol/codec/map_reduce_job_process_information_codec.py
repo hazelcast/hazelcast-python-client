@@ -33,7 +33,7 @@ def decode_response(client_message, to_object=None):
     job_partition_states_size = client_message.read_int()
     job_partition_states = []
     for job_partition_states_index in xrange(0, job_partition_states_size):
-        job_partition_states_item = JobPartitionStateCodec.decode(client_message)
+        job_partition_states_item = JobPartitionStateCodec.decode(client_message, to_object)
         job_partition_states.append(job_partition_states_item)
     parameters['job_partition_states'] = job_partition_states
     parameters['process_records'] = client_message.read_int()

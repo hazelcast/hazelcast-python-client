@@ -38,13 +38,13 @@ def handle(client_message, handle_event_querycachesingle = None, handle_event_qu
     """ Event handler """
     message_type = client_message.get_message_type()
     if message_type == EVENT_QUERYCACHESINGLE and handle_event_querycachesingle is not None:
-        data = QueryCacheEventDataCodec.decode(client_message)
+        data = QueryCacheEventDataCodec.decode(client_message, to_object)
         handle_event_querycachesingle(data=data)
     if message_type == EVENT_QUERYCACHEBATCH and handle_event_querycachebatch is not None:
         events_size = client_message.read_int()
         events = []
         for events_index in xrange(0, events_size):
-            events_item = QueryCacheEventDataCodec.decode(client_message)
+            events_item = QueryCacheEventDataCodec.decode(client_message, to_object)
             events.append(events_item)
         source = client_message.read_str()
         partition_id = client_message.read_int()

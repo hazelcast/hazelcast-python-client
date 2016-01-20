@@ -21,7 +21,7 @@ class MemberCodec(object):
             client_message.append_str(value)
 
     @classmethod
-    def decode(cls, client_message):
+    def decode(cls, client_message, to_object=None):
         address = AddressCodec.decode(client_message)
         uuid = client_message.read_str()
         lite_member = client_message.read_bool()
@@ -40,7 +40,7 @@ class AddressCodec(object):
         client_message.append_str(obj.host).append_int(obj.port)
 
     @classmethod
-    def decode(cls, client_message):
+    def decode(cls, client_message, to_object=None):
         host = client_message.read_str()
         port = client_message.read_int()
         return Address(host, port)
@@ -76,7 +76,7 @@ class EntryViewCodec(object):
         client_message.append_long(entry_view.ttl)
 
     @classmethod
-    def decode(cls, client_message):
+    def decode(cls, client_message, to_object=None):
         entry_view = EntryView()
         entry_view.key = client_message.read_data()
         entry_view.value = client_message.read_data()
@@ -100,7 +100,7 @@ class QueryCacheEventDataCodec(object):
         pass
 
     @classmethod
-    def decode(cls, client_message):
+    def decode(cls, client_message, to_object=None):
         pass
 
 

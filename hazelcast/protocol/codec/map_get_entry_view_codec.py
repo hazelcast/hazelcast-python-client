@@ -34,7 +34,7 @@ def decode_response(client_message, to_object=None):
     parameters = dict(response=None)
     response=None
     if not client_message.read_bool():
-        parameters['response'] = EntryViewCodec.decode(client_message)
+        parameters['response'] = EntryViewCodec.decode(client_message, to_object)
     return parameters
 
 
