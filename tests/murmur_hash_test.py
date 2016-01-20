@@ -1,6 +1,6 @@
 import unittest
 
-from hazelcast.serialization.data import murmur_hash3_x86_32, hash_to_index
+from hazelcast.hash import murmur_hash3_x86_32, hash_to_index
 
 
 class HashTest(unittest.TestCase):
