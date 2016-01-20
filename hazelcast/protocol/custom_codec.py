@@ -94,9 +94,6 @@ class EntryViewCodec(object):
 
 
 class QueryCacheEventDataCodec(object):
-    @class
-
-class QueryCacheEventDataCodec(object):
     @classmethod
     def encode(cls, client_message, obj):
         pass
