@@ -32,7 +32,7 @@ def decode_response(client_message, to_object=None):
     parameters['response'] = client_message.read_str()
     return parameters
 
-def handle(client_message, handle_event_member = None, handle_event_memberlist = None, handle_event_memberattributechange = None):
+def handle(client_message, handle_event_member = None, handle_event_memberlist = None, handle_event_memberattributechange = None, to_object=None):
     """ Event handler """
     message_type = client_message.get_message_type()
     if message_type == EVENT_MEMBER and handle_event_member is not None:

@@ -36,7 +36,7 @@ def decode_response(client_message, to_object=None):
     parameters['response'] = client_message.read_str()
     return parameters
 
-def handle(client_message, handle_event_imapinvalidation = None, handle_event_imapbatchinvalidation = None):
+def handle(client_message, handle_event_imapinvalidation = None, handle_event_imapbatchinvalidation = None, to_object=None):
     """ Event handler """
     message_type = client_message.get_message_type()
     if message_type == EVENT_IMAPINVALIDATION and handle_event_imapinvalidation is not None:
