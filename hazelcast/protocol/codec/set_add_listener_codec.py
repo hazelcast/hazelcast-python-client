@@ -1,6 +1,7 @@
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import ClientMessage
 from hazelcast.protocol.custom_codec import *
+from hazelcast.util import ImmutableLazyDataList
 from hazelcast.protocol.codec.set_message_type import *
 from hazelcast.protocol.event_response_const import *
 
@@ -35,6 +36,7 @@ def decode_response(client_message, to_object=None):
     parameters = dict(response=None)
     parameters['response'] = client_message.read_str()
     return parameters
+
 
 def handle(client_message, handle_event_item = None, to_object=None):
     """ Event handler """

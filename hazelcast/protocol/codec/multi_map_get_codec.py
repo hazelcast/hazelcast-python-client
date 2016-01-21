@@ -1,6 +1,7 @@
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import ClientMessage
 from hazelcast.protocol.custom_codec import *
+from hazelcast.util import ImmutableLazyDataList
 from hazelcast.protocol.codec.multi_map_message_type import *
 
 REQUEST_TYPE = MULTIMAP_GET
@@ -35,9 +36,10 @@ def decode_response(client_message, to_object=None):
     response_size = client_message.read_int()
     response = []
     for response_index in xrange(0, response_size):
-        response_item = to_object(client_message.read_data())
+        response_item = client_message.read_data()
         response.append(response_item)
-    parameters['response'] = response
+    parameters['response'] = ImmutableLazyDataList(response, to_object)
     return parameters
+
 
 

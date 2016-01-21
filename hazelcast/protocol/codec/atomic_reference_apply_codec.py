@@ -1,6 +1,7 @@
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import ClientMessage
 from hazelcast.protocol.custom_codec import *
+from hazelcast.util import ImmutableLazyDataList
 from hazelcast.protocol.codec.atomic_reference_message_type import *
 
 REQUEST_TYPE = ATOMICREFERENCE_APPLY
@@ -34,5 +35,6 @@ def decode_response(client_message, to_object=None):
     if not client_message.read_bool():
         parameters['response'] = to_object(client_message.read_data())
     return parameters
+
 
 

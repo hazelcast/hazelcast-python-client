@@ -1,6 +1,7 @@
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import ClientMessage
 from hazelcast.protocol.custom_codec import *
+from hazelcast.util import ImmutableLazyDataList
 from hazelcast.protocol.codec.enterprise_map_message_type import *
 
 REQUEST_TYPE = ENTERPRISEMAP_SETREADCURSOR
@@ -34,5 +35,6 @@ def decode_response(client_message, to_object=None):
     parameters = dict(response=None)
     parameters['response'] = client_message.read_bool()
     return parameters
+
 
 

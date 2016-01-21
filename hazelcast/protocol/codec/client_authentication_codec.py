@@ -1,6 +1,7 @@
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import ClientMessage
 from hazelcast.protocol.custom_codec import *
+from hazelcast.util import ImmutableLazyDataList
 from hazelcast.protocol.codec.client_message_type import *
 
 REQUEST_TYPE = CLIENT_AUTHENTICATION
@@ -60,5 +61,6 @@ def decode_response(client_message, to_object=None):
         parameters['owner_uuid'] = client_message.read_str()
     parameters['serialization_version'] = client_message.read_byte()
     return parameters
+
 
 

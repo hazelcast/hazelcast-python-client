@@ -112,8 +112,7 @@ class List(PartitionSpecificClientProxy):
         return self._encode_invoke_on_partition(list_get_all_codec, name=self.name)
 
     def iterator(self):
-        codec = list_iterator_codec
-        raise NotImplementedError
+        return self._encode_invoke_on_partition(list_iterator_codec, name=self.name)
 
     def index_of(self, item):
         check_not_none(item, "Value can't be None")
@@ -128,9 +127,8 @@ class List(PartitionSpecificClientProxy):
         item_data = self._to_data(item)
         return self._encode_invoke_on_partition(list_last_index_of_codec, name=self.name, value=item_data)
 
-    def list_iterator(self):
-        codec = list_list_iterator_codec
-        raise NotImplementedError
+    def list_iterator(self, index=0):
+        return self._encode_invoke_on_partition(list_list_iterator_codec, name=self.name, index=index)
 
     def remove(self, item):
         check_not_none(item, "Value can't be None")

@@ -160,8 +160,26 @@ class ListTestCase(SingleMemberTestCase):
     def test_get_all(self):
         _all = ["1", "2", "3"]
         self.list.add_all(_all).result()
-        contains_result = self.list.get_all().result()
-        self.assertEqual(contains_result, _all)
+        all_result = self.list.get_all().result()
+        self.assertEqual(all_result, _all)
+
+    def test_list_iterator(self):
+        _all = ["1", "2", "3"]
+        self.list.add_all(_all).result()
+        list_iter = self.list.list_iterator(1).result()
+        iter_result = []
+        for item in list_iter:
+            iter_result.append(item)
+        self.assertEqual(iter_result, ["2", "3"])
+
+    def test_iterator(self):
+        _all = ["1", "2", "3"]
+        self.list.add_all(_all).result()
+        list_iter = self.list.iterator().result()
+        iter_result = []
+        for item in list_iter:
+            iter_result.append(item)
+        self.assertEqual(iter_result, _all)
 
     def test_index_of(self):
         _all = ["1", "2", "3"]
