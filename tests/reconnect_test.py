@@ -1,10 +1,10 @@
 from threading import Thread
-
 from hazelcast import ClientConfig
 from hazelcast.exception import HazelcastError
 from hazelcast.lifecycle import LIFECYCLE_STATE_DISCONNECTED, LIFECYCLE_STATE_CONNECTED
+from hazelcast.util import AtomicInteger
 from tests.base import HazelcastTestCase
-from tests.util import configure_logging
+from tests.util import configure_logging, event_collector
 
 
 class ReconnectTest(HazelcastTestCase):
@@ -47,4 +47,22 @@ class ReconnectTest(HazelcastTestCase):
         self.cluster.start_member()
         self.assertTrueEventually(lambda: self.assertEqual(state[0], LIFECYCLE_STATE_CONNECTED))
 
+    def test_listener_re_register(self):
+        member = self.cluster.start_member()
+        client = self.create_client()
 
+        map = client.get_map("map")
+
+        collector = event_collector()
+        reg_id = map.add_entry_listener(added=collector)
+        self.logger.info("Registered listener with id %s", reg_id)
+        member.shutdown()
+        self.cluster.start_member()
+
+        count = AtomicInteger()
+
+        def assert_events():
+            map.put("key-%d" % count.get_and_increment(), "value").result()
+            self.assertGreater(len(collector.events), 0)
+
+        self.assertTrueEventually(assert_events)

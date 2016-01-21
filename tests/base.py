@@ -1,9 +1,8 @@
+import logging
 import time
 import unittest
 from threading import Thread
-
 from hzrc.client import HzRemoteController
-
 import hazelcast
 from hazelcast.core import Address
 from tests.util import configure_logging
@@ -31,6 +30,10 @@ class _Cluster(object):
 
 class HazelcastTestCase(unittest.TestCase):
     clients = []
+
+    def __init__(self, methodName):
+        unittest.TestCase.__init__(self, methodName)
+        self.logger = logging.getLogger(methodName)
 
     @staticmethod
     def create_rc():
@@ -64,6 +67,7 @@ class HazelcastTestCase(unittest.TestCase):
         t = Thread(target=target)
         t.start()
         return t
+
 
 class SingleMemberTestCase(HazelcastTestCase):
     """

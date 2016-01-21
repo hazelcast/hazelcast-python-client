@@ -1,15 +1,16 @@
 import logging
 import uuid
 
-LIFECYCLE_STATE_STARTING = "starting"
-LIFECYCLE_STATE_CONNECTED = "connected"
-LIFECYCLE_STATE_DISCONNECTED = "disconnected"
-LIFECYCLE_STATE_SHUTTING_DOWN = "shutting_down"
-LIFECYCLE_STATE_SHUTDOWN = "shutdown"
+LIFECYCLE_STATE_STARTING = "STARTING"
+LIFECYCLE_STATE_CONNECTED = "CONNECTED"
+LIFECYCLE_STATE_DISCONNECTED = "DISCONNECTED"
+LIFECYCLE_STATE_SHUTTING_DOWN = "SHUTTING_DOWN"
+LIFECYCLE_STATE_SHUTDOWN = "SHUTDOWN"
 
 
 class LifecycleService(object):
     logger = logging.getLogger("LifecycleService")
+    state = None
 
     def __init__(self, config):
         self._listeners = {}
@@ -36,6 +37,7 @@ class LifecycleService(object):
         if new_state == LIFECYCLE_STATE_SHUTTING_DOWN:
             self.is_live = False
 
+        self.state = new_state
         self.logger.debug("New Lifecycle state is %s", new_state)
         for listener in self._listeners.values():
             try:

@@ -6,6 +6,7 @@ import functools
 from hazelcast.exception import create_exception, HazelcastInstanceNotActiveError, is_retryable_error, TimeoutError, \
     AuthenticationError, TargetDisconnectedError
 from hazelcast.future import Future
+from hazelcast.lifecycle import LIFECYCLE_STATE_CONNECTED
 from hazelcast.protocol.client_message import LISTENER_FLAG
 from hazelcast.protocol.custom_codec import EXCEPTION_MESSAGE_TYPE, ErrorCodec
 from hazelcast.util import AtomicInteger
@@ -101,8 +102,8 @@ class ListenerService(object):
         def callback(f):
             if f.is_success():
                 new_id = new_invocation.response_decoder(f.result())
-                self.logger.debug("Re-registered listener with id %s for request %s",
-                                  registration_id, new_invocation.request)
+                self.logger.debug("Re-registered listener with id %s and new_id %s for request %s",
+                                  registration_id, new_id, new_invocation.request)
                 self.registrations[registration_id] = (new_id, new_invocation.request.get_correlation_id())
             else:
                 logging.warn("Re-registration for listener with id %s failed.", registration_id, exc_info=True)
@@ -170,9 +171,10 @@ class InvocationService(object):
             if invocation.sent_connection == connection:
                 self._handle_exception(invocation, cause)
 
-        for correlation_id, invocation in dict(self._event_handlers).iteritems():
-            if invocation.sent_connection == connection and invocation.connection is None:
-                self._client.listener.re_register_listener(invocation)
+        if self._client.lifecycle.is_live:
+            for correlation_id, invocation in dict(self._event_handlers).iteritems():
+                if invocation.sent_connection == connection and invocation.connection is None:
+                    self._client.listener.re_register_listener(invocation)
 
     def _heartbeat_stopped(self, connection):
         for correlation_id, invocation in dict(self._pending).iteritems():
@@ -188,16 +190,19 @@ class InvocationService(object):
             conn = self._client.connection_manager.connections[address]
             self._send(invocation, conn, ignore_heartbeat)
         except KeyError:
-            def on_connect(f):
-                if f.is_success():
-                    self._send(invocation, f.result(), ignore_heartbeat)
-                else:
-                    self._handle_exception(invocation, f.exception(), f.traceback())
-
-            self._client.connection_manager.get_or_connect(address).continue_with(on_connect)
+            self.logger.warn("key error when sending %s", invocation.request)
+            if self._client.lifecycle.state != LIFECYCLE_STATE_CONNECTED:
+                self._handle_exception(invocation, IOError("Client is not in connected state"))
+            else:
+                def on_connect(f):
+                    if f.is_success():
+                        self._send(invocation, f.result(), ignore_heartbeat)
+                    else:
+                        self._handle_exception(invocation, f.exception(), f.traceback())
+                self._client.connection_manager.get_or_connect(address).continue_with(on_connect)
 
     def _send(self, invocation, connection, ignore_heartbeat):
-        correlation_id = self._next_correlation_id.increment_and_get()
+        correlation_id = self._next_correlation_id.get_and_increment()
         message = invocation.request
         message.set_correlation_id(correlation_id)
         message.set_partition_id(invocation.partition_id)
@@ -220,9 +225,9 @@ class InvocationService(object):
         except IOError as e:
             self._handle_exception(invocation, e)
 
-    def _handle_client_message(self, message):
+    def _handle_client_message(self, message, connection):
         correlation_id = message.get_correlation_id()
-        self.logger.debug("Received %s", message)
+        self.logger.debug("Received %s on %s", message, connection)
         if message.has_flags(LISTENER_FLAG):
             if correlation_id not in self._event_handlers:
                 self.logger.warn("Got event message with unknown correlation id: %s", message)

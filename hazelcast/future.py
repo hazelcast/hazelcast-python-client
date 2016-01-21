@@ -138,7 +138,7 @@ def combine_futures(*futures):
         if not combined.done():
             if f.is_success():  # TODO: ensure ordering of results as original list
                 results.append(f.result())
-                if completed.increment_and_get() == expected:
+                if completed.get_and_increment() + 1 == expected:
                     combined.set_result(results)
             else:
                 combined.set_exception(f.exception(), f.traceback())

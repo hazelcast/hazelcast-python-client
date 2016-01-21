@@ -1,6 +1,5 @@
 import logging
 import threading
-
 from hazelcast.hash import hash_to_index
 from hazelcast.protocol.codec import client_get_partitions_codec
 
@@ -43,11 +42,14 @@ class PartitionService(object):
 
     def _get_partition_count(self):
         if not self.partitions:
-            event = threading.Event()
-            self._do_refresh(callback=lambda: event.set())
-            event.wait()
-
+            self._get_partition_count_blocking()
         return len(self.partitions)
+
+    def _get_partition_count_blocking(self):
+        event = threading.Event()
+        while not self.partitions:
+            self._do_refresh(callback=lambda: event.set())
+            event.wait(timeout=1)
 
     def _do_refresh(self, callback=None):
         self.logger.debug("Start updating partitions")
@@ -59,9 +61,11 @@ class PartitionService(object):
         request = client_get_partitions_codec.encode_request()
 
         def cb(f):
-            self.process_partition_response(f.result())
-            if callback:
-                callback()
+            if f.is_success():
+                self.process_partition_response(f.result())
+                if callback:
+                    callback()
+
         future = self._client.invoker.invoke_on_connection(request, connection)
         future.add_done_callback(cb)
 

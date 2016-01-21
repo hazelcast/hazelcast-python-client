@@ -103,6 +103,7 @@ class ClusterService(object):
             connection.is_owner = True
             self.owner_uuid = parameters["owner_uuid"]
             self.uuid = parameters["uuid"]
+            return connection
 
         return self._client.invoker.invoke_on_connection(request, connection).continue_with(callback)
 
@@ -179,6 +180,7 @@ class ClusterService(object):
         if connection.endpoint and connection.endpoint == self.owner_connection_address \
                 and self._client.lifecycle.is_live:
             self._client.lifecycle.fire_lifecycle_event(LIFECYCLE_STATE_DISCONNECTED)
+            self.owner_connection_address = None
             # try to reconnect, on new thread
             # TODO: can we avoid having a thread here?
             reconnect_thread = threading.Thread(target=self._reconnect, name="hazelcast-cluster-reconnect")

@@ -10,6 +10,7 @@ from hazelcast.future import ImmediateFuture
 from hazelcast.protocol.client_message import BEGIN_END_FLAG, ClientMessage
 from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
 from hazelcast.serialization import INT_SIZE_IN_BYTES, FMT_LE_INT
+from hazelcast.util import AtomicInteger
 
 BUFFER_SIZE = 8192
 PROTOCOL_VERSION = 1
@@ -74,27 +75,29 @@ class ConnectionManager(object):
                 else:
                     def on_auth(f):
                         if f.is_success():
-                            self.logger.info("Authenticated with %s", address)
+                            self.logger.info("Authenticated with %s", f.result())
                             with self._new_connection_mutex:
-                                self.connections[connection.endpoint] = connection
+                                self.connections[connection.endpoint] = f.result()
                                 self._pending_connections.pop(address)
                             for on_connection_opened, _ in self._connection_listeners:
                                 if on_connection_opened:
-                                    on_connection_opened(connection)
-                            return connection
+                                    on_connection_opened(f.resul())
+                            return f.result()
                         else:
+                            self.logger.debug("Error opening %s", connection)
                             try:
                                 self._pending_connections.pop(address)
                             except KeyError:
                                 pass
                             raise f.exception(), None, f.traceback()
-                authenticator = authenticator or self._cluster_authenticator
-                connection = self._new_connection_func(address,
-                                                       connection_closed_callback=self._connection_closed,
-                                                       message_callback=self._client.invoker._handle_client_message)
-                future = authenticator(connection).continue_with(on_auth)
-                self._pending_connections[address] = future
-                return future
+
+                    authenticator = authenticator or self._cluster_authenticator
+                    connection = self._new_connection_func(address,
+                                                           connection_closed_callback=self._connection_closed,
+                                                           message_callback=self._client.invoker._handle_client_message)
+                    future = authenticator(connection).continue_with(on_auth)
+                    self._pending_connections[address] = future
+                    return future
 
     def _connection_closed(self, connection, cause):
         # if connection was authenticated, fire event
@@ -179,10 +182,12 @@ class Connection(object):
     endpoint = None
     heartbeating = True
     is_owner = False
+    counter = AtomicInteger()
 
     def __init__(self, address, connection_closed_callback, message_callback):
         self._address = (address.host, address.port)
-        self.logger = logging.getLogger("Connection{%s:%d}" % self._address)
+        self.id = self.counter.get_and_increment()
+        self.logger = logging.getLogger("Connection[%s](%s:%d)" % (self.id, address.host, address.port))
         self._connection_closed_callback = connection_closed_callback
         self._message_callback = message_callback
         self._read_buffer = ""
@@ -207,7 +212,7 @@ class Connection(object):
                 return
             message = ClientMessage(buffer(self._read_buffer, 0, frame_length))
             self._read_buffer = self._read_buffer[frame_length:]
-            self._message_callback(message)
+            self._message_callback(message, self)
 
     def write(self, data):
         # must be implemented by subclass
@@ -216,5 +221,5 @@ class Connection(object):
     def close(self, cause):
         pass
 
-    def __str__(self):
-        return "Connection%s" % (self._address,)
+    def __repr__(self):
+        return "Connection(address=%s, id=%s)" % (self._address, self.id)

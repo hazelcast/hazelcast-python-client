@@ -1,8 +1,12 @@
+import logging
+
+
 class Proxy(object):
     def __init__(self, client, service_name, name):
         self.service_name = service_name
         self.name = name
         self._client = client
+        self.logger = logging.getLogger("%s(%s)" % (type(self).__name__, name))
 
     def destroy(self):
         return self._client.proxy.destroy_proxy(self.service_name, self.name)

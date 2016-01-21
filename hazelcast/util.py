@@ -24,9 +24,9 @@ def to_millis(seconds):
 
 class AtomicInteger(object):
     def __init__(self, initial=0):
-        self.count = itertools.count(start=initial + 1)
+        self.count = itertools.count(start=initial)
 
-    def increment_and_get(self):
+    def get_and_increment(self):
         return self.count.next()
 
 
