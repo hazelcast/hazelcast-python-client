@@ -22,23 +22,8 @@ from hazelcast.protocol.codec import list_add_all_codec, \
     list_size_codec, \
     list_sub_codec
 
-from hazelcast.proxy.base import PartitionSpecificClientProxy
-from hazelcast.util import check_not_none, enum
-
-ItemEventType = enum(added=1, removed=2)
-
-
-class ItemEvent(object):
-    def __init__(self, name, item_data, event_type, member, to_object):
-        self.name = name
-        self._item_data = item_data
-        self.event_type = event_type
-        self.member = member
-        self._to_object = to_object
-
-    @property
-    def item(self):
-        return self._to_object(self._item_data)
+from hazelcast.proxy.base import PartitionSpecificClientProxy, ItemEvent, ItemEventType
+from hazelcast.util import check_not_none
 
 
 class List(PartitionSpecificClientProxy):
@@ -76,7 +61,7 @@ class List(PartitionSpecificClientProxy):
             item = item if include_value else None
             member = self._client.cluster.get_member_by_uuid(uuid)
 
-            item_event = ItemEvent(self.name,  item, event_type, member, self._to_object)
+            item_event = ItemEvent(self.name, item, event_type, member, self._to_object)
             if event_type == ItemEventType.added:
                 if item_added:
                     item_added(item_event)
@@ -139,8 +124,7 @@ class List(PartitionSpecificClientProxy):
         return self._encode_invoke_on_partition(list_remove_with_index_codec, name=self.name, index=index)
 
     def remove_listener(self, registration_id):
-        return self._stop_listening(registration_id,
-                                    lambda i: list_remove_listener_codec.encode_request(self.name, i))
+        return self._stop_listening(registration_id, lambda i: list_remove_listener_codec.encode_request(self.name, i))
 
     def remove_all(self, items):
         check_not_none(items, "Value can't be None")

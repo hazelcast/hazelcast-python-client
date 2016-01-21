@@ -1,5 +1,7 @@
 import logging
 
+from hazelcast.util import enum
+
 
 class Proxy(object):
     def __init__(self, client, service_name, name):
@@ -107,3 +109,19 @@ class StringPartitionStrategy(object):
             return key[index_of + 1:]
         except ValueError:
             return key
+
+
+ItemEventType = enum(added=1, removed=2)
+
+
+class ItemEvent(object):
+    def __init__(self, name, item_data, event_type, member, to_object):
+        self.name = name
+        self._item_data = item_data
+        self.event_type = event_type
+        self.member = member
+        self._to_object = to_object
+
+    @property
+    def item(self):
+        return self._to_object(self._item_data)

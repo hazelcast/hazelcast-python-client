@@ -172,6 +172,13 @@ class ListTestCase(SingleMemberTestCase):
             iter_result.append(item)
         self.assertEqual(iter_result, ["2", "3"])
 
+    def test_list_iterator2(self):
+        _all = ["1", "2", "3"]
+        self.list.add_all(_all).result()
+        list_iter = self.list.list_iterator(1).result()
+        iter_val = list_iter[1]
+        self.assertEqual(iter_val, "3")
+
     def test_iterator(self):
         _all = ["1", "2", "3"]
         self.list.add_all(_all).result()

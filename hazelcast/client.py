@@ -6,7 +6,7 @@ from hazelcast.connection import ConnectionManager, Heartbeat
 from hazelcast.invocation import InvocationService, ListenerService
 from hazelcast.lifecycle import LifecycleService, LIFECYCLE_STATE_SHUTTING_DOWN, LIFECYCLE_STATE_SHUTDOWN
 from hazelcast.partition import PartitionService
-from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE, LIST_SERVICE
+from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE, LIST_SERVICE, SET_SERVICE
 from hazelcast.reactor import AsyncoreReactor
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.transaction import TWO_PHASE, TransactionManager
@@ -51,6 +51,9 @@ class HazelcastClient(object):
 
     def get_list(self, name):
         return self.proxy.get_or_create(LIST_SERVICE, name)
+
+    def get_set(self, name):
+        return self.proxy.get_or_create(SET_SERVICE, name)
 
     def new_transaction(self, timeout=120, durability=1, type=TWO_PHASE):
         return self.transaction_manager.new_transaction(timeout, durability, type)
