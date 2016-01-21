@@ -1,13 +1,13 @@
 import asyncore
+import errno
 import logging
+import select
 import socket
 import sys
 import threading
 import time
 from Queue import PriorityQueue
 from collections import deque
-
-import errno
 
 from hazelcast.connection import Connection, BUFFER_SIZE
 from hazelcast.exception import HazelcastError
@@ -36,6 +36,9 @@ class AsyncoreReactor(object):
             try:
                 asyncore.loop(count=10000, timeout=0.1, map=self._map)
                 self._check_timers()
+            except select.error as err:
+                # TODO: parse error type to catch only error "9"
+                pass
             except:
                 self.logger.exception("Error in Reactor Thread")
                 # TODO: shutdown client
@@ -87,6 +90,8 @@ class AsyncoreReactor(object):
 
 
 class AsyncoreConnection(Connection, asyncore.dispatcher):
+    sent_protocol_bytes = False
+
     def __init__(self, map, address, connection_closed_callback, message_callback):
         asyncore.dispatcher.__init__(self, map=map)
         Connection.__init__(self, address, connection_closed_callback, message_callback)
@@ -109,6 +114,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         except IndexError:
             return
         sent = self.send(item)
+        self.sent_protocol_bytes = True
         if sent < len(item):
             self._write_queue.appendleft(item[sent:])
 
@@ -117,13 +123,13 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         self.close(IOError("Connection closed by server."))
 
     def handle_error(self):
-        self.logger.exception("Received error")
         error = sys.exc_info()[1]
-        if error.errno != errno.EAGAIN:
+        if error.errno != errno.EAGAIN and error.errno != errno.EDEADLK:
+            self.logger.exception("Received error")
             self.close(IOError(error))
 
     def readable(self):
-        return not self._closed
+        return not self._closed and self.sent_protocol_bytes
 
     def write(self, data):
         self._write_queue.append(data)
