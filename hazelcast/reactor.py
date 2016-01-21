@@ -45,7 +45,11 @@ class AsyncoreReactor(object):
     def _check_timers(self):
         now = time.time()
         while not self._timers.empty():
-            _, timer = self._timers.queue[0]
+            try:
+                _, timer = self._timers.queue[0]
+            except IndexError:
+                return
+
             if timer.check_timer(now):
                 self._timers.get_nowait()
             else:
@@ -80,6 +84,7 @@ class AsyncoreReactor(object):
             self._timers.queue.remove((timer.end, timer))
         except ValueError:
             pass
+
 
 class AsyncoreConnection(Connection, asyncore.dispatcher):
     def __init__(self, map, address, connection_closed_callback, message_callback):
