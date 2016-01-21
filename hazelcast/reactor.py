@@ -135,9 +135,10 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         self._write_queue.append(data)
 
     def close(self, cause):
-        self._closed = True
-        asyncore.dispatcher.close(self)
-        self._connection_closed_callback(self, cause)
+        if not self._closed:
+            self._closed = True
+            asyncore.dispatcher.close(self)
+            self._connection_closed_callback(self, cause)
 
 
 class Timer(object):
