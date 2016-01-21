@@ -190,7 +190,6 @@ class InvocationService(object):
             conn = self._client.connection_manager.connections[address]
             self._send(invocation, conn, ignore_heartbeat)
         except KeyError:
-            self.logger.warn("key error when sending %s", invocation.request)
             if self._client.lifecycle.state != LIFECYCLE_STATE_CONNECTED:
                 self._handle_exception(invocation, IOError("Client is not in connected state"))
             else:

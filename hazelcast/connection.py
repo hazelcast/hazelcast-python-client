@@ -73,6 +73,11 @@ class ConnectionManager(object):
                 if address in self._pending_connections:
                     return self._pending_connections[address]
                 else:
+                    authenticator = authenticator or self._cluster_authenticator
+                    connection = self._new_connection_func(address,
+                                                           connection_closed_callback=self._connection_closed,
+                                                           message_callback=self._client.invoker._handle_client_message)
+
                     def on_auth(f):
                         if f.is_success():
                             self.logger.info("Authenticated with %s", f.result())
@@ -85,16 +90,10 @@ class ConnectionManager(object):
                             return f.result()
                         else:
                             self.logger.debug("Error opening %s", connection)
-                            try:
+                            with self._new_connection_mutex:
                                 self._pending_connections.pop(address)
-                            except KeyError:
-                                pass
                             raise f.exception(), None, f.traceback()
 
-                    authenticator = authenticator or self._cluster_authenticator
-                    connection = self._new_connection_func(address,
-                                                           connection_closed_callback=self._connection_closed,
-                                                           message_callback=self._client.invoker._handle_client_message)
                     future = authenticator(connection).continue_with(on_auth)
                     self._pending_connections[address] = future
                     return future
@@ -197,7 +196,7 @@ class Connection(object):
         return not self._closed
 
     def send_message(self, message):
-        if self._closed:
+        if not self.live():
             raise IOError("Connection is not live.")
 
         message.add_flag(BEGIN_END_FLAG)
