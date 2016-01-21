@@ -38,7 +38,7 @@ class GroupConfig(object):
 class ClientNetworkConfig(object):
     def __init__(self):
         self.addresses = []
-        self.connection_attempt_limit = 2
+        self.connection_attempt_limit = 4
         self.connection_attempt_period = 3
         self.connection_timeout = 5
         self.redo_operation = False
