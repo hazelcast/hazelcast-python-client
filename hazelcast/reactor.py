@@ -7,6 +7,8 @@ import time
 from Queue import PriorityQueue
 from collections import deque
 
+import errno
+
 from hazelcast.connection import Connection, BUFFER_SIZE
 from hazelcast.exception import HazelcastError
 from hazelcast.future import Future
@@ -111,7 +113,9 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
     def handle_error(self):
         self.logger.exception("Received error")
-        self.close(IOError(sys.exc_info()[1]))
+        error = sys.exc_info()[1]
+        if error.errno != errno.EAGAIN:
+            self.close(IOError(error))
 
     def readable(self):
         return not self._closed

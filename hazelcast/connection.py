@@ -23,7 +23,7 @@ class ConnectionManager(object):
     logger = logging.getLogger("ConnectionManager")
 
     def __init__(self, client, new_connection_func):
-        self._new_connection_mutex = threading.Lock()
+        self._new_connection_mutex = threading.RLock()
         self._io_thread = None
         self._client = client
         self.connections = {}
@@ -91,11 +91,15 @@ class ConnectionManager(object):
                         else:
                             self.logger.debug("Error opening %s", connection)
                             with self._new_connection_mutex:
-                                self._pending_connections.pop(address)
+                                try:
+                                    self._pending_connections.pop(address)
+                                except KeyError:
+                                    pass
                             raise f.exception(), None, f.traceback()
 
                     future = authenticator(connection).continue_with(on_auth)
-                    self._pending_connections[address] = future
+                    if not future.done():
+                        self._pending_connections[address] = future
                     return future
 
     def _connection_closed(self, connection, cause):
