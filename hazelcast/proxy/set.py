@@ -13,92 +13,48 @@ from hazelcast.protocol.codec import \
     set_remove_listener_codec, \
     set_size_codec
 
-from hazelcast.proxy.base import PartitionSpecificClientProxy, ItemEvent, ItemEventType
-from hazelcast.util import check_not_none
+from hazelcast.proxy.collection import Collection
 
 
-class Set(PartitionSpecificClientProxy):
+class Set(Collection):
     def add(self, item):
-        check_not_none(item, "Value can't be None")
-        element_data = self._to_data(item)
-        return self._encode_invoke_on_partition(set_add_codec, name=self.name, value=element_data)
+        return self._add(item, set_add_codec)
 
     def add_all(self, items):
-        check_not_none(items, "Value can't be None")
-        data_items = []
-        for item in items:
-            check_not_none(item, "Value can't be None")
-            data_items.append(self._to_data(item))
-        return self._encode_invoke_on_partition(set_add_all_codec, name=self.name, value_list=data_items)
+        return self._add_all(items, set_add_all_codec)
 
     def add_listener(self, include_value=False, item_added=None, item_removed=None):
-        request = set_add_listener_codec.encode_request(self.name, include_value, False)
-
-        def handle_event_item(item, uuid, event_type):
-            item = item if include_value else None
-            member = self._client.cluster.get_member_by_uuid(uuid)
-
-            item_event = ItemEvent(self.name,  item, event_type, member, self._to_object)
-            if event_type == ItemEventType.added:
-                if item_added:
-                    item_added(item_event)
-            else:
-                if item_removed:
-                    item_removed(item_event)
-
-        return self._start_listening(request,
-                                     lambda m: set_add_listener_codec.handle(m, handle_event_item),
-                                     lambda r: set_add_listener_codec.decode_response(r)['response'],
-                                     self.get_partition_key())
+        return self._add_listener(include_value, item_added, item_removed, set_add_listener_codec)
 
     def clear(self):
-        return self._encode_invoke_on_partition(set_clear_codec, name=self.name)
+        return self._clear(set_clear_codec)
 
     def contains(self, item):
-        check_not_none(item, "Value can't be None")
-        item_data = self._to_data(item)
-        return self._encode_invoke_on_partition(set_contains_codec, name=self.name, value=item_data)
+        return self._contains(item, set_contains_codec)
 
     def contains_all(self, items):
-        check_not_none(items, "Value can't be None")
-        data_items = []
-        for item in items:
-            check_not_none(item, "Value can't be None")
-            data_items.append(self._to_data(item))
-        return self._encode_invoke_on_partition(set_contains_all_codec, name=self.name, value_list=data_items)
+        return self._contains_all(items, set_contains_all_codec)
 
     def get_all(self):
-        return self._encode_invoke_on_partition(set_get_all_codec, name=self.name)
+        return self._get_all(set_get_all_codec)
 
     def is_empty(self):
-        return self._encode_invoke_on_partition(set_is_empty_codec, name=self.name)
+        return self._is_empty(set_is_empty_codec)
 
     def remove(self, item):
-        check_not_none(item, "Value can't be None")
-        item_data = self._to_data(item)
-        return self._encode_invoke_on_partition(set_remove_codec, name=self.name, value=item_data)
+        return self._remove(item, set_remove_codec)
 
     def remove_all(self, items):
-        check_not_none(items, "Value can't be None")
-        data_items = []
-        for item in items:
-            check_not_none(item, "Value can't be None")
-            data_items.append(self._to_data(item))
-        return self._encode_invoke_on_partition(set_compare_and_remove_all_codec, name=self.name, values=data_items)
+        return self._remove_all(items, set_compare_and_remove_all_codec)
 
     def remove_listener(self, registration_id):
-        return self._stop_listening(registration_id, lambda i: set_remove_listener_codec.encode_request(self.name, i))
+        return self._remove_listener(registration_id, set_remove_listener_codec)
 
     def retain_all(self, items):
-        check_not_none(items, "Value can't be None")
-        data_items = []
-        for item in items:
-            check_not_none(item, "Value can't be None")
-            data_items.append(self._to_data(item))
-        return self._encode_invoke_on_partition(set_compare_and_retain_all_codec, name=self.name, values=data_items)
+        return self._retain_all(items, set_compare_and_retain_all_codec)
 
     def size(self):
-        return self._encode_invoke_on_partition(set_size_codec, name=self.name)
+        return self._size(set_size_codec)
 
     def __str__(self):
         return "Set(name=%s)" % self.name

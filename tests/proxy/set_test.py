@@ -1,4 +1,4 @@
-from hazelcast.proxy.list import ItemEventType
+from hazelcast.proxy.base import ItemEventType
 from tests.base import SingleMemberTestCase
 from tests.util import random_string, event_collector
 

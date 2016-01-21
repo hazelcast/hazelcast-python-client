@@ -38,8 +38,7 @@ class Proxy(object):
 
     def _encode_invoke_on_partition(self, codec, partition_id, **kwargs):
         request = codec.encode_request(**kwargs)
-        return self._client.invoker.invoke_on_partition(request, partition_id).continue_with(self._handle_response,
-                                                                                             codec)
+        return self._client.invoker.invoke_on_partition(request, partition_id).continue_with(self._handle_response, codec)
 
     def _handle_response(self, future, codec):
         response = future.result()
@@ -64,8 +63,7 @@ class PartitionSpecificClientProxy(Proxy):
         self._partition_id = self._client.partition_service.get_partition_id(name)
 
     def _encode_invoke_on_partition(self, codec, **kwargs):
-        return super(PartitionSpecificClientProxy, self)._encode_invoke_on_partition(codec, self._partition_id,
-                                                                                     **kwargs)
+        return super(PartitionSpecificClientProxy, self)._encode_invoke_on_partition(codec, self._partition_id, **kwargs)
 
 
 class TransactionalProxy(object):
