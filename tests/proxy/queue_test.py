@@ -1,11 +1,16 @@
 from hazelcast.proxy.base import ItemEventType
+from hazelcast.proxy.queue import Full
 from tests.base import SingleMemberTestCase
 from tests.util import random_string, event_collector
 
 
 class QueueTestCase(SingleMemberTestCase):
+    @classmethod
+    def configure_cluster(cls):
+        return open("./hazelcast_test.xml").read()
+
     def setUp(self):
-        self.queue = self.client.get_queue(random_string()).blocking()
+        self.queue = self.client.get_queue("ClientQueueTest_" + random_string()).blocking()
 
     def test_add_entry_listener_item_added(self):
         collector = event_collector()
@@ -82,6 +87,12 @@ class QueueTestCase(SingleMemberTestCase):
         self.assertTrue(add_resp)
         self.assertTrue(result)
 
+    def test_add_full(self):
+        _all = ["1", "2", "3", "4", "5", "6"]
+        self.queue.add_all(_all)
+        with self.assertRaises(Full):
+            self.queue.add("cannot add this one")
+
     def test_add_null_element(self):
         with self.assertRaises(AssertionError):
             self.queue.add(None)
@@ -133,6 +144,12 @@ class QueueTestCase(SingleMemberTestCase):
         is_empty = self.queue.is_empty()
         self.assertTrue(is_empty)
 
+    def test_remaining_capacity(self):
+        _all = ["1", "2", "3"]
+        self.queue.add_all(_all)
+        capacity = self.queue.remaining_capacity()
+        self.assertEqual(capacity, 3)
+
     def test_remove(self):
         self.queue.add("Test")
         remove_result = self.queue.remove("Test")
@@ -167,3 +184,36 @@ class QueueTestCase(SingleMemberTestCase):
         size = self.queue.drain_to(drain)
         self.assertItemsEqual(drain, _all)
         self.assertEqual(size, 3)
+
+    def test_peek(self):
+        _all = ["1", "2", "3"]
+        self.queue.add_all(_all)
+        peek_result = self.queue.peek()
+        self.assertEqual(peek_result, "1")
+
+    def test_put(self):
+        self.queue.put("Test")
+        result = self.queue.contains("Test")
+        self.assertTrue(result)
+
+    def test_take(self):
+        _all = ["1", "2", "3"]
+        self.queue.add_all(_all)
+        take_result = self.queue.take()
+        self.assertEqual(take_result, "1")
+
+    def test_poll(self):
+        _all = ["1", "2", "3"]
+        self.queue.add_all(_all)
+        poll_result = self.queue.poll()
+        self.assertEqual(poll_result, "1")
+
+    def test_poll_timeout(self):
+        _all = ["1", "2", "3"]
+        self.queue.add_all(_all)
+        poll_result = self.queue.poll(1)
+        self.assertEqual(poll_result, "1")
+
+    def test_str(self):
+        str_ = self.queue.__str__()
+        self.assertTrue(str_.startswith("Queue"))

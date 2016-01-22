@@ -167,6 +167,9 @@ class _BlockingWrapper(object):
 
         return f
 
+    def __str__(self):
+        return self._wrapped.__str__()
+
 
 def make_blocking(instance):
     """

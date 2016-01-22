@@ -102,6 +102,15 @@ class SetTestCase(SingleMemberTestCase):
         with self.assertRaises(AssertionError):
             self.set.add_all(None)
 
+    def test_clear(self):
+        _all = ["1", "2", "3"]
+        self.set.add_all(_all)
+        size = self.set.size()
+        self.set.clear()
+        size_cleared = self.set.size()
+        self.assertEqual(size, len(_all))
+        self.assertEqual(size_cleared, 0)
+
     def test_contains(self):
         _all = ["1", "2", "3"]
         self.set.add_all(_all)
@@ -150,3 +159,7 @@ class SetTestCase(SingleMemberTestCase):
         self.set.add_all(_all)
         size = self.set.size()
         self.assertEqual(size, len(_all))
+
+    def test_str(self):
+        str_ = self.set.__str__()
+        self.assertTrue(str_.startswith("Set"))

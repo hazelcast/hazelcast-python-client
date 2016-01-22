@@ -250,3 +250,7 @@ class ListTestCase(SingleMemberTestCase):
         self.list.add_all(_all)
         sub_list = self.list.sub_list(1, 3)
         self.assertEqual(sub_list, ["2", "3"])
+
+    def test_str(self):
+        str_ = self.list.__str__()
+        self.assertTrue(str_.startswith("List"))
