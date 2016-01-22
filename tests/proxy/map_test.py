@@ -8,7 +8,7 @@ from tests.util import random_string, event_collector
 
 class ClientMapTest(SingleMemberTestCase):
     def setUp(self):
-        self.map = self.client.get_map(random_string())
+        self.map = self.client.get_map(random_string()).blocking()
 
     def tearDown(self):
         self.map.destroy()
@@ -78,84 +78,84 @@ class ClientMapTest(SingleMemberTestCase):
         self.assertTrueEventually(assert_event, 5)
 
     def test_add_index(self):
-        self.map.add_index("field", True).result()
+        self.map.add_index("field", True)
 
     def test_clear(self):
         self._fill_map()
 
-        self.map.clear().result()
+        self.map.clear()
 
-        self.assertEqual(self.map.size().result(), 0)
+        self.assertEqual(self.map.size(), 0)
 
     def test_contains_key(self):
         self._fill_map()
 
-        self.assertTrue(self.map.contains_key("key-1").result())
-        self.assertFalse(self.map.contains_key("key-10").result())
+        self.assertTrue(self.map.contains_key("key-1"))
+        self.assertFalse(self.map.contains_key("key-10"))
 
     def test_contains_value(self):
         self._fill_map()
 
-        self.assertTrue(self.map.contains_value("value-1").result())
-        self.assertFalse(self.map.contains_value("value-10").result())
+        self.assertTrue(self.map.contains_value("value-1"))
+        self.assertFalse(self.map.contains_value("value-10"))
 
     def test_delete(self):
         self._fill_map()
 
-        self.map.delete("key-1").result()
+        self.map.delete("key-1")
 
-        self.assertEqual(self.map.size().result(), 9)
-        self.assertFalse(self.map.contains_key("key-1").result())
+        self.assertEqual(self.map.size(), 9)
+        self.assertFalse(self.map.contains_key("key-1"))
 
     def test_entry_set(self):
         entries = self._fill_map()
 
-        self.assertItemsEqual(self.map.entry_set().result(), list(entries.iteritems()))
+        self.assertItemsEqual(self.map.entry_set(), list(entries.iteritems()))
 
     def test_evict(self):
         self._fill_map()
 
-        self.map.evict("key-1").result()
+        self.map.evict("key-1")
 
-        self.assertEqual(self.map.size().result(), 9)
-        self.assertFalse(self.map.contains_key("key-1").result())
+        self.assertEqual(self.map.size(), 9)
+        self.assertFalse(self.map.contains_key("key-1"))
 
     def test_evict_all(self):
         self._fill_map()
 
-        self.map.evict_all().result()
+        self.map.evict_all()
 
-        self.assertEqual(self.map.size().result(), 0)
+        self.assertEqual(self.map.size(), 0)
 
     def test_flush(self):
         self._fill_map()
 
-        self.map.flush().result()
+        self.map.flush()
 
     def test_force_unlock(self):
-        self.map.put("key", "value").result()
-        self.map.lock("key").result()
+        self.map.put("key", "value")
+        self.map.lock("key")
 
-        self.start_new_thread(lambda: self.map.force_unlock("key").result())
+        self.start_new_thread(lambda: self.map.force_unlock("key"))
 
-        self.assertTrueEventually(lambda: self.assertFalse(self.map.is_locked("key").result()))
+        self.assertTrueEventually(lambda: self.assertFalse(self.map.is_locked("key")))
 
     def test_get_all(self):
         expected = self._fill_map(1000)
 
-        actual = self.map.get_all(expected.keys()).result()
+        actual = self.map.get_all(expected.keys())
 
         self.assertItemsEqual(expected, actual)
 
     def test_get_all_when_no_keys(self):
-        self.assertEqual(self.map.get_all([]).result(), {})
+        self.assertEqual(self.map.get_all([]), {})
 
     def test_get_entry_view(self):
-        self.map.put("key", "value").result()
-        self.map.get("key").result()
-        self.map.put("key", "new_value").result()
+        self.map.put("key", "value")
+        self.map.get("key")
+        self.map.put("key", "new_value")
 
-        entry_view = self.map.get_entry_view("key").result()
+        entry_view = self.map.get_entry_view("key")
 
         self.assertEqual(entry_view.key, "key")
         self.assertEqual(entry_view.value, "new_value")
@@ -172,107 +172,107 @@ class ClientMapTest(SingleMemberTestCase):
     def test_is_empty(self):
         self.map.put("key", "value")
 
-        self.assertFalse(self.map.is_empty().result())
+        self.assertFalse(self.map.is_empty())
 
-        self.map.clear().result()
+        self.map.clear()
 
-        self.assertTrue(self.map.is_empty().result())
+        self.assertTrue(self.map.is_empty())
 
     def test_is_locked(self):
-        self.map.put("key", "value").result()
+        self.map.put("key", "value")
 
-        self.assertFalse(self.map.is_locked("key").result())
-        self.map.lock("key").result()
-        self.assertTrue(self.map.is_locked("key").result())
-        self.map.unlock("key").result()
-        self.assertFalse(self.map.is_locked("key").result())
+        self.assertFalse(self.map.is_locked("key"))
+        self.map.lock("key")
+        self.assertTrue(self.map.is_locked("key"))
+        self.map.unlock("key")
+        self.assertFalse(self.map.is_locked("key"))
 
     def test_key_set(self):
         keys = self._fill_map().keys()
 
-        self.assertItemsEqual(self.map.key_set().result(), keys)
+        self.assertItemsEqual(self.map.key_set(), keys)
 
     def test_load_all(self):
         keys = self._fill_map().keys()
         # TODO: needs map store configuration
         with self.assertRaises(HazelcastError):
-            self.map.load_all().result()
+            self.map.load_all()
 
     def test_lock(self):
-        self.map.put("key", "value").result()
+        self.map.put("key", "value")
 
-        t = self.start_new_thread(lambda: self.map.lock("key").result())
+        t = self.start_new_thread(lambda: self.map.lock("key"))
         t.join()
 
-        self.assertFalse(self.map.try_put("key", "new_value", timeout=0.01).result())
+        self.assertFalse(self.map.try_put("key", "new_value", timeout=0.01))
 
     def test_put_all(self):
         map = {"key-%d" % x: "value-%d" % x for x in xrange(0, 1000)}
-        self.map.put_all(map).result()
+        self.map.put_all(map)
 
-        entries = self.map.entry_set().result()
+        entries = self.map.entry_set()
 
         self.assertItemsEqual(entries, map.iteritems())
 
     def test_put_all_when_no_keys(self):
-        self.assertIsNone(self.map.put_all({}).result())
+        self.assertIsNone(self.map.put_all({}))
 
     def test_put_if_absent_when_missing_value(self):
-        returned_value = self.map.put_if_absent("key", "new_value").result()
+        returned_value = self.map.put_if_absent("key", "new_value")
 
         self.assertIsNone(returned_value)
-        self.assertEqual(self.map.get("key").result(), "new_value")
+        self.assertEqual(self.map.get("key"), "new_value")
 
     def test_put_if_absent_when_existing_value(self):
-        self.map.put("key", "value").result()
+        self.map.put("key", "value")
 
-        returned_value = self.map.put_if_absent("key", "new_value").result()
+        returned_value = self.map.put_if_absent("key", "new_value")
 
         self.assertEqual(returned_value, "value")
-        self.assertEqual(self.map.get("key").result(), "value")
+        self.assertEqual(self.map.get("key"), "value")
 
     def test_put_get(self):
-        self.assertIsNone(self.map.put("key", "value").result())
-        self.assertEqual(self.map.get("key").result(), "value")
+        self.assertIsNone(self.map.put("key", "value"))
+        self.assertEqual(self.map.get("key"), "value")
 
     def test_put_when_existing(self):
-        self.map.put("key", "value").result()
-        self.assertEqual(self.map.put("key", "new_value").result(), "value")
-        self.assertEqual(self.map.get("key").result(), "new_value")
+        self.map.put("key", "value")
+        self.assertEqual(self.map.put("key", "new_value"), "value")
+        self.assertEqual(self.map.get("key"), "new_value")
 
     def test_put_transient(self):
-        self.map.put_transient("key", "value").result()
+        self.map.put_transient("key", "value")
 
-        self.assertEqual(self.map.get("key").result(), "value")
+        self.assertEqual(self.map.get("key"), "value")
 
     def test_remove(self):
         self.map.put("key", "value")
 
-        removed = self.map.remove("key").result()
+        removed = self.map.remove("key")
         self.assertEqual(removed, "value")
-        self.assertEqual(0, self.map.size().result())
-        self.assertFalse(self.map.contains_key("key").result())
+        self.assertEqual(0, self.map.size())
+        self.assertFalse(self.map.contains_key("key"))
 
     def test_remove_if_same_when_same(self):
         self.map.put("key", "value")
 
-        self.assertTrue(self.map.remove_if_same("key", "value").result())
-        self.assertFalse(self.map.contains_key("key").result())
+        self.assertTrue(self.map.remove_if_same("key", "value"))
+        self.assertFalse(self.map.contains_key("key"))
 
     def test_remove_if_same_when_different(self):
         self.map.put("key", "value")
 
-        self.assertFalse(self.map.remove_if_same("key", "another_value").result())
-        self.assertTrue(self.map.contains_key("key").result())
+        self.assertFalse(self.map.remove_if_same("key", "another_value"))
+        self.assertTrue(self.map.contains_key("key"))
 
     def test_remove_entry_listener(self):
         collector = event_collector()
         id = self.map.add_entry_listener(added=collector)
 
-        self.map.put('key', 'value').result()
+        self.map.put('key', 'value')
         self.assertTrueEventually(lambda: self.assertEqual(len(collector.events), 1))
         self.map.remove_entry_listener(id)
-        self.map.put('key2', 'value').result()
+        self.map.put('key2', 'value')
 
         time.sleep(1)
         self.assertEqual(len(collector.events), 1)
@@ -280,80 +280,80 @@ class ClientMapTest(SingleMemberTestCase):
     def test_replace(self):
         self.map.put("key", "value")
 
-        replaced = self.map.replace("key", "new_value").result()
+        replaced = self.map.replace("key", "new_value")
         self.assertEqual(replaced, "value")
-        self.assertEqual(self.map.get("key").result(), "new_value")
+        self.assertEqual(self.map.get("key"), "new_value")
 
     def test_replace_if_same_when_same(self):
         self.map.put("key", "value")
 
-        self.assertTrue(self.map.replace_if_same("key", "value", "new_value").result())
-        self.assertEqual(self.map.get("key").result(), "new_value")
+        self.assertTrue(self.map.replace_if_same("key", "value", "new_value"))
+        self.assertEqual(self.map.get("key"), "new_value")
 
     def test_replace_if_same_when_different(self):
         self.map.put("key", "value")
 
-        self.assertFalse(self.map.replace_if_same("key", "another_value", "new_value").result())
-        self.assertEqual(self.map.get("key").result(), "value")
+        self.assertFalse(self.map.replace_if_same("key", "another_value", "new_value"))
+        self.assertEqual(self.map.get("key"), "value")
 
     def test_set(self):
-        self.map.set("key", "value").result()
+        self.map.set("key", "value")
 
-        self.assertEqual(self.map.get("key").result(), "value")
+        self.assertEqual(self.map.get("key"), "value")
 
     def test_size(self):
         self._fill_map()
 
-        self.assertEqual(10, self.map.size().result())
+        self.assertEqual(10, self.map.size())
 
     def test_try_lock_when_unlocked(self):
-        self.assertTrue(self.map.try_lock("key").result())
-        self.assertTrue(self.map.is_locked("key").result())
+        self.assertTrue(self.map.try_lock("key"))
+        self.assertTrue(self.map.is_locked("key"))
 
     def test_try_lock_when_locked(self):
-        t = self.start_new_thread(lambda: self.map.lock("key").result())
+        t = self.start_new_thread(lambda: self.map.lock("key"))
         t.join()
-        self.assertFalse(self.map.try_lock("key", timeout=0.1).result())
+        self.assertFalse(self.map.try_lock("key", timeout=0.1))
 
     def test_try_put_when_unlocked(self):
-        self.assertTrue(self.map.try_put("key", "value").result())
-        self.assertEqual(self.map.get("key").result(), "value")
+        self.assertTrue(self.map.try_put("key", "value"))
+        self.assertEqual(self.map.get("key"), "value")
 
     def test_try_put_when_locked(self):
-        t = self.start_new_thread(lambda: self.map.lock("key").result())
+        t = self.start_new_thread(lambda: self.map.lock("key"))
         t.join()
-        self.assertFalse(self.map.try_put("key", "value", timeout=0.1).result())
+        self.assertFalse(self.map.try_put("key", "value", timeout=0.1))
 
     def test_try_remove_when_unlocked(self):
-        self.map.put("key", "value").result()
-        self.assertTrue(self.map.try_remove("key").result())
-        self.assertIsNone(self.map.get("key").result())
+        self.map.put("key", "value")
+        self.assertTrue(self.map.try_remove("key"))
+        self.assertIsNone(self.map.get("key"))
 
     def test_try_remove_when_locked(self):
-        self.map.put("key", "value").result()
-        t = self.start_new_thread(lambda: self.map.lock("key").result())
+        self.map.put("key", "value")
+        t = self.start_new_thread(lambda: self.map.lock("key"))
         t.join()
-        self.assertFalse(self.map.try_remove("key", timeout=0.1).result())
+        self.assertFalse(self.map.try_remove("key", timeout=0.1))
 
     def test_unlock(self):
-        self.map.lock("key").result()
-        self.assertTrue(self.map.is_locked("key").result())
-        self.map.unlock("key").result()
-        self.assertFalse(self.map.is_locked("key").result())
+        self.map.lock("key")
+        self.assertTrue(self.map.is_locked("key"))
+        self.map.unlock("key")
+        self.assertFalse(self.map.is_locked("key"))
 
     def test_unlock_when_no_lock(self):
         with self.assertRaises(HazelcastError):
-            self.map.unlock("key").result()
+            self.map.unlock("key")
 
     def test_values(self):
         values = self._fill_map().values()
 
-        self.assertItemsEqual(self.map.values().result(), values)
+        self.assertItemsEqual(self.map.values(), values)
 
     def _fill_map(self, count=10):
         map = {"key-%d" % x: "value-%d" % x for x in xrange(0, count)}
         for k, v in map.iteritems():
-            self.map.put(k, v).result()
+            self.map.put(k, v)
         return map
 
     def _assert_entry_event(self, event, key, event_type, value=None, old_value=None, merging_value=None,

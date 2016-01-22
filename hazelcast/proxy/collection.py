@@ -34,7 +34,7 @@ class Collection(PartitionSpecificClientProxy):
         return self._start_listening(request,
                                      lambda m: add_listener_codec.handle(m, handle_event_item),
                                      lambda r: add_listener_codec.decode_response(r)['response'],
-                                     self.get_partition_key())
+                                     self._get_partition_key())
 
     def _clear(self, clear_codec=None):
         return self._encode_invoke_on_partition(clear_codec, name=self.name)
@@ -43,14 +43,6 @@ class Collection(PartitionSpecificClientProxy):
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)
         return self._encode_invoke_on_partition(contains_codec, name=self.name, value=item_data)
-
-    def _contains_all(self, items, contains_all_codec=None):
-        check_not_none(items, "Value can't be None")
-        data_items = []
-        for item in items:
-            check_not_none(item, "Value can't be None")
-            data_items.append(self._to_data(item))
-        return self._encode_invoke_on_partition(contains_all_codec, name=self.name, value_list=data_items)
 
     def _get_all(self, get_all_codec=None):
         return self._encode_invoke_on_partition(get_all_codec, name=self.name)

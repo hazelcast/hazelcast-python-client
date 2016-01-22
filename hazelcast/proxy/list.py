@@ -57,7 +57,12 @@ class List(Collection):
         return self._contains(item, list_contains_codec)
 
     def contains_all(self, items):
-        return self._contains_all(items, list_contains_all_codec)
+        check_not_none(items, "Items can't be None")
+        data_items = []
+        for item in items:
+            check_not_none(item, "item can't be None")
+            data_items.append(self._to_data(item))
+        return self._encode_invoke_on_partition(list_contains_all_codec, name=self.name, values=data_items)
 
     def get(self, index):
         return self._encode_invoke_on_partition(list_get_codec, name=self.name, index=index)

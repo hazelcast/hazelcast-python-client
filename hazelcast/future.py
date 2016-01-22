@@ -1,7 +1,6 @@
 import logging
 import sys
 import threading
-
 from hazelcast.util import AtomicInteger
 
 NONE_RESULT = object()
@@ -147,3 +146,32 @@ def combine_futures(*futures):
         future.add_done_callback(done)
 
     return combined
+
+
+class _BlockingWrapper(object):
+    def __init__(self, wrapped):
+        self._wrapped = wrapped
+
+    def __getattr__(self, item):
+        inner = getattr(self._wrapped, item)
+        if callable(inner):
+            return self.wrap(inner)
+        return inner
+
+    def wrap(self, inner):
+        def f(*args, **kwargs):
+            result = inner(*args, **kwargs)
+            if isinstance(result, Future):
+                return result.result()
+            return result
+
+        return f
+
+
+def make_blocking(instance):
+    """
+    Takes an instance and returns an object whose methods which return non-blocking Future become blocking calls
+    :param instance:
+    :return:
+    """
+    return _BlockingWrapper(instance)

@@ -53,15 +53,15 @@ class Queue(Collection):
         return self._encode_invoke_on_partition(queue_clear_codec, name=self.name)
 
     def contains(self, item):
-        check_not_none(item, "Value can't be None")
+        check_not_none(item, "Item can't be None")
         item_data = self._to_data(item)
         return self._encode_invoke_on_partition(queue_contains_codec, name=self.name, value=item_data)
 
     def contains_all(self, items):
-        check_not_none(items, "Value can't be None")
+        check_not_none(items, "Items can't be None")
         data_items = []
         for item in items:
-            check_not_none(item, "Value can't be None")
+            check_not_none(item, "item can't be None")
             data_items.append(self._to_data(item))
         return self._encode_invoke_on_partition(queue_contains_all_codec, name=self.name, data_list=data_items)
 

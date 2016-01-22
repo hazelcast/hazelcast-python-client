@@ -2,7 +2,7 @@ import sys
 import traceback
 import unittest
 from threading import Thread, Event
-from hazelcast.future import Future, ImmediateFuture, combine_futures
+from hazelcast.future import Future, ImmediateFuture, combine_futures, make_blocking
 
 
 class FutureTest(unittest.TestCase):
@@ -325,3 +325,42 @@ class CombineFutureTest(unittest.TestCase):
         f3.set_exception(e)
 
         self.assertEqual(e, combined.exception())
+
+
+class MakeBlockingTest(unittest.TestCase):
+    class Calculator(object):
+
+        def __init__(self):
+            self.name = "calc"
+
+        def add_one(self, x):
+            f = Future()
+            f.set_result(x + 1)
+            return f
+
+        def multiply(self, x, y):
+            f = Future()
+            f.set_result(x * y)
+            return f
+
+        def multiply_sync(self, x, y):
+            return x * y
+
+    def setUp(self):
+        self.calculator = make_blocking(MakeBlockingTest.Calculator())
+
+    def test_args(self):
+        self.assertEqual(self.calculator.add_one(1), 2)
+
+    def test_kwargs(self):
+        self.assertEqual(self.calculator.multiply(x=4, y=5), 20)
+
+    def test_blocking_method(self):
+        self.assertEqual(self.calculator.multiply_sync(x=4, y=5), 20)
+
+    def test_missing_method(self):
+        with self.assertRaises(AttributeError):
+            self.calculator.missing_method()
+
+    def test_attribute(self):
+        self.assertEqual(self.calculator.name, "calc")

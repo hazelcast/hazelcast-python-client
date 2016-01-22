@@ -49,7 +49,6 @@ _proxy_init = {
     TOPIC_SERVICE: Topic
 }
 
-
 class ProxyManager(object):
     def __init__(self, client):
         self._client = client

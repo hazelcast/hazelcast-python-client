@@ -5,7 +5,7 @@ from tests.util import random_string, event_collector
 
 class SetTestCase(SingleMemberTestCase):
     def setUp(self):
-        self.set = self.client.get_set(random_string())
+        self.set = self.client.get_set(random_string()).blocking()
 
     def test_add_entry_listener_item_added(self):
         collector = event_collector()
@@ -77,8 +77,8 @@ class SetTestCase(SingleMemberTestCase):
         self.assertTrueEventually(assert_event, 5)
 
     def test_add(self):
-        add_resp = self.set.add("Test").result()
-        result = self.set.contains("Test").result()
+        add_resp = self.set.add("Test")
+        result = self.set.contains("Test")
         self.assertTrue(add_resp)
         self.assertTrue(result)
 
@@ -88,8 +88,8 @@ class SetTestCase(SingleMemberTestCase):
 
     def test_add_all(self):
         _all = ["1", "2", "3"]
-        add_resp = self.set.add_all(_all).result()
-        set_all = self.set.get_all().result()
+        add_resp = self.set.add_all(_all)
+        set_all = self.set.get_all()
         self.assertItemsEqual(_all, set_all)
         self.assertTrue(add_resp)
 
@@ -104,49 +104,49 @@ class SetTestCase(SingleMemberTestCase):
 
     def test_contains(self):
         _all = ["1", "2", "3"]
-        self.set.add_all(_all).result()
+        self.set.add_all(_all)
         contains_result = self.set.contains("2")
         self.assertTrue(contains_result)
 
     def test_contains_all(self):
         _all = ["1", "2", "3"]
-        self.set.add_all(_all).result()
-        contains_result = self.set.contains(_all)
+        self.set.add_all(_all)
+        contains_result = self.set.contains_all(_all)
         self.assertTrue(contains_result)
 
     def test_get_all(self):
         _all = ["1", "2", "3"]
-        self.set.add_all(_all).result()
-        all_result = self.set.get_all().result()
+        self.set.add_all(_all)
+        all_result = self.set.get_all()
         self.assertItemsEqual(all_result, _all)
 
     def test_is_empty(self):
-        is_empty = self.set.is_empty().result()
+        is_empty = self.set.is_empty()
         self.assertTrue(is_empty)
 
     def test_remove(self):
-        self.set.add("Test").result()
-        remove_result = self.set.remove("Test").result()
-        size = self.set.size().result()
+        self.set.add("Test")
+        remove_result = self.set.remove("Test")
+        size = self.set.size()
         self.assertTrue(remove_result)
         self.assertEqual(size, 0)
 
     def test_remove_all(self):
         _all = ["1", "2", "3"]
-        self.set.add_all(_all).result()
+        self.set.add_all(_all)
         self.set.remove_all(["2", "3"])
-        result = self.set.get_all().result()
+        result = self.set.get_all()
         self.assertEqual(result, ["1"])
 
     def test_retain_all(self):
         _all = ["1", "2", "3"]
-        self.set.add_all(_all).result()
+        self.set.add_all(_all)
         self.set.retain_all(["2", "3"])
-        result = self.set.get_all().result()
+        result = self.set.get_all()
         self.assertEqual(result, ["2", "3"])
 
     def test_size(self):
         _all = ["1", "2", "3"]
-        self.set.add_all(_all).result()
-        size = self.set.size().result()
+        self.set.add_all(_all)
+        size = self.set.size()
         self.assertEqual(size, len(_all))

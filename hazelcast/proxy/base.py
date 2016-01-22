@@ -1,5 +1,6 @@
 import logging
 
+from hazelcast.future import make_blocking
 from hazelcast.util import enum
 
 
@@ -38,7 +39,8 @@ class Proxy(object):
 
     def _encode_invoke_on_partition(self, codec, partition_id, **kwargs):
         request = codec.encode_request(**kwargs)
-        return self._client.invoker.invoke_on_partition(request, partition_id).continue_with(self._handle_response, codec)
+        return self._client.invoker.invoke_on_partition(request, partition_id).continue_with(self._handle_response,
+                                                                                             codec)
 
     def _handle_response(self, future, codec):
         response = future.result()
@@ -53,8 +55,14 @@ class Proxy(object):
             except AttributeError:
                 pass
 
-    def get_partition_key(self):
+    def _get_partition_key(self):
         return StringPartitionStrategy.get_partition_key(self.name)
+
+    def blocking(self):
+        """
+        :return: Return a version of this proxy with only blocking method calls
+        """
+        return make_blocking(self)
 
 
 class PartitionSpecificClientProxy(Proxy):
@@ -63,7 +71,8 @@ class PartitionSpecificClientProxy(Proxy):
         self._partition_id = self._client.partition_service.get_partition_id(name)
 
     def _encode_invoke_on_partition(self, codec, **kwargs):
-        return super(PartitionSpecificClientProxy, self)._encode_invoke_on_partition(codec, self._partition_id, **kwargs)
+        return super(PartitionSpecificClientProxy, self)._encode_invoke_on_partition(codec, self._partition_id,
+                                                                                     **kwargs)
 
 
 class TransactionalProxy(object):
