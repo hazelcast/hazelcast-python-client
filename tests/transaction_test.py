@@ -110,6 +110,6 @@ class TransactionTest(SingleMemberTestCase):
     def test_timeout(self):
         transaction = self.client.new_transaction(timeout=0.001)
         transaction.begin()
-        time.sleep(0.001)
+        time.sleep(0.1)
         with self.assertRaises(TransactionError):
             transaction.commit()
