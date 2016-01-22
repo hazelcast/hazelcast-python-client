@@ -66,7 +66,7 @@ class ImmutableLazyDataList(Sequence):
         return super(ImmutableLazyDataList, self).__contains__(value)
 
     def __len__(self):
-        return super(ImmutableLazyDataList, self).__len__()
+        return self._list_data.__len__()
 
     def __getitem__(self, index):
         try:

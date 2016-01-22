@@ -32,33 +32,52 @@ class Full(Exception):
 
 class Queue(Collection):
     def add(self, item):
-        if self.offer(item):
-            return True
-        raise Full("Queue is full!")
+        def result_fnc(f):
+            if f.result():
+                return True
+            raise Full("Queue is full!")
+        return self.offer(item).continue_with(result_fnc)
 
     def add_all(self, items):
-        return self._add_all(items, queue_add_all_codec)
+        check_not_none(items, "Value can't be None")
+        data_items = []
+        for item in items:
+            check_not_none(item, "Value can't be None")
+            data_items.append(self._to_data(item))
+        return self._encode_invoke_on_partition(queue_add_all_codec, name=self.name, data_list=data_items)
 
     def add_listener(self, include_value=False, item_added=None, item_removed=None):
         return self._add_listener(include_value, item_added, item_removed, queue_add_listener_codec)
 
     def clear(self):
-        return self._clear(queue_clear_codec)
+        return self._encode_invoke_on_partition(queue_clear_codec, name=self.name)
 
     def contains(self, item):
-        return self._contains(item, queue_contains_codec)
+        check_not_none(item, "Value can't be None")
+        item_data = self._to_data(item)
+        return self._encode_invoke_on_partition(queue_contains_codec, name=self.name, value=item_data)
 
     def contains_all(self, items):
-        return self._contains_all(items, queue_contains_all_codec)
+        check_not_none(items, "Value can't be None")
+        data_items = []
+        for item in items:
+            check_not_none(item, "Value can't be None")
+            data_items.append(self._to_data(item))
+        return self._encode_invoke_on_partition(queue_contains_all_codec, name=self.name, data_list=data_items)
 
     def drain_to(self, list, max_size=-1):
-        self._encode_invoke_on_partition(queue_drain_to_max_size_codec, name=self.name, max_size=max_size)
+        def drain_result(f):
+            resp = f.result()
+            list.extend(resp)
+            return len(resp)
+        return self._encode_invoke_on_partition(queue_drain_to_max_size_codec, name=self.name, max_size=max_size).continue_with(
+            drain_result)
 
-    def get_all(self):
-        return self._get_all(queue_iterator_codec)
+    def iterator(self):
+        return self._encode_invoke_on_partition(queue_iterator_codec, name=self.name)
 
     def is_empty(self):
-        return self._is_empty(queue_is_empty_codec)
+        return self._encode_invoke_on_partition(queue_is_empty_codec, name=self.name)
 
     def offer(self, item, timeout=0):
         check_not_none(item, "Value can't be None")
@@ -82,19 +101,31 @@ class Queue(Collection):
         return self._encode_invoke_on_partition(queue_remaining_capacity_codec, name=self.name)
 
     def remove(self, item):
-        return self._remove(item, queue_remove_codec)
+        check_not_none(item, "Value can't be None")
+        item_data = self._to_data(item)
+        return self._encode_invoke_on_partition(queue_remove_codec, name=self.name, value=item_data)
 
     def remove_all(self, items):
-        return self._remove_all(items, queue_compare_and_remove_all_codec)
+        check_not_none(items, "Value can't be None")
+        data_items = []
+        for item in items:
+            check_not_none(item, "Value can't be None")
+            data_items.append(self._to_data(item))
+        return self._encode_invoke_on_partition(queue_compare_and_remove_all_codec, name=self.name, data_list=data_items)
 
     def remove_listener(self, registration_id):
-        return self._remove_listener(registration_id, queue_remove_listener_codec)
+        return self._stop_listening(registration_id, lambda i: queue_remove_listener_codec.encode_request(self.name, i))
 
     def retain_all(self, items):
-        return self._retain_all(items, queue_compare_and_retain_all_codec)
+        check_not_none(items, "Value can't be None")
+        data_items = []
+        for item in items:
+            check_not_none(item, "Value can't be None")
+            data_items.append(self._to_data(item))
+        return self._encode_invoke_on_partition(queue_compare_and_retain_all_codec, name=self.name, data_list=data_items)
 
     def size(self):
-        return self._size(queue_size_codec)
+        return self._encode_invoke_on_partition(queue_size_codec, name=self.name)
 
     def take(self):
         return self._encode_invoke_on_partition(queue_take_codec, name=self.name)
