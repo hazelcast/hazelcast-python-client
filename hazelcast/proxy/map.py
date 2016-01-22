@@ -1,4 +1,5 @@
 import itertools
+
 from hazelcast.future import combine_futures, ImmediateFuture
 from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_entry_listener_to_key_codec, \
     map_add_entry_listener_with_predicate_codec, map_add_entry_listener_to_key_with_predicate_codec, \
@@ -10,58 +11,14 @@ from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_entry
     map_put_transient_codec, map_size_codec, map_remove_codec, map_remove_if_same_codec, \
     map_remove_entry_listener_codec, map_replace_codec, map_replace_if_same_codec, map_set_codec, map_try_lock_codec, \
     map_try_put_codec, map_try_remove_codec, map_unlock_codec, map_values_codec, map_values_with_predicate_codec
-from hazelcast.proxy.base import Proxy
-from hazelcast.util import check_not_none, enum, thread_id, to_millis
-
-EntryEventType = enum(added=1,
-                      removed=1 << 1,
-                      updated=1 << 2,
-                      evicted=1 << 3,
-                      evict_all=1 << 4,
-                      clear_all=1 << 5,
-                      merged=1 << 6,
-                      expired=1 << 7)
-
-
-class EntryEvent(object):
-    def __init__(self, to_object, key, old_value, value, merging_value, event_type, uuid,
-                 number_of_affected_entries):
-        self._key_data = key
-        self._value_data = value
-        self._old_value_data = old_value
-        self._merging_value_data = merging_value
-        self.event_type = event_type
-        self.uuid = uuid
-        self.number_of_affected_entries = number_of_affected_entries
-        self._to_object = to_object
-
-    @property
-    def key(self):
-        return self._to_object(self._key_data)
-
-    @property
-    def old_value(self):
-        return self._to_object(self._old_value_data)
-
-    @property
-    def value(self):
-        return self._to_object(self._value_data)
-
-    @property
-    def merging_value(self):
-        return self._to_object(self._merging_value_data)
-
-    def __repr__(self):
-        return "EntryEvent(key=%s, old_value=%s, value=%s, merging_value=%s, event_type=%s, uuid=%s, " \
-               "number_of_affected_entries=%s)" % (
-                   self.key, self.old_value, self.value, self.merging_value, self.event_type, self.uuid,
-                   self.number_of_affected_entries)
+from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType, get_entry_listener_flags
+from hazelcast.util import check_not_none, thread_id, to_millis
 
 
 class Map(Proxy):
     def add_entry_listener(self, include_value=False, key=None, predicate=None, added=None, removed=None, updated=None,
                            evicted=None, evict_all=None, clear_all=None, merged=None, expired=None):
-        flags = self._get_listener_flags(added=added, removed=removed, updated=updated,
+        flags = get_entry_listener_flags(added=added, removed=removed, updated=updated,
                                          evicted=evicted, evict_all=evict_all, clear_all=clear_all, merged=merged,
                                          expired=expired)
 
@@ -393,14 +350,6 @@ class Map(Proxy):
             return self._encode_invoke(map_values_with_predicate_codec, name=self.name, predicate=predicate_data)
         else:
             return self._encode_invoke(map_values_codec, name=self.name)
-
-    @staticmethod
-    def _get_listener_flags(**kwargs):
-        flags = 0
-        for (key, value) in kwargs.iteritems():
-            if value:
-                flags |= getattr(EntryEventType, key)
-        return flags
 
     def __str__(self):
         return "Map(name=%s)" % self.name

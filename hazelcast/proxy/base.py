@@ -132,3 +132,56 @@ class ItemEvent(object):
     @property
     def item(self):
         return self._to_object(self._item_data)
+
+
+EntryEventType = enum(added=1,
+                      removed=1 << 1,
+                      updated=1 << 2,
+                      evicted=1 << 3,
+                      evict_all=1 << 4,
+                      clear_all=1 << 5,
+                      merged=1 << 6,
+                      expired=1 << 7)
+
+
+class EntryEvent(object):
+    def __init__(self, to_object, key, old_value, value, merging_value, event_type, uuid,
+                 number_of_affected_entries):
+        self._key_data = key
+        self._value_data = value
+        self._old_value_data = old_value
+        self._merging_value_data = merging_value
+        self.event_type = event_type
+        self.uuid = uuid
+        self.number_of_affected_entries = number_of_affected_entries
+        self._to_object = to_object
+
+    @property
+    def key(self):
+        return self._to_object(self._key_data)
+
+    @property
+    def old_value(self):
+        return self._to_object(self._old_value_data)
+
+    @property
+    def value(self):
+        return self._to_object(self._value_data)
+
+    @property
+    def merging_value(self):
+        return self._to_object(self._merging_value_data)
+
+    def __repr__(self):
+        return "EntryEvent(key=%s, old_value=%s, value=%s, merging_value=%s, event_type=%s, uuid=%s, " \
+               "number_of_affected_entries=%s)" % (
+                   self.key, self.old_value, self.value, self.merging_value, self.event_type, self.uuid,
+                   self.number_of_affected_entries)
+
+
+def get_entry_listener_flags(**kwargs):
+    flags = 0
+    for (key, value) in kwargs.iteritems():
+        if value:
+            flags |= getattr(EntryEventType, key)
+    return flags
