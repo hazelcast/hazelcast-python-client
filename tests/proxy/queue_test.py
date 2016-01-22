@@ -1,3 +1,5 @@
+import os
+
 from hazelcast.proxy.base import ItemEventType
 from hazelcast.proxy.queue import Full
 from tests.base import SingleMemberTestCase
@@ -7,7 +9,9 @@ from tests.util import random_string, event_collector
 class QueueTestCase(SingleMemberTestCase):
     @classmethod
     def configure_cluster(cls):
-        return open("./hazelcast_test.xml").read()
+        path = os.path.abspath(__file__)
+        dir_path = os.path.dirname(path)
+        return open(os.path.join(dir_path, "hazelcast_test.xml")).read()
 
     def setUp(self):
         self.queue = self.client.get_queue("ClientQueueTest_" + random_string()).blocking()
