@@ -185,3 +185,16 @@ def get_entry_listener_flags(**kwargs):
         if value:
             flags |= getattr(EntryEventType, key)
     return flags
+
+
+class TopicMessage(object):
+    def __init__(self, name, message_data, publish_time, member, to_object):
+        self.name = name
+        self._message_data = message_data
+        self.publish_time = publish_time
+        self.member = member
+        self._to_object = to_object
+
+    @property
+    def message(self):
+        return self._to_object(self._message_data)
