@@ -102,6 +102,15 @@ class QueueTestCase(SingleMemberTestCase):
         with self.assertRaises(AssertionError):
             self.queue.add_all(None)
 
+    def test_clear(self):
+        _all = ["1", "2", "3"]
+        self.queue.add_all(_all)
+        size = self.queue.size()
+        self.queue.clear()
+        size_cleared = self.queue.size()
+        self.assertEqual(size, len(_all))
+        self.assertEqual(size_cleared, 0)
+
     def test_contains(self):
         _all = ["1", "2", "3"]
         self.queue.add_all(_all)

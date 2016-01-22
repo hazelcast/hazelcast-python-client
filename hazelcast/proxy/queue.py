@@ -18,7 +18,7 @@ from hazelcast.protocol.codec import \
     queue_remove_listener_codec, \
     queue_size_codec, \
     queue_take_codec
-from hazelcast.proxy.collection import Collection
+from hazelcast.proxy.base import PartitionSpecificClientProxy, ItemEvent, ItemEventType
 from hazelcast.util import check_not_none
 
 
@@ -30,7 +30,7 @@ class Full(Exception):
     pass
 
 
-class Queue(Collection):
+class Queue(PartitionSpecificClientProxy):
     def add(self, item):
         def result_fnc(f):
             if f.result():
@@ -47,7 +47,24 @@ class Queue(Collection):
         return self._encode_invoke_on_partition(queue_add_all_codec, name=self.name, data_list=data_items)
 
     def add_listener(self, include_value=False, item_added=None, item_removed=None):
-        return self._add_listener(include_value, item_added, item_removed, queue_add_listener_codec)
+        request = queue_add_listener_codec.encode_request(self.name, include_value, False)
+
+        def handle_event_item(item, uuid, event_type):
+            item = item if include_value else None
+            member = self._client.cluster.get_member_by_uuid(uuid)
+
+            item_event = ItemEvent(self.name, item, event_type, member, self._to_object)
+            if event_type == ItemEventType.added:
+                if item_added:
+                    item_added(item_event)
+            else:
+                if item_removed:
+                    item_removed(item_event)
+
+        return self._start_listening(request,
+                                     lambda m: queue_add_listener_codec.handle(m, handle_event_item),
+                                     lambda r: queue_add_listener_codec.decode_response(r)['response'],
+                                     self._get_partition_key())
 
     def clear(self):
         return self._encode_invoke_on_partition(queue_clear_codec, name=self.name)
