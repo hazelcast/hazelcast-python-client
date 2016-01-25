@@ -350,6 +350,9 @@ class ClientMapTest(SingleMemberTestCase):
 
         self.assertItemsEqual(self.map.values(), values)
 
+    def test_str(self):
+        self.assertTrue(str(self.map).startswith("Map"))
+
     def _fill_map(self, count=10):
         map = {"key-%d" % x: "value-%d" % x for x in xrange(0, count)}
         for k, v in map.iteritems():

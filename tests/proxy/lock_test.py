@@ -78,3 +78,6 @@ class ClientLockTest(SingleMemberTestCase):
         self.lock.force_unlock()
 
         self.assertFalse(self.lock.is_locked())
+
+    def test_str(self):
+        self.assertTrue(str(self.lock).startswith("Lock"))

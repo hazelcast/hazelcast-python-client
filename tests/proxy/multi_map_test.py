@@ -206,6 +206,9 @@ class ClientMultiMapTest(SingleMemberTestCase):
         values = self._fill_map().values()
         self.assertItemsEqual(self.multi_map.values(), itertools.chain(*values))
 
+    def test_str(self):
+        self.assertTrue(str(self.multi_map).startswith("MultiMap"))
+
     def _fill_map(self, key_count=5, value_count=5):
         map = {"key-%d" % x: ["value-%d-%d" % (x, y) for y in xrange(0, value_count)] for x in xrange(0, key_count)}
         for k, l in map.iteritems():
