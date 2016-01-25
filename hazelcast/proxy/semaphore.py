@@ -36,7 +36,8 @@ class Semaphore(PartitionSpecificProxy):
 
     def try_acquire(self, permits=1, timeout=0):
         check_negative(permits, "Permits cannot be negative!")
-        return self._encode_invoke_on_partition(semaphore_try_acquire_codec, name=self.name, permits=permits, timeout=timeout)
+        t_msec = timeout * 1000
+        return self._encode_invoke_on_partition(semaphore_try_acquire_codec, name=self.name, permits=permits, timeout=t_msec)
 
     def __str__(self):
         return "Semaphore(name=%s)" % self.name
