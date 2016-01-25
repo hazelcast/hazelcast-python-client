@@ -329,7 +329,6 @@ class CombineFutureTest(unittest.TestCase):
 
 class MakeBlockingTest(unittest.TestCase):
     class Calculator(object):
-
         def __init__(self):
             self.name = "calc"
 

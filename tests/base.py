@@ -63,6 +63,10 @@ class HazelcastTestCase(unittest.TestCase):
                 time.sleep(0.1)
         raise
 
+    def assertSetEventually(self, event, timeout=5):
+        is_set = event.wait(timeout)
+        self.assertTrue(is_set, "Event was not set within %d seconds" % timeout)
+
     def start_new_thread(self, target):
         t = Thread(target=target)
         t.start()

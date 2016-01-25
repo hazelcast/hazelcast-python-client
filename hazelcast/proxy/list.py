@@ -22,11 +22,11 @@ from hazelcast.protocol.codec import list_add_all_codec, \
     list_size_codec, \
     list_sub_codec
 
-from hazelcast.proxy.base import PartitionSpecificClientProxy, ItemEvent, ItemEventType
+from hazelcast.proxy.base import PartitionSpecificProxy, ItemEvent, ItemEventType
 from hazelcast.util import check_not_none
 
 
-class List(PartitionSpecificClientProxy):
+class List(PartitionSpecificProxy):
     def add(self, item):
         check_not_none(item, "Value can't be None")
         element_data = self._to_data(item)

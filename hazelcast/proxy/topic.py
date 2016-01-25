@@ -3,10 +3,10 @@ from hazelcast.protocol.codec import \
     topic_publish_codec, \
     topic_remove_message_listener_codec
 
-from hazelcast.proxy.base import PartitionSpecificClientProxy, TopicMessage
+from hazelcast.proxy.base import PartitionSpecificProxy, TopicMessage
 
 
-class Topic(PartitionSpecificClientProxy):
+class Topic(PartitionSpecificProxy):
     def add_listener(self, on_message=None):
         request = topic_add_message_listener_codec.encode_request(self.name, False)
 

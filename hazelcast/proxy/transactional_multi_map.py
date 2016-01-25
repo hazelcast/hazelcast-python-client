@@ -2,7 +2,6 @@ from hazelcast.proxy.base import TransactionalProxy
 
 
 class TransactionalMultiMap(TransactionalProxy):
-
     def put(self, key, value):
         raise NotImplementedError
 

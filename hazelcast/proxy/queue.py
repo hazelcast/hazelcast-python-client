@@ -18,7 +18,7 @@ from hazelcast.protocol.codec import \
     queue_remove_listener_codec, \
     queue_size_codec, \
     queue_take_codec
-from hazelcast.proxy.base import PartitionSpecificClientProxy, ItemEvent, ItemEventType
+from hazelcast.proxy.base import PartitionSpecificProxy, ItemEvent, ItemEventType
 from hazelcast.util import check_not_none
 
 
@@ -30,7 +30,7 @@ class Full(Exception):
     pass
 
 
-class Queue(PartitionSpecificClientProxy):
+class Queue(PartitionSpecificProxy):
     def add(self, item):
         def result_fnc(f):
             if f.result():

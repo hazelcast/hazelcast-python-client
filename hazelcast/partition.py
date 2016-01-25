@@ -77,3 +77,13 @@ class PartitionService(object):
             for partition in partition_list:
                 self.partitions[partition] = addr
         self.logger.debug("Finished updating partitions")
+
+
+def string_partition_strategy(key):
+    if key is None:
+        return None
+    try:
+        index_of = key.index('@')
+        return key[index_of + 1:]
+    except ValueError:
+        return key

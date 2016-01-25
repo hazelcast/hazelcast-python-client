@@ -310,7 +310,7 @@ class Map(Proxy):
     def size(self):
         return self._encode_invoke(map_size_codec, name=self.name)
 
-    def try_lock(self, key, ttl=-1, timeout=-1):
+    def try_lock(self, key, ttl=-1, timeout=0):
         check_not_none(key, "key can't be None")
 
         key_data = self._to_data(key)
@@ -318,7 +318,7 @@ class Map(Proxy):
         return self._encode_invoke_on_key(map_try_lock_codec, key_data, name=self.name, key=key_data,
                                           thread_id=thread_id(), lease=to_millis(ttl), timeout=to_millis(timeout))
 
-    def try_put(self, key, value, timeout=-1):
+    def try_put(self, key, value, timeout=0):
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
 
@@ -328,7 +328,7 @@ class Map(Proxy):
         return self._encode_invoke_on_key(map_try_put_codec, key_data, name=self.name, key=key_data, value=value_data,
                                           thread_id=thread_id(), timeout=to_millis(timeout))
 
-    def try_remove(self, key, timeout=-1):
+    def try_remove(self, key, timeout=0):
         check_not_none(key, "key can't be None")
 
         key_data = self._to_data(key)
