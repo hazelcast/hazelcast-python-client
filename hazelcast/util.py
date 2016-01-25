@@ -98,3 +98,6 @@ class ImmutableLazyDataList(Sequence):
     def __str__(self):
         self._populate()
         return str(self._list_obj)
+
+    def __repr__(self):
+        return str(self)

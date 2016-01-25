@@ -2,6 +2,7 @@ import logging
 import threading
 import time
 from hazelcast.exception import HazelcastInstanceNotActiveError, TransactionError
+from hazelcast.future import make_blocking
 from hazelcast.protocol.codec import transaction_create_codec, transaction_commit_codec, transaction_rollback_codec
 from hazelcast.proxy.transactional_list import TransactionalList
 from hazelcast.proxy.transactional_map import TransactionalMap
@@ -48,7 +49,8 @@ class TransactionManager(object):
                 address = self._client.load_balancer.next_address()
                 return self._client.connection_manager.get_or_connect(address).result()
             except (IOError, HazelcastInstanceNotActiveError):
-                self.logger.debug("Could not get a connection for the transaction. Attempt %d of %d", count, RETRY_COUNT,
+                self.logger.debug("Could not get a connection for the transaction. Attempt %d of %d", count,
+                                  RETRY_COUNT,
                                   exc_info=True)
                 if count + 1 == RETRY_COUNT:
                     raise
@@ -60,7 +62,7 @@ class TransactionManager(object):
 
 class Transaction(object):
     state = _STATE_NOT_STARTED
-    transaction_id = None
+    id = None
     start_time = None
     _locals = threading.local()
     logger = logging.getLogger("Transaction")
@@ -87,7 +89,7 @@ class Transaction(object):
                                                               transaction_type=self.transaction_type,
                                                               thread_id=self.thread_id)
             response = self.client.invoker.invoke_on_connection(request, self.connection).result()
-            self.transaction_id = transaction_create_codec.decode_response(response)["response"]
+            self.id = transaction_create_codec.decode_response(response)["response"]
             self.state = _STATE_ACTIVE
         except:
             self._locals.transaction_exists = False
@@ -99,7 +101,7 @@ class Transaction(object):
             raise TransactionError("Transaction is not active.")
         try:
             self._check_timeout()
-            request = transaction_commit_codec.encode_request(self.transaction_id, self.thread_id)
+            request = transaction_commit_codec.encode_request(self.id, self.thread_id)
             self.client.invoker.invoke_on_connection(request, self.connection).result()
             self.state = _STATE_COMMITTED
         except:
@@ -110,11 +112,11 @@ class Transaction(object):
 
     def rollback(self):
         self._check_thread()
-        if self.state != _STATE_ACTIVE and self.state != _STATE_PARTIAL_COMMIT:
+        if self.state not in (_STATE_ACTIVE, _STATE_PARTIAL_COMMIT):
             raise TransactionError("Transaction is not active.")
         try:
             if self.state != _STATE_PARTIAL_COMMIT:
-                request = transaction_rollback_codec.encode_request(self.transaction_id, self.thread_id)
+                request = transaction_rollback_codec.encode_request(self.id, self.thread_id)
                 self.client.invoker.invoke_on_connection(request, self.connection).result()
             self.state = _STATE_ROLLED_BACK
         finally:
@@ -145,7 +147,7 @@ class Transaction(object):
         except KeyError:
             proxy = proxy_type(name, self)
             self._objects[key] = proxy
-            return proxy
+            return make_blocking(proxy)
 
     def _check_thread(self):
         if not thread_id() == self.thread_id:
@@ -154,3 +156,13 @@ class Transaction(object):
     def _check_timeout(self):
         if time.time() > self.timeout + self.start_time:
             raise TransactionError("Transaction has timed out.")
+
+    def __enter__(self):
+        self.begin()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        if not type and not value and self.state == _STATE_ACTIVE:
+            self.commit()
+        elif self.state in (_STATE_PARTIAL_COMMIT, _STATE_ACTIVE):
+            self.rollback()

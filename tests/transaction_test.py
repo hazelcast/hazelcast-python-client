@@ -1,8 +1,5 @@
-import unittest
-from threading import Thread
 import time
-
-from hzrc.client import HzRemoteController
+from threading import Thread
 
 import hazelcast
 import hazelcast.transaction
@@ -14,7 +11,7 @@ class TransactionTest(SingleMemberTestCase):
     def test_begin_and_commit_transaction(self):
         transaction = self.client.new_transaction()
         transaction.begin()
-        self.assertIsNotNone(transaction.transaction_id)
+        self.assertIsNotNone(transaction.id)
         self.assertEqual(transaction.state, hazelcast.transaction._STATE_ACTIVE)
 
         transaction.commit()
@@ -23,7 +20,7 @@ class TransactionTest(SingleMemberTestCase):
     def test_begin_and_rollback_transaction(self):
         transaction = self.client.new_transaction()
         transaction.begin()
-        self.assertIsNotNone(transaction.transaction_id)
+        self.assertIsNotNone(transaction.id)
         self.assertEqual(transaction.state, hazelcast.transaction._STATE_ACTIVE)
 
         transaction.rollback()
@@ -113,3 +110,16 @@ class TransactionTest(SingleMemberTestCase):
         time.sleep(0.1)
         with self.assertRaises(TransactionError):
             transaction.commit()
+
+    def test_context_manager(self):
+        with self.client.new_transaction() as t:
+            self.assertEqual(t.state, hazelcast.transaction._STATE_ACTIVE)
+
+        self.assertEqual(t.state, hazelcast.transaction._STATE_COMMITTED)
+
+    def test_context_manager_rollback(self):
+        with self.assertRaises(RuntimeError):
+            with self.client.new_transaction() as t:
+                raise RuntimeError("error")
+
+        self.assertEqual(t.state, hazelcast.transaction._STATE_ROLLED_BACK)
