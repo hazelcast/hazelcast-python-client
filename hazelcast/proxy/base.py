@@ -5,8 +5,6 @@ from hazelcast.util import enum
 
 
 class Proxy(object):
-    _get_partition_key = string_partition_strategy
-
     def __init__(self, client, service_name, name):
         self.service_name = service_name
         self.name = name
@@ -56,6 +54,9 @@ class Proxy(object):
                 return decoded_response['response']
             except AttributeError:
                 pass
+
+    def _get_partition_key(self):
+        return string_partition_strategy(self.name)
 
     def blocking(self):
         """
