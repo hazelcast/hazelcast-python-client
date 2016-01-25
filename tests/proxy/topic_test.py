@@ -8,7 +8,7 @@ class TopicTestCase(SingleMemberTestCase):
 
     def test_add_listener(self):
         collector = event_collector()
-        self.topic.add_listener(on_message=collector)
+        reg_id = self.topic.add_listener(on_message=collector)
         self.topic.publish('item-value')
 
         def assert_event():
@@ -21,7 +21,8 @@ class TopicTestCase(SingleMemberTestCase):
 
     def test_remove_listener(self):
         collector = event_collector()
-        self.topic.add_listener(on_message=collector)
+        reg_id = self.topic.add_listener(on_message=collector)
+        self.topic.remove_listener(reg_id)
         self.topic.publish('item-value')
 
         def assert_event():
