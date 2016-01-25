@@ -1,7 +1,9 @@
 from __future__ import with_statement
+
 import itertools
 import threading
 from collections import Sequence, Iterable
+
 from hazelcast.core import Address
 
 DEFAULT_ADDRESS = "127.0.0.1"
@@ -10,6 +12,11 @@ DEFAULT_PORT = 5701
 
 def check_not_none(val, message):
     if val is None:
+        raise AssertionError(message)
+
+
+def check_negative(val, message):
+    if val < 0:
         raise AssertionError(message)
 
 
