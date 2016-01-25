@@ -198,6 +198,12 @@ class ClientMapTest(SingleMemberTestCase):
         with self.assertRaises(HazelcastError):
             self.map.load_all()
 
+    def test_load_all_with_keys(self):
+        keys = self._fill_map().keys()
+        # TODO: needs map store configuration
+        with self.assertRaises(HazelcastError):
+            self.map.load_all(["key-1", "key-2"])
+
     def test_lock(self):
         self.map.put("key", "value")
 
