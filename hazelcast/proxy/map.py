@@ -65,13 +65,13 @@ class Map(Proxy):
                                          'response'])
 
     def add_index(self, attribute, ordered=False):
-        return self._encode_invoke(map_add_index_codec, name=self.name, attribute=attribute, ordered=ordered)
+        return self._encode_invoke(map_add_index_codec, attribute=attribute, ordered=ordered)
 
     def add_interceptor(self, interceptor):
         raise NotImplementedError
 
     def clear(self):
-        return self._encode_invoke(map_clear_codec, name=self.name)
+        return self._encode_invoke(map_clear_codec)
 
     def contains_key(self, key):
         """
@@ -81,42 +81,42 @@ class Map(Proxy):
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
         return self._encode_invoke_on_key(map_contains_key_codec, key_data,
-                                          name=self.name, key=key_data, thread_id=thread_id())
+                                          key=key_data, thread_id=thread_id())
 
     def contains_value(self, value):
         check_not_none(value, "value can't be None")
         value_data = self._to_data(value)
-        return self._encode_invoke(map_contains_value_codec, name=self.name, value=value_data)
+        return self._encode_invoke(map_contains_value_codec, value=value_data)
 
     def delete(self, key):
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(map_delete_codec, key_data, name=self.name, key=key_data,
+        return self._encode_invoke_on_key(map_delete_codec, key_data, key=key_data,
                                           thread_id=thread_id())
 
     def entry_set(self, predicate=None):
         if predicate:
             predicate_data = self._to_data(predicate)
-            return self._encode_invoke(map_entries_with_predicate_codec, name=self.name, predicate=predicate_data)
+            return self._encode_invoke(map_entries_with_predicate_codec, predicate=predicate_data)
         else:
-            return self._encode_invoke(map_entry_set_codec, name=self.name)
+            return self._encode_invoke(map_entry_set_codec)
 
     def evict(self, key):
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(map_evict_codec, key_data, name=self.name, key=key_data,
+        return self._encode_invoke_on_key(map_evict_codec, key_data, key=key_data,
                                           thread_id=thread_id())
 
     def evict_all(self):
-        return self._encode_invoke(map_evict_all_codec, name=self.name)
+        return self._encode_invoke(map_evict_all_codec)
 
     def flush(self):
-        return self._encode_invoke(map_flush_codec, name=self.name)
+        return self._encode_invoke(map_flush_codec)
 
     def force_unlock(self, key):
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(map_force_unlock_codec, key_data, name=self.name, key=key_data)
+        return self._encode_invoke_on_key(map_force_unlock_codec, key_data, key=key_data)
 
     def get(self, key):
         """
@@ -125,7 +125,7 @@ class Map(Proxy):
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(map_get_codec, key_data, name=self.name, key=key_data, thread_id=thread_id())
+        return self._encode_invoke_on_key(map_get_codec, key_data, key=key_data, thread_id=thread_id())
 
     def get_all(self, keys):
         check_not_none(keys, "keys can't be None")
@@ -146,7 +146,7 @@ class Map(Proxy):
 
         futures = []
         for partition_id, key_list in partition_to_keys.iteritems():
-            future = self._encode_invoke_on_partition(map_get_all_codec, partition_id, name=self.name, keys=key_list)
+            future = self._encode_invoke_on_partition(map_get_all_codec, partition_id, keys=key_list)
             futures.append(future)
 
         def merge(f):
@@ -157,37 +157,37 @@ class Map(Proxy):
     def get_entry_view(self, key):
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(map_get_entry_view_codec, key_data, name=self.name, key=key_data,
+        return self._encode_invoke_on_key(map_get_entry_view_codec, key_data, key=key_data,
                                           thread_id=thread_id())
 
     def is_empty(self):
-        return self._encode_invoke(map_is_empty_codec, name=self.name)
+        return self._encode_invoke(map_is_empty_codec)
 
     def is_locked(self, key):
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(map_is_locked_codec, key_data, name=self.name, key=key_data)
+        return self._encode_invoke_on_key(map_is_locked_codec, key_data, key=key_data)
 
     def key_set(self, predicate=None):
         if predicate:
             predicate_data = self._to_data(predicate)
-            return self._encode_invoke(map_key_set_with_predicate_codec, name=self.name, predicate=predicate_data)
+            return self._encode_invoke(map_key_set_with_predicate_codec, predicate=predicate_data)
         else:
-            return self._encode_invoke(map_key_set_codec, name=self.name)
+            return self._encode_invoke(map_key_set_codec)
 
     def load_all(self, keys=None, replace_existing_values=True):
         if keys:
             key_data_list = map(self._to_data, keys)
-            return self._encode_invoke(map_load_given_keys_codec, name=self.name, keys=key_data_list,
+            return self._encode_invoke(map_load_given_keys_codec, keys=key_data_list,
                                        replace_existing_values=replace_existing_values)
         else:
-            return self._encode_invoke(map_load_all_codec, name=self.name,
+            return self._encode_invoke(map_load_all_codec,
                                        replace_existing_values=replace_existing_values)
 
     def lock(self, key, ttl=-1):
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(map_lock_codec, key_data, name=self.name, key=key_data, thread_id=thread_id(),
+        return self._encode_invoke_on_key(map_lock_codec, key_data, key=key_data, thread_id=thread_id(),
                                           ttl=to_millis(ttl))
 
     def put(self, key, value, ttl=-1):
@@ -201,7 +201,7 @@ class Map(Proxy):
         check_not_none(value, "value can't be None")
         key_data = self._to_data(key)
         value_data = self._to_data(value)
-        return self._encode_invoke_on_key(map_put_codec, key_data, name=self.name, key=key_data, value=value_data,
+        return self._encode_invoke_on_key(map_put_codec, key_data, key=key_data, value=value_data,
                                           thread_id=thread_id(),
                                           ttl=to_millis(ttl))
 
@@ -225,7 +225,7 @@ class Map(Proxy):
 
         futures = []
         for partition_id, entry_list in partition_map.iteritems():
-            future = self._encode_invoke_on_partition(map_put_all_codec, partition_id, name=self.name,
+            future = self._encode_invoke_on_partition(map_put_all_codec, partition_id,
                                                       entries=dict(entry_list))
             futures.append(future)
 
@@ -238,7 +238,7 @@ class Map(Proxy):
         key_data = self._to_data(key)
         value_data = self._to_data(value)
 
-        return self._encode_invoke_on_key(map_put_if_absent_codec, key_data, name=self.name, key=key_data,
+        return self._encode_invoke_on_key(map_put_if_absent_codec, key_data, key=key_data,
                                           value=value_data, thread_id=thread_id(), ttl=to_millis(ttl))
 
     def put_transient(self, key, value, ttl=-1):
@@ -247,13 +247,13 @@ class Map(Proxy):
 
         key_data = self._to_data(key)
         value_data = self._to_data(value)
-        return self._encode_invoke_on_key(map_put_transient_codec, key_data, name=self.name, key=key_data,
+        return self._encode_invoke_on_key(map_put_transient_codec, key_data, key=key_data,
                                           value=value_data, thread_id=thread_id(), ttl=to_millis(ttl))
 
     def remove(self, key):
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(map_remove_codec, key_data, name=self.name, key=key_data,
+        return self._encode_invoke_on_key(map_remove_codec, key_data, key=key_data,
                                           thread_id=thread_id())
 
     def remove_if_same(self, key, value):
@@ -262,7 +262,7 @@ class Map(Proxy):
 
         key_data = self._to_data(key)
         value_data = self._to_data(value)
-        return self._encode_invoke_on_key(map_remove_if_same_codec, key_data, name=self.name, key=key_data,
+        return self._encode_invoke_on_key(map_remove_if_same_codec, key_data, key=key_data,
                                           value=value_data, thread_id=thread_id())
 
     def remove_entry_listener(self, registration_id):
@@ -276,7 +276,7 @@ class Map(Proxy):
         key_data = self._to_data(key)
         value_data = self._to_data(value)
 
-        return self._encode_invoke_on_key(map_replace_codec, key_data, name=self.name, key=key_data, value=value_data,
+        return self._encode_invoke_on_key(map_replace_codec, key_data, key=key_data, value=value_data,
                                           thread_id=thread_id())
 
     def replace_if_same(self, key, old_value, new_value):
@@ -288,7 +288,7 @@ class Map(Proxy):
         old_value_data = self._to_data(old_value)
         new_value_data = self._to_data(new_value)
 
-        return self._encode_invoke_on_key(map_replace_if_same_codec, key_data, name=self.name, key=key_data,
+        return self._encode_invoke_on_key(map_replace_if_same_codec, key_data, key=key_data,
                                           test_value=old_value_data,
                                           value=new_value_data, thread_id=thread_id())
 
@@ -303,19 +303,19 @@ class Map(Proxy):
         check_not_none(value, "value can't be None")
         key_data = self._to_data(key)
         value_data = self._to_data(value)
-        return self._encode_invoke_on_key(map_set_codec, key_data, name=self.name, key=key_data, value=value_data,
+        return self._encode_invoke_on_key(map_set_codec, key_data, key=key_data, value=value_data,
                                           thread_id=thread_id(),
                                           ttl=to_millis(ttl))
 
     def size(self):
-        return self._encode_invoke(map_size_codec, name=self.name)
+        return self._encode_invoke(map_size_codec)
 
     def try_lock(self, key, ttl=-1, timeout=0):
         check_not_none(key, "key can't be None")
 
         key_data = self._to_data(key)
 
-        return self._encode_invoke_on_key(map_try_lock_codec, key_data, name=self.name, key=key_data,
+        return self._encode_invoke_on_key(map_try_lock_codec, key_data, key=key_data,
                                           thread_id=thread_id(), lease=to_millis(ttl), timeout=to_millis(timeout))
 
     def try_put(self, key, value, timeout=0):
@@ -325,7 +325,7 @@ class Map(Proxy):
         key_data = self._to_data(key)
         value_data = self._to_data(value)
 
-        return self._encode_invoke_on_key(map_try_put_codec, key_data, name=self.name, key=key_data, value=value_data,
+        return self._encode_invoke_on_key(map_try_put_codec, key_data, key=key_data, value=value_data,
                                           thread_id=thread_id(), timeout=to_millis(timeout))
 
     def try_remove(self, key, timeout=0):
@@ -333,7 +333,7 @@ class Map(Proxy):
 
         key_data = self._to_data(key)
 
-        return self._encode_invoke_on_key(map_try_remove_codec, key_data, name=self.name, key=key_data,
+        return self._encode_invoke_on_key(map_try_remove_codec, key_data, key=key_data,
                                           thread_id=thread_id(), timeout=to_millis(timeout))
 
     def unlock(self, key):
@@ -341,15 +341,15 @@ class Map(Proxy):
 
         key_data = self._to_data(key)
 
-        return self._encode_invoke_on_key(map_unlock_codec, key_data, name=self.name, key=key_data,
+        return self._encode_invoke_on_key(map_unlock_codec, key_data, key=key_data,
                                           thread_id=thread_id())
 
     def values(self, predicate=None):
         if predicate:
             predicate_data = self._to_data(predicate)
-            return self._encode_invoke(map_values_with_predicate_codec, name=self.name, predicate=predicate_data)
+            return self._encode_invoke(map_values_with_predicate_codec, predicate=predicate_data)
         else:
-            return self._encode_invoke(map_values_codec, name=self.name)
+            return self._encode_invoke(map_values_codec)
 
     def __str__(self):
         return "Map(name=%s)" % self.name

@@ -30,12 +30,12 @@ class List(PartitionSpecificProxy):
     def add(self, item):
         check_not_none(item, "Value can't be None")
         element_data = self._to_data(item)
-        return self._encode_invoke_on_partition(list_add_codec, name=self.name, value=element_data)
+        return self._encode_invoke_on_partition(list_add_codec, value=element_data)
 
     def add_at(self, index, item):
         check_not_none(item, "Value can't be None")
         element_data = self._to_data(item)
-        return self._encode_invoke_on_partition(list_add_with_index_codec, name=self.name, index=index, value=element_data)
+        return self._encode_invoke_on_partition(list_add_with_index_codec, index=index, value=element_data)
 
     def add_all(self, items):
         check_not_none(items, "Value can't be None")
@@ -43,7 +43,7 @@ class List(PartitionSpecificProxy):
         for item in items:
             check_not_none(item, "Value can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke_on_partition(list_add_all_codec, name=self.name, value_list=data_items)
+        return self._encode_invoke_on_partition(list_add_all_codec, value_list=data_items)
 
     def add_all_at(self, index, items):
         check_not_none(items, "Value can't be None")
@@ -51,7 +51,7 @@ class List(PartitionSpecificProxy):
         for item in items:
             check_not_none(item, "Value can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke_on_partition(list_add_all_with_index_codec, name=self.name, index=index, value_list=data_items)
+        return self._encode_invoke_on_partition(list_add_all_with_index_codec, index=index, value_list=data_items)
 
     def add_listener(self, include_value=False, item_added=None, item_removed=None):
         request = list_add_listener_codec.encode_request(self.name, include_value, False)
@@ -74,12 +74,12 @@ class List(PartitionSpecificProxy):
                                      self._get_partition_key())
 
     def clear(self):
-        return self._encode_invoke_on_partition(list_clear_codec, name=self.name)
+        return self._encode_invoke_on_partition(list_clear_codec)
 
     def contains(self, item):
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)
-        return self._encode_invoke_on_partition(list_contains_codec, name=self.name, value=item_data)
+        return self._encode_invoke_on_partition(list_contains_codec, value=item_data)
 
     def contains_all(self, items):
         check_not_none(items, "Items can't be None")
@@ -87,40 +87,40 @@ class List(PartitionSpecificProxy):
         for item in items:
             check_not_none(item, "item can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke_on_partition(list_contains_all_codec, name=self.name, values=data_items)
+        return self._encode_invoke_on_partition(list_contains_all_codec, values=data_items)
 
     def get(self, index):
-        return self._encode_invoke_on_partition(list_get_codec, name=self.name, index=index)
+        return self._encode_invoke_on_partition(list_get_codec, index=index)
 
     def get_all(self):
-        return self._encode_invoke_on_partition(list_get_all_codec, name=self.name)
+        return self._encode_invoke_on_partition(list_get_all_codec)
 
     def iterator(self):
-        return self._encode_invoke_on_partition(list_iterator_codec, name=self.name)
+        return self._encode_invoke_on_partition(list_iterator_codec)
 
     def index_of(self, item):
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)
-        return self._encode_invoke_on_partition(list_index_of_codec, name=self.name, value=item_data)
+        return self._encode_invoke_on_partition(list_index_of_codec, value=item_data)
 
     def is_empty(self):
-        return self._encode_invoke_on_partition(list_is_empty_codec, name=self.name)
+        return self._encode_invoke_on_partition(list_is_empty_codec)
 
     def last_index_of(self, item):
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)
-        return self._encode_invoke_on_partition(list_last_index_of_codec, name=self.name, value=item_data)
+        return self._encode_invoke_on_partition(list_last_index_of_codec, value=item_data)
 
     def list_iterator(self, index=0):
-        return self._encode_invoke_on_partition(list_list_iterator_codec, name=self.name, index=index)
+        return self._encode_invoke_on_partition(list_list_iterator_codec, index=index)
 
     def remove(self, item):
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)
-        return self._encode_invoke_on_partition(list_remove_codec, name=self.name, value=item_data)
+        return self._encode_invoke_on_partition(list_remove_codec, value=item_data)
 
     def remove_at(self, index):
-        return self._encode_invoke_on_partition(list_remove_with_index_codec, name=self.name, index=index)
+        return self._encode_invoke_on_partition(list_remove_with_index_codec, index=index)
 
     def remove_all(self, items):
         check_not_none(items, "Value can't be None")
@@ -128,7 +128,7 @@ class List(PartitionSpecificProxy):
         for item in items:
             check_not_none(item, "Value can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke_on_partition(list_compare_and_remove_all_codec, name=self.name, values=data_items)
+        return self._encode_invoke_on_partition(list_compare_and_remove_all_codec, values=data_items)
 
     def remove_listener(self, registration_id):
         return self._stop_listening(registration_id, lambda i: list_remove_listener_codec.encode_request(self.name, i))
@@ -139,18 +139,18 @@ class List(PartitionSpecificProxy):
         for item in items:
             check_not_none(item, "Value can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke_on_partition(list_compare_and_retain_all_codec, name=self.name, values=data_items)
+        return self._encode_invoke_on_partition(list_compare_and_retain_all_codec, values=data_items)
 
     def size(self):
-        return self._encode_invoke_on_partition(list_size_codec, name=self.name)
+        return self._encode_invoke_on_partition(list_size_codec)
 
     def set_at(self, index, item):
         check_not_none(item, "Value can't be None")
         element_data = self._to_data(item)
-        return self._encode_invoke_on_partition(list_set_codec, name=self.name, index=index, value=element_data)
+        return self._encode_invoke_on_partition(list_set_codec, index=index, value=element_data)
 
     def sub_list(self, from_index, to_index):
-        return self._encode_invoke_on_partition(list_sub_codec, name=self.name, from_=from_index, to=to_index)
+        return self._encode_invoke_on_partition(list_sub_codec, from_=from_index, to=to_index)
 
     def __str__(self):
         return "List(name=%s)" % self.name

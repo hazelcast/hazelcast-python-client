@@ -26,16 +26,15 @@ class Proxy(object):
         return '%s(name="%s")' % (type(self), self.name)
 
     def _encode_invoke(self, codec, **kwargs):
-        request = codec.encode_request(**kwargs)
-        return self._client.invoker.invoke_on_random_target(request).continue_with(response_handler, codec,
-                                                                                   self._to_object)
+        request = codec.encode_request(name=self.name, **kwargs)
+        return self._client.invoker.invoke_on_random_target(request).continue_with(response_handler, codec, self._to_object)
 
     def _encode_invoke_on_key(self, codec, key_data, **kwargs):
         partition_id = self._client.partition_service.get_partition_id(key_data)
         return self._encode_invoke_on_partition(codec, partition_id, **kwargs)
 
     def _encode_invoke_on_partition(self, codec, partition_id, **kwargs):
-        request = codec.encode_request(**kwargs)
+        request = codec.encode_request(name=self.name, **kwargs)
         return self._client.invoker.invoke_on_partition(request, partition_id).continue_with(response_handler,
                                                                                              codec, self._to_object)
 
