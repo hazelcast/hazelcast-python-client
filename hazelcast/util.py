@@ -33,9 +33,18 @@ def to_millis(seconds):
 class AtomicInteger(object):
     def __init__(self, initial=0):
         self.count = itertools.count(start=initial)
+        self._current = initial
 
     def get_and_increment(self):
-        return self.count.next()
+        self._current = self.count.next()
+        return self._current
+
+    def set(self, value):
+        self._current = value
+        self.count = itertools.count(start=value)
+
+    def get(self):
+        return self._current
 
 
 def enum(**enums):

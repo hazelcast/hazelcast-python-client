@@ -16,7 +16,11 @@ class Proxy(object):
         self._stop_listening = client.listener.stop_listening
 
     def destroy(self):
+        self._on_destroy()
         return self._client.proxy.destroy_proxy(self.service_name, self.name)
+
+    def _on_destroy(self):
+        pass
 
     def __str__(self):
         return '%s(name="%s")' % (type(self), self.name)
@@ -51,8 +55,7 @@ class PartitionSpecificProxy(Proxy):
         self._partition_id = self._client.partition_service.get_partition_id(name)
 
     def _encode_invoke_on_partition(self, codec, **kwargs):
-        return super(PartitionSpecificProxy, self)._encode_invoke_on_partition(codec, self._partition_id,
-                                                                               **kwargs)
+        return super(PartitionSpecificProxy, self)._encode_invoke_on_partition(codec, self._partition_id, **kwargs)
 
 
 class TransactionalProxy(object):

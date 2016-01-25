@@ -7,7 +7,7 @@ from hazelcast.lifecycle import LifecycleService, LIFECYCLE_STATE_SHUTTING_DOWN,
 from hazelcast.partition import PartitionService
 from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE, LIST_SERVICE, SET_SERVICE, MULTI_MAP_SERVICE, \
     REPLICATED_MAP_SERVICE, ATOMIC_LONG_SERVICE, ATOMIC_REFERENCE_SERVICE, RINGBUFFER_SERIVCE, COUNT_DOWN_LATCH_SERVICE, \
-    TOPIC_SERVICE, RELIABLE_TOPIC_SERVICE, SEMAPHORE_SERVICE, LOCK_SERVICE, ID_GENERATOR_SERVICE
+    TOPIC_SERVICE, RELIABLE_TOPIC_SERVICE, SEMAPHORE_SERVICE, LOCK_SERVICE, ID_GENERATOR_SERVICE, ID_GENERATOR_ATOMIC_LONG_PREFIX
 from hazelcast.reactor import AsyncoreReactor
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.transaction import TWO_PHASE, TransactionManager
@@ -54,7 +54,8 @@ class HazelcastClient(object):
         return self.proxy.get_or_create(COUNT_DOWN_LATCH_SERVICE, name)
 
     def get_id_generator(self, name):
-        return self.proxy.get_or_create(ID_GENERATOR_SERVICE, name)
+        atomic_long = self.get_atomic_long(ID_GENERATOR_ATOMIC_LONG_PREFIX + name)
+        return self.proxy.get_or_create(ID_GENERATOR_SERVICE, name, atomic_long=atomic_long)
 
     def get_queue(self, name):
         return self.proxy.get_or_create(QUEUE_SERVICE, name)

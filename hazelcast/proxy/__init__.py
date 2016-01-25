@@ -31,6 +31,8 @@ SET_SERVICE = "hz:impl:setService"
 QUEUE_SERVICE = "hz:impl:queueService"
 TOPIC_SERVICE = "hz:impl:topicService"
 
+ID_GENERATOR_ATOMIC_LONG_PREFIX = "hz:atomic:idGenerator:"
+
 _proxy_init = {
     ATOMIC_LONG_SERVICE: AtomicLong,
     ATOMIC_REFERENCE_SERVICE: AtomicReference,
@@ -49,25 +51,26 @@ _proxy_init = {
     TOPIC_SERVICE: Topic
 }
 
+
 class ProxyManager(object):
     def __init__(self, client):
         self._client = client
         self._proxies = {}
 
-    def get_or_create(self, service_name, name):
+    def get_or_create(self, service_name, name, **kwargs):
         ns = (service_name, name)
         if ns in self._proxies:
             return self._proxies[ns]
 
-        proxy = self.create_proxy(service_name, name)
+        proxy = self.create_proxy(service_name, name, **kwargs)
         self._proxies[ns] = proxy
         return proxy
 
-    def create_proxy(self, service_name, name):
+    def create_proxy(self, service_name, name, **kwargs):
         message = client_create_proxy_codec.encode_request(name=name, service_name=service_name,
                                                            target=self._find_next_proxy_address())
         self._client.invoker.invoke_on_random_target(message).result()
-        return _proxy_init[service_name](client=self._client, service_name=service_name, name=name)
+        return _proxy_init[service_name](client=self._client, service_name=service_name, name=name, **kwargs)
 
     def destroy_proxy(self, service_name, name):
         ns = (service_name, name)
