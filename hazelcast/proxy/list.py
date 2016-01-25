@@ -51,8 +51,7 @@ class List(PartitionSpecificProxy):
         for item in items:
             check_not_none(item, "Value can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke_on_partition(list_add_all_with_index_codec, name=self.name, index=index,
-                                                value_list=data_items)
+        return self._encode_invoke_on_partition(list_add_all_with_index_codec, name=self.name, index=index, value_list=data_items)
 
     def add_listener(self, include_value=False, item_added=None, item_removed=None):
         request = list_add_listener_codec.encode_request(self.name, include_value, False)

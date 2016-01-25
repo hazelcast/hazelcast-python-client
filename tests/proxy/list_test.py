@@ -117,15 +117,12 @@ class ListTestCase(SingleMemberTestCase):
             self.list.add_all(None)
 
     def test_add_all_at(self):
+        self.list.add_at(0, "0")
         _all = ["1", "2", "3"]
-        add_resp = self.list.add_all(_all)
-        result0 = self.list.get(0)
-        result1 = self.list.get(1)
-        result2 = self.list.get(2)
+        add_resp = self.list.add_all_at(1, _all)
+        _all_resp = self.list.list_iterator(1)
         self.assertTrue(add_resp)
-        self.assertEqual(result0, "1")
-        self.assertEqual(result1, "2")
-        self.assertEqual(result2, "3")
+        self.assertItemsEqual(_all, _all_resp)
 
     def test_add_all_at_null_element(self):
         _all = ["1", "2", "3", None]
