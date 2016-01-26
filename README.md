@@ -20,7 +20,8 @@ Python client is implemented using the [Hazelcast Open Binary Client Protocol](h
 * IdGenerator
 * CountDownLatch
 * _RingBuffer -- IN PROGRESS_
-* _Reliable Topic -- IN PROGRESS_
+* _ReliableTopic -- IN PROGRESS_
+* _ReplicatedMap -- IN PROGRESS_
 * Transactional Map, MultiMap, Queue, List, Set
 * API configuration
 * Smart and Non-Smart Client operation
