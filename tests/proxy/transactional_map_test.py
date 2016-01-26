@@ -185,7 +185,7 @@ class TransactionalMapTest(SingleMemberTestCase):
             tx_map = tx.get_map(self.map.name)
             self.assertItemsEqual(tx_map.values(), ["value-1", "value-2", "value-3"])
 
-def test_str(self):
-    with self.client.new_transaction() as tx:
-        tx_map = tx.get_map(self.map.name)
-        self.assertTrue(str(tx_map).startswith("TransactionalMap"))
+    def test_str(self):
+        with self.client.new_transaction() as tx:
+            tx_map = tx.get_map(self.map.name)
+            self.assertTrue(str(tx_map).startswith("TransactionalMap"))
