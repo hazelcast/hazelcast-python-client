@@ -4,7 +4,32 @@ Python client implementation for [Hazelcast](https://github.com/hazelcast/hazelc
 
 Python client is implemented using the [Hazelcast Open Binary Client Protocol](http://hazelcast.org/docs/protocol/1.0-developer-preview/client-protocol.html) 
 
-**This client is a work in progress, and not yet functional.**
+**This client is a work in progress**
+
+##Features :
+* Map
+* MultiMap
+* List
+* Set
+* Queue
+* Topic
+* Lock
+* Semaphore
+* AtomicLong
+* AtomicReference
+* IdGenerator
+* CountDownLatch
+* _RingBuffer -- IN PROGRESS_
+* _Reliable Topic -- IN PROGRESS_
+* Transactional Map, MultiMap, Queue, List, Set
+* API configuration
+* Smart and Non-Smart Client operation
+* Event Listeners
+* Lifecycle Service
+* Hazelcast serialization for IdentifiedDataSerializable
+* _Hazelcast serialization for Portable -- IN PROGRESS_
+* _Hazelcast serialization, Custom Serializers -- IN PROGRESS_
+* _Hazelcast serialization, Global Serializers -- IN PROGRESS_
 
 ## Mail Group
 
