@@ -1,4 +1,3 @@
-from threading import Event
 from tests.base import SingleMemberTestCase
 from tests.util import random_string
 

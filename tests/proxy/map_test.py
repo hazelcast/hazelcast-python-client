@@ -6,7 +6,7 @@ from tests.base import SingleMemberTestCase
 from tests.util import random_string, event_collector
 
 
-class ClientMapTest(SingleMemberTestCase):
+class MapTest(SingleMemberTestCase):
     def setUp(self):
         self.map = self.client.get_map(random_string()).blocking()
 

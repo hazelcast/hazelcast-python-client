@@ -3,7 +3,7 @@ from tests.base import SingleMemberTestCase
 from tests.util import random_string, event_collector
 
 
-class ListTestCase(SingleMemberTestCase):
+class ListTest(SingleMemberTestCase):
     def setUp(self):
         self.list = self.client.get_list(random_string()).blocking()
 

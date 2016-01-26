@@ -1,9 +1,7 @@
 from __future__ import with_statement
-
 import itertools
 import threading
 from collections import Sequence, Iterable
-
 from hazelcast.core import Address
 
 DEFAULT_ADDRESS = "127.0.0.1"
@@ -15,8 +13,18 @@ def check_not_none(val, message):
         raise AssertionError(message)
 
 
-def check_negative(val, message):
+def check_true(val, message):
+    if not val:
+        raise AssertionError(message)
+
+
+def check_not_negative(val, message):
     if val < 0:
+        raise AssertionError(message)
+
+
+def check_not_empty(collection, message):
+    if not collection:
         raise AssertionError(message)
 
 

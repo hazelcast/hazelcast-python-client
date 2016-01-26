@@ -9,7 +9,7 @@ from tests.base import SingleMemberTestCase
 from tests.util import random_string, event_collector
 
 
-class ClientMultiMapTest(SingleMemberTestCase):
+class MultiMapTest(SingleMemberTestCase):
     def setUp(self):
         self.multi_map = self.client.get_multi_map(random_string()).blocking()
 

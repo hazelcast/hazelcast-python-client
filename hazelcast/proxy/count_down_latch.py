@@ -5,7 +5,7 @@ from hazelcast.protocol.codec import \
     count_down_latch_try_set_count_codec
 
 from hazelcast.proxy.base import PartitionSpecificProxy
-from hazelcast.util import check_negative, to_millis
+from hazelcast.util import check_not_negative, to_millis
 
 
 class CountDownLatch(PartitionSpecificProxy):
@@ -19,7 +19,7 @@ class CountDownLatch(PartitionSpecificProxy):
         return self._encode_invoke(count_down_latch_get_count_codec)
 
     def try_set_count(self, count):
-        check_negative(count, "count can't be negative")
+        check_not_negative(count, "count can't be negative")
         return self._encode_invoke(count_down_latch_try_set_count_codec, count=count)
 
     def __str__(self):

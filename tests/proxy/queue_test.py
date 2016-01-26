@@ -6,7 +6,7 @@ from tests.base import SingleMemberTestCase
 from tests.util import random_string, event_collector
 
 
-class QueueTestCase(SingleMemberTestCase):
+class QueueTest(SingleMemberTestCase):
     @classmethod
     def configure_cluster(cls):
         path = os.path.abspath(__file__)

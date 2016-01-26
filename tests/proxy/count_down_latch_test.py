@@ -5,7 +5,7 @@ from tests.base import SingleMemberTestCase
 from tests.util import random_string
 
 
-class CountDownLatchTestCase(SingleMemberTestCase):
+class CountDownLatchTest(SingleMemberTestCase):
     def setUp(self):
         self.latch = self.client.get_count_down_latch(random_string()).blocking()
 

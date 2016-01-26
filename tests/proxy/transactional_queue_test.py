@@ -9,9 +9,7 @@ from tests.util import random_string
 class TransactionalQueueTest(SingleMemberTestCase):
     @classmethod
     def configure_cluster(cls):
-        path = os.path.abspath(__file__)
-        dir_path = os.path.dirname(path)
-        return open(os.path.join(dir_path, "hazelcast_test.xml")).read()
+        return open(os.path.join(os.path.dirname(__file__), "hazelcast_test.xml")).read()
 
     def setUp(self):
         self.queue = self.client.get_queue("ClientQueueTest_%s" % random_string()).blocking()

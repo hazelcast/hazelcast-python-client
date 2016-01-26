@@ -48,12 +48,8 @@
         -->
         <max-size>6</max-size>
     </queue>
-    <ringbuffer name="ClientRingbufferTest*">
-        <capacity>10</capacity>
-    </ringbuffer>
-    <ringbuffer name="ClientRingbufferTestWithTTL*">
+    <ringbuffer name="ringbuffer-*">
         <capacity>10</capacity>
         <time-to-live-seconds>180</time-to-live-seconds>
     </ringbuffer>
-
 </hazelcast>

@@ -99,6 +99,7 @@ class Queue(PartitionSpecificProxy):
     def offer(self, item, timeout=0):
         check_not_none(item, "Value can't be None")
         element_data = self._to_data(item)
+        return self._encode_invoke(queue_offer_codec, value=element_data, timeout_millis=to_millis(timeout))
 
     def peek(self):
         return self._encode_invoke(queue_peek_codec)

@@ -2,7 +2,7 @@ from tests.base import SingleMemberTestCase
 from tests.util import random_string
 
 
-class SemaphoreTestCase(SingleMemberTestCase):
+class SemaphoreTest(SingleMemberTestCase):
     def setUp(self):
         self.semaphore = self.client.get_semaphore(random_string()).blocking()
 

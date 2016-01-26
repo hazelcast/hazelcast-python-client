@@ -4,7 +4,7 @@ from tests.base import SingleMemberTestCase
 from tests.util import random_string
 
 
-class ClientLockTest(SingleMemberTestCase):
+class LockTest(SingleMemberTestCase):
     def setUp(self):
         self.lock = self.client.get_lock(random_string()).blocking()
 

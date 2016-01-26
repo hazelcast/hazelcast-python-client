@@ -1,8 +1,21 @@
 import logging
-
 from hazelcast.future import make_blocking
 from hazelcast.partition import string_partition_strategy
 from hazelcast.util import enum, thread_id
+
+
+def default_response_handler(future, codec, to_object):
+    response = future.result()
+    if response:
+        try:
+            codec.decode_response
+        except AttributeError:
+            return
+        decoded_response = codec.decode_response(response, to_object)
+        try:
+            return decoded_response['response']
+        except AttributeError:
+            pass
 
 
 class Proxy(object):
@@ -27,15 +40,16 @@ class Proxy(object):
     def __str__(self):
         return '%s(name="%s")' % (type(self), self.name)
 
-    def _encode_invoke(self, codec, **kwargs):
+    def _encode_invoke(self, codec, response_handler=default_response_handler, **kwargs):
         request = codec.encode_request(name=self.name, **kwargs)
-        return self._client.invoker.invoke_on_random_target(request).continue_with(response_handler, codec, self._to_object)
+        return self._client.invoker.invoke_on_random_target(request).continue_with(response_handler, codec,
+                                                                                   self._to_object)
 
     def _encode_invoke_on_key(self, codec, key_data, **kwargs):
         partition_id = self._client.partition_service.get_partition_id(key_data)
         return self._encode_invoke_on_partition(codec, partition_id, **kwargs)
 
-    def _encode_invoke_on_partition(self, codec, partition_id, **kwargs):
+    def _encode_invoke_on_partition(self, codec, partition_id, response_handler=default_response_handler, **kwargs):
         request = codec.encode_request(name=self.name, **kwargs)
         return self._client.invoker.invoke_on_partition(request, partition_id).continue_with(response_handler,
                                                                                              codec, self._to_object)
@@ -52,8 +66,10 @@ class PartitionSpecificProxy(Proxy):
         super(PartitionSpecificProxy, self).__init__(client, service_name, name)
         self._partition_id = self._client.partition_service.get_partition_id(self.partition_key)
 
-    def _encode_invoke(self, codec, **kwargs):
-        return super(PartitionSpecificProxy, self)._encode_invoke_on_partition(codec, self._partition_id, **kwargs)
+    def _encode_invoke(self, codec, response_handler=default_response_handler, **kwargs):
+        return super(PartitionSpecificProxy, self)._encode_invoke_on_partition(codec, self._partition_id,
+                                                                               response_handler=response_handler,
+                                                                               **kwargs)
 
 
 class TransactionalProxy(object):
@@ -63,24 +79,10 @@ class TransactionalProxy(object):
         self._to_object = transaction.client.serializer.to_object
         self._to_data = transaction.client.serializer.to_data
 
-    def _encode_invoke(self, codec, **kwargs):
+    def _encode_invoke(self, codec, response_handler=default_response_handler, **kwargs):
         request = codec.encode_request(name=self.name, txn_id=self.transaction.id, thread_id=thread_id(), **kwargs)
         return self.transaction.client.invoker.invoke_on_connection(request, self.transaction.connection).continue_with(
             response_handler, codec, self._to_object)
-
-
-def response_handler(future, codec, to_object):
-    response = future.result()
-    if response:
-        try:
-            codec.decode_response
-        except AttributeError:
-            return
-        decoded_response = codec.decode_response(response, to_object)
-        try:
-            return decoded_response['response']
-        except AttributeError:
-            pass
 
 
 ItemEventType = enum(added=1, removed=2)

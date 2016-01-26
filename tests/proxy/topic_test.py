@@ -2,7 +2,7 @@ from tests.base import SingleMemberTestCase
 from tests.util import random_string, event_collector
 
 
-class TopicTestCase(SingleMemberTestCase):
+class TopicTest(SingleMemberTestCase):
     def setUp(self):
         self.topic = self.client.get_topic(random_string()).blocking()
 
