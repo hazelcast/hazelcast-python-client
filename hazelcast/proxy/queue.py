@@ -64,7 +64,7 @@ class Queue(PartitionSpecificProxy):
         return self._start_listening(request,
                                      lambda m: queue_add_listener_codec.handle(m, handle_event_item),
                                      lambda r: queue_add_listener_codec.decode_response(r)['response'],
-                                     self._get_partition_key())
+                                     self.partition_key)
 
     def clear(self):
         return self._encode_invoke_on_partition(queue_clear_codec)

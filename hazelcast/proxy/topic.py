@@ -18,7 +18,7 @@ class Topic(PartitionSpecificProxy):
         return self._start_listening(request,
                                      lambda m: topic_add_message_listener_codec.handle(m, handle),
                                      lambda r: topic_add_message_listener_codec.decode_response(r)['response'],
-                                     self._get_partition_key())
+                                     self.partition_key)
 
     def publish(self, message):
         message_data = self._to_data(message)

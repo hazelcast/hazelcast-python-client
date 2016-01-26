@@ -71,7 +71,7 @@ class List(PartitionSpecificProxy):
         return self._start_listening(request,
                                      lambda m: list_add_listener_codec.handle(m, handle_event_item),
                                      lambda r: list_add_listener_codec.decode_response(r)['response'],
-                                     self._get_partition_key())
+                                     self.partition_key)
 
     def clear(self):
         return self._encode_invoke_on_partition(list_clear_codec)

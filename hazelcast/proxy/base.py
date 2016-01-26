@@ -1,4 +1,5 @@
 import logging
+
 from hazelcast.future import make_blocking
 from hazelcast.partition import string_partition_strategy
 from hazelcast.util import enum, thread_id
@@ -8,6 +9,7 @@ class Proxy(object):
     def __init__(self, client, service_name, name):
         self.service_name = service_name
         self.name = name
+        self.partition_key = string_partition_strategy(self.name)
         self._client = client
         self.logger = logging.getLogger("%s(%s)" % (type(self).__name__, name))
         self._to_object = client.serializer.to_object
@@ -38,9 +40,6 @@ class Proxy(object):
         return self._client.invoker.invoke_on_partition(request, partition_id).continue_with(response_handler,
                                                                                              codec, self._to_object)
 
-    def _get_partition_key(self):
-        return string_partition_strategy(self.name)
-
     def blocking(self):
         """
         :return: Return a version of this proxy with only blocking method calls
@@ -51,7 +50,7 @@ class Proxy(object):
 class PartitionSpecificProxy(Proxy):
     def __init__(self, client, service_name, name):
         super(PartitionSpecificProxy, self).__init__(client, service_name, name)
-        self._partition_id = self._client.partition_service.get_partition_id(name)
+        self._partition_id = self._client.partition_service.get_partition_id(self.partition_key)
 
     def _encode_invoke_on_partition(self, codec, **kwargs):
         return super(PartitionSpecificProxy, self)._encode_invoke_on_partition(codec, self._partition_id, **kwargs)
@@ -63,10 +62,6 @@ class TransactionalProxy(object):
         self.transaction = transaction
         self._to_object = transaction.client.serializer.to_object
         self._to_data = transaction.client.serializer.to_data
-
-    def destroy(self):
-        #TODO: implement destroy
-        raise NotImplementedError
 
     def _encode_invoke(self, codec, **kwargs):
         request = codec.encode_request(name=self.name, txn_id=self.transaction.id, thread_id=thread_id(), **kwargs)
