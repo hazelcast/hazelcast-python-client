@@ -1,10 +1,9 @@
 from tests.base import SingleMemberTestCase
-from tests.util import random_string, configure_logging
+from tests.util import random_string
 
 
 class TransactionalListTest(SingleMemberTestCase):
     def setUp(self):
-        configure_logging()
         self.list = self.client.get_list(random_string()).blocking()
 
     def test_add(self):

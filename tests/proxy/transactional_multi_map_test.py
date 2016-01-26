@@ -1,10 +1,9 @@
 from tests.base import SingleMemberTestCase
-from tests.util import random_string, configure_logging
+from tests.util import random_string
 
 
 class TransactionalMultiMapTest(SingleMemberTestCase):
     def setUp(self):
-        configure_logging()
         self.multi_map = self.client.get_multi_map(random_string()).blocking()
 
     def test_put(self):
