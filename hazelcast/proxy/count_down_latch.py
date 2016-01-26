@@ -5,13 +5,12 @@ from hazelcast.protocol.codec import \
     count_down_latch_try_set_count_codec
 
 from hazelcast.proxy.base import PartitionSpecificProxy
-from hazelcast.util import check_negative
+from hazelcast.util import check_negative, to_millis
 
 
 class CountDownLatch(PartitionSpecificProxy):
     def await(self, timeout):
-        t_msec = timeout * 1000
-        return self._encode_invoke_on_partition(count_down_latch_await_codec, timeout=t_msec)
+        return self._encode_invoke_on_partition(count_down_latch_await_codec, timeout=to_millis(timeout))
 
     def count_down(self):
         return self._encode_invoke_on_partition(count_down_latch_count_down_codec)

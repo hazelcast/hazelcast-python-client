@@ -19,7 +19,7 @@ from hazelcast.protocol.codec import \
     queue_size_codec, \
     queue_take_codec
 from hazelcast.proxy.base import PartitionSpecificProxy, ItemEvent, ItemEventType
-from hazelcast.util import check_not_none
+from hazelcast.util import check_not_none, to_millis
 
 
 class Empty(Exception):
@@ -99,15 +99,13 @@ class Queue(PartitionSpecificProxy):
     def offer(self, item, timeout=0):
         check_not_none(item, "Value can't be None")
         element_data = self._to_data(item)
-        _timeout = timeout * 1000
-        return self._encode_invoke_on_partition(queue_offer_codec, value=element_data, timeout_millis=_timeout)
+        return self._encode_invoke_on_partition(queue_offer_codec, value=element_data, timeout_millis=to_millis(timeout))
 
     def peek(self):
         return self._encode_invoke_on_partition(queue_peek_codec)
 
     def poll(self, timeout=0):
-        _timeout = timeout * 1000
-        return self._encode_invoke_on_partition(queue_poll_codec, timeout_millis=_timeout)
+        return self._encode_invoke_on_partition(queue_poll_codec, timeout_millis=to_millis(timeout))
 
     def put(self, item):
         check_not_none(item, "Value can't be None")
