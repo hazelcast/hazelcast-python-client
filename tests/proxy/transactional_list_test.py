@@ -29,3 +29,7 @@ class TransactionalListTest(SingleMemberTestCase):
             tx_list.add("item")
             self.assertEqual(2, tx_list.size())
 
+    def test_str(self):
+        with self.client.new_transaction() as tx:
+            tx_list = tx.get_list(self.list.name)
+            self.assertTrue(str(tx_list).startswith("TransactionalList"))
