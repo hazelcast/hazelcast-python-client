@@ -21,7 +21,7 @@ class Set(PartitionSpecificProxy):
     def add(self, item):
         check_not_none(item, "Value can't be None")
         element_data = self._to_data(item)
-        return self._encode_invoke_on_partition(set_add_codec, value=element_data)
+        return self._encode_invoke(set_add_codec, value=element_data)
 
     def add_all(self, items):
         check_not_none(items, "Value can't be None")
@@ -29,7 +29,7 @@ class Set(PartitionSpecificProxy):
         for item in items:
             check_not_none(item, "Value can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke_on_partition(set_add_all_codec, value_list=data_items)
+        return self._encode_invoke(set_add_all_codec, value_list=data_items)
 
     def add_listener(self, include_value=False, item_added=None, item_removed=None):
         request = set_add_listener_codec.encode_request(self.name, include_value, False)
@@ -52,12 +52,12 @@ class Set(PartitionSpecificProxy):
                                      self.partition_key)
 
     def clear(self):
-        return self._encode_invoke_on_partition(set_clear_codec)
+        return self._encode_invoke(set_clear_codec)
 
     def contains(self, item):
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)
-        return self._encode_invoke_on_partition(set_contains_codec, value=item_data)
+        return self._encode_invoke(set_contains_codec, value=item_data)
 
     def contains_all(self, items):
         check_not_none(items, "Value can't be None")
@@ -65,18 +65,18 @@ class Set(PartitionSpecificProxy):
         for item in items:
             check_not_none(item, "Value can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke_on_partition(set_contains_all_codec, items=data_items)
+        return self._encode_invoke(set_contains_all_codec, items=data_items)
 
     def get_all(self):
-        return self._encode_invoke_on_partition(set_get_all_codec)
+        return self._encode_invoke(set_get_all_codec)
 
     def is_empty(self):
-        return self._encode_invoke_on_partition(set_is_empty_codec)
+        return self._encode_invoke(set_is_empty_codec)
 
     def remove(self, item):
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)
-        return self._encode_invoke_on_partition(set_remove_codec, value=item_data)
+        return self._encode_invoke(set_remove_codec, value=item_data)
 
     def remove_all(self, items):
         check_not_none(items, "Value can't be None")
@@ -84,7 +84,7 @@ class Set(PartitionSpecificProxy):
         for item in items:
             check_not_none(item, "Value can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke_on_partition(set_compare_and_remove_all_codec, values=data_items)
+        return self._encode_invoke(set_compare_and_remove_all_codec, values=data_items)
 
     def remove_listener(self, registration_id):
         return self._stop_listening(registration_id, lambda i: set_remove_listener_codec.encode_request(self.name, i))
@@ -95,10 +95,10 @@ class Set(PartitionSpecificProxy):
         for item in items:
             check_not_none(item, "Value can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke_on_partition(set_compare_and_retain_all_codec, values=data_items)
+        return self._encode_invoke(set_compare_and_retain_all_codec, values=data_items)
 
     def size(self):
-        return self._encode_invoke_on_partition(set_size_codec)
+        return self._encode_invoke(set_size_codec)
 
     def __str__(self):
         return "Set(name=%s)" % self.name

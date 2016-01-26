@@ -22,7 +22,7 @@ class Topic(PartitionSpecificProxy):
 
     def publish(self, message):
         message_data = self._to_data(message)
-        self._encode_invoke_on_partition(topic_publish_codec, message=message_data)
+        self._encode_invoke(topic_publish_codec, message=message_data)
 
     def remove_listener(self, registration_id):
         return self._stop_listening(registration_id, lambda i: topic_remove_message_listener_codec.encode_request(self.name, i))

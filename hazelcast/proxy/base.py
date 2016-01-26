@@ -52,7 +52,7 @@ class PartitionSpecificProxy(Proxy):
         super(PartitionSpecificProxy, self).__init__(client, service_name, name)
         self._partition_id = self._client.partition_service.get_partition_id(self.partition_key)
 
-    def _encode_invoke_on_partition(self, codec, **kwargs):
+    def _encode_invoke(self, codec, **kwargs):
         return super(PartitionSpecificProxy, self)._encode_invoke_on_partition(codec, self._partition_id, **kwargs)
 
 
