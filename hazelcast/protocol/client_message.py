@@ -222,3 +222,7 @@ class ClientMessage(object):
                                          self.is_retryable(),
                                          self.is_flag_set(LISTENER_FLAG),
                                          self.get_data_offset())
+
+    def append_tuple(self, entry_tuple):
+        self.append_data(entry_tuple[0]).append_data(entry_tuple[1])
+        return self

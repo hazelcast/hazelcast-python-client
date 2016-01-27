@@ -27,9 +27,8 @@ def encode_request(name, entries):
     client_message.set_retryable(RETRYABLE)
     client_message.append_str(name)
     client_message.append_int(len(entries))
-    for key, value in entries.iteritems():
-        client_message.append_data(key)
-        client_message.append_data(value)
+    for entries_item in entries.iteritems():
+        client_message.append_tuple(entries_item)
     client_message.update_frame_length()
     return client_message
 
