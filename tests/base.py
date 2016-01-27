@@ -67,6 +67,16 @@ class HazelcastTestCase(unittest.TestCase):
         is_set = event.wait(timeout)
         self.assertTrue(is_set, "Event was not set within %d seconds" % timeout)
 
+    def assertEntryEvent(self, event, event_type, key=None, value=None, old_value=None, merging_value=None,
+                         number_of_affected_entries=1):
+
+        self.assertEqual(event.key, key)
+        self.assertEquals(event.event_type, event_type)
+        self.assertEqual(event.value, value)
+        self.assertEqual(event.merging_value, merging_value)
+        self.assertEqual(event.old_value, old_value)
+        self.assertEqual(event.number_of_affected_entries, number_of_affected_entries)
+
     def start_new_thread(self, target):
         t = Thread(target=target)
         t.start()

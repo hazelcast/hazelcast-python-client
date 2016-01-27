@@ -1,5 +1,4 @@
 import time
-
 from hazelcast.exception import HazelcastError
 from hazelcast.proxy.map import EntryEventType
 from tests.base import SingleMemberTestCase
@@ -21,7 +20,7 @@ class MapTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self._assert_entry_event(event, key='key', event_type=EntryEventType.added, value='value')
+            self.assertEntryEvent(event, key='key', event_type=EntryEventType.added, value='value')
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -34,7 +33,7 @@ class MapTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self._assert_entry_event(event, key='key', event_type=EntryEventType.removed, old_value='value')
+            self.assertEntryEvent(event, key='key', event_type=EntryEventType.removed, old_value='value')
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -47,7 +46,7 @@ class MapTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self._assert_entry_event(event, key='key', event_type=EntryEventType.updated, old_value='value',
+            self.assertEntryEvent(event, key='key', event_type=EntryEventType.updated, old_value='value',
                                      value='new_value')
 
         self.assertTrueEventually(assert_event, 5)
@@ -60,7 +59,7 @@ class MapTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self._assert_entry_event(event, key='key', event_type=EntryEventType.expired, old_value='value')
+            self.assertEntryEvent(event, key='key', event_type=EntryEventType.expired, old_value='value')
 
         self.assertTrueEventually(assert_event, 10)
 
@@ -73,7 +72,7 @@ class MapTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self._assert_entry_event(event, key='key1', event_type=EntryEventType.added, value='value1')
+            self.assertEntryEvent(event, key='key1', event_type=EntryEventType.added, value='value1')
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -365,11 +364,4 @@ class MapTest(SingleMemberTestCase):
             self.map.put(k, v)
         return map
 
-    def _assert_entry_event(self, event, key, event_type, value=None, old_value=None, merging_value=None,
-                            number_of_affected_entries=1):
-        self.assertEqual(event.key, key)
-        self.assertEquals(event.event_type, event_type)
-        self.assertEqual(event.value, value)
-        self.assertEqual(event.merging_value, merging_value)
-        self.assertEqual(event.old_value, old_value)
-        self.assertEqual(event.number_of_affected_entries, number_of_affected_entries)
+

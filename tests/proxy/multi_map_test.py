@@ -24,7 +24,7 @@ class MultiMapTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self._assert_entry_event(event, key='key', event_type=EntryEventType.added, value='value')
+            self.assertEntryEvent(event, key='key', event_type=EntryEventType.added, value='value')
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -37,7 +37,7 @@ class MultiMapTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self._assert_entry_event(event, key='key', event_type=EntryEventType.removed, old_value='value')
+            self.assertEntryEvent(event, key='key', event_type=EntryEventType.removed, old_value='value')
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -45,13 +45,12 @@ class MultiMapTest(SingleMemberTestCase):
         collector = event_collector()
         self.multi_map.add_entry_listener(include_value=True, clear_all=collector)
         self.multi_map.put('key', 'value')
-        self.multi_map.remove('key', 'value')
         self.multi_map.clear()
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self._assert_entry_event(event, event_type=EntryEventType.clear_all, number_of_affected_entries=0)
+            self.assertEntryEvent(event, event_type=EntryEventType.clear_all, number_of_affected_entries=1)
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -65,7 +64,7 @@ class MultiMapTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self._assert_entry_event(event, key='key1', event_type=EntryEventType.added, value='value1')
+            self.assertEntryEvent(event, key='key1', event_type=EntryEventType.added, value='value1')
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -216,12 +215,3 @@ class MultiMapTest(SingleMemberTestCase):
                 self.multi_map.put(k, v)
 
         return map
-
-    def _assert_entry_event(self, event, event_type, key=None,  value=None, old_value=None, merging_value=None,
-                            number_of_affected_entries=1):
-        self.assertEqual(event.key, key)
-        self.assertEquals(event.event_type, event_type)
-        self.assertEqual(event.value, value)
-        self.assertEqual(event.merging_value, merging_value)
-        self.assertEqual(event.old_value, old_value)
-        self.assertEqual(event.number_of_affected_entries, number_of_affected_entries)
