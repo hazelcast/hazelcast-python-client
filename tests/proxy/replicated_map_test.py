@@ -1,6 +1,7 @@
 import time
 
 from hazelcast.proxy.base import EntryEventType
+from hazelcast.serialization.predicate import SqlPredicate
 from tests.base import SingleMemberTestCase
 from tests.util import random_string, event_collector
 
@@ -73,6 +74,34 @@ class ReplicatedMapTest(SingleMemberTestCase):
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
             self.assertEntryEvent(event, key='key1', event_type=EntryEventType.added, value='value1')
+
+        self.assertTrueEventually(assert_event, 5)
+
+    def test_add_entry_listener_with_predicate(self):
+        collector = event_collector()
+        self.replicated_map.add_entry_listener(predicate=SqlPredicate("this == value1"), added=collector)
+        self.replicated_map.put('key2', 'value2')
+        self.replicated_map.put('key1', 'value1')
+
+        def assert_event():
+            self.assertEqual(len(collector.events), 1)
+            event = collector.events[0]
+            self.assertEntryEvent(event, key='key1', event_type=EntryEventType.added, value='value1')
+
+        self.assertTrueEventually(assert_event, 5)
+
+    def test_add_entry_listener_with_key_and_predicate(self):
+        collector = event_collector()
+        self.replicated_map.add_entry_listener(key='key1', predicate=SqlPredicate("this == value3"), added=collector)
+        self.replicated_map.put('key2', 'value2')
+        self.replicated_map.put('key1', 'value1')
+        self.replicated_map.remove('key1')
+        self.replicated_map.put('key1', 'value3')
+
+        def assert_event():
+            self.assertEqual(len(collector.events), 1)
+            event = collector.events[0]
+            self.assertEntryEvent(event, key='key1', event_type=EntryEventType.added, value='value3')
 
         self.assertTrueEventually(assert_event, 5)
 

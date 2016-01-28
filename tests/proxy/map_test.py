@@ -2,6 +2,7 @@ import time
 from hazelcast.exception import HazelcastError, HazelcastSerializationError
 from hazelcast.proxy.map import EntryEventType
 from hazelcast.serialization.api import IdentifiedDataSerializable
+from hazelcast.serialization.predicate import SqlPredicate
 from tests.base import SingleMemberTestCase
 from tests.util import random_string, event_collector
 
@@ -81,7 +82,7 @@ class MapTest(SingleMemberTestCase):
 
     def test_add_entry_listener_with_key(self):
         collector = event_collector()
-        id = self.map.add_entry_listener(key='key1', include_value=True, added=collector)
+        self.map.add_entry_listener(key='key1', include_value=True, added=collector)
         self.map.put('key2', 'value2')
         self.map.put('key1', 'value1')
 
@@ -89,6 +90,34 @@ class MapTest(SingleMemberTestCase):
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
             self.assertEntryEvent(event, key='key1', event_type=EntryEventType.added, value='value1')
+
+        self.assertTrueEventually(assert_event, 5)
+
+    def test_add_entry_listener_with_predicate(self):
+        collector = event_collector()
+        self.map.add_entry_listener(predicate=SqlPredicate("this == value1"), include_value=True, added=collector)
+        self.map.put('key2', 'value2')
+        self.map.put('key1', 'value1')
+
+        def assert_event():
+            self.assertEqual(len(collector.events), 1)
+            event = collector.events[0]
+            self.assertEntryEvent(event, key='key1', event_type=EntryEventType.added, value='value1')
+
+        self.assertTrueEventually(assert_event, 5)
+
+    def test_add_entry_listener_with_key_and_predicate(self):
+        collector = event_collector()
+        self.map.add_entry_listener(key='key1', predicate=SqlPredicate("this == value3"), include_value=True, added=collector)
+        self.map.put('key2', 'value2')
+        self.map.put('key1', 'value1')
+        self.map.remove('key1')
+        self.map.put('key1', 'value3')
+
+        def assert_event():
+            self.assertEqual(len(collector.events), 1)
+            event = collector.events[0]
+            self.assertEntryEvent(event, key='key1', event_type=EntryEventType.added, value='value3')
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -127,6 +156,11 @@ class MapTest(SingleMemberTestCase):
 
         self.assertItemsEqual(self.map.entry_set(), list(entries.iteritems()))
 
+    def test_entry_set_with_predicate(self):
+        self._fill_map()
+
+        self.assertEqual(self.map.entry_set(SqlPredicate("this == 'value-1'")), [("key-1", "value-1")])
+
     def test_evict(self):
         self._fill_map()
 
@@ -148,8 +182,9 @@ class MapTest(SingleMemberTestCase):
             self.map.execute_on_entries(EntryProcessor())
 
     def test_execute_on_entries_with_predicate(self):
-        # TODO: predicates
-        pass
+        # TODO: EntryProcessor must be defined on the server
+        with self.assertRaises(HazelcastSerializationError):
+            self.map.execute_on_entries(EntryProcessor(), predicate=SqlPredicate())
 
     def test_execute_on_key(self):
         # TODO: EntryProcessor must be defined on the server
@@ -227,6 +262,11 @@ class MapTest(SingleMemberTestCase):
         keys = self._fill_map().keys()
 
         self.assertItemsEqual(self.map.key_set(), keys)
+
+    def test_key_set_with_predicate(self):
+        self._fill_map()
+
+        self.assertEqual(self.map.key_set(SqlPredicate("this == 'value-1'")), ["key-1"])
 
     def test_load_all(self):
         keys = self._fill_map().keys()
@@ -391,6 +431,11 @@ class MapTest(SingleMemberTestCase):
         values = self._fill_map().values()
 
         self.assertItemsEqual(self.map.values(), values)
+
+    def test_values_with_predicate(self):
+        self._fill_map()
+
+        self.assertEqual(self.map.values(SqlPredicate("this == 'value-1'")), ["value-1"])
 
     def test_str(self):
         self.assertTrue(str(self.map).startswith("Map"))

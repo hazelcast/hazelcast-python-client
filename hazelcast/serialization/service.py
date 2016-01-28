@@ -1,5 +1,6 @@
 import logging
 
+from hazelcast.serialization import predicate
 from hazelcast.serialization.base import BaseSerializationService
 from hazelcast.serialization.serializer import *
 
@@ -18,10 +19,17 @@ class SerializationServiceV1(BaseSerializationService):
     def __init__(self, serialization_config=None, version=1, global_partition_strategy=default_partition_strategy,
                  output_buffer_size=DEFAULT_OUT_BUFFER_SIZE,
                  is_big_endian=True):
-        super(SerializationServiceV1, self).__init__(version, global_partition_strategy, output_buffer_size, is_big_endian)
+        super(SerializationServiceV1, self).__init__(version, global_partition_strategy, output_buffer_size,
+                                                     is_big_endian)
         self.serialization_config = serialization_config
 
-        self._registry._data_serializer = IdentifiedDataSerializer(self.serialization_config.data_serializable_factories)
+        # merge configured factories with built in ones
+        factories = {}
+        factories.update(predicate.FACTORY)
+        factories.update(self.serialization_config.data_serializable_factories)
+
+        self._registry._data_serializer = IdentifiedDataSerializer(
+            factories)
         self._register_constant_serializers()
 
     def _register_constant_serializers(self):
