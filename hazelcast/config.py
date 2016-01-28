@@ -6,6 +6,7 @@ DEFAULT_GROUP_PASSWORD = "dev-pass"
 PROPERTY_HEARTBEAT_INTERVAL = "hazelcast.client.heartbeat.interval"
 PROPERTY_HEARTBEAT_TIMEOUT = "hazelcast.client.heartbeat.timeout"
 
+
 class ClientConfig(object):
     def __init__(self):
         self.properties = {}
@@ -14,13 +15,9 @@ class ClientConfig(object):
         self.load_balancer = None
         self.membership_listeners = []
         self.lifecycle_listeners = []
-        self.executor_pool_size = -1
-        self.instance_name = None
-        self.near_cache_configs = {}
-        self.reliable_topic_configs = {}
-        self.query_cache_configs = {}
+        # self.near_cache_configs = {} TODO
+        # self.reliable_topic_configs = {} TODO
         self.serialization_config = SerializationConfig()
-        # self.proxy_factory_configs = {}
 
     def get_property_or_default(self, key, default):
         try:
@@ -40,15 +37,10 @@ class ClientNetworkConfig(object):
         self.addresses = []
         self.connection_attempt_limit = 4
         self.connection_attempt_period = 3
-        self.connection_timeout = 5
+        # self.connection_timeout = 5  TODO
+        # self.socket_options = None TODO
         self.redo_operation = False
         self.smart_routing = True
-        self.socket_options = SocketOptions()
-
-
-class SocketOptions(object):
-    def __init__(self):
-        pass
 
 
 class SerializationConfig(object):
