@@ -1,5 +1,4 @@
 import itertools
-
 from hazelcast.future import combine_futures, ImmediateFuture
 from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_entry_listener_to_key_codec, \
     map_add_entry_listener_with_predicate_codec, map_add_entry_listener_to_key_with_predicate_codec, \
@@ -10,7 +9,9 @@ from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_entry
     map_load_given_keys_codec, map_lock_codec, map_put_codec, map_put_all_codec, map_put_if_absent_codec, \
     map_put_transient_codec, map_size_codec, map_remove_codec, map_remove_if_same_codec, \
     map_remove_entry_listener_codec, map_replace_codec, map_replace_if_same_codec, map_set_codec, map_try_lock_codec, \
-    map_try_put_codec, map_try_remove_codec, map_unlock_codec, map_values_codec, map_values_with_predicate_codec
+    map_try_put_codec, map_try_remove_codec, map_unlock_codec, map_values_codec, map_values_with_predicate_codec, \
+    map_add_interceptor_codec, map_execute_on_all_keys_codec, map_execute_on_key_codec, map_execute_on_keys_codec, \
+    map_execute_with_predicate_codec
 from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType, get_entry_listener_flags
 from hazelcast.util import check_not_none, thread_id, to_millis
 
@@ -68,7 +69,7 @@ class Map(Proxy):
         return self._encode_invoke(map_add_index_codec, attribute=attribute, ordered=ordered)
 
     def add_interceptor(self, interceptor):
-        raise NotImplementedError
+        return self._encode_invoke(map_add_interceptor_codec, interceptor=self._to_data(interceptor))
 
     def clear(self):
         return self._encode_invoke(map_clear_codec)
@@ -109,6 +110,27 @@ class Map(Proxy):
 
     def evict_all(self):
         return self._encode_invoke(map_evict_all_codec)
+
+    def execute_on_entries(self, entry_processor, predicate=None):
+        if predicate:
+            return self._encode_invoke(map_execute_with_predicate_codec, entry_processor=self._to_data(entry_processor),
+                                       predicate=self._to_data(predicate))
+        return self._encode_invoke(map_execute_on_all_keys_codec, entry_processor=self._to_data(entry_processor))
+
+    def execute_on_key(self, key, entry_processor):
+        check_not_none(key, "key can't be None")
+        key_data = self._to_data(key)
+        return self._encode_invoke_on_key(map_execute_on_key_codec, key_data, key=key_data,
+                                          entry_processor=self._to_data(entry_processor), thread_id=thread_id())
+
+    def execute_on_keys(self, keys, entry_processor):
+        key_list = []
+        for key in keys:
+            check_not_none(key, "key can't be None")
+            key_list.append(self._to_data(key))
+
+        return self._encode_invoke(map_execute_on_keys_codec, entry_processor=self._to_data(entry_processor),
+                                   keys=key_list)
 
     def flush(self):
         return self._encode_invoke(map_flush_codec)
