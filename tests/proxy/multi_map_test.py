@@ -54,7 +54,6 @@ class MultiMapTest(SingleMemberTestCase):
 
         self.assertTrueEventually(assert_event, 5)
 
-    @skip(reason="Failing due to #7388")
     def test_add_entry_listener_with_key(self):
         collector = event_collector()
         id = self.multi_map.add_entry_listener(key='key1', include_value=True, added=collector)

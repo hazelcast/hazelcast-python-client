@@ -74,7 +74,6 @@ class TransactionalQueueTest(SingleMemberTestCase):
             tx_queue = tx.get_queue(self.queue.name)
             self.assertIsNone(tx_queue.peek())
 
-    @skip(reason="to be fixed by https://github.com/hazelcast/hazelcast/pull/7402")
     def test_peek_with_timeout(self):
         def offer():
             sleep(0.5)
