@@ -2,6 +2,7 @@ from hazelcast.protocol.codec import client_create_proxy_codec, client_destroy_p
 from hazelcast.proxy.atomic_long import AtomicLong
 from hazelcast.proxy.atomic_reference import AtomicReference
 from hazelcast.proxy.count_down_latch import CountDownLatch
+from hazelcast.proxy.executor import Executor
 from hazelcast.proxy.id_generator import IdGenerator
 from hazelcast.proxy.list import List
 from hazelcast.proxy.lock import Lock
@@ -19,6 +20,7 @@ ATOMIC_LONG_SERVICE = "hz:impl:atomicLongService"
 ATOMIC_REFERENCE_SERVICE = "hz:impl:atomicReferenceService"
 COUNT_DOWN_LATCH_SERVICE = "hz:impl:countDownLatchService"
 ID_GENERATOR_SERVICE = "hz:impl:idGeneratorService"
+EXECUTOR_SERVICE = "hz:impl:executorService"
 LOCK_SERVICE = "hz:impl:lockService"
 LIST_SERVICE = "hz:impl:listService"
 MULTI_MAP_SERVICE = "hz:impl:multiMapService"
@@ -38,6 +40,7 @@ _proxy_init = {
     ATOMIC_REFERENCE_SERVICE: AtomicReference,
     COUNT_DOWN_LATCH_SERVICE: CountDownLatch,
     ID_GENERATOR_SERVICE: IdGenerator,
+    EXECUTOR_SERVICE: Executor,
     LIST_SERVICE: List,
     LOCK_SERVICE: Lock,
     MAP_SERVICE: Map,
