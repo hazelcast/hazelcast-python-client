@@ -1,5 +1,22 @@
+from hazelcast.exception import HazelcastSerializationError
+from hazelcast.serialization.api import IdentifiedDataSerializable
 from tests.base import SingleMemberTestCase
 from tests.util import random_string
+
+FACTORY_ID = 1
+
+
+class Function(IdentifiedDataSerializable):
+    CLASS_ID = 1
+
+    def write_data(self, object_data_output):
+        pass
+
+    def get_factory_id(self):
+        return FACTORY_ID
+
+    def get_class_id(self):
+        return self.CLASS_ID
 
 
 class AtomicLongTest(SingleMemberTestCase):
@@ -13,6 +30,21 @@ class AtomicLongTest(SingleMemberTestCase):
     def test_add_and_get(self):
         self.assertEqual(2, self.atomic_long.add_and_get(2))
         self.assertEqual(4, self.atomic_long.add_and_get(2))
+
+    def test_alter(self):
+        # TODO: Function must be defined on the server
+        with self.assertRaises(HazelcastSerializationError):
+            self.atomic_long.alter(Function())
+
+    def test_alter_and_get(self):
+        # TODO: Function must be defined on the server
+        with self.assertRaises(HazelcastSerializationError):
+            self.atomic_long.alter_and_get(Function())
+
+    def test_apply(self):
+        # TODO: Function must be defined on the server
+        with self.assertRaises(HazelcastSerializationError):
+            self.atomic_long.apply(Function())
 
     def test_get_and_add(self):
         self.assertEqual(0, self.atomic_long.get_and_add(2))
@@ -31,6 +63,11 @@ class AtomicLongTest(SingleMemberTestCase):
     def test_get_set(self):
         self.assertIsNone(self.atomic_long.set(100))
         self.assertEqual(100, self.atomic_long.get())
+
+    def test_get_and_alter(self):
+        # TODO: Function must be declared on the server side
+        with self.assertRaises(HazelcastSerializationError):
+            self.atomic_long.get_and_alter(Function())
 
     def test_get_and_set(self):
         self.assertEqual(0, self.atomic_long.get_and_set(100))

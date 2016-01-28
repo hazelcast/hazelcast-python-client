@@ -1,4 +1,6 @@
+from hazelcast.exception import HazelcastSerializationError
 from tests.base import SingleMemberTestCase
+from tests.proxy.atomic_long_test import Function, FACTORY_ID
 from tests.util import random_string
 
 
@@ -8,6 +10,21 @@ class AtomicReferenceTest(SingleMemberTestCase):
 
     def tearDown(self):
         self.atomic_reference.destroy()
+
+    def test_alter(self):
+        # TODO: Function must be defined on the server
+        with self.assertRaises(HazelcastSerializationError):
+            self.atomic_reference.alter(Function())
+
+    def test_alter_and_get(self):
+        # TODO: Function must be defined on the server
+        with self.assertRaises(HazelcastSerializationError):
+            self.atomic_reference.alter_and_get(Function())
+
+    def test_apply(self):
+        # TODO: Function must be defined on the server
+        with self.assertRaises(HazelcastSerializationError):
+            self.atomic_reference.apply(Function())
 
     def test_compare_and_set(self):
         self.assertTrue(self.atomic_reference.compare_and_set(None, "value"))
@@ -30,7 +47,7 @@ class AtomicReferenceTest(SingleMemberTestCase):
 
     def test_is_null_when_null(self):
         self.assertTrue(self.atomic_reference.is_null())
-        
+
     def test_is_null_when_not_null(self):
         self.atomic_reference.set("value")
         self.assertFalse(self.atomic_reference.is_null())

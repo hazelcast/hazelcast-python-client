@@ -12,15 +12,15 @@ class AtomicLong(PartitionSpecificProxy):
 
     def alter(self, function):
         check_not_none(function, "function can't be None")
-        return self._encode_invoke(atomic_long_alter_codec, self._to_data(function))
+        return self._encode_invoke(atomic_long_alter_codec, function=self._to_data(function))
 
     def alter_and_get(self, function):
         check_not_none(function, "function can't be None")
-        return self._encode_invoke(atomic_long_alter_and_get_codec, self._to_data(function))
+        return self._encode_invoke(atomic_long_alter_and_get_codec, function=self._to_data(function))
 
     def apply(self, function):
         check_not_none(function, "function can't be None")
-        return self._encode_invoke(atomic_long_apply_codec, self._to_data(function))
+        return self._encode_invoke(atomic_long_apply_codec, function=self._to_data(function))
 
     def compare_and_set(self, expected, updated):
         return self._encode_invoke(atomic_long_compare_and_set_codec, expected=expected,
@@ -37,7 +37,7 @@ class AtomicLong(PartitionSpecificProxy):
 
     def get_and_alter(self, function):
         check_not_none(function, "function can't be None")
-        return self._encode_invoke(atomic_long_get_and_alter_codec, self._to_data(function))
+        return self._encode_invoke(atomic_long_get_and_alter_codec, function=self._to_data(function))
 
     def get_and_set(self, new_value):
         return self._encode_invoke(atomic_long_get_and_set_codec, new_value=new_value)

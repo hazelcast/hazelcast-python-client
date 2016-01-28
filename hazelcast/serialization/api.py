@@ -165,16 +165,16 @@ class ObjectDataInput(object):
 
 class IdentifiedDataSerializable(object):
     def write_data(self, object_data_output):
-        pass
+        raise NotImplementedError("read_data must be implemented to serialize this IdentifiedDataSerializable")
 
     def read_data(self, object_data_input):
-        pass
+        raise NotImplementedError("read_data must be implemented to deserialize this IdentifiedDataSerializable")
 
     def get_factory_id(self):
-        pass
+        raise NotImplementedError("This method must return the factory ID for this IdentifiedDataSerializable")
 
     def get_class_id(self):
-        pass
+        raise NotImplementedError("This method must return the class ID for this IdentifiedDataSerializable")
 
 
 class Portable(object):

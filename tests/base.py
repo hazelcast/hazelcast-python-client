@@ -97,7 +97,7 @@ class SingleMemberTestCase(HazelcastTestCase):
         cls.cluster = cls.create_cluster(cls.rc, cls.configure_cluster())
         cls.member = cls.cluster.start_member()
 
-        cls.client = hazelcast.HazelcastClient(cls.configure_client())
+        cls.client = hazelcast.HazelcastClient(cls.configure_client(hazelcast.ClientConfig()))
 
     @classmethod
     def tearDownClass(cls):
@@ -105,8 +105,8 @@ class SingleMemberTestCase(HazelcastTestCase):
         cls.rc.exit()
 
     @classmethod
-    def configure_client(cls):
-        return hazelcast.ClientConfig()
+    def configure_client(cls, config):
+        return config
 
     @classmethod
     def configure_cluster(cls):

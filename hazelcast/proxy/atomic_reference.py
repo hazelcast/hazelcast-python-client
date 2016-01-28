@@ -10,15 +10,15 @@ from hazelcast.util import check_not_none
 class AtomicReference(PartitionSpecificProxy):
     def alter(self, function):
         check_not_none(function, "function can't be None")
-        return self._encode_invoke(atomic_reference_alter_codec, self._to_data(function))
+        return self._encode_invoke(atomic_reference_alter_codec, function=self._to_data(function))
 
     def apply(self, function):
         check_not_none(function, "function can't be None")
-        return self._encode_invoke(atomic_reference_apply_codec, self._to_data(function))
+        return self._encode_invoke(atomic_reference_apply_codec, function=self._to_data(function))
 
     def alter_and_get(self, function):
         check_not_none(function, "function can't be None")
-        return self._encode_invoke(atomic_reference_alter_and_get_codec, self._to_data(function))
+        return self._encode_invoke(atomic_reference_alter_and_get_codec, function=self._to_data(function))
 
     def compare_and_set(self, expected, updated):
         return self._encode_invoke(atomic_reference_compare_and_set_codec,
@@ -36,7 +36,7 @@ class AtomicReference(PartitionSpecificProxy):
 
     def get_and_alter(self, function):
         check_not_none(function, "function can't be None")
-        return self._encode_invoke(atomic_reference_get_and_alter_codec, self._to_data(function))
+        return self._encode_invoke(atomic_reference_get_and_alter_codec, function=self._to_data(function))
 
     def get_and_set(self, new_value):
         return self._encode_invoke(atomic_reference_get_and_set_codec,

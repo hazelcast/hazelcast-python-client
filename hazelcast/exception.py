@@ -1,5 +1,5 @@
 from hazelcast.protocol.error_codes import HAZELCAST_INSTANCE_NOT_ACTIVE, AUTHENTICATION, TARGET_DISCONNECTED, \
-    TARGET_NOT_MEMBER
+    TARGET_NOT_MEMBER, HAZELCAST_SERIALIZATION
 
 
 def retryable(cls):
@@ -45,6 +45,7 @@ class TransactionError(HazelcastError):
 ERROR_CODE_TO_ERROR = {
     AUTHENTICATION: AuthenticationError,
     HAZELCAST_INSTANCE_NOT_ACTIVE: HazelcastInstanceNotActiveError,
+    HAZELCAST_SERIALIZATION: HazelcastSerializationError,
     TARGET_DISCONNECTED: TargetDisconnectedError,
     TARGET_NOT_MEMBER: TargetNotMemberError
 }

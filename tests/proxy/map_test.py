@@ -1,8 +1,24 @@
 import time
-from hazelcast.exception import HazelcastError
+from hazelcast.exception import HazelcastError, HazelcastSerializationError
 from hazelcast.proxy.map import EntryEventType
+from hazelcast.serialization.api import IdentifiedDataSerializable
 from tests.base import SingleMemberTestCase
 from tests.util import random_string, event_collector
+
+FACTORY_ID = 1
+
+
+class EntryProcessor(IdentifiedDataSerializable):
+    CLASS_ID = 1
+
+    def write_data(self, object_data_output):
+        pass
+
+    def get_factory_id(self):
+        return FACTORY_ID
+
+    def get_class_id(self):
+        return self.CLASS_ID
 
 
 class MapTest(SingleMemberTestCase):
@@ -47,7 +63,7 @@ class MapTest(SingleMemberTestCase):
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
             self.assertEntryEvent(event, key='key', event_type=EntryEventType.updated, old_value='value',
-                                     value='new_value')
+                                  value='new_value')
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -125,6 +141,27 @@ class MapTest(SingleMemberTestCase):
         self.map.evict_all()
 
         self.assertEqual(self.map.size(), 0)
+
+    def test_execute_on_entries(self):
+        # TODO: EntryProcessor must be defined on the server
+        with self.assertRaises(HazelcastSerializationError):
+            self.map.execute_on_entries(EntryProcessor())
+
+    def test_execute_on_entries_with_predicate(self):
+        # TODO: predicates
+        pass
+
+    def test_execute_on_key(self):
+        # TODO: EntryProcessor must be defined on the server
+        self.map.put("key", 1)
+        with self.assertRaises(HazelcastSerializationError):
+            self.map.execute_on_key("key", EntryProcessor())
+
+    def test_execute_on_keys(self):
+        # TODO: EntryProcessor must be defined on the server
+        map = self._fill_map()
+        with self.assertRaises(HazelcastSerializationError):
+            self.map.execute_on_keys(map.keys(), EntryProcessor())
 
     def test_flush(self):
         self._fill_map()
@@ -363,5 +400,3 @@ class MapTest(SingleMemberTestCase):
         for k, v in map.iteritems():
             self.map.put(k, v)
         return map
-
-
