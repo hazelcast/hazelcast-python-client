@@ -1,5 +1,4 @@
 import logging
-
 from hazelcast.serialization import predicate
 from hazelcast.serialization.base import BaseSerializationService
 from hazelcast.serialization.serializer import *
@@ -25,11 +24,8 @@ class SerializationServiceV1(BaseSerializationService):
 
         # merge configured factories with built in ones
         factories = {}
-        factories.update(predicate.FACTORY)
         factories.update(self.serialization_config.data_serializable_factories)
-
-        self._registry._data_serializer = IdentifiedDataSerializer(
-            factories)
+        self._registry._data_serializer = IdentifiedDataSerializer(factories)
         self._register_constant_serializers()
 
     def _register_constant_serializers(self):
