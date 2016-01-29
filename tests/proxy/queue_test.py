@@ -219,5 +219,4 @@ class QueueTest(SingleMemberTestCase):
         self.assertEqual(poll_result, "1")
 
     def test_str(self):
-        str_ = self.queue.__str__()
-        self.assertTrue(str_.startswith("Queue"))
+        self.assertTrue(str(self.queue).startswith("Queue"))

@@ -372,6 +372,3 @@ class Map(Proxy):
             return self._encode_invoke(map_values_with_predicate_codec, predicate=predicate_data)
         else:
             return self._encode_invoke(map_values_codec)
-
-    def __str__(self):
-        return "Map(name=%s)" % self.name

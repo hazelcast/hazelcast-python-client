@@ -43,5 +43,4 @@ class SemaphoreTest(SingleMemberTestCase):
         self.assertEqual(available_permits, 0)
 
     def test_str(self):
-        str_ = self.semaphore.__str__()
-        self.assertTrue(str_.startswith("Semaphore"))
+        self.assertTrue(str(self.semaphore).startswith("Semaphore"))

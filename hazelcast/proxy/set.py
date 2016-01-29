@@ -99,6 +99,3 @@ class Set(PartitionSpecificProxy):
 
     def size(self):
         return self._encode_invoke(set_size_codec)
-
-    def __str__(self):
-        return "Set(name=%s)" % self.name

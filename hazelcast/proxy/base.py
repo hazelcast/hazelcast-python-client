@@ -1,4 +1,5 @@
 import logging
+
 from hazelcast.future import make_blocking
 from hazelcast.partition import string_partition_strategy
 from hazelcast.util import enum, thread_id
@@ -37,8 +38,8 @@ class Proxy(object):
     def _on_destroy(self):
         pass
 
-    def __str__(self):
-        return '%s(name="%s")' % (type(self), self.name)
+    def __repr__(self):
+        return '%s(name="%s")' % (type(self).__name__, self.name)
 
     def _encode_invoke(self, codec, response_handler=default_response_handler, **kwargs):
         request = codec.encode_request(name=self.name, **kwargs)
@@ -48,7 +49,7 @@ class Proxy(object):
     def _encode_invoke_on_target(self, codec, _address, response_handler=default_response_handler, **kwargs):
         request = codec.encode_request(name=self.name, **kwargs)
         return self._client.invoker.invoke_on_target(request, _address).continue_with(response_handler, codec,
-                                                                                     self._to_object)
+                                                                                      self._to_object)
 
     def _encode_invoke_on_key(self, codec, key_data, **kwargs):
         partition_id = self._client.partition_service.get_partition_id(key_data)
@@ -57,7 +58,7 @@ class Proxy(object):
     def _encode_invoke_on_partition(self, codec, _partition_id, response_handler=default_response_handler, **kwargs):
         request = codec.encode_request(name=self.name, **kwargs)
         return self._client.invoker.invoke_on_partition(request, _partition_id).continue_with(response_handler,
-                                                                                             codec, self._to_object)
+                                                                                              codec, self._to_object)
 
     def blocking(self):
         """
@@ -88,6 +89,9 @@ class TransactionalProxy(object):
         request = codec.encode_request(name=self.name, txn_id=self.transaction.id, thread_id=thread_id(), **kwargs)
         return self.transaction.client.invoker.invoke_on_connection(request, self.transaction.connection).continue_with(
             response_handler, codec, self._to_object)
+
+    def __repr__(self):
+        return '%s(name="%s")' % (type(self).__name__, self.name)
 
 
 ItemEventType = enum(added=1, removed=2)

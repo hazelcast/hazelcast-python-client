@@ -52,6 +52,3 @@ class AtomicReference(PartitionSpecificProxy):
     def set_and_get(self, new_value):
         return self._encode_invoke(atomic_reference_set_and_get_codec,
                                    new_value=self._to_data(new_value))
-
-    def __str__(self):
-        return "AtomicReference(name=%s)" % self.name

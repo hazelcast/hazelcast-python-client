@@ -21,7 +21,6 @@ from hazelcast.protocol.codec import list_add_all_codec, \
     list_set_codec, \
     list_size_codec, \
     list_sub_codec
-
 from hazelcast.proxy.base import PartitionSpecificProxy, ItemEvent, ItemEventType
 from hazelcast.util import check_not_none
 
@@ -151,6 +150,3 @@ class List(PartitionSpecificProxy):
 
     def sub_list(self, from_index, to_index):
         return self._encode_invoke(list_sub_codec, from_=from_index, to=to_index)
-
-    def __str__(self):
-        return "List(name=%s)" % self.name

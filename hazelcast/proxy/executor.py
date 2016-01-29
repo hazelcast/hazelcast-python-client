@@ -1,10 +1,8 @@
 from uuid import uuid4
-
 from hazelcast import future
 from hazelcast.protocol.codec import executor_service_submit_to_address_codec, executor_service_shutdown_codec, \
     executor_service_is_shutdown_codec, executor_service_cancel_on_address_codec, \
     executor_service_cancel_on_partition_codec, executor_service_submit_to_partition_codec
-
 from hazelcast.proxy.base import Proxy
 from hazelcast.util import check_not_none
 
@@ -43,9 +41,6 @@ class Executor(Proxy):
 
     def shutdown(self):
         return self._encode_invoke(executor_service_shutdown_codec)
-
-    def __str__(self):
-        return "Executor(name=%s)" % self.name
 
     def _execute_on_member(self, address, uuid, task_data):
         return self._encode_invoke_on_target(executor_service_submit_to_address_codec, address, uuid=uuid,

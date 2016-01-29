@@ -83,6 +83,3 @@ class TransactionalMap(TransactionalProxy):
             return self._encode_invoke(transactional_map_values_with_predicate_codec,
                                        predicate=self._to_data(predicate))
         return self._encode_invoke(transactional_map_values_codec)
-
-    def __str__(self):
-        return "TransactionalMap(name=%s)" % self.name

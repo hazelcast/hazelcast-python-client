@@ -19,5 +19,4 @@ class IdGeneratorTest(SingleMemberTestCase):
         self.assertEqual(new_id, 11)
 
     def test_str(self):
-        str_ = self.id_gen.__str__()
-        self.assertTrue(str_.startswith("IdGenerator"))
+        self.assertTrue(str(self.id_gen).startswith("IdGenerator"))

@@ -34,5 +34,4 @@ class TopicTest(SingleMemberTestCase):
         self.assertTrueEventually(assert_event, 5)
 
     def test_str(self):
-        str_ = self.topic.__str__()
-        self.assertTrue(str_.startswith("Topic"))
+        self.assertTrue(str(self.topic).startswith("Topic"))

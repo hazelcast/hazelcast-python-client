@@ -6,7 +6,6 @@ from hazelcast.protocol.codec import \
     semaphore_reduce_permits_codec, \
     semaphore_release_codec, \
     semaphore_try_acquire_codec
-
 from hazelcast.proxy.base import PartitionSpecificProxy
 from hazelcast.util import check_not_negative, to_millis
 
@@ -37,6 +36,3 @@ class Semaphore(PartitionSpecificProxy):
     def try_acquire(self, permits=1, timeout=0):
         check_not_negative(permits, "Permits cannot be negative!")
         return self._encode_invoke(semaphore_try_acquire_codec, permits=permits, timeout=to_millis(timeout))
-
-    def __str__(self):
-        return "Semaphore(name=%s)" % self.name

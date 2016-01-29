@@ -41,5 +41,3 @@ class IdGenerator(Proxy):
         get = self._local.get()
         return get * BLOCK_SIZE + val
 
-    def __str__(self):
-        return "IdGenerator(name=%s)" % self.name

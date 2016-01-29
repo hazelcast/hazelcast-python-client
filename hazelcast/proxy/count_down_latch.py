@@ -22,5 +22,3 @@ class CountDownLatch(PartitionSpecificProxy):
         check_not_negative(count, "count can't be negative")
         return self._encode_invoke(count_down_latch_try_set_count_codec, count=count)
 
-    def __str__(self):
-        return "CountDownLatch(name=%s)" % self.name

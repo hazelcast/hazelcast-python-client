@@ -15,6 +15,3 @@ class TransactionalList(TransactionalProxy):
 
     def size(self):
         return self._encode_invoke(transactional_list_size_codec)
-
-    def __str__(self):
-        return "TransactionalList(name=%s)" % self.name

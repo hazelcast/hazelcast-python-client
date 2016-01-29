@@ -36,6 +36,7 @@ class Queue(PartitionSpecificProxy):
             if f.result():
                 return True
             raise Full("Queue is full!")
+
         return self.offer(item).continue_with(result_fnc)
 
     def add_all(self, items):
@@ -87,6 +88,7 @@ class Queue(PartitionSpecificProxy):
             resp = f.result()
             list.extend(resp)
             return len(resp)
+
         return self._encode_invoke(queue_drain_to_max_size_codec, max_size=max_size).continue_with(
             drain_result)
 
@@ -144,6 +146,3 @@ class Queue(PartitionSpecificProxy):
 
     def take(self):
         return self._encode_invoke(queue_take_codec)
-
-    def __str__(self):
-        return "Queue(name=%s)" % self.name

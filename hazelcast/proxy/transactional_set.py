@@ -15,6 +15,3 @@ class TransactionalSet(TransactionalProxy):
 
     def size(self):
         return self._encode_invoke(transactional_set_size_codec)
-
-    def __str__(self):
-        return "TransactionalSet(name=%s)" % self.name

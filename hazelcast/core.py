@@ -27,11 +27,8 @@ class Address(object):
         self.host = host
         self.port = port
 
-    def __str__(self):
-        return "Address(host=%s, port=%d)" % (self.host, self.port)
-
     def __repr__(self):
-        return str(self)
+        return "Address(host=%s, port=%d)" % (self.host, self.port)
 
     def __hash__(self):
         return hash((self.host, self.port))
@@ -45,11 +42,8 @@ class DistributedObjectInfo(object):
         self.name = name
         self.service_name = service_name
 
-    def __str__(self):
-        return "DistributedObjectInfo(name={}, serviceName={})".format(self.name, self.service_name)
-
     def __repr__(self):
-        return str(self)
+        return "DistributedObjectInfo(name={}, serviceName={})".format(self.name, self.service_name)
 
 
 class EntryView(object):

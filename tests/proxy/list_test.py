@@ -249,5 +249,4 @@ class ListTest(SingleMemberTestCase):
         self.assertEqual(sub_list, ["2", "3"])
 
     def test_str(self):
-        str_ = self.list.__str__()
-        self.assertTrue(str_.startswith("List"))
+        self.assertTrue(str(self.list).startswith("List"))

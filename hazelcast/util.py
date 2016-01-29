@@ -112,9 +112,7 @@ class ImmutableLazyDataList(Sequence):
             if not self._list_obj[index]:
                 self.__getitem__(index)
 
-    def __str__(self):
+    def __repr__(self):
         self._populate()
         return str(self._list_obj)
 
-    def __repr__(self):
-        return str(self)

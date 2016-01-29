@@ -114,6 +114,3 @@ class ReplicatedMap(Proxy):
 
     def _encode_invoke_on_target_partition(self, codec, response_handler=default_response_handler, **kwargs):
         return self._encode_invoke_on_partition(codec, self._get_partition_id(), response_handler, **kwargs)
-
-    def __str__(self):
-        return "ReplicatedMap(name=%s)" % self.name

@@ -135,7 +135,7 @@ class ErrorCodec(object):
         return StackTraceElement(declaring_class=declaring_class,
                                  method_name=method_name, file_name=file_name, line_number=line_number)
 
-    def __str__(self):
+    def __repr__(self):
         return 'ErrorCodec(error_code="%s", class_name="%s", message="%s", cause_error_code="%s", ' \
                'cause_class_name="%s' % (self.error_code, self.class_name, self.message, self.cause_error_code,
                                          self.cause_class_name)

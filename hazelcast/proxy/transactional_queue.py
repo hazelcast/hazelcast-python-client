@@ -21,6 +21,3 @@ class TransactionalQueue(TransactionalProxy):
 
     def size(self):
         return self._encode_invoke(transactional_queue_size_codec)
-
-    def __str__(self):
-        return "TransactionalQueue(name=%s)" % self.name

@@ -134,6 +134,3 @@ class MultiMap(Proxy):
         key_data = self._to_data(key)
         return self._encode_invoke_on_key(multi_map_unlock_codec, key_data, key=key_data,
                                           thread_id=thread_id())
-
-    def __str__(self):
-        return "MultiMap(name=%s)" % self.name

@@ -10,6 +10,3 @@ class ReliableTopic(Proxy):
 
     def remove_listener(self, registration_id):
         raise NotImplementedError
-
-    def __str__(self):
-        return "ReliableTopic(name=%s)" % self.name

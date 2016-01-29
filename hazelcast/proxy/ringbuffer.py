@@ -64,6 +64,3 @@ class Ringbuffer(PartitionSpecificProxy):
     @staticmethod
     def _read_many_response_handler(future, codec, to_object):
         return codec.decode_response(future.result(), to_object)['items']
-
-    def __str__(self):
-        return "Ringbuffer(name=%s)" % self.name

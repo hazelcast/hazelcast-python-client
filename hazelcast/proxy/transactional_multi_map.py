@@ -32,6 +32,3 @@ class TransactionalMultiMap(TransactionalProxy):
 
     def size(self):
         return self._encode_invoke(transactional_multi_map_size_codec)
-
-    def __str__(self):
-        return "TransactionalMultiMap(name=%s)" % self.name

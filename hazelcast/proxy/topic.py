@@ -2,7 +2,6 @@ from hazelcast.protocol.codec import \
     topic_add_message_listener_codec, \
     topic_publish_codec, \
     topic_remove_message_listener_codec
-
 from hazelcast.proxy.base import PartitionSpecificProxy, TopicMessage
 
 
@@ -25,7 +24,5 @@ class Topic(PartitionSpecificProxy):
         self._encode_invoke(topic_publish_codec, message=message_data)
 
     def remove_listener(self, registration_id):
-        return self._stop_listening(registration_id, lambda i: topic_remove_message_listener_codec.encode_request(self.name, i))
-
-    def __str__(self):
-        return "Topic(name=%s)" % self.name
+        return self._stop_listening(registration_id,
+                                    lambda i: topic_remove_message_listener_codec.encode_request(self.name, i))

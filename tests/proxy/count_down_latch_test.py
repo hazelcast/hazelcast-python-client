@@ -26,5 +26,4 @@ class CountDownLatchTest(SingleMemberTestCase):
         self.assertTrue(self.latch.await(15))
 
     def test_str(self):
-        str_ = self.latch.__str__()
-        self.assertTrue(str_.startswith("CountDownLatch"))
+        self.assertTrue(str(self.latch).startswith("CountDownLatch"))

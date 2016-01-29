@@ -161,5 +161,4 @@ class SetTest(SingleMemberTestCase):
         self.assertEqual(size, len(_all))
 
     def test_str(self):
-        str_ = self.set.__str__()
-        self.assertTrue(str_.startswith("Set"))
+        self.assertTrue(str(self.set).startswith("Set"))
