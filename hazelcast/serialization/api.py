@@ -1,6 +1,8 @@
 """
 User API and docs
 """
+
+
 class ObjectDataOutput(object):
     def write_from(self, buff, offset=None, length=None):
         """
@@ -203,18 +205,3 @@ class StreamSerializer(object):
 
     def destroy(self):
         pass
-
-
-class BufferSerializer(object):
-    def write(self, obj):
-        pass
-
-    def read(self, buff):
-        return None
-
-    def get_type_id(self):
-        pass
-
-    def destroy(self):
-        pass
-

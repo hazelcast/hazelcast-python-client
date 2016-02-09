@@ -1,4 +1,7 @@
 """ Configuration module """
+from types import TypeType
+
+from hazelcast.serialization.api import StreamSerializer
 
 DEFAULT_GROUP_NAME = "dev"
 DEFAULT_GROUP_PASSWORD = "dev-pass"
@@ -46,9 +49,7 @@ class ClientNetworkConfig(object):
 class SerializationConfig(object):
     def __init__(self):
         self.portable_version = 0
-        self.data_serializable_factory_classes = {}
         self.data_serializable_factories = {}
-        self.portable_factory_classes = {}
         self.portable_factories = {}
         self.global_serializer_config = None
         self.serializer_configs = []
@@ -59,7 +60,56 @@ class SerializationConfig(object):
         self.enable_shared_object = True
         self.class_definitions = set()
 
+    def add_data_serializable_factory(self, factory):
+        self.data_serializable_factories[factory.factory_id] = factory
+
+
+class BaseSerializerConfig(object):
+    def __init__(self):
+        self._serializer = None
+
+    @property
+    def serializer(self):
+        return self._serializer
+
+    @serializer.setter
+    def set_serializer(self, serializer):
+        if isinstance(serializer, StreamSerializer):
+            self._serializer = serializer
+        else:
+            raise ValueError("Serializer should be an instance of 'hazelcast.serialization.api.StreamSerializer'")
+
 
 class GlobalSerializerConfig(object):
+    # def __init__(self):
+    #     super(GlobalSerializerConfig, self).__init__()
     def __init__(self):
-        pass
+        self._serializer = None
+
+    # @property
+    def serializer(self):
+        return self._serializer
+
+    # @serializer.setter
+    def set_serializer(self, serializer):
+        if issubclass(serializer, StreamSerializer):
+            self._serializer = serializer
+        else:
+            raise ValueError("Serializer should be an instance of 'hazelcast.serialization.api.StreamSerializer'")
+
+
+class SerializerConfig(BaseSerializerConfig):
+    def __init__(self):
+        super(SerializerConfig, self).__init__()
+        self._type = None
+
+    @property
+    def type(self):
+        return self._type
+
+    @type.setter
+    def set_type(self, _type):
+        if isinstance(type, TypeType):
+            self._type = _type
+        else:
+            raise ValueError("Provided value is not a type")

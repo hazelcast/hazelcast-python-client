@@ -8,27 +8,6 @@ from hazelcast.serialization.api import StreamSerializer
 from hazelcast.serialization.serialization_const import *
 
 
-class BufferSerializerWrapper(StreamSerializer):
-    def __init__(self, buffer_serializer):
-        self.buffer_serializer = buffer_serializer
-
-    def read(self, inp):
-        buff = inp.read_byte_array()
-        if buff is None:
-            return None
-        return self.buffer_serializer.read(buff)
-
-    def write(self, out, obj):
-        buff = self.buffer_serializer.write(obj)
-        out.write_byte_array(buff)
-
-    def get_type_id(self):
-        return self.buffer_serializer.get_type_id
-
-    def destroy(self):
-        self.buffer_serializer.destroy()
-
-
 # DEFAULT SERIALIZERS
 class NoneSerializer(StreamSerializer):
     def read(self, inp):
@@ -343,7 +322,8 @@ class LinkedListSerializer(StreamSerializer):
 
 class PythonObjectSerializer(StreamSerializer):
     def read(self, inp):
-        return cPickle.load(inp.read_utf())
+        str = inp.read_utf().encode()
+        return cPickle.loads(str)
 
     def write(self, out, obj):
         out.write_utf(cPickle.dumps(obj))

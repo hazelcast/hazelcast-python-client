@@ -68,7 +68,7 @@ class SampleIdentified(IdentifiedDataSerializable):
 the_factory = {SampleIdentified.CLASS_ID: SampleIdentified}
 
 
-class _IdentifiedSerializationTestCase(unittest.TestCase):
+class IdentifiedSerializationTestCase(unittest.TestCase):
     def test_factory(self):
         config = hazelcast.ClientConfig()
         config.serialization_config.data_serializable_factories[FACTORY_ID] = the_factory
@@ -78,7 +78,3 @@ class _IdentifiedSerializationTestCase(unittest.TestCase):
 
         obj2 = service.to_object(data)
         self.assertTrue(obj == obj2)
-
-
-if __name__ == '__main__':
-    unittest.main()

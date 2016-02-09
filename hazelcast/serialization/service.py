@@ -28,6 +28,11 @@ class SerializationServiceV1(BaseSerializationService):
         self._registry._data_serializer = IdentifiedDataSerializer(factories)
         self._register_constant_serializers()
 
+        global_serializer_config = serialization_config.global_serializer_config
+        if global_serializer_config:
+            serializer = global_serializer_config.serializer()
+            self._registry._global_serializer = serializer()
+
     def _register_constant_serializers(self):
         self._registry.register_constant_serializer(self._registry._null_serializer, type(None))
         self._registry.register_constant_serializer(self._registry._data_serializer)
