@@ -20,9 +20,12 @@ Python client is implemented using the [Hazelcast Open Binary Client Protocol](h
 * IdGenerator
 * CountDownLatch
 * RingBuffer
-* _ReliableTopic -- IN PROGRESS_
+* ReliableTopic -- TODO
 * ReplicatedMap
 * Transactional Map, MultiMap, Queue, List, Set
+* Continuous Query(listener with predicate)
+* Distributed Executor Service
+* Query (Predicates) 
 * API configuration
 * Smart and Non-Smart Client operation
 * Event Listeners
@@ -30,7 +33,7 @@ Python client is implemented using the [Hazelcast Open Binary Client Protocol](h
 * Hazelcast serialization for IdentifiedDataSerializable
 * _Hazelcast serialization for Portable -- IN PROGRESS_
 * _Hazelcast serialization, Custom Serializers -- IN PROGRESS_
-* _Hazelcast serialization, Global Serializers -- IN PROGRESS_
+* Hazelcast serialization, Global Serializers
 
 ## Mail Group
 
