@@ -65,43 +65,30 @@ class SerializationConfig(object):
 
 
 class BaseSerializerConfig(object):
-    def __init__(self):
-        self._serializer = None
+    def __init__(self, serializer=None):
+        self._serializer = serializer
 
     @property
     def serializer(self):
         return self._serializer
 
     @serializer.setter
-    def set_serializer(self, serializer):
-        if isinstance(serializer, StreamSerializer):
-            self._serializer = serializer
+    def serializer(self, value):
+        if isinstance(value, StreamSerializer):
+            self._serializer = value
         else:
             raise ValueError("Serializer should be an instance of 'hazelcast.serialization.api.StreamSerializer'")
 
 
-class GlobalSerializerConfig(object):
-    # def __init__(self):
-    #     super(GlobalSerializerConfig, self).__init__()
-    def __init__(self):
-        self._serializer = None
-
-    # @property
-    def serializer(self):
-        return self._serializer
-
-    # @serializer.setter
-    def set_serializer(self, serializer):
-        if issubclass(serializer, StreamSerializer):
-            self._serializer = serializer
-        else:
-            raise ValueError("Serializer should be an instance of 'hazelcast.serialization.api.StreamSerializer'")
+class GlobalSerializerConfig(BaseSerializerConfig):
+    def __init__(self, serializer=None):
+        super(GlobalSerializerConfig, self).__init__(serializer)
 
 
 class SerializerConfig(BaseSerializerConfig):
-    def __init__(self):
-        super(SerializerConfig, self).__init__()
-        self._type = None
+    def __init__(self, serializer=None, object_type=None):
+        super(SerializerConfig, self).__init__(serializer)
+        self._type = object_type
 
     @property
     def type(self):

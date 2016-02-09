@@ -30,8 +30,8 @@ class SerializationServiceV1(BaseSerializationService):
 
         global_serializer_config = serialization_config.global_serializer_config
         if global_serializer_config:
-            serializer = global_serializer_config.serializer()
-            self._registry._global_serializer = serializer()
+            serializer_constructor = global_serializer_config.serializer
+            self._registry._global_serializer = serializer_constructor()
 
     def _register_constant_serializers(self):
         self._registry.register_constant_serializer(self._registry._null_serializer, type(None))

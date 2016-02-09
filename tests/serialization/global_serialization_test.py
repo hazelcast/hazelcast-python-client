@@ -1,7 +1,7 @@
 import cPickle as pickle
 import unittest
 
-from hazelcast.config import SerializationConfig, GlobalSerializerConfig
+from hazelcast.config import SerializationConfig, GlobalSerializerConfig, SerializerConfig
 from hazelcast.serialization.api import StreamSerializer
 from hazelcast.serialization.service import SerializationServiceV1
 
@@ -36,19 +36,45 @@ class CustomClass(object):
         return False
 
 
-class GlobalSerializationTestCase(unittest.TestCase):
-    def setUp(self):
+class CustomSerializer(StreamSerializer):
+    def write(self, out, obj):
+        if isinstance(obj, CustomClass):
+            out.write_utf(obj.uid)
+            out.write_utf(obj.name)
+            out.write_utf(obj.text)
+        else:
+            raise ValueError("Can only serialize CustomClass")
+
+    def read(self, inp):
+        return CustomClass(inp.read_utf(),  # uid
+                           inp.read_utf(),  # name
+                           inp.read_utf())  # text
+
+    def get_type_id(self):
+        return 10001
+
+
+class CustomSerializationTestCase(unittest.TestCase):
+
+    def test_global_encode_decode(self):
         config = SerializationConfig()
-        global_serializer_config = GlobalSerializerConfig()
-        global_serializer_config.set_serializer(TestGlobalSerializer)
+        config.global_serializer_config = GlobalSerializerConfig(TestGlobalSerializer)
 
-        config.global_serializer_config = global_serializer_config
-
-        self.service = SerializationServiceV1(serialization_config=config)
-
-    def test_encode_decode(self):
+        service = SerializationServiceV1(serialization_config=config)
         obj = CustomClass("uid", "some name", "description text")
-        data = self.service.to_data(obj)
+        data = service.to_data(obj)
 
-        obj2 = self.service.to_object(data)
+        obj2 = service.to_object(data)
+        self.assertEqual(obj, obj2)
+
+    def test_custom_serializer(self):
+        config = SerializationConfig()
+        custom_serializer_config = SerializerConfig(CustomSerializer, CustomClass)
+        config.serializer_configs.append(custom_serializer_config)
+
+        service = SerializationServiceV1(serialization_config=config)
+        obj = CustomClass("uid", "some name", "description text")
+        data = service.to_data(obj)
+
+        obj2 = service.to_object(data)
         self.assertEqual(obj, obj2)
