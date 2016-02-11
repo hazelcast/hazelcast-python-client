@@ -32,7 +32,7 @@ Python client is implemented using the [Hazelcast Open Binary Client Protocol](h
 * Lifecycle Service
 * Hazelcast serialization for IdentifiedDataSerializable
 * _Hazelcast serialization for Portable -- IN PROGRESS_
-* _Hazelcast serialization, Custom Serializers -- IN PROGRESS_
+* Hazelcast serialization, Custom Serializers
 * Hazelcast serialization, Global Serializers
 
 ## Mail Group
