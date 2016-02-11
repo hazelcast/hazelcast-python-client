@@ -1,7 +1,10 @@
 from __future__ import with_statement
+
 import itertools
 import threading
 from collections import Sequence, Iterable
+from types import TypeType
+
 from hazelcast.core import Address
 
 DEFAULT_ADDRESS = "127.0.0.1"
@@ -36,6 +39,16 @@ def to_millis(seconds):
     if seconds >= 0:
         return int(seconds * 1000)
     return seconds
+
+
+def validate_type(_type):
+    if not isinstance(_type, TypeType):
+        raise ValueError("Serializer should be an instance of {}".format(_type.__name__))
+
+
+def validate_serializer(serializer, _type):
+    if not issubclass(serializer, _type):
+        raise ValueError("Serializer should be an instance of {}".format(_type.__name__))
 
 
 class AtomicInteger(object):
@@ -115,4 +128,3 @@ class ImmutableLazyDataList(Sequence):
     def __repr__(self):
         self._populate()
         return str(self._list_obj)
-

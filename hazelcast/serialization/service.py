@@ -29,14 +29,13 @@ class SerializationServiceV1(BaseSerializationService):
         self._register_constant_serializers()
 
         # Register Custom Serializers
-        for serializer_config in serialization_config.serializer_configs:
-            self._registry.register_from_serializer_config(serializer_config)
+        for _type, custom_serializer in serialization_config.custom_serializers.iteritems():
+            self._registry.safe_register_serializer(custom_serializer(), _type)
 
         # Register Global Serializer
-        global_serializer_config = serialization_config.global_serializer_config
-        if global_serializer_config:
-            serializer_constructor = global_serializer_config.serializer
-            self._registry._global_serializer = serializer_constructor()
+        global_serializer = serialization_config.global_serializer
+        if global_serializer:
+            self._registry._global_serializer = global_serializer()
 
     def _register_constant_serializers(self):
         self._registry.register_constant_serializer(self._registry._null_serializer, type(None))

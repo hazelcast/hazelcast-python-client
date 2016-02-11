@@ -1,7 +1,7 @@
 import cPickle as pickle
 import unittest
 
-from hazelcast.config import SerializationConfig, GlobalSerializerConfig, SerializerConfig
+from hazelcast.config import SerializationConfig
 from hazelcast.serialization.api import StreamSerializer
 from hazelcast.serialization.service import SerializationServiceV1
 
@@ -83,7 +83,7 @@ class TheOtherCustomSerializer(StreamSerializer):
 class CustomSerializationTestCase(unittest.TestCase):
     def test_global_encode_decode(self):
         config = SerializationConfig()
-        config.global_serializer_config = GlobalSerializerConfig(TestGlobalSerializer)
+        config.set_global_serializer(TestGlobalSerializer)
 
         service = SerializationServiceV1(serialization_config=config)
         obj = CustomClass("uid", "some name", "description text")
@@ -95,8 +95,7 @@ class CustomSerializationTestCase(unittest.TestCase):
 
     def test_custom_serializer(self):
         config = SerializationConfig()
-        custom_serializer_config = SerializerConfig(CustomSerializer, CustomClass)
-        config.serializer_configs.append(custom_serializer_config)
+        config.set_custom_serializer(CustomClass, CustomSerializer)
 
         service = SerializationServiceV1(serialization_config=config)
         obj = CustomClass("uid", "some name", "description text")
@@ -108,8 +107,8 @@ class CustomSerializationTestCase(unittest.TestCase):
 
     def test_global_custom_serializer(self):
         config = SerializationConfig()
-        config.serializer_configs.append(SerializerConfig(CustomSerializer, CustomClass))
-        config.global_serializer_config = GlobalSerializerConfig(TestGlobalSerializer)
+        config.set_custom_serializer(CustomClass, CustomSerializer)
+        config.set_global_serializer(TestGlobalSerializer)
 
         service = SerializationServiceV1(serialization_config=config)
         obj = CustomClass("uid", "some name", "description text")
@@ -121,7 +120,8 @@ class CustomSerializationTestCase(unittest.TestCase):
 
     def test_double_register_custom_serializer(self):
         config = SerializationConfig()
-        config.serializer_configs.append(SerializerConfig(CustomSerializer, CustomClass))
-        config.serializer_configs.append(SerializerConfig(TheOtherCustomSerializer, CustomClass))
+        config.set_custom_serializer(CustomClass, CustomSerializer)
+        service = SerializationServiceV1(serialization_config=config)
+
         with self.assertRaises(ValueError):
-            SerializationServiceV1(serialization_config=config)
+            service._registry.safe_register_serializer(TheOtherCustomSerializer, CustomClass)

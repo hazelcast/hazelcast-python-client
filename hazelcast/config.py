@@ -1,7 +1,7 @@
 """ Configuration module """
-from types import TypeType
 
 from hazelcast.serialization.api import StreamSerializer
+from hazelcast.util import validate_type, validate_serializer
 
 DEFAULT_GROUP_NAME = "dev"
 DEFAULT_GROUP_PASSWORD = "dev-pass"
@@ -51,8 +51,8 @@ class SerializationConfig(object):
         self.portable_version = 0
         self.data_serializable_factories = {}
         self.portable_factories = {}
-        self.global_serializer_config = None
-        self.serializer_configs = []
+        self.global_serializer = None
+        self.custom_serializers = {}
         self.check_class_def_errors = True
         self.use_native_byte_order = False
         self.is_big_endian = True
@@ -63,40 +63,11 @@ class SerializationConfig(object):
     def add_data_serializable_factory(self, factory):
         self.data_serializable_factories[factory.factory_id] = factory
 
+    def set_custom_serializer(self, _type, serializer):
+        validate_type(_type)
+        validate_serializer(serializer, StreamSerializer)
+        self.custom_serializers[_type] = serializer
 
-class BaseSerializerConfig(object):
-    def __init__(self, serializer=None):
-        self._serializer = serializer
-
-    @property
-    def serializer(self):
-        return self._serializer
-
-    @serializer.setter
-    def serializer(self, value):
-        if isinstance(value, StreamSerializer):
-            self._serializer = value
-        else:
-            raise ValueError("Serializer should be an instance of 'hazelcast.serialization.api.StreamSerializer'")
-
-
-class GlobalSerializerConfig(BaseSerializerConfig):
-    def __init__(self, serializer=None):
-        super(GlobalSerializerConfig, self).__init__(serializer)
-
-
-class SerializerConfig(BaseSerializerConfig):
-    def __init__(self, serializer=None, object_type=None):
-        super(SerializerConfig, self).__init__(serializer)
-        self._type = object_type
-
-    @property
-    def type(self):
-        return self._type
-
-    @type.setter
-    def set_type(self, _type):
-        if isinstance(_type, TypeType):
-            self._type = _type
-        else:
-            raise ValueError("Provided value is not a type")
+    def set_global_serializer(self, global_serializer):
+        validate_serializer(global_serializer, StreamSerializer)
+        self.global_serializer = global_serializer

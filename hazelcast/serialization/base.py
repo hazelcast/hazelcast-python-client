@@ -299,13 +299,6 @@ class SerializerRegistry(object):
             self.safe_register_serializer(serializer, obj_type)
         return serializer
 
-    def register_from_serializer_config(self, serializer_config):
-        if serializer_config.serializer is None:
-            raise ValueError("No Serializer is provided!")
-        if not isinstance(serializer_config.type, TypeType):
-            raise ValueError("No Serializer Type is provided!")
-        self.safe_register_serializer(serializer_config.serializer(), serializer_config.type)
-
     def destroy(self):
         self._active = False
         for serializer in self._type_dict.values():
