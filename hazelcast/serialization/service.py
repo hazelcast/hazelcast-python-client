@@ -1,5 +1,5 @@
 import logging
-from hazelcast.serialization import predicate
+
 from hazelcast.serialization.base import BaseSerializationService
 from hazelcast.serialization.serializer import *
 
@@ -28,6 +28,11 @@ class SerializationServiceV1(BaseSerializationService):
         self._registry._data_serializer = IdentifiedDataSerializer(factories)
         self._register_constant_serializers()
 
+        # Register Custom Serializers
+        for serializer_config in serialization_config.serializer_configs:
+            self._registry.register_from_serializer_config(serializer_config)
+
+        # Register Global Serializer
         global_serializer_config = serialization_config.global_serializer_config
         if global_serializer_config:
             serializer_constructor = global_serializer_config.serializer

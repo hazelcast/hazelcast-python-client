@@ -1,6 +1,7 @@
 import sys
 import traceback
 from threading import RLock
+from types import TypeType
 
 from api import *
 from data import *
@@ -272,27 +273,24 @@ class SerializerRegistry(object):
         if object_type is not None:
             self._constant_type_dict[object_type] = stream_serializer
 
-    def safe_register_serializer(self, serializer, obj_type=None):
-        stream_serializer = serializer
+    def safe_register_serializer(self, stream_serializer, obj_type=None):
         with self._registration_lock:
             if obj_type is not None:
                 if obj_type in self._constant_type_dict:
                     raise ValueError("[{}] serializer cannot be overridden!".format(obj_type))
                 current = self._type_dict.get(obj_type, None)
                 if current is not None and current.__class__ != stream_serializer.__class__:
-                    raise ValueError(
-                            "Serializer[{}] has been already registered for type: {}".format(current.get_implementation(),
-                                                                                             obj_type))
+                    raise ValueError("Serializer[{}] has been already registered for type: {}"
+                                     .format(current.__class__, obj_type))
                 else:
-                    self._constant_type_dict[obj_type] = stream_serializer
-
-            current = self._id_dic.get(stream_serializer.get_type_id(), None)
+                    self._type_dict[obj_type] = stream_serializer
+            serializer_type_id = stream_serializer.get_type_id()
+            current = self._id_dic.get(serializer_type_id, None)
             if current is not None and current.__class__ != stream_serializer.__class__:
-                raise ValueError(
-                        "Serializer[{}] has been already registered for type-id: {}".format(current.get_implementation(),
-                                                                                            stream_serializer.get_type_id()))
+                raise ValueError("Serializer[{}] has been already registered for type-id: {}"
+                                 .format(current.__class__, serializer_type_id))
             else:
-                self._id_dic[stream_serializer.get_type_id()] = stream_serializer
+                self._id_dic[serializer_type_id] = stream_serializer
             return current is None
 
     def register_from_super_type(self, obj_type, super_type):
@@ -300,6 +298,13 @@ class SerializerRegistry(object):
         if serializer is not None:
             self.safe_register_serializer(serializer, obj_type)
         return serializer
+
+    def register_from_serializer_config(self, serializer_config):
+        if serializer_config.serializer is None:
+            raise ValueError("No Serializer is provided!")
+        if not isinstance(serializer_config.type, TypeType):
+            raise ValueError("No Serializer Type is provided!")
+        self.safe_register_serializer(serializer_config.serializer(), serializer_config.type)
 
     def destroy(self):
         self._active = False

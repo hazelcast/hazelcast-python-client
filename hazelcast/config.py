@@ -96,7 +96,7 @@ class SerializerConfig(BaseSerializerConfig):
 
     @type.setter
     def set_type(self, _type):
-        if isinstance(type, TypeType):
+        if isinstance(_type, TypeType):
             self._type = _type
         else:
             raise ValueError("Provided value is not a type")

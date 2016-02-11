@@ -12,7 +12,12 @@ class TestGlobalSerializer(StreamSerializer):
 
     def read(self, inp):
         utf = inp.read_utf()
-        return pickle.loads(utf.encode())
+        obj = pickle.loads(utf.encode())
+        try:
+            obj.source = "GLOBAL"
+        except AttributeError:
+            pass
+        return obj
 
     def write(self, out, obj):
         out.write_utf(pickle.dumps(obj))
@@ -25,10 +30,11 @@ class TestGlobalSerializer(StreamSerializer):
 
 
 class CustomClass(object):
-    def __init__(self, uid, name, text):
+    def __init__(self, uid, name, text, source=None):
         self.uid = uid
         self.name = name
         self.text = text
+        self.source = source
 
     def __eq__(self, other):
         if other:
@@ -48,14 +54,33 @@ class CustomSerializer(StreamSerializer):
     def read(self, inp):
         return CustomClass(inp.read_utf(),  # uid
                            inp.read_utf(),  # name
-                           inp.read_utf())  # text
+                           inp.read_utf(),  # text
+                           "CUSTOM")  # Source
+
+    def get_type_id(self):
+        return 10001
+
+
+class TheOtherCustomSerializer(StreamSerializer):
+    def write(self, out, obj):
+        if isinstance(obj, CustomClass):
+            out.write_utf(obj.text)
+            out.write_utf(obj.name)
+            out.write_utf(obj.uid)
+        else:
+            raise ValueError("Can only serialize CustomClass")
+
+    def read(self, inp):
+        text_ = inp.read_utf()
+        name_ = inp.read_utf()
+        uid = inp.read_utf()
+        return CustomClass(uid, name_, text_, "CUSTOM")
 
     def get_type_id(self):
         return 10001
 
 
 class CustomSerializationTestCase(unittest.TestCase):
-
     def test_global_encode_decode(self):
         config = SerializationConfig()
         config.global_serializer_config = GlobalSerializerConfig(TestGlobalSerializer)
@@ -66,6 +91,7 @@ class CustomSerializationTestCase(unittest.TestCase):
 
         obj2 = service.to_object(data)
         self.assertEqual(obj, obj2)
+        self.assertEqual("GLOBAL", obj2.source)
 
     def test_custom_serializer(self):
         config = SerializationConfig()
@@ -78,3 +104,24 @@ class CustomSerializationTestCase(unittest.TestCase):
 
         obj2 = service.to_object(data)
         self.assertEqual(obj, obj2)
+        self.assertEqual("CUSTOM", obj2.source)
+
+    def test_global_custom_serializer(self):
+        config = SerializationConfig()
+        config.serializer_configs.append(SerializerConfig(CustomSerializer, CustomClass))
+        config.global_serializer_config = GlobalSerializerConfig(TestGlobalSerializer)
+
+        service = SerializationServiceV1(serialization_config=config)
+        obj = CustomClass("uid", "some name", "description text")
+        data = service.to_data(obj)
+
+        obj2 = service.to_object(data)
+        self.assertEqual(obj, obj2)
+        self.assertEqual("CUSTOM", obj2.source)
+
+    def test_double_register_custom_serializer(self):
+        config = SerializationConfig()
+        config.serializer_configs.append(SerializerConfig(CustomSerializer, CustomClass))
+        config.serializer_configs.append(SerializerConfig(TheOtherCustomSerializer, CustomClass))
+        with self.assertRaises(ValueError):
+            SerializationServiceV1(serialization_config=config)
