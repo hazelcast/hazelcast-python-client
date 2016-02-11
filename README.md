@@ -20,7 +20,6 @@ Python client is implemented using the [Hazelcast Open Binary Client Protocol](h
 * IdGenerator
 * CountDownLatch
 * RingBuffer
-* ReliableTopic -- TODO
 * ReplicatedMap
 * Transactional Map, MultiMap, Queue, List, Set
 * Continuous Query(listener with predicate)
