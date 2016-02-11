@@ -195,13 +195,13 @@ class Portable(object):
 
 class StreamSerializer(object):
     def write(self, out, obj):
-        pass
+        raise NotImplementedError("write method must be implemented")
 
     def read(self, inp):
-        return None
+        raise NotImplementedError("write method must be implemented")
 
     def get_type_id(self):
-        pass
+        raise NotImplementedError("get_type_id must be implemented")
 
     def destroy(self):
         pass
