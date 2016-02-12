@@ -1,6 +1,10 @@
 Hazelcast Python Client
 =======================
 
+.. image:: https://badges.gitter.im/hazelcast/hazelcast-python-client.svg
+   :alt: Join the chat at https://gitter.im/hazelcast/hazelcast-python-client
+   :target: https://gitter.im/hazelcast/hazelcast-python-client?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
 Python client implementation for `Hazelcast <https://github.com/hazelcast/hazelcast>`_, the open source in-memory data grid.
 
 Python client is implemented using the `Hazelcast Open Binary Client Protocol <http://docs.hazelcast.org/docs/HazelcastOpenBinaryClientProtocol-Version1.0-Final.pdf>`_
