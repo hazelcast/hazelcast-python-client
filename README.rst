@@ -37,6 +37,18 @@ Features :
 * Hazelcast serialization, Custom Serializers
 * Hazelcast serialization, Global Serializers
 
+
+Installation
+------------
+
+You can install hazelcast python client via::
+
+    $ pip install hazelcast-python-client
+
+or::
+
+    $ python setup.py install
+
 Mail Group
 ----------
 
