@@ -205,3 +205,152 @@ class StreamSerializer(object):
 
     def destroy(self):
         pass
+
+
+class PortableReader(object):
+    def get_version(self):
+        raise NotImplementedError()
+
+    def has_field(self, field_name):
+        raise NotImplementedError()
+
+    def get_field_names(self):
+        raise NotImplementedError()
+
+    def get_field_type(self, field_name):
+        raise NotImplementedError()
+
+    def get_field_class_id(self, field_name):
+        raise NotImplementedError()
+
+    def read_int(self, field_name):
+        raise NotImplementedError()
+
+    def read_long(self, field_name):
+        raise NotImplementedError()
+
+    def read_utf(self, field_name):
+        raise NotImplementedError()
+
+    def read_boolean(self, field_name):
+        raise NotImplementedError()
+
+    def read_byte(self, field_name):
+        raise NotImplementedError()
+
+    def read_char(self, field_name):
+        raise NotImplementedError()
+
+    def read_double(self, field_name):
+        raise NotImplementedError()
+
+    def read_float(self, field_name):
+        raise NotImplementedError()
+
+    def read_short(self, field_name):
+        raise NotImplementedError()
+
+    def read_portable(self, field_name):
+        raise NotImplementedError()
+
+    def read_byte_array(self, field_name):
+        raise NotImplementedError()
+
+    def read_boolean_array(self, field_name):
+        raise NotImplementedError()
+
+    def read_char_array(self, field_name):
+        raise NotImplementedError()
+
+    def read_int_array(self, field_name):
+        raise NotImplementedError()
+
+    def read_long_array(self, field_name):
+        raise NotImplementedError()
+
+    def read_double_array(self, field_name):
+        raise NotImplementedError()
+
+    def read_float_array(self, field_name):
+        raise NotImplementedError()
+
+    def read_short_array(self, field_name):
+        raise NotImplementedError()
+
+    def read_utf_array(self, field_name):
+        raise NotImplementedError()
+
+    def read_portable_array(self, field_name):
+        raise NotImplementedError()
+
+    def get_raw_data_input(self):
+        raise NotImplementedError()
+
+
+class PortableWriter(object):
+    def write_int(self, field_name, value):
+        raise NotImplementedError()
+
+    def write_long(self, field_name, value):
+        raise NotImplementedError()
+
+    def write_utf(self, field_name, value):
+        raise NotImplementedError()
+
+    def write_boolean(self, field_name, value):
+        raise NotImplementedError()
+
+    def write_byte(self, field_name, value):
+        raise NotImplementedError()
+
+    def write_char(self, field_name, value):
+        raise NotImplementedError()
+
+    def write_double(self, field_name, value):
+        raise NotImplementedError()
+
+    def write_float(self, field_name, value):
+        raise NotImplementedError()
+
+    def write_short(self, field_name, value):
+        raise NotImplementedError()
+
+    def write_portable(self, field_name, portable):
+        raise NotImplementedError()
+
+    def write_null_portable(self, field_name, factory_id, class_id):
+        raise NotImplementedError()
+
+    def write_byte_array(self, field_name, values):
+        raise NotImplementedError()
+
+    def write_boolean_array(self, field_name, values):
+        raise NotImplementedError()
+
+    def write_char_array(self, field_name, values):
+        raise NotImplementedError()
+
+    def write_int_array(self, field_name, values):
+        raise NotImplementedError()
+
+    def write_long_array(self, field_name, values):
+        raise NotImplementedError()
+
+    def write_double_array(self, field_name, values):
+        raise NotImplementedError()
+
+    def write_float_array(self, field_name, values):
+        raise NotImplementedError()
+
+    def write_short_array(self, field_name, values):
+        raise NotImplementedError()
+
+    def write_utf_array(self, field_name, values):
+        raise NotImplementedError()
+
+    def write_portable_array(self, field_name, values):
+        raise NotImplementedError()
+
+    def get_raw_data_output(self):
+        raise NotImplementedError()
+
