@@ -128,3 +128,16 @@ class ImmutableLazyDataList(Sequence):
     def __repr__(self):
         self._populate()
         return str(self._list_obj)
+
+
+# Serialization Utilities
+
+def get_portable_version(portable, default_version):
+    try:
+        version = portable.get_class_version()
+    except AttributeError:
+        version = default_version
+    return version
+
+
+

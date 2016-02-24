@@ -52,9 +52,10 @@ class _ObjectDataOutput(ObjectDataOutput):
         # struct.pack_into(self._FMT_CHAR, self._buffer, self._pos, val)
         # self._pos += CHAR_SIZE_IN_BYTES
 
-    def write_int(self, val):
+    def write_int(self, val, position=None):
         self._ensure_available(INT_SIZE_IN_BYTES)
-        struct.pack_into(self._FMT_INT, self._buffer, self._pos, val)
+        _position = self._pos if position is None else position
+        struct.pack_into(self._FMT_INT, self._buffer, _position, val)
         self._pos += INT_SIZE_IN_BYTES
 
     def write_int_big_endian(self, val):
@@ -129,6 +130,12 @@ class _ObjectDataOutput(ObjectDataOutput):
 
     def is_big_endian(self):
         return self._is_big_endian
+
+    def position(self):
+        pass
+
+    def write_zero_bytes(self, count):
+        pass
 
     # HELPERS
     def _write_array_fnc(self, val, item_write_fnc):

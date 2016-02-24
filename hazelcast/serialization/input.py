@@ -61,9 +61,9 @@ class _ObjectDataInput(ObjectDataInput):
         self._check_available(self._pos, SHORT_SIZE_IN_BYTES)
         return self._read_from_buff(self._FMT_CHAR, SHORT_SIZE_IN_BYTES)
 
-    def read_int(self):
-        self._check_available(self._pos, INT_SIZE_IN_BYTES)
-        return self._read_from_buff(self._FMT_INT, INT_SIZE_IN_BYTES)
+    def read_int(self, position=None):
+        self._check_available(position, INT_SIZE_IN_BYTES)
+        return self._read_from_buff(self._FMT_INT, INT_SIZE_IN_BYTES, position)
 
     def read_long(self):
         self._check_available(self._pos, LONG_SIZE_IN_BYTES)
@@ -144,14 +144,16 @@ class _ObjectDataInput(ObjectDataInput):
         return self._is_big_endian
 
     # HELPERS
-    def _check_available(self, pos, size):
-        if pos < 0:
+    def _check_available(self, position, size):
+        _position = self._pos if position is None else position
+        if _position < 0:
             raise ValueError
-        if self._size - pos < size:
+        if self._size - _position < size:
             raise EOFError("Cannot read {} bytes!".format(size))
 
-    def _read_from_buff(self, fmt, size):
-        val = struct.unpack_from(fmt, self._buffer, self._pos)
+    def _read_from_buff(self, fmt, size, position=None):
+        _position = self._pos if position is None else position
+        val = struct.unpack_from(fmt, self._buffer, _position)
         self._pos += size
         return val[0]
 

@@ -11,7 +11,7 @@ class ObjectDataOutput(object):
         :param offset: offset of the buffer where copy begin
         :param length: length of data to be copied from the offset into stream
         """
-        pass
+        raise NotImplementedError()
 
     def write_boolean(self, val):
         """
@@ -19,150 +19,150 @@ class ObjectDataOutput(object):
         single byte value 1 represent True, 0 represent False
         :param val: the boolean to be written
         """
-        pass
+        raise NotImplementedError()
 
     def write_byte(self, val):
-        pass
+        raise NotImplementedError()
 
     def write_short(self, val):
-        pass
+        raise NotImplementedError()
 
     def write_char(self, val):
-        pass
+        raise NotImplementedError()
 
     def write_int(self, val):
-        pass
+        raise NotImplementedError()
 
     def write_long(self, val):
-        pass
+        raise NotImplementedError()
 
     def write_float(self, val):
-        pass
+        raise NotImplementedError()
 
     def write_double(self, val):
-        pass
+        raise NotImplementedError()
 
     def write_bytes(self, string):
-        pass
+        raise NotImplementedError()
 
     def write_chars(self, val):
-        pass
+        raise NotImplementedError()
 
     def write_utf(self, val):
-        pass
+        raise NotImplementedError()
 
     def write_byte_array(self, val):
-        pass
+        raise NotImplementedError()
 
     def write_boolean_array(self, val):
-        pass
+        raise NotImplementedError()
 
     def write_char_array(self, val):
-        pass
+        raise NotImplementedError()
 
     def write_int_array(self, val):
-        pass
+        raise NotImplementedError()
 
     def write_long_array(self, val):
-        pass
+        raise NotImplementedError()
 
     def write_double_array(self, val):
-        pass
+        raise NotImplementedError()
 
     def write_float_array(self, val):
-        pass
+        raise NotImplementedError()
 
     def write_short_array(self, val):
-        pass
+        raise NotImplementedError()
 
     def write_utf_array(self, val):
-        pass
+        raise NotImplementedError()
 
     def write_object(self, val):
-        pass
+        raise NotImplementedError()
 
     def write_data(self, val):
-        pass
+        raise NotImplementedError()
 
     def to_byte_array(self):
-        pass
+        raise NotImplementedError()
 
     def get_byte_order(self):
-        pass
+        raise NotImplementedError()
 
 
 class ObjectDataInput(object):
     def read_into(self, buff, offset=None, length=None):
-        pass
+        raise NotImplementedError()
 
     def skip_bytes(self, count):
-        pass
+        raise NotImplementedError()
 
     def read_boolean(self):
-        pass
+        raise NotImplementedError()
 
     def read_byte(self):
-        pass
+        raise NotImplementedError()
 
     def read_unsigned_byte(self):
-        pass
+        raise NotImplementedError()
 
     def read_short(self):
-        pass
+        raise NotImplementedError()
 
     def read_unsigned_short(self):
-        pass
+        raise NotImplementedError()
 
     def read_int(self):
-        pass
+        raise NotImplementedError()
 
     def read_long(self):
-        pass
+        raise NotImplementedError()
 
     def read_float(self):
-        pass
+        raise NotImplementedError()
 
     def read_double(self):
-        pass
+        raise NotImplementedError()
 
     def read_utf(self):
-        pass
+        raise NotImplementedError()
 
     def read_byte_array(self):
-        pass
+        raise NotImplementedError()
 
     def read_boolean_array(self):
-        pass
+        raise NotImplementedError()
 
     def read_char_array(self):
-        pass
+        raise NotImplementedError()
 
     def read_int_array(self):
-        pass
+        raise NotImplementedError()
 
     def read_long_array(self):
-        pass
+        raise NotImplementedError()
 
     def read_double_array(self):
-        pass
+        raise NotImplementedError()
 
     def read_float_array(self):
-        pass
+        raise NotImplementedError()
 
     def read_short_array(self):
-        pass
+        raise NotImplementedError()
 
     def read_utf_array(self):
-        pass
+        raise NotImplementedError()
 
     def read_object(self):
-        pass
+        raise NotImplementedError()
 
     def read_data(self):
-        pass
+        raise NotImplementedError()
 
     def get_byte_order(self):
-        pass
+        raise NotImplementedError()
 
 
 class IdentifiedDataSerializable(object):
@@ -181,16 +181,16 @@ class IdentifiedDataSerializable(object):
 
 class Portable(object):
     def write_portable(self):
-        pass
+        raise NotImplementedError()
 
     def read_portable(self):
-        pass
+        raise NotImplementedError()
 
     def get_factory_id(self):
-        pass
+        raise NotImplementedError()
 
     def get_class_id(self):
-        pass
+        raise NotImplementedError()
 
 
 class StreamSerializer(object):
@@ -204,7 +204,7 @@ class StreamSerializer(object):
         raise NotImplementedError("get_type_id must be implemented")
 
     def destroy(self):
-        pass
+        raise NotImplementedError()
 
 
 class PortableReader(object):
