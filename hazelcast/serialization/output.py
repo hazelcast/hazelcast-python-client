@@ -19,7 +19,7 @@ class _ObjectDataOutput(ObjectDataOutput):
         self._FMT_FLOAT = FMT_BE_FLOAT if self._is_big_endian else FMT_LE_FLOAT
         self._FMT_DOUBLE = FMT_BE_DOUBLE if self._is_big_endian else FMT_LE_DOUBLE
 
-    def __write(self, val):
+    def _write(self, val):
         self._ensure_available(BYTE_SIZE_IN_BYTES)
         self._buffer[self._pos] = val
         self._pos += BYTE_SIZE_IN_BYTES
@@ -36,10 +36,10 @@ class _ObjectDataOutput(ObjectDataOutput):
         self._pos += _len
 
     def write_boolean(self, bool):
-        self.__write(1 if bool else 0)
+        self._write(1 if bool else 0)
 
     def write_byte(self, val):
-        self.__write(val)
+        self._write(val)
 
     def write_short(self, val):
         self._ensure_available(SHORT_SIZE_IN_BYTES)
@@ -132,10 +132,11 @@ class _ObjectDataOutput(ObjectDataOutput):
         return self._is_big_endian
 
     def position(self):
-        pass
+        return self._pos
 
     def write_zero_bytes(self, count):
-        pass
+        for i in xrange(0, count):
+            self._write(0)
 
     # HELPERS
     def _write_array_fnc(self, val, item_write_fnc):
@@ -164,4 +165,81 @@ class _ObjectDataOutput(ObjectDataOutput):
         from binascii import hexlify
         buf = hexlify(self._buffer)
         pos_ = self._pos * 2
-        return buf[:pos_] + "[" + buf[pos_] + "]" + buf[pos_+1:]
+        return buf[:pos_] + "[" + buf[pos_] + "]" + buf[pos_ + 1:]
+
+
+class EmptyObjectDataOutput(ObjectDataOutput):
+    def write_utf_array(self, val):
+        pass
+
+    def write_utf(self, val):
+        pass
+
+    def write_short_array(self, val):
+        pass
+
+    def write_short(self, val):
+        pass
+
+    def write_object(self, val):
+        pass
+
+    def write_long_array(self, val):
+        pass
+
+    def write_long(self, val):
+        pass
+
+    def write_int_array(self, val):
+        pass
+
+    def write_int(self, val):
+        pass
+
+    def write_from(self, buff, offset=None, length=None):
+        pass
+
+    def write_float_array(self, val):
+        pass
+
+    def write_float(self, val):
+        pass
+
+    def write_double_array(self, val):
+        pass
+
+    def write_double(self, val):
+        pass
+
+    def write_data(self, val):
+        pass
+
+    def write_chars(self, val):
+        pass
+
+    def write_char_array(self, val):
+        pass
+
+    def write_char(self, val):
+        pass
+
+    def write_bytes(self, string):
+        pass
+
+    def write_byte_array(self, val):
+        pass
+
+    def write_byte(self, val):
+        pass
+
+    def write_boolean_array(self, val):
+        pass
+
+    def write_boolean(self, val):
+        pass
+
+    def to_byte_array(self):
+        pass
+
+    def get_byte_order(self):
+        pass

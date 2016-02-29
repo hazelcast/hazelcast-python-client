@@ -26,7 +26,7 @@ FieldType = enum(
 
 
 class FieldDefinition(object):
-    def __init__(self, index, field_name, field_type, factory_id, class_id):
+    def __init__(self, index, field_name, field_type, factory_id=0, class_id=0):
         self.index = index
         self.field_name = field_name
         self.field_type = field_type
@@ -40,6 +40,9 @@ class ClassDefinition(object):
         self.class_id = class_id
         self.version = version
         self.field_defs = {}  # string:FieldDefinition
+
+    def add_field_def(self, field_def):
+        self.field_defs[field_def.field_name] = field_def
 
     def get_field(self, field_name_or_index):
         if isinstance(field_name_or_index, int):
@@ -164,6 +167,13 @@ class ClassDefinitionBuilder(object):
     def add_utf_array_field(self, field_name):
         self._add_field_by_type(field_name, FieldType.UTF_ARRAY)
         return self
+
+    def build(self):
+        self._done = True
+        cd = ClassDefinition(self.factory_id, self.class_id, self.version)
+        for field_def in self._field_defs:
+            cd.add_field_def(field_def)
+        return cd
 
     def _add_field_by_type(self, field_name, field_type):
         self._check()
