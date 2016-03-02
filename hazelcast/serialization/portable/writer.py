@@ -105,7 +105,7 @@ class DefaultPortableWriter(PortableWriter):
         self._out.write_int(fd.class_id)
 
         if not is_none:
-            self._check_portable_attributes(fd, portable)
+            _check_portable_attributes(fd, portable)
             self._portable_serializer.write_internal(self._out, portable)
 
     def write_portable_array(self, field_name, values):
@@ -119,7 +119,7 @@ class DefaultPortableWriter(PortableWriter):
             self._out.write_zero_bytes(len * 4)
             for i in xrange(0, len(values)):
                 portable = values[i]
-                self._check_portable_attributes(fd, portable)
+                _check_portable_attributes(fd, portable)
                 _position = self._out.position()
                 self._out.write_int(_offset + i * INT_SIZE_IN_BYTES, _position)
                 self._portable_serializer.write_internal(self._out, portable)
@@ -156,20 +156,21 @@ class DefaultPortableWriter(PortableWriter):
             raise HazelcastSerializationError("Field '{}' has already been written!".format(field_name))
         return fd
 
-    def _check_portable_attributes(self, field_def, portable):
-        if field_def.factory_id != portable.get_factory_id():
-            raise HazelcastSerializationError("Wrong Portable type! Generic portable types are not supported! "
-                                              "Expected factory-id: {}, Actual factory-id: {}"
-                                              .format(field_def.factory_id, portable.get_factory_id()))
-        if field_def.class_id != portable.get_class_id():
-            raise HazelcastSerializationError("Wrong Portable type! Generic portable types are not supported! "
-                                              "Expected class-id: {}, Actual class-id: {}"
-                                              .format(field_def.class_id, portable.get_class_id()))
-
     def end(self):
         # write final offset
         _position = self._out.position()
         self._out.write_in(self._begin_pos, _position)
+
+
+def _check_portable_attributes(field_def, portable):
+    if field_def.factory_id != portable.get_factory_id():
+        raise HazelcastSerializationError("Wrong Portable type! Generic portable types are not supported! "
+                                          "Expected factory-id: {}, Actual factory-id: {}"
+                                          .format(field_def.factory_id, portable.get_factory_id()))
+    if field_def.class_id != portable.get_class_id():
+        raise HazelcastSerializationError("Wrong Portable type! Generic portable types are not supported! "
+                                          "Expected class-id: {}, Actual class-id: {}"
+                                          .format(field_def.class_id, portable.get_class_id()))
 
 
 class ClassDefinitionWriter(PortableWriter):
@@ -215,7 +216,7 @@ class ClassDefinitionWriter(PortableWriter):
         self._builder.add_portable_field(field_name, nested_class_def)
 
     def write_null_portable(self, field_name, factory_id, class_id):
-        nested_class_def = self.portable_context.lookup_class_definition(factory_id, class_id, self.portable_context.get_version())
+        nested_class_def = self.portable_context.lookup_class_definition(factory_id,class_id, self.portable_context.get_version())
         if nested_class_def is None:
             raise HazelcastSerializationError("Cannot write None portable without explicitly registering class definition!")
         self._builder.add_portable_field(field_name, nested_class_def)

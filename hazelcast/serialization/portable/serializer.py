@@ -38,7 +38,7 @@ class PortableSerializer(StreamSerializer):
         portable = self.create_new_portable_instance(factory_id, class_id)
         portable_version = self.find_portable_version(factory_id, class_id, portable)
         reader = self.create_reader(inp, factory_id, class_id, version, portable_version)
-        portable.readPortable(reader)
+        portable.read_portable(reader)
         reader.end()
         return portable
 
@@ -70,7 +70,7 @@ class PortableSerializer(StreamSerializer):
         if cd is None:
             begin = inp.position()
             cd = self._portable_context.readClassDefinition(inp, factory_id, class_id, effective_version)
-            inp.position(begin)
+            inp.set_position(begin)
 
         if portable_version == effective_version:
             reader = DefaultPortableReader(self, inp, cd)

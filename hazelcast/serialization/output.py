@@ -134,6 +134,9 @@ class _ObjectDataOutput(ObjectDataOutput):
     def position(self):
         return self._pos
 
+    def set_position(self, position):
+        self._pos = position
+
     def write_zero_bytes(self, count):
         for i in xrange(0, count):
             self._write(0)
