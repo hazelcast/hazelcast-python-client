@@ -13,7 +13,7 @@ import hazelcast
 def do_benchmark():
     THREAD_COUNT = 1
     ENTRY_COUNT = 10 * 1000
-    VALUE_SIZE = 10000
+    VALUE_SIZE = 100
     GET_PERCENTAGE = 40
     PUT_PERCENTAGE = 40
 
@@ -38,7 +38,7 @@ def do_benchmark():
             self.setDaemon(True)
 
         def run(self):
-            my_map = client.get_map("default")
+            my_map = client.get_map("default").blocking()
             while True:
                 key = int(random.random() * ENTRY_COUNT)
                 operation = int(random.random() * 100)
