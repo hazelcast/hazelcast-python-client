@@ -176,7 +176,7 @@ class FutureTest(unittest.TestCase):
         self.assertEqual(1, result)
 
     def test_callback_called_exactly_once(self):
-        for _ in xrange(0, 1000):
+        for _ in xrange(0, 10000):
             f = Future()
 
             def set_result():
@@ -195,7 +195,7 @@ class FutureTest(unittest.TestCase):
             self.assertEqual(i[0], 1)
 
     def test_callback_called_exactly_once_when_exception(self):
-        for _ in xrange(0, 1000):
+        for _ in xrange(0, 10000):
             f = Future()
 
             def set_exception():
