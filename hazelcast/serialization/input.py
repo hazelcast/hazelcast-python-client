@@ -37,7 +37,7 @@ class _ObjectDataInput(ObjectDataInput):
         self._pos += _len
 
     def skip_bytes(self, count):
-        pass
+        raise NotImplementedError("skip_bytes not implemented!!!")
 
     def read_boolean(self):
         return self.read_byte() != 0

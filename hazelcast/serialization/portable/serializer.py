@@ -8,8 +8,8 @@ from hazelcast.serialization.serialization_const import CONSTANT_TYPE_PORTABLE
 
 class PortableSerializer(StreamSerializer):
     def __init__(self, portable_context, portable_factories):
-        self._portable_factories = portable_factories
         self._portable_context = portable_context
+        self._portable_factories = portable_factories
 
     def write(self, out, portable):
         if not isinstance(portable, Portable):
@@ -47,7 +47,7 @@ class PortableSerializer(StreamSerializer):
         if current_version < 0:
             current_version = util.get_portable_version(portable, self._portable_context.get_version())
         if current_version > 0:
-            self._portable_context.setClassVersion(factory_id, class_id, current_version)
+            self._portable_context.set_class_version(factory_id, class_id, current_version)
         return current_version
 
     def create_new_portable_instance(self, factory_id, class_id):
@@ -66,10 +66,10 @@ class PortableSerializer(StreamSerializer):
         if version < 0:
             effective_version = self._portable_context.getVersion()
 
-        cd = self._portable_context.lookupClassDefinition(factory_id, class_id, effective_version)
+        cd = self._portable_context.lookup_class_definition(factory_id, class_id, effective_version)
         if cd is None:
             begin = inp.position()
-            cd = self._portable_context.readClassDefinition(inp, factory_id, class_id, effective_version)
+            cd = self._portable_context.read_class_definition(inp, factory_id, class_id, effective_version)
             inp.set_position(begin)
 
         if portable_version == effective_version:
@@ -82,4 +82,4 @@ class PortableSerializer(StreamSerializer):
         return CONSTANT_TYPE_PORTABLE
 
     def destroy(self):
-        pass
+        self._portable_factories.clear()

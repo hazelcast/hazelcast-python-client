@@ -147,14 +147,18 @@ class DefaultPortableWriter(PortableWriter):
         if fd is None:
             raise HazelcastSerializationError("Invalid field name:'{}' for ClassDefinition(id:{} , version:{} )"
                                               .format(field_name, self._class_def.class_id, self._class_def.version))
-        if self._writen_fields.add(field_name):
-            self._out.write_int(self._offset + fd.index * INT_SIZE_IN_BYTES, self._out.position())
-            self._out.write_short(field_name.length())
-            self._out.write_bytes(field_name)
-            self._out.write_byte(field_type)
+        if field_name not in self._writen_fields:
+            self._write_field_def(fd.index, field_name, field_type)
+            self._writen_fields.add(field_name)
         else:
             raise HazelcastSerializationError("Field '{}' has already been written!".format(field_name))
         return fd
+
+    def _write_field_def(self, index, field_name, field_type):
+        self._out.write_int(self._offset + index * INT_SIZE_IN_BYTES, self._out.position())
+        self._out.write_short(len(field_name))
+        self._out.write_from(field_name)
+        self._out.write_byte(field_type)
 
     def end(self):
         # write final offset
@@ -270,3 +274,7 @@ class ClassDefinitionWriter(PortableWriter):
         _writer = ClassDefinitionWriter(self.portable_context, nested_builder)
         portable.write_portable(_writer)
         return self.portable_context.register_class_definition(nested_builder.build())
+
+    def register_and_get(self):
+        cd = self._builder.build()
+        return self.portable_context.register_class_definition(cd)

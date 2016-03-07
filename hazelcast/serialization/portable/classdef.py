@@ -33,6 +33,11 @@ class FieldDefinition(object):
         self.factory_id = factory_id
         self.class_id = class_id
 
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) \
+               and (self.index, self.field_name, self.field_type, self.factory_id, self.class_id) == \
+                   (other.index, other.field_name, other.field_type, other.factory_id, other.class_id)
+
 
 class ClassDefinition(object):
     def __init__(self, factory_id, class_id, version):
@@ -76,6 +81,14 @@ class ClassDefinition(object):
 
     def get_field_count(self):
         return len(self.field_defs)
+
+    def set_version_if_not_set(self, version):
+        if self.version < 0:
+            self.version = version
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and (self.factory_id, self.class_id, self.version, self.field_defs) == \
+                                                     (other.factory_id, other.class_id, other.version, self.field_defs)
 
 
 class ClassDefinitionBuilder(object):
@@ -166,6 +179,14 @@ class ClassDefinitionBuilder(object):
 
     def add_utf_array_field(self, field_name):
         self._add_field_by_type(field_name, FieldType.UTF_ARRAY)
+        return self
+
+    def add_field_def(self, field_def):
+        self._check()
+        if self._index != field_def.index:
+            raise ValueError("Invalid field index")
+        self._index += 1
+        self._field_defs.append(field_def)
         return self
 
     def build(self):

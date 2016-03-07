@@ -35,8 +35,8 @@ class _ObjectDataOutput(ObjectDataOutput):
         self._buffer[self._pos: self._pos + _len] = buff[:]
         self._pos += _len
 
-    def write_boolean(self, bool):
-        self._write(1 if bool else 0)
+    def write_boolean(self, boolean):
+        self._write(1 if boolean else 0)
 
     def write_byte(self, val):
         self._write(val)
@@ -242,7 +242,7 @@ class EmptyObjectDataOutput(ObjectDataOutput):
         pass
 
     def to_byte_array(self):
-        pass
+        raise NotImplementedError("to_byte_array not implemented")
 
     def get_byte_order(self):
         pass
