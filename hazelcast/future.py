@@ -1,6 +1,7 @@
 import logging
 import sys
 import threading
+
 from hazelcast.util import AtomicInteger
 
 NONE_RESULT = object()
@@ -15,7 +16,7 @@ class Future(object):
 
     def __init__(self):
         self._callbacks = []
-        self._event = threading.Event()
+        self._event = _Event()
         pass
 
     def set_result(self, result):
@@ -54,7 +55,7 @@ class Future(object):
         return self._result is not None
 
     def done(self):
-        return self._event.isSet()
+        return self._event.is_set()
 
     def running(self):
         return not self.done()
@@ -70,10 +71,15 @@ class Future(object):
         return self._traceback
 
     def add_done_callback(self, callback):
-        if self.done():
+        run_callback = False
+        with self._event.condition:
+            if self.done():
+                run_callback = True
+            else:
+                self._callbacks.append(callback)
+
+        if run_callback:
             self._invoke_cb(callback)
-        else:
-            self._callbacks.append(callback)
 
     def _invoke_callbacks(self):
         for callback in self._callbacks:
@@ -104,6 +110,27 @@ class Future(object):
         return future
 
 
+class _Event(object):
+    _flag = False
+
+    def __init__(self):
+        self.condition = threading.Condition(threading.Lock())
+
+    def set(self):
+        with self.condition:
+            self._flag = True
+            self.condition.notify_all()
+
+    def is_set(self):
+        return self._flag
+
+    def wait(self):
+        with self.condition:
+            if not self._flag:
+                self.condition.wait()
+            return self._flag
+
+
 class ImmediateFuture(Future):
     def __init__(self, result):
         self._result = result
@@ -125,6 +152,9 @@ class ImmediateFuture(Future):
 
     def result(self):
         return self._result
+
+    def add_done_callback(self, callback):
+        self._invoke_cb(callback)
 
 
 def combine_futures(*futures):
