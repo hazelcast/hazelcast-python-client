@@ -54,18 +54,12 @@ def validate_serializer(serializer, _type):
 class AtomicInteger(object):
     def __init__(self, initial=0):
         self.count = itertools.count(start=initial)
-        self._current = initial
 
     def get_and_increment(self):
-        self._current = self.count.next()
-        return self._current
+        return self.count.next()
 
     def set(self, value):
-        self._current = value
         self.count = itertools.count(start=value)
-
-    def get(self):
-        return self._current
 
 
 def enum(**enums):
