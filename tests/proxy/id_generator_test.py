@@ -1,3 +1,4 @@
+from hazelcast.proxy.id_generator import BLOCK_SIZE
 from tests.base import SingleMemberTestCase
 from tests.util import random_string
 
@@ -20,3 +21,8 @@ class IdGeneratorTest(SingleMemberTestCase):
 
     def test_str(self):
         self.assertTrue(str(self.id_gen).startswith("IdGenerator"))
+
+    def test_new_block(self):
+        self.id_gen.init(BLOCK_SIZE - 1)
+        self.assertEqual(self.id_gen.new_id(), BLOCK_SIZE)
+        self.assertEqual(self.id_gen.new_id(), BLOCK_SIZE + 1)
