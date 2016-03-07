@@ -34,7 +34,7 @@ class AsyncoreReactor(object):
         Future._threading_locals.is_reactor_thread = True
         while self._is_live:
             try:
-                asyncore.loop(count=10000, timeout=0.1, map=self._map)
+                asyncore.loop(count=1000, timeout=0.01, map=self._map)
                 self._check_timers()
             except select.error as err:
                 # TODO: parse error type to catch only error "9"
@@ -96,10 +96,11 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         asyncore.dispatcher.__init__(self, map=map)
         Connection.__init__(self, address, connection_closed_callback, message_callback)
 
+        self._write_lock = threading.Lock()
         self._write_queue = deque()
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect(self._address)
-        self.write("CB2")
+        self._write_queue.append("CB2")
 
     def handle_connect(self):
         self.logger.debug("Connected to %s", self._address)
@@ -109,14 +110,15 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         self.receive_message()
 
     def handle_write(self):
-        try:
-            item = self._write_queue.popleft()
-        except IndexError:
-            return
-        sent = self.send(item)
-        self.sent_protocol_bytes = True
-        if sent < len(item):
-            self._write_queue.appendleft(item[sent:])
+        with self._write_lock:
+            try:
+                data = self._write_queue.popleft()
+            except IndexError:
+                return
+            sent = self.send(data)
+            self.sent_protocol_bytes = True
+            if sent < len(data):
+                self._write_queue.appendleft(data[sent:])
 
     def handle_close(self):
         self.logger.warn("Connection closed by server.")
@@ -132,7 +134,20 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         return not self._closed and self.sent_protocol_bytes
 
     def write(self, data):
-        self._write_queue.append(data)
+        # if write queue is empty, send the data right away, otherwise add to queue
+        if len(self._write_queue) == 0 and self._write_lock.acquire(False):
+            try:
+                sent = self.send(data)
+                if sent < len(data):
+                    self.logger.info("adding to queue")
+                    self._write_queue.appendleft(data[sent:])
+            finally:
+                self._write_lock.release()
+        else:
+            self._write_queue.append(data)
+
+    def writable(self):
+        return len(self._write_queue) > 0
 
     def close(self, cause):
         if not self._closed:

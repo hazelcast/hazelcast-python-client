@@ -77,6 +77,9 @@ class HazelcastTestCase(unittest.TestCase):
         self.assertEqual(event.old_value, old_value)
         self.assertEqual(event.number_of_affected_entries, number_of_affected_entries)
 
+    def set_logging_level(self, level):
+        logging.getLogger().setLevel(level)
+
     def start_new_thread(self, target):
         t = Thread(target=target)
         t.start()
