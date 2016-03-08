@@ -45,7 +45,7 @@ Features :
 Installation
 ------------
 
-You can install hazelcast python client via::
+You can install the Hazelcast python client via the following command::
 
     $ pip install hazelcast-python-client
 
