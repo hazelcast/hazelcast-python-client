@@ -1,6 +1,8 @@
 import logging
 
 from hazelcast.serialization.base import BaseSerializationService
+from hazelcast.serialization.portable.context import PortableContext
+from hazelcast.serialization.portable.serializer import PortableSerializer
 from hazelcast.serialization.serializer import *
 
 DEFAULT_OUT_BUFFER_SIZE = 4 * 1024
@@ -15,12 +17,16 @@ def default_partition_strategy(key):
 class SerializationServiceV1(BaseSerializationService):
     logger = logging.getLogger("SerializationService")
 
-    def __init__(self, serialization_config=None, version=1, global_partition_strategy=default_partition_strategy,
-                 output_buffer_size=DEFAULT_OUT_BUFFER_SIZE,
-                 is_big_endian=True):
-        super(SerializationServiceV1, self).__init__(version, global_partition_strategy, output_buffer_size,
-                                                     is_big_endian)
+    def __init__(self, serialization_config=None, version=1, portable_version=0,
+                 global_partition_strategy=default_partition_strategy,
+                 output_buffer_size=DEFAULT_OUT_BUFFER_SIZE, is_big_endian=True):
+        super(SerializationServiceV1, self).__init__(version, global_partition_strategy, output_buffer_size, is_big_endian)
         self.serialization_config = serialization_config
+
+        portable_context = PortableContext(self, portable_version)
+        for class_def in serialization_config.class_definitions:
+            self._portable_context.register_class_definition(class_def)
+        self._registry._portable_serializer = PortableSerializer(portable_context, self.serialization_config.portable_factories)
 
         # merge configured factories with built in ones
         factories = {}
@@ -40,7 +46,7 @@ class SerializationServiceV1(BaseSerializationService):
     def _register_constant_serializers(self):
         self._registry.register_constant_serializer(self._registry._null_serializer, type(None))
         self._registry.register_constant_serializer(self._registry._data_serializer)
-        # self._registry.register_constant_serializer(self._registry._portable_serializer)
+        self._registry.register_constant_serializer(self._registry._portable_serializer)
         self._registry.register_constant_serializer(ByteSerializer())
         self._registry.register_constant_serializer(BooleanSerializer(), bool)
         self._registry.register_constant_serializer(CharSerializer())

@@ -155,15 +155,17 @@ class DefaultPortableWriter(PortableWriter):
         return fd
 
     def _write_field_def(self, index, field_name, field_type):
-        self._out.write_int(self._offset + index * INT_SIZE_IN_BYTES, self._out.position())
+        pos_val = self._out.position()
+        position = self._offset + index * INT_SIZE_IN_BYTES
+        self._out.write_int(pos_val, position)
         self._out.write_short(len(field_name))
         self._out.write_from(field_name)
         self._out.write_byte(field_type)
 
     def end(self):
         # write final offset
-        _position = self._out.position()
-        self._out.write_in(self._begin_pos, _position)
+        _pos_value = self._out.position()
+        self._out.write_int(_pos_value, self._begin_pos)
 
 
 def _check_portable_attributes(field_def, portable):

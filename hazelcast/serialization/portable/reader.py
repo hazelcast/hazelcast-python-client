@@ -42,12 +42,11 @@ class DefaultPortableReader(PortableReader):
 
     def read_byte(self, field_name):
         pos = self._read_position(field_name, FieldType.BYTE)
-        return self._in.read_long(pos)
+        return self._in.read_byte(pos)
 
     def read_char(self, field_name):
-        raise NotImplementedError()
-        # pos = self._read_position(field_name, FieldType.CHAR)
-        # return self._in.read_long(pos)
+        pos = self._read_position(field_name, FieldType.CHAR)
+        return self._in.read_char(pos)
 
     def read_short(self, field_name):
         pos = self._read_position(field_name, FieldType.SHORT)
@@ -74,6 +73,7 @@ class DefaultPortableReader(PortableReader):
         try:
             pos = self._read_position(field_name, FieldType.UTF)
             self._in.set_position(pos)
+            return self._in.read_utf()
         finally:
             self._in.set_position(cur_pos)
 

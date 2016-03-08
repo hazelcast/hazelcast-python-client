@@ -34,6 +34,22 @@ class InputTestCase(unittest.TestCase):
         self.assertEqual(0, initial_pos)
         self.assertEqual(self.INT_ARR, read_arr)
 
+    def test_char_be(self):
+        buff = bytearray(binascii.unhexlify("00e70000"))
+        _input = _ObjectDataInput(buff, 0, None, True)
+        initial_pos = _input._pos
+        char = _input.read_char()
+        self.assertEqual(0, initial_pos)
+        self.assertEqual(unichr(0x00e7), char)
+
+    def test_char_le(self):
+        buff = bytearray(binascii.unhexlify("e7000000"))
+        _input = _ObjectDataInput(buff, 0, None, False)
+        initial_pos = _input._pos
+        char = _input.read_char()
+        self.assertEqual(0, initial_pos)
+        self.assertEqual(unichr(0x00e7), char)
+
 
 if __name__ == '__main__':
     unittest.main()

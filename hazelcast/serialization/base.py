@@ -154,6 +154,7 @@ class SerializerRegistry(object):
     def __init__(self):
         self._active = True
         self._global_serializer = None
+        self._portable_serializer = None
         self._data_serializer = None
         self._null_serializer = NoneSerializer()
         self._python_serializer = PythonObjectSerializer()
@@ -224,7 +225,7 @@ class SerializerRegistry(object):
         if is_dataserializable(obj):
             return self._data_serializer
         if is_portable(obj):
-            raise NotImplementedError("Portable serializer not implemented yet!")
+            return self._portable_serializer
         type_id = None
         if isinstance(obj, basestring):
             type_id = CONSTANT_TYPE_STRING

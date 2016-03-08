@@ -14,7 +14,7 @@ class _ObjectDataOutput(ObjectDataOutput):
         # Local cache struct formats according to endianness
         self._FMT_INT = FMT_BE_INT if self._is_big_endian else FMT_LE_INT
         self._FMT_SHORT = FMT_BE_INT16 if self._is_big_endian else FMT_LE_INT16
-        self._FMT_CHAR = FMT_BE_UINT16 if self._is_big_endian else FMT_LE_UINT16
+        self._CHAR_ENCODING = "utf_16_be" if self._is_big_endian else "utf_16_le"
         self._FMT_LONG = FMT_BE_LONG if self._is_big_endian else FMT_LE_LONG
         self._FMT_FLOAT = FMT_BE_FLOAT if self._is_big_endian else FMT_LE_FLOAT
         self._FMT_DOUBLE = FMT_BE_DOUBLE if self._is_big_endian else FMT_LE_DOUBLE
@@ -47,16 +47,16 @@ class _ObjectDataOutput(ObjectDataOutput):
         self._pos += SHORT_SIZE_IN_BYTES
 
     def write_char(self, val):
-        raise NotImplementedError("Single char not implemented")
-        # self._ensure_available(CHAR_SIZE_IN_BYTES)
-        # struct.pack_into(self._FMT_CHAR, self._buffer, self._pos, val)
-        # self._pos += CHAR_SIZE_IN_BYTES
+        encoded = val.encode(self._CHAR_ENCODING)
+        self.write_from(encoded)
 
     def write_int(self, val, position=None):
         self._ensure_available(INT_SIZE_IN_BYTES)
-        _position = self._pos if position is None else position
-        struct.pack_into(self._FMT_INT, self._buffer, _position, val)
-        self._pos += INT_SIZE_IN_BYTES
+        if position is None:
+            struct.pack_into(self._FMT_INT, self._buffer, self._pos, val)
+            self._pos += INT_SIZE_IN_BYTES
+        else:
+            struct.pack_into(self._FMT_INT, self._buffer, position, val)
 
     def write_int_big_endian(self, val):
         self._ensure_available(INT_SIZE_IN_BYTES)

@@ -22,7 +22,7 @@ class PortableSerializer(StreamSerializer):
 
     def write_internal(self, out, portable):
         cd = self._portable_context.lookup_or_register_class_definition(portable)
-        out.write_int(cd.get_version())
+        out.write_int(cd.version)
 
         writer = DefaultPortableWriter(self, out, cd)
         portable.write_portable(writer)
@@ -45,7 +45,7 @@ class PortableSerializer(StreamSerializer):
     def find_portable_version(self, factory_id, class_id, portable):
         current_version = self._portable_context.get_class_version(factory_id, class_id)
         if current_version < 0:
-            current_version = util.get_portable_version(portable, self._portable_context.get_version())
+            current_version = util.get_portable_version(portable, self._portable_context.portable_version)
         if current_version > 0:
             self._portable_context.set_class_version(factory_id, class_id, current_version)
         return current_version
@@ -56,10 +56,10 @@ class PortableSerializer(StreamSerializer):
         except KeyError:
             raise HazelcastSerializationError("Could not find portable_factory for factory-id: {}".format(factory_id))
 
-        portable = portable_factory.create(class_id)
+        portable = portable_factory[class_id]
         if portable is None:
             raise HazelcastSerializationError("Could not create Portable for class-id: {}".format(class_id))
-        return portable
+        return portable()
 
     def create_reader(self, inp, factory_id, class_id, version, portable_version):
         effective_version = version

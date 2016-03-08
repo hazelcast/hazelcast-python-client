@@ -13,9 +13,6 @@ class PortableContext(object):
         self.portable_version = portable_version
         self._class_defs = dict()  # {factory_id:ClassDefinitionContext}
 
-    def get_portable_version(self):
-        return self.portable_version
-
     def get_class_version(self, factory_id, class_id):
         return self._get_class_def_context(factory_id).get_class_version(class_id)
 
@@ -43,8 +40,10 @@ class PortableContext(object):
             field_name = bytearray(_len)
             data_in.read_into(field_name)
 
-            ft_byte = data_in.read_byte()
-            field_type = FieldType.reverse[ft_byte]
+            field_type = data_in.read_byte()
+
+            field_factory_id = 0
+            field_class_id = 0
             if field_type == FieldType.PORTABLE:
                 # is null
                 if data_in.read_boolean():
@@ -69,9 +68,7 @@ class PortableContext(object):
                     self.read_class_definition(data_in, field_factory_id, field_class_id, field_version)
                 else:
                     register = False
-            else:
-                raise HazelcastSerializationError("Malformed portable class definition")
-            builder.add_field_def(FieldDefinition(i, field_name, field_type, field_factory_id, field_class_id))
+            builder.add_field_def(FieldDefinition(i, field_name.decode('ascii'), field_type, field_factory_id, field_class_id))
         class_def = builder.build()
         if register:
             class_def = self.register_class_definition(class_def)
@@ -115,13 +112,13 @@ class PortableContext(object):
         try:
             return self._class_defs[factory_id]
         except KeyError:
-            return ClassDefinitionContext(factory_id)
+            return ClassDefinitionContext(factory_id, self.portable_version)
 
 
 class ClassDefinitionContext(object):
-    def __init__(self, factory_id, version):
+    def __init__(self, factory_id, portable_version):
         self._factory_id = factory_id
-        self._version = version
+        self._portable_version = portable_version
         self._versioned_definitions = {}  # (class_id, version) : ClassDefinition
         self._current_class_versions = {}  # class_id:version
         self._lock = threading.RLock()
@@ -149,9 +146,9 @@ class ClassDefinitionContext(object):
             if class_def.factory_id != self._factory_id:
                 raise HazelcastSerializationError("Invalid factory-id! {} -> {}".format(self._factory_id, class_def))
             if isinstance(class_def, ClassDefinition):
-                class_def.set_version_if_not_set(self._version)
+                class_def.set_version_if_not_set(self._portable_version)
             combined_key = (class_def.class_id, class_def.version)
-            if not self._versioned_definitions.has_key(combined_key):
+            if combined_key not in self._versioned_definitions:
                 self._versioned_definitions[combined_key] = class_def
                 return class_def
             current_class_def = self._versioned_definitions[combined_key]

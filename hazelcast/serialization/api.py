@@ -180,10 +180,10 @@ class IdentifiedDataSerializable(object):
 
 
 class Portable(object):
-    def write_portable(self):
+    def write_portable(self, writer):
         raise NotImplementedError()
 
-    def read_portable(self):
+    def read_portable(self, reader):
         raise NotImplementedError()
 
     def get_factory_id(self):

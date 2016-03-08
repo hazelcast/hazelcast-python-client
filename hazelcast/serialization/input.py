@@ -25,7 +25,7 @@ class _ObjectDataInput(ObjectDataInput):
     def read_into(self, buff, offset=None, length=None):
         _off = offset if offset is not None else 0
         _len = length if length is not None else len(buff)
-        if _off < 0 or _len < 0 or (_off + _len) > len(buff):
+        if _off < 0 or _len < 0 or (_off + _len) > len(self._buffer):
             raise IndexError()
         elif length == 0:
             return
@@ -33,49 +33,50 @@ class _ObjectDataInput(ObjectDataInput):
             raise IndexError()
         if self._pos + _len > self._size:
             _len = self._size - self._pos
-        buff[_off: _off + _len] = self._buffer[self._pos:]
+        buff[_off: _off + _len] = self._buffer[self._pos:self._pos + _len]
         self._pos += _len
 
     def skip_bytes(self, count):
         raise NotImplementedError("skip_bytes not implemented!!!")
 
-    def read_boolean(self):
-        return self.read_byte() != 0
+    def read_boolean(self, position=None):
+        return self.read_byte(position) != 0
 
-    def read_byte(self):
+    def read_byte(self, position=None):
         self._check_available(self._pos, BYTE_SIZE_IN_BYTES)
-        return self._read_from_buff(self._FMT_INT8, BYTE_SIZE_IN_BYTES)
+        return self._read_from_buff(self._FMT_INT8, BYTE_SIZE_IN_BYTES, position)
 
-    def read_unsigned_byte(self):
+    def read_unsigned_byte(self, position=None):
         self._check_available(self._pos, BYTE_SIZE_IN_BYTES)
-        return self._read_from_buff(self._FMT_UINT8, BYTE_SIZE_IN_BYTES)
+        return self._read_from_buff(self._FMT_UINT8, BYTE_SIZE_IN_BYTES, position)
 
-    def read_char(self):
-        raise NotImplementedError("Char not implemented yet.")
+    def read_char(self, position=None):
+        char_ord = self.read_short(position)
+        return unichr(char_ord)
 
-    def read_short(self):
+    def read_short(self, position=None):
         self._check_available(self._pos, SHORT_SIZE_IN_BYTES)
-        return self._read_from_buff(self._FMT_SHORT, SHORT_SIZE_IN_BYTES)
+        return self._read_from_buff(self._FMT_SHORT, SHORT_SIZE_IN_BYTES, position)
 
-    def read_unsigned_short(self):
+    def read_unsigned_short(self, position=None):
         self._check_available(self._pos, SHORT_SIZE_IN_BYTES)
-        return self._read_from_buff(self._FMT_CHAR, SHORT_SIZE_IN_BYTES)
+        return self._read_from_buff(self._FMT_CHAR, SHORT_SIZE_IN_BYTES, position)
 
     def read_int(self, position=None):
         self._check_available(position, INT_SIZE_IN_BYTES)
         return self._read_from_buff(self._FMT_INT, INT_SIZE_IN_BYTES, position)
 
-    def read_long(self):
+    def read_long(self, position=None):
         self._check_available(self._pos, LONG_SIZE_IN_BYTES)
-        return self._read_from_buff(self._FMT_LONG, LONG_SIZE_IN_BYTES)
+        return self._read_from_buff(self._FMT_LONG, LONG_SIZE_IN_BYTES, position)
 
-    def read_float(self):
+    def read_float(self, position=None):
         self._check_available(self._pos, FLOAT_SIZE_IN_BYTES)
-        return self._read_from_buff(self._FMT_FLOAT, FLOAT_SIZE_IN_BYTES)
+        return self._read_from_buff(self._FMT_FLOAT, FLOAT_SIZE_IN_BYTES, position)
 
-    def read_double(self):
+    def read_double(self, position=None):
         self._check_available(self._pos, DOUBLE_SIZE_IN_BYTES)
-        return self._read_from_buff(self._FMT_DOUBLE, DOUBLE_SIZE_IN_BYTES)
+        return self._read_from_buff(self._FMT_DOUBLE, DOUBLE_SIZE_IN_BYTES, position)
 
     def read_utf(self):
         length = self.read_int()
@@ -143,6 +144,12 @@ class _ObjectDataInput(ObjectDataInput):
     def is_big_endian(self):
         return self._is_big_endian
 
+    def position(self):
+        return self._pos
+
+    def set_position(self, position):
+        self._pos = position
+
     # HELPERS
     def _check_available(self, position, size):
         _position = self._pos if position is None else position
@@ -152,9 +159,11 @@ class _ObjectDataInput(ObjectDataInput):
             raise EOFError("Cannot read {} bytes!".format(size))
 
     def _read_from_buff(self, fmt, size, position=None):
-        _position = self._pos if position is None else position
-        val = struct.unpack_from(fmt, self._buffer, _position)
-        self._pos += size
+        if position is None:
+            val = struct.unpack_from(fmt, self._buffer, self._pos)
+            self._pos += size
+        else:
+            val = struct.unpack_from(fmt, self._buffer, position)
         return val[0]
 
     def _read_array_fnc(self, read_item_fnc):
@@ -169,4 +178,4 @@ class _ObjectDataInput(ObjectDataInput):
         from binascii import hexlify
         buf = hexlify(self._buffer)
         pos_ = self._pos * 2
-        return buf[:pos_] + "[" + buf[pos_] + "]" + buf[pos_+1:]
+        return buf[:pos_] + "[" + buf[pos_] + "]" + buf[pos_ + 1:]

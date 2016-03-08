@@ -60,8 +60,11 @@ class SerializationConfig(object):
         self.enable_shared_object = True
         self.class_definitions = set()
 
-    def add_data_serializable_factory(self, factory):
-        self.data_serializable_factories[factory.factory_id] = factory
+    def add_portable_factory(self, factory_id, factory):
+        self.portable_factories[factory_id] = factory
+
+    def add_data_serializable_factory(self, factory_id, factory):
+        self.data_serializable_factories[factory_id] = factory
 
     def set_custom_serializer(self, _type, serializer):
         validate_type(_type)
