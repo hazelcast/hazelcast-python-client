@@ -101,8 +101,10 @@ class ClassDefinitionBuilder(object):
         self._done = False
         self._field_defs = list()
 
-    def add_portable_field(self, field_name):
-        self._add_field_by_type(field_name, FieldType.PORTABLE)
+    def add_portable_field(self, field_name, class_def):
+        if class_def.class_id is None or class_def.class_id == 0:
+            raise ValueError("Portable class id cannot be zero!")
+        self._add_field_by_type(field_name, FieldType.PORTABLE, class_def.factory_id, class_def.class_id)
         return self
 
     def add_byte_field(self, field_name):
@@ -196,9 +198,9 @@ class ClassDefinitionBuilder(object):
             cd.add_field_def(field_def)
         return cd
 
-    def _add_field_by_type(self, field_name, field_type):
+    def _add_field_by_type(self, field_name, field_type, factory_id=0, class_id=0):
         self._check()
-        self._field_defs.append(FieldDefinition(self._index, field_name, field_type))
+        self._field_defs.append(FieldDefinition(self._index, field_name, field_type, factory_id, class_id))
         self._index += 1
 
     def _check(self):

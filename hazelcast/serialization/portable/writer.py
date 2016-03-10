@@ -131,11 +131,11 @@ class DefaultPortableWriter(PortableWriter):
         self._out.write_int(class_id)
 
     def get_raw_data_output(self):
-        if self._raw:
-            _pos = self._out.position()
+        if not self._raw:
+            _pos_val = self._out.position()
             # last index
             _index = self._class_def.get_field_count()
-            self._out.write_int(self._offset + _index * INT_SIZE_IN_BYTES, _pos)
+            self._out.write_int(_pos_val, self._offset + _index * INT_SIZE_IN_BYTES)
         self._raw = True
         return self._out
 
@@ -180,7 +180,7 @@ def _check_portable_attributes(field_def, portable):
 
 
 class ClassDefinitionWriter(PortableWriter):
-    def __init__(self, portable_context, factory_id, class_id, version, class_def_builder=None):
+    def __init__(self, portable_context, factory_id=None, class_id=None, version=None, class_def_builder=None):
         self.portable_context = portable_context
         if class_def_builder is None:
             self._builder = ClassDefinitionBuilder(factory_id, class_id, version)
@@ -215,14 +215,17 @@ class ClassDefinitionWriter(PortableWriter):
     def write_portable(self, field_name, portable):
         if portable is None:
             raise HazelcastSerializationError("Cannot write None portable without explicitly registering class definition!")
-        version = util.get_portable_version(portable, self.portable_context.get_version())
+        version = util.get_portable_version(portable, self.portable_context.portable_version)
 
-        nested_builder = ClassDefinitionBuilder(portable.get_factory_id(), portable.get_class_id(), version)
+        factory_id = portable.get_factory_id()
+        class_id = portable.get_class_id()
+        nested_builder = ClassDefinitionBuilder(factory_id, class_id, version)
         nested_class_def = self._create_nested_class_def(portable, nested_builder)
         self._builder.add_portable_field(field_name, nested_class_def)
 
     def write_null_portable(self, field_name, factory_id, class_id):
-        nested_class_def = self.portable_context.lookup_class_definition(factory_id,class_id, self.portable_context.get_version())
+        nested_class_def = self.portable_context.lookup_class_definition(factory_id, class_id,
+                                                                         self.portable_context.portable_version)
         if nested_class_def is None:
             raise HazelcastSerializationError("Cannot write None portable without explicitly registering class definition!")
         self._builder.add_portable_field(field_name, nested_class_def)
@@ -273,7 +276,7 @@ class ClassDefinitionWriter(PortableWriter):
         return EmptyObjectDataOutput()
 
     def _create_nested_class_def(self, portable, nested_builder):
-        _writer = ClassDefinitionWriter(self.portable_context, nested_builder)
+        _writer = ClassDefinitionWriter(self.portable_context, class_def_builder=nested_builder)
         portable.write_portable(_writer)
         return self.portable_context.register_class_definition(nested_builder.build())
 

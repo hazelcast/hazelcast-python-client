@@ -96,10 +96,10 @@ class DefaultPortableReader(PortableReader):
             _check_factory_and_class(fd, factory_id, class_id)
 
             if is_none:
-                return self._portable_serializer.readAndInitialize(self._in, factory_id, class_id)
-            return None
+                return None
+            return self._portable_serializer.read_internal(self._in, factory_id, class_id)
         finally:
-            self._in.position(cur_pos)
+            self._in.set_position(cur_pos)
 
     def read_boolean_array(self, field_name):
         current_pos = self._in.position()
@@ -108,7 +108,7 @@ class DefaultPortableReader(PortableReader):
             self._in.set_position(pos)
             return self._in.read_boolean_array()
         finally:
-            self._in.position(current_pos)
+            self._in.set_position(current_pos)
 
     def read_byte_array(self, field_name):
         current_pos = self._in.position()
@@ -117,7 +117,7 @@ class DefaultPortableReader(PortableReader):
             self._in.set_position(pos)
             return self._in.read_byte_array()
         finally:
-            self._in.position(current_pos)
+            self._in.set_position(current_pos)
 
     def read_char_array(self, field_name):
         current_pos = self._in.position()
@@ -126,7 +126,7 @@ class DefaultPortableReader(PortableReader):
             self._in.set_position(pos)
             return self._in.read_char_array()
         finally:
-            self._in.position(current_pos)
+            self._in.set_position(current_pos)
 
     def read_short_array(self, field_name):
         pass
@@ -136,7 +136,7 @@ class DefaultPortableReader(PortableReader):
             self._in.set_position(pos)
             return self._in.read_short_array()
         finally:
-            self._in.position(current_pos)
+            self._in.set_position(current_pos)
 
     def read_int_array(self, field_name):
         current_pos = self._in.position()
@@ -145,7 +145,7 @@ class DefaultPortableReader(PortableReader):
             self._in.set_position(pos)
             return self._in.read_int_array()
         finally:
-            self._in.position(current_pos)
+            self._in.set_position(current_pos)
 
     def read_long_array(self, field_name):
         current_pos = self._in.position()
@@ -154,7 +154,7 @@ class DefaultPortableReader(PortableReader):
             self._in.set_position(pos)
             return self._in.read_long_array()
         finally:
-            self._in.position(current_pos)
+            self._in.set_position(current_pos)
 
     def read_float_array(self, field_name):
         current_pos = self._in.position()
@@ -163,7 +163,7 @@ class DefaultPortableReader(PortableReader):
             self._in.set_position(pos)
             return self._in.read_float_array()
         finally:
-            self._in.position(current_pos)
+            self._in.set_position(current_pos)
 
     def read_double_array(self, field_name):
         current_pos = self._in.position()
@@ -172,7 +172,7 @@ class DefaultPortableReader(PortableReader):
             self._in.set_position(pos)
             return self._in.read_double_array()
         finally:
-            self._in.position(current_pos)
+            self._in.set_position(current_pos)
 
     def read_utf_array(self, field_name):
         current_pos = self._in.position()
@@ -181,7 +181,7 @@ class DefaultPortableReader(PortableReader):
             self._in.set_position(pos)
             return self._in.read_utf_array()
         finally:
-            self._in.position(current_pos)
+            self._in.set_position(current_pos)
 
     def read_portable_array(self, field_name):
         current_pos = self._in.position()
@@ -208,16 +208,16 @@ class DefaultPortableReader(PortableReader):
                 offset = self._in.position()
                 for i in xrange(0, length):
                     start = self._in.read_int(offset + i * bits.INT_SIZE_IN_BYTES)
-                    self._in.position(start)
+                    self._in.set_position(start)
                     portables[i] = self._portable_serializer.readAndInitialize(self._in, factory_id, class_id)
             return portables
         finally:
-            self._in.position(current_pos)
+            self._in.set_position(current_pos)
 
     def get_raw_data_input(self):
-        if self._raw:
+        if not self._raw:
             pos = self._in.read_int(self._offset + self._class_def.get_field_count() * bits.INT_SIZE_IN_BYTES)
-            self._in.position(pos)
+            self._in.set_position(pos)
         self._raw = True
         return self._in
 
@@ -270,7 +270,7 @@ class DefaultPortableReader(PortableReader):
 
 
 def _check_factory_and_class(field_def, factory_id, class_id):
-    if factory_id != field_def.get_factory_id():
+    if factory_id != field_def.factory_id:
         raise ValueError("Invalid factoryId! Expected: {}, Current: {}".format(field_def.factory_id, factory_id))
     if class_id != field_def.class_id:
         raise ValueError("Invalid classId! Expected: {}, Current: {}".format(field_def.class_id, class_id))

@@ -1,19 +1,19 @@
-import binascii
-import struct
 import unittest
 
 import hazelcast
 from hazelcast.serialization import SerializationServiceV1
-from hazelcast.serialization.api import IdentifiedDataSerializable, Portable
+from hazelcast.serialization.api import Portable
+from tests.serialization.identified_test import create_identified, SerializationV1Identified
 
 FACTORY_ID = 1
 
 
-class SamplePortable(Portable):
+class SerializationV1Portable(Portable):
     CLASS_ID = 8
 
     def __init__(self, a_byte=None, a_boolean=None, a_character=None, a_short=None, a_integer=None, a_long=None, a_float=None,
-                 a_double=None, a_string=None):
+                 a_double=None, bytes_=None, booleans=None, chars=None, shorts=None, ints=None, longs=None,
+                 floats=None, doubles=None, string=None, strings=None, inner_portable=None, identified_serializable=None):
         self.a_byte = a_byte
         self.a_boolean = a_boolean
         self.a_character = a_character
@@ -22,12 +22,23 @@ class SamplePortable(Portable):
         self.a_long = a_long
         self.a_float = a_float
         self.a_double = a_double
-        self.a_string = a_string
+        self.bytes = bytes_
+        self.booleans = booleans
+        self.chars = chars
+        self.shorts = shorts
+        self.ints = ints
+        self.longs = longs
+        self.floats = floats
+        self.doubles = doubles
+        self.a_string = string
+        self.strings = strings
+        self.inner_portable = inner_portable
+        self.identified_serializable = identified_serializable
 
     def write_portable(self, out):
         out.write_byte("1", self.a_byte)
         out.write_boolean("2", self.a_boolean)
-        # out.write_char("3", self.a_character)
+        out.write_char("3", self.a_character)
         out.write_short("4", self.a_short)
         out.write_int("5", self.a_integer)
         out.write_long("6", self.a_long)
@@ -35,16 +46,57 @@ class SamplePortable(Portable):
         out.write_double("8", self.a_double)
         out.write_utf("9", self.a_string)
 
+        out.write_byte_array("a1", self.bytes)
+        out.write_boolean_array("a2", self.booleans)
+        out.write_char_array("a3", self.chars)
+        out.write_short_array("a4", self.shorts)
+        out.write_int_array("a5", self.ints)
+        out.write_long_array("a6", self.longs)
+        out.write_float_array("a7", self.floats)
+        out.write_double_array("a8", self.doubles)
+        out.write_utf_array("a9", self.strings)
+
+        if self.inner_portable is None:
+            out.write_null_portable("p", FACTORY_ID, InnerPortable.CLASS_ID)
+        else:
+            out.write_portable("p", self.inner_portable)
+
+        raw_data_output = out.get_raw_data_output()
+        not_none = self.identified_serializable is not None
+
+        raw_data_output.write_boolean(not_none)
+        if not_none:
+            self.identified_serializable.write_data(raw_data_output)
+
     def read_portable(self, inp):
         self.a_byte = inp.read_byte("1")
         self.a_boolean = inp.read_boolean("2")
-        # self.a_character = inp.read_char("3")
+        self.a_character = inp.read_char("3")
         self.a_short = inp.read_short("4")
         self.a_integer = inp.read_int("5")
         self.a_long = inp.read_long("6")
         self.a_float = inp.read_float("7")
         self.a_double = inp.read_double("8")
         self.a_string = inp.read_utf("9")
+
+        self.bytes = inp.read_byte_array("a1")
+        self.booleans = inp.read_boolean_array("a2")
+        self.chars = inp.read_char_array("a3")
+        self.shorts = inp.read_short_array("a4")
+        self.ints = inp.read_int_array("a5")
+        self.longs = inp.read_long_array("a6")
+        self.floats = inp.read_float_array("a7")
+        self.doubles = inp.read_double_array("a8")
+        self.strings = inp.read_utf_array("a9")
+
+        self.inner_portable = inp.read_portable("p")
+
+        raw_data_input = inp.get_raw_data_input()
+        not_none = raw_data_input.read_boolean()
+        if not_none:
+            identified = SerializationV1Identified()
+            identified.read_data(raw_data_input)
+            self.identified_serializable = identified
 
     def get_factory_id(self):
         return FACTORY_ID
@@ -53,27 +105,77 @@ class SamplePortable(Portable):
         return self.CLASS_ID
 
     def __eq__(self, other):
-        # self.a_character == other.a_character and \
         byte = self.a_byte == other.a_byte
         boolean = self.a_boolean == other.a_boolean
+        char = self.a_character == other.a_character
         short = self.a_short == other.a_short
         integer = self.a_integer == other.a_integer
-        long = self.a_long == other.a_long
-        float = self.a_float == other.a_float
+        long_ = self.a_long == other.a_long
+        float_ = self.a_float == other.a_float
         double = self.a_double == other.a_double
+        bytes_ = self.bytes == other.bytes
+        booleans = self.booleans == other.booleans
+        chars = self.chars == other.chars
+        shorts = self.shorts == other.shorts
+        integers = self.ints == other.ints
+        longs = self.longs == other.longs
+        floats = self.floats == other.floats
+        doubles = self.doubles == other.doubles
         string = self.a_string == other.a_string
-        return byte and boolean and short and integer and long and float and double and string
+        strings = self.strings == other.strings
+        inner_portable = self.inner_portable == other.inner_portable
+        identified_serializable = self.identified_serializable == other.identified_serializable
+        return byte and boolean and char and short and integer and long_ and float_ and double and \
+               bytes_ and booleans and chars and shorts and integers and longs and floats and doubles and \
+               string and strings and inner_portable and identified_serializable
 
 
-the_factory = {SamplePortable.CLASS_ID: SamplePortable}
+class InnerPortable(Portable):
+    CLASS_ID = 1
+
+    def __init__(self, param_str=None, param_int=None):
+        self.param_str = param_str
+        self.param_int = param_int
+
+    def write_portable(self, writer):
+        writer.write_utf("param_str", self.param_str)
+        writer.write_int("param_int", self.param_int)
+
+    def read_portable(self, reader):
+        self.param_str = reader.read_utf("param_str")
+        self.param_int = reader.read_int("param_int")
+
+    def get_factory_id(self):
+        return FACTORY_ID
+
+    def get_class_id(self):
+        return self.CLASS_ID
+
+    def __eq__(self, other):
+        return self.param_str == other.param_str and self.param_int == other.param_int
+
+
+def create_portable():
+    identified = create_identified()
+    inner_portable = InnerPortable("Inner Text", 666)
+    return SerializationV1Portable(99, True, 'c', 11, 1234134, 1341431221l, 1.0, 2.0, [1, 2, 3], [True, False, True],
+                                   ['a', 'b', 'c'],
+                                   [1, 2, 3], [4, 2, 3], [11, 2, 3], [1.0, 2.0, 3.0],
+                                   [11.0, 22.0, 33.0], "the string text",
+                                   ["item1", "item2", "item3"], inner_portable, identified)
+
+
+the_factory = {SerializationV1Portable.CLASS_ID: SerializationV1Portable, InnerPortable.CLASS_ID: InnerPortable}
 
 
 class PortableSerializationTestCase(unittest.TestCase):
-    def test_factory(self):
+    def test_encode_decode(self):
         config = hazelcast.ClientConfig()
         config.serialization_config.portable_factories[FACTORY_ID] = the_factory
         service = SerializationServiceV1(config.serialization_config)
-        obj = SamplePortable(99, True, "c", 11, 1234134, 1341431221, 1.0, 1.0/111, "the string text")
+        obj = create_portable()
+        self.assertTrue(obj.inner_portable)
+
         data = service.to_data(obj)
         obj2 = service.to_object(data)
         self.assertTrue(obj == obj2)
