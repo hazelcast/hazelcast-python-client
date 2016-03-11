@@ -219,10 +219,10 @@ class Connection(object):
 
     def write(self, data):
         # must be implemented by subclass
-        pass
+        raise NotImplementedError
 
     def close(self, cause):
-        pass
+        raise NotImplementedError
 
     def __repr__(self):
         return "Connection(address=%s, id=%s)" % (self._address, self.id)
