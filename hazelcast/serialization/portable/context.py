@@ -55,7 +55,7 @@ class PortableContext(object):
                 if register:
                     field_version = data_in.read_int()
                     self.read_class_definition(data_in, field_factory_id, field_class_id, field_version)
-            elif type == FieldType.PORTABLE_ARRAY:
+            elif field_type == FieldType.PORTABLE_ARRAY:
                 k = data_in.read_int()
                 field_factory_id = data_in.read_int()
                 field_class_id = data_in.read_int()

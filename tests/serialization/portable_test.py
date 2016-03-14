@@ -189,6 +189,18 @@ class PortableSerializationTestCase(unittest.TestCase):
         obj2 = service.to_object(data)
         self.assertTrue(obj == obj2)
 
+    def test_encode_decode_2(self):
+        config = hazelcast.ClientConfig()
+        config.serialization_config.portable_factories[FACTORY_ID] = the_factory
+        service = SerializationServiceV1(config.serialization_config)
+        service2 = SerializationServiceV1(config.serialization_config)
+        obj = create_portable()
+        self.assertTrue(obj.inner_portable)
+
+        data = service.to_data(obj)
+        obj2 = service2.to_object(data)
+        self.assertTrue(obj == obj2)
+
     def test_portable_context(self):
         config = hazelcast.ClientConfig()
         config.serialization_config.portable_factories[FACTORY_ID] = the_factory
