@@ -23,10 +23,10 @@ class SerializationServiceV1(BaseSerializationService):
         super(SerializationServiceV1, self).__init__(version, global_partition_strategy, output_buffer_size, is_big_endian)
         self.serialization_config = serialization_config
 
-        portable_context = PortableContext(self, portable_version)
+        self._portable_context = PortableContext(self, portable_version)
         for class_def in serialization_config.class_definitions:
             self._portable_context.register_class_definition(class_def)
-        self._registry._portable_serializer = PortableSerializer(portable_context, self.serialization_config.portable_factories)
+        self._registry._portable_serializer = PortableSerializer(self._portable_context, self.serialization_config.portable_factories)
 
         # merge configured factories with built in ones
         factories = {}

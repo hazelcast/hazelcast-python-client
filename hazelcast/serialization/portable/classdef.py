@@ -38,6 +38,13 @@ class FieldDefinition(object):
                and (self.index, self.field_name, self.field_type, self.factory_id, self.class_id) == \
                    (other.index, other.field_name, other.field_type, other.factory_id, other.class_id)
 
+    def __str__(self):
+        return "ix:{}, name:{}, type:{}, fid:{}, cid:{}".format(self.index, self.field_name, self.field_type, self.factory_id,
+                                                                self.class_id)
+
+    def __repr__(self):
+        return repr(self)
+
 
 class ClassDefinition(object):
     def __init__(self, factory_id, class_id, version):
@@ -89,6 +96,15 @@ class ClassDefinition(object):
     def __eq__(self, other):
         return isinstance(other, self.__class__) and (self.factory_id, self.class_id, self.version, self.field_defs) == \
                                                      (other.factory_id, other.class_id, other.version, self.field_defs)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __str__(self):
+        return "fid:{}, cid:{}, v:{}, fields:{}".format(self.factory_id, self.class_id, self.version, self.field_defs)
+
+    def __repr__(self):
+        return repr(self)
 
 
 class ClassDefinitionBuilder(object):
@@ -143,8 +159,10 @@ class ClassDefinitionBuilder(object):
         self._add_field_by_type(field_name, FieldType.UTF)
         return self
 
-    def add_portable_array_field(self, field_name):
-        self._add_field_by_type(field_name, FieldType.PORTABLE_ARRAY)
+    def add_portable_array_field(self, field_name, class_def):
+        if class_def.class_id is None or class_def.class_id == 0:
+            raise ValueError("Portable class id cannot be zero!")
+        self._add_field_by_type(field_name, FieldType.PORTABLE_ARRAY, class_def.factory_id, class_def.class_id)
         return self
 
     def add_byte_array_field(self, field_name):

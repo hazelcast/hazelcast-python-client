@@ -111,17 +111,17 @@ class DefaultPortableWriter(PortableWriter):
     def write_portable_array(self, field_name, values):
         fd = self._set_position(field_name, FieldType.PORTABLE_ARRAY)
         _len = NULL_ARRAY_LENGTH if values is None else len(values)
-        self._out.write_int(len)
+        self._out.write_int(_len)
         self._out.write_int(fd.factory_id)
         self._out.write_int(fd.class_id)
         if _len > 0:
             _offset = self._out.position()
-            self._out.write_zero_bytes(len * 4)
-            for i in xrange(0, len(values)):
+            self._out.write_zero_bytes(_len * 4)
+            for i in xrange(0, _len):
                 portable = values[i]
                 _check_portable_attributes(fd, portable)
-                _position = self._out.position()
-                self._out.write_int(_offset + i * INT_SIZE_IN_BYTES, _position)
+                _pos_val = self._out.position()
+                self._out.write_int(_pos_val, _offset + i * INT_SIZE_IN_BYTES)
                 self._portable_serializer.write_internal(self._out, portable)
 
     def write_null_portable(self, field_name, factory_id, class_id):
@@ -187,30 +187,59 @@ class ClassDefinitionWriter(PortableWriter):
         else:
             self._builder = class_def_builder
 
-    def write_utf_array(self, field_name, values):
-        self._builder.add_utf_array_field(field_name)
+    def write_byte(self, field_name, value):
+        self._builder.add_byte_field(field_name)
 
-    def write_utf(self, field_name, value):
-        self._builder.add_utf_array_field(field_name)
+    def write_boolean(self, field_name, value):
+        self._builder.add_boolean_field(field_name)
 
-    def write_short_array(self, field_name, values):
-        self._builder.add_utf_field(field_name)
+    def write_char(self, field_name, value):
+        self._builder.add_char_field(field_name)
 
     def write_short(self, field_name, value):
         self._builder.add_short_field(field_name)
 
-    def write_portable_array(self, field_name, values):
-        if values is None or len(values) == 0:
-            raise HazelcastSerializationError("Cannot write None portable without explicitly registering class definition!")
-        portable = values[0]
-        _class_id = portable.get_class_id()
-        for i in xrange(1, len(values)):
-            if values[i].get_class_id() != _class_id:
-                raise ValueError("Detected different class-ids in portable array!")
-        version = util.get_portable_version(portable, self.portable_context.get_version())
-        nested_builder = ClassDefinitionBuilder(portable.get_factory_id(), portable.get_class_id(), version)
-        nested_class_def = self._create_nested_class_def(portable, nested_builder)
-        self._builder.add_portable_array_field(field_name, nested_class_def)
+    def write_int(self, field_name, value):
+        self._builder.add_int_field(field_name)
+
+    def write_long(self, field_name, value):
+        self._builder.add_long_field(field_name)
+
+    def write_float(self, field_name, value):
+        self._builder.add_float_field(field_name)
+
+    def write_double(self, field_name, value):
+        self._builder.add_double_field(field_name)
+
+    def write_utf(self, field_name, value):
+        self._builder.add_utf_field(field_name)
+
+    def write_byte_array(self, field_name, values):
+        self._builder.add_byte_array_field(field_name)
+
+    def write_boolean_array(self, field_name, values):
+        self._builder.add_boolean_array_field(field_name)
+
+    def write_char_array(self, field_name, values):
+        self._builder.add_char_array_field(field_name)
+
+    def write_short_array(self, field_name, values):
+        self._builder.add_short_array_field(field_name)
+
+    def write_int_array(self, field_name, values):
+        self._builder.add_int_array_field(field_name)
+
+    def write_long_array(self, field_name, values):
+        self._builder.add_long_array_field(field_name)
+
+    def write_float_array(self, field_name, values):
+        self._builder.add_float_array_field(field_name)
+
+    def write_double_array(self, field_name, values):
+        self._builder.add_double_array_field(field_name)
+
+    def write_utf_array(self, field_name, values):
+        self._builder.add_utf_array_field(field_name)
 
     def write_portable(self, field_name, portable):
         if portable is None:
@@ -223,54 +252,25 @@ class ClassDefinitionWriter(PortableWriter):
         nested_class_def = self._create_nested_class_def(portable, nested_builder)
         self._builder.add_portable_field(field_name, nested_class_def)
 
+    def write_portable_array(self, field_name, values):
+        if values is None or len(values) == 0:
+            raise HazelcastSerializationError("Cannot write None portable without explicitly registering class definition!")
+        portable = values[0]
+        _class_id = portable.get_class_id()
+        for i in xrange(1, len(values)):
+            if values[i].get_class_id() != _class_id:
+                raise ValueError("Detected different class-ids in portable array!")
+        version = util.get_portable_version(portable, self.portable_context.portable_version)
+        nested_builder = ClassDefinitionBuilder(portable.get_factory_id(), portable.get_class_id(), version)
+        nested_class_def = self._create_nested_class_def(portable, nested_builder)
+        self._builder.add_portable_array_field(field_name, nested_class_def)
+
     def write_null_portable(self, field_name, factory_id, class_id):
         nested_class_def = self.portable_context.lookup_class_definition(factory_id, class_id,
                                                                          self.portable_context.portable_version)
         if nested_class_def is None:
             raise HazelcastSerializationError("Cannot write None portable without explicitly registering class definition!")
         self._builder.add_portable_field(field_name, nested_class_def)
-
-    def write_long_array(self, field_name, values):
-        self._builder.add_long_array_field(field_name)
-
-    def write_long(self, field_name, value):
-        self._builder.add_long_field(field_name)
-
-    def write_int_array(self, field_name, values):
-        self._builder.add_int_array_field(field_name)
-
-    def write_int(self, field_name, value):
-        self._builder.add_int_field(field_name)
-
-    def write_float_array(self, field_name, values):
-        self._builder.add_float_array_field(field_name)
-
-    def write_float(self, field_name, value):
-        self._builder.add_float_field(field_name)
-
-    def write_double_array(self, field_name, values):
-        self._builder.add_double_array_field(field_name)
-
-    def write_double(self, field_name, value):
-        self._builder.add_double_field(field_name)
-
-    def write_char_array(self, field_name, values):
-        self._builder.add_char_array_field(field_name)
-
-    def write_char(self, field_name, value):
-        self._builder.add_char_field(field_name)
-
-    def write_byte_array(self, field_name, values):
-        self._builder.add_byte_array_field(field_name)
-
-    def write_byte(self, field_name, value):
-        self._builder.add_byte_field(field_name)
-
-    def write_boolean_array(self, field_name, values):
-        self._builder.add_boolean_array_field(field_name)
-
-    def write_boolean(self, field_name, value):
-        self._builder.add_boolean_field(field_name)
 
     def get_raw_data_output(self):
         return EmptyObjectDataOutput()

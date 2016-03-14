@@ -13,7 +13,8 @@ class SerializationV1Portable(Portable):
 
     def __init__(self, a_byte=None, a_boolean=None, a_character=None, a_short=None, a_integer=None, a_long=None, a_float=None,
                  a_double=None, bytes_=None, booleans=None, chars=None, shorts=None, ints=None, longs=None,
-                 floats=None, doubles=None, string=None, strings=None, inner_portable=None, identified_serializable=None):
+                 floats=None, doubles=None, string=None, strings=None, inner_portable=None, inner_portable_array=None,
+                 identified_serializable=None):
         self.a_byte = a_byte
         self.a_boolean = a_boolean
         self.a_character = a_character
@@ -33,6 +34,7 @@ class SerializationV1Portable(Portable):
         self.a_string = string
         self.strings = strings
         self.inner_portable = inner_portable
+        self.inner_portable_array = inner_portable_array
         self.identified_serializable = identified_serializable
 
     def write_portable(self, out):
@@ -60,6 +62,8 @@ class SerializationV1Portable(Portable):
             out.write_null_portable("p", FACTORY_ID, InnerPortable.CLASS_ID)
         else:
             out.write_portable("p", self.inner_portable)
+
+        out.write_portable_array("ap", self.inner_portable_array)
 
         raw_data_output = out.get_raw_data_output()
         not_none = self.identified_serializable is not None
@@ -90,6 +94,8 @@ class SerializationV1Portable(Portable):
         self.strings = inp.read_utf_array("a9")
 
         self.inner_portable = inp.read_portable("p")
+
+        self.inner_portable_array = inp.read_portable_array("ap")
 
         raw_data_input = inp.get_raw_data_input()
         not_none = raw_data_input.read_boolean()
@@ -124,10 +130,11 @@ class SerializationV1Portable(Portable):
         string = self.a_string == other.a_string
         strings = self.strings == other.strings
         inner_portable = self.inner_portable == other.inner_portable
+        inner_portable_array = self.inner_portable_array == other.inner_portable_array
         identified_serializable = self.identified_serializable == other.identified_serializable
         return byte and boolean and char and short and integer and long_ and float_ and double and \
                bytes_ and booleans and chars and shorts and integers and longs and floats and doubles and \
-               string and strings and inner_portable and identified_serializable
+               string and strings and inner_portable and inner_portable_array and identified_serializable
 
 
 class InnerPortable(Portable):
@@ -162,7 +169,9 @@ def create_portable():
                                    ['a', 'b', 'c'],
                                    [1, 2, 3], [4, 2, 3], [11, 2, 3], [1.0, 2.0, 3.0],
                                    [11.0, 22.0, 33.0], "the string text",
-                                   ["item1", "item2", "item3"], inner_portable, identified)
+                                   ["item1", "item2", "item3"], inner_portable,
+                                   [InnerPortable("Portable array item 0", 0), InnerPortable("Portable array item 1", 1)],
+                                   identified)
 
 
 the_factory = {SerializationV1Portable.CLASS_ID: SerializationV1Portable, InnerPortable.CLASS_ID: InnerPortable}
@@ -179,3 +188,15 @@ class PortableSerializationTestCase(unittest.TestCase):
         data = service.to_data(obj)
         obj2 = service.to_object(data)
         self.assertTrue(obj == obj2)
+
+    def test_portable_context(self):
+        config = hazelcast.ClientConfig()
+        config.serialization_config.portable_factories[FACTORY_ID] = the_factory
+        service = SerializationServiceV1(config.serialization_config)
+        obj = create_portable()
+        self.assertTrue(obj.inner_portable)
+
+        data = service.to_data(obj)
+
+        class_definition = service._portable_context.lookup_class_definition(FACTORY_ID, InnerPortable.CLASS_ID, 0)
+        self.assertTrue(class_definition is not None)

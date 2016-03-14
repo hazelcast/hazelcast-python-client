@@ -109,10 +109,9 @@ class PortableContext(object):
         return fd
 
     def _get_class_def_context(self, factory_id):
-        try:
-            return self._class_defs[factory_id]
-        except KeyError:
-            return ClassDefinitionContext(factory_id, self.portable_version)
+        if factory_id not in self._class_defs:
+            self._class_defs[factory_id] = ClassDefinitionContext(factory_id, self.portable_version)
+        return self._class_defs[factory_id]
 
 
 class ClassDefinitionContext(object):

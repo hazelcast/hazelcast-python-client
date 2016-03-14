@@ -209,7 +209,7 @@ class DefaultPortableReader(PortableReader):
                 for i in xrange(0, length):
                     start = self._in.read_int(offset + i * bits.INT_SIZE_IN_BYTES)
                     self._in.set_position(start)
-                    portables[i] = self._portable_serializer.readAndInitialize(self._in, factory_id, class_id)
+                    portables[i] = self._portable_serializer.read_internal(self._in, factory_id, class_id)
             return portables
         finally:
             self._in.set_position(current_pos)
@@ -271,9 +271,9 @@ class DefaultPortableReader(PortableReader):
 
 def _check_factory_and_class(field_def, factory_id, class_id):
     if factory_id != field_def.factory_id:
-        raise ValueError("Invalid factoryId! Expected: {}, Current: {}".format(field_def.factory_id, factory_id))
+        raise ValueError("Invalid factoryId! Expected: {}, Current: {}".format(factory_id, field_def.factory_id))
     if class_id != field_def.class_id:
-        raise ValueError("Invalid classId! Expected: {}, Current: {}".format(field_def.class_id, class_id))
+        raise ValueError("Invalid classId! Expected: {}, Current: {}".format(class_id, field_def.class_id))
 
 
 class MorphingPortableReader(DefaultPortableReader):
