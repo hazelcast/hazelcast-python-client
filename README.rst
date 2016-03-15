@@ -37,7 +37,7 @@ Features :
 * Event Listeners
 * Lifecycle Service
 * Hazelcast serialization for IdentifiedDataSerializable
-* *Hazelcast serialization for Portable -- IN PROGRESS*
+* Hazelcast serialization for Portable
 * Hazelcast serialization, Custom Serializers
 * Hazelcast serialization, Global Serializers
 
