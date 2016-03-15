@@ -4,6 +4,7 @@ from hazelcast.serialization.predicate import is_equal_to, and_, is_between, is_
     is_less_than_or_equal_to, is_greater_than, is_greater_than_or_equal_to, or_, is_not_equal_to, not_, is_like, \
     is_ilike, matches_regex, sql, true, false, is_in, is_instance_of
 from tests.base import SingleMemberTestCase
+from tests.serialization.portable_test import InnerPortable, FACTORY_ID
 from tests.util import random_string
 
 
@@ -57,7 +58,7 @@ class PredicateStrTest(TestCase):
     def test_or(self):
         predicate = or_(is_equal_to("this", "value-1"), is_equal_to("this", "value-2"))
         self.assertEqual(str(predicate), "OrPredicate(EqualPredicate(attribute='this', value=value-1),"
-                                     " EqualPredicate(attribute='this', value=value-2))")
+                                         " EqualPredicate(attribute='this', value=value-2))")
 
     def test_regex(self):
         predicate = matches_regex("this", "c[ar].*")
@@ -70,6 +71,7 @@ class PredicateStrTest(TestCase):
     def test_false(self):
         predicate = false()
         self.assertEqual(str(predicate), "FalsePredicate()")
+
 
 class PredicateTest(SingleMemberTestCase):
     def setUp(self):
@@ -202,3 +204,34 @@ class PredicateTest(SingleMemberTestCase):
         predicate = false()
 
         self.assertItemsEqual(self.map.key_set(predicate), [])
+
+
+class PredicatePortableTest(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        the_factory = {InnerPortable.CLASS_ID: InnerPortable}
+        config.serialization_config.portable_factories[FACTORY_ID] = the_factory
+        return config
+
+    def setUp(self):
+        self.map = self.client.get_map(random_string()).blocking()
+
+    def tearDown(self):
+        self.map.destroy()
+
+    def _fill_map(self, count=1000):
+        map = {InnerPortable("key-%d" % x, x): InnerPortable("value-%d" % x, x) for x in xrange(0, count)}
+        for k, v in map.iteritems():
+            self.map.put(k, v)
+        return map
+
+    def test_predicate_portable_key(self):
+        _map = self._fill_map()
+        map_keys = _map.keys()
+
+        predicate = sql("param_int >= 900")
+        key_set = self.map.key_set(predicate)
+        self.assertEqual(len(key_set), 100)
+        for k in key_set:
+            self.assertGreaterEqual(k.param_int, 900)
+            self.assertIn(k, map_keys)

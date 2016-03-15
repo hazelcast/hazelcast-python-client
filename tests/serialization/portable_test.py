@@ -11,8 +11,8 @@ FACTORY_ID = 1
 class SerializationV1Portable(Portable):
     CLASS_ID = 8
 
-    def __init__(self, a_byte=None, a_boolean=None, a_character=None, a_short=None, a_integer=None, a_long=None, a_float=None,
-                 a_double=None, bytes_=None, booleans=None, chars=None, shorts=None, ints=None, longs=None,
+    def __init__(self, a_byte=0, a_boolean=False, a_character=chr(0), a_short=0, a_integer=0, a_long=0, a_float=0.0,
+                 a_double=0.0, bytes_=None, booleans=None, chars=None, shorts=None, ints=None, longs=None,
                  floats=None, doubles=None, string=None, strings=None, inner_portable=None, inner_portable_array=None,
                  identified_serializable=None):
         self.a_byte = a_byte
@@ -208,7 +208,20 @@ class PortableSerializationTestCase(unittest.TestCase):
         obj = create_portable()
         self.assertTrue(obj.inner_portable)
 
-        data = service.to_data(obj)
+        service.to_data(obj)
 
         class_definition = service._portable_context.lookup_class_definition(FACTORY_ID, InnerPortable.CLASS_ID, 0)
         self.assertTrue(class_definition is not None)
+
+    def test_portable_null_fields(self):
+        config = hazelcast.ClientConfig()
+        config.serialization_config.portable_factories[FACTORY_ID] = the_factory
+        service = SerializationServiceV1(config.serialization_config)
+        service.to_data(create_portable())
+
+        service2 = SerializationServiceV1(config.serialization_config)
+        obj = SerializationV1Portable()
+
+        data = service.to_data(obj)
+        obj2 = service2.to_object(data)
+        self.assertTrue(obj == obj2)

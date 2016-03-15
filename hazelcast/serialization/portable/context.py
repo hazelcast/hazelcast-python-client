@@ -122,11 +122,9 @@ class ClassDefinitionContext(object):
         self._current_class_versions = {}  # class_id:version
         self._lock = threading.RLock()
 
-    # int getClassVersion(int factoryId, int classId);
     def get_class_version(self, class_id):
         return self._current_class_versions.get(class_id, -1)
 
-    # void setClassVersion(int factoryId, int classId, int version);
     def set_class_version(self, class_id, version):
         try:
             current_version = self._current_class_versions[class_id]
