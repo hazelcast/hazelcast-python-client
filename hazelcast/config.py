@@ -1,7 +1,7 @@
 """ Configuration module """
 
 from hazelcast.serialization.api import StreamSerializer
-from hazelcast.util import validate_type, validate_serializer
+from hazelcast.util import validate_type, validate_serializer, enum
 
 DEFAULT_GROUP_NAME = "dev"
 DEFAULT_GROUP_PASSWORD = "dev-pass"
@@ -9,6 +9,7 @@ DEFAULT_GROUP_PASSWORD = "dev-pass"
 PROPERTY_HEARTBEAT_INTERVAL = "hazelcast.client.heartbeat.interval"
 PROPERTY_HEARTBEAT_TIMEOUT = "hazelcast.client.heartbeat.timeout"
 
+INTEGER_TYPE = enum(VAR=0, BYTE=1, SHORT=2, INT=3, LONG=4, BIG_INT=5)
 
 class ClientConfig(object):
     def __init__(self):
@@ -51,14 +52,12 @@ class SerializationConfig(object):
         self.portable_version = 0
         self.data_serializable_factories = {}
         self.portable_factories = {}
+        self.class_definitions = set()
         self.global_serializer = None
         self.custom_serializers = {}
         self.check_class_def_errors = True
-        self.use_native_byte_order = False
         self.is_big_endian = True
-        self.enable_compression = False
-        self.enable_shared_object = True
-        self.class_definitions = set()
+        self.default_integer_type = INTEGER_TYPE.VAR
 
     def add_portable_factory(self, factory_id, factory):
         self.portable_factories[factory_id] = factory

@@ -26,8 +26,8 @@ class Proxy(object):
         self.partition_key = string_partition_strategy(self.name)
         self._client = client
         self.logger = logging.getLogger("%s(%s)" % (type(self).__name__, name))
-        self._to_object = client.serializer.to_object
-        self._to_data = client.serializer.to_data
+        self._to_object = client.serialization_service.to_object
+        self._to_data = client.serialization_service.to_data
         self._start_listening = client.listener.start_listening
         self._stop_listening = client.listener.stop_listening
 
@@ -43,13 +43,11 @@ class Proxy(object):
 
     def _encode_invoke(self, codec, response_handler=default_response_handler, **kwargs):
         request = codec.encode_request(name=self.name, **kwargs)
-        return self._client.invoker.invoke_on_random_target(request).continue_with(response_handler, codec,
-                                                                                   self._to_object)
+        return self._client.invoker.invoke_on_random_target(request).continue_with(response_handler, codec, self._to_object)
 
     def _encode_invoke_on_target(self, codec, _address, response_handler=default_response_handler, **kwargs):
         request = codec.encode_request(name=self.name, **kwargs)
-        return self._client.invoker.invoke_on_target(request, _address).continue_with(response_handler, codec,
-                                                                                      self._to_object)
+        return self._client.invoker.invoke_on_target(request, _address).continue_with(response_handler, codec, self._to_object)
 
     def _encode_invoke_on_key(self, codec, key_data, **kwargs):
         partition_id = self._client.partition_service.get_partition_id(key_data)
@@ -57,8 +55,8 @@ class Proxy(object):
 
     def _encode_invoke_on_partition(self, codec, _partition_id, response_handler=default_response_handler, **kwargs):
         request = codec.encode_request(name=self.name, **kwargs)
-        return self._client.invoker.invoke_on_partition(request, _partition_id).continue_with(response_handler,
-                                                                                              codec, self._to_object)
+        return self._client.invoker.invoke_on_partition(request, _partition_id).continue_with(response_handler, codec,
+                                                                                              self._to_object)
 
     def blocking(self):
         """
@@ -74,35 +72,27 @@ class PartitionSpecificProxy(Proxy):
 
     def _encode_invoke(self, codec, response_handler=default_response_handler, **kwargs):
         return super(PartitionSpecificProxy, self)._encode_invoke_on_partition(codec, self._partition_id,
-                                                                               response_handler=response_handler,
-                                                                               **kwargs)
+                                                                               response_handler=response_handler, **kwargs)
 
 
 class TransactionalProxy(object):
     def __init__(self, name, transaction):
         self.name = name
         self.transaction = transaction
-        self._to_object = transaction.client.serializer.to_object
-        self._to_data = transaction.client.serializer.to_data
+        self._to_object = transaction.client.serialization_service.to_object
+        self._to_data = transaction.client.serialization_service.to_data
 
     def _encode_invoke(self, codec, response_handler=default_response_handler, **kwargs):
         request = codec.encode_request(name=self.name, txn_id=self.transaction.id, thread_id=thread_id(), **kwargs)
         return self.transaction.client.invoker.invoke_on_connection(request, self.transaction.connection).continue_with(
-            response_handler, codec, self._to_object)
+                response_handler, codec, self._to_object)
 
     def __repr__(self):
         return '%s(name="%s")' % (type(self).__name__, self.name)
 
 
 ItemEventType = enum(added=1, removed=2)
-EntryEventType = enum(added=1,
-                      removed=1 << 1,
-                      updated=1 << 2,
-                      evicted=1 << 3,
-                      evict_all=1 << 4,
-                      clear_all=1 << 5,
-                      merged=1 << 6,
-                      expired=1 << 7)
+EntryEventType = enum(added=1, removed=2, updated=4, evicted=8, evict_all=16, clear_all=32, merged=64, expired=128)
 
 
 class ItemEvent(object):

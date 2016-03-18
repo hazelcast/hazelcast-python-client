@@ -36,7 +36,7 @@ class PartitionService(object):
         return self.partitions[partition_id]
 
     def get_partition_id(self, key):
-        data = self._client.serializer.to_data(key)
+        data = self._client.serialization_service.to_data(key)
         count = self.get_partition_count()
         return hash_to_index(data.get_partition_hash(), count)
 

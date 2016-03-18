@@ -8,6 +8,31 @@ from hazelcast.serialization.predicate import sql
 
 FACTORY_ID = 2
 
+class Customer(Portable):
+    def __init__(self, id=None, name=None, surname=None, mobile=None):
+        self.id = id
+        self.name = name
+        self.surname = surname
+        self.mobile = mobile
+
+    def write_portable(self, writer):
+        writer.write_int("id", self.id)
+        writer.write_utf("name", self.name)
+        writer.write_utf("surname", self.surname)
+        writer.write_utf("mobile", self.mobile)
+
+    def read_portable(self, reader):
+        self.id = reader.read_int("id")
+        self.name = reader.read_utf("name")
+        self.surname = reader.read_utf("surname")
+        self.mobile = reader.read_utf("mobile")
+
+    def get_factory_id(self):
+        return FACTORY_ID
+
+    def get_class_id(self):
+        return CLASS_ID
+
 
 class SamplePortable(Portable):
     CLASS_ID = 10
@@ -53,8 +78,8 @@ if __name__ == '__main__':
     config.group_config.name = "dev"
     config.group_config.password = "dev-pass"
 
-    the_factory = {SamplePortable.CLASS_ID: SamplePortable}
-    config.serialization_config.portable_factories[FACTORY_ID] = the_factory
+    config.serialization_config.portable_factories[FACTORY_ID] = \
+        {SamplePortable.CLASS_ID: SamplePortable}
 
     try:
         from hzrc.client import HzRemoteController

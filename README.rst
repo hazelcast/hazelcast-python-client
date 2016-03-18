@@ -14,20 +14,11 @@ Python client is implemented using the `Hazelcast Open Binary Client Protocol <h
 Features :
 ----------
 
-* Map
-* MultiMap
-* List
-* Set
-* Queue
-* Topic
-* Lock
-* Semaphore
-* AtomicLong
-* AtomicReference
+* Distributed Data Structures: Map, MultiMap, List, Set, Queue, Topic, ReplicatedMap
+* Lock, Semaphore, CountDownLatch
+* AtomicLong, AtomicReference
 * IdGenerator
-* CountDownLatch
 * RingBuffer
-* ReplicatedMap
 * Transactional Map, MultiMap, Queue, List, Set
 * Continuous Query(listener with predicate)
 * Distributed Executor Service
@@ -36,10 +27,7 @@ Features :
 * Smart and Non-Smart Client operation
 * Event Listeners
 * Lifecycle Service
-* Hazelcast serialization for IdentifiedDataSerializable
-* Hazelcast serialization for Portable
-* Hazelcast serialization, Custom Serializers
-* Hazelcast serialization, Global Serializers
+* Hazelcast serialization (IdentifiedDataSerializable, Portable, Custom Serializers, Global Serializers)
 
 
 Installation

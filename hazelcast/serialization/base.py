@@ -5,6 +5,7 @@ from types import TypeType
 
 from api import *
 from data import *
+from hazelcast.config import INTEGER_TYPE
 from hazelcast.exception import HazelcastInstanceNotActiveError, HazelcastSerializationError
 from hazelcast.serialization.input import _ObjectDataInput
 from hazelcast.serialization.output import _ObjectDataOutput
@@ -44,8 +45,8 @@ def is_portable(obj):
 
 
 class BaseSerializationService(object):
-    def __init__(self, version, global_partition_strategy, output_buffer_size, is_big_endian):
-        self._registry = SerializerRegistry()
+    def __init__(self, version, global_partition_strategy, output_buffer_size, is_big_endian, int_type):
+        self._registry = SerializerRegistry(int_type)
         self._version = version
         self._global_partition_strategy = global_partition_strategy
         self._output_buffer_size = output_buffer_size
@@ -151,7 +152,7 @@ class BaseSerializationService(object):
 
 
 class SerializerRegistry(object):
-    def __init__(self):
+    def __init__(self, int_type=INTEGER_TYPE.VAR):
         self._active = True
         self._global_serializer = None
         self._portable_serializer = None
@@ -166,6 +167,7 @@ class SerializerRegistry(object):
         self._type_dict = {}  # dict of class:serializer
 
         self._registration_lock = RLock()
+        self.int_type = int_type
 
     def serializer_by_type_id(self, type_id):
         """
@@ -230,22 +232,30 @@ class SerializerRegistry(object):
         if isinstance(obj, basestring):
             type_id = CONSTANT_TYPE_STRING
         # LOCATE NUMERIC TYPES
-        elif obj_type is int:
-            if MIN_BYTE <= obj <= MAX_BYTE:
+        elif obj_type is int or obj_type is long:
+            if self.int_type == INTEGER_TYPE.BYTE:
                 type_id = CONSTANT_TYPE_BYTE
-            elif MIN_SHORT <= obj <= MAX_SHORT:
+            elif self.int_type == INTEGER_TYPE.SHORT:
                 type_id = CONSTANT_TYPE_SHORT
-            elif MIN_INT <= obj <= MAX_INT:
+            elif self.int_type == INTEGER_TYPE.INT:
                 type_id = CONSTANT_TYPE_INTEGER
-            elif MIN_LONG <= obj <= MAX_LONG:
+            elif self.int_type == INTEGER_TYPE.LONG:
                 type_id = CONSTANT_TYPE_LONG
-        elif obj_type is long:
-            if MIN_LONG <= obj <= MAX_LONG:
-                type_id = CONSTANT_TYPE_LONG
-            else:
+            elif self.int_type == INTEGER_TYPE.BIG_INT:
                 type_id = JAVA_DEFAULT_TYPE_BIG_INTEGER
-        elif obj_type is float:
-            type_id = CONSTANT_TYPE_FLOAT if MIN_FLOAT32 <= obj <= MAX_FLOAT32 else CONSTANT_TYPE_DOUBLE
+            elif self.int_type == INTEGER_TYPE.VAR:
+                if MIN_BYTE <= obj <= MAX_BYTE:
+                    type_id = CONSTANT_TYPE_BYTE
+                elif MIN_SHORT <= obj <= MAX_SHORT:
+                    type_id = CONSTANT_TYPE_SHORT
+                elif MIN_INT <= obj <= MAX_INT:
+                    type_id = CONSTANT_TYPE_INTEGER
+                elif MIN_LONG <= obj <= MAX_LONG:
+                    type_id = CONSTANT_TYPE_LONG
+                elif MIN_LONG <= obj <= MAX_LONG:
+                    type_id = CONSTANT_TYPE_LONG
+                else:
+                    type_id = JAVA_DEFAULT_TYPE_BIG_INTEGER
         return self.serializer_by_type_id(type_id) if type_id is not None else self._constant_type_dict.get(obj_type, None)
 
     def lookup_custom_serializer(self, obj_type):

@@ -3,6 +3,7 @@ import unittest
 import hazelcast
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.serialization.api import Portable
+from hazelcast.serialization.portable.classdef import ClassDefinitionBuilder
 from tests.serialization.identified_test import create_identified, SerializationV1Identified
 
 FACTORY_ID = 1
@@ -225,3 +226,48 @@ class PortableSerializationTestCase(unittest.TestCase):
         data = service.to_data(obj)
         obj2 = service2.to_object(data)
         self.assertTrue(obj == obj2)
+    
+    def test_portable_class_def(self):
+        builder_inner = ClassDefinitionBuilder(FACTORY_ID, InnerPortable.CLASS_ID)
+        builder_inner.add_utf_field("param_str")
+        builder_inner.add_int_field("param_int")
+        class_def_inner = builder_inner.build()
+
+        builder = ClassDefinitionBuilder(FACTORY_ID, SerializationV1Portable.CLASS_ID)
+
+        builder.add_byte_field("1")
+        builder.add_boolean_field("2")
+        builder.add_char_field("3")
+        builder.add_short_field("4")
+        builder.add_int_field("5")
+        builder.add_long_field("6")
+        builder.add_float_field("7")
+        builder.add_double_field("8")
+        builder.add_utf_field("9")
+        builder.add_byte_array_field("a1")
+        builder.add_boolean_array_field("a2")
+        builder.add_char_array_field("a3")
+        builder.add_short_array_field("a4")
+        builder.add_int_array_field("a5")
+        builder.add_long_array_field("a6")
+        builder.add_float_array_field("a7")
+        builder.add_double_array_field("a8")
+        builder.add_utf_array_field("a9")
+        builder.add_portable_field("p", class_def_inner)
+        builder.add_portable_array_field("ap", class_def_inner)
+        class_def = builder.build()
+
+        config = hazelcast.ClientConfig()
+        config.serialization_config.portable_factories[FACTORY_ID] = the_factory
+
+        config.serialization_config.class_definitions.add(class_def)
+        config.serialization_config.class_definitions.add(class_def_inner)
+
+        service = SerializationServiceV1(config.serialization_config)
+        service2 = SerializationServiceV1(config.serialization_config)
+        obj = SerializationV1Portable()
+
+        data = service.to_data(obj)
+        obj2 = service2.to_object(data)
+        self.assertTrue(obj == obj2)
+

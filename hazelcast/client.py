@@ -31,7 +31,7 @@ class HazelcastClient(object):
         self.partition_service = PartitionService(self)
         self.proxy = ProxyManager(self)
         self.load_balancer = RandomLoadBalancer(self.cluster)
-        self.serializer = SerializationServiceV1(serialization_config=self.config.serialization_config)
+        self.serialization_service = SerializationServiceV1(serialization_config=self.config.serialization_config)
         self.transaction_manager = TransactionManager(self)
         self._start()
 
