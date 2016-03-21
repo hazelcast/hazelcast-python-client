@@ -19,7 +19,7 @@ def default_partition_strategy(key):
 class SerializationServiceV1(BaseSerializationService):
     logger = logging.getLogger("SerializationService")
 
-    def __init__(self, serialization_config=None, version=1, portable_version=0,
+    def __init__(self, serialization_config, version=1, portable_version=0,
                  global_partition_strategy=default_partition_strategy,
                  output_buffer_size=DEFAULT_OUT_BUFFER_SIZE):
         super(SerializationServiceV1, self).__init__(version, global_partition_strategy, output_buffer_size,

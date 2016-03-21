@@ -1,6 +1,7 @@
 import unittest
 
 import hazelcast
+from hazelcast.exception import HazelcastSerializationError
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.serialization.api import Portable
 from hazelcast.serialization.portable.classdef import ClassDefinitionBuilder
@@ -271,3 +272,14 @@ class PortableSerializationTestCase(unittest.TestCase):
         obj2 = service2.to_object(data)
         self.assertTrue(obj == obj2)
 
+    def test_portable_read_without_factory(self):
+        config = hazelcast.ClientConfig()
+        config.serialization_config.portable_factories[FACTORY_ID] = the_factory
+        service = SerializationServiceV1(config.serialization_config)
+        service2 = SerializationServiceV1(hazelcast.SerializationConfig())
+        obj = create_portable()
+        self.assertTrue(obj.inner_portable)
+
+        data = service.to_data(obj)
+        with self.assertRaises(HazelcastSerializationError):
+            service2.to_object(data)

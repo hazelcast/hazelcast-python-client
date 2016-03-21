@@ -90,24 +90,6 @@ class PortableContext(object):
 
         return class_def
 
-    def get_field_definition(self, class_def, name):
-        fd = class_def.get_field(name)
-        if fd is None:
-            field_names = name.split(".")
-            if len(field_names) > 1:
-                current_class_def = class_def
-                for i in xrange(0, len(field_names)):
-                    fname = field_names[i]
-                    fd = current_class_def.get_field(fname)
-                    if i == len(field_names) - 1:
-                        break
-                    if fd is None:
-                        raise ValueError("Unknown field: {}".format(fname))
-                    current_class_def = self.lookup_class_definition(fd.factory_id, fd.class_id, current_class_def.version)
-                    if current_class_def is None:
-                        raise ValueError("Not a registered Portable field: {}".format(fd))
-        return fd
-
     def _get_class_def_context(self, factory_id):
         if factory_id not in self._class_defs:
             self._class_defs[factory_id] = ClassDefinitionContext(factory_id, self.portable_version)
