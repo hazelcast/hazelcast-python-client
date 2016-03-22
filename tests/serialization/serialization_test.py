@@ -68,9 +68,8 @@ class SerializationTestCase(unittest.TestCase):
 
     def test_not_data_deserialize(self):
         obj = 0
-        with self.assertRaises(HazelcastSerializationError):
-            obj2 = self.service.to_object(obj)
-
+        obj2 = self.service.to_object(obj)
+        self.assertEqual(obj, obj2)
 
 
 byte_val = 0x12
