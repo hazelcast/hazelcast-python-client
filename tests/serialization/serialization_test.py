@@ -1,16 +1,20 @@
 import unittest
 
 from hazelcast.config import SerializationConfig, INTEGER_TYPE
+from hazelcast.core import Address
+from hazelcast.exception import HazelcastSerializationError
+from hazelcast.serialization.data import Data
 from hazelcast.serialization.serialization_const import CONSTANT_TYPE_BYTE, CONSTANT_TYPE_SHORT, CONSTANT_TYPE_INTEGER, \
     CONSTANT_TYPE_LONG
 from hazelcast.serialization.service import SerializationServiceV1
-from tests.util import random_string
 
 
 class SerializationTestCase(unittest.TestCase):
     def setUp(self):
-        n = random_string()
         self.service = SerializationServiceV1(serialization_config=SerializationConfig())
+
+    def tearDown(self):
+        self.service.destroy()
 
     def test_test_dummy_encode_decode(self):
         obj = "Test obj"
@@ -39,6 +43,34 @@ class SerializationTestCase(unittest.TestCase):
         data = self.service.to_data(obj)
 
         self.assertEqual(16, len(data.to_bytes()))
+
+    def test_python_pickle_serialization(self):
+        obj = Address("localhost", 5701)
+        data = self.service.to_data(obj)
+
+        obj2 = self.service.to_object(data)
+        self.assertEqual(obj, obj2)
+
+    def test_null_data(self):
+        data = Data()
+        obj = self.service.to_object(data)
+        self.assertIsNone(obj)
+
+    def test_none_serialize(self):
+        obj = None
+        data = self.service.to_data(obj)
+        self.assertIsNone(data)
+
+    def test_serialize_data(self):
+        data = Data()
+        obj = self.service.to_data(data)
+        self.assertTrue(isinstance(obj, Data))
+
+    def test_not_data_deserialize(self):
+        obj = 0
+        with self.assertRaises(HazelcastSerializationError):
+            obj2 = self.service.to_object(obj)
+
 
 
 byte_val = 0x12

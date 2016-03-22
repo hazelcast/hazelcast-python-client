@@ -60,6 +60,9 @@ class CustomSerializer(StreamSerializer):
     def get_type_id(self):
         return 10001
 
+    def destroy(self):
+        pass
+
 
 class TheOtherCustomSerializer(StreamSerializer):
     def write(self, out, obj):
@@ -78,6 +81,9 @@ class TheOtherCustomSerializer(StreamSerializer):
 
     def get_type_id(self):
         return 10001
+
+    def destroy(self):
+        pass
 
 
 class CustomSerializationTestCase(unittest.TestCase):

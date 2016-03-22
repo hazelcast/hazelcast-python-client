@@ -153,7 +153,6 @@ class BaseSerializationService(object):
 
 class SerializerRegistry(object):
     def __init__(self, int_type=INTEGER_TYPE.VAR):
-        self._active = True
         self._global_serializer = None
         self._portable_serializer = None
         self._data_serializer = None
@@ -217,10 +216,7 @@ class SerializerRegistry(object):
             serializer = self.lookup_python_serializer(obj_type)
 
         if serializer is None:
-            if self._active:
-                raise HazelcastSerializationError("There is no suitable serializer for:" + str(obj_type))
-            else:
-                raise HazelcastInstanceNotActiveError()
+            raise HazelcastSerializationError("There is no suitable serializer for:" + str(obj_type))
         return serializer
 
     def lookup_default_serializer(self, obj_type, obj):
@@ -250,8 +246,6 @@ class SerializerRegistry(object):
                     type_id = CONSTANT_TYPE_SHORT
                 elif MIN_INT <= obj <= MAX_INT:
                     type_id = CONSTANT_TYPE_INTEGER
-                elif MIN_LONG <= obj <= MAX_LONG:
-                    type_id = CONSTANT_TYPE_LONG
                 elif MIN_LONG <= obj <= MAX_LONG:
                     type_id = CONSTANT_TYPE_LONG
                 else:
@@ -311,7 +305,6 @@ class SerializerRegistry(object):
         return serializer
 
     def destroy(self):
-        self._active = False
         for serializer in self._type_dict.values():
             serializer.destroy()
         for serializer in self._constant_type_dict.values():

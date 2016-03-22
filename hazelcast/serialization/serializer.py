@@ -7,9 +7,12 @@ from hazelcast.serialization.api import StreamSerializer
 # from hazelcast.serialization.base import HazelcastSerializationError
 from hazelcast.serialization.serialization_const import *
 
+class BaseSerializer(StreamSerializer):
+    def destroy(self):
+        pass
 
 # DEFAULT SERIALIZERS
-class NoneSerializer(StreamSerializer):
+class NoneSerializer(BaseSerializer):
     def read(self, inp):
         return None
 
@@ -20,7 +23,7 @@ class NoneSerializer(StreamSerializer):
         return CONSTANT_TYPE_NULL
 
 
-class BooleanSerializer(StreamSerializer):
+class BooleanSerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_boolean()
 
@@ -31,7 +34,7 @@ class BooleanSerializer(StreamSerializer):
         return CONSTANT_TYPE_BOOLEAN
 
 
-class ByteSerializer(StreamSerializer):
+class ByteSerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_byte()
 
@@ -42,7 +45,7 @@ class ByteSerializer(StreamSerializer):
         return CONSTANT_TYPE_BYTE
 
 
-class CharSerializer(StreamSerializer):
+class CharSerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_char()
 
@@ -53,7 +56,7 @@ class CharSerializer(StreamSerializer):
         return CONSTANT_TYPE_CHAR
 
 
-class ShortSerializer(StreamSerializer):
+class ShortSerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_short()
 
@@ -64,7 +67,7 @@ class ShortSerializer(StreamSerializer):
         return CONSTANT_TYPE_SHORT
 
 
-class IntegerSerializer(StreamSerializer):
+class IntegerSerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_int()
 
@@ -78,7 +81,7 @@ class IntegerSerializer(StreamSerializer):
         return CONSTANT_TYPE_INTEGER
 
 
-class LongSerializer(StreamSerializer):
+class LongSerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_long()
 
@@ -92,7 +95,7 @@ class LongSerializer(StreamSerializer):
         return CONSTANT_TYPE_LONG
 
 
-class FloatSerializer(StreamSerializer):
+class FloatSerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_float()
 
@@ -103,7 +106,7 @@ class FloatSerializer(StreamSerializer):
         return CONSTANT_TYPE_FLOAT
 
 
-class DoubleSerializer(StreamSerializer):
+class DoubleSerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_double()
 
@@ -114,7 +117,7 @@ class DoubleSerializer(StreamSerializer):
         return CONSTANT_TYPE_DOUBLE
 
 
-class StringSerializer(StreamSerializer):
+class StringSerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_utf()
 
@@ -126,7 +129,7 @@ class StringSerializer(StreamSerializer):
 
 
 # ARRAY SERIALIZERS
-class BooleanArraySerializer(StreamSerializer):
+class BooleanArraySerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_boolean_array()
 
@@ -137,7 +140,7 @@ class BooleanArraySerializer(StreamSerializer):
         return CONSTANT_TYPE_BOOLEAN_ARRAY
 
 
-class ByteArraySerializer(StreamSerializer):
+class ByteArraySerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_byte_array()
 
@@ -148,7 +151,7 @@ class ByteArraySerializer(StreamSerializer):
         return CONSTANT_TYPE_BYTE_ARRAY
 
 
-class CharArraySerializer(StreamSerializer):
+class CharArraySerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_char_array()
 
@@ -159,7 +162,7 @@ class CharArraySerializer(StreamSerializer):
         return CONSTANT_TYPE_CHAR_ARRAY
 
 
-class ShortArraySerializer(StreamSerializer):
+class ShortArraySerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_short_array()
 
@@ -170,7 +173,7 @@ class ShortArraySerializer(StreamSerializer):
         return CONSTANT_TYPE_SHORT_ARRAY
 
 
-class IntegerArraySerializer(StreamSerializer):
+class IntegerArraySerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_int_array()
 
@@ -181,7 +184,7 @@ class IntegerArraySerializer(StreamSerializer):
         return CONSTANT_TYPE_INTEGER_ARRAY
 
 
-class LongArraySerializer(StreamSerializer):
+class LongArraySerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_long_array()
 
@@ -192,7 +195,7 @@ class LongArraySerializer(StreamSerializer):
         return CONSTANT_TYPE_LONG_ARRAY
 
 
-class FloatArraySerializer(StreamSerializer):
+class FloatArraySerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_float_array()
 
@@ -203,7 +206,7 @@ class FloatArraySerializer(StreamSerializer):
         return CONSTANT_TYPE_FLOAT_ARRAY
 
 
-class DoubleArraySerializer(StreamSerializer):
+class DoubleArraySerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_double_array()
 
@@ -214,7 +217,7 @@ class DoubleArraySerializer(StreamSerializer):
         return CONSTANT_TYPE_DOUBLE_ARRAY
 
 
-class StringArraySerializer(StreamSerializer):
+class StringArraySerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_utf_array()
 
@@ -226,7 +229,7 @@ class StringArraySerializer(StreamSerializer):
 
 
 # EXTENSIONS
-class DateTimeSerializer(StreamSerializer):
+class DateTimeSerializer(BaseSerializer):
     def read(self, inp):
         long_time = inp.read_long()
         return datetime.fromtimestamp(long_time / 1000.0)
@@ -239,7 +242,7 @@ class DateTimeSerializer(StreamSerializer):
         return JAVA_DEFAULT_TYPE_DATE
 
 
-class BigIntegerSerializer(StreamSerializer):
+class BigIntegerSerializer(BaseSerializer):
     def read(self, inp):
         raise NotImplementedError("Big integer numbers not supported")
 
@@ -250,7 +253,7 @@ class BigIntegerSerializer(StreamSerializer):
         return JAVA_DEFAULT_TYPE_BIG_INTEGER
 
 
-class BigDecimalSerializer(StreamSerializer):
+class BigDecimalSerializer(BaseSerializer):
     def read(self, inp):
         raise NotImplementedError("Big decimal numbers not supported")
 
@@ -261,7 +264,7 @@ class BigDecimalSerializer(StreamSerializer):
         return JAVA_DEFAULT_TYPE_BIG_DECIMAL
 
 
-class JavaClassSerializer(StreamSerializer):
+class JavaClassSerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_utf()
 
@@ -272,7 +275,7 @@ class JavaClassSerializer(StreamSerializer):
         return JAVA_DEFAULT_TYPE_CLASS
 
 
-class JavaEnumSerializer(StreamSerializer):
+class JavaEnumSerializer(BaseSerializer):
     def read(self, inp):
         """
         :param inp:
@@ -289,7 +292,7 @@ class JavaEnumSerializer(StreamSerializer):
         return JAVA_DEFAULT_TYPE_ENUM
 
 
-class ArrayListSerializer(StreamSerializer):
+class ArrayListSerializer(BaseSerializer):
     def read(self, inp):
         size = inp.read_int()
         if size > NULL_ARRAY_LENGTH:
@@ -306,7 +309,7 @@ class ArrayListSerializer(StreamSerializer):
         return JAVA_DEFAULT_TYPE_ARRAY_LIST
 
 
-class LinkedListSerializer(StreamSerializer):
+class LinkedListSerializer(BaseSerializer):
     def read(self, inp):
         size = inp.read_int()
         if size > NULL_ARRAY_LENGTH:
@@ -320,7 +323,7 @@ class LinkedListSerializer(StreamSerializer):
         return JAVA_DEFAULT_TYPE_LINKED_LIST
 
 
-class PythonObjectSerializer(StreamSerializer):
+class PythonObjectSerializer(BaseSerializer):
     def read(self, inp):
         str = inp.read_utf().encode()
         return cPickle.loads(str)
@@ -332,7 +335,7 @@ class PythonObjectSerializer(StreamSerializer):
         return PYTHON_TYPE_PICKLE
 
 
-class IdentifiedDataSerializer(StreamSerializer):
+class IdentifiedDataSerializer(BaseSerializer):
     def __init__(self, factories):
         self._factories = factories
 
