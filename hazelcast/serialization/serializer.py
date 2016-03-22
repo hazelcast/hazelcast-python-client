@@ -4,20 +4,21 @@ from time import time
 
 from bits import *
 from hazelcast.serialization.api import StreamSerializer
-# from hazelcast.serialization.base import HazelcastSerializationError
+from hazelcast.serialization.base import HazelcastSerializationError
 from hazelcast.serialization.serialization_const import *
+
 
 class BaseSerializer(StreamSerializer):
     def destroy(self):
         pass
+
 
 # DEFAULT SERIALIZERS
 class NoneSerializer(BaseSerializer):
     def read(self, inp):
         return None
 
-    def write(self, out, obj):
-        pass
+    # "write(self, out, obj)" is never called so not implemented here
 
     def get_type_id(self):
         return CONSTANT_TYPE_NULL
@@ -49,8 +50,7 @@ class CharSerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_char()
 
-    def write(self, out, obj):
-        out.write_char(obj)
+    # "write(self, out, obj)" is never called so not implemented here
 
     def get_type_id(self):
         return CONSTANT_TYPE_CHAR
@@ -354,7 +354,6 @@ class IdentifiedDataSerializer(BaseSerializer):
 
         factory = self._factories.get(factory_id, None)
         if factory is None:
-            from hazelcast.serialization.base import HazelcastSerializationError
             raise HazelcastSerializationError("No DataSerializerFactory registered for namespace: {}".format(factory_id))
         identified = factory.get(class_id, None)
         if identified is None:
