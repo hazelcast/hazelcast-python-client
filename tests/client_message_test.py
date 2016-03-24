@@ -2,6 +2,7 @@
 import unittest
 
 from hazelcast.protocol.client_message import *
+from hazelcast.protocol.codec import client_authentication_codec
 
 READ_HEADER = "00" * 20 + "1600"
 
@@ -39,7 +40,7 @@ class ClientMessageTest(unittest.TestCase):
         message.append_byte(0x34)
 
         data_offset = message.get_data_offset()
-        self.assertEqual("21f234", binascii.hexlify(message.buffer[data_offset:data_offset+3]))
+        self.assertEqual("21f234", binascii.hexlify(message.buffer[data_offset:data_offset + 3]))
 
     def test_append_bool(self):
         message = ClientMessage(payload_size=30)
@@ -47,7 +48,7 @@ class ClientMessageTest(unittest.TestCase):
         message.append_bool(True)
 
         data_offset = message.get_data_offset()
-        self.assertEqual("01", binascii.hexlify(message.buffer[data_offset:data_offset+1]))
+        self.assertEqual("01", binascii.hexlify(message.buffer[data_offset:data_offset + 1]))
 
     def test_append_int(self):
         message = ClientMessage(payload_size=30)
@@ -55,7 +56,7 @@ class ClientMessageTest(unittest.TestCase):
         message.append_int(0x1feeddcc)
 
         data_offset = message.get_data_offset()
-        self.assertEqual("ccddee1f", binascii.hexlify(message.buffer[data_offset:data_offset+4]))
+        self.assertEqual("ccddee1f", binascii.hexlify(message.buffer[data_offset:data_offset + 4]))
 
     def test_append_long(self):
         message = ClientMessage(payload_size=30)
@@ -63,7 +64,7 @@ class ClientMessageTest(unittest.TestCase):
         message.append_long(0x1feeddccbbaa8765)
 
         data_offset = message.get_data_offset()
-        self.assertEqual("6587aabbccddee1f", binascii.hexlify(message.buffer[data_offset:data_offset+8]))
+        self.assertEqual("6587aabbccddee1f", binascii.hexlify(message.buffer[data_offset:data_offset + 8]))
 
     def test_append_str(self):
         message = ClientMessage(payload_size=30)
@@ -168,5 +169,35 @@ class ClientMessageTest(unittest.TestCase):
         self.assertTrue(message.is_flag_set(LISTENER_FLAG))
 
 
-if __name__ == '__main__':
-    unittest.main()
+class ClientMessageBuilderTest(unittest.TestCase):
+    def test_message_accumulate(self):
+        message = client_authentication_codec.encode_request("user", "pass", "uuid", "owner-uuid", True, "PYH", 1)
+        message.set_correlation_id(1)
+
+        def message_callback(merged_message):
+            self.assertTrue(merged_message.is_flag_set(BEGIN_END_FLAG))
+            self.assertEqual(merged_message.get_frame_length(), message.get_frame_length())
+            self.assertEqual(merged_message.get_correlation_id(), message.get_correlation_id())
+
+        builder = ClientMessageBuilder(message_callback=message_callback)
+
+        header = message.buffer[0:message.get_data_offset()]
+        payload = message.buffer[message.get_data_offset():]
+
+        indx_1 = len(payload) // 3
+        indx_2 = 2 * len(payload) // 3
+
+        p1 = payload[0:indx_1]
+        p2 = payload[indx_1: indx_2]
+        p3 = payload[indx_2:]
+
+        cm1 = ClientMessage(buff=header + p1)
+        cm2 = ClientMessage(buff=header + p2)
+        cm3 = ClientMessage(buff=header + p3)
+        cm1.add_flag(BEGIN_FLAG)
+        cm3.add_flag(END_FLAG)
+
+        builder.on_message(cm1)
+        builder.on_message(cm2)
+        builder.on_message(cm3)
+

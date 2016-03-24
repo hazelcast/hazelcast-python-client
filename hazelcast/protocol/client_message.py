@@ -23,6 +23,7 @@ Any request parameter, response or event data will be carried in the payload.
 
 """
 import binascii
+import logging
 import struct
 
 from hazelcast.serialization.data import *
@@ -145,6 +146,10 @@ class ClientMessage(object):
         self.buffer[self._write_offset(): self._write_offset() + length] = arr[:]
         self._write_index += length
 
+    def append_tuple(self, entry_tuple):
+        self.append_data(entry_tuple[0]).append_data(entry_tuple[1])
+        return self
+
     # PAYLOAD READ
     def _read_from_buff(self, fmt, size):
         val = struct.unpack_from(fmt, self.buffer, self._read_offset())
@@ -202,6 +207,12 @@ class ClientMessage(object):
         self.set_frame_length(self._write_offset())
         return self
 
+    def accumulate(self, client_message):
+        start = client_message.get_data_offset()
+        end = client_message.get_frame_length()
+        self.buffer += client_message.buffer[start:end]
+        self.set_frame_length(len(self.buffer))
+
     def __repr__(self):
         return binascii.hexlify(self.buffer)
 
@@ -223,6 +234,27 @@ class ClientMessage(object):
                                          self.is_flag_set(LISTENER_FLAG),
                                          self.get_data_offset())
 
-    def append_tuple(self, entry_tuple):
-        self.append_data(entry_tuple[0]).append_data(entry_tuple[1])
-        return self
+
+class ClientMessageBuilder(object):
+    def __init__(self, message_callback):
+        self.logger = logging.getLogger("ClientMessageBuilder:")
+        self._incomplete_messages = dict()
+        self._message_callback = message_callback
+
+    def on_message(self, client_message):
+        if client_message.is_flag_set(BEGIN_END_FLAG):
+            # handle message
+            self._message_callback(client_message)
+        elif client_message.is_flag_set(BEGIN_FLAG):
+            self._incomplete_messages[client_message.get_correlation_id()] = client_message
+        else:
+            try:
+                message = self._incomplete_messages[client_message.get_correlation_id()]
+            except KeyError:
+                self.logger.warn("A message without the begin part is received.")
+                return
+            message.accumulate(client_message)
+            if client_message.is_flag_set(END_FLAG):
+                message.add_flag(BEGIN_END_FLAG)
+                self._message_callback(message)
+                del self._incomplete_messages[client_message.get_correlation_id()]
