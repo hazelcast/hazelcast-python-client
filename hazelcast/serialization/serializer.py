@@ -1,3 +1,4 @@
+import binascii
 import cPickle
 from datetime import datetime
 from time import time
@@ -133,8 +134,7 @@ class BooleanArraySerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_boolean_array()
 
-    def write(self, out, obj):
-        out.write_boolean_array(obj)
+    # "write(self, out, obj)" is never called so not implemented here
 
     def get_type_id(self):
         return CONSTANT_TYPE_BOOLEAN_ARRAY
@@ -144,8 +144,7 @@ class ByteArraySerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_byte_array()
 
-    def write(self, out, obj):
-        out.write_byte_array(obj)
+    # "write(self, out, obj)" is never called so not implemented here
 
     def get_type_id(self):
         return CONSTANT_TYPE_BYTE_ARRAY
@@ -155,8 +154,7 @@ class CharArraySerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_char_array()
 
-    def write(self, out, obj):
-        out.write_char_array(obj)
+    # "write(self, out, obj)" is never called so not implemented here
 
     def get_type_id(self):
         return CONSTANT_TYPE_CHAR_ARRAY
@@ -166,8 +164,7 @@ class ShortArraySerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_short_array()
 
-    def write(self, out, obj):
-        out.write_short_array(obj)
+    # "write(self, out, obj)" is never called so not implemented here
 
     def get_type_id(self):
         return CONSTANT_TYPE_SHORT_ARRAY
@@ -177,8 +174,7 @@ class IntegerArraySerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_int_array()
 
-    def write(self, out, obj):
-        out.write_int_array(obj)
+    # "write(self, out, obj)" is never called so not implemented here
 
     def get_type_id(self):
         return CONSTANT_TYPE_INTEGER_ARRAY
@@ -188,8 +184,7 @@ class LongArraySerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_long_array()
 
-    def write(self, out, obj):
-        out.write_long_array(obj)
+    # "write(self, out, obj)" is never called so not implemented here
 
     def get_type_id(self):
         return CONSTANT_TYPE_LONG_ARRAY
@@ -199,8 +194,7 @@ class FloatArraySerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_float_array()
 
-    def write(self, out, obj):
-        out.write_float_array(obj)
+    # "write(self, out, obj)" is never called so not implemented here
 
     def get_type_id(self):
         return CONSTANT_TYPE_FLOAT_ARRAY
@@ -210,8 +204,7 @@ class DoubleArraySerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_double_array()
 
-    def write(self, out, obj):
-        out.write_double_array(obj)
+    # "write(self, out, obj)" is never called so not implemented here
 
     def get_type_id(self):
         return CONSTANT_TYPE_DOUBLE_ARRAY
@@ -221,8 +214,7 @@ class StringArraySerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_utf_array()
 
-    def write(self, out, obj):
-        out.write_utf_array(obj)
+    # "write(self, out, obj)" is never called so not implemented here
 
     def get_type_id(self):
         return CONSTANT_TYPE_STRING_ARRAY
@@ -244,10 +236,33 @@ class DateTimeSerializer(BaseSerializer):
 
 class BigIntegerSerializer(BaseSerializer):
     def read(self, inp):
-        raise NotImplementedError("Big integer numbers not supported")
+        length = inp.read_int()
+        if length == NULL_ARRAY_LENGTH:
+            return None
+        result = bytearray(length)
+        if length > 0:
+            inp.read_into(result, 0, length)
+        if result[0] & 0x80:
+            neg = bytearray()
+            for c in result:
+                neg.append(c ^ 0xFF)
+            return -1 * int(binascii.hexlify(neg), 16) - 1
+        return int(binascii.hexlify(result), 16)
 
     def write(self, out, obj):
-        raise NotImplementedError("Big integer numbers not supported")
+        the_big_int = -obj-1 if obj < 0 else obj
+        end_index = -1 if type(obj) == long else None
+        hex_str = hex(the_big_int)[2:end_index]
+        if len(hex_str) % 2 == 1:
+            prefix = '0' # "f" if obj < 0 else "0"
+            hex_str = prefix + hex_str
+        num_array = bytearray(binascii.unhexlify(bytearray(hex_str)))
+        if obj < 0:
+            neg = bytearray()
+            for c in num_array:
+                neg.append(c ^ 0xFF)
+            num_array = neg
+        out.write_byte_array(num_array)
 
     def get_type_id(self):
         return JAVA_DEFAULT_TYPE_BIG_INTEGER
