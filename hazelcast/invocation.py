@@ -224,9 +224,8 @@ class InvocationService(object):
         except IOError as e:
             self._handle_exception(invocation, e)
 
-    def _handle_client_message(self, message, connection):
+    def _handle_client_message(self, message):
         correlation_id = message.get_correlation_id()
-        self.logger.debug("Received %s on %s", message, connection)
         if message.has_flags(LISTENER_FLAG):
             if correlation_id not in self._event_handlers:
                 self.logger.warn("Got event message with unknown correlation id: %s", message)

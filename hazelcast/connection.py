@@ -7,7 +7,7 @@ from hazelcast.config import PROPERTY_HEARTBEAT_INTERVAL, PROPERTY_HEARTBEAT_TIM
 from hazelcast.core import CLIENT_TYPE
 from hazelcast.exception import AuthenticationError
 from hazelcast.future import ImmediateFuture
-from hazelcast.protocol.client_message import BEGIN_END_FLAG, ClientMessage
+from hazelcast.protocol.client_message import BEGIN_END_FLAG, ClientMessage, ClientMessageBuilder
 from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
 from hazelcast.serialization import INT_SIZE_IN_BYTES, FMT_LE_INT
 from hazelcast.util import AtomicInteger
@@ -192,7 +192,7 @@ class Connection(object):
         self.id = self.counter.get_and_increment()
         self.logger = logging.getLogger("Connection[%s](%s:%d)" % (self.id, address.host, address.port))
         self._connection_closed_callback = connection_closed_callback
-        self._message_callback = message_callback
+        self._builder = ClientMessageBuilder(message_callback)
         self._read_buffer = ""
         self.last_read = 0
 
@@ -215,7 +215,7 @@ class Connection(object):
                 return
             message = ClientMessage(buffer(self._read_buffer, 0, frame_length))
             self._read_buffer = self._read_buffer[frame_length:]
-            self._message_callback(message, self)
+            self._builder.on_message(message)
 
     def write(self, data):
         # must be implemented by subclass
