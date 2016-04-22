@@ -2,6 +2,7 @@ from __future__ import with_statement
 
 import itertools
 import threading
+import time
 from collections import Sequence, Iterable
 from types import TypeType
 
@@ -29,6 +30,10 @@ def check_not_negative(val, message):
 def check_not_empty(collection, message):
     if not collection:
         raise AssertionError(message)
+
+
+def current_time():
+    return time.time()
 
 
 def thread_id():
@@ -132,6 +137,3 @@ def get_portable_version(portable, default_version):
     except AttributeError:
         version = default_version
     return version
-
-
-

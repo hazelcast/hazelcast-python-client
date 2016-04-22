@@ -1,15 +1,14 @@
-import threading
-import random
-import time
 import logging
+import random
 import sys
-
+import threading
+import time
 from os.path import dirname
-
 
 sys.path.append(dirname(dirname(dirname(__file__))))
 
 import hazelcast
+
 
 def do_benchmark():
     REQ_COUNT = 50000
@@ -45,18 +44,20 @@ def do_benchmark():
                 key = int(random.random() * ENTRY_COUNT)
                 operation = int(random.random() * 100)
                 if operation < GET_PERCENTAGE:
-                    my_map.get_async(key).add_done_callback(self.incr)
+                    my_map.get(key).add_done_callback(self.incr)
                 elif operation < GET_PERCENTAGE + PUT_PERCENTAGE:
-                    my_map.put_async(key, "x" * VALUE_SIZE).add_done_callback(self.incr)
+                    my_map.put(key, "x" * VALUE_SIZE).add_done_callback(self.incr)
                 else:
-                    my_map.remove_async(key).add_done_callback(self.incr)
+                    my_map.remove(key).add_done_callback(self.incr)
+
     t = Test()
     start = time.time()
     t.run()
     t.event.wait()
     time_taken = time.time() - start
     print("Took %s seconds for %d requests" % (time_taken, REQ_COUNT))
-    print("ops per second: %s" % (t.ops/time_taken))
+    print("ops per second: %s" % (t.ops / time_taken))
+
 
 if __name__ == '__main__':
     do_benchmark()

@@ -92,7 +92,7 @@ class TransactionalProxy(object):
 
 
 ItemEventType = enum(added=1, removed=2)
-EntryEventType = enum(added=1, removed=2, updated=4, evicted=8, evict_all=16, clear_all=32, merged=64, expired=128)
+EntryEventType = enum(added=1, removed=2, updated=4, evicted=8, evict_all=16, clear_all=32, merged=64, expired=128, invalidation=256)
 
 
 class ItemEvent(object):

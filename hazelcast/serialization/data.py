@@ -82,8 +82,7 @@ class Data(object):
         return self.hash_code()
 
     def __eq__(self, other):
-        return isinstance(other,
-                          self.__class__) and self.total_size() == other.total_size() and self._buffer == other.to_bytes()
+        return isinstance(other, self.__class__) and self.total_size() == other.total_size() and self._buffer == other.to_bytes()
 
     def __len__(self):
         return self.total_size()

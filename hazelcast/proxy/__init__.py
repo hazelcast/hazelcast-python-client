@@ -6,7 +6,7 @@ from hazelcast.proxy.executor import Executor
 from hazelcast.proxy.id_generator import IdGenerator
 from hazelcast.proxy.list import List
 from hazelcast.proxy.lock import Lock
-from hazelcast.proxy.map import Map
+from hazelcast.proxy.map import create_map_proxy
 from hazelcast.proxy.multi_map import MultiMap
 from hazelcast.proxy.queue import Queue
 from hazelcast.proxy.reliable_topic import ReliableTopic
@@ -43,7 +43,7 @@ _proxy_init = {
     EXECUTOR_SERVICE: Executor,
     LIST_SERVICE: List,
     LOCK_SERVICE: Lock,
-    MAP_SERVICE: Map,
+    MAP_SERVICE: create_map_proxy,
     MULTI_MAP_SERVICE: MultiMap,
     QUEUE_SERVICE: Queue,
     RELIABLE_TOPIC_SERVICE: ReliableTopic,

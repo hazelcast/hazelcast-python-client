@@ -17,7 +17,6 @@ class Future(object):
     def __init__(self):
         self._callbacks = []
         self._event = _Event()
-        pass
 
     def set_result(self, result):
         if result is None:
@@ -48,8 +47,8 @@ class Future(object):
     def _reactor_check(self):
         if not self.done() and hasattr(self._threading_locals, 'is_reactor_thread'):
             raise RuntimeError(
-                "Synchronous result for incomplete operation must not be called from Reactor thread. "
-                "Use add_done_callback instead.")
+                    "Synchronous result for incomplete operation must not be called from Reactor thread. "
+                    "Use add_done_callback instead.")
 
     def is_success(self):
         return self._result is not None
