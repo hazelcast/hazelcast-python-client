@@ -23,6 +23,7 @@ Features :
 * Continuous Query(listener with predicate)
 * Distributed Executor Service
 * Query (Predicates) 
+* Map Near Cache
 * API configuration
 * Smart and Non-Smart Client operation
 * Event Listeners
