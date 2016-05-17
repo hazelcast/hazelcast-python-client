@@ -19,7 +19,7 @@ class Member(object):
             .format(self.address.host, self.address.port, self.uuid, self.is_lite_member, self.attributes)
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.address == other.address
+        return isinstance(other, self.__class__) and self.address == other.address and self.uuid == other.uuid
 
 
 class Address(object):
