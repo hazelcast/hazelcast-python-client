@@ -63,3 +63,5 @@ target/
 #MAC
 .DS_Store
 .directory
+
+*.jar
