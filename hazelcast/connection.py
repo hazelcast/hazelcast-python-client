@@ -75,6 +75,8 @@ class ConnectionManager(object):
                 else:
                     authenticator = authenticator or self._cluster_authenticator
                     connection = self._new_connection_func(address,
+                                                           self._client.config.network_config.connection_timeout,
+                                                           self._client.config.network_config.socket_options,
                                                            connection_closed_callback=self._connection_closed,
                                                            message_callback=self._client.invoker._handle_client_message)
 

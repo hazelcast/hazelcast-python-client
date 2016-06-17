@@ -65,3 +65,5 @@ target/
 .directory
 
 *.jar
+
+docs/api/generated
