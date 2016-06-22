@@ -49,7 +49,9 @@ class ReconnectTest(HazelcastTestCase):
 
     def test_listener_re_register(self):
         member = self.cluster.start_member()
-        client = self.create_client()
+        config = ClientConfig()
+        config.network_config.connection_attempt_limit = 10
+        client = self.create_client(config)
 
         map = client.get_map("map")
 
@@ -62,8 +64,11 @@ class ReconnectTest(HazelcastTestCase):
         count = AtomicInteger()
 
         def assert_events():
-            map.put("key-%d" % count.get_and_increment(), "value").result()
-            self.assertGreater(len(collector.events), 0)
+            if client.lifecycle.is_live:
+                map.put("key-%d" % count.get_and_increment(), "value").result()
+                self.assertGreater(len(collector.events), 0)
+            else:
+                self.fail("Client disconnected...")
 
         self.assertTrueEventually(assert_events)
 
