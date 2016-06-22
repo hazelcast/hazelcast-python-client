@@ -5,6 +5,7 @@ from hazelcast import SerializationConfig
 from hazelcast.config import NearCacheConfig
 from hazelcast.near_cache import *
 from hazelcast.serialization import SerializationServiceV1
+from tests.util import random_string
 
 
 class NearCacheTestCase(unittest.TestCase):
@@ -18,7 +19,7 @@ class NearCacheTestCase(unittest.TestCase):
         self.service.destroy()
 
     def test_near_cache_config(self):
-        config = NearCacheConfig()
+        config = NearCacheConfig(random_string())
         with self.assertRaises(ValueError):
             config.in_memory_format = 100
 

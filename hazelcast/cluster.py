@@ -74,7 +74,7 @@ class ClusterService(object):
         current_attempt = 1
         attempt_limit = self._config.network_config.connection_attempt_limit
         retry_delay = self._config.network_config.connection_attempt_period
-        while current_attempt <= self._config.network_config.connection_attempt_limit:
+        while current_attempt <= attempt_limit:
             for address in addresses:
                 try:
                     self.logger.info("Connecting to %s", address)
