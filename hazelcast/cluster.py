@@ -74,9 +74,11 @@ class ClusterService(object):
         current_attempt = 1
         attempt_limit = self._config.network_config.connection_attempt_limit
         retry_delay = self._config.network_config.connection_attempt_period
-        while current_attempt <= self._config.network_config.connection_attempt_limit:
+        while current_attempt <= attempt_limit:
             for address in addresses:
                 try:
+                    if current_attempt > attempt_limit:
+                        break
                     self.logger.info("Connecting to %s", address)
                     self._connect_to_address(address)
                     return
@@ -84,7 +86,7 @@ class ClusterService(object):
                     self.logger.warning("Error connecting to %s, attempt %d of %d, trying again in %d seconds",
                                         address, current_attempt, attempt_limit, retry_delay, exc_info=True)
                     time.sleep(retry_delay)
-            current_attempt += 1
+                current_attempt += 1
 
         error_msg = "Could not connect to any of %s after %d tries" % (addresses, attempt_limit)
         raise HazelcastError(error_msg)
@@ -108,7 +110,12 @@ class ClusterService(object):
         return self._client.invoker.invoke_on_connection(request, connection).continue_with(callback)
 
     def _connect_to_address(self, address):
-        connection = self._client.connection_manager.get_or_connect(address, self._authenticate_manager).result()
+        f = self._client.connection_manager.get_or_connect(address, self._authenticate_manager)
+        if f.exception():
+            raise f.exception()
+        connection = f.result()
+        if connection is None:
+            print "NOnoee"
         if not connection.is_owner:
             self._authenticate_manager(connection).result()
         self.owner_connection_address = connection.endpoint

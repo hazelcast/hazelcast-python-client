@@ -38,6 +38,7 @@ class AsyncoreReactor(object):
                 self._check_timers()
             except select.error as err:
                 # TODO: parse error type to catch only error "9"
+                self.logger.warn("Connection closed by server.")
                 pass
             except:
                 self.logger.exception("Error in Reactor Thread")
@@ -79,8 +80,8 @@ class AsyncoreReactor(object):
         self._is_live = False
         self._thread.join()
 
-    def new_connection(self, address, connection_closed_callback, message_callback):
-        return AsyncoreConnection(self._map, address, connection_closed_callback, message_callback)
+    def new_connection(self, address, connect_timeout, socket_options, connection_closed_callback, message_callback):
+        return AsyncoreConnection(self._map, address, connect_timeout, socket_options, connection_closed_callback, message_callback)
 
     def _cleanup_timer(self, timer):
         try:
@@ -92,14 +93,26 @@ class AsyncoreReactor(object):
 class AsyncoreConnection(Connection, asyncore.dispatcher):
     sent_protocol_bytes = False
 
-    def __init__(self, map, address, connection_closed_callback, message_callback):
+    def __init__(self, map, address, connect_timeout, socket_options, connection_closed_callback, message_callback):
         asyncore.dispatcher.__init__(self, map=map)
         Connection.__init__(self, address, connection_closed_callback, message_callback)
 
         self._write_lock = threading.Lock()
         self._write_queue = deque()
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.settimeout(connect_timeout)
+
+        # set tcp no delay
+        self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        # set socket buffer
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, BUFFER_SIZE)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, BUFFER_SIZE)
+
+        for socket_option in socket_options:
+            self.socket.setsockopt(socket_option.level, socket_option.option, socket_option.value)
+
         self.connect(self._address)
+        self.socket.settimeout(None)
         self._write_queue.append("CB2")
 
     def handle_connect(self):

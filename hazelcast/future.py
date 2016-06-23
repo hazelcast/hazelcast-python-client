@@ -156,6 +156,32 @@ class ImmediateFuture(Future):
         self._invoke_cb(callback)
 
 
+class ImmediateExceptionFuture(Future):
+    def __init__(self, exception):
+        self._exception = exception
+
+    def set_exception(self, exception):
+        raise NotImplementedError()
+
+    def set_result(self, result):
+        raise NotImplementedError()
+
+    def done(self):
+        return True
+
+    def is_success(self):
+        return False
+
+    def exception(self):
+        return self._exception
+
+    def result(self):
+        return None
+
+    def add_done_callback(self, callback):
+        self._invoke_cb(callback)
+
+
 def combine_futures(*futures):
     expected = len(futures)
     results = []

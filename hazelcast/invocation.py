@@ -108,8 +108,7 @@ class ListenerService(object):
             else:
                 logging.warn("Re-registration for listener with id %s failed.", registration_id, exc_info=True)
 
-        self.logger.debug("Re-registering listener %s for request %s", registration_id,
-                          new_invocation.request)
+        self.logger.debug("Re-registering listener %s for request %s", registration_id, new_invocation.request)
         self._client.invoker.invoke(new_invocation).add_done_callback(callback)
 
 
@@ -193,12 +192,13 @@ class InvocationService(object):
             if self._client.lifecycle.state != LIFECYCLE_STATE_CONNECTED:
                 self._handle_exception(invocation, IOError("Client is not in connected state"))
             else:
-                def on_connect(f):
-                    if f.is_success():
-                        self._send(invocation, f.result(), ignore_heartbeat)
-                    else:
-                        self._handle_exception(invocation, f.exception(), f.traceback())
-                self._client.connection_manager.get_or_connect(address).continue_with(on_connect)
+                self._client.connection_manager.get_or_connect(address).continue_with(self.on_connect, invocation, ignore_heartbeat)
+
+    def on_connect(self, f, invocation, ignore_heartbeat):
+        if f.is_success():
+            self._send(invocation, f.result(), ignore_heartbeat)
+        else:
+            self._handle_exception(invocation, f.exception(), f.traceback())
 
     def _send(self, invocation, connection, ignore_heartbeat):
         correlation_id = self._next_correlation_id.get_and_increment()

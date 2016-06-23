@@ -6,7 +6,7 @@ import time
 from hazelcast.config import PROPERTY_HEARTBEAT_INTERVAL, PROPERTY_HEARTBEAT_TIMEOUT
 from hazelcast.core import CLIENT_TYPE
 from hazelcast.exception import AuthenticationError
-from hazelcast.future import ImmediateFuture
+from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
 from hazelcast.protocol.client_message import BEGIN_END_FLAG, ClientMessage, ClientMessageBuilder
 from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
 from hazelcast.serialization import INT_SIZE_IN_BYTES, FMT_LE_INT
@@ -74,33 +74,40 @@ class ConnectionManager(object):
                     return self._pending_connections[address]
                 else:
                     authenticator = authenticator or self._cluster_authenticator
-                    connection = self._new_connection_func(address,
-                                                           connection_closed_callback=self._connection_closed,
-                                                           message_callback=self._client.invoker._handle_client_message)
+                    try:
+                        connection = self._new_connection_func(address,
+                                                               self._client.config.network_config.connection_timeout,
+                                                               self._client.config.network_config.socket_options,
+                                                               connection_closed_callback=self._connection_closed,
+                                                               message_callback=self._client.invoker._handle_client_message)
+                    except IOError as io_error:
+                        logging.warning(io_error)
+                        return ImmediateExceptionFuture(io_error)
+                        # raise io_error
 
-                    def on_auth(f):
-                        if f.is_success():
-                            self.logger.info("Authenticated with %s", f.result())
-                            with self._new_connection_mutex:
-                                self.connections[connection.endpoint] = f.result()
-                                self._pending_connections.pop(address)
-                            for on_connection_opened, _ in self._connection_listeners:
-                                if on_connection_opened:
-                                    on_connection_opened(f.resul())
-                            return f.result()
-                        else:
-                            self.logger.debug("Error opening %s", connection)
-                            with self._new_connection_mutex:
-                                try:
-                                    self._pending_connections.pop(address)
-                                except KeyError:
-                                    pass
-                            raise f.exception(), None, f.traceback()
-
-                    future = authenticator(connection).continue_with(on_auth)
+                    future = authenticator(connection).continue_with(self.on_auth, connection, address)
                     if not future.done():
                         self._pending_connections[address] = future
                     return future
+
+    def on_auth(self, f, connection, address):
+        if f.is_success():
+            self.logger.info("Authenticated with %s", f.result())
+            with self._new_connection_mutex:
+                self.connections[connection.endpoint] = f.result()
+                self._pending_connections.pop(address)
+            for on_connection_opened, _ in self._connection_listeners:
+                if on_connection_opened:
+                    on_connection_opened(f.resul())
+            return f.result()
+        else:
+            self.logger.debug("Error opening %s", connection)
+            with self._new_connection_mutex:
+                try:
+                    self._pending_connections.pop(address)
+                except KeyError:
+                    pass
+            raise f.exception(), None, f.traceback()
 
     def _connection_closed(self, connection, cause):
         # if connection was authenticated, fire event
