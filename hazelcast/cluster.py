@@ -3,6 +3,7 @@ import random
 import threading
 import time
 import uuid
+
 from hazelcast.core import CLIENT_TYPE, SERIALIZATION_VERSION
 from hazelcast.exception import HazelcastError, AuthenticationError, TargetDisconnectedError
 from hazelcast.invocation import ListenerInvocation
@@ -68,15 +69,17 @@ class ClusterService(object):
             logging.exception("Could not reconnect to cluster. Shutting down client.")
             self._client.shutdown()
 
-    def _connect_to_cluster(self):  # TODO: can be made async
+    def _connect_to_cluster(self):
         addresses = get_possible_addresses(self._config.network_config.addresses, self.members)
 
         current_attempt = 1
         attempt_limit = self._config.network_config.connection_attempt_limit
         retry_delay = self._config.network_config.connection_attempt_period
-        while current_attempt <= self._config.network_config.connection_attempt_limit:
+        while current_attempt <= attempt_limit:
             for address in addresses:
                 try:
+                    if current_attempt > attempt_limit:
+                        break
                     self.logger.info("Connecting to %s", address)
                     self._connect_to_address(address)
                     return
@@ -84,7 +87,7 @@ class ClusterService(object):
                     self.logger.warning("Error connecting to %s, attempt %d of %d, trying again in %d seconds",
                                         address, current_attempt, attempt_limit, retry_delay, exc_info=True)
                     time.sleep(retry_delay)
-            current_attempt += 1
+                current_attempt += 1
 
         error_msg = "Could not connect to any of %s after %d tries" % (addresses, attempt_limit)
         raise HazelcastError(error_msg)
@@ -108,7 +111,8 @@ class ClusterService(object):
         return self._client.invoker.invoke_on_connection(request, connection).continue_with(callback)
 
     def _connect_to_address(self, address):
-        connection = self._client.connection_manager.get_or_connect(address, self._authenticate_manager).result()
+        f = self._client.connection_manager.get_or_connect(address, self._authenticate_manager)
+        connection = f.result()
         if not connection.is_owner:
             self._authenticate_manager(connection).result()
         self.owner_connection_address = connection.endpoint
@@ -181,9 +185,12 @@ class ClusterService(object):
                 and self._client.lifecycle.is_live:
             self._client.lifecycle.fire_lifecycle_event(LIFECYCLE_STATE_DISCONNECTED)
             self.owner_connection_address = None
+            # clear member list as owner connection is lost
+            self.members = []
+
             # try to reconnect, on new thread
-            # TODO: can we avoid having a thread here?
-            reconnect_thread = threading.Thread(target=self._reconnect, name="hazelcast-cluster-reconnect")
+            reconnect_thread = threading.Thread(target=self._reconnect,
+                                                name="hazelcast-cluster-reconnect-{:.4}".format(uuid.uuid4()))
             reconnect_thread.daemon = True
             reconnect_thread.start()
 
@@ -203,4 +210,7 @@ class RandomLoadBalancer(object):
         self._cluster = cluster
 
     def next_address(self):
-        return random.choice(self._cluster.members).address
+        try:
+            return random.choice(self._cluster.members).address
+        except IndexError:
+            return None

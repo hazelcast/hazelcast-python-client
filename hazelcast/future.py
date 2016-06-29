@@ -149,8 +149,41 @@ class ImmediateFuture(Future):
     def exception(self):
         return None
 
+    def traceback(self):
+        return None
+
     def result(self):
         return self._result
+
+    def add_done_callback(self, callback):
+        self._invoke_cb(callback)
+
+
+class ImmediateExceptionFuture(Future):
+    def __init__(self, exception, traceback=None):
+        self._exception = exception
+        self._traceback = traceback
+
+    def set_exception(self, exception, traceback=None):
+        raise NotImplementedError()
+
+    def set_result(self, result):
+        raise NotImplementedError()
+
+    def done(self):
+        return True
+
+    def is_success(self):
+        return False
+
+    def exception(self):
+        return self._exception
+
+    def traceback(self):
+        return self._traceback
+
+    def result(self):
+        raise self._exception, None, self._traceback
 
     def add_done_callback(self, callback):
         self._invoke_cb(callback)

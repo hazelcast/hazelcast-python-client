@@ -19,6 +19,9 @@ from hazelcast.util import check_not_none, thread_id, to_millis
 
 
 class Map(Proxy):
+    """
+    Hazelcast Map client proxy to access the map on the cluster.
+    """
     def add_entry_listener(self, include_value=False, key=None, predicate=None, added=None, removed=None, updated=None,
                            evicted=None, evict_all=None, clear_all=None, merged=None, expired=None):
         flags = get_entry_listener_flags(added=added, removed=removed, updated=updated,

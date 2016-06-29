@@ -89,7 +89,7 @@ class TheOtherCustomSerializer(StreamSerializer):
 class CustomSerializationTestCase(unittest.TestCase):
     def test_global_encode_decode(self):
         config = SerializationConfig()
-        config.set_global_serializer(TestGlobalSerializer)
+        config.global_serializer = TestGlobalSerializer
 
         service = SerializationServiceV1(serialization_config=config)
         obj = CustomClass("uid", "some name", "description text")
@@ -114,7 +114,7 @@ class CustomSerializationTestCase(unittest.TestCase):
     def test_global_custom_serializer(self):
         config = SerializationConfig()
         config.set_custom_serializer(CustomClass, CustomSerializer)
-        config.set_global_serializer(TestGlobalSerializer)
+        config.global_serializer = TestGlobalSerializer
 
         service = SerializationServiceV1(serialization_config=config)
         obj = CustomClass("uid", "some name", "description text")

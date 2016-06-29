@@ -1,4 +1,6 @@
 from threading import Thread
+from time import sleep
+
 from hazelcast import ClientConfig
 from hazelcast.exception import HazelcastError
 from hazelcast.lifecycle import LIFECYCLE_STATE_DISCONNECTED, LIFECYCLE_STATE_CONNECTED
@@ -29,11 +31,15 @@ class ReconnectTest(HazelcastTestCase):
 
     def test_start_client_before_member(self):
         Thread(target=self.cluster.start_member).start()
-        self.create_client()
+        config = ClientConfig()
+        config.network_config.connection_attempt_limit = 10
+        self.create_client(config)
 
     def test_restart_member(self):
         member = self.cluster.start_member()
-        client = self.create_client()
+        config = ClientConfig()
+        config.network_config.connection_attempt_limit = 10
+        client = self.create_client(config)
 
         state = [None]
 
@@ -49,7 +55,9 @@ class ReconnectTest(HazelcastTestCase):
 
     def test_listener_re_register(self):
         member = self.cluster.start_member()
-        client = self.create_client()
+        config = ClientConfig()
+        config.network_config.connection_attempt_limit = 10
+        client = self.create_client(config)
 
         map = client.get_map("map")
 
@@ -57,19 +65,25 @@ class ReconnectTest(HazelcastTestCase):
         reg_id = map.add_entry_listener(added=collector)
         self.logger.info("Registered listener with id %s", reg_id)
         member.shutdown()
+        sleep(3)
         self.cluster.start_member()
 
         count = AtomicInteger()
 
         def assert_events():
-            map.put("key-%d" % count.get_and_increment(), "value").result()
-            self.assertGreater(len(collector.events), 0)
+            if client.lifecycle.is_live:
+                map.put("key-%d" % count.get_and_increment(), "value").result()
+                self.assertGreater(len(collector.events), 0)
+            else:
+                self.fail("Client disconnected...")
 
         self.assertTrueEventually(assert_events)
 
     def test_member_list_after_reconnect(self):
         old_member = self.cluster.start_member()
-        client = self.create_client()
+        config = ClientConfig()
+        config.network_config.connection_attempt_limit = 10
+        client = self.create_client(config)
         old_member.shutdown()
 
         new_member = self.cluster.start_member()
