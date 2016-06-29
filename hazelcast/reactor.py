@@ -81,7 +81,8 @@ class AsyncoreReactor(object):
         self._thread.join()
 
     def new_connection(self, address, connect_timeout, socket_options, connection_closed_callback, message_callback):
-        return AsyncoreConnection(self._map, address, connect_timeout, socket_options, connection_closed_callback, message_callback)
+        return AsyncoreConnection(self._map, address, connect_timeout, socket_options, connection_closed_callback,
+                                  message_callback)
 
     def _cleanup_timer(self, timer):
         try:
@@ -112,7 +113,10 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
             self.socket.setsockopt(socket_option.level, socket_option.option, socket_option.value)
 
         self.connect(self._address)
-        self.socket.settimeout(None)
+
+        # the socket should be non-blocking from now on
+        self.socket.settimeout(0)
+
         self._write_queue.append("CB2")
 
     def handle_connect(self):

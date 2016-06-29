@@ -31,11 +31,15 @@ class ReconnectTest(HazelcastTestCase):
 
     def test_start_client_before_member(self):
         Thread(target=self.cluster.start_member).start()
-        self.create_client()
+        config = ClientConfig()
+        config.network_config.connection_attempt_limit = 10
+        self.create_client(config)
 
     def test_restart_member(self):
         member = self.cluster.start_member()
-        client = self.create_client()
+        config = ClientConfig()
+        config.network_config.connection_attempt_limit = 10
+        client = self.create_client(config)
 
         state = [None]
 
@@ -77,7 +81,9 @@ class ReconnectTest(HazelcastTestCase):
 
     def test_member_list_after_reconnect(self):
         old_member = self.cluster.start_member()
-        client = self.create_client()
+        config = ClientConfig()
+        config.network_config.connection_attempt_limit = 10
+        client = self.create_client(config)
         old_member.shutdown()
 
         new_member = self.cluster.start_member()

@@ -12,7 +12,7 @@ class Member(object):
         self.attributes = attributes
 
     def __str__(self):
-        return "Member [{}]:{}".format(self.address.host, self.address.port)
+        return "Member [{}]:{} - {}".format(self.address.host, self.address.port, self.uuid)
 
     def __repr__(self):
         return "Member(host={}, port={}, uuid={}, liteMember={}, attributes={})" \

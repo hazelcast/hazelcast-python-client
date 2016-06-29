@@ -1,8 +1,11 @@
 from __future__ import with_statement
+
 import logging
 import struct
+import sys
 import threading
 import time
+
 from hazelcast.config import PROPERTY_HEARTBEAT_INTERVAL, PROPERTY_HEARTBEAT_TIMEOUT
 from hazelcast.core import CLIENT_TYPE
 from hazelcast.exception import AuthenticationError
@@ -80,10 +83,8 @@ class ConnectionManager(object):
                                                                self._client.config.network_config.socket_options,
                                                                connection_closed_callback=self._connection_closed,
                                                                message_callback=self._client.invoker._handle_client_message)
-                    except IOError as io_error:
-                        logging.warning(io_error)
-                        return ImmediateExceptionFuture(io_error)
-                        # raise io_error
+                    except IOError:
+                        return ImmediateExceptionFuture(sys.exc_info()[1], sys.exc_info()[2])
 
                     future = authenticator(connection).continue_with(self.on_auth, connection, address)
                     if not future.done():

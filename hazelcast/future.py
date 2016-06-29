@@ -149,6 +149,9 @@ class ImmediateFuture(Future):
     def exception(self):
         return None
 
+    def traceback(self):
+        return None
+
     def result(self):
         return self._result
 
@@ -157,10 +160,11 @@ class ImmediateFuture(Future):
 
 
 class ImmediateExceptionFuture(Future):
-    def __init__(self, exception):
+    def __init__(self, exception, traceback=None):
         self._exception = exception
+        self._traceback = traceback
 
-    def set_exception(self, exception):
+    def set_exception(self, exception, traceback=None):
         raise NotImplementedError()
 
     def set_result(self, result):
@@ -175,8 +179,11 @@ class ImmediateExceptionFuture(Future):
     def exception(self):
         return self._exception
 
+    def traceback(self):
+        return self._traceback
+
     def result(self):
-        return None
+        raise self._exception, None, self._traceback
 
     def add_done_callback(self, callback):
         self._invoke_cb(callback)

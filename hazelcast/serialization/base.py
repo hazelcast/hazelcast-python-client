@@ -1,7 +1,5 @@
 import sys
-import traceback
 from threading import RLock
-from types import TypeType
 
 from api import *
 from data import *
@@ -16,16 +14,15 @@ def empty_partitioning_strategy(key):
     return None
 
 
-def handle_exception(e):
-    traceback.print_exc(file=sys.stderr)
+def handle_exception(e, traceback):
     if isinstance(e, MemoryError):
         # TODO
         print("OUT OF MEMORY")
-        raise e
+        raise e, None, traceback
     elif isinstance(e, HazelcastSerializationError):
-        raise e
+        raise e, None, traceback
     else:
-        raise HazelcastSerializationError(e.message)
+        raise HazelcastSerializationError(e.message), None, traceback
 
 
 def is_null_data(data):
@@ -75,8 +72,8 @@ class BaseSerializationService(object):
             out.write_int_big_endian(serializer.get_type_id())
             serializer.write(out, obj)
             return Data(out.to_byte_array())
-        except Exception as e:
-            handle_exception(e)
+        except:
+            handle_exception(sys.exc_info()[1], sys.exc_info()[2])
         finally:
             pass
             # return out to pool
@@ -102,8 +99,8 @@ class BaseSerializationService(object):
                 else:
                     raise HazelcastInstanceNotActiveError()
             return serializer.read(inp)
-        except Exception as e:
-            handle_exception(e)
+        except:
+            handle_exception(sys.exc_info()[1], sys.exc_info()[2])
         finally:
             pass
             # return out to pool
@@ -115,8 +112,8 @@ class BaseSerializationService(object):
             serializer = self._registry.serializer_for(obj)
             out.write_int(serializer.get_type_id())
             serializer.write(out, obj)
-        except Exception as e:
-            handle_exception(e)
+        except:
+            handle_exception(sys.exc_info()[1], sys.exc_info()[2])
 
     def read_object(self, inp):
         try:
@@ -128,8 +125,8 @@ class BaseSerializationService(object):
                 else:
                     raise HazelcastInstanceNotActiveError()
             return serializer.read(inp)
-        except Exception as e:
-            handle_exception(e)
+        except:
+            handle_exception(sys.exc_info()[1], sys.exc_info()[2])
 
     def _calculate_partitioning_hash(self, obj, partitioning_strategy):
         partitioning_hash = 0
@@ -250,7 +247,8 @@ class SerializerRegistry(object):
                     type_id = CONSTANT_TYPE_LONG
                 else:
                     type_id = JAVA_DEFAULT_TYPE_BIG_INTEGER
-        return self.serializer_by_type_id(type_id) if type_id is not None else self._constant_type_dict.get(obj_type, None)
+        return self.serializer_by_type_id(type_id) if type_id is not None else self._constant_type_dict.get(obj_type,
+                                                                                                            None)
 
     def lookup_custom_serializer(self, obj_type):
         serializer = self._type_dict.get(obj_type, None)
