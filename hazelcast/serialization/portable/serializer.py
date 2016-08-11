@@ -78,6 +78,16 @@ class PortableSerializer(StreamSerializer):
             reader = MorphingPortableReader(self, inp, cd)
         return reader
 
+    def create_morphing_reader_reader(self, inp):
+        factory_id = inp.read_int()
+        class_id = inp.read_int()
+        version = inp.read_int()
+
+        portable = self.create_new_portable_instance(factory_id, class_id)
+        portable_version = self.find_portable_version(factory_id, class_id, portable)
+
+        return self.create_reader(inp, factory_id, class_id, version, portable_version)
+
     def get_type_id(self):
         return CONSTANT_TYPE_PORTABLE
 

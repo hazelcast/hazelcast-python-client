@@ -45,7 +45,7 @@ class DataRecord(object):
             .format(self.key, self.value, self.create_time, self.expiration_time, self.last_access_time, self.access_hit)
 
     def __repr__(self):
-        return repr(self)
+        return self.__str__()
 
 
 class NearCache(dict):
