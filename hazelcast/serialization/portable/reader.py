@@ -245,17 +245,17 @@ class DefaultPortableReader(PortableReader):
                     break
                 if i == len(field_names) - 1:
                     break
-                pos = _reader.read_position(fd)
+                pos = _reader._read_position_by_field_def(fd)
                 self._in.set_position(pos)
                 is_none = self._in.read_boolean()
                 if is_none:
                     raise ValueError("Parent field is null: ".format(field_names[i]))
-                _reader = self._portable_serializer.create_reader(self._in)
+                _reader = self._portable_serializer.create_default_reader(self._in)
             if fd is None:
                 raise self._create_unknown_field_exception(field_name)
             if fd.field_type != field_type:
                 raise HazelcastSerializationError("Not a '{}' field: {}".format(field_type, field_name))
-            return _reader.read_position(fd)
+            return _reader._read_position_by_field_def(fd)
         raise self._create_unknown_field_exception(field_name)
 
     def _create_unknown_field_exception(self, field_name):

@@ -38,7 +38,7 @@ class MorphingPortableTestCase(unittest.TestCase):
 
         inp = self.service2._create_data_input(data)
         portable_serializer = self.service2._registry._portable_serializer
-        self.reader = portable_serializer.create_morphing_reader_reader(inp)
+        self.reader = portable_serializer.create_morphing_reader(inp)
 
     def tearDown(self):
         self.service1.destroy()
@@ -149,3 +149,23 @@ class MorphingPortableTestCase(unittest.TestCase):
                      self.reader.read_portable, self.reader.read_portable_array]
         for read_fnc in functions:
             self.assertIsNone(read_fnc("NO SUCH FIELD"))
+
+    def test_reader_get_version(self):
+        self.assertEqual(0, self.reader.get_version())
+
+    def test_reader_has_field(self):
+        self.assertTrue(self.reader.has_field("1"))
+        self.assertFalse(self.reader.has_field("NO SUCH FIELD"))
+
+    def test_reader_get_field_names(self):
+        expected_names = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "a1", "a2", "a3", "a4", "a5", "a6", "a7", "a8", "a9", "p",
+                          "ap"}
+        field_names = set(self.reader.get_field_names())
+        self.assertSetEqual(expected_names, field_names)
+
+    def test_reader_get_field_type(self):
+        self.assertIsNotNone(self.reader.get_field_type("1"))
+
+    def test_reader_get_field_class_id(self):
+        self.assertEqual(0, self.reader.get_field_class_id("1"))
+
