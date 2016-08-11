@@ -40,12 +40,9 @@ class DataRecord(object):
         return (self.expiration_time is not None and self.expiration_time < now) or \
                (max_idle_seconds is not None and self.last_access_time + max_idle_seconds < now)
 
-    def __str__(self):
+    def __repr__(self):
         return "DataRecord[key:{}, value:{}, create_time:{}, expiration_time:{}, last_access_time={}, access_hit={}]" \
             .format(self.key, self.value, self.create_time, self.expiration_time, self.last_access_time, self.access_hit)
-
-    def __repr__(self):
-        return repr(self)
 
 
 class NearCache(dict):

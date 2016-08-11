@@ -245,17 +245,17 @@ class DefaultPortableReader(PortableReader):
                     break
                 if i == len(field_names) - 1:
                     break
-                pos = _reader.read_position(fd)
+                pos = _reader._read_position_by_field_def(fd)
                 self._in.set_position(pos)
                 is_none = self._in.read_boolean()
                 if is_none:
                     raise ValueError("Parent field is null: ".format(field_names[i]))
-                _reader = self._portable_serializer.create_reader(self._in)
+                _reader = self._portable_serializer.create_default_reader(self._in)
             if fd is None:
                 raise self._create_unknown_field_exception(field_name)
             if fd.field_type != field_type:
                 raise HazelcastSerializationError("Not a '{}' field: {}".format(field_type, field_name))
-            return _reader.read_position(fd)
+            return _reader._read_position_by_field_def(fd)
         raise self._create_unknown_field_exception(field_name)
 
     def _create_unknown_field_exception(self, field_name):
@@ -277,4 +277,197 @@ def _check_factory_and_class(field_def, factory_id, class_id):
 
 
 class MorphingPortableReader(DefaultPortableReader):
-    pass
+
+    def read_short(self, field_name):
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return 0
+        elif fd.field_type == FieldType.SHORT:
+            return super(MorphingPortableReader, self).read_short(field_name)
+        elif fd.field_type == FieldType.BYTE:
+            return super(MorphingPortableReader, self).read_byte(field_name)
+        else:
+            raise self.create_incompatible_class_change_error(fd, FieldType.SHORT)
+
+    def read_int(self, field_name):
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return 0
+        elif fd.field_type == FieldType.INT:
+            return super(MorphingPortableReader, self).read_int(field_name)
+        elif fd.field_type == FieldType.BYTE:
+            return super(MorphingPortableReader, self).read_byte(field_name)
+        elif fd.field_type == FieldType.CHAR:
+            return super(MorphingPortableReader, self).read_char(field_name)
+        elif fd.field_type == FieldType.SHORT:
+            return super(MorphingPortableReader, self).read_short(field_name)
+        else:
+            raise self.create_incompatible_class_change_error(fd, FieldType.INT)
+
+    def read_long(self, field_name):
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return 0
+        elif fd.field_type == FieldType.LONG:
+            return super(MorphingPortableReader, self).read_long(field_name)
+        elif fd.field_type == FieldType.INT:
+            return super(MorphingPortableReader, self).read_int(field_name)
+        elif fd.field_type == FieldType.BYTE:
+            return super(MorphingPortableReader, self).read_byte(field_name)
+        elif fd.field_type == FieldType.CHAR:
+            return super(MorphingPortableReader, self).read_char(field_name)
+        elif fd.field_type == FieldType.SHORT:
+            return super(MorphingPortableReader, self).read_short(field_name)
+        else:
+            raise self.create_incompatible_class_change_error(fd, FieldType.LONG)
+
+    def read_float(self, field_name):
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return 0
+        elif fd.field_type == FieldType.FLOAT:
+            return super(MorphingPortableReader, self).read_float(field_name)
+        elif fd.field_type == FieldType.INT:
+            return super(MorphingPortableReader, self).read_int(field_name)
+        elif fd.field_type == FieldType.BYTE:
+            return super(MorphingPortableReader, self).read_byte(field_name)
+        elif fd.field_type == FieldType.CHAR:
+            return super(MorphingPortableReader, self).read_char(field_name)
+        elif fd.field_type == FieldType.SHORT:
+            return super(MorphingPortableReader, self).read_short(field_name)
+        else:
+            raise self.create_incompatible_class_change_error(fd, FieldType.FLOAT)
+
+    def read_double(self, field_name):
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return 0.0
+        elif fd.field_type == FieldType.DOUBLE:
+            return super(MorphingPortableReader, self).read_double(field_name)
+        elif fd.field_type == FieldType.LONG:
+            return super(MorphingPortableReader, self).read_long(field_name)
+        elif fd.field_type == FieldType.FLOAT:
+            return super(MorphingPortableReader, self).read_float(field_name)
+        elif fd.field_type == FieldType.INT:
+            return super(MorphingPortableReader, self).read_int(field_name)
+        elif fd.field_type == FieldType.BYTE:
+            return super(MorphingPortableReader, self).read_byte(field_name)
+        elif fd.field_type == FieldType.CHAR:
+            return super(MorphingPortableReader, self).read_char(field_name)
+        elif fd.field_type == FieldType.SHORT:
+            return super(MorphingPortableReader, self).read_short(field_name)
+        else:
+            raise self.create_incompatible_class_change_error(fd, FieldType.DOUBLE)
+
+    def read_byte(self, field_name):
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return 0
+        self.validate_type_compatibility(fd, FieldType.BYTE)
+        return super(MorphingPortableReader, self).read_byte(field_name)
+
+    def read_boolean(self, field_name):
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return False
+        self.validate_type_compatibility(fd, FieldType.BOOLEAN)
+        return super(MorphingPortableReader, self).read_boolean(field_name)
+
+    def read_char(self, field_name):
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return 0
+        self.validate_type_compatibility(fd, FieldType.CHAR)
+        return super(MorphingPortableReader, self).read_char(field_name)
+
+    def read_utf(self, field_name):
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return None
+        self.validate_type_compatibility(fd, FieldType.UTF)
+        return super(MorphingPortableReader, self).read_utf(field_name)
+
+    def read_utf_array(self, field_name):
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return None
+        self.validate_type_compatibility(fd, FieldType.UTF_ARRAY)
+        return super(MorphingPortableReader, self).read_utf_array(field_name)
+
+    def read_short_array(self, field_name):
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return None
+        self.validate_type_compatibility(fd, FieldType.SHORT_ARRAY)
+        return super(MorphingPortableReader, self).read_short_array(field_name)
+
+    def read_int_array(self, field_name):
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return None
+        self.validate_type_compatibility(fd, FieldType.INT_ARRAY)
+        return super(MorphingPortableReader, self).read_int_array(field_name)
+
+    def read_long_array(self, field_name):
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return None
+        self.validate_type_compatibility(fd, FieldType.LONG_ARRAY)
+        return super(MorphingPortableReader, self).read_long_array(field_name)
+
+    def read_float_array(self, field_name):
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return None
+        self.validate_type_compatibility(fd, FieldType.FLOAT_ARRAY)
+        return super(MorphingPortableReader, self).read_float_array(field_name)
+
+    def read_double_array(self, field_name):
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return None
+        self.validate_type_compatibility(fd, FieldType.DOUBLE_ARRAY)
+        return super(MorphingPortableReader, self).read_double_array(field_name)
+
+    def read_char_array(self, field_name):
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return None
+        self.validate_type_compatibility(fd, FieldType.CHAR_ARRAY)
+        return super(MorphingPortableReader, self).read_char_array(field_name)
+
+    def read_byte_array(self, field_name):
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return None
+        self.validate_type_compatibility(fd, FieldType.BYTE_ARRAY)
+        return super(MorphingPortableReader, self).read_byte_array(field_name)
+
+    def read_boolean_array(self, field_name):
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return None
+        self.validate_type_compatibility(fd, FieldType.BOOLEAN_ARRAY)
+        return super(MorphingPortableReader, self).read_boolean_array(field_name)
+
+    def read_portable(self, field_name):
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return None
+        self.validate_type_compatibility(fd, FieldType.PORTABLE)
+        return super(MorphingPortableReader, self).read_portable(field_name)
+
+    def read_portable_array(self, field_name):
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return None
+        self.validate_type_compatibility(fd, FieldType.PORTABLE_ARRAY)
+        return super(MorphingPortableReader, self).read_portable_array(field_name)
+
+    def validate_type_compatibility(self, field_def, expected_type):
+        if field_def.field_type != expected_type:
+            raise self.create_incompatible_class_change_error(field_def, expected_type)
+
+    def create_incompatible_class_change_error(self, field_def, expected_type):
+        return TypeError("Incompatible to read {} from {} while reading field :{} on {}"
+                         .format(expected_type, field_def.field_type, field_def.field_name, self._class_def))

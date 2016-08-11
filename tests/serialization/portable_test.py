@@ -38,6 +38,7 @@ class SerializationV1Portable(Portable):
         self.inner_portable = inner_portable
         self.inner_portable_array = inner_portable_array
         self.identified_serializable = identified_serializable
+        self.nested_field = None
 
     def write_portable(self, out):
         out.write_byte("1", self.a_byte)
@@ -98,6 +99,9 @@ class SerializationV1Portable(Portable):
         self.inner_portable = inp.read_portable("p")
 
         self.inner_portable_array = inp.read_portable_array("ap")
+
+        if self.inner_portable:
+            self.nested_field = inp.read_int("p.param_int")
 
         raw_data_input = inp.get_raw_data_input()
         not_none = raw_data_input.read_boolean()
@@ -190,6 +194,7 @@ class PortableSerializationTestCase(unittest.TestCase):
         data = service.to_data(obj)
         obj2 = service.to_object(data)
         self.assertTrue(obj == obj2)
+        self.assertEquals(obj.inner_portable.param_int, obj2.nested_field)
 
     def test_encode_decode_2(self):
         config = hazelcast.ClientConfig()
