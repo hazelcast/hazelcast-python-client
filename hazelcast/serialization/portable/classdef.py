@@ -38,7 +38,7 @@ class FieldDefinition(object):
                and (self.index, self.field_name, self.field_type, self.factory_id, self.class_id) == \
                    (other.index, other.field_name, other.field_type, other.factory_id, other.class_id)
 
-    def __str__(self):
+    def __repr__(self):
         return "FieldDefinition[ ix:{}, name:{}, type:{}, fid:{}, cid:{}]".format(self.index, self.field_name, self.field_type,
                                                                                   self.factory_id,
                                                                                   self.class_id)
@@ -98,11 +98,8 @@ class ClassDefinition(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def __str__(self):
-        return "fid:{}, cid:{}, v:{}, fields:{}".format(self.factory_id, self.class_id, self.version, self.field_defs)
-
     def __repr__(self):
-        return self.__str__()
+        return "fid:{}, cid:{}, v:{}, fields:{}".format(self.factory_id, self.class_id, self.version, self.field_defs)
 
 
 class ClassDefinitionBuilder(object):
