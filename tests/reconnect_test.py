@@ -62,7 +62,7 @@ class ReconnectTest(HazelcastTestCase):
         map = client.get_map("map")
 
         collector = event_collector()
-        reg_id = map.add_entry_listener(added=collector)
+        reg_id = map.add_entry_listener(added_func=collector)
         self.logger.info("Registered listener with id %s", reg_id)
         member.shutdown()
         sleep(3)
