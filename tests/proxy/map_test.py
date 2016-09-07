@@ -31,7 +31,7 @@ class MapTest(SingleMemberTestCase):
 
     def test_add_entry_listener_item_added(self):
         collector = event_collector()
-        self.map.add_entry_listener(include_value=True, added=collector)
+        self.map.add_entry_listener(include_value=True, added_func=collector)
         self.map.put('key', 'value')
 
         def assert_event():
@@ -43,7 +43,7 @@ class MapTest(SingleMemberTestCase):
 
     def test_add_entry_listener_item_removed(self):
         collector = event_collector()
-        self.map.add_entry_listener(include_value=True, removed=collector)
+        self.map.add_entry_listener(include_value=True, removed_func=collector)
         self.map.put('key', 'value')
         self.map.remove('key')
 
@@ -56,7 +56,7 @@ class MapTest(SingleMemberTestCase):
 
     def test_add_entry_listener_item_updated(self):
         collector = event_collector()
-        self.map.add_entry_listener(include_value=True, updated=collector)
+        self.map.add_entry_listener(include_value=True, updated_func=collector)
         self.map.put('key', 'value')
         self.map.put('key', 'new_value')
 
@@ -70,7 +70,7 @@ class MapTest(SingleMemberTestCase):
 
     def test_add_entry_listener_item_expired(self):
         collector = event_collector()
-        self.map.add_entry_listener(include_value=True, expired=collector)
+        self.map.add_entry_listener(include_value=True, expired_func=collector)
         self.map.put('key', 'value', ttl=0.1)
 
         def assert_event():
@@ -82,7 +82,7 @@ class MapTest(SingleMemberTestCase):
 
     def test_add_entry_listener_with_key(self):
         collector = event_collector()
-        self.map.add_entry_listener(key='key1', include_value=True, added=collector)
+        self.map.add_entry_listener(key='key1', include_value=True, added_func=collector)
         self.map.put('key2', 'value2')
         self.map.put('key1', 'value1')
 
@@ -95,7 +95,7 @@ class MapTest(SingleMemberTestCase):
 
     def test_add_entry_listener_with_predicate(self):
         collector = event_collector()
-        self.map.add_entry_listener(predicate=SqlPredicate("this == value1"), include_value=True, added=collector)
+        self.map.add_entry_listener(predicate=SqlPredicate("this == value1"), include_value=True, added_func=collector)
         self.map.put('key2', 'value2')
         self.map.put('key1', 'value1')
 
@@ -108,7 +108,7 @@ class MapTest(SingleMemberTestCase):
 
     def test_add_entry_listener_with_key_and_predicate(self):
         collector = event_collector()
-        self.map.add_entry_listener(key='key1', predicate=SqlPredicate("this == value3"), include_value=True, added=collector)
+        self.map.add_entry_listener(key='key1', predicate=SqlPredicate("this == value3"), include_value=True, added_func=collector)
         self.map.put('key2', 'value2')
         self.map.put('key1', 'value1')
         self.map.remove('key1')
@@ -349,7 +349,7 @@ class MapTest(SingleMemberTestCase):
 
     def test_remove_entry_listener(self):
         collector = event_collector()
-        id = self.map.add_entry_listener(added=collector)
+        id = self.map.add_entry_listener(added_func=collector)
 
         self.map.put('key', 'value')
         self.assertTrueEventually(lambda: self.assertEqual(len(collector.events), 1))

@@ -18,7 +18,7 @@ class MultiMapTest(SingleMemberTestCase):
 
     def test_add_entry_listener_item_added(self):
         collector = event_collector()
-        self.multi_map.add_entry_listener(include_value=True, added=collector)
+        self.multi_map.add_entry_listener(include_value=True, added_func=collector)
         self.multi_map.put('key', 'value')
 
         def assert_event():
@@ -30,7 +30,7 @@ class MultiMapTest(SingleMemberTestCase):
 
     def test_add_entry_listener_item_removed(self):
         collector = event_collector()
-        self.multi_map.add_entry_listener(include_value=True, removed=collector)
+        self.multi_map.add_entry_listener(include_value=True, removed_func=collector)
         self.multi_map.put('key', 'value')
         self.multi_map.remove('key', 'value')
 
@@ -43,7 +43,7 @@ class MultiMapTest(SingleMemberTestCase):
 
     def test_add_entry_listener_clear_all(self):
         collector = event_collector()
-        self.multi_map.add_entry_listener(include_value=True, clear_all=collector)
+        self.multi_map.add_entry_listener(include_value=True, clear_all_func=collector)
         self.multi_map.put('key', 'value')
         self.multi_map.clear()
 
@@ -56,7 +56,7 @@ class MultiMapTest(SingleMemberTestCase):
 
     def test_add_entry_listener_with_key(self):
         collector = event_collector()
-        id = self.multi_map.add_entry_listener(key='key1', include_value=True, added=collector)
+        id = self.multi_map.add_entry_listener(key='key1', include_value=True, added_func=collector)
         self.multi_map.put('key2', 'value2')
         self.multi_map.put('key1', 'value1')
 
@@ -161,7 +161,7 @@ class MultiMapTest(SingleMemberTestCase):
 
     def test_remove_entry_listener(self):
         collector = event_collector()
-        id = self.multi_map.add_entry_listener(added=collector)
+        id = self.multi_map.add_entry_listener(added_func=collector)
 
         self.multi_map.put('key', 'value')
         self.assertTrueEventually(lambda: self.assertEqual(len(collector.events), 1))

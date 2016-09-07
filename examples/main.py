@@ -35,7 +35,7 @@ if __name__ == '__main__':
     def item_removed(event):
         print("item_removed", event)
 
-    print(my_map.add_entry_listener(include_value=True, added=item_added, removed=item_removed))
+    print(my_map.add_entry_listener(include_value=True, added_func=item_added, removed_func=item_removed))
 
     print("map.size", my_map.size().result())
     key = random.random()
