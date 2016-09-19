@@ -9,7 +9,7 @@ class ListTest(SingleMemberTestCase):
 
     def test_add_entry_listener_item_added(self):
         collector = event_collector()
-        self.list.add_listener(include_value=False, item_added=collector)
+        self.list.add_listener(include_value=False, item_added_func=collector)
         self.list.add('item-value')
 
         def assert_event():
@@ -22,7 +22,7 @@ class ListTest(SingleMemberTestCase):
 
     def test_add_entry_listener_item_added_include_value(self):
         collector = event_collector()
-        self.list.add_listener(include_value=True, item_added=collector)
+        self.list.add_listener(include_value=True, item_added_func=collector)
         self.list.add('item-value')
 
         def assert_event():
@@ -35,7 +35,7 @@ class ListTest(SingleMemberTestCase):
 
     def test_add_entry_listener_item_removed(self):
         collector = event_collector()
-        self.list.add_listener(include_value=False, item_removed=collector)
+        self.list.add_listener(include_value=False, item_removed_func=collector)
         self.list.add('item-value')
         self.list.remove('item-value')
 
@@ -49,7 +49,7 @@ class ListTest(SingleMemberTestCase):
 
     def test_add_entry_listener_item_removed_include_value(self):
         collector = event_collector()
-        self.list.add_listener(include_value=True, item_removed=collector)
+        self.list.add_listener(include_value=True, item_removed_func=collector)
         self.list.add('item-value')
         self.list.remove('item-value')
 
@@ -63,7 +63,7 @@ class ListTest(SingleMemberTestCase):
 
     def test_remove_entry_listener_item_added(self):
         collector = event_collector()
-        reg_id = self.list.add_listener(include_value=False, item_added=collector)
+        reg_id = self.list.add_listener(include_value=False, item_added_func=collector)
         self.list.remove_listener(reg_id)
         self.list.add('item-value')
 
