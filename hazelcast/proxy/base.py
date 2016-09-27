@@ -20,6 +20,9 @@ def default_response_handler(future, codec, to_object):
 
 
 class Proxy(object):
+    """
+    Provides basic functionality for Hazelcast Proxies.
+    """
     def __init__(self, client, service_name, name):
         self.service_name = service_name
         self.name = name
@@ -32,6 +35,11 @@ class Proxy(object):
         self._stop_listening = client.listener.stop_listening
 
     def destroy(self):
+        """
+        Destroys this proxy.
+
+        :return: (bool), ``true`` if this proxy is deleted successfully, ``false`` otherwise.
+        """
         self._on_destroy()
         return self._client.proxy.destroy_proxy(self.service_name, self.name)
 
@@ -60,12 +68,16 @@ class Proxy(object):
 
     def blocking(self):
         """
-        :return: Return a version of this proxy with only blocking method calls
+        Returns a version of this proxy with only blocking method calls.
+        :return: (Proxy), a version of this proxy with only blocking method calls.
         """
         return make_blocking(self)
 
 
 class PartitionSpecificProxy(Proxy):
+    """
+    Provides basic functionality for Partition Specific Proxies.
+    """
     def __init__(self, client, service_name, name):
         super(PartitionSpecificProxy, self).__init__(client, service_name, name)
         self._partition_id = self._client.partition_service.get_partition_id(self.partition_key)
@@ -76,6 +88,9 @@ class PartitionSpecificProxy(Proxy):
 
 
 class TransactionalProxy(object):
+    """
+    Provides an interface for all transactional distributed objects.
+    """
     def __init__(self, name, transaction):
         self.name = name
         self.transaction = transaction
@@ -96,6 +111,9 @@ EntryEventType = enum(added=1, removed=2, updated=4, evicted=8, evict_all=16, cl
 
 
 class ItemEvent(object):
+    """
+    Map Item event.
+    """
     def __init__(self, name, item_data, event_type, member, to_object):
         self.name = name
         self._item_data = item_data
@@ -105,10 +123,14 @@ class ItemEvent(object):
 
     @property
     def item(self):
+        """The item related to the event."""
         return self._to_object(self._item_data)
 
 
 class EntryEvent(object):
+    """
+    Map Entry event.
+    """
     def __init__(self, to_object, key, old_value, value, merging_value, event_type, uuid,
                  number_of_affected_entries):
         self._key_data = key
@@ -122,18 +144,22 @@ class EntryEvent(object):
 
     @property
     def key(self):
+        """The key of this entry event."""
         return self._to_object(self._key_data)
 
     @property
     def old_value(self):
+        """The old value of the entry event."""
         return self._to_object(self._old_value_data)
 
     @property
     def value(self):
+        """The value of the entry event."""
         return self._to_object(self._value_data)
 
     @property
     def merging_value(self):
+        """The incoming merging value of the entry event."""
         return self._to_object(self._merging_value_data)
 
     def __repr__(self):
@@ -144,6 +170,9 @@ class EntryEvent(object):
 
 
 class TopicMessage(object):
+    """
+    Topic message.
+    """
     def __init__(self, name, message_data, publish_time, member, to_object):
         self.name = name
         self._message_data = message_data
@@ -153,6 +182,7 @@ class TopicMessage(object):
 
     @property
     def message(self):
+        """The message sent to Topic."""
         return self._to_object(self._message_data)
 
 
