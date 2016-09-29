@@ -6,6 +6,13 @@ from hazelcast.util import current_time
 
 
 def lru_cmp(x, y):
+    """
+    Least recently used comparison.
+
+    :param x: (:class:`~hazelcast.near_cache.DataRecord`), first record to be compared.
+    :param y: (:class:`~hazelcast.near_cache.DataRecord`), second record to be compared.
+    :return: (int), -1 if first record is older, 0 if records have same last access time, 1 if second record is older.
+    """
     if x.last_access_time < y.last_access_time:  # older
         return -1
     elif x.last_access_time > y.last_access_time:
@@ -15,10 +22,24 @@ def lru_cmp(x, y):
 
 
 def lfu_cmp(x, y):
+    """
+    Least frequently used comparison.
+
+    :param x: (:class:`~hazelcast.near_cache.DataRecord`), first record to be compared.
+    :param y: (:class:`~hazelcast.near_cache.DataRecord`), second record to be compared.
+    :return: (int), positive if first record is accessed more than second, 0 in equality, otherwise negative.
+    """
     return x.access_hit - y.access_hit
 
 
 def random_cmp(x, y):
+    """
+    Random comparison.
+
+    :param x: (:class:`~hazelcast.near_cache.DataRecord`), first record to be compared.
+    :param y: (:class:`~hazelcast.near_cache.DataRecord`), second record to be compared.
+    :return: (int), 0.
+    """
     return 0
 
 
@@ -27,6 +48,9 @@ eviction_cmp_func = {EVICTION_POLICY.NONE: None, EVICTION_POLICY.LRU: lru_cmp, E
 
 
 class DataRecord(object):
+    """
+    An expirable and evictable data object which represents a cache entry.
+    """
     def __init__(self, key, value, create_time=None, ttl_seconds=None):
         self.key = key
         self.value = value
@@ -36,6 +60,13 @@ class DataRecord(object):
         self.access_hit = 0
 
     def is_expired(self, max_idle_seconds):
+        """
+        Determines whether this record is expired or not.
+
+        :param max_idle_seconds: (long), the maximum idle time of record, maximum time after the last access time.
+        :return: (bool), ``true`` is this record is not expired.
+        """
+
         now = current_time()
         return (self.expiration_time is not None and self.expiration_time < now) or \
                (max_idle_seconds is not None and self.last_access_time + max_idle_seconds < now)
@@ -46,6 +77,9 @@ class DataRecord(object):
 
 
 class NearCache(dict):
+    """
+    NearCache where the map data is cached locally for the client.
+    """
     logger = logging.getLogger("NearCache")
 
     def __init__(self, serialization_service, in_memory_format, time_to_live_seconds, max_idle_seconds, invalidate_on_change,
@@ -163,6 +197,11 @@ class NearCache(dict):
         return self.eviction_policy != EVICTION_POLICY.NONE and self.eviction_max_size <= self.__len__()
 
     def get_statistics(self):
+        """
+        Returns the statistics of the NearCache.
+
+        :return: (Number, Number), evicted entry count and expired entry count.
+        """
         return self._evicted_count, self._expired_count
 
     def __repr__(self):

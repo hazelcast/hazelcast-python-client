@@ -7,6 +7,9 @@ PARTITION_UPDATE_INTERVAL = 10
 
 
 class PartitionService(object):
+    """
+    An SPI service for accessing partition related information.
+    """
     logger = logging.getLogger("PartitionService")
     timer = None
 
@@ -15,6 +18,9 @@ class PartitionService(object):
         self._client = client
 
     def start(self):
+        """
+        Starts the partition service.
+        """
         self.logger.debug("Starting partition service")
 
         def partition_updater():
@@ -24,23 +30,46 @@ class PartitionService(object):
         self.timer = self._client.reactor.add_timer(PARTITION_UPDATE_INTERVAL, partition_updater)
 
     def shutdown(self):
+        """
+        Shutdowns the partition service.
+        """
         if self.timer:
             self.timer.cancel()
 
     def refresh(self):
+        """
+        Refreshes the partition service.
+        """
         self._client.reactor.add_timer(0, self._do_refresh)
 
     def get_partition_owner(self, partition_id):
+        """
+        Gets the owner of the partition if it's set. Otherwise it will trigger partition assignment.
+
+        :param partition_id: (int), the partition id.
+        :return: (:class:`~hazelcast.core.Address`), owner of partition or ``None`` if it's not set yet.
+        """
         if partition_id not in self.partitions:
             self._do_refresh()
         return self.partitions[partition_id]
 
     def get_partition_id(self, key):
+        """
+        Returns the partition id for a Data key.
+
+        :param key: (object), the data key.
+        :return: (int), the partition id.
+        """
         data = self._client.serialization_service.to_data(key)
         count = self.get_partition_count()
         return hash_to_index(data.get_partition_hash(), count)
 
     def get_partition_count(self):
+        """
+        Returns the number of partitions.
+
+        :return: (int), the number of partitions.
+        """
         if not self.partitions:
             self._get_partition_count_blocking()
         return len(self.partitions)
