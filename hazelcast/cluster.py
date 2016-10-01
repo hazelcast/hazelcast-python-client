@@ -17,6 +17,12 @@ MEMBER_REMOVED = 2
 
 
 class ClusterService(object):
+    """
+    Hazelcast cluster service. It provides access to the members in the cluster and the client can register for changes
+    in the cluster members.
+
+    All the methods on the Cluster are thread-safe.
+    """
     logger = logging.getLogger("ClusterService")
 
     def __init__(self, config, client):
@@ -36,15 +42,34 @@ class ClusterService(object):
         self._client.heartbeat.add_listener(on_heartbeat_stopped=self._heartbeat_stopped)
 
     def start(self):
+        """
+        Connects to cluster.
+        """
         self._connect_to_cluster()
 
     def shutdown(self):
         pass
 
     def size(self):
+        """
+        Returns the size of the cluster.
+
+        :return: (int), size of the cluster.
+        """
         return len(self.members)
 
     def add_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
+        """
+        Adds a membership listener to listen for membership updates, it will be notified when a member is added to
+        cluster or removed from cluster. There is no check for duplicate registrations, so if you register the listener
+        twice, it will get events twice.
+
+
+        :param member_added: (Function), function to be called when a member is added to the cluster (optional).
+        :param member_removed: (Function), function to be called when a member is removed to the cluster (optional).
+        :param fire_for_existing: (bool), (optional).
+        :return: (str), registration id of the listener which will be used for removing this listener.
+        """
         registration_id = str(uuid.uuid4())
         self.listeners[registration_id] = (member_added, member_removed)
 
@@ -55,6 +80,12 @@ class ClusterService(object):
         return registration_id
 
     def remove_listener(self, registration_id):
+        """
+        Removes the specified membership listener.
+
+        :param registration_id: (str), registration id of the listener to be deleted.
+        :return: (bool), if the registration is removed, ``false`` otherwise.
+        """
         try:
             self.listeners.pop(registration_id)
             return True
@@ -200,12 +231,22 @@ class ClusterService(object):
                 "%s stopped heart beating." % connection))
 
     def get_member_by_uuid(self, member_uuid):
+        """
+        Returns the member with specified member uuid.
+
+        :param member_uuid: (int), uuid of the desired member.
+        :return: (Member), the corresponding member.
+        """
         for member in self.members:
             if member.uuid == member_uuid:
                 return member
 
 
 class RandomLoadBalancer(object):
+    """
+    RandomLoadBalancer make the Client send operations randomly on members not to increase the load on a specific
+    member.
+    """
     def __init__(self, cluster):
         self._cluster = cluster
 

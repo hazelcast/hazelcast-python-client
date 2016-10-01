@@ -23,6 +23,9 @@ DEFAULT_HEARTBEAT_TIMEOUT = 60000
 
 
 class ConnectionManager(object):
+    """
+    ConnectionManager is responsible for managing :mod:`Connection` objects.
+    """
     logger = logging.getLogger("ConnectionManager")
 
     def __init__(self, client, new_connection_func):
@@ -36,9 +39,22 @@ class ConnectionManager(object):
         self._connection_listeners = []
 
     def add_listener(self, on_connection_opened=None, on_connection_closed=None):
+        """
+        Registers a ConnectionListener. If the same listener is registered multiple times, it will be notified multiple
+        times.
+
+        :param on_connection_opened: (Function), function to be called when a connection is opened.
+        :param on_connection_closed: (Function), function to be called when a connection is removed.
+        """
         self._connection_listeners.append((on_connection_opened, on_connection_closed))
 
     def get_connection(self, address):
+        """
+        Gets the existing connection for a given address or connects. This call is silent.
+
+        :param address: (:class:`~hazelcast.core.Address`), the address to connect to.
+        :return: (:class:`~hazelcast.connection.Connection`), the found connection, or None if no connection exists.
+        """
         try:
             return self.connections[address]
         except KeyError:
@@ -69,6 +85,15 @@ class ConnectionManager(object):
         return self._client.invoker.invoke_on_connection(request, connection).continue_with(callback)
 
     def get_or_connect(self, address, authenticator=None):
+        """
+        Gets the existing connection for a given address. If it does not exist, the system will try to connect
+        asynchronously. In this case, it returns a Future. When the connection is established at some point in time, it
+        can be retrieved by using the get_connection(:class:`~hazelcast.core.Address`) or from Future.
+
+        :param address: (:class:`~hazelcast.core.Address`), the address to connect to.
+        :param authenticator: (Function), function to be used for authentication (optional).
+        :return: (:class:`~hazelcast.connection.Connection`), the existing connection or it returns a Future which includes asynchronously.
+        """
         if address in self.connections:
             return ImmediateFuture(self.connections[address])
         else:
@@ -92,6 +117,14 @@ class ConnectionManager(object):
                     return future
 
     def on_auth(self, f, connection, address):
+        """
+        Checks for authentication of a connection.
+
+        :param f: (:class:`~hazelcast.future.Future`), future that contains the result of authentication.
+        :param connection: (:class:`~hazelcast.connection.Connection`), newly established connection.
+        :param address: (:class:`~hazelcast.core.Address`), the adress of new connection.
+        :return: Result of authentication.
+        """
         if f.is_success():
             self.logger.info("Authenticated with %s", f.result())
             with self._new_connection_mutex:
@@ -122,6 +155,13 @@ class ConnectionManager(object):
             self._client.invoker.cleanup_connection(connection, cause)
 
     def close_connection(self, address, cause):
+        """
+        Closes the connection with given address.
+
+        :param address: (:class:`~hazelcast.core.Address`), address of the connection to be closed.
+        :param cause: (Exception), the cause for closing the connection.
+        :return: (bool), ``true`` if the connection is closed, ``false`` otherwise.
+        """
         try:
             connection = self.connections[address]
             connection.close(cause)
@@ -131,6 +171,9 @@ class ConnectionManager(object):
 
 
 class Heartbeat(object):
+    """
+    HeartBeat Service.
+    """
     logger = logging.getLogger("ConnectionManager")
     _heartbeat_timer = None
 
@@ -144,6 +187,9 @@ class Heartbeat(object):
                                                                          DEFAULT_HEARTBEAT_INTERVAL) / 1000
 
     def start(self):
+        """
+        Starts sending periodic HeartBeat operations.
+        """
         def _heartbeat():
             self._heartbeat()
             self._heartbeat_timer = self._client.reactor.add_timer(self._heartbeat_interval, _heartbeat)
@@ -151,10 +197,19 @@ class Heartbeat(object):
         self._heartbeat_timer = self._client.reactor.add_timer(self._heartbeat_interval, _heartbeat)
 
     def shutdown(self):
+        """
+        Stops HeartBeat operations.
+        """
         if self._heartbeat():
             self._heartbeat_timer.cancel()
 
     def add_listener(self, on_heartbeat_restored=None, on_heartbeat_stopped=None):
+        """
+        Registers a HeartBeat listener. Listener is invoked when a HeartBeat related event occurs.
+
+        :param on_heartbeat_restored: (Function), function to be called when a HeartBeat is restored (optional).
+        :param on_heartbeat_stopped:  (Function), function to be called when a HeartBeat is stopped (optional).
+        """
         self._listeners.append((on_heartbeat_restored, on_heartbeat_stopped))
 
     def _heartbeat(self):
@@ -189,6 +244,9 @@ class Heartbeat(object):
 
 
 class Connection(object):
+    """
+    Connection object which stores connection related information and operations.
+    """
     _closed = False
     endpoint = None
     heartbeating = True
@@ -205,9 +263,19 @@ class Connection(object):
         self.last_read = 0
 
     def live(self):
+        """
+        Determines whether this connection is live or not.
+
+        :return: (bool), ``true`` if the connection is live, ``false`` otherwise.
+        """
         return not self._closed
 
     def send_message(self, message):
+        """
+        Sends a message to this connection.
+
+        :param message: (Message), message to be sent to this connection.
+        """
         if not self.live():
             raise IOError("Connection is not live.")
 
@@ -215,6 +283,9 @@ class Connection(object):
         self.write(message.buffer)
 
     def receive_message(self):
+        """
+        Receives a message from this connection.
+        """
         self.last_read = time.time()
         # split frames
         while len(self._read_buffer) >= INT_SIZE_IN_BYTES:
@@ -226,10 +297,20 @@ class Connection(object):
             self._builder.on_message(message)
 
     def write(self, data):
+        """
+        Writes data to this connection when sending messages.
+
+        :param data: (Data), data to be written to connection.
+        """
         # must be implemented by subclass
         raise NotImplementedError
 
     def close(self, cause):
+        """
+        Closes the connection.
+
+        :param cause: (Exception), the cause of closing the connection.
+        """
         raise NotImplementedError
 
     def __repr__(self):
