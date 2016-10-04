@@ -13,65 +13,128 @@ DEFAULT_PORT = 5701
 
 
 def check_not_none(val, message):
+    """
+    Tests if an argument is not ``None``.
+
+    :param val: (object), the argument tested to see if it is not ``None``.
+    :param message: (str), the error message.
+    """
     if val is None:
         raise AssertionError(message)
 
 
 def check_true(val, message):
+    """
+    Tests whether the provided expression is ``true``.
+
+    :param val: (bool), the expression tested to see if it is ``true``.
+    :param message: (str), the error message.
+    """
     if not val:
         raise AssertionError(message)
 
 
 def check_not_negative(val, message):
+    """
+    Tests if a value is not negative.
+
+    :param val: (Number), the value tested to see if it is not negative.
+    :param message: (str), the error message.
+    """
     if val < 0:
         raise AssertionError(message)
 
 
 def check_not_empty(collection, message):
+    """
+    Tests if a collection is not empty.
+
+    :param collection: (Collection), the collection tested to see if it is not empty.
+    :param message: (str), the error message.
+    """
     if not collection:
         raise AssertionError(message)
 
 
 def current_time():
+    """
+    Returns the current time of the system.
+
+    :return: (float), current time of the system.
+    """
     return time.time()
 
 
 def thread_id():
+    """
+    Returns the current thread's id.
+
+    :return: (int), current thread's id.
+    """
     return threading.currentThread().ident
 
 
 def to_millis(seconds):
+    """
+    Converts the time parameter in seconds to milliseconds. If the given time is negative, returns the original value.
+
+    :param seconds: (Number), the given time in seconds.
+    :return: (int), result of the conversation in milliseconds.
+    """
     if seconds >= 0:
         return int(seconds * 1000)
     return seconds
 
 
 def validate_type(_type):
+    """
+    Validates the type.
+
+    :param _type: (Type), the type to be validated.
+    """
     if not isinstance(_type, TypeType):
         raise ValueError("Serializer should be an instance of {}".format(_type.__name__))
 
 
 def validate_serializer(serializer, _type):
+    """
+    Validates the serializer for given type.
+
+    :param serializer: (Serializer), the serializer to be validated.
+    :param _type: (Type), type to be used for serializer validation.
+    """
     if not issubclass(serializer, _type):
         raise ValueError("Serializer should be an instance of {}".format(_type.__name__))
 
 
 class AtomicInteger(object):
+    """
+    AtomicInteger is an Integer which can work atomically.
+    """
     def __init__(self, initial=0):
         self.count = itertools.count(start=initial)
 
     def get_and_increment(self):
+        """
+        Returns the current value and increment it.
+
+        :return: (int), current value of AtomicInteger.
+        """
         return self.count.next()
 
     def set(self, value):
+        """
+        Sets the value of this AtomicInteger.
+        :param value: (int), the new value of AtomicInteger.
+        """
         self.count = itertools.count(start=value)
 
 
 def enum(**enums):
     """
-    Utility method for defining enums
-    :param enums:
-    :return:
+    Utility method for defining enums.
+    :param enums: Parameters of enumeration.
+    :return: (Enum), the created enumerations.
     """
     enums['reverse'] = dict((value, key) for key, value in enums.iteritems())
     return type('Enum', (), enums)

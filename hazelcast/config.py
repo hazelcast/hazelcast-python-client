@@ -70,8 +70,8 @@ class ClientConfig(object):
     """
     The root configuration for hazelcast python client.
 
-        client_config = ClientConfig()
-        client = HazelcastClient(client_config)
+        >>> client_config = ClientConfig()
+        >>> client = HazelcastClient(client_config)
     """
 
     def __init__(self):
@@ -102,9 +102,11 @@ class ClientConfig(object):
         """
         Helper method for adding membership listeners
 
-        :param member_added: Function that will be called in case of a member added. In the form of f(member)
-        :param member_removed: Function that will be called in case of a member removed. In the form of f(member)
-        :param fire_for_existing: if True, already existing members will fire member_added event
+        :param member_added: (Function), Function to be called when a member is added, in the form of f(member)
+        (optional).
+        :param member_removed: (Function), Function to be called when a member is removed, in the form of f(member)
+        (optional).
+        :param fire_for_existing: if True, already existing members will fire member_added event (optional).
         :return: `self` for cascading configuration
         """
         self.membership_listeners.append((member_added, member_removed, fire_for_existing))
@@ -112,10 +114,10 @@ class ClientConfig(object):
 
     def add_lifecycle_listener(self, lifecycle_state_changed=None):
         """
-        Helper method for adding lifecycle listeners
+        Helper method for adding lifecycle listeners.
 
-        :param lifecycle_state_changed: Function that will be called in case of the lifecycle state changed.
-        In the form of f(state)
+        :param lifecycle_state_changed: (Function), Function to be called when lifecycle state is changed (optional).
+        In the form of f(state).
         :return: `self` for cascading configuration
         """
         if lifecycle_state_changed:
@@ -124,11 +126,11 @@ class ClientConfig(object):
 
     def get_property_or_default(self, key, default):
         """
-        client property accessor with fallback to default value
+        Client property accessor with fallback to default value.
 
-        :param key: property key to access
-        :param default: the default value for fallback
-        :return: property value if it exist or the default value otherwise
+        :param key: (Object), property key to access.
+        :param default: (Object), the default value for fallback.
+        :return: (Object), property value if it exist or the default value otherwise.
         """
         try:
             return self._properties[key]
@@ -137,10 +139,10 @@ class ClientConfig(object):
 
     def add_near_cache_config(self, near_cache_config):
         """
-        Helper method to add a new NearCacheConfig
+        Helper method to add a new NearCacheConfig.
 
-        :param near_cache_config: the near_cache config to add
-        :return: `self` for cascading configuration
+        :param near_cache_config: (NearCacheConfig), the near_cache config to add.
+        :return: `self` for cascading configuration.
         """
         self.near_cache_configs[near_cache_config.name] = near_cache_config
         return self
@@ -148,7 +150,7 @@ class ClientConfig(object):
 
 class GroupConfig(object):
     """
-    The Group Configuration is the container class for name and password of the cluster
+    The Group Configuration is the container class for name and password of the cluster.
     """
 
     def __init__(self):
@@ -160,7 +162,7 @@ class GroupConfig(object):
 
 class ClientNetworkConfig(object):
     """
-    Network related configuration parameters
+    Network related configuration parameters.
     """
 
     def __init__(self):
@@ -168,8 +170,9 @@ class ClientNetworkConfig(object):
         """The candidate address list that client will use to establish initial connection"""
         self.connection_attempt_limit = 2
         """
-        While client is trying to connect initially to one of the members in the addressList, all might be not available.
-        Instead of giving up, throwing Error and stopping client, it will attempt to retry as much as defined by this parameter.
+        While client is trying to connect initially to one of the members in the addressList, all might be not
+        available. Instead of giving up, throwing Error and stopping client, it will attempt to retry as much as defined
+        by this parameter.
         """
         self.connection_attempt_period = 3
         """Period for the next attempt to find a member to connect"""
@@ -195,14 +198,14 @@ class ClientNetworkConfig(object):
         self.redo_operation = False
         """
         If true, client will redo the operations that were executing on the server and client lost the connection.
-        This can be because of network, or simply because the member died. However it is not clear whether the application is
-        performed or not. For idempotent operations this is harmless, but for non idempotent ones retrying can cause to
-        undesirable effects. Note that the redo can perform on any member.
+        This can be because of network, or simply because the member died. However it is not clear whether the
+        application is performed or not. For idempotent operations this is harmless, but for non idempotent ones
+        retrying can cause to undesirable effects. Note that the redo can perform on any member.
         """
         self.smart_routing = True
         """
-        If true, client will route the key based operations to owner of the key at the best effort. Note that it uses a cached
-        value of partition count and doesn't guarantee that the operation will always be executed on the owner.
+        If true, client will route the key based operations to owner of the key at the best effort. Note that it uses a
+        cached value of partition count and doesn't guarantee that the operation will always be executed on the owner.
         The cached table is updated every 10 seconds.
         """
 
@@ -234,8 +237,8 @@ class SerializationConfig(object):
         """
         self.data_serializable_factories = {}
         """
-        Dictionary of factory-id and corresponding IdentifiedDataserializable factories. A Factory is a simple dictionary with
-        entries of class-id : class-constructor-function pairs.
+        Dictionary of factory-id and corresponding IdentifiedDataserializable factories. A Factory is a simple
+        dictionary with entries of class-id : class-constructor-function pairs.
 
         Example:
 
@@ -272,31 +275,34 @@ class SerializationConfig(object):
 
     def add_data_serializable_factory(self, factory_id, factory):
         """
-        Helper method for adding IdentifiedDataserializable factory
+        Helper method for adding IdentifiedDataSerializable factory.
         example:
             >>> my_factory = {MyPersonClass.CLASS_ID : MyPersonClass, MyAddressClass.CLASS_ID : MyAddressClass}
-            >>> serialization_config.add_data_serializable_factory(factory_id, factory)
-        :param factory_id: factory-id to register
-        :param factory: the factory dict of class-id : class-constructor-function
+            >>> serialization_config.add_data_serializable_factory(factory_id, my_factory)
+
+        :param factory_id: (int), factory-id to register.
+        :param factory: (Dictionary), the factory dictionary of class-id:class-constructor-function pairs.
         """
         self.data_serializable_factories[factory_id] = factory
 
     def add_portable_factory(self, factory_id, factory):
         """
-        Helper method for adding Portable factory
+        Helper method for adding Portable factory.
         example:
             >>> portable_factory = {PortableClass_0.CLASS_ID : PortableClass_0, PortableClass_1.CLASS_ID : PortableClass_1}
             >>> serialization_config.portable_factories[FACTORY_ID] = portable_factory
-        :param factory_id: factory-id to register
-        :param factory: the factory dict of class-id : class-constructor-function
+
+        :param factory_id: (int), factory-id to register.
+        :param factory: (Dictionary), the factory dictionary of class-id:class-constructor-function pairs.
         """
         self.portable_factories[factory_id] = factory
 
     def set_custom_serializer(self, _type, serializer):
         """
-        Assign a serializer for the type
-        :param _type: the target type of the serializer
-        :param serializer: Custom Serializer constructor function
+        Assign a serializer for the type.
+
+        :param _type: (Type), the target type of the serializer
+        :param serializer: (Serializer), Custom Serializer constructor function
         """
         validate_type(_type)
         validate_serializer(serializer, StreamSerializer)
@@ -306,15 +312,17 @@ class SerializationConfig(object):
     def custom_serializers(self):
         """
         All custom serializers.
-        :return: Dictionary of type, custom serializer
+
+        :return: (Dictionary), dictionary of type-custom serializer pairs.
         """
         return self._custom_serializers
 
     @property
     def global_serializer(self):
         """
-        The Global serializer property for serialization service. The assigned value should be a class constructor function.
-        It handles every object if no other serializer found.
+        The Global serializer property for serialization service. The assigned value should be a class constructor
+        function. It handles every object if no other serializer found.
+
         Global serializers should extend `hazelcast.serializer.api.StreamSerializer`
         """
         return self._global_serializer
@@ -410,7 +418,8 @@ class NearCacheConfig(object):
 
     @property
     def eviction_sampling_count(self):
-        """The entry count of the samples for the internal eviction sampling algorithm taking samples in each operation."""
+        """The entry count of the samples for the internal eviction sampling algorithm taking samples in each
+        operation."""
         return self._eviction_sampling_count
 
     @eviction_sampling_count.setter
