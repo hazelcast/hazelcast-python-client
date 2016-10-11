@@ -47,7 +47,7 @@ class Queue(PartitionSpecificProxy):
             data_items.append(self._to_data(item))
         return self._encode_invoke(queue_add_all_codec, data_list=data_items)
 
-    def add_listener(self, include_value=False, item_added=None, item_removed=None):
+    def add_listener(self, include_value=False, item_added_func=None, item_removed_func=None):
         request = queue_add_listener_codec.encode_request(self.name, include_value, False)
 
         def handle_event_item(item, uuid, event_type):
@@ -56,11 +56,11 @@ class Queue(PartitionSpecificProxy):
 
             item_event = ItemEvent(self.name, item, event_type, member, self._to_object)
             if event_type == ItemEventType.added:
-                if item_added:
-                    item_added(item_event)
+                if item_added_func:
+                    item_added_func(item_event)
             else:
-                if item_removed:
-                    item_removed(item_event)
+                if item_removed_func:
+                    item_removed_func(item_event)
 
         return self._start_listening(request,
                                      lambda m: queue_add_listener_codec.handle(m, handle_event_item),
