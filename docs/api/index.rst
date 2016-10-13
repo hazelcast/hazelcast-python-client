@@ -5,4 +5,3 @@ API Documentation
    :maxdepth: 4
 
    hazelcast
-   hazelcast/config
