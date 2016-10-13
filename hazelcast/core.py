@@ -5,6 +5,9 @@ CLIENT_TYPE = "PYH"
 
 
 class Member(object):
+    """
+    Represents a member in the cluster with its address, uuid, lite member status and attributes.
+    """
     def __init__(self, address, uuid, is_lite_member=False, attributes={}):
         self.address = address
         self.uuid = uuid
@@ -23,6 +26,9 @@ class Member(object):
 
 
 class Address(object):
+    """
+    Represents an address of a member in the cluster.
+    """
     def __init__(self, host, port):
         self.host = host
         self.port = port
@@ -38,6 +44,9 @@ class Address(object):
 
 
 class DistributedObjectInfo(object):
+    """
+    Represents name of the Distributed Object and the name of service which it belongs to.
+    """
     def __init__(self, name, service_name):
         self.name = name
         self.service_name = service_name
@@ -47,18 +56,57 @@ class DistributedObjectInfo(object):
 
 
 class EntryView(object):
+    """
+    EntryView represents a readonly view of a map entry.
+    """
     key = None
+    """
+    The key of the entry.
+    """
     value = None
+    """
+    The value of the entry.
+    """
     cost = None
+    """
+    The cost in bytes of the entry.
+    """
     creation_time = None
+    """
+    The creation time of the entry.
+    """
     expiration_time = None
+    """
+    The expiration time of the entry.
+    """
     hits = None
+    """
+    Number of hits of the entry.
+    """
     last_access_time = None
+    """
+    The last access time for the entry.
+    """
     last_stored_time = None
+    """
+    The last store time for the value.
+    """
     last_update_time = None
+    """
+    The last time the value was updated.
+    """
     version = None
+    """
+    The version of the entry.
+    """
     eviction_criteria_number = None
+    """
+    The criteria number for eviction.
+    """
     ttl = None
+    """
+    The last set time to live second.
+    """
 
     def __repr__(self):
         return "EntryView(key=%s, value=%s, cost=%s, creation_time=%s, expiration_time=%s, hits=%s, last_access_time=%s, " \
