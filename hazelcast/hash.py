@@ -13,11 +13,12 @@ def _fmix(h):
 def murmur_hash3_x86_32(data, offset, size, seed=0x01000193):
     """
     murmur3 hash function to determine partition
-    :param data: input byte array
-    :param offset: offset
-    :param size: byte length
+
+    :param data: (byte array), input byte array
+    :param offset: (long), offset.
+    :param size: (long), byte length.
     :param seed: murmur hash seed hazelcast uses 0x01000193
-    :return: calculated hash value. it will be a 32 bit int
+    :return: (int32), calculated hash value.
     """
     key = bytearray(data[offset: offset + size])
     length = len(key)
