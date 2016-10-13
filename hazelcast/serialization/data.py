@@ -21,13 +21,17 @@ class Data(object):
 
     def to_bytes(self):
         """
-        :return:  Returns byte array representation of internal binary format.
+        Returns byte array representation of internal binary format.
+
+        :return:  (byte array), byte array representation of internal binary format.
         """
         return self._buffer
 
     def get_type(self):
         """
-        :return:Returns serialization type of binary form.
+        Returns serialization type of binary form.
+
+        :return: Serialization type of binary form.
         """
         if self.total_size() == 0:
             return CONSTANT_TYPE_NULL
@@ -35,22 +39,27 @@ class Data(object):
 
     def total_size(self):
         """
-        :return:Returns the total size of Data in bytes
+        Returns the total size of Data in bytes.
+
+        :return: (int), total size of Data in bytes.
         """
         return len(self._buffer) if self._buffer is not None else 0
 
     def data_size(self):
         """
-        :return:Returns size of internal binary data in bytes
+        Returns size of internal binary data in bytes.
+
+        :return: (int), size of internal binary data in bytes.
         """
         return max(self.total_size() - HEAP_DATA_OVERHEAD, 0)
 
     def get_partition_hash(self):
         """
         Returns partition hash calculated for serialized object.
-        Partition hash is used to determine partition of a Data and is calculated using
-        * PartitioningStrategy during serialization.
-        * If partition hash is not set then hash_code() is used.
+            Partition hash is used to determine partition of a Data and is calculated using
+                * PartitioningStrategy during serialization.
+                * If partition hash is not set then hash_code() is used.
+
         :return: partition hash
         """
         if self.has_partition_hash():
@@ -59,14 +68,17 @@ class Data(object):
 
     def is_portable(self):
         """
-        Returns true if this Data is created from a {@link com.hazelcast.nio.serialization.Portable} object,false otherwise.
-        :return: true if source object is Portable, false otherwise.
+        Determines whether this Data is created from a :class:`~hazelcast.serialization.api.Portable`. object or not.
+
+        :return: (bool), ``true`` if source object is Portable, ``false`` otherwise.
         """
         return CONSTANT_TYPE_PORTABLE == self.get_type()
 
     def has_partition_hash(self):
         """
-        :return: true if Data has partition hash, false otherwise.
+        Determines whether this Data has partition hash or not.
+
+        :return: (bool), ``true`` if Data has partition hash, ``false`` otherwise.
         """
         return self._buffer is not None \
                and len(self._buffer) >= HEAP_DATA_OVERHEAD \
@@ -74,7 +86,9 @@ class Data(object):
 
     def hash_code(self):
         """
-        :return: return the murmur mash of the internal data
+        Returns the murmur hash of the internal data.
+
+        :return: the murmur hash of the internal data.
         """
         return murmur_hash3_x86_32(self._buffer, DATA_OFFSET, self.data_size())
 
