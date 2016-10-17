@@ -10,8 +10,8 @@ from hazelcast.util import check_not_negative, to_millis
 
 class CountDownLatch(PartitionSpecificProxy):
     """
-    CountDownLatch is a backed-up, distributed, cluster-wide synchronization aid that makes one or more threads wait
-    until set of operations are completed by other threads.
+    CountDownLatch is a backed-up, distributed, cluster-wide synchronization aid that allows one or more threads to wait until a
+    set of operations being performed in other threads completes
     """
     def await(self, timeout):
         """

@@ -8,22 +8,22 @@ Content:
 - Builtin serializers
 - :class:`~hazelcast.serialization.api.IdentifiedDataSerializable`
 - :class:`~hazelcast.serialization.api.Portable`
-- Custom Serializers
+- Custom serializers
 - Global serializers
 
 **Warning :**
-Python client do not support Dataserializable as it's a java class name dependency. Please use :class:`~hazelcast.serialization.api.IdentifiedDataSerializable` instead.
+Python client does not support Dataserializable as it's a Java class name dependency. Please use :class:`~hazelcast.serialization.api.IdentifiedDataSerializable` instead.
 
 
 Builtin serializers
 -------------------
 
-For python builtin types; ``None``, ``bool``, ``int``, ``long``, ``float``, ``str``, arrays of them are supported by default.
+For Python builtin types; ``None``, ``bool``, ``int``, ``long``, ``float``, ``str``, arrays of them are supported by default.
 
 Integer Type: Python has a different int type than Java. Python 2.x has integer type based on the data size which is int or long.
-So in python we have a configuration for int size to map server data type.
+So in Python we have a configuration for int size to map server data type.
 
-You can configure the default integer type as :
+You can configure the default integer type as:
 
 .. code-block:: python
 
@@ -32,7 +32,7 @@ You can configure the default integer type as :
 Please see ::const:`~hazelcast.config.INTEGER_TYPE` for details. Please be careful with INTEGER_TYPE.VAR as static type lang's cannot deserialize it.
 
 There exist an internal serializer for any custom class that is not registered a serializer such as IdentifiedDataSerializable, Portable or Custom Serializer.
-So the serializer service search for a serializer for a custom class, if it fails to find one it uses python builtin serialization :mod:`cPickle` to handle it.
+So the serializer service searches for a serializer for a custom class; if it fails to find one, it uses Python builtin serialization :mod:`cPickle` to handle it.
 Please note that this behaviour can be overridden by a global serializer.
 
 IdentifiedDataSerializable
@@ -72,14 +72,14 @@ example :class:`~hazelcast.serialization.api.IdentifiedDataSerializable` impleme
             return CLASS_ID
 
 
-A factory definition is register to configuration in order to use the above ``Customer`` class:
+A factory definition is registered to configuration in order to use the above ``Customer`` class:
 
 .. code-block:: python
 
     identifiedDataSerializable_factory = {Customer.CLASS_ID: Customer}
     config.serialization_config.add_data_serializable_factory(Customer.FACTORY_ID, identifiedDataSerializable_factory)
 
-With the above registration you can use your class :
+With the above registration you can use your class:
 
 .. code-block:: python
 
@@ -124,14 +124,14 @@ example :class:`~hazelcast.serialization.api.Portable` implementation:
         def get_class_id(self):
             return CLASS_ID
 
-A factory definition is register to configuration in order to use the above ``Customer`` class:
+A factory definition is registered to the configuration in order to use the above ``Customer`` class:
 
 .. code-block:: python
 
     portable_factory = {Customer.CLASS_ID: Customer}
     config.serialization_config.add_portable_factory(Customer.FACTORY_ID, portable_factory)
 
-With the above registration you can use your class :
+With the above registration you can use your class:
 
 .. code-block:: python
 
@@ -152,7 +152,7 @@ With Portable serialization you can make query on your domain object without hav
 
     map.values(sql("name = 'John'"))
 
-Portable serialization support server side field extraction so you can query object with many fields without deserializing them
+Portable serialization supports server side field extraction so you can query an object with many fields without deserializing them
 
 Custom Serializers
 ------------------

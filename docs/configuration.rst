@@ -3,20 +3,20 @@ Client Configuration
 
 Hazelcast Python Client has a simple configuration. Configuration module :mod:`~hazelcast.config` is all we need.
 
-Configuration is actually creating a :class:`~hazelcast.config.ClientConfig` instance to start the client.
+Configuration actually creates a :class:`~hazelcast.config.ClientConfig` instance to start the client.
 
 Configuration titles:
 
 - Credential setup via :class:`~hazelcast.config.GroupConfig`
 - Network configuration via :class:`~hazelcast.config.ClientNetworkConfig`
-- Advance socket configuration via :class:`~hazelcast.config.SocketOption`
+- Advanced socket configuration via :class:`~hazelcast.config.SocketOption`
 - Serialization configuration via :class:`~hazelcast.config.SerializationConfig`
 - Near Cache configuration via :class:`~hazelcast.config.NearCacheConfig`
 
 Credential Setup
 ----------------
 
-:class:`~hazelcast.config.GroupConfig` is used for setting group-name/password.
+:class:`~hazelcast.config.GroupConfig` is used to set group-name/password.
 
 .. code-block:: python
 
@@ -48,7 +48,7 @@ Please see API doc for details :class:`~hazelcast.config.ClientNetworkConfig`
 Serialization Configuration
 ---------------------------
 
-:class:`~hazelcast.config.SerializationConfig` is used for configuring serialization.
+:class:`~hazelcast.config.SerializationConfig` is used to configure serialization.
 
 Please see :doc:`serialization`
 
@@ -57,11 +57,11 @@ Near Cache Configuration
 ------------------------
 
 Near cache can be configured using :class:`~hazelcast.config.NearCacheConfig`. For each map there should be a matching
-near cache config with same name
+near cache configuration with same name
 
 .. code-block:: python
 
     config.add_near_cache_config(NearCacheConfig("map-name"))
 
-Please see API doc for near cache configuration options : :class:`~hazelcast.config.NearCacheConfig`
+Please see API doc for near cache configuration options: :class:`~hazelcast.config.NearCacheConfig`
 

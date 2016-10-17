@@ -7,7 +7,7 @@ Hazelcast Python Client is a Hazelcast Client Protocol implementation for Python
 Installation
 ------------
 
-You can install the Hazelcast Python client simply by executing either of the following command::
+You can install the Hazelcast Python client simply by executing either of the following commands::
 
     python setup.py install
 
@@ -21,7 +21,7 @@ After installation we’re all set to jump right in.
 Configuration
 -------------
 
-As a first step, you need a simple configuration. This configuration provides information on how to
+As the first step, you need a simple configuration. This configuration provides information on how to
 connect to an already existing Hazelcast cluster and looks as simple as the following example:
 
 .. code-block:: python
@@ -50,7 +50,7 @@ The client object should be created once unless you connect to multiple clusters
 And, it should be eventually shut down after using the method ``client.shutdown()``.
 
 With our newly created access to the Hazelcast cluster, we now want to read and write data. Same as before, Hazelcast is as
-simple as possible and access to the distributed map is granted by a single command again:
+simple as possible and access to the distributed map is granted again by a single command:
 
 .. code-block:: python
 
@@ -79,7 +79,7 @@ Or use it to register callback methods which will be executed asynchronously:
 Although async operations are more efficient in a single threaded Python interpreter, we sometimes need a simpler code.
 Python client provides a convenience method to support blocking methods.
 
-Every distributed object provides a blocking helper function as shown below.
+Every distributed object provides a blocking helper function as shown below:
 
 .. code-block:: python
 
