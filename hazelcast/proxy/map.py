@@ -880,6 +880,9 @@ class Map(Proxy):
 
 
 class MapFeatNearCache(Map):
+    """
+    Map proxy implementation featuring Near Cache
+    """
     def __init__(self, client, service_name, name):
         super(MapFeatNearCache, self).__init__(client, service_name, name)
         near_cache_config = client.config.near_cache_configs.get(name, None)
@@ -925,17 +928,19 @@ class MapFeatNearCache(Map):
         if self._invalidation_listener_id:
             self.remove_entry_listener(self._invalidation_listener_id)
 
-    def _handle_invalidation(self, key_data):
+    def _handle_invalidation(self, key):
+        # key is always ``Data``
         # null key means near cache has to remove all entries in it.
         # see MapAddNearCacheEntryListenerMessageTask.
-        if key_data is None:
+        if key is None:
             self._near_cache.clear()
         else:
-            del self._near_cache[key_data]
+            self._invalidate_cache(key)
 
-    def _handle_batch_invalidation(self, key_data_list):
-        for key_data in key_data_list:
-            del self._near_cache[key_data]
+    def _handle_batch_invalidation(self, keys):
+        # key_list is always list of ``Data``
+        for key_data in keys:
+            self._invalidate_cache(key_data)
 
     def _invalidate_cache(self, key_data):
         try:
