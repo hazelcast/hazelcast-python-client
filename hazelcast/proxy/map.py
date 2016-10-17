@@ -931,11 +931,19 @@ class MapFeatNearCache(Map):
         if key_data is None:
             self._near_cache.clear()
         else:
-            del self._near_cache[key_data]
+            try:
+                del self._near_cache[key_data]
+            except KeyError:
+                # There is nothing to invalidate
+                pass
 
     def _handle_batch_invalidation(self, key_data_list):
         for key_data in key_data_list:
-            del self._near_cache[key_data]
+            try:
+                del self._near_cache[key_data]
+            except KeyError:
+                # There is nothing to invalidate
+                pass
 
     def _invalidate_cache(self, key_data):
         try:
