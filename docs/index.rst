@@ -5,7 +5,7 @@ Python client implementation for `Hazelcast <https://hazelcast.org>`_ , the open
 
 It is implemented using the `Hazelcast Open Binary Client Protocol <http://github.com/hazelcast/hazelcast-client-protocol/tree/master/docs/published/protocol/>`_.
 
-It only supports Python 2.7. (Python 3.x support is in progress.)
+It only supports Python 2.7.
 
 
 Contents
@@ -19,6 +19,9 @@ Contents
 
 :doc:`data_structures`
     Distributed data structures.
+
+:doc:`distributed_events`
+    Distributed events
 
 :doc:`serialization`
     Hazelcast Serialization
