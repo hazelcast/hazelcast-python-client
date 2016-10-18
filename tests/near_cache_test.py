@@ -79,6 +79,18 @@ class NearCacheTestCase(unittest.TestCase):
         self.assertLess(evict, 2)
         self.assertGreater(expire, 8)
 
+    def test_max_idle_time(self):
+        near_cache = self.create_near_cache(self.service, IN_MEMORY_FORMAT.OBJECT, 1000, 2, EVICTION_POLICY.LRU, 1000)
+        for i in xrange(0, 1000):
+            key = "key-{}".format(i)
+            value = "value-{}".format(i)
+            near_cache[key] = value
+        sleep(3)
+        near_cache["key"] = "value"
+        evict, expire = near_cache.get_statistics()
+        self.assertEqual(evict, 0)
+        self.assertEqual(expire, near_cache.eviction_sampling_count)
+
     def test_LRU_time(self):
         near_cache = self.create_near_cache(self.service, IN_MEMORY_FORMAT.OBJECT, 1000, 1000, EVICTION_POLICY.LRU, 10000, 16, 16)
         for i in xrange(0, 10000):

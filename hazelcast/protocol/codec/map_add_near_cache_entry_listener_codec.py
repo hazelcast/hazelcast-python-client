@@ -1,9 +1,7 @@
-from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import ClientMessage
-from hazelcast.protocol.custom_codec import *
-from hazelcast.util import ImmutableLazyDataList
 from hazelcast.protocol.codec.map_message_type import *
 from hazelcast.protocol.event_response_const import *
+from hazelcast.serialization.bits import *
 
 REQUEST_TYPE = MAP_ADDNEARCACHEENTRYLISTENER
 RESPONSE_TYPE = 104
@@ -38,11 +36,11 @@ def decode_response(client_message, to_object=None):
     return parameters
 
 
-def handle(client_message, handle_event_imapinvalidation = None, handle_event_imapbatchinvalidation = None, to_object=None):
+def handle(client_message, handle_event_imapinvalidation=None, handle_event_imapbatchinvalidation=None, to_object=None):
     """ Event handler """
     message_type = client_message.get_message_type()
     if message_type == EVENT_IMAPINVALIDATION and handle_event_imapinvalidation is not None:
-        key=None
+        key = None
         if not client_message.read_bool():
             key = client_message.read_data()
         handle_event_imapinvalidation(key=key)
@@ -53,4 +51,3 @@ def handle(client_message, handle_event_imapinvalidation = None, handle_event_im
             keys_item = client_message.read_data()
             keys.append(keys_item)
         handle_event_imapbatchinvalidation(keys=keys)
-

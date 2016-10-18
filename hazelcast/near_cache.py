@@ -78,7 +78,7 @@ class DataRecord(object):
 
 class NearCache(dict):
     """
-    NearCache where the map data is cached locally for the client.
+    NearCache is a local cache used by :class:`~hazelcast.proxy.map.MapFeatNearCache`.
     """
     logger = logging.getLogger("NearCache")
 
@@ -158,10 +158,14 @@ class NearCache(dict):
         self._eviction_candidates = sorted_candidate_pool[:min_size]  # set new eviction candidate pool
 
         if len(new_eviction_samples) == len(new_eviction_samples_cleaned):  # did any item expired or do we need to evict
-            self.logger.debug("Evicting key:{}".format(self._eviction_candidates[0].key))
-            self.__delitem__(self._eviction_candidates[0].key)
-            del self._eviction_candidates[0]
-            self._evicted_count += 1
+            try:
+                self.logger.debug("Evicting key:{}".format(self._eviction_candidates[0].key))
+                self.__delitem__(self._eviction_candidates[0].key)
+                self._evicted_count += 1
+                del self._eviction_candidates[0]
+            except KeyError:
+                # key may be evicted previously so just ignore it
+                self.logger.debug("Trying to evict but key:{} already expired.".format(self._eviction_candidates[0].key))
 
     def _find_new_random_samples(self):
         records = self.values()  # has random order because of dict hash
@@ -170,9 +174,7 @@ class NearCache(dict):
         for i in xrange(start, start + self.eviction_sampling_count):
             index = i if i < len(records) else i - len(records)
             if records[index].is_expired(self.max_idle_seconds):
-                self.logger.debug("Expiring key:{}".format(records[index].key))
-                self.__delitem__(records[index].key)
-                self._expired_count += 1
+                self._clean_expired_record(records[index].key)
             elif self._is_better_than_worse_entry(records[index]) or len(new_sample_pool) < self.eviction_sampling_pool_size:
                 new_sample_pool.add(records[index])
         return new_sample_pool
@@ -181,8 +183,7 @@ class NearCache(dict):
         new_records = []
         for record in records:
             if record.is_expired(self.max_idle_seconds):
-                self.__delitem__(record.key)
-                self._expired_count += 1
+                self._clean_expired_record(record.key)
             else:
                 new_records.append(record)
         return new_records
@@ -199,10 +200,18 @@ class NearCache(dict):
     def get_statistics(self):
         """
         Returns the statistics of the NearCache.
-
         :return: (Number, Number), evicted entry count and expired entry count.
         """
         return self._evicted_count, self._expired_count
+
+    def _clean_expired_record(self, key):
+        try:
+            self.logger.debug("Expiring key:{}".format(key))
+            self.__delitem__(key)
+            self._expired_count += 1
+        except KeyError:
+            # key may be evicted previously so just ignore it
+            self.logger.debug("Trying to expire but key:{} already expired.".format(key))
 
     def __repr__(self):
         return "NearCache[len:{}, evicted:{}]".format(self.__len__(), self._evicted_count)
