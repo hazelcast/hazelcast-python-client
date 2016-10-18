@@ -13,6 +13,7 @@ def calculate_size(name, entries):
     """ Calculates the request payload size"""
     data_size = 0
     data_size += calculate_size_str(name)
+    data_size += INT_SIZE_IN_BYTES
     for key, val in entries.iteritems():
         data_size += calculate_size_data(key)
         data_size += calculate_size_data(val)
