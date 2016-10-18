@@ -266,9 +266,9 @@ class SerializationConfig(object):
         """Hazelcast Serialization is big endian or not."""
         self.default_integer_type = INTEGER_TYPE.INT
         """
-        Python have variable length int/long type. In order to match this with static fixed length Java server, this option
+        Python has variable length int/long type. In order to match this with static fixed length Java server, this option
         defines the length of the int/long.
-        One of the values of INTEGER_TYPE can be assigned. Please see INTEGER_TYPE documentation for deatils of the options.
+        One of the values of :const:`INTEGER_TYPE` can be assigned. Please see :const:`INTEGER_TYPE` documentation for details of the options.
         """
         self._global_serializer = None
         self._custom_serializers = {}
