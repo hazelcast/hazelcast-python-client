@@ -10,7 +10,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
         name='hazelcast-python-client',
-        version='0.3',
+        version='3.7',
         description='Hazelcast Python Client',
         long_description=long_description,
         url='https://github.com/hazelcast/hazelcast-python-client',
@@ -19,10 +19,7 @@ setup(
         author_email='hazelcast@googlegroups.com',
 
         classifiers=[
-            #   3 - Alpha
-            #   4 - Beta
-            #   5 - Production/Stable
-            'Development Status :: 4 - Beta',
+            'Development Status :: 5 - Production/Stable',
             'Intended Audience :: Developers',
             'License :: OSI Approved :: Apache Software License',
             'Natural Language :: English',
