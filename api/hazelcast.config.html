@@ -1,0 +1,609 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Config &mdash; Hazelcast Python Client 3.7 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Hazelcast Python Client 3.7 documentation" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazelcast Python Client 3.7 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.config">
+<span id="config"></span><h1>Config<a class="headerlink" href="#module-hazelcast.config" title="Permalink to this headline">¶</a></h1>
+<p>Hazelcast Client Configuration module contains configuration classes and various constants required to create a ClientConfig.</p>
+<dl class="data">
+<dt id="hazelcast.config.DEFAULT_GROUP_NAME">
+<code class="descname">DEFAULT_GROUP_NAME</code><em class="property"> = 'dev'</em><a class="headerlink" href="#hazelcast.config.DEFAULT_GROUP_NAME" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default group name of the connected Hazelcast cluster</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="hazelcast.config.DEFAULT_GROUP_PASSWORD">
+<code class="descname">DEFAULT_GROUP_PASSWORD</code><em class="property"> = 'dev-pass'</em><a class="headerlink" href="#hazelcast.config.DEFAULT_GROUP_PASSWORD" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default password of connected Hazelcast cluster</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="hazelcast.config.PROPERTY_HEARTBEAT_INTERVAL">
+<code class="descname">PROPERTY_HEARTBEAT_INTERVAL</code><em class="property"> = 'hazelcast.client.heartbeat.interval'</em><a class="headerlink" href="#hazelcast.config.PROPERTY_HEARTBEAT_INTERVAL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration property for heartbeat interval in milliseconds. Client will send heartbeat to server by this value of interval
+unless other requests send to server</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="hazelcast.config.PROPERTY_HEARTBEAT_TIMEOUT">
+<code class="descname">PROPERTY_HEARTBEAT_TIMEOUT</code><em class="property"> = 'hazelcast.client.heartbeat.timeout'</em><a class="headerlink" href="#hazelcast.config.PROPERTY_HEARTBEAT_TIMEOUT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration property for heartbeat timeout in milliseconds. If client cannot see any activity on a connection for this timeout
+value it will shutdown the connection</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.INTEGER_TYPE">
+<code class="descname">INTEGER_TYPE</code><a class="headerlink" href="#hazelcast.config.INTEGER_TYPE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Integer type options that can be used by serialization service.</p>
+<ul class="simple">
+<li>VAR : variable size integer (this option can be problematic on static type clients like java or .NET)</li>
+<li>BYTE: Python int will be interpreted as a single byte int</li>
+<li>SHORT: Python int will be interpreted as a double byte int</li>
+<li>INT: Python int will be interpreted as a four byte int</li>
+<li>LONG: Python int will be interpreted as an eight byte int</li>
+<li>BIG_INT: Python int will be interpreted as Java BigInteger. This option can handle python long values with &#8220;bit_length &gt; 64&#8221;</li>
+</ul>
+<p>alias of <code class="xref py py-class docutils literal"><span class="pre">Enum</span></code></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.EVICTION_POLICY">
+<code class="descname">EVICTION_POLICY</code><a class="headerlink" href="#hazelcast.config.EVICTION_POLICY" title="Permalink to this definition">¶</a></dt>
+<dd><p>Near Cache eviction policy options</p>
+<ul class="simple">
+<li>NONE : No evcition</li>
+<li>LRU : Least Recently Used items will be evicted</li>
+<li>LFU : Least frequently Used items will be evicted</li>
+<li>RANDOM : Items will be evicted randomly</li>
+</ul>
+<p>alias of <code class="xref py py-class docutils literal"><span class="pre">Enum</span></code></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.IN_MEMORY_FORMAT">
+<code class="descname">IN_MEMORY_FORMAT</code><a class="headerlink" href="#hazelcast.config.IN_MEMORY_FORMAT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Near Cache in memory format of the values.</p>
+<ul class="simple">
+<li>BINARY : Binary format, hazelcast serializated bytearray format</li>
+<li>OBJECT : The actual objects used</li>
+</ul>
+<p>alias of <code class="xref py py-class docutils literal"><span class="pre">Enum</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.config.ClientConfig">
+<em class="property">class </em><code class="descname">ClientConfig</code><a class="headerlink" href="#hazelcast.config.ClientConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>The root configuration for hazelcast python client.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">client_config</span> <span class="o">=</span> <span class="n">ClientConfig</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">HazelcastClient</span><span class="p">(</span><span class="n">client_config</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="hazelcast.config.ClientConfig.group_config">
+<code class="descname">group_config</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.ClientConfig.group_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>The group configuration</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.ClientConfig.network_config">
+<code class="descname">network_config</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.ClientConfig.network_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>The network configuration for addresses to connect, smart-routing, socket-options...</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.ClientConfig.load_balancer">
+<code class="descname">load_balancer</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.ClientConfig.load_balancer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Custom load balancer used to distribute the operations to multiple Endpoints.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.ClientConfig.membership_listeners">
+<code class="descname">membership_listeners</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.ClientConfig.membership_listeners" title="Permalink to this definition">¶</a></dt>
+<dd><p>Membership listeners, an array of tuple (member_added, member_removed, fire_for_existing)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.ClientConfig.lifecycle_listeners">
+<code class="descname">lifecycle_listeners</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.ClientConfig.lifecycle_listeners" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lifecycle Listeners, an array of Functions of f(state)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.ClientConfig.near_cache_configs">
+<code class="descname">near_cache_configs</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.ClientConfig.near_cache_configs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Near Cache configuration which maps &#8220;map-name : NearCacheConfig</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.ClientConfig.serialization_config">
+<code class="descname">serialization_config</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.ClientConfig.serialization_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hazelcast serialization configuration</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.config.ClientConfig.add_membership_listener">
+<code class="descname">add_membership_listener</code><span class="sig-paren">(</span><em>member_added=None</em>, <em>member_removed=None</em>, <em>fire_for_existing=False</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.config.ClientConfig.add_membership_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper method for adding membership listeners</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>member_added</strong> &#8211; (Function), Function to be called when a member is added, in the form of f(member)</td>
+</tr>
+</tbody>
+</table>
+<p>(optional).
+:param member_removed: (Function), Function to be called when a member is removed, in the form of f(member)
+(optional).
+:param fire_for_existing: if True, already existing members will fire member_added event (optional).
+:return: <cite>self</cite> for cascading configuration</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.config.ClientConfig.add_lifecycle_listener">
+<code class="descname">add_lifecycle_listener</code><span class="sig-paren">(</span><em>lifecycle_state_changed=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.config.ClientConfig.add_lifecycle_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper method for adding lifecycle listeners.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>lifecycle_state_changed</strong> &#8211; (Function), Function to be called when lifecycle state is changed (optional).</td>
+</tr>
+</tbody>
+</table>
+<p>In the form of f(state).
+:return: <cite>self</cite> for cascading configuration</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.config.ClientConfig.get_property_or_default">
+<code class="descname">get_property_or_default</code><span class="sig-paren">(</span><em>key</em>, <em>default</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.config.ClientConfig.get_property_or_default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Client property accessor with fallback to default value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>key</strong> &#8211; (Object), property key to access.</li>
+<li><strong>default</strong> &#8211; (Object), the default value for fallback.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(Object), property value if it exist or the default value otherwise.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.config.ClientConfig.add_near_cache_config">
+<code class="descname">add_near_cache_config</code><span class="sig-paren">(</span><em>near_cache_config</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.config.ClientConfig.add_near_cache_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper method to add a new NearCacheConfig.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>near_cache_config</strong> &#8211; (NearCacheConfig), the near_cache config to add.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><cite>self</cite> for cascading configuration.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.config.GroupConfig">
+<em class="property">class </em><code class="descname">GroupConfig</code><a class="headerlink" href="#hazelcast.config.GroupConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>The Group Configuration is the container class for name and password of the cluster.</p>
+<dl class="attribute">
+<dt id="hazelcast.config.GroupConfig.name">
+<code class="descname">name</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.GroupConfig.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>The group name of the cluster</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.GroupConfig.password">
+<code class="descname">password</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.GroupConfig.password" title="Permalink to this definition">¶</a></dt>
+<dd><p>The password of the cluster</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.config.ClientNetworkConfig">
+<em class="property">class </em><code class="descname">ClientNetworkConfig</code><a class="headerlink" href="#hazelcast.config.ClientNetworkConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Network related configuration parameters.</p>
+<dl class="attribute">
+<dt id="hazelcast.config.ClientNetworkConfig.addresses">
+<code class="descname">addresses</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.ClientNetworkConfig.addresses" title="Permalink to this definition">¶</a></dt>
+<dd><p>The candidate address list that client will use to establish initial connection</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.ClientNetworkConfig.connection_attempt_limit">
+<code class="descname">connection_attempt_limit</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.ClientNetworkConfig.connection_attempt_limit" title="Permalink to this definition">¶</a></dt>
+<dd><p>While client is trying to connect initially to one of the members in the addressList, all might be not
+available. Instead of giving up, throwing Error and stopping client, it will attempt to retry as much as defined
+by this parameter.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.ClientNetworkConfig.connection_attempt_period">
+<code class="descname">connection_attempt_period</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.ClientNetworkConfig.connection_attempt_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>Period for the next attempt to find a member to connect</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.ClientNetworkConfig.connection_timeout">
+<code class="descname">connection_timeout</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.ClientNetworkConfig.connection_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Socket connection timeout is a float, giving in seconds, or None.
+Setting a timeout of None disables the timeout feature and is equivalent to block the socket until it connects.
+Setting a timeout of zero is the same as disables blocking on connect.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.ClientNetworkConfig.socket_options">
+<code class="descname">socket_options</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.ClientNetworkConfig.socket_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Array of Unix socket options.</p>
+<p>Example usage:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">socket</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client_network_config</span><span class="o">.</span><span class="n">socket_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SocketOption</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">IPPROTO_TCP</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">TCP_NODELAY</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client_network_config</span><span class="o">.</span><span class="n">socket_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SocketOption</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">SOL_SOCKET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SO_SNDBUF</span><span class="p">,</span> <span class="mi">32768</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client_network_config</span><span class="o">.</span><span class="n">socket_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SocketOption</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">SOL_SOCKET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SO_RCVBUF</span><span class="p">,</span> <span class="mi">32768</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Please see the Unix manual for level and option. Level and option constant are in python std lib socket module</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.ClientNetworkConfig.redo_operation">
+<code class="descname">redo_operation</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.ClientNetworkConfig.redo_operation" title="Permalink to this definition">¶</a></dt>
+<dd><p>If true, client will redo the operations that were executing on the server and client lost the connection.
+This can be because of network, or simply because the member died. However it is not clear whether the
+application is performed or not. For idempotent operations this is harmless, but for non idempotent ones
+retrying can cause to undesirable effects. Note that the redo can perform on any member.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.ClientNetworkConfig.smart_routing">
+<code class="descname">smart_routing</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.ClientNetworkConfig.smart_routing" title="Permalink to this definition">¶</a></dt>
+<dd><p>If true, client will route the key based operations to owner of the key at the best effort. Note that it uses a
+cached value of partition count and doesn&#8217;t guarantee that the operation will always be executed on the owner.
+The cached table is updated every 10 seconds.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.config.SocketOption">
+<em class="property">class </em><code class="descname">SocketOption</code><span class="sig-paren">(</span><em>level</em>, <em>option</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.config.SocketOption" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Advanced configuration for fine-tune the TCP options.
+A Socket option represent the unix socket option, that will be passed to python socket.setoption(level,`option, value)`
+See the Unix manual for level and option.</p>
+<dl class="attribute">
+<dt id="hazelcast.config.SocketOption.level">
+<code class="descname">level</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.SocketOption.level" title="Permalink to this definition">¶</a></dt>
+<dd><p>Option level. See the Unix manual for detail.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.SocketOption.option">
+<code class="descname">option</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.SocketOption.option" title="Permalink to this definition">¶</a></dt>
+<dd><p>The actual socket option. The actual socket option.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.SocketOption.value">
+<code class="descname">value</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.SocketOption.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Socket option value. The value argument can either be an integer or a string</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.config.SerializationConfig">
+<em class="property">class </em><code class="descname">SerializationConfig</code><a class="headerlink" href="#hazelcast.config.SerializationConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Hazelcast Serialization Service configuration options can be set from this class.</p>
+<dl class="attribute">
+<dt id="hazelcast.config.SerializationConfig.portable_version">
+<code class="descname">portable_version</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.SerializationConfig.portable_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Portable version will be used to differentiate two versions of the same class that have changes on the class,
+like adding/removing a field or changing a type of a field.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.SerializationConfig.data_serializable_factories">
+<code class="descname">data_serializable_factories</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.SerializationConfig.data_serializable_factories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of factory-id and corresponding IdentifiedDataserializable factories. A Factory is a simple
+dictionary with entries of class-id : class-constructor-function pairs.</p>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_factory</span> <span class="o">=</span> <span class="p">{</span><span class="n">MyPersonClass</span><span class="o">.</span><span class="n">CLASS_ID</span> <span class="p">:</span> <span class="n">MyPersonClass</span><span class="p">,</span> <span class="n">MyAddressClass</span><span class="o">.</span><span class="n">CLASS_ID</span> <span class="p">:</span> <span class="n">MyAddressClass</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">serialization_config</span><span class="o">.</span><span class="n">data_serializable_factories</span><span class="p">[</span><span class="n">FACTORY_ID</span><span class="p">]</span> <span class="o">=</span> <span class="n">my_factory</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.SerializationConfig.portable_factories">
+<code class="descname">portable_factories</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.SerializationConfig.portable_factories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of factory-id and corresponding portable factories. A Factory is a simple dictionary with entries of
+class-id : class-constructor-function pairs.</p>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">portable_factory</span> <span class="o">=</span> <span class="p">{</span><span class="n">PortableClass_0</span><span class="o">.</span><span class="n">CLASS_ID</span> <span class="p">:</span> <span class="n">PortableClass_0</span><span class="p">,</span> <span class="n">PortableClass_1</span><span class="o">.</span><span class="n">CLASS_ID</span> <span class="p">:</span> <span class="n">PortableClass_1</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">serialization_config</span><span class="o">.</span><span class="n">portable_factories</span><span class="p">[</span><span class="n">FACTORY_ID</span><span class="p">]</span> <span class="o">=</span> <span class="n">portable_factory</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.SerializationConfig.class_definitions">
+<code class="descname">class_definitions</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.SerializationConfig.class_definitions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set of all Portable class definitions.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.SerializationConfig.check_class_def_errors">
+<code class="descname">check_class_def_errors</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.SerializationConfig.check_class_def_errors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configured Portable Class definitions should be validated for errors or not.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.SerializationConfig.is_big_endian">
+<code class="descname">is_big_endian</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.SerializationConfig.is_big_endian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hazelcast Serialization is big endian or not.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.SerializationConfig.default_integer_type">
+<code class="descname">default_integer_type</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.SerializationConfig.default_integer_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Python has variable length int/long type. In order to match this with static fixed length Java server, this option
+defines the length of the int/long.
+One of the values of <a class="reference internal" href="#hazelcast.config.INTEGER_TYPE" title="hazelcast.config.INTEGER_TYPE"><code class="xref py py-const docutils literal"><span class="pre">INTEGER_TYPE</span></code></a> can be assigned. Please see <a class="reference internal" href="#hazelcast.config.INTEGER_TYPE" title="hazelcast.config.INTEGER_TYPE"><code class="xref py py-const docutils literal"><span class="pre">INTEGER_TYPE</span></code></a> documentation for details of the options.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.config.SerializationConfig.add_data_serializable_factory">
+<code class="descname">add_data_serializable_factory</code><span class="sig-paren">(</span><em>factory_id</em>, <em>factory</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.config.SerializationConfig.add_data_serializable_factory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper method for adding IdentifiedDataSerializable factory.
+example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_factory</span> <span class="o">=</span> <span class="p">{</span><span class="n">MyPersonClass</span><span class="o">.</span><span class="n">CLASS_ID</span> <span class="p">:</span> <span class="n">MyPersonClass</span><span class="p">,</span> <span class="n">MyAddressClass</span><span class="o">.</span><span class="n">CLASS_ID</span> <span class="p">:</span> <span class="n">MyAddressClass</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">serialization_config</span><span class="o">.</span><span class="n">add_data_serializable_factory</span><span class="p">(</span><span class="n">factory_id</span><span class="p">,</span> <span class="n">my_factory</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>factory_id</strong> &#8211; (int), factory-id to register.</li>
+<li><strong>factory</strong> &#8211; (Dictionary), the factory dictionary of class-id:class-constructor-function pairs.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.config.SerializationConfig.add_portable_factory">
+<code class="descname">add_portable_factory</code><span class="sig-paren">(</span><em>factory_id</em>, <em>factory</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.config.SerializationConfig.add_portable_factory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper method for adding Portable factory.
+example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">portable_factory</span> <span class="o">=</span> <span class="p">{</span><span class="n">PortableClass_0</span><span class="o">.</span><span class="n">CLASS_ID</span> <span class="p">:</span> <span class="n">PortableClass_0</span><span class="p">,</span> <span class="n">PortableClass_1</span><span class="o">.</span><span class="n">CLASS_ID</span> <span class="p">:</span> <span class="n">PortableClass_1</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">serialization_config</span><span class="o">.</span><span class="n">portable_factories</span><span class="p">[</span><span class="n">FACTORY_ID</span><span class="p">]</span> <span class="o">=</span> <span class="n">portable_factory</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>factory_id</strong> &#8211; (int), factory-id to register.</li>
+<li><strong>factory</strong> &#8211; (Dictionary), the factory dictionary of class-id:class-constructor-function pairs.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.config.SerializationConfig.set_custom_serializer">
+<code class="descname">set_custom_serializer</code><span class="sig-paren">(</span><em>_type</em>, <em>serializer</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.config.SerializationConfig.set_custom_serializer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign a serializer for the type.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>_type</strong> &#8211; (Type), the target type of the serializer</li>
+<li><strong>serializer</strong> &#8211; (Serializer), Custom Serializer constructor function</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.SerializationConfig.custom_serializers">
+<code class="descname">custom_serializers</code><a class="headerlink" href="#hazelcast.config.SerializationConfig.custom_serializers" title="Permalink to this definition">¶</a></dt>
+<dd><p>All custom serializers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(Dictionary), dictionary of type-custom serializer pairs.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.SerializationConfig.global_serializer">
+<code class="descname">global_serializer</code><a class="headerlink" href="#hazelcast.config.SerializationConfig.global_serializer" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Global serializer property for serialization service. The assigned value should be a class constructor
+function. It handles every object if no other serializer found.</p>
+<p>Global serializers should extend <cite>hazelcast.serializer.api.StreamSerializer</cite></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.config.NearCacheConfig">
+<em class="property">class </em><code class="descname">NearCacheConfig</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.config.NearCacheConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Map Near cache configuration for a specific map by name.</p>
+<dl class="attribute">
+<dt id="hazelcast.config.NearCacheConfig.invalidate_on_change">
+<code class="descname">invalidate_on_change</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.NearCacheConfig.invalidate_on_change" title="Permalink to this definition">¶</a></dt>
+<dd><p>Should a value is invalidated and removed in case of any map data updating operations such as replace, remove etc.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.NearCacheConfig.name">
+<code class="descname">name</code><a class="headerlink" href="#hazelcast.config.NearCacheConfig.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the map that this near cache belong. Cannot be None.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.NearCacheConfig.in_memory_format">
+<code class="descname">in_memory_format</code><a class="headerlink" href="#hazelcast.config.NearCacheConfig.in_memory_format" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal representation of the stored data in near cache.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.NearCacheConfig.time_to_live_seconds">
+<code class="descname">time_to_live_seconds</code><a class="headerlink" href="#hazelcast.config.NearCacheConfig.time_to_live_seconds" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum number of seconds for each entry to stay in the near cache.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.NearCacheConfig.max_idle_seconds">
+<code class="descname">max_idle_seconds</code><a class="headerlink" href="#hazelcast.config.NearCacheConfig.max_idle_seconds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximum number of seconds each entry can stay in the near cache as untouched (not-read).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.NearCacheConfig.eviction_policy">
+<code class="descname">eviction_policy</code><a class="headerlink" href="#hazelcast.config.NearCacheConfig.eviction_policy" title="Permalink to this definition">¶</a></dt>
+<dd><p>The eviction policy for the near cache</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.NearCacheConfig.eviction_max_size">
+<code class="descname">eviction_max_size</code><a class="headerlink" href="#hazelcast.config.NearCacheConfig.eviction_max_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>The limit for number of entries until the eviction start.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.NearCacheConfig.eviction_sampling_count">
+<code class="descname">eviction_sampling_count</code><a class="headerlink" href="#hazelcast.config.NearCacheConfig.eviction_sampling_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>The entry count of the samples for the internal eviction sampling algorithm taking samples in each
+operation.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.config.NearCacheConfig.eviction_sampling_pool_size">
+<code class="descname">eviction_sampling_pool_size</code><a class="headerlink" href="#hazelcast.config.NearCacheConfig.eviction_sampling_pool_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>The size of the internal eviction sampling algorithm has a pool of best candidates for eviction.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/hazelcast.config.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazelcast Python Client 3.7 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Hazelcast Inc..
+    </div>
+  </body>
+</html>

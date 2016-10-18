@@ -1,0 +1,228 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Invocation &mdash; Hazelcast Python Client 3.7 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Hazelcast Python Client 3.7 documentation" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazelcast Python Client 3.7 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.invocation">
+<span id="invocation"></span><h1>Invocation<a class="headerlink" href="#module-hazelcast.invocation" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="hazelcast.invocation.Invocation">
+<em class="property">class </em><code class="descname">Invocation</code><span class="sig-paren">(</span><em>request</em>, <em>partition_id=-1</em>, <em>address=None</em>, <em>connection=None</em>, <em>timeout=120</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.invocation.Invocation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="hazelcast.invocation.Invocation.sent_connection">
+<code class="descname">sent_connection</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.invocation.Invocation.sent_connection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.invocation.Invocation.timer">
+<code class="descname">timer</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.invocation.Invocation.timer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.invocation.Invocation.has_connection">
+<code class="descname">has_connection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.invocation.Invocation.has_connection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.invocation.Invocation.has_partition_id">
+<code class="descname">has_partition_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.invocation.Invocation.has_partition_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.invocation.Invocation.has_address">
+<code class="descname">has_address</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.invocation.Invocation.has_address" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.invocation.Invocation.set_response">
+<code class="descname">set_response</code><span class="sig-paren">(</span><em>response</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.invocation.Invocation.set_response" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.invocation.Invocation.set_exception">
+<code class="descname">set_exception</code><span class="sig-paren">(</span><em>exception</em>, <em>traceback=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.invocation.Invocation.set_exception" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.invocation.Invocation.on_timeout">
+<code class="descname">on_timeout</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.invocation.Invocation.on_timeout" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.invocation.ListenerInvocation">
+<em class="property">class </em><code class="descname">ListenerInvocation</code><span class="sig-paren">(</span><em>request</em>, <em>event_handler</em>, <em>response_decoder=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.invocation.ListenerInvocation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.invocation.Invocation" title="hazelcast.invocation.Invocation"><code class="xref py py-class docutils literal"><span class="pre">hazelcast.invocation.Invocation</span></code></a></p>
+<dl class="attribute">
+<dt id="hazelcast.invocation.ListenerInvocation.registration_id">
+<code class="descname">registration_id</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.invocation.ListenerInvocation.registration_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.invocation.ListenerService">
+<em class="property">class </em><code class="descname">ListenerService</code><span class="sig-paren">(</span><em>client</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.invocation.ListenerService" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="hazelcast.invocation.ListenerService.logger">
+<code class="descname">logger</code><em class="property"> = &lt;logging.Logger object&gt;</em><a class="headerlink" href="#hazelcast.invocation.ListenerService.logger" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.invocation.ListenerService.start_listening">
+<code class="descname">start_listening</code><span class="sig-paren">(</span><em>request</em>, <em>event_handler</em>, <em>decode_add_listener</em>, <em>key=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.invocation.ListenerService.start_listening" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.invocation.ListenerService.stop_listening">
+<code class="descname">stop_listening</code><span class="sig-paren">(</span><em>registration_id</em>, <em>encode_remove_listener</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.invocation.ListenerService.stop_listening" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.invocation.ListenerService.re_register_listener">
+<code class="descname">re_register_listener</code><span class="sig-paren">(</span><em>invocation</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.invocation.ListenerService.re_register_listener" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.invocation.InvocationService">
+<em class="property">class </em><code class="descname">InvocationService</code><span class="sig-paren">(</span><em>client</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.invocation.InvocationService" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="hazelcast.invocation.InvocationService.logger">
+<code class="descname">logger</code><em class="property"> = &lt;logging.Logger object&gt;</em><a class="headerlink" href="#hazelcast.invocation.InvocationService.logger" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.invocation.InvocationService.invoke_on_connection">
+<code class="descname">invoke_on_connection</code><span class="sig-paren">(</span><em>message</em>, <em>connection</em>, <em>ignore_heartbeat=False</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.invocation.InvocationService.invoke_on_connection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.invocation.InvocationService.invoke_on_partition">
+<code class="descname">invoke_on_partition</code><span class="sig-paren">(</span><em>message</em>, <em>partition_id</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.invocation.InvocationService.invoke_on_partition" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.invocation.InvocationService.invoke_on_random_target">
+<code class="descname">invoke_on_random_target</code><span class="sig-paren">(</span><em>message</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.invocation.InvocationService.invoke_on_random_target" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.invocation.InvocationService.invoke_on_target">
+<code class="descname">invoke_on_target</code><span class="sig-paren">(</span><em>message</em>, <em>address</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.invocation.InvocationService.invoke_on_target" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.invocation.InvocationService.invoke_smart">
+<code class="descname">invoke_smart</code><span class="sig-paren">(</span><em>invocation</em>, <em>ignore_heartbeat=False</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.invocation.InvocationService.invoke_smart" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.invocation.InvocationService.invoke_non_smart">
+<code class="descname">invoke_non_smart</code><span class="sig-paren">(</span><em>invocation</em>, <em>ignore_heartbeat=False</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.invocation.InvocationService.invoke_non_smart" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.invocation.InvocationService.cleanup_connection">
+<code class="descname">cleanup_connection</code><span class="sig-paren">(</span><em>connection</em>, <em>cause</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.invocation.InvocationService.cleanup_connection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.invocation.InvocationService.on_connect">
+<code class="descname">on_connect</code><span class="sig-paren">(</span><em>f</em>, <em>invocation</em>, <em>ignore_heartbeat</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.invocation.InvocationService.on_connect" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/hazelcast.invocation.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazelcast Python Client 3.7 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Hazelcast Inc..
+    </div>
+  </body>
+</html>
