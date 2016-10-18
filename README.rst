@@ -9,7 +9,6 @@ Python client implementation for `Hazelcast <https://github.com/hazelcast/hazelc
 
 Python client is implemented using the `Hazelcast Open Binary Client Protocol <http://docs.hazelcast.org/docs/HazelcastOpenBinaryClientProtocol-Version1.0-Final.pdf>`_
 
-**This client is a work in progress**
 
 Features :
 ----------
