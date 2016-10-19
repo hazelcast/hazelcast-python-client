@@ -44,7 +44,7 @@ or::
 Documentation
 -------------
 
-Please refer to `Hazelcast Python Client documentation<http://hazelcast.github.io/hazelcast-python-client/>`_
+Please refer to `Hazelcast Python Client documentation <http://hazelcast.github.io/hazelcast-python-client>`_
 
 Mail Group
 ----------
