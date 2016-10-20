@@ -317,6 +317,12 @@ class MapTest(SingleMemberTestCase):
         self.assertIsNone(self.map.put("key", "value"))
         self.assertEqual(self.map.get("key"), "value")
 
+    def test_put_get2(self):
+        val = "x"*5000
+
+        self.assertIsNone(self.map.put("key-x", val))
+        self.assertEqual(self.map.get("key-x"), val)
+
     def test_put_when_existing(self):
         self.map.put("key", "value")
         self.assertEqual(self.map.put("key", "new_value"), "value")
