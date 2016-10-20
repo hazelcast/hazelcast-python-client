@@ -27,11 +27,26 @@ def init():
     config = hazelcast.ClientConfig()
     config.group_config.name = "dev"
     config.group_config.password = "dev-pass"
-    config.network_config.addresses.append("127.0.0.1:5701")
+    config.network_config.addresses.append("127.0.0.1")
 
     near_cache_config = NearCacheConfig(MAP_NAME)
     near_cache_config.in_memory_format = IN_MEMORY_FORMAT.OBJECT
     config.add_near_cache_config(near_cache_config)
+
+    try:
+        from hzrc.client import HzRemoteController
+
+        rc = HzRemoteController('127.0.0.1', '9701')
+
+        if not rc.ping():
+            logger.info("Remote Controller Server not running... exiting.")
+            exit()
+        logger.info("Remote Controller Server OK...")
+        rc_cluster = rc.createCluster(None, None)
+        rc_member = rc.startMember(rc_cluster.id)
+        config.network_config.addresses.append('{}:{}'.format(rc_member.host, rc_member.port))
+    except (ImportError, NameError):
+        config.network_config.addresses.append('127.0.0.1')
 
     client = hazelcast.HazelcastClient(config)
 

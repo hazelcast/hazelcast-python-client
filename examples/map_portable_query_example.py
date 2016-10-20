@@ -8,7 +8,10 @@ from hazelcast.serialization.predicate import sql
 
 FACTORY_ID = 2
 
+
 class Customer(Portable):
+    CLASS_ID = 9
+
     def __init__(self, id=None, name=None, surname=None, mobile=None):
         self.id = id
         self.name = name
