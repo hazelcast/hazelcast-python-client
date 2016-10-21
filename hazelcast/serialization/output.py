@@ -151,11 +151,11 @@ class _ObjectDataOutput(ObjectDataOutput):
 
     def _ensure_available(self, length):
         if self._available() < length:
-            if self._buffer is None:
+            if self._buffer is not None:
                 buffer_length = len(self._buffer)
                 new_length = max(buffer_length << 1, buffer_length + length)
                 new_buffer = bytearray(new_length)
-                new_buffer[self._pos: self._pos + buffer_length] = self._buffer[:]
+                new_buffer[:self._pos] = self._buffer[:self._pos]
                 self._buffer = new_buffer
             else:
                 new_length = length * 2 if length > self._init_size / 2 else self._init_size
