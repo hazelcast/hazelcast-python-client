@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 from codecs import open
 from os import path
-
+from hazelcast import __version__
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
@@ -10,7 +10,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
         name='hazelcast-python-client',
-        version='3.7',
+        version=__version__,
         description='Hazelcast Python Client',
         long_description=long_description,
         url='https://github.com/hazelcast/hazelcast-python-client',
