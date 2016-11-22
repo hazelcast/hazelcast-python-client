@@ -162,7 +162,7 @@ class _ObjectDataOutput(ObjectDataOutput):
                 self._buffer = bytearray(new_length)
 
     def _available(self):
-        return len(self._buffer) if self._buffer is not None else 0
+        return len(self._buffer) - self._pos if self._buffer is not None else 0
 
     def __repr__(self):
         from binascii import hexlify
