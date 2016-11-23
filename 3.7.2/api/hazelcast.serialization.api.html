@@ -1,0 +1,1842 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Serialization API &mdash; Hazelcast Python Client 3.7.2 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.7.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Hazelcast Python Client 3.7.2 documentation" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazelcast Python Client 3.7.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.serialization.api">
+<span id="serialization-api"></span><h1>Serialization API<a class="headerlink" href="#module-hazelcast.serialization.api" title="Permalink to this headline">¶</a></h1>
+<p>User API for Serialization.</p>
+<dl class="class">
+<dt id="hazelcast.serialization.api.ObjectDataOutput">
+<em class="property">class </em><code class="descname">ObjectDataOutput</code><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>ObjectDataOutput provides an interface to convert any of primitive types or arrays of them to series of bytes and
+write them on a stream.</p>
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.write_from">
+<code class="descname">write_from</code><span class="sig-paren">(</span><em>buff</em>, <em>offset=None</em>, <em>length=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.write_from" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes the content of the buffer to this output stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>buff</strong> &#8211; input buffer.</li>
+<li><strong>offset</strong> &#8211; (int), offset of the buffer where copy begin (optional).</li>
+<li><strong>length</strong> &#8211; (int), length of data to be copied from the offset into stream (optional).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.write_boolean">
+<code class="descname">write_boolean</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.write_boolean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a bool value to this output stream. Single byte value 1 represent True, 0 represent False</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>val</strong> &#8211; (bool), the bool to be written.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.write_byte">
+<code class="descname">write_byte</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.write_byte" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a byte value to this output stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>val</strong> &#8211; (byte), the byte value to be written.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.write_short">
+<code class="descname">write_short</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.write_short" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a short value to this output stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>val</strong> &#8211; (short), the short value to be written.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.write_char">
+<code class="descname">write_char</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.write_char" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a char value to this output stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>val</strong> &#8211; (char), the char value to be written.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.write_int">
+<code class="descname">write_int</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.write_int" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a int value to this output stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>val</strong> &#8211; (int), the int value to be written.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.write_long">
+<code class="descname">write_long</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.write_long" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a long value to this output stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>val</strong> &#8211; (long), the long value to be written.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.write_float">
+<code class="descname">write_float</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.write_float" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a float value to this output stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>val</strong> &#8211; (float), the float value to be written.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.write_double">
+<code class="descname">write_double</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.write_double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a double value to this output stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>val</strong> &#8211; (double), the double value to be written.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.write_bytes">
+<code class="descname">write_bytes</code><span class="sig-paren">(</span><em>string</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.write_bytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a string to this output stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>val</strong> &#8211; (str), the string to be written.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.write_chars">
+<code class="descname">write_chars</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.write_chars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes every character of string to this output stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>val</strong> &#8211; (str), the string to be written.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.write_utf">
+<code class="descname">write_utf</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.write_utf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes 2 bytes of length information and UTF-8 string to this output stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>val</strong> &#8211; (UTF-8 str), the UTF-8 string to be written.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.write_byte_array">
+<code class="descname">write_byte_array</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.write_byte_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a byte array to this output stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>val</strong> &#8211; (byte array), the byte array to be written.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.write_boolean_array">
+<code class="descname">write_boolean_array</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.write_boolean_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a bool array to this output stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>val</strong> &#8211; (bool array), the bool array to be written.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.write_char_array">
+<code class="descname">write_char_array</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.write_char_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a char array to this output stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>val</strong> &#8211; (char array), the char array to be written.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.write_int_array">
+<code class="descname">write_int_array</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.write_int_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a int array to this output stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>val</strong> &#8211; (int array), the int array to be written.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.write_long_array">
+<code class="descname">write_long_array</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.write_long_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a long array to this output stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>val</strong> &#8211; (long array), the long array to be written.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.write_double_array">
+<code class="descname">write_double_array</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.write_double_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a double array to this output stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>val</strong> &#8211; (double array), the double array to be written.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.write_float_array">
+<code class="descname">write_float_array</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.write_float_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a float array to this output stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>val</strong> &#8211; (float array), the float array to be written.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.write_short_array">
+<code class="descname">write_short_array</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.write_short_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a short array to this output stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>val</strong> &#8211; (short array), the short array to be written.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.write_utf_array">
+<code class="descname">write_utf_array</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.write_utf_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a UTF-8 String array to this output stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>val</strong> &#8211; (UTF-8 String array), the UTF-8 String array to be written.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.write_object">
+<code class="descname">write_object</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.write_object" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes an object to this output stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>val</strong> &#8211; (object), the object to be written.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.write_data">
+<code class="descname">write_data</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.write_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a data to this output stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>val</strong> &#8211; (Data), the data to be written.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.to_byte_array">
+<code class="descname">to_byte_array</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.to_byte_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a copy of internal byte array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(byte array), the copy of internal byte array.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataOutput.get_byte_order">
+<code class="descname">get_byte_order</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataOutput.get_byte_order" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the order of bytes, as BIG_ENDIAN or LITTLE_ENDIAN.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the order of bytes, as BIG_ENDIAN or LITTLE_ENDIAN.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.serialization.api.ObjectDataInput">
+<em class="property">class </em><code class="descname">ObjectDataInput</code><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>ObjectDataInput provides an interface to read bytes from a stream and reconstruct it to any of primitive types or
+arrays of them.</p>
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataInput.read_into">
+<code class="descname">read_into</code><span class="sig-paren">(</span><em>buff</em>, <em>offset=None</em>, <em>length=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput.read_into" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads the content of the buffer into an array of bytes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>buff</strong> &#8211; input buffer.</li>
+<li><strong>offset</strong> &#8211; (int), offset of the buffer where the read begin (optional).</li>
+<li><strong>length</strong> &#8211; (int), length of data to be read (optional).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(byte array), the read data.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataInput.skip_bytes">
+<code class="descname">skip_bytes</code><span class="sig-paren">(</span><em>count</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput.skip_bytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Skips over given number of bytes from input stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>count</strong> &#8211; (long), number of bytes to be skipped.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(long), the actual number of bytes skipped.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataInput.read_boolean">
+<code class="descname">read_boolean</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput.read_boolean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads 1 byte from input stream and convert it to a bool value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(bool), the bool value read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataInput.read_byte">
+<code class="descname">read_byte</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput.read_byte" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads 1 byte from input stream and returns it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(byte), the byte value read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataInput.read_unsigned_byte">
+<code class="descname">read_unsigned_byte</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput.read_unsigned_byte" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads 1 byte from input stream, zero-extends it and returns.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(unsigned byte), the unsigned byte value read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataInput.read_short">
+<code class="descname">read_short</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput.read_short" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads 2 bytes from input stream and returns a short value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(short), the short value read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataInput.read_unsigned_short">
+<code class="descname">read_unsigned_short</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput.read_unsigned_short" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads 2 bytes from input stream and returns an int value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(unsigned short), the unsigned short value read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataInput.read_int">
+<code class="descname">read_int</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput.read_int" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads 4 bytes from input stream and returns an int value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(int), the int value read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataInput.read_long">
+<code class="descname">read_long</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput.read_long" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads 8 bytes from input stream and returns a long value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(long), the int value read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataInput.read_float">
+<code class="descname">read_float</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput.read_float" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads 4 bytes from input stream and returns a float value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(float), the float value read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataInput.read_double">
+<code class="descname">read_double</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput.read_double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads 8 bytes from input stream and returns a double value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(long), the double value read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataInput.read_utf">
+<code class="descname">read_utf</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput.read_utf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a UTF-8 string from input stream and returns it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(UTF-8 str), the UTF-8 string read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataInput.read_byte_array">
+<code class="descname">read_byte_array</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput.read_byte_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a byte array from input stream and returns it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(byte array), the byte array read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataInput.read_boolean_array">
+<code class="descname">read_boolean_array</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput.read_boolean_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a bool array from input stream and returns it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(bool array), the bool array read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataInput.read_char_array">
+<code class="descname">read_char_array</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput.read_char_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a char array from input stream and returns it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(char array), the char array read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataInput.read_int_array">
+<code class="descname">read_int_array</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput.read_int_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a int array from input stream and returns it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(int array), the int array read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataInput.read_long_array">
+<code class="descname">read_long_array</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput.read_long_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a long array from input stream and returns it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(long array), the long array read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataInput.read_double_array">
+<code class="descname">read_double_array</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput.read_double_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a double array from input stream and returns it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(double array), the double array read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataInput.read_float_array">
+<code class="descname">read_float_array</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput.read_float_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a float array from input stream and returns it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(float array), the float array read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataInput.read_short_array">
+<code class="descname">read_short_array</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput.read_short_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a short array from input stream and returns it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(short array), the short array read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataInput.read_utf_array">
+<code class="descname">read_utf_array</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput.read_utf_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a UTF-8 String array from input stream and returns it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(UTF-8 String  array), the UTF-8 String array read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataInput.read_object">
+<code class="descname">read_object</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput.read_object" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a object from input stream and returns it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(object), the object read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataInput.read_data">
+<code class="descname">read_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput.read_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a data from input stream and returns it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(Data), the data read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.ObjectDataInput.get_byte_order">
+<code class="descname">get_byte_order</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.ObjectDataInput.get_byte_order" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the order of bytes, as BIG_ENDIAN or LITTLE_ENDIAN.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the order of bytes, as BIG_ENDIAN or LITTLE_ENDIAN.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.serialization.api.IdentifiedDataSerializable">
+<em class="property">class </em><code class="descname">IdentifiedDataSerializable</code><a class="headerlink" href="#hazelcast.serialization.api.IdentifiedDataSerializable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>IdentifiedDataSerializable is an alternative serialization method to Python pickle, which also avoids reflection
+during de-serialization. Each IdentifiedDataSerializable is created by a registered DataSerializableFactory.</p>
+<dl class="method">
+<dt id="hazelcast.serialization.api.IdentifiedDataSerializable.write_data">
+<code class="descname">write_data</code><span class="sig-paren">(</span><em>object_data_output</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.IdentifiedDataSerializable.write_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes object fields to output stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>object_data_output</strong> &#8211; (<a class="reference internal" href="#hazelcast.serialization.api.ObjectDataOutput" title="hazelcast.serialization.api.ObjectDataOutput"><code class="xref py py-class docutils literal"><span class="pre">hazelcast.serialization.api.ObjectDataOutput</span></code></a>), the output.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.IdentifiedDataSerializable.read_data">
+<code class="descname">read_data</code><span class="sig-paren">(</span><em>object_data_input</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.IdentifiedDataSerializable.read_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads fields from the input stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>object_data_input</strong> &#8211; (<a class="reference internal" href="#hazelcast.serialization.api.ObjectDataInput" title="hazelcast.serialization.api.ObjectDataInput"><code class="xref py py-class docutils literal"><span class="pre">hazelcast.serialization.api.ObjectDataInput</span></code></a>), the input.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.IdentifiedDataSerializable.get_factory_id">
+<code class="descname">get_factory_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.IdentifiedDataSerializable.get_factory_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns DataSerializableFactory factory id for this class.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(int), the factory id.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.IdentifiedDataSerializable.get_class_id">
+<code class="descname">get_class_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.IdentifiedDataSerializable.get_class_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns type identifier for this class. Id should be unique per DataSerializableFactory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(int), the type id.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.serialization.api.Portable">
+<em class="property">class </em><code class="descname">Portable</code><a class="headerlink" href="#hazelcast.serialization.api.Portable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Portable provides an alternative serialization method. Instead of relying on reflection, each Portable is created by
+a registered PortableFactory. Portable serialization has the following advantages:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Support multiversion of the same object type.</li>
+<li>Fetching individual fields without having to rely on reflection.</li>
+<li>Querying and indexing support without de-serialization and/or reflection.</li>
+</ul>
+</div></blockquote>
+<dl class="method">
+<dt id="hazelcast.serialization.api.Portable.write_portable">
+<code class="descname">write_portable</code><span class="sig-paren">(</span><em>writer</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.Portable.write_portable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Serialize this portable object using given PortableWriter.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>writer</strong> &#8211; <a class="reference internal" href="#hazelcast.serialization.api.PortableWriter" title="hazelcast.serialization.api.PortableWriter"><code class="xref py py-class docutils literal"><span class="pre">hazelcast.serialization.api.PortableWriter</span></code></a>, the PortableWriter.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.Portable.read_portable">
+<code class="descname">read_portable</code><span class="sig-paren">(</span><em>reader</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.Portable.read_portable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read portable fields using PortableReader.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>reader</strong> &#8211; <a class="reference internal" href="#hazelcast.serialization.api.PortableReader" title="hazelcast.serialization.api.PortableReader"><code class="xref py py-class docutils literal"><span class="pre">hazelcast.serialization.api.PortableReader</span></code></a>, the PortableReader.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.Portable.get_factory_id">
+<code class="descname">get_factory_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.Portable.get_factory_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns PortableFactory id for this portable class</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(int), the factory id.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.Portable.get_class_id">
+<code class="descname">get_class_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.Portable.get_class_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns class identifier for this portable class. Class id should be unique per PortableFactory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(int), the class id.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.serialization.api.StreamSerializer">
+<em class="property">class </em><code class="descname">StreamSerializer</code><a class="headerlink" href="#hazelcast.serialization.api.StreamSerializer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="docutils">
+<dt>A base class for custom serialization. User can register custom serializer like following:</dt>
+<dd><div class="first last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">CustomSerializer</span><span class="p">(</span><span class="n">StreamSerializer</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="nb">super</span><span class="p">(</span><span class="n">CustomSerializer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="k">pass</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="k">pass</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="nf">get_type_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="k">pass</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="nf">destroy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="k">pass</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<dl class="method">
+<dt id="hazelcast.serialization.api.StreamSerializer.write">
+<code class="descname">write</code><span class="sig-paren">(</span><em>out</em>, <em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.StreamSerializer.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes object to ObjectDataOutput</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>out</strong> &#8211; (<a class="reference internal" href="#hazelcast.serialization.api.ObjectDataOutput" title="hazelcast.serialization.api.ObjectDataOutput"><code class="xref py py-class docutils literal"><span class="pre">hazelcast.serialization.api.ObjectDataOutput</span></code></a>), stream that object will be written to.</li>
+<li><strong>obj</strong> &#8211; (object), the object to be written.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.StreamSerializer.read">
+<code class="descname">read</code><span class="sig-paren">(</span><em>inp</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.StreamSerializer.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads object from objectDataInputStream</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>inp</strong> &#8211; (<a class="reference internal" href="#hazelcast.serialization.api.ObjectDataInput" title="hazelcast.serialization.api.ObjectDataInput"><code class="xref py py-class docutils literal"><span class="pre">hazelcast.serialization.api.ObjectDataInput</span></code></a>) stream that object will read from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(object), the read object.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.StreamSerializer.get_type_id">
+<code class="descname">get_type_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.StreamSerializer.get_type_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns typeId of serializer.
+:return: (int), typeId of serializer.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.StreamSerializer.destroy">
+<code class="descname">destroy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.StreamSerializer.destroy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when instance is shutting down. It can be used to clear used resources.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.serialization.api.PortableReader">
+<em class="property">class </em><code class="descname">PortableReader</code><a class="headerlink" href="#hazelcast.serialization.api.PortableReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Provides a mean of reading portable fields from binary in form of Python primitives and arrays of these primitives,
+nested portable fields and array of portable fields.</p>
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.get_version">
+<code class="descname">get_version</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.get_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the global version of portable classes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(int), global version of portable classes.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.has_field">
+<code class="descname">has_field</code><span class="sig-paren">(</span><em>field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.has_field" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine whether the field name exists in this portable class or not.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>field_name</strong> &#8211; (str), name of the field (does not support nested paths).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal"><span class="pre">true</span></code> if the field name exists in class, <code class="docutils literal"><span class="pre">false</span></code> otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.get_field_names">
+<code class="descname">get_field_names</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.get_field_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the set of field names on this portable class.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(Set), set of field names on this portable class.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.get_field_type">
+<code class="descname">get_field_type</code><span class="sig-paren">(</span><em>field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.get_field_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the field type of given field name.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>field_name</strong> &#8211; (str), name of the field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the field type.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.get_field_class_id">
+<code class="descname">get_field_class_id</code><span class="sig-paren">(</span><em>field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.get_field_class_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the class id of given field.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>field_name</strong> &#8211; (str), name of the field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(int), class id of given field.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.read_int">
+<code class="descname">read_int</code><span class="sig-paren">(</span><em>field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.read_int" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a primitive int.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>field_name</strong> &#8211; (str), name of the field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(int), the int value read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.read_long">
+<code class="descname">read_long</code><span class="sig-paren">(</span><em>field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.read_long" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a primitive long.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>field_name</strong> &#8211; (str), name of the field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(long), the long value read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.read_utf">
+<code class="descname">read_utf</code><span class="sig-paren">(</span><em>field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.read_utf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a UTF-8 String.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>field_name</strong> &#8211; (str), name of the field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(UTF-8 str), the UTF-8 String read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.read_boolean">
+<code class="descname">read_boolean</code><span class="sig-paren">(</span><em>field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.read_boolean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a primitive bool.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>field_name</strong> &#8211; (str), name of the field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), the bool value read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.read_byte">
+<code class="descname">read_byte</code><span class="sig-paren">(</span><em>field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.read_byte" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a primitive byte.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>field_name</strong> &#8211; (str), name of the field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(byte), the byte value read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.read_char">
+<code class="descname">read_char</code><span class="sig-paren">(</span><em>field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.read_char" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a primitive char.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>field_name</strong> &#8211; (str), name of the field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(char), the char value read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.read_double">
+<code class="descname">read_double</code><span class="sig-paren">(</span><em>field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.read_double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a primitive double.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>field_name</strong> &#8211; (str), name of the field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(double), the double value read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.read_float">
+<code class="descname">read_float</code><span class="sig-paren">(</span><em>field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.read_float" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a primitive float.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>field_name</strong> &#8211; (str), name of the field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(float), the float value read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.read_short">
+<code class="descname">read_short</code><span class="sig-paren">(</span><em>field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.read_short" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a primitive short.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>field_name</strong> &#8211; (str), name of the field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(short), the short value read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.read_portable">
+<code class="descname">read_portable</code><span class="sig-paren">(</span><em>field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.read_portable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a portable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>field_name</strong> &#8211; (str), name of the field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(<a class="reference internal" href="#hazelcast.serialization.api.Portable" title="hazelcast.serialization.api.Portable"><code class="xref py py-class docutils literal"><span class="pre">hazelcast.serialization.api.Portable</span></code></a>, the portable read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.read_byte_array">
+<code class="descname">read_byte_array</code><span class="sig-paren">(</span><em>field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.read_byte_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a primitive byte array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>field_name</strong> &#8211; (str), name of the field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(byte array), the byte array read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.read_boolean_array">
+<code class="descname">read_boolean_array</code><span class="sig-paren">(</span><em>field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.read_boolean_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a primitive bool array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>field_name</strong> &#8211; (str), name of the field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool array), the bool array read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.read_char_array">
+<code class="descname">read_char_array</code><span class="sig-paren">(</span><em>field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.read_char_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a primitive char array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>field_name</strong> &#8211; (str), name of the field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(char array), the char array read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.read_int_array">
+<code class="descname">read_int_array</code><span class="sig-paren">(</span><em>field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.read_int_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a primitive int array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>field_name</strong> &#8211; (str), name of the field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(int array), the int array read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.read_long_array">
+<code class="descname">read_long_array</code><span class="sig-paren">(</span><em>field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.read_long_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a primitive long array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>field_name</strong> &#8211; (str), name of the field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(long array), the long array read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.read_double_array">
+<code class="descname">read_double_array</code><span class="sig-paren">(</span><em>field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.read_double_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a primitive double array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>field_name</strong> &#8211; (str), name of the field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(double array), the double array read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.read_float_array">
+<code class="descname">read_float_array</code><span class="sig-paren">(</span><em>field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.read_float_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a primitive float array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>field_name</strong> &#8211; (str), name of the field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(float array), the float array read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.read_short_array">
+<code class="descname">read_short_array</code><span class="sig-paren">(</span><em>field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.read_short_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a primitive short array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>field_name</strong> &#8211; (str), name of the field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(short array), the short array read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.read_utf_array">
+<code class="descname">read_utf_array</code><span class="sig-paren">(</span><em>field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.read_utf_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a UTF-8 String array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>field_name</strong> &#8211; (str), name of the field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(UTF-8 String array), the UTF-8 String array read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.read_portable_array">
+<code class="descname">read_portable_array</code><span class="sig-paren">(</span><em>field_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.read_portable_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a portable array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>field_name</strong> &#8211; (str), name of the field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(Portable array), the portable array read.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableReader.get_raw_data_input">
+<code class="descname">get_raw_data_input</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableReader.get_raw_data_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>After reading portable fields, one can read remaining fields in old fashioned way consecutively from the end of
+stream. After get_raw_data_input() called, no data can be read.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(<a class="reference internal" href="#hazelcast.serialization.api.ObjectDataInput" title="hazelcast.serialization.api.ObjectDataInput"><code class="xref py py-class docutils literal"><span class="pre">hazelcast.serialization.api.ObjectDataInput</span></code></a>), the input.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.serialization.api.PortableWriter">
+<em class="property">class </em><code class="descname">PortableWriter</code><a class="headerlink" href="#hazelcast.serialization.api.PortableWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Provides a mean of writing portable fields to a binary in form of Python primitives and arrays of these primitives,
+nested portable fields and array of portable fields.</p>
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableWriter.write_int">
+<code class="descname">write_int</code><span class="sig-paren">(</span><em>field_name</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableWriter.write_int" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a primitive int.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>field_name</strong> &#8211; (str), name of the field.</li>
+<li><strong>value</strong> &#8211; (int), int value to be written.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableWriter.write_long">
+<code class="descname">write_long</code><span class="sig-paren">(</span><em>field_name</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableWriter.write_long" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a primitive long.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>field_name</strong> &#8211; (str), name of the field.</li>
+<li><strong>value</strong> &#8211; (long), long value to be written.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableWriter.write_utf">
+<code class="descname">write_utf</code><span class="sig-paren">(</span><em>field_name</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableWriter.write_utf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes an UTF string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>field_name</strong> &#8211; (str), name of the field.</li>
+<li><strong>value</strong> &#8211; (UTF str), UTF string value to be written.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableWriter.write_boolean">
+<code class="descname">write_boolean</code><span class="sig-paren">(</span><em>field_name</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableWriter.write_boolean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a primitive bool.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>field_name</strong> &#8211; (str), name of the field.</li>
+<li><strong>value</strong> &#8211; (bool), bool value to be written.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableWriter.write_byte">
+<code class="descname">write_byte</code><span class="sig-paren">(</span><em>field_name</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableWriter.write_byte" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a primitive byte.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>field_name</strong> &#8211; (str), name of the field.</li>
+<li><strong>value</strong> &#8211; (byte), byte value to be written.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableWriter.write_char">
+<code class="descname">write_char</code><span class="sig-paren">(</span><em>field_name</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableWriter.write_char" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a primitive char.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>field_name</strong> &#8211; (str), name of the field.</li>
+<li><strong>value</strong> &#8211; (char), char value to be written.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableWriter.write_double">
+<code class="descname">write_double</code><span class="sig-paren">(</span><em>field_name</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableWriter.write_double" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a primitive double.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>field_name</strong> &#8211; (str), name of the field.</li>
+<li><strong>value</strong> &#8211; (Dobule), double value to be written.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableWriter.write_float">
+<code class="descname">write_float</code><span class="sig-paren">(</span><em>field_name</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableWriter.write_float" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a primitive float.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>field_name</strong> &#8211; (str), name of the field.</li>
+<li><strong>value</strong> &#8211; (float), float value to be written.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableWriter.write_short">
+<code class="descname">write_short</code><span class="sig-paren">(</span><em>field_name</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableWriter.write_short" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a primitive short.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>field_name</strong> &#8211; (str), name of the field.</li>
+<li><strong>value</strong> &#8211; (short), short value to be written.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableWriter.write_portable">
+<code class="descname">write_portable</code><span class="sig-paren">(</span><em>field_name</em>, <em>portable</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableWriter.write_portable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a Portabl</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>field_name</strong> &#8211; (str), name of the field.</li>
+<li><strong>portable</strong> &#8211; (<a class="reference internal" href="#hazelcast.serialization.api.Portable" title="hazelcast.serialization.api.Portable"><code class="xref py py-class docutils literal"><span class="pre">hazelcast.serialization.api.Portable</span></code></a>, portable to be written.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableWriter.write_null_portable">
+<code class="descname">write_null_portable</code><span class="sig-paren">(</span><em>field_name</em>, <em>factory_id</em>, <em>class_id</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableWriter.write_null_portable" title="Permalink to this definition">¶</a></dt>
+<dd><p>To write a null portable value, user needs to provide class and factoryIds of related class.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>field_name</strong> &#8211; (str), name of the field.</li>
+<li><strong>factory_id</strong> &#8211; (int), factory id of related portable class.</li>
+<li><strong>class_id</strong> &#8211; (int), class id of related portable class.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableWriter.write_byte_array">
+<code class="descname">write_byte_array</code><span class="sig-paren">(</span><em>field_name</em>, <em>values</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableWriter.write_byte_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a primitive byte array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>field_name</strong> &#8211; (str), name of the field.</li>
+<li><strong>values</strong> &#8211; (byte array), byte array to be written.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableWriter.write_boolean_array">
+<code class="descname">write_boolean_array</code><span class="sig-paren">(</span><em>field_name</em>, <em>values</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableWriter.write_boolean_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a primitive bool array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>field_name</strong> &#8211; (str), name of the field.</li>
+<li><strong>values</strong> &#8211; (bool array), bool array to be written.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableWriter.write_char_array">
+<code class="descname">write_char_array</code><span class="sig-paren">(</span><em>field_name</em>, <em>values</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableWriter.write_char_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a primitive char array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>field_name</strong> &#8211; (str), name of the field.</li>
+<li><strong>values</strong> &#8211; (char array), char array to be written.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableWriter.write_int_array">
+<code class="descname">write_int_array</code><span class="sig-paren">(</span><em>field_name</em>, <em>values</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableWriter.write_int_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a primitive int array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>field_name</strong> &#8211; (str), name of the field.</li>
+<li><strong>values</strong> &#8211; (int array), int array to be written.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableWriter.write_long_array">
+<code class="descname">write_long_array</code><span class="sig-paren">(</span><em>field_name</em>, <em>values</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableWriter.write_long_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a primitive long array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>field_name</strong> &#8211; (str), name of the field.</li>
+<li><strong>values</strong> &#8211; (long array), long array to be written.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableWriter.write_double_array">
+<code class="descname">write_double_array</code><span class="sig-paren">(</span><em>field_name</em>, <em>values</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableWriter.write_double_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a primitive double array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>field_name</strong> &#8211; (str), name of the field.</li>
+<li><strong>values</strong> &#8211; (double array), double array to be written.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableWriter.write_float_array">
+<code class="descname">write_float_array</code><span class="sig-paren">(</span><em>field_name</em>, <em>values</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableWriter.write_float_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a primitive float array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>field_name</strong> &#8211; (str), name of the field.</li>
+<li><strong>values</strong> &#8211; (float array), float array to be written.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableWriter.write_short_array">
+<code class="descname">write_short_array</code><span class="sig-paren">(</span><em>field_name</em>, <em>values</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableWriter.write_short_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a primitive short array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>field_name</strong> &#8211; (str), name of the field.</li>
+<li><strong>values</strong> &#8211; (short array), short array to be written.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableWriter.write_utf_array">
+<code class="descname">write_utf_array</code><span class="sig-paren">(</span><em>field_name</em>, <em>values</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableWriter.write_utf_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a UTF-8 String array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>field_name</strong> &#8211; (str), name of the field.</li>
+<li><strong>values</strong> &#8211; (UTF-8 String array), UTF-8 String array to be written.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableWriter.write_portable_array">
+<code class="descname">write_portable_array</code><span class="sig-paren">(</span><em>field_name</em>, <em>values</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableWriter.write_portable_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a portable array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>field_name</strong> &#8211; (str), name of the field.</li>
+<li><strong>values</strong> &#8211; (Portable array), portable array to be written.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.api.PortableWriter.get_raw_data_output">
+<code class="descname">get_raw_data_output</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.api.PortableWriter.get_raw_data_output" title="Permalink to this definition">¶</a></dt>
+<dd><p>After writing portable fields, one can write remaining fields in old fashioned way consecutively at the end of
+stream. After get_raw_data_output() called, no data can be written.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(<a class="reference internal" href="#hazelcast.serialization.api.ObjectDataOutput" title="hazelcast.serialization.api.ObjectDataOutput"><code class="xref py py-class docutils literal"><span class="pre">hazelcast.serialization.api.ObjectDataOutput</span></code></a>), the output.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/hazelcast.serialization.api.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazelcast Python Client 3.7.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Hazelcast Inc..
+    </div>
+  </body>
+</html>

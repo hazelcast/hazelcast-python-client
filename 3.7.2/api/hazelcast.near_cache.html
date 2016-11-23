@@ -1,0 +1,199 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>NearCache &mdash; Hazelcast Python Client 3.7.2 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.7.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Hazelcast Python Client 3.7.2 documentation" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazelcast Python Client 3.7.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.near_cache">
+<span id="nearcache"></span><h1>NearCache<a class="headerlink" href="#module-hazelcast.near_cache" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="hazelcast.near_cache.lru_cmp">
+<code class="descname">lru_cmp</code><span class="sig-paren">(</span><em>x</em>, <em>y</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.near_cache.lru_cmp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Least recently used comparison.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x</strong> &#8211; (<a class="reference internal" href="#hazelcast.near_cache.DataRecord" title="hazelcast.near_cache.DataRecord"><code class="xref py py-class docutils literal"><span class="pre">DataRecord</span></code></a>), first record to be compared.</li>
+<li><strong>y</strong> &#8211; (<a class="reference internal" href="#hazelcast.near_cache.DataRecord" title="hazelcast.near_cache.DataRecord"><code class="xref py py-class docutils literal"><span class="pre">DataRecord</span></code></a>), second record to be compared.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(int), -1 if first record is older, 0 if records have same last access time, 1 if second record is older.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="hazelcast.near_cache.lfu_cmp">
+<code class="descname">lfu_cmp</code><span class="sig-paren">(</span><em>x</em>, <em>y</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.near_cache.lfu_cmp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Least frequently used comparison.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x</strong> &#8211; (<a class="reference internal" href="#hazelcast.near_cache.DataRecord" title="hazelcast.near_cache.DataRecord"><code class="xref py py-class docutils literal"><span class="pre">DataRecord</span></code></a>), first record to be compared.</li>
+<li><strong>y</strong> &#8211; (<a class="reference internal" href="#hazelcast.near_cache.DataRecord" title="hazelcast.near_cache.DataRecord"><code class="xref py py-class docutils literal"><span class="pre">DataRecord</span></code></a>), second record to be compared.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(int), positive if first record is accessed more than second, 0 in equality, otherwise negative.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="hazelcast.near_cache.random_cmp">
+<code class="descname">random_cmp</code><span class="sig-paren">(</span><em>x</em>, <em>y</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.near_cache.random_cmp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Random comparison.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x</strong> &#8211; (<a class="reference internal" href="#hazelcast.near_cache.DataRecord" title="hazelcast.near_cache.DataRecord"><code class="xref py py-class docutils literal"><span class="pre">DataRecord</span></code></a>), first record to be compared.</li>
+<li><strong>y</strong> &#8211; (<a class="reference internal" href="#hazelcast.near_cache.DataRecord" title="hazelcast.near_cache.DataRecord"><code class="xref py py-class docutils literal"><span class="pre">DataRecord</span></code></a>), second record to be compared.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(int), 0.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.near_cache.DataRecord">
+<em class="property">class </em><code class="descname">DataRecord</code><span class="sig-paren">(</span><em>key</em>, <em>value</em>, <em>create_time=None</em>, <em>ttl_seconds=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.near_cache.DataRecord" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>An expirable and evictable data object which represents a cache entry.</p>
+<dl class="method">
+<dt id="hazelcast.near_cache.DataRecord.is_expired">
+<code class="descname">is_expired</code><span class="sig-paren">(</span><em>max_idle_seconds</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.near_cache.DataRecord.is_expired" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether this record is expired or not.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>max_idle_seconds</strong> &#8211; (long), the maximum idle time of record, maximum time after the last access time.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal"><span class="pre">true</span></code> is this record is not expired.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.near_cache.NearCache">
+<em class="property">class </em><code class="descname">NearCache</code><span class="sig-paren">(</span><em>serialization_service</em>, <em>in_memory_format</em>, <em>time_to_live_seconds</em>, <em>max_idle_seconds</em>, <em>invalidate_on_change</em>, <em>eviction_policy</em>, <em>eviction_max_size</em>, <em>eviction_sampling_count=None</em>, <em>eviction_sampling_pool_size=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.near_cache.NearCache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">dict</span></code></p>
+<p>NearCache is a local cache used by <a class="reference internal" href="hazelcast.proxy.map.html#hazelcast.proxy.map.MapFeatNearCache" title="hazelcast.proxy.map.MapFeatNearCache"><code class="xref py py-class docutils literal"><span class="pre">MapFeatNearCache</span></code></a>.</p>
+<dl class="attribute">
+<dt id="hazelcast.near_cache.NearCache.logger">
+<code class="descname">logger</code><em class="property"> = &lt;logging.Logger object&gt;</em><a class="headerlink" href="#hazelcast.near_cache.NearCache.logger" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.near_cache.NearCache.get_statistics">
+<code class="descname">get_statistics</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.near_cache.NearCache.get_statistics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the statistics of the NearCache.
+:return: (Number, Number), evicted entry count and expired entry count.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/hazelcast.near_cache.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazelcast Python Client 3.7.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Hazelcast Inc..
+    </div>
+  </body>
+</html>
