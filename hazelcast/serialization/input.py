@@ -150,6 +150,9 @@ class _ObjectDataInput(ObjectDataInput):
     def set_position(self, position):
         self._pos = position
 
+    def size(self):
+        return self._size
+
     # HELPERS
     def _check_available(self, position, size):
         _position = self._pos if position is None else position
