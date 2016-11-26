@@ -412,6 +412,22 @@ class ObjectDataInput(object):
         """
         raise NotImplementedError()
 
+    def position(self):
+        """
+        Returns current position in buffer.
+
+        :return: current position in buffer.
+        """
+        raise NotImplementedError()
+
+    def size(self):
+        """
+        Returns size of buffer.
+
+        :return: size of buffer.
+        """
+        raise NotImplementedError()
+
 
 class IdentifiedDataSerializable(object):
     """
