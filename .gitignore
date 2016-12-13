@@ -60,6 +60,7 @@ target/
 
 # IDEA
 .idea
+*.iml
 
 #MAC
 .DS_Store
