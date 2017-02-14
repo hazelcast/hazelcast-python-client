@@ -6,9 +6,9 @@ else
     USER=""
 fi
 
-HAZELCAST_VERSION="3.7.5-SNAPSHOT"
+HAZELCAST_VERSION="3.8-SNAPSHOT"
 
-HAZELCAST_RC_VERSION="0.1-SNAPSHOT"
+HAZELCAST_RC_VERSION="0.2-SNAPSHOT"
 SNAPSHOT_REPO="https://oss.sonatype.org/content/repositories/snapshots"
 RELEASE_REPO="http://repo1.maven.apache.org/maven2"
 
