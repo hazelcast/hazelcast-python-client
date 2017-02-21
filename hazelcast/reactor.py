@@ -6,7 +6,7 @@ import socket
 import sys
 import threading
 import time
-from Queue import PriorityQueue
+from Queue import PriorityQueue, Empty
 from collections import deque
 
 from hazelcast.connection import Connection, BUFFER_SIZE
@@ -55,7 +55,10 @@ class AsyncoreReactor(object):
                 return
 
             if timer.check_timer(now):
-                self._timers.get_nowait()
+                try:
+                    self._timers.get_nowait()
+                except Empty:
+                    pass
             else:
                 return
 
