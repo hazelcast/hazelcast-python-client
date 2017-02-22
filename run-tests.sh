@@ -6,7 +6,7 @@ else
     USER=""
 fi
 
-HAZELCAST_VERSION="3.8.1-SNAPSHOT"
+HAZELCAST_VERSION="3.9-SNAPSHOT"
 
 HAZELCAST_RC_VERSION="0.2-SNAPSHOT"
 SNAPSHOT_REPO="https://oss.sonatype.org/content/repositories/snapshots"
