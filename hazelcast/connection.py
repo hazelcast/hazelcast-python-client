@@ -260,7 +260,7 @@ class Connection(object):
         self._connection_closed_callback = connection_closed_callback
         self._builder = ClientMessageBuilder(message_callback)
         self._read_buffer = ""
-        self.last_read = 0
+        self.last_read = time.time()
 
     def live(self):
         """

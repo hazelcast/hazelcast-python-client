@@ -126,7 +126,7 @@ class ClusterService(object):
     def _authenticate_manager(self, connection):
         request = client_authentication_codec.encode_request(
             username=self._config.group_config.name, password=self._config.group_config.password,
-            uuid=None, owner_uuid=None, is_owner_connection=True, client_type=CLIENT_TYPE,
+            uuid=self.uuid, owner_uuid=self.owner_uuid, is_owner_connection=True, client_type=CLIENT_TYPE,
             serialization_version=SERIALIZATION_VERSION)
 
         def callback(f):
