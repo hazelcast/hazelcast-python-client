@@ -143,9 +143,12 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
     def handle_error(self):
         error = sys.exc_info()[1]
-        if error.errno != errno.EAGAIN and error.errno != errno.EDEADLK:
-            self.logger.exception("Received error")
-            self.close(IOError(error))
+        if sys.exc_info()[0] is socket.error:
+            if error.errno != errno.EAGAIN and error.errno != errno.EDEADLK:
+                self.logger.exception("Received error")
+                self.close(IOError(error))
+        else:
+            self.logger.warning("Received unexpected error: " + error)
 
     def readable(self):
         return not self._closed and self.sent_protocol_bytes
