@@ -1,0 +1,184 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>TransactionalQueue &mdash; Hazelcast Python Client 3.8 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.8',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Hazelcast Python Client 3.8 documentation" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazelcast Python Client 3.8 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.proxy.transactional_queue">
+<span id="transactionalqueue"></span><h1>TransactionalQueue<a class="headerlink" href="#module-hazelcast.proxy.transactional_queue" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="hazelcast.proxy.transactional_queue.TransactionalQueue">
+<em class="property">class </em><code class="descname">TransactionalQueue</code><span class="sig-paren">(</span><em>name</em>, <em>transaction</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_queue.TransactionalQueue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hazelcast.proxy.base.html#hazelcast.proxy.base.TransactionalProxy" title="hazelcast.proxy.base.TransactionalProxy"><code class="xref py py-class docutils literal"><span class="pre">hazelcast.proxy.base.TransactionalProxy</span></code></a></p>
+<p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.queue.html#hazelcast.proxy.queue.Queue" title="hazelcast.proxy.queue.Queue"><code class="xref py py-class docutils literal"><span class="pre">Queue</span></code></a>.</p>
+<dl class="method">
+<dt id="hazelcast.proxy.transactional_queue.TransactionalQueue.offer">
+<code class="descname">offer</code><span class="sig-paren">(</span><em>item</em>, <em>timeout=0</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_queue.TransactionalQueue.offer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.queue.html#hazelcast.proxy.queue.Queue.offer" title="hazelcast.proxy.queue.Queue.offer"><code class="xref py py-func docutils literal"><span class="pre">Queue.offer(item,</span> <span class="pre">timeout)</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>item</strong> &#8211; (object), the item to be added.</li>
+<li><strong>timeout</strong> &#8211; (long), maximum time in seconds to wait for addition (optional).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(bool), <code class="docutils literal"><span class="pre">true</span></code> if the element was added to this queue, <code class="docutils literal"><span class="pre">false</span></code> otherwise.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.transactional_queue.TransactionalQueue.take">
+<code class="descname">take</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_queue.TransactionalQueue.take" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.queue.html#hazelcast.proxy.queue.Queue.take" title="hazelcast.proxy.queue.Queue.take"><code class="xref py py-func docutils literal"><span class="pre">Queue.take()</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(object), the head of this queue.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.transactional_queue.TransactionalQueue.poll">
+<code class="descname">poll</code><span class="sig-paren">(</span><em>timeout=0</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_queue.TransactionalQueue.poll" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.queue.html#hazelcast.proxy.queue.Queue.poll" title="hazelcast.proxy.queue.Queue.poll"><code class="xref py py-func docutils literal"><span class="pre">Queue.poll(timeout)</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>timeout</strong> &#8211; (long), maximum time in seconds to wait for addition (optional).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(object), the head of this queue, or <code class="docutils literal"><span class="pre">None</span></code> if this queue is empty or specified timeout elapses before an</td>
+</tr>
+</tbody>
+</table>
+<p>item is added to the queue.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.transactional_queue.TransactionalQueue.peek">
+<code class="descname">peek</code><span class="sig-paren">(</span><em>timeout=0</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_queue.TransactionalQueue.peek" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.queue.html#hazelcast.proxy.queue.Queue.peek" title="hazelcast.proxy.queue.Queue.peek"><code class="xref py py-func docutils literal"><span class="pre">Queue.peek(timeout)</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>timeout</strong> &#8211; (long), maximum time in seconds to wait for addition (optional).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(object), the head of this queue, or <code class="docutils literal"><span class="pre">None</span></code> if this queue is empty or specified timeout elapses before an</td>
+</tr>
+</tbody>
+</table>
+<p>item is added to the queue.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.transactional_queue.TransactionalQueue.size">
+<code class="descname">size</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_queue.TransactionalQueue.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.queue.html#hazelcast.proxy.queue.Queue.size" title="hazelcast.proxy.queue.Queue.size"><code class="xref py py-func docutils literal"><span class="pre">Queue.size()</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(int), size of the queue.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/hazelcast.proxy.transactional_queue.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazelcast Python Client 3.8 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Hazelcast Inc..
+    </div>
+  </body>
+</html>
