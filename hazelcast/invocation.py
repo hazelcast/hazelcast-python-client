@@ -4,7 +4,7 @@ import time
 from Queue import Queue
 import functools
 from hazelcast.exception import create_exception, HazelcastInstanceNotActiveError, is_retryable_error, TimeoutError, \
-    AuthenticationError, TargetDisconnectedError
+    AuthenticationError, TargetDisconnectedError, HazelcastClientNotActiveException
 from hazelcast.future import Future
 from hazelcast.lifecycle import LIFECYCLE_STATE_CONNECTED
 from hazelcast.protocol.client_message import LISTENER_FLAG
@@ -154,7 +154,6 @@ class InvocationService(object):
         else:  # send to random address
             addr = self._client.load_balancer.next_address()
             self._send_to_address(invocation, addr)
-
         return invocation.future
 
     def invoke_non_smart(self, invocation, ignore_heartbeat=False):
@@ -251,9 +250,11 @@ class InvocationService(object):
             self.logger.warn("Error handling event %s", message, exc_info=True)
 
     def _handle_exception(self, invocation, error, traceback=None):
+        if not self._client.lifecycle.is_live:
+            invocation.set_exception(HazelcastClientNotActiveException(error.message), traceback)
+            return
         if self.logger.isEnabledFor(logging.DEBUG):
-            self.logger.debug("Got exception for request %s: %s: %s", invocation.request,
-                              type(error).__name__, error)
+            self.logger.debug("Got exception for request %s: %s: %s", invocation.request, type(error).__name__, error)
         if isinstance(error, (AuthenticationError, IOError, HazelcastInstanceNotActiveError)):
             if self._try_retry(invocation):
                 return
@@ -272,7 +273,6 @@ class InvocationService(object):
             return False
 
         invoke_func = functools.partial(self.invoke, invocation)
-        self.logger.debug("Rescheduling request %s to be retried in %s seconds", invocation.request,
-                          RETRY_WAIT_TIME_IN_SECONDS)
+        self.logger.debug("Rescheduling request %s to be retried in %s seconds", invocation.request, RETRY_WAIT_TIME_IN_SECONDS)
         self._client.reactor.add_timer(RETRY_WAIT_TIME_IN_SECONDS, invoke_func)
         return True
