@@ -191,6 +191,8 @@ class Heartbeat(object):
         Starts sending periodic HeartBeat operations.
         """
         def _heartbeat():
+            if not self._client.lifecycle.is_live:
+                return
             self._heartbeat()
             self._heartbeat_timer = self._client.reactor.add_timer(self._heartbeat_interval, _heartbeat)
 

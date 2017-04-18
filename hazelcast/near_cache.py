@@ -159,13 +159,12 @@ class NearCache(dict):
 
         if len(new_eviction_samples) == len(new_eviction_samples_cleaned):  # did any item expired or do we need to evict
             try:
-                self.logger.debug("Evicting key:{}".format(self._eviction_candidates[0].key))
                 self.__delitem__(self._eviction_candidates[0].key)
                 self._evicted_count += 1
                 del self._eviction_candidates[0]
             except KeyError:
                 # key may be evicted previously so just ignore it
-                self.logger.debug("Trying to evict but key:{} already expired.".format(self._eviction_candidates[0].key))
+                pass
 
     def _find_new_random_samples(self):
         records = self.values()  # has random order because of dict hash
@@ -206,12 +205,11 @@ class NearCache(dict):
 
     def _clean_expired_record(self, key):
         try:
-            self.logger.debug("Expiring key:{}".format(key))
             self.__delitem__(key)
             self._expired_count += 1
         except KeyError:
             # key may be evicted previously so just ignore it
-            self.logger.debug("Trying to expire but key:{} already expired.".format(key))
+            pass
 
     def __repr__(self):
         return "NearCache[len:{}, evicted:{}]".format(self.__len__(), self._evicted_count)

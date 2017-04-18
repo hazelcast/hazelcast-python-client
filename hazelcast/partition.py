@@ -51,7 +51,7 @@ class PartitionService(object):
         """
         if partition_id not in self.partitions:
             self._do_refresh()
-        return self.partitions[partition_id]
+        return self.partitions.get(partition_id, None)
 
     def get_partition_id(self, key):
         """
@@ -62,6 +62,8 @@ class PartitionService(object):
         """
         data = self._client.serialization_service.to_data(key)
         count = self.get_partition_count()
+        if count <= 0:
+            return 0
         return hash_to_index(data.get_partition_hash(), count)
 
     def get_partition_count(self):
@@ -76,7 +78,7 @@ class PartitionService(object):
 
     def _get_partition_count_blocking(self):
         event = threading.Event()
-        while not self.partitions:
+        while not event.isSet():
             self._do_refresh(callback=lambda: event.set())
             event.wait(timeout=1)
 
@@ -86,6 +88,8 @@ class PartitionService(object):
         connection = self._client.connection_manager.get_connection(address)
         if connection is None:
             self.logger.debug("Could not update partition thread as owner connection is not available.")
+            if callback:
+                callback()
             return
         request = client_get_partitions_codec.encode_request()
 

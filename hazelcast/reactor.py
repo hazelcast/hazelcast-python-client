@@ -44,7 +44,8 @@ class AsyncoreReactor(object):
                 self.logger.exception("Error in Reactor Thread")
                 # TODO: shutdown client
                 return
-        self.logger.debug("Reactor Thread exited.")
+        self.logger.debug("Reactor Thread exited. %s" % self._timers.qsize())
+        self._cleanup_all_timers()
 
     def _check_timers(self):
         now = time.time()
@@ -71,6 +72,9 @@ class AsyncoreReactor(object):
         return self.add_timer_absolute(delay + time.time(), callback)
 
     def shutdown(self):
+        if not self._is_live:
+            return
+        self._is_live = False
         for connection in self._map.values():
             try:
                 connection.close(HazelcastError("Client is shutting down"))
@@ -80,7 +84,6 @@ class AsyncoreReactor(object):
                 else:
                     raise
         self._map.clear()
-        self._is_live = False
         self._thread.join()
 
     def new_connection(self, address, connect_timeout, socket_options, connection_closed_callback, message_callback):
@@ -89,9 +92,18 @@ class AsyncoreReactor(object):
 
     def _cleanup_timer(self, timer):
         try:
+            self.logger.debug("Cancel timer %s" % timer)
             self._timers.queue.remove((timer.end, timer))
         except ValueError:
             pass
+
+    def _cleanup_all_timers(self):
+        while not self._timers.empty():
+            try:
+                _, timer = self._timers.get_nowait()
+                timer.timer_ended_cb()
+            except Empty:
+                return
 
 
 class AsyncoreConnection(Connection, asyncore.dispatcher):

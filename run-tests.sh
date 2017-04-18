@@ -6,7 +6,7 @@ else
     USER=""
 fi
 
-HAZELCAST_VERSION="3.8.1-SNAPSHOT"
+HAZELCAST_VERSION="3.8.2-SNAPSHOT"
 
 HAZELCAST_RC_VERSION="0.2-SNAPSHOT"
 SNAPSHOT_REPO="https://oss.sonatype.org/content/repositories/snapshots"
@@ -17,7 +17,7 @@ mvn dependency:get -DrepoUrl=${SNAPSHOT_REPO} -Dartifact=com.hazelcast:hazelcast
 
 pip install -r test-requirements.txt ${USER}
 
-nohup java -cp hazelcast-remote-controller-${HAZELCAST_RC_VERSION}.jar:hazelcast-${HAZELCAST_VERSION}.jar  com.hazelcast.remotecontroller.Main>rc_stdout.log 2>rc_stderr.log &
+java -cp hazelcast-remote-controller-${HAZELCAST_RC_VERSION}.jar:hazelcast-${HAZELCAST_VERSION}.jar  com.hazelcast.remotecontroller.Main>rc_stdout.log 2>rc_stderr.log &
 
 sleep 15
 

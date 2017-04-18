@@ -27,6 +27,13 @@ class AuthenticationError(HazelcastError):
     pass
 
 
+class HazelcastClientNotActiveException(ValueError):
+    """
+    A ValueError which is raised when Hazelcast client is not active during an invocation.
+    """
+    pass
+
+
 @retryable
 class HazelcastInstanceNotActiveError(HazelcastError):
     """
