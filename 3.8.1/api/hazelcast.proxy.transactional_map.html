@@ -1,0 +1,394 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>TransactionalMap &mdash; Hazelcast Python Client 3.8.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.8.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Hazelcast Python Client 3.8.1 documentation" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazelcast Python Client 3.8.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.proxy.transactional_map">
+<span id="transactionalmap"></span><h1>TransactionalMap<a class="headerlink" href="#module-hazelcast.proxy.transactional_map" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="hazelcast.proxy.transactional_map.TransactionalMap">
+<em class="property">class </em><code class="descname">TransactionalMap</code><span class="sig-paren">(</span><em>name</em>, <em>transaction</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_map.TransactionalMap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hazelcast.proxy.base.html#hazelcast.proxy.base.TransactionalProxy" title="hazelcast.proxy.base.TransactionalProxy"><code class="xref py py-class docutils literal"><span class="pre">hazelcast.proxy.base.TransactionalProxy</span></code></a></p>
+<p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.map.html#hazelcast.proxy.map.Map" title="hazelcast.proxy.map.Map"><code class="xref py py-class docutils literal"><span class="pre">Map</span></code></a>.</p>
+<dl class="method">
+<dt id="hazelcast.proxy.transactional_map.TransactionalMap.contains_key">
+<code class="descname">contains_key</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_map.TransactionalMap.contains_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.map.html#hazelcast.proxy.map.Map.contains_key" title="hazelcast.proxy.map.Map.contains_key"><code class="xref py py-func docutils literal"><span class="pre">Map.contains_key(key)</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> &#8211; (object), the specified key.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal"><span class="pre">true</span></code> if this map contains an entry for the specified key, <code class="docutils literal"><span class="pre">false</span></code> otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.transactional_map.TransactionalMap.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_map.TransactionalMap.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.map.html#hazelcast.proxy.map.Map.get" title="hazelcast.proxy.map.Map.get"><code class="xref py py-func docutils literal"><span class="pre">Map.get(key)</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> &#8211; (object), the specified key.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(object), the value for the specified key.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.transactional_map.TransactionalMap.get_for_update">
+<code class="descname">get_for_update</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_map.TransactionalMap.get_for_update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Locks the key and then gets and returns the value to which the specified key is mapped. Lock will be released at
+the end of the transaction (either commit or rollback).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> &#8211; (object), the specified key.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(object), the value for the specified key.</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="hazelcast.proxy.map.html#hazelcast.proxy.map.Map.get" title="hazelcast.proxy.map.Map.get"><code class="xref py py-func docutils literal"><span class="pre">Map.get(key)</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.transactional_map.TransactionalMap.size">
+<code class="descname">size</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_map.TransactionalMap.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.map.html#hazelcast.proxy.map.Map.size" title="hazelcast.proxy.map.Map.size"><code class="xref py py-func docutils literal"><span class="pre">Map.size()</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(int), number of entries in this map.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.transactional_map.TransactionalMap.is_empty">
+<code class="descname">is_empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_map.TransactionalMap.is_empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.map.html#hazelcast.proxy.map.Map.is_empty" title="hazelcast.proxy.map.Map.is_empty"><code class="xref py py-func docutils literal"><span class="pre">Map.is_empty()</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal"><span class="pre">true</span></code> if this map contains no key-value mappings, <code class="docutils literal"><span class="pre">false</span></code> otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.transactional_map.TransactionalMap.put">
+<code class="descname">put</code><span class="sig-paren">(</span><em>key</em>, <em>value</em>, <em>ttl=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_map.TransactionalMap.put" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.map.html#hazelcast.proxy.map.Map.put" title="hazelcast.proxy.map.Map.put"><code class="xref py py-func docutils literal"><span class="pre">Map.put(key,</span> <span class="pre">value,</span> <span class="pre">ttl)</span></code></a></p>
+<p>The object to be put will be accessible only in the current transaction context till the transaction is
+committed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>key</strong> &#8211; (object), the specified key.</li>
+<li><strong>value</strong> &#8211; (object), the value to associate with the key.</li>
+<li><strong>ttl</strong> &#8211; (int), maximum time in seconds for this entry to stay (optional).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(object), previous value associated with key or <code class="docutils literal"><span class="pre">None</span></code> if there was no mapping for key.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.transactional_map.TransactionalMap.put_if_absent">
+<code class="descname">put_if_absent</code><span class="sig-paren">(</span><em>key</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_map.TransactionalMap.put_if_absent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.map.html#hazelcast.proxy.map.Map.put_if_absent" title="hazelcast.proxy.map.Map.put_if_absent"><code class="xref py py-func docutils literal"><span class="pre">Map.put_if_absent(key,</span> <span class="pre">value)</span></code></a></p>
+<p>The object to be put will be accessible only in the current transaction context till the transaction is
+committed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>key</strong> &#8211; (object), key of the entry.</li>
+<li><strong>value</strong> &#8211; (object), value of the entry.</li>
+<li><strong>ttl</strong> &#8211; (int), maximum time in seconds for this entry to stay in the map (optional).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(object), old value of the entry.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.transactional_map.TransactionalMap.set">
+<code class="descname">set</code><span class="sig-paren">(</span><em>key</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_map.TransactionalMap.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.map.html#hazelcast.proxy.map.Map.set" title="hazelcast.proxy.map.Map.set"><code class="xref py py-func docutils literal"><span class="pre">Map.set(key,</span> <span class="pre">value)</span></code></a></p>
+<p>The object to be set will be accessible only in the current transaction context till the transaction is
+committed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>key</strong> &#8211; (object), key of the entry.</li>
+<li><strong>value</strong> &#8211; (object), value of the entry.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.transactional_map.TransactionalMap.replace">
+<code class="descname">replace</code><span class="sig-paren">(</span><em>key</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_map.TransactionalMap.replace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.map.html#hazelcast.proxy.map.Map.replace" title="hazelcast.proxy.map.Map.replace"><code class="xref py py-func docutils literal"><span class="pre">Map.replace(key,</span> <span class="pre">value)</span></code></a></p>
+<p>The object to be replaced will be accessible only in the current transaction context till the transaction is
+committed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>key</strong> &#8211; (object), the specified key.</li>
+<li><strong>value</strong> &#8211; (object), the value to replace the previous value.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(object), previous value associated with key, or <code class="docutils literal"><span class="pre">None</span></code> if there was no mapping for key.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.transactional_map.TransactionalMap.replace_if_same">
+<code class="descname">replace_if_same</code><span class="sig-paren">(</span><em>key</em>, <em>old_value</em>, <em>new_value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_map.TransactionalMap.replace_if_same" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.map.html#hazelcast.proxy.map.Map.replace_if_same" title="hazelcast.proxy.map.Map.replace_if_same"><code class="xref py py-func docutils literal"><span class="pre">Map.replace_if_same(key,</span> <span class="pre">old_value,</span> <span class="pre">new_value)</span></code></a></p>
+<p>The object to be replaced will be accessible only in the current transaction context till the transaction is
+committed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>key</strong> &#8211; (object), the specified key.</li>
+<li><strong>old_value</strong> &#8211; (object), replace the key value if it is the old value.</li>
+<li><strong>new_value</strong> &#8211; (object), the new value to replace the old value.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(bool), <code class="docutils literal"><span class="pre">true</span></code> if the value was replaced, <code class="docutils literal"><span class="pre">false</span></code> otherwise.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.transactional_map.TransactionalMap.remove">
+<code class="descname">remove</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_map.TransactionalMap.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.map.html#hazelcast.proxy.map.Map.remove" title="hazelcast.proxy.map.Map.remove"><code class="xref py py-func docutils literal"><span class="pre">Map.remove(key)</span></code></a></p>
+<p>The object to be removed will be removed from only the current transaction context until the transaction is
+committed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> &#8211; (object), key of the mapping to be deleted.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(object), the previous value associated with key, or <code class="docutils literal"><span class="pre">None</span></code> if there was no mapping for key.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.transactional_map.TransactionalMap.remove_if_same">
+<code class="descname">remove_if_same</code><span class="sig-paren">(</span><em>key</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_map.TransactionalMap.remove_if_same" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.map.html#hazelcast.proxy.map.Map.remove_if_same" title="hazelcast.proxy.map.Map.remove_if_same"><code class="xref py py-func docutils literal"><span class="pre">Map.remove_if_same(key,</span> <span class="pre">value)</span></code></a></p>
+<p>The object to be removed will be removed from only the current transaction context until the transaction is
+committed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>key</strong> &#8211; (object), the specified key.</li>
+<li><strong>value</strong> &#8211; (object), remove the key if it has this value.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(bool), <code class="docutils literal"><span class="pre">true</span></code> if the value was removed, <code class="docutils literal"><span class="pre">false</span></code> otherwise.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.transactional_map.TransactionalMap.delete">
+<code class="descname">delete</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_map.TransactionalMap.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.map.html#hazelcast.proxy.map.Map.delete" title="hazelcast.proxy.map.Map.delete"><code class="xref py py-func docutils literal"><span class="pre">Map.delete(key)</span></code></a></p>
+<p>The object to be deleted will be removed from only the current transaction context until the transaction is
+committed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> &#8211; (object), key of the mapping to be deleted.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.transactional_map.TransactionalMap.key_set">
+<code class="descname">key_set</code><span class="sig-paren">(</span><em>predicate=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_map.TransactionalMap.key_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.map.html#hazelcast.proxy.map.Map.key_set" title="hazelcast.proxy.map.Map.key_set"><code class="xref py py-func docutils literal"><span class="pre">Map.key_set(predicate)</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>predicate</strong> &#8211; (Predicate), predicate to filter the entries (optional).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(Sequence), a list of the clone of the keys.</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><code class="xref py py-class docutils literal"><span class="pre">Predicate</span></code> for more info about predicates.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.transactional_map.TransactionalMap.values">
+<code class="descname">values</code><span class="sig-paren">(</span><em>predicate=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_map.TransactionalMap.values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.map.html#hazelcast.proxy.map.Map.values" title="hazelcast.proxy.map.Map.values"><code class="xref py py-func docutils literal"><span class="pre">Map.values(predicate)</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>predicate</strong> &#8211; (Predicate), predicate to filter the entries (optional).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(Sequence), a list of clone of the values contained in this map.</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><code class="xref py py-class docutils literal"><span class="pre">Predicate</span></code> for more info about predicates.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/hazelcast.proxy.transactional_map.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazelcast Python Client 3.8.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Hazelcast Inc..
+    </div>
+  </body>
+</html>

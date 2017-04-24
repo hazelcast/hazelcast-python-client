@@ -1,0 +1,486 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>List &mdash; Hazelcast Python Client 3.8.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.8.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Hazelcast Python Client 3.8.1 documentation" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazelcast Python Client 3.8.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.proxy.list">
+<span id="list"></span><h1>List<a class="headerlink" href="#module-hazelcast.proxy.list" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="hazelcast.proxy.list.List">
+<em class="property">class </em><code class="descname">List</code><span class="sig-paren">(</span><em>client</em>, <em>service_name</em>, <em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.list.List" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hazelcast.proxy.base.html#hazelcast.proxy.base.PartitionSpecificProxy" title="hazelcast.proxy.base.PartitionSpecificProxy"><code class="xref py py-class docutils literal"><span class="pre">hazelcast.proxy.base.PartitionSpecificProxy</span></code></a></p>
+<p>Concurrent, distributed implementation of List.</p>
+<p>The Hazelcast List is not a partitioned data-structure. So all the content of the List is stored in a single
+machine (and in the backup). So the List will not scale by adding more members in the cluster.</p>
+<dl class="method">
+<dt id="hazelcast.proxy.list.List.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.list.List.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the specified item to the end of this list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>item</strong> &#8211; (object), the specified item to be appended to this list.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal"><span class="pre">true</span></code> if item is added, <code class="docutils literal"><span class="pre">false</span></code> otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.list.List.add_at">
+<code class="descname">add_at</code><span class="sig-paren">(</span><em>index</em>, <em>item</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.list.List.add_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the specified item at the specific position in this list. Element in this position and following elements
+are shifted to the right, if any.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>index</strong> &#8211; (int), the specified index to insert the item.</li>
+<li><strong>item</strong> &#8211; (object), the specified item to be inserted.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.list.List.add_all">
+<code class="descname">add_all</code><span class="sig-paren">(</span><em>items</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.list.List.add_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds all of the items in the specified collection to the end of this list. The order of new elements is
+determined by the specified collection&#8217;s iterator.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>items</strong> &#8211; (Collection), the specified collection which includes the elements to be added to list.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal"><span class="pre">true</span></code> if this call changed the list, <code class="docutils literal"><span class="pre">false</span></code> otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.list.List.add_all_at">
+<code class="descname">add_all_at</code><span class="sig-paren">(</span><em>index</em>, <em>items</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.list.List.add_all_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds all of the elements in the specified collection into this list at the specified position. Elements in this
+positions and following elements are shifted to the right, if any. The order of new elements is determined by the
+specified collection&#8217;s iterator.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>index</strong> &#8211; (int), the specified index at which the first element of specified collection is added.</li>
+<li><strong>items</strong> &#8211; (Collection), the specified collection which includes the elements to be added to list.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(bool), <code class="docutils literal"><span class="pre">true</span></code> if this call changed the list, <code class="docutils literal"><span class="pre">false</span></code> otherwise.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.list.List.add_listener">
+<code class="descname">add_listener</code><span class="sig-paren">(</span><em>include_value=False</em>, <em>item_added_func=None</em>, <em>item_removed_func=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.list.List.add_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds an item listener for this list. Listener will be notified for all list add/remove events.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>include_value</strong> &#8211; (bool), whether received events include the updated item or not (optional).</li>
+<li><strong>item_added_func</strong> &#8211; Function to be called when an item is added to this list (optional).</li>
+<li><strong>item_removed_func</strong> &#8211; Function to be called when an item is deleted from this list (optional).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(str), a registration id which is used as a key to remove the listener.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.list.List.clear">
+<code class="descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.list.List.clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the list. List will be empty with this call.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.list.List.contains">
+<code class="descname">contains</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.list.List.contains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether this list contains the specified item or not.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>item</strong> &#8211; (object), the specified item.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal"><span class="pre">true</span></code> if the specified item exists in this list, <code class="docutils literal"><span class="pre">false</span></code> otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.list.List.contains_all">
+<code class="descname">contains_all</code><span class="sig-paren">(</span><em>items</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.list.List.contains_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether this list contains all of the items in specified collection or not.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>items</strong> &#8211; (Collection), the specified collection which includes the items to be searched.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal"><span class="pre">true</span></code> if all of the items in specified collection exist in this list, <code class="docutils literal"><span class="pre">false</span></code> otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.list.List.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.list.List.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the item which is in the specified position in this list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>index</strong> &#8211; (int), the specified index of the item to be returned.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(object), the item in the specified position in this list.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.list.List.get_all">
+<code class="descname">get_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.list.List.get_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all of the items in this list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(Sequence), list that includes all of the items in this list.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.list.List.iterator">
+<code class="descname">iterator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.list.List.iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an iterator over the elements in this list in proper sequence, same with get_all().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(Sequence), an iterator over the elements in this list in proper sequence.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.list.List.index_of">
+<code class="descname">index_of</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.list.List.index_of" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the first index of specified items&#8217;s occurrences in this list. If specified item is not present in this
+list, returns -1.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>item</strong> &#8211; (object), the specified item to be searched for.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(int), the first index of specified items&#8217;s occurrences, -1 if item is not present in this list.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.list.List.is_empty">
+<code class="descname">is_empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.list.List.is_empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether this list is empty or not.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal"><span class="pre">true</span></code> if this list contains no elements.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.list.List.last_index_of">
+<code class="descname">last_index_of</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.list.List.last_index_of" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the last index of specified items&#8217;s occurrences in this list. If specified item is not present in this
+list, returns -1.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>item</strong> &#8211; (object), the specified item to be searched for.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(int), the last index of specified items&#8217;s occurrences, -1 if item is not present in this list.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.list.List.list_iterator">
+<code class="descname">list_iterator</code><span class="sig-paren">(</span><em>index=0</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.list.List.list_iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list iterator of the elements in this list. If an index is provided, iterator starts from this index.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>index</strong> &#8211; (int), index of first element to be returned from the list iterator (optional).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(Sequence), a list iterator of the elements in this list.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.list.List.remove">
+<code class="descname">remove</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.list.List.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the specified element&#8217;s first occurrence from the list if it exists in this list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>item</strong> &#8211; (object), the specified element.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal"><span class="pre">true</span></code> if the specified element is present in this list.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.list.List.remove_at">
+<code class="descname">remove_at</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.list.List.remove_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the item at the specified position in this list. Element in this position and following elements are
+shifted to the left, if any.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>index</strong> &#8211; (int), index of the item to be removed.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(object), the item previously at the specified index.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.list.List.remove_all">
+<code class="descname">remove_all</code><span class="sig-paren">(</span><em>items</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.list.List.remove_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes all of the elements that is present in the specified collection from this list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>items</strong> &#8211; (Collection), the specified collection.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal"><span class="pre">true</span></code> if this list changed as a result of the call.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.list.List.remove_listener">
+<code class="descname">remove_listener</code><span class="sig-paren">(</span><em>registration_id</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.list.List.remove_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the specified item listener. Returns silently if the specified listener was not added before.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>registration_id</strong> &#8211; (str), id of the listener to be deleted.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal"><span class="pre">true</span></code> if the item listener is removed, <code class="docutils literal"><span class="pre">false</span></code> otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.list.List.retain_all">
+<code class="descname">retain_all</code><span class="sig-paren">(</span><em>items</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.list.List.retain_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retains only the items that are contained in the specified collection. It means, items which are not present in
+the specified collection are removed from this list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>items</strong> &#8211; (Collection), collections which includes the elements to be retained in this list.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal"><span class="pre">true</span></code> if this list changed as a result of the call.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.list.List.size">
+<code class="descname">size</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.list.List.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of elements in this list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(int), number of the elements in this list.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.list.List.set_at">
+<code class="descname">set_at</code><span class="sig-paren">(</span><em>index</em>, <em>item</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.list.List.set_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replaces the specified element with the element at the specified position in this list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>index</strong> &#8211; (int), index of the item to be replaced.</li>
+<li><strong>item</strong> &#8211; (object), item to be stored.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(object), the previous item in the specified index.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.list.List.sub_list">
+<code class="descname">sub_list</code><span class="sig-paren">(</span><em>from_index</em>, <em>to_index</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.list.List.sub_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a sublist from this list, whose range is specified with from_index(inclusive) and to_index(exclusive).
+The returned list is backed by this list, so non-structural changes in the returned list are reflected in this
+list, and vice-versa.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>from_index</strong> &#8211; (int), the start point(inclusive) of the sub_list.</li>
+<li><strong>to_index</strong> &#8211; (int), th end point(exclusive) of the sub_list.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(Sequence), a view of the specified range within this list.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/hazelcast.proxy.list.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazelcast Python Client 3.8.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Hazelcast Inc..
+    </div>
+  </body>
+</html>
