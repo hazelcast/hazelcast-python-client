@@ -6,7 +6,7 @@ from hazelcast.protocol.codec.ringbuffer_message_type import *
 
 REQUEST_TYPE = RINGBUFFER_READMANY
 RESPONSE_TYPE = 115
-RETRYABLE = False
+RETRYABLE = True
 
 
 def calculate_size(name, start_sequence, min_count, max_count, filter):
@@ -40,14 +40,24 @@ def encode_request(name, start_sequence, min_count, max_count, filter):
 
 def decode_response(client_message, to_object=None):
     """ Decode response from client message"""
-    parameters = dict(read_count=None, items=None)
+    parameters = dict(read_count=None, items=None, item_seqs=None)
     parameters['read_count'] = client_message.read_int()
+
     items_size = client_message.read_int()
     items = []
     for items_index in xrange(0, items_size):
         items_item = client_message.read_data()
         items.append(items_item)
     parameters['items'] = ImmutableLazyDataList(items, to_object)
+    item_seqs=None
+    if not client_message.read_bool():
+
+        item_seqs_size = client_message.read_int()
+        item_seqs = []
+        for item_seqs_index in xrange(0, item_seqs_size):
+            item_seqs_item = client_message.read_long()
+            item_seqs.append(item_seqs_item)
+        parameters['item_seqs'] = ImmutableLazyDataList(item_seqs, to_object)
     return parameters
 
 

@@ -42,6 +42,7 @@ def handle(client_message, handle_event_member = None, handle_event_memberlist =
         event_type = client_message.read_int()
         handle_event_member(member=member, event_type=event_type)
     if message_type == EVENT_MEMBERLIST and handle_event_memberlist is not None:
+
         members_size = client_message.read_int()
         members = []
         for members_index in xrange(0, members_size):

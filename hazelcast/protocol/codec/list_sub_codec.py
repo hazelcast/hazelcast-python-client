@@ -33,6 +33,7 @@ def encode_request(name, from_, to):
 def decode_response(client_message, to_object=None):
     """ Decode response from client message"""
     parameters = dict(response=None)
+
     response_size = client_message.read_int()
     response = []
     for response_index in xrange(0, response_size):
