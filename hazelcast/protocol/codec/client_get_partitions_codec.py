@@ -28,16 +28,19 @@ def decode_response(client_message, to_object=None):
     """ Decode response from client message"""
     parameters = dict(partitions=None)
     partitions_size = client_message.read_int()
-    partitions = {}
-    for partitions_index in xrange(0,partitions_size):
-        partitions_key = AddressCodec.decode(client_message, to_object)
-        partitions_val_size = client_message.read_int()
-        partitions_val = []
-        for partitions_val_index in xrange(0, partitions_val_size):
-            partitions_val_item = client_message.read_int()
-            partitions_val.append(partitions_val_item)
-        partitions[partitions_key] = partitions_val
-    parameters['partitions'] = partitions
+    partitions = []
+    for partitions_index in xrange(0, partitions_size):
+        partitions_item = {}
+        partitions_item_key = AddressCodec.decode(client_message, to_object)
+        partitions_item_val_size = client_message.read_int()
+        partitions_item_val = []
+        for partitions_item_val_index in xrange(0, partitions_item_val_size):
+            partitions_item_val_item = client_message.read_int()
+            partitions_item_val.append(partitions_item_val_item)
+            partitions_item[partitions_item_key] = partitions_item_val
+        parameters['partitions_item'] = partitions_item
+        partitions.append(partitions_item)
+    parameters['partitions'] = ImmutableLazyDataList(partitions, to_object)
     return parameters
 
 

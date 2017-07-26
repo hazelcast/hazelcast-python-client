@@ -6,7 +6,7 @@ from hazelcast.protocol.codec.map_message_type import *
 
 REQUEST_TYPE = MAP_VALUESWITHPREDICATE
 RESPONSE_TYPE = 106
-RETRYABLE = False
+RETRYABLE = True
 
 
 def calculate_size(name, predicate):
@@ -31,6 +31,7 @@ def encode_request(name, predicate):
 def decode_response(client_message, to_object=None):
     """ Decode response from client message"""
     parameters = dict(response=None)
+
     response_size = client_message.read_int()
     response = []
     for response_index in xrange(0, response_size):

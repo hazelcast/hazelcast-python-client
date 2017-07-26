@@ -1,7 +1,9 @@
+from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import ClientMessage
+from hazelcast.protocol.custom_codec import *
+from hazelcast.util import ImmutableLazyDataList
 from hazelcast.protocol.codec.map_message_type import *
 from hazelcast.protocol.event_response_const import *
-from hazelcast.serialization.bits import *
 
 REQUEST_TYPE = MAP_ADDNEARCACHEENTRYLISTENER
 RESPONSE_TYPE = 104
@@ -36,18 +38,41 @@ def decode_response(client_message, to_object=None):
     return parameters
 
 
-def handle(client_message, handle_event_imapinvalidation=None, handle_event_imapbatchinvalidation=None, to_object=None):
+def handle(client_message, handle_event_imapinvalidation = None, handle_event_imapbatchinvalidation = None, to_object=None):
     """ Event handler """
     message_type = client_message.get_message_type()
     if message_type == EVENT_IMAPINVALIDATION and handle_event_imapinvalidation is not None:
-        key = None
+        key=None
         if not client_message.read_bool():
             key = client_message.read_data()
-        handle_event_imapinvalidation(key=key)
+        source_uuid = client_message.read_str()
+        partition_uuid = UUIDCodec.decode(client_message, to_object)
+        sequence = client_message.read_long()
+        handle_event_imapinvalidation(key=key, source_uuid=source_uuid, partition_uuid=partition_uuid, sequence=sequence)
     if message_type == EVENT_IMAPBATCHINVALIDATION and handle_event_imapbatchinvalidation is not None:
+
         keys_size = client_message.read_int()
         keys = []
         for keys_index in xrange(0, keys_size):
             keys_item = client_message.read_data()
             keys.append(keys_item)
-        handle_event_imapbatchinvalidation(keys=keys)
+
+        source_uuids_size = client_message.read_int()
+        source_uuids = []
+        for source_uuids_index in xrange(0, source_uuids_size):
+            source_uuids_item = client_message.read_str()
+            source_uuids.append(source_uuids_item)
+
+        partition_uuids_size = client_message.read_int()
+        partition_uuids = []
+        for partition_uuids_index in xrange(0, partition_uuids_size):
+            partition_uuids_item = UUIDCodec.decode(client_message, to_object)
+            partition_uuids.append(partition_uuids_item)
+
+        sequences_size = client_message.read_int()
+        sequences = []
+        for sequences_index in xrange(0, sequences_size):
+            sequences_item = client_message.read_java.lang.Long()
+            sequences.append(sequences_item)
+        handle_event_imapbatchinvalidation(keys=keys, source_uuids=source_uuids, partition_uuids=partition_uuids, sequences=sequences)
+
