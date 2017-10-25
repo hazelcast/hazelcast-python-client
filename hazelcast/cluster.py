@@ -216,8 +216,6 @@ class ClusterService(object):
                 and self._client.lifecycle.is_live:
             self._client.lifecycle.fire_lifecycle_event(LIFECYCLE_STATE_DISCONNECTED)
             self.owner_connection_address = None
-            # clear member list as owner connection is lost
-            self.members = []
 
             # try to reconnect, on new thread
             reconnect_thread = threading.Thread(target=self._reconnect,
