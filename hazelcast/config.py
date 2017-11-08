@@ -168,6 +168,7 @@ class ClientNetworkConfig(object):
     def __init__(self):
         self.addresses = []
         """The candidate address list that client will use to establish initial connection"""
+        """Example usage: addresses.append("127.0.0.1:5701") """
         self.connection_attempt_limit = 2
         """
         While client is trying to connect initially to one of the members in the addressList, all might be not

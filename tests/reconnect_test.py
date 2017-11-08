@@ -93,3 +93,19 @@ class ReconnectTest(HazelcastTestCase):
             self.assertEqual(new_member.uuid, client.cluster.members[0].uuid)
 
         self.assertTrueEventually(assert_member_list)
+
+    def test_reconnect_toNewNode_ViaLastMemberList(self):
+        old_member = self.cluster.start_member()
+        config = ClientConfig()
+        config.network_config.addresses.append("127.0.0.1:5701")
+        config.network_config.smart_routing = False
+        config.network_config.connection_attempt_limit = 100
+        client = self.create_client(config)
+        new_member = self.cluster.start_member()
+        old_member.shutdown()
+
+        def assert_member_list():
+            self.assertEqual(1, len(client.cluster.members))
+            self.assertEqual(new_member.uuid, client.cluster.members[0].uuid)
+
+        self.assertTrueEventually(assert_member_list)
