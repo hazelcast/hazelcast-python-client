@@ -42,7 +42,7 @@ def do_benchmark():
 
     client = hazelcast.HazelcastClient(config)
     my_map = client.get_map("default")
-    for i in xrange(0, 1000):
+    for i in range(0, 1000):
         key = int(random.random() * ENTRY_COUNT)
         operation = int(random.random() * 100)
         if operation < GET_PERCENTAGE:

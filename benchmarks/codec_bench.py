@@ -3,7 +3,7 @@ import timeit
 from hazelcast.protocol.client_message import ClientMessage
 from hazelcast.protocol.codec import map_get_codec
 from hazelcast.serialization import SerializationServiceV1, calculate_size_data
-
+from builtins import int
 
 class Bench(object):
     def __init__(self):
@@ -11,7 +11,7 @@ class Bench(object):
         key = "Test" * 1000
         self.name = "name" * 10
         self.key = service.to_data(key)
-        self.thread_id = 1l
+        self.thread_id = int(1)
         msg = ClientMessage(payload_size=calculate_size_data(self.key)).append_bool(False).append_data(
             self.key).update_frame_length()
         self.response_message = ClientMessage(msg.buffer)
@@ -27,7 +27,7 @@ class Bench(object):
         self.response = map_get_codec.decode_response(self.response_message)
 
     def measure(self):
-        print "Encode time: {}".format(timeit.timeit(self.encode, number=100000))
+        print("Encode time: {}".format(timeit.timeit(self.encode, number=100000)))
         # print "Decode time: {}".format(timeit.timeit(self.decode, number=100000))
 
 
@@ -41,10 +41,10 @@ if __name__ == '__main__':
     encode_time = timeit.timeit(bench.encode, setup=setup, number=number)
     decode_time = timeit.timeit(bench.decode, setup=setup, number=number)
 
-    print "--------------------------------------------------------------------------------"
-    print "Encode op/s: {}".format(number / encode_time)
-    print "Decode op/s: {}".format(number / decode_time)
-    print "Total  op/s: {}".format(number / (encode_time + decode_time))
-    print "--------------------------------------------------------------------------------\n\n"
-    print bench.request
-    print bench.response
+    print("--------------------------------------------------------------------------------")
+    print("Encode op/s: {}".format(number / encode_time))
+    print("Decode op/s: {}".format(number / decode_time))
+    print("Total  op/s: {}".format(number / (encode_time + decode_time)))
+    print("--------------------------------------------------------------------------------\n\n")
+    print(bench.request)
+    print(bench.response)

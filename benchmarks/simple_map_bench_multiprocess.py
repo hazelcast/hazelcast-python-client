@@ -66,7 +66,7 @@ def do_benchmark():
                     self.counts[2] += 1
 
     processes = [ClientProcess("client-process-%d" % i, config, multiprocessing.Array('i', 3)) for i in
-                 xrange(0, PROCESS_COUNT)]
+                 range(0, PROCESS_COUNT)]
     for p in processes:
         p.start()
 
@@ -74,8 +74,8 @@ def do_benchmark():
     counter = 1
     while counter < 1000:
         time.sleep(5)
-        print "ops per second : " + \
-              str(sum([sum(p.counts) for p in processes]) / (time.time() - start))
+        print("ops per second : " + \
+              str(sum([sum(p.counts) for p in processes]) / (time.time() - start)))
         # for p in processes:
         #     print ("%s: put: %d get: %d: remove: %d" % (p.name, p.counts[0], p.counts[1], p.counts[2]))
         counter += 1

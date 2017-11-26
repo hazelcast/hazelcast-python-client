@@ -2,7 +2,7 @@ import sys
 import threading
 import time
 from os.path import dirname
-from codec_bench import Bench
+from .codec_bench import Bench
 
 sys.path.append(dirname(dirname(__file__)))
 
@@ -27,7 +27,7 @@ def do_benchmark():
 
                 self.ops += 1
 
-    threads = [ClientThread("client-thread-%d" % i) for i in xrange(0, THREAD_COUNT)]
+    threads = [ClientThread("client-thread-%d" % i) for i in range(0, THREAD_COUNT)]
     for t in threads:
         t.start()
 
@@ -35,8 +35,8 @@ def do_benchmark():
     counter = 1
     while counter < 10:
         time.sleep(5)
-        print "ops per second : " + \
-              str(sum([t.ops for t in threads]) / (time.time() - start))
+        print("ops per second : " + \
+              str(sum([t.ops for t in threads]) / (time.time() - start)))
         # for t in threads:
         #     print ("%s: ops: %d " % (t.name, t.ops))
         counter += 1

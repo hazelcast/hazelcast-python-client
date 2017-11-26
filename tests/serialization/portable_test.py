@@ -6,6 +6,7 @@ from hazelcast.serialization import SerializationServiceV1
 from hazelcast.serialization.api import Portable
 from hazelcast.serialization.portable.classdef import ClassDefinitionBuilder
 from tests.serialization.identified_test import create_identified, SerializationV1Identified
+from builtins import int
 
 FACTORY_ID = 1
 
@@ -171,7 +172,7 @@ class InnerPortable(Portable):
 def create_portable():
     identified = create_identified()
     inner_portable = InnerPortable("Inner Text", 666)
-    return SerializationV1Portable(99, True, 'c', 11, 1234134, 1341431221l, 1.0, 2.0, [1, 2, 3], [True, False, True],
+    return SerializationV1Portable(99, True, 'c', 11, 1234134, int(1341431221), 1.0, 2.0, [1, 2, 3], [True, False, True],
                                    ['a', 'b', 'c'],
                                    [1, 2, 3], [4, 2, 3], [11, 2, 3], [1.0, 2.0, 3.0],
                                    [11.0, 22.0, 33.0], "the string text",

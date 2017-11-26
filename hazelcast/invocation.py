@@ -1,7 +1,10 @@
 import logging
 import threading
 import time
-from Queue import Queue
+try:
+    from Queue import Queue
+except ImportError:
+    from queue import Queue
 import functools
 from hazelcast.exception import create_exception, HazelcastInstanceNotActiveError, is_retryable_error, TimeoutError, \
     AuthenticationError, TargetDisconnectedError, HazelcastClientNotActiveException
@@ -165,17 +168,17 @@ class InvocationService(object):
         return invocation.future
 
     def cleanup_connection(self, connection, cause):
-        for correlation_id, invocation in dict(self._pending).iteritems():
+        for correlation_id, invocation in dict(self._pending).items():
             if invocation.sent_connection == connection:
                 self._handle_exception(invocation, cause)
 
         if self._client.lifecycle.is_live:
-            for correlation_id, invocation in dict(self._event_handlers).iteritems():
+            for correlation_id, invocation in dict(self._event_handlers).items():
                 if invocation.sent_connection == connection and invocation.connection is None:
                     self._client.listener.re_register_listener(invocation)
 
     def _heartbeat_stopped(self, connection):
-        for correlation_id, invocation in dict(self._pending).iteritems():
+        for correlation_id, invocation in dict(self._pending).items():
             if invocation.sent_connection == connection:
                 self._handle_exception(invocation,
                                        TargetDisconnectedError("%s has stopped heart beating." % connection))
@@ -210,8 +213,7 @@ class InvocationService(object):
 
         if isinstance(invocation, ListenerInvocation):
             self._event_handlers[correlation_id] = invocation
-
-        self.logger.debug("Sending %s to %s", message, connection)
+        self.logger.debug("Sending %s to %s", message, connection.encode('utf-8'))
 
         if not ignore_heartbeat and not connection.heartbeating:
             self._handle_exception(invocation, TargetDisconnectedError("%s has stopped heart beating." % connection))
@@ -227,13 +229,13 @@ class InvocationService(object):
         correlation_id = message.get_correlation_id()
         if message.has_flags(LISTENER_FLAG):
             if correlation_id not in self._event_handlers:
-                self.logger.warn("Got event message with unknown correlation id: %s", message)
+                self.logger.warning("Got event message with unknown correlation id: %s", message)
                 return
             invocation = self._event_handlers[correlation_id]
             self._handle_event(invocation, message)
             return
         if correlation_id not in self._pending:
-            self.logger.warn("Got message with unknown correlation id: %s", message)
+            self.logger.warning("Got message with unknown correlation id: %s", message)
             return
         invocation = self._pending.pop(correlation_id)
 

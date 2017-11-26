@@ -289,12 +289,12 @@ class MapTest(SingleMemberTestCase):
         self.assertFalse(self.map.try_put("key", "new_value", timeout=0.01))
 
     def test_put_all(self):
-        map = {"key-%d" % x: "value-%d" % x for x in xrange(0, 1000)}
+        map = {"key-%d" % x: "value-%d" % x for x in range(0, 1000)}
         self.map.put_all(map)
 
         entries = self.map.entry_set()
 
-        self.assertItemsEqual(entries, map.iteritems())
+        self.assertItemsEqual(entries, map.items())
 
     def test_put_all_when_no_keys(self):
         self.assertIsNone(self.map.put_all({}))
@@ -447,7 +447,7 @@ class MapTest(SingleMemberTestCase):
         self.assertTrue(str(self.map).startswith("Map"))
 
     def _fill_map(self, count=10):
-        map = {"key-%d" % x: "value-%d" % x for x in xrange(0, count)}
-        for k, v in map.iteritems():
+        map = {"key-%d" % x: "value-%d" % x for x in range(0, count)}
+        for k, v in map.items():
             self.map.put(k, v)
         return map

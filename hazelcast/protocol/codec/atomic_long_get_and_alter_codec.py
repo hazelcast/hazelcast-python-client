@@ -33,6 +33,3 @@ def decode_response(client_message, to_object=None):
     parameters = dict(response=None)
     parameters['response'] = client_message.read_long()
     return parameters
-
-
-

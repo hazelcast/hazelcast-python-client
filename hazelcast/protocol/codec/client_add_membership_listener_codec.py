@@ -44,7 +44,7 @@ def handle(client_message, handle_event_member = None, handle_event_memberlist =
     if message_type == EVENT_MEMBERLIST and handle_event_memberlist is not None:
         members_size = client_message.read_int()
         members = []
-        for members_index in xrange(0, members_size):
+        for members_index in range(0, members_size):
             members_item = MemberCodec.decode(client_message, to_object)
             members.append(members_item)
         handle_event_memberlist(members=members)

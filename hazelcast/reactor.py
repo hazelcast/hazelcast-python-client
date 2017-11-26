@@ -6,7 +6,11 @@ import socket
 import sys
 import threading
 import time
-from Queue import PriorityQueue, Empty
+
+try:
+    from Queue import Queue,PriorityQueue, Empty
+except ImportError:
+    from queue import Queue,PriorityQueue,Empty
 from collections import deque
 
 from hazelcast.connection import Connection, BUFFER_SIZE
@@ -78,7 +82,7 @@ class AsyncoreReactor(object):
         for connection in self._map.values():
             try:
                 connection.close(HazelcastError("Client is shutting down"))
-            except OSError, connection:
+            except OSError as connection:
                 if connection.args[0] == socket.EBADF:
                     pass
                 else:

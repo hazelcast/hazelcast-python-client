@@ -1,9 +1,13 @@
 import binascii
-import cPickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 from datetime import datetime
 from time import time
+from past.builtins import long
 
-from bits import *
+from .bits import *
 from hazelcast.serialization.api import StreamSerializer
 from hazelcast.serialization.base import HazelcastSerializationError
 from hazelcast.serialization.serialization_const import *
@@ -311,13 +315,13 @@ class ArrayListSerializer(BaseSerializer):
     def read(self, inp):
         size = inp.read_int()
         if size > NULL_ARRAY_LENGTH:
-            return [inp.read_object() for _ in xrange(0, size)]
+            return [inp.read_object() for _ in range(0, size)]
         return None
 
     def write(self, out, obj):
         size = NULL_ARRAY_LENGTH if obj is None else len(obj)
         out.write_int(size)
-        for i in xrange(0, size):
+        for i in range(0, size):
             out.write_object(obj[i])
 
     def get_type_id(self):
@@ -328,7 +332,7 @@ class LinkedListSerializer(BaseSerializer):
     def read(self, inp):
         size = inp.read_int()
         if size > NULL_ARRAY_LENGTH:
-            return [inp.read_object() for _ in xrange(0, size)]
+            return [inp.read_object() for _ in range(0, size)]
         return None
 
     def write(self, out, obj):
@@ -341,10 +345,10 @@ class LinkedListSerializer(BaseSerializer):
 class PythonObjectSerializer(BaseSerializer):
     def read(self, inp):
         str = inp.read_utf().encode()
-        return cPickle.loads(str)
+        return pickle.loads(str)
 
     def write(self, out, obj):
-        out.write_utf(cPickle.dumps(obj))
+        out.write_utf(pickle.dumps(obj))
 
     def get_type_id(self):
         return PYTHON_TYPE_PICKLE

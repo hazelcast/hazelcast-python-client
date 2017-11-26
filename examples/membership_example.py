@@ -29,10 +29,10 @@ if __name__ == '__main__':
     config.group_config.password = "dev-pass"
 
     def member_added(e):
-        print 'member added event :{}'.format(e)
+        print('member added event :{}'.format(e))
 
     def member_removed(e):
-        print 'member removed event :{}'.format(e)
+        print('member removed event :{}'.format(e))
 
     # member_added and member_removed functions will be called when cluster state changed
     config.add_membership_listener(member_added, member_removed, True)

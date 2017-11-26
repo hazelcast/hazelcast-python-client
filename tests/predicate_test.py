@@ -81,13 +81,13 @@ class PredicateTest(SingleMemberTestCase):
         self.map.destroy()
 
     def _fill_map(self, count=10):
-        map = {"key-%d" % x: "value-%d" % x for x in xrange(0, count)}
-        for k, v in map.iteritems():
+        map = {"key-%d" % x: "value-%d" % x for x in range(0, count)}
+        for k, v in map.items():
             self.map.put(k, v)
         return map
 
     def _fill_map_numeric(self, count=100):
-        for n in xrange(0, count):
+        for n in range(0, count):
             self.map.put(n, n)
 
     def test_sql(self):
@@ -220,8 +220,8 @@ class PredicatePortableTest(SingleMemberTestCase):
         self.map.destroy()
 
     def _fill_map(self, count=1000):
-        map = {InnerPortable("key-%d" % x, x): InnerPortable("value-%d" % x, x) for x in xrange(0, count)}
-        for k, v in map.iteritems():
+        map = {InnerPortable("key-%d" % x, x): InnerPortable("value-%d" % x, x) for x in range(0, count)}
+        for k, v in map.items():
             self.map.put(k, v)
         return map
 

@@ -55,7 +55,7 @@ def do_benchmark():
 
         def run(self):
             my_map = client.get_map("default")
-            for _ in xrange(0, REQ_COUNT):
+            for _ in range(0, REQ_COUNT):
                 key = int(random.random() * ENTRY_COUNT)
                 operation = int(random.random() * 100)
                 if operation < GET_PERCENTAGE:

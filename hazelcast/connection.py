@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from __future__ import with_statement
 
 import logging
@@ -14,6 +15,7 @@ from hazelcast.protocol.client_message import BEGIN_END_FLAG, ClientMessage, Cli
 from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
 from hazelcast.serialization import INT_SIZE_IN_BYTES, FMT_LE_INT
 from hazelcast.util import AtomicInteger
+from future.utils import raise_
 
 BUFFER_SIZE = 8192
 PROTOCOL_VERSION = 1
@@ -141,7 +143,7 @@ class ConnectionManager(object):
                     self._pending_connections.pop(address)
                 except KeyError:
                     pass
-            raise f.exception(), None, f.traceback()
+            raise_(f.exception(), None, f.traceback())
 
     def _connection_closed(self, connection, cause):
         # if connection was authenticated, fire event

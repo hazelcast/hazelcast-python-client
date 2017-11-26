@@ -38,6 +38,6 @@ setup(
         keywords='hazelcast,hazelcast client,In-Memory Data Grid,Distributed Computing',
         packages=find_packages(exclude=[ 'benchmarks', 'examples', 'docs', 'tests', 'tests.*']),
         package_dir={'hazelcast': 'hazelcast'},
-        install_requires=[],
+        install_requires=['future'],
         tests_require=['hazelcast-remote-controller', 'nose', 'coverage'],
 )

@@ -96,7 +96,7 @@ class RingBufferTest(SingleMemberTestCase):
             self.ringbuffer.read_many(0, 0, MAX_BATCH_SIZE+1)
 
     def _fill_ringbuffer(self, n=CAPACITY):
-        for x in xrange(0, n):
+        for x in range(0, n):
             self.ringbuffer.add(x)
 
     def test_str(self):
