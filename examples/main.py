@@ -3,7 +3,6 @@ import random
 import hazelcast
 import logging
 
-from hzrc.client import HzRemoteController
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s', datefmt="%H:%M%:%S,")
