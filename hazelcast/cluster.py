@@ -109,16 +109,23 @@ class ClusterService(object):
         while current_attempt <= attempt_limit:
             for address in addresses:
                 try:
-                    if current_attempt > attempt_limit:
-                        break
                     self.logger.info("Connecting to %s", address)
                     self._connect_to_address(address)
                     return
                 except:
-                    self.logger.warning("Error connecting to %s, attempt %d of %d, trying again in %d seconds",
-                                        address, current_attempt, attempt_limit, retry_delay, exc_info=True)
-                    time.sleep(retry_delay)
-                current_attempt += 1
+                    self.logger.warning("Error connecting to %s ", address, exc_info=True)
+
+            if current_attempt >= attempt_limit:
+                self.logger.warning(
+                    "Unable to get alive cluster connection, attempt %d of %d",
+                    current_attempt, attempt_limit)
+                break
+
+            self.logger.warning(
+                "Unable to get alive cluster connection, attempt %d of %d, trying again in %d seconds",
+                current_attempt, attempt_limit, retry_delay)
+            current_attempt += 1
+            time.sleep(retry_delay)
 
         error_msg = "Could not connect to any of %s after %d tries" % (addresses, attempt_limit)
         raise HazelcastError(error_msg)
@@ -245,6 +252,7 @@ class RandomLoadBalancer(object):
     RandomLoadBalancer make the Client send operations randomly on members not to increase the load on a specific
     member.
     """
+
     def __init__(self, cluster):
         self._cluster = cluster
 

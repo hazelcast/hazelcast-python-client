@@ -24,6 +24,8 @@ class ReconnectTest(HazelcastTestCase):
     def test_start_client_with_no_member(self):
         config = ClientConfig()
         config.network_config.addresses.append("127.0.0.1:5701")
+        config.network_config.addresses.append("127.0.0.1:5702")
+        config.network_config.addresses.append("127.0.0.1:5703")
         config.network_config.connection_attempt_limit = 2
         config.network_config.connection_attempt_period = 0.1
         with self.assertRaises(HazelcastError):
