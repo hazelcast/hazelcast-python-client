@@ -35,6 +35,3 @@ def decode_response(client_message, to_object=None):
     if not client_message.read_bool():
         parameters['response'] = to_object(client_message.read_data())
     return parameters
-
-
-

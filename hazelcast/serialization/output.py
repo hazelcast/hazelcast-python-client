@@ -1,7 +1,7 @@
 import struct
 
-from api import *
-from bits import *
+from .api import *
+from .bits import *
 
 
 class _ObjectDataOutput(ObjectDataOutput):
@@ -138,7 +138,7 @@ class _ObjectDataOutput(ObjectDataOutput):
         self._pos = position
 
     def write_zero_bytes(self, count):
-        for i in xrange(0, count):
+        for i in range(0, count):
             self._write(0)
 
     # HELPERS

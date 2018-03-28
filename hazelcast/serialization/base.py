@@ -1,13 +1,15 @@
 import sys
 from threading import RLock
 
-from api import *
-from data import *
+from .api import *
+from .data import *
 from hazelcast.config import INTEGER_TYPE
 from hazelcast.exception import HazelcastInstanceNotActiveError, HazelcastSerializationError
 from hazelcast.serialization.input import _ObjectDataInput
 from hazelcast.serialization.output import _ObjectDataOutput
 from hazelcast.serialization.serializer import *
+from future.utils import raise_
+from past.builtins import basestring,long
 
 
 def empty_partitioning_strategy(key):
@@ -18,11 +20,11 @@ def handle_exception(e, traceback):
     if isinstance(e, MemoryError):
         # TODO
         print("OUT OF MEMORY")
-        raise e, None, traceback
+        raise_(e, None, traceback)
     elif isinstance(e, HazelcastSerializationError):
-        raise e, None, traceback
+        raise_(e, None, traceback)
     else:
-        raise HazelcastSerializationError(e.message), None, traceback
+        raise_(HazelcastSerializationError(e.message), None, traceback)
 
 
 def is_null_data(data):
@@ -156,7 +158,7 @@ class SerializerRegistry(object):
         self._null_serializer = NoneSerializer()
         self._python_serializer = PythonObjectSerializer()
 
-        self._constant_type_ids = [None for _ in xrange(0, CONSTANT_SERIALIZERS_LENGTH)]  # array of serializer
+        self._constant_type_ids = [None for _ in range(0, CONSTANT_SERIALIZERS_LENGTH)]  # array of serializer
         self._constant_type_dict = {}  # dict of class:serializer
 
         self._id_dic = {}  # dict of type_id:serializer

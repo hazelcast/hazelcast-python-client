@@ -1,6 +1,6 @@
 import binascii
 import unittest
-
+from builtins import chr
 from hazelcast.serialization.output import _ObjectDataOutput
 
 
@@ -24,7 +24,7 @@ class OutputTestCase(unittest.TestCase):
 
     def test_char(self):
         pos = self._output._pos
-        self._output.write_char(unichr(0x00e7))
+        self._output.write_char(chr(0x00e7))
         self.assertEqual(bytearray(binascii.unhexlify("00e70000000000000000")),  self._output._buffer[pos:pos + 10])
 
 

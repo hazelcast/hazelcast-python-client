@@ -117,7 +117,7 @@ class ErrorCodec(object):
 
         self.stack_trace = []
         stack_trace_count = client_message.read_int()
-        for _ in xrange(stack_trace_count):
+        for _ in range(stack_trace_count):
             self.stack_trace.append(self.decode_stack_trace(client_message))
 
         self.cause_error_code = client_message.read_int()

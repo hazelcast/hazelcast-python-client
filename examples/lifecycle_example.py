@@ -30,7 +30,7 @@ if __name__ == '__main__':
         #  One of these states will be received
         # from hazelcast.lifecycle import LIFECYCLE_STATE_SHUTDOWN, LIFECYCLE_STATE_SHUTTING_DOWN, LIFECYCLE_STATE_CONNECTED, \
         #     LIFECYCLE_STATE_STARTING, LIFECYCLE_STATE_DISCONNECTED
-        print lifecycle_state_str
+        print(lifecycle_state_str)
 
     # lifecycle_state_changed function will be called with Lifecycle state as parameter when lifecycle state change
     config.add_lifecycle_listener(lifecycle_state_changed)

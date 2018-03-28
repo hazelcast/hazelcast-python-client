@@ -32,7 +32,7 @@ class PortableContext(object):
         # field count
         field_count = data_in.read_int()
         offset = data_in.position()
-        for i in xrange(0, field_count):
+        for i in range(0, field_count):
             pos = data_in.read_int(offset + i * bits.INT_SIZE_IN_BYTES)
             data_in.set_position(pos)
 

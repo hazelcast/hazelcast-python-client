@@ -48,7 +48,7 @@ class TransactionManager(object):
         self._client = client
 
     def _connect(self):
-        for count in xrange(0, RETRY_COUNT):
+        for count in range(0, RETRY_COUNT):
             try:
                 address = self._client.load_balancer.next_address()
                 return self._client.connection_manager.get_or_connect(address).result()

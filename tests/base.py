@@ -61,7 +61,7 @@ class HazelcastTestCase(unittest.TestCase):
                 return
             except AssertionError:
                 time.sleep(0.1)
-        raise
+        raise()
 
     def assertSetEventually(self, event, timeout=5):
         is_set = event.wait(timeout)

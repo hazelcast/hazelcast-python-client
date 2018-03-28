@@ -52,21 +52,21 @@ def init():
 
     my_map = client.get_map(MAP_NAME).blocking()
 
-    print "START INIT"
-    for key in xrange(0, ENTRY_COUNT):
+    print("START INIT")
+    for key in range(0, ENTRY_COUNT):
         my_map.put(key, VALUE)
-    for key in xrange(0, ENTRY_COUNT):
+    for key in range(0, ENTRY_COUNT):
         my_map.get(key)
-    print "INIT COMPLETE"
+    print("INIT COMPLETE")
     return my_map
 
 
 def bench(my_map):
     start = time.time()
     hit = my_map._near_cache._cache_hit
-    for key in xrange(0, ENTRY_COUNT):
+    for key in range(0, ENTRY_COUNT):
         my_map.get(key)
-    print "op / sec :", ENTRY_COUNT / (time.time() - start), "hit:", my_map._near_cache._cache_hit-hit
+    print("op / sec :", ENTRY_COUNT / (time.time() - start), "hit:", my_map._near_cache._cache_hit-hit)
 
 
 if __name__ == '__main__':

@@ -106,7 +106,7 @@ class PartitionService(object):
         partitions = client_get_partitions_codec.decode_response(message)["partitions"]
         # TODO: needs sync
         self.partitions = {}
-        for addr, partition_list in partitions.iteritems():
+        for addr, partition_list in partitions.items():
             for partition in partition_list:
                 self.partitions[partition] = addr
         self.logger.debug("Finished updating partitions")

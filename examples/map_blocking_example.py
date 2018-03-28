@@ -6,8 +6,8 @@ import hazelcast
 
 
 def fill_map(hz_map, count=10):
-    _map = {"key-%d" % x: "value-%d" % x for x in xrange(0, count)}
-    for k, v in _map.iteritems():
+    _map = {"key-%d" % x: "value-%d" % x for x in range(0, count)}
+    for k, v in _map.items():
         hz_map.put(k, v)
     return _map
 
@@ -55,7 +55,7 @@ if __name__ == '__main__':
     print('Iterate over all map:')
 
     for key, value in my_map.entry_set():
-        print "key:", key, "value:", value
+        print("key:", key, "value:", value)
 
 
     sleep(10)

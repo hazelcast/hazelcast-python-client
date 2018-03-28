@@ -94,7 +94,7 @@ class ClusterService(object):
 
     def _reconnect(self):
         try:
-            self.logger.warn("Connection closed to owner node. Trying to reconnect.")
+            self.logger.warning("Connection closed to owner node. Trying to reconnect.")
             self._connect_to_cluster()
         except:
             logging.exception("Could not reconnect to cluster. Shutting down client.")

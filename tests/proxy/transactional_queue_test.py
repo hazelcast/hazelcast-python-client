@@ -22,7 +22,7 @@ class TransactionalQueueTest(SingleMemberTestCase):
         self.assertEqual("item", self.queue.take())
 
     def test_offer_when_queue_full(self):
-        self.queue.add_all(["item-%d" % x for x in xrange(0, 6)])
+        self.queue.add_all(["item-%d" % x for x in range(0, 6)])
 
         with self.client.new_transaction() as tx:
             tx_queue = tx.get_queue(self.queue.name)

@@ -90,4 +90,4 @@ if __name__ == '__main__':
     executor = client.get_executor("my-exec")
     results = executor.execute_on_all_members(CollectData("java.vm.name"))
     for result in results.result():
-        print ">", result
+        print(">", result)

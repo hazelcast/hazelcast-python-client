@@ -1,8 +1,11 @@
+from __future__ import absolute_import
+
 import logging
 import sys
 import threading
 
 from hazelcast.util import AtomicInteger
+from future.utils import raise_
 
 NONE_RESULT = object()
 
@@ -57,7 +60,7 @@ class Future(object):
         self._reactor_check()
         self._event.wait()
         if self._exception:
-            raise self._exception, None, self._traceback
+            raise_(self._exception, None,self._traceback)
         if self._result == NONE_RESULT:
             return None
         else:
@@ -223,7 +226,7 @@ class ImmediateExceptionFuture(Future):
         return self._traceback
 
     def result(self):
-        raise self._exception, None, self._traceback
+        raise_(self._exception, None, self._traceback)
 
     def add_done_callback(self, callback):
         self._invoke_cb(callback)

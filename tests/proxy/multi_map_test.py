@@ -208,8 +208,8 @@ class MultiMapTest(SingleMemberTestCase):
         self.assertTrue(str(self.multi_map).startswith("MultiMap"))
 
     def _fill_map(self, key_count=5, value_count=5):
-        map = {"key-%d" % x: ["value-%d-%d" % (x, y) for y in xrange(0, value_count)] for x in xrange(0, key_count)}
-        for k, l in map.iteritems():
+        map = {"key-%d" % x: ["value-%d-%d" % (x, y) for y in range(0, value_count)] for x in range(0, key_count)}
+        for k, l in map.items():
             for v in l:
                 self.multi_map.put(k, v)
 

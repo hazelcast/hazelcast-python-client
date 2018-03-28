@@ -167,7 +167,7 @@ class ReplicatedMapTest(SingleMemberTestCase):
         self.assertEqual("new_value", self.replicated_map.get("key"))
 
     def test_put_all(self):
-        map = {"key-%d" % x: "value-%d" % x for x in xrange(0, 10)}
+        map = {"key-%d" % x: "value-%d" % x for x in range(0, 10)}
 
         self.replicated_map.put_all(map)
 
@@ -203,7 +203,7 @@ class ReplicatedMapTest(SingleMemberTestCase):
         self.assertTrue(str(self.replicated_map).startswith("ReplicatedMap"))
 
     def _fill_map(self, count=10):
-        map = {"key-%d" % x: "value-%d" % x for x in xrange(0, count)}
-        for k, v in map.iteritems():
+        map = {"key-%d" % x: "value-%d" % x for x in range(0, count)}
+        for k, v in map.items():
             self.replicated_map.put(k, v)
         return map

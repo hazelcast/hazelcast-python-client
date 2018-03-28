@@ -37,7 +37,7 @@ class NearCacheTestCase(unittest.TestCase):
 
     def test_DataRecord_expire_time(self):
         now = current_time()
-        print int(now), now
+        print(int(now), now)
         data_rec = DataRecord("key", "value", create_time=now, ttl_seconds=1)
         sleep(2)
         self.assertTrue(data_rec.is_expired(max_idle_seconds=1000))
@@ -56,7 +56,7 @@ class NearCacheTestCase(unittest.TestCase):
 
     def test_put_get(self):
         near_cache = self.create_near_cache(self.service, IN_MEMORY_FORMAT.OBJECT, 1000, 1000, EVICTION_POLICY.LRU, 1000)
-        for i in xrange(0, 10000):
+        for i in range(0, 10000):
             key = "key-{}".format(i)
             value = "value-{}".format(i)
             near_cache[key] = value
@@ -66,12 +66,12 @@ class NearCacheTestCase(unittest.TestCase):
 
     def test_expiry_time(self):
         near_cache = self.create_near_cache(self.service, IN_MEMORY_FORMAT.OBJECT, 1, 1000, EVICTION_POLICY.LRU, 1000)
-        for i in xrange(0, 1000):
+        for i in range(0, 1000):
             key = "key-{}".format(i)
             value = "value-{}".format(i)
             near_cache[key] = value
         sleep(2)
-        for i in xrange(1001, 1010):
+        for i in range(1001, 1010):
             key = "key-{}".format(i)
             value = "value-{}".format(i)
             near_cache[key] = value
@@ -81,7 +81,7 @@ class NearCacheTestCase(unittest.TestCase):
 
     def test_max_idle_time(self):
         near_cache = self.create_near_cache(self.service, IN_MEMORY_FORMAT.OBJECT, 1000, 2, EVICTION_POLICY.LRU, 1000)
-        for i in xrange(0, 1000):
+        for i in range(0, 1000):
             key = "key-{}".format(i)
             value = "value-{}".format(i)
             near_cache[key] = value
@@ -93,12 +93,12 @@ class NearCacheTestCase(unittest.TestCase):
 
     def test_LRU_time(self):
         near_cache = self.create_near_cache(self.service, IN_MEMORY_FORMAT.OBJECT, 1000, 1000, EVICTION_POLICY.LRU, 10000, 16, 16)
-        for i in xrange(0, 10000):
+        for i in range(0, 10000):
             key = "key-{}".format(i)
             value = "value-{}".format(i)
             near_cache[key] = value
         self.assertEqual("value-0", near_cache["key-0"])
-        for i in xrange(10001, 20000):
+        for i in range(10001, 20000):
             key = "key-{}".format(i)
             value = "value-{}".format(i)
             near_cache[key] = value
@@ -108,11 +108,11 @@ class NearCacheTestCase(unittest.TestCase):
 
     def test_LRU_time_with_update(self):
         near_cache = self.create_near_cache(self.service, IN_MEMORY_FORMAT.OBJECT, 1000, 1000, EVICTION_POLICY.LRU, 10, 10, 10)
-        for i in xrange(0, 10):
+        for i in range(0, 10):
             key = "key-{}".format(i)
             value = "value-{}".format(i)
             near_cache[key] = value
-        for i in xrange(0, 9):
+        for i in range(0, 9):
             key = "key-{}".format(i)
             value = "value-{}".format(i)
             self.assertEqual(value, near_cache[key])
@@ -122,13 +122,13 @@ class NearCacheTestCase(unittest.TestCase):
 
     def test_LFU_time(self):
         near_cache = self.create_near_cache(self.service, IN_MEMORY_FORMAT.BINARY, 1000, 1000, EVICTION_POLICY.LFU, 1000)
-        for i in xrange(0, 1000):
+        for i in range(0, 1000):
             key = "key-{}".format(i)
             value = "value-{}".format(i)
             near_cache[key] = value
-            for j in xrange(0, i + 1):
+            for j in range(0, i + 1):
                 v = near_cache[key]
-        for i in xrange(1001, 2000):
+        for i in range(1001, 2000):
             key = "key-{}".format(i)
             value = "value-{}".format(i)
             near_cache[key] = value
@@ -138,7 +138,7 @@ class NearCacheTestCase(unittest.TestCase):
 
     def test_RANDOM_time(self):
         near_cache = self.create_near_cache(self.service, IN_MEMORY_FORMAT.BINARY, 1000, 1000, EVICTION_POLICY.LFU, 1000)
-        for i in xrange(0, 2000):
+        for i in range(0, 2000):
             key = "key-{}".format(i)
             value = "value-{}".format(i)
             near_cache[key] = value

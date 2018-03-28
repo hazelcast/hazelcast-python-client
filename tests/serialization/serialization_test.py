@@ -56,7 +56,7 @@ class SerializationTestCase(unittest.TestCase):
         self.assertEqual(obj, obj2)
 
     def test_python_pickle_serialization_with_super_type(self):
-        obj = {"key-%d" % x: "value-%d" % x for x in xrange(0, 1000)}
+        obj = {"key-%d" % x: "value-%d" % x for x in range(0, 1000)}
         data = self.service.to_data(obj)
 
         obj2 = self.service.to_object(data)

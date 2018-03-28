@@ -29,6 +29,3 @@ def encode_request(name, function):
 
 
 # Empty decode_response(client_message), this message has no parameters to decode
-
-
-
