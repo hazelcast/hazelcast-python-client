@@ -34,7 +34,7 @@ class AsyncoreReactor(object):
         Future._threading_locals.is_reactor_thread = True
         while self._is_live:
             try:
-                asyncore.loop(count=10, timeout=0.01, map=self._map)
+                asyncore.loop(count=1, timeout=0.1, map=self._map)
                 self._check_timers()
             except select.error as err:
                 # TODO: parse error type to catch only error "9"
