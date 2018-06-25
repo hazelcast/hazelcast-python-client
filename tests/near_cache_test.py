@@ -112,10 +112,12 @@ class NearCacheTestCase(unittest.TestCase):
             key = "key-{}".format(i)
             value = "value-{}".format(i)
             near_cache[key] = value
+            sleep(0.1)
         for i in xrange(0, 9):
             key = "key-{}".format(i)
             value = "value-{}".format(i)
             self.assertEqual(value, near_cache[key])
+            sleep(0.1)
         near_cache["key-10"] = "value-10"
         with self.assertRaises(KeyError):
             val = near_cache["key-9"]
