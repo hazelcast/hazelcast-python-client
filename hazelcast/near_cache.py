@@ -3,6 +3,7 @@ import random
 
 from hazelcast.config import EVICTION_POLICY, IN_MEMORY_FORMAT
 from hazelcast.util import current_time
+from hazelcast.six.moves import range
 
 
 def lru_cmp(x, y):
@@ -153,7 +154,34 @@ class NearCache(dict):
         if len(new_eviction_samples_cleaned) == 0:  # have nothing to expire
             return
 
-        sorted_candidate_pool = sorted(new_eviction_samples_cleaned, cmp=self._cmp_func)  # sort the pool
+        def cmp_to_key(mycmp):
+            class K:
+                def __init__(self, obj, *args):
+                    self.obj = obj
+
+                def __lt__(self, other):
+                    return mycmp(self.obj, other.obj) < 0
+
+                def __gt__(self, other):
+                    return mycmp(self.obj, other.obj) > 0
+
+                def __eq__(self, other):
+                    return mycmp(self.obj, other.obj) == 0
+
+                def __le__(self, other):
+                    return mycmp(self.obj, other.obj) <= 0
+
+                def __ge__(self, other):
+                    return mycmp(self.obj, other.obj) >= 0
+
+                def __ne__(self, other):
+                    return mycmp(self.obj, other.obj) != 0
+            return K
+
+        try:
+            sorted_candidate_pool = sorted(new_eviction_samples_cleaned, cmp=self._cmp_func)  # sort the pool
+        except TypeError:
+            sorted_candidate_pool = sorted(new_eviction_samples_cleaned, key=cmp_to_key(self._cmp_func))
         min_size = min(self.eviction_sampling_pool_size, len(sorted_candidate_pool))
         self._eviction_candidates = sorted_candidate_pool[:min_size]  # set new eviction candidate pool
 
@@ -167,10 +195,10 @@ class NearCache(dict):
                 pass
 
     def _find_new_random_samples(self):
-        records = self.values()  # has random order because of dict hash
+        records = list(self.values())  # has random order because of dict hash
         new_sample_pool = set(self._eviction_candidates)
         start = self._random_index()
-        for i in xrange(start, start + self.eviction_sampling_count):
+        for i in range(start, start + self.eviction_sampling_count):
             index = i if i < len(records) else i - len(records)
             if records[index].is_expired(self.max_idle_seconds):
                 self._clean_expired_record(records[index].key)

@@ -10,7 +10,7 @@ class DataTestCase(unittest.TestCase):
         hexstr = "12345678" + "01020304" + "12345678"
         buff = binascii.unhexlify(hexstr)
         self._data = Data(buff)
-        self._total_size = len(hexstr) / 2
+        self._total_size = len(hexstr) // 2
 
     def tearDown(self):
         del self._data

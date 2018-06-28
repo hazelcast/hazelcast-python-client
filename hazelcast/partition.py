@@ -2,6 +2,7 @@ import logging
 import threading
 from hazelcast.hash import hash_to_index
 from hazelcast.protocol.codec import client_get_partitions_codec
+from hazelcast import six
 
 PARTITION_UPDATE_INTERVAL = 10
 
@@ -106,7 +107,7 @@ class PartitionService(object):
         partitions = client_get_partitions_codec.decode_response(message)["partitions"]
         # TODO: needs sync
         self.partitions = {}
-        for addr, partition_list in partitions.iteritems():
+        for addr, partition_list in six.iteritems(partitions):
             for partition in partition_list:
                 self.partitions[partition] = addr
         self.logger.debug("Finished updating partitions")

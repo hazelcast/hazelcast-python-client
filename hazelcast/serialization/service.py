@@ -6,6 +6,7 @@ from hazelcast.serialization.portable.classdef import FieldType
 from hazelcast.serialization.portable.context import PortableContext
 from hazelcast.serialization.portable.serializer import PortableSerializer
 from hazelcast.serialization.serializer import *
+from hazelcast import six
 
 DEFAULT_OUT_BUFFER_SIZE = 4 * 1024
 
@@ -36,7 +37,7 @@ class SerializationServiceV1(BaseSerializationService):
         self._register_constant_serializers()
 
         # Register Custom Serializers
-        for _type, custom_serializer in serialization_config.custom_serializers.iteritems():
+        for _type, custom_serializer in six.iteritems(serialization_config.custom_serializers):
             self._registry.safe_register_serializer(custom_serializer(), _type)
 
         # Register Global Serializer

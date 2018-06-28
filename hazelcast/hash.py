@@ -1,5 +1,5 @@
 import math
-
+from hazelcast.six.moves import range
 
 def _fmix(h):
     h ^= h >> 16

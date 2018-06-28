@@ -1,7 +1,8 @@
 import struct
 
-from api import *
-from bits import *
+from hazelcast.serialization.api import *
+from hazelcast.serialization.bits import *
+from hazelcast.six.moves import range
 
 
 class _ObjectDataOutput(ObjectDataOutput):
@@ -138,7 +139,7 @@ class _ObjectDataOutput(ObjectDataOutput):
         self._pos = position
 
     def write_zero_bytes(self, count):
-        for i in xrange(0, count):
+        for i in range(0, count):
             self._write(0)
 
     # HELPERS
@@ -158,7 +159,7 @@ class _ObjectDataOutput(ObjectDataOutput):
                 new_buffer[:self._pos] = self._buffer[:self._pos]
                 self._buffer = new_buffer
             else:
-                new_length = length * 2 if length > self._init_size / 2 else self._init_size
+                new_length = length * 2 if length > self._init_size // 2 else self._init_size
                 self._buffer = bytearray(new_length)
 
     def _available(self):

@@ -2,7 +2,7 @@ import unittest
 import binascii
 
 from hazelcast.serialization.input import _ObjectDataInput
-
+from hazelcast import six
 
 class InputTestCase(unittest.TestCase):
     def setUp(self):
@@ -40,7 +40,7 @@ class InputTestCase(unittest.TestCase):
         initial_pos = _input._pos
         char = _input.read_char()
         self.assertEqual(0, initial_pos)
-        self.assertEqual(unichr(0x00e7), char)
+        self.assertEqual(six.unichr(0x00e7), char)
 
     def test_char_le(self):
         buff = bytearray(binascii.unhexlify("e7000000"))
@@ -48,7 +48,7 @@ class InputTestCase(unittest.TestCase):
         initial_pos = _input._pos
         char = _input.read_char()
         self.assertEqual(0, initial_pos)
-        self.assertEqual(unichr(0x00e7), char)
+        self.assertEqual(six.unichr(0x00e7), char)
 
 
 if __name__ == '__main__':

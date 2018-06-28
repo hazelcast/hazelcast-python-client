@@ -4,6 +4,7 @@ from hazelcast.serialization import INT_SIZE_IN_BYTES, NULL_ARRAY_LENGTH
 from hazelcast.serialization.api import PortableWriter
 from hazelcast.serialization.output import EmptyObjectDataOutput
 from hazelcast.serialization.portable.classdef import FieldType, ClassDefinitionBuilder
+from hazelcast.six.moves import range
 
 
 class DefaultPortableWriter(PortableWriter):
@@ -117,7 +118,7 @@ class DefaultPortableWriter(PortableWriter):
         if _len > 0:
             _offset = self._out.position()
             self._out.write_zero_bytes(_len * 4)
-            for i in xrange(0, _len):
+            for i in range(0, _len):
                 portable = values[i]
                 _check_portable_attributes(fd, portable)
                 _pos_val = self._out.position()
@@ -159,7 +160,7 @@ class DefaultPortableWriter(PortableWriter):
         position = self._offset + index * INT_SIZE_IN_BYTES
         self._out.write_int(pos_val, position)
         self._out.write_short(len(field_name))
-        self._out.write_from(field_name)
+        self._out.write_from(field_name.encode("utf-8"))
         self._out.write_byte(field_type)
 
     def end(self):
@@ -257,7 +258,7 @@ class ClassDefinitionWriter(PortableWriter):
             raise HazelcastSerializationError("Cannot write None portable without explicitly registering class definition!")
         portable = values[0]
         _class_id = portable.get_class_id()
-        for i in xrange(1, len(values)):
+        for i in range(1, len(values)):
             if values[i].get_class_id() != _class_id:
                 raise ValueError("Detected different class-ids in portable array!")
         version = util.get_portable_version(portable, self.portable_context.portable_version)

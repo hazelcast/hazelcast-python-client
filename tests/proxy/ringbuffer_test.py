@@ -3,6 +3,7 @@ import os
 from hazelcast.proxy.ringbuffer import OVERFLOW_POLICY_FAIL, MAX_BATCH_SIZE
 from tests.base import SingleMemberTestCase
 from tests.util import random_string
+from hazelcast.six.moves import range
 
 CAPACITY = 10
 
@@ -34,10 +35,10 @@ class RingBufferTest(SingleMemberTestCase):
         self.assertEqual(-1, self.ringbuffer.add(CAPACITY + 1, OVERFLOW_POLICY_FAIL))
 
     def test_add_all(self):
-        self.assertEqual(CAPACITY - 1, self.ringbuffer.add_all(range(0, CAPACITY)))
+        self.assertEqual(CAPACITY - 1, self.ringbuffer.add_all(list(range(0, CAPACITY))))
 
     def test_add_all_when_full(self):
-        self.assertEqual(-1, self.ringbuffer.add_all(range(0, CAPACITY * 2), OVERFLOW_POLICY_FAIL))
+        self.assertEqual(-1, self.ringbuffer.add_all(list(range(0, CAPACITY * 2)), OVERFLOW_POLICY_FAIL))
 
     def test_add_all_when_empty_list(self):
         with self.assertRaises(AssertionError):
@@ -45,7 +46,7 @@ class RingBufferTest(SingleMemberTestCase):
 
     def test_add_all_when_too_large_batch(self):
         with self.assertRaises(AssertionError):
-            self.ringbuffer.add_all(range(0, MAX_BATCH_SIZE + 1))
+            self.ringbuffer.add_all(list(range(0, MAX_BATCH_SIZE + 1)))
 
     def test_head_sequence(self):
         self._fill_ringbuffer(CAPACITY * 2)
@@ -58,9 +59,9 @@ class RingBufferTest(SingleMemberTestCase):
         self.assertEqual(CAPACITY * 2 - 1, self.ringbuffer.tail_sequence())
 
     def test_remaining_capacity(self):
-        self._fill_ringbuffer(CAPACITY / 2)
+        self._fill_ringbuffer(CAPACITY // 2)
 
-        self.assertEqual(CAPACITY / 2, self.ringbuffer.remaining_capacity())
+        self.assertEqual(CAPACITY // 2, self.ringbuffer.remaining_capacity())
 
     def test_read_one(self):
         self.ringbuffer.add("item")
@@ -77,7 +78,7 @@ class RingBufferTest(SingleMemberTestCase):
     def test_read_many(self):
         self._fill_ringbuffer(CAPACITY)
         items = self.ringbuffer.read_many(0, 0, CAPACITY)
-        self.assertEqual(items, range(0,CAPACITY))
+        self.assertEqual(items, list(range(0, CAPACITY)))
 
     def test_read_many_when_negative_start_seq(self):
         with self.assertRaises(AssertionError):
@@ -96,7 +97,7 @@ class RingBufferTest(SingleMemberTestCase):
             self.ringbuffer.read_many(0, 0, MAX_BATCH_SIZE+1)
 
     def _fill_ringbuffer(self, n=CAPACITY):
-        for x in xrange(0, n):
+        for x in range(0, n):
             self.ringbuffer.add(x)
 
     def test_str(self):

@@ -2,6 +2,7 @@ import logging
 from time import sleep
 
 import hazelcast
+from hazelcast import six
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s', datefmt="%H:%M%:%S,")
@@ -10,7 +11,7 @@ if __name__ == '__main__':
 
     config = hazelcast.ClientConfig()
     try:
-        from hzrc.client import HzRemoteController
+        from tests.hzrc.client import HzRemoteController
         rc = HzRemoteController('127.0.0.1', '9701')
 
         if not rc.ping():
@@ -30,7 +31,7 @@ if __name__ == '__main__':
         #  One of these states will be received
         # from hazelcast.lifecycle import LIFECYCLE_STATE_SHUTDOWN, LIFECYCLE_STATE_SHUTTING_DOWN, LIFECYCLE_STATE_CONNECTED, \
         #     LIFECYCLE_STATE_STARTING, LIFECYCLE_STATE_DISCONNECTED
-        print lifecycle_state_str
+        six.print_(lifecycle_state_str)
 
     # lifecycle_state_changed function will be called with Lifecycle state as parameter when lifecycle state change
     config.add_lifecycle_listener(lifecycle_state_changed)

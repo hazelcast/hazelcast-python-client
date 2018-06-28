@@ -6,6 +6,8 @@ import time
 
 import hazelcast
 from hazelcast.config import NearCacheConfig, IN_MEMORY_FORMAT
+from hazelcast import six
+from hazelcast.six.moves import range
 
 sys.path.append(dirname(dirname(dirname(__file__))))
 
@@ -34,7 +36,7 @@ def init():
     config.add_near_cache_config(near_cache_config)
 
     try:
-        from hzrc.client import HzRemoteController
+        from tests.hzrc.client import HzRemoteController
 
         rc = HzRemoteController('127.0.0.1', '9701')
 
@@ -52,21 +54,21 @@ def init():
 
     my_map = client.get_map(MAP_NAME).blocking()
 
-    print "START INIT"
-    for key in xrange(0, ENTRY_COUNT):
+    six.print_("START INIT")
+    for key in range(0, ENTRY_COUNT):
         my_map.put(key, VALUE)
-    for key in xrange(0, ENTRY_COUNT):
+    for key in range(0, ENTRY_COUNT):
         my_map.get(key)
-    print "INIT COMPLETE"
+    six.print_("INIT COMPLETE")
     return my_map
 
 
 def bench(my_map):
     start = time.time()
     hit = my_map._near_cache._cache_hit
-    for key in xrange(0, ENTRY_COUNT):
+    for key in range(0, ENTRY_COUNT):
         my_map.get(key)
-    print "op / sec :", ENTRY_COUNT / (time.time() - start), "hit:", my_map._near_cache._cache_hit-hit
+    six.print_("op / sec :", ENTRY_COUNT // (time.time() - start), "hit:", my_map._near_cache._cache_hit-hit)
 
 
 if __name__ == '__main__':

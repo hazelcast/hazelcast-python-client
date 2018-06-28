@@ -4,9 +4,10 @@ import itertools
 import threading
 import time
 from collections import Sequence, Iterable
-from types import TypeType
 
 from hazelcast.core import Address
+from hazelcast import six
+from hazelcast.six.moves import range
 
 DEFAULT_ADDRESS = "127.0.0.1"
 DEFAULT_PORT = 5701
@@ -92,7 +93,7 @@ def validate_type(_type):
 
     :param _type: (Type), the type to be validated.
     """
-    if not isinstance(_type, TypeType):
+    if not isinstance(_type, type):
         raise ValueError("Serializer should be an instance of {}".format(_type.__name__))
 
 
@@ -120,7 +121,7 @@ class AtomicInteger(object):
 
         :return: (int), current value of AtomicInteger.
         """
-        return self.count.next()
+        return next(self.count)
 
     def set(self, value):
         """
@@ -136,7 +137,7 @@ def enum(**enums):
     :param enums: Parameters of enumeration.
     :return: (Enum), the created enumerations.
     """
-    enums['reverse'] = dict((value, key) for key, value in enums.iteritems())
+    enums['reverse'] = dict((value, key) for key, value in six.iteritems(enums))
     return type('Enum', (), enums)
 
 
@@ -144,7 +145,7 @@ def _parse_address(address):
     if ":" in address:
         host, port = address.split(":")
         return [Address(host, int(port))]
-    return [Address(address, p) for p in xrange(DEFAULT_PORT, DEFAULT_PORT + 3)]
+    return [Address(address, p) for p in range(DEFAULT_PORT, DEFAULT_PORT + 3)]
 
 
 def get_possible_addresses(addresses=[], member_list=[]):

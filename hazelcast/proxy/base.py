@@ -3,6 +3,7 @@ import logging
 from hazelcast.future import make_blocking
 from hazelcast.partition import string_partition_strategy
 from hazelcast.util import enum, thread_id
+from hazelcast import six
 
 
 def default_response_handler(future, codec, to_object):
@@ -188,7 +189,7 @@ class TopicMessage(object):
 
 def get_entry_listener_flags(**kwargs):
     flags = 0
-    for (key, value) in kwargs.iteritems():
+    for (key, value) in six.iteritems(kwargs):
         if value:
             flags |= getattr(EntryEventType, key)
     return flags

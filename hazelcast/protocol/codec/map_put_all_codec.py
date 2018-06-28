@@ -3,6 +3,7 @@ from hazelcast.protocol.client_message import ClientMessage
 from hazelcast.protocol.custom_codec import *
 from hazelcast.util import ImmutableLazyDataList
 from hazelcast.protocol.codec.map_message_type import *
+from hazelcast import six
 
 REQUEST_TYPE = MAP_PUTALL
 RESPONSE_TYPE = 100
@@ -14,7 +15,7 @@ def calculate_size(name, entries):
     data_size = 0
     data_size += calculate_size_str(name)
     data_size += INT_SIZE_IN_BYTES
-    for key, val in entries.iteritems():
+    for key, val in six.iteritems(entries):
         data_size += calculate_size_data(key)
         data_size += calculate_size_data(val)
     return data_size
@@ -27,7 +28,7 @@ def encode_request(name, entries):
     client_message.set_retryable(RETRYABLE)
     client_message.append_str(name)
     client_message.append_int(len(entries))
-    for key, value in entries.iteritems():
+    for key, value in six.iteritems(entries):
         client_message.append_data(key)
         client_message.append_data(value)
     client_message.update_frame_length()

@@ -3,6 +3,8 @@ from types import FunctionType
 
 from hazelcast.serialization.api import ObjectDataOutput, ObjectDataInput, Portable, PortableReader, PortableWriter, \
     StreamSerializer, IdentifiedDataSerializable
+from hazelcast import six
+from hazelcast.six.moves import range
 
 
 class APITestCase(unittest.TestCase):
@@ -21,7 +23,7 @@ class APITestCase(unittest.TestCase):
             try:
                 if isinstance(meth, FunctionType):
                     with self.assertRaises(NotImplementedError):
-                        params = [i for i in xrange(0, meth.func_code.co_argcount)]
+                        params = [i for i in range(0, six.get_function_code(meth).co_argcount)]
                         meth(*params)
             except TypeError as e:
-                print(e)
+                six.print_(e)

@@ -2,6 +2,7 @@
 
 import hazelcast
 import logging
+from hazelcast import six
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s', datefmt="%H:%M%:%S,")
@@ -17,9 +18,9 @@ if __name__ == '__main__':
     mlist.add("item2")
 
     # Remove the first element
-    print("Removed: ", mlist.remove_at(0).result())
+    six.print_("Removed: ", mlist.remove_at(0).result())
     # There is only one element left
-    print("Current size is ", mlist.size().result())
+    six.print_("Current size is ", mlist.size().result())
     # Clear the list
     mlist.clear()
     # Shutdown this Hazelcast Client

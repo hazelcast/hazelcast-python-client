@@ -176,7 +176,7 @@ class ClientMessage(object):
 
     def read_byte_array(self):
         length = self.read_int()
-        result = self.buffer[self._read_offset(): self._read_offset() + length]
+        result = bytearray(self.buffer[self._read_offset(): self._read_offset() + length])
         self._read_index += length
         return result
 
@@ -251,7 +251,7 @@ class ClientMessageBuilder(object):
             try:
                 message = self._incomplete_messages[client_message.get_correlation_id()]
             except KeyError:
-                self.logger.warn("A message without the begin part is received.")
+                self.logger.warning("A message without the begin part is received.")
                 return
             message.accumulate(client_message)
             if client_message.is_flag_set(END_FLAG):

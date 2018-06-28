@@ -35,9 +35,9 @@ class IdGenerator(Proxy):
         :param initial: (long), the given id.
         :return: (bool), ``true`` if initialization succeeded, ``false`` if id is less than 0.
         """
-        if id <= 0:
+        if initial <= 0:
             return False
-        step = initial / BLOCK_SIZE
+        step = initial // BLOCK_SIZE
         with self._lock:
             init = self._atomic_long.compare_and_set(0, step + 1).result()
             if init:

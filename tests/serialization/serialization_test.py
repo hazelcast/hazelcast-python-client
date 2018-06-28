@@ -4,6 +4,7 @@ from hazelcast.config import SerializationConfig
 from hazelcast.core import Address
 from hazelcast.serialization.data import Data
 from hazelcast.serialization.service import SerializationServiceV1
+from hazelcast.six.moves import range
 
 
 class SerializationTestCase(unittest.TestCase):
@@ -51,12 +52,11 @@ class SerializationTestCase(unittest.TestCase):
     def test_python_pickle_serialization(self):
         obj = Address("localhost", 5701)
         data = self.service.to_data(obj)
-
         obj2 = self.service.to_object(data)
         self.assertEqual(obj, obj2)
 
     def test_python_pickle_serialization_with_super_type(self):
-        obj = {"key-%d" % x: "value-%d" % x for x in xrange(0, 1000)}
+        obj = {"key-%d" % x: "value-%d" % x for x in range(0, 1000)}
         data = self.service.to_data(obj)
 
         obj2 = self.service.to_object(data)

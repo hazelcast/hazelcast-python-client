@@ -2,7 +2,7 @@ from hazelcast.exception import HazelcastSerializationError
 from hazelcast.serialization import bits
 from hazelcast.serialization.api import PortableReader
 from hazelcast.serialization.portable.classdef import FieldType
-
+from hazelcast.six.moves import range
 
 class DefaultPortableReader(PortableReader):
     def __init__(self, portable_serializer, data_input, class_def):
@@ -206,7 +206,7 @@ class DefaultPortableReader(PortableReader):
             portables = [None] * length
             if length > 0:
                 offset = self._in.position()
-                for i in xrange(0, length):
+                for i in range(0, length):
                     start = self._in.read_int(offset + i * bits.INT_SIZE_IN_BYTES)
                     self._in.set_position(start)
                     portables[i] = self._portable_serializer.read_internal(self._in, factory_id, class_id)
@@ -239,7 +239,7 @@ class DefaultPortableReader(PortableReader):
         if len(field_names) > 1:
             fd = None
             _reader = self
-            for i in xrange(0, len(field_names)):
+            for i in range(0, len(field_names)):
                 fd = _reader._class_def.get_field(field_names[i])
                 if fd is None:
                     break

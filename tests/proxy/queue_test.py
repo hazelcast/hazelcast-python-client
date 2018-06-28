@@ -4,6 +4,7 @@ from hazelcast.proxy.base import ItemEventType
 from hazelcast.proxy.queue import Full
 from tests.base import SingleMemberTestCase
 from tests.util import random_string, event_collector
+from hazelcast import six
 
 
 class QueueTest(SingleMemberTestCase):
@@ -105,7 +106,7 @@ class QueueTest(SingleMemberTestCase):
         _all = ["1", "2", "3"]
         add_resp = self.queue.add_all(_all)
         q_all = self.queue.iterator()
-        self.assertItemsEqual(_all, q_all)
+        six.assertCountEqual(self, _all, q_all)
         self.assertTrue(add_resp)
 
     def test_add_all_null_element(self):
@@ -142,7 +143,7 @@ class QueueTest(SingleMemberTestCase):
         _all = ["1", "2", "3"]
         self.queue.add_all(_all)
         all_result = self.queue.iterator()
-        self.assertItemsEqual(all_result, _all)
+        six.assertCountEqual(self, all_result, _all)
 
     def test_is_empty(self):
         is_empty = self.queue.is_empty()
@@ -186,7 +187,7 @@ class QueueTest(SingleMemberTestCase):
         self.queue.add_all(_all)
         drain = []
         size = self.queue.drain_to(drain)
-        self.assertItemsEqual(drain, _all)
+        six.assertCountEqual(self, drain, _all)
         self.assertEqual(size, 3)
 
     def test_peek(self):

@@ -6,6 +6,10 @@ from hazelcast.serialization import SerializationServiceV1
 from hazelcast.serialization.api import Portable
 from hazelcast.serialization.portable.classdef import ClassDefinitionBuilder
 from tests.serialization.identified_test import create_identified, SerializationV1Identified
+from hazelcast import six
+
+if not six.PY2:
+    long = int
 
 FACTORY_ID = 1
 
@@ -167,11 +171,15 @@ class InnerPortable(Portable):
     def __eq__(self, other):
         return self.param_str == other.param_str and self.param_int == other.param_int
 
+    def __hash__(self):
+        return id(self)//16
+
 
 def create_portable():
     identified = create_identified()
     inner_portable = InnerPortable("Inner Text", 666)
-    return SerializationV1Portable(99, True, 'c', 11, 1234134, 1341431221l, 1.0, 2.0, [1, 2, 3], [True, False, True],
+    long_var = long("1341431221l") if six.PY2 else 1341431221
+    return SerializationV1Portable(99, True, 'c', 11, 1234134, long_var, 1.0, 2.0, [1, 2, 3], [True, False, True],
                                    ['a', 'b', 'c'],
                                    [1, 2, 3], [4, 2, 3], [11, 2, 3], [1.0, 2.0, 3.0],
                                    [11.0, 22.0, 33.0], "the string text",
@@ -194,7 +202,7 @@ class PortableSerializationTestCase(unittest.TestCase):
         data = service.to_data(obj)
         obj2 = service.to_object(data)
         self.assertTrue(obj == obj2)
-        self.assertEquals(obj.inner_portable.param_int, obj2.nested_field)
+        self.assertEqual(obj.inner_portable.param_int, obj2.nested_field)
 
     def test_encode_decode_2(self):
         config = hazelcast.ClientConfig()

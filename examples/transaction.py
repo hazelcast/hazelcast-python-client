@@ -5,6 +5,7 @@ from os.path import dirname
 
 sys.path.append(dirname(dirname(__file__)))
 import hazelcast
+from hazelcast import six
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s', datefmt="%H:%M%:%S,")
@@ -15,7 +16,7 @@ if __name__ == '__main__':
     config.group_config.name = "dev"
     config.group_config.password = "dev-pass"
     try:
-        from hzrc.client import HzRemoteController
+        from tests.hzrc.client import HzRemoteController
         rc = HzRemoteController('127.0.0.1', '9701')
 
         if not rc.ping():
@@ -34,7 +35,7 @@ if __name__ == '__main__':
     t.begin()
     try:
         map = t.get_map("test")
-        print(map)
+        six.print_(map)
         t.commit()
     except:
         logger.exception("Exception in transaction")

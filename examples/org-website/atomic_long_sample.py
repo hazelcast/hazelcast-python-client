@@ -1,5 +1,6 @@
 import hazelcast
 import logging
+from hazelcast import six
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s', datefmt="%H:%M%:%S,")
@@ -13,6 +14,6 @@ if __name__ == '__main__':
     # Add and Get the "counter"
     counter.add_and_get(3).result()  # value is 3
     # Display the "counter" value
-    print("counter: ", counter.get().result())
+    six.print_("counter: ", counter.get().result())
     # Shutdown this Hazelcast Client
     hz.shutdown()
