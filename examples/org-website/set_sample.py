@@ -1,5 +1,6 @@
 import hazelcast
 import logging
+from hazelcast import six
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s', datefmt="%H:%M%:%S,")
@@ -18,6 +19,6 @@ if __name__ == '__main__':
     mset.add("item2")
     mset.add("item3")
     # Get the items. Note that there are no duplicates.
-    print(mset.get_all().result())
+    six.print_(mset.get_all().result())
     # Shutdown this Hazelcast Client
     hz.shutdown()

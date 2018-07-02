@@ -4,6 +4,7 @@ from hazelcast.protocol.custom_codec import *
 from hazelcast.util import ImmutableLazyDataList
 from hazelcast.protocol.codec.client_message_type import *
 from hazelcast.protocol.event_response_const import *
+from hazelcast.six.moves import range
 
 REQUEST_TYPE = CLIENT_ADDMEMBERSHIPLISTENER
 RESPONSE_TYPE = 104
@@ -44,7 +45,7 @@ def handle(client_message, handle_event_member = None, handle_event_memberlist =
     if message_type == EVENT_MEMBERLIST and handle_event_memberlist is not None:
         members_size = client_message.read_int()
         members = []
-        for members_index in xrange(0, members_size):
+        for members_index in range(0, members_size):
             members_item = MemberCodec.decode(client_message, to_object)
             members.append(members_item)
         handle_event_memberlist(members=members)

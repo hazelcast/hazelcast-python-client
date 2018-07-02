@@ -1,9 +1,9 @@
-import threading
 import random
 import time
 import logging
 import sys
 from os.path import dirname
+from hazelcast.six.moves import range
 
 sys.path.append(dirname(dirname(dirname(__file__))))
 
@@ -26,7 +26,7 @@ def do_benchmark():
     config.group_config.password = "dev-pass"
 
     try:
-        from hzrc.client import HzRemoteController
+        from tests.hzrc.client import HzRemoteController
 
         rc = HzRemoteController('127.0.0.1', '9701')
 
@@ -42,7 +42,7 @@ def do_benchmark():
 
     client = hazelcast.HazelcastClient(config)
     my_map = client.get_map("default")
-    for i in xrange(0, 1000):
+    for i in range(0, 1000):
         key = int(random.random() * ENTRY_COUNT)
         operation = int(random.random() * 100)
         if operation < GET_PERCENTAGE:
@@ -54,4 +54,7 @@ def do_benchmark():
 
 
 if __name__ == '__main__':
+    start = time.time()
     do_benchmark()
+    time_taken = time.time() - start
+    print("Took %s seconds" % (time_taken))

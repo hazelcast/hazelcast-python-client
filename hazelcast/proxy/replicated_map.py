@@ -8,6 +8,7 @@ from hazelcast.protocol.codec import replicated_map_clear_codec, replicated_map_
     replicated_map_values_codec
 from hazelcast.proxy.base import Proxy, default_response_handler, EntryEvent, EntryEventType
 from hazelcast.util import to_millis, check_not_none
+from hazelcast import six
 
 
 class ReplicatedMap(Proxy):
@@ -177,7 +178,7 @@ class ReplicatedMap(Proxy):
         :param map: (dict), map which includes mappings to be stored in this map.
         """
         entries = {}
-        for key, value in map.iteritems():
+        for key, value in six.iteritems(map):
             check_not_none(key, "key can't be None")
             check_not_none(value, "value can't be None")
             entries[self._to_data(key)] = self._to_data(value)

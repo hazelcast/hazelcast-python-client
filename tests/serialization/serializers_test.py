@@ -1,6 +1,7 @@
 import binascii
+from hazelcast import six
 
-from hzrc.ttypes import Lang
+from tests.hzrc.ttypes import Lang
 
 from hazelcast.config import SerializationConfig, INTEGER_TYPE
 from hazelcast.serialization.data import Data
@@ -39,7 +40,7 @@ class SerializersTestCase(SingleMemberTestCase):
         buff = bytearray(binascii.unhexlify("00000000fffffffb00e7"))
         data = Data(buff)
         obj = self.service.to_object(data)
-        self.assertEqual(unichr(0x00e7), obj)
+        self.assertEqual(six.unichr(0x00e7), obj)
 
     def test_float(self):
         buff = bytearray(binascii.unhexlify("00000000fffffff700000000"))
@@ -96,6 +97,6 @@ result=instance_0.getSerializationService().toBytes(BigInteger("{}",10))""".form
         data = Data(response.result)
         val = self.service.to_object(data)
         data_local = self.service.to_data(big_int)
-
+        
         self.assertEqual(binascii.hexlify(data._buffer), binascii.hexlify(data_local._buffer))
         self.assertEqual(big_int, val)

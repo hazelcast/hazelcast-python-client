@@ -1,10 +1,11 @@
 import logging
-import random
 from time import sleep
 
 import hazelcast
 from hazelcast.serialization.api import Portable
 from hazelcast.serialization.predicate import sql
+from hazelcast.six.moves import range
+from hazelcast import six
 
 FACTORY_ID = 2
 
@@ -66,8 +67,8 @@ class SamplePortable(Portable):
 
 
 def fill_map(hz_map, count=10):
-    s_map = {SamplePortable("key-%d" % x, x): SamplePortable("value-%d" % x, x) for x in xrange(0, count)}
-    for k, v in s_map.iteritems():
+    s_map = {SamplePortable("key-%d" % x, x): SamplePortable("value-%d" % x, x) for x in range(0, count)}
+    for k, v in six.iteritems(s_map):
         hz_map.put(k, v)
     return s_map
 
@@ -85,7 +86,7 @@ if __name__ == '__main__':
         {SamplePortable.CLASS_ID: SamplePortable}
 
     try:
-        from hzrc.client import HzRemoteController
+        from tests.hzrc.client import HzRemoteController
 
         rc = HzRemoteController('127.0.0.1', '9701')
 
@@ -102,7 +103,7 @@ if __name__ == '__main__':
     client = hazelcast.HazelcastClient(config)
 
     my_map = client.get_map("map").blocking()  # returns sync map, all map functions are blocking
-    print(my_map)
+    six.print_(my_map)
     #
     _map = fill_map(my_map, 1000)
     # map_keys = _map.keys()
@@ -118,15 +119,15 @@ if __name__ == '__main__':
     #     print "key:", key
 
     my_map_async = client.get_map("map")
-    print("Map Size:", my_map_async.size().result())
+    six.print_("Map Size:", my_map_async.size().result())
 
     predicate2 = sql("param-str ILIKE 'value-2%'")
 
     def values_callback(f):
         result_set = f.result()
-        print("Query Result Size:", len(result_set))
+        six.print_("Query Result Size:", len(result_set))
         for value in result_set:
-            print "value:", value
+            six.print_("value:", value)
     my_map_async.values(predicate2).add_done_callback(values_callback)
 
 

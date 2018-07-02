@@ -2,6 +2,7 @@ import logging
 from time import sleep
 
 import hazelcast
+from hazelcast import six
 
 
 if __name__ == '__main__':
@@ -11,7 +12,7 @@ if __name__ == '__main__':
 
     config = hazelcast.ClientConfig()
     try:
-        from hzrc.client import HzRemoteController
+        from tests.hzrc.client import HzRemoteController
         rc = HzRemoteController('127.0.0.1', '9701')
 
         if not rc.ping():
@@ -29,10 +30,10 @@ if __name__ == '__main__':
     config.group_config.password = "dev-pass"
 
     def member_added(e):
-        print 'member added event :{}'.format(e)
+        six.print_('member added event :{}'.format(e))
 
     def member_removed(e):
-        print 'member removed event :{}'.format(e)
+        six.print_('member removed event :{}'.format(e))
 
     # member_added and member_removed functions will be called when cluster state changed
     config.add_membership_listener(member_added, member_removed, True)

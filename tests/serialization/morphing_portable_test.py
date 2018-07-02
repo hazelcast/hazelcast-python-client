@@ -2,7 +2,11 @@ import unittest
 
 from hazelcast import SerializationConfig
 from hazelcast.serialization import SerializationServiceV1
-from portable_test import create_portable, SerializationV1Portable, InnerPortable, FACTORY_ID
+from tests.serialization.portable_test import create_portable, SerializationV1Portable, InnerPortable, FACTORY_ID
+from hazelcast import six
+
+if not six.PY2:
+    long = int
 
 
 class MorphingPortable(SerializationV1Portable):
@@ -54,7 +58,10 @@ class MorphingPortableTestCase(unittest.TestCase):
         self.assertEqual('c', a_character)
         self.assertEqual(11, a_short)
         self.assertEqual(1234134, a_integer)
-        self.assertEqual(1341431221l, a_long)
+        if six.PY2:
+            self.assertEqual(long("1341431221l"), a_long)
+        else:
+            self.assertEqual(1341431221, a_long)
         self.assertEqual(0, self.reader.read_long("NO SUCH FIELD"))
 
     def test_read_int(self):
@@ -100,7 +107,10 @@ class MorphingPortableTestCase(unittest.TestCase):
         self.assertEqual('c', a_character)
         self.assertEqual(11, a_short)
         self.assertEqual(1234134, a_integer)
-        self.assertEqual(1341431221l, a_long)
+        if six.PY2:
+            self.assertEqual(long("1341431221l"), a_long)
+        else:
+            self.assertEqual(1341431221, a_long)
         self.assertEqual(1.0, a_float)
         self.assertEqual(2.0, a_double)
         self.assertEqual(0, self.reader.read_double("NO SUCH FIELD"))

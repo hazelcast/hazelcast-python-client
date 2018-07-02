@@ -2,6 +2,7 @@ import hazelcast
 import logging
 
 from hazelcast.serialization.api import IdentifiedDataSerializable
+from hazelcast import six
 
 
 class IncEntryProcessor(IdentifiedDataSerializable):
@@ -35,6 +36,6 @@ if __name__ == '__main__':
     # Run the IncEntryProcessor class on the Hazelcast Cluster Member holding the key called "key"
     map.execute_on_key("key", IncEntryProcessor()).result()
     # Show that the IncEntryProcessor updated the value.
-    print("new value:", map.get("key").result())
+    six.print_("new value:", map.get("key").result())
     # Shutdown this Hazelcast Client
     hz.shutdown()

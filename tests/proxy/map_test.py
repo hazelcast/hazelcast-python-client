@@ -5,6 +5,9 @@ from hazelcast.serialization.api import IdentifiedDataSerializable
 from hazelcast.serialization.predicate import SqlPredicate
 from tests.base import SingleMemberTestCase
 from tests.util import random_string, event_collector
+from hazelcast import six
+from hazelcast.six.moves import range
+
 
 FACTORY_ID = 1
 
@@ -154,7 +157,7 @@ class MapTest(SingleMemberTestCase):
     def test_entry_set(self):
         entries = self._fill_map()
 
-        self.assertItemsEqual(self.map.entry_set(), list(entries.iteritems()))
+        six.assertCountEqual(self, self.map.entry_set(), list(six.iteritems(entries)))
 
     def test_entry_set_with_predicate(self):
         self._fill_map()
@@ -196,7 +199,7 @@ class MapTest(SingleMemberTestCase):
         # TODO: EntryProcessor must be defined on the server
         map = self._fill_map()
         with self.assertRaises(HazelcastSerializationError):
-            self.map.execute_on_keys(map.keys(), EntryProcessor())
+            self.map.execute_on_keys(list(map.keys()), EntryProcessor())
 
     def test_flush(self):
         self._fill_map()
@@ -214,9 +217,9 @@ class MapTest(SingleMemberTestCase):
     def test_get_all(self):
         expected = self._fill_map(1000)
 
-        actual = self.map.get_all(expected.keys())
+        actual = self.map.get_all(list(expected.keys()))
 
-        self.assertItemsEqual(expected, actual)
+        six.assertCountEqual(self, expected, actual)
 
     def test_get_all_when_no_keys(self):
         self.assertEqual(self.map.get_all([]), {})
@@ -259,9 +262,9 @@ class MapTest(SingleMemberTestCase):
         self.assertFalse(self.map.is_locked("key"))
 
     def test_key_set(self):
-        keys = self._fill_map().keys()
+        keys = list(self._fill_map().keys())
 
-        self.assertItemsEqual(self.map.key_set(), keys)
+        six.assertCountEqual(self, self.map.key_set(), keys)
 
     def test_key_set_with_predicate(self):
         self._fill_map()
@@ -269,13 +272,13 @@ class MapTest(SingleMemberTestCase):
         self.assertEqual(self.map.key_set(SqlPredicate("this == 'value-1'")), ["key-1"])
 
     def test_load_all(self):
-        keys = self._fill_map().keys()
+        keys = list(self._fill_map().keys())
         # TODO: needs map store configuration
         with self.assertRaises(HazelcastError):
             self.map.load_all()
 
     def test_load_all_with_keys(self):
-        keys = self._fill_map().keys()
+        keys = list(self._fill_map().keys())
         # TODO: needs map store configuration
         with self.assertRaises(HazelcastError):
             self.map.load_all(["key-1", "key-2"])
@@ -289,12 +292,12 @@ class MapTest(SingleMemberTestCase):
         self.assertFalse(self.map.try_put("key", "new_value", timeout=0.01))
 
     def test_put_all(self):
-        map = {"key-%d" % x: "value-%d" % x for x in xrange(0, 1000)}
+        map = {"key-%d" % x: "value-%d" % x for x in range(0, 1000)}
         self.map.put_all(map)
 
         entries = self.map.entry_set()
 
-        self.assertItemsEqual(entries, map.iteritems())
+        six.assertCountEqual(self, entries, six.iteritems(map))
 
     def test_put_all_when_no_keys(self):
         self.assertIsNone(self.map.put_all({}))
@@ -434,9 +437,9 @@ class MapTest(SingleMemberTestCase):
             self.map.unlock("key")
 
     def test_values(self):
-        values = self._fill_map().values()
+        values = list(self._fill_map().values())
 
-        self.assertItemsEqual(self.map.values(), values)
+        six.assertCountEqual(self, list(self.map.values()), values)
 
     def test_values_with_predicate(self):
         self._fill_map()
@@ -447,7 +450,7 @@ class MapTest(SingleMemberTestCase):
         self.assertTrue(str(self.map).startswith("Map"))
 
     def _fill_map(self, count=10):
-        map = {"key-%d" % x: "value-%d" % x for x in xrange(0, count)}
-        for k, v in map.iteritems():
+        map = {"key-%d" % x: "value-%d" % x for x in range(0, count)}
+        for k, v in six.iteritems(map):
             self.map.put(k, v)
         return map

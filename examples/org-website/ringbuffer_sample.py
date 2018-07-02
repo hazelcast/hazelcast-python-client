@@ -2,6 +2,7 @@
 
 import hazelcast
 import logging
+from hazelcast import six
 
 from hazelcast.proxy.ringbuffer import OVERFLOW_POLICY_FAIL
 
@@ -19,8 +20,8 @@ if __name__ == '__main__':
     # we start from the oldest item.
     # if you want to start from the next item, call rb.tailSequence()+1
     sequence = rb.head_sequence().result()
-    print(rb.read_one(sequence).result())
+    six.print_(rb.read_one(sequence).result())
     sequence += 1
-    print(rb.read_one(sequence).result())
+    six.print_(rb.read_one(sequence).result())
     # Shutdown this Hazelcast Client
     hz.shutdown()

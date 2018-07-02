@@ -4,6 +4,8 @@ import unittest
 from threading import Thread, Event
 
 from hazelcast.future import Future, ImmediateFuture, combine_futures, make_blocking, ImmediateExceptionFuture
+from hazelcast import six
+from hazelcast.six.moves import range
 
 
 class FutureTest(unittest.TestCase):
@@ -51,8 +53,9 @@ class FutureTest(unittest.TestCase):
             self.assertEqual(info[1], exc_info[1])
 
             original_tb = traceback.extract_tb(exc_info[2])
-            # shift traceback by one to discard the last frame
-            actual_tb = traceback.extract_tb(info[2])[1:]
+            # shift traceback to discard the last frames
+            shift = 2 if six.PY2 else 3
+            actual_tb = traceback.extract_tb(info[2])[shift:]
 
             self.assertEqual(original_tb, actual_tb)
 
@@ -177,7 +180,7 @@ class FutureTest(unittest.TestCase):
         self.assertEqual(1, result)
 
     def test_callback_called_exactly_once(self):
-        for _ in xrange(0, 10000):
+        for _ in range(0, 10000):
             f = Future()
 
             def set_result():
@@ -196,7 +199,7 @@ class FutureTest(unittest.TestCase):
             self.assertEqual(i[0], 1)
 
     def test_callback_called_exactly_once_when_exception(self):
-        for _ in xrange(0, 10000):
+        for _ in range(0, 10000):
             f = Future()
 
             def set_exception():

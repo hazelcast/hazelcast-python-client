@@ -1,5 +1,6 @@
 from hazelcast.exception import HazelcastSerializationError
 from hazelcast.util import enum
+from hazelcast import six
 
 FieldType = enum(
         PORTABLE=0,
@@ -59,7 +60,7 @@ class ClassDefinition(object):
             index = field_name_or_index
             count = self.get_field_count()
             if 0 <= index < count:
-                for field in self.field_defs.itervalues():
+                for field in six.itervalues(self.field_defs):
                     if field.index == index:
                         return field
             raise IndexError("Index is out of bound. Index: {} and size: {}".format(index, count))
@@ -67,10 +68,10 @@ class ClassDefinition(object):
             return self.field_defs.get(field_name_or_index, None)
 
     def has_field(self, field_name):
-        return self.field_defs.has_key(field_name)
+        return field_name in self.field_defs
 
     def get_field_names(self):
-        return self.field_defs.keys()
+        return list(self.field_defs.keys())
 
     def get_field_type(self, field_name):
         fd = self.get_field(field_name)
@@ -101,6 +102,8 @@ class ClassDefinition(object):
     def __repr__(self):
         return "fid:{}, cid:{}, v:{}, fields:{}".format(self.factory_id, self.class_id, self.version, self.field_defs)
 
+    def __hash__(self):
+        return id(self)//16
 
 class ClassDefinitionBuilder(object):
     def __init__(self, factory_id, class_id, version=-1):

@@ -6,7 +6,7 @@ import socket
 import sys
 import threading
 import time
-from Queue import PriorityQueue, Empty
+from hazelcast.six.moves import queue
 from collections import deque
 
 from hazelcast.connection import Connection, BUFFER_SIZE
@@ -20,7 +20,7 @@ class AsyncoreReactor(object):
     logger = logging.getLogger("Reactor")
 
     def __init__(self):
-        self._timers = PriorityQueue()
+        self._timers = queue.PriorityQueue()
         self._map = {}
 
     def start(self):
@@ -38,7 +38,7 @@ class AsyncoreReactor(object):
                 self._check_timers()
             except select.error as err:
                 # TODO: parse error type to catch only error "9"
-                self.logger.warn("Connection closed by server.")
+                self.logger.warning("Connection closed by server.")
                 pass
             except:
                 self.logger.exception("Error in Reactor Thread")
@@ -58,7 +58,7 @@ class AsyncoreReactor(object):
             if timer.check_timer(now):
                 try:
                     self._timers.get_nowait()
-                except Empty:
+                except queue.Empty:
                     pass
             else:
                 return
@@ -75,10 +75,10 @@ class AsyncoreReactor(object):
         if not self._is_live:
             return
         self._is_live = False
-        for connection in self._map.values():
+        for connection in list(self._map.values()):
             try:
                 connection.close(HazelcastError("Client is shutting down"))
-            except OSError, connection:
+            except OSError as connection:
                 if connection.args[0] == socket.EBADF:
                     pass
                 else:
@@ -102,7 +102,7 @@ class AsyncoreReactor(object):
             try:
                 _, timer = self._timers.get_nowait()
                 timer.timer_ended_cb()
-            except Empty:
+            except queue.Empty:
                 return
 
 
@@ -132,7 +132,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         # the socket should be non-blocking from now on
         self.socket.settimeout(0)
 
-        self._write_queue.append("CB2")
+        self._write_queue.append(b"CB2")
 
     def handle_connect(self):
         self.logger.debug("Connected to %s", self._address)
@@ -153,7 +153,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
                 self._write_queue.appendleft(data[sent:])
 
     def handle_close(self):
-        self.logger.warn("Connection closed by server.")
+        self.logger.warning("Connection closed by server.")
         self.close(IOError("Connection closed by server."))
 
     def handle_error(self):

@@ -1,8 +1,11 @@
 import struct
 
-from api import *
-from bits import *
+from hazelcast.serialization.api import *
+from hazelcast.serialization.bits import *
 from hazelcast.serialization.data import Data
+from hazelcast import six
+from hazelcast.six.moves import range
+
 
 
 class _ObjectDataInput(ObjectDataInput):
@@ -52,7 +55,7 @@ class _ObjectDataInput(ObjectDataInput):
 
     def read_char(self, position=None):
         char_ord = self.read_short(position)
-        return unichr(char_ord)
+        return six.unichr(char_ord)
 
     def read_short(self, position=None):
         self._check_available(self._pos, SHORT_SIZE_IN_BYTES)
@@ -83,7 +86,7 @@ class _ObjectDataInput(ObjectDataInput):
         if length == NULL_ARRAY_LENGTH:
             return None
         result = bytearray()
-        for i in xrange(0, length):
+        for i in range(0, length):
             _first_byte = self.read_byte() & 0xFF
             b = _first_byte >> 4
             if 0 <= b <= 7:
@@ -174,7 +177,7 @@ class _ObjectDataInput(ObjectDataInput):
         if length == NULL_ARRAY_LENGTH:
             return None
         if length > 0:
-            return [read_item_fnc() for _ in xrange(0, length)]
+            return [read_item_fnc() for _ in range(0, length)]
         return []
 
     def __repr__(self):

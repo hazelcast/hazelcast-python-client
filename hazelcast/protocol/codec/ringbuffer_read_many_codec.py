@@ -3,6 +3,7 @@ from hazelcast.protocol.client_message import ClientMessage
 from hazelcast.protocol.custom_codec import *
 from hazelcast.util import ImmutableLazyDataList
 from hazelcast.protocol.codec.ringbuffer_message_type import *
+from hazelcast.six.moves import range
 
 REQUEST_TYPE = RINGBUFFER_READMANY
 RESPONSE_TYPE = 115
@@ -44,7 +45,7 @@ def decode_response(client_message, to_object=None):
     parameters['read_count'] = client_message.read_int()
     items_size = client_message.read_int()
     items = []
-    for items_index in xrange(0, items_size):
+    for items_index in range(0, items_size):
         items_item = client_message.read_data()
         items.append(items_item)
     parameters['items'] = ImmutableLazyDataList(items, to_object)

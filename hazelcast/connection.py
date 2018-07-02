@@ -14,6 +14,7 @@ from hazelcast.protocol.client_message import BEGIN_END_FLAG, ClientMessage, Cli
 from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
 from hazelcast.serialization import INT_SIZE_IN_BYTES, FMT_LE_INT
 from hazelcast.util import AtomicInteger
+from hazelcast import six
 
 BUFFER_SIZE = 8192
 PROTOCOL_VERSION = 1
@@ -141,7 +142,7 @@ class ConnectionManager(object):
                     self._pending_connections.pop(address)
                 except KeyError:
                     pass
-            raise f.exception(), None, f.traceback()
+            six.reraise(f.exception().__class__, f.exception(), f.traceback())
 
     def _connection_closed(self, connection, cause):
         # if connection was authenticated, fire event
@@ -166,7 +167,7 @@ class ConnectionManager(object):
             connection = self.connections[address]
             connection.close(cause)
         except KeyError:
-            logging.warn("No connection with %s was found to close.", address)
+            logging.warning("No connection with %s was found to close.", address)
             return False
 
 
@@ -182,9 +183,9 @@ class Heartbeat(object):
         self._listeners = []
 
         self._heartbeat_timeout = client.config.get_property_or_default(PROPERTY_HEARTBEAT_TIMEOUT,
-                                                                        DEFAULT_HEARTBEAT_TIMEOUT) / 1000
+                                                                        DEFAULT_HEARTBEAT_TIMEOUT) // 1000
         self._heartbeat_interval = client.config.get_property_or_default(PROPERTY_HEARTBEAT_INTERVAL,
-                                                                         DEFAULT_HEARTBEAT_INTERVAL) / 1000
+                                                                         DEFAULT_HEARTBEAT_INTERVAL) // 1000
 
     def start(self):
         """
@@ -216,11 +217,11 @@ class Heartbeat(object):
 
     def _heartbeat(self):
         now = time.time()
-        for connection in self._client.connection_manager.connections.values():
+        for connection in list(self._client.connection_manager.connections.values()):
             time_since_last_read = now - connection.last_read
             if time_since_last_read > self._heartbeat_timeout:
                 if connection.heartbeating:
-                    self.logger.warn(
+                    self.logger.warning(
                         "Heartbeat: Did not hear back after %ss from %s" % (time_since_last_read, connection))
                     self._on_heartbeat_stopped(connection)
 
@@ -261,7 +262,7 @@ class Connection(object):
         self.logger = logging.getLogger("Connection[%s](%s:%d)" % (self.id, address.host, address.port))
         self._connection_closed_callback = connection_closed_callback
         self._builder = ClientMessageBuilder(message_callback)
-        self._read_buffer = ""
+        self._read_buffer = b""
         self.last_read = time.time()
 
     def live(self):
@@ -294,7 +295,7 @@ class Connection(object):
             frame_length = struct.unpack_from(FMT_LE_INT, self._read_buffer, 0)[0]
             if frame_length > len(self._read_buffer):
                 return
-            message = ClientMessage(buffer(self._read_buffer, 0, frame_length))
+            message = ClientMessage(memoryview(self._read_buffer)[:frame_length])
             self._read_buffer = self._read_buffer[frame_length:]
             self._builder.on_message(message)
 

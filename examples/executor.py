@@ -1,6 +1,7 @@
 import hazelcast
 import logging
 from hazelcast.serialization.api import IdentifiedDataSerializable
+from hazelcast import six
 
 
 #     ####### Server side code #######
@@ -90,4 +91,4 @@ if __name__ == '__main__':
     executor = client.get_executor("my-exec")
     results = executor.execute_on_all_members(CollectData("java.vm.name"))
     for result in results.result():
-        print ">", result
+        six.print_(">", result)

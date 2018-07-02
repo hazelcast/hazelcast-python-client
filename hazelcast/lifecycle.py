@@ -59,7 +59,7 @@ class LifecycleService(object):
 
         self.state = new_state
         self.logger.debug("New Lifecycle state is %s", new_state)
-        for listener in self._listeners.values():
+        for listener in list(self._listeners.values()):
             try:
                 listener(new_state)
             except:

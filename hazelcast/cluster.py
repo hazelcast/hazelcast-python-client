@@ -94,7 +94,7 @@ class ClusterService(object):
 
     def _reconnect(self):
         try:
-            self.logger.warn("Connection closed to owner node. Trying to reconnect.")
+            self.logger.warning("Connection closed to owner node. Trying to reconnect.")
             self._connect_to_cluster()
         except:
             logging.exception("Could not reconnect to cluster. Shutting down client.")
@@ -196,7 +196,7 @@ class ClusterService(object):
 
     def _member_added(self, member):
         self.members.append(member)
-        for added, _ in self.listeners.values():
+        for added, _ in list(self.listeners.values()):
             if added:
                 try:
                     added(member)
@@ -207,7 +207,7 @@ class ClusterService(object):
         self.members.remove(member)
         self._client.connection_manager.close_connection(member.address, TargetDisconnectedError(
             "%s is no longer a member of the cluster" % member))
-        for _, removed in self.listeners.values():
+        for _, removed in list(self.listeners.values()):
             if removed:
                 try:
                     removed(member)
@@ -226,7 +226,7 @@ class ClusterService(object):
 
             # try to reconnect, on new thread
             reconnect_thread = threading.Thread(target=self._reconnect,
-                                                name="hazelcast-cluster-reconnect-{:.4}".format(uuid.uuid4()))
+                                                name="hazelcast-cluster-reconnect-{:.4}".format(str(uuid.uuid4())))
             reconnect_thread.daemon = True
             reconnect_thread.start()
 

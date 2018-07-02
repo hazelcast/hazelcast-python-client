@@ -2,6 +2,7 @@
 
 import hazelcast
 import logging
+from hazelcast import six
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s', datefmt="%H:%M%:%S,")
@@ -21,6 +22,6 @@ if __name__ == '__main__':
     anotherItem = queue.poll(5).result()
     # Indefinitely blocking Operations
     queue.put("yetanotheritem").result()
-    print(queue.take().result())
+    six.print_(queue.take().result())
     # Shutdown this Hazelcast Client
     hz.shutdown()

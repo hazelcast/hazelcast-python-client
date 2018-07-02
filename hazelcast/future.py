@@ -3,6 +3,7 @@ import sys
 import threading
 
 from hazelcast.util import AtomicInteger
+from hazelcast import six
 
 NONE_RESULT = object()
 
@@ -57,7 +58,7 @@ class Future(object):
         self._reactor_check()
         self._event.wait()
         if self._exception:
-            raise self._exception, None, self._traceback
+            six.reraise(self._exception.__class__, self._exception, self._traceback)
         if self._result == NONE_RESULT:
             return None
         else:
@@ -223,7 +224,7 @@ class ImmediateExceptionFuture(Future):
         return self._traceback
 
     def result(self):
-        raise self._exception, None, self._traceback
+        six.reraise(self._exception.__class__, self._exception, self._traceback)
 
     def add_done_callback(self, callback):
         self._invoke_cb(callback)

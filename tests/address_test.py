@@ -2,13 +2,13 @@ import unittest
 
 from hazelcast.core import Address, Member
 from hazelcast.util import get_possible_addresses
+from hazelcast import six
 
 
 class AddressTest(unittest.TestCase):
     def test_no_given_address(self):
         addresses = get_possible_addresses([])
-
-        self.assertItemsEqual(addresses,
+        six.assertCountEqual(self, addresses,
                               [Address("127.0.0.1", 5701), Address("127.0.0.1", 5702), Address("127.0.0.1", 5703)])
 
     def test_single_given_address_with_no_port(self):
@@ -16,7 +16,7 @@ class AddressTest(unittest.TestCase):
 
         addresses = get_possible_addresses(addresses)
 
-        self.assertItemsEqual(addresses,
+        six.assertCountEqual(self, addresses,
                               [Address("127.0.0.1", 5701), Address("127.0.0.1", 5702), Address("127.0.0.1", 5703)])
 
     def test_single_address_and_port(self):
@@ -24,14 +24,14 @@ class AddressTest(unittest.TestCase):
 
         addresses = get_possible_addresses(addresses)
 
-        self.assertItemsEqual(addresses, [Address("127.0.0.1", 5701)])
+        six.assertCountEqual(self, addresses, [Address("127.0.0.1", 5701)])
 
     def test_multiple_addresses(self):
         addresses = ["127.0.0.1:5701", "10.0.0.1"]
 
         addresses = get_possible_addresses(addresses)
 
-        self.assertItemsEqual(addresses,
+        six.assertCountEqual(self, addresses,
                               [Address("127.0.0.1", 5701), Address("10.0.0.1", 5701), Address("10.0.0.1", 5702),
                                Address("10.0.0.1", 5703)])
 
@@ -40,7 +40,7 @@ class AddressTest(unittest.TestCase):
 
         addresses = get_possible_addresses(addresses)
 
-        self.assertItemsEqual(addresses, [Address("127.0.0.1", 5701)])
+        six.assertCountEqual(self, addresses, [Address("127.0.0.1", 5701)])
 
     def test_addresses_and_members(self):
         addresses = ["127.0.0.1:5701"]
@@ -48,5 +48,5 @@ class AddressTest(unittest.TestCase):
 
         addresses = get_possible_addresses(addresses, member_list)
 
-        self.assertItemsEqual(addresses,
+        six.assertCountEqual(self, addresses,
                               [Address("127.0.0.1", 5701), Address("10.0.0.1", 5703), Address("10.0.0.2", 5701)])

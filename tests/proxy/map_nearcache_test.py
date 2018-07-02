@@ -1,12 +1,12 @@
-from __future__ import print_function
-
 import os
 
-from hzrc.ttypes import Lang
+from tests.hzrc.ttypes import Lang
 
 from hazelcast.config import NearCacheConfig
 from tests.base import SingleMemberTestCase
 from tests.util import random_string
+from hazelcast.six.moves import range
+from hazelcast import six
 
 
 class MapTest(SingleMemberTestCase):
@@ -25,7 +25,7 @@ class MapTest(SingleMemberTestCase):
         return super(MapTest, cls).configure_client(config)
 
     def setUp(self):
-        name = self.client.config.near_cache_configs.values()[0].name
+        name = list(self.client.config.near_cache_configs.values())[0].name
         self.map = self.client.get_map(name).blocking()
 
     def tearDown(self):
@@ -97,9 +97,9 @@ class MapTest(SingleMemberTestCase):
         self.assertTrueEventually(assertion)
 
     def _fill_map_and_near_cache(self, count=10):
-        fill_content = {"key-%d" % x: "value-%d" % x for x in xrange(0, count)}
-        for k, v in fill_content.iteritems():
+        fill_content = {"key-%d" % x: "value-%d" % x for x in range(0, count)}
+        for k, v in six.iteritems(fill_content):
             self.map.put(k, v)
-        for k, v in fill_content.iteritems():
+        for k, v in six.iteritems(fill_content):
             self.map.get(k)
         return fill_content

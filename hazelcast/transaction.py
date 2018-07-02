@@ -10,6 +10,7 @@ from hazelcast.proxy.transactional_multi_map import TransactionalMultiMap
 from hazelcast.proxy.transactional_queue import TransactionalQueue
 from hazelcast.proxy.transactional_set import TransactionalSet
 from hazelcast.util import thread_id
+from hazelcast.six.moves import range
 
 _STATE_ACTIVE = "active"
 _STATE_NOT_STARTED = "not_started"
@@ -48,7 +49,7 @@ class TransactionManager(object):
         self._client = client
 
     def _connect(self):
-        for count in xrange(0, RETRY_COUNT):
+        for count in range(0, RETRY_COUNT):
             try:
                 address = self._client.load_balancer.next_address()
                 return self._client.connection_manager.get_or_connect(address).result()
@@ -105,7 +106,7 @@ class Transaction(object):
         self.start_time = time.time()
         self.thread_id = thread_id()
         try:
-            request = transaction_create_codec.encode_request(timeout=self.timeout * 1000, durability=self.durability,
+            request = transaction_create_codec.encode_request(timeout=int(self.timeout * 1000), durability=self.durability,
                                                               transaction_type=self.transaction_type,
                                                               thread_id=self.thread_id)
             response = self.client.invoker.invoke_on_connection(request, self.connection).result()
