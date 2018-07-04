@@ -12,6 +12,7 @@ from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
 from hazelcast.protocol.client_message import BEGIN_END_FLAG, ClientMessage, ClientMessageBuilder
 from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
 from hazelcast.serialization import INT_SIZE_IN_BYTES, FMT_LE_INT
+from hazelcast.exception import HazelcastError
 from hazelcast.util import AtomicInteger
 from hazelcast import six
 
@@ -25,7 +26,7 @@ class ConnectionManager(object):
     """
     logger = logging.getLogger("ConnectionManager")
 
-    def __init__(self, client, new_connection_func):
+    def __init__(self, client, new_connection_func, address_translator):
         self._new_connection_mutex = threading.RLock()
         self._io_thread = None
         self._client = client
@@ -34,6 +35,7 @@ class ConnectionManager(object):
         self._socket_map = {}
         self._new_connection_func = new_connection_func
         self._connection_listeners = []
+        self._address_translator = address_translator
 
     def add_listener(self, on_connection_opened=None, on_connection_closed=None):
         """
@@ -100,7 +102,10 @@ class ConnectionManager(object):
                 else:
                     authenticator = authenticator or self._cluster_authenticator
                     try:
-                        connection = self._new_connection_func(address,
+                        translated_address = self._address_translator.translate(address)
+                        if translated_address is None:
+                            raise HazelcastError("Address translator could not translate address: " + str(address))
+                        connection = self._new_connection_func(translated_address,
                                                                self._client.config.network_config.connection_timeout,
                                                                self._client.config.network_config.socket_options,
                                                                connection_closed_callback=self._connection_closed,
@@ -109,9 +114,9 @@ class ConnectionManager(object):
                     except IOError:
                         return ImmediateExceptionFuture(sys.exc_info()[1], sys.exc_info()[2])
 
-                    future = authenticator(connection).continue_with(self.on_auth, connection, address)
+                    future = authenticator(connection).continue_with(self.on_auth, connection, translated_address)
                     if not future.done():
-                        self._pending_connections[address] = future
+                        self._pending_connections[translated_address] = future
                     return future
 
     def on_auth(self, f, connection, address):

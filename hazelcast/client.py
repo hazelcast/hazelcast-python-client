@@ -14,6 +14,10 @@ from hazelcast.reactor import AsyncoreReactor
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.transaction import TWO_PHASE, TransactionManager
 from hazelcast.util import LockReferenceIdGenerator
+from hazelcast.address import DefaultAddressProvider, DefaultAddressTranslator
+from hazelcast.discovery import HazelcastCloudAddressProvider, HazelcastCloudAddressTranslator, HazelcastCloudDiscovery
+from hazelcast.config import PROPERTY_CLOUD_DISCOVERY_TOKEN, DEFAULT_CLOUD_DISCOVERY_TOKEN
+from hazelcast.exception import HazelcastError
 
 
 class HazelcastClient(object):
@@ -28,11 +32,13 @@ class HazelcastClient(object):
         self.properties = ClientProperties(self.config.get_properties())
         self.lifecycle = LifecycleService(self.config)
         self.reactor = AsyncoreReactor()
-        self.connection_manager = ConnectionManager(self, self.reactor.new_connection)
+        self._address_providers = self._create_address_providers()
+        self._address_translator = self._create_address_translator()
+        self.connection_manager = ConnectionManager(self, self.reactor.new_connection, self._address_translator)
         self.heartbeat = Heartbeat(self)
         self.invoker = InvocationService(self)
         self.listener = ListenerService(self)
-        self.cluster = ClusterService(self.config, self)
+        self.cluster = ClusterService(self.config, self, self._address_providers)
         self.partition_service = PartitionService(self)
         self.proxy = ProxyManager(self)
         self.load_balancer = RandomLoadBalancer(self.cluster)
@@ -224,3 +230,48 @@ class HazelcastClient(object):
             self.reactor.shutdown()
             self.lifecycle.fire_lifecycle_event(LIFECYCLE_STATE_SHUTDOWN)
             self.logger.info("Client shutdown.")
+
+    def _create_address_providers(self):
+        address_providers = []
+        cloud_config = self.config.network_config.cloud_config
+        cloud_address_provider = self._init_cloud_address_provider(cloud_config)
+        if cloud_address_provider is not None:
+            address_providers.append(cloud_address_provider)
+        address_providers.append(DefaultAddressProvider(self.config.network_config, len(address_providers) == 0))
+        return address_providers
+
+    def _init_cloud_address_provider(self, cloud_config):
+        if cloud_config.enabled:
+            host, url = HazelcastCloudDiscovery.create_host_and_url(self.config._properties,
+                                                                    cloud_config.discovery_token)
+            return HazelcastCloudAddressProvider(host, url, self._get_connection_timeout())
+        cloud_token = self.config.get_property_or_default(PROPERTY_CLOUD_DISCOVERY_TOKEN,
+                                                          DEFAULT_CLOUD_DISCOVERY_TOKEN)
+        if cloud_token != "":
+            host, url = HazelcastCloudDiscovery.create_host_and_url(self.config._properties,
+                                                                    cloud_token)
+            return HazelcastCloudAddressProvider(host, url, self._get_connection_timeout())
+        return None
+
+    def _create_address_translator(self):
+        cloud_config = self.config.network_config.cloud_config
+        cloud_discovery_token = self.config.get_property_or_default(PROPERTY_CLOUD_DISCOVERY_TOKEN,
+                                                                    DEFAULT_CLOUD_DISCOVERY_TOKEN)
+        if cloud_discovery_token != "" and cloud_config.enabled:
+            raise HazelcastError("Ambiguous hazelcast.cloud configuration. "
+                                 "Both property based and client configuration based settings are provided "
+                                 "for Hazelcast cloud discovery together. Use only one.")
+        if cloud_discovery_token != "" or cloud_config.enabled:
+            if cloud_config.enabled:
+                discovery_token = cloud_config.discovery_token
+            else:
+                discovery_token = cloud_discovery_token
+            host, url = HazelcastCloudDiscovery.create_host_and_url(self.config._properties,
+                                                                    discovery_token)
+            return HazelcastCloudAddressTranslator(host, url, self._get_connection_timeout())
+        return DefaultAddressTranslator()
+
+    def _get_connection_timeout(self):
+        network_config = self.config.network_config
+        conn_timeout = network_config.connection_timeout
+        return 0x7fffffff if conn_timeout == 0 else conn_timeout  # Max integer value

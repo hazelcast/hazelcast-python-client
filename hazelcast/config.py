@@ -17,6 +17,16 @@ DEFAULT_GROUP_PASSWORD = "dev-pass"
 Default password of connected Hazelcast cluster
 """
 
+PROPERTY_CLOUD_DISCOVERY_TOKEN = "hazelcast.client.cloud.discovery.token"
+"""
+This is a token to use discovering cluster via hazelcast.cloud.
+"""
+
+DEFAULT_CLOUD_DISCOVERY_TOKEN = ""
+"""
+Default discovery token for hazelcast.cloud
+"""
+
 INTEGER_TYPE = enum(VAR=0, BYTE=1, SHORT=2, INT=3, LONG=4, BIG_INT=5)
 """
 Integer type options that can be used by serialization service.
@@ -234,6 +244,9 @@ class ClientNetworkConfig(object):
         """
         self.ssl_config = SSLConfig()
         """SSL configurations for the client."""
+        self.cloud_config = ClientCloudConfig()
+        """Hazelcast Cloud configuration to let the client connect the cluster via hazelcast.cloud"""
+
 
 
 class SocketOption(object):
@@ -514,6 +527,18 @@ class SSLConfig(object):
         """
 
 
+class ClientCloudConfig(object):
+    """
+    hazelcast.cloud configuration to let the client connect the cluster via hazelcast.cloud
+    """
+
+    def __init__(self):
+        self.enabled = False
+        """Enables/disables cloud config."""
+        self.discovery_token = ""
+        """Hazelcast Cloud Discovery token of your cluster."""
+
+
 class ClientProperty(object):
     """
     Client property holds the name, default value and time unit of Hazelcast client properties.
@@ -591,4 +616,3 @@ class ClientProperties(object):
         """
         seconds = self.get_seconds(property)
         return seconds if seconds > 0 else TimeUnit.to_seconds(property.default_value, property.time_unit)
-

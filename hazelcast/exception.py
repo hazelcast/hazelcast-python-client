@@ -80,6 +80,13 @@ class TransactionError(HazelcastError):
     pass
 
 
+class HazelcastCertificationError(HazelcastError):
+    """
+    HazelcastCertificateError is raised when there is an error in certificates.
+    """
+    pass
+
+
 ERROR_CODE_TO_ERROR = {
     AUTHENTICATION: AuthenticationError,
     HAZELCAST_INSTANCE_NOT_ACTIVE: HazelcastInstanceNotActiveError,

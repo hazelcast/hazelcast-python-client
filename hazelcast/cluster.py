@@ -9,7 +9,7 @@ from hazelcast.exception import HazelcastError, AuthenticationError, TargetDisco
 from hazelcast.invocation import ListenerInvocation
 from hazelcast.lifecycle import LIFECYCLE_STATE_CONNECTED, LIFECYCLE_STATE_DISCONNECTED
 from hazelcast.protocol.codec import client_add_membership_listener_codec, client_authentication_codec
-from hazelcast.util import get_possible_addresses
+from hazelcast.util import get_possible_addresses, get_provider_addresses
 
 # Membership Event Types
 MEMBER_ADDED = 1
@@ -25,7 +25,7 @@ class ClusterService(object):
     """
     logger = logging.getLogger("ClusterService")
 
-    def __init__(self, config, client):
+    def __init__(self, config, client, address_providers):
         self._config = config
         self._client = client
         self.members = []
@@ -37,6 +37,7 @@ class ClusterService(object):
         for listener in config.membership_listeners:
             self.add_listener(*listener)
 
+        self._address_providers = address_providers
         self._initial_list_fetched = threading.Event()
         self._client.connection_manager.add_listener(on_connection_closed=self._connection_closed)
         self._client.heartbeat.add_listener(on_heartbeat_stopped=self._heartbeat_stopped)
@@ -101,7 +102,8 @@ class ClusterService(object):
             self._client.shutdown()
 
     def _connect_to_cluster(self):
-        addresses = get_possible_addresses(self._config.network_config.addresses, self.members)
+        provider_addresses = get_provider_addresses(self._address_providers)
+        addresses = get_possible_addresses(provider_addresses, self.members)
 
         current_attempt = 1
         attempt_limit = self._config.network_config.connection_attempt_limit

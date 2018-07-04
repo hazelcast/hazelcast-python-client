@@ -167,8 +167,15 @@ def _parse_address(address):
 
 
 def get_possible_addresses(addresses=[], member_list=[]):
-    address_lists = list(itertools.chain(*[_parse_address(a) for a in addresses]))
-    return set((address_lists + [m.address for m in member_list])) or _parse_address(DEFAULT_ADDRESS)
+    return set((addresses + [m.address for m in member_list])) or _parse_address(DEFAULT_ADDRESS)
+
+
+def get_provider_addresses(providers=[]):
+    return list(itertools.chain(*[p.load_addresses() for p in providers]))
+
+
+def parse_addresses(addresses=[]):
+    return itertools.chain(*[_parse_address(a) for a in addresses])
 
 
 class ImmutableLazyDataList(Sequence):
