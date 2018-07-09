@@ -28,6 +28,7 @@ Features :
 * Event Listeners
 * Lifecycle Service
 * Hazelcast Serialization (IdentifiedDataSerializable, Portable, Custom Serializers, Global Serializers)
+* TLS Support with Mutual Authentication (Requires enterprise server)
 
 
 Installation

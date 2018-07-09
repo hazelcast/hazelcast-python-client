@@ -12,6 +12,7 @@ Configuration titles:
 - Advanced socket configuration via :class:`~hazelcast.config.SocketOption`
 - Serialization configuration via :class:`~hazelcast.config.SerializationConfig`
 - Near Cache configuration via :class:`~hazelcast.config.NearCacheConfig`
+- SSL configuration via :class:`~hazelcast.config.SSLConfig`
 
 Credential Setup
 ----------------
@@ -65,3 +66,14 @@ near cache configuration with same name
 
 Please see API doc for near cache configuration options: :class:`~hazelcast.config.NearCacheConfig`
 
+SSL Configuration
+-----------------
+
+TLS/SSL can be configured using :class:`~hazelcast.config.SSLConfig`.
+
+.. code-block:: python
+
+    config.network_config.ssl_config.enable = True
+    config.network_config.ssl_config.cafile = "server.pem"
+
+Please see API doc for SSL configuration options: :class:`~hazelcast.config.SSLConfig`

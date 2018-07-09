@@ -6,11 +6,11 @@ import socket
 import sys
 import threading
 import time
-from collections import deque
-from functools import total_ordering
+import ssl
 
 from hazelcast.six.moves import queue
-
+from collections import deque
+from functools import total_ordering
 from hazelcast.connection import Connection, BUFFER_SIZE
 from hazelcast.exception import HazelcastError
 from hazelcast.future import Future
@@ -88,9 +88,10 @@ class AsyncoreReactor(object):
         self._map.clear()
         self._thread.join()
 
-    def new_connection(self, address, connect_timeout, socket_options, connection_closed_callback, message_callback):
+    def new_connection(self, address, connect_timeout, socket_options, connection_closed_callback, message_callback,
+                       network_config):
         return AsyncoreConnection(self._map, address, connect_timeout, socket_options, connection_closed_callback,
-                                  message_callback)
+                                  message_callback, network_config)
 
     def _cleanup_timer(self, timer):
         try:
@@ -111,7 +112,8 @@ class AsyncoreReactor(object):
 class AsyncoreConnection(Connection, asyncore.dispatcher):
     sent_protocol_bytes = False
 
-    def __init__(self, map, address, connect_timeout, socket_options, connection_closed_callback, message_callback):
+    def __init__(self, map, address, connect_timeout, socket_options, connection_closed_callback, message_callback,
+                 network_config):
         asyncore.dispatcher.__init__(self, map=map)
         Connection.__init__(self, address, connection_closed_callback, message_callback)
 
@@ -130,6 +132,28 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
             self.socket.setsockopt(socket_option.level, socket_option.option, socket_option.value)
 
         self.connect(self._address)
+        ssl_config = network_config.ssl_config
+        if ssl_config.enabled:
+            # operates only on TLSv1+
+            ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+            ssl_context.options |= ssl.OP_NO_SSLv2
+            ssl_context.options |= ssl.OP_NO_SSLv3
+
+            ssl_context.verify_mode = ssl.CERT_REQUIRED
+
+            if ssl_config.cafile:
+                ssl_context.load_verify_locations(ssl_config.cafile)
+
+            if ssl_config.certfile:
+                ssl_context.load_cert_chain(ssl_config.certfile, ssl_config.keyfile, ssl_config.password)
+
+            if ssl_config.hostname:
+                ssl_context.check_hostname = True
+
+            if ssl_config.ciphers:
+                ssl_context.set_ciphers(ssl_config.ciphers)
+
+            self.socket = ssl_context.wrap_socket(self.socket, server_hostname=ssl_config.hostname)
 
         # the socket should be non-blocking from now on
         self.socket.settimeout(0)

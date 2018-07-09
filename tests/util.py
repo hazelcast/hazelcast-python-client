@@ -1,6 +1,9 @@
 import logging
 import time
 from uuid import uuid4
+import os
+
+from hazelcast.config import ClientConfig
 
 
 def random_string():
@@ -20,3 +23,44 @@ def event_collector():
 
     collector.events = events
     return collector
+
+
+def is_oss():
+    return (os.getenv("SERVER_TYPE") == "oss") \
+           or (os.getenv("HZ_TYPE") == "oss") \
+           or ("HAZELCAST_ENTERPRISE_KEY" not in os.environ)
+
+
+def fill_map(map, size=10, key_prefix="key", value_prefix="val"):
+    entries = dict()
+    for i in range(size):
+        entries[key_prefix + str(i)] = value_prefix + str(i)
+    map.put_all(entries)
+
+
+def get_ssl_config(enable_ssl=False,
+                   cafile=None,
+                   certfile=None,
+                   keyfile=None,
+                   password=None,
+                   hostname=None,
+                   ciphers=None,
+                   attempt_limit=1,
+                   timeout=1):
+    config = ClientConfig()
+
+    config.network_config.ssl_config.enabled = enable_ssl
+    config.network_config.ssl_config.cafile = cafile
+    config.network_config.ssl_config.certfile = certfile
+    config.network_config.ssl_config.keyfile = keyfile
+    config.network_config.ssl_config.password = password
+    config.network_config.ssl_config.hostname = hostname
+    config.network_config.ssl_config.ciphers = ciphers
+
+    config.network_config.connection_attempt_limit = attempt_limit
+    config.network_config.connection_timeout = timeout
+    return config
+
+
+def get_abs_path(cur_dir, file_name):
+    return os.path.abspath(os.path.join(cur_dir, file_name))

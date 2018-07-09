@@ -104,7 +104,8 @@ class ConnectionManager(object):
                                                                self._client.config.network_config.connection_timeout,
                                                                self._client.config.network_config.socket_options,
                                                                connection_closed_callback=self._connection_closed,
-                                                               message_callback=self._client.invoker._handle_client_message)
+                                                               message_callback=self._client.invoker._handle_client_message,
+                                                               network_config=self._client.config.network_config)
                     except IOError:
                         return ImmediateExceptionFuture(sys.exc_info()[1], sys.exc_info()[2])
 
