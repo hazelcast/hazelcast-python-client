@@ -55,7 +55,11 @@
                 <property name="trustManagerAlgorithm">SunX509</property>
                 <property name="javax.net.ssl.mutualAuthentication">REQUIRED</property>
                 <property name="keyManagerAlgorithm">SunX509</property>
+<<<<<<< HEAD
                 <property name="protocol">TLSv1</property>
+=======
+                <property name="protocol">TLS</property>
+>>>>>>> implement tls support with mutual authentication
             </properties>
         </ssl>
     </network>
