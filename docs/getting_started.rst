@@ -1,7 +1,7 @@
 Getting Started
 ===============
 
-Hazelcast Python Client is a Hazelcast Client Protocol implementation for Python 2.7.
+Hazelcast Python Client is a Hazelcast Client Protocol implementation for Python 2.7, 3.4, 3.5, 3.6 and 3.7.
 
 
 Installation

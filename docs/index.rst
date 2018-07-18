@@ -5,7 +5,7 @@ Python client implementation for `Hazelcast <https://hazelcast.org>`_ , the open
 
 It is implemented using the `Hazelcast Open Binary Client Protocol <http://github.com/hazelcast/hazelcast-client-protocol/tree/master/docs/published/protocol/>`_.
 
-It only supports Python 2.7.
+It supports Python 2.7, 3.4, 3.5, 3.6 and 3.7.
 
 
 Contents
