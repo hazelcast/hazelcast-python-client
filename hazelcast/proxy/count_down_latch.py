@@ -13,7 +13,7 @@ class CountDownLatch(PartitionSpecificProxy):
     CountDownLatch is a backed-up, distributed, cluster-wide synchronization aid that allows one or more threads to wait until a
     set of operations being performed in other threads completes
     """
-    def await(self, timeout):
+    def await_latch(self, timeout):
         """
         Causes the current thread to wait until the latch has counted down to zero, or the specified waiting time
         elapses.

@@ -23,8 +23,8 @@ class CountDownLatchTest(SingleMemberTestCase):
         _thread = threading.Thread(target=test_run)
         _thread.start()
 
-        self.assertFalse(self.latch.await(1))
-        self.assertTrue(self.latch.await(15))
+        self.assertFalse(self.latch.await_latch(1))
+        self.assertTrue(self.latch.await_latch(15))
 
     def test_str(self):
         self.assertTrue(str(self.latch).startswith("CountDownLatch"))
