@@ -3,6 +3,7 @@ from time import sleep
 
 from tests.base import SingleMemberTestCase
 from tests.util import random_string
+from hazelcast import six
 from hazelcast.six.moves import range
 
 
@@ -23,8 +24,12 @@ class CountDownLatchTest(SingleMemberTestCase):
         _thread = threading.Thread(target=test_run)
         _thread.start()
 
-        self.assertFalse(self.latch.await(1))
-        self.assertTrue(self.latch.await(15))
+        if six.PY2:
+            six.exec_("""self.assertFalse(self.latch.await(1))""")
+            six.exec_("""self.assertTrue(self.latch.await(15))""")
+        else:
+            self.assertFalse(self.latch.await_latch(1))
+            self.assertTrue(self.latch.await_latch(15))
 
     def test_str(self):
         self.assertTrue(str(self.latch).startswith("CountDownLatch"))
