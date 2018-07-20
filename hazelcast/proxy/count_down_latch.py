@@ -6,6 +6,7 @@ from hazelcast.protocol.codec import \
 
 from hazelcast.proxy.base import PartitionSpecificProxy
 from hazelcast.util import check_not_negative, to_millis
+from hazelcast import six
 
 
 class CountDownLatch(PartitionSpecificProxy):
@@ -13,6 +14,11 @@ class CountDownLatch(PartitionSpecificProxy):
     CountDownLatch is a backed-up, distributed, cluster-wide synchronization aid that allows one or more threads to wait until a
     set of operations being performed in other threads completes
     """
+    if six.PY2:
+        six.exec_("""def await(self, timeout):
+            return self.await_latch(timeout)
+        """)
+
     def await_latch(self, timeout):
         """
         Causes the current thread to wait until the latch has counted down to zero, or the specified waiting time
