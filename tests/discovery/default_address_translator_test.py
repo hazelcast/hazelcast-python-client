@@ -13,6 +13,11 @@ class DefaultAddressTranslatorTest(TestCase):
 
         self.assertEqual(self.address, actual)
 
+    def test_translate_none(self):
+        actual = self.translator.translate(None)
+
+        self.assertIsNone(actual)
+
     def test_refresh_and_translate(self):
         self.translator.refresh()
         actual = self.translator.translate(self.address)

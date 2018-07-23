@@ -237,7 +237,7 @@ class HazelcastClient(object):
         cloud_address_provider = self._init_cloud_address_provider(cloud_config)
         if cloud_address_provider is not None:
             address_providers.append(cloud_address_provider)
-        address_providers.append(DefaultAddressProvider(self.config.network_config, len(address_providers) == 0))
+        address_providers.append(DefaultAddressProvider(self.config.network_config))
         return address_providers
 
     def _init_cloud_address_provider(self, cloud_config):

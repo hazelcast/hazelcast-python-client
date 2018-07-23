@@ -36,9 +36,8 @@ class DefaultAddressProvider(AddressProvider):
     Default address provider of Hazelcast.
     Loads addresses from the Hazelcast configuration.
     """
-    def __init__(self, network_config, no_other_address_provider_exists):
+    def __init__(self, network_config):
         self._network_config = network_config
-        self._no_other_address_provider_exists = no_other_address_provider_exists
 
     def load_addresses(self):
         return parse_addresses(self._network_config.addresses)

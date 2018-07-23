@@ -11,7 +11,7 @@ class AddressTest(unittest.TestCase):
 
     def setUp(self):
         self.network_config = ClientNetworkConfig()
-        self.address_provider = DefaultAddressProvider(self.network_config, True)
+        self.address_provider = DefaultAddressProvider(self.network_config)
 
     def test_no_given_address(self):
         self.network_config.addresses = []

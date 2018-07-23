@@ -100,11 +100,11 @@ class HazelcastCloudDiscovery(object):
 
     @staticmethod
     def _extract_error_message(https_response):
-        error_message = json.loads(https_response.read()).get("message")
+        error_message = json.loads(https_response.read().decode("utf-8")).get("message")
         return "" if error_message is None else error_message
 
     def _parse_response(self, https_response):
-        json_value = json.loads(https_response.read())
+        json_value = json.loads(https_response.read().decode("utf-8"))
         private_to_public_addresses = dict()
         for value in json_value:
             private_address = value[self._PRIVATE_ADDRESS_PROPERTY]
