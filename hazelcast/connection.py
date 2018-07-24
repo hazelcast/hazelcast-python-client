@@ -130,7 +130,10 @@ class ConnectionManager(object):
             self.logger.info("Authenticated with %s", f.result())
             with self._new_connection_mutex:
                 self.connections[connection.endpoint] = f.result()
-                self._pending_connections.pop(address)
+                try:
+                    self._pending_connections.pop(address)
+                except KeyError:
+                    pass
             for on_connection_opened, _ in self._connection_listeners:
                 if on_connection_opened:
                     on_connection_opened(f.resul())
@@ -147,7 +150,10 @@ class ConnectionManager(object):
     def _connection_closed(self, connection, cause):
         # if connection was authenticated, fire event
         if connection.endpoint:
-            self.connections.pop(connection.endpoint)
+            try:
+                self.connections.pop(connection.endpoint)
+            except KeyError:
+                pass
             for _, on_connection_closed in self._connection_listeners:
                 if on_connection_closed:
                     on_connection_closed(connection, cause)
