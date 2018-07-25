@@ -105,8 +105,6 @@ class PartitionService(object):
 
     def process_partition_response(self, message):
         partitions = client_get_partitions_codec.decode_response(message)["partitions"]
-        # TODO: needs sync
-        self.partitions = {}
         for addr, partition_list in six.iteritems(partitions):
             for partition in partition_list:
                 self.partitions[partition] = addr
