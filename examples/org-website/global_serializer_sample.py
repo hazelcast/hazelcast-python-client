@@ -27,9 +27,9 @@ class CustomSerializableType(object):
 
 
 if __name__ == '__main__':
+    # Configure logging
     logging.basicConfig(format='%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s', datefmt="%H:%M%:%S,")
     logging.getLogger().setLevel(logging.INFO)
-    logger = logging.getLogger("main")
 
     config = ClientConfig()
     config.serialization_config.global_serializer = GlobalSerializer

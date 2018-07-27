@@ -12,7 +12,7 @@ Content:
 - Global serializers
 
 **Warning :**
-Python client does not support Dataserializable as it's a Java class name dependency. Please use :class:`~hazelcast.serialization.api.IdentifiedDataSerializable` instead.
+Python client does not support DataSerializable as it's a Java class name dependency. Please use :class:`~hazelcast.serialization.api.IdentifiedDataSerializable` instead.
 
 
 Builtin serializers

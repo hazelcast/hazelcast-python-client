@@ -2,7 +2,6 @@ import hazelcast
 import logging
 
 from hazelcast.serialization.api import IdentifiedDataSerializable
-from hazelcast import six
 
 
 class IncEntryProcessor(IdentifiedDataSerializable):
@@ -22,20 +21,20 @@ class IncEntryProcessor(IdentifiedDataSerializable):
         return self.CLASS_ID
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+    # Configure logging
     logging.basicConfig(format='%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s', datefmt="%H:%M%:%S,")
     logging.getLogger().setLevel(logging.INFO)
-    logger = logging.getLogger("main")
 
     # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
     hz = hazelcast.HazelcastClient()
     # Get the Distributed Map from Cluster.
     map = hz.get_map("my-distributed-map")
     # Put the integer value of 0 into the Distributed Map
-    map.put("key", 0).result()
+    map.put("key", 0)
     # Run the IncEntryProcessor class on the Hazelcast Cluster Member holding the key called "key"
-    map.execute_on_key("key", IncEntryProcessor()).result()
+    map.execute_on_key("key", IncEntryProcessor())
     # Show that the IncEntryProcessor updated the value.
-    six.print_("new value:", map.get("key").result())
+    print("new value: {}".format(map.get("key").result()))
     # Shutdown this Hazelcast Client
     hz.shutdown()
