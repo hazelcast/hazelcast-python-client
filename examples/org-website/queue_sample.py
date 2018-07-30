@@ -1,13 +1,10 @@
-
-
 import hazelcast
 import logging
-from hazelcast import six
 
 if __name__ == '__main__':
+    # Configure logging
     logging.basicConfig(format='%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s', datefmt="%H:%M%:%S,")
     logging.getLogger().setLevel(logging.INFO)
-    logger = logging.getLogger("main")
 
     # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
     hz = hazelcast.HazelcastClient()
@@ -22,6 +19,6 @@ if __name__ == '__main__':
     anotherItem = queue.poll(5).result()
     # Indefinitely blocking Operations
     queue.put("yetanotheritem").result()
-    six.print_(queue.take().result())
+    print(queue.take().result())
     # Shutdown this Hazelcast Client
     hz.shutdown()

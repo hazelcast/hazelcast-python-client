@@ -71,7 +71,7 @@ Or use it to register callback methods which will be executed asynchronously:
 .. code-block:: python
 
     def get_async_callback(f):
-            print("map.get_async:", f.result())
+        print("map.get_async:", f.result())
 
     future = my_map.get("key")
     future.add_done_callback(get_async_callback)

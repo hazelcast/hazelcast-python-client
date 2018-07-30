@@ -1,13 +1,10 @@
-
-
 import hazelcast
 import logging
-from hazelcast import six
 
 if __name__ == '__main__':
+    # Configure logging
     logging.basicConfig(format='%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s', datefmt="%H:%M%:%S,")
     logging.getLogger().setLevel(logging.INFO)
-    logger = logging.getLogger("main")
 
     # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
     hz = hazelcast.HazelcastClient()
@@ -16,10 +13,10 @@ if __name__ == '__main__':
     # Put and Get a value from the Replicated Map
     replacedValue = rmap.put("key", "value").result() # Will be null as its first update
     # key/value replicated to all members
-    six.print_("replacedValue = ", replacedValue)
+    print("replacedValue = {}".format(replacedValue))
     # Will be null as its first update
     value = rmap.get("key").result()
     # the value is retrieved from a random member in the cluster
-    six.print_("value for key = ", value)
+    print("value for key = {}".format(value))
     # Shutdown this Hazelcast Client
     hz.shutdown()

@@ -1,7 +1,6 @@
 import hazelcast
 import logging
 
-from hazelcast import ClientConfig
 from hazelcast.serialization.api import StreamSerializer
 
 
@@ -28,12 +27,12 @@ class CustomSerializer(StreamSerializer):
         pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+    # Configure logging
     logging.basicConfig(format='%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s', datefmt="%H:%M%:%S,")
     logging.getLogger().setLevel(logging.INFO)
-    logger = logging.getLogger("main")
 
-    config = ClientConfig()
+    config = hazelcast.ClientConfig()
     config.serialization_config.set_custom_serializer(CustomSerializableType, CustomSerializer)
 
     # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
