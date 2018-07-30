@@ -1,0 +1,145 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Client Configuration &#8212; Hazelcast Python Client 3.9 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="client-configuration">
+<h1>Client Configuration<a class="headerlink" href="#client-configuration" title="Permalink to this headline">¶</a></h1>
+<p>Hazelcast Python Client has a simple configuration. Configuration module <a class="reference internal" href="api/hazelcast.config.html#module-hazelcast.config" title="hazelcast.config"><code class="xref py py-mod docutils literal notranslate"><span class="pre">config</span></code></a> is all we need.</p>
+<p>Configuration actually creates a <a class="reference internal" href="api/hazelcast.config.html#hazelcast.config.ClientConfig" title="hazelcast.config.ClientConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClientConfig</span></code></a> instance to start the client.</p>
+<p>Configuration titles:</p>
+<ul class="simple">
+<li>Credential setup via <a class="reference internal" href="api/hazelcast.config.html#hazelcast.config.GroupConfig" title="hazelcast.config.GroupConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroupConfig</span></code></a></li>
+<li>Network configuration via <a class="reference internal" href="api/hazelcast.config.html#hazelcast.config.ClientNetworkConfig" title="hazelcast.config.ClientNetworkConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClientNetworkConfig</span></code></a></li>
+<li>Advanced socket configuration via <a class="reference internal" href="api/hazelcast.config.html#hazelcast.config.SocketOption" title="hazelcast.config.SocketOption"><code class="xref py py-class docutils literal notranslate"><span class="pre">SocketOption</span></code></a></li>
+<li>Serialization configuration via <a class="reference internal" href="api/hazelcast.config.html#hazelcast.config.SerializationConfig" title="hazelcast.config.SerializationConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">SerializationConfig</span></code></a></li>
+<li>Near Cache configuration via <a class="reference internal" href="api/hazelcast.config.html#hazelcast.config.NearCacheConfig" title="hazelcast.config.NearCacheConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">NearCacheConfig</span></code></a></li>
+</ul>
+<div class="section" id="credential-setup">
+<h2>Credential Setup<a class="headerlink" href="#credential-setup" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="api/hazelcast.config.html#hazelcast.config.GroupConfig" title="hazelcast.config.GroupConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">GroupConfig</span></code></a> is used to set group-name/password.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ClientConfig</span><span class="p">()</span><span class="o">.</span><span class="n">group_config</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Group name of the Hazelcast cluster&quot;</span>
+<span class="n">ClientConfig</span><span class="p">()</span><span class="o">.</span><span class="n">group_config</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="s2">&quot;the password&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="network-configuration">
+<h2>Network Configuration<a class="headerlink" href="#network-configuration" title="Permalink to this headline">¶</a></h2>
+<p>In order to connect to the cluster, it’s required to setup the network details. The minimal client configuration requires
+a list of addresses of the cluster.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">config</span><span class="o">.</span><span class="n">network_config</span><span class="o">.</span><span class="n">addresses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;127.0.0.1&#39;</span><span class="p">)</span>
+<span class="n">config</span><span class="o">.</span><span class="n">network_config</span><span class="o">.</span><span class="n">addresses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;192.168.1.99&#39;</span><span class="p">)</span>
+<span class="n">config</span><span class="o">.</span><span class="n">network_config</span><span class="o">.</span><span class="n">addresses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;the-server:5702&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Another important option is to configure client operation modes as Smart or Dummy.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">config</span><span class="o">.</span><span class="n">network_config</span><span class="o">.</span><span class="n">smart_routing</span><span class="o">=</span><span class="bp">True</span> <span class="c1">#Smart Mode</span>
+<span class="n">config</span><span class="o">.</span><span class="n">network_config</span><span class="o">.</span><span class="n">smart_routing</span><span class="o">=</span><span class="bp">False</span> <span class="c1">#Dummy Mode</span>
+</pre></div>
+</div>
+<p>Please see API doc for details <a class="reference internal" href="api/hazelcast.config.html#hazelcast.config.ClientNetworkConfig" title="hazelcast.config.ClientNetworkConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClientNetworkConfig</span></code></a></p>
+</div>
+<div class="section" id="serialization-configuration">
+<h2>Serialization Configuration<a class="headerlink" href="#serialization-configuration" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="api/hazelcast.config.html#hazelcast.config.SerializationConfig" title="hazelcast.config.SerializationConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">SerializationConfig</span></code></a> is used to configure serialization.</p>
+<p>Please see <a class="reference internal" href="serialization.html"><span class="doc">Hazelcast Serialization</span></a></p>
+</div>
+<div class="section" id="near-cache-configuration">
+<h2>Near Cache Configuration<a class="headerlink" href="#near-cache-configuration" title="Permalink to this headline">¶</a></h2>
+<p>Near cache can be configured using <a class="reference internal" href="api/hazelcast.config.html#hazelcast.config.NearCacheConfig" title="hazelcast.config.NearCacheConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">NearCacheConfig</span></code></a>. For each map there should be a matching
+near cache configuration with same name</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">config</span><span class="o">.</span><span class="n">add_near_cache_config</span><span class="p">(</span><span class="n">NearCacheConfig</span><span class="p">(</span><span class="s2">&quot;map-name&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Please see API doc for near cache configuration options: <a class="reference internal" href="api/hazelcast.config.html#hazelcast.config.NearCacheConfig" title="hazelcast.config.NearCacheConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">NearCacheConfig</span></code></a></p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Client Configuration</a><ul>
+<li><a class="reference internal" href="#credential-setup">Credential Setup</a></li>
+<li><a class="reference internal" href="#network-configuration">Network Configuration</a></li>
+<li><a class="reference internal" href="#serialization-configuration">Serialization Configuration</a></li>
+<li><a class="reference internal" href="#near-cache-configuration">Near Cache Configuration</a></li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/configuration.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Hazelcast Inc..
+    </div>
+  </body>
+</html>

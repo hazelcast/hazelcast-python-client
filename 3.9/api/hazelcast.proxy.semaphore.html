@@ -1,0 +1,245 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Semaphore &#8212; Hazelcast Python Client 3.9 documentation</title>
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazelcast Python Client 3.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.proxy.semaphore">
+<span id="semaphore"></span><h1>Semaphore<a class="headerlink" href="#module-hazelcast.proxy.semaphore" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="hazelcast.proxy.semaphore.Semaphore">
+<em class="property">class </em><code class="descname">Semaphore</code><span class="sig-paren">(</span><em>client</em>, <em>service_name</em>, <em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.semaphore.Semaphore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hazelcast.proxy.base.html#hazelcast.proxy.base.PartitionSpecificProxy" title="hazelcast.proxy.base.PartitionSpecificProxy"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.proxy.base.PartitionSpecificProxy</span></code></a></p>
+<p>Semaphore is a backed-up distributed alternative to the Python <a class="reference external" href="https://docs.python.org/3/library/asyncio-sync.html">asyncio.Semaphore</a></p>
+<p>Semaphore is a cluster-wide counting semaphore. Conceptually, it maintains a set of permits. Each acquire() blocks
+if necessary until a permit is available, and then takes it. Each release() adds a permit, potentially releasing a
+blocking acquirer. However, no actual permit objects are used; the semaphore just keeps a count of the number
+available and acts accordingly.</p>
+<p>The Hazelcast distributed semaphore implementation guarantees that threads invoking any of the acquire methods are
+selected to obtain permits in the order in which their invocation of those methods was processed(first-in-first-out;
+FIFO). Note that FIFO ordering necessarily applies to specific internal points of execution within the cluster.
+Therefore, it is possible for one member to invoke acquire before another, but reach the ordering point after the
+other, and similarly upon return from the method.</p>
+<p>This class also provides convenience methods to acquire and release multiple permits at a time. Beware of the
+increased risk of indefinite postponement when using the multiple acquire. If a single permit is released to a
+semaphore that is currently blocking, a thread waiting for one permit will acquire it before a thread waiting for
+multiple permits regardless of the call order.</p>
+<dl class="method">
+<dt id="hazelcast.proxy.semaphore.Semaphore.init">
+<code class="descname">init</code><span class="sig-paren">(</span><em>permits</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.semaphore.Semaphore.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try to initialize this Semaphore instance with the given permit count.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>permits</strong> – (int), the given permit count.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if initialization success.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.semaphore.Semaphore.acquire">
+<code class="descname">acquire</code><span class="sig-paren">(</span><em>permits=1</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.semaphore.Semaphore.acquire" title="Permalink to this definition">¶</a></dt>
+<dd><p>Acquires one or specified amount of permits if available, and returns immediately, reducing the number of
+available permits by one or given amount.</p>
+<p>If insufficient permits are available then the current thread becomes disabled for thread scheduling purposes
+and lies dormant until one of following happens:</p>
+<blockquote>
+<div><ul class="simple">
+<li>some other thread invokes one of the release methods for this semaphore, the current thread is next to be</li>
+</ul>
+<p>assigned permits and the number of available permits satisfies this request,
+* this Semaphore instance is destroyed, or
+* some other thread interrupts the current thread.</p>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>permits</strong> – (int), the number of permits to acquire (optional).</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.semaphore.Semaphore.available_permits">
+<code class="descname">available_permits</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.semaphore.Semaphore.available_permits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the current number of permits currently available in this semaphore.</p>
+<blockquote>
+<div><ul class="simple">
+<li>This method is typically used for debugging and testing purposes.</li>
+</ul>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(int), the number of available permits in this semaphore.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.semaphore.Semaphore.drain_permits">
+<code class="descname">drain_permits</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.semaphore.Semaphore.drain_permits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Acquires and returns all permits that are immediately available.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(int), the number of permits drained.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.semaphore.Semaphore.reduce_permits">
+<code class="descname">reduce_permits</code><span class="sig-paren">(</span><em>reduction</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.semaphore.Semaphore.reduce_permits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shrinks the number of available permits by the indicated reduction. This method differs from acquire in that it
+does not block waiting for permits to become available.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>reduction</strong> – (int),  the number of permits to remove.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.semaphore.Semaphore.release">
+<code class="descname">release</code><span class="sig-paren">(</span><em>permits=1</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.semaphore.Semaphore.release" title="Permalink to this definition">¶</a></dt>
+<dd><p>Releases one or given number of permits, increasing the number of available permits by one or that amount.</p>
+<p>There is no requirement that a thread that releases a permit must have acquired that permit by calling one of
+the acquire methods. Correct usage of a semaphore is established by programming convention in the application.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>permits</strong> – (int), the number of permits to release (optional).</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.semaphore.Semaphore.try_acquire">
+<code class="descname">try_acquire</code><span class="sig-paren">(</span><em>permits=1</em>, <em>timeout=0</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.semaphore.Semaphore.try_acquire" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tries to acquire one or the given number of permits, if they are available, and returns immediately, with the
+value <code class="docutils literal notranslate"><span class="pre">true</span></code>, reducing the number of available permits by the given amount.</p>
+<p>If there are insufficient permits and a timeout is provided, the current thread becomes disabled for thread
+scheduling purposes and lies dormant until one of following happens:</p>
+<blockquote>
+<div><ul class="simple">
+<li>some other thread invokes the release() method for this semaphore and the current thread is next to be</li>
+</ul>
+<p>assigned a permit, or
+* some other thread interrupts the current thread, or
+* the specified waiting time elapses.</p>
+</div></blockquote>
+<p>If there are insufficient permits and no timeout is provided, this method will return immediately with the value
+<code class="docutils literal notranslate"><span class="pre">false</span></code> and the number of available permits is unchanged.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>permits</strong> – (int), the number of permits to acquire (optional).</li>
+<li><strong>timeout</strong> – (long), the maximum time in seconds to wait for the permit(s) (optional).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if desired amount of permits was acquired, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/hazelcast.proxy.semaphore.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazelcast Python Client 3.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Hazelcast Inc..
+    </div>
+  </body>
+</html>

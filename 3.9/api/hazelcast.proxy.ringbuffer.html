@@ -1,0 +1,299 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>RingBuffer &#8212; Hazelcast Python Client 3.9 documentation</title>
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazelcast Python Client 3.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.proxy.ringbuffer">
+<span id="ringbuffer"></span><h1>RingBuffer<a class="headerlink" href="#module-hazelcast.proxy.ringbuffer" title="Permalink to this headline">¶</a></h1>
+<dl class="data">
+<dt id="hazelcast.proxy.ringbuffer.OVERFLOW_POLICY_OVERWRITE">
+<code class="descname">OVERFLOW_POLICY_OVERWRITE</code><em class="property"> = 0</em><a class="headerlink" href="#hazelcast.proxy.ringbuffer.OVERFLOW_POLICY_OVERWRITE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration property for DEFAULT overflow policy. When an item is tried to be added on full Ringbuffer, oldest item in
+the Ringbuffer is overwritten and item is added.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="hazelcast.proxy.ringbuffer.OVERFLOW_POLICY_FAIL">
+<code class="descname">OVERFLOW_POLICY_FAIL</code><em class="property"> = 1</em><a class="headerlink" href="#hazelcast.proxy.ringbuffer.OVERFLOW_POLICY_FAIL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration property for overflow policy. When an item is tried to be added on full Ringbuffer, the call fails and
+item is not added.</p>
+<p>The reason that FAIL exist is to give the opportunity to obey the ttl. If blocking behavior is required, this can be
+implemented using retrying in combination with an exponential backoff.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sleepMS</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">while</span> <span class="n">true</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">result</span> <span class="o">=</span> <span class="n">ringbuffer</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">if</span> <span class="n">result</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="k">break</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">sleep</span><span class="p">(</span><span class="n">sleepMS</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">sleepMS</span> <span class="o">*=</span> <span class="mi">2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="data">
+<dt id="hazelcast.proxy.ringbuffer.MAX_BATCH_SIZE">
+<code class="descname">MAX_BATCH_SIZE</code><em class="property"> = 1000</em><a class="headerlink" href="#hazelcast.proxy.ringbuffer.MAX_BATCH_SIZE" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum number of items to be added to RingBuffer or read from RingBuffer at a time.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.proxy.ringbuffer.Ringbuffer">
+<em class="property">class </em><code class="descname">Ringbuffer</code><span class="sig-paren">(</span><em>client</em>, <em>service_name</em>, <em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.ringbuffer.Ringbuffer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hazelcast.proxy.base.html#hazelcast.proxy.base.PartitionSpecificProxy" title="hazelcast.proxy.base.PartitionSpecificProxy"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.proxy.base.PartitionSpecificProxy</span></code></a></p>
+<p>A Ringbuffer is a data-structure where the content is stored in a ring like structure. A Ringbuffer has a capacity
+so it won’t grow beyond that capacity and endanger the stability of the system. If that capacity is exceeded, than
+the oldest item in the Ringbuffer is overwritten. The Ringbuffer has 2 always incrementing sequences:</p>
+<blockquote>
+<div>#. tail_sequence: this is the side where the youngest item is found. So the tail is the side of the Ringbuffer
+where items are added to.
+#. head_sequence: this is the side where the oldest items are found. So the head is the side where items gets
+discarded.</div></blockquote>
+<p>The items in the Ringbuffer can be found by a sequence that is in between (inclusive) the head and tail sequence.</p>
+<p>A Ringbuffer currently is not a distributed data-structure. So all data is stored in a single partition; comparable
+to the IQueue implementation. But we’ll provide an option to partition the data in the near future. A Ringbuffer
+can be used in a similar way as a queue, but one of the key differences is that a queue.take is destructive,
+meaning that only 1 thread is able to take an item. A Ringbuffer.read is not destructive, so you can have multiple
+threads reading the same item multiple times.</p>
+<dl class="method">
+<dt id="hazelcast.proxy.ringbuffer.Ringbuffer.capacity">
+<code class="descname">capacity</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.ringbuffer.Ringbuffer.capacity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the capacity of this Ringbuffer.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(long), the capacity of Ringbuffer.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.ringbuffer.Ringbuffer.size">
+<code class="descname">size</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.ringbuffer.Ringbuffer.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns number of items in the Ringbuffer.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(long), the size of Ringbuffer.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.ringbuffer.Ringbuffer.tail_sequence">
+<code class="descname">tail_sequence</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.ringbuffer.Ringbuffer.tail_sequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the sequence of the tail. The tail is the side of the Ringbuffer where the items are added to. The
+initial value of the tail is -1.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(long), the sequence of the tail.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.ringbuffer.Ringbuffer.head_sequence">
+<code class="descname">head_sequence</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.ringbuffer.Ringbuffer.head_sequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the sequence of the head. The head is the side of the Ringbuffer where the oldest items in the
+Ringbuffer are found. If the Ringbuffer is empty, the head will be one more than the tail. The initial value of
+the head is 0 (1 more than tail).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(long), the sequence of the head.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.ringbuffer.Ringbuffer.remaining_capacity">
+<code class="descname">remaining_capacity</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.ringbuffer.Ringbuffer.remaining_capacity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the remaining capacity of the Ringbuffer.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(long), the remaining capacity of Ringbuffer.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.ringbuffer.Ringbuffer.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>item</em>, <em>overflow_policy=0</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.ringbuffer.Ringbuffer.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the specified item to the tail of the Ringbuffer. If there is no space in the Ringbuffer, the action is
+determined by overflow policy as <a class="reference internal" href="#hazelcast.proxy.ringbuffer.OVERFLOW_POLICY_OVERWRITE" title="hazelcast.proxy.ringbuffer.OVERFLOW_POLICY_OVERWRITE"><code class="xref py py-const docutils literal notranslate"><span class="pre">OVERFLOW_POLICY_OVERWRITE</span></code></a> or <a class="reference internal" href="#hazelcast.proxy.ringbuffer.OVERFLOW_POLICY_FAIL" title="hazelcast.proxy.ringbuffer.OVERFLOW_POLICY_FAIL"><code class="xref py py-const docutils literal notranslate"><span class="pre">OVERFLOW_POLICY_FAIL</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>item</strong> – (object), the specified item to be added.</li>
+<li><strong>overflow_policy</strong> – (int), the OverflowPolicy to be used when there is no space (optional).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(long), the sequenceId of the added item, or -1 if the add failed.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.ringbuffer.Ringbuffer.add_all">
+<code class="descname">add_all</code><span class="sig-paren">(</span><em>items</em>, <em>overflow_policy=0</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.ringbuffer.Ringbuffer.add_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds all of the item in the specified collection to the tail of the Ringbuffer. An add_all is likely to
+outperform multiple calls to add(object) due to better io utilization and a reduced number of executed
+operations. The items are added in the order of the Iterator of the collection.</p>
+<p>If there is no space in the Ringbuffer, the action is determined by overflow policy as <a class="reference internal" href="#hazelcast.proxy.ringbuffer.OVERFLOW_POLICY_OVERWRITE" title="hazelcast.proxy.ringbuffer.OVERFLOW_POLICY_OVERWRITE"><code class="xref py py-const docutils literal notranslate"><span class="pre">OVERFLOW_POLICY_OVERWRITE</span></code></a>
+or <a class="reference internal" href="#hazelcast.proxy.ringbuffer.OVERFLOW_POLICY_FAIL" title="hazelcast.proxy.ringbuffer.OVERFLOW_POLICY_FAIL"><code class="xref py py-const docutils literal notranslate"><span class="pre">OVERFLOW_POLICY_FAIL</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>items</strong> – (Collection), the specified collection which contains the items to be added.</li>
+<li><strong>overflow_policy</strong> – (int), the OverflowPolicy to be used when there is no space (optional).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(long), the sequenceId of the last written item, or -1 of the last write is failed.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.ringbuffer.Ringbuffer.read_one">
+<code class="descname">read_one</code><span class="sig-paren">(</span><em>sequence</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.ringbuffer.Ringbuffer.read_one" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads one item from the Ringbuffer. If the sequence is one beyond the current tail, this call blocks until an
+item is added. Currently it isn’t possible to control how long this call is going to block.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sequence</strong> – (long), the sequence of the item to read.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(object), the read item.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.ringbuffer.Ringbuffer.read_many">
+<code class="descname">read_many</code><span class="sig-paren">(</span><em>start_sequence</em>, <em>min_count</em>, <em>max_count</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.ringbuffer.Ringbuffer.read_many" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a batch of items from the Ringbuffer. If the number of available items after the first read item is
+smaller than the max_count, these items are returned. So it could be the number of items read is smaller than
+the max_count. If there are less items available than min_count, then this call blocks. Reading a batch of items
+is likely to perform better because less overhead is involved.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>start_sequence</strong> – (long),  the start_sequence of the first item to read.</li>
+<li><strong>min_count</strong> – (int), the minimum number of items to read.</li>
+<li><strong>max_count</strong> – (int), the maximum number of items to read.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(Sequence), the list of read items.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/hazelcast.proxy.ringbuffer.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazelcast Python Client 3.9 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Hazelcast Inc..
+    </div>
+  </body>
+</html>
