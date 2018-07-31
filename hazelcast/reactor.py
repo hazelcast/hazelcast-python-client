@@ -142,7 +142,6 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
         ssl_config = network_config.ssl_config
         if ssl and ssl_config.enabled:
-
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
 
             protocol = ssl_config.protocol
@@ -168,6 +167,8 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
             if ssl_config.cafile:
                 ssl_context.load_verify_locations(ssl_config.cafile)
+            else:
+                ssl_context.load_default_certs()
 
             if ssl_config.certfile:
                 ssl_context.load_cert_chain(ssl_config.certfile, ssl_config.keyfile, ssl_config.password)

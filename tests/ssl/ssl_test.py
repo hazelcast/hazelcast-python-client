@@ -76,7 +76,5 @@ class SSLTest(HazelcastTestCase):
             return f.read()
 
     def configure_cluster(self):
-        f = open(self.hazelcast_xml, "r")
-        xml = f.read()
-        f.close()
-        return xml
+        with open(self.hazelcast_xml, "r") as f:
+            return f.read()
