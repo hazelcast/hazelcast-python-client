@@ -1,6 +1,5 @@
-from __future__ import with_statement
-
 import os
+
 from unittest import skipIf
 from tests.base import HazelcastTestCase
 from hazelcast.client import HazelcastClient
@@ -8,7 +7,7 @@ from hazelcast.exception import HazelcastError
 from tests.util import is_oss, get_ssl_config, configure_logging, fill_map, get_abs_path
 
 
-@skipIf(is_oss(), "SSL/TLS support is only available at the Enterprise version.")
+@skipIf(is_oss(), "SSL/TLS is only supported with enterprise server.")
 class SSLTest(HazelcastTestCase):
     current_directory = os.path.dirname(__file__)
     rc = None
@@ -42,8 +41,25 @@ class SSLTest(HazelcastTestCase):
         self.assertEqual(test_map.size().result(), 10)
         client.shutdown()
 
+    def test_ssl_enabled_with_hostname(self):
+        client = HazelcastClient(get_ssl_config(True,
+                                                get_abs_path(self.current_directory, "server1-cert.pem"),
+                                                hostname="foo.bar.com"))
+        self.assertTrue(client.lifecycle.is_live)
+        client.shutdown()
+
+    def test_ssl_enabled_with_invalid_hostname(self):
+        with self.assertRaises(HazelcastError):
+            client = HazelcastClient(get_ssl_config(True,
+                                                    get_abs_path(self.current_directory, "server1-cert.pem"),
+                                                    hostname="INVALID HOST NAME"))
+
+    def test_ssl_enabled_with_unknown_ciphers(self):
+        with self.assertRaises(HazelcastError):
+            client = HazelcastClient(get_ssl_config(True,
+                                                    get_abs_path(self.current_directory, "server1-cert.pem"),
+                                                    ciphers="UNKNOWN CIPHERS"))
+
     def configure_cluster(self):
-        f = open(self.hazelcast_xml, "r")
-        xml = f.read()
-        f.close()
-        return xml
+        with open(self.hazelcast_xml, "r") as f:
+            return f.read()

@@ -219,6 +219,7 @@ class ClientNetworkConfig(object):
         self.ssl_config = SSLConfig()
         """SSL configurations for the client."""
 
+
 class SocketOption(object):
     """
     Advanced configuration for fine-tune the TCP options.
@@ -459,28 +460,34 @@ class SSLConfig(object):
     def __init__(self):
         self.enabled = False
         """Enables/disables SSL."""
+
         self.cafile = None
         """Path of concatenated CA certificates used to validate server's certificates in PEM format."""
+
         self.certfile = None
         """Path of the client certificate in PEM format."""
+
         self.keyfile = None
         """
         Path of the private key file for the client certificate in the PEM format.
         If this parameter is None, private key will be taken from certfile.
         """
+
         self.password = None
         """
         Password for decrypting the keyfile if it is encrypted.
         The password may be a function to call to get the password.
-        It will be called with no arguments, and it should return a string, bytes, or bytearray. 
-        If the return value is a string it will be encoded as UTF-8 before using it to decrypt the key. 
-        Alternatively a string, bytes, or bytearray value may be supplied directly as the password. 
+        It will be called with no arguments, and it should return a string, bytes, or bytearray.
+        If the return value is a string it will be encoded as UTF-8 before using it to decrypt the key.
+        Alternatively a string, bytes, or bytearray value may be supplied directly as the password.
         """
+
         self.hostname = None
         """
         Server's host name. If this is not None, server's certificate will be checked to verify
-        that hostname is matched with the it. IP addresses are not supported. 
+        that hostname is matched with the it. IP addresses are not supported.
         """
+
         self.ciphers = None
         """String in the OpenSSL cipher list format to set the available ciphers for sockets."""
 

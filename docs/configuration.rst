@@ -69,11 +69,24 @@ Please see API doc for near cache configuration options: :class:`~hazelcast.conf
 SSL Configuration
 -----------------
 
-TLS/SSL can be configured using :class:`~hazelcast.config.SSLConfig`.
+SSL/TLS can be configured using :class:`~hazelcast.config.SSLConfig` by providing a CA certificate
+for the server's certificate.
 
 .. code-block:: python
 
-    config.network_config.ssl_config.enable = True
+    config.network_config.ssl_config.enabled = True
     config.network_config.ssl_config.cafile = "server.pem"
 
-Please see API doc for SSL configuration options: :class:`~hazelcast.config.SSLConfig`
+SSL/TLS with mutual authentication can also be configured using :class:`~hazelcast.config.SSLConfig` by providing
+a CA certificate for the server's certificate, a client certificate and a private key for the client certificate.
+Please note that there should be a CA certificate for client's certificate on the server side.
+
+.. code-block:: python
+
+    config.network_config.ssl.config.enabled = True
+    config.network_config.ssl.config.cafile = "server.pem"
+    config.network_config.ssl.config.certfile = "client.pem"
+    config.network_config.ssl.config.keyfile = "client-key.pem"
+    config.network_config.ssl.config.password = "keyfile-password"
+
+Please see API doc of SSL configuration for more options: :class:`~hazelcast.config.SSLConfig`

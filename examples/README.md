@@ -34,5 +34,6 @@ Included example folders
 *   **/ring-buffer** — Contains a code sample to show usage of distributed ring buffer.
 *   **/serialization** — Includes code samples that implement various serialization interfaces like IdentifiedDataSerializable, Portable. It also has code samples to show how to plug a custom and global serializers using StreamSerializer.
 *   **/set** — Contains a code sample to show usage of distributed set.
+*   **/ssl** — Contains code samples that show how to configure client with SSL or SSL with mutual authentication
 *   **/topic** — Includes a code sample to show usage of distributed topic.
 *   **/transactions** — Code samples showing how to use the TransactionalMap.

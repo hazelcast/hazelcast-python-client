@@ -6,7 +6,6 @@ import socket
 import sys
 import threading
 import time
-import ssl
 
 from hazelcast.six.moves import queue
 from collections import deque
@@ -14,6 +13,10 @@ from functools import total_ordering
 from hazelcast.connection import Connection, BUFFER_SIZE
 from hazelcast.exception import HazelcastError
 from hazelcast.future import Future
+try:
+    import ssl
+except ImportError:
+    ssl = None
 
 
 class AsyncoreReactor(object):
@@ -132,8 +135,9 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
             self.socket.setsockopt(socket_option.level, socket_option.option, socket_option.value)
 
         self.connect(self._address)
+
         ssl_config = network_config.ssl_config
-        if ssl_config.enabled:
+        if ssl and ssl_config.enabled:
             # operates only on TLSv1+
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
             ssl_context.options |= ssl.OP_NO_SSLv2
@@ -143,6 +147,8 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
             if ssl_config.cafile:
                 ssl_context.load_verify_locations(ssl_config.cafile)
+            else:
+                ssl_context.load_default_certs()
 
             if ssl_config.certfile:
                 ssl_context.load_cert_chain(ssl_config.certfile, ssl_config.keyfile, ssl_config.password)
