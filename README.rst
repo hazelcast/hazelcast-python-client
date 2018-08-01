@@ -27,7 +27,7 @@ Features :
 * Smart and Non-Smart Client operation
 * Event Listeners
 * Lifecycle Service
-* Hazelcast serialization (IdentifiedDataSerializable, Portable, Custom Serializers, Global Serializers)
+* Hazelcast Serialization (IdentifiedDataSerializable, Portable, Custom Serializers, Global Serializers)
 
 
 Installation
@@ -46,6 +46,16 @@ Documentation
 
 Please refer to `Hazelcast Python Client documentation <http://hazelcast.github.io/hazelcast-python-client/>`_
 
+Examples
+------------
+
+See `Examples </examples>`_
+
+Getting Started
+---------------
+
+Please take a look at our `Getting Started <http://hazelcast.github.io/hazelcast-python-client/3.9/getting_started.html>`_ guide.
+
 Mail Group
 ----------
 
@@ -54,12 +64,12 @@ Please join the mail group if you are interested in using or developing Hazelcas
 `http://groups.google.com/group/hazelcast <http://groups.google.com/group/hazelcast>`_
 
 License
-~~~~~~~
+-------
 
 Hazelcast is available under the Apache 2 License. Please see the `Licensing appendix <http://docs.hazelcast.org/docs/latest/manual/html-single/index.html#license-questions>`_ for more information.
 
 Copyright
-~~~~~~~~~
+---------
 
 Copyright (c) 2008-2018, Hazelcast, Inc. All Rights Reserved.
 
