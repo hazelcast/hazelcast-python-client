@@ -16,14 +16,13 @@ An even simpler way is to install the client from the official Python Package In
     pip install hazelcast-python-client
 
 
-
 Starting Hazelcast
 ------------------
 
-Before diving right into the configuration, you should have a running Hazelcast server. If you are already familiar
-with Hazelcast and have a server running, you can simply skip to the Configuration section.
+Before diving right into the configuration, you should have a running Hazelcast member. If you are already familiar
+with Hazelcast and have a member running, you can simply skip to the Configuration section.
 
-If not, follow these steps to start an Hazelcast server in your local computer:
+If not, follow these steps to start an Hazelcast member in your local computer:
 
 * Make sure that you have `Java <http://www.oracle.com/technetwork/java/javase/downloads/index.html>`_ installed on your system.
 * Download the latest `Hazelcast release <https://hazelcast.org/download/>`_.
@@ -32,7 +31,9 @@ If not, follow these steps to start an Hazelcast server in your local computer:
 * If you are using Linux/MacOS, you can start a Hazelcast member with **start.sh** and stop the member you have started with **stop.sh** when you are done.
 * If you are using Windows, you can start a Hazelcast member with **start.bat** and stop the member you have started with **stop.bat** when you are done.
 * Refer to the `Using the Scripts In The Package <http://docs.hazelcast.org/docs/latest/manual/html-single/index.html#using-the-scripts-in-the-package>`_ for more information about these scripts.
-* After successfully running these scripts, you should see the ip address and port of your member on your console. Take a note of these and jump right into the Configuration section!
+* If you use **start.sh/bat** again while your first Hazelcast member is running, you will start a second Hazelcast member. These members will join together to form a Hazelcast cluster.
+* You can increase the size of your cluster by repeating the step above as many times as you want.
+* After successfully running these scripts, you should see the ip address and port of your members on your console. Take a note of these and jump right into the Configuration section!
 
 
 Configuration
