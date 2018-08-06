@@ -1,7 +1,7 @@
 from unittest import TestCase
 from hazelcast import six
 from hazelcast.core import Address
-from hazelcast.address import DefaultAddressProvider
+from hazelcast.connection import DefaultAddressProvider
 from hazelcast.config import ClientNetworkConfig
 
 

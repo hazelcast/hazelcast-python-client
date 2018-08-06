@@ -1,5 +1,3 @@
-import logging
-
 from unittest import TestCase
 from hazelcast.core import Address
 from hazelcast.discovery import HazelcastCloudDiscovery, HazelcastCloudAddressProvider
@@ -15,7 +13,7 @@ class HazelcastCloudProviderTest(TestCase):
         self.expected_addresses[Address("10.0.0.1", 5702)] = Address("198.51.100.1", 5702)
         self.expected_addresses[Address("10.0.0.2", 5701)] = Address("198.51.100.2", 5701)
         self.cloud_discovery = HazelcastCloudDiscovery("", "", 0)
-        self.cloud_discovery.discover_nodes = self.mock_discover_nodes
+        self.cloud_discovery.discover_nodes = lambda: self.expected_addresses
         self.provider = HazelcastCloudAddressProvider("", "", 0)
         self.provider._cloud_discovery = self.cloud_discovery
 
@@ -31,9 +29,6 @@ class HazelcastCloudProviderTest(TestCase):
         self.provider._cloud_discovery.discover_nodes = self.mock_discover_nodes_with_exception
         addresses = self.provider.load_addresses()
         self.assertEqual(0, len(addresses))
-
-    def mock_discover_nodes(self):
-        return self.expected_addresses
 
     def mock_discover_nodes_with_exception(self):
         raise Exception("Expected exception")

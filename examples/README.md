@@ -24,6 +24,7 @@ How to try these examples
 Included example folders
 -----------------------
 
+*   **/cloud-discovery** — Includes a code sample that shows how to use Hazelcast.Cloud
 *   **/learning-basics** — Code samples to show some Hazelcast basics like creating, configuring and destroying Hazelcast instances, configuring logging and Hazelcast configuration.
 *   **/list** — Contains a code sample to show usage of distributed list.
 *   **/map** — Code samples folder that includes some features of the Hazelcast distributed map in action.

@@ -13,7 +13,7 @@ from hazelcast.protocol.client_message import BEGIN_END_FLAG, ClientMessage, Cli
 from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
 from hazelcast.serialization import INT_SIZE_IN_BYTES, FMT_LE_INT
 from hazelcast.exception import HazelcastError
-from hazelcast.util import AtomicInteger
+from hazelcast.util import AtomicInteger, parse_addresses
 from hazelcast import six
 
 BUFFER_SIZE = 8192
@@ -104,7 +104,7 @@ class ConnectionManager(object):
                     try:
                         translated_address = self._address_translator.translate(address)
                         if translated_address is None:
-                            raise HazelcastError("Address translator could not translate address: " + str(address))
+                            raise HazelcastError("Address translator could not translate address: {}".format(address))
                         connection = self._new_connection_func(translated_address,
                                                                self._client.config.network_config.connection_timeout,
                                                                self._client.config.network_config.socket_options,
@@ -326,3 +326,60 @@ class Connection(object):
 
     def __repr__(self):
         return "Connection(address=%s, id=%s)" % (self._address, self.id)
+
+
+class AddressProvider(object):
+    """
+    Provides initial addresses for client to find and connect to a node
+    """
+    def load_addresses(self):
+        """
+        :return: (Sequence), The possible member addresses to connect to.
+        """
+        raise NotImplementedError()
+
+
+class AddressTranslator(object):
+    """
+    AddressTranslator is used to resolve private ip addresses of cloud services.
+    """
+    def translate(self, address):
+        """
+        Translates the given address to another address specific to network or service.
+        :param address: (:class:`~hazelcast.core.Address`)
+        :return: (:class:`~hazelcast.core.Address`), new address if given address is known, otherwise returns null
+        """
+        raise NotImplementedError()
+
+    def refresh(self):
+        """
+        Refreshes the internal lookup table if necessary.
+        """
+        raise NotImplementedError()
+
+
+class DefaultAddressProvider(AddressProvider):
+    """
+    Default address provider of Hazelcast.
+    Loads addresses from the Hazelcast configuration.
+    """
+    def __init__(self, network_config):
+        self._network_config = network_config
+
+    def load_addresses(self):
+        return parse_addresses(self._network_config.addresses)
+
+
+class DefaultAddressTranslator(AddressTranslator):
+    """
+    DefaultAddressTranslator is a no-op. It always returns the given address.
+    """
+    def translate(self, address):
+        """
+        :param address: (:class:`~hazelcast.core.Address`)
+        :return: (class:`~hazelcast.core.Address`)
+        """
+        return address
+
+    def refresh(self):
+        pass

@@ -2,7 +2,7 @@ import unittest
 
 from hazelcast.core import Address, Member
 from hazelcast.util import get_possible_addresses, get_provider_addresses
-from hazelcast.address import DefaultAddressProvider
+from hazelcast.connection import DefaultAddressProvider
 from hazelcast.config import ClientNetworkConfig
 from hazelcast import six
 

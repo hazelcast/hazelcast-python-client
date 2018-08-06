@@ -1,6 +1,6 @@
 from unittest import TestCase
 from hazelcast.core import Address
-from hazelcast.address import DefaultAddressProvider
+from hazelcast.connection import DefaultAddressProvider
 from hazelcast.discovery import HazelcastCloudAddressProvider
 from hazelcast.config import ClientNetworkConfig
 from hazelcast.util import get_provider_addresses, get_possible_addresses
@@ -11,18 +11,16 @@ class MultipleProvidersTest(TestCase):
     def setUp(self):
         self.network_config = ClientNetworkConfig()
         self.cloud_address_provider = HazelcastCloudAddressProvider("", "", 0)
-        self.cloud_address_provider.load_addresses = self.mock_cloud_load_addresses
+        self.cloud_address_provider.load_addresses = lambda: [Address("10.0.0.1", 5701)]
 
     def test_multiple_providers_with_empty_network_config_addresses(self):
         default_address_provider = DefaultAddressProvider(self.network_config)
 
         providers = [default_address_provider, self.cloud_address_provider]
         provider_addresses = get_provider_addresses(providers)
-
         six.assertCountEqual(self, provider_addresses, [Address("10.0.0.1", 5701)])
 
         addresses = get_possible_addresses(provider_addresses)
-
         six.assertCountEqual(self, addresses, [Address("10.0.0.1", 5701)])
 
     def test_multiple_providers_with_nonempty_network_config_addresses(self):
@@ -31,11 +29,9 @@ class MultipleProvidersTest(TestCase):
 
         providers = [default_address_provider, self.cloud_address_provider]
         provider_addresses = get_provider_addresses(providers)
-
         six.assertCountEqual(self, provider_addresses, [Address("10.0.0.1", 5701), Address("127.0.0.1", 5701)])
 
         addresses = get_possible_addresses(provider_addresses)
-
         six.assertCountEqual(self, addresses, [Address("10.0.0.1", 5701), Address("127.0.0.1", 5701)])
 
     def test_multiple_providers_with_nonempty_network_config_addresses_without_port(self):
@@ -44,14 +40,12 @@ class MultipleProvidersTest(TestCase):
 
         providers = [default_address_provider, self.cloud_address_provider]
         provider_addresses = get_provider_addresses(providers)
-
         six.assertCountEqual(self, provider_addresses, [Address("10.0.0.1", 5701),
                                                         Address("127.0.0.1", 5701),
                                                         Address("127.0.0.1", 5702),
                                                         Address("127.0.0.1", 5703)])
 
         addresses = get_possible_addresses(provider_addresses)
-
         six.assertCountEqual(self, addresses, [Address("10.0.0.1", 5701),
                                                Address("127.0.0.1", 5701),
                                                Address("127.0.0.1", 5702),
@@ -64,13 +58,11 @@ class MultipleProvidersTest(TestCase):
 
         providers = [default_address_provider, self.cloud_address_provider]
         provider_addresses = get_provider_addresses(providers)
-
         six.assertCountEqual(self, provider_addresses, [Address("10.0.0.1", 5701),
                                                         Address("127.0.0.1", 5701),
                                                         Address("127.0.0.1", 5701)])
 
         addresses = get_possible_addresses(provider_addresses)
-
         six.assertCountEqual(self, addresses, [Address("10.0.0.1", 5701),
                                                Address("127.0.0.1", 5701)])
 
@@ -86,15 +78,9 @@ class MultipleProvidersTest(TestCase):
 
         providers = [default_address_provider, self.cloud_address_provider]
         provider_addresses = get_provider_addresses(providers)
-
         six.assertCountEqual(self, provider_addresses, [])
 
         addresses = get_possible_addresses(provider_addresses)
-
         six.assertCountEqual(self, addresses, [Address("127.0.0.1", 5701),
                                                Address("127.0.0.1", 5702),
                                                Address("127.0.0.1", 5703)])
-
-    @staticmethod
-    def mock_cloud_load_addresses():
-        return [Address("10.0.0.1", 5701)]

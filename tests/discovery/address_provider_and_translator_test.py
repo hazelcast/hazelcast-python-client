@@ -1,7 +1,5 @@
-from __future__ import with_statement
-
 from unittest import TestCase
-from hazelcast.address import AddressProvider, AddressTranslator
+from hazelcast.connection import AddressProvider, AddressTranslator
 
 
 class AddressProviderAndTranslatorTest(TestCase):

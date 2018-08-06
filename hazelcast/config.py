@@ -165,8 +165,9 @@ class ClientConfig(object):
 
     def get_properties(self):
         """
-        Gets the configuration properties.
-        :return: (dict), Client configuration properties.
+        Returns properties.
+
+        :return: (dict), properties.
         """
         return self._properties
 
@@ -246,7 +247,6 @@ class ClientNetworkConfig(object):
         """SSL configurations for the client."""
         self.cloud_config = ClientCloudConfig()
         """Hazelcast Cloud configuration to let the client connect the cluster via hazelcast.cloud"""
-
 
 
 class SocketOption(object):

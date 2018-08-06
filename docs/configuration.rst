@@ -13,6 +13,7 @@ Configuration titles:
 - Serialization configuration via :class:`~hazelcast.config.SerializationConfig`
 - Near Cache configuration via :class:`~hazelcast.config.NearCacheConfig`
 - SSL/TLS configuration via :class:`~hazelcast.config.SSLConfig`
+- Hazelcast.Cloud configuration via :class:`~hazelcast.config.ClientCloudConfig`
 
 Credential Setup
 ----------------
@@ -98,3 +99,20 @@ Please note that, certfile and keyfile options should point to the absolute path
 
 Please see API doc of SSL configuration for more options: :class:`~hazelcast.config.SSLConfig`
 
+Hazelcast Cloud Configuration
+-----------------------------
+Hazelcast client can be configured to connect a cluster on the hazelcast.cloud using
+:class:`~hazelcast.config.network_config.ClientCloudConfig`. Please note that, in order for
+:class:`~hazelcast.config.network_config.ClientCloudConfig` to work, SSL/TLS with mutual authentication should be
+configured first using :class:`~hazelcast.config.network_config.SSLConfig`.
+
+.. code-block:: python
+
+    config.network_config.ssl.config.enabled = True
+    config.network_config.ssl.config.cafile = "server.pem"
+    config.network_config.ssl.config.certfile = "client.pem"
+    config.network_config.ssl.config.keyfile = "client-key.pem"
+    config.network_config.ssl.config.password = "keyfile-password"
+
+    config.network_config.cloud_config.enabled = True
+    config.network_config.cloud_config.discovery_token = "token"

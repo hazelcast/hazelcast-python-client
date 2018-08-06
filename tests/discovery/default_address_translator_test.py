@@ -1,6 +1,6 @@
 from unittest import TestCase
 from hazelcast.core import Address
-from hazelcast.address import DefaultAddressTranslator
+from hazelcast.connection import DefaultAddressTranslator
 
 
 class DefaultAddressTranslatorTest(TestCase):

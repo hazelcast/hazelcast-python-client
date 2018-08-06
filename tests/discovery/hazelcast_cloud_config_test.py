@@ -1,5 +1,3 @@
-from __future__ import with_statement
-
 from unittest import TestCase
 from hazelcast.client import HazelcastClient
 from hazelcast.config import ClientConfig, ClientCloudConfig
