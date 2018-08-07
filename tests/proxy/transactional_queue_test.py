@@ -1,6 +1,5 @@
 import os
 from time import sleep
-from unittest import skip
 
 from tests.base import SingleMemberTestCase
 from tests.util import random_string
@@ -10,7 +9,10 @@ from hazelcast.six.moves import range
 class TransactionalQueueTest(SingleMemberTestCase):
     @classmethod
     def configure_cluster(cls):
-        return open(os.path.join(os.path.dirname(__file__), "hazelcast_test.xml")).read()
+        path = os.path.abspath(__file__)
+        dir_path = os.path.dirname(path)
+        with open(os.path.join(dir_path, "hazelcast.xml")) as f:
+            return f.read()
 
     def setUp(self):
         self.queue = self.client.get_queue("ClientQueueTest_%s" % random_string()).blocking()
