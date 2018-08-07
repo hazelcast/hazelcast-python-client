@@ -220,6 +220,7 @@ is_not = NotPredicate
 false = FalsePredicate
 true = TruePredicate
 
+
 def is_greater_than(attribute, x):
     return GreaterLessPredicate(attribute, x, False, False)
 

@@ -20,13 +20,12 @@ def default_partition_strategy(key):
 class SerializationServiceV1(BaseSerializationService):
     logger = logging.getLogger("SerializationService")
 
-    def __init__(self, serialization_config, version=1, portable_version=0,
-                 global_partition_strategy=default_partition_strategy,
+    def __init__(self, serialization_config, version=1, global_partition_strategy=default_partition_strategy,
                  output_buffer_size=DEFAULT_OUT_BUFFER_SIZE):
         super(SerializationServiceV1, self).__init__(version, global_partition_strategy, output_buffer_size,
                                                      serialization_config.is_big_endian,
                                                      serialization_config.default_integer_type)
-        self._portable_context = PortableContext(self, portable_version)
+        self._portable_context = PortableContext(self, serialization_config.portable_version)
         self.register_class_definitions(serialization_config.class_definitions, serialization_config.check_class_def_errors)
         self._registry._portable_serializer = PortableSerializer(self._portable_context, serialization_config.portable_factories)
 

@@ -3,6 +3,7 @@ from unittest import TestCase, skip
 from hazelcast.serialization.predicate import is_equal_to, and_, is_between, is_less_than, \
     is_less_than_or_equal_to, is_greater_than, is_greater_than_or_equal_to, or_, is_not_equal_to, not_, is_like, \
     is_ilike, matches_regex, sql, true, false, is_in, is_instance_of
+from hazelcast.serialization.api import Portable
 from tests.base import SingleMemberTestCase
 from tests.serialization.portable_test import InnerPortable, FACTORY_ID
 from tests.util import random_string
@@ -237,3 +238,88 @@ class PredicatePortableTest(SingleMemberTestCase):
         for k in key_set:
             self.assertGreaterEqual(k.param_int, 900)
             self.assertIn(k, map_keys)
+
+
+class NestedPredicatePortableTest(SingleMemberTestCase):
+
+    class Body(Portable):
+        def __init__(self, name=None, limb=None):
+            self.name = name
+            self.limb = limb
+
+        def get_class_id(self):
+            return 1
+
+        def get_factory_id(self):
+            return 1
+
+        def get_class_version(self):
+            return 15
+
+        def write_portable(self, writer):
+            writer.write_utf("name", self.name)
+            writer.write_portable("limb", self.limb)
+
+        def read_portable(self, reader):
+            self.name = reader.read_utf("name")
+            self.limb = reader.read_portable("limb")
+
+        def __eq__(self, other):
+            return isinstance(other, self.__class__) and (self.name, self.limb) == (other.name, other.limb)
+
+    class Limb(Portable):
+        def __init__(self, name=None):
+            self.name = name
+
+        def get_class_id(self):
+            return 2
+
+        def get_factory_id(self):
+            return 1
+
+        def get_class_version(self):
+            return 2
+
+        def write_portable(self, writer):
+            writer.write_utf("name", self.name)
+
+        def read_portable(self, reader):
+            self.name = reader.read_utf("name")
+
+        def __eq__(self, other):
+            return isinstance(other, self.__class__) and self.name == other.name
+
+    @classmethod
+    def configure_client(cls, config):
+        factory = {1: NestedPredicatePortableTest.Body, 2: NestedPredicatePortableTest.Limb}
+        config.serialization_config.portable_factories[FACTORY_ID] = factory
+        return config
+
+    def setUp(self):
+        self.map = self.client.get_map(random_string()).blocking()
+        self.map.put(1, NestedPredicatePortableTest.Body("body1", NestedPredicatePortableTest.Limb("hand")))
+        self.map.put(2, NestedPredicatePortableTest.Body("body2", NestedPredicatePortableTest.Limb("leg")))
+
+    def tearDown(self):
+        self.map.destroy()
+
+    def test_adding_indexes(self):
+        # single-attribute index
+        self.map.add_index("name", True)
+
+        # nested-attribute index
+        self.map.add_index("limb.name", True)
+
+    def test_single_attribute_query_portable_predicates(self):
+        predicate = is_equal_to("limb.name", "hand")
+        values = self.map.values(predicate)
+
+        self.assertEqual(1, len(values))
+        self.assertEqual("body1", values[0].name)
+
+    def test_nested_attribute_query_sql_predicate(self):
+        predicate = sql("limb.name == 'leg'")
+        values = self.map.values(predicate)
+
+        self.assertEqual(1, len(values))
+        self.assertEqual("body2", values[0].name)
