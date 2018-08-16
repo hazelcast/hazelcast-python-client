@@ -6,8 +6,10 @@ import socket
 import sys
 import threading
 import time
-from hazelcast.six.moves import queue
 from collections import deque
+from functools import total_ordering
+
+from hazelcast.six.moves import queue
 
 from hazelcast.connection import Connection, BUFFER_SIZE
 from hazelcast.exception import HazelcastError
@@ -191,6 +193,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
             self._connection_closed_callback(self, cause)
 
 
+@total_ordering
 class Timer(object):
     canceled = False
 
@@ -198,6 +201,12 @@ class Timer(object):
         self.end = end
         self.timer_ended_cb = timer_ended_cb
         self.timer_canceled_cb = timer_canceled_cb
+
+    def __eq__(self, other):
+        return self.end == other.end
+
+    def __ne__(self, other):
+        return not (self == other)
 
     def __lt__(self, other):
         return self.end < other.end
