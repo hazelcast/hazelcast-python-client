@@ -1,7 +1,5 @@
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import ClientMessage
-from hazelcast.protocol.custom_codec import *
-from hazelcast.util import ImmutableLazyDataList
 from hazelcast.protocol.codec.replicated_map_message_type import *
 
 REQUEST_TYPE = REPLICATEDMAP_REMOVEENTRYLISTENER
@@ -27,12 +25,5 @@ def encode_request(name, registration_id):
     client_message.update_frame_length()
     return client_message
 
-
-def decode_response(client_message, to_object=None):
-    """ Decode response from client message"""
-    parameters = dict(response=None)
-    parameters['response'] = client_message.read_bool()
-    return parameters
-
-
+# Empty decode_response because response is not used to determine the return value.
 
