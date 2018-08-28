@@ -150,6 +150,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
             except IndexError:
                 return
             sent = self.send(data)
+            self.last_write = time.time()
             self.sent_protocol_bytes = True
             if sent < len(data):
                 self._write_queue.appendleft(data[sent:])
@@ -175,6 +176,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         if len(self._write_queue) == 0 and self._write_lock.acquire(False):
             try:
                 sent = self.send(data)
+                self.last_write = time.time()
                 if sent < len(data):
                     self.logger.info("adding to queue")
                     self._write_queue.appendleft(data[sent:])
