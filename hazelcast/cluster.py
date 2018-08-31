@@ -164,7 +164,7 @@ class ClusterService(object):
             client_add_membership_listener_codec.handle(m, self._handle_member, self._handle_member_list)
 
         response = self._client.invoker.invoke(
-            ListenerInvocation(request, handler, connection=connection)).result()
+            ListenerInvocation(self._client.listener, request, handler, connection=connection)).result()
         registration_id = client_add_membership_listener_codec.decode_response(response)["response"]
         self.logger.debug("Registered membership listener with ID " + registration_id)
         self._initial_list_fetched.wait()

@@ -1,9 +1,12 @@
 import logging
+import sys
 
 from hazelcast.future import make_blocking
 from hazelcast.partition import string_partition_strategy
 from hazelcast.util import enum, thread_id
 from hazelcast import six
+
+MAX_SIZE = sys.maxsize
 
 
 def default_response_handler(future, codec, to_object):
@@ -58,14 +61,15 @@ class Proxy(object):
         request = codec.encode_request(name=self.name, **kwargs)
         return self._client.invoker.invoke_on_target(request, _address).continue_with(response_handler, codec, self._to_object)
 
-    def _encode_invoke_on_key(self, codec, key_data, **kwargs):
+    def _encode_invoke_on_key(self, codec, key_data, invocation_timeout=None, **kwargs):
         partition_id = self._client.partition_service.get_partition_id(key_data)
-        return self._encode_invoke_on_partition(codec, partition_id, **kwargs)
+        return self._encode_invoke_on_partition(codec, partition_id, invocation_timeout=invocation_timeout, **kwargs)
 
-    def _encode_invoke_on_partition(self, codec, _partition_id, response_handler=default_response_handler, **kwargs):
+    def _encode_invoke_on_partition(self, codec, _partition_id, response_handler=default_response_handler,
+                                    invocation_timeout=None, **kwargs):
         request = codec.encode_request(name=self.name, **kwargs)
-        return self._client.invoker.invoke_on_partition(request, _partition_id).continue_with(response_handler, codec,
-                                                                                              self._to_object)
+        return self._client.invoker.invoke_on_partition(request, _partition_id, invocation_timeout).continue_with(response_handler,
+                                                                                                                  codec, self._to_object)
 
     def blocking(self):
         """
@@ -83,9 +87,10 @@ class PartitionSpecificProxy(Proxy):
         super(PartitionSpecificProxy, self).__init__(client, service_name, name)
         self._partition_id = self._client.partition_service.get_partition_id(self.partition_key)
 
-    def _encode_invoke(self, codec, response_handler=default_response_handler, **kwargs):
+    def _encode_invoke(self, codec, response_handler=default_response_handler, invocation_timeout=None, **kwargs):
         return super(PartitionSpecificProxy, self)._encode_invoke_on_partition(codec, self._partition_id,
-                                                                               response_handler=response_handler, **kwargs)
+                                                                               response_handler=response_handler,
+                                                                               invocation_timeout=invocation_timeout, **kwargs)
 
 
 class TransactionalProxy(object):

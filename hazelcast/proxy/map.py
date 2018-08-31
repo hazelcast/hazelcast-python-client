@@ -14,7 +14,7 @@ from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_entry
     map_try_put_codec, map_try_remove_codec, map_unlock_codec, map_values_codec, map_values_with_predicate_codec, \
     map_add_interceptor_codec, map_execute_on_all_keys_codec, map_execute_on_key_codec, map_execute_on_keys_codec, \
     map_execute_with_predicate_codec, map_add_near_cache_entry_listener_codec
-from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType, get_entry_listener_flags
+from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType, get_entry_listener_flags, MAX_SIZE
 from hazelcast.util import check_not_none, thread_id, to_millis
 from hazelcast import six
 
@@ -478,8 +478,9 @@ class Map(Proxy):
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(map_lock_codec, key_data, key=key_data, thread_id=thread_id(),
-                                          ttl=to_millis(ttl), reference_id=self.reference_id_generator.get_next())
+        return self._encode_invoke_on_key(map_lock_codec, key_data, invocation_timeout=MAX_SIZE, key=key_data,
+                                          thread_id=thread_id(), ttl=to_millis(ttl),
+                                          reference_id=self.reference_id_generator.get_next())
 
     def put(self, key, value, ttl=-1):
         """
@@ -747,8 +748,8 @@ class Map(Proxy):
 
         key_data = self._to_data(key)
 
-        return self._encode_invoke_on_key(map_try_lock_codec, key_data, key=key_data, thread_id=thread_id(),
-                                          lease=to_millis(ttl), timeout=to_millis(timeout),
+        return self._encode_invoke_on_key(map_try_lock_codec, key_data, invocation_timeout=MAX_SIZE, key=key_data,
+                                          thread_id=thread_id(), lease=to_millis(ttl), timeout=to_millis(timeout),
                                           reference_id=self.reference_id_generator.get_next())
 
     def try_put(self, key, value, timeout=0):

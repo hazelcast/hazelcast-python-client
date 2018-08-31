@@ -214,7 +214,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
                 self.logger.exception("Received error")
                 self.close(IOError(error))
         else:
-            self.logger.warning("Received unexpected error: " + error)
+            self.logger.warning("Received unexpected error: " + str(error))
 
     def readable(self):
         return not self._closed and self.sent_protocol_bytes

@@ -13,17 +13,15 @@ from hazelcast.util import AtomicInteger
 from hazelcast.six.moves import queue
 from hazelcast import six
 
-INVOCATION_TIMEOUT = 120
-RETRY_WAIT_TIME_IN_SECONDS = 1
-
 
 class Invocation(object):
     sent_connection = None
     timer = None
 
-    def __init__(self, request, partition_id=-1, address=None, connection=None, timeout=INVOCATION_TIMEOUT):
+    def __init__(self, invocation_service, request, partition_id=-1, address=None, connection=None):
         self._event = threading.Event()
-        self.timeout = timeout + time.time()
+        self._invocation_timeout = invocation_service.invocation_timeout
+        self.timeout = self._invocation_timeout + time.time()
         self.address = address
         self.connection = connection
         self.partition_id = partition_id
@@ -49,16 +47,20 @@ class Invocation(object):
             self.timer.cancel()
         self.future.set_exception(exception, traceback)
 
+    def set_timeout(self, timeout):
+        self._invocation_timeout = timeout
+        self.timeout = self._invocation_timeout + time.time()
+
     def on_timeout(self):
-        self.set_exception(TimeoutError("Request timed out after %d seconds." % INVOCATION_TIMEOUT))
+        self.set_exception(TimeoutError("Request timed out after %d seconds." % self._invocation_timeout))
 
 
 class ListenerInvocation(Invocation):
     # used for storing the original registration id across re-registrations
     registration_id = None
 
-    def __init__(self, request, event_handler, response_decoder=None, **kwargs):
-        Invocation.__init__(self, request, **kwargs)
+    def __init__(self, invocation_service, request, event_handler, response_decoder=None, **kwargs):
+        Invocation.__init__(self, invocation_service, request, **kwargs)
         self.event_handler = event_handler
         self.response_decoder = response_decoder
 
@@ -69,14 +71,16 @@ class ListenerService(object):
     def __init__(self, client):
         self._client = client
         self.registrations = {}
+        self.invocation_timeout = self._init_invocation_timeout()
         pass
 
     def start_listening(self, request, event_handler, decode_add_listener, key=None):
         if key:
             partition_id = self._client.partition_service.get_partition_id(key)
-            invocation = ListenerInvocation(request, event_handler, decode_add_listener, partition_id=partition_id)
+            invocation = ListenerInvocation(self, request, event_handler, decode_add_listener,
+                                            partition_id=partition_id)
         else:
-            invocation = ListenerInvocation(request, event_handler, decode_add_listener)
+            invocation = ListenerInvocation(self, request, event_handler, decode_add_listener)
 
         future = self._client.invoker.invoke(invocation)
         registration_id = decode_add_listener(future.result())
@@ -96,8 +100,8 @@ class ListenerService(object):
 
     def re_register_listener(self, invocation):
         registration_id = invocation.registration_id
-        new_invocation = ListenerInvocation(invocation.request, invocation.event_handler, invocation.response_decoder,
-                                            partition_id=invocation.partition_id)
+        new_invocation = ListenerInvocation(self, invocation.request, invocation.event_handler,
+                                            invocation.response_decoder, partition_id=invocation.partition_id)
         new_invocation.registration_id = registration_id
 
         # re-send the request
@@ -113,6 +117,11 @@ class ListenerService(object):
         self.logger.debug("Re-registering listener %s for request %s", registration_id, new_invocation.request)
         self._client.invoker.invoke(new_invocation).add_done_callback(callback)
 
+    def _init_invocation_timeout(self):
+        invocation_timeout = self._client.properties.get_seconds_positive_or_default(
+            self._client.properties.INVOCATION_TIMEOUT_SECONDS)
+        return invocation_timeout
+
 
 class InvocationService(object):
     logger = logging.getLogger("InvocationService")
@@ -124,6 +133,8 @@ class InvocationService(object):
         self._client = client
         self._event_queue = queue.Queue()
         self._is_redo_operation = client.config.network_config.redo_operation
+        self._invocation_retry_pause = self._init_invocation_retry_pause()
+        self.invocation_timeout = self._init_invocation_timeout()
 
         if client.config.network_config.smart_routing:
             self.invoke = self.invoke_smart
@@ -134,16 +145,19 @@ class InvocationService(object):
         client.heartbeat.add_listener(on_heartbeat_stopped=self._heartbeat_stopped)
 
     def invoke_on_connection(self, message, connection, ignore_heartbeat=False):
-        return self.invoke(Invocation(message, connection=connection), ignore_heartbeat)
+        return self.invoke(Invocation(self, message, connection=connection), ignore_heartbeat)
 
-    def invoke_on_partition(self, message, partition_id):
-        return self.invoke(Invocation(message, partition_id=partition_id))
+    def invoke_on_partition(self, message, partition_id, invocation_timeout=None):
+        invocation = Invocation(self, message, partition_id=partition_id)
+        if invocation_timeout:
+            invocation.set_timeout(invocation_timeout)
+        return self.invoke(invocation)
 
     def invoke_on_random_target(self, message):
-        return self.invoke(Invocation(message))
+        return self.invoke(Invocation(self, message))
 
     def invoke_on_target(self, message, address):
-        return self.invoke(Invocation(message, address=address))
+        return self.invoke(Invocation(self, message, address=address))
 
     def invoke_smart(self, invocation, ignore_heartbeat=False):
         if invocation.has_connection():
@@ -176,6 +190,16 @@ class InvocationService(object):
                 if invocation.sent_connection == connection and invocation.connection is None:
                     self._client.listener.re_register_listener(invocation)
 
+    def _init_invocation_retry_pause(self):
+        invocation_retry_pause = self._client.properties.get_seconds_positive_or_default(
+            self._client.properties.INVOCATION_RETRY_PAUSE_MILLIS)
+        return invocation_retry_pause
+
+    def _init_invocation_timeout(self):
+        invocation_timeout = self._client.properties.get_seconds_positive_or_default(
+            self._client.properties.INVOCATION_TIMEOUT_SECONDS)
+        return invocation_timeout
+
     def _heartbeat_stopped(self, connection):
         for correlation_id, invocation in six.iteritems(dict(self._pending)):
             if invocation.sent_connection == connection:
@@ -193,7 +217,8 @@ class InvocationService(object):
             if self._client.lifecycle.state != LIFECYCLE_STATE_CONNECTED:
                 self._handle_exception(invocation, IOError("Client is not in connected state"))
             else:
-                self._client.connection_manager.get_or_connect(address).continue_with(self.on_connect, invocation, ignore_heartbeat)
+                self._client.connection_manager.get_or_connect(address).continue_with(self.on_connect, invocation,
+                                                                                      ignore_heartbeat)
 
     def on_connect(self, f, invocation, ignore_heartbeat):
         if f.is_success():
@@ -275,6 +300,7 @@ class InvocationService(object):
             return False
 
         invoke_func = functools.partial(self.invoke, invocation)
-        self.logger.debug("Rescheduling request %s to be retried in %s seconds", invocation.request, RETRY_WAIT_TIME_IN_SECONDS)
-        self._client.reactor.add_timer(RETRY_WAIT_TIME_IN_SECONDS, invoke_func)
+        self.logger.debug("Rescheduling request %s to be retried in %s seconds", invocation.request,
+                          self._invocation_retry_pause)
+        self._client.reactor.add_timer(self._invocation_retry_pause, invoke_func)
         return True
