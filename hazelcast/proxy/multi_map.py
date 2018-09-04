@@ -12,6 +12,10 @@ class MultiMap(Proxy):
     """
     A specialized map whose keys can be associated with multiple values.
     """
+    def __init__(self, client, service_name, name):
+        super(MultiMap, self).__init__(client, service_name, name)
+        self.reference_id_generator = self._client.lock_reference_id_generator
+
     def add_entry_listener(self, include_value=False, key=None, added_func=None, removed_func=None, clear_all_func=None):
         """
         Adds an entry listener for this multimap. The listener will be notified for all multimap add/remove/clear-all
@@ -152,7 +156,8 @@ class MultiMap(Proxy):
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(multi_map_force_unlock_codec, key_data, key=key_data)
+        return self._encode_invoke_on_key(multi_map_force_unlock_codec, key_data, key=key_data,
+                                          reference_id=self.reference_id_generator.get_next())
 
     def key_set(self):
         """
@@ -186,7 +191,8 @@ class MultiMap(Proxy):
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
         return self._encode_invoke_on_key(multi_map_lock_codec, key_data, key=key_data,
-                                          thread_id=thread_id(), ttl=to_millis(lease_time))
+                                          thread_id=thread_id(), ttl=to_millis(lease_time),
+                                          reference_id=self.reference_id_generator.get_next())
 
     def remove(self, key, value):
         """
@@ -310,7 +316,8 @@ class MultiMap(Proxy):
         key_data = self._to_data(key)
         return self._encode_invoke_on_key(multi_map_try_lock_codec, key_data, key=key_data,
                                           thread_id=thread_id(), lease=to_millis(lease_time),
-                                          timeout=to_millis(timeout))
+                                          timeout=to_millis(timeout),
+                                          reference_id=self.reference_id_generator.get_next())
 
     def unlock(self, key):
         """
@@ -324,4 +331,4 @@ class MultiMap(Proxy):
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
         return self._encode_invoke_on_key(multi_map_unlock_codec, key_data, key=key_data,
-                                          thread_id=thread_id())
+                                          thread_id=thread_id(), reference_id=self.reference_id_generator.get_next())
