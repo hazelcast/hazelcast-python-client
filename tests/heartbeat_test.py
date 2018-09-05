@@ -17,20 +17,21 @@ class HeartbeatTest(HazelcastTestCase):
 
     def setUp(self):
         self.cluster = self.create_cluster(self.rc)
+        self.member = self.rc.startMember(self.cluster.id)
+        self.config = ClientConfig()
+
+        self.config._properties[PROPERTY_HEARTBEAT_INTERVAL] = 500
+        self.config._properties[PROPERTY_HEARTBEAT_TIMEOUT] = 2000
+
+        self.client = HazelcastClient(self.config)
 
     def tearDown(self):
+        self.client.shutdown()
         self.rc.shutdownCluster(self.cluster.id)
 
     def test_heartbeat_stopped(self):
-        member = self.rc.startMember(self.cluster.id)
-        config = ClientConfig()
 
-        config._properties[PROPERTY_HEARTBEAT_INTERVAL] = 500
-        config._properties[PROPERTY_HEARTBEAT_TIMEOUT] = 2000
-
-        client = HazelcastClient(config)
-
-        client.cluster.add_listener(member_added=lambda m: client.connection_manager.get_or_connect(m.address))
+        self.client.cluster.add_listener(member_added=lambda m: self.client.connection_manager.get_or_connect(m.address))
 
         def heartbeat_stopped_collector():
             connections = []
@@ -43,37 +44,29 @@ class HeartbeatTest(HazelcastTestCase):
 
         collector = heartbeat_stopped_collector()
 
-        client.heartbeat.add_listener(on_heartbeat_stopped=collector)
+        self.client.heartbeat.add_listener(on_heartbeat_stopped=collector)
 
         member2 = self.rc.startMember(self.cluster.id)
-        self.simulate_heartbeat_lost(client, Address(member2.host, member2.port), 2)
+        self.simulate_heartbeat_lost(self.client, Address(member2.host, member2.port), 2)
 
-        def assert_connection():
-            self.assertTrue(len(collector.connections) > 0)
+        def assert_heartbeat_stopped():
+            self.assertEqual(1, len(collector.connections))
             connection = collector.connections[0]
             self.assertEqual(connection._address, (member2.host, member2.port))
 
-        self.assertTrueEventually(assert_connection)
-        client.shutdown()
+        self.assertTrueEventually(assert_heartbeat_stopped)
 
     def test_heartbeat_restored(self):
-        member = self.rc.startMember(self.cluster.id)
-        config = ClientConfig()
-
-        config._properties[PROPERTY_HEARTBEAT_INTERVAL] = 500
-        config._properties[PROPERTY_HEARTBEAT_TIMEOUT] = 2000
-
-        client = HazelcastClient(config)
 
         def member_added_func(m):
 
             def connection_callback(f):
                 conn = f.result()
-                self.simulate_heartbeat_lost(client, Address(conn._address[0], conn._address[1]), 2)
+                self.simulate_heartbeat_lost(self.client, Address(conn._address[0], conn._address[1]), 2)
 
-            client.connection_manager.get_or_connect(m.address).add_done_callback(connection_callback)
+            self.client.connection_manager.get_or_connect(m.address).add_done_callback(connection_callback)
 
-        client.cluster.add_listener(member_added=member_added_func)
+        self.client.cluster.add_listener(member_added=member_added_func)
 
         def heartbeat_restored_collector():
             connections = []
@@ -86,19 +79,17 @@ class HeartbeatTest(HazelcastTestCase):
 
         collector = heartbeat_restored_collector()
 
-        client.heartbeat.add_listener(on_heartbeat_restored=collector)
+        self.client.heartbeat.add_listener(on_heartbeat_restored=collector)
 
         member2 = self.rc.startMember(self.cluster.id)
 
-        def assert_event():
-            self.assertTrue(len(collector.connections) > 0)
+        def assert_heartbeat_restored():
+            self.assertEqual(1, len(collector.connections))
             connection = collector.connections[0]
             self.assertEqual(connection._address, (member2.host, member2.port))
 
-        self.assertTrueEventually(assert_event)
-        client.shutdown()
+        self.assertTrueEventually(assert_heartbeat_restored)
 
     @staticmethod
     def simulate_heartbeat_lost(client, address, timeout):
         client.connection_manager.connections[address].last_read -= timeout
-        client.connection_manager.connections[address].last_write += timeout

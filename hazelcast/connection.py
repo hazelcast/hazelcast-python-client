@@ -225,13 +225,13 @@ class Heartbeat(object):
                     self.logger.warning(
                         "Heartbeat: Did not hear back after %ss from %s" % (time_since_last_read, connection))
                     self._on_heartbeat_stopped(connection)
+            else:
+                if not connection.heartbeating:
+                    self._on_heartbeat_restored(connection)
 
             if time_since_last_write > self._heartbeat_interval:
                 request = client_ping_codec.encode_request()
                 self._client.invoker.invoke_on_connection(request, connection, ignore_heartbeat=True)
-            else:
-                if not connection.heartbeating:
-                    self._on_heartbeat_restored(connection)
 
     def _on_heartbeat_restored(self, connection):
         self.logger.info("Heartbeat: Heartbeat restored for connection %s" % connection)

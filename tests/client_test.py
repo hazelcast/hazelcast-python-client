@@ -1,5 +1,4 @@
 import time
-import logging
 
 from tests.base import HazelcastTestCase
 from hazelcast.config import ClientConfig, PROPERTY_HEARTBEAT_INTERVAL
@@ -26,17 +25,23 @@ class ClientTest(HazelcastTestCase):
         client_config._properties[PROPERTY_HEARTBEAT_INTERVAL] = 1000
 
         client1 = HazelcastClient(client_config)
-        is_client_disconnected = [False]
 
-        def lifecycle_listener(event, flag=is_client_disconnected):
-            if event == LIFECYCLE_STATE_DISCONNECTED:
-                flag[0] = True
+        def lifecycle_event_collector():
+            events = []
 
-        client1.lifecycle.add_listener(lifecycle_listener)
+            def event_collector(e):
+                if e == LIFECYCLE_STATE_DISCONNECTED:
+                    events.append(e)
+
+            event_collector.events = events
+            return event_collector
+
+        collector = lifecycle_event_collector()
+        client1.lifecycle.add_listener(collector)
         client2 = HazelcastClient()
 
         key = "topic-name"
-        topic = client1.get_topic(key).blocking()
+        topic = client1.get_topic(key)
 
         def message_listener(e):
             pass
@@ -48,7 +53,9 @@ class ClientTest(HazelcastTestCase):
 
         while (time.time() - begin) < 2 * client_heartbeat_seconds:
             client2topic.publish("message")
+            time.sleep(0.5)
 
-        self.assertFalse(is_client_disconnected[0])
-
+        self.assertEqual(0, len(collector.events))
+        client1.shutdown()
+        client2.shutdown()
         rc.exit()
