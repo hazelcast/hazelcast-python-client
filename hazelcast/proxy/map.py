@@ -53,6 +53,10 @@ class Map(Proxy):
 
     This class does not allow ``None`` to be used as a key or value.
     """
+    def __init__(self, client, service_name, name):
+        super(Map, self).__init__(client, service_name, name)
+        self.reference_id_generator = self._client.lock_reference_id_generator
+
     def add_entry_listener(self, include_value=False, key=None, predicate=None, added_func=None, removed_func=None, updated_func=None,
                            evicted_func=None, evict_all_func=None, clear_all_func=None, merged_func=None, expired_func=None):
         """
@@ -318,7 +322,8 @@ class Map(Proxy):
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(map_force_unlock_codec, key_data, key=key_data)
+        return self._encode_invoke_on_key(map_force_unlock_codec, key_data, key=key_data,
+                                          reference_id=self.reference_id_generator.get_next())
 
     def get(self, key):
         """
@@ -473,7 +478,8 @@ class Map(Proxy):
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(map_lock_codec, key_data, key=key_data, thread_id=thread_id(), ttl=to_millis(ttl))
+        return self._encode_invoke_on_key(map_lock_codec, key_data, key=key_data, thread_id=thread_id(),
+                                          ttl=to_millis(ttl), reference_id=self.reference_id_generator.get_next())
 
     def put(self, key, value, ttl=-1):
         """
@@ -741,8 +747,9 @@ class Map(Proxy):
 
         key_data = self._to_data(key)
 
-        return self._encode_invoke_on_key(map_try_lock_codec, key_data, key=key_data, thread_id=thread_id(), lease=to_millis(ttl),
-                                          timeout=to_millis(timeout))
+        return self._encode_invoke_on_key(map_try_lock_codec, key_data, key=key_data, thread_id=thread_id(),
+                                          lease=to_millis(ttl), timeout=to_millis(timeout),
+                                          reference_id=self.reference_id_generator.get_next())
 
     def try_put(self, key, value, timeout=0):
         """
@@ -787,7 +794,8 @@ class Map(Proxy):
 
         key_data = self._to_data(key)
 
-        return self._encode_invoke_on_key(map_unlock_codec, key_data, key=key_data, thread_id=thread_id())
+        return self._encode_invoke_on_key(map_unlock_codec, key_data, key=key_data, thread_id=thread_id(),
+                                          reference_id=self.reference_id_generator.get_next())
 
     def values(self, predicate=None):
         """

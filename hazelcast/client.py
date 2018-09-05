@@ -13,6 +13,7 @@ from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE, LIST_SERVI
 from hazelcast.reactor import AsyncoreReactor
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.transaction import TWO_PHASE, TransactionManager
+from hazelcast.util import LockReferenceIdGenerator
 
 
 class HazelcastClient(object):
@@ -36,6 +37,7 @@ class HazelcastClient(object):
         self.load_balancer = RandomLoadBalancer(self.cluster)
         self.serialization_service = SerializationServiceV1(serialization_config=self.config.serialization_config)
         self.transaction_manager = TransactionManager(self)
+        self.lock_reference_id_generator = LockReferenceIdGenerator()
         self._start()
 
     def _start(self):

@@ -9,12 +9,17 @@ class Lock(PartitionSpecificProxy):
     """
     Distributed implementation of `asyncio.Lock <https://docs.python.org/3/library/asyncio-sync.html>`_
     """
+
+    def __init__(self, client, service_name, name):
+        super(Lock, self).__init__(client, service_name, name)
+        self.reference_id_generator = self._client.lock_reference_id_generator
+
     def force_unlock(self):
         """
         Releases the lock regardless of the lock owner. It always successfully unlocks, never blocks, and returns
         immediately.
         """
-        return self._encode_invoke(lock_force_unlock_codec)
+        return self._encode_invoke(lock_force_unlock_codec, reference_id=self.reference_id_generator.get_next())
 
     def get_lock_count(self):
         """
@@ -59,7 +64,7 @@ class Lock(PartitionSpecificProxy):
         :param lease_time: (long), time to wait before releasing the lock (optional).
         """
         return self._encode_invoke(lock_lock_codec, lease_time=to_millis(lease_time),
-                                   thread_id=thread_id())
+                                   thread_id=thread_id(), reference_id=self.reference_id_generator.get_next())
 
     def try_lock(self, timeout=0, lease_time=-1):
         """
@@ -78,10 +83,12 @@ class Lock(PartitionSpecificProxy):
         :return: (bool), ``true`` if the lock was acquired and otherwise, ``false``.
         """
         return self._encode_invoke(lock_try_lock_codec, lease=to_millis(lease_time),
-                                   thread_id=thread_id(), timeout=to_millis(timeout))
+                                   thread_id=thread_id(), timeout=to_millis(timeout),
+                                   reference_id=self.reference_id_generator.get_next())
 
     def unlock(self):
         """
         Releases the lock.
         """
-        return self._encode_invoke(lock_unlock_codec, thread_id=thread_id())
+        return self._encode_invoke(lock_unlock_codec, thread_id=thread_id(),
+                                   reference_id=self.reference_id_generator.get_next())
