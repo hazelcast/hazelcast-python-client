@@ -92,6 +92,13 @@ class PredicateTest(SingleMemberTestCase):
         for n in range(0, count):
             self.map.put(n, n)
 
+    def test_key_set(self):
+        self._fill_map()
+        key_set = self.map.key_set()
+        key_set_list = list(key_set)
+        key_set_list = list(key_set)
+        assert key_set_list[0]
+
     def test_sql(self):
         self._fill_map()
         predicate = sql("this == 'value-1'")
