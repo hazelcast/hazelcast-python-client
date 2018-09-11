@@ -69,17 +69,24 @@ Please see API doc for near cache configuration options: :class:`~hazelcast.conf
 SSL Configuration
 -----------------
 
-SSL/TLS can be configured using :class:`~hazelcast.config.SSLConfig` by providing a CA certificate
-for the server's certificate.
+SSL/TLS can be configured using :class:`~hazelcast.config.SSLConfig` to allow encrypted socket level communication
+between Hazelcast members and Hazelcast Python Client. Please note that, Hazelcast members should be started with
+SSL enabled to use this feature.
+
+To use SSL to authenticate the Hazelcast members, SSL should be enabled on the client side. Client should also
+provide a CA file in the PEM format that includes the certificates offered by Hazelcast members during the handshake.
+You should provide the absolute path of your CA file to the cafile option.
 
 .. code-block:: python
 
     config.network_config.ssl_config.enabled = True
     config.network_config.ssl_config.cafile = "server.pem"
 
-SSL/TLS with mutual authentication can also be configured using :class:`~hazelcast.config.SSLConfig` by providing
-a CA certificate for the server's certificate, a client certificate and a private key for the client certificate.
-Please note that there should be a CA certificate for client's certificate on the server side.
+SSL/TLS with mutual authentication can also be configured using :class:`~hazelcast.config.SSLConfig` to allow Hazelcast
+members to authenticate Hazelcast Python Client. To do this, you should also provide a certificate file that will be
+offered to Hazelcast members during the handshake. This certificate file may contain the private key or private key
+may be provided as a separate file. If your private key is encrypted, you should also specify the password of it.
+Please note that, certfile and keyfile options should point to the absolute path of these files.
 
 .. code-block:: python
 

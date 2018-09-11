@@ -11,12 +11,15 @@ from hazelcast.six.moves import queue
 from collections import deque
 from functools import total_ordering
 from hazelcast.connection import Connection, BUFFER_SIZE
+from hazelcast.config import PROTOCOL
 from hazelcast.exception import HazelcastError
 from hazelcast.future import Future
 try:
     import ssl
 except ImportError:
     ssl = None
+
+logging.basicConfig()
 
 
 class AsyncoreReactor(object):
@@ -138,28 +141,42 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
         ssl_config = network_config.ssl_config
         if ssl and ssl_config.enabled:
-            # operates only on TLSv1+
+
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-            ssl_context.options |= ssl.OP_NO_SSLv2
-            ssl_context.options |= ssl.OP_NO_SSLv3
+
+            protocol = ssl_config.protocol
+
+            # Use only the configured protocol
+            try:
+                if protocol != PROTOCOL.SSLv2:
+                    ssl_context.options |= ssl.OP_NO_SSLv2
+                if protocol != PROTOCOL.SSLv3 and protocol != PROTOCOL.SSL:
+                    ssl_context.options |= ssl.OP_NO_SSLv3
+                if protocol != PROTOCOL.TLSv1:
+                    ssl_context.options |= ssl.OP_NO_TLSv1
+                if protocol != PROTOCOL.TLSv1_1:
+                    ssl_context.options |= ssl.OP_NO_TLSv1_1
+                if protocol != PROTOCOL.TLSv1_2 and protocol != PROTOCOL.TLS:
+                    ssl_context.options |= ssl.OP_NO_TLSv1_2
+                if protocol != PROTOCOL.TLSv1_3:
+                    ssl_context.options |= ssl.OP_NO_TLSv1_3
+            except AttributeError:
+                pass
 
             ssl_context.verify_mode = ssl.CERT_REQUIRED
 
             if ssl_config.cafile:
                 ssl_context.load_verify_locations(ssl_config.cafile)
-            else:
-                ssl_context.load_default_certs()
 
             if ssl_config.certfile:
                 ssl_context.load_cert_chain(ssl_config.certfile, ssl_config.keyfile, ssl_config.password)
 
-            if ssl_config.hostname:
-                ssl_context.check_hostname = True
-
             if ssl_config.ciphers:
                 ssl_context.set_ciphers(ssl_config.ciphers)
 
-            self.socket = ssl_context.wrap_socket(self.socket, server_hostname=ssl_config.hostname)
+            ssl_context.check_hostname = ssl_config.check_hostname
+
+            self.socket = ssl_context.wrap_socket(self.socket, server_hostname=self._address[0])
 
         # the socket should be non-blocking from now on
         self.socket.settimeout(0)

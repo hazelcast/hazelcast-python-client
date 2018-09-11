@@ -50,6 +50,22 @@ Near Cache in memory format of the values.
 
 """
 
+PROTOCOL = enum(SSLv2=0, SSLv3=1, TLSv1=2, TLSv1_1=3, TLSv1_2=4, TLSv1_3=5, TLS=6, SSL=7)
+"""
+SSL protocol options.
+
+* SSLv2     : SSL 2.O Protocol. RFC 6176 prohibits SSL 2.0. Please use TLSv1+
+* SSLv3     : SSL 3.0 Protocol. RFC 7568 prohibits SSL 3.0. Please use TLSv1+
+* TLSv1     : TLS 1.0 Protocol described in RFC 2246
+* TLSv1_1   : TLS 1.1 Protocol described in RFC 4346
+* TLSv1_2   : TLS 1.2 Protocol described in RFC 5246
+* TLSv1_3   : TLS 1.3 Protocol described in RFC 8446
+* TLS       : Alias for TLS 1.2
+* SSL       : Alias for SSL 3.0
+* TLSv1+ requires at least Python 2.7.9 or Python 3.4 build with OpenSSL 1.0.1+ 
+* TLSv1_3 requires at least Python 2.7.15 or Python 3.7 build with OpenSSL 1.1.1+
+"""
+
 DEFAULT_MAX_ENTRY_COUNT = 10000
 DEFAULT_SAMPLING_COUNT = 8
 DEFAULT_SAMPLING_POOL_SIZE = 16
@@ -482,14 +498,20 @@ class SSLConfig(object):
         Alternatively a string, bytes, or bytearray value may be supplied directly as the password.
         """
 
-        self.hostname = None
+        self.protocol = PROTOCOL.TLS
+        """Protocol version used in SSL communication."""
+
+        self.check_hostname = False
         """
-        Server's host name. If this is not None, server's certificate will be checked to verify
-        that hostname is matched with the it. IP addresses are not supported.
+        If True, verifies that server's certificate matches the server's hostname. The rules applied are those 
+        for checking the identity of HTTPS servers as outlined in RFC 2818, RFC 5280 and RFC 6125.
         """
 
         self.ciphers = None
-        """String in the OpenSSL cipher list format to set the available ciphers for sockets."""
+        """
+        String in the OpenSSL cipher list format to set the available ciphers for sockets.
+        More than one cipher can be set by separating them with a colon.
+        """
 
 
 class ClientProperty(object):
