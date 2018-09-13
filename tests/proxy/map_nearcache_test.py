@@ -14,7 +14,8 @@ class MapTest(SingleMemberTestCase):
     def configure_cluster(cls):
         path = os.path.abspath(__file__)
         dir_path = os.path.dirname(path)
-        return open(os.path.join(dir_path, "hazelcast_test.xml")).read()
+        with open(os.path.join(dir_path, "hazelcast.xml")) as f:
+            return f.read()
 
     @classmethod
     def configure_client(cls, config):
