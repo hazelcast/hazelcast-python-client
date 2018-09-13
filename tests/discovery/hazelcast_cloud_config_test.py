@@ -42,26 +42,26 @@ class HazelcastCloudConfigTest(TestCase):
     def test_custom_cloud_url(self):
         self.config._properties[PROPERTY_CLOUD_DISCOVERY_TOKEN] = self.token
         self.config._properties[PROPERTY_CLOUD_URL_BASE] = "dev.hazelcast.cloud"
-        host, url = HazelcastCloudDiscovery.create_host_and_url(self.config._properties, self.token)
+        host, url = HazelcastCloudDiscovery.get_host_and_url(self.config._properties, self.token)
         self.assertEqual("dev.hazelcast.cloud", host)
         self.assertEqual("/cluster/discovery?token=TOKEN", url)
 
     def test_custom_cloud_url_with_https(self):
         self.config._properties[PROPERTY_CLOUD_DISCOVERY_TOKEN] = self.token
         self.config._properties[PROPERTY_CLOUD_URL_BASE] = "https://dev.hazelcast.cloud"
-        host, url = HazelcastCloudDiscovery.create_host_and_url(self.config._properties, self.token)
+        host, url = HazelcastCloudDiscovery.get_host_and_url(self.config._properties, self.token)
         self.assertEqual("dev.hazelcast.cloud", host)
         self.assertEqual("/cluster/discovery?token=TOKEN", url)
 
     def test_custom_url_with_http(self):
         self.config._properties[PROPERTY_CLOUD_DISCOVERY_TOKEN] = self.token
         self.config._properties[PROPERTY_CLOUD_URL_BASE] = "http://dev.hazelcast.cloud"
-        host, url = HazelcastCloudDiscovery.create_host_and_url(self.config._properties, self.token)
+        host, url = HazelcastCloudDiscovery.get_host_and_url(self.config._properties, self.token)
         self.assertEqual("dev.hazelcast.cloud", host)
         self.assertEqual("/cluster/discovery?token=TOKEN", url)
 
     def test_default_cloud_url(self):
         self.config._properties[PROPERTY_CLOUD_DISCOVERY_TOKEN] = self.token
-        host, url = HazelcastCloudDiscovery.create_host_and_url(self.config._properties, self.token)
+        host, url = HazelcastCloudDiscovery.get_host_and_url(self.config._properties, self.token)
         self.assertEqual("coordinator.hazelcast.cloud", host)
         self.assertEqual("/cluster/discovery?token=TOKEN", url)

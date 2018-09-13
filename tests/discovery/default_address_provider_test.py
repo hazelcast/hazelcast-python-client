@@ -38,5 +38,3 @@ class DefaultAddressProviderTest(TestCase):
         provider = DefaultAddressProvider(self.network_config)
         addresses = provider.load_addresses()
         six.assertCountEqual(self, addresses, [])
-
-

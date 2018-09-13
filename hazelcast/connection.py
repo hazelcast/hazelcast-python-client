@@ -328,58 +328,32 @@ class Connection(object):
         return "Connection(address=%s, id=%s)" % (self._address, self.id)
 
 
-class AddressProvider(object):
+class DefaultAddressProvider(object):
     """
-    Provides initial addresses for client to find and connect to a node
-    """
-    def load_addresses(self):
-        """
-        :return: (Sequence), The possible member addresses to connect to.
-        """
-        raise NotImplementedError()
-
-
-class AddressTranslator(object):
-    """
-    AddressTranslator is used to resolve private ip addresses of cloud services.
-    """
-    def translate(self, address):
-        """
-        Translates the given address to another address specific to network or service.
-        :param address: (:class:`~hazelcast.core.Address`)
-        :return: (:class:`~hazelcast.core.Address`), new address if given address is known, otherwise returns null
-        """
-        raise NotImplementedError()
-
-    def refresh(self):
-        """
-        Refreshes the internal lookup table if necessary.
-        """
-        raise NotImplementedError()
-
-
-class DefaultAddressProvider(AddressProvider):
-    """
-    Default address provider of Hazelcast.
+    Provides initial addresses for client to find and connect to a node.
     Loads addresses from the Hazelcast configuration.
     """
     def __init__(self, network_config):
         self._network_config = network_config
 
     def load_addresses(self):
+        """
+        :return: (Sequence), The possible member addresses to connect to.
+        """
         return parse_addresses(self._network_config.addresses)
 
 
-class DefaultAddressTranslator(AddressTranslator):
+class DefaultAddressTranslator(object):
     """
     DefaultAddressTranslator is a no-op. It always returns the given address.
     """
     def translate(self, address):
         """
-        :param address: (:class:`~hazelcast.core.Address`)
-        :return: (class:`~hazelcast.core.Address`)
+        :param address: (:class:`~hazelcast.core.Address`), address to be translated.
+        :return: (class:`~hazelcast.core.Address`), translated address.
         """
         return address
 
     def refresh(self):
+        """Refreshes the internal lookup table if necessary."""
         pass

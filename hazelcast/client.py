@@ -236,7 +236,7 @@ class HazelcastClient(object):
 
         cloud_config = network_config.cloud_config
         cloud_address_provider = self._init_cloud_address_provider(cloud_config)
-        if cloud_address_provider is not None:
+        if cloud_address_provider:
             address_providers.append(cloud_address_provider)
 
         address_providers.append(DefaultAddressProvider(network_config))
@@ -245,13 +245,13 @@ class HazelcastClient(object):
     def _init_cloud_address_provider(self, cloud_config):
         if cloud_config.enabled:
             discovery_token = cloud_config.discovery_token
-            host, url = HazelcastCloudDiscovery.create_host_and_url(self.config.get_properties(), discovery_token)
+            host, url = HazelcastCloudDiscovery.get_host_and_url(self.config.get_properties(), discovery_token)
             return HazelcastCloudAddressProvider(host, url, self._get_connection_timeout())
 
         cloud_token = self.config.get_property_or_default(PROPERTY_CLOUD_DISCOVERY_TOKEN,
                                                           DEFAULT_CLOUD_DISCOVERY_TOKEN)
         if cloud_token != "":
-            host, url = HazelcastCloudDiscovery.create_host_and_url(self.config.get_properties(), cloud_token)
+            host, url = HazelcastCloudDiscovery.get_host_and_url(self.config.get_properties(), cloud_token)
             return HazelcastCloudAddressProvider(host, url, self._get_connection_timeout())
 
         return None
@@ -276,7 +276,7 @@ class HazelcastClient(object):
                 discovery_token = cloud_config.discovery_token
             else:
                 discovery_token = cloud_discovery_token
-            host, url = HazelcastCloudDiscovery.create_host_and_url(self.config.get_properties(), discovery_token)
+            host, url = HazelcastCloudDiscovery.get_host_and_url(self.config.get_properties(), discovery_token)
             return HazelcastCloudAddressTranslator(host, url, self._get_connection_timeout())
 
         return DefaultAddressTranslator()

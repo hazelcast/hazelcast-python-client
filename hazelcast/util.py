@@ -175,7 +175,7 @@ def get_provider_addresses(providers=[]):
 
 
 def parse_addresses(addresses=[]):
-    return itertools.chain(*[_parse_address(a) for a in addresses])
+    return list(itertools.chain(*[_parse_address(a) for a in addresses]))
 
 
 class ImmutableLazyDataList(Sequence):

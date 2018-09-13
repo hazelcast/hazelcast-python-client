@@ -20,7 +20,7 @@ class HazelcastCloudTranslatorTest(TestCase):
         self.translator = HazelcastCloudAddressTranslator("", "", 0)
         self.translator._cloud_discovery = self.cloud_discovery
 
-    def test_translate_when_address_is_null(self):
+    def test_translate_when_address_is_none(self):
         actual = self.translator.translate(None)
 
         self.assertIsNone(actual)
