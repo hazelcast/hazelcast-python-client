@@ -175,6 +175,46 @@ class InnerPortable(Portable):
         return id(self)//16
 
 
+class Parent(Portable):
+    def __init__(self, child=None):
+        self.child = child
+
+    def get_class_id(self):
+        return 1
+
+    def get_factory_id(self):
+        return 1
+
+    def write_portable(self, writer):
+        writer.write_portable("child", self.child)
+
+    def read_portable(self, reader):
+        self.child = reader.read_portable("child")
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.child == other.child
+
+
+class Child(Portable):
+    def __init__(self, name=None):
+        self.name = name
+
+    def get_factory_id(self):
+        return 1
+
+    def get_class_id(self):
+        return 2
+
+    def write_portable(self, writer):
+        writer.write_utf("name", self.name)
+
+    def read_portable(self, reader):
+        self.name = reader.read_utf("name")
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.name == other.name
+
+
 def create_portable():
     identified = create_identified()
     inner_portable = InnerPortable("Inner Text", 666)
@@ -296,3 +336,20 @@ class PortableSerializationTestCase(unittest.TestCase):
         data = service.to_data(obj)
         with self.assertRaises(HazelcastSerializationError):
             service2.to_object(data)
+
+    def test_nested_portable_serialization(self):
+        serialization_config = hazelcast.SerializationConfig()
+        serialization_config.portable_version = 6
+
+        serialization_config.portable_factories[1] = {1: Parent, 2: Child}
+
+        ss1 = SerializationServiceV1(serialization_config)
+        ss2 = SerializationServiceV1(serialization_config)
+
+        ss2.to_data(Child("Joe"))
+
+        p = Parent(Child("Joe"))
+
+        data = ss1.to_data(p)
+
+        self.assertEqual(p, ss2.to_object(data))
