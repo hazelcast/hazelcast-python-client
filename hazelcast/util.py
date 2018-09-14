@@ -193,7 +193,7 @@ class ImmutableLazyDataList(Sequence):
                 self._list_obj[index] = (self.to_object(key), self.to_object(value))
             else:
                 self._list_obj[index] = self.to_object(data)
-            return self._list_obj[index]
+        return self._list_obj[index]
 
     def __eq__(self, other):
         if not isinstance(other, Iterable):
