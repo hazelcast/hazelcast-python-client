@@ -50,18 +50,18 @@ Near Cache in memory format of the values.
 
 """
 
-PROTOCOL = enum(SSLv2=0, SSLv3=1, TLSv1=2, TLSv1_1=3, TLSv1_2=4, TLSv1_3=5, TLS=6, SSL=7)
+PROTOCOL = enum(SSLv2=0, SSLv3=1, SSL=2, TLSv1=3, TLSv1_1=4, TLSv1_2=5, TLSv1_3=6, TLS=7)
 """
 SSL protocol options.
 
 * SSLv2     : SSL 2.O Protocol. RFC 6176 prohibits SSL 2.0. Please use TLSv1+
 * SSLv3     : SSL 3.0 Protocol. RFC 7568 prohibits SSL 3.0. Please use TLSv1+
+* SSL       : Alias for SSL 3.0
 * TLSv1     : TLS 1.0 Protocol described in RFC 2246
 * TLSv1_1   : TLS 1.1 Protocol described in RFC 4346
 * TLSv1_2   : TLS 1.2 Protocol described in RFC 5246
 * TLSv1_3   : TLS 1.3 Protocol described in RFC 8446
 * TLS       : Alias for TLS 1.2
-* SSL       : Alias for SSL 3.0
 * TLSv1+ requires at least Python 2.7.9 or Python 3.4 build with OpenSSL 1.0.1+ 
 * TLSv1_3 requires at least Python 2.7.15 or Python 3.7 build with OpenSSL 1.1.1+
 """
