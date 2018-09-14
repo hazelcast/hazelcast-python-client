@@ -1,4 +1,5 @@
 import time
+import os
 from hazelcast.exception import HazelcastError, HazelcastSerializationError
 from hazelcast.proxy.map import EntryEventType
 from hazelcast.serialization.api import IdentifiedDataSerializable
@@ -9,23 +10,40 @@ from hazelcast import six
 from hazelcast.six.moves import range
 
 
-FACTORY_ID = 1
-
-
 class EntryProcessor(IdentifiedDataSerializable):
+    FACTORY_ID = 66
     CLASS_ID = 1
 
+    def __init__(self, value=None):
+        self.value = value
+
     def write_data(self, object_data_output):
-        pass
+        object_data_output.write_utf(self.value)
+
+    def read_data(self, object_data_input):
+        self.value = object_data_input.read()
 
     def get_factory_id(self):
-        return FACTORY_ID
+        return self.FACTORY_ID
 
     def get_class_id(self):
         return self.CLASS_ID
 
 
 class MapTest(SingleMemberTestCase):
+    @classmethod
+    def configure_cluster(cls):
+        path = os.path.abspath(__file__)
+        dir_path = os.path.dirname(path)
+        with open(os.path.join(dir_path, "hazelcast.xml")) as f:
+            return f.read()
+
+    @classmethod
+    def configure_client(cls, config):
+        config.serialization_config.add_data_serializable_factory(EntryProcessor.FACTORY_ID,
+                                                                  {EntryProcessor.CLASS_ID: EntryProcessor})
+        return config
+
     def setUp(self):
         self.map = self.client.get_map(random_string()).blocking()
 
@@ -180,26 +198,48 @@ class MapTest(SingleMemberTestCase):
         self.assertEqual(self.map.size(), 0)
 
     def test_execute_on_entries(self):
-        # TODO: EntryProcessor must be defined on the server
-        with self.assertRaises(HazelcastSerializationError):
-            self.map.execute_on_entries(EntryProcessor())
+        map = self._fill_map()
+        expected_entry_set = [(key, "processed") for key in map]
+
+        values = self.map.execute_on_entries(EntryProcessor("processed"))
+
+        six.assertCountEqual(self, expected_entry_set, self.map.entry_set())
+        six.assertCountEqual(self, expected_entry_set, values)
 
     def test_execute_on_entries_with_predicate(self):
-        # TODO: EntryProcessor must be defined on the server
-        with self.assertRaises(HazelcastSerializationError):
-            self.map.execute_on_entries(EntryProcessor(), predicate=SqlPredicate())
+        map = self._fill_map()
+        expected_entry_set = [(key, "processed") if key < "key-5" else (key, map[key]) for key in map]
+        expected_values = [(key, "processed") for key in map if key < "key-5"]
+
+        values = self.map.execute_on_entries(EntryProcessor("processed"), SqlPredicate("__key < 'key-5'"))
+
+        six.assertCountEqual(self, expected_entry_set, self.map.entry_set())
+        six.assertCountEqual(self, expected_values, values)
 
     def test_execute_on_key(self):
-        # TODO: EntryProcessor must be defined on the server
-        self.map.put("key", 1)
-        with self.assertRaises(HazelcastSerializationError):
-            self.map.execute_on_key("key", EntryProcessor())
+        self.map.put("test-key", "test-value")
+        value = self.map.execute_on_key("test-key", EntryProcessor("processed"))
+
+        self.assertEqual("processed", self.map.get("test-key"))
+        self.assertEqual("processed", value)
 
     def test_execute_on_keys(self):
-        # TODO: EntryProcessor must be defined on the server
         map = self._fill_map()
-        with self.assertRaises(HazelcastSerializationError):
-            self.map.execute_on_keys(list(map.keys()), EntryProcessor())
+        expected_entry_set = [(key, "processed") for key in map]
+
+        values = self.map.execute_on_keys(list(map.keys()), EntryProcessor("processed"))
+
+        six.assertCountEqual(self, expected_entry_set, self.map.entry_set())
+        six.assertCountEqual(self, expected_entry_set, values)
+
+    def test_execute_on_keys_with_empty_key_list(self):
+        map = self._fill_map()
+        expected_entry_set = [(key, map[key]) for key in map]
+
+        values = self.map.execute_on_keys([], EntryProcessor("processed"))
+
+        self.assertEqual([], values)
+        six.assertCountEqual(self, expected_entry_set, self.map.entry_set())
 
     def test_flush(self):
         self._fill_map()

@@ -11,10 +11,13 @@ CAPACITY = 10
 class RingBufferTest(SingleMemberTestCase):
     @classmethod
     def configure_cluster(cls):
-        return open(os.path.join(os.path.dirname(__file__), "hazelcast_test.xml")).read()
+        path = os.path.abspath(__file__)
+        dir_path = os.path.dirname(path)
+        with open(os.path.join(dir_path, "hazelcast.xml")) as f:
+            return f.read()
 
     def setUp(self):
-        self.ringbuffer = self.client.get_ringbuffer("ringbuffer-" + random_string()).blocking()
+        self.ringbuffer = self.client.get_ringbuffer("ClientRingbufferTestWithTTL-" + random_string()).blocking()
 
     def tearDown(self):
         self.ringbuffer.destroy()

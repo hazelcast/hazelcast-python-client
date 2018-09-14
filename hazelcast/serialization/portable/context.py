@@ -45,6 +45,7 @@ class PortableContext(object):
 
             field_factory_id = 0
             field_class_id = 0
+            field_version = version
             if field_type == FieldType.PORTABLE:
                 # is null
                 if data_in.read_boolean():
@@ -69,7 +70,8 @@ class PortableContext(object):
                     self.read_class_definition(data_in, field_factory_id, field_class_id, field_version)
                 else:
                     register = False
-            builder.add_field_def(FieldDefinition(i, field_name.decode('ascii'), field_type, field_factory_id, field_class_id))
+            builder.add_field_def(FieldDefinition(i, field_name.decode('ascii'), field_type, field_version,
+                                                  field_factory_id, field_class_id))
         class_def = builder.build()
         if register:
             class_def = self.register_class_definition(class_def)

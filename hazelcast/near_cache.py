@@ -6,46 +6,38 @@ from hazelcast.util import current_time
 from hazelcast.six.moves import range
 
 
-def lru_cmp(x, y):
+def lru_key_func(x):
     """
-    Least recently used comparison.
+    Least Recently Used key function.
 
-    :param x: (:class:`~hazelcast.near_cache.DataRecord`), first record to be compared.
-    :param y: (:class:`~hazelcast.near_cache.DataRecord`), second record to be compared.
-    :return: (int), -1 if first record is older, 0 if records have same last access time, 1 if second record is older.
+    :param x: (:class:`~hazelcast.near_cache.DataRecord`)
+    :return: (float), last access time of x.
     """
-    if x.last_access_time < y.last_access_time:  # older
-        return -1
-    elif x.last_access_time > y.last_access_time:
-        return 1
-    else:
-        return 0
+    return x.last_access_time
 
 
-def lfu_cmp(x, y):
+def lfu_key_func(x):
     """
-    Least frequently used comparison.
+    Least Frequently Used key function.
 
-    :param x: (:class:`~hazelcast.near_cache.DataRecord`), first record to be compared.
-    :param y: (:class:`~hazelcast.near_cache.DataRecord`), second record to be compared.
-    :return: (int), positive if first record is accessed more than second, 0 in equality, otherwise negative.
+    :param x: (:class:`~hazelcast.near_cache.DataRecord`)
+    :return: (int), access hit count of x.
     """
-    return x.access_hit - y.access_hit
+    return x.access_hit
 
 
-def random_cmp(x, y):
+def random_key_func(x):
     """
-    Random comparison.
+    Random key function.
 
-    :param x: (:class:`~hazelcast.near_cache.DataRecord`), first record to be compared.
-    :param y: (:class:`~hazelcast.near_cache.DataRecord`), second record to be compared.
+    :param x: (:class:`~hazelcast.near_cache.DataRecord`)
     :return: (int), 0.
     """
     return 0
 
 
-eviction_cmp_func = {EVICTION_POLICY.NONE: None, EVICTION_POLICY.LRU: lru_cmp, EVICTION_POLICY.LFU: lfu_cmp,
-                     EVICTION_POLICY.RANDOM: random_cmp}
+eviction_key_func = {EVICTION_POLICY.NONE: None, EVICTION_POLICY.LRU: lru_key_func, EVICTION_POLICY.LFU: lfu_key_func,
+                     EVICTION_POLICY.RANDOM: random_key_func}
 
 
 class DataRecord(object):
@@ -108,7 +100,7 @@ class NearCache(dict):
             self.eviction_sampling_pool_size = self.eviction_max_size
 
         # internal
-        self._cmp_func = eviction_cmp_func[self.eviction_policy]
+        self._key_func = eviction_key_func[self.eviction_policy]
         self._eviction_candidates = list()
         self._evicted_count = 0
         self._expired_count = 0
@@ -154,34 +146,7 @@ class NearCache(dict):
         if len(new_eviction_samples_cleaned) == 0:  # have nothing to expire
             return
 
-        def cmp_to_key(mycmp):
-            class K:
-                def __init__(self, obj, *args):
-                    self.obj = obj
-
-                def __lt__(self, other):
-                    return mycmp(self.obj, other.obj) < 0
-
-                def __gt__(self, other):
-                    return mycmp(self.obj, other.obj) > 0
-
-                def __eq__(self, other):
-                    return mycmp(self.obj, other.obj) == 0
-
-                def __le__(self, other):
-                    return mycmp(self.obj, other.obj) <= 0
-
-                def __ge__(self, other):
-                    return mycmp(self.obj, other.obj) >= 0
-
-                def __ne__(self, other):
-                    return mycmp(self.obj, other.obj) != 0
-            return K
-
-        try:
-            sorted_candidate_pool = sorted(new_eviction_samples_cleaned, cmp=self._cmp_func)  # sort the pool
-        except TypeError:
-            sorted_candidate_pool = sorted(new_eviction_samples_cleaned, key=cmp_to_key(self._cmp_func))
+        sorted_candidate_pool = sorted(new_eviction_samples_cleaned, key=self._key_func)
         min_size = min(self.eviction_sampling_pool_size, len(sorted_candidate_pool))
         self._eviction_candidates = sorted_candidate_pool[:min_size]  # set new eviction candidate pool
 
@@ -219,7 +184,8 @@ class NearCache(dict):
         return random.randint(0, self.eviction_max_size - 1)
 
     def _is_better_than_worse_entry(self, data_record):
-        return len(self._eviction_candidates) == 0 or self._cmp_func(data_record, self._eviction_candidates[-1]) == -1
+        return len(self._eviction_candidates) == 0 \
+               or (self._key_func(data_record) - self._key_func(self._eviction_candidates[-1])) < 0
 
     def _is_eviction_required(self):
         return self.eviction_policy != EVICTION_POLICY.NONE and self.eviction_max_size <= self.__len__()

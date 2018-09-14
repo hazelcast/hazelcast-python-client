@@ -12,7 +12,8 @@ class QueueTest(SingleMemberTestCase):
     def configure_cluster(cls):
         path = os.path.abspath(__file__)
         dir_path = os.path.dirname(path)
-        return open(os.path.join(dir_path, "hazelcast_test.xml")).read()
+        with open(os.path.join(dir_path, "hazelcast.xml")) as f:
+            return f.read()
 
     def setUp(self):
         self.queue = self.client.get_queue("ClientQueueTest_" + random_string()).blocking()
