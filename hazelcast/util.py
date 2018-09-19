@@ -219,3 +219,27 @@ def get_portable_version(portable, default_version):
     except AttributeError:
         version = default_version
     return version
+
+
+class TimeUnit(object):
+    """
+    Represents the time durations at given units in seconds.
+    """
+    NANOSECOND = 1e-9
+    MICROSECOND = 1e-6
+    MILLISECOND = 1e-3
+    SECOND = 1.0
+    MINUTE = 60.0
+    HOUR = 3600.0
+
+    @staticmethod
+    def to_seconds(value, time_unit):
+        """
+        :param value: (Number), value to be translated to seconds
+        :param time_unit: Time duration in seconds
+        :return: Value of the value in seconds
+        """
+        if isinstance(value, bool):
+            # bool is a subclass of int. Don't let bool and float multiplication.
+            raise TypeError
+        return float(value) * time_unit

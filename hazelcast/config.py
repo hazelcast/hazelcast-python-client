@@ -2,9 +2,10 @@
 Hazelcast Client Configuration module contains configuration classes and various constants required to create a ClientConfig.
 
 """
+import os
 
 from hazelcast.serialization.api import StreamSerializer
-from hazelcast.util import validate_type, validate_serializer, enum
+from hazelcast.util import validate_type, validate_serializer, enum, TimeUnit
 
 DEFAULT_GROUP_NAME = "dev"
 """
@@ -14,18 +15,6 @@ Default group name of the connected Hazelcast cluster
 DEFAULT_GROUP_PASSWORD = "dev-pass"
 """
 Default password of connected Hazelcast cluster
-"""
-
-PROPERTY_HEARTBEAT_INTERVAL = "hazelcast.client.heartbeat.interval"
-"""
-Configuration property for heartbeat interval in milliseconds. Client will send heartbeat to server by this value of interval
-unless other requests send to server
-"""
-
-PROPERTY_HEARTBEAT_TIMEOUT = "hazelcast.client.heartbeat.timeout"
-"""
-Configuration property for heartbeat timeout in milliseconds. If client cannot see any activity on a connection for this timeout
-value it will shutdown the connection
 """
 
 INTEGER_TYPE = enum(VAR=0, BYTE=1, SHORT=2, INT=3, LONG=4, BIG_INT=5)
@@ -76,6 +65,7 @@ class ClientConfig(object):
 
     def __init__(self):
         self._properties = {}
+        """Config properties"""
 
         self.group_config = GroupConfig()
         """The group configuration"""
@@ -124,6 +114,16 @@ class ClientConfig(object):
             self.lifecycle_listeners.append(lifecycle_state_changed)
         return self
 
+    def add_near_cache_config(self, near_cache_config):
+        """
+        Helper method to add a new NearCacheConfig.
+
+        :param near_cache_config: (NearCacheConfig), the near_cache config to add.
+        :return: `self` for cascading configuration.
+        """
+        self.near_cache_configs[near_cache_config.name] = near_cache_config
+        return self
+
     def get_property_or_default(self, key, default):
         """
         Client property accessor with fallback to default value.
@@ -137,14 +137,21 @@ class ClientConfig(object):
         except KeyError:
             return default
 
-    def add_near_cache_config(self, near_cache_config):
+    def get_properties(self):
         """
-        Helper method to add a new NearCacheConfig.
+        Gets the configuration properties.
+        :return: (dict), Client configuration properties.
+        """
+        return self._properties
 
-        :param near_cache_config: (NearCacheConfig), the near_cache config to add.
+    def set_property(self, key, value):
+        """
+        Sets the value of a named property.
+        :param key: Property name
+        :param value: Value of the property
         :return: `self` for cascading configuration.
         """
-        self.near_cache_configs[near_cache_config.name] = near_cache_config
+        self._properties[key] = value
         return self
 
 
@@ -217,6 +224,7 @@ class SocketOption(object):
     A Socket option represent the unix socket option, that will be passed to python socket.setoption(level,`option, value)`
     See the Unix manual for level and option.
     """
+
     def __init__(self, level, option, value):
         self.level = level
         """Option level. See the Unix manual for detail."""
@@ -230,6 +238,7 @@ class SerializationConfig(object):
     """
     Hazelcast Serialization Service configuration options can be set from this class.
     """
+
     def __init__(self):
         self.portable_version = 0
         """
@@ -439,3 +448,82 @@ class NearCacheConfig(object):
         if eviction_sampling_pool_size < 1:
             raise ValueError("'eviction_sampling_pool_size' cannot be less than 1")
         self._eviction_sampling_pool_size = eviction_sampling_pool_size
+
+
+class ClientProperty(object):
+    """
+    Client property holds the name, default value and time unit of Hazelcast client properties.
+    Client properties can be set by
+    * Programmatic Configuration (config.set_property)
+    * Environment variables
+    """
+
+    def __init__(self, name, default_value=None, time_unit=None):
+        self.name = name
+        self.default_value = default_value
+        self.time_unit = time_unit
+
+
+class ClientProperties(object):
+    HEARTBEAT_INTERVAL = ClientProperty("hazelcast.client.heartbeat.interval", 5000, TimeUnit.MILLISECOND)
+    """
+    Time interval between the heartbeats sent by the client to the nodes.
+    """
+
+    HEARTBEAT_TIMEOUT = ClientProperty("hazelcast.client.heartbeat.timeout", 60000, TimeUnit.MILLISECOND)
+    """
+    Client sends heartbeat messages to the members and this is the timeout for this sending operations.
+    If there is not any message passing between the client and member within the given time via this property
+    in milliseconds, the connection will be closed.
+    """
+
+    INVOCATION_TIMEOUT_SECONDS = ClientProperty("hazelcast.client.invocation.timeout.seconds", 120, TimeUnit.SECOND)
+    """
+    When an invocation gets an exception because :
+    * Member throws an exception.
+    * Connection between the client and member is closed.
+    * Client's heartbeat requests are timed out.
+    Time passed since invocation started is compared with this property.
+    If the time is already passed, then the exception is delegated to the user. If not, the invocation is retried.
+    Note that, if invocation gets no exception and it is a long running one, then it will not get any exception,
+    no matter how small this timeout is set.
+    """
+
+    INVOCATION_RETRY_PAUSE_MILLIS = ClientProperty("hazelcast.client.invocation.retry.pause.millis", 1000,
+                                                   TimeUnit.MILLISECOND)
+    """
+    Pause time between each retry cycle of an invocation in milliseconds.
+    """
+
+    def __init__(self, properties):
+        self._properties = properties
+
+    def get(self, property):
+        """
+        Gets the value of the given property. First checks client config properties, then environment variables
+        and lastly fall backs to the default value of the property.
+        :param property: (:class:`~hazelcast.config.ClientProperty`), Property to get value from
+        :return: Returns the value of the given property
+        """
+        return self._properties.get(property.name) or os.getenv(property.name) or property.default_value
+
+    def get_seconds(self, property):
+        """
+        Gets the value of the given property in seconds. If the value of the given property is not a number,
+        throws TypeError.
+        :param property: (:class:`~hazelcast.config.ClientProperty`), Property to get seconds from
+        :return: (float), Value of the given property in seconds
+        """
+        return TimeUnit.to_seconds(self.get(property), property.time_unit)
+
+    def get_seconds_positive_or_default(self, property):
+        """
+        Gets the value of the given property in seconds. If the value of the given property is not a number,
+        throws TypeError. If the value of the given property in seconds is not positive, tries to
+        return the default value in seconds.
+        :param property: (:class:`~hazelcast.config.ClientProperty`), Property to get seconds from
+        :return: (float), Value of the given property in seconds if it is positive.
+        Else, value of the default value of given property in seconds.
+        """
+        seconds = self.get_seconds(property)
+        return seconds if seconds > 0 else TimeUnit.to_seconds(property.default_value, property.time_unit)

@@ -6,7 +6,6 @@ import sys
 import threading
 import time
 
-from hazelcast.config import PROPERTY_HEARTBEAT_INTERVAL, PROPERTY_HEARTBEAT_TIMEOUT
 from hazelcast.core import CLIENT_TYPE
 from hazelcast.exception import AuthenticationError
 from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
@@ -18,9 +17,6 @@ from hazelcast import six
 
 BUFFER_SIZE = 8192
 PROTOCOL_VERSION = 1
-
-DEFAULT_HEARTBEAT_INTERVAL = 5000
-DEFAULT_HEARTBEAT_TIMEOUT = 60000
 
 
 class ConnectionManager(object):
@@ -188,10 +184,8 @@ class Heartbeat(object):
         self._client = client
         self._listeners = []
 
-        self._heartbeat_timeout = client.config.get_property_or_default(PROPERTY_HEARTBEAT_TIMEOUT,
-                                                                        DEFAULT_HEARTBEAT_TIMEOUT) // 1000
-        self._heartbeat_interval = client.config.get_property_or_default(PROPERTY_HEARTBEAT_INTERVAL,
-                                                                         DEFAULT_HEARTBEAT_INTERVAL) // 1000
+        self._heartbeat_timeout = client.properties.get_seconds_positive_or_default(client.properties.HEARTBEAT_TIMEOUT)
+        self._heartbeat_interval = client.properties.get_seconds_positive_or_default(client.properties.HEARTBEAT_INTERVAL)
 
     def start(self):
         """
