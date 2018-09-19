@@ -1,6 +1,6 @@
 import logging
 from hazelcast.cluster import ClusterService, RandomLoadBalancer
-from hazelcast.config import ClientConfig
+from hazelcast.config import ClientConfig, ClientProperties
 from hazelcast.connection import ConnectionManager, Heartbeat
 from hazelcast.invocation import InvocationService, ListenerService
 from hazelcast.lifecycle import LifecycleService, LIFECYCLE_STATE_SHUTTING_DOWN, LIFECYCLE_STATE_SHUTDOWN
@@ -25,6 +25,7 @@ class HazelcastClient(object):
 
     def __init__(self, config=None):
         self.config = config or ClientConfig()
+        self.properties = ClientProperties(self.config.get_properties())
         self.lifecycle = LifecycleService(self.config)
         self.reactor = AsyncoreReactor()
         self.connection_manager = ConnectionManager(self, self.reactor.new_connection)
