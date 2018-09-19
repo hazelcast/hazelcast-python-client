@@ -1,7 +1,7 @@
 import time
 
 from tests.base import HazelcastTestCase
-from hazelcast.config import ClientConfig, PROPERTY_HEARTBEAT_INTERVAL
+from hazelcast.config import ClientConfig, ClientProperties
 from hazelcast.client import HazelcastClient
 from hazelcast.lifecycle import LIFECYCLE_STATE_DISCONNECTED
 
@@ -22,7 +22,7 @@ class ClientTest(HazelcastTestCase):
         member = cluster.start_member()
 
         client_config = ClientConfig()
-        client_config._properties[PROPERTY_HEARTBEAT_INTERVAL] = 1000
+        client_config.set_property(ClientProperties.HEARTBEAT_INTERVAL.name, 1000)
 
         client1 = HazelcastClient(client_config)
 
