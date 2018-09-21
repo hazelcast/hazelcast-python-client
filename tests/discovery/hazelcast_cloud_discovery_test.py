@@ -5,10 +5,9 @@ import threading
 from hazelcast.six.moves import BaseHTTPServer
 from hazelcast import six
 from unittest import TestCase
-
 from hazelcast.core import Address
 from hazelcast.exception import HazelcastCertificationError
-from hazelcast.discovery import HazelcastCloudDiscovery, PROPERTY_CLOUD_URL_BASE
+from hazelcast.discovery import HazelcastCloudDiscovery
 from hazelcast.config import ClientConfig
 from hazelcast.client import HazelcastClient
 from tests.util import get_abs_path
@@ -25,9 +24,9 @@ RESPONSE = """[
 
 HOST = "localhost"
 
-EXPECTED_ADDRESS_DICT = {Address("10.47.0.8", 32298): Address("54.213.63.142", 32298),
-                         Address("10.47.0.9", 32298): Address("54.245.77.185", 32298),
-                         Address("10.47.0.10", 32298): Address("54.186.232.37", 32298)}
+ADDRESSES = {Address("10.47.0.8", 32298): Address("54.213.63.142", 32298),
+             Address("10.47.0.9", 32298): Address("54.245.77.185", 32298),
+             Address("10.47.0.10", 32298): Address("54.186.232.37", 32298)}
 
 
 class CloudHTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
@@ -91,9 +90,9 @@ class HazelcastCloudDiscoveryTest(TestCase):
     def test_found_response(self):
         discovery = HazelcastCloudDiscovery(HOST + ":" + str(self.server.port), CLOUD_URL + TOKEN, 5.0)
         discovery._ctx = ssl.create_default_context(cafile=get_abs_path(self.cur_dir, "cert.pem"))
-        actual = discovery.discover_nodes()
+        addresses = discovery.discover_nodes()
 
-        six.assertCountEqual(self, EXPECTED_ADDRESS_DICT, actual)
+        six.assertCountEqual(self, ADDRESSES, addresses)
 
     def test_not_found_response(self):
         discovery = HazelcastCloudDiscovery(HOST + ":" + str(self.server.port), CLOUD_URL + "INVALID_TOKEN", 5.0)
@@ -117,7 +116,7 @@ class HazelcastCloudDiscoveryTest(TestCase):
         config.network_config.cloud_config.enabled = True
         config.network_config.cloud_config.discovery_token = TOKEN
 
-        config.set_property(PROPERTY_CLOUD_URL_BASE, HOST + ":" + str(self.server.port))
+        config.set_property(HazelcastCloudDiscovery.CLOUD_URL_BASE_PROPERTY.name, HOST + ":" + str(self.server.port))
         client = TestClient(config)
         client._address_translator._cloud_discovery._ctx = ssl.create_default_context(
             cafile=get_abs_path(self.cur_dir, "cert.pem"))
@@ -126,11 +125,11 @@ class HazelcastCloudDiscoveryTest(TestCase):
 
         private_addresses = client._address_providers[0].load_addresses()
 
-        six.assertCountEqual(self, list(EXPECTED_ADDRESS_DICT.keys()), private_addresses)
+        six.assertCountEqual(self, list(ADDRESSES.keys()), private_addresses)
 
         for private_address in private_addresses:
             translated_address = client._address_translator.translate(private_address)
-            self.assertEqual(EXPECTED_ADDRESS_DICT[private_address], translated_address)
+            self.assertEqual(ADDRESSES[private_address], translated_address)
 
     @classmethod
     def tearDownClass(cls):

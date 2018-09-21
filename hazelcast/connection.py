@@ -12,7 +12,6 @@ from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
 from hazelcast.protocol.client_message import BEGIN_END_FLAG, ClientMessage, ClientMessageBuilder
 from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
 from hazelcast.serialization import INT_SIZE_IN_BYTES, FMT_LE_INT
-from hazelcast.exception import HazelcastError
 from hazelcast.util import AtomicInteger, parse_addresses
 from hazelcast import six
 
@@ -104,7 +103,7 @@ class ConnectionManager(object):
                     try:
                         translated_address = self._address_translator.translate(address)
                         if translated_address is None:
-                            raise HazelcastError("Address translator could not translate address: {}".format(address))
+                            raise ValueError("Address translator could not translate address: {}".format(address))
                         connection = self._new_connection_func(translated_address,
                                                                self._client.config.network_config.connection_timeout,
                                                                self._client.config.network_config.socket_options,
@@ -114,9 +113,9 @@ class ConnectionManager(object):
                     except IOError:
                         return ImmediateExceptionFuture(sys.exc_info()[1], sys.exc_info()[2])
 
-                    future = authenticator(connection).continue_with(self.on_auth, connection, translated_address)
+                    future = authenticator(connection).continue_with(self.on_auth, connection, address)
                     if not future.done():
-                        self._pending_connections[translated_address] = future
+                        self._pending_connections[address] = future
                     return future
 
     def on_auth(self, f, connection, address):
@@ -138,7 +137,7 @@ class ConnectionManager(object):
                     pass
             for on_connection_opened, _ in self._connection_listeners:
                 if on_connection_opened:
-                    on_connection_opened(f.resul())
+                    on_connection_opened(f.result())
             return f.result()
         else:
             self.logger.debug("Error opening %s", connection)

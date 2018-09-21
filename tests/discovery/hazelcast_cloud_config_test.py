@@ -1,10 +1,8 @@
 from unittest import TestCase
-from hazelcast.client import HazelcastClient
+from hazelcast.client import HazelcastClient, ClientProperties
 from hazelcast.config import ClientConfig, ClientCloudConfig
-from hazelcast.config import PROPERTY_CLOUD_DISCOVERY_TOKEN, DEFAULT_CLOUD_DISCOVERY_TOKEN
 from hazelcast.discovery import HazelcastCloudDiscovery
-from hazelcast.discovery import PROPERTY_CLOUD_URL_BASE
-from hazelcast.exception import HazelcastError
+from hazelcast.exception import HazelcastIllegalStateError
 
 
 class HazelcastCloudConfigTest(TestCase):
@@ -27,41 +25,40 @@ class HazelcastCloudConfigTest(TestCase):
         self.assertEqual(self.token, self.config.network_config.cloud_config.discovery_token)
 
     def test_cloud_config_with_property(self):
-        self.config._properties[PROPERTY_CLOUD_DISCOVERY_TOKEN] = self.token
-        self.assertEqual(False, self.config.network_config.cloud_config.enabled)
-        self.assertEqual("", self.config.network_config.cloud_config.discovery_token)
-        self.assertEqual(self.token, self.config.get_property_or_default(PROPERTY_CLOUD_DISCOVERY_TOKEN,
-                                                                         DEFAULT_CLOUD_DISCOVERY_TOKEN))
+        self.config.set_property(ClientProperties.HAZELCAST_CLOUD_DISCOVERY_TOKEN.name, self.token)
+        token = self.config.get_property_or_default(ClientProperties.HAZELCAST_CLOUD_DISCOVERY_TOKEN.name,
+                                                    ClientProperties.HAZELCAST_CLOUD_DISCOVERY_TOKEN.default_value)
+        self.assertEqual(self.token, token)
 
     def test_cloud_config_with_property_and_client_configuration(self):
         self.config.network_config.cloud_config.enabled = True
-        self.config._properties[PROPERTY_CLOUD_DISCOVERY_TOKEN] = self.token
-        with self.assertRaises(HazelcastError):
+        self.config.set_property(ClientProperties.HAZELCAST_CLOUD_DISCOVERY_TOKEN.name, self.token)
+        with self.assertRaises(HazelcastIllegalStateError):
             client = HazelcastClient(self.config)
 
     def test_custom_cloud_url(self):
-        self.config._properties[PROPERTY_CLOUD_DISCOVERY_TOKEN] = self.token
-        self.config._properties[PROPERTY_CLOUD_URL_BASE] = "dev.hazelcast.cloud"
+        self.config.set_property(ClientProperties.HAZELCAST_CLOUD_DISCOVERY_TOKEN.name, self.token)
+        self.config.set_property(HazelcastCloudDiscovery.CLOUD_URL_BASE_PROPERTY.name, "dev.hazelcast.cloud")
         host, url = HazelcastCloudDiscovery.get_host_and_url(self.config._properties, self.token)
         self.assertEqual("dev.hazelcast.cloud", host)
         self.assertEqual("/cluster/discovery?token=TOKEN", url)
 
     def test_custom_cloud_url_with_https(self):
-        self.config._properties[PROPERTY_CLOUD_DISCOVERY_TOKEN] = self.token
-        self.config._properties[PROPERTY_CLOUD_URL_BASE] = "https://dev.hazelcast.cloud"
+        self.config.set_property(ClientProperties.HAZELCAST_CLOUD_DISCOVERY_TOKEN.name, self.token)
+        self.config.set_property(HazelcastCloudDiscovery.CLOUD_URL_BASE_PROPERTY.name, "https://dev.hazelcast.cloud")
         host, url = HazelcastCloudDiscovery.get_host_and_url(self.config._properties, self.token)
         self.assertEqual("dev.hazelcast.cloud", host)
         self.assertEqual("/cluster/discovery?token=TOKEN", url)
 
     def test_custom_url_with_http(self):
-        self.config._properties[PROPERTY_CLOUD_DISCOVERY_TOKEN] = self.token
-        self.config._properties[PROPERTY_CLOUD_URL_BASE] = "http://dev.hazelcast.cloud"
+        self.config.set_property(ClientProperties.HAZELCAST_CLOUD_DISCOVERY_TOKEN.name, self.token)
+        self.config.set_property(HazelcastCloudDiscovery.CLOUD_URL_BASE_PROPERTY.name, "http://dev.hazelcast.cloud")
         host, url = HazelcastCloudDiscovery.get_host_and_url(self.config._properties, self.token)
         self.assertEqual("dev.hazelcast.cloud", host)
         self.assertEqual("/cluster/discovery?token=TOKEN", url)
 
     def test_default_cloud_url(self):
-        self.config._properties[PROPERTY_CLOUD_DISCOVERY_TOKEN] = self.token
+        self.config.set_property(ClientProperties.HAZELCAST_CLOUD_DISCOVERY_TOKEN.name, self.token)
         host, url = HazelcastCloudDiscovery.get_host_and_url(self.config._properties, self.token)
         self.assertEqual("coordinator.hazelcast.cloud", host)
         self.assertEqual("/cluster/discovery?token=TOKEN", url)

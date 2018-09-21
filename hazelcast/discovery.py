@@ -4,22 +4,13 @@ import logging
 from hazelcast.exception import HazelcastCertificationError
 from hazelcast.util import _parse_address
 from hazelcast.core import Address
+from hazelcast.config import ClientProperty
 from hazelcast.six.moves import http_client
 
 try:
     import ssl
 except ImportError:
     ssl = None
-
-PROPERTY_CLOUD_URL_BASE = "hazelcast.client.cloud.url"
-"""
-Internal client property to change base url of cloud discovery endpoint.
-Used for testing cloud discovery.
-"""
-DEFAULT_CLOUD_URL_BASE = "https://coordinator.hazelcast.cloud"
-"""
-Default base url of cloud discovery endpoint.
-"""
 
 
 class HazelcastCloudAddressProvider(object):
@@ -91,6 +82,12 @@ class HazelcastCloudDiscovery(object):
     _PRIVATE_ADDRESS_PROPERTY = "private-address"
     _PUBLIC_ADDRESS_PROPERTY = "public-address"
 
+    CLOUD_URL_BASE_PROPERTY = ClientProperty("hazelcast.client.cloud.url", "https://coordinator.hazelcast.cloud")
+    """
+    Internal client property to change base url of cloud discovery endpoint.
+    Used for testing cloud discovery.
+    """
+
     def __init__(self, host, url, connection_timeout):
         self._host = host
         self._url = url
@@ -146,7 +143,8 @@ class HazelcastCloudDiscovery(object):
         :param cloud_token: Cloud discovery token.
         :return: Host and URL pair
         """
-        host = properties.get(PROPERTY_CLOUD_URL_BASE, DEFAULT_CLOUD_URL_BASE)
+        host = properties.get(HazelcastCloudDiscovery.CLOUD_URL_BASE_PROPERTY.name,
+                              HazelcastCloudDiscovery.CLOUD_URL_BASE_PROPERTY.default_value)
         host = host.replace("https://", "")
         host = host.replace("http://", "")
         return host, HazelcastCloudDiscovery._CLOUD_URL_PATH + cloud_token

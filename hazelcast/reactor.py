@@ -167,8 +167,6 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
             if ssl_config.cafile:
                 ssl_context.load_verify_locations(ssl_config.cafile)
-            else:
-                ssl_context.load_default_certs()
 
             if ssl_config.certfile:
                 ssl_context.load_cert_chain(ssl_config.certfile, ssl_config.keyfile, ssl_config.password)

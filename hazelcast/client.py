@@ -15,8 +15,7 @@ from hazelcast.serialization import SerializationServiceV1
 from hazelcast.transaction import TWO_PHASE, TransactionManager
 from hazelcast.util import LockReferenceIdGenerator
 from hazelcast.discovery import HazelcastCloudAddressProvider, HazelcastCloudAddressTranslator, HazelcastCloudDiscovery
-from hazelcast.config import PROPERTY_CLOUD_DISCOVERY_TOKEN, DEFAULT_CLOUD_DISCOVERY_TOKEN
-from hazelcast.exception import HazelcastError
+from hazelcast.exception import HazelcastIllegalStateError
 
 
 class HazelcastClient(object):
@@ -248,8 +247,7 @@ class HazelcastClient(object):
             host, url = HazelcastCloudDiscovery.get_host_and_url(self.config.get_properties(), discovery_token)
             return HazelcastCloudAddressProvider(host, url, self._get_connection_timeout())
 
-        cloud_token = self.config.get_property_or_default(PROPERTY_CLOUD_DISCOVERY_TOKEN,
-                                                          DEFAULT_CLOUD_DISCOVERY_TOKEN)
+        cloud_token = self.properties.get(self.properties.HAZELCAST_CLOUD_DISCOVERY_TOKEN)
         if cloud_token != "":
             host, url = HazelcastCloudDiscovery.get_host_and_url(self.config.get_properties(), cloud_token)
             return HazelcastCloudAddressProvider(host, url, self._get_connection_timeout())
@@ -259,14 +257,13 @@ class HazelcastClient(object):
     def _create_address_translator(self):
         network_config = self.config.network_config
         cloud_config = network_config.cloud_config
-        cloud_discovery_token = self.config.get_property_or_default(PROPERTY_CLOUD_DISCOVERY_TOKEN,
-                                                                    DEFAULT_CLOUD_DISCOVERY_TOKEN)
+        cloud_discovery_token = self.properties.get(self.properties.HAZELCAST_CLOUD_DISCOVERY_TOKEN)
 
         address_list_provided = len(network_config.addresses) != 0
         if cloud_discovery_token != "" and cloud_config.enabled:
-            raise HazelcastError("Ambiguous hazelcast.cloud configuration. "
-                                 "Both property based and client configuration based settings are provided "
-                                 "for Hazelcast cloud discovery together. Use only one.")
+            raise HazelcastIllegalStateError("Ambiguous hazelcast.cloud configuration. "
+                                             "Both property based and client configuration based settings are provided "
+                                             "for Hazelcast cloud discovery together. Use only one.")
 
         hazelcast_cloud_enabled = cloud_discovery_token != "" or cloud_config.enabled
         self._is_discovery_configuration_consistent(address_list_provided, hazelcast_cloud_enabled)
@@ -294,7 +291,7 @@ class HazelcastClient(object):
             count += 1
 
         if count > 1:
-            raise HazelcastError("Only one discovery method can be enabled at a time. "
-                                 "Cluster members given explicitly: {}"
-                                 ", Hazelcast.cloud enabled: {}".format(address_list_provided,
-                                                                        hazelcast_cloud_enabled))
+            raise HazelcastIllegalStateError("Only one discovery method can be enabled at a time. "
+                                             "Cluster members given explicitly: {}"
+                                             ", Hazelcast.cloud enabled: {}".format(address_list_provided,
+                                                                                    hazelcast_cloud_enabled))

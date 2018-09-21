@@ -17,16 +17,6 @@ DEFAULT_GROUP_PASSWORD = "dev-pass"
 Default password of connected Hazelcast cluster
 """
 
-PROPERTY_CLOUD_DISCOVERY_TOKEN = "hazelcast.client.cloud.discovery.token"
-"""
-This is a token to use discovering cluster via hazelcast.cloud.
-"""
-
-DEFAULT_CLOUD_DISCOVERY_TOKEN = ""
-"""
-Default discovery token for hazelcast.cloud
-"""
-
 INTEGER_TYPE = enum(VAR=0, BYTE=1, SHORT=2, INT=3, LONG=4, BIG_INT=5)
 """
 Integer type options that can be used by serialization service.
@@ -165,9 +155,8 @@ class ClientConfig(object):
 
     def get_properties(self):
         """
-        Returns properties.
-
-        :return: (dict), properties.
+        Gets the configuration properties.
+        :return: (dict), Client configuration properties.
         """
         return self._properties
 
@@ -582,6 +571,11 @@ class ClientProperties(object):
                                                    TimeUnit.MILLISECOND)
     """
     Pause time between each retry cycle of an invocation in milliseconds.
+    """
+
+    HAZELCAST_CLOUD_DISCOVERY_TOKEN = ClientProperty("hazelcast.client.cloud.discovery.token", "")
+    """
+    Token to use when discovering cluster via hazelcast.cloud
     """
 
     def __init__(self, properties):
