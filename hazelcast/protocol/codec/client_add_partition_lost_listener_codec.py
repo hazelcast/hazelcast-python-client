@@ -1,7 +1,6 @@
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import ClientMessage
 from hazelcast.protocol.custom_codec import *
-from hazelcast.util import ImmutableLazyDataList
 from hazelcast.protocol.codec.client_message_type import *
 from hazelcast.protocol.event_response_const import *
 
@@ -34,14 +33,13 @@ def decode_response(client_message, to_object=None):
     return parameters
 
 
-def handle(client_message, handle_event_partitionlost = None, to_object=None):
+def handle(client_message, handle_event_partition_lost=None, to_object=None):
     """ Event handler """
     message_type = client_message.get_message_type()
-    if message_type == EVENT_PARTITIONLOST and handle_event_partitionlost is not None:
+    if message_type == EVENT_PARTITIONLOST and handle_event_partition_lost is not None:
         partition_id = client_message.read_int()
         lost_backup_count = client_message.read_int()
-        source=None
+        source = None
         if not client_message.read_bool():
             source = AddressCodec.decode(client_message, to_object)
-        handle_event_partitionlost(partition_id=partition_id, lost_backup_count=lost_backup_count, source=source)
-
+        handle_event_partition_lost(partition_id=partition_id, lost_backup_count=lost_backup_count, source=source)

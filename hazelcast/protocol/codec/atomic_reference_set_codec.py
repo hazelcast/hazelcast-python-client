@@ -1,7 +1,5 @@
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import ClientMessage
-from hazelcast.protocol.custom_codec import *
-from hazelcast.util import ImmutableLazyDataList
 from hazelcast.protocol.codec.atomic_reference_message_type import *
 
 REQUEST_TYPE = ATOMICREFERENCE_SET
@@ -33,6 +31,3 @@ def encode_request(name, new_value):
 
 
 # Empty decode_response(client_message), this message has no parameters to decode
-
-
-

@@ -37,18 +37,18 @@ def decode_response(client_message, to_object=None):
     return parameters
 
 
-def handle(client_message, handle_event_imapinvalidation=None, handle_event_imapbatchinvalidation=None, to_object=None):
+def handle(client_message, handle_event_imap_invalidation=None, handle_event_imap_batch_invalidation=None, to_object=None):
     """ Event handler """
     message_type = client_message.get_message_type()
-    if message_type == EVENT_IMAPINVALIDATION and handle_event_imapinvalidation is not None:
+    if message_type == EVENT_IMAPINVALIDATION and handle_event_imap_invalidation is not None:
         key = None
         if not client_message.read_bool():
             key = client_message.read_data()
-        handle_event_imapinvalidation(key=key)
-    if message_type == EVENT_IMAPBATCHINVALIDATION and handle_event_imapbatchinvalidation is not None:
+        handle_event_imap_invalidation(key=key)
+    if message_type == EVENT_IMAPBATCHINVALIDATION and handle_event_imap_batch_invalidation is not None:
         keys_size = client_message.read_int()
         keys = []
-        for keys_index in range(0, keys_size):
+        for _ in range(0, keys_size):
             keys_item = client_message.read_data()
             keys.append(keys_item)
-        handle_event_imapbatchinvalidation(keys=keys)
+        handle_event_imap_batch_invalidation(keys=keys)

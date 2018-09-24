@@ -1,7 +1,5 @@
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import ClientMessage
-from hazelcast.protocol.custom_codec import *
-from hazelcast.util import ImmutableLazyDataList
 from hazelcast.protocol.codec.transactional_map_message_type import *
 
 REQUEST_TYPE = TRANSACTIONALMAP_PUT
@@ -39,7 +37,6 @@ def encode_request(name, txn_id, thread_id, key, value, ttl):
 def decode_response(client_message, to_object=None):
     """ Decode response from client message"""
     parameters = dict(response=None)
-    response=None
     if not client_message.read_bool():
         parameters['response'] = to_object(client_message.read_data())
     return parameters

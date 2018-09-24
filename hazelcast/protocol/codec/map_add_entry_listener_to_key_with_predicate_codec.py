@@ -1,7 +1,5 @@
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import ClientMessage
-from hazelcast.protocol.custom_codec import *
-from hazelcast.util import ImmutableLazyDataList
 from hazelcast.protocol.codec.map_message_type import *
 from hazelcast.protocol.event_response_const import *
 
@@ -44,24 +42,23 @@ def decode_response(client_message, to_object=None):
     return parameters
 
 
-def handle(client_message, handle_event_entry = None, to_object=None):
+def handle(client_message, handle_event_entry=None, to_object=None):
     """ Event handler """
     message_type = client_message.get_message_type()
     if message_type == EVENT_ENTRY and handle_event_entry is not None:
-        key=None
+        key = None
         if not client_message.read_bool():
             key = client_message.read_data()
-        value=None
+        value = None
         if not client_message.read_bool():
             value = client_message.read_data()
-        old_value=None
+        old_value = None
         if not client_message.read_bool():
             old_value = client_message.read_data()
-        merging_value=None
+        merging_value = None
         if not client_message.read_bool():
             merging_value = client_message.read_data()
         event_type = client_message.read_int()
         uuid = client_message.read_str()
         number_of_affected_entries = client_message.read_int()
         handle_event_entry(key=key, value=value, old_value=old_value, merging_value=merging_value, event_type=event_type, uuid=uuid, number_of_affected_entries=number_of_affected_entries)
-

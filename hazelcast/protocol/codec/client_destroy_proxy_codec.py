@@ -1,7 +1,5 @@
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import ClientMessage
-from hazelcast.protocol.custom_codec import *
-from hazelcast.util import ImmutableLazyDataList
 from hazelcast.protocol.codec.client_message_type import *
 
 REQUEST_TYPE = CLIENT_DESTROYPROXY
@@ -29,6 +27,3 @@ def encode_request(name, service_name):
 
 
 # Empty decode_response(client_message), this message has no parameters to decode
-
-
-
