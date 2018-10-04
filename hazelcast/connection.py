@@ -219,18 +219,19 @@ class Heartbeat(object):
         now = time.time()
         for connection in list(self._client.connection_manager.connections.values()):
             time_since_last_read = now - connection.last_read
+            time_since_last_write = now - connection.last_write
             if time_since_last_read > self._heartbeat_timeout:
                 if connection.heartbeating:
                     self.logger.warning(
                         "Heartbeat: Did not hear back after %ss from %s" % (time_since_last_read, connection))
                     self._on_heartbeat_stopped(connection)
-
-            if time_since_last_read > self._heartbeat_interval:
-                request = client_ping_codec.encode_request()
-                self._client.invoker.invoke_on_connection(request, connection, ignore_heartbeat=True)
             else:
                 if not connection.heartbeating:
                     self._on_heartbeat_restored(connection)
+
+            if time_since_last_write > self._heartbeat_interval:
+                request = client_ping_codec.encode_request()
+                self._client.invoker.invoke_on_connection(request, connection, ignore_heartbeat=True)
 
     def _on_heartbeat_restored(self, connection):
         self.logger.info("Heartbeat: Heartbeat restored for connection %s" % connection)
@@ -264,6 +265,7 @@ class Connection(object):
         self._builder = ClientMessageBuilder(message_callback)
         self._read_buffer = b""
         self.last_read = time.time()
+        self.last_write = 0
 
     def live(self):
         """

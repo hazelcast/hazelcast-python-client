@@ -32,10 +32,12 @@ class ReconnectTest(HazelcastTestCase):
             self.create_client(config)
 
     def test_start_client_before_member(self):
-        Thread(target=self.cluster.start_member).start()
+        t = Thread(target=self.cluster.start_member)
+        t.start()
         config = ClientConfig()
         config.network_config.connection_attempt_limit = 10
         self.create_client(config)
+        t.join()
 
     def test_restart_member(self):
         member = self.cluster.start_member()
