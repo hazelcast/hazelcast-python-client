@@ -3,8 +3,8 @@ import os
 import hazelcast
 from hazelcast.config import PROTOCOL
 
-# Hazelcast server should be started with SSL and mutual authentication enabled
-# to use SSLConfig with mutual authentication
+# To use SSLConfig with mutual authentication, Hazelcast server should be started with
+# SSL and mutual authentication enabled
 if __name__ == "__main__":
     logging.basicConfig()
     logging.getLogger().setLevel(logging.INFO)
@@ -25,10 +25,11 @@ if __name__ == "__main__":
     # If private key file is encrypted, password is required to decrypt it
     ssl_config.password = "key-file-password"
 
-    # Select the protocol used in SSL communication
+    # Select the protocol used in SSL communication. This step is optional. Default is TLSv1_2
     ssl_config.protocol = PROTOCOL.TLSv1_2
 
-    # Hostname of the server can be checked against its certificate
+    # Hostname of the server can be checked against its certificate. This step is optional.
+    # By default, Python client will not check hostname.
     ssl_config.check_hostname = True
 
     config.network_config.ssl_config = ssl_config

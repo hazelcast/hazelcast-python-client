@@ -12,7 +12,7 @@ Configuration titles:
 - Advanced socket configuration via :class:`~hazelcast.config.SocketOption`
 - Serialization configuration via :class:`~hazelcast.config.SerializationConfig`
 - Near Cache configuration via :class:`~hazelcast.config.NearCacheConfig`
-- SSL configuration via :class:`~hazelcast.config.SSLConfig`
+- SSL/TLS configuration via :class:`~hazelcast.config.SSLConfig`
 
 Credential Setup
 ----------------
@@ -66,8 +66,8 @@ near cache configuration with same name
 
 Please see API doc for near cache configuration options: :class:`~hazelcast.config.NearCacheConfig`
 
-SSL Configuration
------------------
+SSL/TLS Configuration
+---------------------
 
 SSL/TLS can be configured using :class:`~hazelcast.config.SSLConfig` to allow encrypted socket level communication
 between Hazelcast members and Hazelcast Python Client. Please note that, Hazelcast members should be started with

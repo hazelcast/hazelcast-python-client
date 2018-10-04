@@ -478,14 +478,14 @@ class SSLConfig(object):
         """Enables/disables SSL."""
 
         self.cafile = None
-        """Path of concatenated CA certificates used to validate server's certificates in PEM format."""
+        """Absolute path of concatenated CA certificates used to validate server's certificates in PEM format."""
 
         self.certfile = None
-        """Path of the client certificate in PEM format."""
+        """Absolute path of the client certificate in PEM format."""
 
         self.keyfile = None
         """
-        Path of the private key file for the client certificate in the PEM format.
+        Absolute path of the private key file for the client certificate in the PEM format.
         If this parameter is None, private key will be taken from certfile.
         """
 
