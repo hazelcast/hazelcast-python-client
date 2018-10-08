@@ -1,5 +1,5 @@
 from hazelcast.client import HazelcastClient
-from hazelcast.config import ClientConfig, ClientNetworkConfig, SerializationConfig, GroupConfig
+from hazelcast.config import ClientConfig, ClientNetworkConfig, SerializationConfig, GroupConfig, SSLConfig
 
 # version info determines release version
 __version_info__ = (3, 9)

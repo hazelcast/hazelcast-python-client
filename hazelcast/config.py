@@ -50,6 +50,22 @@ Near Cache in memory format of the values.
 
 """
 
+PROTOCOL = enum(SSLv2=0, SSLv3=1, SSL=2, TLSv1=3, TLSv1_1=4, TLSv1_2=5, TLSv1_3=6, TLS=7)
+"""
+SSL protocol options.
+
+* SSLv2     : SSL 2.O Protocol. RFC 6176 prohibits SSL 2.0. Please use TLSv1+
+* SSLv3     : SSL 3.0 Protocol. RFC 7568 prohibits SSL 3.0. Please use TLSv1+
+* SSL       : Alias for SSL 3.0
+* TLSv1     : TLS 1.0 Protocol described in RFC 2246
+* TLSv1_1   : TLS 1.1 Protocol described in RFC 4346
+* TLSv1_2   : TLS 1.2 Protocol described in RFC 5246
+* TLSv1_3   : TLS 1.3 Protocol described in RFC 8446
+* TLS       : Alias for TLS 1.2
+* TLSv1+ requires at least Python 2.7.9 or Python 3.4 build with OpenSSL 1.0.1+ 
+* TLSv1_3 requires at least Python 2.7.15 or Python 3.7 build with OpenSSL 1.1.1+
+"""
+
 DEFAULT_MAX_ENTRY_COUNT = 10000
 DEFAULT_SAMPLING_COUNT = 8
 DEFAULT_SAMPLING_POOL_SIZE = 16
@@ -216,6 +232,8 @@ class ClientNetworkConfig(object):
         cached value of partition count and doesn't guarantee that the operation will always be executed on the owner.
         The cached table is updated every 10 seconds.
         """
+        self.ssl_config = SSLConfig()
+        """SSL configurations for the client."""
 
 
 class SocketOption(object):
@@ -450,6 +468,52 @@ class NearCacheConfig(object):
         self._eviction_sampling_pool_size = eviction_sampling_pool_size
 
 
+class SSLConfig(object):
+    """
+    SSL configuration.
+    """
+
+    def __init__(self):
+        self.enabled = False
+        """Enables/disables SSL."""
+
+        self.cafile = None
+        """Absolute path of concatenated CA certificates used to validate server's certificates in PEM format."""
+
+        self.certfile = None
+        """Absolute path of the client certificate in PEM format."""
+
+        self.keyfile = None
+        """
+        Absolute path of the private key file for the client certificate in the PEM format.
+        If this parameter is None, private key will be taken from certfile.
+        """
+
+        self.password = None
+        """
+        Password for decrypting the keyfile if it is encrypted.
+        The password may be a function to call to get the password.
+        It will be called with no arguments, and it should return a string, bytes, or bytearray.
+        If the return value is a string it will be encoded as UTF-8 before using it to decrypt the key.
+        Alternatively a string, bytes, or bytearray value may be supplied directly as the password.
+        """
+
+        self.protocol = PROTOCOL.TLS
+        """Protocol version used in SSL communication."""
+
+        self.check_hostname = False
+        """
+        If True, verifies that server's certificate matches the server's hostname. The rules applied are those 
+        for checking the identity of HTTPS servers as outlined in RFC 2818, RFC 5280 and RFC 6125.
+        """
+
+        self.ciphers = None
+        """
+        String in the OpenSSL cipher list format to set the available ciphers for sockets.
+        More than one cipher can be set by separating them with a colon.
+        """
+
+
 class ClientProperty(object):
     """
     Client property holds the name, default value and time unit of Hazelcast client properties.
@@ -527,3 +591,4 @@ class ClientProperties(object):
         """
         seconds = self.get_seconds(property)
         return seconds if seconds > 0 else TimeUnit.to_seconds(property.default_value, property.time_unit)
+
