@@ -66,3 +66,11 @@ def get_ssl_config(enable_ssl=False,
 
 def get_abs_path(cur_dir, file_name):
     return os.path.abspath(os.path.join(cur_dir, file_name))
+
+
+def generate_key_owned_by_instance(client, instance):
+    while True:
+        key = random_string()
+        partition_id = client.partition_service.get_partition_id(key)
+        if client.partition_service.get_partition_owner(partition_id) == instance:
+            return key

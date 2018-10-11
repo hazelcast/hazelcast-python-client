@@ -1,7 +1,7 @@
 from hazelcast.protocol.codec import lock_force_unlock_codec, lock_get_lock_count_codec, \
     lock_get_remaining_lease_time_codec, lock_is_locked_by_current_thread_codec, lock_is_locked_codec, lock_lock_codec, \
     lock_try_lock_codec, lock_unlock_codec
-from hazelcast.proxy.base import PartitionSpecificProxy
+from hazelcast.proxy.base import PartitionSpecificProxy, MAX_SIZE
 from hazelcast.util import thread_id, to_millis
 
 
@@ -63,7 +63,7 @@ class Lock(PartitionSpecificProxy):
 
         :param lease_time: (long), time to wait before releasing the lock (optional).
         """
-        return self._encode_invoke(lock_lock_codec, lease_time=to_millis(lease_time),
+        return self._encode_invoke(lock_lock_codec, invocation_timeout=MAX_SIZE, lease_time=to_millis(lease_time),
                                    thread_id=thread_id(), reference_id=self.reference_id_generator.get_next())
 
     def try_lock(self, timeout=0, lease_time=-1):
@@ -82,7 +82,7 @@ class Lock(PartitionSpecificProxy):
         :param lease_time: (long), time in seconds to wait before releasing the lock (optional).
         :return: (bool), ``true`` if the lock was acquired and otherwise, ``false``.
         """
-        return self._encode_invoke(lock_try_lock_codec, lease=to_millis(lease_time),
+        return self._encode_invoke(lock_try_lock_codec, invocation_timeout=MAX_SIZE, lease=to_millis(lease_time),
                                    thread_id=thread_id(), timeout=to_millis(timeout),
                                    reference_id=self.reference_id_generator.get_next())
 

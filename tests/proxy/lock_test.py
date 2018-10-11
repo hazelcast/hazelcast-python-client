@@ -1,7 +1,7 @@
+import time
 from threading import Event
-
 from tests.base import SingleMemberTestCase
-from tests.util import random_string
+from tests.util import random_string, generate_key_owned_by_instance
 
 
 class LockTest(SingleMemberTestCase):
@@ -81,3 +81,40 @@ class LockTest(SingleMemberTestCase):
 
     def test_str(self):
         self.assertTrue(str(self.lock).startswith("Lock"))
+
+    def test_key_owner_shutdowns_after_invocation_timeout(self):
+        key_owner = self.cluster.start_member()
+
+        invocation_timeout_seconds = 1
+        self.client.invoker.invocation_timeout = invocation_timeout_seconds
+
+        key = generate_key_owned_by_instance(self.client, key_owner.address)
+        server_lock = self.client.get_lock(key).blocking()
+        server_lock.lock()
+
+        e = Event()
+
+        def lock_thread_func():
+            lock = self.client.get_lock(key).blocking()
+            lock.lock()
+            lock.unlock()
+            e.set()
+
+        self.start_new_thread(lock_thread_func)
+
+        time.sleep(2 * invocation_timeout_seconds)
+        key_owner.shutdown()
+
+        partition_id = self.client.partition_service.get_partition_id(key)
+        while not (self.client.partition_service.get_partition_owner(partition_id) == self.member.address):
+            time.sleep(0.1)
+        try:
+            self.assertTrue(server_lock.is_locked())
+            self.assertTrue(server_lock.is_locked_by_current_thread())
+            self.assertTrue(server_lock.try_lock())
+            server_lock.unlock()
+            server_lock.unlock()
+            self.assertSetEventually(e)
+        finally:
+            # revert the invocation timeout change for other tests since client instance is only created once.
+            self.client.invoker.invocation_timeout = self.client.properties.INVOCATION_TIMEOUT_SECONDS.default_value
