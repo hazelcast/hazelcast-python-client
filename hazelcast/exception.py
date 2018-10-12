@@ -89,7 +89,7 @@ class HazelcastCertificationError(HazelcastError):
 
 class HazelcastIllegalStateError(HazelcastError):
     """
-    HazelcastIllegalStateError signals that that a method has been invoked at an illegal or inappropriate time.
+    HazelcastIllegalStateError signals that a method has been invoked at an illegal or inappropriate time.
     In other words, Hazelcast Python Client is not in an appropriate state for the requested operation.
     """
     pass

@@ -36,23 +36,22 @@ class CloudHTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             if self.path[:idx + 1] == CLOUD_URL:
                 # Found a cluster with the given token
                 if self.path[idx + 1:] == TOKEN:
-                    self.send_response(200)
-                    self.send_header("Content-type", "text/html")
-                    self.end_headers()
-                    self.wfile.write(six.b(RESPONSE))
+                    self._set_response(200, RESPONSE)
                     return
                 # Can not find a cluster with the given token
                 else:
-                    self.send_response(404)
-                    self.send_header("Content-type", "text/html")
-                    self.end_headers()
-                    self.wfile.write(six.b('{"message":"Cluster with token: ' + self.path[idx + 1:] + ' not found."}'))
+                    self._set_response(404, '{"message":"Cluster with token: ' + self.path[idx + 1:] + ' not found."}')
+                    return
         else:
             # Wrong URL
-            self.send_response(404)
-            self.send_header("Content-type", "text/html")
-            self.end_headers()
-            self.wfile.write(six.b("default backend - 404"))
+            self._set_response(404, "default backend - 404")
+            return
+
+    def _set_response(self, status, message):
+        self.send_response(status)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        self.wfile.write(six.b(message))
 
 
 class Server(object):
@@ -83,31 +82,36 @@ class HazelcastCloudDiscoveryTest(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.ctx = ssl.create_default_context(cafile=get_abs_path(cls.cur_dir, "cert.pem"))
         cls.server = Server()
         cls.server_thread = threading.Thread(target=cls.server.start_server)
         cls.server_thread.start()
 
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.close_server()
+
     def test_found_response(self):
-        discovery = HazelcastCloudDiscovery(HOST + ":" + str(self.server.port), CLOUD_URL + TOKEN, 5.0)
-        discovery._ctx = ssl.create_default_context(cafile=get_abs_path(self.cur_dir, "cert.pem"))
+        discovery = HazelcastCloudDiscovery(*get_params(HOST, self.server.port, CLOUD_URL, TOKEN))
+        discovery._ctx = self.ctx
         addresses = discovery.discover_nodes()
 
         six.assertCountEqual(self, ADDRESSES, addresses)
 
     def test_not_found_response(self):
-        discovery = HazelcastCloudDiscovery(HOST + ":" + str(self.server.port), CLOUD_URL + "INVALID_TOKEN", 5.0)
-        discovery._ctx = ssl.create_default_context(cafile=get_abs_path(self.cur_dir, "cert.pem"))
+        discovery = HazelcastCloudDiscovery(*get_params(HOST, self.server.port, CLOUD_URL, "INVALID_TOKEN"))
+        discovery._ctx = self.ctx
         with self.assertRaises(IOError):
             discovery.discover_nodes()
 
     def test_invalid_url(self):
-        discovery = HazelcastCloudDiscovery(HOST + ":" + str(self.server.port), "/INVALID_URL", 5.0)
-        discovery._ctx = ssl.create_default_context(cafile=get_abs_path(self.cur_dir, "cert.pem"))
+        discovery = HazelcastCloudDiscovery(*get_params(HOST, self.server.port, "/INVALID_URL", ""))
+        discovery._ctx = self.ctx
         with self.assertRaises(IOError):
             discovery.discover_nodes()
 
     def test_invalid_certificates(self):
-        discovery = HazelcastCloudDiscovery(HOST + ":" + str(self.server.port), CLOUD_URL + TOKEN, 5.0)
+        discovery = HazelcastCloudDiscovery(*get_params(HOST, self.server.port, CLOUD_URL, TOKEN))
         with self.assertRaises(HazelcastCertificationError):
             discovery.discover_nodes()
 
@@ -118,10 +122,8 @@ class HazelcastCloudDiscoveryTest(TestCase):
 
         config.set_property(HazelcastCloudDiscovery.CLOUD_URL_BASE_PROPERTY.name, HOST + ":" + str(self.server.port))
         client = TestClient(config)
-        client._address_translator._cloud_discovery._ctx = ssl.create_default_context(
-            cafile=get_abs_path(self.cur_dir, "cert.pem"))
-        client._address_providers[0]._cloud_discovery._ctx = ssl.create_default_context(
-            cafile=get_abs_path(self.cur_dir, "cert.pem"))
+        client._address_translator._cloud_discovery._ctx = self.ctx
+        client._address_providers[0]._cloud_discovery._ctx = self.ctx
 
         private_addresses = client._address_providers[0].load_addresses()
 
@@ -131,6 +133,6 @@ class HazelcastCloudDiscoveryTest(TestCase):
             translated_address = client._address_translator.translate(private_address)
             self.assertEqual(ADDRESSES[private_address], translated_address)
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.server.close_server()
+
+def get_params(host, port, url, token, timeout=5.0):
+    return host + ":" + str(port), url + token, timeout

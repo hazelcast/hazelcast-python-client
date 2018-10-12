@@ -235,7 +235,7 @@ class ClientNetworkConfig(object):
         self.ssl_config = SSLConfig()
         """SSL configurations for the client."""
         self.cloud_config = ClientCloudConfig()
-        """Hazelcast Cloud configuration to let the client connect the cluster via hazelcast.cloud"""
+        """Hazelcast Cloud configuration to let the client connect the cluster via Hazelcast.cloud"""
 
 
 class SocketOption(object):
@@ -518,7 +518,7 @@ class SSLConfig(object):
 
 class ClientCloudConfig(object):
     """
-    hazelcast.cloud configuration to let the client connect the cluster via hazelcast.cloud
+    Hazelcast Cloud configuration to let the client connect the cluster via Hazelcast.cloud
     """
 
     def __init__(self):
@@ -575,7 +575,7 @@ class ClientProperties(object):
 
     HAZELCAST_CLOUD_DISCOVERY_TOKEN = ClientProperty("hazelcast.client.cloud.discovery.token", "")
     """
-    Token to use when discovering cluster via hazelcast.cloud
+    Token to use when discovering cluster via Hazelcast.cloud
     """
 
     def __init__(self, properties):

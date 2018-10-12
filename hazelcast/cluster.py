@@ -102,13 +102,13 @@ class ClusterService(object):
             self._client.shutdown()
 
     def _connect_to_cluster(self):
-        provider_addresses = get_provider_addresses(self._address_providers)
-        addresses = get_possible_addresses(provider_addresses, self.members)
-
         current_attempt = 1
         attempt_limit = self._config.network_config.connection_attempt_limit
         retry_delay = self._config.network_config.connection_attempt_period
         while current_attempt <= attempt_limit:
+            provider_addresses = get_provider_addresses(self._address_providers)
+            addresses = get_possible_addresses(provider_addresses, self.members)
+
             for address in addresses:
                 try:
                     self.logger.info("Connecting to %s", address)

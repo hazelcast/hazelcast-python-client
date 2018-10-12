@@ -1,6 +1,5 @@
 import hazelcast
 import logging
-import os
 
 if __name__ == "__main__":
     logging.basicConfig()
@@ -8,23 +7,19 @@ if __name__ == "__main__":
 
     config = hazelcast.ClientConfig()
 
-    ssl_config = hazelcast.SSLConfig()
-    ssl_config.enabled = True
+    # Set up group name and password for authentication
+    config.group_config.name = "name"
+    config.group_config.password = "password"
 
-    # PEM file paths should be absolute
-    ssl_config.cafile = os.path.abspath("server.pem")
-    ssl_config.certfile = os.path.abspath("client.pem")
-    ssl_config.keyfile = os.path.abspath("client-key.pem")
-    ssl_config.password = "keyfile-password"
+    # Enable SSL for encryption. CA file should be set as the absolute path.
+    config.network_config.ssl_config.enabled = True
+    config.network_config.ssl_config.cafile = "cert.pem"
 
-    config.network_config.ssl_config = ssl_config
+    # Enable Hazelcast.Cloud configuration and set the token of your cluster.
+    config.network_config.cloud_config.enabled = True
+    config.network_config.cloud_config.discovery_token = "token"
 
-    cloud_config = hazelcast.ClientCloudConfig()
-    cloud_config.enabled = True
-    cloud_config.discovery_token = "token"
-
-    config.network_config.cloud_config = cloud_config
-
+    # Start a new Hazelcast client with this configuration.
     client = hazelcast.HazelcastClient(config)
 
     my_map = client.get_map("map-on-the-cloud")

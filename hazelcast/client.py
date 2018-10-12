@@ -261,7 +261,7 @@ class HazelcastClient(object):
 
         address_list_provided = len(network_config.addresses) != 0
         if cloud_discovery_token != "" and cloud_config.enabled:
-            raise HazelcastIllegalStateError("Ambiguous hazelcast.cloud configuration. "
+            raise HazelcastIllegalStateError("Ambiguous Hazelcast.cloud configuration. "
                                              "Both property based and client configuration based settings are provided "
                                              "for Hazelcast cloud discovery together. Use only one.")
 

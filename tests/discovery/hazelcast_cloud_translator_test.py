@@ -18,7 +18,7 @@ class HazelcastCloudTranslatorTest(TestCase):
         self.cloud_discovery = HazelcastCloudDiscovery("", "", 0)
         self.cloud_discovery.discover_nodes = lambda: self.lookup
         self.translator = HazelcastCloudAddressTranslator("", "", 0)
-        self.translator._cloud_discovery = self.cloud_discovery
+        self.translator.cloud_discovery = self.cloud_discovery
 
     def test_translate_when_address_is_none(self):
         actual = self.translator.translate(None)
@@ -48,7 +48,7 @@ class HazelcastCloudTranslatorTest(TestCase):
         cloud_discovery = HazelcastCloudDiscovery("", "", 0)
         cloud_discovery.discover_nodes = self.mock_discover_nodes_with_exception
         translator = HazelcastCloudAddressTranslator("", "", 0)
-        translator._cloud_discovery = cloud_discovery
+        translator.cloud_discovery = cloud_discovery
         translator.refresh()
 
     def mock_discover_nodes_with_exception(self):

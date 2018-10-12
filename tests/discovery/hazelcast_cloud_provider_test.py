@@ -15,7 +15,7 @@ class HazelcastCloudProviderTest(TestCase):
         self.cloud_discovery = HazelcastCloudDiscovery("", "", 0)
         self.cloud_discovery.discover_nodes = lambda: self.expected_addresses
         self.provider = HazelcastCloudAddressProvider("", "", 0)
-        self.provider._cloud_discovery = self.cloud_discovery
+        self.provider.cloud_discovery = self.cloud_discovery
 
     def test_load_addresses(self):
         addresses = self.provider.load_addresses()
@@ -26,7 +26,7 @@ class HazelcastCloudProviderTest(TestCase):
         self.assertEqual(0, len(addresses))
 
     def test_load_addresses_with_exception(self):
-        self.provider._cloud_discovery.discover_nodes = self.mock_discover_nodes_with_exception
+        self.provider.cloud_discovery.discover_nodes = self.mock_discover_nodes_with_exception
         addresses = self.provider.load_addresses()
         self.assertEqual(0, len(addresses))
 

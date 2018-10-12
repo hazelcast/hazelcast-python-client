@@ -21,7 +21,7 @@ class HazelcastCloudAddressProvider(object):
     logger = logging.getLogger("HazelcastCloudAddressProvider")
 
     def __init__(self, host, url, connection_timeout):
-        self._cloud_discovery = HazelcastCloudDiscovery(host, url, connection_timeout)
+        self.cloud_discovery = HazelcastCloudDiscovery(host, url, connection_timeout)
 
     def load_addresses(self):
         """
@@ -29,9 +29,9 @@ class HazelcastCloudAddressProvider(object):
         :return: (Sequence), The possible member addresses to connect to.
         """
         try:
-            return list(self._cloud_discovery.discover_nodes().keys())
+            return list(self.cloud_discovery.discover_nodes().keys())
         except Exception as ex:
-            self.logger.warning("Failed to load addresses from hazelcast.cloud: {}".format(ex.args[0]))
+            self.logger.warning("Failed to load addresses from Hazelcast.cloud: {}".format(ex.args[0]))
         return []
 
 
@@ -43,7 +43,7 @@ class HazelcastCloudAddressTranslator(object):
     logger = logging.getLogger("HazelcastAddressTranslator")
 
     def __init__(self, host, url, connection_timeout):
-        self._cloud_discovery = HazelcastCloudDiscovery(host, url, connection_timeout)
+        self.cloud_discovery = HazelcastCloudDiscovery(host, url, connection_timeout)
         self._private_to_public = dict()
 
     def translate(self, address):
@@ -68,14 +68,14 @@ class HazelcastCloudAddressTranslator(object):
         Refreshes the internal lookup table if necessary.
         """
         try:
-            self._private_to_public = self._cloud_discovery.discover_nodes()
+            self._private_to_public = self.cloud_discovery.discover_nodes()
         except Exception as ex:
-            self.logger.warning("Failed to load addresses from hazelcast.cloud: {}".format(ex.args[0]))
+            self.logger.warning("Failed to load addresses from Hazelcast.cloud: {}".format(ex.args[0]))
 
 
 class HazelcastCloudDiscovery(object):
     """
-    Discovery service that discover nodes via hazelcast.cloud
+    Discovery service that discover nodes via Hazelcast.cloud
     https://coordinator.hazelcast.cloud/cluster/discovery?token=<TOKEN>
     """
     _CLOUD_URL_PATH = "/cluster/discovery?token="
@@ -92,12 +92,12 @@ class HazelcastCloudDiscovery(object):
         self._host = host
         self._url = url
         self._connection_timeout = connection_timeout
-        # Default context operates only on TLSv1+, checks certificates and hostname
+        # Default context operates only on TLSv1+, checks certificates,hostname and validity
         self._ctx = ssl.create_default_context()
 
     def discover_nodes(self):
         """
-        Discover nodes via Hazelcast.cloud.
+        Discovers nodes from Hazelcast.cloud.
         :return: (dict), dictionary that maps private addresses to public addresses.
         """
         try:
