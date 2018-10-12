@@ -234,6 +234,8 @@ class ClientNetworkConfig(object):
         """
         self.ssl_config = SSLConfig()
         """SSL configurations for the client."""
+        self.cloud_config = ClientCloudConfig()
+        """Hazelcast Cloud configuration to let the client connect the cluster via Hazelcast.cloud"""
 
 
 class SocketOption(object):
@@ -514,6 +516,18 @@ class SSLConfig(object):
         """
 
 
+class ClientCloudConfig(object):
+    """
+    Hazelcast Cloud configuration to let the client connect the cluster via Hazelcast.cloud
+    """
+
+    def __init__(self):
+        self.enabled = False
+        """Enables/disables cloud config."""
+        self.discovery_token = ""
+        """Hazelcast Cloud Discovery token of your cluster."""
+
+
 class ClientProperty(object):
     """
     Client property holds the name, default value and time unit of Hazelcast client properties.
@@ -559,6 +573,11 @@ class ClientProperties(object):
     Pause time between each retry cycle of an invocation in milliseconds.
     """
 
+    HAZELCAST_CLOUD_DISCOVERY_TOKEN = ClientProperty("hazelcast.client.cloud.discovery.token", "")
+    """
+    Token to use when discovering cluster via Hazelcast.cloud
+    """
+
     def __init__(self, properties):
         self._properties = properties
 
@@ -591,4 +610,3 @@ class ClientProperties(object):
         """
         seconds = self.get_seconds(property)
         return seconds if seconds > 0 else TimeUnit.to_seconds(property.default_value, property.time_unit)
-

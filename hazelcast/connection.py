@@ -12,7 +12,7 @@ from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
 from hazelcast.protocol.client_message import BEGIN_END_FLAG, ClientMessage, ClientMessageBuilder
 from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
 from hazelcast.serialization import INT_SIZE_IN_BYTES, FMT_LE_INT
-from hazelcast.util import AtomicInteger
+from hazelcast.util import AtomicInteger, parse_addresses
 from hazelcast import six
 
 BUFFER_SIZE = 8192
@@ -25,7 +25,7 @@ class ConnectionManager(object):
     """
     logger = logging.getLogger("ConnectionManager")
 
-    def __init__(self, client, new_connection_func):
+    def __init__(self, client, new_connection_func, address_translator):
         self._new_connection_mutex = threading.RLock()
         self._io_thread = None
         self._client = client
@@ -34,6 +34,7 @@ class ConnectionManager(object):
         self._socket_map = {}
         self._new_connection_func = new_connection_func
         self._connection_listeners = []
+        self._address_translator = address_translator
 
     def add_listener(self, on_connection_opened=None, on_connection_closed=None):
         """
@@ -100,7 +101,10 @@ class ConnectionManager(object):
                 else:
                     authenticator = authenticator or self._cluster_authenticator
                     try:
-                        connection = self._new_connection_func(address,
+                        translated_address = self._address_translator.translate(address)
+                        if translated_address is None:
+                            raise ValueError("Address translator could not translate address: {}".format(address))
+                        connection = self._new_connection_func(translated_address,
                                                                self._client.config.network_config.connection_timeout,
                                                                self._client.config.network_config.socket_options,
                                                                connection_closed_callback=self._connection_closed,
@@ -133,7 +137,7 @@ class ConnectionManager(object):
                     pass
             for on_connection_opened, _ in self._connection_listeners:
                 if on_connection_opened:
-                    on_connection_opened(f.resul())
+                    on_connection_opened(f.result())
             return f.result()
         else:
             self.logger.debug("Error opening %s", connection)
@@ -321,3 +325,34 @@ class Connection(object):
 
     def __repr__(self):
         return "Connection(address=%s, id=%s)" % (self._address, self.id)
+
+
+class DefaultAddressProvider(object):
+    """
+    Provides initial addresses for client to find and connect to a node.
+    Loads addresses from the Hazelcast configuration.
+    """
+    def __init__(self, network_config):
+        self._network_config = network_config
+
+    def load_addresses(self):
+        """
+        :return: (Sequence), The possible member addresses to connect to.
+        """
+        return parse_addresses(self._network_config.addresses)
+
+
+class DefaultAddressTranslator(object):
+    """
+    DefaultAddressTranslator is a no-op. It always returns the given address.
+    """
+    def translate(self, address):
+        """
+        :param address: (:class:`~hazelcast.core.Address`), address to be translated.
+        :return: (class:`~hazelcast.core.Address`), translated address.
+        """
+        return address
+
+    def refresh(self):
+        """Refreshes the internal lookup table if necessary."""
+        pass

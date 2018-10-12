@@ -142,7 +142,6 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
         ssl_config = network_config.ssl_config
         if ssl and ssl_config.enabled:
-
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
 
             protocol = ssl_config.protocol

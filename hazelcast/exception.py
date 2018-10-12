@@ -80,6 +80,21 @@ class TransactionError(HazelcastError):
     pass
 
 
+class HazelcastCertificationError(HazelcastError):
+    """
+    HazelcastCertificateError is raised when there is an error in certificates.
+    """
+    pass
+
+
+class HazelcastIllegalStateError(HazelcastError):
+    """
+    HazelcastIllegalStateError signals that a method has been invoked at an illegal or inappropriate time.
+    In other words, Hazelcast Python Client is not in an appropriate state for the requested operation.
+    """
+    pass
+
+
 ERROR_CODE_TO_ERROR = {
     AUTHENTICATION: AuthenticationError,
     HAZELCAST_INSTANCE_NOT_ACTIVE: HazelcastInstanceNotActiveError,
