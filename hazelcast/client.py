@@ -1,4 +1,6 @@
 import logging
+import sys
+
 from hazelcast.cluster import ClusterService, RandomLoadBalancer
 from hazelcast.config import ClientConfig, ClientProperties
 from hazelcast.connection import ConnectionManager, Heartbeat, DefaultAddressProvider, DefaultAddressTranslator
@@ -281,7 +283,7 @@ class HazelcastClient(object):
     def _get_connection_timeout(self):
         network_config = self.config.network_config
         conn_timeout = network_config.connection_timeout
-        return 0x7fffffff if conn_timeout == 0 else conn_timeout  # Max integer value
+        return sys.maxsize if conn_timeout == 0 else conn_timeout
 
     def _is_discovery_configuration_consistent(self, address_list_provided, hazelcast_cloud_enabled):
         count = 0
