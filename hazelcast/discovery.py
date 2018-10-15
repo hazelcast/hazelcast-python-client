@@ -17,7 +17,6 @@ class HazelcastCloudAddressProvider(object):
     """
     Provides initial addresses for client to find and connect to a node.
     """
-    logging.basicConfig()
     logger = logging.getLogger("HazelcastCloudAddressProvider")
 
     def __init__(self, host, url, connection_timeout):
@@ -39,7 +38,6 @@ class HazelcastCloudAddressTranslator(object):
     """
     Resolves private IP addresses of Hazelcast.cloud service.
     """
-    logging.basicConfig()
     logger = logging.getLogger("HazelcastAddressTranslator")
 
     def __init__(self, host, url, connection_timeout):
