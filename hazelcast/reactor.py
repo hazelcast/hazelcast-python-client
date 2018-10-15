@@ -20,8 +20,6 @@ try:
 except ImportError:
     ssl = None
 
-logging.basicConfig()
-
 
 class AsyncoreReactor(object):
     _thread = None
