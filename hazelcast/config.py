@@ -156,6 +156,7 @@ class ClientConfig(object):
     def get_properties(self):
         """
         Gets the configuration properties.
+
         :return: (dict), Client configuration properties.
         """
         return self._properties
@@ -163,6 +164,7 @@ class ClientConfig(object):
     def set_property(self, key, value):
         """
         Sets the value of a named property.
+
         :param key: Property name
         :param value: Value of the property
         :return: `self` for cascading configuration.
@@ -532,7 +534,8 @@ class ClientProperty(object):
     """
     Client property holds the name, default value and time unit of Hazelcast client properties.
     Client properties can be set by
-    * Programmatic Configuration (config.set_property)
+
+    * Programmatic Configuration
     * Environment variables
     """
 
@@ -557,10 +560,12 @@ class ClientProperties(object):
 
     INVOCATION_TIMEOUT_SECONDS = ClientProperty("hazelcast.client.invocation.timeout.seconds", 120, TimeUnit.SECOND)
     """
-    When an invocation gets an exception because :
+    When an invocation gets an exception because
+    
     * Member throws an exception.
     * Connection between the client and member is closed.
     * Client's heartbeat requests are timed out.
+    
     Time passed since invocation started is compared with this property.
     If the time is already passed, then the exception is delegated to the user. If not, the invocation is retried.
     Note that, if invocation gets no exception and it is a long running one, then it will not get any exception,
@@ -585,6 +590,7 @@ class ClientProperties(object):
         """
         Gets the value of the given property. First checks client config properties, then environment variables
         and lastly fall backs to the default value of the property.
+
         :param property: (:class:`~hazelcast.config.ClientProperty`), Property to get value from
         :return: Returns the value of the given property
         """
@@ -594,6 +600,7 @@ class ClientProperties(object):
         """
         Gets the value of the given property in seconds. If the value of the given property is not a number,
         throws TypeError.
+
         :param property: (:class:`~hazelcast.config.ClientProperty`), Property to get seconds from
         :return: (float), Value of the given property in seconds
         """
@@ -604,9 +611,10 @@ class ClientProperties(object):
         Gets the value of the given property in seconds. If the value of the given property is not a number,
         throws TypeError. If the value of the given property in seconds is not positive, tries to
         return the default value in seconds.
+
         :param property: (:class:`~hazelcast.config.ClientProperty`), Property to get seconds from
         :return: (float), Value of the given property in seconds if it is positive.
-        Else, value of the default value of given property in seconds.
+            Else, value of the default value of given property in seconds.
         """
         seconds = self.get_seconds(property)
         return seconds if seconds > 0 else TimeUnit.to_seconds(property.default_value, property.time_unit)

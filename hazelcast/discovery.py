@@ -25,6 +25,7 @@ class HazelcastCloudAddressProvider(object):
     def load_addresses(self):
         """
         Loads member addresses from Hazelcast.cloud endpoint.
+
         :return: (Sequence), The possible member addresses to connect to.
         """
         try:
@@ -47,6 +48,7 @@ class HazelcastCloudAddressTranslator(object):
     def translate(self, address):
         """
         Translates the given address to another address specific to network or service.
+
         :param address: (:class:`~hazelcast.core.Address`), private address to be translated
         :return: (:class:`~hazelcast.core.Address`), new address if given address is known, otherwise returns null
         """
@@ -96,7 +98,8 @@ class HazelcastCloudDiscovery(object):
     def discover_nodes(self):
         """
         Discovers nodes from Hazelcast.cloud.
-        :return: (dict), dictionary that maps private addresses to public addresses.
+
+        :return: (dict), Dictionary that maps private addresses to public addresses.
         """
         try:
             return self._call_service()
@@ -137,6 +140,7 @@ class HazelcastCloudDiscovery(object):
     def get_host_and_url(properties, cloud_token):
         """
         Helper method to get host and url that can be used in HTTPSConnection.
+
         :param properties: Client config properties.
         :param cloud_token: Cloud discovery token.
         :return: Host and URL pair

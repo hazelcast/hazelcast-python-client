@@ -349,7 +349,7 @@ class DefaultAddressTranslator(object):
     def translate(self, address):
         """
         :param address: (:class:`~hazelcast.core.Address`), address to be translated.
-        :return: (class:`~hazelcast.core.Address`), translated address.
+        :return: (:class:`~hazelcast.core.Address`), translated address.
         """
         return address
 

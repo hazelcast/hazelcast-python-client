@@ -76,7 +76,7 @@ SSL enabled to use this feature.
 
 To use SSL to authenticate the Hazelcast members, SSL should be enabled on the client side. Client should also
 provide a CA file in the PEM format that includes the certificates offered by Hazelcast members during the handshake.
-You should provide the absolute path of your CA file to the cafile option.
+You should provide the absolute path of your CA file to the cafile field.
 
 .. code-block:: python
 
@@ -87,7 +87,7 @@ SSL/TLS with mutual authentication can also be configured using :class:`~hazelca
 members to authenticate Hazelcast Python Client. To do this, you should also provide a certificate file that will be
 offered to Hazelcast members during the handshake. This certificate file may contain the private key or private key
 may be provided as a separate file. If your private key is encrypted, you should also specify the password of it.
-Please note that, certfile and keyfile options should point to the absolute path of these files.
+Please note that, certfile and keyfile fields should point to the absolute path of these files.
 
 .. code-block:: python
 
@@ -102,10 +102,10 @@ Please see API doc of SSL configuration for more options: :class:`~hazelcast.con
 Hazelcast Cloud Configuration
 -----------------------------
 Hazelcast client can be configured to connect a cluster running on the Hazelcast.Cloud using
-:class:`~hazelcast.config.network_config.ClientCloudConfig`. Please note that, in order for
-:class:`~hazelcast.config.network_config.ClientCloudConfig` to work, SSL/TLS should be enabled
-using :class:`~hazelcast.config.network_config.SSLConfig` and a cafile should be set.
-You should also specify the group name and password of your cluster using :class:`hazelcast.config.group_config`.
+:class:`~hazelcast.config.ClientCloudConfig`. Please note that, in order for
+:class:`~hazelcast.config.ClientCloudConfig` to work, SSL/TLS should be enabled
+using :class:`~hazelcast.config.SSLConfig` and a cafile should be set.
+You should also specify the group name and password of your cluster using :class:`~hazelcast.config.GroupConfig`.
 
 .. code-block:: python
 
