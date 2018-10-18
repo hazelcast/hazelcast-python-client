@@ -1,0 +1,193 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Executor &#8212; Hazelcast Python Client 3.10 documentation</title>
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazelcast Python Client 3.10 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.proxy.executor">
+<span id="executor"></span><h1>Executor<a class="headerlink" href="#module-hazelcast.proxy.executor" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="hazelcast.proxy.executor.Executor">
+<em class="property">class </em><code class="descname">Executor</code><span class="sig-paren">(</span><em>client</em>, <em>service_name</em>, <em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.executor.Executor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hazelcast.proxy.base.html#hazelcast.proxy.base.Proxy" title="hazelcast.proxy.base.Proxy"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.proxy.base.Proxy</span></code></a></p>
+<p>An object that executes submitted executable tasks.</p>
+<dl class="method">
+<dt id="hazelcast.proxy.executor.Executor.execute_on_key_owner">
+<code class="descname">execute_on_key_owner</code><span class="sig-paren">(</span><em>key</em>, <em>task</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.executor.Executor.execute_on_key_owner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes a task on the owner of the specified key.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>key</strong> – (object), the specified key.</li>
+<li><strong>task</strong> – (Task), a task executed on the owner of the specified key.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(<a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future"><code class="xref py py-class docutils literal notranslate"><span class="pre">Future</span></code></a>), future representing pending completion of the task.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.executor.Executor.execute_on_member">
+<code class="descname">execute_on_member</code><span class="sig-paren">(</span><em>member</em>, <em>task</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.executor.Executor.execute_on_member" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes a task on the specified member.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>member</strong> – (Member), the specified member.</li>
+<li><strong>task</strong> – (Task), the task executed on the specified member.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(<a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future"><code class="xref py py-class docutils literal notranslate"><span class="pre">Future</span></code></a>), Future representing pending completion of the task.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.executor.Executor.execute_on_members">
+<code class="descname">execute_on_members</code><span class="sig-paren">(</span><em>members</em>, <em>task</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.executor.Executor.execute_on_members" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes a task on each of the specified members.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>members</strong> – (Collection), the specified members.</li>
+<li><strong>task</strong> – (Task), the task executed on the specified members.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(Map), <a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future"><code class="xref py py-class docutils literal notranslate"><span class="pre">Future</span></code></a> tuples representing pending completion of the task on each member.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.executor.Executor.execute_on_all_members">
+<code class="descname">execute_on_all_members</code><span class="sig-paren">(</span><em>task</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.executor.Executor.execute_on_all_members" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes a task on all of the known cluster members.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>task</strong> – (Task), the task executed on the all of the members.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(Map), <a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future"><code class="xref py py-class docutils literal notranslate"><span class="pre">Future</span></code></a> tuples representing pending completion of the task on each member.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.executor.Executor.is_shutdown">
+<code class="descname">is_shutdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.executor.Executor.is_shutdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether this executor has been shut down or not.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if this executor has been shut down.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.executor.Executor.shutdown">
+<code class="descname">shutdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.executor.Executor.shutdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initiates a shutdown process which works orderly. Tasks that were submitted before shutdown are executed but new
+task will not be accepted.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/hazelcast.proxy.executor.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazelcast Python Client 3.10 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Hazelcast Inc..
+    </div>
+  </body>
+</html>

@@ -1,0 +1,377 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Util &#8212; Hazelcast Python Client 3.10 documentation</title>
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazelcast Python Client 3.10 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.util">
+<span id="util"></span><h1>Util<a class="headerlink" href="#module-hazelcast.util" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="hazelcast.util.check_not_none">
+<code class="descname">check_not_none</code><span class="sig-paren">(</span><em>val</em>, <em>message</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.util.check_not_none" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests if an argument is not <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>val</strong> – (object), the argument tested to see if it is not <code class="docutils literal notranslate"><span class="pre">None</span></code>.</li>
+<li><strong>message</strong> – (str), the error message.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="hazelcast.util.check_true">
+<code class="descname">check_true</code><span class="sig-paren">(</span><em>val</em>, <em>message</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.util.check_true" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests whether the provided expression is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>val</strong> – (bool), the expression tested to see if it is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</li>
+<li><strong>message</strong> – (str), the error message.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="hazelcast.util.check_not_negative">
+<code class="descname">check_not_negative</code><span class="sig-paren">(</span><em>val</em>, <em>message</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.util.check_not_negative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests if a value is not negative.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>val</strong> – (Number), the value tested to see if it is not negative.</li>
+<li><strong>message</strong> – (str), the error message.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="hazelcast.util.check_not_empty">
+<code class="descname">check_not_empty</code><span class="sig-paren">(</span><em>collection</em>, <em>message</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.util.check_not_empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests if a collection is not empty.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>collection</strong> – (Collection), the collection tested to see if it is not empty.</li>
+<li><strong>message</strong> – (str), the error message.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="hazelcast.util.current_time">
+<code class="descname">current_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.util.current_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the current time of the system.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(float), current time of the system.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="hazelcast.util.thread_id">
+<code class="descname">thread_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.util.thread_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the current thread’s id.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(int), current thread’s id.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="hazelcast.util.to_millis">
+<code class="descname">to_millis</code><span class="sig-paren">(</span><em>seconds</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.util.to_millis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts the time parameter in seconds to milliseconds. If the given time is negative, returns the original value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>seconds</strong> – (Number), the given time in seconds.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(int), result of the conversation in milliseconds.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="hazelcast.util.validate_type">
+<code class="descname">validate_type</code><span class="sig-paren">(</span><em>_type</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.util.validate_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates the type.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>_type</strong> – (Type), the type to be validated.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="hazelcast.util.validate_serializer">
+<code class="descname">validate_serializer</code><span class="sig-paren">(</span><em>serializer</em>, <em>_type</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.util.validate_serializer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates the serializer for given type.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>serializer</strong> – (Serializer), the serializer to be validated.</li>
+<li><strong>_type</strong> – (Type), type to be used for serializer validation.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.util.AtomicInteger">
+<em class="property">class </em><code class="descname">AtomicInteger</code><span class="sig-paren">(</span><em>initial=0</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.util.AtomicInteger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>AtomicInteger is an Integer which can work atomically.</p>
+<dl class="method">
+<dt id="hazelcast.util.AtomicInteger.get_and_increment">
+<code class="descname">get_and_increment</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.util.AtomicInteger.get_and_increment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the current value and increment it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(int), current value of AtomicInteger.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.util.AtomicInteger.set">
+<code class="descname">set</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.util.AtomicInteger.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the value of this AtomicInteger.
+:param value: (int), the new value of AtomicInteger.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.util.LockReferenceIdGenerator">
+<em class="property">class </em><code class="descname">LockReferenceIdGenerator</code><a class="headerlink" href="#hazelcast.util.LockReferenceIdGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This class generates unique (per client) incrementing reference id which is used during locking related requests.
+The server side uses this id to match if any previous request with the same id was issued and shall not re-do the
+lock related operation but it shall just return the previous result. Hence, this id identifies the request sent to
+the server side for locking operations. Similarly, if the client re-sends the request to the server for some reason
+it will use the same reference id to make sure that the operation is not executed more than once at the server side.</p>
+<dl class="method">
+<dt id="hazelcast.util.LockReferenceIdGenerator.get_next">
+<code class="descname">get_next</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.util.LockReferenceIdGenerator.get_next" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(int), A per client unique reference id.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="hazelcast.util.enum">
+<code class="descname">enum</code><span class="sig-paren">(</span><em>**enums</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.util.enum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Utility method for defining enums.
+:param enums: Parameters of enumeration.
+:return: (Enum), the created enumerations.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="hazelcast.util.get_possible_addresses">
+<code class="descname">get_possible_addresses</code><span class="sig-paren">(</span><em>addresses=[]</em>, <em>member_list=[]</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.util.get_possible_addresses" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="hazelcast.util.get_provider_addresses">
+<code class="descname">get_provider_addresses</code><span class="sig-paren">(</span><em>providers=[]</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.util.get_provider_addresses" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="hazelcast.util.parse_addresses">
+<code class="descname">parse_addresses</code><span class="sig-paren">(</span><em>addresses=[]</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.util.parse_addresses" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.util.ImmutableLazyDataList">
+<em class="property">class </em><code class="descname">ImmutableLazyDataList</code><span class="sig-paren">(</span><em>list_data</em>, <em>to_object</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.util.ImmutableLazyDataList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_abcoll.Sequence</span></code></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="hazelcast.util.get_portable_version">
+<code class="descname">get_portable_version</code><span class="sig-paren">(</span><em>portable</em>, <em>default_version</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.util.get_portable_version" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.util.TimeUnit">
+<em class="property">class </em><code class="descname">TimeUnit</code><a class="headerlink" href="#hazelcast.util.TimeUnit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Represents the time durations at given units in seconds.</p>
+<dl class="attribute">
+<dt id="hazelcast.util.TimeUnit.NANOSECOND">
+<code class="descname">NANOSECOND</code><em class="property"> = 1e-09</em><a class="headerlink" href="#hazelcast.util.TimeUnit.NANOSECOND" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.util.TimeUnit.MICROSECOND">
+<code class="descname">MICROSECOND</code><em class="property"> = 1e-06</em><a class="headerlink" href="#hazelcast.util.TimeUnit.MICROSECOND" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.util.TimeUnit.MILLISECOND">
+<code class="descname">MILLISECOND</code><em class="property"> = 0.001</em><a class="headerlink" href="#hazelcast.util.TimeUnit.MILLISECOND" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.util.TimeUnit.SECOND">
+<code class="descname">SECOND</code><em class="property"> = 1.0</em><a class="headerlink" href="#hazelcast.util.TimeUnit.SECOND" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.util.TimeUnit.MINUTE">
+<code class="descname">MINUTE</code><em class="property"> = 60.0</em><a class="headerlink" href="#hazelcast.util.TimeUnit.MINUTE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.util.TimeUnit.HOUR">
+<code class="descname">HOUR</code><em class="property"> = 3600.0</em><a class="headerlink" href="#hazelcast.util.TimeUnit.HOUR" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="hazelcast.util.TimeUnit.to_seconds">
+<em class="property">static </em><code class="descname">to_seconds</code><span class="sig-paren">(</span><em>value</em>, <em>time_unit</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.util.TimeUnit.to_seconds" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>value</strong> – (Number), value to be translated to seconds</li>
+<li><strong>time_unit</strong> – Time duration in seconds</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Value of the value in seconds</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/hazelcast.util.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazelcast Python Client 3.10 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Hazelcast Inc..
+    </div>
+  </body>
+</html>
