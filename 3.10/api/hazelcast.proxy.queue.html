@@ -1,0 +1,440 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Queue &#8212; Hazelcast Python Client 3.10 documentation</title>
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazelcast Python Client 3.10 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.proxy.queue">
+<span id="queue"></span><h1>Queue<a class="headerlink" href="#module-hazelcast.proxy.queue" title="Permalink to this headline">¶</a></h1>
+<dl class="exception">
+<dt id="hazelcast.proxy.queue.Empty">
+<em class="property">exception </em><code class="descname">Empty</code><a class="headerlink" href="#hazelcast.proxy.queue.Empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">exceptions.Exception</span></code></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.proxy.queue.Full">
+<em class="property">exception </em><code class="descname">Full</code><a class="headerlink" href="#hazelcast.proxy.queue.Full" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">exceptions.Exception</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.proxy.queue.Queue">
+<em class="property">class </em><code class="descname">Queue</code><span class="sig-paren">(</span><em>client</em>, <em>service_name</em>, <em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.queue.Queue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hazelcast.proxy.base.html#hazelcast.proxy.base.PartitionSpecificProxy" title="hazelcast.proxy.base.PartitionSpecificProxy"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.proxy.base.PartitionSpecificProxy</span></code></a></p>
+<p>Concurrent, blocking, distributed, observable queue. Queue is not a partitioned data-structure. All of the Queue
+content is stored in a single machine (and in the backup). Queue will not scale by adding more members
+in the cluster.</p>
+<dl class="method">
+<dt id="hazelcast.proxy.queue.Queue.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.queue.Queue.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the specified item to this queue if there is available space.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>item</strong> – (object), the specified item.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if element is successfully added, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.queue.Queue.add_all">
+<code class="descname">add_all</code><span class="sig-paren">(</span><em>items</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.queue.Queue.add_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the elements in the specified collection to this queue.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>items</strong> – (Collection), collection which includes the items to be added.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if this queue is changed after call, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.queue.Queue.add_listener">
+<code class="descname">add_listener</code><span class="sig-paren">(</span><em>include_value=False</em>, <em>item_added_func=None</em>, <em>item_removed_func=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.queue.Queue.add_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds an item listener for this queue. Listener will be notified for all queue add/remove events.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>include_value</strong> – (bool), whether received events include the updated item or not (optional).</li>
+<li><strong>item_added_func</strong> – Function to be called when an item is added to this set (optional).</li>
+<li><strong>item_removed_func</strong> – Function to be called when an item is deleted from this set (optional).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(str), a registration id which is used as a key to remove the listener.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.queue.Queue.clear">
+<code class="descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.queue.Queue.clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears this queue. Queue will be empty after this call.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.queue.Queue.contains">
+<code class="descname">contains</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.queue.Queue.contains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether this queue contains the specified item or not.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>item</strong> – (object), the specified item to be searched.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if the specified item exists in this queue, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.queue.Queue.contains_all">
+<code class="descname">contains_all</code><span class="sig-paren">(</span><em>items</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.queue.Queue.contains_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether this queue contains all of the items in the specified collection or not.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>items</strong> – (Collection), the specified collection which includes the items to be searched.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if all of the items in the specified collection exist in this queue, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.queue.Queue.drain_to">
+<code class="descname">drain_to</code><span class="sig-paren">(</span><em>list</em>, <em>max_size=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.queue.Queue.drain_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transfers all available items to the given <a class="reference external" href="https://docs.python.org/2/library/functions.html#list">list</a> and removes these items from this queue. If a max_size is
+specified, it transfers at most the given number of items. In case of a failure, an item can exist in both
+collections or none of them.</p>
+<p>This operation may be more efficient than polling elements repeatedly and putting into collection.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>list</strong> – (<a class="reference external" href="https://docs.python.org/2/library/functions.html#list">list</a>), the list where the items in this queue will be transferred.</li>
+<li><strong>max_size</strong> – (int), the maximum number items to transfer (optional).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(int), number of transferred items.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.queue.Queue.iterator">
+<code class="descname">iterator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.queue.Queue.iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all of the items in this queue.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(Sequence), collection of items in this queue.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.queue.Queue.is_empty">
+<code class="descname">is_empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.queue.Queue.is_empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether this set is empty or not.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if this queue is empty, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.queue.Queue.offer">
+<code class="descname">offer</code><span class="sig-paren">(</span><em>item</em>, <em>timeout=0</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.queue.Queue.offer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inserts the specified element into this queue if it is possible to do so immediately without violating capacity
+restrictions. Returns <code class="docutils literal notranslate"><span class="pre">true</span></code> upon success. If there is no space currently available:</p>
+<blockquote>
+<div><ul class="simple">
+<li>If a timeout is provided, it waits until this timeout elapses and returns the result.</li>
+<li>If a timeout is not provided, returns <code class="docutils literal notranslate"><span class="pre">false</span></code> immediately.</li>
+</ul>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>item</strong> – (object), the item to be added.</li>
+<li><strong>timeout</strong> – (long), maximum time in seconds to wait for addition (optional).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if the element was added to this queue, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.queue.Queue.peek">
+<code class="descname">peek</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.queue.Queue.peek" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the head of queue without removing it from the queue. If the queue is empty, returns <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(object), the head of this queue, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if this queue is empty.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.queue.Queue.poll">
+<code class="descname">poll</code><span class="sig-paren">(</span><em>timeout=0</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.queue.Queue.poll" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Retrieves and removes the head of this queue, if this queue is empty:</dt>
+<dd><ul class="first last simple">
+<li>If a timeout is provided, it waits until this timeout elapses and returns the result.</li>
+<li>If a timeout is not provided, returns <code class="docutils literal notranslate"><span class="pre">None</span></code>.</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>timeout</strong> – (long), maximum time in seconds to wait for addition (optional).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(object), the head of this queue, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if this queue is empty or specified timeout elapses before an</td>
+</tr>
+</tbody>
+</table>
+<p>item is added to the queue.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.queue.Queue.put">
+<code class="descname">put</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.queue.Queue.put" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the specified element into this queue. If there is no space, it waits until necessary space becomes
+available.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>item</strong> – (object), the specified item.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.queue.Queue.remaining_capacity">
+<code class="descname">remaining_capacity</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.queue.Queue.remaining_capacity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the remaining capacity of this queue.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(int), remaining capacity of this queue.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.queue.Queue.remove">
+<code class="descname">remove</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.queue.Queue.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the specified element from the queue if it exists.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>item</strong> – (object), the specified element to be removed.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if the specified element exists in this queue.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.queue.Queue.remove_all">
+<code class="descname">remove_all</code><span class="sig-paren">(</span><em>items</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.queue.Queue.remove_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes all of the elements of the specified collection from this queue.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>items</strong> – (Collection), the specified collection.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if the call changed this queue, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.queue.Queue.remove_listener">
+<code class="descname">remove_listener</code><span class="sig-paren">(</span><em>registration_id</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.queue.Queue.remove_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the specified item listener. Returns silently if the specified listener was not added before.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>registration_id</strong> – (str), id of the listener to be deleted.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if the item listener is removed, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.queue.Queue.retain_all">
+<code class="descname">retain_all</code><span class="sig-paren">(</span><em>items</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.queue.Queue.retain_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the items which are not contained in the specified collection. In other words, only the items that
+are contained in the specified collection will be retained.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>items</strong> – (Collection), collection which includes the elements to be retained in this set.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if this queue changed as a result of the call.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.queue.Queue.size">
+<code class="descname">size</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.queue.Queue.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of elements in this collection. If the size is greater than sys.maxint, it returns
+sys.maxint.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(int), size of the queue.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.queue.Queue.take">
+<code class="descname">take</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.queue.Queue.take" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves and removes the head of this queue, if necessary, waits until an item becomes available.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(object), the head of this queue.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/hazelcast.proxy.queue.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazelcast Python Client 3.10 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Hazelcast Inc..
+    </div>
+  </body>
+</html>
