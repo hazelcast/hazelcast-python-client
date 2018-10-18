@@ -122,8 +122,8 @@ class HazelcastCloudDiscoveryTest(TestCase):
 
         config.set_property(HazelcastCloudDiscovery.CLOUD_URL_BASE_PROPERTY.name, HOST + ":" + str(self.server.port))
         client = TestClient(config)
-        client._address_translator._cloud_discovery._ctx = self.ctx
-        client._address_providers[0]._cloud_discovery._ctx = self.ctx
+        client._address_translator.cloud_discovery._ctx = self.ctx
+        client._address_providers[0].cloud_discovery._ctx = self.ctx
 
         private_addresses = client._address_providers[0].load_addresses()
 
