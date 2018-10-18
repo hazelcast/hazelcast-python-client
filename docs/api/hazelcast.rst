@@ -9,6 +9,7 @@ Hazelcast Python Client
     hazelcast.config
     hazelcast.connection
     hazelcast.core
+    hazelcast.discovery
     hazelcast.exception
     hazelcast.future
     hazelcast.hash
