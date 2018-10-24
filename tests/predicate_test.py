@@ -6,7 +6,7 @@ from hazelcast.serialization.predicate import is_equal_to, and_, is_between, is_
 from hazelcast.serialization.api import Portable
 from tests.base import SingleMemberTestCase
 from tests.serialization.portable_test import InnerPortable, FACTORY_ID
-from tests.util import random_string
+from tests.util import random_string, set_attr
 from hazelcast import six
 from hazelcast.six.moves import range
 
@@ -247,6 +247,7 @@ class PredicatePortableTest(SingleMemberTestCase):
             self.assertIn(k, map_keys)
 
 
+@set_attr(category=3.8)
 class NestedPredicatePortableTest(SingleMemberTestCase):
 
     class Body(Portable):
