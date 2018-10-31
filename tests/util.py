@@ -71,3 +71,14 @@ def generate_key_owned_by_instance(client, instance):
         partition_id = client.partition_service.get_partition_id(key)
         if client.partition_service.get_partition_owner(partition_id) == instance:
             return key
+
+
+def set_attr(*args, **kwargs):
+    def wrap_ob(ob):
+        for name in args:
+            setattr(ob, name, True)
+        for name, value in kwargs.items():
+            setattr(ob, name, value)
+        return ob
+
+    return wrap_ob
