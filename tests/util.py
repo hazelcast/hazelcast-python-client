@@ -45,8 +45,7 @@ def get_ssl_config(enable_ssl=False,
                    protocol=PROTOCOL.TLS,
                    check_hostname=None,
                    ciphers=None,
-                   attempt_limit=1,
-                   timeout=1):
+                   attempt_limit=1):
     config = ClientConfig()
 
     config.network_config.ssl_config.enabled = enable_ssl
@@ -59,7 +58,6 @@ def get_ssl_config(enable_ssl=False,
     config.network_config.ssl_config.ciphers = ciphers
 
     config.network_config.connection_attempt_limit = attempt_limit
-    config.network_config.connection_timeout = timeout
     return config
 
 
