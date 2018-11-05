@@ -43,7 +43,6 @@ def get_ssl_config(enable_ssl=False,
                    keyfile=None,
                    password=None,
                    protocol=PROTOCOL.TLS,
-                   check_hostname=None,
                    ciphers=None,
                    attempt_limit=1):
     config = ClientConfig()
@@ -54,7 +53,6 @@ def get_ssl_config(enable_ssl=False,
     config.network_config.ssl_config.keyfile = keyfile
     config.network_config.ssl_config.password = password
     config.network_config.ssl_config.protocol = protocol
-    config.network_config.ssl_config.check_hostname = check_hostname
     config.network_config.ssl_config.ciphers = ciphers
 
     config.network_config.connection_attempt_limit = attempt_limit

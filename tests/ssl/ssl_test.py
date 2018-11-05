@@ -44,13 +44,6 @@ class SSLTest(HazelcastTestCase):
         self.assertEqual(test_map.size().result(), 10)
         client.shutdown()
 
-    def test_ssl_enabled_with_check_hostname(self):
-        # Member has the certificate with common name of 'foo.bar.com'
-        with self.assertRaises(HazelcastError):
-            client = HazelcastClient(get_ssl_config(True,
-                                                    get_abs_path(self.current_directory, "server1-cert.pem"),
-                                                    check_hostname=True, protocol=PROTOCOL.TLSv1))
-
     def test_ssl_enabled_with_custom_ciphers(self):
         client = HazelcastClient(get_ssl_config(True, get_abs_path(self.current_directory, "server1-cert.pem"),
                                                 protocol=PROTOCOL.TLSv1,

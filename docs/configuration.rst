@@ -76,7 +76,8 @@ SSL enabled to use this feature.
 
 To use SSL to authenticate the Hazelcast members, SSL should be enabled on the client side. Client should also
 provide a CA file in the PEM format that includes the certificates offered by Hazelcast members during the handshake.
-You should provide the absolute path of your CA file to the cafile field.
+You should provide the absolute path of your CA file to the cafile field. When SSL is enabled and cafile is not set,
+a set of default CA certificates from default locations will be used.
 
 .. code-block:: python
 
@@ -103,14 +104,12 @@ Hazelcast Cloud Configuration
 -----------------------------
 Hazelcast client can be configured to connect a cluster running on the Hazelcast.Cloud using
 :class:`~hazelcast.config.ClientCloudConfig`. Please note that, in order for
-:class:`~hazelcast.config.ClientCloudConfig` to work, SSL/TLS should be enabled
-using :class:`~hazelcast.config.SSLConfig` and a cafile should be set.
+:class:`~hazelcast.config.ClientCloudConfig` to work, SSL/TLS should be enabled.
 You should also specify the group name and password of your cluster using :class:`~hazelcast.config.GroupConfig`.
 
 .. code-block:: python
 
     config.network_config.ssl_config.enabled = True
-    config.network_config.ssl_config.cafile = "cert.pem"
     config.group_config.name = "name"
     config.group_config.password = "password"
     config.network_config.cloud_config.enabled = True
