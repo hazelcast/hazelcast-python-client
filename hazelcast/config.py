@@ -482,7 +482,11 @@ class SSLConfig(object):
         """Enables/disables SSL."""
 
         self.cafile = None
-        """Absolute path of concatenated CA certificates used to validate server's certificates in PEM format."""
+        """
+        Absolute path of concatenated CA certificates used to validate server's certificates in PEM format.
+        When SSL is enabled and cafile is not set, a set of default CA certificates from default locations
+        will be used.
+        """
 
         self.certfile = None
         """Absolute path of the client certificate in PEM format."""
@@ -503,13 +507,7 @@ class SSLConfig(object):
         """
 
         self.protocol = PROTOCOL.TLS
-        """Protocol version used in SSL communication."""
-
-        self.check_hostname = False
-        """
-        If True, verifies that server's certificate matches the server's hostname. The rules applied are those 
-        for checking the identity of HTTPS servers as outlined in RFC 2818, RFC 5280 and RFC 6125.
-        """
+        """Protocol version used in SSL communication. Default value is TLSv1.2"""
 
         self.ciphers = None
         """

@@ -76,7 +76,8 @@ SSL enabled to use this feature.
 
 To use SSL to authenticate the Hazelcast members, SSL should be enabled on the client side. Client should also
 provide a CA file in the PEM format that includes the certificates offered by Hazelcast members during the handshake.
-You should provide the absolute path of your CA file to the cafile field.
+You should provide the absolute path of your CA file to the cafile field. When SSL is enabled and cafile is not set,
+a set of default CA certificates from default locations will be used.
 
 .. code-block:: python
 

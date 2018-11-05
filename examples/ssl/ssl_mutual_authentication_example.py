@@ -28,10 +28,6 @@ if __name__ == "__main__":
     # Select the protocol used in SSL communication. This step is optional. Default is TLSv1_2
     ssl_config.protocol = PROTOCOL.TLSv1_3
 
-    # Hostname of the server can be checked against its certificate. This step is optional.
-    # By default, Python client will not check hostname.
-    ssl_config.check_hostname = True
-
     config.network_config.ssl_config = ssl_config
 
     config.network_config.addresses.append("foo.bar.com:8888")

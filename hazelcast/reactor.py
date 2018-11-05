@@ -165,6 +165,8 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
             if ssl_config.cafile:
                 ssl_context.load_verify_locations(ssl_config.cafile)
+            else:
+                ssl_context.load_default_certs()
 
             if ssl_config.certfile:
                 ssl_context.load_cert_chain(ssl_config.certfile, ssl_config.keyfile, ssl_config.password)
@@ -172,9 +174,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
             if ssl_config.ciphers:
                 ssl_context.set_ciphers(ssl_config.ciphers)
 
-            ssl_context.check_hostname = ssl_config.check_hostname
-
-            self.socket = ssl_context.wrap_socket(self.socket, server_hostname=self._address[0])
+            self.socket = ssl_context.wrap_socket(self.socket)
 
         # the socket should be non-blocking from now on
         self.socket.settimeout(0)
