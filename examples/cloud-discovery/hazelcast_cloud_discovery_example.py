@@ -11,9 +11,8 @@ if __name__ == "__main__":
     config.group_config.name = "name"
     config.group_config.password = "password"
 
-    # Enable SSL for encryption. CA file should be set as the absolute path.
+    # Enable SSL for encryption. Default CA certificates will be used.
     config.network_config.ssl_config.enabled = True
-    config.network_config.ssl_config.cafile = "cert.pem"
 
     # Enable Hazelcast.Cloud configuration and set the token of your cluster.
     config.network_config.cloud_config.enabled = True

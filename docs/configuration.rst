@@ -104,14 +104,12 @@ Hazelcast Cloud Configuration
 -----------------------------
 Hazelcast client can be configured to connect a cluster running on the Hazelcast.Cloud using
 :class:`~hazelcast.config.ClientCloudConfig`. Please note that, in order for
-:class:`~hazelcast.config.ClientCloudConfig` to work, SSL/TLS should be enabled
-using :class:`~hazelcast.config.SSLConfig` and a cafile should be set.
+:class:`~hazelcast.config.ClientCloudConfig` to work, SSL/TLS should be enabled.
 You should also specify the group name and password of your cluster using :class:`~hazelcast.config.GroupConfig`.
 
 .. code-block:: python
 
     config.network_config.ssl_config.enabled = True
-    config.network_config.ssl_config.cafile = "cert.pem"
     config.group_config.name = "name"
     config.group_config.password = "password"
     config.network_config.cloud_config.enabled = True
