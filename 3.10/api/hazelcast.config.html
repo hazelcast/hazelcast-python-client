@@ -583,7 +583,9 @@ operation.</p>
 <dl class="attribute">
 <dt id="hazelcast.config.SSLConfig.cafile">
 <code class="descname">cafile</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.SSLConfig.cafile" title="Permalink to this definition">¶</a></dt>
-<dd><p>Absolute path of concatenated CA certificates used to validate server’s certificates in PEM format.</p>
+<dd><p>Absolute path of concatenated CA certificates used to validate server’s certificates in PEM format.
+When SSL is enabled and cafile is not set, a set of default CA certificates from default locations
+will be used.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -612,14 +614,7 @@ Alternatively a string, bytes, or bytearray value may be supplied directly as th
 <dl class="attribute">
 <dt id="hazelcast.config.SSLConfig.protocol">
 <code class="descname">protocol</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.SSLConfig.protocol" title="Permalink to this definition">¶</a></dt>
-<dd><p>Protocol version used in SSL communication.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="hazelcast.config.SSLConfig.check_hostname">
-<code class="descname">check_hostname</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.config.SSLConfig.check_hostname" title="Permalink to this definition">¶</a></dt>
-<dd><p>If True, verifies that server’s certificate matches the server’s hostname. The rules applied are those 
-for checking the identity of HTTPS servers as outlined in RFC 2818, RFC 5280 and RFC 6125.</p>
+<dd><p>Protocol version used in SSL communication. Default value is TLSv1.2</p>
 </dd></dl>
 
 <dl class="attribute">
