@@ -1,15 +1,13 @@
 import os
 
-from unittest import skipIf
 from tests.base import HazelcastTestCase
 from hazelcast.client import HazelcastClient
 from hazelcast.config import PROTOCOL
 from hazelcast.exception import HazelcastError
-from tests.util import is_oss, get_ssl_config, configure_logging, get_abs_path, set_attr
+from tests.util import get_ssl_config, configure_logging, get_abs_path, set_attr
 
 
-@set_attr(category=3.8)
-@skipIf(is_oss(), "SSL/TLS is only supported with enterprise server.")
+@set_attr(category=3.8, enterprise=True)
 class MutualAuthenticationTest(HazelcastTestCase):
     current_directory = os.path.dirname(__file__)
     rc = None

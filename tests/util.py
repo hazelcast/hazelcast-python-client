@@ -24,12 +24,6 @@ def event_collector():
     return collector
 
 
-def is_oss():
-    return (os.getenv("SERVER_TYPE") == "oss") \
-           or (os.getenv("HZ_TYPE") == "oss") \
-           or ("HAZELCAST_ENTERPRISE_KEY" not in os.environ)
-
-
 def fill_map(map, size=10, key_prefix="key", value_prefix="val"):
     entries = dict()
     for i in range(size):
