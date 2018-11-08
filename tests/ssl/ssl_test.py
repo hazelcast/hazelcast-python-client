@@ -1,14 +1,13 @@
 import os
 
-from unittest import skipIf
 from tests.base import HazelcastTestCase
 from hazelcast.client import HazelcastClient
 from hazelcast.exception import HazelcastError
 from hazelcast.config import PROTOCOL
-from tests.util import is_oss, get_ssl_config, configure_logging, fill_map, get_abs_path
+from tests.util import get_ssl_config, configure_logging, fill_map, get_abs_path, set_attr
 
 
-@skipIf(is_oss(), "SSL/TLS is only supported with enterprise server.")
+@set_attr(enterprise=True)
 class SSLTest(HazelcastTestCase):
     current_directory = os.path.dirname(__file__)
     rc = None
