@@ -7,19 +7,7 @@ How to try these examples
 -------------------------
 
 * To try these examples, you should have a running Hazelcast member. If you are already familiar with Hazelcast and have a member running, add its address and port to your configuration as shown in the [**/learning-basics/1-configure_client.py**](learning-basics/1-configure_client.py).
-* If not, follow these steps to start an Hazelcast member in your local computer:
-    * Make sure that you have [Java](http://www.oracle.com/technetwork/java/javase/downloads/index.html) installed on your system.
-    * Download the latest [Hazelcast release](https://hazelcast.org/download/).
-    * Extract the zip file you have downloaded.
-    * You should see a directory called **bin** which includes a few scripts and xml files.
-    * If you are using Linux/MacOS, you can start a Hazelcast member with **start.sh** and stop the member you have started with **stop.sh** when you are done.
-    * If you are using Windows, you can start a Hazelcast member with **start.bat** and stop the member you have started with **stop.bat** when you are done.
-    * Refer to the [Using the Scripts In The Package](http://docs.hazelcast.org/docs/latest/manual/html-single/index.html#using-the-scripts-in-the-package) for more information about these scripts.
-    * If you use **start.sh/bat** again while your first Hazelcast member is running, you will start a second Hazelcast member. These members will join together to form a Hazelcast cluster.
-    * You can increase the size of your cluster by repeating the step above as many times as you want.
-    * After successfully running these scripts, you should see the ip address and port of your members on your console. Take a note of these.
-    * Add these addresses and ports to your configuration as shown in the [**/learning-basics/1-configure_client.py**](learning-basics/1-configure_client.py). 
-* After configuring your client as described above, you are ready to learn using Hazelcast Python Client with these examples.
+* If not, follow the steps described in [Working with Hazelcast IMDG Clusters section](https://github.com/hazelcast/hazelcast-python-client/blob/master/README.md#12-working-with-hazelcast-imdg-clusters) of the README and start a Hazelcast member in your local computer.
     
 Included example folders
 -----------------------
