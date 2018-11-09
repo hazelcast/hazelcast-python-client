@@ -25,18 +25,16 @@ class Customer(Portable):
         object_data_output.write_long("last_order", self.last_order)
 
     def get_factory_id(self):
-        return Customer.FACTORY_ID
+        return self.FACTORY_ID
 
     def get_class_id(self):
-        return Customer.CLASS_ID
-
-    def __repr__(self):
-        return '%s %s %s' % (self.id, self.name, self.last_order)
+        return self.CLASS_ID
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Configure logging
-    logging.basicConfig(format='%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s', datefmt="%H:%M%:%S,")
+    logging.basicConfig(format="%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s",
+                        datefmt="%H:%M%:%S,")
     logging.getLogger().setLevel(logging.INFO)
 
     config = ClientConfig()
@@ -44,8 +42,5 @@ if __name__ == '__main__':
     config.serialization_config.add_portable_factory(Customer.FACTORY_ID, my_factory)
     # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
     hz = hazelcast.HazelcastClient(config)
-
     # Customer can be used here
-
-    # Shutdown this Hazelcast Client
     hz.shutdown()
