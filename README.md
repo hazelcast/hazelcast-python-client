@@ -598,7 +598,7 @@ config.network_config.addresses.append("127.0.0.1:5701")
 client = hazelcast.HazelcastClient(config)
 ```
 
-See the `ClientConfig` class documentation at [Hazelcast Python Client API Docs](http://hazelcast.github.io/hazelcast-python-client/3.10/api/hazelcast.config.html) for details.
+See the `ClientConfig` class documentation at [Hazelcast Python Client API Docs](http://hazelcast.github.io/hazelcast-python-client/3.10/hazelcast.config.html) for details.
 
 # 4. Serialization
 
@@ -1802,7 +1802,7 @@ class Employee(Portable):
         writer.write_double("salary", self.salary)
 ```
 
-Note that `Employee` extends `Portable`. As portable types are not deserialized on server side for querying, you don't need to implement its Java equivalent on the server-side.
+Note that `Employee` extends `Portable`. As portable types are not deserialized on the server side for querying, you don’t need to implement its Java equivalent on the server side.
 
 For types that are not portable, you need to implement its Java equivalent and its data serializable factory on the server side for server to reconstitute the objects from binary formats. In this case, you need to compile the `Employee` and related factory classes with server's `CLASSPATH` and add them to the `user-lib` directory in the extracted `hazelcast-<version>.zip` (or `tar`) before starting the server. See the [Adding User Library to CLASSPATH section](#adding-user-library-to-classpath).
 
