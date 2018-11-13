@@ -23,10 +23,3 @@ Hazelcast Python Client
     hazelcast.transaction
     hazelcast.util
 
-Module contents
----------------
-
-.. automodule:: hazelcast
-    :members:
-    :undoc-members:
-    :show-inheritance:
