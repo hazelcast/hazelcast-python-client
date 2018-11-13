@@ -1,0 +1,504 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>MultiMap &#8212; Hazelcast Python Client 3.10 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Queue" href="hazelcast.proxy.queue.html" />
+    <link rel="prev" title="Map" href="hazelcast.proxy.map.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.queue.html" title="Queue"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.map.html" title="Map"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.10 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" accesskey="U">Hazelcast Proxies</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.proxy.multi_map">
+<span id="multimap"></span><h1>MultiMap<a class="headerlink" href="#module-hazelcast.proxy.multi_map" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="hazelcast.proxy.multi_map.MultiMap">
+<em class="property">class </em><code class="descname">MultiMap</code><span class="sig-paren">(</span><em>client</em>, <em>service_name</em>, <em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.multi_map.MultiMap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hazelcast.proxy.base.html#hazelcast.proxy.base.Proxy" title="hazelcast.proxy.base.Proxy"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.proxy.base.Proxy</span></code></a></p>
+<p>A specialized map whose keys can be associated with multiple values.</p>
+<dl class="method">
+<dt id="hazelcast.proxy.multi_map.MultiMap.add_entry_listener">
+<code class="descname">add_entry_listener</code><span class="sig-paren">(</span><em>include_value=False</em>, <em>key=None</em>, <em>added_func=None</em>, <em>removed_func=None</em>, <em>clear_all_func=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.multi_map.MultiMap.add_entry_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds an entry listener for this multimap. The listener will be notified for all multimap add/remove/clear-all
+events.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>include_value</strong> – (bool), whether received events include an old value or not (optional).</li>
+<li><strong>key</strong> – (object), key for filtering the events (optional).</li>
+<li><strong>added_func</strong> – Function to be called when an entry is added to map (optional).</li>
+<li><strong>removed_func</strong> – Function to be called when an entry is removed_func from map (optional).</li>
+<li><strong>clear_all_func</strong> – Function to be called when entries are cleared from map (optional).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(str), a registration id which is used as a key to remove the listener.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.multi_map.MultiMap.contains_key">
+<code class="descname">contains_key</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.multi_map.MultiMap.contains_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether this multimap contains an entry with the key.</p>
+<p><strong>Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> – (object), the specified key.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if this multimap contains an entry for the specified key.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.multi_map.MultiMap.contains_value">
+<code class="descname">contains_value</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.multi_map.MultiMap.contains_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether this map contains one or more keys for the specified value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> – (object), the specified value.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if this multimap contains an entry for the specified value.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.multi_map.MultiMap.contains_entry">
+<code class="descname">contains_entry</code><span class="sig-paren">(</span><em>key</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.multi_map.MultiMap.contains_entry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether the multimap contains an entry with the value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>key</strong> – (object), the specified key.</li>
+<li><strong>value</strong> – (object), the specified value.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if this multimap contains the key-value tuple.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.multi_map.MultiMap.clear">
+<code class="descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.multi_map.MultiMap.clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the multimap. Removes all key-value tuples.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.multi_map.MultiMap.entry_set">
+<code class="descname">entry_set</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.multi_map.MultiMap.entry_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the list of key-value tuples in the multimap.</p>
+<p><strong>Warning:
+The list is NOT backed by the map, so changes to the map are NOT reflected in the list, and vice-versa.</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(Sequence), the list of key-value tuples in the multimap.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.multi_map.MultiMap.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.multi_map.MultiMap.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the list of values associated with the key. <code class="docutils literal notranslate"><span class="pre">None</span></code> if this map does not contain this key.</p>
+<p><strong>Warning:
+This method uses hashCode and equals of the binary form of the key, not the actual implementations of hashCode
+and equals defined in the key’s class.</strong></p>
+<p><strong>Warning-2:
+The list is NOT backed by the multimap, so changes to the map are list reflected in the collection, and
+vice-versa.</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> – (object), the specified key.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(Sequence), the list of the values associated with the specified key.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.multi_map.MultiMap.is_locked">
+<code class="descname">is_locked</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.multi_map.MultiMap.is_locked" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks the lock for the specified key. If the lock is acquired, returns <code class="docutils literal notranslate"><span class="pre">true</span></code>. Otherwise, returns false.</p>
+<p><strong>Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> – (object), the key that is checked for lock.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if lock is acquired, false otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.multi_map.MultiMap.force_unlock">
+<code class="descname">force_unlock</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.multi_map.MultiMap.force_unlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Releases the lock for the specified key regardless of the lock owner. It always successfully unlocks the key,
+never blocks, and returns immediately.</p>
+<p><strong>Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> – (object), the key to lock.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.multi_map.MultiMap.key_set">
+<code class="descname">key_set</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.multi_map.MultiMap.key_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the list of keys in the multimap.</p>
+<p><strong>Warning:
+The list is NOT backed by the map, so changes to the map are NOT reflected in the list, and vice-versa.</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(Sequence), a list of the clone of the keys.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.multi_map.MultiMap.lock">
+<code class="descname">lock</code><span class="sig-paren">(</span><em>key</em>, <em>lease_time=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.multi_map.MultiMap.lock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Acquires the lock for the specified key infinitely or for the specified lease time if provided.</p>
+<p>If the lock is not available, the current thread becomes disabled for thread scheduling purposes and lies
+dormant until the lock has been acquired.</p>
+<p>Scope of the lock is this map only. Acquired lock is only for the key in this map.</p>
+<p>Locks are re-entrant; so, if the key is locked N times, it should be unlocked N times before another thread can
+acquire it.</p>
+<p><strong>Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>key</strong> – (object), the key to lock.</li>
+<li><strong>lease_time</strong> – (int), time in seconds to wait before releasing the lock (optional).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.multi_map.MultiMap.remove">
+<code class="descname">remove</code><span class="sig-paren">(</span><em>key</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.multi_map.MultiMap.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the given key-value tuple from the multimap.</p>
+<p><strong>Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>key</strong> – (object),  the key of the entry to remove.</li>
+<li><strong>value</strong> – (object), the value of the entry to remove.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if the size of the multimap changed after the remove operation, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.multi_map.MultiMap.remove_all">
+<code class="descname">remove_all</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.multi_map.MultiMap.remove_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes all the entries with the given key and returns the value list associated with this key.</p>
+<p><strong>Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<p><strong>Warning-2:
+The returned list is NOT backed by the map, so changes to the map are NOT reflected in the list, and
+vice-versa.</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> – (object), the key of the entries to remove.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(Sequence), the collection of removed values associated with the given key.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.multi_map.MultiMap.put">
+<code class="descname">put</code><span class="sig-paren">(</span><em>key</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.multi_map.MultiMap.put" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores a key-value tuple in the multimap.</p>
+<p><strong>Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>key</strong> – (object), the key to be stored.</li>
+<li><strong>value</strong> – (object), the value to be stored.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if size of the multimap is increased, <code class="docutils literal notranslate"><span class="pre">false</span></code> if the multimap already contains the key-value</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>tuple.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.multi_map.MultiMap.remove_entry_listener">
+<code class="descname">remove_entry_listener</code><span class="sig-paren">(</span><em>registration_id</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.multi_map.MultiMap.remove_entry_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the specified entry listener. Returns silently if there is no such listener added before.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>registration_id</strong> – (str), id of registered listener.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if registration is removed, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.multi_map.MultiMap.size">
+<code class="descname">size</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.multi_map.MultiMap.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of entries in this multimap.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(int), number of entries in this multimap.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.multi_map.MultiMap.value_count">
+<code class="descname">value_count</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.multi_map.MultiMap.value_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of values that match the given key in the multimap.</p>
+<p><strong>Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> – (object), the key whose values count is to be returned.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(int), the number of values that match the given key in the multimap.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.multi_map.MultiMap.values">
+<code class="descname">values</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.multi_map.MultiMap.values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the list of values in the multimap.</p>
+<p><strong>Warning:
+The returned list is NOT backed by the map, so changes to the map are NOT reflected in the list, and
+vice-versa.</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(Sequence), the list of values in the multimap.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.multi_map.MultiMap.try_lock">
+<code class="descname">try_lock</code><span class="sig-paren">(</span><em>key</em>, <em>lease_time=-1</em>, <em>timeout=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.multi_map.MultiMap.try_lock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tries to acquire the lock for the specified key. When the lock is not available,</p>
+<blockquote>
+<div><ul>
+<li><p class="first">If timeout is not provided, the current thread doesn’t wait and returns <code class="docutils literal notranslate"><span class="pre">false</span></code> immediately.</p>
+</li>
+<li><p class="first">If a timeout is provided, the current thread becomes disabled for thread scheduling purposes and lies
+dormant until one of the followings happens:</p>
+<blockquote>
+<div><ul class="simple">
+<li>the lock is acquired by the current thread, or</li>
+<li>the specified waiting time elapses.</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+<p>If lease_time is provided, lock will be released after this time elapses.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>key</strong> – (object), key to lock in this map.</li>
+<li><strong>lease_time</strong> – (int), time in seconds to wait before releasing the lock (optional).</li>
+<li><strong>timeout</strong> – (int), maximum time in seconds to wait for the lock (optional).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if the lock was acquired and otherwise, false.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.multi_map.MultiMap.unlock">
+<code class="descname">unlock</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.multi_map.MultiMap.unlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Releases the lock for the specified key. It never blocks and returns immediately.</p>
+<p><strong>Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> – (object), the key to lock.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.map.html"
+                        title="previous chapter">Map</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.queue.html"
+                        title="next chapter">Queue</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.proxy.multi_map.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.queue.html" title="Queue"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.map.html" title="Map"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.10 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" >Hazelcast Proxies</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Hazelcast Inc..
+    </div>
+  </body>
+</html>

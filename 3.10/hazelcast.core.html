@@ -1,0 +1,209 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Core &#8212; Hazelcast Python Client 3.10 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Discovery" href="hazelcast.discovery.html" />
+    <link rel="prev" title="Connection" href="hazelcast.connection.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.discovery.html" title="Discovery"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.connection.html" title="Connection"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.10 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" accesskey="U">Hazelcast Python Client</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.core">
+<span id="core"></span><h1>Core<a class="headerlink" href="#module-hazelcast.core" title="Permalink to this headline">¶</a></h1>
+<p>Hazelcast Core objects</p>
+<dl class="class">
+<dt id="hazelcast.core.Member">
+<em class="property">class </em><code class="descname">Member</code><span class="sig-paren">(</span><em>address</em>, <em>uuid</em>, <em>is_lite_member=False</em>, <em>attributes={}</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.core.Member" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Represents a member in the cluster with its address, uuid, lite member status and attributes.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.core.Address">
+<em class="property">class </em><code class="descname">Address</code><span class="sig-paren">(</span><em>host</em>, <em>port</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.core.Address" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Represents an address of a member in the cluster.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.core.DistributedObjectInfo">
+<em class="property">class </em><code class="descname">DistributedObjectInfo</code><span class="sig-paren">(</span><em>name</em>, <em>service_name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.core.DistributedObjectInfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Represents name of the Distributed Object and the name of service which it belongs to.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.core.EntryView">
+<em class="property">class </em><code class="descname">EntryView</code><a class="headerlink" href="#hazelcast.core.EntryView" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>EntryView represents a readonly view of a map entry.</p>
+<dl class="attribute">
+<dt id="hazelcast.core.EntryView.key">
+<code class="descname">key</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.core.EntryView.key" title="Permalink to this definition">¶</a></dt>
+<dd><p>The key of the entry.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.core.EntryView.value">
+<code class="descname">value</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.core.EntryView.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>The value of the entry.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.core.EntryView.cost">
+<code class="descname">cost</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.core.EntryView.cost" title="Permalink to this definition">¶</a></dt>
+<dd><p>The cost in bytes of the entry.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.core.EntryView.creation_time">
+<code class="descname">creation_time</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.core.EntryView.creation_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>The creation time of the entry.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.core.EntryView.expiration_time">
+<code class="descname">expiration_time</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.core.EntryView.expiration_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>The expiration time of the entry.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.core.EntryView.hits">
+<code class="descname">hits</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.core.EntryView.hits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of hits of the entry.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.core.EntryView.last_access_time">
+<code class="descname">last_access_time</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.core.EntryView.last_access_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>The last access time for the entry.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.core.EntryView.last_stored_time">
+<code class="descname">last_stored_time</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.core.EntryView.last_stored_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>The last store time for the value.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.core.EntryView.last_update_time">
+<code class="descname">last_update_time</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.core.EntryView.last_update_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>The last time the value was updated.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.core.EntryView.version">
+<code class="descname">version</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.core.EntryView.version" title="Permalink to this definition">¶</a></dt>
+<dd><p>The version of the entry.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.core.EntryView.eviction_criteria_number">
+<code class="descname">eviction_criteria_number</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.core.EntryView.eviction_criteria_number" title="Permalink to this definition">¶</a></dt>
+<dd><p>The criteria number for eviction.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.core.EntryView.ttl">
+<code class="descname">ttl</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.core.EntryView.ttl" title="Permalink to this definition">¶</a></dt>
+<dd><p>The last set time to live second.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.connection.html"
+                        title="previous chapter">Connection</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.discovery.html"
+                        title="next chapter">Discovery</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.core.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.discovery.html" title="Discovery"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.connection.html" title="Connection"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.10 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Hazelcast Inc..
+    </div>
+  </body>
+</html>
