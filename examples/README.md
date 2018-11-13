@@ -7,7 +7,7 @@ How to try these examples
 -------------------------
 
 * To try these examples, you should have a running Hazelcast member. If you are already familiar with Hazelcast and have a member running, add its address and port to your configuration as shown in the [**/learning-basics/1-configure_client.py**](learning-basics/1-configure_client.py).
-* If not, follow the steps described in [Working with Hazelcast IMDG Clusters section](https://github.com/hazelcast/hazelcast-python-client/blob/master/README.md#12-working-with-hazelcast-imdg-clusters) of the README and start a Hazelcast member in your local computer.
+* If not, follow the steps described in the [Working with Hazelcast IMDG Clusters section](https://github.com/hazelcast/hazelcast-python-client/blob/master/README.md#12-working-with-hazelcast-imdg-clusters) of the README and start a Hazelcast member in your local computer.
     
 Included example folders
 -----------------------

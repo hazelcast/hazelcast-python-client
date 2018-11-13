@@ -207,13 +207,13 @@ See the [Hazelcast IMDG Reference Manual](http://docs.hazelcast.org/docs/latest/
 
 ## 1.3. Downloading and Installing
 
-Hazelcast Python client can be installed from [PyPI](https://pypi.org/project/hazelcast-python-client/) using pip.
+You can download and install the Python client from [PyPI](https://pypi.org/project/hazelcast-python-client/) using pip. Run the following command:
 
 ```
 pip install hazelcast-python-client
 ```
 
-Alternatively, it can be installed from source.
+Alternatively, it can be installed from the source using the following command:
 
 ```
 python setup.py install
@@ -326,9 +326,12 @@ names as explained in the previous section. If you did, then you need to make ce
 
 ### Group Settings
 
+You need to provide the group name of the cluster, if it is defined on the server side, to which you want the client to connect.
+
 ```python
 config = hazelcast.ClientConfig()
-config.group_config.name = "group-name-of-you-cluster"
+config.group_config.name = "group-name-of-your-cluster"
+config.group_config.password = "group password"
 ```
 
 > **NOTE: If you have a Hazelcast IMDG release older than 3.11, you need to provide also a group password along with the group name.**
@@ -357,17 +360,20 @@ Then, it creates a configuration object and starts a client.
 import hazelcast
 import logging
 
-logging.basicConfig() # For this example, default logging format will be used 
+# For this example, default logging format will be used 
 # and logs will be printed to the sys.stderr
+logging.basicConfig() 
 
-logging.getLogger().setLevel(logging.INFO) # We set logging level to INFO to see the logs
+# We set logging level to INFO to see the logs
 # with the level of INFO or higher
+logging.getLogger().setLevel(logging.INFO) 
 
-config = hazelcast.ClientConfig() 
 # We create a config for illustrative purposes.
 # We do not adjust this config. Therefore it has default settings.
+config = hazelcast.ClientConfig() 
 
-client = hazelcast.HazelcastClient(config) # Client connects to the cluster with the given configuration. 
+# Client connects to the cluster with the given configuration. 
+client = hazelcast.HazelcastClient(config) 
 ```
 
 This should print logs about the cluster members such as address, port and UUID to the `stderr`.
@@ -485,11 +491,11 @@ execution order of your program.
 
 You may get the value returned by the method calls using the `result()` method of the `Future` class.
 `result` will block the execution of your program and will wait until the future finishes running. Then, it will return the
-value returned by the call which are key, value pairs in our `entry_set()` method call. 
+value returned by the call which are key-value pairs in our `entry_set()` method call. 
 
-You may also attach a function to future objects that will be called, with the future as its only argument, when the future finishes running.
+You may also attach a function to the future objects that will be called, with the future as its only argument, when the future finishes running.
 
-For example, the part where we printed the personnel in above can be rewritten with a callback attached to the `entry_set()`.
+For example, the part where we printed the personnel in above code can be rewritten with a callback attached to the `entry_set()`, as shown below..
 
 ```python
 import time
@@ -504,11 +510,11 @@ time.sleep(0.1) # wait for Future to complete
 ```
 
 Asynchronous operations are far more efficient in single threaded Python interpreter but you may want all of your method calls
-over distributed objects to be blocking. For this case, Hazelcast Python client provides a helper method called `blocking()` 
-which will block the execution of your program for all the method calls over distributed objects
+over distributed objects to be blocking. For this purpose, Hazelcast Python client provides a helper method called `blocking()`. 
+This method blocks the execution of your program for all the method calls over distributed objects
 until the return value of your call is calculated and returns that value directly instead of a `Future` object.
 
-To make the `personnel_map` above blocking, you need to call `blocking()` method over it.
+To make the `personnel_map` presented previously in this section blocking, you need to call `blocking()` method over it.
 
 ```python
 personnel_map = client.get_map("personnel-map").blocking()
@@ -537,7 +543,7 @@ Hazelcast Python client supports the following data structures and features:
 * Set
 * List
 * MultiMap
-* ReplicatedMap
+* Replicated Map
 * Ringbuffer
 * Topic
 * Lock
@@ -592,7 +598,7 @@ config.network_config.addresses.append("127.0.0.1:5701")
 client = hazelcast.HazelcastClient(config)
 ```
 
-See the `ClientConfig` class documentation at [Hazelcast Python client API Docs](http://hazelcast.github.io/hazelcast-python-client/3.10/api/hazelcast.config.html) for details.
+See the `ClientConfig` class documentation at [Hazelcast Python Client API Docs](http://hazelcast.github.io/hazelcast-python-client/3.10/api/hazelcast.config.html) for details.
 
 # 4. Serialization
 
@@ -617,7 +623,7 @@ Arrays of the above types can be serialized as `boolean[]`, `byte[]`, `short[]`,
 
 When Hazelcast Python client serializes an object:
 
-1. It first checks whether the object is `None.
+1. It first checks whether the object is `None`.
 
 2. If the above check fails, then it checks if it is an instance of `IdentifiedDataSerializable`.
 
@@ -671,7 +677,7 @@ class Address(IdentifiedDataSerializable):
 ```
 > Note: For IdentifiedDataSerializable to work in Python client, the class that inherits it should have default valued parameters in its `__init__` method so that an instance of that class can be created without passing any arguments to it.  
 
-The IdentifiedDataSerializable uses `get_class_id()` and `get_factory_id()` methods to reconstitute the object. To complete the implementation, an `IdentifiedDataSerializable factory` should also be created and registered into the `SerializationConfig` which can be accessed from `Config.serialization_config`. A factory is a dictionary that stores class ID and the `IdentifiedDataSerializable` class type pairs as the key and the value. The factory's responsibility is to store the right `IdentifiedDataSerializable` class type for the given class ID. 
+The IdentifiedDataSerializable uses `get_class_id()` and `get_factory_id()` methods to reconstitute the object. To complete the implementation, an `IdentifiedDataSerializable factory` should also be created and registered into the `SerializationConfig` which can be accessed from `Config.serialization_config`. A factory is a dictionary that stores class ID and the `IdentifiedDataSerializable` class type pairs as the key and value. The factory's responsibility is to store the right `IdentifiedDataSerializable` class type for the given class ID. 
 
 A sample `IdentifiedDataSerializable factory` could be created as follows:
 
@@ -727,7 +733,7 @@ class Foo(Portable):
 
 > Note: For Portable to work in Python client, the class that inherits it should have default valued parameters in its `__init__` method so that an instance of that class can be created without passing any arguments to it.  
 
-Similar to `IdentifiedDataSerializable`, a `Portable` class must provide the `get_class_id()` and the `get_factory_id()` methods. The factory dictionary will be used to create the `Portable` object given the class ID.
+Similar to `IdentifiedDataSerializable`, a `Portable` class must provide the `get_class_id()` and `get_factory_id()` methods. The factory dictionary will be used to create the `Portable` object given the class ID.
 
 A sample `Portable factory` could be created as follows:
 
@@ -766,6 +772,9 @@ class MusicianSerializer(StreamSerializer):
     def get_type_id(self):
         return 10
     
+    def destroy(self):
+        pass
+    
     def write(self, out, obj):
         out.write_int(len(obj.name))
         for s in obj.name:
@@ -779,7 +788,7 @@ class MusicianSerializer(StreamSerializer):
         return Musician(name)
 ```
 
-Note that the serializer `id` must be unique as Hazelcast will use it to lookup the `MusicianSerializer` while it de-serializes the object. Now the last required step is to register the `MusicianSerializer` to the configuration.
+Note that the serializer `id` must be unique as Hazelcast will use it to lookup the `MusicianSerializer` while it deserializes the object. Now the last required step is to register the `MusicianSerializer` to the configuration.
 
 
 ```python
@@ -809,6 +818,9 @@ from hazelcast.serialization.api import StreamSerializer
 class GlobalSerializer(StreamSerializer):
     def get_type_id(self):
         return 20
+    
+    def destroy(self):
+        pass
     
     def write(self, out, obj):
         out.write_utf(some_third_party_serializer.serialize(obj))
@@ -856,10 +868,10 @@ You can specify multiple addresses with or without the port information as seen 
 
 ## 5.2. Setting Smart Routing
 
-Smart routing defines whether the client mode is smart or unisocket. See [Python client Operation Modes section](#72-python-client-operation-modes)
+Smart routing defines whether the client mode is smart or unisocket. See the [Python Client Operation Modes section](#72-python-client-operation-modes)
 for the description of smart and unisocket modes.
  
-The following is the example configuration.
+The following is an example configuration.
 
 ```python
 config.network_config.smart_routing = True
@@ -882,7 +894,7 @@ Its default value is `False` (disabled).
 Connection timeout is the timeout value in seconds for the members to accept the client connection requests.
 If the member does not respond within the timeout, the client will retry to connect as many as `ClientNetworkConfig.connection_attempt_limit` times.
  
-The following is the example configuration.
+The following is an example configuration.
 
 ```python
 config.network_config.connection_timeout = 6.0
@@ -894,7 +906,7 @@ Its default value is `5.0` seconds.
 
 While the client is trying to connect initially to one of the members in the `ClientNetworkConfig.addresses`, that member might not be available at that moment. Instead of giving up, throwing an error and stopping the client, the client will retry as many as `ClientNetworkConfig.connection_attempt_limit` times. This is also the case when the previously established connection between the client and that member goes down.
 
-The following is the example configuration.
+The following is an example configuration.
 
 ```python
 config.network_config.connection_attempt_limit = 5
@@ -906,7 +918,7 @@ Its default value is `2`.
 
 Connection attempt period is the duration in seconds between the connection attempts defined by `ClientNetworkConfig.connection_attempt_limit`.
  
-The following is the example configuration.
+The following is an example configuration.
 
 ```python
 config.network_config.connection_attempt_period = 5.0
@@ -937,7 +949,7 @@ config.network_config.cloud_config.enabled = True
 config.network_config.cloud_config.discovery_token = "dc9220bc5d9"
 ```
 
-To be able to connect to the provided IP addresses, you should use secure TLS/SSL connection between the client and members. Therefore, you should enable the SSL configuration as described in the [TLS/SSL fot Hazelcast Python client section](#612-tlsssl-for-hazelcast-python-clients).
+To be able to connect to the provided IP addresses, you should use secure TLS/SSL connection between the client and members. Therefore, you should enable the SSL configuration as described in the [TLS/SSL fot Hazelcast Python Client section](#612-tlsssl-for-hazelcast-python-clients).
 
 # 6. Securing Client Connection
 
@@ -951,7 +963,7 @@ One of the offers of Hazelcast is the TLS/SSL protocol which you can use to esta
 
 * A Java `trustStore` is a file that includes a list of certificates trusted by your application which is named certificate authority. The equivalent of a trust store is a `cafile` at the Python client side.
 
-You should set `keyStore` and `trustStore` before starting the members. See the next section how to set `keyStore` and `trustStore` on the server side.
+You should set `keyStore` and `trustStore` before starting the members. See the next section on how to set `keyStore` and `trustStore` on the server side.
 
 #### 6.1.1. TLS/SSL for Hazelcast Members
 
@@ -980,7 +992,7 @@ config.network_config.ssl_config.ciphers = "DHE-RSA-AES128-SHA:DHE-RSA-AES256-SH
 TLS/SSL for the Hazelcast Python client can be enabled/disabled using the `enabled` option. When this option is set to `True`, TLS/SSL will be configured with respect to the other `SSLConfig` options. 
 Setting this option to `False` will result in discarding the other `SSLConfig` options.
 
-The following is the example configuration:
+The following is an example configuration:
 
 ```python
 config.network_config.ssl_config.enabled = True
@@ -993,7 +1005,7 @@ Default value is `False` (disabled).
 Certificates of the Hazelcast members can be validated against `cafile`. This option should point to the absolute path of the concatenated CA certificates in PEM format. 
 When SSL is enabled and `cafile` is not set, a set of default CA certificates from default locations will be used.
 
-The following is the example configuration:
+The following is an example configuration:
 
 ```python
 config.network_config.ssl_config.cafile = "/home/hazelcast/cafile.pem"
@@ -1006,7 +1018,7 @@ Then, Hazelcast members can use these certificates to validate the identity of t
 
 Client certificate can be set using the `certfile`. This option should point to the absolute path of the client certificate in PEM format.
 
-The following is the example configuration:
+The following is an example configuration:
 
 ```python
 config.network_config.ssl_config.certfile = "/home/hazelcast/certfile.pem"
@@ -1027,7 +1039,7 @@ If this option is not set, private key will be taken from `certfile`. In this ca
 -----END CERTIFICATE-----
 ```
 
-The following is the example configuration:
+The following is an example configuration:
 
 ```python
 config.network_config.ssl_config.keyfile = "/home/hazelcast/keyfile.pem"
@@ -1036,11 +1048,11 @@ config.network_config.ssl_config.keyfile = "/home/hazelcast/keyfile.pem"
 ##### Setting Password of the Private Key
 
 If the private key is encrypted using a password, `password` will be used to decrypt it. The `password` may be a function to call to get the password.
-In that case, it will be called with no arguments, and it should return a string, bytes, or bytearray. If the return value is a string it will be encoded as UTF-8 before using it to decrypt the key.
+In that case, it will be called with no arguments, and it should return a string, bytes or bytearray. If the return value is a string it will be encoded as UTF-8 before using it to decrypt the key.
         
-Alternatively a string, bytes, or bytearray value may be supplied directly as the password.
+Alternatively a string, bytes or bytearray value may be supplied directly as the password.
 
-The following is the example configuration:
+The following is an example configuration:
 
 ```python
 config.network_config.ssl_config.password = "hazelcast"
@@ -1059,7 +1071,7 @@ config.network_config.ssl_config.password = "hazelcast"
 * **TLSv1_3**   : TLS 1.3 Protocol described in RFC 8446
 * **TLS**       : Alias for TLS 1.2
 
-> Note that TLSv1+ requires at least Python 2.7.9 or Python 3.4 build with OpenSSL 1.0.1+ and TLSv1_3 requires at least Python 2.7.15 or Python 3.7 build with OpenSSL 1.1.1+
+> Note that TLSv1+ requires at least Python 2.7.9 or Python 3.4 built with OpenSSL 1.0.1+, and TLSv1_3 requires at least Python 2.7.15 or Python 3.7 built with OpenSSL 1.1.1+.
 
 These protocol versions can be selected using the `hazelcast.config.PROTOCOL` as follows:
 
@@ -1069,7 +1081,7 @@ from hazelcast.config import PROTOCOL
 config.network_config.ssl_config.protocol = PROTOCOL.TLSv1_3
 ``` 
 
-> Note that Hazelcast Python client and the Hazelcast members should have the same protocol version in order for TLS/SSL to work. In case of the protocol mismatch, connection attempts will be refused.
+> Note that the Hazelcast Python client and the Hazelcast members should have the same protocol version in order for TLS/SSL to work. In case of the protocol mismatch, connection attempts will be refused.
 
 Default value is `PROTOCOL.TLS` which is an alias for `PROTOCOL.TLSv1_2`.
 
@@ -1082,7 +1094,7 @@ TLS/SSL implementation will honor the cipher suite order. So, Hazelcast Python c
 
 Note that, when this option is not set, all the available ciphers will be offered to the Hazelcast members with their default order.
 
-The following is the example configuration:
+The following is an example configuration:
 
 ```python
 config.network_config.ssl_config.ciphers = "DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA"
@@ -1118,7 +1130,7 @@ This chapter provides information on how you can use Hazelcast IMDG's data struc
 
 ## 7.1. Python Client API Overview
 
-Hazelcast Python client designed to be fully asynchronous. See the [Basic Usage section](#15-basic-usage) to learn more about asynchronous nature of the Python Client.
+Hazelcast Python client is designed to be fully asynchronous. See the [Basic Usage section](#15-basic-usage) to learn more about asynchronous nature of the Python Client.
 
 If you are ready to go, let's start to use Hazelcast Python client.
 
@@ -1208,12 +1220,15 @@ Hazelcast Map is a distributed dictionary. Through the Python client, you can pe
 A Map usage example is shown below.
 
 ```python
+# Get the Distributed Map from Cluster.
 my_map = client.get_map("my-distributed-map").blocking()
 
-my_map.put("key", "value") # Standard put and get
+# Standard Put and Get
+my_map.put("key", "value")
 my_map.get("key")
 
-my_map.put_if_absent("somekey", "somevalue") # Concurrent map methods, optimistic updating
+# Concurrent Map methods, optimistic updating
+my_map.put_if_absent("somekey", "somevalue") 
 my_map.replace_if_same("key", "value", "newvalue")
 ```
 
@@ -1224,36 +1239,43 @@ Hazelcast MultiMap is a distributed and specialized map where you can store mult
 A MultiMap usage example is shown below.
 
 ```python
+# Get the Distributed MultiMap from Cluster.
 multi_map = client.get_multi_map("my-distributed-multimap").blocking()
 
-multi_map.put("my-key", "value1") # Put values in the map against the same key
+# Put values in the map against the same key
+multi_map.put("my-key", "value1")
 multi_map.put("my-key", "value2")
 multi_map.put("my-key", "value3")
 
-values = multi_map.get("my-key") # Print out all the values for associated with key called "my-key"
+# Print out all the values for associated with key called "my-key"
+# Outputs '['value2', 'value1', 'value3']'
+values = multi_map.get("my-key") 
+print(values) 
 
-print(values) # Outputs '['value2', 'value1', 'value3']'
-
-multi_map.remove("my-key", "value2") # Remove specific key/value pair
+# Remove specific key/value pair
+multi_map.remove("my-key", "value2") 
 ```
 
 ### 7.4.3. Using Replicated Map
 
-Hazelcast ReplicatedMap is a distributed key-value data structure where the data is replicated to all members in the cluster. It provides full replication of entries to all members for high speed access. For details, see the [Replicated Map section](https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#replicated-map) in the Hazelcast IMDG Reference Manual.
+Hazelcast Replicated Map is a distributed key-value data structure where the data is replicated to all members in the cluster. It provides full replication of entries to all members for high speed access. For details, see the [Replicated Map section](https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#replicated-map) in the Hazelcast IMDG Reference Manual.
 
 A Replicated Map usage example is shown below.
 
 ```python
+# Get a Replicated Map called "my-replicated-map"
 replicated_map = client.get_replicated_map("my-replicated-map").blocking()
 
 # Put and Get a value from the Replicated Map
-replaced_value = replicated_map.put("key", "value") # Will be None as its first update
+# key/value replicated to all members
+replaced_value = replicated_map.put("key", "value") 
 
+# Will be None as its first update
 print("replaced value = {}".format(replaced_value)) # Outputs 'replaced value = None'
 
+# The value is retrieved from a random member in the cluster
 value = replicated_map.get("key")
 
-# The value is retrieved from a random member in the cluster
 print("value for key = {}".format(value)) # Outputs 'value for key = value'
 ```
 
@@ -1264,18 +1286,20 @@ Hazelcast Queue is a distributed queue which enables all cluster members to inte
 A Queue usage example is shown below.
 
 ```python
+# Get a Blocking Queue called "my-distributed-queue"
 queue = client.get_queue("my-distributed-queue").blocking()
 
-# Offer a string into the distributed queue
+# Offer a String into the Distributed Queue
 queue.offer("item")
 
-# Poll the distributed queue and return the string
+# Poll the Distributed Queue and return the String
 item = queue.poll()
 
-# Timed blocking operations
+# Timed blocking Operations
 queue.offer("another-item", 1)
 another_item = queue.poll(5)
 
+# Indefinitely blocking Operations
 queue.put("yet-another-item")
 
 print(queue.take()) # Outputs 'yet-another-item'
@@ -1288,6 +1312,7 @@ Hazelcast Set is a distributed set which does not allow duplicate elements. For 
 A Set usage example is shown below.
 
 ```python
+# Get the Distributed Set from Cluster.
 my_set = client.get_set("my-distributed-set").blocking()
 
 # Add items to the set with duplicates
@@ -1299,7 +1324,8 @@ my_set.add("item2")
 my_set.add("item3")
 
 # Get the items. Note that there are no duplicates.
-print(my_set.get_all()) # Outputs '['item1', 'item2', 'item3']'
+for item in my_set.get_all():
+    print(item)
 ```
 
 ### 7.4.6. Using List
@@ -1309,9 +1335,10 @@ Hazelcast List is a distributed list which allows duplicate elements and preserv
 A List usage example is shown below.
 
 ```python
+# Get the Distributed List from Cluster.
 my_list = client.get_list("my-distributed-list").blocking()
 
-# Add elements to the list
+# Add element to the list
 my_list.add("item1")
 my_list.add("item2")
 
@@ -1332,7 +1359,8 @@ Hazelcast Ringbuffer is a replicated but not partitioned data structure that sto
 A Ringbuffer usage example is shown below.
 
 ```python
-ringbuffer = client.get_ringbuffer("my-distributed-ringbuffer").blocking()
+# Get a RingBuffer called "my-ringbuffer"
+ringbuffer = client.get_ringbuffer("my-ringbuffer").blocking()
 
 # Add two items into ring buffer
 ringbuffer.add(100)
@@ -1354,13 +1382,14 @@ Hazelcast Topic is a distribution mechanism for publishing messages that are del
 A Topic usage example is shown below.
 
 ```python
+# Function to be called when a message is published
 def print_on_message(topic_message):
     print("Got message:", topic_message.message)
 
 # Get a Topic called "my-distributed-topic"
 topic = client.get_topic("my-distributed-topic")
 
-# Add a listener to the Topic
+# Add a Listener to the Topic
 topic.add_listener(print_on_message)
 
 # Publish a message to the Topic
@@ -1374,9 +1403,10 @@ Hazelcast Lock is a distributed lock implementation. You can synchronize Hazelca
 A Lock usage example is shown below.
 
 ```python
+# Get a distributed lock called "my-distributed-lock"
 lock = client.get_lock("my-distributed-lock").blocking()
 
-# Now lock the Lock and execute some guarded code.
+# Now create a lock and execute some guarded code
 lock.lock()
 try:
     # Do something here
@@ -1392,6 +1422,7 @@ Hazelcast Atomic Long is the distributed long which offers most of the operation
 An Atomic Long usage example is shown below.
 
 ```python
+# Get an Atomic Counter, we'll call it "counter"
 counter = client.get_atomic_long("counter").blocking()
 
 # Add and Get the "counter"
@@ -1408,11 +1439,16 @@ Hazelcast Semaphore is a distributed semaphore implementation. For details, see 
 A Semaphore usage example is shown below.
 
 ```python
-semaphore = client.get_semaphore("my-semaphore").blocking()
+# Get a Semaphore called "my-distributed-semaphore"
+semaphore = client.get_semaphore("my-distributed-semaphore").blocking()
 
+# Initialize the Semaphore with 10 permits
 semaphore.init(10)
+
+# Acquire 5 permits
 semaphore.acquire(5)
 
+# Print the number of the available permits
 print(semaphore.available_permits()) # Outputs '5'
 ```
 
@@ -1423,9 +1459,11 @@ Hazelcast Python client provides transactional operations like beginning transac
 You can create a `Transaction` object using the Python client to begin, commit and rollback a transaction. You can obtain transaction-aware instances of queues, maps, sets, lists and multimaps via the `Transaction` object, work with them and commit or rollback in one shot. For details, see the [Transactions section](https://docs.hazelcast.org//docs/latest/manual/html-single/index.html#transactions) in the Hazelcast IMDG Reference Manual.
 
 ```python
+# Create a Transaction object and begin the transaction
 transaction = client.new_transaction(timeout=10)
 transaction.begin()
 
+# Get transactional distributed data structures
 txn_map = transaction.get_map("transactional-map")
 txn_queue = transaction.get_queue("transactional-queue")
 txt_set = transaction.get_set("transactional-set")
@@ -1438,12 +1476,19 @@ try:
     txt_set.add("value")
 
     # Do other things
-
-    transaction.commit()  # Above transactional actions will be executed now.
+    
+    # Commit the above changes done in the cluster.
+    transaction.commit()  
 except Exception as ex:
+    # In the case of a transactional failure, rollback the transaction 
     transaction.rollback()
     print("Transaction failed! {}".format(ex.args))
 ```
+In a transaction, operations will not be executed immediately. Their changes will be local to the `Transaction` object until committed. However, they will ensure the changes via locks.
+
+For the above example, when `txn_map.put()` is executed, no data will be put in the map but the key will be locked against changes. While committing, operations will be executed, the value will be put to the map and the key will be unlocked.
+
+The isolation level in Hazelcast Transactions is `READ_COMMITTED` on the level of a single partition. If you are in a transaction, you can read the data in your transaction and the data that is already committed. If you are not in a transaction, you can only read the committed data.
 
 ## 7.5. Distributed Events
 
@@ -1455,7 +1500,7 @@ You can add event listeners to a Hazelcast Python client. You can configure the 
 
 * Membership Listener: Notifies when a member joins to/leaves the cluster.
 
-* Lifecycle Listener: Notifies when the client is starting, started, shutting down, and shutdown.
+* Lifecycle Listener: Notifies when the client is starting, started, shutting down and shutdown.
 
 #### 7.5.1.1. Listening for Member Events
 
@@ -1476,10 +1521,10 @@ client.cluster.add_listener(member_added=lambda m: print("Member Added: The addr
 
 The `Lifecycle Listener` notifies for the following events:
 
-* `STARTING`: A client is starting.
-* `CONNECTED`: A client is connected.
-* `SHUTTING_DOWN`: A client is shutting down.
-* `SHUTDOWN`: A client’s shutdown has completed.
+* `STARTING`: The client is starting.
+* `CONNECTED`: The client is connected.
+* `SHUTTING_DOWN`: The client is shutting down.
+* `SHUTDOWN`: The client’s shutdown has completed.
 
 The following is an example of the `Lifecycle listener` that is added to the `ClientConfig` object and its output.
 
@@ -1571,7 +1616,7 @@ The `Map` class provides the following methods for entry processing:
 
 In the Python client, an `EntryProcessor` should be `IdentifiedDataSerializable` or `Portable` because the server should be able to deserialize it to process.
 
-The following is an example for `EntryProcessor` which is and `IdentifiedDataSerializable`.
+The following is an example for `EntryProcessor` which is an `IdentifiedDataSerializable`.
 
 ```python
 from hazelcast.serialization.api import IdentifiedDataSerializable
@@ -1698,7 +1743,7 @@ Hazelcast partitions your data and spreads it across cluster of members. You can
 
 Distributed query is highly scalable. If you add new members to the cluster, the partition count for each member is reduced and thus the time spent by each member on iterating its entries is reduced. In addition, the pool of partition threads evaluates the entries concurrently in each member, and the network traffic is also reduced since only filtered data is sent to the requester.
 
-**Predicates Object Operators**
+**Predicate Module Operators**
 
 The `Predicate` module offered by the Python client includes many operators for your query requirements. Some of them are explained below.
 
@@ -1715,6 +1760,8 @@ The `Predicate` module offered by the Python client includes many operators for 
 * `is_in`: Checks if the result of an expression is an element of a certain list.
 * `is_not`: Checks if the result of an expression is false.
 * `matches_regex`: Checks if the result of an expression matches some regular expression.
+* `true`: Creates an always true predicate that will pass all items.
+* `false`: Creates an always false predicate that will filter out all items.
 
 Hazelcast offers the following ways for distributed query purposes:
 
@@ -1727,9 +1774,9 @@ Hazelcast offers the following ways for distributed query purposes:
 Assume that you have an `employee` map containing the instances of `Employee` class, as coded below. 
 
 ```python
-from hazelcast.serialization.api import IdentifiedDataSerializable
+from hazelcast.serialization.api import Portable
 
-class Employee(IdentifiedDataSerializable):
+class Employee(Portable):
     def __init__(self, name=None, age=None, active=None, salary=None):
         self.name = name
         self.age = age
@@ -1737,43 +1784,29 @@ class Employee(IdentifiedDataSerializable):
         self.salary = salary
     
     def get_class_id(self):
-        return 1
+        return 100
     
     def get_factory_id(self):
-        return 1
+        return 1000
     
-    def read_data(self, object_data_input):
-        self.name = object_data_input.read_utf()
-        self.age = object_data_input.read_int()
-        self.active = object_data_input.read_boolean()
-        self.salary = object_data_input.read_double()
+    def read_portable(self, reader):
+        self.name = reader.read_utf("name")
+        self.age = reader.read_int("age")
+        self.active = reader.read_boolean("active")
+        self.salary = reader.read_double("salary")
     
-    def write_data(self, object_data_output):
-        object_data_output.write_utf(self.name)
-        object_data_output.write_int(self.age)
-        object_data_output.write_boolean(self.active)
-        object_data_output.write_double(self.salary)
+    def write_portable(self, writer):
+        writer.write_utf("name", self.name)
+        writer.write_int("age", self.age)
+        writer.write_boolean("active", self.active)
+        writer.write_double("salary", self.salary)
 ```
 
-Note that `Employee` extends `IdentifiedDataSerializable`. If you just want to save the `Employee` objects as byte arrays on the map, you don't need to implement its equivalent on the server-side. However, if you want to query on the `employee` map, server needs the `Employee` objects rather than byte array formats. Therefore, you need to implement its Java equivalent and its data serializable factory on server side for server to reconstitute the objects from binary formats. After implementing the Java class and its factory, you need to add the factory to the data serializable factories or the portable factories by giving a factory `id`. The following is an example declarative configuration on the server.
+Note that `Employee` extends `Portable`. As portable types are not deserialized on server side for querying, you don't need to implement its Java equivalent on the server-side.
 
-```xml
-<hazelcast>
-    ...
-    <serialization>
-        <data-serializable-factories>
-            <data-serializable-factory factory-id="1">
-                mypackage.MyIdentifiedFactory
-            </data-serializable-factory>
-        </data-serializable-factories>
-    </serialization>
-    ...
-</hazelcast>
-```
+For types that are not portable, you need to implement its Java equivalent and its data serializable factory on the server side for server to reconstitute the objects from binary formats. In this case, you need to compile the `Employee` and related factory classes with server's `CLASSPATH` and add them to the `user-lib` directory in the extracted `hazelcast-<version>.zip` (or `tar`) before starting the server. See the [Adding User Library to CLASSPATH section](#adding-user-library-to-classpath).
 
-Note that before starting the server, you need to compile the `Employee` and `MyIdentifiedFactory` classes with server's `CLASSPATH` and add them to the `user-lib` directory in the extracted `hazelcast-<version>.zip` (or `tar`). See the [Adding User Library to CLASSPATH section](#adding-user-library-to-classpath).
-
-> **NOTE: You can also make this object `Portable` and implement its Java equivalent and portable factory on the server side. Note that querying with `Portable` object is faster as compared to `IdentifiedDataSerializable`.**
+> **NOTE: Querying with `Portable` class is faster as compared to `IdentifiedDataSerializable`.**
 
 #### 7.7.1.2. Querying by Combining Predicates with AND, OR, NOT
 
@@ -1960,9 +1993,9 @@ logging.basicConfig(stream=sys.stdout)
 
 You can specify the `filename` and `filemode` attributes to log to a file. 
 
-When `filename` is set, a [FileHandler](https://docs.python.org/3/library/logging.handlers.html#logging.FileHandler), using the specified file name, will be created instead of a [StreamHandler](https://docs.python.org/3/library/logging.handlers.html#streamhandler). FileHandler sends logging output to a disk file using the output functionality of the StreamHandler.
+When `filename` is set, a [FileHandler](https://docs.python.org/3/library/logging.handlers.html#logging.FileHandler), using the specified file name, will be created instead of a [StreamHandler](https://docs.python.org/3/library/logging.handlers.html#streamhandler). FileHandler sends the logging output to a disk file using the output functionality of the StreamHandler.
 
-If the `filename` is specified, you can also select the mode that the log file will be opened using the `filemode`. See the available [file modes](https://docs.python.org/3/library/functions.html#filemodes) from the Python documentation. 
+If the `filename` is specified, you can also select the mode that the log file will be opened using the `filemode`. See the available [file modes](https://docs.python.org/3/library/functions.html#filemodes) in the Python documentation. 
 
 When `filemode` is not specified, `'a'` will be used by default.
 
@@ -1974,11 +2007,11 @@ logging.basicConfig(filename="/home/hazelcast/hz-py.log", filemode="w")
 
 ### Specifying Logging Format
 
-Logging format can be set using `format` and `datefmt` arguments. 
+Logging format can be set using the `format` and `datefmt` arguments. 
 
-Handlers will use the `format` string to specify to logging output. You can look into the available format attributes from the [LogRecord attributes](https://docs.python.org/3/library/logging.html#logrecord-attributes) documentation. 
+Handlers will use the `format` string to specify the logging output. See the available format attributes in the [LogRecord attributes](https://docs.python.org/3/library/logging.html#logrecord-attributes) documentation. 
 
-Date and time format used in format attributes such as `%(asctime)s` can be specified using `datefmt` argument. `datefmt` should be a legal format string for [time.strftime()](https://docs.python.org/3/library/time.html#time.strftime).
+Date and time format used in the format attributes such as `%(asctime)s` can be specified using `datefmt` argument. `datefmt` should be a legal format string for [time.strftime()](https://docs.python.org/3/library/time.html#time.strftime).
 
 Below is an example of this configuration and its output.
 
@@ -1997,7 +2030,7 @@ logging.basicConfig(format='%(asctime)s%(msecs)03d [%(threadName)s][%(name)s] %(
 
 Although you can not change the logging levels used within the Hazelcast Python client, you can specify a logging level that will be used to threshold the logs that are at least as severe as your specified level using  the `level` argument.
 
-Here is the table of the default logging levels that comes with the `logging` module and their numeric value that represents the how severe they are.
+Here is the table listing the default logging levels that come with the `logging` module and numeric values that represent their severity:
 
 | Level    | Numeric Value |
 |----------|---------------|
@@ -2008,7 +2041,7 @@ Here is the table of the default logging levels that comes with the `logging` mo
 | DEBUG    | 10            |
 | NOTSET   | 0             |
 
-For example, setting logging level to `logging.DEBUG` will cause all the logging messages that are equal or higher than the `logging.DEBUG` in terms of severity to be emitted by your logger.
+For example, setting the logging level to `logging.DEBUG` will cause all the logging messages that are equal or higher than the `logging.DEBUG` in terms of severity to be emitted by your logger.
 
 Below is an example of this configuration.
 
