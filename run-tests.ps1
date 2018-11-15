@@ -43,7 +43,7 @@ if(Test-Path env:HAZELCAST_ENTERPRISE_KEY){
 	}
 
 	if(Test-Path "hazelcast-enterprise-${hazelcastEnterpriseTestVersion}-tests.jar") {
-		Write-Host "hazelcast-enterprise-${hazelcastEnterpriseVersion}-tests.jar already exist, not downloading from maven."
+		Write-Host "hazelcast-enterprise-${hazelcastEnterpriseTestVersion}-tests.jar already exist, not downloading from maven."
 	} else {
 		Write-Host "Downloading hazelcast-enterprise-${hazelcastEnterpriseTestVersion}-tests.jar ..."
 		& "mvn" -q "dependency:get" "-DrepoUrl=${enterpriseRepo}" "-Dartifact=com.hazelcast:hazelcast-enterprise:${hazelcastEnterpriseTestVersion}:jar:tests" "-Ddest=hazelcast-enterprise-${hazelcastEnterpriseTestVersion}-tests.jar"
