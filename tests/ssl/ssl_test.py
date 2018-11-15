@@ -12,6 +12,7 @@ class SSLTest(HazelcastTestCase):
     current_directory = os.path.dirname(__file__)
     rc = None
     hazelcast_ssl_xml = get_abs_path(current_directory, "hazelcast-ssl.xml")
+    default_ca_xml = get_abs_path(current_directory, "hazelcast-default-ca.xml")
 
     @classmethod
     def setUpClass(cls):
@@ -24,14 +25,14 @@ class SSLTest(HazelcastTestCase):
         self.rc.exit()
 
     def test_ssl_disabled(self):
-        cluster = self.create_cluster(self.rc, self.configure_cluster())
+        cluster = self.create_cluster(self.rc, self.configure_cluster(self.hazelcast_ssl_xml))
         cluster.start_member()
 
         with self.assertRaises(HazelcastError):
             client = HazelcastClient(get_ssl_config(False))
 
     def test_ssl_enabled_is_client_live(self):
-        cluster = self.create_cluster(self.rc, self.configure_cluster())
+        cluster = self.create_cluster(self.rc, self.configure_cluster(self.hazelcast_ssl_xml))
         cluster.start_member()
 
         client = HazelcastClient(get_ssl_config(True, get_abs_path(self.current_directory, "server1-cert.pem"),
@@ -39,34 +40,25 @@ class SSLTest(HazelcastTestCase):
         self.assertTrue(client.lifecycle.is_live)
         client.shutdown()
 
-    def test_ssl_enabled_trust_default_cafiles(self):
-        default_ca_xml = """<hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-config-3.10.xsd"
-           xmlns="http://www.hazelcast.com/schema/config"
-           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <network>
-                <ssl enabled="true">
-                    <factory-class-name>
-                        com.hazelcast.nio.ssl.BasicSSLContextFactory
-                    </factory-class-name>
-                    <properties>
-                        <property name="keyStore">{}</property>
-                        <property name="keyStorePassword">{}</property>
-                        <property name="keyManagerAlgorithm">SunX509</property>
-                        <property name="protocol">TLSv1</property>
-                    </properties>
-                </ssl>
-            </network>
-        </hazelcast>""".format(get_abs_path(self.current_directory, "letsencrypt.jks"), "123456")
-
-        cluster = self.create_cluster(self.rc, default_ca_xml)
+    def test_ssl_enabled_trust_default_certificates(self):
+        # Member started with Let's Encrypt certificate
+        cluster = self.create_cluster(self.rc, self.configure_cluster(self.default_ca_xml))
         cluster.start_member()
 
         client = HazelcastClient(get_ssl_config(True, protocol=PROTOCOL.TLSv1))
         self.assertTrue(client.lifecycle.is_live)
         client.shutdown()
 
+    def test_ssl_enabled_dont_trust_self_signed_certificates(self):
+        # Member started with self-signed certificate
+        cluster = self.create_cluster(self.rc, self.configure_cluster(self.hazelcast_ssl_xml))
+        cluster.start_member()
+
+        with self.assertRaises(HazelcastError):
+            client = HazelcastClient(get_ssl_config(True, protocol=PROTOCOL.TLSv1))
+
     def test_ssl_enabled_map_size(self):
-        cluster = self.create_cluster(self.rc, self.configure_cluster())
+        cluster = self.create_cluster(self.rc, self.configure_cluster(self.hazelcast_ssl_xml))
         cluster.start_member()
 
         client = HazelcastClient(get_ssl_config(True, get_abs_path(self.current_directory, "server1-cert.pem"),
@@ -77,7 +69,7 @@ class SSLTest(HazelcastTestCase):
         client.shutdown()
 
     def test_ssl_enabled_with_custom_ciphers(self):
-        cluster = self.create_cluster(self.rc, self.configure_cluster())
+        cluster = self.create_cluster(self.rc, self.configure_cluster(self.hazelcast_ssl_xml))
         cluster.start_member()
 
         client = HazelcastClient(get_ssl_config(True, get_abs_path(self.current_directory, "server1-cert.pem"),
@@ -87,7 +79,7 @@ class SSLTest(HazelcastTestCase):
         client.shutdown()
 
     def test_ssl_enabled_with_invalid_ciphers(self):
-        cluster = self.create_cluster(self.rc, self.configure_cluster())
+        cluster = self.create_cluster(self.rc, self.configure_cluster(self.hazelcast_ssl_xml))
         cluster.start_member()
 
         with self.assertRaises(HazelcastError):
@@ -97,14 +89,14 @@ class SSLTest(HazelcastTestCase):
                                                     ciphers="INVALID-CIPHER1:INVALID_CIPHER2"))
 
     def test_ssl_enabled_with_protocol_mismatch(self):
-        cluster = self.create_cluster(self.rc, self.configure_cluster())
+        cluster = self.create_cluster(self.rc, self.configure_cluster(self.hazelcast_ssl_xml))
         cluster.start_member()
 
-        # member configured with TLSv1
+        # Member configured with TLSv1
         with self.assertRaises(HazelcastError):
             client = HazelcastClient(get_ssl_config(True, get_abs_path(self.current_directory, "server1-cert.pem"),
                                                     protocol=PROTOCOL.SSLv3))
 
-    def configure_cluster(self):
-        with open(self.hazelcast_ssl_xml, "r") as f:
+    def configure_cluster(self, filename):
+        with open(filename, "r") as f:
             return f.read()
