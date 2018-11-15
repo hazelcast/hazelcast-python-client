@@ -26,7 +26,8 @@ class MessagePrinter(Portable):
 
 if __name__ == "__main__":
     # Configure logging
-    logging.basicConfig(format='%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s', datefmt="%H:%M%:%S,")
+    logging.basicConfig(format="%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s",
+                        datefmt="%H:%M%:%S,")
     logging.getLogger().setLevel(logging.INFO)
 
     # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
@@ -34,9 +35,9 @@ if __name__ == "__main__":
     # Get the Distributed Executor Service
     ex = hz.get_executor("my-distributed-executor")
     # Get the first Hazelcast Cluster Member
-    firstMember = hz.cluster.members[0]
+    first_member = hz.cluster.members[0]
     # Submit the MessagePrinter Runnable to the first Hazelcast Cluster Member
-    ex.execute_on_member(firstMember, MessagePrinter("message to very first member of the cluster"))
+    ex.execute_on_member(first_member, MessagePrinter("message to very first member of the cluster"))
     # Submit the MessagePrinter Runnable to all Hazelcast Cluster Members
     ex.execute_on_all_members(MessagePrinter("message to all members in the cluster"))
     # Submit the MessagePrinter Runnable to the Hazelcast Cluster Member owning the key called "key"

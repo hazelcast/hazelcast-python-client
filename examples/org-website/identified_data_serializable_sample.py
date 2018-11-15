@@ -22,28 +22,22 @@ class Employee(IdentifiedDataSerializable):
         object_data_output.write_utf(self.name)
 
     def get_factory_id(self):
-        return Employee.FACTORY_ID
+        return self.FACTORY_ID
 
     def get_class_id(self):
-        return Employee.CLASS_ID
-
-    def __repr__(self):
-        return '%s %s' % (self.id, self.name)
+        return self.CLASS_ID
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Configure logging
-    logging.basicConfig(format='%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s', datefmt="%H:%M%:%S,")
+    logging.basicConfig(format="%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s",
+                        datefmt="%H:%M%:%S,")
     logging.getLogger().setLevel(logging.INFO)
 
     config = ClientConfig()
     my_factory = {Employee.CLASS_ID: Employee}
     config.serialization_config.add_data_serializable_factory(Employee.FACTORY_ID, my_factory)
-
     # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
     hz = hazelcast.HazelcastClient(config)
-
     # Employee can be used here
-
-    # Shutdown this Hazelcast Client
     hz.shutdown()
