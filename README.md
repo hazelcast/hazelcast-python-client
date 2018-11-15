@@ -184,9 +184,9 @@ If you want to add a `Portable` class, you should use `<portable-factories>` ins
 
 `hazelcast-member` is a tool to download and run Hazelcast IMDG members easily. 
 
-You can find the installation guides for various platforms below.
+You can find the installation instructions for various platforms in the following sections.
 
-##### Installation Guide for Mac OS X
+##### Installing on Mac OS X
 
 If you have brew installed, run the following commands to install this tool:
 
@@ -195,17 +195,17 @@ brew tap hazelcast/homebrew-hazelcast
 brew install hazelcast-member
 ```
 
-##### Installation Guide for Ubuntu and Debian
+##### Installing on Ubuntu and Debian
 
-You can resolve the `.deb` artifacts from Bintray as follows:
+To resolve the `.deb` artifacts from Bintray, follow the below instructions.
 
-First, you need to import the Bintray's GPG key:
+First, you need to import the Bintray's GPG key using the following command:
 
 ```
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 379CE192D401AB61
 ```
 
-Then, add the following to your `/etc/apt/sources.list` system config file and update the lists of packages:
+Then, run the following commands to add the `.deb` artifact to your system configuration file and update the lists of packages:
 
 ```
 echo "deb https://dl.bintray.com/hazelcast/deb stable main" | sudo tee -a /etc/apt/sources.list
@@ -218,17 +218,18 @@ Finally, run the following command to install the `hazelcast-member` tool:
 sudo apt-get install hazelcast-member
 ```
 
-##### Installation Guide for Red Hat and CentOS
+##### Installing on Red Hat and CentOS
 
-You can resolve the `RPM` artifacts from Bintray as follows:
+To resolve the `RPM` artifacts from Bintray, follow the below instructions.
 
-First, run the following to get a generated `.repo` file.
+First, run the following command to get a generated `.repo` file:
 
 ```
 wget https://bintray.com/hazelcast/rpm/rpm -O bintray-hazelcast-rpm.repo
 ```
 
-Then, install the `.repo` file.
+Then, install the `.repo` file using the following command:
+
 
 ```
 sudo mv bintray-hazelcast-rpm.repo /etc/yum.repos.d/
