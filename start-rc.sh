@@ -6,9 +6,10 @@ else
     USER=""
 fi
 
-HZ_VERSION="3.10.2"
+HZ_VERSION="3.11"
 
 HAZELCAST_TEST_VERSION=${HZ_VERSION}
+HAZELCAST_ENTERPRISE_TEST_VERSION=${HZ_VERSION}
 HAZELCAST_VERSION=${HZ_VERSION}
 HAZELCAST_ENTERPRISE_VERSION=${HZ_VERSION}
 HAZELCAST_RC_VERSION="0.3-SNAPSHOT"
@@ -62,7 +63,19 @@ if [ -n "${HAZELCAST_ENTERPRISE_KEY}" ]; then
             exit 1
         fi
     fi
-    CLASSPATH="hazelcast-enterprise-${HAZELCAST_ENTERPRISE_VERSION}.jar:"${CLASSPATH}
+
+    if [ -f "hazelcast-enterprise-${HAZELCAST_ENTERPRISE_TEST_VERSION}-tests.jar" ]; then
+        echo "hazelcast-enterprise-test.jar already exists, not downloading from maven."
+    else
+        echo "Downloading: hazelcast enterprise test jar com.hazelcast:hazelcast-enterprise:${HAZELCAST_ENTERPRISE_TEST_VERSION}:jar:tests"
+        mvn -q dependency:get -DrepoUrl=${ENTERPRISE_REPO} -Dartifact=com.hazelcast:hazelcast-enterprise:${HAZELCAST_ENTERPRISE_TEST_VERSION}:jar:tests -Ddest=hazelcast-enterprise-${HAZELCAST_ENTERPRISE_TEST_VERSION}-tests.jar
+        if [ $? -ne 0 ]; then
+            echo "Failed download hazelcast enterprise test jar com.hazelcast:hazelcast-enterprise:${HAZELCAST_ENTERPRISE_TEST_VERSION}:jar:tests"
+            exit 1
+        fi
+    fi
+
+    CLASSPATH="hazelcast-enterprise-${HAZELCAST_ENTERPRISE_VERSION}.jar:hazelcast-enterprise-${HAZELCAST_ENTERPRISE_TEST_VERSION}-tests.jar:"${CLASSPATH}
     echo "Starting Remote Controller ... enterprise ..."
 else
     if [ -f "hazelcast-${HAZELCAST_VERSION}.jar" ]; then
