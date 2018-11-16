@@ -807,7 +807,7 @@ Note that the ID that is passed to the `SerializationConfig` is same as the fact
 
 Hazelcast lets you plug a custom serializer to be used for serialization of objects.
 
-Let's say you have a class called `Musician` and you would like to customize the serialization for it, , since you may want to use an external serializer for only one class.
+Let's say you have a class called `Musician` and you would like to customize the serialization for it, since you may want to use an external serializer for only one class.
 
 ```python
 class Musician:
