@@ -5,7 +5,7 @@
   * [1.1. Requirements](#11-requirements)
   * [1.2. Working with Hazelcast IMDG Clusters](#12-working-with-hazelcast-imdg-clusters)
     * [1.2.1. Setting Up a Hazelcast IMDG Cluster](#121-setting-up-a-hazelcast-imdg-cluster)
-      * [1.2.1.1. Running Standalone Jars](#1211-running-standalone-jars)
+      * [1.2.1.1. Running Standalone JARs](#1211-running-standalone-jars)
       * [1.2.1.2. Adding User Library to CLASSPATH](#1212-adding-user-library-to-classpath)
       * [1.2.1.3. Using hazelcast-member Tool](#1213-using-hazelcast-member-tool)
   * [1.3. Downloading and Installing](#13-downloading-and-installing)
@@ -182,9 +182,7 @@ If you want to add a `Portable` class, you should use `<portable-factories>` ins
 
 #### 1.2.1.3. Using hazelcast-member Tool
 
-`hazelcast-member` is a tool to download and run Hazelcast IMDG members easily. 
-
-You can find the installation instructions for various platforms in the following sections.
+`hazelcast-member` is a tool to download and run Hazelcast IMDG members easily. You can find the installation instructions for various platforms in the following sections.
 
 ##### Installing on Mac OS X
 
@@ -292,7 +290,7 @@ See the [Hazelcast IMDG Reference Manual](https://docs.hazelcast.org/docs/latest
 Hazelcast IMDG aims to run out-of-the-box for most common scenarios. However if you have limitations on your network such as multicast being disabled,
 you may have to configure your Hazelcast IMDG members so that they can find each other on the network. Also, since most of the distributed data structures are configurable, you may want to configure them according to your needs. We will show you the basics about network configuration here.
 
-There are two ways to configure Hazelcast IMDG:
+You can use the following options to configure Hazelcast IMDG:
 
 * Using the `hazelcast.xml` configuration file.
 * Programmatically configuring the member before starting it from the Java code.
@@ -809,7 +807,7 @@ Note that the ID that is passed to the `SerializationConfig` is same as the fact
 
 Hazelcast lets you plug a custom serializer to be used for serialization of objects.
 
-Let's say you have a class called `Musician` and you would like to customize the serialization for it. The reason might be that you want to use an external serializer for only one class.
+Let's say you have a class called `Musician` and you would like to customize the serialization for it, , since you may want to use an external serializer for only one class.
 
 ```python
 class Musician:
@@ -857,7 +855,7 @@ The global serializer is identical to custom serializers from the implementation
 
 By default, `cPickle/pickle` serialization is used if the class is not `IdentifiedDataSerializable` or `Portable` or there is no custom serializer for it. When you configure a global serializer, it is used instead of `cPickle/pickle` serialization.
 
-You can use the global serialization for the following cases:
+**Use Cases:**
 
 * Third party serialization frameworks can be integrated using the global serializer.
 
@@ -1003,7 +1001,7 @@ config.network_config.cloud_config.enabled = True
 config.network_config.cloud_config.discovery_token = "dc9220bc5d9"
 ```
 
-To be able to connect to the provided IP addresses, you should use secure TLS/SSL connection between the client and members. Therefore, you should enable the SSL configuration as described in the [TLS/SSL fot Hazelcast Python Client section](#612-tlsssl-for-hazelcast-python-clients).
+To be able to connect to the provided IP addresses, you should use secure TLS/SSL connection between the client and members. Therefore, you should enable the SSL configuration as described in the [TLS/SSL for Hazelcast Python Client section](#612-tlsssl-for-hazelcast-python-clients).
 
 # 6. Securing Client Connection
 
@@ -1082,7 +1080,7 @@ config.network_config.ssl_config.certfile = "/home/hazelcast/certfile.pem"
 
 Private key of the `certfile` can be set using the `keyfile`. This option should point to the absolute path of the private key file for the client certificate in the PEM format.
 
-If this option is not set, private key will be taken from `certfile`. In this case, `cerfile` should be in the following format.
+If this option is not set, private key will be taken from `certfile`. In this case, `certfile` should be in the following format.
 
 ```
 -----BEGIN RSA PRIVATE KEY-----
@@ -1160,7 +1158,7 @@ As explained above, Hazelcast members have key stores used to identify themselve
 
 Using mutual authentication, the clients also have their key stores and members have their trust stores so that the members can know which clients they can trust.
 
-To enable mutual authentication, firstly, you need to set the following property at the server side in the `hazelcast.xml` file:
+To enable mutual authentication, firstly, you need to set the following property on the server side in the `hazelcast.xml` file:
 
 ```xml
 <network>
