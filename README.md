@@ -1251,7 +1251,7 @@ The client executes each operation through the already established connection to
 
 While sending the requests to the related members, the operations can fail due to various reasons. Read-only operations are retried by default. If you want to enable retrying for the other operations, you can set the `redo_operation` to `True`. See the [Enabling Redo Operation section](#53-enabling-redo-operation).
 
-You can set a timeout for retrying the operations sent to a member. This can be provided by using the property `hazelcast.client.invocation.timeout.seconds` in `ClientConfig.properties`. The client will retry an operation within this given period, of course, if it is a read-only operation or you enabled the `redo_operation` as stated in the above paragraph. This timeout value is important when there is a failure resulted by either of the following causes:
+You can set a timeout for retrying the operations sent to a member. This can be provided by using the property `hazelcast.client.invocation.timeout.seconds` via `ClientConfig.set_property()` method. The client will retry an operation within this given period, of course, if it is a read-only operation or you enabled the `redo_operation` as stated in the above paragraph. This timeout value is important when there is a failure resulted by either of the following causes:
 
 * Member throws an exception.
 
@@ -1260,6 +1260,14 @@ You can set a timeout for retrying the operations sent to a member. This can be 
 * Client’s heartbeat requests are timed out.
 
 When a connection problem occurs, an operation is retried if it is certain that it has not run on the member yet or if it is idempotent such as a read-only operation, i.e., retrying does not have a side effect. If it is not certain whether the operation has run on the member, then the non-idempotent operations are not retried. However, as explained in the first paragraph of this section, you can force all the client operations to be retried (`redo_operation`) when there is a connection failure between the client and member. But in this case, you should know that some operations may run multiple times causing conflicts. For example, assume that your client sent a `queue.offer` operation to the member and then the connection is lost. Since there will be no response for this operation, you will not know whether it has run on the member or not. If you enabled `redo_operation`, it means this operation may run again, which may cause two instances of the same object in the queue.
+
+When invocation is being retried, the client may wait some time before it retries again. You can configure this duration for waiting using the following property:
+
+ ```python
+config.set_property("hazelcast.client.invocation.retry.pause.millis", 500)
+```
+
+The default retry wait time is `1` second.
 
 ## 7.4. Using Distributed Data Structures
 
