@@ -12,6 +12,9 @@
   * [1.4. Basic Configuration](#14-basic-configuration)
     * [1.4.1. Configuring Hazelcast IMDG](#141-configuring-hazelcast-imdg)
     * [1.4.2. Configuring Hazelcast Python Client](#142-configuring-hazelcast-python-client)
+      * [1.4.2.1. Group Settings](#1421-group-settings)
+      * [1.4.2.2. Network Settings](#1421-network-settings)
+    * [1.4.3. Client System Properties](#143-client-system-properties)
   * [1.5. Basic Usage](#15-basic-usage)
   * [1.6. Code Samples](#16-code-samples)
 * [2. Features](#2-features)
@@ -376,7 +379,7 @@ If you run the Hazelcast IMDG members in a different server than the client, you
 names as explained in the previous section. If you did, then you need to make certain changes to the network settings of your client.
 
 
-### Group Settings
+#### 1.4.2.1. Group Settings
 
 You need to provide the group name of the cluster, if it is defined on the server side, to which you want the client to connect.
 
@@ -388,7 +391,7 @@ config.group_config.password = "group password"
 
 > **NOTE: If you have a Hazelcast IMDG release older than 3.11, you need to provide also a group password along with the group name.**
 
-### Network Settings
+#### 1.4.2.2. Network Settings
 
 You need to provide the IP address and port of at least one member in your cluster so the client can find it.
 
@@ -398,6 +401,47 @@ import hazelcast
 config = hazelcast.ClientConfig()
 config.network_config.addresses.append("IP-address:port")
 ```
+
+### 1.4.3. Client System Properties
+
+While configuring your Python client, you can use various system properties provided by Hazelcast to tune its clients. These properties can be set programmatically through `config.set_property` method or by using an environment variable.
+
+The value of this property will be:
+
+* the programmatically configured value, if programmatically set,
+* the environment variable value, if the environment variable is set,
+* the default value, if none of the above is set.
+
+See the following for an example client system property configuration:
+ 
+**Programmatically:**
+
+ ```python
+from hazelcast.config import ClientProperties
+
+# Sets invocation timeout as 2 seconds
+config.set_property(ClientProperties.INVOCATION_TIMEOUT_SECONDS.name, 2) 
+```
+
+or 
+ 
+ ```python
+# Sets invocation timeout as 2 seconds
+config.set_property("hazelcast.client.invocation.timeout.seconds", 2)
+```
+
+ **By using an environment variable:** 
+
+```python
+import os
+
+environ = os.environ
+environ[ClientProperties.INVOCATION_TIMEOUT_SECONDS.name] = "2"
+```
+
+If you set a property both programmatically and via an environment variable, the programmatically set value will be used.
+
+See the [complete list](http://hazelcast.github.io/hazelcast-python-client/3.10/hazelcast.config.html#hazelcast.config.ClientProperties) of client system properties, along with their descriptions, which can be used to configure your Hazelcast Python client.
 
 ## 1.5. Basic Usage
 
