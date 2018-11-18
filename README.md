@@ -74,8 +74,15 @@
       * [7.7.1.1. Employee Map Query Example](#7711-employee-map-query-example)
       * [7.7.1.2. Querying by Combining Predicates with AND, OR, NOT](#7712-querying-by-combining-predicates-with-and-or-not)
       * [7.7.1.3. Querying with SQL](#7713-querying-with-sql)
-  * [7.8. Logging](#78-logging)
-    * [7.8.1. Logging Configuration](#781-logging-configuration)
+  * [7.8. Performance](#78-performance)
+    * [7.8.1. Near Cache](#781-near-cache)
+      * [7.8.1.1. Configuring Near Cache](#7811-configuring-near-cache)
+      * [7.8.1.2. Near Cache Example for Map](#7812-near-cache-example-for-map)
+      * [7.8.1.3. Near Cache Eviction](#7813-near-cache-eviction)
+      * [7.8.1.4. Near Cache Expiration](#7814-near-cache-expiration)
+      * [7.8.1.5. Near Cache Invalidation](#7815-near-cache-invalidation)
+  * [7.9. Logging](#79-logging)
+    * [7.9.1. Logging Configuration](#791-logging-configuration)
 * [8. Development and Testing](#8-development-and-testing)
   * [8.1. Building and Using Client From Sources](#81-building-and-using-client-from-sources)
   * [8.2. Testing](#82-testing)
@@ -406,7 +413,7 @@ config.network_config.addresses.append("IP-address:port")
 
 While configuring your Python client, you can use various system properties provided by Hazelcast to tune its clients. These properties can be set programmatically through `config.set_property` method or by using an environment variable.
 
-The value of this property will be:
+The value of the any property will be:
 
 * the programmatically configured value, if programmatically set,
 * the environment variable value, if the environment variable is set,
@@ -1295,7 +1302,7 @@ The client executes each operation through the already established connection to
 
 While sending the requests to the related members, the operations can fail due to various reasons. Read-only operations are retried by default. If you want to enable retrying for the other operations, you can set the `redo_operation` to `True`. See the [Enabling Redo Operation section](#53-enabling-redo-operation).
 
-You can set a timeout for retrying the operations sent to a member. This can be provided by using the property `hazelcast.client.invocation.timeout.seconds` via `ClientConfig.set_property()` method. The client will retry an operation within this given period, of course, if it is a read-only operation or you enabled the `redo_operation` as stated in the above paragraph. This timeout value is important when there is a failure resulted by either of the following causes:
+You can set a timeout for retrying the operations sent to a member. This can be provided by using the property `hazelcast.client.invocation.timeout.seconds` via `ClientConfig.set_property` method. The client will retry an operation within this given period, of course, if it is a read-only operation or you enabled the `redo_operation` as stated in the above paragraph. This timeout value is important when there is a failure resulted by either of the following causes:
 
 * Member throws an exception.
 
@@ -1305,7 +1312,7 @@ You can set a timeout for retrying the operations sent to a member. This can be 
 
 When a connection problem occurs, an operation is retried if it is certain that it has not run on the member yet or if it is idempotent such as a read-only operation, i.e., retrying does not have a side effect. If it is not certain whether the operation has run on the member, then the non-idempotent operations are not retried. However, as explained in the first paragraph of this section, you can force all the client operations to be retried (`redo_operation`) when there is a connection failure between the client and member. But in this case, you should know that some operations may run multiple times causing conflicts. For example, assume that your client sent a `queue.offer` operation to the member and then the connection is lost. Since there will be no response for this operation, you will not know whether it has run on the member or not. If you enabled `redo_operation`, it means this operation may run again, which may cause two instances of the same object in the queue.
 
-When invocation is being retried, the client may wait some time before it retries again. You can configure this duration for waiting using the following property:
+When invocation is being retried, the client may wait some time before it retries again. This duration can be configured using the following property:
 
  ```python
 config.set_property("hazelcast.client.invocation.retry.pause.millis", 500)
@@ -2031,11 +2038,97 @@ print(persons[0], persons[1]) # Outputs '28 30'
 
 In this example, the code creates a list with the values greater than or equal to "27".
 
-# 7.8. Logging
+## 7.8. Performance
+
+### 7.8.1. Near Cache
+
+Map entries in Hazelcast are partitioned across the cluster members. Hazelcast clients do not have local data at all. Suppose you read the key `k` a number of times from a Hazelcast client and `k` is owned by a member in your cluster. Then each `map.get(k)` will be a remote operation, which creates a lot of network trips. If you have a map that is mostly read, then you should consider creating a local Near Cache, so that reads are sped up and less network traffic is created. 
+
+These benefits do not come for free, please consider the following trade-offs:
+
+- Clients with a Near Cache will have to hold the extra cached data, which increases memory consumption.
+- If invalidation is enabled and entries are updated frequently, then invalidations will be costly.
+- Near Cache breaks the strong consistency guarantees; you might be reading stale data.
+ 
+Near Cache is highly recommended for maps that are mostly read.
+
+#### 7.8.1.1. Configuring Near Cache
+
+The following snippet show how a Near Cache is configured in the Python client, presenting all available values for each element:
+
+```python
+from hazelcast.config import NearCacheConfig, IN_MEMORY_FORMAT, EVICTION_POLICY
+
+near_cache_config = NearCacheConfig("mostly-read-map")
+near_cache_config.invalidate_on_change = False
+near_cache_config.time_to_live_seconds = 600
+near_cache_config.max_idle_seconds = 5
+near_cache_config.in_memory_format = IN_MEMORY_FORMAT.OBJECT
+near_cache_config.eviction_policy = EVICTION_POLICY.LRU
+near_cache_config.eviction_max_size = 100
+near_cache_config.eviction_sampling_count = 8
+near_cache_config.eviction_sampling_pool_size = 16
+
+config.add_near_cache_config(near_cache_config)
+```
+
+Following are the descriptions of all configuration elements:
+
+- `in_memory_format`: Specifies in which format data will be stored in your Near Cache. Note that a map’s in-memory format can be different from that of its Near Cache. Available values are as follows:
+  - `BINARY`: Data will be stored in serialized binary format (default value).
+  - `OBJECT`: Data will be stored in deserialized format.
+- `invalidate_on_change`: Specifies whether the cached entries are evicted when the entries are updated or removed. Its default value is `True`.
+- `time_to_live_seconds`: Maximum number of seconds for each entry to stay in the Near Cache. Entries that are older than this period are automatically evicted from the Near Cache. Regardless of the eviction policy used, `time_to_live_seconds` still applies. Any non-negative number can be assigned. Its default value is `None`. `None` means infinite. 
+- `max_idle_seconds`: Maximum number of seconds each entry can stay in the Near Cache as untouched (not read). Entries that are not read more than this period are removed from the Near Cache. Any non-negative number can be assigned. Its default value is `None`. `None` means infinite. 
+- `eviction_policy`: Eviction policy configuration. Available values are as follows:
+  - `LRU`: Least Recently Used (default value).
+  - `LFU`: Least Frequently Used.
+  - `NONE`: No items are evicted and the `eviction_max_size` property is ignored. You still can combine it with `time_to_live_seconds` and `max_idle_seconds` to evict items from the Near Cache. 
+  - `RANDOM`: A random item is evicted.
+- `eviction_max_size`: Maximum number of entries kept in the memory before eviction kicks in.
+- `eviction_sampling_count`: Number of random entries that are evaluated to see if some of them are already expired. If there are expired entries, those are removed and there is no need for eviction.
+- `eviction_sampling_pool_size`: Size of the pool for eviction candidates. The pool is kept sorted according to eviction policy. The entry with the highest score is evicted. 
+
+#### 7.8.1.2. Near Cache Example for Map
+
+The following is an example configuration for a Near Cache defined in the `mostly-read-map` map. According to this configuration, the entries are stored as `OBJECT`'s in this Near Cache and eviction starts when the count of entries reaches `5000`; entries are evicted based on the `LRU` (Least Recently Used) policy. In addition, when an entry is updated or removed on the member side, it is eventually evicted on the client side.
+
+```python
+near_cache_config = NearCacheConfig("mostly-read-map")
+near_cache_config.invalidate_on_change = True
+near_cache_config.in_memory_format = IN_MEMORY_FORMAT.OBJECT
+near_cache_config.eviction_policy = EVICTION_POLICY.LRU
+near_cache_config.eviction_max_size = 5000
+
+config.add_near_cache_config(near_cache_config)
+```
+
+#### 7.8.1.3. Near Cache Eviction
+
+In the scope of Near Cache, eviction means evicting (clearing) the entries selected according to the given `eviction_policy` when the specified `eviction_max_size` has been reached.
+
+The `eviction_max_size` defines the entry count when the Near Cache is full and determines whether the eviction should be triggered. 
+
+Once the eviction is triggered, the configured `eviction_policy` determines which, if any, entries must be evicted.
+
+#### 7.8.1.4. Near Cache Expiration
+
+Expiration means the eviction of expired records. A record is expired:
+
+- If it is not touched (accessed/read) for `max_idle_seconds`
+- `time_to_live_seconds` passed since it is put to Near Cache
+
+The actual expiration is performed when a record is accessed: it is checked if the record is expired or not. If it is expired, it is evicted and `KeyError` is raised to the caller.
+
+#### 7.8.1.5. Near Cache Invalidation
+
+Invalidation is the process of removing an entry from the Near Cache when its value is updated or it is removed from the original map (to prevent stale reads). See the [Near Cache Invalidation section](https://docs.hazelcast.org/docs/latest/manual/html-single/#near-cache-invalidation) in the Hazelcast IMDG Reference Manual.
+
+## 7.9. Logging
 
 In this chapter, you will learn about the different ways of configuring the logging for the Python client.
 
-## 7.8.1 Logging Configuration
+### 7.9.1 Logging Configuration
 
 Hazelcast Python client allows you to configure the logging through the root logger via the `logging` module. 
 
@@ -2075,7 +2168,7 @@ INFO:HazelcastClient:Client shutdown.
 
 Let's go over the keyword arguments supported by the `logging.basicConfig` one by one.
 
-### Logging to Stream
+#### Logging to Stream
 
 You can specify the `stream` attribute to log to a stream.
 
@@ -2093,7 +2186,7 @@ import sys
 logging.basicConfig(stream=sys.stdout)
 ``` 
 
-### Logging to File
+#### Logging to File
 
 You can specify the `filename` and `filemode` attributes to log to a file. 
 
@@ -2109,7 +2202,7 @@ Below is an example of this configuration.
 logging.basicConfig(filename="/home/hazelcast/hz-py.log", filemode="w")
 ```
 
-### Specifying Logging Format
+#### Specifying Logging Format
 
 Logging format can be set using the `format` and `datefmt` arguments. 
 
@@ -2130,7 +2223,7 @@ logging.basicConfig(format='%(asctime)s%(msecs)03d [%(threadName)s][%(name)s] %(
 08:48:12,439 [hazelcast-reactor][Reactor] DEBUG: Starting Reactor Thread
 ```
 
-### Setting Logging Level
+#### Setting Logging Level
 
 Although you can not change the logging levels used within the Hazelcast Python client, you can specify a logging level that will be used to threshold the logs that are at least as severe as your specified level using  the `level` argument.
 
@@ -2153,7 +2246,7 @@ Below is an example of this configuration.
 logging.basicConfig(level=logging.INFO)
 ```
 
-### Setting Custom Handlers
+#### Setting Custom Handlers
 
 Apart from `FileHandler` and `StreamHandler`, custom handlers can be added to the root logger using the `handlers` attribute.
 
