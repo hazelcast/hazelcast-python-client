@@ -6,7 +6,7 @@ else
     USER=""
 fi
 
-HZ_VERSION="3.11"
+HZ_VERSION="3.11.1-SNAPSHOT"
 
 HAZELCAST_TEST_VERSION=${HZ_VERSION}
 HAZELCAST_ENTERPRISE_TEST_VERSION=${HZ_VERSION}
@@ -103,4 +103,3 @@ if [ "$USER" = "--user" ] ; then
 else
     nosetests -v --with-xunit --with-coverage --cover-xml --cover-package=hazelcast --cover-inclusive --nologcapture
 fi
-

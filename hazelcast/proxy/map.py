@@ -301,6 +301,9 @@ class Map(Proxy):
             check_not_none(key, "key can't be None")
             key_list.append(self._to_data(key))
 
+        if len(keys) == 0:
+            return ImmediateFuture([])
+
         return self._encode_invoke(map_execute_on_keys_codec, entry_processor=self._to_data(entry_processor),
                                    keys=key_list)
 
