@@ -6,7 +6,7 @@ import sys
 import threading
 import time
 
-from hazelcast.core import CLIENT_TYPE
+from hazelcast.core import CLIENT_TYPE, CLIENT_VERSION, SERIALIZATION_VERSION
 from hazelcast.exception import AuthenticationError
 from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
 from hazelcast.protocol.client_message import BEGIN_END_FLAG, ClientMessage, ClientMessageBuilder
@@ -69,7 +69,8 @@ class ConnectionManager(object):
             owner_uuid=owner_uuid,
             is_owner_connection=False,
             client_type=CLIENT_TYPE,
-            serialization_version=1)
+            serialization_version=SERIALIZATION_VERSION,
+            client_hazelcast_version=CLIENT_VERSION)
 
         def callback(f):
             parameters = client_authentication_codec.decode_response(f.result())
@@ -78,6 +79,7 @@ class ConnectionManager(object):
             connection.endpoint = parameters["address"]
             self.owner_uuid = parameters["owner_uuid"]
             self.uuid = parameters["uuid"]
+            connection.server_version = parameters["server_hazelcast_version"]
             return connection
 
         return self._client.invoker.invoke_on_connection(request, connection).continue_with(callback)
@@ -269,8 +271,10 @@ class Connection(object):
         self._connection_closed_callback = connection_closed_callback
         self._builder = ClientMessageBuilder(message_callback)
         self._read_buffer = b""
-        self.last_read = time.time()
+        self.last_read = 0
         self.last_write = 0
+        self.start_time = 0
+        self.server_version = ""
 
     def live(self):
         """
@@ -296,7 +300,6 @@ class Connection(object):
         """
         Receives a message from this connection.
         """
-        self.last_read = time.time()
         # split frames
         while len(self._read_buffer) >= INT_SIZE_IN_BYTES:
             frame_length = struct.unpack_from(FMT_LE_INT, self._read_buffer, 0)[0]

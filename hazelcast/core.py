@@ -2,6 +2,7 @@
 
 SERIALIZATION_VERSION = 1
 CLIENT_TYPE = "PYH"
+CLIENT_VERSION = "3.10"
 
 
 class Member(object):

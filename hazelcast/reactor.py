@@ -182,10 +182,12 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         self._write_queue.append(b"CB2")
 
     def handle_connect(self):
+        self.start_time = time.time()
         self.logger.debug("Connected to %s", self._address)
 
     def handle_read(self):
         self._read_buffer += self.recv(BUFFER_SIZE)
+        self.last_read = time.time()
         self.receive_message()
 
     def handle_write(self):
