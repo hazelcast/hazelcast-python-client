@@ -8,6 +8,15 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
+
+stats_requirements = [
+    'psutil',
+]
+
+extras = {
+    'stats': stats_requirements,
+}
+
 setup(
         name='hazelcast-python-client',
         version=__version__,
@@ -38,8 +47,9 @@ setup(
         ],
         license='Apache 2.0',
         keywords='hazelcast,hazelcast client,In-Memory Data Grid,Distributed Computing',
-        packages=find_packages(exclude=[ 'benchmarks', 'examples', 'docs', 'tests', 'tests.*']),
+        packages=find_packages(exclude=[ 'benchmarks', 'examples', 'examples.*', 'docs', 'tests', 'tests.*']),
         package_dir={'hazelcast': 'hazelcast'},
         install_requires=[],
+        extras_require=extras,
         tests_require=['thrift', 'nose', 'coverage'],
 )

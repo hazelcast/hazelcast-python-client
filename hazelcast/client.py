@@ -12,8 +12,10 @@ from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE, LIST_SERVI
     TOPIC_SERVICE, RELIABLE_TOPIC_SERVICE, SEMAPHORE_SERVICE, LOCK_SERVICE, ID_GENERATOR_SERVICE, \
     ID_GENERATOR_ATOMIC_LONG_PREFIX, \
     EXECUTOR_SERVICE
+from hazelcast.near_cache import NearCacheManager
 from hazelcast.reactor import AsyncoreReactor
 from hazelcast.serialization import SerializationServiceV1
+from hazelcast.statistics import Statistics
 from hazelcast.transaction import TWO_PHASE, TransactionManager
 from hazelcast.util import AtomicInteger
 from hazelcast.discovery import HazelcastCloudAddressProvider, HazelcastCloudAddressTranslator, HazelcastCloudDiscovery
@@ -24,6 +26,7 @@ class HazelcastClient(object):
     """
     Hazelcast Client.
     """
+    CLIENT_ID = AtomicInteger()
     logger = logging.getLogger("HazelcastClient")
     _config = None
 
@@ -45,6 +48,10 @@ class HazelcastClient(object):
         self.serialization_service = SerializationServiceV1(serialization_config=self.config.serialization_config)
         self.transaction_manager = TransactionManager(self)
         self.lock_reference_id_generator = AtomicInteger(1)
+        self.near_cache_manager = NearCacheManager(self)
+        self.id = HazelcastClient.CLIENT_ID.get_and_increment()
+        self.name = self._init_client_name()
+        self.statistics = Statistics(self)
         self._start()
 
     def _start(self):
@@ -53,6 +60,7 @@ class HazelcastClient(object):
             self.cluster.start()
             self.heartbeat.start()
             self.partition_service.start()
+            self.statistics.start()
         except:
             self.reactor.shutdown()
             raise
@@ -224,6 +232,8 @@ class HazelcastClient(object):
         """
         if self.lifecycle.is_live:
             self.lifecycle.fire_lifecycle_event(LIFECYCLE_STATE_SHUTTING_DOWN)
+            self.statistics.shutdown()
+            self.near_cache_manager.destroy_all_near_caches()
             self.partition_service.shutdown()
             self.heartbeat.shutdown()
             self.cluster.shutdown()
@@ -297,3 +307,8 @@ class HazelcastClient(object):
                                              "Cluster members given explicitly: {}"
                                              ", Hazelcast.cloud enabled: {}".format(address_list_provided,
                                                                                     hazelcast_cloud_enabled))
+
+    def _init_client_name(self):
+        if self.config.client_name:
+            return self.config.client_name
+        return "hz.client_" + str(self.id)

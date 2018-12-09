@@ -898,12 +898,9 @@ class MapFeatNearCache(Map):
     """
     def __init__(self, client, service_name, name):
         super(MapFeatNearCache, self).__init__(client, service_name, name)
-        near_cache_config = client.config.near_cache_configs.get(name, None)
-        if near_cache_config is None:
-            raise ValueError("NearCache config cannot be None here!")
         self._invalidation_listener_id = None
-        self._near_cache = create_near_cache(client.serialization_service, near_cache_config)
-        if near_cache_config.invalidate_on_change:
+        self._near_cache = client.near_cache_manager.get_or_create_near_cache(name)
+        if self._near_cache.invalidate_on_change:
             self._add_near_cache_invalidation_listener()
 
     def clear(self):
@@ -1059,18 +1056,6 @@ class MapFeatNearCache(Map):
     def _delete_internal(self, key_data):
         self._invalidate_cache(key_data)
         return super(MapFeatNearCache, self)._delete_internal(key_data)
-
-
-def create_near_cache(serialization_service, near_cache_config):
-    return NearCache(serialization_service,
-                     near_cache_config.in_memory_format,
-                     near_cache_config.time_to_live_seconds,
-                     near_cache_config.max_idle_seconds,
-                     near_cache_config.invalidate_on_change,
-                     near_cache_config.eviction_policy,
-                     near_cache_config.eviction_max_size,
-                     near_cache_config.eviction_sampling_count,
-                     near_cache_config.eviction_sampling_pool_size)
 
 
 def create_map_proxy(client, service_name, name, **kwargs):

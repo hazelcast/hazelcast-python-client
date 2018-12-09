@@ -12,7 +12,7 @@ from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
 from hazelcast.protocol.client_message import BEGIN_END_FLAG, ClientMessage, ClientMessageBuilder
 from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
 from hazelcast.serialization import INT_SIZE_IN_BYTES, FMT_LE_INT
-from hazelcast.util import AtomicInteger, parse_addresses
+from hazelcast.util import AtomicInteger, parse_addresses, calculate_version
 from hazelcast import six
 
 BUFFER_SIZE = 8192
@@ -79,7 +79,8 @@ class ConnectionManager(object):
             connection.endpoint = parameters["address"]
             self.owner_uuid = parameters["owner_uuid"]
             self.uuid = parameters["uuid"]
-            connection.server_version = parameters["server_hazelcast_version"]
+            connection.server_version_str = parameters["server_hazelcast_version"]
+            connection.server_version = calculate_version(connection.server_version_str)
             return connection
 
         return self._client.invoker.invoke_on_connection(request, connection).continue_with(callback)
@@ -274,7 +275,8 @@ class Connection(object):
         self.last_read = 0
         self.last_write = 0
         self.start_time = 0
-        self.server_version = ""
+        self.server_version_str = ""
+        self.server_version = 0
 
     def live(self):
         """

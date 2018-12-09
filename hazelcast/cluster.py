@@ -9,7 +9,7 @@ from hazelcast.exception import HazelcastError, AuthenticationError, TargetDisco
 from hazelcast.invocation import ListenerInvocation
 from hazelcast.lifecycle import LIFECYCLE_STATE_CONNECTED, LIFECYCLE_STATE_DISCONNECTED
 from hazelcast.protocol.codec import client_add_membership_listener_codec, client_authentication_codec
-from hazelcast.util import get_possible_addresses, get_provider_addresses
+from hazelcast.util import get_possible_addresses, get_provider_addresses, calculate_version
 
 # Membership Event Types
 MEMBER_ADDED = 1
@@ -151,7 +151,8 @@ class ClusterService(object):
             connection.is_owner = True
             self.owner_uuid = parameters["owner_uuid"]
             self.uuid = parameters["uuid"]
-            connection.server_version = parameters["server_hazelcast_version"]
+            connection.server_version_str = parameters["server_hazelcast_version"]
+            connection.server_version = calculate_version(connection.server_version_str)
             return connection
 
         return self._client.invoker.invoke_on_connection(request, connection).continue_with(callback)

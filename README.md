@@ -81,8 +81,9 @@
       * [7.8.1.3. Near Cache Eviction](#7813-near-cache-eviction)
       * [7.8.1.4. Near Cache Expiration](#7814-near-cache-expiration)
       * [7.8.1.5. Near Cache Invalidation](#7815-near-cache-invalidation)
-  * [7.9. Logging](#79-logging)
-    * [7.9.1. Logging Configuration](#791-logging-configuration)
+  * [7.9. Monitoring and Logging](#79-monitoring-and-logging)
+    * [7.9.1. Enabling Client Statistics](#791-enabling-client-statistics)
+    * [7.9.2. Logging Configuration](#792-logging-configuration)
 * [8. Development and Testing](#8-development-and-testing)
   * [8.1. Building and Using Client From Sources](#81-building-and-using-client-from-sources)
   * [8.2. Testing](#82-testing)
@@ -455,7 +456,7 @@ See the [complete list](http://hazelcast.github.io/hazelcast-python-client/3.10/
 Now that we have a working cluster and we know how to configure both our cluster and client, we can run a simple program to use a
 distributed map in the Python client.
 
-The following example first configures the logger for the Python client. You can find more information about the logging options in the [Logging Configuration section](#791-logging-configuration). 
+The following example first configures the logger for the Python client. You can find more information about the logging options in the [Logging Configuration section](#792-logging-configuration). 
 
 Then, it creates a configuration object and starts a client.
 
@@ -2124,11 +2125,58 @@ The actual expiration is performed when a record is accessed: it is checked if t
 
 Invalidation is the process of removing an entry from the Near Cache when its value is updated or it is removed from the original map (to prevent stale reads). See the [Near Cache Invalidation section](https://docs.hazelcast.org/docs/latest/manual/html-single/#near-cache-invalidation) in the Hazelcast IMDG Reference Manual.
 
-## 7.9. Logging
+## 7.9. Monitoring and Logging
 
-In this chapter, you will learn about the different ways of configuring the logging for the Python client.
+### 7.9.1. Enabling Client Statistics
 
-### 7.9.1 Logging Configuration
+You can monitor your clients using Hazelcast Management Center.
+
+As a prerequisite, you need to enable the client statistics before starting your clients. This can be done by setting the `hazelcast.client.statistics.enabled` system property to `true` on the **member** as the following:
+
+```xml
+<hazelcast>
+    ...
+    <properties>
+        <property name="hazelcast.client.statistics.enabled">true</property>
+    </properties>
+    ...
+</hazelcast>
+```
+
+Also, you need to enable the client statistics in the Python client. There are two properties related to client statistics:
+
+- `hazelcast.client.statistics.enabled`: If set to `True`, it enables collecting the client statistics and sending them to the cluster. When it is `True` you can monitor the clients that are connected to your Hazelcast cluster, using Hazelcast Management Center. Its default value is `False`.
+
+- `hazelcast.client.statistics.period.seconds`: Period in seconds the client statistics are collected and sent to the cluster. Its default value is `3`.
+
+You can enable client statistics and set a non-default period in seconds as follows:
+
+```python
+config = hazelcast.ClientConfig()
+config.set_property(ClientProperties.STATISTICS_ENABLED.name, True)
+config.set_property(ClientProperties.STATISTICS_PERIOD_SECONDS.name, 4)
+```
+
+Hazelcast Python client can collect statistics related to the client and Near Caches without an extra dependency. However, to get the statistics about the runtime and operating system, [psutil](https://pypi.org/project/psutil/) is used as an extra dependency.
+
+If the `psutil` is installed, runtime and operating system statistics will be sent to cluster along with statistics related to the client and Near Caches. If not, only the client and Near Cache statistics will be sent.
+
+`psutil` can be installed independently or with the Hazelcast Python client as follows:
+
+**From PyPI**
+```
+pip install hazelcast-python-client[stats]
+```
+
+**From source**
+
+```
+pip install -e .[stats]
+```
+ 
+After enabling the client statistics, you can monitor your clients using Hazelcast Management Center. Please refer to the [Monitoring Clients section](https://docs.hazelcast.org/docs/management-center/latest/manual/html/index.html#monitoring-clients) in the Hazelcast Management Center Reference Manual for more information on the client statistics.
+
+### 7.9.2 Logging Configuration
 
 Hazelcast Python client allows you to configure the logging through the root logger via the `logging` module. 
 

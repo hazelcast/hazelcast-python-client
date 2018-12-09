@@ -66,6 +66,14 @@ def current_time():
     return time.time()
 
 
+def current_time_in_millis():
+    """
+    Returns the current time of the system in millis.
+    :return: (int), current time of the system in millis.
+    """
+    return int(time.time() * 1000)
+
+
 def thread_id():
     """
     Returns the current thread's id.
@@ -84,6 +92,18 @@ def to_millis(seconds):
     """
     if seconds >= 0:
         return int(seconds * 1000)
+    return seconds
+
+
+def to_nanos(seconds):
+    """
+    Converts the time parameter in seconds to nanoseconds. If the given time is negative, returns the original value.
+
+    :param seconds: (Number), the given time in seconds.
+    :return: (int), result of the conversation in nanoseconds.
+    """
+    if seconds >= 0:
+        return int(seconds * 1e9)
     return seconds
 
 
@@ -232,3 +252,34 @@ class TimeUnit(object):
             # bool is a subclass of int. Don't let bool and float multiplication.
             raise TypeError
         return float(value) * time_unit
+
+
+# Version utilities
+UNKNOWN_VERSION = -1
+MAJOR_VERSION_MULTIPLIER = 10000
+MINOR_VERSION_MULTIPLIER = 100
+
+
+def calculate_version(version_str):
+    if not version_str:
+        return UNKNOWN_VERSION
+
+    main_parts = version_str.split("-")
+    tokens = main_parts[0].split(".")
+
+    if len(tokens) < 2:
+        return UNKNOWN_VERSION
+
+    try:
+        major_coeff = int(tokens[0])
+        minor_coeff = int(tokens[1])
+
+        calculated_version = major_coeff * MAJOR_VERSION_MULTIPLIER + minor_coeff * MINOR_VERSION_MULTIPLIER
+
+        if len(tokens) > 2:
+            patch_coeff = int(tokens[2])
+            calculated_version += patch_coeff
+
+        return calculated_version
+    except ValueError:
+        return UNKNOWN_VERSION
