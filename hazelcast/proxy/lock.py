@@ -19,7 +19,8 @@ class Lock(PartitionSpecificProxy):
         Releases the lock regardless of the lock owner. It always successfully unlocks, never blocks, and returns
         immediately.
         """
-        return self._encode_invoke(lock_force_unlock_codec, reference_id=self.reference_id_generator.get_next())
+        return self._encode_invoke(lock_force_unlock_codec,
+                                   reference_id=self.reference_id_generator.get_and_increment())
 
     def get_lock_count(self):
         """
@@ -64,7 +65,7 @@ class Lock(PartitionSpecificProxy):
         :param lease_time: (long), time to wait before releasing the lock (optional).
         """
         return self._encode_invoke(lock_lock_codec, invocation_timeout=MAX_SIZE, lease_time=to_millis(lease_time),
-                                   thread_id=thread_id(), reference_id=self.reference_id_generator.get_next())
+                                   thread_id=thread_id(), reference_id=self.reference_id_generator.get_and_increment())
 
     def try_lock(self, timeout=0, lease_time=-1):
         """
@@ -84,11 +85,11 @@ class Lock(PartitionSpecificProxy):
         """
         return self._encode_invoke(lock_try_lock_codec, invocation_timeout=MAX_SIZE, lease=to_millis(lease_time),
                                    thread_id=thread_id(), timeout=to_millis(timeout),
-                                   reference_id=self.reference_id_generator.get_next())
+                                   reference_id=self.reference_id_generator.get_and_increment())
 
     def unlock(self):
         """
         Releases the lock.
         """
         return self._encode_invoke(lock_unlock_codec, thread_id=thread_id(),
-                                   reference_id=self.reference_id_generator.get_next())
+                                   reference_id=self.reference_id_generator.get_and_increment())

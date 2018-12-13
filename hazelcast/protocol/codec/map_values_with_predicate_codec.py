@@ -6,7 +6,7 @@ from hazelcast.six.moves import range
 
 REQUEST_TYPE = MAP_VALUESWITHPREDICATE
 RESPONSE_TYPE = 106
-RETRYABLE = False
+RETRYABLE = True
 
 
 def calculate_size(name, predicate):

@@ -326,7 +326,7 @@ class Map(Proxy):
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
         return self._encode_invoke_on_key(map_force_unlock_codec, key_data, key=key_data,
-                                          reference_id=self.reference_id_generator.get_next())
+                                          reference_id=self.reference_id_generator.get_and_increment())
 
     def get(self, key):
         """
@@ -483,7 +483,7 @@ class Map(Proxy):
         key_data = self._to_data(key)
         return self._encode_invoke_on_key(map_lock_codec, key_data, invocation_timeout=MAX_SIZE, key=key_data,
                                           thread_id=thread_id(), ttl=to_millis(ttl),
-                                          reference_id=self.reference_id_generator.get_next())
+                                          reference_id=self.reference_id_generator.get_and_increment())
 
     def put(self, key, value, ttl=-1):
         """
@@ -753,7 +753,7 @@ class Map(Proxy):
 
         return self._encode_invoke_on_key(map_try_lock_codec, key_data, invocation_timeout=MAX_SIZE, key=key_data,
                                           thread_id=thread_id(), lease=to_millis(ttl), timeout=to_millis(timeout),
-                                          reference_id=self.reference_id_generator.get_next())
+                                          reference_id=self.reference_id_generator.get_and_increment())
 
     def try_put(self, key, value, timeout=0):
         """
@@ -799,7 +799,7 @@ class Map(Proxy):
         key_data = self._to_data(key)
 
         return self._encode_invoke_on_key(map_unlock_codec, key_data, key=key_data, thread_id=thread_id(),
-                                          reference_id=self.reference_id_generator.get_next())
+                                          reference_id=self.reference_id_generator.get_and_increment())
 
     def values(self, predicate=None):
         """
