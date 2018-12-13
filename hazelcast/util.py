@@ -131,24 +131,6 @@ class AtomicInteger(object):
         self.count = itertools.count(start=value)
 
 
-class LockReferenceIdGenerator(object):
-    """
-    This class generates unique (per client) incrementing reference id which is used during locking related requests.
-    The server side uses this id to match if any previous request with the same id was issued and shall not re-do the
-    lock related operation but it shall just return the previous result. Hence, this id identifies the request sent to
-    the server side for locking operations. Similarly, if the client re-sends the request to the server for some reason
-    it will use the same reference id to make sure that the operation is not executed more than once at the server side.
-    """
-    def __init__(self):
-        self.reference_id_counter = itertools.count(start=1)
-
-    def get_next(self):
-        """
-        :return: (int), A per client unique reference id.
-        """
-        return next(self.reference_id_counter)
-
-
 def enum(**enums):
     """
     Utility method for defining enums.

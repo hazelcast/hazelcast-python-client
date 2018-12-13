@@ -6,7 +6,7 @@ from hazelcast.six.moves import range
 
 REQUEST_TYPE = RINGBUFFER_READMANY
 RESPONSE_TYPE = 115
-RETRYABLE = False
+RETRYABLE = True
 
 
 def calculate_size(name, start_sequence, min_count, max_count, filter):

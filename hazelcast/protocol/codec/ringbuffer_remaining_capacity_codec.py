@@ -4,7 +4,7 @@ from hazelcast.protocol.codec.ringbuffer_message_type import *
 
 REQUEST_TYPE = RINGBUFFER_REMAININGCAPACITY
 RESPONSE_TYPE = 103
-RETRYABLE = False
+RETRYABLE = True
 
 
 def calculate_size(name):
