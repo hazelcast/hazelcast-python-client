@@ -904,10 +904,7 @@ class MapFeatNearCache(Map):
             self._add_near_cache_invalidation_listener()
 
     def clear(self):
-        size = len(self._near_cache)
-        self._near_cache.clear()
-        self._near_cache._invalidations += size
-        self._near_cache._invalidation_requests += 1
+        self._near_cache._clear()
         return super(MapFeatNearCache, self).clear()
 
     def evict_all(self):
@@ -946,10 +943,7 @@ class MapFeatNearCache(Map):
         # null key means near cache has to remove all entries in it.
         # see MapAddNearCacheEntryListenerMessageTask.
         if key is None:
-            size = len(self._near_cache)
-            self._near_cache.clear()
-            self._near_cache._invalidations += size
-            self._near_cache._invalidation_requests += 1
+            self._near_cache._clear()
         else:
             self._invalidate_cache(key)
 
@@ -959,23 +953,11 @@ class MapFeatNearCache(Map):
             self._invalidate_cache(key_data)
 
     def _invalidate_cache(self, key_data):
-        try:
-            del self._near_cache[key_data]
-            self._near_cache._invalidations += 1
-        except KeyError:
-            # There is nothing to invalidate
-            pass
-        self._near_cache._invalidation_requests += 1
+        self._near_cache._invalidate(key_data)
 
     def _invalidate_cache_batch(self, key_data_list):
         for key_data in key_data_list:
-            try:
-                del self._near_cache[key_data]
-                self._near_cache._invalidations += 1
-            except KeyError:
-                # There is nothing to invalidate
-                pass
-            self._near_cache._invalidation_requests += 1
+            self._near_cache._invalidate(key_data)
 
     # internals
     def _contains_key_internal(self, key_data):

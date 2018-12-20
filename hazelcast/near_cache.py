@@ -112,6 +112,25 @@ class NearCache(dict):
         self._invalidation_requests = 0
         self._creation_time_in_seconds = current_time()
 
+    def get_statistics(self):
+        """
+        Returns the statistics of the NearCache.
+        :return: (Dict), Dictionary that stores statistics related to this near cache.
+        """
+        stats = {
+            "creation_time": self._creation_time_in_seconds,
+            "evictions": self._evictions,
+            "expirations": self._expirations,
+            "misses": self._misses,
+            "hits": self._hits,
+            "invalidations": self._invalidations,
+            "invalidation_requests": self._invalidation_requests,
+            "owned_entry_count": self.__len__(),
+            "owned_entry_memory_cost": getsizeof(self),
+        }
+
+        return stats
+
     def __setitem__(self, key, value):
         self._do_eviction_if_required()
 
@@ -195,25 +214,6 @@ class NearCache(dict):
     def _is_eviction_required(self):
         return self.eviction_policy != EVICTION_POLICY.NONE and self.eviction_max_size <= self.__len__()
 
-    def get_statistics(self):
-        """
-        Returns the statistics of the NearCache.
-        :return: (Dict), Dictionary that stores statistics related to this near cache.
-        """
-        stats = {
-            "creation_time": self._creation_time_in_seconds,
-            "evictions": self._evictions,
-            "expirations": self._expirations,
-            "misses": self._misses,
-            "hits": self._hits,
-            "invalidations": self._invalidations,
-            "invalidation_requests": self._invalidation_requests,
-            "owned_entry_count": self.__len__(),
-            "owned_entry_memory_cost": getsizeof(self),
-        }
-
-        return stats
-
     def _clean_expired_record(self, key):
         try:
             self.__delitem__(key)
@@ -221,6 +221,21 @@ class NearCache(dict):
         except KeyError:
             # key may be evicted previously so just ignore it
             pass
+
+    def _clear(self):
+        size = self.__len__()
+        self.clear()
+        self._invalidations += size
+        self._invalidation_requests += 1
+
+    def _invalidate(self, key_data):
+        try:
+            self.__delitem__(key_data)
+            self._invalidations += 1
+        except KeyError:
+            # There is nothing to invalidate
+            pass
+        self._invalidation_requests += 1
 
     def __repr__(self):
         return "NearCache[len:{}, evicted:{}]".format(self.__len__(), self._evictions)
