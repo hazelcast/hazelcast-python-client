@@ -40,8 +40,8 @@ class MapTest(SingleMemberTestCase):
         value3 = self.map.get(key)
         self.assertEqual(value, value2)
         self.assertEqual(value, value3)
-        self.assertEqual(1, self.map._near_cache._cache_hit)
-        self.assertEqual(1, self.map._near_cache._cache_miss)
+        self.assertEqual(1, self.map._near_cache._hits)
+        self.assertEqual(1, self.map._near_cache._misses)
 
     def test_put_get_remove(self):
         key = "key"
@@ -52,8 +52,8 @@ class MapTest(SingleMemberTestCase):
         self.map.remove(key)
         self.assertEqual(value, value2)
         self.assertEqual(value, value3)
-        self.assertEqual(1, self.map._near_cache._cache_hit)
-        self.assertEqual(1, self.map._near_cache._cache_miss)
+        self.assertEqual(1, self.map._near_cache._hits)
+        self.assertEqual(1, self.map._near_cache._misses)
         self.assertEqual(0, len(self.map._near_cache))
 
     def test_invalidate_single_key(self):

@@ -226,8 +226,8 @@ class Heartbeat(object):
     def _heartbeat(self):
         now = time.time()
         for connection in list(self._client.connection_manager.connections.values()):
-            time_since_last_read = now - connection.last_read
-            time_since_last_write = now - connection.last_write
+            time_since_last_read = now - connection.last_read_in_seconds
+            time_since_last_write = now - connection.last_write_in_seconds
             if time_since_last_read > self._heartbeat_timeout:
                 if connection.heartbeating:
                     self.logger.warning(
@@ -272,9 +272,9 @@ class Connection(object):
         self._connection_closed_callback = connection_closed_callback
         self._builder = ClientMessageBuilder(message_callback)
         self._read_buffer = b""
-        self.last_read = 0
-        self.last_write = 0
-        self.start_time = 0
+        self.last_read_in_seconds = 0
+        self.last_write_in_seconds = 0
+        self.start_time_in_seconds = 0
         self.server_version_str = ""
         self.server_version = 0
 

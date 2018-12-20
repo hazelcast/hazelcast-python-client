@@ -182,12 +182,12 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         self._write_queue.append(b"CB2")
 
     def handle_connect(self):
-        self.start_time = time.time()
+        self.start_time_in_seconds = time.time()
         self.logger.debug("Connected to %s", self._address)
 
     def handle_read(self):
         self._read_buffer += self.recv(BUFFER_SIZE)
-        self.last_read = time.time()
+        self.last_read_in_seconds = time.time()
         self.receive_message()
 
     def handle_write(self):
@@ -197,7 +197,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
             except IndexError:
                 return
             sent = self.send(data)
-            self.last_write = time.time()
+            self.last_write_in_seconds = time.time()
             self.sent_protocol_bytes = True
             if sent < len(data):
                 self._write_queue.appendleft(data[sent:])
@@ -223,7 +223,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         if len(self._write_queue) == 0 and self._write_lock.acquire(False):
             try:
                 sent = self.send(data)
-                self.last_write = time.time()
+                self.last_write_in_seconds = time.time()
                 if sent < len(data):
                     self.logger.info("adding to queue")
                     self._write_queue.appendleft(data[sent:])

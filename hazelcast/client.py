@@ -50,7 +50,7 @@ class HazelcastClient(object):
         self.lock_reference_id_generator = AtomicInteger(1)
         self.near_cache_manager = NearCacheManager(self)
         self.id = HazelcastClient.CLIENT_ID.get_and_increment()
-        self.name = self._init_client_name()
+        self.name = self._create_client_name()
         self.statistics = Statistics(self)
         self._start()
 
@@ -308,7 +308,7 @@ class HazelcastClient(object):
                                              ", Hazelcast.cloud enabled: {}".format(address_list_provided,
                                                                                     hazelcast_cloud_enabled))
 
-    def _init_client_name(self):
+    def _create_client_name(self):
         if self.config.client_name:
             return self.config.client_name
         return "hz.client_" + str(self.id)

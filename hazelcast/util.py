@@ -12,6 +12,9 @@ from hazelcast.six.moves import range
 DEFAULT_ADDRESS = "127.0.0.1"
 DEFAULT_PORT = 5701
 
+MILLISECONDS_IN_SECONDS = 1000
+NANOSECONDS_IN_SECONDS = 1e9
+
 
 def check_not_none(val, message):
     """
@@ -71,7 +74,7 @@ def current_time_in_millis():
     Returns the current time of the system in millis.
     :return: (int), current time of the system in millis.
     """
-    return int(time.time() * 1000)
+    return to_millis(current_time())
 
 
 def thread_id():
@@ -91,7 +94,7 @@ def to_millis(seconds):
     :return: (int), result of the conversation in milliseconds.
     """
     if seconds >= 0:
-        return int(seconds * 1000)
+        return int(seconds * MILLISECONDS_IN_SECONDS)
     return seconds
 
 
@@ -103,7 +106,7 @@ def to_nanos(seconds):
     :return: (int), result of the conversation in nanoseconds.
     """
     if seconds >= 0:
-        return int(seconds * 1e9)
+        return int(seconds * NANOSECONDS_IN_SECONDS)
     return seconds
 
 

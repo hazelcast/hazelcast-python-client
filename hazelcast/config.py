@@ -617,7 +617,7 @@ class ClientProperties(object):
         value = self.get(property)
         if isinstance(value, bool):
             return value
-        return value == "true" or value == "True"
+        return value.lower() == "true"
 
     def get_seconds(self, property):
         """

@@ -5,6 +5,7 @@ from hazelcast.protocol.codec import client_statistics_codec
 from hazelcast.util import calculate_version, current_time_in_millis, to_millis, to_nanos, current_time
 from hazelcast.config import ClientProperties
 from hazelcast.core import CLIENT_VERSION, CLIENT_TYPE
+from hazelcast import six
 
 try:
     import psutil
@@ -80,52 +81,29 @@ class Statistics(object):
 
     def _add_runtime_and_os_stats(self, stats):
         os_and_runtime_stats = self._get_os_and_runtime_stats()
-        for stat in os_and_runtime_stats:
-            self._add_stat(stats, stat, os_and_runtime_stats[stat])
+        for stat_name, stat_value in six.iteritems(os_and_runtime_stats):
+            self._add_stat(stats, stat_name, stat_value)
 
     def _get_os_and_runtime_stats(self):
         psutil_stats = {}
         if PSUTIL_ENABLED:
-            try:
-                # Availability: All platforms. Try to be sure that it is working.
-                if "phy_mem" not in self._failed_gauges:
-                    memory_info = psutil.virtual_memory()
-                    psutil_stats["os.totalPhysicalMemorySize"] = memory_info.total
-                    psutil_stats["os.freePhysicalMemorySize"] = memory_info.available
-            except Exception as ex:
-                self.logger.warning(self._EXCEPTION_STR.format("physical memory size", ex))
-                self._failed_gauges.add("phy_mem")
 
-            try:
-                # Availability: All platforms. Try to be sure that it is working.
-                if "swap_mem" not in self._failed_gauges:
-                    swap_info = psutil.swap_memory()
-                    psutil_stats["os.totalSwapSpaceSize"] = swap_info.total
-                    psutil_stats["os.freeSwapSpaceSize"] = swap_info.free
-            except Exception as ex:
-                self.logger.warning(self._EXCEPTION_STR.format("swap space size", ex))
-                self._failed_gauges.add("swap_mem")
+            # Availability: All platforms. Try to be sure that it is working.
+            if self._can_collect_stat("physical_memory_info"):
+                self._collect_physical_memory_info(psutil_stats)
 
-            try:
-                # Availability: Unix. Load average in the last minute
-                if "load_avg" not in self._failed_gauges:
-                    psutil_stats["os.systemLoadAverage"] = os.getloadavg()[0]
-            except Exception as ex:
-                self.logger.warning(self._EXCEPTION_STR.format("system load average", ex))
-                self._failed_gauges.add("load_avg")
+            # Availability: All platforms. Try to be sure that it is working.
+            if self._can_collect_stat("swap_memory_info"):
+                self._collect_swap_memory_info(psutil_stats)
 
-            try:
-                # Availability: All platforms. Try to be sure that it is working.
-                # Under some platforms, CPU count cannot be determined properly.
-                if "cpu_count" not in self._failed_gauges:
-                    cpu_count = psutil.cpu_count()
-                    if cpu_count:
-                        psutil_stats["runtime.availableProcessors"] = cpu_count
-                    else:
-                        raise ValueError("CPU count cannot be determined.")
-            except Exception as ex:
-                self.logger.warning(self._EXCEPTION_STR.format("CPU count", ex))
-                self._failed_gauges.add("cpu_count")
+            # Availability: Unix. Load average in the last minute
+            if self._can_collect_stat("load_average"):
+                self._collect_load_average(psutil_stats)
+
+            # Availability: All platforms. Try to be sure that it is working.
+            # Under some platforms, CPU count cannot be determined properly.
+            if self._can_collect_stat("cpu_count"):
+                self._collect_cpu_time(psutil_stats)
 
             process = psutil.Process()
             with process.oneshot():
@@ -133,50 +111,24 @@ class Statistics(object):
                 # faster due to caching.
 
                 # Availability: All platforms. Try to be sure that it is working.
-                try:
-                    if "p_mem_info" not in self._failed_gauges:
-                        p_memory_info = process.memory_info()
-                        psutil_stats["os.committedVirtualMemorySize"] = p_memory_info.vms
-                        psutil_stats["runtime.usedMemory"] = p_memory_info.rss
-                except Exception as ex:
-                    self.logger.warning(self._EXCEPTION_STR.format("memory info related to the process", ex))
-                    self._failed_gauges.add("p_mem_info")
+                if self._can_collect_stat("process_memory_info"):
+                    self._collect_process_memory_info(psutil_stats, process)
 
-                try:
-                    # Availability: UNIX
-                    if "p_fdc" not in self._failed_gauges:
-                        psutil_stats["os.openFileDescriptorCount"] = process.num_fds()
-                except AttributeError:
-                    # Availability: Windows
-                    if "p_fdc" not in self._failed_gauges:
-                        psutil_stats["os.openFileDescriptorCount"] = process.num_handles()
-                except Exception as ex:
-                    self.logger.warning(self._EXCEPTION_STR.format("open file descriptor count", ex))
-                    self._failed_gauges.add("p_fdc")
+                # Availability: UNIX and Windows
+                if self._can_collect_stat("file_descriptor_count"):
+                    self._collect_file_descriptor_count(psutil_stats, process)
 
-                try:
-                    # Availability: Linux. Gets the 'hard'/'max' limit
-                    if "p_max_fdc" not in self._failed_gauges:
-                        psutil_stats["os.maxFileDescriptorCount"] = process.rlimit(psutil.RLIMIT_NOFILE)[1]
-                except Exception as ex:
-                    self.logger.warning(self._EXCEPTION_STR.format("max file descriptor count", ex))
-                    self._failed_gauges.add("p_max_fdc")
+                # Availability: Linux. Gets the 'hard'/'max' limit
+                if self._can_collect_stat("max_file_descriptor_count"):
+                    self._collect_max_file_descriptor_count(psutil_stats, process)
 
-                try:
-                    # Availability: All platforms. Try to be sure that it is working.
-                    if "p_cpu_time" not in self._failed_gauges:
-                        psutil_stats["os.processCpuTime"] = to_nanos(sum(process.cpu_times()))
-                except Exception as ex:
-                    self.logger.warning(self._EXCEPTION_STR.format("process CPU time", ex))
-                    self._failed_gauges.add("p_cpu_time")
+                # Availability: All platforms. Try to be sure that it is working.
+                if self._can_collect_stat("process_cpu_time"):
+                    self._collect_process_cpu_time(psutil_stats, process)
 
-                try:
-                    # Availability: All platforms. Try to be sure that it is working.
-                    if "p_uptime" not in self._failed_gauges:
-                        psutil_stats["runtime.uptime"] = to_millis(current_time() - process.create_time())
-                except Exception as ex:
-                    self.logger.warning(self._EXCEPTION_STR.format("process uptime", ex))
-                    self._failed_gauges.add("p_uptime")
+                # Availability: All platforms. Try to be sure that it is working.
+                if self._can_collect_stat("process_uptime"):
+                    self._collect_process_uptime(psutil_stats, process)
 
         return psutil_stats
 
@@ -185,13 +137,12 @@ class Statistics(object):
         self._add_stat(stats, "enterprise", "false")
         self._add_stat(stats, "clientType", CLIENT_TYPE)
         self._add_stat(stats, "clientVersion", CLIENT_VERSION)
-        self._add_stat(stats, "clusterConnectionTimestamp", to_millis(owner_connection.start_time))
+        self._add_stat(stats, "clusterConnectionTimestamp", to_millis(owner_connection.start_time_in_seconds))
 
         local_host, local_ip = owner_connection.socket.getsockname()
         local_address = str(local_host) + ":" + str(local_ip)
         self._add_stat(stats, "clientAddress", local_address)
         self._add_stat(stats, "clientName", self._client.name)
-        self._add_stat(stats, "credentials.principal", self._client.config.group_config.name)
 
     def _add_near_cache_stats(self, stats):
         for near_cache in self._client.near_cache_manager.list_all_near_caches():
@@ -204,9 +155,11 @@ class Statistics(object):
             self._add_stat(stats, "evictions", near_cache_stats["evictions"], prefix)
             self._add_stat(stats, "hits", near_cache_stats["hits"], prefix)
             self._add_stat(stats, "misses", near_cache_stats["misses"], prefix)
-            self._add_stat(stats, "ownedEntryCount", near_cache_stats["entry_count"], prefix)
+            self._add_stat(stats, "ownedEntryCount", near_cache_stats["owned_entry_count"], prefix)
             self._add_stat(stats, "expirations", near_cache_stats["expirations"], prefix)
-            self._add_stat(stats, "ownedEntryMemoryCost", near_cache_stats["size"], prefix)
+            self._add_stat(stats, "invalidations", near_cache_stats["invalidations"], prefix)
+            self._add_stat(stats, "invalidationRequests", near_cache_stats["invalidation_requests"], prefix)
+            self._add_stat(stats, "ownedEntryMemoryCost", near_cache_stats["owned_entry_memory_cost"], prefix)
 
     def _add_stat(self, stats, name, value, key_prefix=None):
         if len(stats) != 0:
@@ -247,5 +200,84 @@ class Statistics(object):
         return [Statistics._NEAR_CACHE_CATEGORY_PREFIX, self._escape_special_characters(name)]
 
     def _escape_special_characters(self, name):
-        escaped_name = name.replace("\\", "\\\\").replace(",", "\,").replace(".", "\.").replace("=", "\=")
+        escaped_name = name.replace("\\", "\\\\").replace(",", "\\,").replace(".", "\\.").replace("=", "\\=")
         return escaped_name[1:] if name[0] == "/" else escaped_name
+
+    def _can_collect_stat(self, name):
+        return name not in self._failed_gauges
+
+    def _collect_physical_memory_info(self, psutil_stats):
+        try:
+            memory_info = psutil.virtual_memory()
+            psutil_stats["os.totalPhysicalMemorySize"] = memory_info.total
+            psutil_stats["os.freePhysicalMemorySize"] = memory_info.available
+        except Exception as ex:
+            self.logger.warning(self._EXCEPTION_STR.format("physical memory size", ex))
+            self._failed_gauges.add("physical_memory_info")
+
+    def _collect_swap_memory_info(self, psutil_stats):
+        try:
+            swap_info = psutil.swap_memory()
+            psutil_stats["os.totalSwapSpaceSize"] = swap_info.total
+            psutil_stats["os.freeSwapSpaceSize"] = swap_info.free
+        except Exception as ex:
+            self.logger.warning(self._EXCEPTION_STR.format("swap space size", ex))
+            self._failed_gauges.add("swap_memory_info")
+
+    def _collect_load_average(self, psutil_stats):
+        try:
+            psutil_stats["os.systemLoadAverage"] = os.getloadavg()[0]
+        except Exception as ex:
+            self.logger.warning(self._EXCEPTION_STR.format("system load average", ex))
+            self._failed_gauges.add("load_average")
+
+    def _collect_cpu_time(self, psutil_stats):
+        try:
+            cpu_count = psutil.cpu_count()
+            if cpu_count:
+                psutil_stats["runtime.availableProcessors"] = cpu_count
+            else:
+                raise ValueError("CPU count cannot be determined.")
+        except Exception as ex:
+            self.logger.warning(self._EXCEPTION_STR.format("CPU count", ex))
+            self._failed_gauges.add("cpu_count")
+
+    def _collect_process_memory_info(self, psutil_stats, process):
+        try:
+            p_memory_info = process.memory_info()
+            psutil_stats["os.committedVirtualMemorySize"] = p_memory_info.vms
+            psutil_stats["runtime.usedMemory"] = p_memory_info.rss
+        except Exception as ex:
+            self.logger.warning(self._EXCEPTION_STR.format("memory info related to the process", ex))
+            self._failed_gauges.add("process_memory_info")
+
+    def _collect_file_descriptor_count(self, psutil_stats, process):
+        try:
+            psutil_stats["os.openFileDescriptorCount"] = process.num_fds()
+        except AttributeError:
+            # Fallback for Windows
+            psutil_stats["os.openFileDescriptorCount"] = process.num_handles()
+        except Exception as ex:
+            self.logger.warning(self._EXCEPTION_STR.format("open file descriptor count", ex))
+            self._failed_gauges.add("file_descriptor_count")
+
+    def _collect_max_file_descriptor_count(self, psutil_stats, process):
+        try:
+            psutil_stats["os.maxFileDescriptorCount"] = process.rlimit(psutil.RLIMIT_NOFILE)[1]
+        except Exception as ex:
+            self.logger.warning(self._EXCEPTION_STR.format("max file descriptor count", ex))
+            self._failed_gauges.add("max_file_descriptor_count")
+
+    def _collect_process_cpu_time(self, psutil_stats, process):
+        try:
+            psutil_stats["os.processCpuTime"] = to_nanos(sum(process.cpu_times()))
+        except Exception as ex:
+            self.logger.warning(self._EXCEPTION_STR.format("process CPU time", ex))
+            self._failed_gauges.add("process_cpu_time")
+
+    def _collect_process_uptime(self, psutil_stats, process):
+        try:
+            psutil_stats["runtime.uptime"] = to_millis(current_time() - process.create_time())
+        except Exception as ex:
+            self.logger.warning(self._EXCEPTION_STR.format("process uptime", ex))
+            self._failed_gauges.add("process_uptime")

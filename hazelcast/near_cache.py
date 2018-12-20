@@ -104,11 +104,13 @@ class NearCache(dict):
         # internal
         self._key_func = eviction_key_func[self.eviction_policy]
         self._eviction_candidates = list()
-        self._evicted_count = 0
-        self._expired_count = 0
-        self._cache_hit = 0
-        self._cache_miss = 0
-        self._creation_time = current_time()
+        self._evictions = 0
+        self._expirations = 0
+        self._hits = 0
+        self._misses = 0
+        self._invalidations = 0
+        self._invalidation_requests = 0
+        self._creation_time_in_seconds = current_time()
 
     def __setitem__(self, key, value):
         self._do_eviction_if_required()
@@ -130,14 +132,14 @@ class NearCache(dict):
                 super(NearCache, self).__delitem__(key)
                 raise KeyError
         except KeyError as ke:
-            self._cache_miss += 1
+            self._misses += 1
             raise ke
 
         if self.eviction_policy == EVICTION_POLICY.LRU:
             value_record.last_access_time = current_time()
         elif self.eviction_policy == EVICTION_POLICY.LFU:
             value_record.access_hit += 1
-        self._cache_hit += 1
+        self._hits += 1
         return self.serialization_service.to_object(value_record.value) \
             if self.in_memory_format == IN_MEMORY_FORMAT.BINARY else value_record.value
 
@@ -156,7 +158,7 @@ class NearCache(dict):
         if len(new_eviction_samples) == len(new_eviction_samples_cleaned):  # did any item expired or do we need to evict
             try:
                 self.__delitem__(self._eviction_candidates[0].key)
-                self._evicted_count += 1
+                self._evictions += 1
                 del self._eviction_candidates[0]
             except KeyError:
                 # key may be evicted previously so just ignore it
@@ -199,13 +201,15 @@ class NearCache(dict):
         :return: (Dict), Dictionary that stores statistics related to this near cache.
         """
         stats = {
-            "creation_time": self._creation_time,
-            "evictions": self._evicted_count,
-            "expirations": self._expired_count,
-            "misses": self._cache_miss,
-            "hits": self._cache_hit,
-            "entry_count": self.__len__(),
-            "size": getsizeof(self),
+            "creation_time": self._creation_time_in_seconds,
+            "evictions": self._evictions,
+            "expirations": self._expirations,
+            "misses": self._misses,
+            "hits": self._hits,
+            "invalidations": self._invalidations,
+            "invalidation_requests": self._invalidation_requests,
+            "owned_entry_count": self.__len__(),
+            "owned_entry_memory_cost": getsizeof(self),
         }
 
         return stats
@@ -213,13 +217,13 @@ class NearCache(dict):
     def _clean_expired_record(self, key):
         try:
             self.__delitem__(key)
-            self._expired_count += 1
+            self._expirations += 1
         except KeyError:
             # key may be evicted previously so just ignore it
             pass
 
     def __repr__(self):
-        return "NearCache[len:{}, evicted:{}]".format(self.__len__(), self._evicted_count)
+        return "NearCache[len:{}, evicted:{}]".format(self.__len__(), self._evictions)
 
 
 class NearCacheManager(object):
