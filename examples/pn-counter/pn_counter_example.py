@@ -13,6 +13,6 @@ if __name__ == "__main__":
         print("Added {} to the counter. Current value is {}".format(i, pn_counter.add_and_get(i)))
 
     print("Incremented the counter after getting the current value. "
-          "Old value is {}".format(pn_counter.get_and_increment()))
+          "Previous value is {}".format(pn_counter.get_and_increment()))
 
     print("Final value is {}".format(pn_counter.get()))

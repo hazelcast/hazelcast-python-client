@@ -118,8 +118,23 @@ class EntryView(object):
 
 
 class MemberSelector(object):
+    """
+    Extensions of this class select members
+    that are capable of executing a special kind of task.
+    The select(Member) method is called for every available
+    member in the cluster and it is up to the implementation to decide
+    if the member is going to be used or not.
+    """
+
     @staticmethod
     def select(member):
+        """
+        Decides if the given member will be part of an operation or not.
+
+        :param member: (:class:`hazelcast.core.Member`), the member instance to decide upon
+        :return: (bool), True if the member should take part in the operation, False otherwise
+        """
+
         raise NotImplementedError()
 
 

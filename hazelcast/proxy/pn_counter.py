@@ -1,6 +1,6 @@
 import random
 
-from hazelcast.core import Address, DataMemberSelector
+from hazelcast.core import DataMemberSelector
 from hazelcast.future import ImmediateFuture
 from hazelcast.proxy.base import Proxy
 from hazelcast.cluster import VectorClock
@@ -11,6 +11,47 @@ from hazelcast.six.moves import range
 
 
 class PNCounter(Proxy):
+    """
+    PN (Positive-Negative) CRDT counter.
+
+    The counter supports adding and subtracting values as well as
+    retrieving the current counter value.
+    Each replica of this counter can perform operations locally without
+    coordination with the other replicas, thus increasing availability.
+    The counter guarantees that whenever two nodes have received the
+    same set of updates, possibly in a different order, their state is
+    identical, and any conflicting updates are merged automatically.
+    If no new updates are made to the shared state, all nodes that can
+    communicate will eventually have the same data.
+
+    When invoking updates from the client, the invocation is remote.
+    This may lead to indeterminate state - the update may be applied but the
+    response has not been received. In this case, the caller will be notified
+    with a TargetDisconnectedError.
+
+    The read and write methods provide monotonic read and RYW (read-your-write)
+    guarantees. These guarantees are session guarantees which means that if
+    no replica with the previously observed state is reachable, the session
+    guarantees are lost and the method invocation will throw a
+    ConsistencyLostError. This does not mean
+    that an update is lost. All of the updates are part of some replica and
+    will be eventually reflected in the state of all other replicas. This
+    exception just means that you cannot observe your own writes because
+    all replicas that contain your updates are currently unreachable.
+    After you have received a ConsistencyLostError, you can either
+    wait for a sufficiently up-to-date replica to become reachable in which
+    case the session can be continued or you can reset the session by calling
+    the reset() method. If you have called the reset() method,
+    a new session is started with the next invocation to a CRDT replica.
+
+    NOTE:
+    The CRDT state is kept entirely on non-lite (data) members. If there
+    aren't any and the methods here are invoked on a lite member, they will
+    fail with an NoDataMemberInClusterError.
+
+    Requires Hazelcast 3.10+.
+    """
+
     _EMPTY_ADDRESS_LIST = []
 
     def __init__(self, client, service_name, name):
@@ -20,11 +61,32 @@ class PNCounter(Proxy):
         self._current_target_replica_address = None
 
     def get(self):
+        """
+        Returns the current value of the counter.
+
+        :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
+        :raises UnsupportedOperationError: if the cluster version is less than 3.10.
+        :raises ConsistencyLostError: if the session guarantees have been lost.
+
+        :return: (int), the current value of the counter.
+        """
+
         return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST,
                                      None,
                                      pn_counter_get_codec)
 
     def get_and_add(self, delta):
+        """
+        Adds the given value to the current value and returns the previous value.
+
+        :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
+        :raises UnsupportedOperationError: if the cluster version is less than 3.10.
+        :raises ConsistencyLostError: if the session guarantees have been lost.
+
+        :param delta: (int), the value to add.
+        :return: (int), the previous value.
+        """
+
         return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST,
                                      None,
                                      pn_counter_add_codec,
@@ -32,6 +94,17 @@ class PNCounter(Proxy):
                                      get_before_update=True)
 
     def add_and_get(self, delta):
+        """
+        Adds the given value to the current value and returns the updated value.
+
+        :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
+        :raises UnsupportedOperationError: if the cluster version is less than 3.10.
+        :raises ConsistencyLostError: if the session guarantees have been lost.
+
+        :param delta: (int), the value to add.
+        :return: (int), the updated value.
+        """
+
         return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST,
                                      None,
                                      pn_counter_add_codec,
@@ -39,6 +112,17 @@ class PNCounter(Proxy):
                                      get_before_update=False)
 
     def get_and_subtract(self, delta):
+        """
+        Subtracts the given value from the current value and returns the previous value.
+
+        :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
+        :raises UnsupportedOperationError: if the cluster version is less than 3.10.
+        :raises ConsistencyLostError: if the session guarantees have been lost.
+
+        :param delta: (int), the value to subtract.
+        :return: (int), the previous value.
+        """
+
         return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST,
                                      None,
                                      pn_counter_add_codec,
@@ -46,6 +130,17 @@ class PNCounter(Proxy):
                                      get_before_update=True)
 
     def subtract_and_get(self, delta):
+        """
+        Subtracts the given value from the current value and returns the updated value.
+
+        :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
+        :raises UnsupportedOperationError: if the cluster version is less than 3.10.
+        :raises ConsistencyLostError: if the session guarantees have been lost.
+
+        :param delta: (int), the value to subtract.
+        :return: (int), the updated value.
+        """
+
         return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST,
                                      None,
                                      pn_counter_add_codec,
@@ -53,6 +148,16 @@ class PNCounter(Proxy):
                                      get_before_update=False)
 
     def get_and_decrement(self):
+        """
+        Decrements the counter value by one and returns the previous value.
+
+        :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
+        :raises UnsupportedOperationError: if the cluster version is less than 3.10.
+        :raises ConsistencyLostError: if the session guarantees have been lost.
+
+        :return: (int), the previous value.
+        """
+
         return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST,
                                      None,
                                      pn_counter_add_codec,
@@ -60,6 +165,16 @@ class PNCounter(Proxy):
                                      get_before_update=True)
 
     def decrement_and_get(self):
+        """
+        Decrements the counter value by one and returns the updated value.
+
+        :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
+        :raises UnsupportedOperationError: if the cluster version is less than 3.10.
+        :raises ConsistencyLostError: if the session guarantees have been lost.
+
+        :return: (int), the updated value.
+        """
+
         return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST,
                                      None,
                                      pn_counter_add_codec,
@@ -67,6 +182,16 @@ class PNCounter(Proxy):
                                      get_before_update=False)
 
     def get_and_increment(self):
+        """
+        Increments the counter value by one and returns the previous value.
+
+        :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
+        :raises UnsupportedOperationError: if the cluster version is less than 3.10.
+        :raises ConsistencyLostError: if the session guarantees have been lost.
+
+        :return: (int), the previous value.
+        """
+
         return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST,
                                      None,
                                      pn_counter_add_codec,
@@ -74,6 +199,16 @@ class PNCounter(Proxy):
                                      get_before_update=True)
 
     def increment_and_get(self):
+        """
+        Increments the counter value by one and returns the updated value.
+
+        :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
+        :raises UnsupportedOperationError: if the cluster version is less than 3.10.
+        :raises ConsistencyLostError: if the session guarantees have been lost.
+
+        :return: (int), the updated value.
+        """
+
         return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST,
                                      None,
                                      pn_counter_add_codec,
@@ -81,6 +216,12 @@ class PNCounter(Proxy):
                                      get_before_update=False)
 
     def reset(self):
+        """
+        Resets the observed state by this PN counter. This method may be used
+        after a method invocation has thrown a `ConsistencyLostError`
+        to reset the proxy and to be able to start a new session.
+        """
+
         self._observed_clock = VectorClock()
 
     def _invoke_internal(self, excluded_addresses, last_error, codec, **kwargs):

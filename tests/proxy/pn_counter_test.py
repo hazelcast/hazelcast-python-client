@@ -1,11 +1,12 @@
-import hazelcast
 import os
 
 from tests.base import SingleMemberTestCase, HazelcastTestCase
-from tests.util import find_member_by_address, configure_logging, get_abs_path
+from tests.util import find_member_by_address, configure_logging, get_abs_path, set_attr
 from hazelcast.exception import ConsistencyLostError, NoDataMemberInClusterError
+from hazelcast import HazelcastClient
 
 
+@set_attr(category=3.10)
 class PNCounterBasicTest(SingleMemberTestCase):
     def setUp(self):
         self.pn_counter = self.client.get_pn_counter("pn-counter").blocking()
@@ -55,6 +56,7 @@ class PNCounterBasicTest(SingleMemberTestCase):
         self.assertEqual(expected_get_value, get_value)
 
 
+@set_attr(category=3.10)
 class PNCounterConsistencyTest(HazelcastTestCase):
     @classmethod
     def setUpClass(cls):
@@ -65,7 +67,7 @@ class PNCounterConsistencyTest(HazelcastTestCase):
         self.cluster = self.create_cluster(self.rc, self._configure_cluster())
         self.member1 = self.cluster.start_member()
         self.member2 = self.cluster.start_member()
-        self.client = hazelcast.HazelcastClient()
+        self.client = HazelcastClient()
         self.pn_counter = self.client.get_pn_counter("pn-counter").blocking()
 
     def tearDown(self):
@@ -99,6 +101,7 @@ class PNCounterConsistencyTest(HazelcastTestCase):
             return f.read()
 
 
+@set_attr(category=3.10)
 class PNCounterLiteMemberTest(SingleMemberTestCase):
     @classmethod
     def configure_cluster(cls):

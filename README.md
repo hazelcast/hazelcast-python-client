@@ -577,6 +577,7 @@ Hazelcast Python client supports the following data structures and features:
 * Lock
 * Semaphore
 * AtomicLong
+* CRDT PN Counter
 * AtomicReference
 * IdGenerator
 * CountDownLatch

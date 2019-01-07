@@ -261,8 +261,8 @@ class ClusterService(object):
         """
         Returns the member with the specified member address.
 
-        :param address: (:class:`~hazelcast.core.Address`), address for the desired member
-        :return: (:class:`~hazelcast.core.Member`), the corresponding member
+        :param address: (:class:`~hazelcast.core.Address`), address for the desired member.
+        :return: (:class:`~hazelcast.core.Member`), the corresponding member.
         """
         for member in self.members:
             if member.address == address:
@@ -274,8 +274,8 @@ class ClusterService(object):
         If selector is not None, returns the members that satisfy the given selector.
         Else, returns all the members.
 
-        :param selector: (:class:`~hazelcast.core.MemberSelector`), Selector to be applied to the members
-        :return: (List), List of members
+        :param selector: (:class:`~hazelcast.core.MemberSelector`), Selector to be applied to the members.
+        :return: (List), List of members.
         """
         if selector is None:
             return self.members
@@ -326,8 +326,8 @@ class VectorClock(IdentifiedDataSerializable):
         provided vector clock. This means that it the provided clock is neither
         equal to, greater than or concurrent to this vector clock.
 
-        :param other: (:class:`~hazelcast.cluster.VectorClock`)
-        :return: (bool)
+        :param other: (:class:`~hazelcast.cluster.VectorClock`), vector clock to be compared
+        :return: (bool), True if this vector clock is strictly after the other vector clock, False otherwise
         """
         any_timestamp_greater = False
         for replica_id, other_timestamp in six.iteritems(other.replica_timestamps):
