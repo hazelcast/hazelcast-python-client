@@ -82,3 +82,9 @@ def open_connection_to_address(client, address):
     m.put(key, 0)
     m.destroy()
 
+
+def find_member_by_address(client, address):
+    for member in client.cluster.get_members():
+        if address == member.address:
+            return member
+

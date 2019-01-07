@@ -115,3 +115,15 @@ class EntryView(object):
                    self.key, self.value, self.cost, self.creation_time, self.expiration_time, self.hits,
                    self.last_access_time, self.last_stored_time, self.last_update_time, self.version,
                    self.eviction_criteria_number, self.ttl)
+
+
+class MemberSelector(object):
+    @staticmethod
+    def select(member):
+        raise NotImplementedError()
+
+
+class DataMemberSelector(MemberSelector):
+    @staticmethod
+    def select(member):
+        return not member.is_lite_member

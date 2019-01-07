@@ -60,6 +60,7 @@
     * [7.4.10. Using Atomic Long](#7410-using-atomic-long)
     * [7.4.11. Using Semaphore](#7411-using-semaphore)
     * [7.4.12. Using Transactions](#7412-using-transactions)
+    * [7.4.13. Using PN Counter](#7413-using-pn-counter)
   * [7.5. Distributed Events](#75-distributed-events)
     * [7.5.1. Cluster Events](#751-cluster-events)
       * [7.5.1.1. Listening for Member Events](#7511-listening-for-member-events)
@@ -1524,6 +1525,21 @@ In a transaction, operations will not be executed immediately. Their changes wil
 For the above example, when `txn_map.put()` is executed, no data will be put in the map but the key will be locked against changes. While committing, operations will be executed, the value will be put to the map and the key will be unlocked.
 
 The isolation level in Hazelcast Transactions is `READ_COMMITTED` on the level of a single partition. If you are in a transaction, you can read the data in your transaction and the data that is already committed. If you are not in a transaction, you can only read the committed data.
+
+### 7.4.13. Using PN Counter
+
+Hazelcast `PNCounter` (Positive-Negative Counter) is a CRDT positive-negative counter implementation. It is an eventually consistent counter given there is no member failure. For details, see the [PN Counter section](https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#pn-counter) in the Hazelcast IMDG Reference Manual.
+
+A PN Counter usage example is shown below.
+
+```python
+pn_counter = client.get_pn_counter("pn-counter").blocking()
+
+print(pn_counter.add_and_get(5))  # 5
+print(pn_counter.decrement_and_get())  # 4
+print(pn_counter.get_and_increment())  # 4
+print(pn_counter.get())  # 5
+```
 
 ## 7.5. Distributed Events
 

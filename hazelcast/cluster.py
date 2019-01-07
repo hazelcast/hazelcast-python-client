@@ -10,6 +10,8 @@ from hazelcast.invocation import ListenerInvocation
 from hazelcast.lifecycle import LIFECYCLE_STATE_CONNECTED, LIFECYCLE_STATE_DISCONNECTED
 from hazelcast.protocol.codec import client_add_membership_listener_codec, client_authentication_codec
 from hazelcast.util import get_possible_addresses, get_provider_addresses, calculate_version
+from hazelcast.serialization.api import IdentifiedDataSerializable
+from hazelcast import six
 
 # Membership Event Types
 MEMBER_ADDED = 1
@@ -255,6 +257,36 @@ class ClusterService(object):
             if member.uuid == member_uuid:
                 return member
 
+    def get_member_by_address(self, address):
+        """
+        Returns the member with the specified member address.
+
+        :param address: (:class:`~hazelcast.core.Address`), address for the desired member
+        :return: (:class:`~hazelcast.core.Member`), the corresponding member
+        """
+        for member in self.members:
+            if member.address == address:
+                return member
+        return None
+
+    def get_members(self, selector=None):
+        """
+        If selector is not None, returns the members that satisfy the given selector.
+        Else, returns all the members.
+
+        :param selector: (:class:`~hazelcast.core.MemberSelector`), Selector to be applied to the members
+        :return: (List), List of members
+        """
+        if selector is None:
+            return self.members
+
+        members = []
+        for member in self.members:
+            if selector.select(member):
+                members.append(member)
+
+        return members
+
 
 class RandomLoadBalancer(object):
     """
@@ -270,3 +302,63 @@ class RandomLoadBalancer(object):
             return random.choice(self._cluster.members).address
         except IndexError:
             return None
+
+
+class VectorClock(IdentifiedDataSerializable):
+    """
+    Vector clock consisting of distinct replica logical clocks.
+
+    See https://en.wikipedia.org/wiki/Vector_clock
+    The vector clock may be read from different thread but concurrent
+    updates must be synchronized externally. There is no guarantee for
+    concurrent updates.
+    """
+
+    CLASS_ID = 43
+    FACTORY_ID = 0
+
+    def __init__(self):
+        self.replica_timestamps = {}
+
+    def is_after(self, other):
+        """
+        Returns true if this vector clock is causally strictly after the
+        provided vector clock. This means that it the provided clock is neither
+        equal to, greater than or concurrent to this vector clock.
+
+        :param other: (:class:`~hazelcast.cluster.VectorClock`)
+        :return: (bool)
+        """
+        any_timestamp_greater = False
+        for replica_id, other_timestamp in six.iteritems(other.replica_timestamps):
+            local_timestamp = self.replica_timestamps.get(replica_id)
+
+            if local_timestamp is None or local_timestamp < other_timestamp:
+                return False
+            elif local_timestamp > other_timestamp:
+                any_timestamp_greater = True
+
+        # there is at least one local timestamp greater or local vector clock has additional timestamps
+        return any_timestamp_greater or len(other.replica_timestamps) < len(self.replica_timestamps)
+
+    def read_data(self, object_data_input):
+        state_size = object_data_input.read_int()
+        for i in range(state_size):
+            replica_id = object_data_input.read_utf()
+            timestamp = object_data_input.read_long()
+            self.replica_timestamps[replica_id] = timestamp
+
+    def write_data(self, object_data_output):
+        object_data_output.write_int(len(self.replica_timestamps))
+        for replica_id, timestamp in six.iteritems(self.replica_timestamps):
+            object_data_output.write_utf(replica_id)
+            object_data_output.write_long(timestamp)
+
+    def get_class_id(self):
+        return self.CLASS_ID
+
+    def get_factory_id(self):
+        return self.FACTORY_ID
+
+    def __eq__(self, other):
+        return type(self) == type(other) and self.replica_timestamps == other.replica_timestamps

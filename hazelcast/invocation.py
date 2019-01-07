@@ -4,7 +4,7 @@ import time
 import functools
 
 from hazelcast.exception import create_exception, HazelcastInstanceNotActiveError, is_retryable_error, TimeoutError, \
-    AuthenticationError, TargetDisconnectedError, HazelcastClientNotActiveException
+    AuthenticationError, TargetDisconnectedError, HazelcastClientNotActiveException, TargetNotMemberError
 from hazelcast.future import Future
 from hazelcast.lifecycle import LIFECYCLE_STATE_CONNECTED
 from hazelcast.protocol.client_message import LISTENER_FLAG
@@ -166,7 +166,10 @@ class InvocationService(object):
             addr = self._client.partition_service.get_partition_owner(invocation.partition_id)
             self._send_to_address(invocation, addr)
         elif invocation.has_address():
-            self._send_to_address(invocation, invocation.address)
+            if not self._is_member(invocation.address):
+                invocation.future.set_exception(TargetNotMemberError("Target '{}' is not a member.".format(invocation.address)))
+            else:
+                self._send_to_address(invocation, invocation.address)
         else:  # send to random address
             addr = self._client.load_balancer.next_address()
             self._send_to_address(invocation, addr)
@@ -304,3 +307,6 @@ class InvocationService(object):
                           self._invocation_retry_pause)
         self._client.reactor.add_timer(self._invocation_retry_pause, invoke_func)
         return True
+
+    def _is_member(self, address):
+        return self._client.cluster.get_member_by_address(address) is not None

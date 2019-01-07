@@ -31,7 +31,7 @@ class MemberCodec(object):
             key = client_message.read_str()
             value = client_message.read_str()
             attributes[key] = value
-        return Member(address, uuid, attributes, lite_member)
+        return Member(address, uuid, lite_member, attributes)
 
 
 class AddressCodec(object):
