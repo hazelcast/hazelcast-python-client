@@ -71,9 +71,7 @@ class PNCounter(Proxy):
         :return: (int), the current value of the counter.
         """
 
-        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST,
-                                     None,
-                                     pn_counter_get_codec)
+        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST, None, pn_counter_get_codec)
 
     def get_and_add(self, delta):
         """
@@ -87,10 +85,7 @@ class PNCounter(Proxy):
         :return: (int), the previous value.
         """
 
-        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST,
-                                     None,
-                                     pn_counter_add_codec,
-                                     delta=delta,
+        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST, None, pn_counter_add_codec, delta=delta,
                                      get_before_update=True)
 
     def add_and_get(self, delta):
@@ -105,10 +100,7 @@ class PNCounter(Proxy):
         :return: (int), the updated value.
         """
 
-        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST,
-                                     None,
-                                     pn_counter_add_codec,
-                                     delta=delta,
+        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST, None, pn_counter_add_codec, delta=delta,
                                      get_before_update=False)
 
     def get_and_subtract(self, delta):
@@ -123,10 +115,7 @@ class PNCounter(Proxy):
         :return: (int), the previous value.
         """
 
-        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST,
-                                     None,
-                                     pn_counter_add_codec,
-                                     delta=-1 * delta,
+        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST, None, pn_counter_add_codec, delta=-1 * delta,
                                      get_before_update=True)
 
     def subtract_and_get(self, delta):
@@ -141,10 +130,7 @@ class PNCounter(Proxy):
         :return: (int), the updated value.
         """
 
-        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST,
-                                     None,
-                                     pn_counter_add_codec,
-                                     delta=-1 * delta,
+        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST, None, pn_counter_add_codec, delta=-1 * delta,
                                      get_before_update=False)
 
     def get_and_decrement(self):
@@ -158,10 +144,7 @@ class PNCounter(Proxy):
         :return: (int), the previous value.
         """
 
-        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST,
-                                     None,
-                                     pn_counter_add_codec,
-                                     delta=-1,
+        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST, None, pn_counter_add_codec, delta=-1,
                                      get_before_update=True)
 
     def decrement_and_get(self):
@@ -175,10 +158,7 @@ class PNCounter(Proxy):
         :return: (int), the updated value.
         """
 
-        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST,
-                                     None,
-                                     pn_counter_add_codec,
-                                     delta=-1,
+        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST, None, pn_counter_add_codec, delta=-1,
                                      get_before_update=False)
 
     def get_and_increment(self):
@@ -192,10 +172,7 @@ class PNCounter(Proxy):
         :return: (int), the previous value.
         """
 
-        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST,
-                                     None,
-                                     pn_counter_add_codec,
-                                     delta=1,
+        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST, None, pn_counter_add_codec, delta=1,
                                      get_before_update=True)
 
     def increment_and_get(self):
@@ -209,10 +186,7 @@ class PNCounter(Proxy):
         :return: (int), the updated value.
         """
 
-        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST,
-                                     None,
-                                     pn_counter_add_codec,
-                                     delta=1,
+        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST, None, pn_counter_add_codec, delta=1,
                                      get_before_update=False)
 
     def reset(self):
@@ -232,16 +206,11 @@ class PNCounter(Proxy):
             raise NoDataMemberInClusterError("Cannot invoke operations on a CRDT because "
                                              "the cluster does not contain any data members")
 
-        def response_handler(future, codec, to_object):
-            response = future.result()
-            if response:
-                return codec.decode_response(response, to_object)
-
         try:
             result = self._encode_invoke_on_target(codec,
                                                    target,
-                                                   response_handler,
-                                                   replica_timestamps=list(self._observed_clock.replica_timestamps.items()),
+                                                   self._response_handler,
+                                                   replica_timestamps=self._observed_clock.entry_set(),
                                                    target_replica=target,
                                                    **kwargs).result()
 
@@ -302,7 +271,12 @@ class PNCounter(Proxy):
 
     def _to_vector_clock(self, timestamps):
         vector_clock = VectorClock()
-        for timestamp in timestamps:
-            vector_clock.replica_timestamps[timestamp[0]] = timestamp[1]
+        for replica_id, timestamp in timestamps:
+            vector_clock.set_replica_timestamp(replica_id, timestamp)
 
         return vector_clock
+
+    def _response_handler(self, future, codec, to_object):
+        response = future.result()
+        if response:
+            return codec.decode_response(response, to_object)

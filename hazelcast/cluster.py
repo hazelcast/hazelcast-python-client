@@ -10,8 +10,6 @@ from hazelcast.invocation import ListenerInvocation
 from hazelcast.lifecycle import LIFECYCLE_STATE_CONNECTED, LIFECYCLE_STATE_DISCONNECTED
 from hazelcast.protocol.codec import client_add_membership_listener_codec, client_authentication_codec
 from hazelcast.util import get_possible_addresses, get_provider_addresses, calculate_version
-from hazelcast.serialization.api import IdentifiedDataSerializable
-from hazelcast import six
 
 # Membership Event Types
 MEMBER_ADDED = 1
@@ -304,7 +302,7 @@ class RandomLoadBalancer(object):
             return None
 
 
-class VectorClock(IdentifiedDataSerializable):
+class VectorClock(object):
     """
     Vector clock consisting of distinct replica logical clocks.
 
@@ -314,11 +312,8 @@ class VectorClock(IdentifiedDataSerializable):
     concurrent updates.
     """
 
-    CLASS_ID = 43
-    FACTORY_ID = 0
-
     def __init__(self):
-        self.replica_timestamps = {}
+        self._replica_timestamps = {}
 
     def is_after(self, other):
         """
@@ -329,9 +324,10 @@ class VectorClock(IdentifiedDataSerializable):
         :param other: (:class:`~hazelcast.cluster.VectorClock`), vector clock to be compared
         :return: (bool), True if this vector clock is strictly after the other vector clock, False otherwise
         """
+
         any_timestamp_greater = False
-        for replica_id, other_timestamp in six.iteritems(other.replica_timestamps):
-            local_timestamp = self.replica_timestamps.get(replica_id)
+        for replica_id, other_timestamp in other.entry_set():
+            local_timestamp = self._replica_timestamps.get(replica_id)
 
             if local_timestamp is None or local_timestamp < other_timestamp:
                 return False
@@ -339,26 +335,35 @@ class VectorClock(IdentifiedDataSerializable):
                 any_timestamp_greater = True
 
         # there is at least one local timestamp greater or local vector clock has additional timestamps
-        return any_timestamp_greater or len(other.replica_timestamps) < len(self.replica_timestamps)
+        return any_timestamp_greater or other.size() < self.size()
 
-    def read_data(self, object_data_input):
-        state_size = object_data_input.read_int()
-        for i in range(state_size):
-            replica_id = object_data_input.read_utf()
-            timestamp = object_data_input.read_long()
-            self.replica_timestamps[replica_id] = timestamp
+    def set_replica_timestamp(self, replica_id, timestamp):
+        """
+        Sets the logical timestamp for the given replica ID.
 
-    def write_data(self, object_data_output):
-        object_data_output.write_int(len(self.replica_timestamps))
-        for replica_id, timestamp in six.iteritems(self.replica_timestamps):
-            object_data_output.write_utf(replica_id)
-            object_data_output.write_long(timestamp)
+        :param replica_id: (str), replica ID.
+        :param timestamp: (int), timestamp for the given replica ID.
+        """
 
-    def get_class_id(self):
-        return self.CLASS_ID
+        self._replica_timestamps[replica_id] = timestamp
 
-    def get_factory_id(self):
-        return self.FACTORY_ID
+    def entry_set(self):
+        """
+        Returns the entry set of the replica timestamps in a format
+        of list of tuples. Each tuple contains the replica ID and the
+        timestamp associated with it.
 
-    def __eq__(self, other):
-        return type(self) == type(other) and self.replica_timestamps == other.replica_timestamps
+        :return: (list), list of tuples.
+        """
+
+        return list(self._replica_timestamps.items())
+
+    def size(self):
+        """
+        Returns the number of timestamps that are in the
+        replica timestamps dictionary.
+
+        :return: (int), Number of timestamps in the replica timestamps.
+        """
+
+        return len(self._replica_timestamps)

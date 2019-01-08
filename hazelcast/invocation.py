@@ -167,7 +167,7 @@ class InvocationService(object):
             self._send_to_address(invocation, addr)
         elif invocation.has_address():
             if not self._is_member(invocation.address):
-                invocation.future.set_exception(TargetNotMemberError("Target '{}' is not a member.".format(invocation.address)))
+                self._handle_exception(invocation, TargetNotMemberError("Target '{}' is not a member.".format(invocation.address)))
             else:
                 self._send_to_address(invocation, invocation.address)
         else:  # send to random address
