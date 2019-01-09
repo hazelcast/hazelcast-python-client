@@ -227,13 +227,15 @@ class StatisticsTest(HazelcastTestCase):
         client.shutdown()
 
     def _get_client_stats_from_server(self, client_uuid):
-        script = "clients = instance_0.getClientService().getConnectedClients().toArray()\n" \
-                 "for client in clients:\n" \
-                 "\tif client.getUuid() == \"%s\":\n" \
-                 "\t\tresult = client.getClientStatistics()\n" \
-                 "\t\tbreak" % client_uuid
+        script = "clients=instance_0.getClientService().getConnectedClients().toArray()\n" \
+                 "for(i=0;i<clients.length;i++) {\n" \
+                 "   if (clients[i].getUuid().equals(\"%s\")) {\n" \
+                 "       result=clients[i].getClientStatistics();\n" \
+                 "       break;" \
+                 "   }\n" \
+                 "}\n" % client_uuid
 
-        return self.rc.executeOnController(self.cluster.id, script, Lang.PYTHON)
+        return self.rc.executeOnController(self.cluster.id, script, Lang.JAVASCRIPT)
 
     def _get_local_address(self, client):
         owner_address = client.cluster.owner_connection_address
