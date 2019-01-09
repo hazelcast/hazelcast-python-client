@@ -7,9 +7,10 @@ from hazelcast.client import HazelcastClient
 from hazelcast.config import ClientConfig, ClientProperties, NearCacheConfig
 from hazelcast.core import CLIENT_VERSION, CLIENT_TYPE
 from tests.hzrc.ttypes import Lang
-from tests.util import random_string
+from tests.util import random_string, set_attr
 
 
+@set_attr(category=3.9)
 class StatisticsTest(HazelcastTestCase):
 
     DEFAULT_STATS_PERIOD = 3
@@ -28,7 +29,9 @@ class StatisticsTest(HazelcastTestCase):
     def test_statistics_disabled_by_default(self):
         client = HazelcastClient()
         time.sleep(2 * self.DEFAULT_STATS_PERIOD)
-        response = self._get_client_stats_from_server()
+        client_uuid = client.cluster.uuid
+
+        response = self._get_client_stats_from_server(client_uuid)
 
         self.assertTrue(response.success)
         self.assertIsNone(response.result)
@@ -39,8 +42,10 @@ class StatisticsTest(HazelcastTestCase):
         config.set_property(ClientProperties.STATISTICS_ENABLED.name, "truee")
         config.set_property(ClientProperties.STATISTICS_PERIOD_SECONDS.name, self.STATS_PERIOD)
         client = HazelcastClient(config)
+        client_uuid = client.cluster.uuid
+
         time.sleep(2 * self.STATS_PERIOD)
-        response = self._get_client_stats_from_server()
+        response = self._get_client_stats_from_server(client_uuid)
 
         self.assertTrue(response.success)
         self.assertIsNone(response.result)
@@ -50,9 +55,10 @@ class StatisticsTest(HazelcastTestCase):
         config = ClientConfig()
         config.set_property(ClientProperties.STATISTICS_ENABLED.name, True)
         client = HazelcastClient(config)
+        client_uuid = client.cluster.uuid
 
         time.sleep(2 * self.DEFAULT_STATS_PERIOD)
-        self._wait_for_statistics_collection(2 * self.STATS_PERIOD)
+        self._wait_for_statistics_collection(client_uuid)
 
         client.shutdown()
 
@@ -62,9 +68,10 @@ class StatisticsTest(HazelcastTestCase):
         environ[ClientProperties.STATISTICS_PERIOD_SECONDS.name] = str(self.STATS_PERIOD)
 
         client = HazelcastClient()
+        client_uuid = client.cluster.uuid
 
         time.sleep(2 * self.STATS_PERIOD)
-        self._wait_for_statistics_collection(2 * self.STATS_PERIOD)
+        self._wait_for_statistics_collection(client_uuid)
 
         os.unsetenv(ClientProperties.STATISTICS_ENABLED.name)
         os.unsetenv(ClientProperties.STATISTICS_PERIOD_SECONDS.name)
@@ -75,12 +82,13 @@ class StatisticsTest(HazelcastTestCase):
         config.set_property(ClientProperties.STATISTICS_ENABLED.name, True)
         config.set_property(ClientProperties.STATISTICS_PERIOD_SECONDS.name, self.STATS_PERIOD)
         client = HazelcastClient(config)
+        client_uuid = client.cluster.uuid
 
         time.sleep(2 * self.STATS_PERIOD)
-        response1 = self._wait_for_statistics_collection(2 * self.STATS_PERIOD)
+        response1 = self._wait_for_statistics_collection(client_uuid)
 
         time.sleep(2 * self.STATS_PERIOD)
-        response2 = self._wait_for_statistics_collection(2 * self.STATS_PERIOD)
+        response2 = self._wait_for_statistics_collection(client_uuid)
 
         self.assertNotEqual(response1, response2)
         client.shutdown()
@@ -90,9 +98,10 @@ class StatisticsTest(HazelcastTestCase):
         config.set_property(ClientProperties.STATISTICS_ENABLED.name, True)
         config.set_property(ClientProperties.STATISTICS_PERIOD_SECONDS.name, -1 * self.STATS_PERIOD)
         client = HazelcastClient(config)
+        client_uuid = client.cluster.uuid
 
         time.sleep(2 * self.DEFAULT_STATS_PERIOD)
-        self._wait_for_statistics_collection(2 * self.DEFAULT_STATS_PERIOD)
+        self._wait_for_statistics_collection(client_uuid)
 
         client.shutdown()
 
@@ -107,11 +116,12 @@ class StatisticsTest(HazelcastTestCase):
         config.near_cache_configs[map_name] = near_cache_config
 
         client = HazelcastClient(config)
+        client_uuid = client.cluster.uuid
 
         test_map = client.get_map(map_name).blocking()
 
         time.sleep(2 * self.STATS_PERIOD)
-        response = self._wait_for_statistics_collection(2 * self.STATS_PERIOD)
+        response = self._wait_for_statistics_collection(client_uuid)
 
         result = response.result.decode("utf-8")
         local_address = self._get_local_address(client)
@@ -156,10 +166,12 @@ class StatisticsTest(HazelcastTestCase):
         config.near_cache_configs[map_name] = near_cache_config
 
         client = HazelcastClient(config)
+        client_uuid = client.cluster.uuid
+
         test_map = client.get_map(map_name).blocking()
 
         time.sleep(2 * self.STATS_PERIOD)
-        response = self._wait_for_statistics_collection(2 * self.STATS_PERIOD)
+        response = self._wait_for_statistics_collection(client_uuid)
 
         result = response.result.decode("utf-8")
         unescaped_result = self._unescape_special_chars(result)
@@ -178,10 +190,12 @@ class StatisticsTest(HazelcastTestCase):
         config.near_cache_configs[map_name] = near_cache_config
 
         client = HazelcastClient(config)
+        client_uuid = client.cluster.uuid
+
         test_map = client.get_map(map_name).blocking()
 
         time.sleep(2 * self.STATS_PERIOD)
-        response = self._wait_for_statistics_collection(2 * self.STATS_PERIOD)
+        response = self._wait_for_statistics_collection(client_uuid)
 
         result = response.result.decode("utf-8")
         self.assertEqual(1, result.count("nc." + map_name + ".evictions=0"))
@@ -199,7 +213,7 @@ class StatisticsTest(HazelcastTestCase):
         test_map.get(1)     # cache miss
 
         time.sleep(2 * self.STATS_PERIOD)
-        response = self._wait_for_statistics_collection(2 * self.STATS_PERIOD)
+        response = self._wait_for_statistics_collection(client_uuid)
 
         result = response.result.decode("utf-8")
         self.assertEqual(1, result.count("nc." + map_name + ".evictions=0"))
@@ -212,9 +226,13 @@ class StatisticsTest(HazelcastTestCase):
 
         client.shutdown()
 
-    def _get_client_stats_from_server(self):
-        script = "client0=instance_0.getClientService().getConnectedClients()." \
-                 "toArray()[0]\nresult=client0.getClientStatistics();"
+    def _get_client_stats_from_server(self, client_uuid):
+        script = "clients = instance_0.getClientService().getConnectedClients().toArray()\n" \
+                 "for client in clients:\n" \
+                 "\tif client.getUuid() == \"%s\":\n" \
+                 "\t\tresult = client.getClientStatistics()\n" \
+                 "\t\tbreak" % client_uuid
+
         return self.rc.executeOnController(self.cluster.id, script, Lang.PYTHON)
 
     def _get_local_address(self, client):
@@ -230,14 +248,14 @@ class StatisticsTest(HazelcastTestCase):
         if not response.success or response.result is None:
             raise AssertionError
 
-    def _wait_for_statistics_collection(self, timeout):
+    def _wait_for_statistics_collection(self, client_uuid, timeout=30):
         timeout_time = time.time() + timeout
-        response = self._get_client_stats_from_server()
+        response = self._get_client_stats_from_server(client_uuid)
         while time.time() < timeout_time:
             try:
                 self._verify_response_not_empty(response)
                 return response
             except AssertionError:
                 time.sleep(0.1)
-                response = self._get_client_stats_from_server()
+                response = self._get_client_stats_from_server(client_uuid)
         raise AssertionError

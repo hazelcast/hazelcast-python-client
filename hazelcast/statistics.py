@@ -24,7 +24,7 @@ class Statistics(object):
     _KEY_VALUE_SEPARATOR = "="
     _EMPTY_STAT_VALUE = ""
 
-    _EXCEPTION_STR = "Could not collect data for the {}. It won't be collected again. {}"
+    _DEFAULT_PROBE_VALUE = 0
 
     logger = logging.getLogger("Statistics")
 
@@ -88,47 +88,41 @@ class Statistics(object):
         psutil_stats = {}
         if PSUTIL_ENABLED:
 
-            # Availability: All platforms. Try to be sure that it is working.
-            if self._can_collect_stat("physical_memory_info"):
-                self._collect_physical_memory_info(psutil_stats)
+            if self._can_collect_stat("os.totalPhysicalMemorySize") \
+                    or self._can_collect_stat("os.freePhysicalMemorySize"):
+                self._collect_physical_memory_info(psutil_stats, "os.totalPhysicalMemorySize",
+                                                   "os.freePhysicalMemorySize")
 
-            # Availability: All platforms. Try to be sure that it is working.
-            if self._can_collect_stat("swap_memory_info"):
-                self._collect_swap_memory_info(psutil_stats)
+            if self._can_collect_stat("os.totalSwapSpaceSize") or self._can_collect_stat("os.freeSwapSpaceSize"):
+                self._collect_swap_memory_info(psutil_stats, "os.totalSwapSpaceSize", "os.freeSwapSpaceSize")
 
-            # Availability: Unix. Load average in the last minute
-            if self._can_collect_stat("load_average"):
-                self._collect_load_average(psutil_stats)
+            if self._can_collect_stat("os.systemLoadAverage"):
+                self._collect_load_average(psutil_stats, "os.systemLoadAverage")
 
-            # Availability: All platforms. Try to be sure that it is working.
-            # Under some platforms, CPU count cannot be determined properly.
-            if self._can_collect_stat("cpu_count"):
-                self._collect_cpu_time(psutil_stats)
+            if self._can_collect_stat("runtime.availableProcessors"):
+                self._collect_cpu_count(psutil_stats, "runtime.availableProcessors")
 
             process = psutil.Process()
             with process.oneshot():
                 # With oneshot, process related information could be gathered
                 # faster due to caching.
 
-                # Availability: All platforms. Try to be sure that it is working.
-                if self._can_collect_stat("process_memory_info"):
-                    self._collect_process_memory_info(psutil_stats, process)
+                if self._can_collect_stat("os.committedVirtualMemorySize") \
+                        or self._can_collect_stat("runtime.usedMemory"):
+                    self._collect_process_memory_info(psutil_stats, "os.committedVirtualMemorySize",
+                                                      "runtime.usedMemory", process)
 
-                # Availability: UNIX and Windows
-                if self._can_collect_stat("file_descriptor_count"):
-                    self._collect_file_descriptor_count(psutil_stats, process)
+                if self._can_collect_stat("os.openFileDescriptorCount"):
+                    self._collect_file_descriptor_count(psutil_stats, "os.openFileDescriptorCount", process)
 
-                # Availability: Linux. Gets the 'hard'/'max' limit
-                if self._can_collect_stat("max_file_descriptor_count"):
-                    self._collect_max_file_descriptor_count(psutil_stats, process)
+                if self._can_collect_stat("os.maxFileDescriptorCount"):
+                    self._collect_max_file_descriptor_count(psutil_stats, "os.maxFileDescriptorCount", process)
 
-                # Availability: All platforms. Try to be sure that it is working.
-                if self._can_collect_stat("process_cpu_time"):
-                    self._collect_process_cpu_time(psutil_stats, process)
+                if self._can_collect_stat("os.processCpuTime"):
+                    self._collect_process_cpu_time(psutil_stats, "os.processCpuTime", process)
 
-                # Availability: All platforms. Try to be sure that it is working.
-                if self._can_collect_stat("process_uptime"):
-                    self._collect_process_uptime(psutil_stats, process)
+                if self._can_collect_stat("runtime.uptime"):
+                    self._collect_process_uptime(psutil_stats, "runtime.uptime", process)
 
         return psutil_stats
 
@@ -206,78 +200,101 @@ class Statistics(object):
     def _can_collect_stat(self, name):
         return name not in self._failed_gauges
 
-    def _collect_physical_memory_info(self, psutil_stats):
-        try:
-            memory_info = psutil.virtual_memory()
-            psutil_stats["os.totalPhysicalMemorySize"] = memory_info.total
-            psutil_stats["os.freePhysicalMemorySize"] = memory_info.available
-        except Exception as ex:
-            self.logger.warning(self._EXCEPTION_STR.format("physical memory size", ex))
-            self._failed_gauges.add("physical_memory_info")
+    def _safe_psutil_stat_collector(func):
+        def safe_wrapper(self, psutil_stats, probe_name, *args):
+            # Decorated function's signature must match with above
+            try:
+                stat = func(self, psutil_stats, probe_name, *args)
+            except AttributeError as ae:
+                self.logger.debug("Unable to register psutil method used for the probe {}. "
+                                  "Cause: {}".format(probe_name, ae))
+                self._failed_gauges.add(probe_name)
+                return
+            except Exception as ex:
+                self.logger.warning("Failed to access the probe {}. Cause: {}".format(probe_name, ex))
+                stat = self._DEFAULT_PROBE_VALUE
 
-    def _collect_swap_memory_info(self, psutil_stats):
-        try:
-            swap_info = psutil.swap_memory()
-            psutil_stats["os.totalSwapSpaceSize"] = swap_info.total
-            psutil_stats["os.freeSwapSpaceSize"] = swap_info.free
-        except Exception as ex:
-            self.logger.warning(self._EXCEPTION_STR.format("swap space size", ex))
-            self._failed_gauges.add("swap_memory_info")
+            psutil_stats[probe_name] = stat
 
-    def _collect_load_average(self, psutil_stats):
-        try:
-            psutil_stats["os.systemLoadAverage"] = os.getloadavg()[0]
-        except Exception as ex:
-            self.logger.warning(self._EXCEPTION_STR.format("system load average", ex))
-            self._failed_gauges.add("load_average")
+        return safe_wrapper
 
-    def _collect_cpu_time(self, psutil_stats):
-        try:
-            cpu_count = psutil.cpu_count()
-            if cpu_count:
-                psutil_stats["runtime.availableProcessors"] = cpu_count
-            else:
-                raise ValueError("CPU count cannot be determined.")
-        except Exception as ex:
-            self.logger.warning(self._EXCEPTION_STR.format("CPU count", ex))
-            self._failed_gauges.add("cpu_count")
+    def _collect_physical_memory_info(self, psutil_stats, probe_total, probe_free):
+        memory_info = psutil.virtual_memory()
 
-    def _collect_process_memory_info(self, psutil_stats, process):
-        try:
-            p_memory_info = process.memory_info()
-            psutil_stats["os.committedVirtualMemorySize"] = p_memory_info.vms
-            psutil_stats["runtime.usedMemory"] = p_memory_info.rss
-        except Exception as ex:
-            self.logger.warning(self._EXCEPTION_STR.format("memory info related to the process", ex))
-            self._failed_gauges.add("process_memory_info")
+        if self._can_collect_stat(probe_total):
+            self._collect_total_physical_memory_size(psutil_stats, probe_total, memory_info)
 
-    def _collect_file_descriptor_count(self, psutil_stats, process):
+        if self._can_collect_stat(probe_free):
+            self._collect_free_physical_memory_size(psutil_stats, probe_free, memory_info)
+
+    @_safe_psutil_stat_collector
+    def _collect_total_physical_memory_size(self, psutil_stats, probe_name, memory_info):
+        return memory_info.total
+
+    @_safe_psutil_stat_collector
+    def _collect_free_physical_memory_size(self, psutil_stats, probe_name, memory_info):
+        return memory_info.available
+
+    def _collect_swap_memory_info(self, psutil_stats, probe_total, probe_free):
+        swap_info = psutil.swap_memory()
+
+        if self._can_collect_stat(probe_total):
+            self._collect_total_swap_space(psutil_stats, probe_total, swap_info)
+
+        if self._can_collect_stat(probe_free):
+            self._collect_free_swap_space(psutil_stats, probe_free, swap_info)
+
+    @_safe_psutil_stat_collector
+    def _collect_total_swap_space(self, psutil_stats, probe_name, swap_info):
+        return swap_info.total
+
+    @_safe_psutil_stat_collector
+    def _collect_free_swap_space(self, psutil_stats, probe_name, swap_info):
+        return swap_info.free
+
+    @_safe_psutil_stat_collector
+    def _collect_load_average(self, psutil_stats, probe_name):
+        return os.getloadavg()[0]
+
+    @_safe_psutil_stat_collector
+    def _collect_cpu_count(self, psutil_stats, probe_name):
+        return psutil.cpu_count()
+
+    def _collect_process_memory_info(self, psutil_stats, probe_cvms, probe_used, process):
+        p_memory_info = process.memory_info()
+
+        if self._can_collect_stat(probe_cvms):
+            self._collect_committed_virtual_memory_size(psutil_stats, probe_cvms, p_memory_info)
+
+        if self._can_collect_stat(probe_used):
+            self._collect_used_memory(psutil_stats, probe_used, p_memory_info)
+
+    @_safe_psutil_stat_collector
+    def _collect_committed_virtual_memory_size(self, psutil_stats, probe_name, p_memory_info):
+        return p_memory_info.vms
+
+    @_safe_psutil_stat_collector
+    def _collect_used_memory(self, psutil_stats, probe_name, p_memory_info):
+        return p_memory_info.rss
+
+    @_safe_psutil_stat_collector
+    def _collect_file_descriptor_count(self, psutil_stats, probe_name, process):
         try:
-            psutil_stats["os.openFileDescriptorCount"] = process.num_fds()
+            return process.num_fds()
         except AttributeError:
             # Fallback for Windows
-            psutil_stats["os.openFileDescriptorCount"] = process.num_handles()
-        except Exception as ex:
-            self.logger.warning(self._EXCEPTION_STR.format("open file descriptor count", ex))
-            self._failed_gauges.add("file_descriptor_count")
+            return process.num_handles()
 
-    def _collect_max_file_descriptor_count(self, psutil_stats, process):
-        try:
-            psutil_stats["os.maxFileDescriptorCount"] = process.rlimit(psutil.RLIMIT_NOFILE)[1]
-        except Exception as ex:
-            self.logger.warning(self._EXCEPTION_STR.format("max file descriptor count", ex))
-            self._failed_gauges.add("max_file_descriptor_count")
+    @_safe_psutil_stat_collector
+    def _collect_max_file_descriptor_count(self, psutil_stats, probe_name, process):
+        return process.rlimit(psutil.RLIMIT_NOFILE)[1]
 
-    def _collect_process_cpu_time(self, psutil_stats, process):
-        try:
-            psutil_stats["os.processCpuTime"] = to_nanos(sum(process.cpu_times()))
-        except Exception as ex:
-            self.logger.warning(self._EXCEPTION_STR.format("process CPU time", ex))
-            self._failed_gauges.add("process_cpu_time")
+    @_safe_psutil_stat_collector
+    def _collect_process_cpu_time(self, psutil_stats, probe_name, process):
+        return to_nanos(sum(process.cpu_times()))
 
-    def _collect_process_uptime(self, psutil_stats, process):
-        try:
-            psutil_stats["runtime.uptime"] = to_millis(current_time() - process.create_time())
-        except Exception as ex:
-            self.logger.warning(self._EXCEPTION_STR.format("process uptime", ex))
-            self._failed_gauges.add("process_uptime")
+    @_safe_psutil_stat_collector
+    def _collect_process_uptime(self, psutil_stats, probe_name, process):
+        return to_millis(current_time() - process.create_time())
+
+

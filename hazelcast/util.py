@@ -88,26 +88,22 @@ def thread_id():
 
 def to_millis(seconds):
     """
-    Converts the time parameter in seconds to milliseconds. If the given time is negative, returns the original value.
+    Converts the time parameter in seconds to milliseconds.
 
     :param seconds: (Number), the given time in seconds.
     :return: (int), result of the conversation in milliseconds.
     """
-    if seconds >= 0:
-        return int(seconds * MILLISECONDS_IN_SECONDS)
-    return seconds
+    return int(seconds * MILLISECONDS_IN_SECONDS)
 
 
 def to_nanos(seconds):
     """
-    Converts the time parameter in seconds to nanoseconds. If the given time is negative, returns the original value.
+    Converts the time parameter in seconds to nanoseconds.
 
     :param seconds: (Number), the given time in seconds.
     :return: (int), result of the conversation in nanoseconds.
     """
-    if seconds >= 0:
-        return int(seconds * NANOSECONDS_IN_SECONDS)
-    return seconds
+    return int(seconds * NANOSECONDS_IN_SECONDS)
 
 
 def validate_type(_type):
