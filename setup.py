@@ -47,9 +47,9 @@ setup(
         ],
         license='Apache 2.0',
         keywords='hazelcast,hazelcast client,In-Memory Data Grid,Distributed Computing',
-        packages=find_packages(exclude=[ 'benchmarks', 'examples', 'examples.*', 'docs', 'tests', 'tests.*']),
+        packages=find_packages(exclude=['benchmarks', 'examples', 'examples.*', 'docs', 'tests', 'tests.*']),
         package_dir={'hazelcast': 'hazelcast'},
         install_requires=[],
         extras_require=extras,
-        tests_require=['thrift', 'nose', 'coverage'],
+        tests_require=['thrift', 'nose', 'coverage', 'psutil'],
 )
