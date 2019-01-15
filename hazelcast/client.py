@@ -232,8 +232,8 @@ class HazelcastClient(object):
         """
         if self.lifecycle.is_live:
             self.lifecycle.fire_lifecycle_event(LIFECYCLE_STATE_SHUTTING_DOWN)
-            self.statistics.shutdown()
             self.near_cache_manager.destroy_all_near_caches()
+            self.statistics.shutdown()
             self.partition_service.shutdown()
             self.heartbeat.shutdown()
             self.cluster.shutdown()

@@ -211,7 +211,7 @@ class Heartbeat(object):
         """
         Stops HeartBeat operations.
         """
-        if self._heartbeat():
+        if self._heartbeat_timer:
             self._heartbeat_timer.cancel()
 
     def add_listener(self, on_heartbeat_restored=None, on_heartbeat_stopped=None):
