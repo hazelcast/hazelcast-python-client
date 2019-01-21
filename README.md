@@ -61,6 +61,7 @@
     * [7.4.11. Using Semaphore](#7411-using-semaphore)
     * [7.4.12. Using Transactions](#7412-using-transactions)
     * [7.4.13. Using PN Counter](#7413-using-pn-counter)
+    * [7.4.14. Using Flake ID Generator](#7414-using-flake-id-generator)
   * [7.5. Distributed Events](#75-distributed-events)
     * [7.5.1. Cluster Events](#751-cluster-events)
       * [7.5.1.1. Listening for Member Events](#7511-listening-for-member-events)
@@ -1549,6 +1550,21 @@ print(pn_counter.decrement_and_get())  # 4
 # value and then does the operation
 print(pn_counter.get_and_increment())  # 4
 print(pn_counter.get())  # 5
+```
+
+### 7.4.14. Using Flake ID Generator
+
+Hazelcast `FlakeIdGenerator` is used to generate cluster-wide unique identifiers. Generated identifiers are long 
+primitive values and are k-ordered (roughly ordered). IDs are in the range from 0 to `2^63-1` (maximum signed long value). 
+For details, see the [FlakeIdGenerator section](https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#flakeidgenerator) in the 
+Hazelcast IMDG Reference Manual.
+
+```python
+# Get a Flake ID Generator called 'flake-id-generator'
+generator = client.get_flake_id_generator("flake-id-generator").blocking()
+
+# Generate a some unique identifier
+print("ID: {}".format(generator.new_id()))
 ```
 
 ## 7.5. Distributed Events
