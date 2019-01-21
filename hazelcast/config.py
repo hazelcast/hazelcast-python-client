@@ -104,6 +104,9 @@ class ClientConfig(object):
         self.serialization_config = SerializationConfig()
         """Hazelcast serialization configuration"""
 
+        self.client_name = ""
+        """Name of the client"""
+
     def add_membership_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
         """
         Helper method for adding membership listeners
@@ -370,7 +373,7 @@ class NearCacheConfig(object):
     Map Near cache configuration for a specific map by name.
     """
 
-    def __init__(self, name):
+    def __init__(self, name="default"):
         self._name = name
         self.invalidate_on_change = True
         """Should a value is invalidated and removed in case of any map data updating operations such as replace, remove etc."""
@@ -578,7 +581,17 @@ class ClientProperties(object):
 
     HAZELCAST_CLOUD_DISCOVERY_TOKEN = ClientProperty("hazelcast.client.cloud.discovery.token", "")
     """
-    Token to use when discovering cluster via Hazelcast.cloud
+    Token to use when discovering cluster via Hazelcast.cloud.
+    """
+
+    STATISTICS_ENABLED = ClientProperty("hazelcast.client.statistics.enabled", False)
+    """
+    Used to enable the client statistics collection.
+    """
+
+    STATISTICS_PERIOD_SECONDS = ClientProperty("hazelcast.client.statistics.period.seconds", 3, TimeUnit.SECOND)
+    """
+    Period in seconds to collect statistics.
     """
 
     def __init__(self, properties):
@@ -590,9 +603,21 @@ class ClientProperties(object):
         and lastly fall backs to the default value of the property.
 
         :param property: (:class:`~hazelcast.config.ClientProperty`), Property to get value from
-        :return: Returns the value of the given property
+        :return: Value of the given property
         """
         return self._properties.get(property.name) or os.getenv(property.name) or property.default_value
+
+    def get_bool(self, property):
+        """
+        Gets the value of the given property as boolean.
+
+        :param property: (:class:`~hazelcast.config.ClientProperty`), Property to get value from
+        :return: (bool), Value of the given property
+        """
+        value = self.get(property)
+        if isinstance(value, bool):
+            return value
+        return value.lower() == "true"
 
     def get_seconds(self, property):
         """

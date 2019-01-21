@@ -77,7 +77,8 @@ class NearCacheTestCase(unittest.TestCase):
             key = "key-{}".format(i)
             value = "value-{}".format(i)
             near_cache[key] = value
-        evict, expire = near_cache.get_statistics()
+        stats = near_cache.get_statistics()
+        evict, expire = stats["evictions"], stats["expirations"]
         self.assertLess(evict, 2)
         self.assertGreater(expire, 8)
 
@@ -89,7 +90,8 @@ class NearCacheTestCase(unittest.TestCase):
             near_cache[key] = value
         sleep(3)
         near_cache["key"] = "value"
-        evict, expire = near_cache.get_statistics()
+        stats = near_cache.get_statistics()
+        evict, expire = stats["evictions"], stats["expirations"]
         self.assertEqual(evict, 0)
         self.assertEqual(expire, near_cache.eviction_sampling_count)
 
@@ -104,7 +106,8 @@ class NearCacheTestCase(unittest.TestCase):
             key = "key-{}".format(i)
             value = "value-{}".format(i)
             near_cache[key] = value
-        evict, expire = near_cache.get_statistics()
+        stats = near_cache.get_statistics()
+        evict, expire = stats["evictions"], stats["expirations"]
         self.assertEqual(expire, 0)
         self.assertLess(evict, 10000)
 
@@ -136,7 +139,8 @@ class NearCacheTestCase(unittest.TestCase):
             key = "key-{}".format(i)
             value = "value-{}".format(i)
             near_cache[key] = value
-        evict, expire = near_cache.get_statistics()
+        stats = near_cache.get_statistics()
+        evict, expire = stats["evictions"], stats["expirations"]
         self.assertEqual(expire, 0)
         self.assertLess(evict, 1000)
 
@@ -146,11 +150,12 @@ class NearCacheTestCase(unittest.TestCase):
             key = "key-{}".format(i)
             value = "value-{}".format(i)
             near_cache[key] = value
-        evict, expire = near_cache.get_statistics()
+        stats = near_cache.get_statistics()
+        evict, expire = stats["evictions"], stats["expirations"]
         self.assertEqual(expire, 0)
         self.assertGreaterEqual(evict, 1000)
 
     def create_near_cache(self, service, im_format, ttl, max_idle, policy, max_size, eviction_sampling_count=None,
                           eviction_sampling_pool_size=None):
-        return NearCache(service, im_format, ttl, max_idle, True, policy, max_size, eviction_sampling_count,
+        return NearCache("default", service, im_format, ttl, max_idle, True, policy, max_size, eviction_sampling_count,
                          eviction_sampling_pool_size)

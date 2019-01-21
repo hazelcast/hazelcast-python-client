@@ -6,13 +6,13 @@ import sys
 import threading
 import time
 
-from hazelcast.core import CLIENT_TYPE
+from hazelcast.core import CLIENT_TYPE, CLIENT_VERSION, SERIALIZATION_VERSION
 from hazelcast.exception import AuthenticationError
 from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
 from hazelcast.protocol.client_message import BEGIN_END_FLAG, ClientMessage, ClientMessageBuilder
 from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
 from hazelcast.serialization import INT_SIZE_IN_BYTES, FMT_LE_INT
-from hazelcast.util import AtomicInteger, parse_addresses
+from hazelcast.util import AtomicInteger, parse_addresses, calculate_version
 from hazelcast import six
 
 BUFFER_SIZE = 8192
@@ -69,7 +69,8 @@ class ConnectionManager(object):
             owner_uuid=owner_uuid,
             is_owner_connection=False,
             client_type=CLIENT_TYPE,
-            serialization_version=1)
+            serialization_version=SERIALIZATION_VERSION,
+            client_hazelcast_version=CLIENT_VERSION)
 
         def callback(f):
             parameters = client_authentication_codec.decode_response(f.result())
@@ -78,6 +79,8 @@ class ConnectionManager(object):
             connection.endpoint = parameters["address"]
             self.owner_uuid = parameters["owner_uuid"]
             self.uuid = parameters["uuid"]
+            connection.server_version_str = parameters["server_hazelcast_version"]
+            connection.server_version = calculate_version(connection.server_version_str)
             return connection
 
         return self._client.invoker.invoke_on_connection(request, connection).continue_with(callback)
@@ -208,7 +211,7 @@ class Heartbeat(object):
         """
         Stops HeartBeat operations.
         """
-        if self._heartbeat():
+        if self._heartbeat_timer:
             self._heartbeat_timer.cancel()
 
     def add_listener(self, on_heartbeat_restored=None, on_heartbeat_stopped=None):
@@ -223,8 +226,8 @@ class Heartbeat(object):
     def _heartbeat(self):
         now = time.time()
         for connection in list(self._client.connection_manager.connections.values()):
-            time_since_last_read = now - connection.last_read
-            time_since_last_write = now - connection.last_write
+            time_since_last_read = now - connection.last_read_in_seconds
+            time_since_last_write = now - connection.last_write_in_seconds
             if time_since_last_read > self._heartbeat_timeout:
                 if connection.heartbeating:
                     self.logger.warning(
@@ -269,8 +272,11 @@ class Connection(object):
         self._connection_closed_callback = connection_closed_callback
         self._builder = ClientMessageBuilder(message_callback)
         self._read_buffer = b""
-        self.last_read = time.time()
-        self.last_write = 0
+        self.last_read_in_seconds = 0
+        self.last_write_in_seconds = 0
+        self.start_time_in_seconds = 0
+        self.server_version_str = ""
+        self.server_version = 0
 
     def live(self):
         """
@@ -296,7 +302,6 @@ class Connection(object):
         """
         Receives a message from this connection.
         """
-        self.last_read = time.time()
         # split frames
         while len(self._read_buffer) >= INT_SIZE_IN_BYTES:
             frame_length = struct.unpack_from(FMT_LE_INT, self._read_buffer, 0)[0]

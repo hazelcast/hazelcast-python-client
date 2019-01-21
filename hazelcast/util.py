@@ -12,6 +12,9 @@ from hazelcast.six.moves import range
 DEFAULT_ADDRESS = "127.0.0.1"
 DEFAULT_PORT = 5701
 
+MILLISECONDS_IN_SECONDS = 1000
+NANOSECONDS_IN_SECONDS = 1e9
+
 
 def check_not_none(val, message):
     """
@@ -66,6 +69,14 @@ def current_time():
     return time.time()
 
 
+def current_time_in_millis():
+    """
+    Returns the current time of the system in millis.
+    :return: (int), current time of the system in millis.
+    """
+    return to_millis(current_time())
+
+
 def thread_id():
     """
     Returns the current thread's id.
@@ -77,14 +88,22 @@ def thread_id():
 
 def to_millis(seconds):
     """
-    Converts the time parameter in seconds to milliseconds. If the given time is negative, returns the original value.
+    Converts the time parameter in seconds to milliseconds.
 
     :param seconds: (Number), the given time in seconds.
     :return: (int), result of the conversation in milliseconds.
     """
-    if seconds >= 0:
-        return int(seconds * 1000)
-    return seconds
+    return int(seconds * MILLISECONDS_IN_SECONDS)
+
+
+def to_nanos(seconds):
+    """
+    Converts the time parameter in seconds to nanoseconds.
+
+    :param seconds: (Number), the given time in seconds.
+    :return: (int), result of the conversation in nanoseconds.
+    """
+    return int(seconds * NANOSECONDS_IN_SECONDS)
 
 
 def validate_type(_type):
@@ -232,3 +251,34 @@ class TimeUnit(object):
             # bool is a subclass of int. Don't let bool and float multiplication.
             raise TypeError
         return float(value) * time_unit
+
+
+# Version utilities
+UNKNOWN_VERSION = -1
+MAJOR_VERSION_MULTIPLIER = 10000
+MINOR_VERSION_MULTIPLIER = 100
+
+
+def calculate_version(version_str):
+    if not version_str:
+        return UNKNOWN_VERSION
+
+    main_parts = version_str.split("-")
+    tokens = main_parts[0].split(".")
+
+    if len(tokens) < 2:
+        return UNKNOWN_VERSION
+
+    try:
+        major_coeff = int(tokens[0])
+        minor_coeff = int(tokens[1])
+
+        calculated_version = major_coeff * MAJOR_VERSION_MULTIPLIER + minor_coeff * MINOR_VERSION_MULTIPLIER
+
+        if len(tokens) > 2:
+            patch_coeff = int(tokens[2])
+            calculated_version += patch_coeff
+
+        return calculated_version
+    except ValueError:
+        return UNKNOWN_VERSION

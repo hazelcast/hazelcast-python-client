@@ -4,6 +4,7 @@ import random
 from hazelcast.config import EVICTION_POLICY, IN_MEMORY_FORMAT
 from hazelcast.util import current_time
 from hazelcast.six.moves import range
+from sys import getsizeof
 
 
 def lru_key_func(x):
@@ -75,8 +76,9 @@ class NearCache(dict):
     """
     logger = logging.getLogger("NearCache")
 
-    def __init__(self, serialization_service, in_memory_format, time_to_live_seconds, max_idle_seconds, invalidate_on_change,
+    def __init__(self, name, serialization_service, in_memory_format, time_to_live_seconds, max_idle_seconds, invalidate_on_change,
                  eviction_policy, eviction_max_size, eviction_sampling_count=None, eviction_sampling_pool_size=None):
+        self.name = name
         self.serialization_service = serialization_service
         self.in_memory_format = in_memory_format
         self.time_to_live_seconds = time_to_live_seconds
@@ -102,10 +104,32 @@ class NearCache(dict):
         # internal
         self._key_func = eviction_key_func[self.eviction_policy]
         self._eviction_candidates = list()
-        self._evicted_count = 0
-        self._expired_count = 0
-        self._cache_hit = 0
-        self._cache_miss = 0
+        self._evictions = 0
+        self._expirations = 0
+        self._hits = 0
+        self._misses = 0
+        self._invalidations = 0
+        self._invalidation_requests = 0
+        self._creation_time_in_seconds = current_time()
+
+    def get_statistics(self):
+        """
+        Returns the statistics of the NearCache.
+        :return: (Dict), Dictionary that stores statistics related to this near cache.
+        """
+        stats = {
+            "creation_time": self._creation_time_in_seconds,
+            "evictions": self._evictions,
+            "expirations": self._expirations,
+            "misses": self._misses,
+            "hits": self._hits,
+            "invalidations": self._invalidations,
+            "invalidation_requests": self._invalidation_requests,
+            "owned_entry_count": self.__len__(),
+            "owned_entry_memory_cost": getsizeof(self),
+        }
+
+        return stats
 
     def __setitem__(self, key, value):
         self._do_eviction_if_required()
@@ -127,14 +151,14 @@ class NearCache(dict):
                 super(NearCache, self).__delitem__(key)
                 raise KeyError
         except KeyError as ke:
-            self._cache_miss += 1
+            self._misses += 1
             raise ke
 
         if self.eviction_policy == EVICTION_POLICY.LRU:
             value_record.last_access_time = current_time()
         elif self.eviction_policy == EVICTION_POLICY.LFU:
             value_record.access_hit += 1
-        self._cache_hit += 1
+        self._hits += 1
         return self.serialization_service.to_object(value_record.value) \
             if self.in_memory_format == IN_MEMORY_FORMAT.BINARY else value_record.value
 
@@ -153,7 +177,7 @@ class NearCache(dict):
         if len(new_eviction_samples) == len(new_eviction_samples_cleaned):  # did any item expired or do we need to evict
             try:
                 self.__delitem__(self._eviction_candidates[0].key)
-                self._evicted_count += 1
+                self._evictions += 1
                 del self._eviction_candidates[0]
             except KeyError:
                 # key may be evicted previously so just ignore it
@@ -190,20 +214,70 @@ class NearCache(dict):
     def _is_eviction_required(self):
         return self.eviction_policy != EVICTION_POLICY.NONE and self.eviction_max_size <= self.__len__()
 
-    def get_statistics(self):
-        """
-        Returns the statistics of the NearCache.
-        :return: (Number, Number), evicted entry count and expired entry count.
-        """
-        return self._evicted_count, self._expired_count
-
     def _clean_expired_record(self, key):
         try:
             self.__delitem__(key)
-            self._expired_count += 1
+            self._expirations += 1
         except KeyError:
             # key may be evicted previously so just ignore it
             pass
 
+    def _clear(self):
+        size = self.__len__()
+        self.clear()
+        self._invalidations += size
+        self._invalidation_requests += 1
+
+    def _invalidate(self, key_data):
+        try:
+            self.__delitem__(key_data)
+            self._invalidations += 1
+        except KeyError:
+            # There is nothing to invalidate
+            pass
+        self._invalidation_requests += 1
+
     def __repr__(self):
-        return "NearCache[len:{}, evicted:{}]".format(self.__len__(), self._evicted_count)
+        return "NearCache[len:{}, evicted:{}]".format(self.__len__(), self._evictions)
+
+
+class NearCacheManager(object):
+    def __init__(self, client):
+        self._client = client
+        self._caches = {}
+
+    def get_or_create_near_cache(self, name):
+        near_cache = self._caches.get(name, None)
+        if not near_cache:
+            near_cache_config = self._client.config.near_cache_configs.get(name, None)
+            if not near_cache_config:
+                raise ValueError("Cannot find a near cache configuration with the name '{}'".format(name))
+
+            near_cache = NearCache(near_cache_config.name,
+                                   self._client.serialization_service,
+                                   near_cache_config.in_memory_format,
+                                   near_cache_config.time_to_live_seconds,
+                                   near_cache_config.max_idle_seconds,
+                                   near_cache_config.invalidate_on_change,
+                                   near_cache_config.eviction_policy,
+                                   near_cache_config.eviction_max_size,
+                                   near_cache_config.eviction_sampling_count,
+                                   near_cache_config.eviction_sampling_pool_size)
+
+            self._caches[name] = near_cache
+
+        return near_cache
+
+    def destroy_near_cache(self, name):
+        try:
+            near_cache = self._caches.pop(name)
+            near_cache.clear()
+        except KeyError:
+            pass
+
+    def destroy_all_near_caches(self):
+        for key in list(self._caches.keys()):
+            self.destroy_near_cache(key)
+
+    def list_all_near_caches(self):
+        return list(self._caches.values())

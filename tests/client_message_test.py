@@ -171,7 +171,7 @@ class ClientMessageTest(unittest.TestCase):
 
 class ClientMessageBuilderTest(unittest.TestCase):
     def test_message_accumulate(self):
-        message = client_authentication_codec.encode_request("user", "pass", "uuid", "owner-uuid", True, "PYH", 1)
+        message = client_authentication_codec.encode_request("user", "pass", "uuid", "owner-uuid", True, "PYH", 1, "3.10")
         message.set_correlation_id(1)
 
         def message_callback(merged_message):

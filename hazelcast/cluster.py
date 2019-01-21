@@ -4,12 +4,12 @@ import threading
 import time
 import uuid
 
-from hazelcast.core import CLIENT_TYPE, SERIALIZATION_VERSION
+from hazelcast.core import CLIENT_TYPE, CLIENT_VERSION, SERIALIZATION_VERSION
 from hazelcast.exception import HazelcastError, AuthenticationError, TargetDisconnectedError
 from hazelcast.invocation import ListenerInvocation
 from hazelcast.lifecycle import LIFECYCLE_STATE_CONNECTED, LIFECYCLE_STATE_DISCONNECTED
 from hazelcast.protocol.codec import client_add_membership_listener_codec, client_authentication_codec
-from hazelcast.util import get_possible_addresses, get_provider_addresses
+from hazelcast.util import get_possible_addresses, get_provider_addresses, calculate_version
 
 # Membership Event Types
 MEMBER_ADDED = 1
@@ -134,9 +134,14 @@ class ClusterService(object):
 
     def _authenticate_manager(self, connection):
         request = client_authentication_codec.encode_request(
-            username=self._config.group_config.name, password=self._config.group_config.password,
-            uuid=self.uuid, owner_uuid=self.owner_uuid, is_owner_connection=True, client_type=CLIENT_TYPE,
-            serialization_version=SERIALIZATION_VERSION)
+            username=self._config.group_config.name,
+            password=self._config.group_config.password,
+            uuid=self.uuid,
+            owner_uuid=self.owner_uuid,
+            is_owner_connection=True,
+            client_type=CLIENT_TYPE,
+            serialization_version=SERIALIZATION_VERSION,
+            client_hazelcast_version=CLIENT_VERSION)
 
         def callback(f):
             parameters = client_authentication_codec.decode_response(f.result())
@@ -146,6 +151,8 @@ class ClusterService(object):
             connection.is_owner = True
             self.owner_uuid = parameters["owner_uuid"]
             self.uuid = parameters["uuid"]
+            connection.server_version_str = parameters["server_hazelcast_version"]
+            connection.server_version = calculate_version(connection.server_version_str)
             return connection
 
         return self._client.invoker.invoke_on_connection(request, connection).continue_with(callback)
