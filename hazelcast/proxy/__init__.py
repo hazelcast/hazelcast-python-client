@@ -33,7 +33,7 @@ SEMAPHORE_SERVICE = "hz:impl:semaphoreService"
 SET_SERVICE = "hz:impl:setService"
 QUEUE_SERVICE = "hz:impl:queueService"
 TOPIC_SERVICE = "hz:impl:topicService"
-PNCOUNTER_SERVICE = "hz:impl:PNCounterService"
+PN_COUNTER_SERVICE = "hz:impl:PNCounterService"
 
 ID_GENERATOR_ATOMIC_LONG_PREFIX = "hz:atomic:idGenerator:"
 
@@ -54,7 +54,7 @@ _proxy_init = {
     SEMAPHORE_SERVICE: Semaphore,
     SET_SERVICE: Set,
     TOPIC_SERVICE: Topic,
-    PNCOUNTER_SERVICE: PNCounter
+    PN_COUNTER_SERVICE: PNCounter
 }
 
 

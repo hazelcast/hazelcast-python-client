@@ -10,7 +10,7 @@ from hazelcast.partition import PartitionService
 from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE, LIST_SERVICE, SET_SERVICE, MULTI_MAP_SERVICE, \
     REPLICATED_MAP_SERVICE, ATOMIC_LONG_SERVICE, ATOMIC_REFERENCE_SERVICE, RINGBUFFER_SERIVCE, COUNT_DOWN_LATCH_SERVICE, \
     TOPIC_SERVICE, RELIABLE_TOPIC_SERVICE, SEMAPHORE_SERVICE, LOCK_SERVICE, ID_GENERATOR_SERVICE, \
-    ID_GENERATOR_ATOMIC_LONG_PREFIX, EXECUTOR_SERVICE, PNCOUNTER_SERVICE
+    ID_GENERATOR_ATOMIC_LONG_PREFIX, EXECUTOR_SERVICE, PN_COUNTER_SERVICE
 from hazelcast.near_cache import NearCacheManager
 from hazelcast.reactor import AsyncoreReactor
 from hazelcast.serialization import SerializationServiceV1
@@ -162,7 +162,7 @@ class HazelcastClient(object):
         :param name: (str), name of the PN Counter
         :return: (:class:`~hazelcast.proxy.pn_counter.PNCounter`), the PN Counter
         """
-        return self.proxy.get_or_create(PNCOUNTER_SERVICE, name)
+        return self.proxy.get_or_create(PN_COUNTER_SERVICE, name)
 
     def get_reliable_topic(self, name):
         """
