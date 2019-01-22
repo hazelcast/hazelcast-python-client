@@ -34,10 +34,10 @@ if __name__ == "__main__":
     hz = hazelcast.HazelcastClient()
     # Get the Distributed Executor Service
     ex = hz.get_executor("my-distributed-executor")
-    # Get the first Hazelcast Cluster Member
-    first_member = hz.cluster.members[0]
+    # Get the an Hazelcast Cluster Member
+    member = hz.cluster.get_member_list()[0]
     # Submit the MessagePrinter Runnable to the first Hazelcast Cluster Member
-    ex.execute_on_member(first_member, MessagePrinter("message to very first member of the cluster"))
+    ex.execute_on_member(member, MessagePrinter("message to very first member of the cluster"))
     # Submit the MessagePrinter Runnable to all Hazelcast Cluster Members
     ex.execute_on_all_members(MessagePrinter("message to all members in the cluster"))
     # Submit the MessagePrinter Runnable to the Hazelcast Cluster Member owning the key called "key"

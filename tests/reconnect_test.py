@@ -93,8 +93,8 @@ class ReconnectTest(HazelcastTestCase):
         new_member = self.cluster.start_member()
 
         def assert_member_list():
-            self.assertEqual(1, len(client.cluster.members))
-            self.assertEqual(new_member.uuid, client.cluster.members[0].uuid)
+            self.assertEqual(1, client.cluster.size())
+            self.assertEqual(new_member.uuid, client.cluster.get_member_list()[0].uuid)
 
         self.assertTrueEventually(assert_member_list)
 
@@ -109,7 +109,7 @@ class ReconnectTest(HazelcastTestCase):
         old_member.shutdown()
 
         def assert_member_list():
-            self.assertEqual(1, len(client.cluster.members))
-            self.assertEqual(new_member.uuid, client.cluster.members[0].uuid)
+            self.assertEqual(1, client.cluster.size())
+            self.assertEqual(new_member.uuid, client.cluster.get_member_list()[0].uuid)
 
         self.assertTrueEventually(assert_member_list)

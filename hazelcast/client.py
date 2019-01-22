@@ -159,8 +159,9 @@ class HazelcastClient(object):
     def get_pn_counter(self, name):
         """
         Returns the PN Counter instance with the specified name.
-        :param name: (str), name of the PN Counter
-        :return: (:class:`~hazelcast.proxy.pn_counter.PNCounter`), the PN Counter
+
+        :param name: (str), name of the PN Counter.
+        :return: (:class:`~hazelcast.proxy.pn_counter.PNCounter`), the PN Counter.
         """
         return self.proxy.get_or_create(PN_COUNTER_SERVICE, name)
 

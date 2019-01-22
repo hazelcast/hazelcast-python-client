@@ -1,7 +1,7 @@
 import os
 
 from tests.base import SingleMemberTestCase, HazelcastTestCase
-from tests.util import find_member_by_address, configure_logging, get_abs_path, set_attr
+from tests.util import configure_logging, get_abs_path, set_attr
 from hazelcast.exception import ConsistencyLostError, NoDataMemberInClusterError
 from hazelcast import HazelcastClient
 
@@ -19,28 +19,28 @@ class PNCounterBasicTest(SingleMemberTestCase):
         self.assertEqual(4, self.pn_counter.get())
 
     def test_get_and_add(self):
-        self._test_pn_counter_method(self.pn_counter.get_and_add(3), 0, 3)
+        self._check_pn_counter_method(self.pn_counter.get_and_add(3), 0, 3)
 
     def test_add_and_get(self):
-        self._test_pn_counter_method(self.pn_counter.add_and_get(4), 4, 4)
+        self._check_pn_counter_method(self.pn_counter.add_and_get(4), 4, 4)
 
     def test_get_and_subtract(self):
-        self._test_pn_counter_method(self.pn_counter.get_and_subtract(2), 0, -2)
+        self._check_pn_counter_method(self.pn_counter.get_and_subtract(2), 0, -2)
 
     def test_subtract_and_get(self):
-        self._test_pn_counter_method(self.pn_counter.subtract_and_get(5), -5, -5)
+        self._check_pn_counter_method(self.pn_counter.subtract_and_get(5), -5, -5)
 
     def test_get_and_decrement(self):
-        self._test_pn_counter_method(self.pn_counter.get_and_decrement(), 0, -1)
+        self._check_pn_counter_method(self.pn_counter.get_and_decrement(), 0, -1)
 
     def test_decrement_and_get(self):
-        self._test_pn_counter_method(self.pn_counter.decrement_and_get(), -1, -1)
+        self._check_pn_counter_method(self.pn_counter.decrement_and_get(), -1, -1)
 
     def test_get_and_increment(self):
-        self._test_pn_counter_method(self.pn_counter.get_and_increment(), 0, 1)
+        self._check_pn_counter_method(self.pn_counter.get_and_increment(), 0, 1)
 
     def test_increment_and_get(self):
-        self._test_pn_counter_method(self.pn_counter.increment_and_get(), 1, 1)
+        self._check_pn_counter_method(self.pn_counter.increment_and_get(), 1, 1)
 
     def test_reset(self):
         self.pn_counter.get_and_add(1)
@@ -49,7 +49,7 @@ class PNCounterBasicTest(SingleMemberTestCase):
 
         self.assertNotEqual(old_vector_clock, self.pn_counter._observed_clock)
 
-    def _test_pn_counter_method(self, return_value, expected_return_value, expected_get_value):
+    def _check_pn_counter_method(self, return_value, expected_return_value, expected_get_value):
         get_value = self.pn_counter.get()
 
         self.assertEqual(expected_return_value, return_value)
@@ -79,7 +79,7 @@ class PNCounterConsistencyTest(HazelcastTestCase):
         self.pn_counter.add_and_get(3)
 
         replica_address = self.pn_counter._current_target_replica_address
-        member = find_member_by_address(self.client, replica_address)
+        member = self.client.cluster.get_member_by_address(replica_address)
 
         self.rc.terminateMember(self.cluster.id, member.uuid)
         with self.assertRaises(ConsistencyLostError):
@@ -89,7 +89,7 @@ class PNCounterConsistencyTest(HazelcastTestCase):
         self.pn_counter.add_and_get(3)
 
         replica_address = self.pn_counter._current_target_replica_address
-        member = find_member_by_address(self.client, replica_address)
+        member = self.client.cluster.get_member_by_address(replica_address)
 
         self.rc.terminateMember(self.cluster.id, member.uuid)
         self.pn_counter.reset()
