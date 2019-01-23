@@ -1,3 +1,6 @@
+import time
+import itertools
+
 from hazelcast import HazelcastClient
 from hazelcast.core import Address
 from tests.base import HazelcastTestCase
@@ -32,45 +35,45 @@ class HeartbeatTest(HazelcastTestCase):
     def test_heartbeat_stopped(self):
 
         def member_added_func(m):
+            retry_count = itertools.count(3, -1)
+
             def connection_callback(f):
-                conn = f.result()
-                self.simulate_heartbeat_lost(self.client, Address(conn._address[0], conn._address[1]), 2)
+                try:
+                    conn = f.result()
+                    self.simulate_heartbeat_lost(self.client, Address(conn._address[0], conn._address[1]), 2)
+                except:
+                    if next(retry_count) > 0:
+                        time.sleep(1)
+                        self.client.connection_manager.get_or_connect(m.address).add_done_callback(connection_callback)
+                    else:
+                        self.fail("Couldn't connect to address {}".format(m.address))
 
             self.client.connection_manager.get_or_connect(m.address).add_done_callback(connection_callback)
 
         self.client.cluster.add_listener(member_added=member_added_func)
 
-        def heartbeat_stopped_collector():
+        def connection_collector():
             connections = []
 
-            def connection_collector(c):
+            def collector(c):
                 connections.append(c)
 
-            connection_collector.connections = connections
-            return connection_collector
+            collector.connections = connections
+            return collector
 
-        def heartbeat_restored_collector():
-            connections = []
+        heartbeat_stopped_collector = connection_collector()
+        heartbeat_restored_collector = connection_collector()
 
-            def connection_collector(c):
-                connections.append(c)
-
-            connection_collector.connections = connections
-            return connection_collector
-
-        stopped_collector = heartbeat_stopped_collector()
-        restored_collector = heartbeat_restored_collector()
-
-        self.client.heartbeat.add_listener(on_heartbeat_stopped=stopped_collector,
-                                           on_heartbeat_restored=restored_collector)
+        self.client.heartbeat.add_listener(on_heartbeat_stopped=heartbeat_stopped_collector,
+                                           on_heartbeat_restored=heartbeat_restored_collector)
 
         member2 = self.rc.startMember(self.cluster.id)
 
         def assert_heartbeat_stopped_and_restored():
-            self.assertEqual(1, len(stopped_collector.connections))
-            self.assertEqual(1, len(restored_collector.connections))
-            connection_stopped = stopped_collector.connections[0]
-            connection_restored = restored_collector.connections[0]
+            self.assertEqual(1, len(heartbeat_stopped_collector.connections))
+            self.assertEqual(1, len(heartbeat_restored_collector.connections))
+            connection_stopped = heartbeat_stopped_collector.connections[0]
+            connection_restored = heartbeat_restored_collector.connections[0]
             self.assertEqual(connection_stopped._address, (member2.host, member2.port))
             self.assertEqual(connection_restored._address, (member2.host, member2.port))
 
