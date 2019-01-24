@@ -74,3 +74,11 @@ def set_attr(*args, **kwargs):
         return ob
 
     return wrap_ob
+
+
+def open_connection_to_address(client, address):
+    key = generate_key_owned_by_instance(client, address)
+    m = client.get_map(random_string()).blocking()
+    m.put(key, 0)
+    m.destroy()
+

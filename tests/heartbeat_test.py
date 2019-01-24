@@ -1,11 +1,8 @@
-import time
-import itertools
-
 from hazelcast import HazelcastClient
 from hazelcast.core import Address
 from tests.base import HazelcastTestCase
 from hazelcast.config import ClientConfig, ClientProperties
-from tests.util import configure_logging
+from tests.util import configure_logging, open_connection_to_address
 
 
 class HeartbeatTest(HazelcastTestCase):
@@ -34,24 +31,6 @@ class HeartbeatTest(HazelcastTestCase):
 
     def test_heartbeat_stopped(self):
 
-        def member_added_func(m):
-            retry_count = itertools.count(3, -1)
-
-            def connection_callback(f):
-                try:
-                    conn = f.result()
-                    self.simulate_heartbeat_lost(self.client, Address(conn._address[0], conn._address[1]), 2)
-                except:
-                    if next(retry_count) > 0:
-                        time.sleep(1)
-                        self.client.connection_manager.get_or_connect(m.address).add_done_callback(connection_callback)
-                    else:
-                        self.fail("Couldn't connect to address {}".format(m.address))
-
-            self.client.connection_manager.get_or_connect(m.address).add_done_callback(connection_callback)
-
-        self.client.cluster.add_listener(member_added=member_added_func)
-
         def connection_collector():
             connections = []
 
@@ -68,6 +47,9 @@ class HeartbeatTest(HazelcastTestCase):
                                            on_heartbeat_restored=heartbeat_restored_collector)
 
         member2 = self.rc.startMember(self.cluster.id)
+        addr = Address(member2.host, member2.port)
+        open_connection_to_address(self.client, addr)
+        self.simulate_heartbeat_lost(self.client, addr, 2)
 
         def assert_heartbeat_stopped_and_restored():
             self.assertEqual(1, len(heartbeat_stopped_collector.connections))
