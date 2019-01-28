@@ -1534,10 +1534,19 @@ Hazelcast `PNCounter` (Positive-Negative Counter) is a CRDT positive-negative co
 A PN Counter usage example is shown below.
 
 ```python
+# Get a PN Counter called 'pn-counter'
 pn_counter = client.get_pn_counter("pn-counter").blocking()
 
+# Counter is initialized with 0
+print(pn_counter.get()) # 0
+
+# .._and_get() variants does the operation
+# and returns the final value
 print(pn_counter.add_and_get(5))  # 5
 print(pn_counter.decrement_and_get())  # 4
+
+# get_and_..() variants returns the current 
+# value and then does the operation
 print(pn_counter.get_and_increment())  # 4
 print(pn_counter.get())  # 5
 ```

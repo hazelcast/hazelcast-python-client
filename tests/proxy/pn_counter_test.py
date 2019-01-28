@@ -18,6 +18,9 @@ class PNCounterBasicTest(SingleMemberTestCase):
         self.pn_counter.add_and_get(4)
         self.assertEqual(4, self.pn_counter.get())
 
+    def test_get_initial_value(self):
+        self.assertEqual(0, self.pn_counter.get())
+
     def test_get_and_add(self):
         self._check_pn_counter_method(self.pn_counter.get_and_add(3), 0, 3)
 

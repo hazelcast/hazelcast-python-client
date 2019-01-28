@@ -9,6 +9,8 @@ if __name__ == "__main__":
 
     pn_counter = client.get_pn_counter("pn-counter").blocking()
 
+    print("Counter is initialized with {}".format(pn_counter.get()))
+
     for i in range(10):
         print("Added {} to the counter. Current value is {}".format(i, pn_counter.add_and_get(i)))
 

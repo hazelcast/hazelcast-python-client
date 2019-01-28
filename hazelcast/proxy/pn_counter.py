@@ -1,7 +1,8 @@
+import functools
 import random
 
 from hazelcast.core import DataMemberSelector
-from hazelcast.future import ImmediateFuture
+from hazelcast.future import Future
 from hazelcast.proxy.base import Proxy
 from hazelcast.cluster import VectorClock
 from hazelcast.protocol.codec import pn_counter_add_codec, pn_counter_get_codec, \
@@ -49,7 +50,7 @@ class PNCounter(Proxy):
     aren't any and the methods here are invoked on a lite member, they will
     fail with an NoDataMemberInClusterError.
 
-    Requires Hazelcast 3.10+.
+    Requires Hazelcast IMDG 3.10+.
     """
 
     _EMPTY_ADDRESS_LIST = []
@@ -71,7 +72,7 @@ class PNCounter(Proxy):
         :return: (int), the current value of the counter.
         """
 
-        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST, None, pn_counter_get_codec)
+        return self._invoke_internal(pn_counter_get_codec)
 
     def get_and_add(self, delta):
         """
@@ -85,8 +86,7 @@ class PNCounter(Proxy):
         :return: (int), the previous value.
         """
 
-        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST, None, pn_counter_add_codec, delta=delta,
-                                     get_before_update=True)
+        return self._invoke_internal(pn_counter_add_codec, delta=delta, get_before_update=True)
 
     def add_and_get(self, delta):
         """
@@ -100,8 +100,7 @@ class PNCounter(Proxy):
         :return: (int), the updated value.
         """
 
-        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST, None, pn_counter_add_codec, delta=delta,
-                                     get_before_update=False)
+        return self._invoke_internal(pn_counter_add_codec, delta=delta, get_before_update=False)
 
     def get_and_subtract(self, delta):
         """
@@ -115,8 +114,7 @@ class PNCounter(Proxy):
         :return: (int), the previous value.
         """
 
-        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST, None, pn_counter_add_codec, delta=-1 * delta,
-                                     get_before_update=True)
+        return self._invoke_internal(pn_counter_add_codec, delta=-1 * delta, get_before_update=True)
 
     def subtract_and_get(self, delta):
         """
@@ -130,8 +128,7 @@ class PNCounter(Proxy):
         :return: (int), the updated value.
         """
 
-        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST, None, pn_counter_add_codec, delta=-1 * delta,
-                                     get_before_update=False)
+        return self._invoke_internal(pn_counter_add_codec, delta=-1 * delta, get_before_update=False)
 
     def get_and_decrement(self):
         """
@@ -144,8 +141,7 @@ class PNCounter(Proxy):
         :return: (int), the previous value.
         """
 
-        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST, None, pn_counter_add_codec, delta=-1,
-                                     get_before_update=True)
+        return self._invoke_internal(pn_counter_add_codec, delta=-1, get_before_update=True)
 
     def decrement_and_get(self):
         """
@@ -158,8 +154,7 @@ class PNCounter(Proxy):
         :return: (int), the updated value.
         """
 
-        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST, None, pn_counter_add_codec, delta=-1,
-                                     get_before_update=False)
+        return self._invoke_internal(pn_counter_add_codec, delta=-1, get_before_update=False)
 
     def get_and_increment(self):
         """
@@ -172,8 +167,7 @@ class PNCounter(Proxy):
         :return: (int), the previous value.
         """
 
-        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST, None, pn_counter_add_codec, delta=1,
-                                     get_before_update=True)
+        return self._invoke_internal(pn_counter_add_codec, delta=1, get_before_update=True)
 
     def increment_and_get(self):
         """
@@ -186,8 +180,7 @@ class PNCounter(Proxy):
         :return: (int), the updated value.
         """
 
-        return self._invoke_internal(PNCounter._EMPTY_ADDRESS_LIST, None, pn_counter_add_codec, delta=1,
-                                     get_before_update=False)
+        return self._invoke_internal(pn_counter_add_codec, delta=1, get_before_update=False)
 
     def reset(self):
         """
@@ -198,24 +191,35 @@ class PNCounter(Proxy):
 
         self._observed_clock = VectorClock()
 
-    def _invoke_internal(self, excluded_addresses, last_error, codec, **kwargs):
+    def _invoke_internal(self, codec, **kwargs):
+        delegated_future = Future()
+        self._set_result_or_error(delegated_future, PNCounter._EMPTY_ADDRESS_LIST, None, codec, **kwargs)
+        return delegated_future
+
+    def _set_result_or_error(self, delegated_future, excluded_addresses, last_error, codec, **kwargs):
         target = self._get_crdt_operation_target(excluded_addresses)
         if target is None:
             if last_error:
-                raise last_error
-            raise NoDataMemberInClusterError("Cannot invoke operations on a CRDT because "
-                                             "the cluster does not contain any data members")
+                delegated_future.set_exception(last_error)
+                return
+            delegated_future.set_exception(NoDataMemberInClusterError("Cannot invoke operations on a CRDT because "
+                                                                      "the cluster does not contain any data members"))
+            return
 
+        future = self._encode_invoke_on_target(codec, target, self._response_handler,
+                                               replica_timestamps=self._observed_clock.entry_set(),
+                                               target_replica=target,
+                                               **kwargs)
+
+        checker_func = functools.partial(self._check_invocation_result, delegated_future=delegated_future,
+                                         excluded_addresses=excluded_addresses, target=target, codec=codec, **kwargs)
+        future.add_done_callback(checker_func)
+
+    def _check_invocation_result(self, future, delegated_future, excluded_addresses, target, codec, **kwargs):
         try:
-            result = self._encode_invoke_on_target(codec,
-                                                   target,
-                                                   self._response_handler,
-                                                   replica_timestamps=self._observed_clock.entry_set(),
-                                                   target_replica=target,
-                                                   **kwargs).result()
-
+            result = future.result()
             self._update_observed_replica_timestamp(result["replica_timestamps"])
-            return ImmediateFuture(result["value"])
+            delegated_future.set_result(result["value"])
         except Exception as ex:
             self.logger.debug("Exception occurred while invoking operation on target {}, "
                               "choosing different target. Cause: {}".format(target, ex))
@@ -223,7 +227,7 @@ class PNCounter(Proxy):
                 excluded_addresses = []
 
             excluded_addresses.append(target)
-            return self._invoke_internal(excluded_addresses, ex, codec, **kwargs)
+            self._set_result_or_error(delegated_future, excluded_addresses, ex, codec, **kwargs)
 
     def _get_crdt_operation_target(self, excluded_addresses):
         if self._current_target_replica_address and \
