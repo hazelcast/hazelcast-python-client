@@ -1,6 +1,3 @@
-from __future__ import with_statement
-
-import logging
 import struct
 import sys
 import threading
@@ -12,7 +9,7 @@ from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
 from hazelcast.protocol.client_message import BEGIN_END_FLAG, ClientMessage, ClientMessageBuilder
 from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
 from hazelcast.serialization import INT_SIZE_IN_BYTES, FMT_LE_INT
-from hazelcast.util import AtomicInteger, parse_addresses, calculate_version
+from hazelcast.util import AtomicInteger, parse_addresses, calculate_version, get_logger
 from hazelcast import six
 
 BUFFER_SIZE = 8192
@@ -23,12 +20,12 @@ class ConnectionManager(object):
     """
     ConnectionManager is responsible for managing :mod:`Connection` objects.
     """
-    logger = logging.getLogger("ConnectionManager")
 
     def __init__(self, client, new_connection_func, address_translator):
         self._new_connection_mutex = threading.RLock()
         self._io_thread = None
         self._client = client
+        self.logger = get_logger(client, "ConnectionManager")
         self.connections = {}
         self._pending_connections = {}
         self._socket_map = {}
@@ -177,7 +174,7 @@ class ConnectionManager(object):
             connection = self.connections[address]
             connection.close(cause)
         except KeyError:
-            logging.warning("No connection with %s was found to close.", address)
+            self.logger.warning("No connection with %s was found to close.", address)
             return False
 
 
@@ -185,11 +182,11 @@ class Heartbeat(object):
     """
     HeartBeat Service.
     """
-    logger = logging.getLogger("ConnectionManager")
     _heartbeat_timer = None
 
     def __init__(self, client):
         self._client = client
+        self.logger = get_logger(client, "HeartbeatService")
         self._listeners = []
 
         self._heartbeat_timeout = client.properties.get_seconds_positive_or_default(client.properties.HEARTBEAT_TIMEOUT)
@@ -265,10 +262,10 @@ class Connection(object):
     is_owner = False
     counter = AtomicInteger()
 
-    def __init__(self, address, connection_closed_callback, message_callback):
+    def __init__(self, client, address, connection_closed_callback, message_callback):
         self._address = (address.host, address.port)
         self.id = self.counter.get_and_increment()
-        self.logger = logging.getLogger("Connection[%s](%s:%d)" % (self.id, address.host, address.port))
+        self.logger = get_logger(client, "Connection[%s](%s:%d)" % (self.id, address.host, address.port))
         self._connection_closed_callback = connection_closed_callback
         self._builder = ClientMessageBuilder(message_callback)
         self._read_buffer = bytearray()

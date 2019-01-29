@@ -3,6 +3,7 @@ from __future__ import with_statement
 import itertools
 import threading
 import time
+import logging
 from collections import Sequence, Iterable
 
 from hazelcast.core import Address
@@ -282,3 +283,19 @@ def calculate_version(version_str):
         return calculated_version
     except ValueError:
         return UNKNOWN_VERSION
+
+# Logging utilities
+
+
+class VersionMessageFilter(logging.Filter):
+    def __init__(self, name="", version_message=""):
+        super(VersionMessageFilter, self).__init__(name)
+        self._version_message = version_message
+
+    def filter(self, record):
+        record.version_message = self._version_message
+        return True
+
+
+def get_logger(client, logger_name):
+    return logging.getLogger("HazelcastClient." + client.name + "." + logger_name)

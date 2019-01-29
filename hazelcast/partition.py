@@ -1,8 +1,8 @@
-import logging
 import threading
 from hazelcast.hash import hash_to_index
 from hazelcast.protocol.codec import client_get_partitions_codec
 from hazelcast import six
+from hazelcast.util import get_logger
 
 PARTITION_UPDATE_INTERVAL = 10
 
@@ -11,12 +11,12 @@ class PartitionService(object):
     """
     An SPI service for accessing partition related information.
     """
-    logger = logging.getLogger("PartitionService")
     timer = None
 
     def __init__(self, client):
-        self.partitions = {}
         self._client = client
+        self.logger = get_logger(client, "PartitionService")
+        self.partitions = {}
 
     def start(self):
         """

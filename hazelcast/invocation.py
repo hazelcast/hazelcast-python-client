@@ -9,7 +9,7 @@ from hazelcast.future import Future
 from hazelcast.lifecycle import LIFECYCLE_STATE_CONNECTED
 from hazelcast.protocol.client_message import LISTENER_FLAG
 from hazelcast.protocol.custom_codec import EXCEPTION_MESSAGE_TYPE, ErrorCodec
-from hazelcast.util import AtomicInteger
+from hazelcast.util import AtomicInteger, get_logger
 from hazelcast.six.moves import queue
 from hazelcast import six
 
@@ -66,10 +66,9 @@ class ListenerInvocation(Invocation):
 
 
 class ListenerService(object):
-    logger = logging.getLogger("ListenerService")
-
     def __init__(self, client):
         self._client = client
+        self.logger = get_logger(client, "ListenerService")
         self.registrations = {}
         self.invocation_timeout = self._init_invocation_timeout()
         pass
@@ -112,7 +111,7 @@ class ListenerService(object):
                                   registration_id, new_id, new_invocation.request)
                 self.registrations[registration_id] = (new_id, new_invocation.request.get_correlation_id())
             else:
-                logging.warning("Re-registration for listener with id %s failed.", registration_id, exc_info=True)
+                self.logger.warning("Re-registration for listener with id %s failed.", registration_id, exc_info=True)
 
         self.logger.debug("Re-registering listener %s for request %s", registration_id, new_invocation.request)
         self._client.invoker.invoke(new_invocation).add_done_callback(callback)
@@ -124,8 +123,6 @@ class ListenerService(object):
 
 
 class InvocationService(object):
-    logger = logging.getLogger("InvocationService")
-
     def __init__(self, client):
         self._pending = {}
         self._event_handlers = {}
@@ -135,6 +132,7 @@ class InvocationService(object):
         self._is_redo_operation = client.config.network_config.redo_operation
         self._invocation_retry_pause = self._init_invocation_retry_pause()
         self.invocation_timeout = self._init_invocation_timeout()
+        self.logger = get_logger(client, "InvocationService")
 
         if client.config.network_config.smart_routing:
             self.invoke = self.invoke_smart

@@ -1,4 +1,3 @@
-import logging
 import random
 import threading
 import time
@@ -9,7 +8,7 @@ from hazelcast.exception import HazelcastError, AuthenticationError, TargetDisco
 from hazelcast.invocation import ListenerInvocation
 from hazelcast.lifecycle import LIFECYCLE_STATE_CONNECTED, LIFECYCLE_STATE_DISCONNECTED
 from hazelcast.protocol.codec import client_add_membership_listener_codec, client_authentication_codec
-from hazelcast.util import get_possible_addresses, get_provider_addresses, calculate_version
+from hazelcast.util import get_possible_addresses, get_provider_addresses, calculate_version, get_logger
 
 # Membership Event Types
 MEMBER_ADDED = 1
@@ -23,12 +22,12 @@ class ClusterService(object):
 
     All the methods on the Cluster are thread-safe.
     """
-    logger = logging.getLogger("ClusterService")
 
     def __init__(self, config, client, address_providers):
         self._config = config
         self._client = client
         self._members = {}
+        self.logger = get_logger(client, "ClusterService")
         self.owner_connection_address = None
         self.owner_uuid = None
         self.uuid = None
@@ -106,7 +105,7 @@ class ClusterService(object):
             self.logger.warning("Connection closed to owner node. Trying to reconnect.")
             self._connect_to_cluster()
         except:
-            logging.exception("Could not reconnect to cluster. Shutting down client.")
+            self.logger.exception("Could not reconnect to cluster. Shutting down client.")
             self._client.shutdown()
 
     def _connect_to_cluster(self):
@@ -218,7 +217,7 @@ class ClusterService(object):
                 try:
                     added(member)
                 except:
-                    logging.exception("Exception in membership listener")
+                    self.logger.exception("Exception in membership listener")
 
     def _member_removed(self, member):
         self._members.pop(member.address, None)
@@ -229,7 +228,7 @@ class ClusterService(object):
                 try:
                     removed(member)
                 except:
-                    logging.exception("Exception in membership listener")
+                    self.logger.exception("Exception in membership listener")
 
     def _log_member_list(self):
         self.logger.info("New member list:\n\nMembers [%d] {\n%s\n}\n", self.size(),

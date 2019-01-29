@@ -2,7 +2,7 @@ import logging
 import os
 
 from hazelcast.protocol.codec import client_statistics_codec
-from hazelcast.util import calculate_version, current_time_in_millis, to_millis, to_nanos, current_time
+from hazelcast.util import calculate_version, current_time_in_millis, to_millis, to_nanos, current_time, get_logger
 from hazelcast.config import ClientProperties
 from hazelcast.core import CLIENT_VERSION, CLIENT_TYPE
 from hazelcast import six
@@ -26,10 +26,9 @@ class Statistics(object):
 
     _DEFAULT_PROBE_VALUE = 0
 
-    logger = logging.getLogger("Statistics")
-
     def __init__(self, client):
         self._client = client
+        self.logger = get_logger(client, "Statistics")
         self._enabled = client.properties.get_bool(ClientProperties.STATISTICS_ENABLED)
         self._cached_owner_address = None
         self._statistics_timer = None

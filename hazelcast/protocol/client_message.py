@@ -23,10 +23,9 @@ Any request parameter, response or event data will be carried in the payload.
 
 """
 import binascii
-import errno
-import logging
-import socket
 import struct
+import socket
+import errno
 
 from hazelcast.serialization.data import *
 

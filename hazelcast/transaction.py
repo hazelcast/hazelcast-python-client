@@ -9,7 +9,7 @@ from hazelcast.proxy.transactional_map import TransactionalMap
 from hazelcast.proxy.transactional_multi_map import TransactionalMultiMap
 from hazelcast.proxy.transactional_queue import TransactionalQueue
 from hazelcast.proxy.transactional_set import TransactionalSet
-from hazelcast.util import thread_id
+from hazelcast.util import thread_id, get_logger
 from hazelcast.six.moves import range
 
 _STATE_ACTIVE = "active"
@@ -43,10 +43,10 @@ class TransactionManager(object):
     """
     Manages the execution of client transactions and provides Transaction objects.
     """
-    logger = logging.getLogger("TransactionManager")
 
     def __init__(self, client):
         self._client = client
+        self.logger = get_logger(client, "TransactionManager")
 
     def _connect(self):
         for count in range(0, RETRY_COUNT):
@@ -83,7 +83,6 @@ class Transaction(object):
     id = None
     start_time = None
     _locals = threading.local()
-    logger = logging.getLogger("Transaction")
     thread_id = None
 
     def __init__(self, client, connection, timeout, durability, transaction_type):
@@ -92,6 +91,7 @@ class Transaction(object):
         self.durability = durability
         self.transaction_type = transaction_type
         self.client = client
+        self.logger = get_logger(client, "Transaction")
         self._objects = {}
 
     def begin(self):

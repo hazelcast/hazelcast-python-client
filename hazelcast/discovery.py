@@ -1,8 +1,7 @@
 import json
-import logging
 
 from hazelcast.exception import HazelcastCertificationError
-from hazelcast.util import _parse_address
+from hazelcast.util import _parse_address, get_logger
 from hazelcast.core import Address
 from hazelcast.config import ClientProperty
 from hazelcast.six.moves import http_client
@@ -17,9 +16,9 @@ class HazelcastCloudAddressProvider(object):
     """
     Provides initial addresses for client to find and connect to a node.
     """
-    logger = logging.getLogger("HazelcastCloudAddressProvider")
 
-    def __init__(self, host, url, connection_timeout):
+    def __init__(self, client, host, url, connection_timeout):
+        self.logger = get_logger(client, "HazelcastCloudAddressProvider")
         self.cloud_discovery = HazelcastCloudDiscovery(host, url, connection_timeout)
 
     def load_addresses(self):
@@ -39,9 +38,9 @@ class HazelcastCloudAddressTranslator(object):
     """
     Resolves private IP addresses of Hazelcast.cloud service.
     """
-    logger = logging.getLogger("HazelcastAddressTranslator")
 
-    def __init__(self, host, url, connection_timeout):
+    def __init__(self, client, host, url, connection_timeout):
+        self.logger = get_logger(client, "HazelcastCloudAddressTranslator")
         self.cloud_discovery = HazelcastCloudDiscovery(host, url, connection_timeout)
         self._private_to_public = dict()
 

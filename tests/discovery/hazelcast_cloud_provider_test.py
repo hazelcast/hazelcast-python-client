@@ -1,6 +1,7 @@
 from unittest import TestCase
 from hazelcast.core import Address
 from hazelcast.discovery import HazelcastCloudDiscovery, HazelcastCloudAddressProvider
+from tests.util import FakeClientForLogger
 
 
 class HazelcastCloudProviderTest(TestCase):
@@ -14,7 +15,7 @@ class HazelcastCloudProviderTest(TestCase):
         self.expected_addresses[Address("10.0.0.2", 5701)] = Address("198.51.100.2", 5701)
         self.cloud_discovery = HazelcastCloudDiscovery("", "", 0)
         self.cloud_discovery.discover_nodes = lambda: self.expected_addresses
-        self.provider = HazelcastCloudAddressProvider("", "", 0)
+        self.provider = HazelcastCloudAddressProvider(FakeClientForLogger(), "", "", 0)
         self.provider.cloud_discovery = self.cloud_discovery
 
     def test_load_addresses(self):

@@ -5,12 +5,13 @@ from hazelcast.discovery import HazelcastCloudAddressProvider
 from hazelcast.config import ClientNetworkConfig
 from hazelcast.util import get_provider_addresses, get_possible_addresses
 from hazelcast import six
+from tests.util import FakeClientForLogger
 
 
 class MultipleProvidersTest(TestCase):
     def setUp(self):
         self.network_config = ClientNetworkConfig()
-        self.cloud_address_provider = HazelcastCloudAddressProvider("", "", 0)
+        self.cloud_address_provider = HazelcastCloudAddressProvider(FakeClientForLogger(), "", "", 0)
         self.cloud_address_provider.load_addresses = lambda: [Address("10.0.0.1", 5701)]
 
     def test_multiple_providers_with_empty_network_config_addresses(self):

@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+  "loggers": {
+    "HazelcastClient.MyClient1": {
+      "level": "INFO",
+      "handlers": ["StderrHandler"]
+    }
+  },
+
+  "handlers": {
+    "StderrHandler": {
+      "class": "logging.StreamHandler",
+      "stream": "ext://sys.stderr",
+      "level": "INFO"
+    }
+  }
+}

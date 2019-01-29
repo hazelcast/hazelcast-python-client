@@ -74,7 +74,6 @@ class NearCache(dict):
     """
     NearCache is a local cache used by :class:`~hazelcast.proxy.map.MapFeatNearCache`.
     """
-    logger = logging.getLogger("NearCache")
 
     def __init__(self, name, serialization_service, in_memory_format, time_to_live_seconds, max_idle_seconds, invalidate_on_change,
                  eviction_policy, eviction_max_size, eviction_sampling_count=None, eviction_sampling_pool_size=None):

@@ -2,6 +2,7 @@
 Hazelcast Client Configuration module contains configuration classes and various constants required to create a ClientConfig.
 
 """
+import logging
 import os
 
 from hazelcast.serialization.api import StreamSerializer
@@ -108,6 +109,9 @@ class ClientConfig(object):
 
         self.serialization_config = SerializationConfig()
         """Hazelcast serialization configuration"""
+
+        self.logger_config = LoggerConfig()
+        """Logger configuration."""
 
         self.client_name = ""
         """Name of the client"""
@@ -611,6 +615,31 @@ class ClientCloudConfig(object):
         """Enables/disables cloud config."""
         self.discovery_token = ""
         """Hazelcast Cloud Discovery token of your cluster."""
+
+
+class LoggerConfig(object):
+    """
+    #TODO doc
+    """
+    def __init__(self):
+        self.level = logging.INFO
+        """
+        Sets the logging level for the default logging
+        configuration. To turn of the logging, level
+        can be set to a high integer value. If custom
+        logging levels are not used, a value higher 
+        than the 50 is enough to turn off the default
+        logger. 
+        """
+        self.configuration_file = None
+        """
+        If the configuration file is set, given configuration file
+        will be used instead of the default logger configuration
+        with the given log level. This should be the absolute 
+        path of a JSON file that follows the 
+        ``Configuration dictionary schema`` described in the logging 
+        module of the standard library.
+        """
 
 
 class ClientProperty(object):

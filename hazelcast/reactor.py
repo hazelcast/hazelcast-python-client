@@ -1,6 +1,5 @@
 import asyncore
 import errno
-import logging
 import select
 import socket
 import sys
@@ -14,6 +13,7 @@ from hazelcast.connection import Connection, BUFFER_SIZE
 from hazelcast.exception import HazelcastError
 from hazelcast.future import Future
 from hazelcast.six.moves import queue
+from hazelcast.util import get_logger
 
 try:
     import ssl
@@ -24,9 +24,10 @@ except ImportError:
 class AsyncoreReactor(object):
     _thread = None
     _is_live = False
-    logger = logging.getLogger("Reactor")
 
-    def __init__(self):
+    def __init__(self, client):
+        self._client = client
+        self.logger = get_logger(client, "Reactor")
         self._timers = queue.PriorityQueue()
         self._map = {}
 
@@ -45,7 +46,7 @@ class AsyncoreReactor(object):
                 self._check_timers()
             except select.error as err:
                 # TODO: parse error type to catch only error "9"
-                self.logger.warning("Connection closed by server.")
+                self.logger.warning("Connection closed by server")
                 pass
             except:
                 self.logger.exception("Error in Reactor Thread")
@@ -95,8 +96,8 @@ class AsyncoreReactor(object):
 
     def new_connection(self, address, connect_timeout, socket_options, connection_closed_callback, message_callback,
                        network_config):
-        return AsyncoreConnection(self._map, address, connect_timeout, socket_options, connection_closed_callback,
-                                  message_callback, network_config)
+        return AsyncoreConnection(self._client, self._map, address, connect_timeout, socket_options,
+                                  connection_closed_callback, message_callback, network_config)
 
     def _cleanup_timer(self, timer):
         try:
@@ -117,10 +118,10 @@ class AsyncoreReactor(object):
 class AsyncoreConnection(Connection, asyncore.dispatcher):
     sent_protocol_bytes = False
 
-    def __init__(self, map, address, connect_timeout, socket_options, connection_closed_callback, message_callback,
-                 network_config):
+    def __init__(self, client, map, address, connect_timeout, socket_options, connection_closed_callback,
+                 message_callback, network_config):
         asyncore.dispatcher.__init__(self, map=map)
-        Connection.__init__(self, address, connection_closed_callback, message_callback)
+        Connection.__init__(self, client, address, connection_closed_callback, message_callback)
 
         self._write_lock = threading.Lock()
         self._write_queue = deque()
@@ -203,8 +204,8 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
                 self._write_queue.appendleft(data[sent:])
 
     def handle_close(self):
-        self.logger.warning("Connection closed by server.")
-        self.close(IOError("Connection closed by server."))
+        self.logger.warning("Connection closed by server")
+        self.close(IOError("Connection closed by server"))
 
     def handle_error(self):
         error = sys.exc_info()[1]

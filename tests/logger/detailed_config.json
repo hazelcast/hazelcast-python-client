@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "loggers": {
+    "HazelcastClient.Detailed": {
+      "level": "INFO",
+      "handlers": ["StdoutHandler", "StderrHandler"]
+    }
+  },
+  "handlers": {
+    "StdoutHandler": {
+      "class": "logging.StreamHandler",
+      "level": "INFO",
+      "formatter": "SimpleFormatter",
+      "stream": "ext://sys.stdout"
+    },
+    "StderrHandler": {
+      "class": "logging.StreamHandler",
+      "level": "INFO",
+      "formatter": "DetailedFormatter",
+      "stream": "ext://sys.stderr"
+    }
+  },
+  "formatters": {
+    "SimpleFormatter": {
+      "format": "%(asctime)s*%(name)s*%(levelname)s*%(message)s",
+      "datefmt": "%Y-%m-%d %H:%M:%S"
+    },
+    "DetailedFormatter": {
+      "format": "%(asctime)s*%(name)s*%(funcName)s*%(lineno)d*%(levelname)s*%(message)s",
+      "datefmt": "%Y-%m-%d %H:%M:%S"
+    }
+  }
+}

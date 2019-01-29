@@ -16,7 +16,7 @@ class Future(object):
     _exception = None
     _traceback = None
     _threading_locals = threading.local()
-    logger = logging.getLogger("Future")
+    logger = logging.getLogger("HazelcastClient.Future")
 
     def __init__(self):
         self._callbacks = []
@@ -128,7 +128,7 @@ class Future(object):
         try:
             callback(self)
         except:
-            logging.exception("Exception when invoking callback")
+            self.logger.exception("Exception when invoking callback")
 
     def continue_with(self, continuation_func, *args):
         """
