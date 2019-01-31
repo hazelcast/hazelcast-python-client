@@ -28,7 +28,7 @@ class ClusterService(object):
     def __init__(self, config, client, address_providers):
         self._config = config
         self._client = client
-        self.members = {}
+        self._members = {}
         self.owner_connection_address = None
         self.owner_uuid = None
         self.uuid = None
@@ -57,7 +57,7 @@ class ClusterService(object):
 
         :return: (int), size of the cluster.
         """
-        return len(self.members)
+        return len(self._members)
 
     def add_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
         """
@@ -92,6 +92,14 @@ class ClusterService(object):
             return True
         except KeyError:
             return False
+
+    @property
+    def members(self):
+        """
+        Returns the members in the cluster.
+        :return: (list), List of members.
+        """
+        return self.get_member_list()
 
     def _reconnect(self):
         try:
@@ -204,7 +212,7 @@ class ClusterService(object):
         self._initial_list_fetched.set()
 
     def _member_added(self, member):
-        self.members[member.address] = member
+        self._members[member.address] = member
         for added, _ in list(self.listeners.values()):
             if added:
                 try:
@@ -213,7 +221,7 @@ class ClusterService(object):
                     logging.exception("Exception in membership listener")
 
     def _member_removed(self, member):
-        self.members.pop(member.address, None)
+        self._members.pop(member.address, None)
         self._client.connection_manager.close_connection(member.address, TargetDisconnectedError(
             "%s is no longer a member of the cluster" % member))
         for _, removed in list(self.listeners.values()):
@@ -263,7 +271,7 @@ class ClusterService(object):
         :param address: (:class:`~hazelcast.core.Address`), address of the desired member.
         :return: (:class:`~hazelcast.core.Member`), the corresponding member.
         """
-        return self.members.get(address, None)
+        return self._members.get(address, None)
 
     def get_members(self, selector):
         """
@@ -285,7 +293,7 @@ class ClusterService(object):
 
         :return: (List), List of members.
         """
-        return list(self.members.values())
+        return list(self._members.values())
 
 
 class RandomLoadBalancer(object):
