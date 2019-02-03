@@ -95,3 +95,18 @@ class ClusterTest(HazelcastTestCase):
         config.membership_listeners.append((listener, listener))
         self.cluster.start_member()
         self.create_client(config)
+
+    def test_cluster_service_get_members_by_property(self):
+        self.cluster.start_member()
+        client = self.create_client()
+
+        self.assertEqual(1, len(client.cluster.members))
+
+    def test_cluster_service_cant_set_members(self):
+        self.cluster.start_member()
+        client = self.create_client()
+
+        with self.assertRaises(AttributeError):
+            client.cluster.members = []
+
+

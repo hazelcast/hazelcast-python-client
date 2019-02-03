@@ -115,3 +115,26 @@ class EntryView(object):
                    self.key, self.value, self.cost, self.creation_time, self.expiration_time, self.hits,
                    self.last_access_time, self.last_stored_time, self.last_update_time, self.version,
                    self.eviction_criteria_number, self.ttl)
+
+
+class MemberSelector(object):
+    """
+    Subclasses of this class select members
+    that are capable of executing a special kind of task.
+    The select(Member) method is called for every available
+    member in the cluster and it is up to the implementation to decide
+    if the member is going to be used or not.
+    """
+    def select(self, member):
+        """
+        Decides if the given member will be part of an operation or not.
+
+        :param member: (:class:`~hazelcast.core.Member`), the member instance to decide upon.
+        :return: (bool), True if the member should take part in the operation, False otherwise.
+        """
+        raise NotImplementedError()
+
+
+class DataMemberSelector(MemberSelector):
+    def select(self, member):
+        return not member.is_lite_member

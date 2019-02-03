@@ -81,4 +81,3 @@ def open_connection_to_address(client, address):
     m = client.get_map(random_string()).blocking()
     m.put(key, 0)
     m.destroy()
-

@@ -64,7 +64,7 @@ class Executor(Proxy):
         :param task: (Task), the task executed on the all of the members.
         :return: (Map), :class:`~hazelcast.future.Future` tuples representing pending completion of the task on each member.
         """
-        return self.execute_on_members(self._client.cluster.members, task)
+        return self.execute_on_members(self._client.cluster.get_member_list(), task)
 
     def is_shutdown(self):
         """

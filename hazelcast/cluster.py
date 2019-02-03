@@ -28,7 +28,7 @@ class ClusterService(object):
     def __init__(self, config, client, address_providers):
         self._config = config
         self._client = client
-        self.members = []
+        self._members = {}
         self.owner_connection_address = None
         self.owner_uuid = None
         self.uuid = None
@@ -57,7 +57,7 @@ class ClusterService(object):
 
         :return: (int), size of the cluster.
         """
-        return len(self.members)
+        return len(self._members)
 
     def add_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
         """
@@ -75,7 +75,7 @@ class ClusterService(object):
         self.listeners[registration_id] = (member_added, member_removed)
 
         if fire_for_existing:
-            for member in self.members:
+            for member in self.get_member_list():
                 member_added(member)
 
         return registration_id
@@ -93,6 +93,14 @@ class ClusterService(object):
         except KeyError:
             return False
 
+    @property
+    def members(self):
+        """
+        Returns the members in the cluster.
+        :return: (list), List of members.
+        """
+        return self.get_member_list()
+
     def _reconnect(self):
         try:
             self.logger.warning("Connection closed to owner node. Trying to reconnect.")
@@ -107,7 +115,7 @@ class ClusterService(object):
         retry_delay = self._config.network_config.connection_attempt_period
         while current_attempt <= attempt_limit:
             provider_addresses = get_provider_addresses(self._address_providers)
-            addresses = get_possible_addresses(provider_addresses, self.members)
+            addresses = get_possible_addresses(provider_addresses, self.get_member_list())
 
             for address in addresses:
                 try:
@@ -191,7 +199,7 @@ class ClusterService(object):
     def _handle_member_list(self, members):
         self.logger.debug("Got initial member list: %s", members)
 
-        for m in list(self.members):
+        for m in self.get_member_list():
             try:
                 members.remove(m)
             except ValueError:
@@ -204,7 +212,7 @@ class ClusterService(object):
         self._initial_list_fetched.set()
 
     def _member_added(self, member):
-        self.members.append(member)
+        self._members[member.address] = member
         for added, _ in list(self.listeners.values()):
             if added:
                 try:
@@ -213,7 +221,7 @@ class ClusterService(object):
                     logging.exception("Exception in membership listener")
 
     def _member_removed(self, member):
-        self.members.remove(member)
+        self._members.pop(member.address, None)
         self._client.connection_manager.close_connection(member.address, TargetDisconnectedError(
             "%s is no longer a member of the cluster" % member))
         for _, removed in list(self.listeners.values()):
@@ -224,8 +232,8 @@ class ClusterService(object):
                     logging.exception("Exception in membership listener")
 
     def _log_member_list(self):
-        self.logger.info("New member list:\n\nMembers [%d] {\n%s\n}\n", len(self.members),
-                         "\n".join(["\t" + str(x) for x in self.members]))
+        self.logger.info("New member list:\n\nMembers [%d] {\n%s\n}\n", self.size(),
+                         "\n".join(["\t" + str(x) for x in self.get_member_list()]))
 
     def _connection_closed(self, connection, _):
         if connection.endpoint and connection.endpoint == self.owner_connection_address \
@@ -249,11 +257,43 @@ class ClusterService(object):
         Returns the member with specified member uuid.
 
         :param member_uuid: (int), uuid of the desired member.
-        :return: (Member), the corresponding member.
+        :return: (:class:`~hazelcast.core.Member`), the corresponding member.
         """
-        for member in self.members:
+        for member in self.get_member_list():
             if member.uuid == member_uuid:
                 return member
+
+    def get_member_by_address(self, address):
+        """
+        Returns the member with the specified address if it is in the
+        cluster, None otherwise.
+
+        :param address: (:class:`~hazelcast.core.Address`), address of the desired member.
+        :return: (:class:`~hazelcast.core.Member`), the corresponding member.
+        """
+        return self._members.get(address, None)
+
+    def get_members(self, selector):
+        """
+        Returns the members that satisfy the given selector.
+
+        :param selector: (:class:`~hazelcast.core.MemberSelector`), Selector to be applied to the members.
+        :return: (List), List of members.
+        """
+        members = []
+        for member in self.get_member_list():
+            if selector.select(member):
+                members.append(member)
+
+        return members
+
+    def get_member_list(self):
+        """
+        Returns all the members as a list.
+
+        :return: (List), List of members.
+        """
+        return list(self._members.values())
 
 
 class RandomLoadBalancer(object):
@@ -267,6 +307,69 @@ class RandomLoadBalancer(object):
 
     def next_address(self):
         try:
-            return random.choice(self._cluster.members).address
+            return random.choice(self._cluster.get_member_list()).address
         except IndexError:
             return None
+
+
+class VectorClock(object):
+    """
+    Vector clock consisting of distinct replica logical clocks.
+
+    See https://en.wikipedia.org/wiki/Vector_clock
+    The vector clock may be read from different thread but concurrent
+    updates must be synchronized externally. There is no guarantee for
+    concurrent updates.
+    """
+
+    def __init__(self):
+        self._replica_timestamps = {}
+
+    def is_after(self, other):
+        """
+        Returns true if this vector clock is causally strictly after the
+        provided vector clock. This means that it the provided clock is neither
+        equal to, greater than or concurrent to this vector clock.
+
+        :param other: (:class:`~hazelcast.cluster.VectorClock`), Vector clock to be compared
+        :return: (bool), True if this vector clock is strictly after the other vector clock, False otherwise
+        """
+        any_timestamp_greater = False
+        for replica_id, other_timestamp in other.entry_set():
+            local_timestamp = self._replica_timestamps.get(replica_id)
+
+            if local_timestamp is None or local_timestamp < other_timestamp:
+                return False
+            elif local_timestamp > other_timestamp:
+                any_timestamp_greater = True
+
+        # there is at least one local timestamp greater or local vector clock has additional timestamps
+        return any_timestamp_greater or other.size() < self.size()
+
+    def set_replica_timestamp(self, replica_id, timestamp):
+        """
+        Sets the logical timestamp for the given replica ID.
+
+        :param replica_id: (str), Replica ID.
+        :param timestamp: (int), Timestamp for the given replica ID.
+        """
+        self._replica_timestamps[replica_id] = timestamp
+
+    def entry_set(self):
+        """
+        Returns the entry set of the replica timestamps in a format
+        of list of tuples. Each tuple contains the replica ID and the
+        timestamp associated with it.
+
+        :return: (list), List of tuples.
+        """
+        return list(self._replica_timestamps.items())
+
+    def size(self):
+        """
+        Returns the number of timestamps that are in the
+        replica timestamps dictionary.
+
+        :return: (int), Number of timestamps in the replica timestamps.
+        """
+        return len(self._replica_timestamps)

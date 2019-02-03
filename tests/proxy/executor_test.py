@@ -31,12 +31,12 @@ class ExecutorTest(SingleMemberTestCase):
     def test_execute_on_member(self):
         # TODO: Task must be defined on the server
         with self.assertRaises(HazelcastSerializationError):
-            self.executor.execute_on_member(self.client.cluster.members[0], Task())
+            self.executor.execute_on_member(self.client.cluster.get_member_list()[0], Task())
 
     def test_execute_on_members(self):
         # TODO: Task must be defined on the server
         with self.assertRaises(HazelcastSerializationError):
-            self.executor.execute_on_members(self.client.cluster.members, Task())
+            self.executor.execute_on_members(self.client.cluster.get_member_list(), Task())
 
     def test_execute_on_all_members(self):
         # TODO: Task must be defined on the server

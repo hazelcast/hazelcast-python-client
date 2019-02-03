@@ -1,5 +1,5 @@
 from hazelcast.protocol.error_codes import HAZELCAST_INSTANCE_NOT_ACTIVE, AUTHENTICATION, TARGET_DISCONNECTED, \
-    TARGET_NOT_MEMBER, HAZELCAST_SERIALIZATION
+    TARGET_NOT_MEMBER, HAZELCAST_SERIALIZATION, CONSISTENCY_LOST_EXCEPTION, UNSUPPORTED_OPERATION
 
 
 def retryable(cls):
@@ -95,12 +95,36 @@ class HazelcastIllegalStateError(HazelcastError):
     pass
 
 
+class NoDataMemberInClusterError(HazelcastError):
+    """
+    NoDataMemberInClusterError is raised when there is no data member in the cluster to assign partitions.
+    """
+    pass
+
+
+class ConsistencyLostError(HazelcastError):
+    """
+    Error that indicates that the consistency guarantees provided by
+    some service has been lost. The exact guarantees depend on the service.
+    """
+    pass
+
+
+class UnsupportedOperationError(HazelcastError):
+    """
+    UnsupportedOperationError is raised to indicate that the requested operation is not supported.
+    """
+    pass
+
+
 ERROR_CODE_TO_ERROR = {
     AUTHENTICATION: AuthenticationError,
     HAZELCAST_INSTANCE_NOT_ACTIVE: HazelcastInstanceNotActiveError,
     HAZELCAST_SERIALIZATION: HazelcastSerializationError,
     TARGET_DISCONNECTED: TargetDisconnectedError,
-    TARGET_NOT_MEMBER: TargetNotMemberError
+    TARGET_NOT_MEMBER: TargetNotMemberError,
+    CONSISTENCY_LOST_EXCEPTION: ConsistencyLostError,
+    UNSUPPORTED_OPERATION: UnsupportedOperationError
 }
 
 
