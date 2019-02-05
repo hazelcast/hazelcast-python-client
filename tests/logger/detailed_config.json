@@ -1,7 +1,7 @@
 {
   "version": 1,
   "loggers": {
-    "HazelcastClient.Detailed": {
+    "HazelcastClient": {
       "level": "INFO",
       "handlers": ["StdoutHandler", "StderrHandler"]
     }
@@ -9,13 +9,11 @@
   "handlers": {
     "StdoutHandler": {
       "class": "logging.StreamHandler",
-      "level": "INFO",
       "formatter": "SimpleFormatter",
       "stream": "ext://sys.stdout"
     },
     "StderrHandler": {
       "class": "logging.StreamHandler",
-      "level": "INFO",
       "formatter": "DetailedFormatter",
       "stream": "ext://sys.stderr"
     }

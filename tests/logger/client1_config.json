@@ -12,7 +12,6 @@
     "StderrHandler": {
       "class": "logging.StreamHandler",
       "stream": "ext://sys.stderr",
-      "level": "INFO"
     }
   }
 }

@@ -27,7 +27,7 @@ class LoggerConfigTest(HazelcastTestCase):
         logger_config = LoggerConfig()
 
         self.assertEqual(logging.INFO, logger_config.level)
-        self.assertIsNone(logger_config.configuration_file)
+        self.assertIsNone(logger_config.config_file)
 
         config = ClientConfig()
         config.logger_config = logger_config
@@ -63,7 +63,7 @@ class LoggerConfigTest(HazelcastTestCase):
         logger_config.level = logging.CRITICAL
 
         self.assertEqual(logging.CRITICAL, logger_config.level)
-        self.assertIsNone(logger_config.configuration_file)
+        self.assertIsNone(logger_config.config_file)
 
         config = ClientConfig()
         config.logger_config = logger_config
@@ -98,9 +98,9 @@ class LoggerConfigTest(HazelcastTestCase):
 
         # Outputs to stdout with the level of error
         config_path = get_abs_path(self.CUR_DIR, "simple_config.json")
-        logger_config.configuration_file = config_path
+        logger_config.config_file = config_path
 
-        self.assertEqual(config_path, logger_config.configuration_file)
+        self.assertEqual(config_path, logger_config.config_file)
 
         config = ClientConfig()
         config.logger_config = logger_config
@@ -130,6 +130,27 @@ class LoggerConfigTest(HazelcastTestCase):
 
         client.shutdown()
 
+    def test_custom_handlers(self):
+        logger_config = LoggerConfig()
+
+        out = StringIO()
+        handler = logging.StreamHandler(stream=out)
+
+        logger_config.handlers.append(handler)
+        config = ClientConfig()
+        config.logger_config = logger_config
+
+        client = HazelcastClient(config)
+
+        self.assertEqual(1, len(client.logger.handlers))
+        self.assertTrue(handler is client.logger.handlers[0])
+
+        client.logger.info("TEST_MSG")
+
+        self.assertTrue("TEST_MSG" in out.getvalue())
+
+        client.shutdown()
+
     def test_default_configuration_multiple_clients(self):
         client1 = HazelcastClient()
         client2 = HazelcastClient()
@@ -148,6 +169,9 @@ class LoggerConfigTest(HazelcastTestCase):
 
         self.assertEqual(1, out1_str.count("TEST_MSG"))
         self.assertEqual(1, out2_str.count("TEST_MSG"))
+
+        client1.shutdown()
+        client2.shutdown()
 
     def test_same_custom_configuration_file_with_multiple_clients(self):
         config = ClientConfig()
@@ -169,6 +193,9 @@ class LoggerConfigTest(HazelcastTestCase):
         out_str = out.getvalue()
 
         self.assertEqual(2, out_str.count("TEST_MSG"))
+
+        client1.shutdown()
+        client2.shutdown()
 
     def test_multiple_clients_with_different_custom_configurations(self):
         config1 = ClientConfig()
@@ -233,6 +260,8 @@ class LoggerConfigTest(HazelcastTestCase):
                 self.assertEqual(version_message[0], group_name)
                 self.assertEqual(version_message[1], version)
                 self.assertEqual("TEST_MSG", message)
+
+        client.shutdown()
 
     def test_custom_configuration_output(self):
         config = ClientConfig()

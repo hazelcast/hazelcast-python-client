@@ -337,25 +337,31 @@ class HazelcastClient(object):
 
     def _init_logger(self):
         logger_config = self.config.logger_config
-        if logger_config.configuration_file is not None:
-            with open(logger_config.configuration_file, "r") as f:
+        if logger_config.config_file is not None:
+            with open(logger_config.config_file, "r") as f:
                 json_config = json.loads(f.read())
                 logging.config.dictConfig(json_config)
         else:
             group_name = self.config.group_config.name
 
             version_message = "[" + group_name + "] [" + CLIENT_VERSION + "]"
-
             version_filter = VersionMessageFilter(version_message=version_message)
-            std_err_handler = logging.StreamHandler()
 
-            fmt = '%(asctime)s %(name)s\n%(levelname)s: %(version_message)s %(message)s'
-            datefmt = '%b %m, %Y %I:%M:%S %p'
+            fmt = "%(asctime)s %(name)s\n%(levelname)s: %(version_message)s %(message)s"
+            datefmt = "%b %m, %Y %I:%M:%S %p"
             formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
-            std_err_handler.setFormatter(formatter)
-            std_err_handler.addFilter(version_filter)
 
-            self.logger.addHandler(std_err_handler)
+            if logger_config.handlers:
+                for handler in logger_config.handlers:
+                    handler.setFormatter(formatter)
+                    handler.addFilter(version_filter)
+                    self.logger.addHandler(handler)
+            else:
+                default_handler = logging.StreamHandler()
+                default_handler.setFormatter(formatter)
+                default_handler.addFilter(version_filter)
+                self.logger.addHandler(default_handler)
+
             self.logger.setLevel(logger_config.level)
 
     def _log_group_password_info(self):

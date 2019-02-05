@@ -387,15 +387,6 @@ Then, it creates a configuration object and starts a client.
 
 ```python
 import hazelcast
-import logging
-
-# For this example, default logging format will be used 
-# and logs will be printed to the sys.stderr
-logging.basicConfig() 
-
-# We set logging level to INFO to see the logs
-# with the level of INFO or higher
-logging.getLogger().setLevel(logging.INFO) 
 
 # We create a config for illustrative purposes.
 # We do not adjust this config. Therefore it has default settings.
@@ -408,15 +399,25 @@ client = hazelcast.HazelcastClient(config)
 This should print logs about the cluster members such as address, port and UUID to the `stderr`.
 
 ```
-INFO:ClusterService:Connecting to Address(host=127.0.0.1, port=5701)
-INFO:ConnectionManager:Authenticated with <hazelcast.reactor.AsyncoreConnection connected 127.0.0.1:5701 at 0x105b6cc88>
-INFO:ClusterService:New member list:
+Feb 02, 2019 01:47:07 AM HazelcastClient.hz.client_0
+INFO: [dev] [3.10] A non-empty group password is configured for the Hazelcast client. Starting with Hazelcast IMDG version 3.11, clients with the same group name, but with different group passwords (that do not use authentication) will be accepted to a cluster. The group password configuration will be removed completely in a future release.
+Feb 02, 2019 01:47:07 AM HazelcastClient.hz.client_0.LifecycleService
+INFO: [dev] [3.10] (20181119 - 9080a46) HazelcastClient is STARTING
+Feb 02, 2019 01:47:07 AM HazelcastClient.hz.client_0.ClusterService
+INFO: [dev] [3.10] Connecting to Address(host=127.0.0.1, port=5701)
+Feb 02, 2019 01:47:07 AM HazelcastClient.hz.client_0.ConnectionManager
+INFO: [dev] [3.10] Authenticated with Connection(address=('127.0.0.1', 5701), id=0)
+Feb 02, 2019 01:47:07 AM HazelcastClient.hz.client_0.ClusterService
+INFO: [dev] [3.10] New member list:
 
 Members [1] {
-	Member [10.216.1.20]:5701 - 7581def2-8c50-4945-8f41-f169a74969e2
+	Member [192.168.1.45]:5701 - 67ea0e80-12ca-4944-a67e-3e4dfe1b872f
 }
 
-INFO:HazelcastClient:Client started.
+Feb 02, 2019 01:47:07 AM HazelcastClient.hz.client_0.LifecycleService
+INFO: [dev] [3.10] (20181119 - 9080a46) HazelcastClient is CONNECTED
+Feb 02, 2019 01:47:07 AM HazelcastClient.hz.client_0
+INFO: [dev] [3.10] Client started.
 ```
 
 Congratulations. You just started a Hazelcast Python client.
@@ -427,10 +428,6 @@ Let's manipulate a distributed map on a cluster using the client.
 
 ```python
 import hazelcast
-import logging
-
-logging.basicConfig()
-logging.getLogger().setLevel(logging.INFO)
 
 config = hazelcast.ClientConfig()
 client = hazelcast.HazelcastClient(config)
@@ -451,21 +448,37 @@ client.shutdown()
 **Output**
 
 ```
-INFO:ClusterService:Connecting to Address(host=127.0.0.1, port=5701)
-INFO:ConnectionManager:Authenticated with <hazelcast.reactor.AsyncoreConnection connected 127.0.0.1:5701 at 0x10a814ef0>
-INFO:ClusterService:New member list:
+Feb 02, 2019 01:47:44 AM HazelcastClient.hz.client_0
+INFO: [dev] [3.10] A non-empty group password is configured for the Hazelcast client. Starting with Hazelcast IMDG version 3.11, clients with the same group name, but with different group passwords (that do not use authentication) will be accepted to a cluster. The group password configuration will be removed completely in a future release.
+Feb 02, 2019 01:47:44 AM HazelcastClient.hz.client_0.LifecycleService
+INFO: [dev] [3.10] (20181119 - 9080a46) HazelcastClient is STARTING
+Feb 02, 2019 01:47:44 AM HazelcastClient.hz.client_0.ClusterService
+INFO: [dev] [3.10] Connecting to Address(host=127.0.0.1, port=5701)
+Feb 02, 2019 01:47:44 AM HazelcastClient.hz.client_0.ConnectionManager
+INFO: [dev] [3.10] Authenticated with Connection(address=('127.0.0.1', 5701), id=0)
+Feb 02, 2019 01:47:44 AM HazelcastClient.hz.client_0.ClusterService
+INFO: [dev] [3.10] New member list:
 
 Members [1] {
-	Member [10.216.1.20]:5701 - 7581def2-8c50-4945-8f41-f169a74969e2
+	Member [192.168.1.45]:5701 - 67ea0e80-12ca-4944-a67e-3e4dfe1b872f
 }
 
-INFO:HazelcastClient:Client started.
-Added IT personnel. Logging all known personnel
+Feb 02, 2019 01:47:44 AM HazelcastClient.hz.client_0.LifecycleService
+INFO: [dev] [3.10] (20181119 - 9080a46) HazelcastClient is CONNECTED
+Feb 02, 2019 01:47:44 AM HazelcastClient.hz.client_0
+INFO: [dev] [3.10] Client started.
+Added IT personnel. Printing all known personnel
 Alice is in IT department
 Clark is in IT department
 Bob is in IT department
-WARNING:Reactor:Connection closed by server.
-INFO:HazelcastClient:Client shutdown.
+Feb 02, 2019 01:47:44 AM HazelcastClient.hz.client_0.LifecycleService
+INFO: [dev] [3.10] (20181119 - 9080a46) HazelcastClient is SHUTTING_DOWN
+Feb 02, 2019 01:47:44 AM HazelcastClient.hz.client_0.Reactor
+WARNING: [dev] [3.10] Connection closed by server
+Feb 02, 2019 01:47:44 AM HazelcastClient.hz.client_0.LifecycleService
+INFO: [dev] [3.10] (20181119 - 9080a46) HazelcastClient is SHUTDOWN
+Feb 02, 2019 01:47:44 AM HazelcastClient.hz.client_0
+INFO: [dev] [3.10] Client shutdown.
 ```
 
 You see this example puts all the IT personnel into a cluster-wide `personnel-map` and then prints all the known personnel.
@@ -487,15 +500,25 @@ for person, department in personnel_map.entry_set().result():
 **Output**
 
 ```
-INFO:ClusterService:Connecting to Address(host=127.0.0.1, port=5701)
-INFO:ConnectionManager:Authenticated with <hazelcast.reactor.AsyncoreConnection connected 127.0.0.1:5701 at 0x104f4def0>
-INFO:ClusterService:New member list:
+Feb 02, 2019 01:48:43 AM HazelcastClient.hz.client_0
+INFO: [dev] [3.10] A non-empty group password is configured for the Hazelcast client. Starting with Hazelcast IMDG version 3.11, clients with the same group name, but with different group passwords (that do not use authentication) will be accepted to a cluster. The group password configuration will be removed completely in a future release.
+Feb 02, 2019 01:48:43 AM HazelcastClient.hz.client_0.LifecycleService
+INFO: [dev] [3.10] (20181119 - 9080a46) HazelcastClient is STARTING
+Feb 02, 2019 01:48:43 AM HazelcastClient.hz.client_0.ClusterService
+INFO: [dev] [3.10] Connecting to Address(host=127.0.0.1, port=5701)
+Feb 02, 2019 01:48:43 AM HazelcastClient.hz.client_0.ConnectionManager
+INFO: [dev] [3.10] Authenticated with Connection(address=('127.0.0.1', 5701), id=0)
+Feb 02, 2019 01:48:43 AM HazelcastClient.hz.client_0.ClusterService
+INFO: [dev] [3.10] New member list:
 
 Members [1] {
-	Member [10.216.1.20]:5701 - 7581def2-8c50-4945-8f41-f169a74969e2
+	Member [192.168.1.45]:5701 - 67ea0e80-12ca-4944-a67e-3e4dfe1b872f
 }
 
-INFO:HazelcastClient:Client started.
+Feb 02, 2019 01:48:43 AM HazelcastClient.hz.client_0.LifecycleService
+INFO: [dev] [3.10] (20181119 - 9080a46) HazelcastClient is CONNECTED
+Feb 02, 2019 01:48:43 AM HazelcastClient.hz.client_0
+INFO: [dev] [3.10] Client started.
 Added Sales personnel. Printing all known personnel
 Denise is in Sales department
 Erwing is in Sales department
@@ -503,8 +526,14 @@ Faith is in Sales department
 Alice is in IT department
 Clark is in IT department
 Bob is in IT department
-WARNING:Reactor:Connection closed by server.
-INFO:HazelcastClient:Client shutdown.
+Feb 02, 2019 01:48:43 AM HazelcastClient.hz.client_0.LifecycleService
+INFO: [dev] [3.10] (20181119 - 9080a46) HazelcastClient is SHUTTING_DOWN
+Feb 02, 2019 01:48:43 AM HazelcastClient.hz.client_0.Reactor
+WARNING: [dev] [3.10] Connection closed by server
+Feb 02, 2019 01:48:43 AM HazelcastClient.hz.client_0.LifecycleService
+INFO: [dev] [3.10] (20181119 - 9080a46) HazelcastClient is SHUTDOWN
+Feb 02, 2019 01:48:43 AM HazelcastClient.hz.client_0
+INFO: [dev] [3.10] Client shutdown.
 ```
 
 You will see this time we add only the sales employees but we get the list of all known employees including the ones in IT.
@@ -535,7 +564,6 @@ def entry_set_cb(future):
 
 personnel_map.entry_set().add_done_callback(entry_set_cb)
 time.sleep(0.1) # wait for Future to complete
-
 ```
 
 Asynchronous operations are far more efficient in single threaded Python interpreter but you may want all of your method calls
@@ -2143,22 +2171,17 @@ After enabling the client statistics, you can monitor your clients using Hazelca
 
 ### 7.9.2 Logging Configuration
 
-Hazelcast Python client allows you to configure the logging through the root logger via the `logging` module. 
+Hazelcast Python client allows you to configure the logging through the `LoggerConfig` in the `ClientConfig` class. 
 
-Logging configuration can be easily done with the help of `logging.basicConfig` function. 
+`LoggerConfig` contains options that allow you to set the logging level, handlers that will be added to the client's logger and a custom logging configuration file
+to the client. 
 
-When called with no parameters, it does the basic configuration for the logging system which outputs to the `sys.stderr`, using the default output format which is `%(levelname)s:%(name)s:%(message)s`.
+By default, Hazelcast clients will log to the `sys.stderr` with the `INFO` logging level and `%(asctime)s %(name)s\n%(levelname)s: %(version_message)s %(message)s` format where the `version_message` contains the information about the group name and the client version.
 
-However, calling `logging.basicConfig` without parameters does not set the logging level by default. So, you have to set the logging level explicitly when this type of configuration is used.
-
-Below is an example of the most basic logging configuration.
+Below is an example of the default logging configuration.
 
 ```python
 import hazelcast
-import logging
-
-logging.basicConfig()
-logging.getLogger().setLevel(logging.INFO)
 
 client = hazelcast.HazelcastClient()
 client.shutdown()
@@ -2166,79 +2189,40 @@ client.shutdown()
 
 **Output to the `sys.stderr`**
 ```
-INFO:ClusterService:Connecting to Address(host=127.0.0.1, port=5701)
-INFO:ConnectionManager:Authenticated with Connection(address=('127.0.0.1', 5701), id=0)
-INFO:ClusterService:New member list:
+Feb 02, 2019 02:05:53 AM HazelcastClient.hz.client_0
+INFO: [dev] [3.10] A non-empty group password is configured for the Hazelcast client. Starting with Hazelcast IMDG version 3.11, clients with the same group name, but with different group passwords (that do not use authentication) will be accepted to a cluster. The group password configuration will be removed completely in a future release.
+Feb 02, 2019 02:05:53 AM HazelcastClient.hz.client_0.LifecycleService
+INFO: [dev] [3.10] (20181119 - 9080a46) HazelcastClient is STARTING
+Feb 02, 2019 02:05:53 AM HazelcastClient.hz.client_0.ClusterService
+INFO: [dev] [3.10] Connecting to Address(host=127.0.0.1, port=5701)
+Feb 02, 2019 02:05:54 AM HazelcastClient.hz.client_0.ConnectionManager
+INFO: [dev] [3.10] Authenticated with Connection(address=('127.0.0.1', 5701), id=0)
+Feb 02, 2019 02:05:54 AM HazelcastClient.hz.client_0.ClusterService
+INFO: [dev] [3.10] New member list:
 
 Members [1] {
-	Member [127.0.0.1]:5701 - af987b33-b89d-4dbd-b17d-cc327788c75e
+	Member [192.168.1.45]:5701 - 67ea0e80-12ca-4944-a67e-3e4dfe1b872f
 }
 
-INFO:HazelcastClient:Client started.
-WARNING:Reactor:Connection closed by server.
-INFO:HazelcastClient:Client shutdown.
+Feb 02, 2019 02:05:54 AM HazelcastClient.hz.client_0.LifecycleService
+INFO: [dev] [3.10] (20181119 - 9080a46) HazelcastClient is CONNECTED
+Feb 02, 2019 02:05:54 AM HazelcastClient.hz.client_0
+INFO: [dev] [3.10] Client started.
+Feb 02, 2019 02:05:54 AM HazelcastClient.hz.client_0.LifecycleService
+INFO: [dev] [3.10] (20181119 - 9080a46) HazelcastClient is SHUTTING_DOWN
+Feb 02, 2019 02:05:54 AM HazelcastClient.hz.client_0.Reactor
+WARNING: [dev] [3.10] Connection closed by server
+Feb 02, 2019 02:05:54 AM HazelcastClient.hz.client_0.LifecycleService
+INFO: [dev] [3.10] (20181119 - 9080a46) HazelcastClient is SHUTDOWN
+Feb 02, 2019 02:05:54 AM HazelcastClient.hz.client_0
+INFO: [dev] [3.10] Client shutdown.
 ```
 
-Let's go over the keyword arguments supported by the `logging.basicConfig` one by one.
-
-#### Logging to Stream
-
-You can specify the `stream` attribute to log to a stream.
-
-When `stream` is set, a [StreamHandler](https://docs.python.org/3/library/logging.handlers.html#streamhandler), using the specified stream instance, will be created. Then, the stream instance will be used for the logging output. 
-
-By default, `StreamHandler` outputs to the `sys.stderr`.
-
-> Note that `stream` argument is incompatible with the `filename` argument - if both are present, a `ValueError` is raised.
-
-Below is an example of this configuration.
-
-```python
-import sys
-
-logging.basicConfig(stream=sys.stdout)
-``` 
-
-#### Logging to File
-
-You can specify the `filename` and `filemode` attributes to log to a file. 
-
-When `filename` is set, a [FileHandler](https://docs.python.org/3/library/logging.handlers.html#logging.FileHandler), using the specified file name, will be created instead of a [StreamHandler](https://docs.python.org/3/library/logging.handlers.html#streamhandler). FileHandler sends the logging output to a disk file using the output functionality of the StreamHandler.
-
-If the `filename` is specified, you can also select the mode that the log file will be opened using the `filemode`. See the available [file modes](https://docs.python.org/3/library/functions.html#filemodes) in the Python documentation. 
-
-When `filemode` is not specified, `'a'` will be used by default.
-
-Below is an example of this configuration.
-
-```python
-logging.basicConfig(filename="/home/hazelcast/hz-py.log", filemode="w")
-```
-
-#### Specifying Logging Format
-
-Logging format can be set using the `format` and `datefmt` arguments. 
-
-Handlers will use the `format` string to specify the logging output. See the available format attributes in the [LogRecord attributes](https://docs.python.org/3/library/logging.html#logrecord-attributes) documentation. 
-
-Date and time format used in the format attributes such as `%(asctime)s` can be specified using `datefmt` argument. `datefmt` should be a legal format string for [time.strftime()](https://docs.python.org/3/library/time.html#time.strftime).
-
-Below is an example of this configuration and its output.
-
-```python
-logging.basicConfig(format='%(asctime)s%(msecs)03d [%(threadName)s][%(name)s] %(levelname)s: %(message)s', datefmt="%H:%M:%S,")
-``` 
-
-**Output**
-
-```
-08:48:12,438 [MainThread][LifecycleService] DEBUG: New Lifecycle state is STARTING
-08:48:12,439 [hazelcast-reactor][Reactor] DEBUG: Starting Reactor Thread
-```
+Let's go over the `LoggerConfig` options one by one.
 
 #### Setting Logging Level
 
-Although you can not change the logging levels used within the Hazelcast Python client, you can specify a logging level that will be used to threshold the logs that are at least as severe as your specified level using  the `level` argument.
+Although you can not change the logging levels used within the Hazelcast Python client, you can specify a logging level that will be used to threshold the logs that are at least as severe as your specified level using the `ClientConfig.logger_config.level`.
 
 Here is the table listing the default logging levels that come with the `logging` module and numeric values that represent their severity:
 
@@ -2253,62 +2237,136 @@ Here is the table listing the default logging levels that come with the `logging
 
 For example, setting the logging level to `logging.DEBUG` will cause all the logging messages that are equal or higher than the `logging.DEBUG` in terms of severity to be emitted by your logger.
 
-Below is an example of this configuration.
+By default, logging level is set to `logging.INFO`.
+
+To turn off the logging, you can set the `ClientConfig.logger_config.level` to a value higher than the numeric value of `logging.CRITICAL`. For example, configuration below turns of the logging for the Hazelcast client.
 
 ```python
-logging.basicConfig(level=logging.INFO)
-```
-
-#### Setting Custom Handlers
-
-Apart from `FileHandler` and `StreamHandler`, custom handlers can be added to the root logger using the `handlers` attribute.
-
-If specified, `handlers` should be the iterable of already created handlers. Any handler which don't already have a formatter set will be assigned to the default formatter created in the `logging.basicConfig`.
-
-> Note that `handlers` argument is incompatible with `filename` or `stream` arguments - if both are present, a `ValueError` is raised.
-
-Below is an example of `RotatingFileHandler` which can be used when you want to let a log file grow to a certain size, then open a new file and log to that.
-
-```python
-import hazelcast
-import logging, logging.handlers
-
-handler = logging.handlers.RotatingFileHandler(filename="hz.log", maxBytes=200, backupCount=3)
-logging.basicConfig(level=logging.INFO, handlers=[handler])
-
-client = hazelcast.HazelcastClient()
-client.shutdown()
+config.logger_config.level = 100  # Anything above the 50 will turn off the logging
 ``` 
 
-The result should be 3 separate files, each with part of the log history for the Python client:
+#### Setting Handlers
 
-**hz.log**
+Different handlers can be appended to the `ClientConfig.logger_config.handlers` and Hazelcast client can add these to its logger. 
 
+There is no need to set a formatter for the handlers appended to this list since Hazelcast client will use its own formatter with the format described above.
+
+If there are no handlers in this list, Hazelcast client will use a `StreamHandler`.
+
+By default, this list is empty.
+
+Below is an example for this option. With the configuration below, Hazelcast client will log to the `sys.stdout` and `sys.stderr`. 
+
+```python
+import logging
+import sys
+
+out_handler = logging.StreamHandler(stream=sys.stdout)
+err_handler = logging.StreamHandler(stream=sys.stderr)
+
+config.logger_config.handlers.append(out_handler)
+config.logger_config.handlers.append(err_handler)
+
+client = hazelcast.HazelcastClient(config)
 ```
-WARNING:Reactor:Connection closed by server.
-INFO:HazelcastClient:Client shutdown.
-```
 
-**hz.log.1**
+#### Setting a Custom Logging Configuration
 
-```
-INFO:ClusterService:New member list:
+`ClientConfig.logger_config.config_file` can be used for configuring the logger for the Hazelcast client entirely. 
+When set, this field should contain the absolute path of the JSON file that contains the logging information as described in the [Configuration dictionary schema](https://docs.python.org/3/library/logging.config.html#logging-config-dictschema). This file will be directly fed into the `logging.dictConfig` function.
 
-Members [1] {
-	Member [10.216.1.20]:5701 - 8a65e6fa-7c39-4065-8d72-ba3498721198
+When this field is set, `level` and `handlers` will simply be discarded and configuration in this file will be used.
+
+For all clients, loggers has the `HazelcastClient.client_name` as their parent logger. 
+
+`client_name` can be set with the `ClientConfig.name` field. By default, client's name will be `hz.client_#num` where the `#num` starts from 0 and increases by one for each client created.
+
+You can configure logging for `HazelcastClient` base logger and this logging will be used for all clients 
+since `HazelcastClient` will be their parent logger or you can configure the logging for each individual 
+client by following the naming convention described above.
+
+Below is an sample configuration file for the base `HazelcastClient` logger.
+
+**config.json**
+```json
+{
+  "version": 1,
+  "loggers": {
+    "HazelcastClient": {
+      "level": "INFO",
+      "handlers": ["StdoutHandler", "StderrHandler"]
+    }
+  },
+  "handlers": {
+    "StdoutHandler": {
+      "class": "logging.StreamHandler",
+      "formatter": "SimpleFormatter",
+      "stream": "ext://sys.stdout"
+    },
+    "StderrHandler": {
+      "class": "logging.StreamHandler",
+      "formatter": "DetailedFormatter",
+      "stream": "ext://sys.stderr"
+    }
+  },
+  "formatters": {
+    "SimpleFormatter": {
+      "format": "%(asctime)s*%(name)s*%(levelname)s*%(message)s",
+      "datefmt": "%Y-%m-%d %H:%M:%S"
+    },
+    "DetailedFormatter": {
+      "format": "%(asctime)s*%(name)s*%(funcName)s*%(lineno)d*%(levelname)s*%(message)s",
+      "datefmt": "%Y-%m-%d %H:%M:%S"
+    }
+  }
 }
-
-INFO:HazelcastClient:Client started.
 ```
 
-**hz.log.2**
-```
-INFO:ClusterService:Connecting to Address(host=127.0.0.1, port=5701)
-INFO:ConnectionManager:Authenticated with <hazelcast.reactor.AsyncoreConnection connected 127.0.0.1:5701 at 0x10ff5d780>
+And below are the configurations for the different individual clients.
+
+**client1.json**
+```json
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+  "loggers": {
+    "HazelcastClient.hz.client_0": {
+      "level": "INFO",
+      "handlers": ["StderrHandler"]
+    }
+  },
+
+  "handlers": {
+    "StderrHandler": {
+      "class": "logging.StreamHandler",
+      "stream": "ext://sys.stderr",
+    }
+  }
+}
 ```
 
-`logging.basicConfig` is not the only way to configure the logging for the Python client. You can use the ways described in the [Logging module page](https://docs.python.org/3.7/library/logging.html) or [Logging Cookbook](https://docs.python.org/3/howto/logging-cookbook.html) to configure the root logger.
+**client2.json**
+```json
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+  "loggers": {
+    "HazelcastClient.hz.client_1": {
+      "level": "ERROR",
+      "handlers": ["StdoutHandler"]
+    }
+  },
 
+  "handlers": {
+    "StdoutHandler": {
+      "class": "logging.StreamHandler",
+      "stream": "ext://sys.stdout",
+    }
+  }
+}
+```
+
+To learn more about `logging` module and its capabilities, please refer to the [logging cookbook](https://docs.python.org/3/howto/logging-cookbook.html) and [documentation](https://docs.python.org/3/library/logging.html) of the `logging` module.
 
 # 8. Development and Testing
 
