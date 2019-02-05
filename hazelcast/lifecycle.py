@@ -1,6 +1,6 @@
 import uuid
 
-from hazelcast.util import get_logger
+from hazelcast.util import get_logger, create_git_info
 
 LIFECYCLE_STATE_STARTING = "STARTING"
 LIFECYCLE_STATE_CONNECTED = "CONNECTED"
@@ -21,6 +21,7 @@ class LifecycleService(object):
         for listener in client.config.lifecycle_listeners:
             self.add_listener(listener)
 
+        self._git_info = create_git_info()
         self.logger = get_logger(client, "LifecycleService")
         self.is_live = True
         self.fire_lifecycle_event(LIFECYCLE_STATE_STARTING)
@@ -59,7 +60,7 @@ class LifecycleService(object):
             self.is_live = False
 
         self.state = new_state
-        self.logger.info("New Lifecycle state is %s", new_state)
+        self.logger.info(self._git_info + "HazelcastClient is %s", new_state)
         for listener in list(self._listeners.values()):
             try:
                 listener(new_state)

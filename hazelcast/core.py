@@ -1,8 +1,6 @@
+import json
+import os
 """Hazelcast Core objects"""
-
-SERIALIZATION_VERSION = 1
-CLIENT_TYPE = "PYH"
-CLIENT_VERSION = "3.11-SNAPSHOT"
 
 
 class Member(object):
@@ -138,3 +136,33 @@ class MemberSelector(object):
 class DataMemberSelector(MemberSelector):
     def select(self, member):
         return not member.is_lite_member
+
+
+class _InfoProvider(object):
+    def __init__(self):
+        self.serialization_version = 1
+        self.client_type = "PYH"
+
+        info = self._read_info_file()
+        self.client_version = info.get("client_version", "")
+        self.git_commit_id = info.get("git_commit_id", "")
+        self.git_commit_date = info.get("git_commit_date", "")
+
+    def _read_info_file(self):
+        try:
+            here = os.path.dirname(__file__)
+            json_path = os.path.abspath(os.path.join(here, "hazelcast_info.json"))
+            with open(json_path, "r") as f:
+                info = json.load(f)
+            return info
+        except:
+            return {}
+
+
+_info_provider = _InfoProvider()
+
+SERIALIZATION_VERSION = _info_provider.serialization_version
+CLIENT_TYPE = _info_provider.client_type
+CLIENT_VERSION = _info_provider.client_version
+GIT_COMMIT_ID = _info_provider.git_commit_id
+GIT_COMMIT_DATE = _info_provider.git_commit_date

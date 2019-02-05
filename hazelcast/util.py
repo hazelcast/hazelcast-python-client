@@ -1,12 +1,10 @@
-from __future__ import with_statement
-
 import itertools
 import threading
 import time
 import logging
 from collections import Sequence, Iterable
 
-from hazelcast.core import Address
+from hazelcast.core import Address, GIT_COMMIT_DATE, GIT_COMMIT_ID
 from hazelcast import six
 from hazelcast.six.moves import range
 
@@ -299,3 +297,14 @@ class VersionMessageFilter(logging.Filter):
 
 def get_logger(client, logger_name):
     return logging.getLogger("HazelcastClient." + client.name + "." + logger_name)
+
+
+def create_git_info():
+    if GIT_COMMIT_DATE:
+        if GIT_COMMIT_ID:
+            return "(" + GIT_COMMIT_DATE + " - " + GIT_COMMIT_ID + ") "
+        return "(" + GIT_COMMIT_DATE + ") "
+
+    if GIT_COMMIT_ID:
+        return "(" + GIT_COMMIT_ID + ") "
+    return ""
