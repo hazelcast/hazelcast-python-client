@@ -1,5 +1,4 @@
 import hazelcast
-import logging
 
 # We are using six.moves.cPickle to support both Python 2 and Python 3.
 # You can use cPickle for Python 2 or pickle for Python 3
@@ -36,9 +35,6 @@ class GlobalSerializer(StreamSerializer):
 
 
 if __name__ == "__main__":
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.INFO)
-
     config = hazelcast.ClientConfig()
     config.serialization_config.global_serializer = GlobalSerializer
 

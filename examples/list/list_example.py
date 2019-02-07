@@ -1,10 +1,6 @@
 import hazelcast
-import logging
 
 if __name__ == "__main__":
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.INFO)
-
     client = hazelcast.HazelcastClient()
 
     my_list = client.get_list("cities-list")

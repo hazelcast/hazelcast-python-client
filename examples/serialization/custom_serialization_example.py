@@ -1,5 +1,4 @@
 import hazelcast
-import logging
 
 from hazelcast.serialization.api import StreamSerializer
 
@@ -35,9 +34,6 @@ class CustomSerializer(StreamSerializer):
 
 
 if __name__ == "__main__":
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.INFO)
-
     config = hazelcast.ClientConfig()
     config.serialization_config.set_custom_serializer(type(TimeOfDay), CustomSerializer)
 

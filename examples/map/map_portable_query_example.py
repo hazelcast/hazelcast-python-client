@@ -1,4 +1,3 @@
-import logging
 import time
 import hazelcast
 
@@ -36,9 +35,6 @@ class Employee(Portable):
 
 
 if __name__ == '__main__':
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.INFO)
-
     config = hazelcast.ClientConfig()
 
     config.serialization_config.portable_factories[Employee.FACTORY_ID] = \

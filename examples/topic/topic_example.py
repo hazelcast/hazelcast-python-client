@@ -1,5 +1,4 @@
 import hazelcast
-import logging
 import time
 
 
@@ -9,9 +8,6 @@ def on_message(event):
 
 
 if __name__ == "__main__":
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.INFO)
-
     client = hazelcast.HazelcastClient()
 
     topic = client.get_topic("topic")

@@ -1,5 +1,4 @@
 import hazelcast
-import logging
 
 from hazelcast.serialization.api import IdentifiedDataSerializable
 
@@ -31,9 +30,6 @@ class Student(IdentifiedDataSerializable):
 
 
 if __name__ == "__main__":
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.INFO)
-
     config = hazelcast.ClientConfig()
     factory = {Student.CLASS_ID: Student}
     config.serialization_config.add_data_serializable_factory(Student.FACTORY_ID, factory)

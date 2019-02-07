@@ -1,4 +1,3 @@
-import logging
 import os
 import hazelcast
 from hazelcast.config import PROTOCOL
@@ -6,9 +5,6 @@ from hazelcast.config import PROTOCOL
 # To use SSLConfig with mutual authentication, Hazelcast server should be started with
 # SSL and mutual authentication enabled
 if __name__ == "__main__":
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.INFO)
-
     config = hazelcast.ClientConfig()
 
     # SSL Config

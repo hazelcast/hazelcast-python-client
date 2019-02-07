@@ -1,11 +1,7 @@
 import hazelcast
-import logging
 import time
 
 if __name__ == "__main__":
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.INFO)
-
     client = hazelcast.HazelcastClient()
     transaction = client.new_transaction(timeout=10)
     try:

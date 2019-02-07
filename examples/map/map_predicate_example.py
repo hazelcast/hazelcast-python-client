@@ -1,12 +1,8 @@
 import hazelcast
-import logging
 
 from hazelcast.serialization.predicate import BetweenPredicate
 
 if __name__ == "__main__":
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.INFO)
-
     client = hazelcast.HazelcastClient()
 
     predicate_map = client.get_map("predicate-map")
