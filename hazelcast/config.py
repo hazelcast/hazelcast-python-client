@@ -572,7 +572,7 @@ class FlakeIdGeneratorConfig(object):
             Prefetch count should be in the range 1..100,000.
         :type: int
         """
-        return max(1, self._prefetch_count)
+        return self._prefetch_count
 
     @prefetch_count.setter
     def prefetch_count(self, prefetch_count):
