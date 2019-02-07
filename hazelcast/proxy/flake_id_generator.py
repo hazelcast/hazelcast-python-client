@@ -4,7 +4,7 @@ import collections
 
 from hazelcast.proxy.base import Proxy, MAX_SIZE
 from hazelcast.config import FlakeIdGeneratorConfig
-from hazelcast.util import current_time_in_millis
+from hazelcast.util import current_time_in_millis, TimeUnit, to_millis
 from hazelcast.protocol.codec import flake_id_generator_new_id_batch_codec
 from hazelcast.future import ImmediateFuture, Future
 
@@ -35,6 +35,9 @@ class FlakeIdGenerator(Proxy):
 
     Requires Hazelcast IMDG 3.10
     """
+    _BITS_NODE_ID = 16
+    _BITS_SEQUENCE = 6
+
     def __init__(self, client, service_name, name):
         super(FlakeIdGenerator, self).__init__(client, service_name, name)
 
@@ -62,6 +65,27 @@ class FlakeIdGenerator(Proxy):
         :return: (int), new cluster-wide unique ID.
         """
         return self._auto_batcher.new_id()
+
+    def init(self, id):
+        """
+        This method does nothing and will simply tell if the next ID
+        will be larger than the given ID.
+        You don't need to call this method on cluster restart - uniqueness is preserved thanks to the
+        timestamp component of the ID.
+        This method exists to make :class:`~hazelcast.proxy.FlakeIdGenerator` drop-in replacement
+        for the deprecated :class:`~hazelcast.proxy.IdGenerator`.
+
+        :param id: (int), ID to compare.
+        :return: (bool), True if the next ID will be larger than the supplied id, False otherwise.
+        """
+
+        # Add 1 hour worth of IDs as a reserve: due to long batch validity some clients might be still getting
+        # older IDs. 1 hour is just a safe enough value, not a real guarantee: some clients might have longer
+        # validity.
+        # The init method should normally be called before any client generated IDs: in this case no reserve is
+        # needed, so we don't want to increase the reserve excessively.
+        reserve = to_millis(TimeUnit.HOUR) << (FlakeIdGenerator._BITS_NODE_ID + FlakeIdGenerator._BITS_SEQUENCE)
+        return self.new_id().continue_with(lambda f: f.result() >= (id + reserve))
 
     def _new_id_batch(self, batch_size):
         future = self._encode_invoke(flake_id_generator_new_id_batch_codec, self._response_handler,
