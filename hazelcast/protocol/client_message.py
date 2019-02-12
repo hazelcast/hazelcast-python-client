@@ -23,7 +23,9 @@ Any request parameter, response or event data will be carried in the payload.
 
 """
 import binascii
+import errno
 import logging
+import socket
 import struct
 
 from hazelcast.serialization.data import *
@@ -237,7 +239,6 @@ class ClientMessage(object):
 
 class ClientMessageBuilder(object):
     def __init__(self, message_callback):
-        self.logger = logging.getLogger("ClientMessageBuilder:")
         self._incomplete_messages = dict()
         self._message_callback = message_callback
 
@@ -251,8 +252,7 @@ class ClientMessageBuilder(object):
             try:
                 message = self._incomplete_messages[client_message.get_correlation_id()]
             except KeyError:
-                self.logger.warning("A message without the begin part is received.")
-                return
+                raise socket.error(errno.EIO, "A message without the begin part is received.")
             message.accumulate(client_message)
             if client_message.is_flag_set(END_FLAG):
                 message.add_flag(BEGIN_END_FLAG)
