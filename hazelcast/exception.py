@@ -1,5 +1,6 @@
 from hazelcast.protocol.error_codes import HAZELCAST_INSTANCE_NOT_ACTIVE, AUTHENTICATION, TARGET_DISCONNECTED, \
-    TARGET_NOT_MEMBER, HAZELCAST_SERIALIZATION, CONSISTENCY_LOST_EXCEPTION, UNSUPPORTED_OPERATION
+    TARGET_NOT_MEMBER, HAZELCAST_SERIALIZATION, CONSISTENCY_LOST_EXCEPTION, UNSUPPORTED_OPERATION, \
+    FLAKE_ID_NODE_ID_OUT_OF_RANGE_EXCEPTION
 
 
 def retryable(cls):
@@ -110,6 +111,14 @@ class ConsistencyLostError(HazelcastError):
     pass
 
 
+class NodeIdOutOfRangeError(HazelcastError):
+    """
+    NodeIdOutOfRangeError thrown from member if that member is not able to generate IDs using Flake ID generator
+    because its node ID is too big.
+    """
+    pass
+
+
 class UnsupportedOperationError(HazelcastError):
     """
     UnsupportedOperationError is raised to indicate that the requested operation is not supported.
@@ -124,6 +133,7 @@ ERROR_CODE_TO_ERROR = {
     TARGET_DISCONNECTED: TargetDisconnectedError,
     TARGET_NOT_MEMBER: TargetNotMemberError,
     CONSISTENCY_LOST_EXCEPTION: ConsistencyLostError,
+    FLAKE_ID_NODE_ID_OUT_OF_RANGE_EXCEPTION: NodeIdOutOfRangeError,
     UNSUPPORTED_OPERATION: UnsupportedOperationError
 }
 

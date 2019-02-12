@@ -10,7 +10,7 @@ from hazelcast.partition import PartitionService
 from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE, LIST_SERVICE, SET_SERVICE, MULTI_MAP_SERVICE, \
     REPLICATED_MAP_SERVICE, ATOMIC_LONG_SERVICE, ATOMIC_REFERENCE_SERVICE, RINGBUFFER_SERIVCE, COUNT_DOWN_LATCH_SERVICE, \
     TOPIC_SERVICE, RELIABLE_TOPIC_SERVICE, SEMAPHORE_SERVICE, LOCK_SERVICE, ID_GENERATOR_SERVICE, \
-    ID_GENERATOR_ATOMIC_LONG_PREFIX, EXECUTOR_SERVICE, PN_COUNTER_SERVICE
+    ID_GENERATOR_ATOMIC_LONG_PREFIX, EXECUTOR_SERVICE, PN_COUNTER_SERVICE, FLAKE_ID_GENERATOR_SERVICE
 from hazelcast.near_cache import NearCacheManager
 from hazelcast.reactor import AsyncoreReactor
 from hazelcast.serialization import SerializationServiceV1
@@ -100,6 +100,15 @@ class HazelcastClient(object):
         :return: (:class:`~hazelcast.proxy.executor.Executor`), Executor proxy for the given name.
         """
         return self.proxy.get_or_create(EXECUTOR_SERVICE, name)
+
+    def get_flake_id_generator(self, name):
+        """
+        Creates or returns a cluster-wide :class:`~hazelcast.proxy.flake_id_generator.FlakeIdGenerator`.
+
+        :param name: (str), name of the FlakeIdGenerator proxy.
+        :return: (:class:`~hazelcast.proxy.flake_id_generator.FlakeIdGenerator`), FlakeIdGenerator proxy for the given name
+        """
+        return self.proxy.get_or_create(FLAKE_ID_GENERATOR_SERVICE, name)
 
     def get_id_generator(self, name):
         """

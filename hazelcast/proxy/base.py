@@ -1,12 +1,11 @@
 import logging
-import sys
 
 from hazelcast.future import make_blocking
 from hazelcast.partition import string_partition_strategy
 from hazelcast.util import enum, thread_id
 from hazelcast import six
 
-MAX_SIZE = sys.maxsize
+MAX_SIZE = float('inf')
 
 
 def default_response_handler(future, codec, to_object):

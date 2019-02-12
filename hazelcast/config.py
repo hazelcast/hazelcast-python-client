@@ -70,6 +70,8 @@ DEFAULT_MAX_ENTRY_COUNT = 10000
 DEFAULT_SAMPLING_COUNT = 8
 DEFAULT_SAMPLING_POOL_SIZE = 16
 
+MAXIMUM_PREFETCH_COUNT = 100000
+
 
 class ClientConfig(object):
     """
@@ -100,6 +102,9 @@ class ClientConfig(object):
 
         self.near_cache_configs = {}  # map_name:NearCacheConfig
         """Near Cache configuration which maps "map-name : NearCacheConfig"""
+
+        self.flake_id_generator_configs = {}
+        """Flake ID generator configuration which maps "config-name" : FlakeIdGeneratorConfig """
 
         self.serialization_config = SerializationConfig()
         """Hazelcast serialization configuration"""
@@ -141,6 +146,16 @@ class ClientConfig(object):
         :return: `self` for cascading configuration.
         """
         self.near_cache_configs[near_cache_config.name] = near_cache_config
+        return self
+
+    def add_flake_id_generator_config(self, flake_id_generator_config):
+        """
+        Helper method to add a new FlakeIdGeneratorConfig.
+
+        :param flake_id_generator_config: (FlakeIdGeneratorConfig), the configuration to add
+        :return: `self` for cascading configuration
+        """
+        self.flake_id_generator_configs[flake_id_generator_config.name] = flake_id_generator_config
         return self
 
     def get_property_or_default(self, key, default):
@@ -517,6 +532,73 @@ class SSLConfig(object):
         String in the OpenSSL cipher list format to set the available ciphers for sockets.
         More than one cipher can be set by separating them with a colon.
         """
+
+
+class FlakeIdGeneratorConfig(object):
+    """
+    FlakeIdGeneratorConfig contains the configuration for the client regarding
+    :class:`~hazelcast.proxy.flake_id_generator.FlakeIdGenerator`
+    """
+
+    def __init__(self, name="default"):
+        self._name = name
+        self._prefetch_count = 100
+        self._prefetch_validity_in_millis = 600000
+
+    @property
+    def name(self):
+        """
+        Name of the flake ID generator configuration.
+
+        :getter: Returns the configuration name. This can be actual object name or pattern.
+        :setter: Sets the name or name pattern for this config. Must not be modified after this
+            instance is added to configuration.
+        :type: str
+        """
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        self._name = name
+
+    @property
+    def prefetch_count(self):
+        """
+        Prefetch value count.
+
+        :getter: Returns the prefetch count. Prefetch count is in the range 1..100,000.
+        :setter: Sets how many IDs are pre-fetched on the background when a new flake ID is requested
+            from members. Default is 100.
+            Prefetch count should be in the range 1..100,000.
+        :type: int
+        """
+        return self._prefetch_count
+
+    @prefetch_count.setter
+    def prefetch_count(self, prefetch_count):
+        if not (0 < prefetch_count <= MAXIMUM_PREFETCH_COUNT):
+            raise ValueError("Prefetch count must be 1..{}, not {}".format(MAXIMUM_PREFETCH_COUNT, prefetch_count))
+        self._prefetch_count = prefetch_count
+
+    @property
+    def prefetch_validity_in_millis(self):
+        """
+        Prefetch validity in milliseconds.
+
+        :getter: Returns the prefetch validity in milliseconds.
+        :setter: Sets for how long the pre-fetched IDs can be used.
+            If this time elapses, a new batch of IDs will be fetched.
+            Time unit is milliseconds, default is 600,000 (10 minutes).
+            The IDs contain timestamp component, which ensures rough global ordering of IDs.
+            If an ID is assigned to an object that was created much later, it will be much out of order.
+            If you don't care about ordering, set this value to 0.
+        :type: int
+        """
+        return self._prefetch_validity_in_millis
+
+    @prefetch_validity_in_millis.setter
+    def prefetch_validity_in_millis(self, prefetch_validity_in_millis):
+        self._prefetch_validity_in_millis = prefetch_validity_in_millis
 
 
 class ClientCloudConfig(object):

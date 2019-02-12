@@ -16,6 +16,7 @@ from hazelcast.proxy.semaphore import Semaphore
 from hazelcast.proxy.set import Set
 from hazelcast.proxy.topic import Topic
 from hazelcast.proxy.pn_counter import PNCounter
+from hazelcast.proxy.flake_id_generator import FlakeIdGenerator
 
 ATOMIC_LONG_SERVICE = "hz:impl:atomicLongService"
 ATOMIC_REFERENCE_SERVICE = "hz:impl:atomicReferenceService"
@@ -34,6 +35,7 @@ SET_SERVICE = "hz:impl:setService"
 QUEUE_SERVICE = "hz:impl:queueService"
 TOPIC_SERVICE = "hz:impl:topicService"
 PN_COUNTER_SERVICE = "hz:impl:PNCounterService"
+FLAKE_ID_GENERATOR_SERVICE = "hz:impl:flakeIdGeneratorService"
 
 ID_GENERATOR_ATOMIC_LONG_PREFIX = "hz:atomic:idGenerator:"
 
@@ -54,7 +56,8 @@ _proxy_init = {
     SEMAPHORE_SERVICE: Semaphore,
     SET_SERVICE: Set,
     TOPIC_SERVICE: Topic,
-    PN_COUNTER_SERVICE: PNCounter
+    PN_COUNTER_SERVICE: PNCounter,
+    FLAKE_ID_GENERATOR_SERVICE: FlakeIdGenerator
 }
 
 
