@@ -67,3 +67,7 @@ target/
 .directory
 
 *.jar
+
+# Git version info related
+git_info.json
+hazelcast/git_info.json

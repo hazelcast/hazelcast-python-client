@@ -1,6 +1,8 @@
+import logging
+
 from hazelcast.future import make_blocking
 from hazelcast.partition import string_partition_strategy
-from hazelcast.util import enum, thread_id, get_logger
+from hazelcast.util import enum, thread_id
 from hazelcast import six
 
 MAX_SIZE = float('inf')
@@ -29,7 +31,7 @@ class Proxy(object):
         self.name = name
         self.partition_key = string_partition_strategy(self.name)
         self._client = client
-        self.logger = get_logger(client, "%s(%s)" % (type(self).__name__, name))
+        self.logger = logging.getLogger("HazelcastClient.%s(%s)" % (type(self).__name__, name))
         self._to_object = client.serialization_service.to_object
         self._to_data = client.serialization_service.to_data
         self._start_listening = client.listener.start_listening

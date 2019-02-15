@@ -619,7 +619,8 @@ class ClientCloudConfig(object):
 
 class LoggerConfig(object):
     """
-    #TODO doc
+    Custom configuration for logging or a logging level for the default
+    Hazelcast client logger can be set using this class.
     """
     def __init__(self):
         self.config_file = None
@@ -631,12 +632,6 @@ class LoggerConfig(object):
         ``Configuration dictionary schema`` described in the logging 
         module of the standard library.
         """
-        self.handlers = []
-        """
-        This list contains the handlers that will be added
-        to the logger for this client. If this list is empty,
-        a StreamHandler that outputs to stderr will be used.
-        """
         self.level = logging.INFO
         """
         Sets the logging level for the default logging
@@ -646,7 +641,6 @@ class LoggerConfig(object):
         than the 50 is enough to turn off the default
         logger. 
         """
-
 
 
 class ClientProperty(object):

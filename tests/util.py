@@ -82,7 +82,3 @@ def open_connection_to_address(client, address):
     m.put(key, 0)
     m.destroy()
 
-
-class FakeClientForLogger(object):
-    def __init__(self):
-        self.name = "FakeClient"

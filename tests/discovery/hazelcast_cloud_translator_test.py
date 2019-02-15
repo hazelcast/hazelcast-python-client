@@ -1,7 +1,6 @@
 from unittest import TestCase
 from hazelcast.core import Address
 from hazelcast.discovery import HazelcastCloudDiscovery, HazelcastCloudAddressTranslator
-from tests.util import FakeClientForLogger
 
 
 class HazelcastCloudTranslatorTest(TestCase):
@@ -18,7 +17,7 @@ class HazelcastCloudTranslatorTest(TestCase):
         self.lookup[Address("127.0.0.2", 5701)] = Address("192.168.0.2", 5701)
         self.cloud_discovery = HazelcastCloudDiscovery("", "", 0)
         self.cloud_discovery.discover_nodes = lambda: self.lookup
-        self.translator = HazelcastCloudAddressTranslator(FakeClientForLogger(), "", "", 0)
+        self.translator = HazelcastCloudAddressTranslator("", "", 0)
         self.translator.cloud_discovery = self.cloud_discovery
 
     def test_translate_when_address_is_none(self):
@@ -48,7 +47,7 @@ class HazelcastCloudTranslatorTest(TestCase):
     def test_refresh_with_exception(self):
         cloud_discovery = HazelcastCloudDiscovery("", "", 0)
         cloud_discovery.discover_nodes = self.mock_discover_nodes_with_exception
-        translator = HazelcastCloudAddressTranslator(FakeClientForLogger(), "", "", 0)
+        translator = HazelcastCloudAddressTranslator("", "", 0)
         translator.cloud_discovery = cloud_discovery
         translator.refresh()
 

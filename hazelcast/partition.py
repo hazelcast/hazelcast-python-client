@@ -1,8 +1,9 @@
+import logging
 import threading
+
 from hazelcast.hash import hash_to_index
 from hazelcast.protocol.codec import client_get_partitions_codec
 from hazelcast import six
-from hazelcast.util import get_logger
 
 PARTITION_UPDATE_INTERVAL = 10
 
@@ -11,18 +12,19 @@ class PartitionService(object):
     """
     An SPI service for accessing partition related information.
     """
+    logger = logging.getLogger("HazelcastClient.PartitionService")
     timer = None
 
     def __init__(self, client):
         self._client = client
-        self.logger = get_logger(client, "PartitionService")
+        self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
         self.partitions = {}
 
     def start(self):
         """
         Starts the partition service.
         """
-        self.logger.debug("Starting partition service")
+        self.logger.debug("Starting partition service", extra=self._logger_extras)
 
         def partition_updater():
             self._do_refresh()
@@ -84,11 +86,12 @@ class PartitionService(object):
             event.wait(timeout=1)
 
     def _do_refresh(self, callback=None):
-        self.logger.debug("Start updating partitions")
+        self.logger.debug("Start updating partitions", extra=self._logger_extras)
         address = self._client.cluster.owner_connection_address
         connection = self._client.connection_manager.get_connection(address)
         if connection is None:
-            self.logger.debug("Could not update partition thread as owner connection is not available.")
+            self.logger.debug("Could not update partition thread as owner connection is not available.",
+                              extra=self._logger_extras)
             if callback:
                 callback()
             return
@@ -108,7 +111,7 @@ class PartitionService(object):
         for addr, partition_list in six.iteritems(partitions):
             for partition in partition_list:
                 self.partitions[partition] = addr
-        self.logger.debug("Finished updating partitions")
+        self.logger.debug("Finished updating partitions", extra=self._logger_extras)
 
 
 def string_partition_strategy(key):

@@ -1,14 +1,15 @@
+import logging
 import random
 import threading
 import time
 import uuid
 
-from hazelcast.core import CLIENT_TYPE, CLIENT_VERSION, SERIALIZATION_VERSION
 from hazelcast.exception import HazelcastError, AuthenticationError, TargetDisconnectedError
 from hazelcast.invocation import ListenerInvocation
 from hazelcast.lifecycle import LIFECYCLE_STATE_CONNECTED, LIFECYCLE_STATE_DISCONNECTED
 from hazelcast.protocol.codec import client_add_membership_listener_codec, client_authentication_codec
-from hazelcast.util import get_possible_addresses, get_provider_addresses, calculate_version, get_logger
+from hazelcast.util import get_possible_addresses, get_provider_addresses, calculate_version
+from hazelcast.version import CLIENT_TYPE, CLIENT_VERSION, SERIALIZATION_VERSION
 
 # Membership Event Types
 MEMBER_ADDED = 1
@@ -22,12 +23,13 @@ class ClusterService(object):
 
     All the methods on the Cluster are thread-safe.
     """
+    logger = logging.getLogger("HazelcastClient.ClusterService")
 
     def __init__(self, config, client, address_providers):
         self._config = config
         self._client = client
+        self._logger_extras = {"client_name": client.name, "group_name": config.group_config.name}
         self._members = {}
-        self.logger = get_logger(client, "ClusterService")
         self.owner_connection_address = None
         self.owner_uuid = None
         self.uuid = None
@@ -102,10 +104,10 @@ class ClusterService(object):
 
     def _reconnect(self):
         try:
-            self.logger.warning("Connection closed to owner node. Trying to reconnect.")
+            self.logger.warning("Connection closed to owner node. Trying to reconnect.", extra=self._logger_extras)
             self._connect_to_cluster()
         except:
-            self.logger.exception("Could not reconnect to cluster. Shutting down client.")
+            self.logger.exception("Could not reconnect to cluster. Shutting down client.", extra=self._logger_extras)
             self._client.shutdown()
 
     def _connect_to_cluster(self):
@@ -118,21 +120,21 @@ class ClusterService(object):
 
             for address in addresses:
                 try:
-                    self.logger.info("Connecting to %s", address)
+                    self.logger.info("Connecting to %s", address, extra=self._logger_extras)
                     self._connect_to_address(address)
                     return
                 except:
-                    self.logger.warning("Error connecting to %s ", address, exc_info=True)
+                    self.logger.warning("Error connecting to %s ", address, exc_info=True, extra=self._logger_extras)
 
             if current_attempt >= attempt_limit:
                 self.logger.warning(
                     "Unable to get alive cluster connection, attempt %d of %d",
-                    current_attempt, attempt_limit)
+                    current_attempt, attempt_limit, extra=self._logger_extras)
                 break
 
             self.logger.warning(
                 "Unable to get alive cluster connection, attempt %d of %d, trying again in %d seconds",
-                current_attempt, attempt_limit, retry_delay)
+                current_attempt, attempt_limit, retry_delay, extra=self._logger_extras)
             current_attempt += 1
             time.sleep(retry_delay)
 
@@ -182,11 +184,11 @@ class ClusterService(object):
         response = self._client.invoker.invoke(
             ListenerInvocation(self._client.listener, request, handler, connection=connection)).result()
         registration_id = client_add_membership_listener_codec.decode_response(response)["response"]
-        self.logger.debug("Registered membership listener with ID " + registration_id)
+        self.logger.debug("Registered membership listener with ID " + registration_id, extra=self._logger_extras)
         self._initial_list_fetched.wait()
 
     def _handle_member(self, member, event_type):
-        self.logger.debug("Got member event: %s, %s", member, event_type)
+        self.logger.debug("Got member event: %s, %s", member, event_type, extra=self._logger_extras)
         if event_type == MEMBER_ADDED:
             self._member_added(member)
         elif event_type == MEMBER_REMOVED:
@@ -196,7 +198,7 @@ class ClusterService(object):
         self._client.partition_service.refresh()
 
     def _handle_member_list(self, members):
-        self.logger.debug("Got initial member list: %s", members)
+        self.logger.debug("Got initial member list: %s", members, extra=self._logger_extras)
 
         for m in self.get_member_list():
             try:
@@ -217,7 +219,7 @@ class ClusterService(object):
                 try:
                     added(member)
                 except:
-                    self.logger.exception("Exception in membership listener")
+                    self.logger.exception("Exception in membership listener", extra=self._logger_extras)
 
     def _member_removed(self, member):
         self._members.pop(member.address, None)
@@ -228,11 +230,11 @@ class ClusterService(object):
                 try:
                     removed(member)
                 except:
-                    self.logger.exception("Exception in membership listener")
+                    self.logger.exception("Exception in membership listener", extra=self._logger_extras)
 
     def _log_member_list(self):
         self.logger.info("New member list:\n\nMembers [%d] {\n%s\n}\n", self.size(),
-                         "\n".join(["\t" + str(x) for x in self.get_member_list()]))
+                         "\n".join(["\t" + str(x) for x in self.get_member_list()]), extra=self._logger_extras)
 
     def _connection_closed(self, connection, _):
         if connection.endpoint and connection.endpoint == self.owner_connection_address \

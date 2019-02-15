@@ -9,7 +9,7 @@ from hazelcast.proxy.transactional_map import TransactionalMap
 from hazelcast.proxy.transactional_multi_map import TransactionalMultiMap
 from hazelcast.proxy.transactional_queue import TransactionalQueue
 from hazelcast.proxy.transactional_set import TransactionalSet
-from hazelcast.util import thread_id, get_logger
+from hazelcast.util import thread_id
 from hazelcast.six.moves import range
 
 _STATE_ACTIVE = "active"
@@ -43,10 +43,11 @@ class TransactionManager(object):
     """
     Manages the execution of client transactions and provides Transaction objects.
     """
+    logger = logging.getLogger("HazelcastClient.TransactionManager")
 
     def __init__(self, client):
         self._client = client
-        self.logger = get_logger(client, "TransactionManager")
+        self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
 
     def _connect(self):
         for count in range(0, RETRY_COUNT):
@@ -55,8 +56,7 @@ class TransactionManager(object):
                 return self._client.connection_manager.get_or_connect(address).result()
             except (IOError, HazelcastInstanceNotActiveError):
                 self.logger.debug("Could not get a connection for the transaction. Attempt %d of %d", count,
-                                  RETRY_COUNT,
-                                  exc_info=True)
+                                  RETRY_COUNT, exc_info=True, extra=self._logger_extras)
                 if count + 1 == RETRY_COUNT:
                     raise
 
@@ -84,6 +84,7 @@ class Transaction(object):
     start_time = None
     _locals = threading.local()
     thread_id = None
+    logger = logging.getLogger("HazelcastClient.Transaction")
 
     def __init__(self, client, connection, timeout, durability, transaction_type):
         self.connection = connection
@@ -91,7 +92,6 @@ class Transaction(object):
         self.durability = durability
         self.transaction_type = transaction_type
         self.client = client
-        self.logger = get_logger(client, "Transaction")
         self._objects = {}
 
     def begin(self):

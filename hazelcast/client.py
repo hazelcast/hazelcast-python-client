@@ -6,7 +6,6 @@ import json
 from hazelcast.cluster import ClusterService, RandomLoadBalancer
 from hazelcast.config import ClientConfig, ClientProperties
 from hazelcast.connection import ConnectionManager, Heartbeat, DefaultAddressProvider, DefaultAddressTranslator
-from hazelcast.core import CLIENT_VERSION
 from hazelcast.invocation import InvocationService, ListenerService
 from hazelcast.lifecycle import LifecycleService, LIFECYCLE_STATE_SHUTTING_DOWN, LIFECYCLE_STATE_SHUTDOWN
 from hazelcast.partition import PartitionService
@@ -19,7 +18,7 @@ from hazelcast.reactor import AsyncoreReactor
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.statistics import Statistics
 from hazelcast.transaction import TWO_PHASE, TransactionManager
-from hazelcast.util import AtomicInteger, VersionMessageFilter
+from hazelcast.util import AtomicInteger, DEFAULT_LOGGING
 from hazelcast.discovery import HazelcastCloudAddressProvider, HazelcastCloudAddressTranslator, HazelcastCloudDiscovery
 from hazelcast.exception import HazelcastIllegalStateError
 
@@ -30,14 +29,15 @@ class HazelcastClient(object):
     """
     CLIENT_ID = AtomicInteger()
     _config = None
+    logger = logging.getLogger("HazelcastClient")
 
     def __init__(self, config=None):
         self.config = config or ClientConfig()
         self.properties = ClientProperties(self.config.get_properties())
         self.id = HazelcastClient.CLIENT_ID.get_and_increment()
         self.name = self._create_client_name()
-        self.logger = logging.getLogger("HazelcastClient." + self.name)
         self._init_logger()
+        self._logger_extras = {"client_name": self.name, "group_name": self.config.group_config.name}
         self._log_group_password_info()
         self.lifecycle = LifecycleService(self)
         self.reactor = AsyncoreReactor(self)
@@ -68,7 +68,7 @@ class HazelcastClient(object):
         except:
             self.reactor.shutdown()
             raise
-        self.logger.info("Client started.")
+        self.logger.info("Client started.", extra=self._logger_extras)
 
     def get_atomic_long(self, name):
         """
@@ -261,7 +261,7 @@ class HazelcastClient(object):
             self.cluster.shutdown()
             self.reactor.shutdown()
             self.lifecycle.fire_lifecycle_event(LIFECYCLE_STATE_SHUTDOWN)
-            self.logger.info("Client shutdown.")
+            self.logger.info("Client shutdown.", extra=self._logger_extras)
 
     def _create_address_providers(self):
         network_config = self.config.network_config
@@ -279,12 +279,12 @@ class HazelcastClient(object):
         if cloud_config.enabled:
             discovery_token = cloud_config.discovery_token
             host, url = HazelcastCloudDiscovery.get_host_and_url(self.config.get_properties(), discovery_token)
-            return HazelcastCloudAddressProvider(self, host, url, self._get_connection_timeout())
+            return HazelcastCloudAddressProvider(host, url, self._get_connection_timeout())
 
         cloud_token = self.properties.get(self.properties.HAZELCAST_CLOUD_DISCOVERY_TOKEN)
         if cloud_token != "":
             host, url = HazelcastCloudDiscovery.get_host_and_url(self.config.get_properties(), cloud_token)
-            return HazelcastCloudAddressProvider(self, host, url, self._get_connection_timeout())
+            return HazelcastCloudAddressProvider(host, url, self._get_connection_timeout())
 
         return None
 
@@ -308,7 +308,7 @@ class HazelcastClient(object):
             else:
                 discovery_token = cloud_discovery_token
             host, url = HazelcastCloudDiscovery.get_host_and_url(self.config.get_properties(), discovery_token)
-            return HazelcastCloudAddressTranslator(self, host, url, self._get_connection_timeout())
+            return HazelcastCloudAddressTranslator(host, url, self._get_connection_timeout())
 
         return DefaultAddressTranslator()
 
@@ -342,26 +342,7 @@ class HazelcastClient(object):
                 json_config = json.loads(f.read())
                 logging.config.dictConfig(json_config)
         else:
-            group_name = self.config.group_config.name
-
-            version_message = "[" + group_name + "] [" + CLIENT_VERSION + "]"
-            version_filter = VersionMessageFilter(version_message=version_message)
-
-            fmt = "%(asctime)s %(name)s\n%(levelname)s: %(version_message)s %(message)s"
-            datefmt = "%b %m, %Y %I:%M:%S %p"
-            formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
-
-            if logger_config.handlers:
-                for handler in logger_config.handlers:
-                    handler.setFormatter(formatter)
-                    handler.addFilter(version_filter)
-                    self.logger.addHandler(handler)
-            else:
-                default_handler = logging.StreamHandler()
-                default_handler.setFormatter(formatter)
-                default_handler.addFilter(version_filter)
-                self.logger.addHandler(default_handler)
-
+            logging.config.dictConfig(DEFAULT_LOGGING)
             self.logger.setLevel(logger_config.level)
 
     def _log_group_password_info(self):
@@ -370,4 +351,4 @@ class HazelcastClient(object):
                              "Starting with Hazelcast IMDG version 3.11, clients with the same group name, "
                              "but with different group passwords (that do not use authentication) will be "
                              "accepted to a cluster. The group password configuration will be removed "
-                             "completely in a future release.")
+                             "completely in a future release.", extra=self._logger_extras)
