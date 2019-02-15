@@ -59,7 +59,7 @@ class Statistics(object):
         self._statistics_timer = self._client.reactor.add_timer(period, _statistics_task)
 
         self.logger.info("Client statistics enabled with the period of {} seconds.".format(period),
-                         extras=self._logger_extras)
+                         extra=self._logger_extras)
 
     def shutdown(self):
         if self._statistics_timer:
