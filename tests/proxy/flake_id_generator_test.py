@@ -124,7 +124,10 @@ class FlakeIdGeneratorTest(SingleMemberTestCase):
         for i in range(1, SHORT_TERM_BATCH_SIZE):
             flake_id_generator.new_id()
 
-        # Batch should be exhausted now
+        # Batch is exhausted. We should wait for a little so that the member
+        # sends the new batch with a base greater than the last id
+        # generated + flake id step size.
+        time.sleep(1)
 
         second_id = flake_id_generator.new_id()
         self.assertGreater(second_id, first_id + FLAKE_ID_STEP * SHORT_TERM_BATCH_SIZE)
