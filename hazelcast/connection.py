@@ -271,7 +271,7 @@ class Connection(object):
         self.logger = logging.getLogger("Connection[%s](%s:%d)" % (self.id, address.host, address.port))
         self._connection_closed_callback = connection_closed_callback
         self._builder = ClientMessageBuilder(message_callback)
-        self._read_buffer = b""
+        self._read_buffer = bytearray()
         self.last_read_in_seconds = 0
         self.last_write_in_seconds = 0
         self.start_time_in_seconds = 0
