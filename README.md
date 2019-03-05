@@ -2173,9 +2173,9 @@ After enabling the client statistics, you can monitor your clients using Hazelca
 
 Hazelcast Python client allows you to configure the logging through the `LoggerConfig` in the `ClientConfig` class. 
 
-`LoggerConfig` contains options that allow you to set the logging level and a custom logging configuration file to the Hazelcast client. 
+`LoggerConfig` contains options that allow you to set the logging level and a custom logging configuration file to the Hazelcast Python client. 
 
-By default, Hazelcast clients will log to the `sys.stderr` with the `INFO` logging level and `%(asctime)s %(name)s\n%(levelname)s: %(version_message)s %(message)s` format where the `version_message` contains the information about the client version, group name and client name.
+By default, Hazelcast Python client will log to the `sys.stderr` with the `INFO` logging level and `%(asctime)s %(name)s\n%(levelname)s: %(version_message)s %(message)s` format where the `version_message` contains the information about the client version, group name and client name.
 
 Below is an example of the default logging configuration.
 
@@ -2238,21 +2238,22 @@ For example, setting the logging level to `logging.DEBUG` will cause all the log
 
 By default, logging level is set to `logging.INFO`.
 
-To turn off the logging, you can set the `ClientConfig.logger_config.level` to a value higher than the numeric value of `logging.CRITICAL`. For example, configuration below turns of the logging for the Hazelcast client.
+To turn off the logging, you can set the `ClientConfig.logger_config.level` to a value higher than the numeric value of `logging.CRITICAL`. For example, the configuration below turns off the logging for the Hazelcast Python client.
 
 ```python
 config.logger_config.level = 100  # Anything above the 50 will turn off the logging
+client = hazelcast.HazelcastClient(config)
 ``` 
 
 #### Setting a Custom Logging Configuration
 
-`ClientConfig.logger_config.config_file` can be used to configure the logger for the Hazelcast client entirely.
+`ClientConfig.logger_config.config_file` can be used to configure the logger for the Hazelcast Python client entirely.
  
 When set, this field should contain the absolute path of the JSON file that contains the logging configuration as described in the [Configuration dictionary schema](https://docs.python.org/3/library/logging.config.html#logging-config-dictschema). This file will be read and contents of it will be directly fed into the `logging.dictConfig` function.
 
-When this field is set, `level` will simply be discarded and configuration in this file will be used.
+When this field is set, `level` field will simply be discarded and configuration in this file will be used.
 
-All Hazelcast client related loggers have `HazelcastClient` as their parent logger. So, you can configure logging for `HazelcastClient` base logger and this logging configuration will be used for all Hazelcast client related loggers. 
+All Hazelcast Python client related loggers have `HazelcastClient` as their parent logger. So, you can configure logging for `HazelcastClient` base logger and this logging configuration can be used for all client related loggers. 
 
 Let's replicate the default configuration used within the Hazelcast client with this configuration method.
 
@@ -2306,7 +2307,7 @@ class HazelcastFormatter(logging.Formatter):
         client_name = getattr(record, "client_name", None)
         group_name = getattr(record, "group_name", None)
         if client_name and group_name:
-            record.msg = "[" + group_name + "] [" + record.client_name + "] " + record.msg
+            record.msg = "[" + group_name + "] [" + client_name + "] " + record.msg
         return super(HazelcastFormatter, self).format(record)
 ```
 
@@ -2324,7 +2325,7 @@ client = hazelcast.HazelcastClient(config)
 client.shutdown()
 ``` 
 
-To learn more about `logging` module and its capabilities, please refer to the [logging cookbook](https://docs.python.org/3/howto/logging-cookbook.html) and [documentation](https://docs.python.org/3/library/logging.html) of the `logging` module.
+To learn more about `logging` module and its capabilities, please see the [logging cookbook](https://docs.python.org/3/howto/logging-cookbook.html) and [documentation](https://docs.python.org/3/library/logging.html) of the `logging` module.
 
 # 8. Development and Testing
 
