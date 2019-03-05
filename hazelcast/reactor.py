@@ -186,7 +186,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         self.logger.debug("Connected to %s", self._address)
 
     def handle_read(self):
-        self._read_buffer += self.recv(BUFFER_SIZE)
+        self._read_buffer.extend(self.recv(BUFFER_SIZE))
         self.last_read_in_seconds = time.time()
         self.receive_message()
 
