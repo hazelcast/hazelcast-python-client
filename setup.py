@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 from codecs import open
 from os import path
 from hazelcast import __version__
@@ -53,7 +53,7 @@ setup(
         ],
         license='Apache 2.0',
         keywords='hazelcast,hazelcast client,In-Memory Data Grid,Distributed Computing',
-        packages=["hazelcast"],
+        packages=find_packages(exclude=['benchmarks', 'examples', 'examples.*', 'docs', 'tests', 'tests.*']),
         package_dir={'hazelcast': 'hazelcast'},
         package_data={'hazelcast': ["git_info.json"]},
         install_requires=[],
