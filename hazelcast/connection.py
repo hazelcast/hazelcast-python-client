@@ -266,10 +266,9 @@ class Connection(object):
     is_owner = False
     counter = AtomicInteger()
 
-    def __init__(self, client, address, connection_closed_callback, message_callback):
+    def __init__(self, address, connection_closed_callback, message_callback, logger_extras=None):
         self._address = (address.host, address.port)
-        self._client = client
-        self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
+        self._logger_extras = logger_extras
         self.id = self.counter.get_and_increment()
         self.logger = logging.getLogger("HazelcastClient.Connection[%s](%s:%d)" % (self.id, address.host, address.port))
         self._connection_closed_callback = connection_closed_callback

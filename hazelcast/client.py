@@ -39,8 +39,8 @@ class HazelcastClient(object):
         self._init_logger()
         self._logger_extras = {"client_name": self.name, "group_name": self.config.group_config.name}
         self._log_group_password_info()
-        self.lifecycle = LifecycleService(self)
-        self.reactor = AsyncoreReactor(self)
+        self.lifecycle = LifecycleService(self.config, self._logger_extras)
+        self.reactor = AsyncoreReactor(self._logger_extras)
         self._address_providers = self._create_address_providers()
         self._address_translator = self._create_address_translator()
         self.connection_manager = ConnectionManager(self, self.reactor.new_connection, self._address_translator)
@@ -279,12 +279,12 @@ class HazelcastClient(object):
         if cloud_config.enabled:
             discovery_token = cloud_config.discovery_token
             host, url = HazelcastCloudDiscovery.get_host_and_url(self.config.get_properties(), discovery_token)
-            return HazelcastCloudAddressProvider(host, url, self._get_connection_timeout())
+            return HazelcastCloudAddressProvider(host, url, self._get_connection_timeout(), self._logger_extras)
 
         cloud_token = self.properties.get(self.properties.HAZELCAST_CLOUD_DISCOVERY_TOKEN)
         if cloud_token != "":
             host, url = HazelcastCloudDiscovery.get_host_and_url(self.config.get_properties(), cloud_token)
-            return HazelcastCloudAddressProvider(host, url, self._get_connection_timeout())
+            return HazelcastCloudAddressProvider(host, url, self._get_connection_timeout(), self._logger_extras)
 
         return None
 
@@ -308,7 +308,7 @@ class HazelcastClient(object):
             else:
                 discovery_token = cloud_discovery_token
             host, url = HazelcastCloudDiscovery.get_host_and_url(self.config.get_properties(), discovery_token)
-            return HazelcastCloudAddressTranslator(host, url, self._get_connection_timeout())
+            return HazelcastCloudAddressTranslator(host, url, self._get_connection_timeout(), self._logger_extras)
 
         return DefaultAddressTranslator()
 

@@ -26,9 +26,8 @@ class AsyncoreReactor(object):
     _is_live = False
     logger = logging.getLogger("HazelcastClient.AsyncoreReactor")
 
-    def __init__(self, client):
-        self._client = client
-        self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
+    def __init__(self, logger_extras=None):
+        self._logger_extras = logger_extras
         self._timers = queue.PriorityQueue()
         self._map = {}
 
@@ -97,8 +96,8 @@ class AsyncoreReactor(object):
 
     def new_connection(self, address, connect_timeout, socket_options, connection_closed_callback, message_callback,
                        network_config):
-        return AsyncoreConnection(self._client, self._map, address, connect_timeout, socket_options,
-                                  connection_closed_callback, message_callback, network_config)
+        return AsyncoreConnection(self._map, address, connect_timeout, socket_options,
+                                  connection_closed_callback, message_callback, network_config, self._logger_extras)
 
     def _cleanup_timer(self, timer):
         try:
@@ -119,10 +118,10 @@ class AsyncoreReactor(object):
 class AsyncoreConnection(Connection, asyncore.dispatcher):
     sent_protocol_bytes = False
 
-    def __init__(self, client, map, address, connect_timeout, socket_options, connection_closed_callback,
-                 message_callback, network_config):
+    def __init__(self, map, address, connect_timeout, socket_options, connection_closed_callback,
+                 message_callback, network_config, logger_extras=None):
         asyncore.dispatcher.__init__(self, map=map)
-        Connection.__init__(self, client, address, connection_closed_callback, message_callback)
+        Connection.__init__(self, address, connection_closed_callback, message_callback, logger_extras)
 
         self._write_lock = threading.Lock()
         self._write_queue = deque()
