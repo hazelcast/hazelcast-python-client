@@ -21,7 +21,7 @@ class MultiMap(Proxy):
         Adds an entry listener for this multimap. The listener will be notified for all multimap add/remove/clear-all
         events.
 
-        :param include_value: (bool), whether received events include an old value or not (optional).
+        :param include_value: (bool), whether received event should include the value or not (optional).
         :param key: (object), key for filtering the events (optional).
         :param added_func: Function to be called when an entry is added to map (optional).
         :param removed_func: Function to be called when an entry is removed_func from map (optional).
