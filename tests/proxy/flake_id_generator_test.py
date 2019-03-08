@@ -4,7 +4,7 @@ import random
 
 from tests.base import SingleMemberTestCase, HazelcastTestCase
 from tests.hzrc.ttypes import Lang
-from tests.util import configure_logging
+from tests.util import configure_logging, set_attr
 from hazelcast.config import ClientConfig, FlakeIdGeneratorConfig, MAXIMUM_PREFETCH_COUNT
 from hazelcast.client import HazelcastClient
 from hazelcast.util import to_millis
@@ -20,6 +20,7 @@ NUM_IDS_IN_THREADS = 100000
 AUTO_BATCHER_BASE = 10
 
 
+@set_attr(category=3.10)
 class FlakeIdGeneratorConfigTest(HazelcastTestCase):
     def setUp(self):
         self.flake_id_config = FlakeIdGeneratorConfig()
@@ -50,6 +51,7 @@ class FlakeIdGeneratorConfigTest(HazelcastTestCase):
             self.flake_id_config.prefetch_count = MAXIMUM_PREFETCH_COUNT + 1
 
 
+@set_attr(category=3.10)
 class FlakeIdGeneratorTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
@@ -135,6 +137,7 @@ class FlakeIdGeneratorTest(SingleMemberTestCase):
         flake_id_generator.destroy()
 
 
+@set_attr(category=3.10)
 class FlakeIdGeneratorDataStructuresTest(HazelcastTestCase):
     def test_id_batch_as_iterator(self):
         base = 3
@@ -228,6 +231,7 @@ class FlakeIdGeneratorDataStructuresTest(HazelcastTestCase):
         return ImmediateFuture(_IdBatch(AUTO_BATCHER_BASE, FLAKE_ID_STEP, batch_size))
 
 
+@set_attr(category=3.10)
 class FlakeIdGeneratorIdOutOfRangeTest(HazelcastTestCase):
     @classmethod
     def setUpClass(cls):
