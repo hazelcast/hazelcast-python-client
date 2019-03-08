@@ -635,10 +635,10 @@ class LoggerConfig(object):
         self.level = logging.INFO
         """
         Sets the logging level for the default logging
-        configuration. To turn of the logging, level
+        configuration. To turn off the logging, level
         can be set to a high integer value. If custom
-        logging levels are not used, a value higher 
-        than the 50 is enough to turn off the default
+        logging levels are not used, a value greater 
+        than 50 is enough to turn off the default
         logger. 
         """
 

@@ -2221,7 +2221,7 @@ Let's go over the `LoggerConfig` options one by one.
 
 #### Setting Logging Level
 
-Although you can not change the logging levels used within the Hazelcast Python client, you can specify a logging level that will be used to threshold the logs that are at least as severe as your specified level using the `ClientConfig.logger_config.level`.
+Although you can not change the logging levels used within the Hazelcast Python client, you can specify a logging level that is used to threshold the logs that are at least as severe as your specified level using `ClientConfig.logger_config.level`.
 
 Here is the table listing the default logging levels that come with the `logging` module and numeric values that represent their severity:
 
@@ -2236,12 +2236,12 @@ Here is the table listing the default logging levels that come with the `logging
 
 For example, setting the logging level to `logging.DEBUG` will cause all the logging messages that are equal or higher than the `logging.DEBUG` in terms of severity to be emitted by your logger.
 
-By default, logging level is set to `logging.INFO`.
+By default, the logging level is set to `logging.INFO`.
 
-To turn off the logging, you can set the `ClientConfig.logger_config.level` to a value higher than the numeric value of `logging.CRITICAL`. For example, the configuration below turns off the logging for the Hazelcast Python client.
+To turn off the logging, you can set `ClientConfig.logger_config.level` to a value greater than the numeric value of `logging.CRITICAL`. For example, the configuration below turns off the logging for the Hazelcast Python client.
 
 ```python
-config.logger_config.level = 100  # Anything above the 50 will turn off the logging
+config.logger_config.level = 100  # Any value greater than 50 will turn off the logging
 client = hazelcast.HazelcastClient(config)
 ``` 
 
@@ -2249,11 +2249,11 @@ client = hazelcast.HazelcastClient(config)
 
 `ClientConfig.logger_config.config_file` can be used to configure the logger for the Hazelcast Python client entirely.
  
-When set, this field should contain the absolute path of the JSON file that contains the logging configuration as described in the [Configuration dictionary schema](https://docs.python.org/3/library/logging.config.html#logging-config-dictschema). This file will be read and contents of it will be directly fed into the `logging.dictConfig` function.
+When set, this field should contain the absolute path of the JSON file that contains the logging configuration as described in the [Configuration dictionary schema](https://docs.python.org/3/library/logging.config.html#logging-config-dictschema). This file will be read and the contents of it will be directly fed into the `logging.dictConfig` function.
 
-When this field is set, `level` field will simply be discarded and configuration in this file will be used.
+When this field is set, the `level` field is simply discarded and configuration in this file is used.
 
-All Hazelcast Python client related loggers have `HazelcastClient` as their parent logger. So, you can configure logging for `HazelcastClient` base logger and this logging configuration can be used for all client related loggers. 
+All Hazelcast Python client related loggers have `HazelcastClient` as their parent logger. So, you can configure logging for the `HazelcastClient` base logger and this logging configuration can be used for all client related loggers. 
 
 Let's replicate the default configuration used within the Hazelcast client with this configuration method.
 
@@ -2325,7 +2325,7 @@ client = hazelcast.HazelcastClient(config)
 client.shutdown()
 ``` 
 
-To learn more about `logging` module and its capabilities, please see the [logging cookbook](https://docs.python.org/3/howto/logging-cookbook.html) and [documentation](https://docs.python.org/3/library/logging.html) of the `logging` module.
+To learn more about the `logging` module and its capabilities, please see the [logging cookbook](https://docs.python.org/3/howto/logging-cookbook.html) and [documentation](https://docs.python.org/3/library/logging.html) of the `logging` module.
 
 # 8. Development and Testing
 
