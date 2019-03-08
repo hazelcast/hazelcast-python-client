@@ -63,7 +63,7 @@ class Map(Proxy):
         Adds a continuous entry listener for this map. Listener will get notified for map events filtered with given
         parameters.
 
-        :param include_value: (bool), whether received events include an old value or not (optional).
+        :param include_value: (bool), whether received event should include the value or not (optional).
         :param key: (object), key for filtering the events (optional).
         :param predicate: (Predicate), predicate for filtering the events (optional).
         :param added_func: Function to be called when an entry is added to map (optional).
