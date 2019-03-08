@@ -58,6 +58,8 @@ def decode_response(client_message, to_object=None):
     if not client_message.read_bool():
         parameters['owner_uuid'] = client_message.read_str()
     parameters['serialization_version'] = client_message.read_byte()
+    if client_message.is_complete():
+        return parameters
     parameters['server_hazelcast_version'] = client_message.read_str()
     if not client_message.read_bool():
         client_unregistered_members_size = client_message.read_int()
