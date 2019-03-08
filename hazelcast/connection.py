@@ -78,7 +78,7 @@ class ConnectionManager(object):
             connection.endpoint = parameters["address"]
             self.owner_uuid = parameters["owner_uuid"]
             self.uuid = parameters["uuid"]
-            connection.server_version_str = parameters["server_hazelcast_version"]
+            connection.server_version_str = parameters.get("server_hazelcast_version", "")
             connection.server_version = calculate_version(connection.server_version_str)
             return connection
 
