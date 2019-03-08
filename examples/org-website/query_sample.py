@@ -1,5 +1,4 @@
 import hazelcast
-import logging
 
 from hazelcast import ClientConfig
 from hazelcast.serialization.api import Portable
@@ -42,11 +41,6 @@ def generate_users(users):
 
 
 if __name__ == "__main__":
-    # Configure logging
-    logging.basicConfig(format="%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s",
-                        datefmt="%H:%M%:%S,")
-    logging.getLogger().setLevel(logging.INFO)
-
     config = ClientConfig()
     portable_factory = {User.CLASS_ID: User}
     config.serialization_config.add_portable_factory(User.FACTORY_ID, portable_factory)

@@ -1,11 +1,7 @@
 import hazelcast
-import logging
 import threading
 
 if __name__ == "__main__":
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.INFO)
-
     client = hazelcast.HazelcastClient()
 
     queue = client.get_queue("queue")

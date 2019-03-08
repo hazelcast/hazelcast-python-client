@@ -1,10 +1,6 @@
 import hazelcast
-import logging
 
 if __name__ == "__main__":
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.INFO)
-
     config = hazelcast.ClientConfig()
 
     # Set up group name and password for authentication

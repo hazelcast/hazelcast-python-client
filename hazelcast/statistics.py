@@ -4,7 +4,7 @@ import os
 from hazelcast.protocol.codec import client_statistics_codec
 from hazelcast.util import calculate_version, current_time_in_millis, to_millis, to_nanos, current_time
 from hazelcast.config import ClientProperties
-from hazelcast.core import CLIENT_VERSION, CLIENT_TYPE
+from hazelcast.version import CLIENT_VERSION, CLIENT_TYPE
 from hazelcast import six
 
 try:
@@ -26,10 +26,11 @@ class Statistics(object):
 
     _DEFAULT_PROBE_VALUE = 0
 
-    logger = logging.getLogger("Statistics")
+    logger = logging.getLogger("HazelcastClient.Statistics")
 
     def __init__(self, client):
         self._client = client
+        self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
         self._enabled = client.properties.get_bool(ClientProperties.STATISTICS_ENABLED)
         self._cached_owner_address = None
         self._statistics_timer = None
@@ -48,7 +49,7 @@ class Statistics(object):
                                 "You provided {} as the configuration. Client will use the default value "
                                 "{} instead.".format(ClientProperties.STATISTICS_PERIOD_SECONDS.name,
                                                      period,
-                                                     default_period))
+                                                     default_period), extra=self._logger_extras)
             period = default_period
 
         def _statistics_task():
@@ -57,7 +58,8 @@ class Statistics(object):
 
         self._statistics_timer = self._client.reactor.add_timer(period, _statistics_task)
 
-        self.logger.info("Client statistics enabled with the period of {} seconds.".format(period))
+        self.logger.info("Client statistics enabled with the period of {} seconds.".format(period),
+                         extra=self._logger_extras)
 
     def shutdown(self):
         if self._statistics_timer:
@@ -66,7 +68,8 @@ class Statistics(object):
     def _send_statistics(self):
         owner_connection = self._get_owner_connection()
         if owner_connection is None:
-            self.logger.debug("Cannot send client statistics to the server. No owner connection.")
+            self.logger.debug("Cannot send client statistics to the server. No owner connection.",
+                              extra=self._logger_extras)
             return
 
         stats = []
@@ -182,7 +185,8 @@ class Statistics(object):
             if self._cached_owner_address and self._cached_owner_address != current_owner_address:
                 self.logger.debug("Client statistics cannot be sent to server {} since,"
                                   "connected owner server version is less than the minimum supported server version ,"
-                                  "{}.".format(current_owner_address, Statistics._SINCE_VERSION_STRING))
+                                  "{}.".format(current_owner_address, Statistics._SINCE_VERSION_STRING),
+                                  extra=self._logger_extras)
 
             # cache the last connected server address for decreasing the log prints
             self._cached_owner_address = current_owner_address
@@ -207,11 +211,12 @@ class Statistics(object):
                 stat = func(self, psutil_stats, probe_name, *args)
             except AttributeError as ae:
                 self.logger.debug("Unable to register psutil method used for the probe {}. "
-                                  "Cause: {}".format(probe_name, ae))
+                                  "Cause: {}".format(probe_name, ae), extra=self._logger_extras)
                 self._failed_gauges.add(probe_name)
                 return
             except Exception as ex:
-                self.logger.warning("Failed to access the probe {}. Cause: {}".format(probe_name, ex))
+                self.logger.warning("Failed to access the probe {}. Cause: {}".format(probe_name, ex),
+                                    extra=self._logger_extras)
                 stat = self._DEFAULT_PROBE_VALUE
 
             psutil_stats[probe_name] = stat

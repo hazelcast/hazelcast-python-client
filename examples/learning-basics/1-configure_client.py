@@ -1,11 +1,6 @@
 import hazelcast
-import logging
 
 if __name__ == "__main__":
-    # Configure logging
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.INFO)
-
     # Create configuration for the client
     config = hazelcast.ClientConfig()
     print("Cluster name: {}".format(config.group_config.name))

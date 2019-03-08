@@ -24,9 +24,10 @@ except ImportError:
 class AsyncoreReactor(object):
     _thread = None
     _is_live = False
-    logger = logging.getLogger("Reactor")
+    logger = logging.getLogger("HazelcastClient.AsyncoreReactor")
 
-    def __init__(self):
+    def __init__(self, logger_extras=None):
+        self._logger_extras = logger_extras
         self._timers = queue.PriorityQueue()
         self._map = {}
 
@@ -37,7 +38,7 @@ class AsyncoreReactor(object):
         self._thread.start()
 
     def _loop(self):
-        self.logger.debug("Starting Reactor Thread")
+        self.logger.debug("Starting Reactor Thread", extra=self._logger_extras)
         Future._threading_locals.is_reactor_thread = True
         while self._is_live:
             try:
@@ -45,13 +46,13 @@ class AsyncoreReactor(object):
                 self._check_timers()
             except select.error as err:
                 # TODO: parse error type to catch only error "9"
-                self.logger.warning("Connection closed by server.")
+                self.logger.warning("Connection closed by server", extra=self._logger_extras)
                 pass
             except:
-                self.logger.exception("Error in Reactor Thread")
+                self.logger.exception("Error in Reactor Thread", extra=self._logger_extras)
                 # TODO: shutdown client
                 return
-        self.logger.debug("Reactor Thread exited. %s" % self._timers.qsize())
+        self.logger.debug("Reactor Thread exited. %s" % self._timers.qsize(), extra=self._logger_extras)
         self._cleanup_all_timers()
 
     def _check_timers(self):
@@ -95,12 +96,12 @@ class AsyncoreReactor(object):
 
     def new_connection(self, address, connect_timeout, socket_options, connection_closed_callback, message_callback,
                        network_config):
-        return AsyncoreConnection(self._map, address, connect_timeout, socket_options, connection_closed_callback,
-                                  message_callback, network_config)
+        return AsyncoreConnection(self._map, address, connect_timeout, socket_options,
+                                  connection_closed_callback, message_callback, network_config, self._logger_extras)
 
     def _cleanup_timer(self, timer):
         try:
-            self.logger.debug("Cancel timer %s" % timer)
+            self.logger.debug("Cancel timer %s" % timer, extra=self._logger_extras)
             self._timers.queue.remove((timer.end, timer))
         except ValueError:
             pass
@@ -117,10 +118,10 @@ class AsyncoreReactor(object):
 class AsyncoreConnection(Connection, asyncore.dispatcher):
     sent_protocol_bytes = False
 
-    def __init__(self, map, address, connect_timeout, socket_options, connection_closed_callback, message_callback,
-                 network_config):
+    def __init__(self, map, address, connect_timeout, socket_options, connection_closed_callback,
+                 message_callback, network_config, logger_extras=None):
         asyncore.dispatcher.__init__(self, map=map)
-        Connection.__init__(self, address, connection_closed_callback, message_callback)
+        Connection.__init__(self, address, connection_closed_callback, message_callback, logger_extras)
 
         self._write_lock = threading.Lock()
         self._write_queue = deque()
@@ -183,7 +184,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
     def handle_connect(self):
         self.start_time_in_seconds = time.time()
-        self.logger.debug("Connected to %s", self._address)
+        self.logger.debug("Connected to %s", self._address, extra=self._logger_extras)
 
     def handle_read(self):
         self._read_buffer.extend(self.recv(BUFFER_SIZE))
@@ -203,17 +204,17 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
                 self._write_queue.appendleft(data[sent:])
 
     def handle_close(self):
-        self.logger.warning("Connection closed by server.")
-        self.close(IOError("Connection closed by server."))
+        self.logger.warning("Connection closed by server", extra=self._logger_extras)
+        self.close(IOError("Connection closed by server"))
 
     def handle_error(self):
         error = sys.exc_info()[1]
         if sys.exc_info()[0] is socket.error:
             if error.errno != errno.EAGAIN and error.errno != errno.EDEADLK:
-                self.logger.exception("Received error")
+                self.logger.exception("Received error", extra=self._logger_extras)
                 self.close(IOError(error))
         else:
-            self.logger.warning("Received unexpected error: " + str(error))
+            self.logger.warning("Received unexpected error: " + str(error), extra=self._logger_extras)
 
     def readable(self):
         return not self._closed and self.sent_protocol_bytes
@@ -225,7 +226,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
                 sent = self.send(data)
                 self.last_write_in_seconds = time.time()
                 if sent < len(data):
-                    self.logger.info("adding to queue")
+                    self.logger.info("Adding to queue", extra=self._logger_extras)
                     self._write_queue.appendleft(data[sent:])
             finally:
                 self._write_lock.release()

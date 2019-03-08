@@ -43,10 +43,11 @@ class TransactionManager(object):
     """
     Manages the execution of client transactions and provides Transaction objects.
     """
-    logger = logging.getLogger("TransactionManager")
+    logger = logging.getLogger("HazelcastClient.TransactionManager")
 
     def __init__(self, client):
         self._client = client
+        self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
 
     def _connect(self):
         for count in range(0, RETRY_COUNT):
@@ -55,8 +56,7 @@ class TransactionManager(object):
                 return self._client.connection_manager.get_or_connect(address).result()
             except (IOError, HazelcastInstanceNotActiveError):
                 self.logger.debug("Could not get a connection for the transaction. Attempt %d of %d", count,
-                                  RETRY_COUNT,
-                                  exc_info=True)
+                                  RETRY_COUNT, exc_info=True, extra=self._logger_extras)
                 if count + 1 == RETRY_COUNT:
                     raise
 
@@ -83,8 +83,8 @@ class Transaction(object):
     id = None
     start_time = None
     _locals = threading.local()
-    logger = logging.getLogger("Transaction")
     thread_id = None
+    logger = logging.getLogger("HazelcastClient.Transaction")
 
     def __init__(self, client, connection, timeout, durability, transaction_type):
         self.connection = connection

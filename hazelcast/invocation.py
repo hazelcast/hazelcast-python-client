@@ -66,10 +66,11 @@ class ListenerInvocation(Invocation):
 
 
 class ListenerService(object):
-    logger = logging.getLogger("ListenerService")
+    logger = logging.getLogger("HazelcastClient.ListenerService")
 
     def __init__(self, client):
         self._client = client
+        self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
         self.registrations = {}
         self.invocation_timeout = self._init_invocation_timeout()
         pass
@@ -109,12 +110,14 @@ class ListenerService(object):
             if f.is_success():
                 new_id = new_invocation.response_decoder(f.result())
                 self.logger.debug("Re-registered listener with id %s and new_id %s for request %s",
-                                  registration_id, new_id, new_invocation.request)
+                                  registration_id, new_id, new_invocation.request, extra=self._logger_extras)
                 self.registrations[registration_id] = (new_id, new_invocation.request.get_correlation_id())
             else:
-                logging.warning("Re-registration for listener with id %s failed.", registration_id, exc_info=True)
+                self.logger.warning("Re-registration for listener with id %s failed.", registration_id, exc_info=True,
+                                    extra=self._logger_extras)
 
-        self.logger.debug("Re-registering listener %s for request %s", registration_id, new_invocation.request)
+        self.logger.debug("Re-registering listener %s for request %s", registration_id, new_invocation.request,
+                          extra=self._logger_extras)
         self._client.invoker.invoke(new_invocation).add_done_callback(callback)
 
     def _init_invocation_timeout(self):
@@ -124,13 +127,14 @@ class ListenerService(object):
 
 
 class InvocationService(object):
-    logger = logging.getLogger("InvocationService")
+    logger = logging.getLogger("HazelcastClient.InvocationService")
 
     def __init__(self, client):
         self._pending = {}
         self._event_handlers = {}
         self._next_correlation_id = AtomicInteger(1)
         self._client = client
+        self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
         self._event_queue = queue.Queue()
         self._is_redo_operation = client.config.network_config.redo_operation
         self._invocation_retry_pause = self._init_invocation_retry_pause()
@@ -241,7 +245,7 @@ class InvocationService(object):
         if isinstance(invocation, ListenerInvocation):
             self._event_handlers[correlation_id] = invocation
 
-        self.logger.debug("Sending %s to %s", message, connection)
+        self.logger.debug("Sending %s to %s", message, connection, extra=self._logger_extras)
 
         if not ignore_heartbeat and not connection.heartbeating:
             self._handle_exception(invocation, TargetDisconnectedError("%s has stopped heart beating." % connection))
@@ -257,13 +261,14 @@ class InvocationService(object):
         correlation_id = message.get_correlation_id()
         if message.has_flags(LISTENER_FLAG):
             if correlation_id not in self._event_handlers:
-                self.logger.warning("Got event message with unknown correlation id: %s", message)
+                self.logger.warning("Got event message with unknown correlation id: %s", message,
+                                    extra=self._logger_extras)
                 return
             invocation = self._event_handlers[correlation_id]
             self._handle_event(invocation, message)
             return
         if correlation_id not in self._pending:
-            self.logger.warning("Got message with unknown correlation id: %s", message)
+            self.logger.warning("Got message with unknown correlation id: %s", message, extra=self._logger_extras)
             return
         invocation = self._pending.pop(correlation_id)
 
@@ -277,14 +282,15 @@ class InvocationService(object):
         try:
             invocation.event_handler(message)
         except:
-            self.logger.warning("Error handling event %s", message, exc_info=True)
+            self.logger.warning("Error handling event %s", message, exc_info=True, extra=self._logger_extras)
 
     def _handle_exception(self, invocation, error, traceback=None):
         if not self._client.lifecycle.is_live:
             invocation.set_exception(HazelcastClientNotActiveException(error.args[0]), traceback)
             return
         if self.logger.isEnabledFor(logging.DEBUG):
-            self.logger.debug("Got exception for request %s: %s: %s", invocation.request, type(error).__name__, error)
+            self.logger.debug("Got exception for request %s: %s: %s", invocation.request, type(error).__name__, error,
+                              extra=self._logger_extras)
         if isinstance(error, (AuthenticationError, IOError, HazelcastInstanceNotActiveError)):
             if self._try_retry(invocation):
                 return
@@ -304,7 +310,7 @@ class InvocationService(object):
 
         invoke_func = functools.partial(self.invoke, invocation)
         self.logger.debug("Rescheduling request %s to be retried in %s seconds", invocation.request,
-                          self._invocation_retry_pause)
+                          self._invocation_retry_pause, extra=self._logger_extras)
         self._client.reactor.add_timer(self._invocation_retry_pause, invoke_func)
         return True
 

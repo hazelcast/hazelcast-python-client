@@ -1,5 +1,3 @@
-import logging
-
 from hazelcast.exception import HazelcastSerializationError
 from hazelcast.serialization.base import BaseSerializationService
 from hazelcast.serialization.portable.classdef import FieldType
@@ -18,8 +16,6 @@ def default_partition_strategy(key):
 
 
 class SerializationServiceV1(BaseSerializationService):
-    logger = logging.getLogger("SerializationService")
-
     def __init__(self, serialization_config, version=1, global_partition_strategy=default_partition_strategy,
                  output_buffer_size=DEFAULT_OUT_BUFFER_SIZE):
         super(SerializationServiceV1, self).__init__(version, global_partition_strategy, output_buffer_size,

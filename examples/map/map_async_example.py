@@ -1,5 +1,4 @@
 import hazelcast
-import logging
 import random
 import time
 
@@ -10,9 +9,6 @@ def fill_map(hz_map, count=10):
 
 
 if __name__ == "__main__":
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.INFO)
-
     client = hazelcast.HazelcastClient()
 
     my_map = client.get_map("async-map")

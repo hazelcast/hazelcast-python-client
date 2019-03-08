@@ -1,5 +1,4 @@
 import hazelcast
-import logging
 
 
 def on_state_change(state):
@@ -7,9 +6,6 @@ def on_state_change(state):
 
 
 if __name__ == "__main__":
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.INFO)
-
     config = hazelcast.ClientConfig()
     config.add_lifecycle_listener(on_state_change)
 

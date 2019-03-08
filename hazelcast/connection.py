@@ -1,18 +1,16 @@
-from __future__ import with_statement
-
 import logging
 import struct
 import sys
 import threading
 import time
 
-from hazelcast.core import CLIENT_TYPE, CLIENT_VERSION, SERIALIZATION_VERSION
 from hazelcast.exception import AuthenticationError
 from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
 from hazelcast.protocol.client_message import BEGIN_END_FLAG, ClientMessage, ClientMessageBuilder
 from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
 from hazelcast.serialization import INT_SIZE_IN_BYTES, FMT_LE_INT
 from hazelcast.util import AtomicInteger, parse_addresses, calculate_version
+from hazelcast.version import CLIENT_TYPE, CLIENT_VERSION, SERIALIZATION_VERSION
 from hazelcast import six
 
 BUFFER_SIZE = 8192
@@ -23,7 +21,7 @@ class ConnectionManager(object):
     """
     ConnectionManager is responsible for managing :mod:`Connection` objects.
     """
-    logger = logging.getLogger("ConnectionManager")
+    logger = logging.getLogger("HazelcastClient.ConnectionManager")
 
     def __init__(self, client, new_connection_func, address_translator):
         self._new_connection_mutex = threading.RLock()
@@ -35,6 +33,7 @@ class ConnectionManager(object):
         self._new_connection_func = new_connection_func
         self._connection_listeners = []
         self._address_translator = address_translator
+        self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
 
     def add_listener(self, on_connection_opened=None, on_connection_closed=None):
         """
@@ -131,7 +130,7 @@ class ConnectionManager(object):
         :return: Result of authentication.
         """
         if f.is_success():
-            self.logger.info("Authenticated with %s", f.result())
+            self.logger.info("Authenticated with %s", f.result(), extra=self._logger_extras)
             with self._new_connection_mutex:
                 self.connections[connection.endpoint] = f.result()
                 try:
@@ -143,7 +142,7 @@ class ConnectionManager(object):
                     on_connection_opened(f.result())
             return f.result()
         else:
-            self.logger.debug("Error opening %s", connection)
+            self.logger.debug("Error opening %s", connection, extra=self._logger_extras)
             with self._new_connection_mutex:
                 try:
                     self._pending_connections.pop(address)
@@ -177,7 +176,7 @@ class ConnectionManager(object):
             connection = self.connections[address]
             connection.close(cause)
         except KeyError:
-            logging.warning("No connection with %s was found to close.", address)
+            self.logger.warning("No connection with %s was found to close.", address, extra=self._logger_extras)
             return False
 
 
@@ -185,12 +184,13 @@ class Heartbeat(object):
     """
     HeartBeat Service.
     """
-    logger = logging.getLogger("ConnectionManager")
     _heartbeat_timer = None
+    logger = logging.getLogger("HazelcastClient.HeartbeatService")
 
     def __init__(self, client):
         self._client = client
         self._listeners = []
+        self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
 
         self._heartbeat_timeout = client.properties.get_seconds_positive_or_default(client.properties.HEARTBEAT_TIMEOUT)
         self._heartbeat_interval = client.properties.get_seconds_positive_or_default(client.properties.HEARTBEAT_INTERVAL)
@@ -231,7 +231,8 @@ class Heartbeat(object):
             if time_since_last_read > self._heartbeat_timeout:
                 if connection.heartbeating:
                     self.logger.warning(
-                        "Heartbeat: Did not hear back after %ss from %s" % (time_since_last_read, connection))
+                        "Heartbeat: Did not hear back after %ss from %s" % (time_since_last_read, connection),
+                        extra=self._logger_extras)
                     self._on_heartbeat_stopped(connection)
             else:
                 if not connection.heartbeating:
@@ -242,7 +243,7 @@ class Heartbeat(object):
                 self._client.invoker.invoke_on_connection(request, connection, ignore_heartbeat=True)
 
     def _on_heartbeat_restored(self, connection):
-        self.logger.info("Heartbeat: Heartbeat restored for connection %s" % connection)
+        self.logger.info("Heartbeat: Heartbeat restored for connection %s" % connection, extra=self._logger_extras)
         connection.heartbeating = True
         for callback, _ in self._listeners:
             if callback:
@@ -265,10 +266,11 @@ class Connection(object):
     is_owner = False
     counter = AtomicInteger()
 
-    def __init__(self, address, connection_closed_callback, message_callback):
+    def __init__(self, address, connection_closed_callback, message_callback, logger_extras=None):
         self._address = (address.host, address.port)
+        self._logger_extras = logger_extras
         self.id = self.counter.get_and_increment()
-        self.logger = logging.getLogger("Connection[%s](%s:%d)" % (self.id, address.host, address.port))
+        self.logger = logging.getLogger("HazelcastClient.Connection[%s](%s:%d)" % (self.id, address.host, address.port))
         self._connection_closed_callback = connection_closed_callback
         self._builder = ClientMessageBuilder(message_callback)
         self._read_buffer = bytearray()

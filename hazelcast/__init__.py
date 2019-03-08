@@ -1,7 +1,5 @@
 from hazelcast.client import HazelcastClient
 from hazelcast.config import ClientConfig, ClientNetworkConfig, SerializationConfig, GroupConfig, SSLConfig, \
     ClientCloudConfig, FlakeIdGeneratorConfig
-
-# version info determines release version
-__version_info__ = (3, 10)
-__version__ = '.'.join(map(str, __version_info__))
+from hazelcast.version import CLIENT_VERSION_INFO as __version_info__
+from hazelcast.version import CLIENT_VERSION as __version__

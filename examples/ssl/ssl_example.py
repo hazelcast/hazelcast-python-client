@@ -1,13 +1,9 @@
-import logging
 import os
 import hazelcast
 from hazelcast.config import PROTOCOL
 
 # Hazelcast server should be started with SSL enabled to use SSLConfig
 if __name__ == "__main__":
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.INFO)
-
     config = hazelcast.ClientConfig()
 
     # SSL Config

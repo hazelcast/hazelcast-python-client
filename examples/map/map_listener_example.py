@@ -1,5 +1,4 @@
 import hazelcast
-import logging
 
 
 def entry_added(event):
@@ -17,9 +16,6 @@ def entry_updated(event):
 
 
 if __name__ == "__main__":
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.INFO)
-
     client = hazelcast.HazelcastClient()
 
     my_map = client.get_map("listener-map").blocking()

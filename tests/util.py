@@ -1,7 +1,7 @@
 import logging
-from uuid import uuid4
 import os
 
+from uuid import uuid4
 from hazelcast.config import ClientConfig, PROTOCOL
 
 
@@ -81,3 +81,4 @@ def open_connection_to_address(client, address):
     m = client.get_map(random_string()).blocking()
     m.put(key, 0)
     m.destroy()
+

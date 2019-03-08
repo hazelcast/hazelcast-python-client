@@ -1,5 +1,4 @@
 import hazelcast
-import logging
 
 from hazelcast.serialization.api import IdentifiedDataSerializable
 
@@ -23,8 +22,6 @@ class EntryProcessor(IdentifiedDataSerializable):
 
 
 if __name__ == "__main__":
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.INFO)
 
     config = hazelcast.ClientConfig()
     client = hazelcast.HazelcastClient(config)

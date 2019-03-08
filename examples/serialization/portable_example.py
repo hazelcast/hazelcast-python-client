@@ -1,5 +1,4 @@
 import hazelcast
-import logging
 
 from hazelcast.serialization.api import Portable
 
@@ -31,9 +30,6 @@ class Engineer(Portable):
 
 
 if __name__ == "__main__":
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.INFO)
-
     config = hazelcast.ClientConfig()
     factory = {Engineer.CLASS_ID: Engineer}
     config.serialization_config.add_portable_factory(Engineer.FACTORY_ID, factory)

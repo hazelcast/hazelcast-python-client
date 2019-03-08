@@ -5,7 +5,7 @@ from tests.base import HazelcastTestCase
 from hazelcast.statistics import Statistics
 from hazelcast.client import HazelcastClient
 from hazelcast.config import ClientConfig, ClientProperties, NearCacheConfig
-from hazelcast.core import CLIENT_VERSION, CLIENT_TYPE
+from hazelcast.version import CLIENT_VERSION, CLIENT_TYPE
 from tests.hzrc.ttypes import Lang
 from tests.util import random_string, set_attr
 

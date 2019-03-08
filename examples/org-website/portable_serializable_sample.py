@@ -1,5 +1,4 @@
 import hazelcast
-import logging
 
 from hazelcast import ClientConfig
 from hazelcast.serialization.api import Portable
@@ -32,11 +31,6 @@ class Customer(Portable):
 
 
 if __name__ == "__main__":
-    # Configure logging
-    logging.basicConfig(format="%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s",
-                        datefmt="%H:%M%:%S,")
-    logging.getLogger().setLevel(logging.INFO)
-
     config = ClientConfig()
     my_factory = {Customer.CLASS_ID: Customer}
     config.serialization_config.add_portable_factory(Customer.FACTORY_ID, my_factory)
