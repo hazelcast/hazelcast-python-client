@@ -7,7 +7,7 @@ from hazelcast.exception import HazelcastError
 from tests.util import get_ssl_config, configure_logging, get_abs_path, set_attr
 
 
-@set_attr(category=3.8, enterprise=True)
+@set_attr(category=3.08, enterprise=True)
 class MutualAuthenticationTest(HazelcastTestCase):
     current_directory = os.path.dirname(__file__)
     rc = None

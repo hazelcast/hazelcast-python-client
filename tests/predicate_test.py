@@ -247,7 +247,7 @@ class PredicatePortableTest(SingleMemberTestCase):
             self.assertIn(k, map_keys)
 
 
-@set_attr(category=3.8)
+@set_attr(category=3.08)
 class NestedPredicatePortableTest(SingleMemberTestCase):
 
     class Body(Portable):

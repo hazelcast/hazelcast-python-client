@@ -10,7 +10,7 @@ from tests.hzrc.ttypes import Lang
 from tests.util import random_string, set_attr
 
 
-@set_attr(category=3.9)
+@set_attr(category=3.09)
 class StatisticsTest(HazelcastTestCase):
 
     DEFAULT_STATS_PERIOD = 3
