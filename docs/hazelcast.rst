@@ -20,6 +20,8 @@ Hazelcast Python Client
     hazelcast.proxy
     hazelcast.reactor
     hazelcast.serialization
+    hazelcast.statistics
     hazelcast.transaction
     hazelcast.util
+    hazelcast.version
 
