@@ -1,0 +1,364 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>ReplicatedMap &#8212; Hazelcast Python Client 3.11 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="RingBuffer" href="hazelcast.proxy.ringbuffer.html" />
+    <link rel="prev" title="Queue" href="hazelcast.proxy.queue.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.ringbuffer.html" title="RingBuffer"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.queue.html" title="Queue"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.11 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" accesskey="U">Hazelcast Proxies</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.proxy.replicated_map">
+<span id="replicatedmap"></span><h1>ReplicatedMap<a class="headerlink" href="#module-hazelcast.proxy.replicated_map" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="hazelcast.proxy.replicated_map.ReplicatedMap">
+<em class="property">class </em><code class="descname">ReplicatedMap</code><span class="sig-paren">(</span><em>client</em>, <em>service_name</em>, <em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.replicated_map.ReplicatedMap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hazelcast.proxy.base.html#hazelcast.proxy.base.Proxy" title="hazelcast.proxy.base.Proxy"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.proxy.base.Proxy</span></code></a></p>
+<p>A ReplicatedMap is a map-like data structure with weak consistency and values locally stored on every node of the
+cluster.</p>
+<p>Whenever a value is written asynchronously, the new value will be internally distributed to all existing cluster
+members, and eventually every node will have the new value.</p>
+<p>When a new node joins the cluster, the new node initially will request existing values from older nodes and
+replicate them locally.</p>
+<dl class="method">
+<dt id="hazelcast.proxy.replicated_map.ReplicatedMap.add_entry_listener">
+<code class="descname">add_entry_listener</code><span class="sig-paren">(</span><em>key=None</em>, <em>predicate=None</em>, <em>added_func=None</em>, <em>removed_func=None</em>, <em>updated_func=None</em>, <em>evicted_func=None</em>, <em>clear_all_func=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.replicated_map.ReplicatedMap.add_entry_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a continuous entry listener for this map. Listener will get notified for map events filtered with given
+parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>key</strong> – (object), key for filtering the events (optional).</li>
+<li><strong>predicate</strong> – (Predicate), predicate for filtering the events (optional).</li>
+<li><strong>added_func</strong> – Function to be called when an entry is added to map (optional).</li>
+<li><strong>removed_func</strong> – Function to be called when an entry is removed from map (optional).</li>
+<li><strong>updated_func</strong> – Function to be called when an entry is updated (optional).</li>
+<li><strong>evicted_func</strong> – Function to be called when an entry is evicted from map (optional).</li>
+<li><strong>clear_all_func</strong> – Function to be called when entries are cleared from map (optional).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(str), a registration id which is used as a key to remove the listener.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><code class="xref py py-class docutils literal notranslate"><span class="pre">Predicate</span></code> for more info about predicates.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.replicated_map.ReplicatedMap.clear">
+<code class="descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.replicated_map.ReplicatedMap.clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wipes data out of the replicated map.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.replicated_map.ReplicatedMap.contains_key">
+<code class="descname">contains_key</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.replicated_map.ReplicatedMap.contains_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether this map contains an entry with the key.</p>
+<p><strong>Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> – (object), the specified key.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if this map contains an entry for the specified key.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.replicated_map.ReplicatedMap.contains_value">
+<code class="descname">contains_value</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.replicated_map.ReplicatedMap.contains_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether this map contains one or more keys for the specified value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> – (object), the specified value.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if this map contains an entry for the specified value.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.replicated_map.ReplicatedMap.entry_set">
+<code class="descname">entry_set</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.replicated_map.ReplicatedMap.entry_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a List clone of the mappings contained in this map.</p>
+<p><strong>Warning:
+The list is NOT backed by the map, so changes to the map are NOT reflected in the list, and vice-versa.</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(Sequence), the list of key-value tuples in the map.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.replicated_map.ReplicatedMap.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.replicated_map.ReplicatedMap.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the value for the specified key, or None if this map does not contain this key.</p>
+<p><strong>Warning:
+This method uses hashCode and equals of the binary form of the key, not the actual implementations of hashCode
+and equals defined in the key’s class.</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> – (object), the specified key.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(Sequence), the list of the values associated with the specified key.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.replicated_map.ReplicatedMap.is_empty">
+<code class="descname">is_empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.replicated_map.ReplicatedMap.is_empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns <code class="docutils literal notranslate"><span class="pre">true</span></code> if this map contains no key-value mappings.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if this map contains no key-value mappings.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.replicated_map.ReplicatedMap.key_set">
+<code class="descname">key_set</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.replicated_map.ReplicatedMap.key_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the list of keys in the ReplicatedMap.</p>
+<p><strong>Warning:
+The list is NOT backed by the map, so changes to the map are NOT reflected in the list, and vice-versa.</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(Sequence), a list of the clone of the keys.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.replicated_map.ReplicatedMap.put">
+<code class="descname">put</code><span class="sig-paren">(</span><em>key</em>, <em>value</em>, <em>ttl=0</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.replicated_map.ReplicatedMap.put" title="Permalink to this definition">¶</a></dt>
+<dd><p>Associates the specified value with the specified key in this map. If the map previously contained a mapping for
+the key, the old value is replaced by the specified value. If ttl is provided, entry will expire and get evicted
+after the ttl.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>key</strong> – (object), the specified key.</li>
+<li><strong>value</strong> – (object), the value to associate with the key.</li>
+<li><strong>ttl</strong> – (int), maximum time in seconds for this entry to stay, if not provided, the value configured on
+server side configuration will be used(optional).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(object), previous value associated with key or None if there was no mapping for key.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.replicated_map.ReplicatedMap.put_all">
+<code class="descname">put_all</code><span class="sig-paren">(</span><em>map</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.replicated_map.ReplicatedMap.put_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copies all of the mappings from the specified map to this map. No atomicity guarantees are
+given. In the case of a failure, some of the key-value tuples may get written, while others are not.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>map</strong> – (dict), map which includes mappings to be stored in this map.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.replicated_map.ReplicatedMap.remove">
+<code class="descname">remove</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.replicated_map.ReplicatedMap.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the mapping for a key from this map if it is present. The map will not contain a mapping for the
+specified key once the call returns.</p>
+<p><strong>Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> – (object), key of the mapping to be deleted.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(object), the previous value associated with key, or None if there was no mapping for key.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.replicated_map.ReplicatedMap.remove_entry_listener">
+<code class="descname">remove_entry_listener</code><span class="sig-paren">(</span><em>registration_id</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.replicated_map.ReplicatedMap.remove_entry_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the specified entry listener. Returns silently if there is no such listener added before.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>registration_id</strong> – (str), id of registered listener.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if registration is removed, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.replicated_map.ReplicatedMap.size">
+<code class="descname">size</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.replicated_map.ReplicatedMap.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of entries in this multimap.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(int), number of entries in this multimap.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.replicated_map.ReplicatedMap.values">
+<code class="descname">values</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.replicated_map.ReplicatedMap.values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the list of values in the map.</p>
+<p><strong>Warning:
+The returned list is NOT backed by the map, so changes to the map are NOT reflected in the list, and
+vice-versa.</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(Sequence), the list of values in the map.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.queue.html"
+                        title="previous chapter">Queue</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.ringbuffer.html"
+                        title="next chapter">RingBuffer</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.proxy.replicated_map.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.ringbuffer.html" title="RingBuffer"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.queue.html" title="Queue"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.11 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" >Hazelcast Proxies</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Hazelcast Inc..
+    </div>
+  </body>
+</html>
