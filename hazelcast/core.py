@@ -151,11 +151,11 @@ class HazelcastJsonValue(object):
     See `Distributed Query section <https://github.com/hazelcast/hazelcast-python-client#77-distributed-query>`_.
 
     In terms of querying, numbers in JSON strings are treated as either
-    Long or Double in the Java side. Strings, booleans and null
-    are treated as their Java counterparts.
+    Long or Double in the Java side. str, bool and None
+    are treated as String, boolean and null respectively.
 
     HazelcastJsonValue keeps given string as it is. Strings are not
-    checked for being valid. Ill-formatted json strings may cause false
+    checked for being valid. Ill-formatted JSON strings may cause false
     positive or false negative results in queries.
 
     HazelcastJsonValue can also be constructed from JSON serializable objects.

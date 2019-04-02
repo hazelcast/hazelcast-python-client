@@ -174,9 +174,9 @@ class SerializerRegistry(object):
         """
         if type_id <= 0:
             indx = index_for_default_type(type_id)
-            if indx < CONSTANT_SERIALIZERS_LENGTH \
-                    or indx == index_for_default_type(JAVASCRIPT_JSON_SERIALIZATION_TYPE):
-                return self._constant_type_ids.get(indx, None)
+            serializer = self._constant_type_ids.get(indx, None)
+            if serializer is not None:
+                return serializer
         return self._id_dic.get(type_id, None)
 
     def serializer_for(self, obj):

@@ -866,7 +866,7 @@ In order to use JSON serialization, you should use the `HazelcastJsonValue` obje
 
 `HazelcastJsonValue` is a simple wrapper and identifier for the JSON formatted strings. You can get the JSON string from the `HazelcastJsonValue` object using the `to_string()` method. 
 
-You can construct `HazelcastJsonValue` from strings or Python objects. If a Python object is provided to the constructor, `HazelcastJsonValue` tries to convert it
+You can construct `HazelcastJsonValue` from strings or JSON serializable Python objects. If a Python object is provided to the constructor, `HazelcastJsonValue` tries to convert it
 to a JSON string. If an error occurs during the conversion, it is raised directly. If a string argument is provided to the constructor, it is used as it is. 
 
 No JSON parsing is performed but it is your responsibility to provide correctly formatted JSON strings. The client will not validate the string, and it will send it to the cluster as it is. If you submit incorrectly formatted JSON strings and, later, if you query those objects, it is highly possible that you will get formatting errors since the server will fail to deserialize or find the query fields.
@@ -874,7 +874,10 @@ No JSON parsing is performed but it is your responsibility to provide correctly 
 Here is an example of how you can construct a `HazelcastJsonValue` and put to the map:
 
 ```python
+# From JSON string
 json_map.put("item1", HazelcastJsonValue("{\"age\": 4}"))
+
+# # From JSON serializable object
 json_map.put("item2", HazelcastJsonValue({"age": 20}))
 ```
 
