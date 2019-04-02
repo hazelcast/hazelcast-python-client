@@ -2,9 +2,9 @@ import itertools
 import threading
 import time
 import logging
+import hazelcast
 from collections import Sequence, Iterable
 
-from hazelcast.core import Address
 from hazelcast import six
 from hazelcast.six.moves import range
 from hazelcast.version import GIT_COMMIT_ID, GIT_COMMIT_DATE, CLIENT_VERSION
@@ -163,8 +163,8 @@ def enum(**enums):
 def _parse_address(address):
     if ":" in address:
         host, port = address.split(":")
-        return [Address(host, int(port))]
-    return [Address(address, p) for p in range(DEFAULT_PORT, DEFAULT_PORT + 3)]
+        return [hazelcast.core.Address(host, int(port))]
+    return [hazelcast.core.Address(address, p) for p in range(DEFAULT_PORT, DEFAULT_PORT + 3)]
 
 
 def get_possible_addresses(addresses=[], member_list=[]):
