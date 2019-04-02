@@ -4,6 +4,7 @@ import binascii
 from hazelcast.serialization.input import _ObjectDataInput
 from hazelcast import six
 
+
 class InputTestCase(unittest.TestCase):
     def setUp(self):
         self.BOOL_ARR = [False, True, True, True]

@@ -2,11 +2,12 @@ import binascii
 from datetime import datetime
 from time import time
 
+from hazelcast import six
+from hazelcast.core import HazelcastJsonValue
 from hazelcast.serialization.bits import *
 from hazelcast.serialization.api import StreamSerializer
 from hazelcast.serialization.base import HazelcastSerializationError
 from hazelcast.serialization.serialization_const import *
-from hazelcast import six
 from hazelcast.six.moves import range, cPickle
 
 if not six.PY2:
@@ -131,6 +132,17 @@ class StringSerializer(BaseSerializer):
 
     def get_type_id(self):
         return CONSTANT_TYPE_STRING
+
+
+class HazelcastJsonValueSerializer(BaseSerializer):
+    def read(self, inp):
+        return HazelcastJsonValue(inp.read_utf())
+
+    def write(self, out, obj):
+        out.write_utf(obj.to_string())
+
+    def get_type_id(self):
+        return JAVASCRIPT_JSON_SERIALIZATION_TYPE
 
 
 # ARRAY SERIALIZERS

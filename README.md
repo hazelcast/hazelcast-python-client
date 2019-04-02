@@ -24,7 +24,8 @@
   * [4.1. IdentifiedDataSerializable Serialization](#41-identifieddataserializable-serialization)
   * [4.2. Portable Serialization](#42-portable-serialization)
   * [4.3. Custom Serialization](#43-custom-serialization)
-  * [4.4. Global Serialization](#44-global-serialization)
+  * [4.4. JSON Serialization](#44-json-serialization)
+  * [4.5. Global Serialization](#45-global-serialization)
 * [5. Setting Up Client Network](#5-setting-up-client-network)
   * [5.1. Providing Member Addresses](#51-providing-member-addresses)
   * [5.2. Setting Smart Routing](#52-setting-smart-routing)
@@ -75,6 +76,7 @@
       * [7.7.1.1. Employee Map Query Example](#7711-employee-map-query-example)
       * [7.7.1.2. Querying by Combining Predicates with AND, OR, NOT](#7712-querying-by-combining-predicates-with-and-or-not)
       * [7.7.1.3. Querying with SQL](#7713-querying-with-sql)
+      * [7.7.1.4. Querying with JSON Strings](#7714-querying-with-json-strings)
   * [7.8. Performance](#78-performance)
     * [7.8.1. Near Cache](#781-near-cache)
       * [7.8.1.1. Configuring Near Cache](#7811-configuring-near-cache)
@@ -635,6 +637,7 @@ Hazelcast Python client supports the following data structures and features:
 * IdentifiedDataSerializable Serialization
 * Portable Serialization
 * Custom Serialization
+* JSON Serialization
 * Global Serialization
 
 # 3. Configuration Overview
@@ -691,7 +694,7 @@ When Hazelcast Python client serializes an object:
 
 5. If the above check fails, then it looks for a user-specified [Custom Serialization](#43-custom-serialization).
 
-6. If the above check fails, it will use the registered [Global Serialization](#44-global-serialization) if one exists.
+6. If the above check fails, it will use the registered [Global Serialization](#45-global-serialization) if one exists.
 
 7. If the above check fails, then the Python client uses `cPickle` (for Python 2) or `pickle` (for Python 3) by default.
 
@@ -855,7 +858,36 @@ config.serialization_config.set_custom_serializer(Musician, MusicianSerializer)
 
 From now on, Hazelcast will use `MusicianSerializer` to serialize `Musician` objects.
 
-## 4.4. Global Serialization
+## 4.4. JSON Serialization
+
+You can use the JSON formatted strings as objects in Hazelcast cluster. Starting with Hazelcast IMDG 3.12, the JSON serialization is one of the formerly supported serialization methods. Creating JSON objects in the cluster does not require any server side coding and hence you can just send a JSON formatted string object to the cluster and query these objects by fields.
+
+In order to use JSON serialization, you should use the `HazelcastJsonValue` object for the key or value. Here is an example IMap usage:
+
+`HazelcastJsonValue` is a simple wrapper and identifier for the JSON formatted strings. You can get the JSON string from the `HazelcastJsonValue` object using the `to_string()` method. 
+
+You can construct `HazelcastJsonValue` from strings or Python objects. If a Python object is provided to the constructor, `HazelcastJsonValue` tries to convert it
+to a JSON string. If an error occurs during the conversion, it is raised directly. If a string argument is provided to the constructor, it is used as it is. 
+
+No JSON parsing is performed but it is your responsibility to provide correctly formatted JSON strings. The client will not validate the string, and it will send it to the cluster as it is. If you submit incorrectly formatted JSON strings and, later, if you query those objects, it is highly possible that you will get formatting errors since the server will fail to deserialize or find the query fields.
+
+Here is an example of how you can construct a `HazelcastJsonValue` and put to the map:
+
+```python
+json_map.put("item1", HazelcastJsonValue("{\"age\": 4}"))
+json_map.put("item2", HazelcastJsonValue({"age": 20}))
+```
+
+You can query JSON objects in the cluster using the `Predicate`s of your choice. An example JSON query for querying the values whose age is less than 6 is shown below:
+
+```python
+# Get the objects whose age is less than 6
+result = json_map.values(is_less_than_or_equal_to("age", 6))
+print("Retrieved {} values whose age is less than 6.".format(len(result)))
+print("Entry is {}".format(result[0].to_string()))
+```
+
+## 4.5. Global Serialization
 
 The global serializer is identical to custom serializers from the implementation perspective. The global serializer is registered as a fallback serializer to handle all other objects if a serializer cannot be located for them.
 
@@ -2031,6 +2063,66 @@ print(persons[0], persons[1]) # Outputs '28 30'
 ```
 
 In this example, the code creates a list with the values greater than or equal to "27".
+
+#### 7.7.1.4. Querying with JSON Strings
+
+You can query JSON strings stored inside your Hazelcast clusters. To query the JSON string,
+you first need to create a `HazelcastJsonValue` from the JSON string or JSON serializable object.
+You can use ``HazelcastJsonValue``s both as keys and values in the distributed data structures. Then, it is
+possible to query these objects using the Hazelcast query methods explained in this section.
+
+```python
+from hazelcast.core import HazelcastJsonValue
+person1 = "{ \"name\": \"John\", \"age\": 35 }"
+person2 = "{ \"name\": \"Jane\", \"age\": 24 }"
+person3 = {"name": "Trey", "age": 17}
+
+id_person_map = client.get_map("json-values").blocking()
+
+# From JSON string
+id_person_map.put(1, HazelcastJsonValue(person1))
+id_person_map.put(2, HazelcastJsonValue(person2))
+
+# From JSON serializable object
+id_person_map.put(3, HazelcastJsonValue(person3))
+
+people_under_21 = id_person_map.values(is_less_than("age", 21)) 
+```
+
+When running the queries, Hazelcast treats values extracted from the JSON documents as Java types so they
+can be compared with the query attribute. JSON specification defines five primitive types to be used in the JSON
+documents: `number`,`string`, `true`, `false` and `null`. The `string`, `true/false` and `null` types are treated
+as `String`, `boolean` and `null`, respectively. We treat the extracted `number` values as `long`s if they
+can be represented by a `long`. Otherwise, `number`s are treated as `double`s.
+
+It is possible to query nested attributes and arrays in the JSON documents. The query syntax is the same
+as querying other Hazelcast objects using the `Predicate`s.`
+
+
+```python
+# Sample JSON object
+# {
+#     "departmentId": 1,
+#     "room": "alpha",
+#     "people": [
+#         {
+#             "name": "Peter",
+#             "age": 26,
+#             "salary": 50000
+#         },
+#         {
+#             "name": "Jonah",
+#             "age": 50,
+#             "salary": 140000
+#         }
+#     ]
+# }
+# The following query finds all the departments that have a person named "Peter" working in them.
+
+department_with_peter = departments.values(is_equal_to("people[any].name", "Peter"))
+```
+
+`HazelcastJsonValue` is a lightweight wrapper around your JSON strings. It is used merely as a way to indicate that the contained string should be treated as a valid JSON value. Hazelcast does not check the validity of JSON strings put into to the maps. Putting an invalid JSON string into a map is permissible. However, in that case whether such an entry is going to be returned or not from a query is not defined.
 
 ## 7.8. Performance
 
