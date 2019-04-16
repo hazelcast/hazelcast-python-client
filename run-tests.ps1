@@ -68,6 +68,6 @@ Write-Host Wait for Hazelcast to start ...
 Start-Sleep -s 15
 
 Write-Host Running tests ...
-python -m nose -v --with-xunit --cover-xml --cover-package=hazelcast --cover-inclusive --nologcapture
+python -m nose -v --with-xunit --cover-xml --cover-package=hazelcast --cover-inclusive --nologcapture -A "not faketime"
 
 Stop-Process -Force -Id $remoteControllerApp.Id

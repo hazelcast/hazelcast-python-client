@@ -40,6 +40,7 @@ class SSLTest(HazelcastTestCase):
         self.assertTrue(client.lifecycle.is_live)
         client.shutdown()
 
+    @set_attr(faketime=True)
     def test_ssl_enabled_trust_default_certificates(self):
         # Member started with Let's Encrypt certificate
         cluster = self.create_cluster(self.rc, self.configure_cluster(self.default_ca_xml))

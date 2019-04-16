@@ -98,8 +98,17 @@ java -Dhazelcast.enterprise.license.key=${HAZELCAST_ENTERPRISE_KEY} -cp ${CLASSP
 
 sleep 15
 
-if [ "$USER" = "--user" ] ; then
-    faketime "2019-04-02 08:42:15" ~/.local/bin/nosetests -v --with-xunit --with-coverage --cover-xml --cover-package=hazelcast --cover-inclusive --nologcapture
+
+if [ "$2" = "--faketime" ] ; then
+    if [ "$USER" = "--user" ] ; then
+        faketime "2019-04-02 08:42:15" ~/.local/bin/nosetests -v --with-xunit --with-coverage --cover-xml --cover-package=hazelcast --cover-inclusive --nologcapture
+    else
+        faketime "2019-04-02 08:42:15" nosetests -v --with-xunit --with-coverage --cover-xml --cover-package=hazelcast --cover-inclusive --nologcapture
+    fi
 else
-    faketime "2019-04-02 08:42:15" nosetests -v --with-xunit --with-coverage --cover-xml --cover-package=hazelcast --cover-inclusive --nologcapture
+    if [ "$USER" = "--user" ] ; then
+        ~/.local/bin/nosetests -v --with-xunit --with-coverage --cover-xml --cover-package=hazelcast --cover-inclusive --nologcapture -A "not faketime"
+    else
+        nosetests -v --with-xunit --with-coverage --cover-xml --cover-package=hazelcast --cover-inclusive --nologcapture -A "not faketime"
+    fi
 fi
