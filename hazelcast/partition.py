@@ -47,13 +47,11 @@ class PartitionService(object):
 
     def get_partition_owner(self, partition_id):
         """
-        Gets the owner of the partition if it's set. Otherwise it will trigger partition assignment.
+        Gets the owner of the partition if it's set.
 
         :param partition_id: (int), the partition id.
         :return: (:class:`~hazelcast.core.Address`), owner of partition or ``None`` if it's not set yet.
         """
-        if partition_id not in self.partitions:
-            self._do_refresh()
         return self.partitions.get(partition_id, None)
 
     def get_partition_id(self, key):
