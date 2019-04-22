@@ -1,4 +1,8 @@
 """Hazelcast Core objects"""
+import json
+
+from hazelcast import six
+from hazelcast import util
 
 
 class Member(object):
@@ -134,3 +138,52 @@ class MemberSelector(object):
 class DataMemberSelector(MemberSelector):
     def select(self, member):
         return not member.is_lite_member
+
+
+class HazelcastJsonValue(object):
+    """
+    HazelcastJsonValue is a wrapper for JSON formatted strings. It is preferred
+    to store HazelcastJsonValue instead of Strings for JSON formatted strings.
+    Users can run predicates and use indexes on the attributes of the underlying
+    JSON strings.
+
+    HazelcastJsonValue is queried using Hazelcast's querying language.
+    See `Distributed Query section <https://github.com/hazelcast/hazelcast-python-client#77-distributed-query>`_.
+
+    In terms of querying, numbers in JSON strings are treated as either
+    Long or Double in the Java side. str, bool and None
+    are treated as String, boolean and null respectively.
+
+    HazelcastJsonValue keeps given string as it is. Strings are not
+    checked for being valid. Ill-formatted JSON strings may cause false
+    positive or false negative results in queries.
+
+    HazelcastJsonValue can also be constructed from JSON serializable objects.
+    In that case, objects are converted to JSON strings and stored as such.
+    If an error occurs during the conversion, it is raised directly.
+
+    None values are not allowed.
+    """
+    def __init__(self, value):
+        util.check_not_none(value, "JSON string or the object cannot be None.")
+        if isinstance(value, six.string_types):
+            self._json_string = value
+        else:
+            self._json_string = json.dumps(value)
+
+    def to_string(self):
+        """
+        Returns unaltered string that was used to create this object.
+
+        :return: (str), original string
+        """
+        return self._json_string
+
+    def loads(self):
+        """
+        Deserializes the string that was used to create this object
+        and returns as Python object.
+
+        :return: (object), Python object represented by the original string
+        """
+        return json.loads(self._json_string)

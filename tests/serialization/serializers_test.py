@@ -1,13 +1,13 @@
 import binascii
+
 from hazelcast import six
-
-from tests.hzrc.ttypes import Lang
-
+from hazelcast.core import HazelcastJsonValue
 from hazelcast.config import SerializationConfig, INTEGER_TYPE
 from hazelcast.serialization.data import Data
 from hazelcast.serialization.serialization_const import CONSTANT_TYPE_DOUBLE
 from hazelcast.serialization.service import SerializationServiceV1
 from tests.base import SingleMemberTestCase
+from tests.hzrc.ttypes import Lang
 
 
 class SerializersTestCase(SingleMemberTestCase):
@@ -77,6 +77,12 @@ result=instance_0.getSerializationService().toBytes(cal.getTime())
         self.assertEqual(hour, val.hour)
         self.assertEqual(minute, val.minute)
         self.assertEqual(second, val.second)
+
+    def test_hazelcast_json_vale(self):
+        json_value = HazelcastJsonValue('{"key": "value"}')
+        json_data = self.service.to_data(json_value)
+        json_deserialized = self.service.to_object(json_data)
+        self.assertEqual(json_value.to_string(), json_deserialized.to_string())
 
     def test_big_int_small(self):
         self._big_int_test(12)

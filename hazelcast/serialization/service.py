@@ -71,6 +71,7 @@ class SerializationServiceV1(BaseSerializationService):
         self._registry.register_constant_serializer(JavaEnumSerializer())
         self._registry.register_constant_serializer(ArrayListSerializer(), list)
         self._registry.register_constant_serializer(LinkedListSerializer())
+        self._registry.register_constant_serializer(HazelcastJsonValueSerializer(), HazelcastJsonValue)
 
         self._registry.safe_register_serializer(self._registry._python_serializer)
 

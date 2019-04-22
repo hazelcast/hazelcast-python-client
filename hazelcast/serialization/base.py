@@ -9,7 +9,6 @@ from hazelcast.serialization.input import _ObjectDataInput
 from hazelcast.serialization.output import _ObjectDataOutput
 from hazelcast.serialization.serializer import *
 from hazelcast import six
-from hazelcast.six.moves import range
 
 
 def empty_partitioning_strategy(key):
@@ -158,7 +157,7 @@ class SerializerRegistry(object):
         self._null_serializer = NoneSerializer()
         self._python_serializer = PythonObjectSerializer()
 
-        self._constant_type_ids = [None for _ in range(0, CONSTANT_SERIALIZERS_LENGTH)]  # array of serializer
+        self._constant_type_ids = {}  # dict of id:serializer
         self._constant_type_dict = {}  # dict of class:serializer
 
         self._id_dic = {}  # dict of type_id:serializer
@@ -175,8 +174,9 @@ class SerializerRegistry(object):
         """
         if type_id <= 0:
             indx = index_for_default_type(type_id)
-            if indx < CONSTANT_SERIALIZERS_LENGTH:
-                return self._constant_type_ids[indx]
+            serializer = self._constant_type_ids.get(indx, None)
+            if serializer is not None:
+                return serializer
         return self._id_dic.get(type_id, None)
 
     def serializer_for(self, obj):
