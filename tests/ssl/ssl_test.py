@@ -41,6 +41,8 @@ class SSLTest(HazelcastTestCase):
         client.shutdown()
 
     def test_ssl_enabled_trust_default_certificates(self):
+        self.skipTest("Ignore Let's Encrypt test until a solution is found for the expired certificate")
+
         # Member started with Let's Encrypt certificate
         cluster = self.create_cluster(self.rc, self.configure_cluster(self.default_ca_xml))
         cluster.start_member()

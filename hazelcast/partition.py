@@ -108,9 +108,11 @@ class PartitionService(object):
 
     def process_partition_response(self, message):
         partitions = client_get_partitions_codec.decode_response(message)["partitions"]
+        partitions_dict = {}
         for addr, partition_list in six.iteritems(partitions):
             for partition in partition_list:
-                self.partitions[partition] = addr
+                partitions_dict[partition] = addr
+        self.partitions.update(partitions_dict)
         self.logger.debug("Finished updating partitions", extra=self._logger_extras)
 
 

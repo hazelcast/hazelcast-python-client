@@ -168,7 +168,14 @@ class InvocationService(object):
             self._send(invocation, invocation.connection, ignore_heartbeat)
         elif invocation.has_partition_id():
             addr = self._client.partition_service.get_partition_owner(invocation.partition_id)
-            self._send_to_address(invocation, addr)
+            if addr is None:
+                self._handle_exception(invocation, IOError("Partition does not have an owner. "
+                                                           "partition Id: ".format(invocation.partition_id)))
+            elif not self._is_member(addr):
+                self._handle_exception(invocation, TargetNotMemberError("Partition owner '{}' "
+                                                                        "is not a member.".format(addr)))
+            else:
+                self._send_to_address(invocation, addr)
         elif invocation.has_address():
             if not self._is_member(invocation.address):
                 self._handle_exception(invocation, TargetNotMemberError("Target '{}' is not a member.".format(invocation.address)))
@@ -176,7 +183,10 @@ class InvocationService(object):
                 self._send_to_address(invocation, invocation.address)
         else:  # send to random address
             addr = self._client.load_balancer.next_address()
-            self._send_to_address(invocation, addr)
+            if addr is None:
+                self._handle_exception(invocation, IOError("No address found to invoke"))
+            else:
+                self._send_to_address(invocation, addr)
         return invocation.future
 
     def invoke_non_smart(self, invocation, ignore_heartbeat=False):
