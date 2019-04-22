@@ -183,7 +183,10 @@ class InvocationService(object):
                 self._send_to_address(invocation, invocation.address)
         else:  # send to random address
             addr = self._client.load_balancer.next_address()
-            self._send_to_address(invocation, addr)
+            if addr is None:
+                self._handle_exception(invocation, IOError("No address found to invoke"))
+            else:
+                self._send_to_address(invocation, addr)
         return invocation.future
 
     def invoke_non_smart(self, invocation, ignore_heartbeat=False):
