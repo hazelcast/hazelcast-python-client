@@ -18,6 +18,11 @@ class VersionTest(TestCase):
         self.assertEqual(commit_id, info.get("commit_id"))
         self.assertEqual(commit_date, info.get("commit_date"))
 
+        try:
+            os.remove(os.path.join(here, "git_info.json"))
+        except:
+            pass
+
     def test_git_info_provider(self):
         info_provider = GitInfoProvider()
 
