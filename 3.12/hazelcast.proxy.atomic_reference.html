@@ -1,0 +1,308 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>AtomicReference &#8212; Hazelcast Python Client 3.12 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Base" href="hazelcast.proxy.base.html" />
+    <link rel="prev" title="AtomicLong" href="hazelcast.proxy.atomic_long.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.base.html" title="Base"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.atomic_long.html" title="AtomicLong"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" accesskey="U">Hazelcast Proxies</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.proxy.atomic_reference">
+<span id="atomicreference"></span><h1>AtomicReference<a class="headerlink" href="#module-hazelcast.proxy.atomic_reference" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="hazelcast.proxy.atomic_reference.AtomicReference">
+<em class="property">class </em><code class="descname">AtomicReference</code><span class="sig-paren">(</span><em>client</em>, <em>service_name</em>, <em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_reference.AtomicReference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hazelcast.proxy.base.html#hazelcast.proxy.base.PartitionSpecificProxy" title="hazelcast.proxy.base.PartitionSpecificProxy"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.proxy.base.PartitionSpecificProxy</span></code></a></p>
+<p>AtomicReference is a atomically updated reference to an object.</p>
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_reference.AtomicReference.alter">
+<code class="descname">alter</code><span class="sig-paren">(</span><em>function</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_reference.AtomicReference.alter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alters the currently stored reference by applying a function on it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>function</strong> – (Function), A stateful serializable object which represents the Function defined on
+server side.
+This object must have a serializable Function counter part registered on server side with the actual
+<code class="docutils literal notranslate"><span class="pre">org.hazelcast.core.IFunction</span></code> implementation.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_reference.AtomicReference.apply">
+<code class="descname">apply</code><span class="sig-paren">(</span><em>function</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_reference.AtomicReference.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies a function on the value, the actual stored value will not change.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>function</strong> – (Function), A stateful serializable object which represents the Function defined on
+server side.
+This object must have a serializable Function counter part registered on server side with the actual
+<code class="docutils literal notranslate"><span class="pre">org.hazelcast.core.IFunction</span></code> implementation.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(object), the result of the function application.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_reference.AtomicReference.alter_and_get">
+<code class="descname">alter_and_get</code><span class="sig-paren">(</span><em>function</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_reference.AtomicReference.alter_and_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alters the currently stored reference by applying a function on it and gets the result.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>function</strong> – (Function), A stateful serializable object which represents the Function defined on
+server side.
+This object must have a serializable Function counter part registered on server side with the actual
+<code class="docutils literal notranslate"><span class="pre">org.hazelcast.core.IFunction</span></code> implementation.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(object), the new value, the result of the applied function.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_reference.AtomicReference.compare_and_set">
+<code class="descname">compare_and_set</code><span class="sig-paren">(</span><em>expected</em>, <em>updated</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_reference.AtomicReference.compare_and_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Atomically sets the value to the given updated value only if the current value == the expected value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>expected</strong> – (object), the expected value.</li>
+<li><strong>updated</strong> – (object), the new value.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if successful; or <code class="docutils literal notranslate"><span class="pre">false</span></code> if the actual value was not equal to the expected value.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_reference.AtomicReference.clear">
+<code class="descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_reference.AtomicReference.clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the current stored reference.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_reference.AtomicReference.contains">
+<code class="descname">contains</code><span class="sig-paren">(</span><em>expected</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_reference.AtomicReference.contains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the reference contains the value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>expected</strong> – (object), the value to check (is allowed to be <code class="docutils literal notranslate"><span class="pre">None</span></code>).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if the value is found, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_reference.AtomicReference.get">
+<code class="descname">get</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_reference.AtomicReference.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the current value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(object), the current value.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_reference.AtomicReference.get_and_alter">
+<code class="descname">get_and_alter</code><span class="sig-paren">(</span><em>function</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_reference.AtomicReference.get_and_alter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alters the currently stored reference by applying a function on it on and gets the old value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>function</strong> – (Function), A stateful serializable object which represents the Function defined on
+server side.
+This object must have a serializable Function counter part registered on server side with the actual
+<code class="docutils literal notranslate"><span class="pre">org.hazelcast.core.IFunction</span></code> implementation.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(object), the old value, the value before the function is applied.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_reference.AtomicReference.get_and_set">
+<code class="descname">get_and_set</code><span class="sig-paren">(</span><em>new_value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_reference.AtomicReference.get_and_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the old value and sets the new value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>new_value</strong> – (object), the new value.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(object), the old value.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_reference.AtomicReference.is_null">
+<code class="descname">is_null</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_reference.AtomicReference.is_null" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the stored reference is null.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if null, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_reference.AtomicReference.set">
+<code class="descname">set</code><span class="sig-paren">(</span><em>new_value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_reference.AtomicReference.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Atomically sets the given value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>new_value</strong> – (object), the new value.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_reference.AtomicReference.set_and_get">
+<code class="descname">set_and_get</code><span class="sig-paren">(</span><em>new_value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_reference.AtomicReference.set_and_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets and gets the value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>new_value</strong> – (object), the new value.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(object), the new value.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.atomic_long.html"
+                        title="previous chapter">AtomicLong</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.base.html"
+                        title="next chapter">Base</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.proxy.atomic_reference.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.base.html" title="Base"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.atomic_long.html" title="AtomicLong"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" >Hazelcast Proxies</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Hazelcast Inc..
+    </div>
+  </body>
+</html>
