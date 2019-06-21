@@ -111,7 +111,7 @@ class _ObjectDataInput(ObjectDataInput):
         result = bytearray(length)
         if length > 0:
             self.read_into(result, 0, length)
-        return [x for x in result]
+        return list(result)
 
     def read_boolean_array(self):
         return self._read_array_fnc(self.read_boolean)
