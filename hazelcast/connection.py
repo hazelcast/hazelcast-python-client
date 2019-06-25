@@ -13,7 +13,7 @@ from hazelcast.util import AtomicInteger, parse_addresses, calculate_version
 from hazelcast.version import CLIENT_TYPE, CLIENT_VERSION, SERIALIZATION_VERSION
 from hazelcast import six
 
-BUFFER_SIZE = 8192
+BUFFER_SIZE = 128000
 PROTOCOL_VERSION = 1
 
 
