@@ -5,6 +5,7 @@ from hazelcast.serialization.portable.context import PortableContext
 from hazelcast.serialization.portable.serializer import PortableSerializer
 from hazelcast.serialization.serializer import *
 from hazelcast import six
+from hazelcast.config import ClientProperties
 
 DEFAULT_OUT_BUFFER_SIZE = 4 * 1024
 
@@ -16,7 +17,8 @@ def default_partition_strategy(key):
 
 
 class SerializationServiceV1(BaseSerializationService):
-    def __init__(self, serialization_config, version=1, global_partition_strategy=default_partition_strategy,
+
+    def __init__(self, serialization_config, properties=ClientProperties({}), version=1, global_partition_strategy=default_partition_strategy,
                  output_buffer_size=DEFAULT_OUT_BUFFER_SIZE):
         super(SerializationServiceV1, self).__init__(version, global_partition_strategy, output_buffer_size,
                                                      serialization_config.is_big_endian,
@@ -39,6 +41,8 @@ class SerializationServiceV1(BaseSerializationService):
         global_serializer = serialization_config.global_serializer
         if global_serializer:
             self._registry._global_serializer = global_serializer()
+
+        self.properties = properties
 
     def _register_constant_serializers(self):
         self._registry.register_constant_serializer(self._registry._null_serializer, type(None))

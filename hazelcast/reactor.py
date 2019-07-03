@@ -42,7 +42,7 @@ class AsyncoreReactor(object):
         Future._threading_locals.is_reactor_thread = True
         while self._is_live:
             try:
-                asyncore.loop(count=1, timeout=0.1, map=self._map)
+                asyncore.loop(count=1, timeout=0.01, map=self._map)
                 self._check_timers()
             except select.error as err:
                 # TODO: parse error type to catch only error "9"
@@ -117,6 +117,7 @@ class AsyncoreReactor(object):
 
 class AsyncoreConnection(Connection, asyncore.dispatcher):
     sent_protocol_bytes = False
+    read_buffer_size = BUFFER_SIZE
 
     def __init__(self, map, address, connect_timeout, socket_options, connection_closed_callback,
                  message_callback, network_config, logger_extras=None):
@@ -135,6 +136,9 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, BUFFER_SIZE)
 
         for socket_option in socket_options:
+            if socket_option.option is socket.SO_RCVBUF:
+                self.read_buffer_size = socket_option.value
+
             self.socket.setsockopt(socket_option.level, socket_option.option, socket_option.value)
 
         self.connect(self._address)
@@ -187,7 +191,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         self.logger.debug("Connected to %s", self._address, extra=self._logger_extras)
 
     def handle_read(self):
-        self._read_buffer.extend(self.recv(BUFFER_SIZE))
+        self._read_buffer.extend(self.recv(self.read_buffer_size))
         self.last_read_in_seconds = time.time()
         self.receive_message()
 
