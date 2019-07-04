@@ -766,9 +766,11 @@ As an alternative to the existing serialization methods, Hazelcast offers portab
 
 In order to support these features, a serialized `Portable` object contains meta information like the version and concrete location of the each field in the binary data. This way Hazelcast is able to navigate in the binary data and deserialize only the required field without actually deserializing the whole object which improves the query performance.
 
-With multiversion support, you can have two members where each of them having different versions of the same object, and Hazelcast will store both meta information and use the correct one to serialize and deserialize portable objects depending on the member. This is very helpful when you are doing a rolling upgrade without shutting down the cluster.
+With multiversion support, you can have two members that each have different versions of the same object, and Hazelcast will store both meta information and use the correct one to serialize and deserialize portable objects depending on the member. This is very helpful when you are doing a rolling upgrade without shutting down the cluster.
 
 Also note that portable serialization is totally language independent and is used as the binary protocol between Hazelcast server and clients.
+
+### 4.2.1 - Portable Serialization Example Code
 
 A sample portable implementation of a `Foo` class looks like the following:
 
@@ -776,14 +778,18 @@ A sample portable implementation of a `Foo` class looks like the following:
 from hazelcast.serialization.api import Portable
 
 class Foo(Portable):
+
+    CLASS_ID = 1
+    FACTORY_ID = 1
+    
     def __init__(self, foo=None):
         self.foo = foo
         
     def get_class_id(self):
-        return 1
+        return CLASS_ID
         
     def get_factory_id(self):
-        return 1
+        return FACTORY_ID
         
     def write_portable(self, writer):
         writer.write_utf("foo", self.foo)
@@ -795,6 +801,8 @@ class Foo(Portable):
 > Note: For Portable to work in Python client, the class that inherits it should have default valued parameters in its `__init__` method so that an instance of that class can be created without passing any arguments to it.  
 
 Similar to `IdentifiedDataSerializable`, a `Portable` class must provide the `get_class_id()` and `get_factory_id()` methods. The factory dictionary will be used to create the `Portable` object given the class ID.
+
+### 4.2.2 - Registering the Portable Factory
 
 A sample `Portable factory` could be created as follows:
 
@@ -811,6 +819,81 @@ config.serialization_config.data_serializable_factories[1] = factory
 ```
 
 Note that the ID that is passed to the `SerializationConfig` is same as the factory ID that `Foo` class returns.
+
+### 4.2.3 - Versioning for Portable Serialization
+
+More than one version of the same class may need to be serialized and deserialized. For example, a client may have an older version of a class and the member to which it is connected may have a newer version of the same class.
+
+Portable serialization supports versioning. It is a global versioning, meaning that all portable classes that are serialized through a member get the globally configured portable version.
+
+You can declare Version in the configuration file `hazelcast.xml` using the `portable-version` element, as shown below.
+
+```xml
+<hazelcast>
+    ...
+    <serialization>
+        <portable-version>1</portable-version>
+    </serialization>
+    ...
+</hazelcast>
+```
+
+If you update the class by changing the type of one of the fields or by adding a new field, it is a good idea to upgrade the version of the class, rather than sticking to the global version specified in the `hazelcast.xml` file.
+
+In Python Client, you can achieve this by simply adding the `get_class_version()` method to your class’s implementation of `Portable`, and setting the `CLASS_VERSION` to be different than the default global version.
+
+> Note: If your class that implements `Portable` doesn’t implement this method, its version is set by default to be the global version.
+
+Here is an example implementation of creating a version 2 for the above Foo class:
+
+```python
+from hazelcast.serialization.api import Portable
+
+class Foo(Portable):
+
+    CLASS_ID = 1
+    FACTORY_ID = 1
+    CLASS_VERSION = 2
+    
+    def __init__(self, foo=None, foo2=None):
+        self.foo = foo  
+        self.foo2 = foo2
+        
+    def get_class_id(self):
+        return CLASS_ID
+        
+    def get_factory_id(self):
+        return FACTORY_ID
+        
+    def get_class_version(self):
+        return CLASS_VERSION
+        
+    def write_portable(self, writer):
+        writer.write_utf("foo", self.foo)
+        writer.write_utf("foo2", self.foo2)
+        
+    def read_portable(self, reader):
+        self.foo = reader.read_utf("foo")
+        self.foo2 = reader.read_utf("foo2")
+```
+
+You should consider the following when you perform versioning:
+* It is important to change the version whenever an update is performed in the serialized fields of a class, for example by incrementing the version.
+* If a client performs a Portable deserialization on a field and then that Portable is updated by removing that field on the cluster side, this may lead to a problem.
+* Portable serialization does not use reflection and hence, fields in the class and in the serialized content are not automatically mapped. Field renaming is a simpler process. Also, since the class ID is stored, renaming the Portable does not lead to problems.
+* Types of fields need to be updated carefully. Hazelcast performs basic type upgradings, such as `int` to `float`.
+
+#### Example Portable Versioning Scenarios:
+
+Assume that a new member joins to the cluster with a class that has been modified and class's version has been upgraded due to this modification.
+
+If you modified the class by adding a new field, the new member’s put operations include that new field. If this new member tries to get an object that was put from the older members, it gets null for the newly added field.
+
+If you modified the class by removing a field, the old members get null for the objects that are put by the new member.
+
+If you modified the class by changing the type of a field to an incompatible type (such as from `int` to `String`), a `TypeError` (wrapped as `HazelcastSerializationError`) is generated as the member tries accessing an object with the older version of the class. The same applies if a member with the old version tries to access a new version object.
+
+If you did not modify a class at all, it works as usual.
 
 ## 4.3. Custom Serialization
 
