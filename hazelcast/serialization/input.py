@@ -5,7 +5,7 @@ from hazelcast.serialization.bits import *
 from hazelcast.serialization.data import Data
 from hazelcast import six
 from hazelcast.six.moves import range
-
+from hazelcast.config import ClientProperties
 
 
 class _ObjectDataInput(ObjectDataInput):
@@ -15,6 +15,7 @@ class _ObjectDataInput(ObjectDataInput):
         self._is_big_endian = is_big_endian
         self._pos = offset
         self._size = len(buff)
+        self._respect_bytearrays = False if serialization_service is None else serialization_service.properties.get_bool(ClientProperties.SERIALIZATION_INPUT_RETURNS_BYTEARRAY)
         # Local cache struct formats according to endianness
         self._FMT_INT8 = FMT_BE_INT8 if self._is_big_endian else FMT_LE_INT8
         self._FMT_UINT8 = FMT_BE_UINT8 if self._is_big_endian else FMT_LE_UINT8
@@ -111,7 +112,11 @@ class _ObjectDataInput(ObjectDataInput):
         result = bytearray(length)
         if length > 0:
             self.read_into(result, 0, length)
-        return [x for x in result]
+
+        if self._respect_bytearrays:
+            return result
+
+        return list(result)
 
     def read_boolean_array(self):
         return self._read_array_fnc(self.read_boolean)

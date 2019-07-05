@@ -706,6 +706,12 @@ class ClientProperties(object):
     Period in seconds to collect statistics.
     """
 
+    SERIALIZATION_INPUT_RETURNS_BYTEARRAY = ClientProperty("hazelcast.serialization.input.returns.bytearray", False)
+    """
+    Input#read_byte_array returns a List if property is False, otherwise it will return a byte-array.
+    Changing this to True, gives a considerable performance benefit.
+    """
+
     def __init__(self, properties):
         self._properties = properties
 
