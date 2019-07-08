@@ -1,4 +1,3 @@
-import time
 import hazelcast
 
 from hazelcast.serialization.api import Portable
@@ -172,15 +171,14 @@ if __name__ == '__main__':
         # Client that has class with int type age field tries to read Employee3 object with String age field.
         print(my_map.get(2))
     except hazelcast.exception.HazelcastSerializationError as ex:
-        print("Failed due to: {}".format(ex.message))
+        print("Failed due to: {}".format(ex))
 
     try:
         # Client that has class with String type age field tries to read Employee object with int age field.
         print(my_map3.get(0))
     except hazelcast.exception.HazelcastSerializationError as ex:
-        print("Failed due to: {}".format(ex.message))
+        print("Failed due to: {}".format(ex))
 
-    time.sleep(10)
     client.shutdown()
     client2.shutdown()
     client3.shutdown()
