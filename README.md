@@ -12,7 +12,7 @@
     * [1.4.1. Configuring Hazelcast IMDG](#141-configuring-hazelcast-imdg)
     * [1.4.2. Configuring Hazelcast Python Client](#142-configuring-hazelcast-python-client)
       * [1.4.2.1. Group Settings](#1421-group-settings)
-      * [1.4.2.2. Network Settings](#1421-network-settings)
+      * [1.4.2.2. Network Settings](#1422-network-settings)
     * [1.4.3. Client System Properties](#143-client-system-properties)
   * [1.5. Basic Usage](#15-basic-usage)
   * [1.6. Code Samples](#16-code-samples)
@@ -23,6 +23,7 @@
 * [4. Serialization](#4-serialization)
   * [4.1. IdentifiedDataSerializable Serialization](#41-identifieddataserializable-serialization)
   * [4.2. Portable Serialization](#42-portable-serialization)
+    * [4.2.1. Versioning for Portable Serialization](#421-versioning-for-portable-serialization)
   * [4.3. Custom Serialization](#43-custom-serialization)
   * [4.4. JSON Serialization](#44-json-serialization)
   * [4.5. Global Serialization](#45-global-serialization)
@@ -770,8 +771,6 @@ With multiversion support, you can have two members that each have different ver
 
 Also note that portable serialization is totally language independent and is used as the binary protocol between Hazelcast server and clients.
 
-### 4.2.1 - Portable Serialization Example Code
-
 A sample portable implementation of a `Foo` class looks like the following:
 
 ```python
@@ -802,8 +801,6 @@ class Foo(Portable):
 
 Similar to `IdentifiedDataSerializable`, a `Portable` class must provide the `get_class_id()` and `get_factory_id()` methods. The factory dictionary will be used to create the `Portable` object given the class ID.
 
-### 4.2.2 - Registering the Portable Factory
-
 A sample `Portable factory` could be created as follows:
 
 ```python
@@ -820,7 +817,7 @@ config.serialization_config.data_serializable_factories[1] = factory
 
 Note that the ID that is passed to the `SerializationConfig` is same as the factory ID that `Foo` class returns.
 
-### 4.2.3 - Versioning for Portable Serialization
+### 4.2.1. Versioning for Portable Serialization
 
 More than one version of the same class may need to be serialized and deserialized. For example, a client may have an older version of a class and the member to which it is connected may have a newer version of the same class.
 
@@ -885,13 +882,13 @@ You should consider the following when you perform versioning:
 
 #### Example Portable Versioning Scenarios:
 
-Assume that a new member joins to the cluster with a class that has been modified and class's version has been upgraded due to this modification.
+Assume that a new client joins to the cluster with a class that has been modified and class's version has been upgraded due to this modification.
 
-If you modified the class by adding a new field, the new member’s put operations include that new field. If this new member tries to get an object that was put from the older members, it gets null for the newly added field.
+If you modified the class by adding a new field, the new client’s put operations include that new field. If this new client tries to get an object that was put from the older clients, it gets null for the newly added field.
 
-If you modified the class by removing a field, the old members get null for the objects that are put by the new member.
+If you modified the class by removing a field, the old clients get null for the objects that are put by the new client.
 
-If you modified the class by changing the type of a field to an incompatible type (such as from `int` to `String`), a `TypeError` (wrapped as `HazelcastSerializationError`) is generated as the member tries accessing an object with the older version of the class. The same applies if a member with the old version tries to access a new version object.
+If you modified the class by changing the type of a field to an incompatible type (such as from `int` to `String`), a `TypeError` (wrapped as `HazelcastSerializationError`) is generated as the client tries accessing an object with the older version of the class. The same applies if a client with the old version tries to access a new version object.
 
 If you did not modify a class at all, it works as usual.
 
