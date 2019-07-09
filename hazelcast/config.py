@@ -723,7 +723,15 @@ class ClientProperties(object):
         :param property: (:class:`~hazelcast.config.ClientProperty`), Property to get value from
         :return: Value of the given property
         """
-        return self._properties.get(property.name) or os.getenv(property.name) or property.default_value
+        value = self._properties.get(property.name, None)
+        if value is not None:
+            return value
+
+        value = os.getenv(property.name, None)
+        if value is not None:
+            return value
+
+        return property.default_value
 
     def get_bool(self, property):
         """

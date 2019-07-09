@@ -94,3 +94,12 @@ class PropertyTest(TestCase):
         props = ClientProperties(config.get_properties())
         with self.assertRaises(ValueError):
             props.get_seconds_positive_or_default(prop)
+
+    def test_client_properties_set_false_when_default_is_true(self):
+        config = ClientConfig()
+        prop = ClientProperty("test", True)
+        config.set_property(prop.name, False)
+
+        props = ClientProperties(config.get_properties())
+
+        self.assertFalse(props.get(prop))
