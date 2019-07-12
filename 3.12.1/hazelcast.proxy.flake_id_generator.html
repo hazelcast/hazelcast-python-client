@@ -1,0 +1,181 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>FlakeIdGenerator &#8212; Hazelcast Python Client 3.12.1 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="IdGenerator" href="hazelcast.proxy.id_generator.html" />
+    <link rel="prev" title="Executor" href="hazelcast.proxy.executor.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.id_generator.html" title="IdGenerator"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.executor.html" title="Executor"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" accesskey="U">Hazelcast Proxies</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.proxy.flake_id_generator">
+<span id="flakeidgenerator"></span><h1>FlakeIdGenerator<a class="headerlink" href="#module-hazelcast.proxy.flake_id_generator" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="hazelcast.proxy.flake_id_generator.FlakeIdGenerator">
+<em class="property">class </em><code class="descname">FlakeIdGenerator</code><span class="sig-paren">(</span><em>client</em>, <em>service_name</em>, <em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.flake_id_generator.FlakeIdGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hazelcast.proxy.base.html#hazelcast.proxy.base.Proxy" title="hazelcast.proxy.base.Proxy"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.proxy.base.Proxy</span></code></a></p>
+<p>A cluster-wide unique ID generator. Generated IDs are int (long in case of the Python 2 on 32 bit architectures)
+values and are k-ordered (roughly ordered). IDs are in the range from 0 to 2^63 - 1.</p>
+<p>The IDs contain timestamp component and a node ID component, which is assigned when the member
+joins the cluster. This allows the IDs to be ordered and unique without any coordination between
+members, which makes the generator safe even in split-brain scenario.</p>
+<p>Timestamp component is in milliseconds since 1.1.2018, 0:00 UTC and has 41 bits. This caps
+the useful lifespan of the generator to little less than 70 years (until ~2088). The sequence component
+is 6 bits. If more than 64 IDs are requested in single millisecond, IDs will gracefully overflow to the next
+millisecond and uniqueness is guaranteed in this case. The implementation does not allow overflowing
+by more than 15 seconds, if IDs are requested at higher rate, the call will block. Note, however, that
+clients are able to generate even faster because each call goes to a different (random) member and
+the 64 IDs/ms limit is for single member.</p>
+<p><strong>Node ID overflow</strong></p>
+<p>It is possible to generate IDs on any member or client as long as there is at least one
+member with join version smaller than 2^16 in the cluster. The remedy is to restart the cluster:
+nodeId will be assigned from zero again. Uniqueness after the restart will be preserved thanks to
+the timestamp component.</p>
+<p>Requires Hazelcast IMDG 3.10</p>
+<dl class="method">
+<dt id="hazelcast.proxy.flake_id_generator.FlakeIdGenerator.new_id">
+<code class="descname">new_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.flake_id_generator.FlakeIdGenerator.new_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates and returns a cluster-wide unique ID.</p>
+<p>This method goes to a random member and gets a batch of IDs, which will then be returned
+locally for limited time. The pre-fetch size and the validity time can be configured, see
+<a class="reference internal" href="hazelcast.config.html#hazelcast.config.FlakeIdGeneratorConfig" title="hazelcast.config.FlakeIdGeneratorConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.config.FlakeIdGeneratorConfig</span></code></a>.</p>
+<p>Note: Values returned from this method may not be strictly ordered.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first simple">
+<li><a class="reference internal" href="hazelcast.exception.html#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><strong>HazelcastError</strong></a> – if node ID for all members in the cluster is out of valid range.
+See “Node ID overflow” note above.</li>
+<li><a class="reference internal" href="hazelcast.exception.html#hazelcast.exception.UnsupportedOperationError" title="hazelcast.exception.UnsupportedOperationError"><strong>UnsupportedOperationError</strong></a> – if the cluster version is below 3.10.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(int), new cluster-wide unique ID.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.flake_id_generator.FlakeIdGenerator.init">
+<code class="descname">init</code><span class="sig-paren">(</span><em>id</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.flake_id_generator.FlakeIdGenerator.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method does nothing and will simply tell if the next ID
+will be larger than the given ID.
+You don’t need to call this method on cluster restart - uniqueness is preserved thanks to the
+timestamp component of the ID.
+This method exists to make <code class="xref py py-class docutils literal notranslate"><span class="pre">FlakeIdGenerator</span></code> drop-in replacement
+for the deprecated <code class="xref py py-class docutils literal notranslate"><span class="pre">IdGenerator</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>id</strong> – (int), ID to compare.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(bool), True if the next ID will be larger than the supplied id, False otherwise.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.executor.html"
+                        title="previous chapter">Executor</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.id_generator.html"
+                        title="next chapter">IdGenerator</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.proxy.flake_id_generator.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.id_generator.html" title="IdGenerator"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.executor.html" title="Executor"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" >Hazelcast Proxies</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Hazelcast Inc..
+    </div>
+  </body>
+</html>
