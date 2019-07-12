@@ -767,7 +767,7 @@ As an alternative to the existing serialization methods, Hazelcast offers portab
 
 In order to support these features, a serialized `Portable` object contains meta information like the version and concrete location of the each field in the binary data. This way Hazelcast is able to navigate in the binary data and deserialize only the required field without actually deserializing the whole object which improves the query performance.
 
-With multiversion support, you can have two members each having different versions of the same object; Hazelcast stores both meta information and use the correct one to serialize and deserialize portable objects depending on the member. This is very helpful when you are doing a rolling upgrade without shutting down the cluster.
+With multiversion support, you can have two members each having different versions of the same object; Hazelcast stores both meta information and uses the correct one to serialize and deserialize portable objects depending on the member. This is very helpful when you are doing a rolling upgrade without shutting down the cluster.
 
 Also note that portable serialization is totally language independent and is used as the binary protocol between Hazelcast server and clients.
 
@@ -797,7 +797,7 @@ class Foo(Portable):
         self.foo = reader.read_utf("foo")
 ```
 
-> Note: For Portable to work in Python client, the class that inherits it should have default valued parameters in its `__init__` method so that an instance of that class can be created without passing any arguments to it.  
+> **NOTE: For Portable to work in Python client, the class that inherits it should have default valued parameters in its `__init__` method so that an instance of that class can be created without passing any arguments to it.**
 
 Similar to `IdentifiedDataSerializable`, a `Portable` class must provide the `get_class_id()` and `get_factory_id()` methods. The factory dictionary will be used to create the `Portable` object given the class ID.
 
@@ -838,7 +838,7 @@ You can declare the version in the `hazelcast.xml` configuration file using the 
 If you update the class by changing the type of one of the fields or by adding a new field, it is a good idea to upgrade the version of the class, rather than sticking to the global version specified in the `hazelcast.xml` file.
 In the Python client, you can achieve this by simply adding the `get_class_version()` method to your class’s implementation of `Portable`, and setting the `CLASS_VERSION` to be different than the default global version.
 
-> Note: If you do not use the `get_class_version()` method in your `Portable` implementation, it will have the global version, by default.
+> **NOTE: If you do not use the `get_class_version()` method in your `Portable` implementation, it will have the global version, by default.**
 
 Here is an example implementation of creating a version 2 for the above Foo class:
 
