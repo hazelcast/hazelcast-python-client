@@ -4,21 +4,22 @@ import time
 import functools
 
 from hazelcast.exception import create_exception, HazelcastInstanceNotActiveError, is_retryable_error, TimeoutError, \
-    AuthenticationError, TargetDisconnectedError, HazelcastClientNotActiveException, TargetNotMemberError
+    AuthenticationError, TargetDisconnectedError, HazelcastClientNotActiveException, TargetNotMemberError, \
+    HazelcastError, OperationTimeoutError
 from hazelcast.future import Future
 from hazelcast.lifecycle import LIFECYCLE_STATE_CONNECTED
 from hazelcast.protocol.client_message import LISTENER_FLAG
 from hazelcast.protocol.custom_codec import EXCEPTION_MESSAGE_TYPE, ErrorCodec
-from hazelcast.util import AtomicInteger
+from hazelcast.util import AtomicInteger, check_not_none, current_time_in_millis
 from hazelcast.six.moves import queue
 from hazelcast import six
-
+from uuid import uuid4
 
 class Invocation(object):
     sent_connection = None
     timer = None
 
-    def __init__(self, invocation_service, request, partition_id=-1, address=None, connection=None):
+    def __init__(self, invocation_service, request, partition_id=-1, address=None, connection=None, event_handler=None):
         self._event = threading.Event()
         self._invocation_timeout = invocation_service.invocation_timeout
         self.timeout = self._invocation_timeout + time.time()
@@ -27,6 +28,7 @@ class Invocation(object):
         self.partition_id = partition_id
         self.request = request
         self.future = Future()
+        self.event_handler = event_handler
 
     def has_connection(self):
         return self.connection is not None
@@ -55,6 +57,22 @@ class Invocation(object):
         self.set_exception(TimeoutError("Request timed out after %d seconds." % self._invocation_timeout))
 
 
+class ListenerRegistration(object):
+    def __init__(self, registration_request, decode_register_response, encode_deregister_request, handler):
+        self.registration_request = registration_request #of type ClientMessage (already encoded)
+        self.decode_register_response = decode_register_response #take ClientMessage return String
+        self.encode_deregister_request = encode_deregister_request #take String return ClientMessage
+        self.handler = handler
+        self.connection_registrations = {} #Map <Connection, Event Registration>)
+
+
+class EventRegistration(object):
+    def __init__(self, server_registration_id, correlation_id):
+        self.server_registration_id = server_registration_id
+        self.correlation_id = correlation_id
+        # self.connection = connection --> buna gerek yok bence
+
+"""
 class ListenerInvocation(Invocation):
     # used for storing the original registration id across re-registrations
     registration_id = None
@@ -63,6 +81,7 @@ class ListenerInvocation(Invocation):
         Invocation.__init__(self, invocation_service, request, **kwargs)
         self.event_handler = event_handler
         self.response_decoder = response_decoder
+"""
 
 
 class ListenerService(object):
@@ -70,11 +89,154 @@ class ListenerService(object):
 
     def __init__(self, client):
         self._client = client
+        self._invocation_service = client.invoker
+        self.is_smart = client.config.network_config.smart_routing
         self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
-        self.registrations = {}
-        self.invocation_timeout = self._init_invocation_timeout()
+        self.active_registrations = {}  # Map <user_registration_id, listener_registration >
+        self._registration_lock = threading.RLock()
+        self._event_handlers = {}
+
+    def try_sync_connect_to_all_members(self):
+        cluster_service = self._client.cluster
+        start_millis = current_time_in_millis()
+        while True:
+            last_failed_member = None
+            last_exception = None
+            for member in cluster_service.members():
+                try:
+                    self._client.connection_manager.get_or_connect(member.address).result() #!
+                except Exception as e:
+                    last_failed_member = member
+                    last_exception = e
+            if last_exception is None:
+                break
+            self.time_out_or_sleep_before_next_try(start_millis, last_failed_member, last_exception)
+            if not self._client.lifecycle.is_live():
+                break
+
+    def time_out_or_sleep_before_next_try(self, start_millis, last_failed_member, last_exception):
+        now_in_millis = current_time_in_millis()
+        elapsed_millis = now_in_millis - start_millis
+        invocation_time_out_millis = self._invocation_service.invocation_timeout * 1000
+        timed_out = elapsed_millis > invocation_time_out_millis
+        if timed_out:
+            raise OperationTimeoutError("Registering listeners is timed out."
+                                        + " Last failed member : " + str(last_failed_member) + ", "
+                                        + " Current time: " + str(now_in_millis) + ", "
+                                        + " Start time : " + str(start_millis) + ", "
+                                        + " Client invocation timeout : " + str(invocation_time_out_millis) + " ms, "
+                                        + " Elapsed time : " + str(elapsed_millis) + " ms. ", last_exception)
+        else:
+            self.sleep_before_next_try()
+
+    def sleep_before_next_try(self):
+        self._invocation_service.invocation_retry_pause()
         pass
 
+    def register_listener(self, registration_request, decode_register_response, encode_deregister_request, handler):
+        # From JAVA: assert (!Thread.currentThread().getName().contains("eventRegistration"));
+        if self.is_smart:
+            self.try_sync_connect_to_all_members()
+
+        with self._registration_lock:
+            user_registration_id = str(uuid4())
+            listener_registration = ListenerRegistration(registration_request, decode_register_response,
+                                                         encode_deregister_request, handler)
+            self.active_registrations.put(user_registration_id, listener_registration)
+
+            active_connections = self._client.connection_manager.connections
+            for connection in active_connections:
+                try:
+                    self.register_listener_on_connection(listener_registration, connection)
+                except Exception as e:
+                    if connection.live():
+                        self.deregister_listener(user_registration_id)
+                        raise HazelcastError("Listener cannot be added ")  # cause'unu include etmeli miyim nasil (,e)
+            return user_registration_id
+
+    def register_listener_on_connection(self, listener_registration, connection):
+        # From JAVA: assert(Thread.currentThread().getName().contains("eventRegistration"));
+        registration_map = listener_registration.connection_registrations
+
+        if connection in registration_map:
+            return
+
+        registration_request = listener_registration.registration_request
+        future = self._invocation_service.invoke_on_connection(registration_request, connection,
+                                                                      event_handler=listener_registration.handler)
+        response = future.result()
+
+        server_registration_id = listener_registration.decode_register_response(response)
+        correlation_id = registration_request.get_correlation_id()
+        registration = EventRegistration(server_registration_id, correlation_id)
+        registration_map.put(connection, registration)
+
+    def deregister_listener(self, user_registration_id):
+        # From JAVA: assert (!Thread.currentThread().getName().contains("eventRegistration"));
+        check_not_none(user_registration_id, "Null userRegistrationId is not allowed!")
+
+        with self._registration_lock:
+            listener_registration = self.active_registrations.get(user_registration_id)
+            if listener_registration is None:
+                return False
+            successful = True
+            for connection, event_registration in listener_registration.connection_registrations.items():
+                try:
+                    server_registration_id = event_registration.server_registration_id
+                    deregister_request = listener_registration.encode_deregister_request(server_registration_id)
+                    self._invocation_service.invoke_on_connection(deregister_request, connection).result()
+                    self.remove_event_handler(event_registration.correlation_id)
+                    listener_registration.connection_registrations.pop(connection)
+                except Exception:
+                    if connection.live():
+                        successful = False
+                        self.logger.warning("Deregistration for listener with ID {} has failed to address {} ".format
+                                            (user_registration_id, "address"), exc_info=True, extra=self._logger_extras)
+            if successful:
+                self.active_registrations.pop(user_registration_id)
+            return successful
+
+    def connection_added(self, connection):
+        # From JAVA: assert (!Thread.currentThread().getName().contains("eventRegistration"));
+        with self._registration_lock:
+            for listener_registration in self.active_registrations.values():
+                self.register_listener_on_connection(listener_registration, connection)
+
+    def connection_removed(self, connection):
+        # From JAVA: assert (!Thread.currentThread().getName().contains("eventRegistration"));
+        with self._registration_lock:
+            for listener_registration in self.active_registrations.values():
+                event_registration = listener_registration.connection_registrations.pop(connection)
+                if event_registration is not None:
+                    self.remove_event_handler(event_registration.correlation_id)
+
+    def start(self):  # ?
+        # clientConnectionManager.addConnectionListener(this);
+        # ama pythonda add_listener parametre olarak listener almiyor.
+        self._client.connection_manager.add_listener(self.connection_added, self.connection_removed)
+        # .NET'te bu var gerekli mi:
+        # if (IsSmart)
+        # {
+        #     _connectionReopener = new Timer(ReOpenAllConnectionsIfNotOpen, null, 1000, 1000);
+        # }
+
+    def handle_client_message(self, message):
+        correlation_id = message.get_correlation_id()
+        if correlation_id not in self._event_handlers:
+            self.logger.warning("Got event message with unknown correlation id: %s", message, extra=self._logger_extras)
+        event_handler = self._event_handlers.get(correlation_id)
+        event_handler(message)
+        # Asagidakini yapmak yerine bu sekilde yaptim
+        # invocation = self._event_handlers[correlation_id] --> bundan nasil invocation cikabiliyor ki?
+        # self._handle_event(invocation, message)
+
+    def add_event_handler(self, correlation_id, event_handler):
+        self._event_handlers[correlation_id] = event_handler
+
+    def remove_event_handler(self, correlation_id):
+        self._event_handlers.pop(correlation_id)
+
+    """
     def start_listening(self, request, event_handler, decode_add_listener, key=None):
         if key:
             partition_id = self._client.partition_service.get_partition_id(key)
@@ -98,7 +260,9 @@ class ListenerService(object):
             return True
         except KeyError:
             return False
-
+    """
+    """
+    # Gerekli mi?
     def re_register_listener(self, invocation):
         registration_id = invocation.registration_id
         new_invocation = ListenerInvocation(self, invocation.request, invocation.event_handler,
@@ -119,11 +283,14 @@ class ListenerService(object):
         self.logger.debug("Re-registering listener %s for request %s", registration_id, new_invocation.request,
                           extra=self._logger_extras)
         self._client.invoker.invoke(new_invocation).add_done_callback(callback)
-
+    """
+    """
+    # Gerekli mi? Bunun aynisi InvocationService'te de var.
     def _init_invocation_timeout(self):
         invocation_timeout = self._client.properties.get_seconds_positive_or_default(
             self._client.properties.INVOCATION_TIMEOUT_SECONDS)
         return invocation_timeout
+    """
 
 
 class InvocationService(object):
@@ -131,14 +298,14 @@ class InvocationService(object):
 
     def __init__(self, client):
         self._pending = {}
-        self._event_handlers = {}
         self._next_correlation_id = AtomicInteger(1)
         self._client = client
         self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
         self._event_queue = queue.Queue()
         self._is_redo_operation = client.config.network_config.redo_operation
-        self._invocation_retry_pause = self._init_invocation_retry_pause()
+        self.invocation_retry_pause = self._init_invocation_retry_pause() #eskiden private'ti public yaptim.
         self.invocation_timeout = self._init_invocation_timeout()
+        self._listener_service = client.listener
 
         if client.config.network_config.smart_routing:
             self.invoke = self.invoke_smart
@@ -148,8 +315,8 @@ class InvocationService(object):
         self._client.connection_manager.add_listener(on_connection_closed=self.cleanup_connection)
         client.heartbeat.add_listener(on_heartbeat_stopped=self._heartbeat_stopped)
 
-    def invoke_on_connection(self, message, connection, ignore_heartbeat=False):
-        return self.invoke(Invocation(self, message, connection=connection), ignore_heartbeat)
+    def invoke_on_connection(self, message, connection, ignore_heartbeat=False, event_handler=None):
+        return self.invoke(Invocation(self, message, connection=connection, event_handler=event_handler), ignore_heartbeat)
 
     def invoke_on_partition(self, message, partition_id, invocation_timeout=None):
         invocation = Invocation(self, message, partition_id=partition_id)
@@ -222,9 +389,10 @@ class InvocationService(object):
             if invocation.sent_connection == connection:
                 self._handle_exception(invocation,
                                        TargetDisconnectedError("%s has stopped heart beating." % connection))
-
+    """
     def _remove_event_handler(self, correlation_id):
         self._event_handlers.pop(correlation_id)
+    """
 
     def _send_to_address(self, invocation, address, ignore_heartbeat=False):
         try:
@@ -252,8 +420,8 @@ class InvocationService(object):
         if not invocation.timer:
             invocation.timer = self._client.reactor.add_timer_absolute(invocation.timeout, invocation.on_timeout)
 
-        if isinstance(invocation, ListenerInvocation):
-            self._event_handlers[correlation_id] = invocation
+        if invocation.event_handler is not None:
+            self._listener_service.add_event_handler(correlation_id, invocation.event_handler)
 
         self.logger.debug("Sending %s to %s", message, connection, extra=self._logger_extras)
 
@@ -265,17 +433,19 @@ class InvocationService(object):
         try:
             connection.send_message(message)
         except IOError as e:
+            self._listener_service.remove_event_handler(correlation_id)  # fail ederse event handleri temizlemek icin
             self._handle_exception(invocation, e)
 
     def _handle_client_message(self, message):
         correlation_id = message.get_correlation_id()
         if message.has_flags(LISTENER_FLAG):
-            if correlation_id not in self._event_handlers:
-                self.logger.warning("Got event message with unknown correlation id: %s", message,
-                                    extra=self._logger_extras)
-                return
-            invocation = self._event_handlers[correlation_id]
-            self._handle_event(invocation, message)
+            self._listener_service.handle_client_message(message)
+            # if correlation_id not in self._event_handlers:
+            #     self.logger.warning("Got event message with unknown correlation id: %s", message,
+            #                         extra=self._logger_extras)
+            #     return
+            # invocation = self._event_handlers[correlation_id]
+            # self._handle_event(invocation, message)
             return
         if correlation_id not in self._pending:
             self.logger.warning("Got message with unknown correlation id: %s", message, extra=self._logger_extras)
@@ -320,8 +490,8 @@ class InvocationService(object):
 
         invoke_func = functools.partial(self.invoke, invocation)
         self.logger.debug("Rescheduling request %s to be retried in %s seconds", invocation.request,
-                          self._invocation_retry_pause, extra=self._logger_extras)
-        self._client.reactor.add_timer(self._invocation_retry_pause, invoke_func)
+                          self.invocation_retry_pause, extra=self._logger_extras)
+        self._client.reactor.add_timer(self.invocation_retry_pause, invoke_func)
         return True
 
     def _is_member(self, address):
