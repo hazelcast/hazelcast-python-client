@@ -118,8 +118,9 @@ class Map(Proxy):
             elif event.event_type == EntryEventType.expired:
                 expired_func(event)
 
-        return self._start_listening(request, lambda m: map_add_entry_listener_codec.handle(m, handle_event_entry),
-                                     lambda r: map_add_entry_listener_codec.decode_response(r)['response'])
+        return self._register_listener(request, lambda r: map_add_entry_listener_codec.decode_response(r)['response'],
+                                       lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name, reg_id),
+                                       lambda m: map_add_entry_listener_codec.handle(m, handle_event_entry))
 
     def add_index(self, attribute, ordered=False):
         """
@@ -640,8 +641,7 @@ class Map(Proxy):
         :param registration_id: (str), id of registered listener.
         :return: (bool), ``true`` if registration is removed, ``false`` otherwise.
         """
-        return self._stop_listening(registration_id,
-                                    lambda i: map_remove_entry_listener_codec.encode_request(self.name, i))
+        return self._deregister_listener(registration_id)
 
     def replace(self, key, value):
         """
