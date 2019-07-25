@@ -70,11 +70,11 @@ class ReplicatedMap(Proxy):
             elif event.event_type == EntryEventType.clear_all and clear_all_func:
                 clear_all_func(event)
 
-        return self._start_listening(request,
-                                     lambda m: replicated_map_add_entry_listener_codec.handle(m,
-                                                                                              handle_event_entry),
-                                     lambda r: replicated_map_add_entry_listener_codec.decode_response(r)[
-                                         'response'])
+        return self._register_listener(request,
+                                       lambda r: replicated_map_add_entry_listener_codec.decode_response(r)['response'],
+                                       lambda reg_id: replicated_map_remove_entry_listener_codec.encode_request(
+                                           self.name, reg_id),
+                                       lambda m: replicated_map_add_entry_listener_codec.handle(m, handle_event_entry))
 
     def clear(self):
         """
@@ -206,8 +206,7 @@ class ReplicatedMap(Proxy):
         :param registration_id: (str), id of registered listener.
         :return: (bool), ``true`` if registration is removed, ``false`` otherwise.
         """
-        return self._stop_listening(registration_id,
-                                    lambda i: replicated_map_remove_entry_listener_codec.encode_request(self.name, i))
+        return self._deregister_listener(registration_id)
 
     def size(self):
         """

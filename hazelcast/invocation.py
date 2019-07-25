@@ -135,10 +135,11 @@ class InvocationService(object):
             if invocation.sent_connection == connection:
                 self._handle_exception(invocation, cause)
 
-        if self._client.lifecycle.is_live:
-            for correlation_id, invocation in six.iteritems(dict(self._event_handlers)):
-                if invocation.sent_connection == connection and invocation.connection is None:
-                    self._client.listener.re_register_listener(invocation)
+        # TODO
+        # if self._client.lifecycle.is_live:
+        #     for correlation_id, invocation in six.iteritems(dict(self._event_handlers)):
+        #         if invocation.sent_connection == connection and invocation.connection is None:
+        #             self._client.listener.re_register_listener(invocation)
 
     def _init_invocation_retry_pause(self):
         invocation_retry_pause = self._client.properties.get_seconds_positive_or_default(
