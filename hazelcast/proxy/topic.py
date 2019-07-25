@@ -31,10 +31,11 @@ class Topic(PartitionSpecificProxy):
             item_event = TopicMessage(self.name, item, publish_time, member, self._to_object)
             on_message(item_event)
 
-        return self._start_listening(request,
-                                     lambda m: topic_add_message_listener_codec.handle(m, handle),
-                                     lambda r: topic_add_message_listener_codec.decode_response(r)['response'],
-                                     self.partition_key)
+        return self._register_listener(request,
+                                       lambda r: topic_add_message_listener_codec.decode_response(r)['response'],
+                                       lambda reg_id: topic_remove_message_listener_codec.encode_request(self.name,
+                                                                                                         reg_id),
+                                       lambda m: topic_add_message_listener_codec.handle(m, handle))
 
     def publish(self, message):
         """
@@ -53,5 +54,4 @@ class Topic(PartitionSpecificProxy):
         :param registration_id: (str), registration id of the listener to be removed.
         :return: (bool), ``true`` if the listener is removed, ``false`` otherwise.
         """
-        return self._stop_listening(registration_id,
-                                    lambda i: topic_remove_message_listener_codec.encode_request(self.name, i))
+        return self._deregister_listener(registration_id)

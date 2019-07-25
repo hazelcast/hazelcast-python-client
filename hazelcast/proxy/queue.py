@@ -87,10 +87,9 @@ class Queue(PartitionSpecificProxy):
                 if item_removed_func:
                     item_removed_func(item_event)
 
-        return self._start_listening(request,
-                                     lambda m: queue_add_listener_codec.handle(m, handle_event_item),
-                                     lambda r: queue_add_listener_codec.decode_response(r)['response'],
-                                     self.partition_key)
+        return self._register_listener(request, lambda r: queue_add_listener_codec.decode_response(r)['response'],
+                                       lambda reg_id: queue_remove_listener_codec.encode_request(self.name, reg_id),
+                                       lambda m: queue_add_listener_codec.handle(m, handle_event_item))
 
     def clear(self):
         """
@@ -247,7 +246,7 @@ class Queue(PartitionSpecificProxy):
         :param registration_id: (str), id of the listener to be deleted.
         :return: (bool), ``true`` if the item listener is removed, ``false`` otherwise.
         """
-        return self._stop_listening(registration_id, lambda i: queue_remove_listener_codec.encode_request(self.name, i))
+        return self._deregister_listener(registration_id)
 
     def retain_all(self, items):
         """
