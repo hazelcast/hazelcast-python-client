@@ -166,7 +166,7 @@ class ListenerService(object):
         self._event_handlers[correlation_id] = event_handler
 
     def remove_event_handler(self, correlation_id):
-        self._event_handlers.pop(correlation_id)
+        self._event_handlers.pop(correlation_id, None)
 
     """
     def start_listening(self, request, event_handler, decode_add_listener, key=None):
