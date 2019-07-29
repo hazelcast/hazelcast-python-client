@@ -96,7 +96,7 @@ class List(PartitionSpecificProxy):
         :param item_removed_func: Function to be called when an item is deleted from this list (optional).
         :return: (str), a registration id which is used as a key to remove the listener.
         """
-        request = list_add_listener_codec.encode_request(self.name, include_value, False)
+        request = list_add_listener_codec.encode_request(self.name, include_value, self._is_smart)
 
         def handle_event_item(item, uuid, event_type):
             item = item if include_value else None

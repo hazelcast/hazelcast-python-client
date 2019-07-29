@@ -46,16 +46,16 @@ class ReplicatedMap(Proxy):
             predicate_data = self._to_data(predicate)
             request = replicated_map_add_entry_listener_to_key_with_predicate_codec.encode_request(self.name, key_data,
                                                                                                    predicate_data,
-                                                                                                   False)
+                                                                                                   self._is_smart)
         elif key and not predicate:
             key_data = self._to_data(key)
-            request = replicated_map_add_entry_listener_to_key_codec.encode_request(self.name, key_data, False)
+            request = replicated_map_add_entry_listener_to_key_codec.encode_request(self.name, key_data, self._is_smart)
         elif not key and predicate:
             predicate = self._to_data(predicate)
             request = replicated_map_add_entry_listener_with_predicate_codec.encode_request(self.name, predicate,
-                                                                                            False)
+                                                                                            self._is_smart)
         else:
-            request = replicated_map_add_entry_listener_codec.encode_request(self.name, False)
+            request = replicated_map_add_entry_listener_codec.encode_request(self.name, self._is_smart)
 
         def handle_event_entry(**_kwargs):
             event = EntryEvent(self._to_object, **_kwargs)

@@ -143,7 +143,7 @@ class ListenerService(object):
         # From JAVA: assert (!Thread.currentThread().getName().contains("eventRegistration"));
         with self._registration_lock:
             for listener_registration in self.active_registrations.values():
-                event_registration = listener_registration.connection_registrations.pop(connection)
+                event_registration = listener_registration.connection_registrations.pop(connection, None)
                 if event_registration is not None:
                     self.remove_event_handler(event_registration.correlation_id)
 

@@ -24,7 +24,7 @@ class Topic(PartitionSpecificProxy):
         :param on_message: (Function), function to be called when a message is published.
         :return: (str), a registration id which is used as a key to remove the listener.
         """
-        request = topic_add_message_listener_codec.encode_request(self.name, False)
+        request = topic_add_message_listener_codec.encode_request(self.name, self._is_smart)
 
         def handle(item, publish_time, uuid):
             member = self._client.cluster.get_member_by_uuid(uuid)
