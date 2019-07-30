@@ -8,9 +8,9 @@ from hazelcast.util import current_time_in_millis, check_not_none
 
 class ListenerRegistration(object):
     def __init__(self, registration_request, decode_register_response, encode_deregister_request, handler):
-        self.registration_request = registration_request #of type ClientMessage (already encoded)
-        self.decode_register_response = decode_register_response #take ClientMessage return String
-        self.encode_deregister_request = encode_deregister_request #take String return ClientMessage
+        self.registration_request = registration_request
+        self.decode_register_response = decode_register_response
+        self.encode_deregister_request = encode_deregister_request
         self.handler = handler
         self.connection_registrations = {} #Map <Connection, Event Registration>)
 
@@ -41,7 +41,7 @@ class ListenerService(object):
             last_exception = None
             for member in cluster_service.members:
                 try:
-                    self._client.connection_manager.get_or_connect(member.address).result() #!
+                    self._client.connection_manager.get_or_connect(member.address).result()
                 except Exception as e:
                     last_failed_member = member
                     last_exception = e
@@ -64,14 +64,9 @@ class ListenerService(object):
                                         + " Client invocation timeout : " + str(invocation_time_out_millis) + " ms, "
                                         + " Elapsed time : " + str(elapsed_millis) + " ms. ", last_exception)
         else:
-            self.sleep_before_next_try()
-
-    def sleep_before_next_try(self):
-        self._invocation_service.invocation_retry_pause()
-        pass
+            self._invocation_service.invocation_retry_pause()  # sleep before next try
 
     def register_listener(self, registration_request, decode_register_response, encode_deregister_request, handler):
-        # From JAVA: assert (!Thread.currentThread().getName().contains("eventRegistration"));
         if self.is_smart:
             self.try_sync_connect_to_all_members()
 
@@ -85,14 +80,13 @@ class ListenerService(object):
             for connection in active_connections.values():
                 try:
                     self.register_listener_on_connection(listener_registration, connection)
-                except Exception as e:
+                except:
                     if connection.live():
                         self.deregister_listener(user_registration_id)
                         raise HazelcastError("Listener cannot be added ")  # cause'unu include etmeli miyim nasil (,e)
             return user_registration_id
 
     def register_listener_on_connection(self, listener_registration, connection):
-        # From JAVA: assert(Thread.currentThread().getName().contains("eventRegistration"));
         registration_map = listener_registration.connection_registrations
 
         if connection in registration_map:
@@ -100,16 +94,22 @@ class ListenerService(object):
 
         registration_request = listener_registration.registration_request
         future = self._invocation_service.invoke_on_connection(registration_request, connection,
-                                                                      event_handler=listener_registration.handler)
-        response = future.result()
+                                                               event_handler=listener_registration.handler)
 
-        server_registration_id = listener_registration.decode_register_response(response)
-        correlation_id = registration_request.get_correlation_id()
-        registration = EventRegistration(server_registration_id, correlation_id)
-        registration_map[connection] = registration
+        def callback(f):
+            try:
+                response = f.result()
+                server_registration_id = listener_registration.decode_register_response(response)
+                correlation_id = registration_request.get_correlation_id()
+                registration = EventRegistration(server_registration_id, correlation_id)
+                registration_map[connection] = registration
+            except:
+                # Gotta handle exception
+                pass
+
+        future.add_done_callback(callback)
 
     def deregister_listener(self, user_registration_id):
-        # From JAVA: assert (!Thread.currentThread().getName().contains("eventRegistration"));
         check_not_none(user_registration_id, "Null userRegistrationId is not allowed!")
 
         with self._registration_lock:
@@ -124,7 +124,7 @@ class ListenerService(object):
                     self._invocation_service.invoke_on_connection(deregister_request, connection).result()
                     self.remove_event_handler(event_registration.correlation_id)
                     listener_registration.connection_registrations.pop(connection)
-                except Exception:
+                except:
                     if connection.live():
                         successful = False
                         self.logger.warning("Deregistration for listener with ID {} has failed to address {} ".format
@@ -134,22 +134,18 @@ class ListenerService(object):
             return successful
 
     def connection_added(self, connection):
-        # From JAVA: assert (!Thread.currentThread().getName().contains("eventRegistration"));
         with self._registration_lock:
             for listener_registration in self.active_registrations.values():
                 self.register_listener_on_connection(listener_registration, connection)
 
     def connection_removed(self, connection, _):
-        # From JAVA: assert (!Thread.currentThread().getName().contains("eventRegistration"));
         with self._registration_lock:
             for listener_registration in self.active_registrations.values():
                 event_registration = listener_registration.connection_registrations.pop(connection, None)
                 if event_registration is not None:
                     self.remove_event_handler(event_registration.correlation_id)
 
-    def start(self):  # ?
-        # clientConnectionManager.addConnectionListener(this);
-        # ama pythonda add_listener parametre olarak listener almiyor.
+    def start(self):
         self._client.connection_manager.add_listener(self.connection_added, self.connection_removed)
 
     def handle_client_message(self, message):
@@ -158,9 +154,6 @@ class ListenerService(object):
             self.logger.warning("Got event message with unknown correlation id: %s", message, extra=self._logger_extras)
         event_handler = self._event_handlers.get(correlation_id)
         event_handler(message)
-        # Asagidakini yapmak yerine bu sekilde yaptim
-        # invocation = self._event_handlers[correlation_id] --> bundan nasil invocation cikabiliyor ki?
-        # self._handle_event(invocation, message)
 
     def add_event_handler(self, correlation_id, event_handler):
         self._event_handlers[correlation_id] = event_handler
