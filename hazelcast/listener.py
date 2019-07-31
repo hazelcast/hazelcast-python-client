@@ -111,7 +111,7 @@ class ListenerService(object):
         return future
 
     def deregister_listener(self, user_registration_id):
-        check_not_none(user_registration_id, "Null userRegistrationId is not allowed!")
+        check_not_none(user_registration_id, "None userRegistrationId is not allowed!")
 
         with self._registration_lock:
             listener_registration = self.active_registrations.get(user_registration_id)

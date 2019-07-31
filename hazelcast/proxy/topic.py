@@ -31,11 +31,10 @@ class Topic(PartitionSpecificProxy):
             item_event = TopicMessage(self.name, item, publish_time, member, self._to_object)
             on_message(item_event)
 
-        return self._register_listener(request,
-                                       lambda r: topic_add_message_listener_codec.decode_response(r)['response'],
-                                       lambda reg_id: topic_remove_message_listener_codec.encode_request(self.name,
-                                                                                                         reg_id),
-                                       lambda m: topic_add_message_listener_codec.handle(m, handle))
+        return self._register_listener(
+            request, lambda r: topic_add_message_listener_codec.decode_response(r)['response'],
+            lambda reg_id: topic_remove_message_listener_codec.encode_request(self.name, reg_id),
+            lambda m: topic_add_message_listener_codec.handle(m, handle))
 
     def publish(self, message):
         """
