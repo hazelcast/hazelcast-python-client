@@ -44,16 +44,15 @@ class ReplicatedMap(Proxy):
         if key and predicate:
             key_data = self._to_data(key)
             predicate_data = self._to_data(predicate)
-            request = replicated_map_add_entry_listener_to_key_with_predicate_codec.encode_request(self.name, key_data,
-                                                                                                   predicate_data,
-                                                                                                   self._is_smart)
+            request = replicated_map_add_entry_listener_to_key_with_predicate_codec.encode_request(
+                self.name, key_data, predicate_data, self._is_smart)
         elif key and not predicate:
             key_data = self._to_data(key)
             request = replicated_map_add_entry_listener_to_key_codec.encode_request(self.name, key_data, self._is_smart)
         elif not key and predicate:
             predicate = self._to_data(predicate)
-            request = replicated_map_add_entry_listener_with_predicate_codec.encode_request(self.name, predicate,
-                                                                                            self._is_smart)
+            request = replicated_map_add_entry_listener_with_predicate_codec.encode_request(
+                self.name, predicate, self._is_smart)
         else:
             request = replicated_map_add_entry_listener_codec.encode_request(self.name, self._is_smart)
 
@@ -70,11 +69,10 @@ class ReplicatedMap(Proxy):
             elif event.event_type == EntryEventType.clear_all and clear_all_func:
                 clear_all_func(event)
 
-        return self._register_listener(request,
-                                       lambda r: replicated_map_add_entry_listener_codec.decode_response(r)['response'],
-                                       lambda reg_id: replicated_map_remove_entry_listener_codec.encode_request(
-                                           self.name, reg_id),
-                                       lambda m: replicated_map_add_entry_listener_codec.handle(m, handle_event_entry))
+        return self._register_listener(
+            request, lambda r: replicated_map_add_entry_listener_codec.decode_response(r)['response'],
+            lambda reg_id: replicated_map_remove_entry_listener_codec.encode_request(self.name, reg_id),
+            lambda m: replicated_map_add_entry_listener_codec.handle(m, handle_event_entry))
 
     def clear(self):
         """
