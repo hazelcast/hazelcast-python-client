@@ -12,7 +12,7 @@ class ListenerRegistration(object):
         self.decode_register_response = decode_register_response
         self.encode_deregister_request = encode_deregister_request
         self.handler = handler
-        self.connection_registrations = {} #Map <Connection, Event Registration>)
+        self.connection_registrations = {}  # Dict of Connection, EventRegistration
 
 
 class EventRegistration(object):
@@ -29,7 +29,7 @@ class ListenerService(object):
         self._invocation_service = client.invoker
         self.is_smart = client.config.network_config.smart_routing
         self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
-        self.active_registrations = {}  # Map <user_registration_id, listener_registration >
+        self.active_registrations = {}  # Dict of user_registration_id, ListenerRegistration
         self._registration_lock = threading.RLock()
         self._event_handlers = {}
 
@@ -57,12 +57,10 @@ class ListenerService(object):
         invocation_time_out_millis = self._invocation_service.invocation_timeout * 1000
         timed_out = elapsed_millis > invocation_time_out_millis
         if timed_out:
-            raise OperationTimeoutError("Registering listeners is timed out."
-                                        + " Last failed member : " + str(last_failed_member) + ", "
-                                        + " Current time: " + str(now_in_millis) + ", "
-                                        + " Start time : " + str(start_millis) + ", "
-                                        + " Client invocation timeout : " + str(invocation_time_out_millis) + " ms, "
-                                        + " Elapsed time : " + str(elapsed_millis) + " ms. ", last_exception)
+            raise OperationTimeoutError\
+                ("Registering listeners is timed out. Last failed member: %s, Current time: %s, Start time: %s, "
+                 "Client invocation timeout: %s, Elapsed time: %s ms, Cause: %s", last_failed_member, now_in_millis,
+                 start_millis, invocation_time_out_millis, elapsed_millis, last_exception.args[0])
         else:
             self._invocation_service.invocation_retry_pause()  # sleep before next try
 
@@ -79,14 +77,15 @@ class ListenerService(object):
             active_connections = self._client.connection_manager.connections
             for connection in active_connections.values():
                 try:
-                    self.register_listener_on_connection(listener_registration, connection)
+                    self.register_listener_on_connection_async(user_registration_id, listener_registration, connection)\
+                        .result()
                 except:
                     if connection.live():
                         self.deregister_listener(user_registration_id)
-                        raise HazelcastError("Listener cannot be added ")  # cause'unu include etmeli miyim nasil (,e)
+                        raise HazelcastError("Listener cannot be added ")
             return user_registration_id
 
-    def register_listener_on_connection(self, listener_registration, connection):
+    def register_listener_on_connection_async(self, user_registration_id, listener_registration, connection):
         registration_map = listener_registration.connection_registrations
 
         if connection in registration_map:
@@ -103,11 +102,13 @@ class ListenerService(object):
                 correlation_id = registration_request.get_correlation_id()
                 registration = EventRegistration(server_registration_id, correlation_id)
                 registration_map[connection] = registration
-            except:
-                # Gotta handle exception
-                pass
+            except Exception as e:
+                if connection.live():
+                    self.logger.warning("Listener %s can not be added to a new connection: %s, reason: %s",
+                                        user_registration_id, connection, e.args[0])
 
         future.add_done_callback(callback)
+        return future
 
     def deregister_listener(self, user_registration_id):
         check_not_none(user_registration_id, "Null userRegistrationId is not allowed!")
@@ -127,16 +128,16 @@ class ListenerService(object):
                 except:
                     if connection.live():
                         successful = False
-                        self.logger.warning("Deregistration for listener with ID {} has failed to address {} ".format
-                                            (user_registration_id, "address"), exc_info=True, extra=self._logger_extras)
+                        self.logger.warning("Deregistration for listener with ID %s has failed to address %s ",
+                                            user_registration_id, "address", exc_info=True, extra=self._logger_extras)
             if successful:
                 self.active_registrations.pop(user_registration_id)
             return successful
 
     def connection_added(self, connection):
         with self._registration_lock:
-            for listener_registration in self.active_registrations.values():
-                self.register_listener_on_connection(listener_registration, connection)
+            for user_reg_id, listener_registration in self.active_registrations.items():
+                self.register_listener_on_connection_async(user_reg_id, listener_registration, connection)
 
     def connection_removed(self, connection, _):
         with self._registration_lock:

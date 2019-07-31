@@ -41,7 +41,7 @@ class ListenerTest(HazelcastTestCase):
 
         owner_address = client.cluster.owner_connection_address
 
-        # Test listener re-registers properly when owner connection is removed.
+        # Test if listener re-registers properly when owner connection is removed.
         members = [self.m1, self.m2, self.m3]
         for m in members:
             if m.address == owner_address:

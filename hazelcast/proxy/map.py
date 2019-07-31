@@ -85,17 +85,16 @@ class Map(Proxy):
         if key and predicate:
             key_data = self._to_data(key)
             predicate_data = self._to_data(predicate)
-            request = map_add_entry_listener_to_key_with_predicate_codec.encode_request(self.name, key_data,
-                                                                                        predicate_data, include_value,
-                                                                                        flags, self._is_smart)
+            request = map_add_entry_listener_to_key_with_predicate_codec.encode_request(
+                self.name, key_data, predicate_data, include_value, flags, self._is_smart)
         elif key and not predicate:
             key_data = self._to_data(key)
-            request = map_add_entry_listener_to_key_codec.encode_request(self.name, key_data, include_value, flags,
-                                                                         self._is_smart)
+            request = map_add_entry_listener_to_key_codec.encode_request(
+                self.name, key_data, include_value, flags, self._is_smart)
         elif not key and predicate:
             predicate = self._to_data(predicate)
-            request = map_add_entry_listener_with_predicate_codec.encode_request(self.name, predicate, include_value,
-                                                                                 flags, self._is_smart)
+            request = map_add_entry_listener_with_predicate_codec.encode_request(
+                self.name, predicate, include_value, flags, self._is_smart)
         else:
             request = map_add_entry_listener_codec.encode_request(self.name, include_value, flags, self._is_smart)
 
@@ -922,19 +921,14 @@ class MapFeatNearCache(Map):
         super(MapFeatNearCache, self)._on_destroy()
 
     def _add_near_cache_invalidation_listener(self):
-        def handle(message):
-            map_add_near_cache_entry_listener_codec.handle(message, self._handle_invalidation, self._handle_batch_invalidation)
-
-        def add_decode(message):
-            return map_add_near_cache_entry_listener_codec.decode_response(message)['response']
-
-        def remove_encode(reg_id):
-            return map_remove_entry_listener_codec.encode_request(self.name, reg_id)
-
         try:
             request = map_add_near_cache_entry_listener_codec.encode_request(self.name, EntryEventType.invalidation,
                                                                              self._is_smart)
-            self._invalidation_listener_id = self._register_listener(request, add_decode, remove_encode, handle)
+            self._invalidation_listener_id = self._register_listener(
+                request, lambda r: map_add_near_cache_entry_listener_codec.decode_response(r)['response'],
+                lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name, reg_id),
+                lambda m: map_add_near_cache_entry_listener_codec.handle(m, self._handle_invalidation,
+                                                                         self._handle_batch_invalidation))
         except:
             self.logger.severe("-----------------\n Near Cache is not initialized!!! \n-----------------")
 

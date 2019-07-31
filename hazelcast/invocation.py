@@ -66,7 +66,7 @@ class InvocationService(object):
         self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
         self._event_queue = queue.Queue()
         self._is_redo_operation = client.config.network_config.redo_operation
-        self.invocation_retry_pause = self._init_invocation_retry_pause() #eskiden private'ti public yaptim.
+        self.invocation_retry_pause = self._init_invocation_retry_pause()
         self.invocation_timeout = self._init_invocation_timeout()
         self._listener_service = None
 
@@ -82,7 +82,8 @@ class InvocationService(object):
         self._listener_service = self._client.listener
 
     def invoke_on_connection(self, message, connection, ignore_heartbeat=False, event_handler=None):
-        return self.invoke(Invocation(self, message, connection=connection, event_handler=event_handler), ignore_heartbeat)
+        return self.invoke(Invocation(self, message, connection=connection, event_handler=event_handler),
+                           ignore_heartbeat)
 
     def invoke_on_partition(self, message, partition_id, invocation_timeout=None):
         invocation = Invocation(self, message, partition_id=partition_id)
@@ -111,7 +112,8 @@ class InvocationService(object):
                 self._send_to_address(invocation, addr)
         elif invocation.has_address():
             if not self._is_member(invocation.address):
-                self._handle_exception(invocation, TargetNotMemberError("Target '{}' is not a member.".format(invocation.address)))
+                self._handle_exception(invocation, TargetNotMemberError("Target '{}' is not a member.".format
+                                                                        (invocation.address)))
             else:
                 self._send_to_address(invocation, invocation.address)
         else:  # send to random address
@@ -134,12 +136,6 @@ class InvocationService(object):
         for correlation_id, invocation in six.iteritems(dict(self._pending)):
             if invocation.sent_connection == connection:
                 self._handle_exception(invocation, cause)
-
-        # TODO
-        # if self._client.lifecycle.is_live:
-        #     for correlation_id, invocation in six.iteritems(dict(self._event_handlers)):
-        #         if invocation.sent_connection == connection and invocation.connection is None:
-        #             self._client.listener.re_register_listener(invocation)
 
     def _init_invocation_retry_pause(self):
         invocation_retry_pause = self._client.properties.get_seconds_positive_or_default(
@@ -196,7 +192,7 @@ class InvocationService(object):
         try:
             connection.send_message(message)
         except IOError as e:
-            self._listener_service.remove_event_handler(correlation_id)  # fail ederse event handleri temizlemek icin
+            self._listener_service.remove_event_handler(correlation_id)
             self._handle_exception(invocation, e)
 
     def _handle_client_message(self, message):
