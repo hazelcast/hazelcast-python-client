@@ -192,7 +192,8 @@ class InvocationService(object):
         try:
             connection.send_message(message)
         except IOError as e:
-            self._listener_service.remove_event_handler(correlation_id)
+            if invocation.event_handler is not None:
+                self._listener_service.remove_event_handler(correlation_id)
             self._handle_exception(invocation, e)
 
     def _handle_client_message(self, message):

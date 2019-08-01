@@ -2,7 +2,7 @@ from threading import Thread
 from time import sleep
 
 from hazelcast import ClientConfig
-from hazelcast.exception import HazelcastError
+from hazelcast.exception import HazelcastError, TargetDisconnectedError
 from hazelcast.lifecycle import LIFECYCLE_STATE_DISCONNECTED, LIFECYCLE_STATE_CONNECTED
 from hazelcast.util import AtomicInteger
 from tests.base import HazelcastTestCase
@@ -76,7 +76,12 @@ class ReconnectTest(HazelcastTestCase):
 
         def assert_events():
             if client.lifecycle.is_live:
-                map.put("key-%d" % count.get_and_increment(), "value").result()
+                while True:
+                    try:
+                        map.put("key-%d" % count.get_and_increment(), "value").result()
+                        break
+                    except TargetDisconnectedError:
+                        pass
                 self.assertGreater(len(collector.events), 0)
             else:
                 self.fail("Client disconnected...")

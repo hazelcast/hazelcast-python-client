@@ -4,6 +4,7 @@ from uuid import uuid4
 
 from hazelcast.exception import OperationTimeoutError, HazelcastError
 from hazelcast.util import current_time_in_millis, check_not_none
+from time import sleep
 
 
 class ListenerRegistration(object):
@@ -29,7 +30,7 @@ class ListenerService(object):
         self._invocation_service = client.invoker
         self.is_smart = client.config.network_config.smart_routing
         self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
-        self.active_registrations = {}  # Dict of user_registration_id, ListenerRegistration
+        self._active_registrations = {}  # Dict of user_registration_id, ListenerRegistration
         self._registration_lock = threading.RLock()
         self._event_handlers = {}
 
@@ -62,7 +63,7 @@ class ListenerService(object):
                  "Client invocation timeout: %s, Elapsed time: %s ms, Cause: %s", last_failed_member, now_in_millis,
                  start_millis, invocation_time_out_millis, elapsed_millis, last_exception.args[0])
         else:
-            self._invocation_service.invocation_retry_pause()  # sleep before next try
+            sleep(self._invocation_service.invocation_retry_pause())  # sleep before next try
 
     def register_listener(self, registration_request, decode_register_response, encode_deregister_request, handler):
         if self.is_smart:
@@ -72,7 +73,7 @@ class ListenerService(object):
             user_registration_id = str(uuid4())
             listener_registration = ListenerRegistration(registration_request, decode_register_response,
                                                          encode_deregister_request, handler)
-            self.active_registrations[user_registration_id] = listener_registration
+            self._active_registrations[user_registration_id] = listener_registration
 
             active_connections = self._client.connection_manager.connections
             for connection in active_connections.values():
@@ -105,7 +106,7 @@ class ListenerService(object):
             except Exception as e:
                 if connection.live():
                     self.logger.warning("Listener %s can not be added to a new connection: %s, reason: %s",
-                                        user_registration_id, connection, e.args[0])
+                                        user_registration_id, connection, e.args[0], extra=self._logger_extras)
 
         future.add_done_callback(callback)
         return future
@@ -114,7 +115,7 @@ class ListenerService(object):
         check_not_none(user_registration_id, "None userRegistrationId is not allowed!")
 
         with self._registration_lock:
-            listener_registration = self.active_registrations.get(user_registration_id)
+            listener_registration = self._active_registrations.get(user_registration_id)
             if listener_registration is None:
                 return False
             successful = True
@@ -131,17 +132,17 @@ class ListenerService(object):
                         self.logger.warning("Deregistration for listener with ID %s has failed to address %s ",
                                             user_registration_id, "address", exc_info=True, extra=self._logger_extras)
             if successful:
-                self.active_registrations.pop(user_registration_id)
+                self._active_registrations.pop(user_registration_id)
             return successful
 
     def connection_added(self, connection):
         with self._registration_lock:
-            for user_reg_id, listener_registration in self.active_registrations.items():
+            for user_reg_id, listener_registration in self._active_registrations.items():
                 self.register_listener_on_connection_async(user_reg_id, listener_registration, connection)
 
     def connection_removed(self, connection, _):
         with self._registration_lock:
-            for listener_registration in self.active_registrations.values():
+            for listener_registration in self._active_registrations.values():
                 event_registration = listener_registration.connection_registrations.pop(connection, None)
                 if event_registration is not None:
                     self.remove_event_handler(event_registration.correlation_id)
@@ -153,8 +154,9 @@ class ListenerService(object):
         correlation_id = message.get_correlation_id()
         if correlation_id not in self._event_handlers:
             self.logger.warning("Got event message with unknown correlation id: %s", message, extra=self._logger_extras)
-        event_handler = self._event_handlers.get(correlation_id)
-        event_handler(message)
+        else:
+            event_handler = self._event_handlers.get(correlation_id)
+            event_handler(message)
 
     def add_event_handler(self, correlation_id, event_handler):
         self._event_handlers[correlation_id] = event_handler

@@ -15,8 +15,8 @@ class ListenerTest(HazelcastTestCase):
         self.collector = event_collector()
 
     def tearDown(self):
-        self.rc.exit()
         self.shutdown_all_clients()
+        self.rc.exit()
 
     # -------------------------- test_remove_member ----------------------- #
     def test_smart_listener_remove_member(self):
