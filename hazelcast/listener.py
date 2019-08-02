@@ -63,7 +63,7 @@ class ListenerService(object):
                  "Client invocation timeout: %s, Elapsed time: %s ms, Cause: %s", last_failed_member, now_in_millis,
                  start_millis, invocation_time_out_millis, elapsed_millis, last_exception.args[0])
         else:
-            sleep(self._invocation_service.invocation_retry_pause())  # sleep before next try
+            sleep(self._invocation_service.invocation_retry_pause)  # sleep before next try
 
     def register_listener(self, registration_request, decode_register_response, encode_deregister_request, handler):
         if self.is_smart:
