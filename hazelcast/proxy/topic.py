@@ -24,17 +24,17 @@ class Topic(PartitionSpecificProxy):
         :param on_message: (Function), function to be called when a message is published.
         :return: (str), a registration id which is used as a key to remove the listener.
         """
-        request = topic_add_message_listener_codec.encode_request(self.name, False)
+        request = topic_add_message_listener_codec.encode_request(self.name, self._is_smart)
 
         def handle(item, publish_time, uuid):
             member = self._client.cluster.get_member_by_uuid(uuid)
             item_event = TopicMessage(self.name, item, publish_time, member, self._to_object)
             on_message(item_event)
 
-        return self._start_listening(request,
-                                     lambda m: topic_add_message_listener_codec.handle(m, handle),
-                                     lambda r: topic_add_message_listener_codec.decode_response(r)['response'],
-                                     self.partition_key)
+        return self._register_listener(
+            request, lambda r: topic_add_message_listener_codec.decode_response(r)['response'],
+            lambda reg_id: topic_remove_message_listener_codec.encode_request(self.name, reg_id),
+            lambda m: topic_add_message_listener_codec.handle(m, handle))
 
     def publish(self, message):
         """
@@ -53,5 +53,4 @@ class Topic(PartitionSpecificProxy):
         :param registration_id: (str), registration id of the listener to be removed.
         :return: (bool), ``true`` if the listener is removed, ``false`` otherwise.
         """
-        return self._stop_listening(registration_id,
-                                    lambda i: topic_remove_message_listener_codec.encode_request(self.name, i))
+        return self._deregister_listener(registration_id)

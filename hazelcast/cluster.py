@@ -5,7 +5,6 @@ import time
 import uuid
 
 from hazelcast.exception import HazelcastError, AuthenticationError, TargetDisconnectedError
-from hazelcast.invocation import ListenerInvocation
 from hazelcast.lifecycle import LIFECYCLE_STATE_CONNECTED, LIFECYCLE_STATE_DISCONNECTED
 from hazelcast.protocol.codec import client_add_membership_listener_codec, client_authentication_codec
 from hazelcast.util import get_possible_addresses, get_provider_addresses, calculate_version
@@ -181,8 +180,7 @@ class ClusterService(object):
         def handler(m):
             client_add_membership_listener_codec.handle(m, self._handle_member, self._handle_member_list)
 
-        response = self._client.invoker.invoke(
-            ListenerInvocation(self._client.listener, request, handler, connection=connection)).result()
+        response = self._client.invoker.invoke_on_connection(request, connection, True, handler).result()
         registration_id = client_add_membership_listener_codec.decode_response(response)["response"]
         self.logger.debug("Registered membership listener with ID " + registration_id, extra=self._logger_extras)
         self._initial_list_fetched.wait()

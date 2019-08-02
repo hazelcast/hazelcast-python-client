@@ -79,25 +79,24 @@ class Map(Proxy):
         .. seealso:: :class:`~hazelcast.serialization.predicate.Predicate` for more info about predicates.
         """
         flags = get_entry_listener_flags(added=added_func, removed=removed_func, updated=updated_func,
-                                         evicted=evicted_func, evict_all=evict_all_func, clear_all=clear_all_func, merged=merged_func,
-                                         expired=expired_func)
+                                         evicted=evicted_func, evict_all=evict_all_func, clear_all=clear_all_func,
+                                         merged=merged_func, expired=expired_func)
 
         if key and predicate:
             key_data = self._to_data(key)
             predicate_data = self._to_data(predicate)
-            request = map_add_entry_listener_to_key_with_predicate_codec.encode_request(self.name, key_data,
-                                                                                        predicate_data, include_value,
-                                                                                        flags, False)
+            request = map_add_entry_listener_to_key_with_predicate_codec.encode_request(
+                self.name, key_data, predicate_data, include_value, flags, self._is_smart)
         elif key and not predicate:
             key_data = self._to_data(key)
-            request = map_add_entry_listener_to_key_codec.encode_request(self.name, key_data, include_value, flags,
-                                                                         False)
+            request = map_add_entry_listener_to_key_codec.encode_request(
+                self.name, key_data, include_value, flags, self._is_smart)
         elif not key and predicate:
             predicate = self._to_data(predicate)
-            request = map_add_entry_listener_with_predicate_codec.encode_request(self.name, predicate, include_value,
-                                                                                 flags, False)
+            request = map_add_entry_listener_with_predicate_codec.encode_request(
+                self.name, predicate, include_value, flags, self._is_smart)
         else:
-            request = map_add_entry_listener_codec.encode_request(self.name, include_value, flags, False)
+            request = map_add_entry_listener_codec.encode_request(self.name, include_value, flags, self._is_smart)
 
         def handle_event_entry(**_kwargs):
             event = EntryEvent(self._to_object, **_kwargs)
@@ -118,8 +117,9 @@ class Map(Proxy):
             elif event.event_type == EntryEventType.expired:
                 expired_func(event)
 
-        return self._start_listening(request, lambda m: map_add_entry_listener_codec.handle(m, handle_event_entry),
-                                     lambda r: map_add_entry_listener_codec.decode_response(r)['response'])
+        return self._register_listener(request, lambda r: map_add_entry_listener_codec.decode_response(r)['response'],
+                                       lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name, reg_id),
+                                       lambda m: map_add_entry_listener_codec.handle(m, handle_event_entry))
 
     def add_index(self, attribute, ordered=False):
         """
@@ -640,8 +640,7 @@ class Map(Proxy):
         :param registration_id: (str), id of registered listener.
         :return: (bool), ``true`` if registration is removed, ``false`` otherwise.
         """
-        return self._stop_listening(registration_id,
-                                    lambda i: map_remove_entry_listener_codec.encode_request(self.name, i))
+        return self._deregister_listener(registration_id)
 
     def replace(self, key, value):
         """
@@ -922,15 +921,14 @@ class MapFeatNearCache(Map):
         super(MapFeatNearCache, self)._on_destroy()
 
     def _add_near_cache_invalidation_listener(self):
-        def handle(message):
-            map_add_near_cache_entry_listener_codec.handle(message, self._handle_invalidation, self._handle_batch_invalidation)
-
-        def handle_decode(message):
-            return map_add_near_cache_entry_listener_codec.decode_response(message)['response']
-
         try:
-            request = map_add_near_cache_entry_listener_codec.encode_request(self.name, EntryEventType.invalidation, False)
-            self._invalidation_listener_id = self._start_listening(request, handle, handle_decode)
+            request = map_add_near_cache_entry_listener_codec.encode_request(self.name, EntryEventType.invalidation,
+                                                                             self._is_smart)
+            self._invalidation_listener_id = self._register_listener(
+                request, lambda r: map_add_near_cache_entry_listener_codec.decode_response(r)['response'],
+                lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name, reg_id),
+                lambda m: map_add_near_cache_entry_listener_codec.handle(m, self._handle_invalidation,
+                                                                         self._handle_batch_invalidation))
         except:
             self.logger.severe("-----------------\n Near Cache is not initialized!!! \n-----------------")
 

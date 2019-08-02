@@ -96,7 +96,7 @@ class List(PartitionSpecificProxy):
         :param item_removed_func: Function to be called when an item is deleted from this list (optional).
         :return: (str), a registration id which is used as a key to remove the listener.
         """
-        request = list_add_listener_codec.encode_request(self.name, include_value, False)
+        request = list_add_listener_codec.encode_request(self.name, include_value, self._is_smart)
 
         def handle_event_item(item, uuid, event_type):
             item = item if include_value else None
@@ -110,10 +110,9 @@ class List(PartitionSpecificProxy):
                 if item_removed_func:
                     item_removed_func(item_event)
 
-        return self._start_listening(request,
-                                     lambda m: list_add_listener_codec.handle(m, handle_event_item),
-                                     lambda r: list_add_listener_codec.decode_response(r)['response'],
-                                     self.partition_key)
+        return self._register_listener(request, lambda r: list_add_listener_codec.decode_response(r)['response'],
+                                       lambda reg_id: list_remove_listener_codec.encode_request(self.name, reg_id),
+                                       lambda m: list_add_listener_codec.handle(m, handle_event_item))
 
     def clear(self):
         """
@@ -254,7 +253,7 @@ class List(PartitionSpecificProxy):
         :param registration_id: (str), id of the listener to be deleted.
         :return: (bool), ``true`` if the item listener is removed, ``false`` otherwise.
         """
-        return self._stop_listening(registration_id, lambda i: list_remove_listener_codec.encode_request(self.name, i))
+        return self._deregister_listener(registration_id)
 
     def retain_all(self, items):
         """

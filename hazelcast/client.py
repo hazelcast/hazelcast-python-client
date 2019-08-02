@@ -6,7 +6,8 @@ import json
 from hazelcast.cluster import ClusterService, RandomLoadBalancer
 from hazelcast.config import ClientConfig, ClientProperties
 from hazelcast.connection import ConnectionManager, Heartbeat, DefaultAddressProvider, DefaultAddressTranslator
-from hazelcast.invocation import InvocationService, ListenerService
+from hazelcast.invocation import InvocationService
+from hazelcast.listener import ListenerService
 from hazelcast.lifecycle import LifecycleService, LIFECYCLE_STATE_SHUTTING_DOWN, LIFECYCLE_STATE_SHUTDOWN
 from hazelcast.partition import PartitionService
 from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE, LIST_SERVICE, SET_SERVICE, MULTI_MAP_SERVICE, \
@@ -61,8 +62,10 @@ class HazelcastClient(object):
     def _start(self):
         self.reactor.start()
         try:
+            self.invoker.start()
             self.cluster.start()
             self.heartbeat.start()
+            self.listener.start()
             self.partition_service.start()
             self.statistics.start()
         except:

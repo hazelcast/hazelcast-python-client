@@ -408,6 +408,12 @@ class MapTest(SingleMemberTestCase):
         time.sleep(1)
         self.assertEqual(len(collector.events), 1)
 
+    def test_remove_entry_listener_with_none_id(self):
+        with self.assertRaises(AssertionError) as cm:
+            self.map.remove_entry_listener(None)
+        e = cm.exception
+        self.assertEqual(e.args[0],"None userRegistrationId is not allowed!")
+
     def test_replace(self):
         self.map.put("key", "value")
 
