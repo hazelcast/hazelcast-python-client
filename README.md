@@ -174,7 +174,7 @@ INFO: [192.168.0.3]:5701 [dev] [3.10.4] [192.168.0.3]:5701 is STARTED
 
 When you want to use features such as querying and language interoperability, you might need to add your own Java classes to the Hazelcast member in order to use them from your Python client. This can be done by adding your own compiled code to the `CLASSPATH`. To do this, compile your code with the `CLASSPATH` and add the compiled files to the `user-lib` directory in the extracted `hazelcast-<version>.zip` (or `tar`). Then, you can start your Hazelcast member by using the start scripts in the `bin` directory. The start scripts will automatically add your compiled classes to the `CLASSPATH`.
 
-Note that if you are adding an `IdentifiedDataSerializable` or a `Portable` class, you need to add its factory too. Then, you should configure the factory in the `hazelcast.xml` configuration file. This file resides in the `bin` directory where you extracted the `hazelcast-<version>.zip` (or `tar`).
+Note that if you are adding an `IdentifiedDataSerializable` or a `Portable` class, you need to add its factory too. Then you should configure the factory in the `hazelcast.xml` configuration file. This file resides in the `bin` directory where you extracted the `hazelcast-<version>.zip` (or `tar`).
 
 The following is an example configuration when you are adding an `IdentifiedDataSerializable` class:
 
@@ -290,12 +290,12 @@ These configuration elements are enough for most connection scenarios. Now we wi
 
 ### 1.4.2. Configuring Hazelcast Python Client
 
-Hazelcast Python client can be configured programmatically.
+The Hazelcast Python client can be configured programmatically.
 
 This section describes some network configuration settings to cover common use cases in connecting the client to a cluster. See the [Configuration Overview section](#3-configuration-overview)
 and the following sections for information about detailed network configurations and/or additional features of Hazelcast Python client configuration.
 
-An easy way to configure your Hazelcast Python client is to create a `ClientConfig` object and set the appropriate options. Then you can
+An easy way to configure your Hazelcast Python client is to create a `ClientConfig` object and set the appropriate config options. Then you can
 supply this object to your client at the startup. This is the programmatic configuration approach.
 
 Once you imported `hazelcast` to your Python project, you may follow programmatic configuration approach.
@@ -311,8 +311,8 @@ client = hazelcast.HazelcastClient(config)
 
 ---
 
-If you run the Hazelcast IMDG members in a different server than the client, you most probably have configured the members' ports and cluster
-names as explained in the previous section. If you did, then you need to make certain changes to the network settings of your client.
+If you run the Hazelcast IMDG members on a different server than the client, you most probably have configured the members' ports and cluster
+names as explained in the previous section. If you did, then you need to make match those changes to the network settings of your client.
 
 
 #### 1.4.2.1. Group Settings
@@ -325,7 +325,7 @@ config.group_config.name = "group-name-of-your-cluster"
 config.group_config.password = "group password"
 ```
 
-> **NOTE: If you have a Hazelcast IMDG release older than 3.11, you need to provide also a group password along with the group name.**
+> **NOTE: If you have a Hazelcast IMDG release older than 3.11, you also need to provide a group password along with the group name.**
 
 #### 1.4.2.2. Network Settings
 
@@ -539,12 +539,12 @@ Feb 15, 2019 12:54:05 PM HazelcastClient
 INFO: [3.10] [dev] [hz.client_0] Client shutdown.
 ```
 
-You will see this time we add only the sales employees but we get the list of all known employees including the ones in IT.
-That is because our map lives in the cluster and no matter which client we use, we can access the whole map.
+You will see this time we added only the sales employees but we get the list of all known employees including the ones in IT.
+This is because our map lives in the cluster and no matter which client we use, we can access the whole map.
 
-You may wonder why we have used `result()` method over the `entry_set()` method of the `personnel_map`. That is because 
+You may wonder why we have used `result()` method over the `entry_set()` method of the `personnel_map`. This is because 
 the Hazelcast Python client is designed to be fully asynchronous. Every method call over distributed objects such as 
-`put()`, `get()`, `entry_set()`, etc. will return a `Future` object that is similar to the [Future](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.Future)
+`put()`, `get()`, `entry_set()` etc, will return a `Future` object that is similar to the [Future](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.Future)
 class of the [concurrent.futures](https://docs.python.org/3/library/concurrent.futures.html#module-concurrent.futures) module.
 
 With this design choice, method calls over the distributed objects can be executed asynchronously without blocking the 
@@ -769,7 +769,7 @@ In order to support these features, a serialized `Portable` object contains meta
 
 With multiversion support, you can have two members each having different versions of the same object; Hazelcast stores both meta information and uses the correct one to serialize and deserialize portable objects depending on the member. This is very helpful when you are doing a rolling upgrade without shutting down the cluster.
 
-Also note that portable serialization is totally language independent and is used as the binary protocol between Hazelcast server and clients.
+Also note that portable serialization is completely language independent and is used as the binary protocol between Hazelcast server and clients.
 
 A sample portable implementation of a `Foo` class looks like the following:
 
@@ -949,7 +949,7 @@ In order to use JSON serialization, you should use the `HazelcastJsonValue` obje
 You can construct `HazelcastJsonValue` from strings or JSON serializable Python objects. If a Python object is provided to the constructor, `HazelcastJsonValue` tries to convert it
 to a JSON string. If an error occurs during the conversion, it is raised directly. If a string argument is provided to the constructor, it is used as it is. 
 
-No JSON parsing is performed but it is your responsibility to provide correctly formatted JSON strings. The client will not validate the string, and it will send it to the cluster as it is. If you submit incorrectly formatted JSON strings and, later, if you query those objects, it is highly possible that you will get formatting errors since the server will fail to deserialize or find the query fields.
+No JSON parsing is performed. It is your responsibility to provide correctly formatted JSON strings. The client will not validate the string, it will send it to the cluster as it is. If you submit incorrectly formatted JSON strings and, later, if you query those objects, it is highly possible that you will get formatting errors since the server will fail to deserialize or find the query fields.
 
 Here is an example of how you can construct a `HazelcastJsonValue` and put to the map:
 
@@ -961,7 +961,7 @@ json_map.put("item1", HazelcastJsonValue("{\"age\": 4}"))
 json_map.put("item2", HazelcastJsonValue({"age": 20}))
 ```
 
-You can query JSON objects in the cluster using the `Predicate`s of your choice. An example JSON query for querying the values whose age is less than 6 is shown below:
+You can query JSON objects in the cluster using the `Predicate` of your choice. An example JSON query for querying the values whose age is less than 6 is shown below:
 
 ```python
 # Get the objects whose age is less than 6
@@ -1011,7 +1011,7 @@ config.serialization_config.global_serializer = GlobalSerializer
 
 # 5. Setting Up Client Network
 
-All network related configuration of Hazelcast Python client is performed via the `ClientNetworkConfig` class when using programmatic configuration. Let's first give the examples for this approach. Then we will look at its sub-elements and attributes.
+All network related configuration of a Hazelcast Python client is performed via the `ClientNetworkConfig` class when using the programmatic configuration. Let's first give an example for this approach. Then we will look at its sub-elements and attributes.
 
 Here is an example of configuring the network for Python Client programmatically.
 
@@ -1035,7 +1035,7 @@ config.network_config.addresses.append("10.1.1.21") # single value
 config.network_config.addresses.extend(["10.1.1.23", "10.1.1.22:5703"]) # multiple values
 ```
 
-If the port part is omitted, then 5701, 5702 and 5703 will be tried in a random order.
+If the port part is omitted, then ports 5701, 5702 and 5703 will be tried in a random order.
 
 You can specify multiple addresses with or without the port information as seen above. The provided list is shuffled and tried in a random order. Its default value is `localhost`.
 
@@ -1348,13 +1348,13 @@ The client has two operation modes because of the distributed nature of the data
 
 ### 7.2.1. Smart Client
 
-In the smart mode, the clients connect to each cluster member. Since each data partition uses the well known and consistent hashing algorithm, each client can send an operation to the relevant cluster member, which increases the overall throughput and efficiency. Smart mode is the default mode.
+In the smart mode, the clients connect to all the cluster members. Since each data partition uses the well known and consistent hashing algorithm, each client can send an operation to the relevant cluster member, which increases the overall throughput and efficiency. Smart mode is the default mode.
 
 ### 7.2.2. Unisocket Client
 
 For some cases, the clients can be required to connect to a single member instead of each member in the cluster. Firewalls, security or some custom networking issues can be the reason for these cases.
 
-In the unisocket client mode, the client will only connect to one of the configured addresses. This single member will behave as a gateway to the other members. For any operation requested from the client, it will redirect the request to the relevant member and return the response back to the client returned from this member.
+In the unisocket client mode, the client will only connect to one of the configured member addresses. This single member will behave as a gateway to the other members. For any operation requested from the client, it will redirect the request to the relevant member and return the response back to the client returned from this member.
 
 ## 7.3. Handling Failures
 
@@ -2215,7 +2215,7 @@ Map entries in Hazelcast are partitioned across the cluster members. Hazelcast c
 
 These benefits do not come for free, please consider the following trade-offs:
 
-- Clients with a Near Cache will have to hold the extra cached data, which increases memory consumption.
+- Clients with a Near Cache will have to hold the extra cached data, which increases their memory consumption.
 - If invalidation is enabled and entries are updated frequently, then invalidations will be costly.
 - Near Cache breaks the strong consistency guarantees; you might be reading stale data.
  
