@@ -1,33 +1,7 @@
-"""
-Client Message is the carrier framed data as defined below.
-Any request parameter, response or event data will be carried in the payload.
-
-0                   1                   2                   3
-0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|R|                      Frame Length                           |
-+-------------+---------------+---------------------------------+
-|  Version    |B|E|  Flags    |               Type              |
-+-------------+---------------+---------------------------------+
-|                                                               |
-+                       CorrelationId                           +
-|                                                               |
-+---------------------------------------------------------------+
-|                        PartitionId                            |
-+-----------------------------+---------------------------------+
-|        Data Offset          |                                 |
-+-----------------------------+                                 |
-|                      Message Payload Data                    ...
-|                                                              ...
-
-
-"""
-import binascii
 import struct
+import hazelcast.protocol.bits as Bits
 import socket
 import errno
-
-from hazelcast.serialization.data import *
 
 # constants
 VERSION = 0
@@ -39,207 +13,233 @@ LISTENER_FLAG = 0x01
 PAYLOAD_OFFSET = 18
 SIZE_OFFSET = 0
 
-FRAME_LENGTH_FIELD_OFFSET = 0
-VERSION_FIELD_OFFSET = FRAME_LENGTH_FIELD_OFFSET + INT_SIZE_IN_BYTES
-FLAGS_FIELD_OFFSET = VERSION_FIELD_OFFSET + BYTE_SIZE_IN_BYTES
-TYPE_FIELD_OFFSET = FLAGS_FIELD_OFFSET + BYTE_SIZE_IN_BYTES
-CORRELATION_ID_FIELD_OFFSET = TYPE_FIELD_OFFSET + SHORT_SIZE_IN_BYTES
-PARTITION_ID_FIELD_OFFSET = CORRELATION_ID_FIELD_OFFSET + LONG_SIZE_IN_BYTES
-DATA_OFFSET_FIELD_OFFSET = PARTITION_ID_FIELD_OFFSET + INT_SIZE_IN_BYTES
-HEADER_SIZE = DATA_OFFSET_FIELD_OFFSET + SHORT_SIZE_IN_BYTES
+# Note that all frames will merged with frame length and flags
+TYPE_FIELD_OFFSET = 0
+CORRELATION_ID_FIELD_OFFSET = TYPE_FIELD_OFFSET + Bits.INT_SIZE_IN_BYTES
+
+# backup acks field offset is used by response messages
+RESPONSE_BACKUP_ACKS_FIELD_OFFSET = CORRELATION_ID_FIELD_OFFSET + Bits.LONG_SIZE_IN_BYTES
+
+# partition id field offset used by request and event messages
+PARTITION_ID_FIELD_OFFSET = CORRELATION_ID_FIELD_OFFSET + Bits.LONG_SIZE_IN_BYTES
+
+# offset valid for fragmentation frames only
+FRAGMENTATION_ID_OFFSET = 0
+
+DEFAULT_FLAGS = 0
+BEGIN_FRAGMENT_FLAG = 1 << 15
+END_FRAGMENT_FLAG = 1 << 14
+UNFRAGMENTED_MESSAGE = BEGIN_FRAGMENT_FLAG | END_FRAGMENT_FLAG
+IS_FINAL_FLAG = 1 << 13
+BEGIN_DATA_STRUCTURE_FLAG = 1 << 12
+END_DATA_STRUCTURE_FLAG = 1 << 11
+IS_NULL_FLAG = 1 << 10
+IS_EVENT_FLAG = 1 << 9
+
+BACKUP_AWARE_FLAG = 1 << 8
+
+BACKUP_EVENT_FLAG = 1 << 7
+
+SIZE_OF_FRAME_LENGTH_AND_FLAGS = Bits.INT_SIZE_IN_BYTES + Bits.SHORT_SIZE_IN_BYTES
 
 
-class ClientMessage(object):
-    def __init__(self, buff=None, payload_size=0):
-        if buff:
-            self.buffer = buff
-            self._read_index = 0
-        else:
-            self.buffer = bytearray(HEADER_SIZE + payload_size)
-            self.set_data_offset(HEADER_SIZE)
-            self._write_index = 0
-        self._retryable = False
+class ClientMessage:
+    def __init__(self, start_frame=None, end_frame=None):
+        self.start_frame = start_frame
+        self.end_frame = end_frame
+        self.connection = None
+        self.retryable = None
+        self.operation_name = ""
 
-    # HEADER ACCESSORS
-    def get_correlation_id(self):
-        return struct.unpack_from(FMT_LE_LONG, self.buffer, CORRELATION_ID_FIELD_OFFSET)[0]
+    # BEGIN_FRAME = ClientMessage.Frame(bytearray(), BEGIN_DATA_STRUCTURE_FLAG)
+    # END_FRAME = ClientMessage.Frame(bytearray(), END_DATA_STRUCTURE_FLAG)
 
-    def set_correlation_id(self, val):
-        struct.pack_into(FMT_LE_LONG, self.buffer, CORRELATION_ID_FIELD_OFFSET, val)
+    # @property
+    # def NULL_FRAME(self):
+    #    return self.Frame(bytearray(), IS_NULL_FLAG)
+
+    @staticmethod
+    def create_for_decode(start_frame):
+        return ClientMessage(start_frame=start_frame)
+
+    @staticmethod
+    def create_for_encode():
+        return ClientMessage()
+
+    def add(self, frame):
+        frame.next = None
+        if self.start_frame is None:
+            self.start_frame = frame
+            self.end_frame = frame
+            return self
+
+        self.end_frame.next = frame
+        self.end_frame = frame
         return self
 
-    def get_partition_id(self):
-        return struct.unpack_from(FMT_LE_INT, self.buffer, PARTITION_ID_FIELD_OFFSET)[0]
-
-    def set_partition_id(self, val):
-        struct.pack_into(FMT_LE_INT, self.buffer, PARTITION_ID_FIELD_OFFSET, val)
-        return self
+    def frame_iterator(self):
+        return self.ForwardFrameIterator(self.start_frame)
 
     def get_message_type(self):
-        return struct.unpack_from(FMT_LE_UINT16, self.buffer, TYPE_FIELD_OFFSET)[0]
+        return struct.unpack_from(Bits.FMT_LE_INT, self.start_frame.content, TYPE_FIELD_OFFSET)[0]
 
-    def set_message_type(self, val):
-        struct.pack_into(FMT_LE_UINT16, self.buffer, TYPE_FIELD_OFFSET, val)
-        return self
+    def set_message_type(self, message_type):
+        struct.pack_into(Bits.FMT_LE_INT, self.start_frame.content, TYPE_FIELD_OFFSET, message_type)
 
-    def get_flags(self):
-        return struct.unpack_from(FMT_LE_UINT8, self.buffer, FLAGS_FIELD_OFFSET)[0]
+    def get_correlation_id(self):
+        return struct.unpack_from(Bits.FMT_LE_INT, self.start_frame.content, CORRELATION_ID_FIELD_OFFSET)[0]
 
-    def set_flags(self, val):
-        struct.pack_into(FMT_LE_UINT8, self.buffer, FLAGS_FIELD_OFFSET, val)
-        return self
+    def set_correlation_id(self, correlation_id):
+        struct.pack_into(Bits.FMT_LE_INT, self.start_frame.content, CORRELATION_ID_FIELD_OFFSET, correlation_id)
 
-    def has_flags(self, flags):
-        return self.get_flags() & flags
+    def get_number_of_backup_acks(self):
+        return struct.unpack_from(Bits.FMT_LE_LONG, self.start_frame, RESPONSE_BACKUP_ACKS_FIELD_OFFSET)[0]
+
+    def set_number_of_backup_acks(self, number_of_backup_acks):
+        struct.pack_into(Bits.FMT_LE_LONG, self.start_frame.content, RESPONSE_BACKUP_ACKS_FIELD_OFFSET,
+                         number_of_backup_acks)
+
+    def get_partition_id(self):
+        return struct.unpack_from(Bits.FMT_LE_INT, self.start_frame.content, PARTITION_ID_FIELD_OFFSET)[0]
+
+    def set_partition_id(self, partition_id):
+        struct.pack_into(Bits.FMT_LE_INT, self.start_frame.content, PARTITION_ID_FIELD_OFFSET,
+                         partition_id)
+
+    @staticmethod
+    def is_flag_set(flags, flag_mask):
+        i = flags & flag_mask
+        return i == flag_mask
 
     def get_frame_length(self):
-        return struct.unpack_from(FMT_LE_INT, self.buffer, FRAME_LENGTH_FIELD_OFFSET)[0]
+        frame_length = 0
+        current_frame = self.start_frame
+        while current_frame is not None:
+            frame_length += current_frame.get_size()
+            current_frame = current_frame.next
+        return frame_length
 
-    def set_frame_length(self, val):
-        struct.pack_into(FMT_LE_INT, self.buffer, FRAME_LENGTH_FIELD_OFFSET, val)
-        return self
+    def merge(self, fragment):
+        # skip the first element
+        fragment_message_start_frame = fragment.start_frame.next
+        self.end_frame.next = fragment_message_start_frame
+        self.end_frame = fragment.end_frame
 
-    def get_data_offset(self):
-        return struct.unpack_from(FMT_LE_UINT16, self.buffer, DATA_OFFSET_FIELD_OFFSET)[0]
-
-    def set_data_offset(self, val):
-        struct.pack_into(FMT_LE_UINT16, self.buffer, DATA_OFFSET_FIELD_OFFSET, val)
-        return self
-
-    def _write_offset(self):
-        return self.get_data_offset() + self._write_index
-
-    def _read_offset(self):
-        return self.get_data_offset() + self._read_index
-
-    # PAYLOAD
-    def append_byte(self, val):
-        struct.pack_into(FMT_LE_UINT8, self.buffer, self._write_offset(), val)
-        self._write_index += BYTE_SIZE_IN_BYTES
-        return self
-
-    def append_bool(self, val):
-        return self.append_byte(1 if val else 0)
-
-    def append_int(self, val):
-        struct.pack_into(FMT_LE_INT, self.buffer, self._write_offset(), val)
-        self._write_index += INT_SIZE_IN_BYTES
-        return self
-
-    def append_long(self, val):
-        struct.pack_into(FMT_LE_LONG, self.buffer, self._write_offset(), val)
-        self._write_index += LONG_SIZE_IN_BYTES
-        return self
-
-    def append_str(self, val):
-        self.append_byte_array(val.encode("utf-8"))
-        return self
-
-    def append_data(self, val):
-        self.append_byte_array(val.to_bytes())
-        return self
-
-    def append_byte_array(self, arr):
-        length = len(arr)
-        # length
-        self.append_int(length)
-        # copy content
-        self.buffer[self._write_offset(): self._write_offset() + length] = arr[:]
-        self._write_index += length
-
-    def append_tuple(self, entry_tuple):
-        self.append_data(entry_tuple[0]).append_data(entry_tuple[1])
-        return self
-
-    # PAYLOAD READ
-    def _read_from_buff(self, fmt, size):
-        val = struct.unpack_from(fmt, self.buffer, self._read_offset())
-        self._read_index += size
-        return val[0]
-
-    def read_byte(self):
-        return self._read_from_buff(FMT_LE_UINT8, BYTE_SIZE_IN_BYTES)
-
-    def read_bool(self):
-        return True if self.read_byte() else False
-
-    def read_int(self):
-        return self._read_from_buff(FMT_LE_INT, INT_SIZE_IN_BYTES)
-
-    def read_long(self):
-        return self._read_from_buff(FMT_LE_LONG, LONG_SIZE_IN_BYTES)
-
-    def read_str(self):
-        return self.read_byte_array().decode("utf-8")
-
-    def read_data(self):
-        return Data(self.read_byte_array())
-
-    def read_byte_array(self):
-        length = self.read_int()
-        result = bytearray(self.buffer[self._read_offset(): self._read_offset() + length])
-        self._read_index += length
-        return result
-
-    # helpers
-
-    def is_retryable(self):
-        return self._retryable
-
-    def set_retryable(self, val):
-        self._retryable = val
-        return self
-
-    def is_complete(self):
-        try:
-            return (self._read_offset() >= HEADER_SIZE) and (self._read_offset() == self.get_frame_length())
-        except AttributeError:
+    def __eq__(self, other):
+        if other is None or type(other) != type(self):
             return False
+        if other is self:
+            return True
 
-    def is_flag_set(self, flag):
-        i = self.get_flags() & flag
-        return i == flag
-
-    def add_flag(self, flags):
-        self.set_flags(self.get_flags() | flags)
-        return self
-
-    def update_frame_length(self):
-        self.set_frame_length(self._write_offset())
-        return self
-
-    def accumulate(self, client_message):
-        start = client_message.get_data_offset()
-        end = client_message.get_frame_length()
-        self.buffer += client_message.buffer[start:end]
-        self.set_frame_length(len(self.buffer))
-
-    def clone(self):
-        client_message = ClientMessage(bytearray(self.buffer))
-        client_message.set_retryable(self._retryable)
-        return client_message
-
-    def __repr__(self):
-        return binascii.hexlify(self.buffer)
+        if self.retryable != other.retryable:
+            return False
+        if not self.operation_name == other.operation_name:
+            return False
+        return self.connection == other.connection
 
     def __str__(self):
-        return "ClientMessage:{{" \
-               "length={}, " \
-               "correlationId={}, " \
-               "messageType={}, " \
-               "partitionId={}, " \
-               "isComplete={}, " \
-               "isRetryable={}, " \
-               "isEvent={}, " \
-               "writeOffset={}}}".format(self.get_frame_length(),
-                                         self.get_correlation_id(),
-                                         self.get_message_type(),
-                                         self.get_partition_id(),
-                                         self.is_complete(),
-                                         self.is_retryable(),
-                                         self.is_flag_set(LISTENER_FLAG),
-                                         self.get_data_offset())
+        s = "ClientMessage{connection={0}"
+        if self.start_frame is not None:
+            s += ", length={}, operation={}, isRetyrable={}". \
+                format(self.get_frame_length(), self.operation_name, self.retryable)
 
+            begin_fragment = self.is_flag_set(self.start_frame.flags, BEGIN_FRAGMENT_FLAG)
+            un_fragmented = self.is_flag_set(self.start_frame.flags, UNFRAGMENTED_MESSAGE)
+
+            if un_fragmented:
+                is_event = self.is_flag_set(self.start_frame.flags, IS_EVENT_FLAG)
+                s += ", correlationId={}, messageType={}, isEvent={}". \
+                    format(self.get_correlation_id(), self.get_message_type(), is_event)
+            elif begin_fragment:
+                fragmentation_id = struct.unpack_from(Bits.FMT_BE_LONG, self.start_frame.content,
+                                                      FRAGMENTATION_ID_OFFSET)
+                message_type = self.get_message_type()
+                is_event = self.is_flag_set(self.start_frame.flags, IS_EVENT_FLAG)
+                s += ", fragmentationId={}, correlationId={}, messageType={}, isEvent={}". \
+                    format(fragmentation_id, self.get_correlation_id(), message_type, is_event)
+            else:
+                fragmentation_id = struct.unpack_from(Bits.FMT_BE_LONG, self.start_frame.content,
+                                                      FRAGMENTATION_ID_OFFSET)
+                s += ", fragmentationId={}".format(fragmentation_id)
+            s += ", isFragmented={1}}"
+            return s.format(self.connection, not un_fragmented)
+
+    class ForwardFrameIterator:
+        def __init__(self, start):
+            self.next_frame = start
+
+        def next(self):
+            result = self.next_frame
+            if self.next_frame is not None:
+                self.next_frame = self.next_frame.next
+            return result
+
+        def has_next(self):
+            return self.next_frame is not None
+
+        def peek_next(self):
+            return self.next_frame
+
+    class Frame:
+        def __init__(self, content, flags=None, next_frame=None):
+            if flags is None:
+                self.flags = DEFAULT_FLAGS
+            else:
+                self.flags = flags
+            self.next = next_frame
+            self.content = content
+
+        def copy(self):
+            frame = ClientMessage.Frame(self.content, self.flags)
+            frame.next = self.next
+            return frame
+
+        def deep_copy(self):
+            new_content = bytearray(self.content)
+            # new_content[:] = self.content
+            frame = ClientMessage.Frame(new_content, self.flags)
+            frame.next = self.next
+            return frame
+
+        def is_end_frame(self):
+            return ClientMessage.is_flag_set(self.flags, END_DATA_STRUCTURE_FLAG)
+
+        def is_begin_frame(self):
+            return ClientMessage.is_flag_set(self.flags, BEGIN_DATA_STRUCTURE_FLAG)
+
+        def is_null_frame(self):
+            return ClientMessage.is_flag_set(self.flags, IS_NULL_FLAG)
+
+        def get_size(self):
+            if self.content is None:
+                return SIZE_OF_FRAME_LENGTH_AND_FLAGS
+            else:
+                return SIZE_OF_FRAME_LENGTH_AND_FLAGS + len(self.content)
+
+        def __eq__(self, other):
+            if other is None or type(self) != type(other):
+                return False
+            if self is other:
+                return True
+
+            if self.flags != other.flags:
+                return False
+
+            return self.content == other.content
+
+
+NULL_FRAME = ClientMessage.Frame(bytearray(), IS_NULL_FLAG)
+BEGIN_FRAME = ClientMessage.Frame(bytearray(), BEGIN_DATA_STRUCTURE_FLAG)
+END_FRAME = ClientMessage.Frame(bytearray(), END_DATA_STRUCTURE_FLAG)
+
+if __name__ == "__main__":
+    f = ClientMessage.Frame(bytearray("dfgsd", "utf-8"))
+    v = ClientMessage.Frame(bytearray())
+    c = ClientMessage()
+    print(type(v))
+    #print(hash(c))
+    print(f == v)
+    print(hash(f))
 
 class ClientMessageBuilder(object):
     def __init__(self, message_callback):

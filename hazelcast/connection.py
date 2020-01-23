@@ -6,12 +6,13 @@ import time
 
 from hazelcast.exception import AuthenticationError
 from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
-from hazelcast.protocol.client_message import BEGIN_END_FLAG, ClientMessage, ClientMessageBuilder
+from hazelcast.protocol.client_message import ClientMessage, ClientMessageBuilder
 from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
 from hazelcast.serialization import INT_SIZE_IN_BYTES, FMT_LE_INT
 from hazelcast.util import AtomicInteger, parse_addresses, calculate_version
 from hazelcast.version import CLIENT_TYPE, CLIENT_VERSION, SERIALIZATION_VERSION
 from hazelcast import six
+from hazelcast.protocol.client_message_writer import ClientMessageWriter
 
 BUFFER_SIZE = 128000
 PROTOCOL_VERSION = 1
@@ -62,14 +63,15 @@ class ConnectionManager(object):
         owner_uuid = self._client.cluster.owner_uuid
 
         request = client_authentication_codec.encode_request(
-            username=self._client.config.group_config.name,
-            password=self._client.config.group_config.password,
+            cluster_name=self._client._config.group_config.name,
+            username=None,
+            password=None,
             uuid=uuid,
-            owner_uuid=owner_uuid,
-            is_owner_connection=False,
             client_type=CLIENT_TYPE,
             serialization_version=SERIALIZATION_VERSION,
-            client_hazelcast_version=CLIENT_VERSION)
+            client_hazelcast_version=CLIENT_VERSION,
+            client_name=self._client.name,
+            labels=[])
 
         def callback(f):
             parameters = client_authentication_codec.decode_response(f.result())
@@ -279,6 +281,9 @@ class Connection(object):
         self.start_time_in_seconds = 0
         self.server_version_str = ""
         self.server_version = 0
+        self.bytes_read = 0
+        self.bytes_written = 0
+        self.writer = ClientMessageWriter(self)
 
     def live(self):
         """
@@ -296,9 +301,7 @@ class Connection(object):
         """
         if not self.live():
             raise IOError("Connection is not live.")
-
-        message.add_flag(BEGIN_END_FLAG)
-        self.write(message.buffer)
+        self.writer.write_to(message)
 
     def receive_message(self):
         """

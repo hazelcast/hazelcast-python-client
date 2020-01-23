@@ -31,7 +31,7 @@ class ClusterService(object):
         self._members = {}
         self.owner_connection_address = None
         self.owner_uuid = None
-        self.uuid = None
+        self.uuid = uuid.uuid4()
         self.listeners = {}
 
         for listener in config.membership_listeners:
@@ -140,16 +140,18 @@ class ClusterService(object):
         error_msg = "Could not connect to any of %s after %d tries" % (addresses, attempt_limit)
         raise HazelcastError(error_msg)
 
+    import uuid
     def _authenticate_manager(self, connection):
         request = client_authentication_codec.encode_request(
-            username=self._config.group_config.name,
-            password=self._config.group_config.password,
+            cluster_name=self._config.group_config.name,
+            username=None,
+            password=None,
             uuid=self.uuid,
-            owner_uuid=self.owner_uuid,
-            is_owner_connection=True,
             client_type=CLIENT_TYPE,
             serialization_version=SERIALIZATION_VERSION,
-            client_hazelcast_version=CLIENT_VERSION)
+            client_hazelcast_version=CLIENT_VERSION,
+            client_name=self._client.name,
+            labels=[])
 
         def callback(f):
             parameters = client_authentication_codec.decode_response(f.result())

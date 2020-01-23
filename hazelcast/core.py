@@ -27,6 +27,31 @@ class Member(object):
         return isinstance(other, self.__class__) and self.address == other.address and self.uuid == other.uuid
 
 
+class MemberInfo(object):
+    def __init__(self, address, uuid, attributes, lite_member, version):
+        self.address = address
+        self.uuid = uuid
+        self.attributes = attributes
+        self.lite_member = lite_member
+        self.version = version
+
+
+
+class MemberVersion(object):
+    def __init__(self, major, minor, patch):
+        self.major = major
+        self.minor = minor
+        self.patch = patch
+
+    def get_major(self):
+        return self.major
+
+    def get_minor(self):
+        return self.minor
+
+    def get_patch(self):
+        return self.patch
+
 class Address(object):
     """
     Represents an address of a member in the cluster.

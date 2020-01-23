@@ -6,6 +6,8 @@ import socket
 import sys
 import threading
 import time
+import traceback
+import pydevd
 
 from collections import deque
 from functools import total_ordering
@@ -14,6 +16,7 @@ from hazelcast.connection import Connection, BUFFER_SIZE
 from hazelcast.exception import HazelcastError
 from hazelcast.future import Future
 from hazelcast.six.moves import queue
+from hazelcast.protocol.util.client_message_decoder import ClientMessageDecoder
 
 try:
     import ssl
@@ -34,8 +37,9 @@ class AsyncoreReactor(object):
     def start(self):
         self._is_live = True
         self._thread = threading.Thread(target=self._loop, name="hazelcast-reactor")
-        self._thread.daemon = True
+        self._thread.daemon = False
         self._thread.start()
+
 
     def _loop(self):
         self.logger.debug("Starting Reactor Thread", extra=self._logger_extras)
@@ -124,6 +128,8 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         asyncore.dispatcher.__init__(self, map=map)
         Connection.__init__(self, address, connection_closed_callback, message_callback, logger_extras)
 
+        self.client_message_decoder = ClientMessageDecoder(self)
+
         self._write_lock = threading.Lock()
         self._write_queue = deque()
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -184,16 +190,22 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         # the socket should be non-blocking from now on
         self.socket.settimeout(0)
 
-        self._write_queue.append(b"CB2")
+        self._write_queue.append(b"CP2")
 
     def handle_connect(self):
         self.start_time_in_seconds = time.time()
         self.logger.debug("Connected to %s", self._address, extra=self._logger_extras)
 
     def handle_read(self):
-        self._read_buffer.extend(self.recv(self.read_buffer_size))
+        print("a")
+        data_read = self.recv(self.read_buffer_size)
+        self._read_buffer.extend(data_read)
+        self.bytes_written += len(data_read)
+        print(data_read)
+        print(type(data_read))
         self.last_read_in_seconds = time.time()
-        self.receive_message()
+        self.client_message_decoder.on_read()
+        #self.receive_message()
 
     def handle_write(self):
         with self._write_lock:
@@ -218,12 +230,15 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
                 self.logger.exception("Received error", extra=self._logger_extras)
                 self.close(IOError(error))
         else:
+            traceback.print_exc()
             self.logger.warning("Received unexpected error: " + str(error), extra=self._logger_extras)
 
     def readable(self):
         return not self._closed and self.sent_protocol_bytes
 
     def write(self, data):
+        print(data)
+        print(len(data))
         # if write queue is empty, send the data right away, otherwise add to queue
         if len(self._write_queue) == 0 and self._write_lock.acquire(False):
             try:

@@ -8,7 +8,7 @@ if __name__ == "__main__":
     # Add member's host:port to the configuration.
     # For each member on your Hazelcast cluster, you should add its host:port pair to the configuration.
     config.network_config.addresses.append("127.0.0.1:5701")
-    config.network_config.addresses.append("127.0.0.1:5702")
+    #config.network_config.addresses.append("127.0.0.1:5702")
 
     # Create a client using the configuration above
     client = hazelcast.HazelcastClient(config)
