@@ -13,6 +13,7 @@ from hazelcast.client import HazelcastClient
 from tests.util import get_abs_path
 
 TOKEN = "123abc456"
+PRIVATE_LINK_TOKEN = "abc123def"
 
 CLOUD_URL = HazelcastCloudDiscovery._CLOUD_URL_PATH
 
@@ -22,11 +23,19 @@ RESPONSE = """[
  {"private-address":"10.47.0.10","public-address":"54.186.232.37:32298"}
 ]"""
 
+PRIVATE_LINK_RESPONSE = """[
+  {"private-address":"100.96.5.1:5701","public-address":"10.113.44.139:31115"},
+  {"private-address":"100.96.4.2:5701","public-address":"10.113.44.130:31115"}
+]"""
+
 HOST = "localhost"
 
 ADDRESSES = {Address("10.47.0.8", 32298): Address("54.213.63.142", 32298),
              Address("10.47.0.9", 32298): Address("54.245.77.185", 32298),
              Address("10.47.0.10", 32298): Address("54.186.232.37", 32298)}
+
+PRIVATE_LINK_ADDRESSES = {Address("100.96.5.1", 5701): Address("10.113.44.139", 31115),
+                          Address("100.96.4.2", 5701): Address("10.113.44.130", 31115)}
 
 
 class CloudHTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
@@ -35,17 +44,17 @@ class CloudHTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if idx > 0:
             if self.path[:idx + 1] == CLOUD_URL:
                 # Found a cluster with the given token
-                if self.path[idx + 1:] == TOKEN:
+                token = self.path[idx + 1:]
+                if token == TOKEN:
                     self._set_response(200, RESPONSE)
-                    return
+                elif token == PRIVATE_LINK_TOKEN:
+                    self._set_response(200, PRIVATE_LINK_RESPONSE)
                 # Can not find a cluster with the given token
                 else:
                     self._set_response(404, '{"message":"Cluster with token: ' + self.path[idx + 1:] + ' not found."}')
-                    return
         else:
             # Wrong URL
             self._set_response(404, "default backend - 404")
-            return
 
     def _set_response(self, status, message):
         self.send_response(status)
@@ -97,6 +106,13 @@ class HazelcastCloudDiscoveryTest(TestCase):
         addresses = discovery.discover_nodes()
 
         six.assertCountEqual(self, ADDRESSES, addresses)
+
+    def test_private_link_response(self):
+        discovery = HazelcastCloudDiscovery(*get_params(HOST, self.server.port, CLOUD_URL, PRIVATE_LINK_TOKEN))
+        discovery._ctx = self.ctx
+        addresses = discovery.discover_nodes()
+
+        six.assertCountEqual(self, PRIVATE_LINK_ADDRESSES, addresses)
 
     def test_not_found_response(self):
         discovery = HazelcastCloudDiscovery(*get_params(HOST, self.server.port, CLOUD_URL, "INVALID_TOKEN"))
