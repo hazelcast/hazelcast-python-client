@@ -137,10 +137,20 @@ class HazelcastCloudDiscovery(object):
             private_address = value[self._PRIVATE_ADDRESS_PROPERTY]
             public_address = value[self._PUBLIC_ADDRESS_PROPERTY]
 
-            public_addr = _parse_address(public_address)[0]
-            private_to_public_addresses[Address(private_address, public_addr.port)] = public_addr
+            public_addr = self._parse_address(public_address)
+            private_addr = self._parse_address(private_address)
+            if private_addr.port == -1:
+                # If not explicitly given, set the port of the private address to port of the public address
+                private_addr.port = public_addr.port
+            private_to_public_addresses[private_addr] = public_addr
 
         return private_to_public_addresses
+
+    def _parse_address(self, address):
+        if ':' in address:
+            host, port = address.split(':')
+            return Address(host, int(port))
+        return Address(address, -1)
 
     @staticmethod
     def get_host_and_url(properties, cloud_token):
