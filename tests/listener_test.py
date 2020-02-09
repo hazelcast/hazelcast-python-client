@@ -27,12 +27,6 @@ class ListenerTest(HazelcastTestCase):
         map.put(key_m1, 'value1')
         map.add_entry_listener(updated_func=self.collector)
         self.m1.shutdown()
-
-        def assert_partition_list_refreshed():
-            partition_id = client.partition_service.get_partition_id(key_m1)
-            self.assertNotEqual(self.m1.address, client.partition_service.get_partition_owner(partition_id))
-        self.assertTrueEventually(assert_partition_list_refreshed)
-
         map.put(key_m1, 'value2')
 
         def assert_event():

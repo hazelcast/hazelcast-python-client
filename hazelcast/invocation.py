@@ -4,7 +4,7 @@ import time
 import functools
 
 from hazelcast.exception import create_exception, HazelcastInstanceNotActiveError, is_retryable_error, TimeoutError, \
-    AuthenticationError, TargetDisconnectedError, HazelcastClientNotActiveException, TargetNotMemberError
+    TargetDisconnectedError, HazelcastClientNotActiveException, TargetNotMemberError
 from hazelcast.future import Future
 from hazelcast.lifecycle import LIFECYCLE_STATE_CONNECTED
 from hazelcast.protocol.client_message import LISTENER_FLAG
@@ -219,34 +219,51 @@ class InvocationService(object):
             self.logger.warning("Error handling event %s", message, exc_info=True, extra=self._logger_extras)
 
     def _handle_exception(self, invocation, error, traceback=None):
-        if not self._client.lifecycle.is_live:
-            invocation.set_exception(HazelcastClientNotActiveException(error.args[0]), traceback)
-            return
         if self.logger.isEnabledFor(logging.DEBUG):
             self.logger.debug("Got exception for request %s: %s: %s", invocation.request, type(error).__name__, error,
                               extra=self._logger_extras)
-        if isinstance(error, (AuthenticationError, IOError, HazelcastInstanceNotActiveError)):
-            if self._try_retry(invocation):
-                return
 
-        if is_retryable_error(error):
-            if invocation.request.is_retryable() or self._is_redo_operation:
-                if self._try_retry(invocation):
-                    return
+        if not self._client.lifecycle.is_live:
+            invocation.set_exception(HazelcastClientNotActiveException(error.args[0]), traceback)
+            return
 
-        invocation.set_exception(error, traceback)
+        if self._is_not_allowed_to_retry_on_selection(invocation, error):
+            invocation.set_exception(error, traceback)
+            return
 
-    def _try_retry(self, invocation):
-        if invocation.connection:
-            return False
+        if not self._should_retry(invocation, error):
+            invocation.set_exception(error, traceback)
+            return
+
         if invocation.timeout < time.time():
-            return False
+            if self.logger.isEnabledFor(logging.DEBUG):
+                self.logger.debug('Error will not be retried because invocation timed out: %s', error,
+                                  extra=self._logger_extras)
+            invocation.set_excetion(TimeoutError(
+                '%s timed out because an error occurred after invocation timeout: %s' % (invocation.request, error),
+                traceback))
+            return
 
         invoke_func = functools.partial(self.invoke, invocation)
-        self.logger.debug("Rescheduling request %s to be retried in %s seconds", invocation.request,
-                          self.invocation_retry_pause, extra=self._logger_extras)
         self._client.reactor.add_timer(self.invocation_retry_pause, invoke_func)
-        return True
+
+    def _should_retry(self, invocation, error):
+        if isinstance(error, (IOError, HazelcastInstanceNotActiveError)) or is_retryable_error(error):
+            return True
+
+        if isinstance(error, TargetDisconnectedError):
+            return invocation.request.is_retryable() or self._is_redo_operation
+
+        return False
+
+    def _is_not_allowed_to_retry_on_selection(self, invocation, error):
+        if invocation.connection is not None and isinstance(error, IOError):
+            return True
+
+        # When invocation is sent over an address,error is the TargetNotMemberError and the
+        # member is not in the member list, we should not retry
+        return invocation.address is not None and isinstance(error, TargetNotMemberError) \
+               and not self._is_member(invocation.address)
 
     def _is_member(self, address):
         return self._client.cluster.get_member_by_address(address) is not None
