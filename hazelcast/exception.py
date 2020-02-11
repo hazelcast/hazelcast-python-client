@@ -221,7 +221,6 @@ class StaleSequenceError(HazelcastError):
     pass
 
 
-@retryable
 class TargetDisconnectedError(HazelcastError):
     pass
 
