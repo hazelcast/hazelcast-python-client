@@ -333,6 +333,9 @@ class Connection(object):
     def __repr__(self):
         return "Connection(address=%s, id=%s)" % (self._address, self.id)
 
+    def  __hash__(self):
+        return self.id
+
 
 class DefaultAddressProvider(object):
     """
