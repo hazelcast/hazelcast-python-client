@@ -214,6 +214,11 @@ class ClientMessage(object):
         self.buffer += client_message.buffer[start:end]
         self.set_frame_length(len(self.buffer))
 
+    def clone(self):
+        client_message = ClientMessage(bytearray(self.buffer))
+        client_message.set_retryable(self._retryable)
+        return client_message
+
     def __repr__(self):
         return binascii.hexlify(self.buffer)
 
