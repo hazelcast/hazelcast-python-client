@@ -168,6 +168,19 @@ class ClientMessageTest(unittest.TestCase):
         self.assertFalse(message.is_flag_set(END_FLAG))
         self.assertTrue(message.is_flag_set(LISTENER_FLAG))
 
+    def test_clone(self):
+        message = ClientMessage(payload_size=0)
+        message.set_flags(0)
+
+        message.add_flag(LISTENER_FLAG)
+        clone = message.clone()
+        clone.add_flag(BEGIN_FLAG)
+
+        self.assertTrue(message.is_flag_set(LISTENER_FLAG))
+        self.assertTrue(clone.is_flag_set(LISTENER_FLAG))
+        self.assertFalse(message.is_flag_set(BEGIN_FLAG))
+        self.assertTrue(clone.is_flag_set(BEGIN_FLAG))
+
 
 class ClientMessageBuilderTest(unittest.TestCase):
     def test_message_accumulate(self):

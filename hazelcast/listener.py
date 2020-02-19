@@ -92,7 +92,7 @@ class ListenerService(object):
         if connection in registration_map:
             return
 
-        registration_request = listener_registration.registration_request
+        registration_request = listener_registration.registration_request.clone()
         future = self._invocation_service.invoke_on_connection(registration_request, connection,
                                                                event_handler=listener_registration.handler)
 
