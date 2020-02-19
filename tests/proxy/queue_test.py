@@ -80,10 +80,6 @@ class QueueTest(SingleMemberTestCase):
 
         def assert_event():
             self.assertEqual(len(collector.events), 0)
-            if len(collector.events) > 0:
-                event = collector.events[0]
-                self.assertEqual(event.item, None)
-                self.assertEqual(event.event_type, ItemEventType.added)
 
         self.assertTrueEventually(assert_event, 5)
 

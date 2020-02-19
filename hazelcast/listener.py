@@ -107,9 +107,9 @@ class ListenerService(object):
                 if connection.live():
                     self.logger.warning("Listener %s can not be added to a new connection: %s, reason: %s",
                                         user_registration_id, connection, e.args[0], extra=self._logger_extras)
+                raise e
 
-        future.add_done_callback(callback)
-        return future
+        return future.continue_with(callback)
 
     def deregister_listener(self, user_registration_id):
         check_not_none(user_registration_id, "None userRegistrationId is not allowed!")
