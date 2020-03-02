@@ -1,0 +1,210 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>NearCache &#8212; Hazelcast Python Client 3.12.2 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Partition" href="hazelcast.partition.html" />
+    <link rel="prev" title="LifeCycle" href="hazelcast.lifecycle.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.partition.html" title="Partition"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.lifecycle.html" title="LifeCycle"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" accesskey="U">Hazelcast Python Client</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.near_cache">
+<span id="nearcache"></span><h1>NearCache<a class="headerlink" href="#module-hazelcast.near_cache" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="hazelcast.near_cache.lru_key_func">
+<code class="sig-name descname">lru_key_func</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.near_cache.lru_key_func" title="Permalink to this definition">¶</a></dt>
+<dd><p>Least Recently Used key function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> – (<a class="reference internal" href="#hazelcast.near_cache.DataRecord" title="hazelcast.near_cache.DataRecord"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataRecord</span></code></a>)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(float), last access time of x.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="hazelcast.near_cache.lfu_key_func">
+<code class="sig-name descname">lfu_key_func</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.near_cache.lfu_key_func" title="Permalink to this definition">¶</a></dt>
+<dd><p>Least Frequently Used key function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> – (<a class="reference internal" href="#hazelcast.near_cache.DataRecord" title="hazelcast.near_cache.DataRecord"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataRecord</span></code></a>)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(int), access hit count of x.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="hazelcast.near_cache.random_key_func">
+<code class="sig-name descname">random_key_func</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.near_cache.random_key_func" title="Permalink to this definition">¶</a></dt>
+<dd><p>Random key function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> – (<a class="reference internal" href="#hazelcast.near_cache.DataRecord" title="hazelcast.near_cache.DataRecord"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataRecord</span></code></a>)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(int), 0.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.near_cache.DataRecord">
+<em class="property">class </em><code class="sig-name descname">DataRecord</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">value</em>, <em class="sig-param">create_time=None</em>, <em class="sig-param">ttl_seconds=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.near_cache.DataRecord" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>An expirable and evictable data object which represents a cache entry.</p>
+<dl class="method">
+<dt id="hazelcast.near_cache.DataRecord.is_expired">
+<code class="sig-name descname">is_expired</code><span class="sig-paren">(</span><em class="sig-param">max_idle_seconds</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.near_cache.DataRecord.is_expired" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether this record is expired or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>max_idle_seconds</strong> – (long), the maximum idle time of record, maximum time after the last access time.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> is this record is not expired.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.near_cache.NearCache">
+<em class="property">class </em><code class="sig-name descname">NearCache</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">serialization_service</em>, <em class="sig-param">in_memory_format</em>, <em class="sig-param">time_to_live_seconds</em>, <em class="sig-param">max_idle_seconds</em>, <em class="sig-param">invalidate_on_change</em>, <em class="sig-param">eviction_policy</em>, <em class="sig-param">eviction_max_size</em>, <em class="sig-param">eviction_sampling_count=None</em>, <em class="sig-param">eviction_sampling_pool_size=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.near_cache.NearCache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></p>
+<p>NearCache is a local cache used by <a class="reference internal" href="hazelcast.proxy.map.html#hazelcast.proxy.map.MapFeatNearCache" title="hazelcast.proxy.map.MapFeatNearCache"><code class="xref py py-class docutils literal notranslate"><span class="pre">MapFeatNearCache</span></code></a>.</p>
+<dl class="method">
+<dt id="hazelcast.near_cache.NearCache.get_statistics">
+<code class="sig-name descname">get_statistics</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.near_cache.NearCache.get_statistics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the statistics of the NearCache.
+:return: (Dict), Dictionary that stores statistics related to this near cache.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.near_cache.NearCacheManager">
+<em class="property">class </em><code class="sig-name descname">NearCacheManager</code><span class="sig-paren">(</span><em class="sig-param">client</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.near_cache.NearCacheManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="hazelcast.near_cache.NearCacheManager.get_or_create_near_cache">
+<code class="sig-name descname">get_or_create_near_cache</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.near_cache.NearCacheManager.get_or_create_near_cache" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.near_cache.NearCacheManager.destroy_near_cache">
+<code class="sig-name descname">destroy_near_cache</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.near_cache.NearCacheManager.destroy_near_cache" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.near_cache.NearCacheManager.destroy_all_near_caches">
+<code class="sig-name descname">destroy_all_near_caches</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.near_cache.NearCacheManager.destroy_all_near_caches" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.near_cache.NearCacheManager.list_all_near_caches">
+<code class="sig-name descname">list_all_near_caches</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.near_cache.NearCacheManager.list_all_near_caches" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.lifecycle.html"
+                        title="previous chapter">LifeCycle</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.partition.html"
+                        title="next chapter">Partition</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.near_cache.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.partition.html" title="Partition"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.lifecycle.html" title="LifeCycle"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Hazelcast Inc..
+    </div>
+  </body>
+</html>

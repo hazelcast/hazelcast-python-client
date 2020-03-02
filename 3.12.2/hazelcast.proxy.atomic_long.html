@@ -1,0 +1,295 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>AtomicLong &#8212; Hazelcast Python Client 3.12.2 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="AtomicReference" href="hazelcast.proxy.atomic_reference.html" />
+    <link rel="prev" title="Hazelcast Proxies" href="hazelcast.proxy.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.atomic_reference.html" title="AtomicReference"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.html" title="Hazelcast Proxies"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" accesskey="U">Hazelcast Proxies</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.proxy.atomic_long">
+<span id="atomiclong"></span><h1>AtomicLong<a class="headerlink" href="#module-hazelcast.proxy.atomic_long" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="hazelcast.proxy.atomic_long.AtomicLong">
+<em class="property">class </em><code class="sig-name descname">AtomicLong</code><span class="sig-paren">(</span><em class="sig-param">client</em>, <em class="sig-param">service_name</em>, <em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_long.AtomicLong" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hazelcast.proxy.base.html#hazelcast.proxy.base.PartitionSpecificProxy" title="hazelcast.proxy.base.PartitionSpecificProxy"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.proxy.base.PartitionSpecificProxy</span></code></a></p>
+<p>AtomicLong is a redundant and highly available distributed long value which can be updated atomically.</p>
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_long.AtomicLong.add_and_get">
+<code class="sig-name descname">add_and_get</code><span class="sig-paren">(</span><em class="sig-param">delta</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_long.AtomicLong.add_and_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Atomically adds the given delta value to the currently stored value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>delta</strong> – (long), the value to add to the currently stored value.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(long), the updated value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_long.AtomicLong.alter">
+<code class="sig-name descname">alter</code><span class="sig-paren">(</span><em class="sig-param">function</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_long.AtomicLong.alter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alters the currently stored value by applying a function on it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>function</strong> – (Function), A stateful serializable object which represents the Function defined on
+server side.
+This object must have a serializable Function counter part registered on server side with the actual
+<code class="docutils literal notranslate"><span class="pre">org.hazelcast.core.IFunction</span></code> implementation.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_long.AtomicLong.alter_and_get">
+<code class="sig-name descname">alter_and_get</code><span class="sig-paren">(</span><em class="sig-param">function</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_long.AtomicLong.alter_and_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alters the currently stored value by applying a function on it and gets the result.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>function</strong> – (Function), A stateful serializable object which represents the Function defined on
+server side.
+This object must have a serializable Function counter part registered on server side with the actual
+<code class="docutils literal notranslate"><span class="pre">org.hazelcast.core.IFunction</span></code> implementation.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(long), the new value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_long.AtomicLong.apply">
+<code class="sig-name descname">apply</code><span class="sig-paren">(</span><em class="sig-param">function</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_long.AtomicLong.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies a function on the value, the actual stored value will not change.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>function</strong> – (Function), A stateful serializable object which represents the Function defined on
+server side.
+This object must have a serializable Function counter part registered on server side with the actual
+<code class="docutils literal notranslate"><span class="pre">org.hazelcast.core.IFunction</span></code> implementation.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(object), the result of the function application.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_long.AtomicLong.compare_and_set">
+<code class="sig-name descname">compare_and_set</code><span class="sig-paren">(</span><em class="sig-param">expected</em>, <em class="sig-param">updated</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_long.AtomicLong.compare_and_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Atomically sets the value to the given updated value only if the current value == the expected value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>expected</strong> – (long), the expected value.</p></li>
+<li><p><strong>updated</strong> – (long), the new value.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if successful; or <code class="docutils literal notranslate"><span class="pre">false</span></code> if the actual value was not equal to the expected value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_long.AtomicLong.decrement_and_get">
+<code class="sig-name descname">decrement_and_get</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_long.AtomicLong.decrement_and_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Atomically decrements the current value by one.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(long), the updated value, the current value decremented by one.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_long.AtomicLong.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_long.AtomicLong.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the current value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(long), gets the current value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_long.AtomicLong.get_and_add">
+<code class="sig-name descname">get_and_add</code><span class="sig-paren">(</span><em class="sig-param">delta</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_long.AtomicLong.get_and_add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Atomically adds the given value to the current value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>delta</strong> – (long), the value to add to the current value.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(long), the old value before the addition.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_long.AtomicLong.get_and_alter">
+<code class="sig-name descname">get_and_alter</code><span class="sig-paren">(</span><em class="sig-param">function</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_long.AtomicLong.get_and_alter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alters the currently stored value by applying a function on it on and gets the old value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>function</strong> – (Function), A stateful serializable object which represents the Function defined on
+server side.
+This object must have a serializable Function counter part registered on server side with the actual
+<code class="docutils literal notranslate"><span class="pre">org.hazelcast.core.IFunction</span></code> implementation.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(long), the old value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_long.AtomicLong.get_and_set">
+<code class="sig-name descname">get_and_set</code><span class="sig-paren">(</span><em class="sig-param">new_value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_long.AtomicLong.get_and_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Atomically sets the given value and returns the old value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>new_value</strong> – (long), the new value.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(long), the old value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_long.AtomicLong.increment_and_get">
+<code class="sig-name descname">increment_and_get</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_long.AtomicLong.increment_and_get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Atomically increments the current value by one.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(long), the updated value, the current value incremented by one.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_long.AtomicLong.get_and_increment">
+<code class="sig-name descname">get_and_increment</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_long.AtomicLong.get_and_increment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Atomically increments the current value by one.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(long), the old value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.atomic_long.AtomicLong.set">
+<code class="sig-name descname">set</code><span class="sig-paren">(</span><em class="sig-param">new_value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.atomic_long.AtomicLong.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Atomically sets the given value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>new_value</strong> – (long), the new value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.html"
+                        title="previous chapter">Hazelcast Proxies</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.atomic_reference.html"
+                        title="next chapter">AtomicReference</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.proxy.atomic_long.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.atomic_reference.html" title="AtomicReference"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.html" title="Hazelcast Proxies"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" >Hazelcast Proxies</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Hazelcast Inc..
+    </div>
+  </body>
+</html>

@@ -1,0 +1,215 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Base &#8212; Hazelcast Python Client 3.12.2 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="CountDownLatch" href="hazelcast.proxy.count_down_latch.html" />
+    <link rel="prev" title="AtomicReference" href="hazelcast.proxy.atomic_reference.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.count_down_latch.html" title="CountDownLatch"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.atomic_reference.html" title="AtomicReference"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" accesskey="U">Hazelcast Proxies</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.proxy.base">
+<span id="base"></span><h1>Base<a class="headerlink" href="#module-hazelcast.proxy.base" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="hazelcast.proxy.base.default_response_handler">
+<code class="sig-name descname">default_response_handler</code><span class="sig-paren">(</span><em class="sig-param">future</em>, <em class="sig-param">codec</em>, <em class="sig-param">to_object</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.base.default_response_handler" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.proxy.base.Proxy">
+<em class="property">class </em><code class="sig-name descname">Proxy</code><span class="sig-paren">(</span><em class="sig-param">client</em>, <em class="sig-param">service_name</em>, <em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.base.Proxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Provides basic functionality for Hazelcast Proxies.</p>
+<dl class="method">
+<dt id="hazelcast.proxy.base.Proxy.destroy">
+<code class="sig-name descname">destroy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.base.Proxy.destroy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Destroys this proxy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if this proxy is deleted successfully, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.base.Proxy.blocking">
+<code class="sig-name descname">blocking</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.base.Proxy.blocking" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a version of this proxy with only blocking method calls.
+:return: (Proxy), a version of this proxy with only blocking method calls.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.proxy.base.PartitionSpecificProxy">
+<em class="property">class </em><code class="sig-name descname">PartitionSpecificProxy</code><span class="sig-paren">(</span><em class="sig-param">client</em>, <em class="sig-param">service_name</em>, <em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.base.PartitionSpecificProxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.proxy.base.Proxy" title="hazelcast.proxy.base.Proxy"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.proxy.base.Proxy</span></code></a></p>
+<p>Provides basic functionality for Partition Specific Proxies.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.proxy.base.TransactionalProxy">
+<em class="property">class </em><code class="sig-name descname">TransactionalProxy</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">transaction</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.base.TransactionalProxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Provides an interface for all transactional distributed objects.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.proxy.base.ItemEvent">
+<em class="property">class </em><code class="sig-name descname">ItemEvent</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">item_data</em>, <em class="sig-param">event_type</em>, <em class="sig-param">member</em>, <em class="sig-param">to_object</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.base.ItemEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Map Item event.</p>
+<dl class="method">
+<dt id="hazelcast.proxy.base.ItemEvent.item">
+<em class="property">property </em><code class="sig-name descname">item</code><a class="headerlink" href="#hazelcast.proxy.base.ItemEvent.item" title="Permalink to this definition">¶</a></dt>
+<dd><p>The item related to the event.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.proxy.base.EntryEvent">
+<em class="property">class </em><code class="sig-name descname">EntryEvent</code><span class="sig-paren">(</span><em class="sig-param">to_object</em>, <em class="sig-param">key</em>, <em class="sig-param">old_value</em>, <em class="sig-param">value</em>, <em class="sig-param">merging_value</em>, <em class="sig-param">event_type</em>, <em class="sig-param">uuid</em>, <em class="sig-param">number_of_affected_entries</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.base.EntryEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Map Entry event.</p>
+<dl class="method">
+<dt id="hazelcast.proxy.base.EntryEvent.key">
+<em class="property">property </em><code class="sig-name descname">key</code><a class="headerlink" href="#hazelcast.proxy.base.EntryEvent.key" title="Permalink to this definition">¶</a></dt>
+<dd><p>The key of this entry event.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.base.EntryEvent.old_value">
+<em class="property">property </em><code class="sig-name descname">old_value</code><a class="headerlink" href="#hazelcast.proxy.base.EntryEvent.old_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>The old value of the entry event.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.base.EntryEvent.value">
+<em class="property">property </em><code class="sig-name descname">value</code><a class="headerlink" href="#hazelcast.proxy.base.EntryEvent.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>The value of the entry event.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.base.EntryEvent.merging_value">
+<em class="property">property </em><code class="sig-name descname">merging_value</code><a class="headerlink" href="#hazelcast.proxy.base.EntryEvent.merging_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>The incoming merging value of the entry event.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.proxy.base.TopicMessage">
+<em class="property">class </em><code class="sig-name descname">TopicMessage</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">message_data</em>, <em class="sig-param">publish_time</em>, <em class="sig-param">member</em>, <em class="sig-param">to_object</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.base.TopicMessage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Topic message.</p>
+<dl class="method">
+<dt id="hazelcast.proxy.base.TopicMessage.message">
+<em class="property">property </em><code class="sig-name descname">message</code><a class="headerlink" href="#hazelcast.proxy.base.TopicMessage.message" title="Permalink to this definition">¶</a></dt>
+<dd><p>The message sent to Topic.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="hazelcast.proxy.base.get_entry_listener_flags">
+<code class="sig-name descname">get_entry_listener_flags</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.base.get_entry_listener_flags" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.atomic_reference.html"
+                        title="previous chapter">AtomicReference</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.count_down_latch.html"
+                        title="next chapter">CountDownLatch</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.proxy.base.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.count_down_latch.html" title="CountDownLatch"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.atomic_reference.html" title="AtomicReference"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" >Hazelcast Proxies</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Hazelcast Inc..
+    </div>
+  </body>
+</html>

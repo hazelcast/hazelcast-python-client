@@ -1,0 +1,237 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Reactor &#8212; Hazelcast Python Client 3.12.2 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Serialization" href="hazelcast.serialization.html" />
+    <link rel="prev" title="TransactionalSet" href="hazelcast.proxy.transactional_set.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.serialization.html" title="Serialization"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.transactional_set.html" title="TransactionalSet"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" accesskey="U">Hazelcast Python Client</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.reactor">
+<span id="reactor"></span><h1>Reactor<a class="headerlink" href="#module-hazelcast.reactor" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="hazelcast.reactor.AsyncoreReactor">
+<em class="property">class </em><code class="sig-name descname">AsyncoreReactor</code><span class="sig-paren">(</span><em class="sig-param">logger_extras=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.reactor.AsyncoreReactor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="hazelcast.reactor.AsyncoreReactor.logger">
+<code class="sig-name descname">logger</code><em class="property"> = &lt;Logger HazelcastClient.AsyncoreReactor (WARNING)&gt;</em><a class="headerlink" href="#hazelcast.reactor.AsyncoreReactor.logger" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.reactor.AsyncoreReactor.start">
+<code class="sig-name descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.reactor.AsyncoreReactor.start" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.reactor.AsyncoreReactor.add_timer_absolute">
+<code class="sig-name descname">add_timer_absolute</code><span class="sig-paren">(</span><em class="sig-param">timeout</em>, <em class="sig-param">callback</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.reactor.AsyncoreReactor.add_timer_absolute" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.reactor.AsyncoreReactor.add_timer">
+<code class="sig-name descname">add_timer</code><span class="sig-paren">(</span><em class="sig-param">delay</em>, <em class="sig-param">callback</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.reactor.AsyncoreReactor.add_timer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.reactor.AsyncoreReactor.shutdown">
+<code class="sig-name descname">shutdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.reactor.AsyncoreReactor.shutdown" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.reactor.AsyncoreReactor.new_connection">
+<code class="sig-name descname">new_connection</code><span class="sig-paren">(</span><em class="sig-param">address</em>, <em class="sig-param">connect_timeout</em>, <em class="sig-param">socket_options</em>, <em class="sig-param">connection_closed_callback</em>, <em class="sig-param">message_callback</em>, <em class="sig-param">network_config</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.reactor.AsyncoreReactor.new_connection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.reactor.AsyncoreConnection">
+<em class="property">class </em><code class="sig-name descname">AsyncoreConnection</code><span class="sig-paren">(</span><em class="sig-param">map</em>, <em class="sig-param">address</em>, <em class="sig-param">connect_timeout</em>, <em class="sig-param">socket_options</em>, <em class="sig-param">connection_closed_callback</em>, <em class="sig-param">message_callback</em>, <em class="sig-param">network_config</em>, <em class="sig-param">logger_extras=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.reactor.AsyncoreConnection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hazelcast.connection.html#hazelcast.connection.Connection" title="hazelcast.connection.Connection"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.connection.Connection</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">asyncore.dispatcher</span></code></p>
+<dl class="attribute">
+<dt id="hazelcast.reactor.AsyncoreConnection.sent_protocol_bytes">
+<code class="sig-name descname">sent_protocol_bytes</code><em class="property"> = False</em><a class="headerlink" href="#hazelcast.reactor.AsyncoreConnection.sent_protocol_bytes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.reactor.AsyncoreConnection.read_buffer_size">
+<code class="sig-name descname">read_buffer_size</code><em class="property"> = 128000</em><a class="headerlink" href="#hazelcast.reactor.AsyncoreConnection.read_buffer_size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.reactor.AsyncoreConnection.handle_connect">
+<code class="sig-name descname">handle_connect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.reactor.AsyncoreConnection.handle_connect" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.reactor.AsyncoreConnection.handle_read">
+<code class="sig-name descname">handle_read</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.reactor.AsyncoreConnection.handle_read" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.reactor.AsyncoreConnection.handle_write">
+<code class="sig-name descname">handle_write</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.reactor.AsyncoreConnection.handle_write" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.reactor.AsyncoreConnection.handle_close">
+<code class="sig-name descname">handle_close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.reactor.AsyncoreConnection.handle_close" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.reactor.AsyncoreConnection.handle_error">
+<code class="sig-name descname">handle_error</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.reactor.AsyncoreConnection.handle_error" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.reactor.AsyncoreConnection.readable">
+<code class="sig-name descname">readable</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.reactor.AsyncoreConnection.readable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.reactor.AsyncoreConnection.write">
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">data</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.reactor.AsyncoreConnection.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes data to this connection when sending messages.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> – (Data), data to be written to connection.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.reactor.AsyncoreConnection.writable">
+<code class="sig-name descname">writable</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.reactor.AsyncoreConnection.writable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.reactor.AsyncoreConnection.close">
+<code class="sig-name descname">close</code><span class="sig-paren">(</span><em class="sig-param">cause</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.reactor.AsyncoreConnection.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Closes the connection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>cause</strong> – (Exception), the cause of closing the connection.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.reactor.Timer">
+<em class="property">class </em><code class="sig-name descname">Timer</code><span class="sig-paren">(</span><em class="sig-param">end</em>, <em class="sig-param">timer_ended_cb</em>, <em class="sig-param">timer_canceled_cb</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.reactor.Timer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="hazelcast.reactor.Timer.canceled">
+<code class="sig-name descname">canceled</code><em class="property"> = False</em><a class="headerlink" href="#hazelcast.reactor.Timer.canceled" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.reactor.Timer.cancel">
+<code class="sig-name descname">cancel</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.reactor.Timer.cancel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.reactor.Timer.check_timer">
+<code class="sig-name descname">check_timer</code><span class="sig-paren">(</span><em class="sig-param">now</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.reactor.Timer.check_timer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.transactional_set.html"
+                        title="previous chapter">TransactionalSet</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.serialization.html"
+                        title="next chapter">Serialization</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.reactor.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.serialization.html" title="Serialization"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.transactional_set.html" title="TransactionalSet"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Hazelcast Inc..
+    </div>
+  </body>
+</html>

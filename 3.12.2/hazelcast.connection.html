@@ -1,0 +1,361 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Connection &#8212; Hazelcast Python Client 3.12.2 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Core" href="hazelcast.core.html" />
+    <link rel="prev" title="Config" href="hazelcast.config.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.core.html" title="Core"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.config.html" title="Config"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" accesskey="U">Hazelcast Python Client</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.connection">
+<span id="connection"></span><h1>Connection<a class="headerlink" href="#module-hazelcast.connection" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="hazelcast.connection.ConnectionManager">
+<em class="property">class </em><code class="sig-name descname">ConnectionManager</code><span class="sig-paren">(</span><em class="sig-param">client</em>, <em class="sig-param">new_connection_func</em>, <em class="sig-param">address_translator</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.connection.ConnectionManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>ConnectionManager is responsible for managing <code class="xref py py-mod docutils literal notranslate"><span class="pre">Connection</span></code> objects.</p>
+<dl class="attribute">
+<dt id="hazelcast.connection.ConnectionManager.logger">
+<code class="sig-name descname">logger</code><em class="property"> = &lt;Logger HazelcastClient.ConnectionManager (WARNING)&gt;</em><a class="headerlink" href="#hazelcast.connection.ConnectionManager.logger" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.connection.ConnectionManager.add_listener">
+<code class="sig-name descname">add_listener</code><span class="sig-paren">(</span><em class="sig-param">on_connection_opened=None</em>, <em class="sig-param">on_connection_closed=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.connection.ConnectionManager.add_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Registers a ConnectionListener. If the same listener is registered multiple times, it will be notified multiple
+times.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>on_connection_opened</strong> – (Function), function to be called when a connection is opened.</p></li>
+<li><p><strong>on_connection_closed</strong> – (Function), function to be called when a connection is removed.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.connection.ConnectionManager.get_connection">
+<code class="sig-name descname">get_connection</code><span class="sig-paren">(</span><em class="sig-param">address</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.connection.ConnectionManager.get_connection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the existing connection for a given address or connects. This call is silent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>address</strong> – (<a class="reference internal" href="hazelcast.core.html#hazelcast.core.Address" title="hazelcast.core.Address"><code class="xref py py-class docutils literal notranslate"><span class="pre">Address</span></code></a>), the address to connect to.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="#hazelcast.connection.Connection" title="hazelcast.connection.Connection"><code class="xref py py-class docutils literal notranslate"><span class="pre">Connection</span></code></a>), the found connection, or None if no connection exists.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.connection.ConnectionManager.get_or_connect">
+<code class="sig-name descname">get_or_connect</code><span class="sig-paren">(</span><em class="sig-param">address</em>, <em class="sig-param">authenticator=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.connection.ConnectionManager.get_or_connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the existing connection for a given address. If it does not exist, the system will try to connect
+asynchronously. In this case, it returns a Future. When the connection is established at some point in time, it
+can be retrieved by using the get_connection(<a class="reference internal" href="hazelcast.core.html#hazelcast.core.Address" title="hazelcast.core.Address"><code class="xref py py-class docutils literal notranslate"><span class="pre">Address</span></code></a>) or from Future.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>address</strong> – (<a class="reference internal" href="hazelcast.core.html#hazelcast.core.Address" title="hazelcast.core.Address"><code class="xref py py-class docutils literal notranslate"><span class="pre">Address</span></code></a>), the address to connect to.</p></li>
+<li><p><strong>authenticator</strong> – (Function), function to be used for authentication (optional).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="#hazelcast.connection.Connection" title="hazelcast.connection.Connection"><code class="xref py py-class docutils literal notranslate"><span class="pre">Connection</span></code></a>), the existing connection or it returns a Future which includes asynchronously.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.connection.ConnectionManager.on_auth">
+<code class="sig-name descname">on_auth</code><span class="sig-paren">(</span><em class="sig-param">f</em>, <em class="sig-param">connection</em>, <em class="sig-param">address</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.connection.ConnectionManager.on_auth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks for authentication of a connection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>f</strong> – (<a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future"><code class="xref py py-class docutils literal notranslate"><span class="pre">Future</span></code></a>), future that contains the result of authentication.</p></li>
+<li><p><strong>connection</strong> – (<a class="reference internal" href="#hazelcast.connection.Connection" title="hazelcast.connection.Connection"><code class="xref py py-class docutils literal notranslate"><span class="pre">Connection</span></code></a>), newly established connection.</p></li>
+<li><p><strong>address</strong> – (<a class="reference internal" href="hazelcast.core.html#hazelcast.core.Address" title="hazelcast.core.Address"><code class="xref py py-class docutils literal notranslate"><span class="pre">Address</span></code></a>), the adress of new connection.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Result of authentication.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.connection.ConnectionManager.close_connection">
+<code class="sig-name descname">close_connection</code><span class="sig-paren">(</span><em class="sig-param">address</em>, <em class="sig-param">cause</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.connection.ConnectionManager.close_connection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Closes the connection with given address.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>address</strong> – (<a class="reference internal" href="hazelcast.core.html#hazelcast.core.Address" title="hazelcast.core.Address"><code class="xref py py-class docutils literal notranslate"><span class="pre">Address</span></code></a>), address of the connection to be closed.</p></li>
+<li><p><strong>cause</strong> – (Exception), the cause for closing the connection.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if the connection is closed, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.connection.Heartbeat">
+<em class="property">class </em><code class="sig-name descname">Heartbeat</code><span class="sig-paren">(</span><em class="sig-param">client</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.connection.Heartbeat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>HeartBeat Service.</p>
+<dl class="attribute">
+<dt id="hazelcast.connection.Heartbeat.logger">
+<code class="sig-name descname">logger</code><em class="property"> = &lt;Logger HazelcastClient.HeartbeatService (WARNING)&gt;</em><a class="headerlink" href="#hazelcast.connection.Heartbeat.logger" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.connection.Heartbeat.start">
+<code class="sig-name descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.connection.Heartbeat.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Starts sending periodic HeartBeat operations.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.connection.Heartbeat.shutdown">
+<code class="sig-name descname">shutdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.connection.Heartbeat.shutdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stops HeartBeat operations.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.connection.Heartbeat.add_listener">
+<code class="sig-name descname">add_listener</code><span class="sig-paren">(</span><em class="sig-param">on_heartbeat_restored=None</em>, <em class="sig-param">on_heartbeat_stopped=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.connection.Heartbeat.add_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Registers a HeartBeat listener. Listener is invoked when a HeartBeat related event occurs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>on_heartbeat_restored</strong> – (Function), function to be called when a HeartBeat is restored (optional).</p></li>
+<li><p><strong>on_heartbeat_stopped</strong> – (Function), function to be called when a HeartBeat is stopped (optional).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.connection.Connection">
+<em class="property">class </em><code class="sig-name descname">Connection</code><span class="sig-paren">(</span><em class="sig-param">address</em>, <em class="sig-param">connection_closed_callback</em>, <em class="sig-param">message_callback</em>, <em class="sig-param">logger_extras=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.connection.Connection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Connection object which stores connection related information and operations.</p>
+<dl class="attribute">
+<dt id="hazelcast.connection.Connection.endpoint">
+<code class="sig-name descname">endpoint</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.connection.Connection.endpoint" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.connection.Connection.heartbeating">
+<code class="sig-name descname">heartbeating</code><em class="property"> = True</em><a class="headerlink" href="#hazelcast.connection.Connection.heartbeating" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.connection.Connection.is_owner">
+<code class="sig-name descname">is_owner</code><em class="property"> = False</em><a class="headerlink" href="#hazelcast.connection.Connection.is_owner" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.connection.Connection.counter">
+<code class="sig-name descname">counter</code><em class="property"> = &lt;hazelcast.util.AtomicInteger object&gt;</em><a class="headerlink" href="#hazelcast.connection.Connection.counter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.connection.Connection.live">
+<code class="sig-name descname">live</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.connection.Connection.live" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether this connection is live or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if the connection is live, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.connection.Connection.send_message">
+<code class="sig-name descname">send_message</code><span class="sig-paren">(</span><em class="sig-param">message</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.connection.Connection.send_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends a message to this connection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>message</strong> – (Message), message to be sent to this connection.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.connection.Connection.receive_message">
+<code class="sig-name descname">receive_message</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.connection.Connection.receive_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Receives a message from this connection.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.connection.Connection.write">
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">data</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.connection.Connection.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes data to this connection when sending messages.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> – (Data), data to be written to connection.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.connection.Connection.close">
+<code class="sig-name descname">close</code><span class="sig-paren">(</span><em class="sig-param">cause</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.connection.Connection.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Closes the connection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>cause</strong> – (Exception), the cause of closing the connection.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.connection.DefaultAddressProvider">
+<em class="property">class </em><code class="sig-name descname">DefaultAddressProvider</code><span class="sig-paren">(</span><em class="sig-param">network_config</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.connection.DefaultAddressProvider" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Provides initial addresses for client to find and connect to a node.
+Loads addresses from the Hazelcast configuration.</p>
+<dl class="method">
+<dt id="hazelcast.connection.DefaultAddressProvider.load_addresses">
+<code class="sig-name descname">load_addresses</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.connection.DefaultAddressProvider.load_addresses" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(Sequence), The possible member addresses to connect to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.connection.DefaultAddressTranslator">
+<em class="property">class </em><code class="sig-name descname">DefaultAddressTranslator</code><a class="headerlink" href="#hazelcast.connection.DefaultAddressTranslator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>DefaultAddressTranslator is a no-op. It always returns the given address.</p>
+<dl class="method">
+<dt id="hazelcast.connection.DefaultAddressTranslator.translate">
+<code class="sig-name descname">translate</code><span class="sig-paren">(</span><em class="sig-param">address</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.connection.DefaultAddressTranslator.translate" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>address</strong> – (<a class="reference internal" href="hazelcast.core.html#hazelcast.core.Address" title="hazelcast.core.Address"><code class="xref py py-class docutils literal notranslate"><span class="pre">Address</span></code></a>), address to be translated.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="hazelcast.core.html#hazelcast.core.Address" title="hazelcast.core.Address"><code class="xref py py-class docutils literal notranslate"><span class="pre">Address</span></code></a>), translated address.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.connection.DefaultAddressTranslator.refresh">
+<code class="sig-name descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.connection.DefaultAddressTranslator.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refreshes the internal lookup table if necessary.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.config.html"
+                        title="previous chapter">Config</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.core.html"
+                        title="next chapter">Core</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.connection.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.core.html" title="Core"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.config.html" title="Config"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Hazelcast Inc..
+    </div>
+  </body>
+</html>

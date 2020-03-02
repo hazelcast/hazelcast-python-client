@@ -1,0 +1,213 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Data &#8212; Hazelcast Python Client 3.12.2 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Statistics" href="hazelcast.statistics.html" />
+    <link rel="prev" title="Serialization API" href="hazelcast.serialization.api.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.statistics.html" title="Statistics"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.serialization.api.html" title="Serialization API"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.serialization.html" accesskey="U">Serialization</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.serialization.data">
+<span id="data"></span><h1>Data<a class="headerlink" href="#module-hazelcast.serialization.data" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="hazelcast.serialization.data.Data">
+<em class="property">class </em><code class="sig-name descname">Data</code><span class="sig-paren">(</span><em class="sig-param">buff=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.data.Data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Data is basic unit of serialization. It stores binary form of an object serialized by serialization service</p>
+<dl class="method">
+<dt id="hazelcast.serialization.data.Data.to_bytes">
+<code class="sig-name descname">to_bytes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.data.Data.to_bytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns byte array representation of internal binary format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(byte array), byte array representation of internal binary format.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.data.Data.get_type">
+<code class="sig-name descname">get_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.data.Data.get_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns serialization type of binary form.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Serialization type of binary form.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.data.Data.total_size">
+<code class="sig-name descname">total_size</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.data.Data.total_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the total size of Data in bytes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(int), total size of Data in bytes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.data.Data.data_size">
+<code class="sig-name descname">data_size</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.data.Data.data_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns size of internal binary data in bytes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(int), size of internal binary data in bytes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.data.Data.get_partition_hash">
+<code class="sig-name descname">get_partition_hash</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.data.Data.get_partition_hash" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Returns partition hash calculated for serialized object.</dt><dd><dl class="simple">
+<dt>Partition hash is used to determine partition of a Data and is calculated using</dt><dd><ul class="simple">
+<li><p>PartitioningStrategy during serialization.</p></li>
+<li><p>If partition hash is not set then hash_code() is used.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>partition hash</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.data.Data.is_portable">
+<code class="sig-name descname">is_portable</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.data.Data.is_portable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether this Data is created from a <a class="reference internal" href="hazelcast.serialization.api.html#hazelcast.serialization.api.Portable" title="hazelcast.serialization.api.Portable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Portable</span></code></a>. object or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if source object is Portable, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.data.Data.has_partition_hash">
+<code class="sig-name descname">has_partition_hash</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.data.Data.has_partition_hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether this Data has partition hash or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if Data has partition hash, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.serialization.data.Data.hash_code">
+<code class="sig-name descname">hash_code</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.serialization.data.Data.hash_code" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the murmur hash of the internal data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the murmur hash of the internal data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.serialization.api.html"
+                        title="previous chapter">Serialization API</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.statistics.html"
+                        title="next chapter">Statistics</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.serialization.data.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.statistics.html" title="Statistics"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.serialization.api.html" title="Serialization API"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.serialization.html" >Serialization</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Hazelcast Inc..
+    </div>
+  </body>
+</html>
