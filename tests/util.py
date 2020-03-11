@@ -29,6 +29,7 @@ def fill_map(map, size=10, key_prefix="key", value_prefix="val"):
     for i in range(size):
         entries[key_prefix + str(i)] = value_prefix + str(i)
     map.put_all(entries)
+    return entries
 
 
 def get_ssl_config(enable_ssl=False,
