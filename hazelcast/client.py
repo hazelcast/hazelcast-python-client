@@ -11,7 +11,7 @@ from hazelcast.listener import ListenerService
 from hazelcast.lifecycle import LifecycleService, LIFECYCLE_STATE_SHUTTING_DOWN, LIFECYCLE_STATE_SHUTDOWN
 from hazelcast.partition import PartitionService
 from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE, LIST_SERVICE, SET_SERVICE, MULTI_MAP_SERVICE, \
-    REPLICATED_MAP_SERVICE, ATOMIC_LONG_SERVICE, ATOMIC_REFERENCE_SERVICE, RINGBUFFER_SERIVCE, COUNT_DOWN_LATCH_SERVICE, \
+    REPLICATED_MAP_SERVICE, ATOMIC_LONG_SERVICE, ATOMIC_REFERENCE_SERVICE, RINGBUFFER_SERVICE, COUNT_DOWN_LATCH_SERVICE, \
     TOPIC_SERVICE, RELIABLE_TOPIC_SERVICE, SEMAPHORE_SERVICE, LOCK_SERVICE, ID_GENERATOR_SERVICE, \
     ID_GENERATOR_ATOMIC_LONG_PREFIX, EXECUTOR_SERVICE, PN_COUNTER_SERVICE, FLAKE_ID_GENERATOR_SERVICE
 from hazelcast.near_cache import NearCacheManager
@@ -208,7 +208,7 @@ class HazelcastClient(object):
         :return: (:class:`~hazelcast.proxy.ringbuffer.RingBuffer`), distributed RingBuffer instance with the specified name.
         """
 
-        return self.proxy.get_or_create(RINGBUFFER_SERIVCE, name)
+        return self.proxy.get_or_create(RINGBUFFER_SERVICE, name)
 
     def get_semaphore(self, name):
         """

@@ -29,7 +29,7 @@ MULTI_MAP_SERVICE = "hz:impl:multiMapService"
 MAP_SERVICE = "hz:impl:mapService"
 RELIABLE_TOPIC_SERVICE = "hz:impl:reliableTopicService"
 REPLICATED_MAP_SERVICE = "hz:impl:replicatedMapService"
-RINGBUFFER_SERIVCE = "hz:impl:ringbufferService"
+RINGBUFFER_SERVICE = "hz:impl:ringbufferService"
 SEMAPHORE_SERVICE = "hz:impl:semaphoreService"
 SET_SERVICE = "hz:impl:setService"
 QUEUE_SERVICE = "hz:impl:queueService"
@@ -52,7 +52,7 @@ _proxy_init = {
     QUEUE_SERVICE: Queue,
     RELIABLE_TOPIC_SERVICE: ReliableTopic,
     REPLICATED_MAP_SERVICE: ReplicatedMap,
-    RINGBUFFER_SERIVCE: Ringbuffer,
+    RINGBUFFER_SERVICE: Ringbuffer,
     SEMAPHORE_SERVICE: Semaphore,
     SET_SERVICE: Set,
     TOPIC_SERVICE: Topic,
