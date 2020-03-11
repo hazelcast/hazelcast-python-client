@@ -5,7 +5,7 @@ from hazelcast.proxy.map import EntryEventType
 from hazelcast.serialization.api import IdentifiedDataSerializable
 from hazelcast.serialization.predicate import SqlPredicate
 from tests.base import SingleMemberTestCase
-from tests.util import random_string, event_collector
+from tests.util import random_string, event_collector, fill_map
 from hazelcast import six
 from hazelcast.six.moves import range
 
@@ -500,3 +500,73 @@ class MapTest(SingleMemberTestCase):
         for k, v in six.iteritems(map):
             self.map.put(k, v)
         return map
+
+
+class MapStoreTest(SingleMemberTestCase):
+    @classmethod
+    def configure_cluster(cls):
+        path = os.path.abspath(__file__)
+        dir_path = os.path.dirname(path)
+        with open(os.path.join(dir_path, "hazelcast_mapstore.xml")) as f:
+            return f.read()
+
+    def setUp(self):
+        self.map = self.client.get_map("mapstore-test").blocking()
+        self.entries = fill_map(self.map, size=10, key_prefix="key", value_prefix="val")
+
+    def tearDown(self):
+        self.map.destroy()
+
+    def test_load_all_with_no_args_loads_all_keys(self):
+        self.map.evict_all()
+        self.map.load_all()
+        entry_set = self.map.get_all(self.entries.keys())
+        six.assertCountEqual(self, entry_set, self.entries)
+
+    def test_load_all_with_key_set_loads_given_keys(self):
+        self.map.evict_all()
+        self.map.load_all(['key0', 'key1'])
+        entry_set = self.map.get_all(['key0', 'key1'])
+        six.assertCountEqual(self, entry_set, {'key0': 'val0', 'key1': 'val1'})
+
+    def test_load_all_overrides_entries_in_memory_by_default(self):
+        self.map.evict_all()
+        self.map.put_transient('key0', 'new0')
+        self.map.put_transient('key1', 'new1')
+        self.map.load_all(['key0', 'key1'])
+        entry_set = self.map.get_all(['key0', 'key1'])
+        six.assertCountEqual(self, entry_set, {'key0': 'val0', 'key1': 'val1'})
+
+    def test_load_all_with_replace_existing_false_does_not_override(self):
+        self.map.evict_all()
+        self.map.put_transient('key0', 'new0')
+        self.map.put_transient('key1', 'new1')
+        self.map.load_all(['key0', 'key1'], replace_existing_values=False)
+        entry_set = self.map.get_all(['key0', 'key1'])
+        six.assertCountEqual(self, entry_set, {'key0': 'new0', 'key1': 'new1'})
+
+    def test_evict(self):
+        self.map.evict('key0')
+        self.assertEqual(self.map.size(), 9)
+
+    def test_evict_non_existing_key(self):
+        self.map.evict('non_existing_key')
+        self.assertEqual(self.map.size(), 10)
+
+    def test_evict_all(self):
+        self.map.evict_all()
+        self.assertEqual(self.map.size(), 0)
+
+    def test_add_entry_listener_item_loaded(self):
+        collector = event_collector()
+        self.map.add_entry_listener(include_value=True, loaded_func=collector)
+        self.map.put('key', 'value', ttl=0.1)
+        time.sleep(2)
+        self.map.get('key')
+
+        def assert_event():
+            self.assertEqual(len(collector.events), 1)
+            event = collector.events[0]
+            self.assertEntryEvent(event, key='key', value='value', event_type=EntryEventType.loaded)
+
+        self.assertTrueEventually(assert_event, 10)

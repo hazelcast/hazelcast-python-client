@@ -57,8 +57,9 @@ class Map(Proxy):
         super(Map, self).__init__(client, service_name, name)
         self.reference_id_generator = self._client.lock_reference_id_generator
 
-    def add_entry_listener(self, include_value=False, key=None, predicate=None, added_func=None, removed_func=None, updated_func=None,
-                           evicted_func=None, evict_all_func=None, clear_all_func=None, merged_func=None, expired_func=None):
+    def add_entry_listener(self, include_value=False, key=None, predicate=None, added_func=None, removed_func=None,
+                           updated_func=None, evicted_func=None, evict_all_func=None, clear_all_func=None,
+                           merged_func=None, expired_func=None, loaded_func=None):
         """
         Adds a continuous entry listener for this map. Listener will get notified for map events filtered with given
         parameters.
@@ -74,13 +75,14 @@ class Map(Proxy):
         :param clear_all_func: Function to be called when entries are cleared from map (optional).
         :param merged_func: Function to be called when WAN replicated entry is merged_func (optional).
         :param expired_func: Function to be called when an entry's live time is expired (optional).
+        :param loaded_func: Function to be called when an entry is loaded from a map loader (optional).
         :return: (str), a registration id which is used as a key to remove the listener.
 
         .. seealso:: :class:`~hazelcast.serialization.predicate.Predicate` for more info about predicates.
         """
         flags = get_entry_listener_flags(added=added_func, removed=removed_func, updated=updated_func,
                                          evicted=evicted_func, evict_all=evict_all_func, clear_all=clear_all_func,
-                                         merged=merged_func, expired=expired_func)
+                                         merged=merged_func, expired=expired_func, loaded=loaded_func)
 
         if key and predicate:
             key_data = self._to_data(key)
@@ -116,6 +118,8 @@ class Map(Proxy):
                 merged_func(event)
             elif event.event_type == EntryEventType.expired:
                 expired_func(event)
+            elif event.event_type == EntryEventType.loaded:
+                loaded_func(event)
 
         return self._register_listener(request, lambda r: map_add_entry_listener_codec.decode_response(r)['response'],
                                        lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name, reg_id),
