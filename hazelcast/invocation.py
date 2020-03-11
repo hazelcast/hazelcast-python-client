@@ -239,7 +239,7 @@ class InvocationService(object):
             if self.logger.isEnabledFor(logging.DEBUG):
                 self.logger.debug('Error will not be retried because invocation timed out: %s', error,
                                   extra=self._logger_extras)
-            invocation.set_excetion(TimeoutError(
+            invocation.set_exception(TimeoutError(
                 '%s timed out because an error occurred after invocation timeout: %s' % (invocation.request, error),
                 traceback))
             return
