@@ -199,3 +199,19 @@ def get_entry_listener_flags(**kwargs):
         if value:
             flags |= getattr(EntryEventType, key)
     return flags
+
+
+class DistributedObjectEvent(object):
+    """
+    Distributed Object Event
+    """
+
+    def __init__(self, name, service_name, event_type):
+        self.name = name
+        self.service_name = service_name
+        self.event_type = event_type
+
+    def __repr__(self):
+        return "DistributedObjectEvent[name={}, " \
+               "service_name={}, " \
+               "event_type={}]".format(self.name, self.service_name, self.event_type)

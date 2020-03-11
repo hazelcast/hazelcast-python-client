@@ -1,6 +1,8 @@
-from hazelcast.protocol.codec import client_create_proxy_codec, client_destroy_proxy_codec
+from hazelcast.protocol.codec import client_create_proxy_codec, client_destroy_proxy_codec, \
+    client_add_distributed_object_listener_codec, client_remove_distributed_object_listener_codec
 from hazelcast.proxy.atomic_long import AtomicLong
 from hazelcast.proxy.atomic_reference import AtomicReference
+from hazelcast.proxy.base import DistributedObjectEvent
 from hazelcast.proxy.count_down_latch import CountDownLatch
 from hazelcast.proxy.executor import Executor
 from hazelcast.proxy.id_generator import IdGenerator
@@ -66,19 +68,21 @@ class ProxyManager(object):
         self._client = client
         self._proxies = {}
 
-    def get_or_create(self, service_name, name, **kwargs):
+    def get_or_create(self, service_name, name, create_on_remote=True, **kwargs):
         ns = (service_name, name)
         if ns in self._proxies:
             return self._proxies[ns]
 
-        proxy = self.create_proxy(service_name, name, **kwargs)
+        proxy = self.create_proxy(service_name, name, create_on_remote, **kwargs)
         self._proxies[ns] = proxy
         return proxy
 
-    def create_proxy(self, service_name, name, **kwargs):
-        message = client_create_proxy_codec.encode_request(name=name, service_name=service_name,
-                                                           target=self._find_next_proxy_address())
-        self._client.invoker.invoke_on_random_target(message).result()
+    def create_proxy(self, service_name, name, create_on_remote, **kwargs):
+        if create_on_remote:
+            message = client_create_proxy_codec.encode_request(name=name, service_name=service_name,
+                                                               target=self._find_next_proxy_address())
+            self._client.invoker.invoke_on_random_target(message).result()
+
         return _proxy_init[service_name](client=self._client, service_name=service_name, name=name, **kwargs)
 
     def destroy_proxy(self, service_name, name):
@@ -90,6 +94,29 @@ class ProxyManager(object):
             return True
         except KeyError:
             return False
+
+    def add_distributed_object_listener(self, listener_func):
+        is_smart = self._client.config.network_config.smart_routing
+        request = client_add_distributed_object_listener_codec.encode_request(is_smart)
+
+        def handle_distributed_object_event(**kwargs):
+            event = DistributedObjectEvent(**kwargs)
+            listener_func(event)
+
+        def event_handler(client_message):
+            return client_add_distributed_object_listener_codec.handle(client_message, handle_distributed_object_event)
+
+        def decode_add_listener(response):
+            return client_add_distributed_object_listener_codec.decode_response(response)["response"]
+
+        def encode_remove_listener(registration_id):
+            return client_remove_distributed_object_listener_codec.encode_request(registration_id)
+
+        return self._client.listener.register_listener(request, decode_add_listener,
+                                                       encode_remove_listener, event_handler)
+
+    def remove_distributed_object_listener(self, registration_id):
+        return self._client.listener.deregister_listener(registration_id)
 
     def _find_next_proxy_address(self):
         # TODO: filter out lite members
