@@ -556,3 +556,17 @@ class MapStoreTest(SingleMemberTestCase):
     def test_evict_all(self):
         self.map.evict_all()
         self.assertEqual(self.map.size(), 0)
+
+    def test_add_entry_listener_item_loaded(self):
+        collector = event_collector()
+        self.map.add_entry_listener(include_value=True, loaded_func=collector)
+        self.map.put('key', 'value', ttl=0.1)
+        time.sleep(2)
+        self.map.get('key')
+
+        def assert_event():
+            self.assertEqual(len(collector.events), 1)
+            event = collector.events[0]
+            self.assertEntryEvent(event, key='key', value='value', event_type=EntryEventType.loaded)
+
+        self.assertTrueEventually(assert_event, 10)
