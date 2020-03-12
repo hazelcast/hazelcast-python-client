@@ -199,4 +199,3 @@ def get_entry_listener_flags(**kwargs):
         if value:
             flags |= getattr(EntryEventType, key)
     return flags
-

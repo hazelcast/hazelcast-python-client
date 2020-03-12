@@ -40,7 +40,7 @@ class DistributedObjectsTest(SingleMemberTestCase):
         six.assertCountEqual(self, [m], self.client.get_distributed_objects())
 
         other_client = hazelcast.HazelcastClient()
-        other_clients_map = other_client.get_map("map").blocking()
+        other_clients_map = other_client.get_map("map")
         other_clients_map.destroy()
 
         six.assertCountEqual(self, [], self.client.get_distributed_objects())

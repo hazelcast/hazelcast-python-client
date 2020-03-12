@@ -67,7 +67,8 @@
   * [7.5. Distributed Events](#75-distributed-events)
     * [7.5.1. Cluster Events](#751-cluster-events)
       * [7.5.1.1. Listening for Member Events](#7511-listening-for-member-events)
-      * [7.5.1.2. Listening for Lifecycle Events](#7512-listening-for-lifecycle-events)
+      * [7.5.1.2. Listenring for Distributed Object Events](#7512-listening-for-distributed-object-events)
+      * [7.5.1.3. Listening for Lifecycle Events](#7513-listening-for-lifecycle-events)
     * [7.5.2. Distributed Data Structure Events](#752-distributed-data-structure-events)
       * [7.5.2.1. Listening for Map Events](#7521-listening-for-map-events)
   * [7.6. Distributed Computing](#76-distributed-computing)
@@ -1737,7 +1738,42 @@ The following is a membership listener registration by using the `add_listener()
 client.cluster.add_listener(member_added=lambda m: print("Member Added: The address is {}".format(m.address)))
 ```
 
-#### 7.5.1.2. Listening for Lifecycle Events
+#### 7.5.1.2. Listening for Distributed Object Events
+
+The events for distributed objects are invoked when they are created and destroyed in the cluster. When an event
+is received, listener function will be called. The parameter passed into the listener function will be of the type
+``DistributedObjectEvent``. A ``DistributedObjectEvent`` contains the following fields:
+* ``name``: Name of the distributed object.
+* ``service_name``: Service name of the distributed object.
+* ``event_type``: Type of the invoked event. It is either ``CREATED`` or ``DESTROYED``.
+
+The following is example of adding a distributed object listener to a client.
+
+```python
+def distributed_object_listener(event):
+    print("Distributed object event >>>", event.name, event.service_name, event.event_type)
+
+client.add_distributed_object_listener(listener_func=distributed_object_listener)
+
+map_name = "test_map"
+
+# This call causes a CREATED event
+test_map = client.get_map(map_name)
+
+# This causes no event because map was already created
+test_map2 = client.get_map(map_name)
+
+# This causes a DESTROYED event
+test_map.destroy()
+```
+
+**Output**
+```
+Distributed object event >>> test_map hz:impl:mapService CREATED
+Distributed object event >>> test_map hz:impl:mapService DESTROYED
+```
+
+#### 7.5.1.3. Listening for Lifecycle Events
 
 The `Lifecycle Listener` notifies for the following events:
 
