@@ -3,6 +3,7 @@ import json
 
 from hazelcast import six
 from hazelcast import util
+from hazelcast.util import enum
 
 
 class Member(object):
@@ -54,6 +55,39 @@ class DistributedObjectInfo(object):
 
     def __repr__(self):
         return "DistributedObjectInfo(name={}, serviceName={})".format(self.name, self.service_name)
+
+    def __hash__(self):
+        return hash((self.name, self.service_name))
+
+    def __eq__(self, other):
+        if isinstance(other, DistributedObjectInfo):
+            return self.name == other.name and self.service_name == other.service_name
+        return False
+
+
+DistributedObjectEventType = enum(CREATED="CREATED", DESTROYED="DESTROYED")
+"""
+Type of the distributed object event.
+
+* CREATED : DistributedObject is created.
+* DESTROYED: DistributedObject is destroyed. 
+"""
+
+
+class DistributedObjectEvent(object):
+    """
+    Distributed Object Event
+    """
+
+    def __init__(self, name, service_name, event_type):
+        self.name = name
+        self.service_name = service_name
+        self.event_type = DistributedObjectEventType.reverse.get(event_type, None)
+
+    def __repr__(self):
+        return "DistributedObjectEvent[name={}, " \
+               "service_name={}, " \
+               "event_type={}]".format(self.name, self.service_name, self.event_type)
 
 
 class EntryView(object):

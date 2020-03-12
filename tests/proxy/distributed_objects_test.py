@@ -1,4 +1,5 @@
 import hazelcast
+from hazelcast.core import DistributedObjectEventType
 
 from hazelcast.proxy import MAP_SERVICE
 from tests.base import SingleMemberTestCase
@@ -33,6 +34,17 @@ class DistributedObjectsTest(SingleMemberTestCase):
 
         six.assertCountEqual(self, [m, s, q], self.client.get_distributed_objects())
 
+    def test_get_distributed_objects_clears_destroyed_proxies(self):
+        m = self.client.get_map("map")
+
+        six.assertCountEqual(self, [m], self.client.get_distributed_objects())
+
+        other_client = hazelcast.HazelcastClient()
+        other_clients_map = other_client.get_map("map").blocking()
+        other_clients_map.destroy()
+
+        six.assertCountEqual(self, [], self.client.get_distributed_objects())
+
     def test_add_distributed_object_listener_object_created(self):
         collector = event_collector()
         self.client.add_distributed_object_listener(listener_func=collector)
@@ -42,7 +54,7 @@ class DistributedObjectsTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(1, len(collector.events))
             event = collector.events[0]
-            self.assertDistributedObjectEvent(event, "test-map", MAP_SERVICE, "CREATED")
+            self.assertDistributedObjectEvent(event, "test-map", MAP_SERVICE, DistributedObjectEventType.CREATED)
 
         self.assertTrueEventually(assert_event)
 
@@ -56,7 +68,7 @@ class DistributedObjectsTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(1, len(collector.events))
             event = collector.events[0]
-            self.assertDistributedObjectEvent(event, "test-map", MAP_SERVICE, "DESTROYED")
+            self.assertDistributedObjectEvent(event, "test-map", MAP_SERVICE, DistributedObjectEventType.DESTROYED)
 
         self.assertTrueEventually(assert_event)
 
@@ -71,8 +83,10 @@ class DistributedObjectsTest(SingleMemberTestCase):
             self.assertEqual(2, len(collector.events))
             created_event = collector.events[0]
             destroyed_event = collector.events[1]
-            self.assertDistributedObjectEvent(created_event, "test-map", MAP_SERVICE, "CREATED")
-            self.assertDistributedObjectEvent(destroyed_event, "test-map", MAP_SERVICE, "DESTROYED")
+            self.assertDistributedObjectEvent(created_event, "test-map", MAP_SERVICE,
+                                              DistributedObjectEventType.CREATED)
+            self.assertDistributedObjectEvent(destroyed_event, "test-map", MAP_SERVICE,
+                                              DistributedObjectEventType.DESTROYED)
 
         self.assertTrueEventually(assert_event)
 
@@ -89,7 +103,7 @@ class DistributedObjectsTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(1, len(collector.events))
             event = collector.events[0]
-            self.assertDistributedObjectEvent(event, "test-map", MAP_SERVICE, "CREATED")
+            self.assertDistributedObjectEvent(event, "test-map", MAP_SERVICE, DistributedObjectEventType.CREATED)
         self.assertTrueEventually(assert_event)
 
     def test_remove_invalid_distributed_object_listener(self):

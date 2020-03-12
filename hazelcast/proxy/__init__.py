@@ -1,8 +1,8 @@
+from hazelcast.core import DistributedObjectEvent
 from hazelcast.protocol.codec import client_create_proxy_codec, client_destroy_proxy_codec, \
     client_add_distributed_object_listener_codec, client_remove_distributed_object_listener_codec
 from hazelcast.proxy.atomic_long import AtomicLong
 from hazelcast.proxy.atomic_reference import AtomicReference
-from hazelcast.proxy.base import DistributedObjectEvent
 from hazelcast.proxy.count_down_latch import CountDownLatch
 from hazelcast.proxy.executor import Executor
 from hazelcast.proxy.id_generator import IdGenerator
@@ -19,6 +19,7 @@ from hazelcast.proxy.set import Set
 from hazelcast.proxy.topic import Topic
 from hazelcast.proxy.pn_counter import PNCounter
 from hazelcast.proxy.flake_id_generator import FlakeIdGenerator
+from hazelcast.util import to_list
 
 ATOMIC_LONG_SERVICE = "hz:impl:atomicLongService"
 ATOMIC_REFERENCE_SERVICE = "hz:impl:atomicReferenceService"
@@ -85,15 +86,19 @@ class ProxyManager(object):
 
         return _proxy_init[service_name](client=self._client, service_name=service_name, name=name, **kwargs)
 
-    def destroy_proxy(self, service_name, name):
+    def destroy_proxy(self, service_name, name, destroy_on_remote=True):
         ns = (service_name, name)
         try:
             self._proxies.pop(ns)
-            message = client_destroy_proxy_codec.encode_request(name=name, service_name=service_name)
-            self._client.invoker.invoke_on_random_target(message).result()
+            if destroy_on_remote:
+                message = client_destroy_proxy_codec.encode_request(name=name, service_name=service_name)
+                self._client.invoker.invoke_on_random_target(message).result()
             return True
         except KeyError:
             return False
+
+    def get_distributed_objects(self):
+        return to_list(self._proxies.values())
 
     def add_distributed_object_listener(self, listener_func):
         is_smart = self._client.config.network_config.smart_routing
