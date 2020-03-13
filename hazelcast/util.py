@@ -341,3 +341,7 @@ def create_git_info():
     if GIT_COMMIT_ID:
         return "(" + GIT_COMMIT_ID + ") "
     return ""
+
+
+def to_list(*args, **kwargs):
+    return list(*args, **kwargs)

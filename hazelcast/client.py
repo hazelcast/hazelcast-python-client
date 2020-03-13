@@ -6,10 +6,12 @@ import json
 from hazelcast.cluster import ClusterService, RandomLoadBalancer
 from hazelcast.config import ClientConfig, ClientProperties
 from hazelcast.connection import ConnectionManager, Heartbeat, DefaultAddressProvider, DefaultAddressTranslator
+from hazelcast.core import DistributedObjectInfo
 from hazelcast.invocation import InvocationService
 from hazelcast.listener import ListenerService
 from hazelcast.lifecycle import LifecycleService, LIFECYCLE_STATE_SHUTTING_DOWN, LIFECYCLE_STATE_SHUTDOWN
 from hazelcast.partition import PartitionService
+from hazelcast.protocol.codec import client_get_distributed_objects_codec
 from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE, LIST_SERVICE, SET_SERVICE, MULTI_MAP_SERVICE, \
     REPLICATED_MAP_SERVICE, ATOMIC_LONG_SERVICE, ATOMIC_REFERENCE_SERVICE, RINGBUFFER_SERVICE, COUNT_DOWN_LATCH_SERVICE, \
     TOPIC_SERVICE, RELIABLE_TOPIC_SERVICE, SEMAPHORE_SERVICE, LOCK_SERVICE, ID_GENERATOR_SERVICE, \
@@ -250,6 +252,48 @@ class HazelcastClient(object):
         :return: (:class:`~hazelcast.transaction.Transaction`), new Transaction associated with the current thread.
         """
         return self.transaction_manager.new_transaction(timeout, durability, type)
+
+    def add_distributed_object_listener(self, listener_func):
+        """
+        Adds a listener which will be notified when a
+        new distributed object is created or destroyed.
+        :param listener_func: Function to be called when a distributed object is created or destroyed.
+        :return: (str), a registration id which is used as a key to remove the listener.
+        """
+        return self.proxy.add_distributed_object_listener(listener_func)
+
+    def remove_distributed_object_listener(self, registration_id):
+        """
+        Removes the specified distributed object listener. Returns silently if there is no such listener added before.
+        :param registration_id: (str), id of registered listener.
+        :return: (bool), ``true`` if registration is removed, ``false`` otherwise.
+        """
+        return self.proxy.remove_distributed_object_listener(registration_id)
+
+    def get_distributed_objects(self):
+        """
+        Returns all distributed objects such as; queue, map, set, list, topic, lock, multimap.
+        Also, as a side effect, it clears the local instances of the destroyed proxies.
+        :return:(Sequence), List of instances created by Hazelcast.
+        """
+        request = client_get_distributed_objects_codec.encode_request()
+        to_object = self.serialization_service.to_object
+        future = self.invoker.invoke_on_random_target(request)
+        response = client_get_distributed_objects_codec.decode_response(future.result(), to_object)["response"]
+
+        distributed_objects = self.proxy.get_distributed_objects()
+        local_distributed_object_infos = set()
+        for dist_obj in distributed_objects:
+            local_distributed_object_infos.add(DistributedObjectInfo(dist_obj.name, dist_obj.service_name))
+
+        for dist_obj_info in response:
+            local_distributed_object_infos.discard(dist_obj_info)
+            self.proxy.get_or_create(dist_obj_info.service_name, dist_obj_info.name, create_on_remote=False)
+
+        for dist_obj_info in local_distributed_object_infos:
+            self.proxy.destroy_proxy(dist_obj_info.service_name, dist_obj_info.name, destroy_on_remote=False)
+
+        return self.proxy.get_distributed_objects()
 
     def shutdown(self):
         """
