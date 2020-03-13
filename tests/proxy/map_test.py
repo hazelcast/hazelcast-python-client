@@ -5,7 +5,7 @@ from hazelcast.proxy.map import EntryEventType
 from hazelcast.serialization.api import IdentifiedDataSerializable
 from hazelcast.serialization.predicate import SqlPredicate
 from tests.base import SingleMemberTestCase
-from tests.util import random_string, event_collector, fill_map
+from tests.util import random_string, event_collector, fill_map, set_attr
 from hazelcast import six
 from hazelcast.six.moves import range
 
@@ -557,6 +557,7 @@ class MapStoreTest(SingleMemberTestCase):
         self.map.evict_all()
         self.assertEqual(self.map.size(), 0)
 
+    @set_attr(category=3.11)
     def test_add_entry_listener_item_loaded(self):
         collector = event_collector()
         self.map.add_entry_listener(include_value=True, loaded_func=collector)
