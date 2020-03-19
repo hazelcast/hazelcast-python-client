@@ -1,0 +1,277 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Transaction &#8212; Hazelcast Python Client 3.12.3 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Util" href="hazelcast.util.html" />
+    <link rel="prev" title="Statistics" href="hazelcast.statistics.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.util.html" title="Util"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.statistics.html" title="Statistics"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" accesskey="U">Hazelcast Python Client</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.transaction">
+<span id="transaction"></span><h1>Transaction<a class="headerlink" href="#module-hazelcast.transaction" title="Permalink to this headline">¶</a></h1>
+<dl class="data">
+<dt id="hazelcast.transaction.TWO_PHASE">
+<code class="sig-name descname">TWO_PHASE</code><em class="property"> = 1</em><a class="headerlink" href="#hazelcast.transaction.TWO_PHASE" title="Permalink to this definition">¶</a></dt>
+<dd><p>The two phase commit is separated in 2 parts. First it tries to execute the prepare; if there are any conflicts,
+the prepare will fail. Once the prepare has succeeded, the commit (writing the changes) can be executed.</p>
+<p>Hazelcast also provides three phase transaction by automatically copying the backlog to another member so that in case
+of failure during a commit, another member can continue the commit from backup.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="hazelcast.transaction.ONE_PHASE">
+<code class="sig-name descname">ONE_PHASE</code><em class="property"> = 2</em><a class="headerlink" href="#hazelcast.transaction.ONE_PHASE" title="Permalink to this definition">¶</a></dt>
+<dd><p>The one phase transaction executes a transaction using a single step at the end; committing the changes. There
+is no prepare of the transactions, so conflicts are not detected. If there is a conflict, then when the transaction
+commits the changes, some of the changes are written and others are not; leaving the system in a potentially permanent
+inconsistent state.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.transaction.TransactionManager">
+<em class="property">class </em><code class="sig-name descname">TransactionManager</code><span class="sig-paren">(</span><em class="sig-param">client</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.transaction.TransactionManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Manages the execution of client transactions and provides Transaction objects.</p>
+<dl class="attribute">
+<dt id="hazelcast.transaction.TransactionManager.logger">
+<code class="sig-name descname">logger</code><em class="property"> = &lt;Logger HazelcastClient.TransactionManager (WARNING)&gt;</em><a class="headerlink" href="#hazelcast.transaction.TransactionManager.logger" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.transaction.TransactionManager.new_transaction">
+<code class="sig-name descname">new_transaction</code><span class="sig-paren">(</span><em class="sig-param">timeout</em>, <em class="sig-param">durability</em>, <em class="sig-param">transaction_type</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.transaction.TransactionManager.new_transaction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a Transaction object with given timeout, durability and transaction type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timeout</strong> – (long), the timeout in seconds determines the maximum lifespan of a transaction.</p></li>
+<li><p><strong>durability</strong> – (int), the durability is the number of machines that can take over if a member fails during a
+transaction commit or rollback</p></li>
+<li><p><strong>transaction_type</strong> – (Transaction Type), the transaction type which can be <a class="reference internal" href="#hazelcast.transaction.TWO_PHASE" title="hazelcast.transaction.TWO_PHASE"><code class="xref py py-const docutils literal notranslate"><span class="pre">TWO_PHASE</span></code></a> or <a class="reference internal" href="#hazelcast.transaction.ONE_PHASE" title="hazelcast.transaction.ONE_PHASE"><code class="xref py py-const docutils literal notranslate"><span class="pre">ONE_PHASE</span></code></a></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="#hazelcast.transaction.Transaction" title="hazelcast.transaction.Transaction"><code class="xref py py-class docutils literal notranslate"><span class="pre">Transaction</span></code></a>), new created Transaction.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.transaction.Transaction">
+<em class="property">class </em><code class="sig-name descname">Transaction</code><span class="sig-paren">(</span><em class="sig-param">client</em>, <em class="sig-param">connection</em>, <em class="sig-param">timeout</em>, <em class="sig-param">durability</em>, <em class="sig-param">transaction_type</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.transaction.Transaction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Provides transactional operations: beginning/committing transactions, but also retrieving
+transactional data-structures like the TransactionalMap.</p>
+<dl class="attribute">
+<dt id="hazelcast.transaction.Transaction.state">
+<code class="sig-name descname">state</code><em class="property"> = 'not_started'</em><a class="headerlink" href="#hazelcast.transaction.Transaction.state" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.transaction.Transaction.id">
+<code class="sig-name descname">id</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.transaction.Transaction.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.transaction.Transaction.start_time">
+<code class="sig-name descname">start_time</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.transaction.Transaction.start_time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.transaction.Transaction.thread_id">
+<code class="sig-name descname">thread_id</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.transaction.Transaction.thread_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.transaction.Transaction.logger">
+<code class="sig-name descname">logger</code><em class="property"> = &lt;Logger HazelcastClient.Transaction (WARNING)&gt;</em><a class="headerlink" href="#hazelcast.transaction.Transaction.logger" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.transaction.Transaction.begin">
+<code class="sig-name descname">begin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.transaction.Transaction.begin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Begins this transaction.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.transaction.Transaction.commit">
+<code class="sig-name descname">commit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.transaction.Transaction.commit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Commits this transaction.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.transaction.Transaction.rollback">
+<code class="sig-name descname">rollback</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.transaction.Transaction.rollback" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rollback of this current transaction.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.transaction.Transaction.get_list">
+<code class="sig-name descname">get_list</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.transaction.Transaction.get_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the transactional list instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – (str), the specified name.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="hazelcast.proxy.transactional_list.html#hazelcast.proxy.transactional_list.TransactionalList" title="hazelcast.proxy.transactional_list.TransactionalList"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransactionalList</span></code></a>), the instance of Transactional List with the specified name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.transaction.Transaction.get_map">
+<code class="sig-name descname">get_map</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.transaction.Transaction.get_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the transactional map instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – (str), the specified name.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="hazelcast.proxy.transactional_map.html#hazelcast.proxy.transactional_map.TransactionalMap" title="hazelcast.proxy.transactional_map.TransactionalMap"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransactionalMap</span></code></a>), the instance of Transactional Map with the specified name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.transaction.Transaction.get_multi_map">
+<code class="sig-name descname">get_multi_map</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.transaction.Transaction.get_multi_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the transactional multimap instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – (str), the specified name.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="hazelcast.proxy.transactional_multi_map.html#hazelcast.proxy.transactional_multi_map.TransactionalMultiMap" title="hazelcast.proxy.transactional_multi_map.TransactionalMultiMap"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransactionalMultiMap</span></code></a>), the instance of Transactional MultiMap with the specified name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.transaction.Transaction.get_queue">
+<code class="sig-name descname">get_queue</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.transaction.Transaction.get_queue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the transactional queue instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – (str), the specified name.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="hazelcast.proxy.transactional_queue.html#hazelcast.proxy.transactional_queue.TransactionalQueue" title="hazelcast.proxy.transactional_queue.TransactionalQueue"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransactionalQueue</span></code></a>), the instance of Transactional Queue with the specified name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.transaction.Transaction.get_set">
+<code class="sig-name descname">get_set</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.transaction.Transaction.get_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the transactional set instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – (str), the specified name.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="hazelcast.proxy.transactional_set.html#hazelcast.proxy.transactional_set.TransactionalSet" title="hazelcast.proxy.transactional_set.TransactionalSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransactionalSet</span></code></a>), the instance of Transactional Set with the specified name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.statistics.html"
+                        title="previous chapter">Statistics</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.util.html"
+                        title="next chapter">Util</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.transaction.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.util.html" title="Util"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.statistics.html" title="Statistics"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Hazelcast Inc..
+    </div>
+  </body>
+</html>

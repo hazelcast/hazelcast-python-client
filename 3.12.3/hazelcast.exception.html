@@ -1,0 +1,705 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Exception &#8212; Hazelcast Python Client 3.12.3 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Future" href="hazelcast.future.html" />
+    <link rel="prev" title="Discovery" href="hazelcast.discovery.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.future.html" title="Future"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.discovery.html" title="Discovery"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" accesskey="U">Hazelcast Python Client</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.exception">
+<span id="exception"></span><h1>Exception<a class="headerlink" href="#module-hazelcast.exception" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="hazelcast.exception.retryable">
+<code class="sig-name descname">retryable</code><span class="sig-paren">(</span><em class="sig-param">cls</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.exception.retryable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes the given error retryable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>cls</strong> – (<a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">HazelcastError</span></code></a>), the given error.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">HazelcastError</span></code></a>), the given error with retryable property.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.HazelcastError">
+<em class="property">exception </em><code class="sig-name descname">HazelcastError</code><a class="headerlink" href="#hazelcast.exception.HazelcastError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>General HazelcastError class.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.ArrayIndexOutOfBoundsError">
+<em class="property">exception </em><code class="sig-name descname">ArrayIndexOutOfBoundsError</code><a class="headerlink" href="#hazelcast.exception.ArrayIndexOutOfBoundsError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.ArrayStoreError">
+<em class="property">exception </em><code class="sig-name descname">ArrayStoreError</code><a class="headerlink" href="#hazelcast.exception.ArrayStoreError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.AuthenticationError">
+<em class="property">exception </em><code class="sig-name descname">AuthenticationError</code><a class="headerlink" href="#hazelcast.exception.AuthenticationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.CacheNotExistsError">
+<em class="property">exception </em><code class="sig-name descname">CacheNotExistsError</code><a class="headerlink" href="#hazelcast.exception.CacheNotExistsError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.CallerNotMemberError">
+<em class="property">exception </em><code class="sig-name descname">CallerNotMemberError</code><a class="headerlink" href="#hazelcast.exception.CallerNotMemberError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+<dl class="attribute">
+<dt id="hazelcast.exception.CallerNotMemberError.retryable">
+<code class="sig-name descname">retryable</code><em class="property"> = True</em><a class="headerlink" href="#hazelcast.exception.CallerNotMemberError.retryable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.CancellationError">
+<em class="property">exception </em><code class="sig-name descname">CancellationError</code><a class="headerlink" href="#hazelcast.exception.CancellationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.ClassCastError">
+<em class="property">exception </em><code class="sig-name descname">ClassCastError</code><a class="headerlink" href="#hazelcast.exception.ClassCastError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.ClassNotFoundError">
+<em class="property">exception </em><code class="sig-name descname">ClassNotFoundError</code><a class="headerlink" href="#hazelcast.exception.ClassNotFoundError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.ConcurrentModificationError">
+<em class="property">exception </em><code class="sig-name descname">ConcurrentModificationError</code><a class="headerlink" href="#hazelcast.exception.ConcurrentModificationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.ConfigMismatchError">
+<em class="property">exception </em><code class="sig-name descname">ConfigMismatchError</code><a class="headerlink" href="#hazelcast.exception.ConfigMismatchError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.ConfigurationError">
+<em class="property">exception </em><code class="sig-name descname">ConfigurationError</code><a class="headerlink" href="#hazelcast.exception.ConfigurationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.DistributedObjectDestroyedError">
+<em class="property">exception </em><code class="sig-name descname">DistributedObjectDestroyedError</code><a class="headerlink" href="#hazelcast.exception.DistributedObjectDestroyedError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.DuplicateInstanceNameError">
+<em class="property">exception </em><code class="sig-name descname">DuplicateInstanceNameError</code><a class="headerlink" href="#hazelcast.exception.DuplicateInstanceNameError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.HazelcastEOFError">
+<em class="property">exception </em><code class="sig-name descname">HazelcastEOFError</code><a class="headerlink" href="#hazelcast.exception.HazelcastEOFError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.ExecutionError">
+<em class="property">exception </em><code class="sig-name descname">ExecutionError</code><a class="headerlink" href="#hazelcast.exception.ExecutionError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.HazelcastInstanceNotActiveError">
+<em class="property">exception </em><code class="sig-name descname">HazelcastInstanceNotActiveError</code><a class="headerlink" href="#hazelcast.exception.HazelcastInstanceNotActiveError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+<dl class="attribute">
+<dt id="hazelcast.exception.HazelcastInstanceNotActiveError.retryable">
+<code class="sig-name descname">retryable</code><em class="property"> = True</em><a class="headerlink" href="#hazelcast.exception.HazelcastInstanceNotActiveError.retryable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.HazelcastOverloadError">
+<em class="property">exception </em><code class="sig-name descname">HazelcastOverloadError</code><a class="headerlink" href="#hazelcast.exception.HazelcastOverloadError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.HazelcastSerializationError">
+<em class="property">exception </em><code class="sig-name descname">HazelcastSerializationError</code><a class="headerlink" href="#hazelcast.exception.HazelcastSerializationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.HazelcastIOError">
+<em class="property">exception </em><code class="sig-name descname">HazelcastIOError</code><a class="headerlink" href="#hazelcast.exception.HazelcastIOError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.IllegalArgumentError">
+<em class="property">exception </em><code class="sig-name descname">IllegalArgumentError</code><a class="headerlink" href="#hazelcast.exception.IllegalArgumentError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.IllegalAccessException">
+<em class="property">exception </em><code class="sig-name descname">IllegalAccessException</code><a class="headerlink" href="#hazelcast.exception.IllegalAccessException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.IllegalAccessError">
+<em class="property">exception </em><code class="sig-name descname">IllegalAccessError</code><a class="headerlink" href="#hazelcast.exception.IllegalAccessError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.IllegalMonitorStateError">
+<em class="property">exception </em><code class="sig-name descname">IllegalMonitorStateError</code><a class="headerlink" href="#hazelcast.exception.IllegalMonitorStateError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.HazelcastIllegalStateError">
+<em class="property">exception </em><code class="sig-name descname">HazelcastIllegalStateError</code><a class="headerlink" href="#hazelcast.exception.HazelcastIllegalStateError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.IllegalThreadStateError">
+<em class="property">exception </em><code class="sig-name descname">IllegalThreadStateError</code><a class="headerlink" href="#hazelcast.exception.IllegalThreadStateError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.IndexOutOfBoundsError">
+<em class="property">exception </em><code class="sig-name descname">IndexOutOfBoundsError</code><a class="headerlink" href="#hazelcast.exception.IndexOutOfBoundsError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.HazelcastInterruptedError">
+<em class="property">exception </em><code class="sig-name descname">HazelcastInterruptedError</code><a class="headerlink" href="#hazelcast.exception.HazelcastInterruptedError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.InvalidAddressError">
+<em class="property">exception </em><code class="sig-name descname">InvalidAddressError</code><a class="headerlink" href="#hazelcast.exception.InvalidAddressError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.InvalidConfigurationError">
+<em class="property">exception </em><code class="sig-name descname">InvalidConfigurationError</code><a class="headerlink" href="#hazelcast.exception.InvalidConfigurationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.MemberLeftError">
+<em class="property">exception </em><code class="sig-name descname">MemberLeftError</code><a class="headerlink" href="#hazelcast.exception.MemberLeftError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+<dl class="attribute">
+<dt id="hazelcast.exception.MemberLeftError.retryable">
+<code class="sig-name descname">retryable</code><em class="property"> = True</em><a class="headerlink" href="#hazelcast.exception.MemberLeftError.retryable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.NegativeArraySizeError">
+<em class="property">exception </em><code class="sig-name descname">NegativeArraySizeError</code><a class="headerlink" href="#hazelcast.exception.NegativeArraySizeError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.NoSuchElementError">
+<em class="property">exception </em><code class="sig-name descname">NoSuchElementError</code><a class="headerlink" href="#hazelcast.exception.NoSuchElementError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.NotSerializableError">
+<em class="property">exception </em><code class="sig-name descname">NotSerializableError</code><a class="headerlink" href="#hazelcast.exception.NotSerializableError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.NullPointerError">
+<em class="property">exception </em><code class="sig-name descname">NullPointerError</code><a class="headerlink" href="#hazelcast.exception.NullPointerError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.OperationTimeoutError">
+<em class="property">exception </em><code class="sig-name descname">OperationTimeoutError</code><a class="headerlink" href="#hazelcast.exception.OperationTimeoutError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.PartitionMigratingError">
+<em class="property">exception </em><code class="sig-name descname">PartitionMigratingError</code><a class="headerlink" href="#hazelcast.exception.PartitionMigratingError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+<dl class="attribute">
+<dt id="hazelcast.exception.PartitionMigratingError.retryable">
+<code class="sig-name descname">retryable</code><em class="property"> = True</em><a class="headerlink" href="#hazelcast.exception.PartitionMigratingError.retryable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.QueryError">
+<em class="property">exception </em><code class="sig-name descname">QueryError</code><a class="headerlink" href="#hazelcast.exception.QueryError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.QueryResultSizeExceededError">
+<em class="property">exception </em><code class="sig-name descname">QueryResultSizeExceededError</code><a class="headerlink" href="#hazelcast.exception.QueryResultSizeExceededError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.QuorumError">
+<em class="property">exception </em><code class="sig-name descname">QuorumError</code><a class="headerlink" href="#hazelcast.exception.QuorumError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.ReachedMaxSizeError">
+<em class="property">exception </em><code class="sig-name descname">ReachedMaxSizeError</code><a class="headerlink" href="#hazelcast.exception.ReachedMaxSizeError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.RejectedExecutionError">
+<em class="property">exception </em><code class="sig-name descname">RejectedExecutionError</code><a class="headerlink" href="#hazelcast.exception.RejectedExecutionError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.RemoteMapReduceError">
+<em class="property">exception </em><code class="sig-name descname">RemoteMapReduceError</code><a class="headerlink" href="#hazelcast.exception.RemoteMapReduceError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.ResponseAlreadySentError">
+<em class="property">exception </em><code class="sig-name descname">ResponseAlreadySentError</code><a class="headerlink" href="#hazelcast.exception.ResponseAlreadySentError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.RetryableHazelcastError">
+<em class="property">exception </em><code class="sig-name descname">RetryableHazelcastError</code><a class="headerlink" href="#hazelcast.exception.RetryableHazelcastError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+<dl class="attribute">
+<dt id="hazelcast.exception.RetryableHazelcastError.retryable">
+<code class="sig-name descname">retryable</code><em class="property"> = True</em><a class="headerlink" href="#hazelcast.exception.RetryableHazelcastError.retryable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.RetryableIOError">
+<em class="property">exception </em><code class="sig-name descname">RetryableIOError</code><a class="headerlink" href="#hazelcast.exception.RetryableIOError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+<dl class="attribute">
+<dt id="hazelcast.exception.RetryableIOError.retryable">
+<code class="sig-name descname">retryable</code><em class="property"> = True</em><a class="headerlink" href="#hazelcast.exception.RetryableIOError.retryable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.HazelcastRuntimeError">
+<em class="property">exception </em><code class="sig-name descname">HazelcastRuntimeError</code><a class="headerlink" href="#hazelcast.exception.HazelcastRuntimeError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.SecurityError">
+<em class="property">exception </em><code class="sig-name descname">SecurityError</code><a class="headerlink" href="#hazelcast.exception.SecurityError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.SocketError">
+<em class="property">exception </em><code class="sig-name descname">SocketError</code><a class="headerlink" href="#hazelcast.exception.SocketError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.StaleSequenceError">
+<em class="property">exception </em><code class="sig-name descname">StaleSequenceError</code><a class="headerlink" href="#hazelcast.exception.StaleSequenceError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.TargetDisconnectedError">
+<em class="property">exception </em><code class="sig-name descname">TargetDisconnectedError</code><a class="headerlink" href="#hazelcast.exception.TargetDisconnectedError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.TargetNotMemberError">
+<em class="property">exception </em><code class="sig-name descname">TargetNotMemberError</code><a class="headerlink" href="#hazelcast.exception.TargetNotMemberError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+<dl class="attribute">
+<dt id="hazelcast.exception.TargetNotMemberError.retryable">
+<code class="sig-name descname">retryable</code><em class="property"> = True</em><a class="headerlink" href="#hazelcast.exception.TargetNotMemberError.retryable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.TimeoutError">
+<em class="property">exception </em><code class="sig-name descname">TimeoutError</code><a class="headerlink" href="#hazelcast.exception.TimeoutError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.TopicOverloadError">
+<em class="property">exception </em><code class="sig-name descname">TopicOverloadError</code><a class="headerlink" href="#hazelcast.exception.TopicOverloadError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.TopologyChangedError">
+<em class="property">exception </em><code class="sig-name descname">TopologyChangedError</code><a class="headerlink" href="#hazelcast.exception.TopologyChangedError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.TransactionError">
+<em class="property">exception </em><code class="sig-name descname">TransactionError</code><a class="headerlink" href="#hazelcast.exception.TransactionError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.TransactionNotActiveError">
+<em class="property">exception </em><code class="sig-name descname">TransactionNotActiveError</code><a class="headerlink" href="#hazelcast.exception.TransactionNotActiveError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.TransactionTimedOutError">
+<em class="property">exception </em><code class="sig-name descname">TransactionTimedOutError</code><a class="headerlink" href="#hazelcast.exception.TransactionTimedOutError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.URISyntaxError">
+<em class="property">exception </em><code class="sig-name descname">URISyntaxError</code><a class="headerlink" href="#hazelcast.exception.URISyntaxError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.UTFDataFormatError">
+<em class="property">exception </em><code class="sig-name descname">UTFDataFormatError</code><a class="headerlink" href="#hazelcast.exception.UTFDataFormatError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.UnsupportedOperationError">
+<em class="property">exception </em><code class="sig-name descname">UnsupportedOperationError</code><a class="headerlink" href="#hazelcast.exception.UnsupportedOperationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.WrongTargetError">
+<em class="property">exception </em><code class="sig-name descname">WrongTargetError</code><a class="headerlink" href="#hazelcast.exception.WrongTargetError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+<dl class="attribute">
+<dt id="hazelcast.exception.WrongTargetError.retryable">
+<code class="sig-name descname">retryable</code><em class="property"> = True</em><a class="headerlink" href="#hazelcast.exception.WrongTargetError.retryable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.XAError">
+<em class="property">exception </em><code class="sig-name descname">XAError</code><a class="headerlink" href="#hazelcast.exception.XAError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.AccessControlError">
+<em class="property">exception </em><code class="sig-name descname">AccessControlError</code><a class="headerlink" href="#hazelcast.exception.AccessControlError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.LoginError">
+<em class="property">exception </em><code class="sig-name descname">LoginError</code><a class="headerlink" href="#hazelcast.exception.LoginError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.UnsupportedCallbackError">
+<em class="property">exception </em><code class="sig-name descname">UnsupportedCallbackError</code><a class="headerlink" href="#hazelcast.exception.UnsupportedCallbackError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.NoDataMemberInClusterError">
+<em class="property">exception </em><code class="sig-name descname">NoDataMemberInClusterError</code><a class="headerlink" href="#hazelcast.exception.NoDataMemberInClusterError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.ReplicatedMapCantBeCreatedOnLiteMemberError">
+<em class="property">exception </em><code class="sig-name descname">ReplicatedMapCantBeCreatedOnLiteMemberError</code><a class="headerlink" href="#hazelcast.exception.ReplicatedMapCantBeCreatedOnLiteMemberError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.MaxMessageSizeExceededError">
+<em class="property">exception </em><code class="sig-name descname">MaxMessageSizeExceededError</code><a class="headerlink" href="#hazelcast.exception.MaxMessageSizeExceededError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.WANReplicationQueueFullError">
+<em class="property">exception </em><code class="sig-name descname">WANReplicationQueueFullError</code><a class="headerlink" href="#hazelcast.exception.WANReplicationQueueFullError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.HazelcastAssertionError">
+<em class="property">exception </em><code class="sig-name descname">HazelcastAssertionError</code><a class="headerlink" href="#hazelcast.exception.HazelcastAssertionError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.OutOfMemoryError">
+<em class="property">exception </em><code class="sig-name descname">OutOfMemoryError</code><a class="headerlink" href="#hazelcast.exception.OutOfMemoryError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.StackOverflowError">
+<em class="property">exception </em><code class="sig-name descname">StackOverflowError</code><a class="headerlink" href="#hazelcast.exception.StackOverflowError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.NativeOutOfMemoryError">
+<em class="property">exception </em><code class="sig-name descname">NativeOutOfMemoryError</code><a class="headerlink" href="#hazelcast.exception.NativeOutOfMemoryError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.ServiceNotFoundError">
+<em class="property">exception </em><code class="sig-name descname">ServiceNotFoundError</code><a class="headerlink" href="#hazelcast.exception.ServiceNotFoundError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.StaleTaskIdError">
+<em class="property">exception </em><code class="sig-name descname">StaleTaskIdError</code><a class="headerlink" href="#hazelcast.exception.StaleTaskIdError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.DuplicateTaskError">
+<em class="property">exception </em><code class="sig-name descname">DuplicateTaskError</code><a class="headerlink" href="#hazelcast.exception.DuplicateTaskError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.StaleTaskError">
+<em class="property">exception </em><code class="sig-name descname">StaleTaskError</code><a class="headerlink" href="#hazelcast.exception.StaleTaskError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.LocalMemberResetError">
+<em class="property">exception </em><code class="sig-name descname">LocalMemberResetError</code><a class="headerlink" href="#hazelcast.exception.LocalMemberResetError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.IndeterminateOperationStateError">
+<em class="property">exception </em><code class="sig-name descname">IndeterminateOperationStateError</code><a class="headerlink" href="#hazelcast.exception.IndeterminateOperationStateError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.NodeIdOutOfRangeError">
+<em class="property">exception </em><code class="sig-name descname">NodeIdOutOfRangeError</code><a class="headerlink" href="#hazelcast.exception.NodeIdOutOfRangeError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.TargetNotReplicaError">
+<em class="property">exception </em><code class="sig-name descname">TargetNotReplicaError</code><a class="headerlink" href="#hazelcast.exception.TargetNotReplicaError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+<dl class="attribute">
+<dt id="hazelcast.exception.TargetNotReplicaError.retryable">
+<code class="sig-name descname">retryable</code><em class="property"> = True</em><a class="headerlink" href="#hazelcast.exception.TargetNotReplicaError.retryable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.MutationDisallowedError">
+<em class="property">exception </em><code class="sig-name descname">MutationDisallowedError</code><a class="headerlink" href="#hazelcast.exception.MutationDisallowedError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.ConsistencyLostError">
+<em class="property">exception </em><code class="sig-name descname">ConsistencyLostError</code><a class="headerlink" href="#hazelcast.exception.ConsistencyLostError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.HazelcastClientNotActiveException">
+<em class="property">exception </em><code class="sig-name descname">HazelcastClientNotActiveException</code><a class="headerlink" href="#hazelcast.exception.HazelcastClientNotActiveException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="hazelcast.exception.HazelcastCertificationError">
+<em class="property">exception </em><code class="sig-name descname">HazelcastCertificationError</code><a class="headerlink" href="#hazelcast.exception.HazelcastCertificationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.exception.HazelcastError</span></code></a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="hazelcast.exception.create_exception">
+<code class="sig-name descname">create_exception</code><span class="sig-paren">(</span><em class="sig-param">error_codec</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.exception.create_exception" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an exception with given error codec.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>error_codec</strong> – (Error Codec), error codec which includes the class name, message and exception trace.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(Exception), the created exception.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="hazelcast.exception.is_retryable_error">
+<code class="sig-name descname">is_retryable_error</code><span class="sig-paren">(</span><em class="sig-param">error</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.exception.is_retryable_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether the given error is retryable or not.
+:param error: (<a class="reference internal" href="#hazelcast.exception.HazelcastError" title="hazelcast.exception.HazelcastError"><code class="xref py py-class docutils literal notranslate"><span class="pre">HazelcastError</span></code></a>), the given error.
+:return: (bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if the given error is retryable, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.discovery.html"
+                        title="previous chapter">Discovery</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.future.html"
+                        title="next chapter">Future</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.exception.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.future.html" title="Future"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.discovery.html" title="Discovery"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Hazelcast Inc..
+    </div>
+  </body>
+</html>

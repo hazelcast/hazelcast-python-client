@@ -1,0 +1,426 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Hazelcast Client &#8212; Hazelcast Python Client 3.12.3 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Hazelcast Cluster" href="hazelcast.cluster.html" />
+    <link rel="prev" title="Hazelcast Python Client" href="hazelcast.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.cluster.html" title="Hazelcast Cluster"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.html" title="Hazelcast Python Client"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" accesskey="U">Hazelcast Python Client</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.client">
+<span id="hazelcast-client"></span><h1>Hazelcast Client<a class="headerlink" href="#module-hazelcast.client" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="hazelcast.client.HazelcastClient">
+<em class="property">class </em><code class="sig-name descname">HazelcastClient</code><span class="sig-paren">(</span><em class="sig-param">config=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Hazelcast Client.</p>
+<dl class="attribute">
+<dt id="hazelcast.client.HazelcastClient.CLIENT_ID">
+<code class="sig-name descname">CLIENT_ID</code><em class="property"> = &lt;hazelcast.util.AtomicInteger object&gt;</em><a class="headerlink" href="#hazelcast.client.HazelcastClient.CLIENT_ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.client.HazelcastClient.logger">
+<code class="sig-name descname">logger</code><em class="property"> = &lt;Logger HazelcastClient (WARNING)&gt;</em><a class="headerlink" href="#hazelcast.client.HazelcastClient.logger" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.client.HazelcastClient.get_atomic_long">
+<code class="sig-name descname">get_atomic_long</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_atomic_long" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates cluster-wide <a class="reference internal" href="hazelcast.proxy.atomic_long.html#hazelcast.proxy.atomic_long.AtomicLong" title="hazelcast.proxy.atomic_long.AtomicLong"><code class="xref py py-class docutils literal notranslate"><span class="pre">AtomicLong</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – (str), name of the AtomicLong proxy.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="hazelcast.proxy.atomic_long.html#hazelcast.proxy.atomic_long.AtomicLong" title="hazelcast.proxy.atomic_long.AtomicLong"><code class="xref py py-class docutils literal notranslate"><span class="pre">AtomicLong</span></code></a>), AtomicLong proxy for the given name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.client.HazelcastClient.get_atomic_reference">
+<code class="sig-name descname">get_atomic_reference</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_atomic_reference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates cluster-wide <a class="reference internal" href="hazelcast.proxy.atomic_reference.html#hazelcast.proxy.atomic_reference.AtomicReference" title="hazelcast.proxy.atomic_reference.AtomicReference"><code class="xref py py-class docutils literal notranslate"><span class="pre">AtomicReference</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – (str), name of the AtomicReference proxy.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="hazelcast.proxy.atomic_reference.html#hazelcast.proxy.atomic_reference.AtomicReference" title="hazelcast.proxy.atomic_reference.AtomicReference"><code class="xref py py-class docutils literal notranslate"><span class="pre">AtomicReference</span></code></a>), AtomicReference proxy for the given name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.client.HazelcastClient.get_count_down_latch">
+<code class="sig-name descname">get_count_down_latch</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_count_down_latch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates cluster-wide <a class="reference internal" href="hazelcast.proxy.count_down_latch.html#hazelcast.proxy.count_down_latch.CountDownLatch" title="hazelcast.proxy.count_down_latch.CountDownLatch"><code class="xref py py-class docutils literal notranslate"><span class="pre">CountDownLatch</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – (str), name of the CountDownLatch proxy.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="hazelcast.proxy.count_down_latch.html#hazelcast.proxy.count_down_latch.CountDownLatch" title="hazelcast.proxy.count_down_latch.CountDownLatch"><code class="xref py py-class docutils literal notranslate"><span class="pre">CountDownLatch</span></code></a>), CountDownLatch proxy for the given name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.client.HazelcastClient.get_executor">
+<code class="sig-name descname">get_executor</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_executor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates cluster-wide <a class="reference internal" href="hazelcast.proxy.executor.html#hazelcast.proxy.executor.Executor" title="hazelcast.proxy.executor.Executor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Executor</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – (str), name of the Executor proxy.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="hazelcast.proxy.executor.html#hazelcast.proxy.executor.Executor" title="hazelcast.proxy.executor.Executor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Executor</span></code></a>), Executor proxy for the given name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.client.HazelcastClient.get_flake_id_generator">
+<code class="sig-name descname">get_flake_id_generator</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_flake_id_generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates or returns a cluster-wide <a class="reference internal" href="hazelcast.proxy.flake_id_generator.html#hazelcast.proxy.flake_id_generator.FlakeIdGenerator" title="hazelcast.proxy.flake_id_generator.FlakeIdGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">FlakeIdGenerator</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – (str), name of the FlakeIdGenerator proxy.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="hazelcast.proxy.flake_id_generator.html#hazelcast.proxy.flake_id_generator.FlakeIdGenerator" title="hazelcast.proxy.flake_id_generator.FlakeIdGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">FlakeIdGenerator</span></code></a>), FlakeIdGenerator proxy for the given name</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.client.HazelcastClient.get_id_generator">
+<code class="sig-name descname">get_id_generator</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_id_generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates cluster-wide <a class="reference internal" href="hazelcast.proxy.id_generator.html#hazelcast.proxy.id_generator.IdGenerator" title="hazelcast.proxy.id_generator.IdGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">IdGenerator</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – (str), name of the IdGenerator proxy.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="hazelcast.proxy.id_generator.html#hazelcast.proxy.id_generator.IdGenerator" title="hazelcast.proxy.id_generator.IdGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">IdGenerator</span></code></a>), IdGenerator proxy for the given name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.client.HazelcastClient.get_queue">
+<code class="sig-name descname">get_queue</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_queue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distributed queue instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – (str), name of the distributed queue.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="hazelcast.proxy.queue.html#hazelcast.proxy.queue.Queue" title="hazelcast.proxy.queue.Queue"><code class="xref py py-class docutils literal notranslate"><span class="pre">Queue</span></code></a>), distributed queue instance with the specified name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.client.HazelcastClient.get_list">
+<code class="sig-name descname">get_list</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distributed list instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – (str), name of the distributed list.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="hazelcast.proxy.list.html#hazelcast.proxy.list.List" title="hazelcast.proxy.list.List"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>), distributed list instance with the specified name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.client.HazelcastClient.get_lock">
+<code class="sig-name descname">get_lock</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_lock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distributed lock instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – (str), name of the distributed lock.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="hazelcast.proxy.lock.html#hazelcast.proxy.lock.Lock" title="hazelcast.proxy.lock.Lock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Lock</span></code></a>), distributed lock instance with the specified name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.client.HazelcastClient.get_map">
+<code class="sig-name descname">get_map</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distributed map instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – (str), name of the distributed map.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="hazelcast.proxy.map.html#hazelcast.proxy.map.Map" title="hazelcast.proxy.map.Map"><code class="xref py py-class docutils literal notranslate"><span class="pre">Map</span></code></a>), distributed map instance with the specified name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.client.HazelcastClient.get_multi_map">
+<code class="sig-name descname">get_multi_map</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_multi_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distributed MultiMap instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – (str), name of the distributed MultiMap.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="hazelcast.proxy.multi_map.html#hazelcast.proxy.multi_map.MultiMap" title="hazelcast.proxy.multi_map.MultiMap"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiMap</span></code></a>), distributed MultiMap instance with the specified name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.client.HazelcastClient.get_pn_counter">
+<code class="sig-name descname">get_pn_counter</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_pn_counter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the PN Counter instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – (str), name of the PN Counter.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="hazelcast.proxy.pn_counter.html#hazelcast.proxy.pn_counter.PNCounter" title="hazelcast.proxy.pn_counter.PNCounter"><code class="xref py py-class docutils literal notranslate"><span class="pre">PNCounter</span></code></a>), the PN Counter.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.client.HazelcastClient.get_reliable_topic">
+<code class="sig-name descname">get_reliable_topic</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_reliable_topic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the <code class="xref py py-class docutils literal notranslate"><span class="pre">ReliableTopic</span></code> instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – (str), name of the ReliableTopic.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<code class="xref py py-class docutils literal notranslate"><span class="pre">ReliableTopic</span></code>), the ReliableTopic.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.client.HazelcastClient.get_replicated_map">
+<code class="sig-name descname">get_replicated_map</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_replicated_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distributed ReplicatedMap instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – (str), name of the distributed ReplicatedMap.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="hazelcast.proxy.replicated_map.html#hazelcast.proxy.replicated_map.ReplicatedMap" title="hazelcast.proxy.replicated_map.ReplicatedMap"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReplicatedMap</span></code></a>), distributed ReplicatedMap instance with the specified name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.client.HazelcastClient.get_ringbuffer">
+<code class="sig-name descname">get_ringbuffer</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_ringbuffer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distributed RingBuffer instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – (str), name of the distributed RingBuffer.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<code class="xref py py-class docutils literal notranslate"><span class="pre">RingBuffer</span></code>), distributed RingBuffer instance with the specified name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.client.HazelcastClient.get_semaphore">
+<code class="sig-name descname">get_semaphore</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_semaphore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distributed Semaphore instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – (str), name of the distributed Semaphore.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="hazelcast.proxy.semaphore.html#hazelcast.proxy.semaphore.Semaphore" title="hazelcast.proxy.semaphore.Semaphore"><code class="xref py py-class docutils literal notranslate"><span class="pre">Semaphore</span></code></a>), distributed Semaphore instance with the specified name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.client.HazelcastClient.get_set">
+<code class="sig-name descname">get_set</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distributed Set instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – (str), name of the distributed Set.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="hazelcast.proxy.set.html#hazelcast.proxy.set.Set" title="hazelcast.proxy.set.Set"><code class="xref py py-class docutils literal notranslate"><span class="pre">Set</span></code></a>), distributed Set instance with the specified name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.client.HazelcastClient.get_topic">
+<code class="sig-name descname">get_topic</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_topic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the <a class="reference internal" href="hazelcast.proxy.topic.html#hazelcast.proxy.topic.Topic" title="hazelcast.proxy.topic.Topic"><code class="xref py py-class docutils literal notranslate"><span class="pre">Topic</span></code></a> instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – (str), name of the Topic.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="hazelcast.proxy.topic.html#hazelcast.proxy.topic.Topic" title="hazelcast.proxy.topic.Topic"><code class="xref py py-class docutils literal notranslate"><span class="pre">Topic</span></code></a>), the Topic.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.client.HazelcastClient.new_transaction">
+<code class="sig-name descname">new_transaction</code><span class="sig-paren">(</span><em class="sig-param">timeout=120</em>, <em class="sig-param">durability=1</em>, <em class="sig-param">type=1</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.new_transaction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new <a class="reference internal" href="hazelcast.transaction.html#hazelcast.transaction.Transaction" title="hazelcast.transaction.Transaction"><code class="xref py py-class docutils literal notranslate"><span class="pre">Transaction</span></code></a> associated with the current thread using default or given options.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timeout</strong> – (long), the timeout in seconds determines the maximum lifespan of a transaction. So if a
+transaction is configured with a timeout of 2 minutes, then it will automatically rollback if it hasn’t
+committed yet.</p></li>
+<li><p><strong>durability</strong> – (int), the durability is the number of machines that can take over if a member fails during a</p></li>
+</ul>
+</dd>
+</dl>
+<p>transaction commit or rollback
+:param type: (Transaction Type), the transaction type which can be <a class="reference internal" href="hazelcast.transaction.html#hazelcast.transaction.TWO_PHASE" title="hazelcast.transaction.TWO_PHASE"><code class="xref py py-const docutils literal notranslate"><span class="pre">TWO_PHASE</span></code></a> or <a class="reference internal" href="hazelcast.transaction.html#hazelcast.transaction.ONE_PHASE" title="hazelcast.transaction.ONE_PHASE"><code class="xref py py-const docutils literal notranslate"><span class="pre">ONE_PHASE</span></code></a>
+:return: (<a class="reference internal" href="hazelcast.transaction.html#hazelcast.transaction.Transaction" title="hazelcast.transaction.Transaction"><code class="xref py py-class docutils literal notranslate"><span class="pre">Transaction</span></code></a>), new Transaction associated with the current thread.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.client.HazelcastClient.add_distributed_object_listener">
+<code class="sig-name descname">add_distributed_object_listener</code><span class="sig-paren">(</span><em class="sig-param">listener_func</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.add_distributed_object_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a listener which will be notified when a
+new distributed object is created or destroyed.
+:param listener_func: Function to be called when a distributed object is created or destroyed.
+:return: (str), a registration id which is used as a key to remove the listener.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.client.HazelcastClient.remove_distributed_object_listener">
+<code class="sig-name descname">remove_distributed_object_listener</code><span class="sig-paren">(</span><em class="sig-param">registration_id</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.remove_distributed_object_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the specified distributed object listener. Returns silently if there is no such listener added before.
+:param registration_id: (str), id of registered listener.
+:return: (bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if registration is removed, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.client.HazelcastClient.get_distributed_objects">
+<code class="sig-name descname">get_distributed_objects</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_distributed_objects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all distributed objects such as; queue, map, set, list, topic, lock, multimap.
+Also, as a side effect, it clears the local instances of the destroyed proxies.
+:return:(Sequence), List of instances created by Hazelcast.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.client.HazelcastClient.shutdown">
+<code class="sig-name descname">shutdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.shutdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shuts down this HazelcastClient.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.html"
+                        title="previous chapter">Hazelcast Python Client</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.cluster.html"
+                        title="next chapter">Hazelcast Cluster</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.client.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.cluster.html" title="Hazelcast Cluster"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.html" title="Hazelcast Python Client"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Hazelcast Inc..
+    </div>
+  </body>
+</html>

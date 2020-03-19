@@ -1,0 +1,205 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Discovery &#8212; Hazelcast Python Client 3.12.3 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Exception" href="hazelcast.exception.html" />
+    <link rel="prev" title="Core" href="hazelcast.core.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.exception.html" title="Exception"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.core.html" title="Core"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" accesskey="U">Hazelcast Python Client</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.discovery">
+<span id="discovery"></span><h1>Discovery<a class="headerlink" href="#module-hazelcast.discovery" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="hazelcast.discovery.HazelcastCloudAddressProvider">
+<em class="property">class </em><code class="sig-name descname">HazelcastCloudAddressProvider</code><span class="sig-paren">(</span><em class="sig-param">host</em>, <em class="sig-param">url</em>, <em class="sig-param">connection_timeout</em>, <em class="sig-param">logger_extras=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.discovery.HazelcastCloudAddressProvider" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Provides initial addresses for client to find and connect to a node.</p>
+<dl class="attribute">
+<dt id="hazelcast.discovery.HazelcastCloudAddressProvider.logger">
+<code class="sig-name descname">logger</code><em class="property"> = &lt;Logger HazelcastClient.HazelcastCloudAddressProvider (WARNING)&gt;</em><a class="headerlink" href="#hazelcast.discovery.HazelcastCloudAddressProvider.logger" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.discovery.HazelcastCloudAddressProvider.load_addresses">
+<code class="sig-name descname">load_addresses</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.discovery.HazelcastCloudAddressProvider.load_addresses" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads member addresses from Hazelcast.cloud endpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(Sequence), The possible member addresses to connect to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.discovery.HazelcastCloudAddressTranslator">
+<em class="property">class </em><code class="sig-name descname">HazelcastCloudAddressTranslator</code><span class="sig-paren">(</span><em class="sig-param">host</em>, <em class="sig-param">url</em>, <em class="sig-param">connection_timeout</em>, <em class="sig-param">logger_extras=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.discovery.HazelcastCloudAddressTranslator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Resolves private IP addresses of Hazelcast.cloud service.</p>
+<dl class="attribute">
+<dt id="hazelcast.discovery.HazelcastCloudAddressTranslator.logger">
+<code class="sig-name descname">logger</code><em class="property"> = &lt;Logger HazelcastClient.HazelcastCloudAddressTranslator (WARNING)&gt;</em><a class="headerlink" href="#hazelcast.discovery.HazelcastCloudAddressTranslator.logger" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.discovery.HazelcastCloudAddressTranslator.translate">
+<code class="sig-name descname">translate</code><span class="sig-paren">(</span><em class="sig-param">address</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.discovery.HazelcastCloudAddressTranslator.translate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Translates the given address to another address specific to network or service.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>address</strong> – (<a class="reference internal" href="hazelcast.core.html#hazelcast.core.Address" title="hazelcast.core.Address"><code class="xref py py-class docutils literal notranslate"><span class="pre">Address</span></code></a>), private address to be translated</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(<a class="reference internal" href="hazelcast.core.html#hazelcast.core.Address" title="hazelcast.core.Address"><code class="xref py py-class docutils literal notranslate"><span class="pre">Address</span></code></a>), new address if given address is known, otherwise returns null</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.discovery.HazelcastCloudAddressTranslator.refresh">
+<code class="sig-name descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.discovery.HazelcastCloudAddressTranslator.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refreshes the internal lookup table if necessary.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.discovery.HazelcastCloudDiscovery">
+<em class="property">class </em><code class="sig-name descname">HazelcastCloudDiscovery</code><span class="sig-paren">(</span><em class="sig-param">host</em>, <em class="sig-param">url</em>, <em class="sig-param">connection_timeout</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.discovery.HazelcastCloudDiscovery" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Discovery service that discover nodes via Hazelcast.cloud
+<a class="reference external" href="https://coordinator.hazelcast.cloud/cluster/discovery">https://coordinator.hazelcast.cloud/cluster/discovery</a>?token=&lt;TOKEN&gt;</p>
+<dl class="attribute">
+<dt id="hazelcast.discovery.HazelcastCloudDiscovery.CLOUD_URL_BASE_PROPERTY">
+<code class="sig-name descname">CLOUD_URL_BASE_PROPERTY</code><em class="property"> = &lt;hazelcast.config.ClientProperty object&gt;</em><a class="headerlink" href="#hazelcast.discovery.HazelcastCloudDiscovery.CLOUD_URL_BASE_PROPERTY" title="Permalink to this definition">¶</a></dt>
+<dd><p>Internal client property to change base url of cloud discovery endpoint.
+Used for testing cloud discovery.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.discovery.HazelcastCloudDiscovery.discover_nodes">
+<code class="sig-name descname">discover_nodes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.discovery.HazelcastCloudDiscovery.discover_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Discovers nodes from Hazelcast.cloud.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(dict), Dictionary that maps private addresses to public addresses.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.discovery.HazelcastCloudDiscovery.get_host_and_url">
+<em class="property">static </em><code class="sig-name descname">get_host_and_url</code><span class="sig-paren">(</span><em class="sig-param">properties</em>, <em class="sig-param">cloud_token</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.discovery.HazelcastCloudDiscovery.get_host_and_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper method to get host and url that can be used in HTTPSConnection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>properties</strong> – Client config properties.</p></li>
+<li><p><strong>cloud_token</strong> – Cloud discovery token.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Host and URL pair</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.core.html"
+                        title="previous chapter">Core</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.exception.html"
+                        title="next chapter">Exception</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.discovery.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.exception.html" title="Exception"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.core.html" title="Core"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Hazelcast Inc..
+    </div>
+  </body>
+</html>

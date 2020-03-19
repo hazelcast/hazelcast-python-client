@@ -1,0 +1,163 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>LifeCycle &#8212; Hazelcast Python Client 3.12.3 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="NearCache" href="hazelcast.near_cache.html" />
+    <link rel="prev" title="Invocation" href="hazelcast.invocation.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.near_cache.html" title="NearCache"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.invocation.html" title="Invocation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" accesskey="U">Hazelcast Python Client</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.lifecycle">
+<span id="lifecycle"></span><h1>LifeCycle<a class="headerlink" href="#module-hazelcast.lifecycle" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="hazelcast.lifecycle.LifecycleService">
+<em class="property">class </em><code class="sig-name descname">LifecycleService</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">logger_extras=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.lifecycle.LifecycleService" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>LifecycleService allows you to shutdown, terminate, and listen to LifecycleEvent’s on HazelcastInstances.</p>
+<dl class="attribute">
+<dt id="hazelcast.lifecycle.LifecycleService.logger">
+<code class="sig-name descname">logger</code><em class="property"> = &lt;Logger HazelcastClient.LifecycleService (WARNING)&gt;</em><a class="headerlink" href="#hazelcast.lifecycle.LifecycleService.logger" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hazelcast.lifecycle.LifecycleService.state">
+<code class="sig-name descname">state</code><em class="property"> = None</em><a class="headerlink" href="#hazelcast.lifecycle.LifecycleService.state" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.lifecycle.LifecycleService.add_listener">
+<code class="sig-name descname">add_listener</code><span class="sig-paren">(</span><em class="sig-param">on_lifecycle_change</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.lifecycle.LifecycleService.add_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a listener object to listen for lifecycle events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>on_lifecycle_change</strong> – (Function), function to be called when LifeCycle state is changed.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(str), id of the listener.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.lifecycle.LifecycleService.remove_listener">
+<code class="sig-name descname">remove_listener</code><span class="sig-paren">(</span><em class="sig-param">registration_id</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.lifecycle.LifecycleService.remove_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes a lifecycle listener.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>registration_id</strong> – (str), the id of the listener to be removed.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if the listener is removed successfully, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.lifecycle.LifecycleService.fire_lifecycle_event">
+<code class="sig-name descname">fire_lifecycle_event</code><span class="sig-paren">(</span><em class="sig-param">new_state</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.lifecycle.LifecycleService.fire_lifecycle_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when instance’s state changes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>new_state</strong> – (Lifecycle State), the new state of the instance.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.invocation.html"
+                        title="previous chapter">Invocation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.near_cache.html"
+                        title="next chapter">NearCache</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.lifecycle.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.near_cache.html" title="NearCache"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.invocation.html" title="Invocation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Hazelcast Inc..
+    </div>
+  </body>
+</html>

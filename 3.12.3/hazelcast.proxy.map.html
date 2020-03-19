@@ -1,0 +1,960 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Map &#8212; Hazelcast Python Client 3.12.3 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="MultiMap" href="hazelcast.proxy.multi_map.html" />
+    <link rel="prev" title="Lock" href="hazelcast.proxy.lock.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.multi_map.html" title="MultiMap"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.lock.html" title="Lock"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" accesskey="U">Hazelcast Proxies</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.proxy.map">
+<span id="map"></span><h1>Map<a class="headerlink" href="#module-hazelcast.proxy.map" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="hazelcast.proxy.map.Map">
+<em class="property">class </em><code class="sig-name descname">Map</code><span class="sig-paren">(</span><em class="sig-param">client</em>, <em class="sig-param">service_name</em>, <em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hazelcast.proxy.base.html#hazelcast.proxy.base.Proxy" title="hazelcast.proxy.base.Proxy"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.proxy.base.Proxy</span></code></a></p>
+<p>Hazelcast Map client proxy to access the map on the cluster.</p>
+<p>Concurrent, distributed, observable and queryable map.</p>
+<p>This map can work both async(non-blocking) or sync(blocking). Blocking calls return the value of the call and block
+the execution until return value is calculated. However, async calls return <a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future"><code class="xref py py-class docutils literal notranslate"><span class="pre">Future</span></code></a> and do not block execution.
+Result of the <a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future"><code class="xref py py-class docutils literal notranslate"><span class="pre">Future</span></code></a> can be used whenever ready. A <a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future"><code class="xref py py-class docutils literal notranslate"><span class="pre">Future</span></code></a>’s result can be obtained with blocking the execution by
+calling <a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future.result" title="hazelcast.future.Future.result"><code class="xref py py-func docutils literal notranslate"><span class="pre">Future.result()</span></code></a>.</p>
+<blockquote>
+<div><dl>
+<dt>Example of sync(blocking) usage:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1">#client is initialized Hazelcast Client.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_map</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_map</span><span class="p">(</span><span class="s2">&quot;map&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">blocking</span><span class="p">()</span><span class="c1"># returns sync map, all map functions are blocking</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;map.put&quot;</span><span class="p">,</span> <span class="n">my_map</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s2">&quot;key&quot;</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;map.contains_key&quot;</span><span class="p">,</span> <span class="n">my_map</span><span class="o">.</span><span class="n">contains_key</span><span class="p">(</span><span class="s2">&quot;key&quot;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;map.get&quot;</span><span class="p">,</span> <span class="n">my_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;key&quot;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;map.size&quot;</span><span class="p">,</span> <span class="n">my_map</span><span class="o">.</span><span class="n">size</span><span class="p">())</span>
+</pre></div>
+</div>
+</dd>
+<dt>Example of async(non-blocking) usage:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1">#client is initialized Hazelcast Client.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_map</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_map</span><span class="p">(</span><span class="s2">&quot;map&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">put_callback</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;map.put&quot;</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_map</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s2">&quot;key&quot;</span><span class="p">,</span> <span class="s2">&quot;async_val&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="n">put_callback</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;map.size&quot;</span><span class="p">,</span> <span class="n">my_map</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">contains_key_callback</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;map.contains_key&quot;</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_map</span><span class="o">.</span><span class="n">contains_key</span><span class="p">(</span><span class="s2">&quot;key&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="n">contains_key_callback</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</div></blockquote>
+<p>This class does not allow <code class="docutils literal notranslate"><span class="pre">None</span></code> to be used as a key or value.</p>
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.add_entry_listener">
+<code class="sig-name descname">add_entry_listener</code><span class="sig-paren">(</span><em class="sig-param">include_value=False</em>, <em class="sig-param">key=None</em>, <em class="sig-param">predicate=None</em>, <em class="sig-param">added_func=None</em>, <em class="sig-param">removed_func=None</em>, <em class="sig-param">updated_func=None</em>, <em class="sig-param">evicted_func=None</em>, <em class="sig-param">evict_all_func=None</em>, <em class="sig-param">clear_all_func=None</em>, <em class="sig-param">merged_func=None</em>, <em class="sig-param">expired_func=None</em>, <em class="sig-param">loaded_func=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.add_entry_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a continuous entry listener for this map. Listener will get notified for map events filtered with given
+parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>include_value</strong> – (bool), whether received event should include the value or not (optional).</p></li>
+<li><p><strong>key</strong> – (object), key for filtering the events (optional).</p></li>
+<li><p><strong>predicate</strong> – (Predicate), predicate for filtering the events (optional).</p></li>
+<li><p><strong>added_func</strong> – Function to be called when an entry is added to map (optional).</p></li>
+<li><p><strong>removed_func</strong> – Function to be called when an entry is removed from map (optional).</p></li>
+<li><p><strong>updated_func</strong> – Function to be called when an entry is updated (optional).</p></li>
+<li><p><strong>evicted_func</strong> – Function to be called when an entry is evicted from map (optional).</p></li>
+<li><p><strong>evict_all_func</strong> – Function to be called when entries are evicted from map (optional).</p></li>
+<li><p><strong>clear_all_func</strong> – Function to be called when entries are cleared from map (optional).</p></li>
+<li><p><strong>merged_func</strong> – Function to be called when WAN replicated entry is merged_func (optional).</p></li>
+<li><p><strong>expired_func</strong> – Function to be called when an entry’s live time is expired (optional).</p></li>
+<li><p><strong>loaded_func</strong> – Function to be called when an entry is loaded from a map loader (optional).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(str), a registration id which is used as a key to remove the listener.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">Predicate</span></code> for more info about predicates.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.add_index">
+<code class="sig-name descname">add_index</code><span class="sig-paren">(</span><em class="sig-param">attribute</em>, <em class="sig-param">ordered=False</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.add_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds an index to this map for the specified entries so that queries can run faster.</p>
+<dl>
+<dt>Example:</dt><dd><dl>
+<dt>Let’s say your map values are Employee objects.</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Employee</span><span class="p">(</span><span class="n">IdentifiedDataSerializable</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">active</span> <span class="o">=</span> <span class="n">false</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">age</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">name</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="c1">#other fields</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="c1">#methods</span>
+</pre></div>
+</div>
+</dd>
+<dt>If you query your values mostly based on age and active fields, you should consider indexing these.</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">get_map</span><span class="p">(</span><span class="s2">&quot;employees&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">map</span><span class="o">.</span><span class="n">add_index</span><span class="p">(</span><span class="s2">&quot;age&quot;</span> <span class="p">,</span> <span class="n">true</span><span class="p">)</span> <span class="c1">#ordered, since we have ranged queries for this field</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">map</span><span class="o">.</span><span class="n">add_index</span><span class="p">(</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="n">false</span><span class="p">)</span> <span class="c1">#not ordered, because boolean field cannot have range</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>attribute</strong> – (str), index attribute of the value.</p></li>
+<li><p><strong>ordered</strong> – (bool), for ordering the index or not (optional).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.add_interceptor">
+<code class="sig-name descname">add_interceptor</code><span class="sig-paren">(</span><em class="sig-param">interceptor</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.add_interceptor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds an interceptor for this map. Added interceptor will intercept operations and execute user defined methods.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>interceptor</strong> – (object), interceptor for the map which includes user defined methods.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(str),id of registered interceptor.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.clear">
+<code class="sig-name descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the map.</p>
+<p>The MAP_CLEARED event is fired for any registered listeners.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.contains_key">
+<code class="sig-name descname">contains_key</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.contains_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether this map contains an entry with the key.</p>
+<p><strong>Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> – (object), the specified key.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if this map contains an entry for the specified key.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.contains_value">
+<code class="sig-name descname">contains_value</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.contains_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether this map contains one or more keys for the specified value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> – (object), the specified value.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if this map contains an entry for the specified value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.delete">
+<code class="sig-name descname">delete</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the mapping for a key from this map if it is present (optional operation).</p>
+<p>Unlike remove(object), this operation does not return the removed value, which avoids the serialization cost of
+the returned value. If the removed value will not be used, a delete operation is preferred over a remove
+operation for better performance.</p>
+<p>The map will not contain a mapping for the specified key once the call returns.</p>
+<p><strong>Warning:
+This method breaks the contract of EntryListener. When an entry is removed by delete(), it fires an EntryEvent
+with a</strong> <code class="docutils literal notranslate"><span class="pre">None</span></code> <strong>oldValue. Also, a listener with predicates will have</strong> <code class="docutils literal notranslate"><span class="pre">None</span></code> <strong>values, so only the keys can be queried
+via predicates.</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> – (object), key of the mapping to be deleted.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.entry_set">
+<code class="sig-name descname">entry_set</code><span class="sig-paren">(</span><em class="sig-param">predicate=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.entry_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list clone of the mappings contained in this map.</p>
+<p><strong>Warning:
+The list is NOT backed by the map, so changes to the map are NOT reflected in the list, and vice-versa.</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>predicate</strong> – (Predicate), predicate for the map to filter entries (optional).</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(Sequence), the list of key-value tuples in the map.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">Predicate</span></code> for more info about predicates.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.evict">
+<code class="sig-name descname">evict</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.evict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evicts the specified key from this map.</p>
+<p><strong>Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> – (object), key to evict.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if the key is evicted, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.evict_all">
+<code class="sig-name descname">evict_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.evict_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evicts all keys from this map except the locked ones.</p>
+<p>The EVICT_ALL event is fired for any registered listeners.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.execute_on_entries">
+<code class="sig-name descname">execute_on_entries</code><span class="sig-paren">(</span><em class="sig-param">entry_processor</em>, <em class="sig-param">predicate=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.execute_on_entries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies the user defined EntryProcessor to all the entries in the map or entries in the map which satisfies
+the predicate if provided. Returns the results mapped by each key in the map.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entry_processor</strong> – (object), A stateful serializable object which represents the EntryProcessor defined on
+server side.
+This object must have a serializable EntryProcessor counter part registered on server side with the actual
+<code class="docutils literal notranslate"><span class="pre">org.hazelcast.map.EntryProcessor</span></code> implementation.</p></li>
+<li><p><strong>predicate</strong> – (Predicate), predicate for filtering the entries (optional).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(Sequence), list of map entries which includes the keys and the results of the entry process.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">Predicate</span></code> for more info about predicates.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.execute_on_key">
+<code class="sig-name descname">execute_on_key</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">entry_processor</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.execute_on_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies the user defined EntryProcessor to the entry mapped by the key. Returns the object which is the result
+of EntryProcessor’s process method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> – (object), specified key for the entry to be processed.</p></li>
+<li><p><strong>entry_processor</strong> – (object), A stateful serializable object which represents the EntryProcessor defined on
+server side.
+This object must have a serializable EntryProcessor counter part registered on server side with the actual
+<code class="docutils literal notranslate"><span class="pre">org.hazelcast.map.EntryProcessor</span></code> implementation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(object), result of entry process.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.execute_on_keys">
+<code class="sig-name descname">execute_on_keys</code><span class="sig-paren">(</span><em class="sig-param">keys</em>, <em class="sig-param">entry_processor</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.execute_on_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies the user defined EntryProcessor to the entries mapped by the collection of keys. Returns the results
+mapped by each key in the collection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>keys</strong> – (Collection), collection of the keys for the entries to be processed.</p></li>
+<li><p><strong>entry_processor</strong> – (object), A stateful serializable object which represents the EntryProcessor defined on
+server side.
+This object must have a serializable EntryProcessor counter part registered on server side with the actual
+<code class="docutils literal notranslate"><span class="pre">org.hazelcast.map.EntryProcessor</span></code> implementation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(Sequence), list of map entries which includes the keys and the results of the entry process.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.flush">
+<code class="sig-name descname">flush</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.flush" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flushes all the local dirty entries.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.force_unlock">
+<code class="sig-name descname">force_unlock</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.force_unlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Releases the lock for the specified key regardless of the lock owner. It always successfully unlocks the key,
+never blocks, and returns immediately.</p>
+<p><strong>Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> – (object), the key to lock.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the value for the specified key, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if this map does not contain this key.</p>
+<p><strong>Warning:
+This method returns a clone of original value, modifying the returned value does not change the actual value in
+the map. One should put modified value back to make changes visible to all nodes.</strong></p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">value</span> <span class="o">=</span> <span class="nb">map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">value</span><span class="o">.</span><span class="n">update_some_property</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">map</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="n">value</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Warning 2: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> – (object), the specified key.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(object), the value for the specified key.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.get_all">
+<code class="sig-name descname">get_all</code><span class="sig-paren">(</span><em class="sig-param">keys</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.get_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the entries for the given keys.</p>
+<p><strong>Warning:
+The returned map is NOT backed by the original map, so changes to the original map are NOT reflected in the
+returned map, and vice-versa.</strong></p>
+<p><strong>Warning 2: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>keys</strong> – (Collection), keys to get.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(dict), dictionary of map entries.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.get_entry_view">
+<code class="sig-name descname">get_entry_view</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.get_entry_view" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the EntryView for the specified key.</p>
+<p><strong>Warning:
+This method returns a clone of original mapping, modifying the returned value does not change the actual value
+in the map. One should put modified value back to make changes visible to all nodes.</strong></p>
+<p><strong>Warning 2: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> – (object), the key of the entry.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(EntryView), EntryView of the specified key.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="hazelcast.core.html#hazelcast.core.EntryView" title="hazelcast.core.EntryView"><code class="xref py py-class docutils literal notranslate"><span class="pre">EntryView</span></code></a> for more info about EntryView.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.is_empty">
+<code class="sig-name descname">is_empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.is_empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns <code class="docutils literal notranslate"><span class="pre">true</span></code> if this map contains no key-value mappings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if this map contains no key-value mappings.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.is_locked">
+<code class="sig-name descname">is_locked</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.is_locked" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks the lock for the specified key. If the lock is acquired, it returns <code class="docutils literal notranslate"><span class="pre">true</span></code>. Otherwise, it returns <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+<p><strong>Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> – (object), the key that is checked for lock</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if lock is acquired, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.key_set">
+<code class="sig-name descname">key_set</code><span class="sig-paren">(</span><em class="sig-param">predicate=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.key_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a List clone of the keys contained in this map or the keys of the entries filtered with the predicate if
+provided.</p>
+<p><strong>Warning:
+The list is NOT backed by the map, so changes to the map are NOT reflected in the list, and vice-versa.</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>predicate</strong> – (Predicate), predicate to filter the entries (optional).</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(Sequence), a list of the clone of the keys.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">Predicate</span></code> for more info about predicates.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.load_all">
+<code class="sig-name descname">load_all</code><span class="sig-paren">(</span><em class="sig-param">keys=None</em>, <em class="sig-param">replace_existing_values=True</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.load_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads all keys from the store at server side or loads the given keys if provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>keys</strong> – (Collection), keys of the entry values to load (optional).</p></li>
+<li><p><strong>replace_existing_values</strong> – (bool), whether the existing values will be replaced or not with those loaded</p></li>
+</ul>
+</dd>
+</dl>
+<p>from the server side MapLoader (optional).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.lock">
+<code class="sig-name descname">lock</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">ttl=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.lock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Acquires the lock for the specified key infinitely or for the specified lease time if provided.</p>
+<p>If the lock is not available, the current thread becomes disabled for thread scheduling purposes and lies
+dormant until the lock has been acquired.</p>
+<p>You get a lock whether the value is present in the map or not. Other threads (possibly on other systems) would
+block on their invoke of lock() until the non-existent key is unlocked. If the lock holder introduces the key to
+the map, the put() operation is not blocked. If a thread not holding a lock on the non-existent key tries to
+introduce the key while a lock exists on the non-existent key, the put() operation blocks until it is unlocked.</p>
+<p>Scope of the lock is this map only. Acquired lock is only for the key in this map.</p>
+<p>Locks are re-entrant; so, if the key is locked N times, it should be unlocked N times before another thread can
+acquire it.</p>
+<p><strong>Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> – (object), the key to lock.</p></li>
+<li><p><strong>ttl</strong> – (int), time in seconds to wait before releasing the lock (optional).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.put">
+<code class="sig-name descname">put</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">value</em>, <em class="sig-param">ttl=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.put" title="Permalink to this definition">¶</a></dt>
+<dd><p>Associates the specified value with the specified key in this map. If the map previously contained a mapping for
+the key, the old value is replaced by the specified value. If ttl is provided, entry will expire and get evicted
+after the ttl.</p>
+<p><strong>Warning:
+This method returns a clone of the previous value, not the original (identically equal) value previously put
+into the map.</strong></p>
+<p><strong>Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> – (object), the specified key.</p></li>
+<li><p><strong>value</strong> – (object), the value to associate with the key.</p></li>
+<li><p><strong>ttl</strong> – (int), maximum time in seconds for this entry to stay, if not provided, the value configured on
+server side configuration will be used(optional).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(object), previous value associated with key or <code class="docutils literal notranslate"><span class="pre">None</span></code> if there was no mapping for key.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.put_all">
+<code class="sig-name descname">put_all</code><span class="sig-paren">(</span><em class="sig-param">map</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.put_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copies all of the mappings from the specified map to this map. No atomicity guarantees are
+given. In the case of a failure, some of the key-value tuples may get written, while others are not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>map</strong> – (dict), map which includes mappings to be stored in this map.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.put_if_absent">
+<code class="sig-name descname">put_if_absent</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">value</em>, <em class="sig-param">ttl=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.put_if_absent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Associates the specified key with the given value if it is not already associated. If ttl is provided, entry
+will expire and get evicted after the ttl.</p>
+<dl>
+<dt>This is equivalent to:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="ow">not</span> <span class="nb">map</span><span class="o">.</span><span class="n">contains_key</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="nb">map</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="n">value</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">else</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="nb">map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>except that the action is performed atomically.</p>
+<p><strong>Warning:
+This method returns a clone of the previous value, not the original (identically equal) value previously put
+into the map.</strong></p>
+<p><strong>Warning 2: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> – (object), key of the entry.</p></li>
+<li><p><strong>value</strong> – (object), value of the entry.</p></li>
+<li><p><strong>ttl</strong> – (int), maximum time in seconds for this entry to stay in the map, if not provided, the value
+configured on server side configuration will be used (optional).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(object), old value of the entry.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.put_transient">
+<code class="sig-name descname">put_transient</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">value</em>, <em class="sig-param">ttl=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.put_transient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Same as put(TKey, TValue, Ttl), but MapStore defined at the server side will not be called.</p>
+<p><strong>Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> – (object), key of the entry.</p></li>
+<li><p><strong>value</strong> – (object), value of the entry.</p></li>
+<li><p><strong>ttl</strong> – (int), maximum time in seconds for this entry to stay in the map, if not provided, the value
+configured on server side configuration will be used (optional).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.remove">
+<code class="sig-name descname">remove</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the mapping for a key from this map if it is present. The map will not contain a mapping for the
+specified key once the call returns.</p>
+<p><strong>Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> – (object), key of the mapping to be deleted.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(object), the previous value associated with key, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if there was no mapping for key.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.remove_if_same">
+<code class="sig-name descname">remove_if_same</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.remove_if_same" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the entry for a key only if it is currently mapped to a given value.</p>
+<dl>
+<dt>This is equivalent to:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="nb">map</span><span class="o">.</span><span class="n">contains_key</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">map</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">true</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">else</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">false</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>except that the action is performed atomically.</p>
+<p><strong>Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> – (object), the specified key.</p></li>
+<li><p><strong>value</strong> – (object), remove the key if it has this value.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if the value was removed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.remove_entry_listener">
+<code class="sig-name descname">remove_entry_listener</code><span class="sig-paren">(</span><em class="sig-param">registration_id</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.remove_entry_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the specified entry listener. Returns silently if there is no such listener added before.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>registration_id</strong> – (str), id of registered listener.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if registration is removed, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.replace">
+<code class="sig-name descname">replace</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.replace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replaces the entry for a key only if it is currently mapped to some value.</p>
+<dl>
+<dt>This is equivalent to:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="nb">map</span><span class="o">.</span><span class="n">contains_key</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="nb">map</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="n">value</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">else</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="kc">None</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>except that the action is performed atomically.</p>
+<p><strong>Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<p><strong>Warning 2:
+This method returns a clone of the previous value, not the original (identically equal) value previously put
+into the map.</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> – (object), the specified key.</p></li>
+<li><p><strong>value</strong> – (object), the value to replace the previous value.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(object), previous value associated with key, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if there was no mapping for key.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.replace_if_same">
+<code class="sig-name descname">replace_if_same</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">old_value</em>, <em class="sig-param">new_value</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.replace_if_same" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replaces the entry for a key only if it is currently mapped to a given value.</p>
+<dl>
+<dt>This is equivalent to:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="nb">map</span><span class="o">.</span><span class="n">contains_key</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">old_value</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">map</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">new_value</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">true</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">else</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">false</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>except that the action is performed atomically.</p>
+<p><strong>Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> – (object), the specified key.</p></li>
+<li><p><strong>old_value</strong> – (object), replace the key value if it is the old value.</p></li>
+<li><p><strong>new_value</strong> – (object), the new value to replace the old value.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if the value was replaced.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.set">
+<code class="sig-name descname">set</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">value</em>, <em class="sig-param">ttl=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Puts an entry into this map. Similar to the put operation except that set doesn’t return the old value, which is
+more efficient. If ttl is provided, entry will expire and get evicted after the ttl.</p>
+<p><strong>Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
+of __hash__ and __eq__ defined in key’s class.</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> – (object), key of the entry.</p></li>
+<li><p><strong>value</strong> – (object), value of the entry.</p></li>
+<li><p><strong>ttl</strong> – (int), maximum time in seconds for this entry to stay in the map, 0 means infinite. If ttl is not
+provided, the value configured on server side configuration will be used (optional).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.size">
+<code class="sig-name descname">size</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of entries in this map.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(int), number of entries in this map.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.try_lock">
+<code class="sig-name descname">try_lock</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">ttl=-1</em>, <em class="sig-param">timeout=0</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.try_lock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tries to acquire the lock for the specified key. When the lock is not available,</p>
+<blockquote>
+<div><ul>
+<li><p>If timeout is not provided, the current thread doesn’t wait and returns <code class="docutils literal notranslate"><span class="pre">false</span></code> immediately.</p></li>
+<li><p>If a timeout is provided, the current thread becomes disabled for thread scheduling purposes and lies
+dormant until one of the followings happens:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>the lock is acquired by the current thread, or</p></li>
+<li><p>the specified waiting time elapses.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+<p>If ttl is provided, lock will be released after this time elapses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> – (object), key to lock in this map.</p></li>
+<li><p><strong>ttl</strong> – (int), time in seconds to wait before releasing the lock (optional).</p></li>
+<li><p><strong>timeout</strong> – (int), maximum time in seconds to wait for the lock (optional).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if the lock was acquired and otherwise, <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.try_put">
+<code class="sig-name descname">try_put</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">value</em>, <em class="sig-param">timeout=0</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.try_put" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tries to put the given key and value into this map and returns immediately if timeout is not provided. If
+timeout is provided, operation waits until it is completed or timeout is reached.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> – (object), key of the entry.</p></li>
+<li><p><strong>value</strong> – (object), value of the entry.</p></li>
+<li><p><strong>timeout</strong> – (int), operation timeout in seconds (optional).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if the put is successful, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.try_remove">
+<code class="sig-name descname">try_remove</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">timeout=0</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.try_remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tries to remove the given key from this map and returns immediately if timeout is not provided. If
+timeout is provided, operation waits until it is completed or timeout is reached.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> – (object), key of the entry to be deleted.</p></li>
+<li><p><strong>timeout</strong> – (int), operation timeout in seconds (optional).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if the remove is successful, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.unlock">
+<code class="sig-name descname">unlock</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.unlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Releases the lock for the specified key. It never blocks and returns immediately. If the current thread is the
+holder of this lock, then the hold count is decremented. If the hold count is zero, then the lock is released.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> – (object), the key to lock.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.Map.values">
+<code class="sig-name descname">values</code><span class="sig-paren">(</span><em class="sig-param">predicate=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.Map.values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list clone of the values contained in this map or values of the entries which are filtered with
+the predicate if provided.</p>
+<p><strong>Warning:
+The list is NOT backed by the map, so changes to the map are NOT reflected in the list, and
+vice-versa.</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>predicate</strong> – (Predicate), predicate to filter the entries (optional).</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(Sequence), a list of clone of the values contained in this map.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">Predicate</span></code> for more info about predicates.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hazelcast.proxy.map.MapFeatNearCache">
+<em class="property">class </em><code class="sig-name descname">MapFeatNearCache</code><span class="sig-paren">(</span><em class="sig-param">client</em>, <em class="sig-param">service_name</em>, <em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.MapFeatNearCache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hazelcast.proxy.map.Map" title="hazelcast.proxy.map.Map"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.proxy.map.Map</span></code></a></p>
+<p>Map proxy implementation featuring Near Cache</p>
+<dl class="method">
+<dt id="hazelcast.proxy.map.MapFeatNearCache.clear">
+<code class="sig-name descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.MapFeatNearCache.clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the map.</p>
+<p>The MAP_CLEARED event is fired for any registered listeners.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.MapFeatNearCache.evict_all">
+<code class="sig-name descname">evict_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.MapFeatNearCache.evict_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evicts all keys from this map except the locked ones.</p>
+<p>The EVICT_ALL event is fired for any registered listeners.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.map.MapFeatNearCache.load_all">
+<code class="sig-name descname">load_all</code><span class="sig-paren">(</span><em class="sig-param">keys=None</em>, <em class="sig-param">replace_existing_values=True</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.MapFeatNearCache.load_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads all keys from the store at server side or loads the given keys if provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>keys</strong> – (Collection), keys of the entry values to load (optional).</p></li>
+<li><p><strong>replace_existing_values</strong> – (bool), whether the existing values will be replaced or not with those loaded</p></li>
+</ul>
+</dd>
+</dl>
+<p>from the server side MapLoader (optional).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="hazelcast.proxy.map.create_map_proxy">
+<code class="sig-name descname">create_map_proxy</code><span class="sig-paren">(</span><em class="sig-param">client</em>, <em class="sig-param">service_name</em>, <em class="sig-param">name</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.map.create_map_proxy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.lock.html"
+                        title="previous chapter">Lock</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.multi_map.html"
+                        title="next chapter">MultiMap</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.proxy.map.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.multi_map.html" title="MultiMap"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.lock.html" title="Lock"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" >Hazelcast Proxies</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Hazelcast Inc..
+    </div>
+  </body>
+</html>

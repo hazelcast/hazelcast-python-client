@@ -1,0 +1,217 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Lock &#8212; Hazelcast Python Client 3.12.3 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Map" href="hazelcast.proxy.map.html" />
+    <link rel="prev" title="List" href="hazelcast.proxy.list.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.map.html" title="Map"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.list.html" title="List"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" accesskey="U">Hazelcast Proxies</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.proxy.lock">
+<span id="lock"></span><h1>Lock<a class="headerlink" href="#module-hazelcast.proxy.lock" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="hazelcast.proxy.lock.Lock">
+<em class="property">class </em><code class="sig-name descname">Lock</code><span class="sig-paren">(</span><em class="sig-param">client</em>, <em class="sig-param">service_name</em>, <em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.lock.Lock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hazelcast.proxy.base.html#hazelcast.proxy.base.PartitionSpecificProxy" title="hazelcast.proxy.base.PartitionSpecificProxy"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.proxy.base.PartitionSpecificProxy</span></code></a></p>
+<p>Distributed implementation of <a class="reference external" href="https://docs.python.org/3/library/asyncio-sync.html">asyncio.Lock</a></p>
+<dl class="method">
+<dt id="hazelcast.proxy.lock.Lock.force_unlock">
+<code class="sig-name descname">force_unlock</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.lock.Lock.force_unlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Releases the lock regardless of the lock owner. It always successfully unlocks, never blocks, and returns
+immediately.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.lock.Lock.get_lock_count">
+<code class="sig-name descname">get_lock_count</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.lock.Lock.get_lock_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns re-entrant lock hold count, regardless of lock ownership.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(int), the lock hold count.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.lock.Lock.get_remaining_lease_time">
+<code class="sig-name descname">get_remaining_lease_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.lock.Lock.get_remaining_lease_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns remaining lease time in milliseconds. If the lock is not locked then -1 will be returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(long), remaining lease time in milliseconds.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.lock.Lock.is_locked">
+<code class="sig-name descname">is_locked</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.lock.Lock.is_locked" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether this lock is locked or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if this lock is locked, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.lock.Lock.is_locked_by_current_thread">
+<code class="sig-name descname">is_locked_by_current_thread</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.lock.Lock.is_locked_by_current_thread" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether this lock is locked by current thread or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if this lock is locked by current thread, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.lock.Lock.lock">
+<code class="sig-name descname">lock</code><span class="sig-paren">(</span><em class="sig-param">lease_time=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.lock.Lock.lock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Acquires the lock. If a lease time is specified, lock will be released after this lease time.</p>
+<p>If the lock is not available, the current thread becomes disabled for thread scheduling purposes and lies
+dormant until the lock has been acquired.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>lease_time</strong> – (long), time to wait before releasing the lock (optional).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.lock.Lock.try_lock">
+<code class="sig-name descname">try_lock</code><span class="sig-paren">(</span><em class="sig-param">timeout=0</em>, <em class="sig-param">lease_time=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.lock.Lock.try_lock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tries to acquire the lock. When the lock is not available,</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>If timeout is not provided, the current thread doesn’t wait and returns <code class="docutils literal notranslate"><span class="pre">false</span></code> immediately.</p></li>
+<li><p>If a timeout is provided, the current thread becomes disabled for thread scheduling purposes and lies</p></li>
+</ul>
+<dl class="simple">
+<dt>dormant until one of the followings happens:</dt><dd><ul class="simple">
+<li><p>the lock is acquired by the current thread, or</p></li>
+<li><p>the specified waiting time elapses.</p></li>
+</ul>
+</dd>
+</dl>
+</div></blockquote>
+<p>If lease time is provided, lock will be released after this time elapses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timeout</strong> – (long), maximum time in seconds to wait for the lock (optional).</p></li>
+<li><p><strong>lease_time</strong> – (long), time in seconds to wait before releasing the lock (optional).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>(bool), <code class="docutils literal notranslate"><span class="pre">true</span></code> if the lock was acquired and otherwise, <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazelcast.proxy.lock.Lock.unlock">
+<code class="sig-name descname">unlock</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.lock.Lock.unlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Releases the lock.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.list.html"
+                        title="previous chapter">List</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.map.html"
+                        title="next chapter">Map</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.proxy.lock.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.map.html" title="Map"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.list.html" title="List"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 3.12.3 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" >Hazelcast Proxies</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Hazelcast Inc..
+    </div>
+  </body>
+</html>
