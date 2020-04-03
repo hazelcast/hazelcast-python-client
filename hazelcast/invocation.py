@@ -287,16 +287,11 @@ class InvocationService(object):
             self.logger.debug("Got exception for request %s: %s: %s", invocation.request, type(error).__name__, error,
                               extra=self._logger_extras)
 
-<<<<<<< HEAD
-        if not self._client.lifecycle.is_live:
-            invocation.set_exception(HazelcastClientNotActiveException(error.args[0]), traceback)
-            return
-=======
         if is_retryable_error(error):
             if invocation.request.retryable or self._is_redo_operation:
                 if self._try_retry(invocation):
                     return
->>>>>>> in progress
+
 
         if self._is_not_allowed_to_retry_on_selection(invocation, error):
             invocation.set_exception(error, traceback)

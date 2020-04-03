@@ -109,13 +109,10 @@ class ListenerService(object):
                                         user_registration_id, connection, e.args[0], extra=self._logger_extras)
                 raise e
 
-<<<<<<< HEAD
-        return future.continue_with(callback)
-=======
         future.add_done_callback(callback)
         #return future.continue_with(callback)
         return future
->>>>>>> in progress
+
 
     def deregister_listener(self, user_registration_id):
         check_not_none(user_registration_id, "None userRegistrationId is not allowed!")

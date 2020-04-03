@@ -37,9 +37,9 @@ class ConnectionManager(object):
         self._connection_listeners = []
         self._address_translator = address_translator
         self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
-        self.connection_strategy_config = self._client.connection_strategy_config
-        self.async_start = self.connection_strategy_config.async_start
-        self.reconnect_mode = self.connection_strategy_config.reconnect_mode
+        #self.connection_strategy_config = self._client.connection_strategy_config
+        #self.async_start = self.connection_strategy_config.async_start
+        #self.reconnect_mode = self.connection_strategy_config.reconnect_mode
 
     def add_listener(self, on_connection_opened=None, on_connection_closed=None):
         """
@@ -352,10 +352,6 @@ class Connection(object):
     def __hash__(self):
         return self.id
 
-<<<<<<< HEAD
-=======
-
->>>>>>> in progress
 
 class DefaultAddressProvider(object):
     """
