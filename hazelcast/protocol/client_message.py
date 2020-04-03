@@ -133,8 +133,8 @@ class ClientMessage(object):
         self.end_frame = fragment.end_frame
 
     def clone(self):
-        client_message = ClientMessage(start_frame=bytearray(self.start_frame.content))
-        client_message.retryable=self.retryable
+        client_message = ClientMessage(start_frame=self.start_frame)
+        client_message.retryable = self.retryable
         return client_message
 
     def __eq__(self, other):

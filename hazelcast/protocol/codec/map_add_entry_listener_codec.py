@@ -63,7 +63,7 @@ def handle(client_message, handle_entry_event=None, to_object=None):
         event_type = FixedSizeTypesCodec.decode_int(initial_frame.content, EVENT_ENTRY_EVENT_TYPE_FIELD_OFFSET)
         uuid = FixedSizeTypesCodec.decode_uuid(initial_frame.content, EVENT_ENTRY_UUID_FIELD_OFFSET)
         number_of_affected_entries = FixedSizeTypesCodec.decode_int(initial_frame.content, EVENT_ENTRY_NUMBER_OF_AFFECTED_ENTRIES_FIELD_OFFSET)
-        """
+
         key = to_object(CodecUtil.decode_nullable(iterator, DataCodec.decode))
         value = to_object(CodecUtil.decode_nullable(iterator, DataCodec.decode))
         old_value = to_object(CodecUtil.decode_nullable(iterator, DataCodec.decode))
@@ -75,4 +75,4 @@ def handle(client_message, handle_entry_event=None, to_object=None):
         old_value = CodecUtil.decode_nullable(iterator, DataCodec.decode)
         merging_value = CodecUtil.decode_nullable(iterator, DataCodec.decode)
         handle_entry_event(key=key, value=value, old_value=old_value, merging_value=merging_value, event_type=event_type, uuid=uuid, number_of_affected_entries=number_of_affected_entries)
-
+        """
