@@ -4,12 +4,13 @@ from hazelcast.protocol.codec.builtin import *
 from hazelcast.protocol.codec.custom import *
 from hazelcast.protocol.exception.error_holder import ErrorHolder
 
-# Generated("db3f1fc19389509509ff1c7673466b7b")
+# Generated("354ce4fad0ac8cee9d69f137cd4ee206")
 
 ERROR_CODE_FIELD_OFFSET = 0
 INITIAL_FRAME_SIZE = ERROR_CODE_FIELD_OFFSET + Bits.INT_SIZE_IN_BYTES
 
-class ErrorHolderCodec:
+
+class ErrorHolderCodec(object):
     @staticmethod
     def encode(client_message, error_holder):
         client_message.add(BEGIN_FRAME)

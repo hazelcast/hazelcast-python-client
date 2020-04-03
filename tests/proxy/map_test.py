@@ -40,6 +40,7 @@ class MapTest(SingleMemberTestCase):
 
     @classmethod
     def configure_client(cls, config):
+        config.group_config.name = cls.cluster.id
         config.serialization_config.add_data_serializable_factory(EntryProcessor.FACTORY_ID,
                                                                   {EntryProcessor.CLASS_ID: EntryProcessor})
         return config

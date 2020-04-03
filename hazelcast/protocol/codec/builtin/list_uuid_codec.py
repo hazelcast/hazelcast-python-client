@@ -15,10 +15,10 @@ class ListUUIDCodec:
 
     @staticmethod
     def decode(frame_or_iterator):
-        if type(frame_or_iterator) == type(ClientMessage.ForwardFrameIterator()):
+        if isinstance(frame_or_iterator, ClientMessage.ForwardFrameIterator):
             return ListUUIDCodec.decode(frame_or_iterator.next())
         else:
-            item_count = len(frame_or_iterator.content) / UUID_SIZE_IN_BYTES
+            item_count = len(frame_or_iterator.content) // UUID_SIZE_IN_BYTES
             result = []
             for i in range(item_count):
                 result.append(FixedSizeTypesCodec.decode_uuid(frame_or_iterator.content, i * UUID_SIZE_IN_BYTES))

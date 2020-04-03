@@ -7,7 +7,6 @@ import sys
 import threading
 import time
 import traceback
-import pydevd
 
 from collections import deque
 from functools import total_ordering
@@ -37,7 +36,7 @@ class AsyncoreReactor(object):
     def start(self):
         self._is_live = True
         self._thread = threading.Thread(target=self._loop, name="hazelcast-reactor")
-        self._thread.daemon = False
+        self._thread.daemon = True
         self._thread.start()
 
 
@@ -47,7 +46,7 @@ class AsyncoreReactor(object):
         while self._is_live:
             try:
                 asyncore.loop(count=1, timeout=0.01, map=self._map)
-                self._check_timers()
+                #self._check_timers()
             except select.error as err:
                 # TODO: parse error type to catch only error "9"
                 self.logger.warning("Connection closed by server", extra=self._logger_extras)
@@ -197,17 +196,15 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         self.logger.debug("Connected to %s", self._address, extra=self._logger_extras)
 
     def handle_read(self):
-        print("a")
         data_read = self.recv(self.read_buffer_size)
-        self._read_buffer.extend(data_read)
+        self.read_buffer.extend(data_read)
         self.bytes_written += len(data_read)
-        print(data_read)
-        print(type(data_read))
         self.last_read_in_seconds = time.time()
         self.client_message_decoder.on_read()
         #self.receive_message()
 
     def handle_write(self):
+        #print("sending msg")
         with self._write_lock:
             try:
                 data = self._write_queue.popleft()
@@ -237,8 +234,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         return not self._closed and self.sent_protocol_bytes
 
     def write(self, data):
-        print(data)
-        print(len(data))
+        #print("sending msg")
         # if write queue is empty, send the data right away, otherwise add to queue
         if len(self._write_queue) == 0 and self._write_lock.acquire(False):
             try:

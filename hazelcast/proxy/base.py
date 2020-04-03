@@ -20,6 +20,8 @@ def default_response_handler(future, codec, to_object):
             return decoded_response['response']
         except AttributeError:
             pass
+        except KeyError:
+            pass
 
 
 class Proxy(object):

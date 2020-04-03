@@ -18,7 +18,7 @@ class FixedSizeTypesCodec:
 
 	@staticmethod
 	def decode_int(buffer, pos):
-		struct.unpack_from(Bits.FMT_LE_INT, buffer, pos)
+		return struct.unpack_from(Bits.FMT_LE_INT, buffer, pos)[0]
 
 	@staticmethod
 	def decode_enum(buffer, pos):
@@ -38,8 +38,7 @@ class FixedSizeTypesCodec:
 		FixedSizeTypesCodec.encode_boolean(buffer, pos, is_null)
 		if is_null:
 			return
-		#msb = (value.int >> 64) & 0xFFFFFFFFFFFFFFFF	#2581521426421336153
-		#lsb = (value.int << 64 & 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF) >> 64	#-7846814559864137868
+
 		msb, lsb = struct.unpack(">qq", value.bytes)
 		FixedSizeTypesCodec.encode_long(buffer, pos + Bits.BOOLEAN_SIZE_IN_BYTES, msb)
 		FixedSizeTypesCodec.encode_long(buffer, pos + Bits.BOOLEAN_SIZE_IN_BYTES + Bits.LONG_SIZE_IN_BYTES, lsb)
@@ -51,7 +50,7 @@ class FixedSizeTypesCodec:
 			return None
 		msb = FixedSizeTypesCodec.decode_long(buffer, pos + Bits.BOOLEAN_SIZE_IN_BYTES)
 		lsb = FixedSizeTypesCodec.decode_long(buffer, pos + Bits.BOOLEAN_SIZE_IN_BYTES + Bits.LONG_SIZE_IN_BYTES)
-		return uuid.UUID(int=(msb << 64 + lsb))
+		return uuid.UUID(int=((msb << 64) | lsb) & 0xffffffffffffffffffffffffffffffff)
 
 	@staticmethod
 	def encode_boolean(buffer, pos, value):

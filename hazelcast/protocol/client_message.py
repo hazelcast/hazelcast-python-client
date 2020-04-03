@@ -43,10 +43,13 @@ BACKUP_EVENT_FLAG = 1 << 7
 SIZE_OF_FRAME_LENGTH_AND_FLAGS = Bits.INT_SIZE_IN_BYTES + Bits.SHORT_SIZE_IN_BYTES
 
 
-class ClientMessage:
+class ClientMessage(object):
     def __init__(self, start_frame=None, end_frame=None):
         self.start_frame = start_frame
-        self.end_frame = end_frame
+        if end_frame is None:
+            self.end_frame = start_frame
+        else:
+            self.end_frame = end_frame
         self.connection = None
         self.retryable = None
         self.operation_name = ""
@@ -111,6 +114,10 @@ class ClientMessage:
         i = flags & flag_mask
         return i == flag_mask
 
+    @property
+    def header_flags(self):
+        return self.start_frame.flags
+
     def get_frame_length(self):
         frame_length = 0
         current_frame = self.start_frame
@@ -125,6 +132,11 @@ class ClientMessage:
         self.end_frame.next = fragment_message_start_frame
         self.end_frame = fragment.end_frame
 
+    def clone(self):
+        client_message = ClientMessage(start_frame=bytearray(self.start_frame.content))
+        client_message.retryable=self.retryable
+        return client_message
+
     def __eq__(self, other):
         if other is None or type(other) != type(self):
             return False
@@ -138,7 +150,7 @@ class ClientMessage:
         return self.connection == other.connection
 
     def __str__(self):
-        s = "ClientMessage{connection={0}"
+        s = "ClientMessage[connection={0}"
         if self.start_frame is not None:
             s += ", length={}, operation={}, isRetyrable={}". \
                 format(self.get_frame_length(), self.operation_name, self.retryable)
@@ -161,10 +173,10 @@ class ClientMessage:
                 fragmentation_id = struct.unpack_from(Bits.FMT_BE_LONG, self.start_frame.content,
                                                       FRAGMENTATION_ID_OFFSET)
                 s += ", fragmentationId={}".format(fragmentation_id)
-            s += ", isFragmented={1}}"
+            s += ", isFragmented={1}]"
             return s.format(self.connection, not un_fragmented)
 
-    class ForwardFrameIterator:
+    class ForwardFrameIterator(object):
         def __init__(self, start):
             self.next_frame = start
 

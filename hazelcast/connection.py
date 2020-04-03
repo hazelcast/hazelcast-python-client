@@ -3,13 +3,14 @@ import struct
 import sys
 import threading
 import time
+import random
 
 from hazelcast.exception import AuthenticationError
 from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
 from hazelcast.protocol.client_message import ClientMessage, ClientMessageBuilder
 from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
 from hazelcast.serialization import INT_SIZE_IN_BYTES, FMT_LE_INT
-from hazelcast.util import AtomicInteger, parse_addresses, calculate_version
+from hazelcast.util import AtomicInteger, parse_addresses, calculate_version,ByteBuffer
 from hazelcast.version import CLIENT_TYPE, CLIENT_VERSION, SERIALIZATION_VERSION
 from hazelcast import six
 from hazelcast.protocol.client_message_writer import ClientMessageWriter
@@ -28,6 +29,7 @@ class ConnectionManager(object):
         self._new_connection_mutex = threading.RLock()
         self._io_thread = None
         self._client = client
+        # key will be uuid instead of Address object
         self.connections = {}
         self._pending_connections = {}
         self._socket_map = {}
@@ -35,6 +37,9 @@ class ConnectionManager(object):
         self._connection_listeners = []
         self._address_translator = address_translator
         self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
+        self.connection_strategy_config = self._client.connection_strategy_config
+        self.async_start = self.connection_strategy_config.async_start
+        self.reconnect_mode = self.connection_strategy_config.reconnect_mode
 
     def add_listener(self, on_connection_opened=None, on_connection_closed=None):
         """
@@ -57,6 +62,13 @@ class ConnectionManager(object):
             return self.connections[address]
         except KeyError:
             return None
+
+    def get_random_connection(self):
+        if self._client.config.network_config.smart_routing:
+            if self.connections:
+                return random.choice(list(self.connections.items()))[1]
+            else:
+                return None
 
     def _cluster_authenticator(self, connection):
         uuid = self._client.cluster.uuid
@@ -274,8 +286,9 @@ class Connection(object):
         self.id = self.counter.get_and_increment()
         self.logger = logging.getLogger("HazelcastClient.Connection[%s](%s:%d)" % (self.id, address.host, address.port))
         self._connection_closed_callback = connection_closed_callback
+        self.callback = message_callback
         self._builder = ClientMessageBuilder(message_callback)
-        self._read_buffer = bytearray()
+        self.read_buffer = bytearray()
         self.last_read_in_seconds = 0
         self.last_write_in_seconds = 0
         self.start_time_in_seconds = 0
@@ -308,12 +321,12 @@ class Connection(object):
         Receives a message from this connection.
         """
         # split frames
-        while len(self._read_buffer) >= INT_SIZE_IN_BYTES:
-            frame_length = struct.unpack_from(FMT_LE_INT, self._read_buffer, 0)[0]
-            if frame_length > len(self._read_buffer):
+        while len(self.read_buffer) >= INT_SIZE_IN_BYTES:
+            frame_length = struct.unpack_from(FMT_LE_INT, self.read_buffer, 0)[0]
+            if frame_length > len(self.read_buffer):
                 return
-            message = ClientMessage(memoryview(self._read_buffer)[:frame_length])
-            self._read_buffer = self._read_buffer[frame_length:]
+            message = ClientMessage(memoryview(self.read_buffer)[:frame_length])
+            self.read_buffer = self.read_buffer[frame_length:]
             self._builder.on_message(message)
 
     def write(self, data):
@@ -339,6 +352,10 @@ class Connection(object):
     def __hash__(self):
         return self.id
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> in progress
 
 class DefaultAddressProvider(object):
     """

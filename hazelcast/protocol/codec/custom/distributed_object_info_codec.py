@@ -4,10 +4,11 @@ from hazelcast.protocol.codec.builtin import *
 from hazelcast.protocol.codec.custom import *
 from hazelcast.core import DistributedObjectInfo
 
-# Generated("80bd48d2b5368c3a23fb6d8f15a90d26")
+# Generated("c8b1c42a96f0be9b24404cb9d0215c94")
 
 
-class DistributedObjectInfoCodec:
+
+class DistributedObjectInfoCodec(object):
     @staticmethod
     def encode(client_message, distributed_object_info):
         client_message.add(BEGIN_FRAME)

@@ -4,13 +4,14 @@ from hazelcast.protocol.codec.builtin import *
 from hazelcast.protocol.codec.custom import *
 from hazelcast.core import MemberInfo
 
-# Generated("8a342cf8e550f1cfec63c7c4d25fcae3")
+# Generated("22a7aa6d0c8c8d586989618fbecca8cf")
 
 UUID_FIELD_OFFSET = 0
 LITE_MEMBER_FIELD_OFFSET = UUID_FIELD_OFFSET + Bits.UUID_SIZE_IN_BYTES
 INITIAL_FRAME_SIZE = LITE_MEMBER_FIELD_OFFSET + Bits.BOOLEAN_SIZE_IN_BYTES
 
-class MemberInfoCodec:
+
+class MemberInfoCodec(object):
     @staticmethod
     def encode(client_message, member_info):
         client_message.add(BEGIN_FRAME)

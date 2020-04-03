@@ -12,4 +12,3 @@ class ByteArrayCodec:
             return ByteArrayCodec.decode(frame_or_iterator.next())
         else:
             return frame_or_iterator.content
-

@@ -4,12 +4,13 @@ from hazelcast.protocol.codec.builtin import *
 from hazelcast.protocol.codec.custom import *
 from hazelcast.protocol.stack_trace_element import StackTraceElement
 
-# Generated("df8b9c5e36c8b9a81e081f1ed752c461")
+# Generated("157abeb4d8b033bea86ab07fd0a06738")
 
 LINE_NUMBER_FIELD_OFFSET = 0
 INITIAL_FRAME_SIZE = LINE_NUMBER_FIELD_OFFSET + Bits.INT_SIZE_IN_BYTES
 
-class StackTraceElementCodec:
+
+class StackTraceElementCodec(object):
     @staticmethod
     def encode(client_message, stack_trace_element):
         client_message.add(BEGIN_FRAME)

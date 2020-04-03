@@ -24,6 +24,3 @@ class EntryListIntegerLongCodec:
             value = FixedSizeTypesCodec.decode_long(frame.content, i*ENTRY_SIZE_IN_BYTES + INT_SIZE_IN_BYTES)
             result[key] = value
         return result
-
-
-

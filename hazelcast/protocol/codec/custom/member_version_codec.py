@@ -4,14 +4,15 @@ from hazelcast.protocol.codec.builtin import *
 from hazelcast.protocol.codec.custom import *
 from hazelcast.core import MemberVersion
 
-# Generated("5499d2aaff5d94700815ecba7a05fb08")
+# Generated("1bb77669095053abf8b2426605acf2ff")
 
 MAJOR_FIELD_OFFSET = 0
 MINOR_FIELD_OFFSET = MAJOR_FIELD_OFFSET + Bits.BYTE_SIZE_IN_BYTES
 PATCH_FIELD_OFFSET = MINOR_FIELD_OFFSET + Bits.BYTE_SIZE_IN_BYTES
 INITIAL_FRAME_SIZE = PATCH_FIELD_OFFSET + Bits.BYTE_SIZE_IN_BYTES
 
-class MemberVersionCodec:
+
+class MemberVersionCodec(object):
     @staticmethod
     def encode(client_message, member_version):
         client_message.add(BEGIN_FRAME)

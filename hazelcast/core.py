@@ -36,7 +36,6 @@ class MemberInfo(object):
         self.version = version
 
 
-
 class MemberVersion(object):
     def __init__(self, major, minor, patch):
         self.major = major

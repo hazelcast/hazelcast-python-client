@@ -7,19 +7,13 @@ from hazelcast.protocol.bits import FMT_LE_LONG
 
 class ClientMessageDecoder:
     def __init__(self, connection):
-
         self.connection = connection
-
         self.active_reader = ClientMessageReader(self.connection)
         self.builder_by_session_id_map = {}
 
-
-    def handler_added(self):
-        bytearray()
-
     def on_read(self):
         while self.active_reader.connection.bytes_written - self.active_reader.connection.bytes_read:
-            complete = self.active_reader.read_from(self.active_reader.connection._read_buffer)
+            complete = self.active_reader.read_from(self.active_reader.connection.read_buffer)
             if not complete:
                 break
 

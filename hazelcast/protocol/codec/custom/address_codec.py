@@ -4,12 +4,13 @@ from hazelcast.protocol.codec.builtin import *
 from hazelcast.protocol.codec.custom import *
 from hazelcast.core import Address
 
-# Generated("3379cf6bb330d268ec62cd7de98c146a")
+# Generated("8f840d62b43c43faba3173642c83a984")
 
 PORT_FIELD_OFFSET = 0
 INITIAL_FRAME_SIZE = PORT_FIELD_OFFSET + Bits.INT_SIZE_IN_BYTES
 
-class AddressCodec:
+
+class AddressCodec(object):
     @staticmethod
     def encode(client_message, address):
         client_message.add(BEGIN_FRAME)

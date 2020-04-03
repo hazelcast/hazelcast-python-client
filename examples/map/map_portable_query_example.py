@@ -42,6 +42,9 @@ if __name__ == '__main__':
 
     client = hazelcast.HazelcastClient(config)
 
+    import logging
+    config.logger_config.level = logging.DEBUG
+
     my_map = client.get_map("employee-map")
     #
     my_map.put(0, Employee("Jack", 28))

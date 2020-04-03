@@ -15,7 +15,7 @@ class CodecUtil:
     @staticmethod
     def encode_nullable(client_message, value, encode):
         if value is None:
-            client_message.add(NULL_FRAME.deep_copy())
+            client_message.add(NULL_FRAME.copy())
         else:
             encode(client_message, value)
 
@@ -24,7 +24,7 @@ class CodecUtil:
         if CodecUtil.next_frame_is_null_end_frame(iterator):
             return None
         else:
-            decode(iterator)
+            return decode(iterator)
 
     @staticmethod
     def next_frame_is_data_structure_end_frame(iterator):

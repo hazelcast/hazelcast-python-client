@@ -179,6 +179,18 @@ def parse_addresses(addresses=[]):
     return list(itertools.chain(*[_parse_address(a) for a in addresses]))
 
 
+class ByteBuffer(bytearray):
+    def __init__(self):
+        bytearray.__init__(self)
+        self.bytes_written = 0
+        self.bytes_read = 0
+
+    def remaining(self):
+        return self.bytes_written - self.bytes_read
+
+    def position(self):
+        return self.bytes_read
+
 class ImmutableLazyDataList(Sequence):
     def __init__(self, list_data, to_object):
         super(ImmutableLazyDataList, self).__init__()

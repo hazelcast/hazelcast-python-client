@@ -4,8 +4,6 @@ from hazelcast.protocol.codec.builtin.list_multi_frame_codec import ListMultiFra
 from hazelcast.protocol.codec.builtin.list_uuid_codec import ListUUIDCodec
 
 
-
-
 class EntryListUUIDListIntegerCodec:
     @staticmethod
     def encode(client_message, collection):

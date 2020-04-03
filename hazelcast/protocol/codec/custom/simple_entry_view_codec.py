@@ -4,7 +4,7 @@ from hazelcast.protocol.codec.builtin import *
 from hazelcast.protocol.codec.custom import *
 from hazelcast.core import EntryView
 
-# Generated("05ea90d77c371cdc0a844d0727a6416f")
+# Generated("f3c745a1584d63e0e9df66e92cc15bb8")
 
 COST_FIELD_OFFSET = 0
 CREATION_TIME_FIELD_OFFSET = COST_FIELD_OFFSET + Bits.LONG_SIZE_IN_BYTES
@@ -18,7 +18,8 @@ TTL_FIELD_OFFSET = VERSION_FIELD_OFFSET + Bits.LONG_SIZE_IN_BYTES
 MAX_IDLE_FIELD_OFFSET = TTL_FIELD_OFFSET + Bits.LONG_SIZE_IN_BYTES
 INITIAL_FRAME_SIZE = MAX_IDLE_FIELD_OFFSET + Bits.LONG_SIZE_IN_BYTES
 
-class SimpleEntryViewCodec:
+
+class SimpleEntryViewCodec(object):
     @staticmethod
     def encode(client_message, simple_entry_view):
         client_message.add(BEGIN_FRAME)

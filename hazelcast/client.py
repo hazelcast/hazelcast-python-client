@@ -3,7 +3,7 @@ import logging.config
 import sys
 import json
 
-from hazelcast.cluster import ClusterService, RandomLoadBalancer
+from hazelcast.cluster import ClusterService, RandomLoadBalancer, ClientClusterViewService
 from hazelcast.config import ClientConfig, ClientProperties
 from hazelcast.connection import ConnectionManager, Heartbeat, DefaultAddressProvider, DefaultAddressTranslator
 from hazelcast.core import DistributedObjectInfo
@@ -59,17 +59,22 @@ class HazelcastClient(object):
         self.lock_reference_id_generator = AtomicInteger(1)
         self.near_cache_manager = NearCacheManager(self)
         self.statistics = Statistics(self)
+        self.client_cluster_view_listener_service = ClientClusterViewService(self)
         self._start()
 
     def _start(self):
         self.reactor.start()
         try:
             self.invoker.start()
+            self.client_cluster_view_listener_service.start()
             self.cluster.start()
             self.heartbeat.start()
+            self.cluster.wait_initial_membership_fetched()
             self.listener.start()
+            #self.client_cluster_view_listener_service.start()
             self.partition_service.start()
             self.statistics.start()
+
         except:
             self.reactor.shutdown()
             raise
@@ -304,6 +309,7 @@ class HazelcastClient(object):
             self.near_cache_manager.destroy_all_near_caches()
             self.statistics.shutdown()
             self.partition_service.shutdown()
+            #self.client_cluster_view_listener_service.shutdown()
             self.heartbeat.shutdown()
             self.cluster.shutdown()
             self.reactor.shutdown()

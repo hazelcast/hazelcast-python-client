@@ -4,28 +4,28 @@ from hazelcast.protocol.codec.builtin.codec_util import CodecUtil
 class ListMultiFrameCodec:
     @staticmethod
     def encode(client_message, collection, encode_function):
-        client_message.add(BEGIN_FRAME)
+        client_message.add(BEGIN_FRAME.copy())
 
         for item in collection:
             encode_function(client_message, item)
 
-        client_message.add(END_FRAME)
+        client_message.add(END_FRAME.copy())
 
     @staticmethod
     def encode_contains_nullable(client_message, collection, encode_function):
-        client_message.add(BEGIN_FRAME)
+        client_message.add(BEGIN_FRAME.copy())
         for item in collection:
             if item is None:
-                client_message.add(NULL_FRAME)
+                client_message.add(NULL_FRAME.copy())
             else:
                 encode_function(client_message, item)
 
-        client_message.add(END_FRAME)
+        client_message.add(END_FRAME.copy())
 
     @staticmethod
     def encode_nullable(client_message, collection, encode_function):
         if collection is None:
-            client_message.add(NULL_FRAME)
+            client_message.add(NULL_FRAME.copy())
         else:
             ListMultiFrameCodec.encode(client_message, collection, encode_function)
 

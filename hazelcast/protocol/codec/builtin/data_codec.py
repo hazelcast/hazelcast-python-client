@@ -5,14 +5,14 @@ from hazelcast.serialization.data import Data
 class DataCodec:
     @staticmethod
     def encode(client_message, data):
-        client_message.add(ClientMessage.Frame(bytearray(data)))
+        client_message.add(ClientMessage.Frame(bytearray(data._buffer)))
 
     @staticmethod
     def encode_nullable(client_message, data):
         if data is None:
             client_message.add(NULL_FRAME)
         else:
-            client_message.add(ClientMessage.Frame(bytearray(data)))
+            client_message.add(ClientMessage.Frame(bytearray(data._buffer)))
 
     @staticmethod
     def decode(iterator):

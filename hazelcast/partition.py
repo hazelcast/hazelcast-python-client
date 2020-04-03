@@ -18,7 +18,8 @@ class PartitionService(object):
     def __init__(self, client):
         self._client = client
         self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
-        self.partitions = {}
+        self.partition_count = 0
+        self.partition_table = PartitionTable(None, -1, {})
 
     def start(self):
         """
@@ -52,9 +53,14 @@ class PartitionService(object):
         :param partition_id: (int), the partition id.
         :return: (:class:`~hazelcast.core.Address`), owner of partition or ``None`` if it's not set yet.
         """
-        if partition_id not in self.partitions:
-            self._do_refresh()
-        return self.partitions.get(partition_id, None)
+        #print("get partition owner {}".format(partition_id not in self.partition_table.partitions))
+        if not self.partition_table.partitions or partition_id not in list(self.partition_table.partitions.values())[0]:
+            return None
+        for key, value in self.partition_table.partitions.items():
+            if partition_id in value:
+                #print("key:{}".format(key))
+                return key
+        #return self.partition_table.partitions.get(partition_id, None)
 
     def get_partition_id(self, key):
         """
@@ -75,36 +81,7 @@ class PartitionService(object):
 
         :return: (int), the number of partitions.
         """
-        if not self.partitions:
-            self._get_partition_count_blocking()
-        return len(self.partitions)
-
-    def _get_partition_count_blocking(self):
-        event = threading.Event()
-        while not event.isSet():
-            self._do_refresh(callback=lambda: event.set())
-            event.wait(timeout=1)
-
-    def _do_refresh(self, callback=None):
-        self.logger.debug("Start updating partitions", extra=self._logger_extras)
-        address = self._client.cluster.owner_connection_address
-        connection = self._client.connection_manager.get_connection(address)
-        if connection is None:
-            self.logger.debug("Could not update partition thread as owner connection is not available.",
-                              extra=self._logger_extras)
-            if callback:
-                callback()
-            return
-        request = client_get_partitions_codec.encode_request()
-
-        def cb(f):
-            if f.is_success():
-                self.process_partition_response(f.result())
-                if callback:
-                    callback()
-
-        future = self._client.invoker.invoke_on_connection(request, connection)
-        future.add_done_callback(cb)
+        return self.partition_count
 
     def process_partition_response(self, message):
         partitions = client_get_partitions_codec.decode_response(message)["partitions"]
@@ -112,8 +89,47 @@ class PartitionService(object):
         for addr, partition_list in six.iteritems(partitions):
             for partition in partition_list:
                 partitions_dict[partition] = addr
-        self.partitions.update(partitions_dict)
+        self.partition_table.partitions.update(partitions_dict)
         self.logger.debug("Finished updating partitions", extra=self._logger_extras)
+
+    def handle_partitions_view_event(self, connection, partitions, partition_state_version):
+
+        #logging.debug("Handling new partition table with  partitionStateVersion: " + partition_state_version, extra=self._logger_extras)
+
+        while True:
+            if not self.should_be_applied(connection, partitions, partition_state_version, self.partition_table):
+                return
+            if isinstance(partitions, list):
+                dict_partitions = {}
+                for i, j in partitions:
+                    dict_partitions[i] = j
+                self.partition_table = PartitionTable(connection, partition_state_version, dict_partitions)
+            else:
+                self.partition_table = PartitionTable(connection, partition_state_version, partitions)
+            logging.debug("Applied partition table with partitionStateVersion : " + str(partition_state_version),
+                          extra=self._logger_extras)
+
+    def should_be_applied(self, connection, partitions, partition_state_version, current):
+        if not partitions:
+            logging.warning(connection, partition_state_version, current,
+                            "response is empty", extra=self._logger_extras)
+            return False
+        if not current:
+            logging.warning("Event coming from a new connection. Old connection: "
+                            + ", new connection ", extra=self._logger_extras)
+            return True
+        if connection is not current.connection:
+            logging.warning("Event coming from a new connection. Old connection: " + str(current.connection)
+                            + ", new connection " + str(connection), extra=self._logger_extras)
+            return True
+        if partition_state_version <= current.partition_state_version:
+            logging.debug("{} {} response state version is old".format(partition_state_version,  current.partition_state_version), extra=self._logger_extras)
+            return False
+
+        return True
+
+    def _do_refresh(self):
+        pass
 
 
 def string_partition_strategy(key):
@@ -124,3 +140,10 @@ def string_partition_strategy(key):
         return key[index_of + 1:]
     except ValueError:
         return key
+
+
+class PartitionTable(object):
+    def __init__(self, connection, partition_state_version, partitions):
+        self.partitions = partitions
+        self.partition_state_version = partition_state_version
+        self.connection = connection

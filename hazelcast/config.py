@@ -116,6 +116,10 @@ class ClientConfig(object):
         self.client_name = ""
         """Name of the client"""
 
+        self.is_backup_ack_to_client_enabled = True
+
+        self.connection_strategy_config = ConnectionStrategyConfig()
+
     def add_membership_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
         """
         Helper method for adding membership listeners
@@ -767,3 +771,81 @@ class ClientProperties(object):
         """
         seconds = self.get_seconds(property)
         return seconds if seconds > 0 else TimeUnit.to_seconds(property.default_value, property.time_unit)
+
+
+class ConnectionRetryConfig(object):
+    INITIAL_BACKOFF_MILLIS = 1000
+    MAX_BACKOFF_MILLIS = 30000
+    CLUSTER_CONNECT_TIMEOUT_MILLIS = 20000
+    JITTER = 0
+
+    def __init__(self, connection_retry_config=None):
+        if connection_retry_config:
+            self.initial_backoff_millis = connection_retry_config.initial_backoff_millis
+            self.max_backoff_millis = connection_retry_config.max_backoff_millis
+            self.multiplier = connection_retry_config.multiplier
+            self.connect_timeout_millis = connection_retry_config.connect_timeout_millis
+            self.jitter = connection_retry_config.jitter
+        else:
+            self.initial_backoff_millis = ConnectionRetryConfig.INITIAL_BACKOFF_MILLIS
+            self.max_backoff_millis = ConnectionRetryConfig.MAX_BACKOFF_MILLIS
+            self.multiplier = 1
+            self.connect_timeout_millis = ConnectionRetryConfig.CLUSTER_CONNECT_TIMEOUT_MILLIS
+            self.jitter = ConnectionRetryConfig.JITTER
+
+    def __eq__(self, other):
+        if self is other:
+            return True
+        elif other is None or not isinstance(self, type(other)):
+            return False
+        elif self.initial_backoff_millis != other.initial_backoff_millis:
+            return False
+        elif self.max_backoff_millis != other.max_backoff_millis:
+            return False
+        elif self.multiplier != other.multiplier:
+            return False
+        elif self.connect_timeout_millis != other.connect_timeout_millis:
+            return False
+        else:
+            return self.jitter == other.jitter
+
+    def __hash__(self):
+        pass
+
+    def __str__(self):
+        return """ConnectionRetryConfig| initialBackoffMillis= {},
+            maxBackoffMillis= {},
+            multiplier= {},
+            clusterConnectTimeoutMillis={},
+            jitter= {}|
+        """.format(self.initial_backoff_millis,
+                   self.max_backoff_millis, self.multiplier, self.connect_timeout_millis, self.jitter)
+
+
+
+
+
+RECONNECTMODE = enum(OFF=0, ON=1, ASYNC=2)
+
+
+class ConnectionStrategyConfig(object):
+    def __init__(self, connection_strategy_config=None):
+        if connection_strategy_config:
+            self.async_start = connection_strategy_config.async_start
+            reconnect_mode = connection_strategy_config.reconnect_mode
+            connection_retry_config = ConnectionRetryConfig(connection_strategy_config.connection_retry_config)
+        else:
+            self.async_start = False
+            reconnect_mode = RECONNECTMODE.ON
+            connection_retry_config = ConnectionRetryConfig()
+
+
+
+    def __eq__(self, other):
+        pass
+
+    def __hash__(self):
+        pass
+
+    def __str__(self):
+        pass

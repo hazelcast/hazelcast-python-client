@@ -16,9 +16,9 @@ def calculate_size():
 
 def encode_request():
     """ Encode request into client_message"""
-    client_message = ClientMessage(payload_size=calculate_size())
+    client_message = ClientMessage()
     client_message.set_message_type(REQUEST_TYPE)
-    client_message.set_retryable(RETRYABLE)
+    client_message.retryable=RETRYABLE
     client_message.update_frame_length()
     return client_message
 

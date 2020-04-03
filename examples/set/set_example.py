@@ -1,8 +1,10 @@
 import hazelcast
 
 if __name__ == "__main__":
-    client = hazelcast.HazelcastClient()
-
+    config = hazelcast.ClientConfig()
+    config.network_config.addresses.append("127.0.0.1:5701")
+    #config.network_config.smart_routing = False
+    client = hazelcast.HazelcastClient(config)
     my_set = client.get_set("set")
 
     my_set.add("Item1")

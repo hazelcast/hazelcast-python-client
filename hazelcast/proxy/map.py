@@ -17,6 +17,7 @@ from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_entry
 from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType, get_entry_listener_flags, MAX_SIZE
 from hazelcast.util import check_not_none, thread_id, to_millis
 from hazelcast import six
+from hazelcast.serialization.base import BaseSerializationService
 
 
 class Map(Proxy):
@@ -123,7 +124,7 @@ class Map(Proxy):
 
         return self._register_listener(request, lambda r: map_add_entry_listener_codec.decode_response(r)['response'],
                                        lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name, reg_id),
-                                       lambda m: map_add_entry_listener_codec.handle(m, handle_event_entry))
+                                       lambda m: map_add_entry_listener_codec.handle(m, handle_event_entry, self._to_object))
 
     def add_index(self, attribute, ordered=False):
         """
