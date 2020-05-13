@@ -73,6 +73,13 @@ DEFAULT_SAMPLING_POOL_SIZE = 16
 
 MAXIMUM_PREFETCH_COUNT = 100000
 
+TOPIC_OVERLOAD_POLICY = enum(
+    DISCARD_OLDEST=0,
+    DISCARD_NEWEST=1,
+    BLOCK=2,
+    ERROR=3
+)
+
 
 class ClientConfig(object):
     """
@@ -106,6 +113,9 @@ class ClientConfig(object):
 
         self.flake_id_generator_configs = {}
         """Flake ID generator configuration which maps "config-name" : FlakeIdGeneratorConfig """
+
+        self.reliable_topic_configs = {}
+        """ReliableTopic configuration"""
 
         self.serialization_config = SerializationConfig()
         """Hazelcast serialization configuration"""
@@ -160,6 +170,10 @@ class ClientConfig(object):
         :return: `self` for cascading configuration
         """
         self.flake_id_generator_configs[flake_id_generator_config.name] = flake_id_generator_config
+        return self
+
+    def add_reliable_topic_config(self, reliable_topic_config):
+        self.reliable_topic_configs[reliable_topic_config.name] = reliable_topic_config
         return self
 
     def get_property_or_default(self, key, default):
@@ -536,6 +550,42 @@ class SSLConfig(object):
         String in the OpenSSL cipher list format to set the available ciphers for sockets.
         More than one cipher can be set by separating them with a colon.
         """
+
+
+class ReliableTopicConfig(object):
+    """
+    ReliableTopicConfig contains the configuration for the client regarding
+    :class:`~hazelcast.proxy.reliable_topic.ReliableTopic`
+    """
+
+    def __init__(self, name="default"):
+        self._name = name
+        self._read_batch_size = 10
+        self._topic_overload_policy = TOPIC_OVERLOAD_POLICY.BLOCK
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        self._name = name
+
+    @property
+    def read_batch_size(self):
+        return self._read_batch_size
+
+    @read_batch_size.setter
+    def read_batch_size(self, read_batch_size):
+        self._read_batch_size = read_batch_size
+
+    @property
+    def topic_overload_policy(self):
+        return self._topic_overload_policy
+
+    @topic_overload_policy.setter
+    def topic_overload_policy(self, topic_overload_policy):
+        self._topic_overload_policy = topic_overload_policy
 
 
 class FlakeIdGeneratorConfig(object):

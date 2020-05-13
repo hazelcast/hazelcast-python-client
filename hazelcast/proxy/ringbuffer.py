@@ -157,7 +157,7 @@ class Ringbuffer(PartitionSpecificProxy):
         """
         check_not_negative(start_sequence, "sequence can't be smaller than 0")
         check_true(max_count >= min_count, "max count should be greater or equal to min count")
-        check_true(min_count <= self.capacity().result(), "min count should be smaller or equal to capacity")
+        #check_true(min_count <= self.capacity().result(), "min count should be smaller or equal to capacity")
         check_true(max_count < MAX_BATCH_SIZE, "max count can't be greater than %d" % MAX_BATCH_SIZE)
 
         return self._encode_invoke(ringbuffer_read_many_codec, response_handler=self._read_many_response_handler,

@@ -1,8 +1,8 @@
-from hazelcast.exception import HazelcastSerializationError
 from hazelcast.serialization.base import BaseSerializationService
 from hazelcast.serialization.portable.classdef import FieldType
 from hazelcast.serialization.portable.context import PortableContext
 from hazelcast.serialization.portable.serializer import PortableSerializer
+from hazelcast.serialization.reliable_topic import ReliableTopicMessage
 from hazelcast.serialization.serializer import *
 from hazelcast import six
 from hazelcast.config import ClientProperties
@@ -14,6 +14,12 @@ def default_partition_strategy(key):
     if hasattr(key, "get_partition_key"):
         return key.get_partition_key()
     return None
+
+
+def _init_factories(data_serializable_factories):
+    factories = {ReliableTopicMessage.FACTORY_ID: {ReliableTopicMessage.CLASS_ID: ReliableTopicMessage}}
+    factories.update(data_serializable_factories)
+    return factories
 
 
 class SerializationServiceV1(BaseSerializationService):
@@ -28,8 +34,7 @@ class SerializationServiceV1(BaseSerializationService):
         self._registry._portable_serializer = PortableSerializer(self._portable_context, serialization_config.portable_factories)
 
         # merge configured factories with built in ones
-        factories = {}
-        factories.update(serialization_config.data_serializable_factories)
+        factories = _init_factories(serialization_config.data_serializable_factories)
         self._registry._data_serializer = IdentifiedDataSerializer(factories)
         self._register_constant_serializers()
 

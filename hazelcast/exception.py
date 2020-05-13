@@ -238,6 +238,10 @@ class TopicOverloadError(HazelcastError):
     pass
 
 
+class TopicOverflowError(HazelcastError):
+    pass
+
+
 class TopologyChangedError(HazelcastError):
     pass
 
