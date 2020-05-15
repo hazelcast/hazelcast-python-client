@@ -1,6 +1,6 @@
 from hazelcast import ClientConfig
-from hazelcast.lifecycle import LIFECYCLE_STATE_SHUTDOWN, LIFECYCLE_STATE_SHUTTING_DOWN, LIFECYCLE_STATE_CONNECTED, \
-    LIFECYCLE_STATE_STARTING, LIFECYCLE_STATE_DISCONNECTED
+from hazelcast.lifecycle import LIFECYCLE_STATE_SHUTDOWN, LIFECYCLE_STATE_SHUTTING_DOWN, LIFECYCLE_STATE_CLIENT_CONNECTED, \
+    LIFECYCLE_STATE_STARTING, LIFECYCLE_STATE_CLIENT_DISCONNECTED
 from tests.base import HazelcastTestCase
 from tests.util import configure_logging, event_collector
 
@@ -27,7 +27,7 @@ class LifecycleTest(HazelcastTestCase):
 
         # noinspection PyUnresolvedReferences
         self.assertEqual(collector.events,
-                         [LIFECYCLE_STATE_STARTING, LIFECYCLE_STATE_CONNECTED, LIFECYCLE_STATE_SHUTTING_DOWN,
+                         [LIFECYCLE_STATE_STARTING, LIFECYCLE_STATE_CLIENT_CONNECTED, LIFECYCLE_STATE_SHUTTING_DOWN,
                           LIFECYCLE_STATE_SHUTDOWN])
 
     def test_lifecycle_listener_disconnected(self):
@@ -39,7 +39,7 @@ class LifecycleTest(HazelcastTestCase):
 
         member.shutdown()
 
-        self.assertEqual(collector.events, [LIFECYCLE_STATE_DISCONNECTED])
+        self.assertEqual(collector.events, [LIFECYCLE_STATE_CLIENT_DISCONNECTED])
 
     def test_remove_lifecycle_listener(self):
         collector = event_collector()

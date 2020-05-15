@@ -274,11 +274,11 @@ class MapTest(SingleMemberTestCase):
 
         self.assertEqual(entry_view.key, "key")
         self.assertEqual(entry_view.value, "new_value")
+        self.assertGreater(entry_view.cost, 0)
         self.assertIsNotNone(entry_view.creation_time)
         self.assertIsNotNone(entry_view.expiration_time)
         self.assertEqual(entry_view.hits, 2)
         self.assertEqual(entry_view.version, 1)
-        self.assertEqual(entry_view.eviction_criteria_number, 0)
         self.assertIsNotNone(entry_view.last_access_time)
         self.assertIsNotNone(entry_view.last_stored_time)
         self.assertIsNotNone(entry_view.last_update_time)
@@ -510,6 +510,11 @@ class MapStoreTest(SingleMemberTestCase):
         dir_path = os.path.dirname(path)
         with open(os.path.join(dir_path, "hazelcast_mapstore.xml")) as f:
             return f.read()
+
+    @classmethod
+    def configure_client(cls, config):
+        config.group_config.name = cls.cluster.id
+        return config
 
     def setUp(self):
         self.map = self.client.get_map("mapstore-test").blocking()

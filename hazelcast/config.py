@@ -6,7 +6,7 @@ import logging
 import os
 
 from hazelcast.serialization.api import StreamSerializer
-from hazelcast.util import validate_type, validate_serializer, enum, TimeUnit
+from hazelcast.util import validate_type, validate_serializer, enum, TimeUnit, IndexUtil
 
 DEFAULT_GROUP_NAME = "dev"
 """
@@ -67,11 +67,36 @@ SSL protocol options.
 * TLSv1_3 requires at least Python 2.7.15 or Python 3.7 build with OpenSSL 1.1.1+
 """
 
+QUERY_CONSTANTS = enum(KEY_ATTRIBUTE_NAME="__key", THIS_ATTRIBUTE_NAME="this")
+"""
+Contains constants for Query.
+
+* KEY_ATTRIBUTE_NAME  : Attribute name of the key.
+* THIS_ATTRIBUTE_NAME : Attribute name of the "this"
+"""
+
+UNIQUE_KEY_TRANSFORMATION = enum(OBJECT=0, LONG=1, RAW=2)
+"""
+Defines an assortment of transformations which can be applied to 
+BitmapIndexOptions#getUniqueKey() unique key values.
+
+* OBJECT : Extracted unique key value is interpreted as an object value. Non-negative unique ID is assigned to every distinct object value.
+* LONG   : Extracted unique key value is interpreted as a whole integer value of byte, short, int or long type. The extracted value is upcasted to long (if necessary) and unique non-negative ID is assigned to every distinct value.
+* RAW    : Extracted unique key value is interpreted as a whole integer value of byte, short, int or long type. The extracted value is upcasted to long (if necessary) and the resulting value is used directly as an ID.
+"""
+
+DEFAULT_UNIQUE_KEY = QUERY_CONSTANTS.KEY_ATTRIBUTE_NAME
+DEFAULT_UNIQUE_KEY_TRANSFORMATION = UNIQUE_KEY_TRANSFORMATION.OBJECT
+
 DEFAULT_MAX_ENTRY_COUNT = 10000
 DEFAULT_SAMPLING_COUNT = 8
 DEFAULT_SAMPLING_POOL_SIZE = 16
 
 MAXIMUM_PREFETCH_COUNT = 100000
+
+CONNECTION_TIMEOUT = 5000
+
+DEFAULT_CLUSTER_NAME = "dev"
 
 
 class ClientConfig(object):
@@ -119,6 +144,12 @@ class ClientConfig(object):
         self.is_backup_ack_to_client_enabled = True
 
         self.connection_strategy_config = ConnectionStrategyConfig()
+
+        self.cluster_name = DEFAULT_CLUSTER_NAME
+
+        self.labels = set()
+
+        # TODO: self.load_balancer
 
     def add_membership_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
         """
@@ -211,6 +242,22 @@ class GroupConfig(object):
         """The password of the cluster"""
 
 
+class ListenerConfig(object):
+    """
+    Configurations for LifecycleListeners. These are registered as soon as client started.
+    """
+    def __init__(self):
+        self.lifecycle_listeners = []
+        self.membership_listeners = []
+
+    def add_lifecycle_listener(self, listener):
+        self.lifecycle_listeners.append(listener)
+
+    def add_membership_listener(self, membership_listener):
+        self.membership_listeners.append(membership_listener)
+
+
+
 class ClientNetworkConfig(object):
     """
     Network related configuration parameters.
@@ -264,6 +311,9 @@ class ClientNetworkConfig(object):
         """SSL configurations for the client."""
         self.cloud_config = ClientCloudConfig()
         """Hazelcast Cloud configuration to let the client connect the cluster via Hazelcast.cloud"""
+        self.connection_timeout = CONNECTION_TIMEOUT
+        """Timeout value in millis for nodes to accept client connection requests."""
+        self.connection_retry_config = ConnectionRetryConfig()
 
 
 class SocketOption(object):
@@ -775,8 +825,17 @@ class ClientProperties(object):
 
 class ConnectionRetryConfig(object):
     INITIAL_BACKOFF_MILLIS = 1000
+    """How long to wait after the first failure before retrying."""
+
     MAX_BACKOFF_MILLIS = 30000
+    """When backoff reaches this upper bound, it does not increase any more."""
+
     CLUSTER_CONNECT_TIMEOUT_MILLIS = 20000
+    """Timeout value in milliseconds for the client to give up to connect to the current cluster."""
+
+    multiplier = 1
+    """Factor with which to multiply backoff after a failed retry."""
+
     JITTER = 0
 
     def __init__(self, connection_retry_config=None):
@@ -789,9 +848,28 @@ class ConnectionRetryConfig(object):
         else:
             self.initial_backoff_millis = ConnectionRetryConfig.INITIAL_BACKOFF_MILLIS
             self.max_backoff_millis = ConnectionRetryConfig.MAX_BACKOFF_MILLIS
-            self.multiplier = 1
             self.connect_timeout_millis = ConnectionRetryConfig.CLUSTER_CONNECT_TIMEOUT_MILLIS
             self.jitter = ConnectionRetryConfig.JITTER
+
+    def set_initial_backoff_millis(self, initial_backoff_millis):
+        self.initial_backoff_millis = initial_backoff_millis
+        return self
+
+    def set_max_backoff_millis(self, max_backoff_millis):
+        self.max_backoff_millis = max_backoff_millis
+        return self
+
+    def set_multiplier(self, multiplier):
+        self.multiplier = multiplier
+        return self
+
+    def set_cluster_connect_timeout_millis(self, connect_timeout_millis):
+        self.connect_timeout_millis = connect_timeout_millis
+        return self
+
+    def set_jitter(self, jitter):
+        self.jitter = jitter
+        return self
 
     def __eq__(self, other):
         if self is other:
@@ -810,10 +888,18 @@ class ConnectionRetryConfig(object):
             return self.jitter == other.jitter
 
     def __hash__(self):
-        pass
+        result = self.initial_backoff_millis
+        result = 31 * result + self.max_backoff_millis
+        temp = bin(self.multiplier)
+        result = 31 * result + (temp ^ (temp >> 32))
+        result = 31 * result + (self.connect_timeout_millis ^ (self.connect_timeout_millis >> 32))
+        temp = bin(self.jitter)
+        result = 31 * result + (temp ^ (temp >> 32))
+        return result
 
     def __str__(self):
-        return """ConnectionRetryConfig| initialBackoffMillis= {},
+        return """ConnectionRetryConfig| 
+            initialBackoffMillis= {},
             maxBackoffMillis= {},
             multiplier= {},
             clusterConnectTimeoutMillis={},
@@ -822,30 +908,174 @@ class ConnectionRetryConfig(object):
                    self.max_backoff_millis, self.multiplier, self.connect_timeout_millis, self.jitter)
 
 
-
-
-
-RECONNECTMODE = enum(OFF=0, ON=1, ASYNC=2)
+RECONNECT_MODE = enum(OFF=0, ON=1, ASYNC=2)
+"""
+* OFF   : Prevent reconnect to cluster after a disconnect.
+* ON    : Reconnect to cluster by blocking invocations.
+* ASYNC : Reconnect to cluster without blocking invocations. Invocations will receive ClientOfflineError
+"""
 
 
 class ConnectionStrategyConfig(object):
+    """Connection strategy configuration is used for setting custom strategies and configuring strategy parameters."""
+
     def __init__(self, connection_strategy_config=None):
         if connection_strategy_config:
             self.async_start = connection_strategy_config.async_start
-            reconnect_mode = connection_strategy_config.reconnect_mode
-            connection_retry_config = ConnectionRetryConfig(connection_strategy_config.connection_retry_config)
+            self.reconnect_mode = connection_strategy_config.reconnect_mode
+            self.connection_retry_config = ConnectionRetryConfig(connection_strategy_config.connection_retry_config)
         else:
             self.async_start = False
-            reconnect_mode = RECONNECTMODE.ON
-            connection_retry_config = ConnectionRetryConfig()
-
-
+            self.reconnect_mode = RECONNECT_MODE.ON
+            self.connection_retry_config = ConnectionRetryConfig()
 
     def __eq__(self, other):
-        pass
+        if self is other:
+            return True
+        elif other is None or not isinstance(self, type(other)):
+            return False
+        elif self.async_start != other.async_start:
+            return False
+        elif self.reconnect_mode != other.reconnect_mode:
+            return False
+        else:
+            return self.connection_retry_config == other.connection_retry_config
 
     def __hash__(self):
-        pass
+        result = 1 if self.async_start else 0
+        result = 31 * result + (1 if self.reconnect_mode is not None else 0)
+        result = 31 * result + (1 if self.connection_retry_config is not None else 0)
+        return result
 
     def __str__(self):
-        pass
+        return """ClientConnectionStrategyConfig|
+        asyncStart={}
+        , reconnectMode={}
+        , connectionRetryConfig={}|        
+        """.format(self.async_start, self.reconnect_mode, self.connection_retry_config)
+
+
+INDEX_TYPE = enum(SORTED=0, HASH=1, BITMAP=2)
+"""
+Type of the index.
+* SORTED : Sorted index. Can be used with equality and range predicates.
+* HASH   : Hash index. Can be used with equality predicates.
+* BITMAP : Bitmap index. Can be used with equality predicates.
+"""
+
+
+class IndexType(object):
+    pass
+
+
+class IndexConfig(object):
+    DEFAULT_TYPE = INDEX_TYPE.SORTED
+    """
+    Default index type.
+    """
+
+    name = None
+    """
+    Name of the index.
+    """
+
+    index_type = DEFAULT_TYPE
+    """
+    Type of the index.
+    """
+
+    attributes = []
+    """
+    Indexed attributes
+    """
+
+    bitmap_index_options = None
+
+    def __init__(self, name=None, index_type=None, attributes=None, other=None):
+        if name:
+            self.name = name
+        if index_type:
+            self.index_type = index_type
+        if attributes:
+            self.attributes = attributes
+        if other:
+            self.bitmap_index_options = other
+
+    def add_attribute(self, attribute):
+        IndexUtil.validate_attribute(self, attribute)
+        self.attributes.append(attribute)
+        return self
+
+    def __str__(self):
+        return "IndexConfig[" \
+               "name: {}" \
+               ", type: {}" \
+               ", attributes: {}" \
+               "bitmap_index_options: {}]".format(self.name,
+                                                  self.index_type,
+                                                  self.attributes,
+                                                  self.bitmap_index_options)
+
+    def get_bitmap_index_options(self):
+        if not self.bitmap_index_options:
+            self.bitmap_index_options = BitmapIndexOptions()
+
+        return self.bitmap_index_options
+
+
+class BitmapIndexOptions(object):
+    unique_key = DEFAULT_UNIQUE_KEY
+    unique_key_transformation = DEFAULT_UNIQUE_KEY_TRANSFORMATION
+
+    def __init__(self, unique_key, unique_key_transformation):
+        self.unique_key = unique_key
+        self.unique_key_transformation = unique_key_transformation
+
+
+class ConfigPatternMatcher(object):
+    def matches(self, config_patterns, item_name):
+        matching_pattern = None
+        duplicate_pattern = None
+        best_matching_point = -1
+        for pattern in config_patterns:
+            current_point = self._get_matching_point(pattern, item_name)
+            if current_point > best_matching_point:
+                best_matching_point = current_point
+                matching_pattern = pattern
+                duplicate_pattern = None
+            elif current_point == best_matching_point and matching_pattern is not None:
+                duplicate_pattern = matching_pattern
+                matching_pattern = pattern
+
+        if duplicate_pattern is not None:
+            raise TypeError('Found ambiguous configurations for item {}: "{}" vs "{}".'
+                            ' Please specify your configuration.'.format(item_name, matching_pattern, duplicate_pattern))
+
+        return matching_pattern
+
+    def _get_matching_point(self, pattern, item_name):
+        """
+        This method returns the higher value the better the matching is.
+        :param pattern: configuration pattern to match with
+        :param item_name: item name to match
+        :return: (int), -1 if name does not match at all, zero or positive otherwise
+        """
+        try:
+            index = pattern.index("*")
+        except ValueError:
+            return -1
+
+        first_part = pattern[:index]
+
+        if not item_name.startswith(first_part):
+            return -1
+
+        second_part = pattern[index + 1:]
+        if not second_part.endswith(second_part):
+            return -1
+
+        return len(first_part) + len(second_part)
+
+# TODO: implement security config
+class SecurityConfig(object):
+    pass

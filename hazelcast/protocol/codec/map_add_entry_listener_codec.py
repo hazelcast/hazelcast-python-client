@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("ab2d464be69075615e1f8b1a8e8b1bee")
+# Generated("42c7fb5c6530f7c3807c9de4f0dcc1cb")
 
 # hex: 0x011900
 REQUEST_MESSAGE_TYPE = 71936
@@ -63,16 +63,8 @@ def handle(client_message, handle_entry_event=None, to_object=None):
         event_type = FixedSizeTypesCodec.decode_int(initial_frame.content, EVENT_ENTRY_EVENT_TYPE_FIELD_OFFSET)
         uuid = FixedSizeTypesCodec.decode_uuid(initial_frame.content, EVENT_ENTRY_UUID_FIELD_OFFSET)
         number_of_affected_entries = FixedSizeTypesCodec.decode_int(initial_frame.content, EVENT_ENTRY_NUMBER_OF_AFFECTED_ENTRIES_FIELD_OFFSET)
-
         key = to_object(CodecUtil.decode_nullable(iterator, DataCodec.decode))
         value = to_object(CodecUtil.decode_nullable(iterator, DataCodec.decode))
         old_value = to_object(CodecUtil.decode_nullable(iterator, DataCodec.decode))
         merging_value = to_object(CodecUtil.decode_nullable(iterator, DataCodec.decode))
         handle_entry_event(key=key, value=value, old_value=old_value, merging_value=merging_value, event_type=event_type, uuid=uuid, number_of_affected_entries=number_of_affected_entries)
-        """
-        key = CodecUtil.decode_nullable(iterator, DataCodec.decode)
-        value = CodecUtil.decode_nullable(iterator, DataCodec.decode)
-        old_value = CodecUtil.decode_nullable(iterator, DataCodec.decode)
-        merging_value = CodecUtil.decode_nullable(iterator, DataCodec.decode)
-        handle_entry_event(key=key, value=value, old_value=old_value, merging_value=merging_value, event_type=event_type, uuid=uuid, number_of_affected_entries=number_of_affected_entries)
-        """

@@ -280,3 +280,7 @@ class NearCacheManager(object):
 
     def list_all_near_caches(self):
         return list(self._caches.values())
+
+    def clear_all_near_caches(self):
+        for near_cache in self.list_all_near_caches():
+            near_cache.clear()

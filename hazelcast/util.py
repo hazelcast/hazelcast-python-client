@@ -4,10 +4,13 @@ import time
 import logging
 import hazelcast
 from collections import Sequence, Iterable
+import re
 
 from hazelcast import six
 from hazelcast.six.moves import range
 from hazelcast.version import GIT_COMMIT_ID, GIT_COMMIT_DATE, CLIENT_VERSION
+# TODO: the following line causes circular dependent imports
+# from hazelcast.config import INDEX_TYPE, IndexConfig
 
 DEFAULT_ADDRESS = "127.0.0.1"
 DEFAULT_PORT = 5701
@@ -179,18 +182,6 @@ def parse_addresses(addresses=[]):
     return list(itertools.chain(*[_parse_address(a) for a in addresses]))
 
 
-class ByteBuffer(bytearray):
-    def __init__(self):
-        bytearray.__init__(self)
-        self.bytes_written = 0
-        self.bytes_read = 0
-
-    def remaining(self):
-        return self.bytes_written - self.bytes_read
-
-    def position(self):
-        return self.bytes_read
-
 class ImmutableLazyDataList(Sequence):
     def __init__(self, list_data, to_object):
         super(ImmutableLazyDataList, self).__init__()
@@ -357,3 +348,124 @@ def create_git_info():
 
 def to_list(*args, **kwargs):
     return list(*args, **kwargs)
+
+
+class IndexUtil(object):
+    MAX_ATTRIBUTES = 256
+
+    THIS_PATTERN = re.compile(r"^this\\.")
+
+    @staticmethod
+    def validate_and_normalize(map_name, index_config):
+        assert index_config is not None
+
+        original_attribute_names = index_config.attributes
+
+        if len(original_attribute_names):
+            raise TypeError("Index must have at least one attribute: {}".format(index_config))
+
+        if len(original_attribute_names) > IndexUtil.MAX_ATTRIBUTES:
+            raise TypeError("Index connot have more than {}, attributes = {}"
+                            .format(IndexUtil.MAX_ATTRIBUTES, index_config))
+
+        if index_config.index_type == INDEX_TYPE.BITMAP and len(original_attribute_names) > 1:
+            raise TypeError("Composite bitmap indexes are not supported: {}".format(index_config))
+
+        normalized_attribute_names = []
+
+        for original_attribute_name in original_attribute_names:
+            IndexUtil.validate_attribute(index_config, original_attribute_name)
+
+            original_attribute_name = original_attribute_name.split(" ")
+
+            normalized_attribute_name = IndexUtil.canonicalize_attribute(original_attribute_name)
+
+            existing_index = - 1
+            try:
+                existing_index = normalized_attribute_names.index(normalized_attribute_name)
+            except ValueError:
+                pass
+
+            if existing_index != - 1:
+                duplicate_original_attribute_name = original_attribute_names[existing_index]
+
+                if duplicate_original_attribute_name == original_attribute_name:
+                    raise TypeError("Duplicate attribute name [attribute_name= {}, index_config= {}"']'
+                                    .format(original_attribute_name, index_config))
+                else:
+                    raise TypeError("Duplicate attribute names [attribute_name1= {}, attribute_name2= {}"
+                                    ", index_config= {}"']'
+                                    .format(duplicate_original_attribute_name, original_attribute_name, index_config))
+
+            normalized_attribute_names.append(normalized_attribute_name)
+
+        name = index_config.name
+
+        if name is not None and not name.split(" ")[0]:
+            name = None
+
+        normalized_config = IndexUtil.build_normalized_config(map_name, index_config.index_type, name
+                                                              , normalized_attribute_names)
+
+        if index_config.index_type == INDEX_TYPE.BITMAP:
+            unique_key = index_config.get_bitmap_index_options().unique_key
+            unique_key_transformation = index_config.get_bitmap_index_options().unique_key_transformation
+
+            IndexUtil.validate_attribute(index_config, unique_key)
+            unique_key = IndexUtil.canonicalize_attribute(unique_key)
+
+            normalized_config.get_bitmap_index_options().set_unique_key(unique_key)\
+                .set_unique_key_transformation(unique_key_transformation)
+
+        return normalized_config
+
+    @staticmethod
+    def build_normalized_config(map_name, index_type, index_name, normalized_attribute_names):
+        new_config = IndexConfig()
+
+        new_config.index_type = index_type
+
+        name = map_name + '_' + IndexUtil.get_index_type_name(index_type) if index_name else None
+
+        for normalized_attribute_name in normalized_attribute_names:
+            new_config.add_attribute(normalized_attribute_name)
+
+            if name:
+                name += '_' + normalized_attribute_name
+
+        if name:
+            index_name = name
+
+        new_config.name = index_name
+
+        return new_config
+
+    @staticmethod
+    def validate_attribute(index_config, attribute_name):
+        if not attribute_name:
+            raise TypeError("Attibute name cannot be None: ", index_config)
+
+        attribute_name0 = attribute_name.split(" ")[0]
+
+        if not attribute_name0:
+            raise TypeError("Attribute name cannot be empty")
+
+        if attribute_name0.endswith("."):
+            raise TypeError("Attribute name cannot end with dot, attribute= {}".format(attribute_name))
+
+    @staticmethod
+    # TODO: Fix this later
+    def canonicalize_attribute(attribute):
+        pass
+
+    @staticmethod
+    def get_index_type_name(index_type):
+        if index_type == INDEX_TYPE.SORTED:
+            return "sorted"
+        elif index_type == INDEX_TYPE.HASH:
+            return "hash"
+        elif index_type == INDEX_TYPE.BITMAP:
+            return "bitmap"
+        else:
+            # TODO: check later if it is true that printing the index_type like this
+            raise TypeError("Unsupported index type: {}".format(index_type))

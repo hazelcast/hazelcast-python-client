@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("81ca690efe32655f8a43e60eadb24d89")
+# Generated("bfec311a8792db26b0213e8dd3f4d55e")
 
 # hex: 0x013F00
 REQUEST_MESSAGE_TYPE = 81664
@@ -56,7 +56,7 @@ def decode_response(client_message, to_object=None):
     return response
 
 
-def handle(client_message, handle_i_map_invalidation_event=None, handle_i_map_batch_invalidation_event=None):
+def handle(client_message, handle_i_map_invalidation_event=None, handle_i_map_batch_invalidation_event=None, to_object=None):
     message_type = client_message.get_message_type()
     iterator = client_message.frame_iterator()
     if message_type == EVENT_I_MAP_INVALIDATION_MESSAGE_TYPE and handle_i_map_invalidation_event is not None:
@@ -65,7 +65,7 @@ def handle(client_message, handle_i_map_invalidation_event=None, handle_i_map_ba
         partition_uuid = FixedSizeTypesCodec.decode_uuid(initial_frame.content, EVENT_I_MAP_INVALIDATION_PARTITION_UUID_FIELD_OFFSET)
         sequence = FixedSizeTypesCodec.decode_long(initial_frame.content, EVENT_I_MAP_INVALIDATION_SEQUENCE_FIELD_OFFSET)
         key = to_object(CodecUtil.decode_nullable(iterator, DataCodec.decode))
-        handle_i_map_invalidation_event(key, source_uuid, partition_uuid, sequence)
+        handle_i_map_invalidation_event(key=key, source_uuid=source_uuid, partition_uuid=partition_uuid, sequence=sequence)
     if message_type == EVENT_I_MAP_BATCH_INVALIDATION_MESSAGE_TYPE and handle_i_map_batch_invalidation_event is not None:
         #empty initial frame
         iterator.next()
@@ -73,4 +73,4 @@ def handle(client_message, handle_i_map_invalidation_event=None, handle_i_map_ba
         source_uuids = ListUUIDCodec.decode(iterator)
         partition_uuids = ListUUIDCodec.decode(iterator)
         sequences = ListLongCodec.decode(iterator)
-        handle_i_map_batch_invalidation_event(keys, source_uuids, partition_uuids, sequences)
+        handle_i_map_batch_invalidation_event(keys=keys, source_uuids=source_uuids, partition_uuids=partition_uuids, sequences=sequences)

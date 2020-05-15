@@ -4,6 +4,7 @@ import json
 from hazelcast import six
 from hazelcast import util
 from hazelcast.util import enum
+from hazelcast.serialization.api import IdentifiedDataSerializable
 
 
 class Member(object):
@@ -35,6 +36,20 @@ class MemberInfo(object):
         self.lite_member = lite_member
         self.version = version
 
+    def __eq__(self, other):
+        if other is None:
+            return False
+
+        if self.address != other.address:
+            return False
+
+        return self.uuid == other.uuid if self.uuid is not None else other.uuid is None
+
+    def __str__(self):
+        return """
+        Member[uuid: {}, address: {}, lite_member: {}, member_list_join_version: {}]
+        """.format(self.uuid, self.address, self.lite_member, self.version)
+
 
 class MemberVersion(object):
     def __init__(self, major, minor, patch):
@@ -50,6 +65,7 @@ class MemberVersion(object):
 
     def get_patch(self):
         return self.patch
+
 
 class Address(object):
     """
@@ -175,6 +191,30 @@ class EntryView(object):
                    self.eviction_criteria_number, self.ttl)
 
 
+# TODO: check if these super classes is necessary to extend.
+class SimpleEntryView(EntryView, IdentifiedDataSerializable):
+    def __init__(self, key, value, cost, creation_time, expiration_time, hits, last_access_time, last_stored_time,
+                 last_update_time, version, ttl, max_idle):
+        self.key = key
+        self.value = value
+        self.cost = cost
+        self.creation_time = creation_time
+        self.expiration_time = expiration_time
+        self.hits = hits
+        self.last_access_time = last_access_time
+        self.last_stored_time = last_stored_time
+        self.last_update_time = last_update_time
+        self.version = version
+        self.ttl = ttl
+        self.max_idle = max_idle
+
+    def __repr__(self):
+        return "EntryView(key=%s, value=%s, cost=%s, creation_time=%s, expiration_time=%s, hits=%s, last_access_time=%s, " \
+               "last_stored_time=%s, last_update_time=%s, version=%s, ttl=%s, max_idle=%s" % (
+                   self.key, self.value, self.cost, self.creation_time, self.expiration_time, self.hits,
+                   self.last_access_time, self.last_stored_time, self.last_update_time, self.version,
+                   self.ttl, self.max_idle)
+
 class MemberSelector(object):
     """
     Subclasses of this class select members
@@ -195,7 +235,7 @@ class MemberSelector(object):
 
 class DataMemberSelector(MemberSelector):
     def select(self, member):
-        return not member.is_lite_member
+        return not member.lite_member
 
 
 class HazelcastJsonValue(object):

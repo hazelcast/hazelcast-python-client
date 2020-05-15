@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("d63af1065d9ed9ba32faa74d19b0bb87")
+# Generated("a3a2cda225ac728b06f852cc4c8f9ee3")
 
 # hex: 0x000300
 REQUEST_MESSAGE_TYPE = 768
@@ -48,17 +48,16 @@ def decode_response(client_message, to_object=None):
     return response
 
 
-def handle(client_message, handle_members_view_event=None, handle_partitions_view_event=None):
+def handle(client_message, handle_members_view_event=None, handle_partitions_view_event=None, to_object=None):
     message_type = client_message.get_message_type()
     iterator = client_message.frame_iterator()
     if message_type == EVENT_MEMBERS_VIEW_MESSAGE_TYPE and handle_members_view_event is not None:
         initial_frame = iterator.next()
         version = FixedSizeTypesCodec.decode_int(initial_frame.content, EVENT_MEMBERS_VIEW_VERSION_FIELD_OFFSET)
         member_infos = ListMultiFrameCodec.decode(iterator, MemberInfoCodec.decode)
-        handle_members_view_event(version, member_infos)
+        handle_members_view_event(version=version, member_infos=member_infos)
     if message_type == EVENT_PARTITIONS_VIEW_MESSAGE_TYPE and handle_partitions_view_event is not None:
         initial_frame = iterator.next()
         version = FixedSizeTypesCodec.decode_int(initial_frame.content, EVENT_PARTITIONS_VIEW_VERSION_FIELD_OFFSET)
         partitions = EntryListUUIDListIntegerCodec.decode(iterator)
-        #handle_partitions_view_event(partitions, version)
-        handle_partitions_view_event(version, partitions)
+        handle_partitions_view_event(version=version, partitions=partitions)

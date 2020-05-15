@@ -5,13 +5,14 @@ import time
 import uuid
 
 from hazelcast.exception import HazelcastError, AuthenticationError, TargetDisconnectedError
-from hazelcast.lifecycle import LIFECYCLE_STATE_CONNECTED, LIFECYCLE_STATE_DISCONNECTED
+from hazelcast.lifecycle import LIFECYCLE_STATE_CLIENT_CONNECTED, LIFECYCLE_STATE_CLIENT_DISCONNECTED
 from hazelcast.protocol.codec import client_add_membership_listener_codec, client_authentication_codec
 from hazelcast.util import get_possible_addresses, get_provider_addresses, calculate_version
 from hazelcast.version import CLIENT_TYPE, CLIENT_VERSION, SERIALIZATION_VERSION
 from hazelcast.protocol.codec import client_add_cluster_view_listener_codec
 from hazelcast.invocation import Invocation
 from hazelcast.core import Member
+from hazelcast.future import Future
 import logging
 import threading
 
@@ -31,6 +32,9 @@ class MemberListSnapshot(object):
     def __str__(self):
         return "MemberListSnapshot"
 
+    def __repr__(self):
+        return "MemberListSnapshot"
+
 
 EMPTY_SNAPSHOT = MemberListSnapshot(-1, {})
 
@@ -44,8 +48,7 @@ class ClusterService(object):
     """
     logger = logging.getLogger("HazelcastClient.ClusterService")
 
-
-    def __init__(self, config, client, address_providers):
+    def __init__(self, config, client):
         self.semaphore_ = threading.Semaphore()
         self._config = config
         self._client = client
@@ -60,10 +63,10 @@ class ClusterService(object):
         for listener in config.membership_listeners:
             self.add_listener(*listener)
 
-        self._address_providers = address_providers
+        # self._address_providers = address_providers
         self._initial_list_fetched = threading.Event()
-        self._client.connection_manager.add_listener(on_connection_closed=self._connection_closed)
-        self._client.heartbeat.add_listener(on_heartbeat_stopped=self._heartbeat_stopped)
+        # self._client.connection_manager.add_listener(on_connection_closed=self._connection_closed)
+        # self._client.heartbeat.add_listener(on_heartbeat_stopped=self._heartbeat_stopped)
 
     def start(self):
         """
@@ -82,6 +85,7 @@ class ClusterService(object):
         """
         return len(self._members)
 
+    # TODO: add_membership_listener
     def add_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
         """
         Adds a membership listener to listen for membership updates, it will be notified when a member is added to
@@ -133,37 +137,57 @@ class ClusterService(object):
             self._client.shutdown()
 
     def _connect_to_cluster(self):
-        current_attempt = 1
-        attempt_limit = self._config.network_config.connection_attempt_limit
-        retry_delay = self._config.network_config.connection_attempt_period
-        while current_attempt <= attempt_limit:
-            provider_addresses = get_provider_addresses(self._address_providers)
-            addresses = get_possible_addresses(provider_addresses, self.get_member_list())
+        """
+        if self._client.connection_manager.async_start:
+            self._client.connection_manager.submit_connect_to_cluster_task()
+        else:
+            self._client.connection_manager.do_connect_to_cluster()
 
-            for address in addresses:
-                try:
-                    self.logger.info("Connecting to %s", address, extra=self._logger_extras)
-                    self._connect_to_address(address)
-                    return
-                except:
-                    self.logger.warning("Error connecting to %s ", address, exc_info=True, extra=self._logger_extras)
 
-            if current_attempt >= attempt_limit:
+        if self._client.connection_manager.async_start:
+            pass
+        else:
+            # doConnectToCandidateCluster
+            current_attempt = 1
+            attempt_limit = self._config.network_config.connection_attempt_limit
+            retry_delay = self._config.network_config.connection_attempt_period
+            self._client.connection_manager.wait_strategy.reset()
+            while True:
+                provider_addresses = get_provider_addresses(self._address_providers)
+                addresses = get_possible_addresses(provider_addresses, self.get_member_list())
+
+                for address in addresses:
+                    try:
+                        self.logger.info("Connecting to %s", address, extra=self._logger_extras)
+                        self._connect_to_address(address)
+                        return
+                    except:
+                        self.logger.warning("Error connecting to %s ", address, exc_info=True, extra=self._logger_extras)
+
+                if not self._client.connection_manager.wait_strategy.sleep():
+                    break
+
                 self.logger.warning(
-                    "Unable to get alive cluster connection, attempt %d of %d",
-                    current_attempt, attempt_limit, extra=self._logger_extras)
-                break
+                    "Unable to get alive cluster connection, attempt %d of %d, trying again in %d seconds",
+                    current_attempt, attempt_limit, retry_delay, extra=self._logger_extras)
+                current_attempt += 1
+                #time.sleep(retry_delay)
 
-            self.logger.warning(
-                "Unable to get alive cluster connection, attempt %d of %d, trying again in %d seconds",
-                current_attempt, attempt_limit, retry_delay, extra=self._logger_extras)
-            current_attempt += 1
-            time.sleep(retry_delay)
+            error_msg = "Could not connect to any of %s after %d tries" % (addresses, attempt_limit)
+            raise HazelcastError(error_msg)
+        """
+        return
 
-        error_msg = "Could not connect to any of %s after %d tries" % (addresses, attempt_limit)
-        raise HazelcastError(error_msg)
+    def add_membership_listener(self, listener):
+        assert listener
 
-    import uuid
+        id = uuid.uuid4()
+        if isinstance(listener, InitialMembershipListener):
+            members = self.get_member_list()
+
+            if len(members) != 0:
+                event = InitialMembershipEvent(members)
+
     def _authenticate_manager(self, connection):
         request = client_authentication_codec.encode_request(
             cluster_name=self._config.group_config.name,
@@ -180,7 +204,7 @@ class ClusterService(object):
             parameters = client_authentication_codec.decode_response(f.result())
             if parameters["status"] != 0:  # TODO: handle other statuses
                 raise AuthenticationError("Authentication failed.")
-            connection.endpoint = parameters["address"]
+            connection.remote_address = parameters["address"]
             connection.is_owner = True
             # self.owner_uuid = parameters["owner_uuid"]
             self.uuid = parameters["memberUuid"]
@@ -196,9 +220,9 @@ class ClusterService(object):
         connection = f.result()
         if not connection.is_owner:
             self._authenticate_manager(connection).result()
-        self.owner_connection_address = connection.endpoint
+        self.owner_connection_address = connection.remote_address
         # self._init_membership_listener(connection)
-        self._client.lifecycle.fire_lifecycle_event(LIFECYCLE_STATE_CONNECTED)
+        self._client.lifecycle.fire_lifecycle_event(LIFECYCLE_STATE_CLIENT_CONNECTED)
 
     def _init_membership_listener(self, connection):
         request = client_add_membership_listener_codec.encode_request(False)
@@ -237,7 +261,6 @@ class ClusterService(object):
         self._initial_list_fetched.set()
 
     def _member_added(self, member):
-        print("members added")
         self._members[member.address] = member
         for added, _ in list(self.listeners.values()):
             if added:
@@ -262,9 +285,9 @@ class ClusterService(object):
                          "\n".join(["\t" + str(x) for x in self.get_member_list()]), extra=self._logger_extras)
 
     def _connection_closed(self, connection, _):
-        if connection.endpoint and connection.endpoint == self.owner_connection_address \
+        if connection.remote_address and connection.remote_address == self.owner_connection_address \
                 and self._client.lifecycle.is_live:
-            self._client.lifecycle.fire_lifecycle_event(LIFECYCLE_STATE_DISCONNECTED)
+            self._client.lifecycle.fire_lifecycle_event(LIFECYCLE_STATE_CLIENT_DISCONNECTED)
             self.owner_connection_address = None
 
             # try to reconnect, on new thread
@@ -274,8 +297,8 @@ class ClusterService(object):
             reconnect_thread.start()
 
     def _heartbeat_stopped(self, connection):
-        if connection.endpoint == self.owner_connection_address:
-            self._client.connection_manager.close_connection(connection.endpoint, TargetDisconnectedError(
+        if connection.remote_address == self.owner_connection_address:
+            self._client.connection_manager.close_connection(connection.remote_address, TargetDisconnectedError(
                 "%s stopped heart beating." % connection))
 
     def get_member_by_uuid(self, member_uuid):
@@ -322,27 +345,27 @@ class ClusterService(object):
         return list(self._members.values())
 
     def wait_initial_membership_fetched(self):
-        success = self.semaphore_.acquire(blocking=True)
-        assert success
+        future = Future()
+        future.set_result(self.semaphore_.acquire())
+        return future
 
-
-
-    def handle_members_view_event(self, member_list_version, member_infos):
-        snapshot = self.create_snapshot(member_list_version, member_infos)
-        self.logger.debug("Handling new snapshot with membership version: " + str(member_list_version),
-                      extra=self._logger_extras)
+    def handle_members_view_event(self, version=None, member_infos=None):
+        assert version and member_infos
+        snapshot = self.create_snapshot(version, member_infos)
+        self.logger.debug("Handling new snapshot with membership version: " + str(version),
+                          extra=self._logger_extras)
 
         if self.member_list_snapshot is EMPTY_SNAPSHOT:
-
-            self.apply_initial_state(member_list_version, member_infos)
+            self.apply_initial_state(version, member_infos)
 
             self.semaphore_.release()
+            # self._log_member_list()
             return
 
         events = []
-        if member_list_version >= self.member_list_snapshot.version:
+        if version >= self.member_list_snapshot.version:
             prev_members = self.member_list_snapshot.members
-            #snapshot = self.create_snapshot(member_list_version, member_infos)
+            snapshot = self.create_snapshot(version, member_infos)
             self.member_list_snapshot = snapshot
             current_members = snapshot.members
             events = self.detect_membership_events(prev_members, current_members)
@@ -350,59 +373,64 @@ class ClusterService(object):
         self.fire_events(events)
 
     def detect_membership_events(self, prev_member, current_members):
-        dead_members = set(prev_member)
-        new_members = set(current_members)
+        dead_members = set(prev_member.keys())
+        new_members = []
         for member in current_members:
             if member not in prev_member:
-                new_members.add(member)
-            else:
-                dead_members.remove(member)
+                new_members.append(member)
 
         events = []
         for member in dead_members:
-            events.append((self._client.cluster, member, MEMBER_REMOVED, current_members))
-            # member.uuid should be instead
-            connection = self._client.connection_manager.get_connection(member.address)
+            events.append(MembershipEvent(member, MEMBER_REMOVED, current_members))
+            # TODO: Check this later
+            """
+            connection = self._client.connection_manager.get_connection(member)
             if connection is not None:
                 connection.close("The client has closed the connection to this member,"
-                                + " after receiving a member left event from the cluster. " + connection)
-        for member in new_members:
-            events.append((self._client.cluster, member, MEMBER_ADDED, current_members))
+                                 " after receiving a member left event from the cluster. {}".format(connection))
+            """
 
-        if len(events) == 0:
+        for member in new_members:
+            events.append(MembershipEvent(member, MEMBER_ADDED, current_members))
+
+        if len(events) != 0:
             if len(self.member_list_snapshot) != 0:
-                logging.info(self.member_list_snapshot)
+                logging.info("MemberListSnapshot", extra=self._logger_extras)
 
         return events
 
     def fire_events(self, events):
         for event in events:
-            #for listener in self.listeners:
-            if event[2] == MEMBER_ADDED:
-                self._member_added(event[3][self.uuid])
-            else:
-                self._member_removed(event[3][self.uuid])
+            for listener in self.listeners.values():
+                if event.event_type == MEMBER_ADDED:
+                    listener[0](event)
+                else:
+                    listener[1](event)
 
     def apply_initial_state(self, version, member_infos):
         snapshot = self.create_snapshot(version, member_infos)
         self.member_list_snapshot = snapshot
-        logging.info(snapshot)
-        members = snapshot.members
+        # TODO: self._logger_extras has a class which is not printable
+        #self.logger.info("MemberListSnapshot")
+        members = snapshot.members.values()
         self._members = snapshot.members
-        event = InitialMembershipEvent(self._client.cluster, members)
+        event = InitialMembershipEvent(members)
 
         for listener in self.listeners.values():
             if isinstance(listener, InitialMembershipEvent):
-                pass
+                listener.init(event)
 
     def create_snapshot(self, member_list_version, member_infos):
         new_members = {}
         for member_info in member_infos:
             member = Member(member_info.address, member_info.uuid, member_info.lite_member,
-                   member_info.attributes)
+                            member_info.attributes)
             new_members[member_info.uuid] = member
 
         return MemberListSnapshot(member_list_version, new_members)
+
+    def clear_member_list_version(self):
+        self.logger.debug("Resetting the member list version", extra=self._logger_extras)
 
 
 class ClientClusterViewService(object):
@@ -426,6 +454,7 @@ class ClientClusterViewService(object):
 
     def connection_removed(self, connection, cause):
         self.try_reregister_to_random_connection(connection)
+        pass
 
     def try_reregister_to_random_connection(self, old_connection):
         if self.listener_added_connection is not old_connection:
@@ -435,7 +464,8 @@ class ClientClusterViewService(object):
             self.listener_added_connection = None
 
         new_connection = self.connection_manager.get_random_connection()
-        if new_connection is not None:
+        # TODO: Check this one
+        if new_connection is not None and new_connection.live():
             self.try_register(new_connection)
 
     def try_register(self, connection):
@@ -460,7 +490,8 @@ class ClientClusterViewService(object):
         def callback(f):
             try:
                 f.result()
-            except:
+            except Exception as e:
+                print(str(e))
                 self.try_reregister_to_random_connection(connection)
 
         # invocation.future.add_done_callback(callback)
@@ -472,7 +503,8 @@ class ClientClusterViewService(object):
             self.client_cluster_view_service = client_cluster_view_service
 
         def before_listener_register(self, connection):
-            ClientClusterViewService.logger.debug("Register attempt of ClusterViewListenerHandler to " + repr(connection))
+            ClientClusterViewService.logger.debug(
+                "Register attempt of ClusterViewListenerHandler to " + repr(connection))
 
         def on_listener_register(self, connection):
             ClientClusterViewService.logger.debug("Registered ClusterViewListenerHandler to " + repr(connection))
@@ -494,30 +526,123 @@ class ClientClusterViewService(object):
                 request,
                 lambda r: client_add_cluster_view_listener_codec.decode_response(r),
                 lambda: None,
-                lambda m: client_add_cluster_view_listener_codec.handle(m, handle_partitions_view_event=self.client_cluster_view_service.partition_service.handle_partitions_view_event
-                                                                        , handle_members_view_event= self.client_cluster_view_service.cluster_service.handle_members_view_event))
+                lambda m: client_add_cluster_view_listener_codec.handle(m,
+                                                                        handle_partitions_view_event=self.client_cluster_view_service.partition_service.handle_partitions_view_event
+                                                                        ,
+                                                                        handle_members_view_event=self.client_cluster_view_service.cluster_service.handle_members_view_event))
 
 
 class InitialMembershipEvent(object):
-    def __init__(self, cluster, members):
-        self.cluster = cluster
+    """
+    An event that is sent when a :class:`InitialMembershipListener` registers itself on a cluster. For more
+    information, see the :class:`InitialMembershipListener`.
+
+    .. seealso:: :class:`MembershipListener` and :class:`MembershipEvent`
+    """
+
+    # TODO: check if MembershipListener is necessary
+    def __init__(self, members):
         self.members = members
 
 
-class RandomLoadBalancer(object):
+class MembershipEvent(object):
     """
-    RandomLoadBalancer make the Client send operations randomly on members not to increase the load on a specific
+    Membership event fired when a new member is added to the cluster and/or when a member leaves the cluster
+    or when there is a member attribute change.
+    """
+
+    member = None
+    """The removed or added member."""
+
+    event_type = None
+    """The membership event type."""
+
+    members = []
+    """The members at the moment after this event."""
+
+    def __init__(self, member, event_type, members):
+        self.member = member
+        self.event_type = event_type
+        self.members = members
+
+class MembershipListener(object):
+    def member_added(self, membership):
+        raise NotImplementedError
+
+    def member_removed(self, membership):
+        raise NotImplementedError
+
+
+class LoadBalancer(object):
+    def init_load_balancer(self, cluster, config):
+        raise NotImplementedError
+
+
+class InitialMembershipListener(MembershipListener):
+    def init(self, event):
+        raise NotImplementedError
+
+
+class AbstractLoadBalancer(LoadBalancer, InitialMembershipListener):
+    _members = None
+    _cluster = None
+
+    def next_address(self):
+        raise NotImplementedError
+
+    def init_load_balancer(self, cluster, config):
+        self._cluster = cluster
+        cluster.add_membership_listener(self)
+
+    def init(self, event):
+        self.set_members()
+
+    def member_added(self, membership):
+        self.set_members()
+
+    def member_removed(self, membership):
+        self.set_members()
+
+    @property
+    def members(self):
+        return self._members
+
+    def set_members(self):
+        self._members = self._cluster.get_member_list()
+
+
+
+class RandomLoadBalancer(AbstractLoadBalancer):
+    """
+    A LoadBalancer that selects a random member to route to.
     member.
     """
 
-    def __init__(self, cluster):
-        self._cluster = cluster
-
     def next_address(self):
         try:
-            return random.choice(self._cluster.get_member_list()).address
+            return random.choice(self._cluster.get_member_list())
         except IndexError:
             return None
+
+
+class RoundRobinLoadBalancer(AbstractLoadBalancer):
+    """
+    RoundRobinLoadBalancer relies on using round robin to a next member to send a request to.
+    """
+
+    def __init__(self):
+        self._index = random.randint(0, int(time.time()))
+
+    def next_address(self):
+        members = self._cluster.get_member_list()
+
+        if members is None or len(members) == 0:
+            return None
+
+        length = len(members)
+        self._index += 1
+        index = self._index % length
+        return members[index]
 
 
 class VectorClock(object):

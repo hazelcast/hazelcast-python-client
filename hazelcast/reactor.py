@@ -95,11 +95,12 @@ class AsyncoreReactor(object):
                 else:
                     raise
         self._map.clear()
+        # todo this is blocking call and prevents process to finish
         self._thread.join()
 
-    def new_connection(self, address, connect_timeout, socket_options, connection_closed_callback, message_callback,
+    def new_connection(self, client, address, connect_timeout, socket_options, connection_closed_callback, message_callback,
                        network_config):
-        return AsyncoreConnection(self._map, address, connect_timeout, socket_options,
+        return AsyncoreConnection(self._map, client, address, connect_timeout, socket_options,
                                   connection_closed_callback, message_callback, network_config, self._logger_extras)
 
     def _cleanup_timer(self, timer):
@@ -122,11 +123,12 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
     sent_protocol_bytes = False
     read_buffer_size = BUFFER_SIZE
 
-    def __init__(self, map, address, connect_timeout, socket_options, connection_closed_callback,
+    def __init__(self, map, client, address, connect_timeout, socket_options, connection_closed_callback,
                  message_callback, network_config, logger_extras=None):
         asyncore.dispatcher.__init__(self, map=map)
         Connection.__init__(self, address, connection_closed_callback, message_callback, logger_extras)
 
+        self._client = client
         self.client_message_decoder = ClientMessageDecoder(self)
 
         self._write_lock = threading.Lock()
@@ -255,6 +257,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         if not self._closed:
             self._closed = True
             asyncore.dispatcher.close(self)
+            self._client.connection_manager.on_connection_close(self)
             self._connection_closed_callback(self, cause)
 
 

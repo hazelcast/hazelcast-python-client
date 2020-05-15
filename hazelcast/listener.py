@@ -42,14 +42,14 @@ class ListenerService(object):
             last_exception = None
             for member in cluster_service.members:
                 try:
-                    self._client.connection_manager.get_or_connect(member.address).result()
+                    self._client.connection_manager.get_or_connect(member.uuid).result()
                 except Exception as e:
                     last_failed_member = member
                     last_exception = e
             if last_exception is None:
                 break
             self.time_out_or_sleep_before_next_try(start_millis, last_failed_member, last_exception)
-            if not self._client.lifecycle.is_live():
+            if not self._client.lifecycle.is_live:
                 break
 
     def time_out_or_sleep_before_next_try(self, start_millis, last_failed_member, last_exception):
@@ -80,7 +80,8 @@ class ListenerService(object):
                 try:
                     self.register_listener_on_connection_async(user_registration_id, listener_registration, connection)\
                         .result()
-                except:
+                except Exception as e:
+                    print("Error happened:" + str(e))
                     if connection.live():
                         self.deregister_listener(user_registration_id)
                         raise HazelcastError("Listener cannot be added ")
@@ -90,6 +91,7 @@ class ListenerService(object):
         registration_map = listener_registration.connection_registrations
 
         if connection in registration_map:
+            print("None returned")
             return
 
         registration_request = listener_registration.registration_request.clone()
@@ -109,9 +111,7 @@ class ListenerService(object):
                                         user_registration_id, connection, e.args[0], extra=self._logger_extras)
                 raise e
 
-        future.add_done_callback(callback)
-        #return future.continue_with(callback)
-        return future
+        return future.continue_with(callback)
 
 
     def deregister_listener(self, user_registration_id):

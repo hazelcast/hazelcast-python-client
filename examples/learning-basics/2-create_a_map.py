@@ -5,6 +5,14 @@ import hazelcast
 if __name__ == "__main__":
     # Connect
     config = hazelcast.ClientConfig()
+    connection_retry_config = config.connection_strategy_config.connection_retry_config
+    config.connection_strategy_config.async_start = False
+    """"""
+    connection_retry_config.set_initial_backoff_millis(1000)\
+        .set_max_backoff_millis(60000).set_multiplier(2)\
+        .set_cluster_connect_timeout_millis(10000).set_jitter(0.2)
+
+
     config.logger_config.level = logging.DEBUG
     #config.network_config.addresses.append("192.168.1.29:5701")
     #config.network_config.smart_routing = False

@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("9a939dbb1c43d962f35f695152c83d9b")
+# Generated("2a932651253418c4243ba2ec165f998b")
 
 # hex: 0x000900
 REQUEST_MESSAGE_TYPE = 2304
@@ -50,7 +50,7 @@ def decode_response(client_message, to_object=None):
     return response
 
 
-def handle(client_message, handle_distributed_object_event=None):
+def handle(client_message, handle_distributed_object_event=None, to_object=None):
     message_type = client_message.get_message_type()
     iterator = client_message.frame_iterator()
     if message_type == EVENT_DISTRIBUTED_OBJECT_MESSAGE_TYPE and handle_distributed_object_event is not None:
@@ -59,4 +59,4 @@ def handle(client_message, handle_distributed_object_event=None):
         name = StringCodec.decode(iterator)
         service_name = StringCodec.decode(iterator)
         event_type = StringCodec.decode(iterator)
-        handle_distributed_object_event(name, service_name, event_type, source)
+        handle_distributed_object_event(name=name, service_name=service_name, event_type=event_type, source=source)

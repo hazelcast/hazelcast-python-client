@@ -76,6 +76,9 @@ class ProxyManager(object):
         self._proxies[ns] = proxy
         return proxy
 
+    def clear(self):
+        self._proxies.clear()
+
     def create_proxy(self, service_name, name, **kwargs):
         message = client_create_proxy_codec.encode_request(name=name, service_name=service_name)
         self._client.invoker.invoke_on_random_target(message).result()

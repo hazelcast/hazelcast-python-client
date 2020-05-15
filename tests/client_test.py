@@ -3,7 +3,7 @@ import time
 from tests.base import HazelcastTestCase
 from hazelcast.config import ClientConfig, ClientProperties
 from hazelcast.client import HazelcastClient
-from hazelcast.lifecycle import LIFECYCLE_STATE_DISCONNECTED
+from hazelcast.lifecycle import LIFECYCLE_STATE_CLIENT_DISCONNECTED
 
 
 class ClientTest(HazelcastTestCase):
@@ -30,7 +30,7 @@ class ClientTest(HazelcastTestCase):
             events = []
 
             def event_collector(e):
-                if e == LIFECYCLE_STATE_DISCONNECTED:
+                if e == LIFECYCLE_STATE_CLIENT_DISCONNECTED:
                     events.append(e)
 
             event_collector.events = events

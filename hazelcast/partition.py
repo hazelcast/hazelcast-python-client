@@ -48,10 +48,10 @@ class PartitionService(object):
 
     def get_partition_owner(self, partition_id):
         """
-        Gets the owner of the partition if it's set. Otherwise it will trigger partition assignment.
+        Gets the owner of the partition if it's set. Otherwise it returns None.
 
         :param partition_id: (int), the partition id.
-        :return: (:class:`~hazelcast.core.Address`), owner of partition or ``None`` if it's not set yet.
+        :return: (:class:`uuid.UUID`), owner of partition or ``None`` if it's not set yet.
         """
         #print("get partition owner {}".format(partition_id not in self.partition_table.partitions))
         if not self.partition_table.partitions or partition_id not in list(self.partition_table.partitions.values())[0]:
@@ -83,6 +83,14 @@ class PartitionService(object):
         """
         return self.partition_count
 
+    def reset(self):
+        """
+        Resets the partition table to initial state.
+        """
+        self.partition_table.connection = None
+        self.partition_table.partition_state_version = -1
+        self.partition_table.partitions = {}
+
     def process_partition_response(self, message):
         partitions = client_get_partitions_codec.decode_response(message)["partitions"]
         partitions_dict = {}
@@ -94,7 +102,8 @@ class PartitionService(object):
 
     def handle_partitions_view_event(self, connection, partitions, partition_state_version):
 
-        #logging.debug("Handling new partition table with  partitionStateVersion: " + partition_state_version, extra=self._logger_extras)
+        logging.debug("Handling new partition table with  partitionStateVersion: {}".format(partition_state_version),
+                      extra=self._logger_extras)
 
         while True:
             if not self.should_be_applied(connection, partitions, partition_state_version, self.partition_table):
@@ -103,9 +112,15 @@ class PartitionService(object):
                 dict_partitions = {}
                 for i, j in partitions:
                     dict_partitions[i] = j
-                self.partition_table = PartitionTable(connection, partition_state_version, dict_partitions)
+                self.partition_table.connection = connection
+                self.partition_table.partition_state_version = partition_state_version
+                self.partition_table.partitions = dict_partitions
+                # self.partition_table = PartitionTable(connection, partition_state_version, dict_partitions)
             else:
-                self.partition_table = PartitionTable(connection, partition_state_version, partitions)
+                self.partition_table.connection = connection
+                self.partition_table.partition_state_version = partition_state_version
+                self.partition_table.partitions = partitions
+                # self.partition_table = PartitionTable(connection, partition_state_version, partitions)
             logging.debug("Applied partition table with partitionStateVersion : " + str(partition_state_version),
                           extra=self._logger_extras)
 
@@ -127,6 +142,13 @@ class PartitionService(object):
             return False
 
         return True
+
+    def check_and_set_partition_count(self, new_partition_count):
+        if self.partition_count == 0:
+            self.partition_count = new_partition_count
+            return True
+
+        return self.partition_count == new_partition_count
 
     def _do_refresh(self):
         pass

@@ -3,7 +3,7 @@ from time import sleep
 
 from hazelcast import ClientConfig
 from hazelcast.exception import HazelcastError, TargetDisconnectedError
-from hazelcast.lifecycle import LIFECYCLE_STATE_DISCONNECTED, LIFECYCLE_STATE_CONNECTED
+from hazelcast.lifecycle import LIFECYCLE_STATE_CLIENT_DISCONNECTED, LIFECYCLE_STATE_CLIENT_CONNECTED
 from hazelcast.util import AtomicInteger
 from tests.base import HazelcastTestCase
 from tests.util import configure_logging, event_collector
@@ -53,9 +53,9 @@ class ReconnectTest(HazelcastTestCase):
         client.lifecycle.add_listener(listener)
 
         member.shutdown()
-        self.assertTrueEventually(lambda: self.assertEqual(state[0], LIFECYCLE_STATE_DISCONNECTED))
+        self.assertTrueEventually(lambda: self.assertEqual(state[0], LIFECYCLE_STATE_CLIENT_DISCONNECTED))
         self.cluster.start_member()
-        self.assertTrueEventually(lambda: self.assertEqual(state[0], LIFECYCLE_STATE_CONNECTED))
+        self.assertTrueEventually(lambda: self.assertEqual(state[0], LIFECYCLE_STATE_CLIENT_CONNECTED))
 
     def test_listener_re_register(self):
         member = self.cluster.start_member()

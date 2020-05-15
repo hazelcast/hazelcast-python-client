@@ -1,6 +1,7 @@
 from hazelcast.protocol.client_message import ClientMessage,RESPONSE_BACKUP_ACKS_FIELD_OFFSET,UNFRAGMENTED_MESSAGE
 from hazelcast.protocol.bits import BYTE_SIZE_IN_BYTES
 from hazelcast.protocol.codec.builtin.list_multi_frame_codec import ListMultiFrameCodec
+# from hazelcast.protocol.codec.custom.error_holder_codec import ErrorHolderCodec
 
 
 EXCEPTION_MESSAGE_TYPE = 0

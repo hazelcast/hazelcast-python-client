@@ -3,11 +3,11 @@ import time
 
 
 def member_added(member):
-    print("Member added: {}".format(member.address))
+    print("Member added: {}".format(member.member))
 
 
 def member_removed(member):
-    print("Member removed: {}".format(member.address))
+    print("Member removed: {}".format(member.member))
 
 
 if __name__ == "__main__":

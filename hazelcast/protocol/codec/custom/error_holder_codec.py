@@ -3,6 +3,7 @@ import hazelcast.protocol.bits as Bits
 from hazelcast.protocol.codec.builtin import *
 from hazelcast.protocol.codec.custom import *
 from hazelcast.protocol.exception.error_holder import ErrorHolder
+from hazelcast.protocol.codec.custom.stack_trace_element_codec import StackTraceElementCodec
 
 # Generated("354ce4fad0ac8cee9d69f137cd4ee206")
 

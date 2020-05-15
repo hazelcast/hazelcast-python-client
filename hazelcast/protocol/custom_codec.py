@@ -4,9 +4,11 @@ Hazelcast client protocol codecs
 
 from collections import namedtuple
 from hazelcast.core import Member, DistributedObjectInfo, EntryView, Address
+# TODO: Potential cyclic dependent import
+# from hazelcast.protocol.codec.builtin import ErrorsCodec
 from hazelcast.six.moves import range
 
-EXCEPTION_MESSAGE_TYPE = 109
+EXCEPTION_MESSAGE_TYPE = 0
 
 
 class MemberCodec(object):
@@ -106,24 +108,26 @@ class QueryCacheEventDataCodec(object):
 StackTraceElement = namedtuple('StackTraceElement', ['declaring_class', 'method_name', 'file_name', 'line_number'])
 
 
+class ExceptionFactory(object):
+    _code_to_factory = {}
+
+    def __init__(self):
+        self.register()
+
+    def register(self, code, exception_factory):
+        self._code_to_factory[code] = exception_factory
+
+
 class ErrorCodec(object):
     message = None
     cause_class_name = None
 
+    # TODO: Implement the stack trace elements field and handle all error holders.
     def __init__(self, client_message):
-        self.error_code = client_message.read_int()
-        self.class_name = client_message.read_str()
-        if not client_message.read_bool():
-            self.message = client_message.read_str()
-
-        self.stack_trace = []
-        stack_trace_count = client_message.read_int()
-        for _ in range(stack_trace_count):
-            self.stack_trace.append(self.decode_stack_trace(client_message))
-
-        self.cause_error_code = client_message.read_int()
-        if not client_message.read_bool():
-            self.cause_class_name = client_message.read_str()
+        error_holders = ErrorsCodec.decode(client_message)
+        self.error_code = error_holders[0].error_code
+        self.class_name = error_holders[0].class_name
+        self.message = error_holders[0].message
 
     @staticmethod
     def decode_stack_trace(client_message):
@@ -137,6 +141,31 @@ class ErrorCodec(object):
                                  method_name=method_name, file_name=file_name, line_number=line_number)
 
     def __repr__(self):
-        return 'ErrorCodec(error_code="%s", class_name="%s", message="%s", cause_error_code="%s", ' \
-               'cause_class_name="%s' % (self.error_code, self.class_name, self.message, self.cause_error_code,
-                                         self.cause_class_name)
+        return 'ErrorCodec(error_code="%s", class_name="%s", message="%s"'\
+               % (self.error_code, self.class_name, self.message)
+
+
+
+from hazelcast.protocol.client_message import ClientMessage,RESPONSE_BACKUP_ACKS_FIELD_OFFSET,UNFRAGMENTED_MESSAGE
+from hazelcast.protocol.bits import BYTE_SIZE_IN_BYTES
+from hazelcast.protocol.codec.builtin.list_multi_frame_codec import ListMultiFrameCodec
+from hazelcast.protocol.codec.custom.error_holder_codec import ErrorHolderCodec
+
+INITIAL_FRAME_SIZE = RESPONSE_BACKUP_ACKS_FIELD_OFFSET + BYTE_SIZE_IN_BYTES
+
+class ErrorsCodec:
+    @staticmethod
+    def encode(error_holders):
+        client_message = ClientMessage.create_for_encode()
+        initial_frame = ClientMessage.Frame(bytearray(INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
+        client_message.add(initial_frame)
+        client_message.set_message_type(EXCEPTION_MESSAGE_TYPE)
+        ListMultiFrameCodec.encode(client_message, error_holders, ErrorHolderCodec.encode)
+        return client_message
+
+    @staticmethod
+    def decode(client_message):
+        iterator = client_message.frame_iterator()
+
+        iterator.next()
+        return ListMultiFrameCodec.decode(iterator, ErrorHolderCodec.decode)

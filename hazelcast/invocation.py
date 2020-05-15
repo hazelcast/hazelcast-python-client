@@ -6,7 +6,7 @@ import functools
 from hazelcast.exception import create_exception, HazelcastInstanceNotActiveError, is_retryable_error, TimeoutError, \
     TargetDisconnectedError, HazelcastClientNotActiveException, TargetNotMemberError
 from hazelcast.future import Future
-from hazelcast.lifecycle import LIFECYCLE_STATE_CONNECTED
+from hazelcast.lifecycle import LIFECYCLE_STATE_CLIENT_CONNECTED
 from hazelcast.protocol.client_message import LISTENER_FLAG
 from hazelcast.protocol.custom_codec import EXCEPTION_MESSAGE_TYPE, ErrorCodec
 from hazelcast.util import AtomicInteger
@@ -72,14 +72,15 @@ class InvocationService(object):
         self.invocation_retry_pause = self._init_invocation_retry_pause()
         self.invocation_timeout = self._init_invocation_timeout()
         self._listener_service = None
+        self.is_shutdown = False
 
         if client.config.network_config.smart_routing:
             self.invoke = self.invoke_smart
         else:
             self.invoke = self.invoke_non_smart
 
-        self._client.connection_manager.add_listener(on_connection_closed=self.cleanup_connection)
-        client.heartbeat.add_listener(on_heartbeat_stopped=self._heartbeat_stopped)
+        # self._client.connection_manager.add_listener(on_connection_closed=self.cleanup_connection)
+        # client.heartbeat.add_listener(on_heartbeat_stopped=self._heartbeat_stopped)
 
     def start(self):
         self._listener_service = self._client.listener
@@ -93,7 +94,6 @@ class InvocationService(object):
         if invocation_timeout:
             invocation.set_timeout(invocation_timeout)
         return self.invoke(invocation)
-
 
     """
     def invoke_on_partition_owner(self, invocation, partition_id):
@@ -125,17 +125,14 @@ class InvocationService(object):
                 raise IOError("NonSmartClientInvocationService: No connection is available.")
         return connection
 
-
-
-
     def invoke_smart(self, invocation, ignore_heartbeat=False):
         if invocation.has_connection():
-            #invoke on connection
+            # invoke on connection
             if self._client.config.is_backup_ack_to_client_enabled:
                 invocation.request.start_frame.flags |= BACKUP_AWARE_FLAG
             self._send(invocation, invocation.connection, ignore_heartbeat)
         elif invocation.has_partition_id():
-            #invoke_on_partition_owner
+            # invoke_on_partition_owner
             partition_owner = self._client.partition_service.get_partition_owner(invocation.partition_id)
             if partition_owner is None:
                 self.logger.debug("Partition owner is not assigned yet, Retrying on random target")
@@ -147,8 +144,7 @@ class InvocationService(object):
                     invocation.request.start_frame.flags |= BACKUP_AWARE_FLAG
                 self._send(invocation, connection)
             else:
-                #invoke on target
-
+                # invoke on target
                 if not self._is_member(invocation.address):
                     self.logger.debug(
                         "Target : " + str(invocation.address) + " is not in the member list, Retrying on random target")
@@ -165,23 +161,25 @@ class InvocationService(object):
                     self.invoke_on_connection(invocation, connection)
 
         elif invocation.has_address():
-            #invoke on target
+            # invoke on target
             if not self._is_member(invocation.address):
-                self.logger.debug("Target : " + invocation.address + " is not in the member list, Retrying on random target")
+                self.logger.debug(
+                    "Target : " + invocation.address + " is not in the member list, Retrying on random target")
                 return self.invoke_on_random_target(invocation)
 
             else:
                 connection = self.get_connection(target=invocation.address)
                 self.invoke_on_connection(invocation, connection)
         else:  # send to random address
-            #invoke on random target
+            # invoke on random target
             connection = self._client.connection_manager.get_random_connection()
             if connection is None:
                 self._handle_exception(invocation, IOError("No connection found to invoke"))
             if self._client.config.is_backup_ack_to_client_enabled:
                 invocation.request.start_frame.flags |= BACKUP_AWARE_FLAG
 
-            self._send(invocation, connection, ignore_heartbeat)
+            if connection is not None:
+                self._send(invocation, connection, ignore_heartbeat)
         return invocation.future
 
     def invoke_non_smart(self, invocation, ignore_heartbeat=False):
@@ -218,7 +216,7 @@ class InvocationService(object):
             conn = self._client.connection_manager.connections[address]
             self._send(invocation, conn, ignore_heartbeat)
         except KeyError:
-            if self._client.lifecycle.state != LIFECYCLE_STATE_CONNECTED:
+            if self._client.lifecycle.state != LIFECYCLE_STATE_CLIENT_CONNECTED:
                 self._handle_exception(invocation, IOError("Client is not in connected state"))
             else:
                 self._client.connection_manager.get_or_connect(address).continue_with(self.on_connect, invocation,
@@ -231,7 +229,7 @@ class InvocationService(object):
             self._handle_exception(invocation, f.exception(), f.traceback())
 
     def _send(self, invocation, connection, ignore_heartbeat=False):
-        #!!!BACKUP AWARE FLAG
+        # !!!BACKUP AWARE FLAG
         correlation_id = self._next_correlation_id.get_and_increment()
         message = invocation.request
         message.set_correlation_id(correlation_id)
@@ -245,9 +243,9 @@ class InvocationService(object):
 
         self.logger.debug("Sending %s to %s", message, connection, extra=self._logger_extras)
 
-        if not ignore_heartbeat and not connection.heartbeating:
+        """if not ignore_heartbeat and not connection.heartbeating:
             self._handle_exception(invocation, TargetDisconnectedError("%s has stopped heart beating." % connection))
-            return
+            return"""
 
         invocation.sent_connection = connection
         try:
@@ -269,7 +267,6 @@ class InvocationService(object):
             self.logger.warning("Got message with unknown correlation id: %s", message, extra=self._logger_extras)
             return
         invocation = self._pending.pop(correlation_id)
-
         if message.get_message_type() == EXCEPTION_MESSAGE_TYPE:
             error = create_exception(ErrorCodec(message))
             return self._handle_exception(invocation, error)
@@ -291,7 +288,6 @@ class InvocationService(object):
             if invocation.request.retryable or self._is_redo_operation:
                 if self._try_retry(invocation):
                     return
-
 
         if self._is_not_allowed_to_retry_on_selection(invocation, error):
             invocation.set_exception(error, traceback)
@@ -318,7 +314,7 @@ class InvocationService(object):
             return True
 
         if isinstance(error, TargetDisconnectedError):
-            return invocation.request.is_retryable() or self._is_redo_operation
+            return invocation.request.retryable or self._is_redo_operation
 
         return False
 

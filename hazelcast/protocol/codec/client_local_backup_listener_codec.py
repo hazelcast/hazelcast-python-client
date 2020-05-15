@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("00d155e2f3571b0a5c448527facf907a")
+# Generated("d2697ac2980786fc304080baaff6c93c")
 
 # hex: 0x000F00
 REQUEST_MESSAGE_TYPE = 3840
@@ -46,10 +46,10 @@ def decode_response(client_message, to_object=None):
     return response
 
 
-def handle(client_message, handle_backup_event=None):
+def handle(client_message, handle_backup_event=None, to_object=None):
     message_type = client_message.get_message_type()
     iterator = client_message.frame_iterator()
     if message_type == EVENT_BACKUP_MESSAGE_TYPE and handle_backup_event is not None:
         initial_frame = iterator.next()
         source_invocation_correlation_id = FixedSizeTypesCodec.decode_long(initial_frame.content, EVENT_BACKUP_SOURCE_INVOCATION_CORRELATION_ID_FIELD_OFFSET)
-        handle_backup_event(source_invocation_correlation_id)
+        handle_backup_event(source_invocation_correlation_id=source_invocation_correlation_id)

@@ -2,7 +2,7 @@ from hazelcast.protocol.client_message import ClientMessage, NULL_FRAME, BEGIN_F
 import hazelcast.protocol.bits as Bits
 from hazelcast.protocol.codec.builtin import *
 from hazelcast.protocol.codec.custom import *
-from hazelcast.core import EntryView
+from hazelcast.core import SimpleEntryView
 
 # Generated("f3c745a1584d63e0e9df66e92cc15bb8")
 
@@ -64,4 +64,4 @@ class SimpleEntryViewCodec(object):
 
         CodecUtil.fast_forward_to_end_frame(iterator)
 
-        return EntryView(key, value, cost, creation_time, expiration_time, hits, last_access_time, last_stored_time, last_update_time, version, ttl, max_idle)
+        return SimpleEntryView(key, value, cost, creation_time, expiration_time, hits, last_access_time, last_stored_time, last_update_time, version, ttl, max_idle)

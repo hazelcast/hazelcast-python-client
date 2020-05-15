@@ -122,11 +122,33 @@ class Map(Proxy):
             elif event.event_type == EntryEventType.loaded:
                 loaded_func(event)
 
+        if key and predicate:
+            return self._register_listener(request,
+                                           lambda r: map_add_entry_listener_to_key_with_predicate_codec.decode_response(r)['response'],
+                                           lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name,
+                                                                                                         reg_id),
+                                           lambda m: map_add_entry_listener_to_key_with_predicate_codec.handle(m, handle_event_entry,
+                                                                                                self._to_object))
+        elif key and not predicate:
+            return self._register_listener(request,
+                                           lambda r: map_add_entry_listener_to_key_codec.decode_response(r)['response'],
+                                           lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name,
+                                                                                                         reg_id),
+                                           lambda m: map_add_entry_listener_to_key_codec.handle(m, handle_event_entry,
+                                                                                                self._to_object))
+        elif not key and predicate:
+            return self._register_listener(request,
+                                           lambda r: map_add_entry_listener_with_predicate_codec.decode_response(r)['response'],
+                                           lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name,
+                                                                                                         reg_id),
+                                           lambda m: map_add_entry_listener_with_predicate_codec.handle(m, handle_event_entry,
+                                                                                                self._to_object))
+
         return self._register_listener(request, lambda r: map_add_entry_listener_codec.decode_response(r)['response'],
                                        lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name, reg_id),
                                        lambda m: map_add_entry_listener_codec.handle(m, handle_event_entry, self._to_object))
 
-    def add_index(self, attribute, ordered=False):
+    def add_index(self, index_config, ordered=False):
         """
         Adds an index to this map for the specified entries so that queries can run faster.
 
@@ -149,7 +171,10 @@ class Map(Proxy):
         :param attribute: (str), index attribute of the value.
         :param ordered: (bool), for ordering the index or not (optional).
         """
-        return self._encode_invoke(map_add_index_codec, attribute=attribute, ordered=ordered)
+        # TODO: Edit the doctest
+        check_not_none(index_config, "Index config cannot be none.")
+
+        return self._encode_invoke(map_add_index_codec, ordered=ordered)
 
     def add_interceptor(self, interceptor):
         """
@@ -402,9 +427,29 @@ class Map(Proxy):
 
         .. seealso:: :class:`~hazelcast.core.EntryView` for more info about EntryView.
         """
+
+        def response_handler(future, codec, to_object):
+            response = future.result()
+            if response:
+                try:
+                    codec.decode_response
+                except AttributeError:
+                    return
+                decoded_response = codec.decode_response(response, to_object)
+                try:
+                    entry_view = decoded_response['response']
+                    entry_view.key = self._to_object(entry_view.key)
+                    entry_view.value = self._to_object(entry_view.value)
+                    return entry_view
+                except AttributeError:
+                    pass
+                except KeyError:
+                    pass
+
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(map_get_entry_view_codec, key_data, key=key_data, thread_id=thread_id())
+        return self._encode_invoke_on_key(map_get_entry_view_codec, key_data, key=key_data, thread_id=thread_id(),
+                                          response_handler=response_handler)
 
     def is_empty(self):
         """

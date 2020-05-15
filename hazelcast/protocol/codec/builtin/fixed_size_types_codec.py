@@ -33,6 +33,10 @@ class FixedSizeTypesCodec:
 		return struct.unpack_from(Bits.FMT_LE_LONG, buffer, pos)[0]
 
 	@staticmethod
+	def decode_long_unsigned(buffer, pos):
+		return struct.unpack_from(Bits.FMT_LE_ULONG, buffer, pos)[0]
+
+	@staticmethod
 	def encode_uuid(buffer, pos, value):
 		is_null = value is None
 		FixedSizeTypesCodec.encode_boolean(buffer, pos, is_null)
@@ -48,9 +52,9 @@ class FixedSizeTypesCodec:
 		is_null = FixedSizeTypesCodec.decode_boolean(buffer, pos)
 		if is_null:
 			return None
-		msb = FixedSizeTypesCodec.decode_long(buffer, pos + Bits.BOOLEAN_SIZE_IN_BYTES)
-		lsb = FixedSizeTypesCodec.decode_long(buffer, pos + Bits.BOOLEAN_SIZE_IN_BYTES + Bits.LONG_SIZE_IN_BYTES)
-		return uuid.UUID(int=((msb << 64) | lsb) & 0xffffffffffffffffffffffffffffffff)
+		msb = FixedSizeTypesCodec.decode_long_unsigned(buffer, pos + Bits.BOOLEAN_SIZE_IN_BYTES)
+		lsb = FixedSizeTypesCodec.decode_long_unsigned(buffer, pos + Bits.BOOLEAN_SIZE_IN_BYTES + Bits.LONG_SIZE_IN_BYTES)
+		return uuid.UUID(int=(lsb & 0xffffffffffffffff) | (msb << 64))
 
 	@staticmethod
 	def encode_boolean(buffer, pos, value):

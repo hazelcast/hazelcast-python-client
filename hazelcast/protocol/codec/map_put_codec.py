@@ -44,7 +44,7 @@ def decode_response(client_message, to_object=None):
     response = dict(response=None)
     #empty initial frame
     iterator.next()
-    response["response"] = to_object(CodecUtil.decode_nullable(iterator, DataCodec.decode))
+    response["response"] = CodecUtil.decode_nullable(iterator, DataCodec.decode)
     return response
 
 

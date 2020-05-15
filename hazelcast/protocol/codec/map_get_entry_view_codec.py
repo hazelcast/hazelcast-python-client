@@ -43,7 +43,7 @@ def decode_response(client_message, to_object=None):
     response = dict(response=None, maxIdle=None)
     initial_frame = iterator.next()
     response["maxIdle"] = FixedSizeTypesCodec.decode_long(initial_frame.content, RESPONSE_MAX_IDLE_FIELD_OFFSET)
-    response["response"] = CodecUtil.decode_nullable(iterator, SimpleEntryViewCodec.decode)
+    response["response"] = to_object(CodecUtil.decode_nullable(iterator, SimpleEntryViewCodec.decode))
     return response
 
 

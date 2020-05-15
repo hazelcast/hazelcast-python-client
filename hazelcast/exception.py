@@ -1,4 +1,5 @@
 from hazelcast.protocol.error_codes import *
+#from hazelcast.protocol.codec.builtin import ErrorsCodec
 
 
 def retryable(cls):
@@ -51,6 +52,8 @@ class ClassCastError(HazelcastError):
 class ClassNotFoundError(HazelcastError):
     pass
 
+class ClientNotAllowedInClusterError(HazelcastError):
+    pass
 
 class ConcurrentModificationError(HazelcastError):
     pass
@@ -60,15 +63,7 @@ class ConfigMismatchError(HazelcastError):
     pass
 
 
-class ConfigurationError(HazelcastError):
-    pass
-
-
 class DistributedObjectDestroyedError(HazelcastError):
-    pass
-
-
-class DuplicateInstanceNameError(HazelcastError):
     pass
 
 
@@ -175,19 +170,11 @@ class QueryResultSizeExceededError(HazelcastError):
     pass
 
 
-class QuorumError(HazelcastError):
-    pass
-
-
 class ReachedMaxSizeError(HazelcastError):
     pass
 
 
 class RejectedExecutionError(HazelcastError):
-    pass
-
-
-class RemoteMapReduceError(HazelcastError):
     pass
 
 
@@ -235,10 +222,6 @@ class TimeoutError(HazelcastError):
 
 
 class TopicOverloadError(HazelcastError):
-    pass
-
-
-class TopologyChangedError(HazelcastError):
     pass
 
 
@@ -360,7 +343,7 @@ class ConsistencyLostError(HazelcastError):
     pass
 
 
-class HazelcastClientNotActiveException(ValueError):
+class HazelcastClientNotActiveException(HazelcastError):
     pass
 
 
@@ -379,9 +362,7 @@ ERROR_CODE_TO_ERROR = {
     CLASS_NOT_FOUND: ClassNotFoundError,
     CONCURRENT_MODIFICATION: ConcurrentModificationError,
     CONFIG_MISMATCH: ConfigMismatchError,
-    CONFIGURATION: ConfigurationError,
     DISTRIBUTED_OBJECT_DESTROYED: DistributedObjectDestroyedError,
-    DUPLICATE_INSTANCE_NAME: DuplicateInstanceNameError,
     EOF: HazelcastEOFError,
     EXECUTION: ExecutionError,
     HAZELCAST: HazelcastError,
@@ -408,10 +389,8 @@ ERROR_CODE_TO_ERROR = {
     PARTITION_MIGRATING: PartitionMigratingError,
     QUERY: QueryError,
     QUERY_RESULT_SIZE_EXCEEDED: QueryResultSizeExceededError,
-    QUORUM: QuorumError,
     REACHED_MAX_SIZE: ReachedMaxSizeError,
     REJECTED_EXECUTION: RejectedExecutionError,
-    REMOTE_MAP_REDUCE: RemoteMapReduceError,
     RESPONSE_ALREADY_SENT: ResponseAlreadySentError,
     RETRYABLE_HAZELCAST: RetryableHazelcastError,
     RETRYABLE_IO: RetryableIOError,
@@ -423,7 +402,6 @@ ERROR_CODE_TO_ERROR = {
     TARGET_NOT_MEMBER: TargetNotMemberError,
     TIMEOUT: TimeoutError,
     TOPIC_OVERLOAD: TopicOverloadError,
-    TOPOLOGY_CHANGED: TopologyChangedError,
     TRANSACTION: TransactionError,
     TRANSACTION_NOT_ACTIVE: TransactionNotActiveError,
     TRANSACTION_TIMED_OUT: TransactionTimedOutError,
@@ -482,3 +460,31 @@ def is_retryable_error(error):
     :return: (bool), ``true`` if the given error is retryable, ``false`` otherwise.
     """
     return hasattr(error, 'retryable')
+
+"""
+class ErrorFactory(object):
+    def __init__(self):
+        self.error_code = None
+        self.class_name = None
+        self.message = None
+
+    def create_error_from_client_message(self, client_message):
+        error_holders = ErrorsCodec.decode(client_message)
+        return self.create_error(error_holders, 0)
+
+    def create_error(self, error_holders, error_holder_index):
+        if error_holder_index == len(error_holders):
+            return
+
+        error_holder = error_holders[error_holder_index]
+        factory_func = ERROR_CODE_TO_ERROR.get(error_holder.errorCode)
+        if factory_func is not None:
+            error = factory_func(error_holder.message)
+        else:
+            error = HazelcastError(error_holder.message)
+
+        return error
+"""
+
+
+
