@@ -533,6 +533,7 @@ class Connection(object):
         """
         if not self.live():
             raise IOError("Connection is not live.")
+
         self.writer.write_to(message)
 
     def receive_message(self):

@@ -1,6 +1,7 @@
 import time
 import os
-from hazelcast.exception import HazelcastError, HazelcastSerializationError
+from hazelcast.config import IndexConfig, INDEX_TYPE
+from hazelcast.exception import HazelcastError
 from hazelcast.proxy.map import EntryEventType
 from hazelcast.serialization.api import IdentifiedDataSerializable
 from hazelcast.serialization.predicate import SqlPredicate
@@ -144,7 +145,17 @@ class MapTest(SingleMemberTestCase):
         self.assertTrueEventually(assert_event, 5)
 
     def test_add_index(self):
-        self.map.add_index("field", True)
+        ordered_index_config = IndexConfig()
+        ordered_index_config.name = 'length'
+        ordered_index_config.add_attribute('this')
+
+        unordered_index_config = IndexConfig()
+        unordered_index_config.name = 'length'
+        unordered_index_config.type = INDEX_TYPE.HASH
+        unordered_index_config.add_attribute('this')
+
+        self.map.add_index(ordered_index_config)
+        self.map.add_index(unordered_index_config)
 
     def test_clear(self):
         self._fill_map()
@@ -313,14 +324,10 @@ class MapTest(SingleMemberTestCase):
         self.assertEqual(self.map.key_set(SqlPredicate("this == 'value-1'")), ["key-1"])
 
     def test_load_all(self):
-        keys = list(self._fill_map().keys())
-        # TODO: needs map store configuration
         with self.assertRaises(HazelcastError):
             self.map.load_all()
 
     def test_load_all_with_keys(self):
-        keys = list(self._fill_map().keys())
-        # TODO: needs map store configuration
         with self.assertRaises(HazelcastError):
             self.map.load_all(["key-1", "key-2"])
 

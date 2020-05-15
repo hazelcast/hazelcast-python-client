@@ -9,8 +9,10 @@ import re
 from hazelcast import six
 from hazelcast.six.moves import range
 from hazelcast.version import GIT_COMMIT_ID, GIT_COMMIT_DATE, CLIENT_VERSION
+
 # TODO: the following line causes circular dependent imports
 # from hazelcast.config import INDEX_TYPE, IndexConfig
+
 
 DEFAULT_ADDRESS = "127.0.0.1"
 DEFAULT_PORT = 5701
@@ -162,6 +164,70 @@ def enum(**enums):
     enums['reverse'] = dict((value, key) for key, value in six.iteritems(enums))
     return type('Enum', (), enums)
 
+# TODO: Once cyclic dependency solved, remove INDEX_TYPE and IndexConfig
+INDEX_TYPE = enum(SORTED=0, HASH=1, BITMAP=2)
+"""
+Type of the index.
+* SORTED : Sorted index. Can be used with equality and range predicates.
+* HASH   : Hash index. Can be used with equality predicates.
+* BITMAP : Bitmap index. Can be used with equality predicates.
+"""
+
+
+class IndexConfig(object):
+    DEFAULT_TYPE = INDEX_TYPE.SORTED
+    """
+    Default index type.
+    """
+
+    name = None
+    """
+    Name of the index.
+    """
+
+    type = DEFAULT_TYPE
+    """
+    Type of the index.
+    """
+
+    attributes = None
+    """
+    Indexed attributes
+    """
+
+    bitmap_index_options = None
+
+    def __init__(self, name=None, index_type=None, attributes=None, other=None):
+        if name:
+            self.name = name
+        if index_type:
+            self.type = index_type
+
+        self.attributes = attributes or []
+
+        if other:
+            self.bitmap_index_options = other
+
+    def add_attribute(self, attribute):
+        IndexUtil.validate_attribute(self, attribute)
+        self.attributes.append(attribute)
+        return self
+
+    def get_bitmap_index_options(self):
+        if not self.bitmap_index_options:
+            self.bitmap_index_options = BitmapIndexOptions()
+
+        return self.bitmap_index_options
+
+    def __str__(self):
+        return "IndexConfig[" \
+               "name: {}" \
+               ", type: {}" \
+               ", attributes: {}" \
+               "bitmap_index_options: {}]".format(self.name,
+                                                  self.type,
+                                                  self.attributes,
+                                                  self.bitmap_index_options)
 
 def _parse_address(address):
     if ":" in address:
@@ -357,18 +423,25 @@ class IndexUtil(object):
 
     @staticmethod
     def validate_and_normalize(map_name, index_config):
+        """
+        Validate provided index config and normalize it's name and attribute names.
+        :param map_name: Name of the map.
+        :param index_config: Index config.
+        :return: Normalized index config.
+        :raises: TypeError if index configuration is invalid.
+        """
         assert index_config is not None
 
         original_attribute_names = index_config.attributes
 
-        if len(original_attribute_names):
+        if not original_attribute_names:
             raise TypeError("Index must have at least one attribute: {}".format(index_config))
 
         if len(original_attribute_names) > IndexUtil.MAX_ATTRIBUTES:
             raise TypeError("Index connot have more than {}, attributes = {}"
                             .format(IndexUtil.MAX_ATTRIBUTES, index_config))
 
-        if index_config.index_type == INDEX_TYPE.BITMAP and len(original_attribute_names) > 1:
+        if index_config.type == INDEX_TYPE.BITMAP and len(original_attribute_names) > 1:
             raise TypeError("Composite bitmap indexes are not supported: {}".format(index_config))
 
         normalized_attribute_names = []
@@ -376,7 +449,7 @@ class IndexUtil(object):
         for original_attribute_name in original_attribute_names:
             IndexUtil.validate_attribute(index_config, original_attribute_name)
 
-            original_attribute_name = original_attribute_name.split(" ")
+            original_attribute_name = original_attribute_name.strip()
 
             normalized_attribute_name = IndexUtil.canonicalize_attribute(original_attribute_name)
 
@@ -404,10 +477,10 @@ class IndexUtil(object):
         if name is not None and not name.split(" ")[0]:
             name = None
 
-        normalized_config = IndexUtil.build_normalized_config(map_name, index_config.index_type, name
+        normalized_config = IndexUtil.build_normalized_config(map_name, index_config.type, name
                                                               , normalized_attribute_names)
 
-        if index_config.index_type == INDEX_TYPE.BITMAP:
+        if index_config.type == INDEX_TYPE.BITMAP:
             unique_key = index_config.get_bitmap_index_options().unique_key
             unique_key_transformation = index_config.get_bitmap_index_options().unique_key_transformation
 
@@ -423,7 +496,7 @@ class IndexUtil(object):
     def build_normalized_config(map_name, index_type, index_name, normalized_attribute_names):
         new_config = IndexConfig()
 
-        new_config.index_type = index_type
+        new_config.type = index_type
 
         name = map_name + '_' + IndexUtil.get_index_type_name(index_type) if index_name else None
 
@@ -455,8 +528,9 @@ class IndexUtil(object):
 
     @staticmethod
     # TODO: Fix this later
-    def canonicalize_attribute(attribute):
-        pass
+    def canonicalize_attribute(attribute: str):
+        return re.sub(IndexUtil.THIS_PATTERN, "", attribute)
+
 
     @staticmethod
     def get_index_type_name(index_type):

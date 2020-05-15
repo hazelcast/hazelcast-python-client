@@ -15,7 +15,7 @@ from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_entry
     map_add_interceptor_codec, map_execute_on_all_keys_codec, map_execute_on_key_codec, map_execute_on_keys_codec, \
     map_execute_with_predicate_codec, map_add_near_cache_entry_listener_codec
 from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType, get_entry_listener_flags, MAX_SIZE
-from hazelcast.util import check_not_none, thread_id, to_millis
+from hazelcast.util import IndexUtil, check_not_none, thread_id, to_millis
 from hazelcast import six
 from hazelcast.serialization.base import BaseSerializationService
 
@@ -54,6 +54,7 @@ class Map(Proxy):
 
     This class does not allow ``None`` to be used as a key or value.
     """
+
     def __init__(self, client, service_name, name):
         super(Map, self).__init__(client, service_name, name)
         self.reference_id_generator = self._client.lock_reference_id_generator
@@ -85,22 +86,6 @@ class Map(Proxy):
                                          evicted=evicted_func, evict_all=evict_all_func, clear_all=clear_all_func,
                                          merged=merged_func, expired=expired_func, loaded=loaded_func)
 
-        if key and predicate:
-            key_data = self._to_data(key)
-            predicate_data = self._to_data(predicate)
-            request = map_add_entry_listener_to_key_with_predicate_codec.encode_request(
-                self.name, key_data, predicate_data, include_value, flags, self._is_smart)
-        elif key and not predicate:
-            key_data = self._to_data(key)
-            request = map_add_entry_listener_to_key_codec.encode_request(
-                self.name, key_data, include_value, flags, self._is_smart)
-        elif not key and predicate:
-            predicate = self._to_data(predicate)
-            request = map_add_entry_listener_with_predicate_codec.encode_request(
-                self.name, predicate, include_value, flags, self._is_smart)
-        else:
-            request = map_add_entry_listener_codec.encode_request(self.name, include_value, flags, self._is_smart)
-
         def handle_event_entry(**_kwargs):
             event = EntryEvent(self._to_object, **_kwargs)
             if event.event_type == EntryEventType.added:
@@ -123,32 +108,38 @@ class Map(Proxy):
                 loaded_func(event)
 
         if key and predicate:
-            return self._register_listener(request,
-                                           lambda r: map_add_entry_listener_to_key_with_predicate_codec.decode_response(r)['response'],
-                                           lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name,
-                                                                                                         reg_id),
-                                           lambda m: map_add_entry_listener_to_key_with_predicate_codec.handle(m, handle_event_entry,
-                                                                                                self._to_object))
+            key_data = self._to_data(key)
+            predicate_data = self._to_data(predicate)
+            return self._register_listener(map_add_entry_listener_to_key_with_predicate_codec.encode_request(
+                self.name, key_data, predicate_data, include_value, flags, self._is_smart),
+                lambda r: map_add_entry_listener_to_key_with_predicate_codec.decode_response(r)['response'],
+                lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name, reg_id),
+                lambda m: map_add_entry_listener_to_key_with_predicate_codec.handle(m, handle_event_entry,
+                                                                                    self._to_object))
+
         elif key and not predicate:
-            return self._register_listener(request,
-                                           lambda r: map_add_entry_listener_to_key_codec.decode_response(r)['response'],
-                                           lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name,
-                                                                                                         reg_id),
-                                           lambda m: map_add_entry_listener_to_key_codec.handle(m, handle_event_entry,
-                                                                                                self._to_object))
+            key_data = self._to_data(key)
+            return self._register_listener(map_add_entry_listener_to_key_codec.encode_request(
+                self.name, key_data, include_value, flags, self._is_smart),
+                lambda r: map_add_entry_listener_to_key_codec.decode_response(r)['response'],
+                lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name,reg_id),
+                lambda m: map_add_entry_listener_to_key_codec.handle(m, handle_event_entry,self._to_object))
+
         elif not key and predicate:
-            return self._register_listener(request,
-                                           lambda r: map_add_entry_listener_with_predicate_codec.decode_response(r)['response'],
-                                           lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name,
-                                                                                                         reg_id),
-                                           lambda m: map_add_entry_listener_with_predicate_codec.handle(m, handle_event_entry,
-                                                                                                self._to_object))
+            predicate = self._to_data(predicate)
+            return self._register_listener(map_add_entry_listener_with_predicate_codec.encode_request(
+                self.name, predicate, include_value, flags, self._is_smart),
+                lambda r: map_add_entry_listener_with_predicate_codec.decode_response(r)['response'],
+                lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name,reg_id),
+                lambda m: map_add_entry_listener_with_predicate_codec.handle(m, handle_event_entry, self._to_object))
 
-        return self._register_listener(request, lambda r: map_add_entry_listener_codec.decode_response(r)['response'],
-                                       lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name, reg_id),
-                                       lambda m: map_add_entry_listener_codec.handle(m, handle_event_entry, self._to_object))
+        return self._register_listener(
+            map_add_entry_listener_codec.encode_request(self.name, include_value, flags, self._is_smart),
+            lambda r: map_add_entry_listener_codec.decode_response(r)['response'],
+            lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name, reg_id),
+            lambda m: map_add_entry_listener_codec.handle(m, handle_event_entry, self._to_object))
 
-    def add_index(self, index_config, ordered=False):
+    def add_index(self, index_config):
         """
         Adds an index to this map for the specified entries so that queries can run faster.
 
@@ -164,17 +155,37 @@ class Map(Proxy):
 
             If you query your values mostly based on age and active fields, you should consider indexing these.
                 >>> map = self.client.get_map("employees")
-                >>> map.add_index("age" , true) #ordered, since we have ranged queries for this field
-                >>> map.add_index("active", false) #not ordered, because boolean field cannot have range
+                >>> age_index = IndexConfig()
+                >>> age_index.type = INDEX_TYPE.SORTED
+                >>> age_index.add_attribute('age')
+                >>> active_index = IndexConfig()
+                >>> active_index.type = INDEX_TYPE.HASH
+                >>> active_index.add_attribute('active')
+                >>> map.add_index(age_index) # Sorted index for range queries
+                >>> map.add_index(active_index) # Hash index for equality predicates
 
+        Index attribute should either have a getter method or be public. You should also make sure to add the
+        indexes before adding entries to this map.
 
-        :param attribute: (str), index attribute of the value.
-        :param ordered: (bool), for ordering the index or not (optional).
+        Time to Index
+        #############
+        Indexing time is executed in parallel on each partition by operation threads.
+        The Map is not blocked during this operation.
+        The time taken in proportional to the size of the Map and the number Members.
+
+        Searches while indexes are being built
+        ######################################
+
+        Until the index finishes being created, any searches for the attribute will use a full Map scan, thus
+        avoiding using a partially built index and returning incorrect results.
+
+        :param index_config: Index configuration
         """
         # TODO: Edit the doctest
-        check_not_none(index_config, "Index config cannot be none.")
+        check_not_none(index_config, "Index config cannot be None.")
+        index_config0 = IndexUtil.validate_and_normalize(self.name, index_config)
 
-        return self._encode_invoke(map_add_index_codec, ordered=ordered)
+        return self._encode_invoke(map_add_index_codec, index_config=index_config0)
 
     def add_interceptor(self, interceptor):
         """
@@ -554,11 +565,27 @@ class Map(Proxy):
             server side configuration will be used(optional).
         :return: (object), previous value associated with key or ``None`` if there was no mapping for key.
         """
+
+        def response_handler(future, codec, to_object):
+            response = future.result()
+            if response:
+                try:
+                    codec.decode_response
+                except AttributeError:
+                    return
+                decoded_response = codec.decode_response(response, to_object)
+                try:
+                    return self._to_object(decoded_response['response'])
+                except AttributeError:
+                    pass
+                except KeyError:
+                    pass
+
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
         key_data = self._to_data(key)
         value_data = self._to_data(value)
-        return self._put_internal(key_data, value_data, ttl)
+        return self._put_internal(key_data, value_data, ttl, response_handler)
 
     def put_all(self, map):
         """
@@ -899,12 +926,14 @@ class Map(Proxy):
     def _delete_internal(self, key_data):
         return self._encode_invoke_on_key(map_delete_codec, key_data, key=key_data, thread_id=thread_id())
 
-    def _put_internal(self, key_data, value_data, ttl):
-        return self._encode_invoke_on_key(map_put_codec, key_data, key=key_data, value=value_data, thread_id=thread_id(),
-                                          ttl=to_millis(ttl))
+    def _put_internal(self, key_data, value_data, ttl, response_handler):
+        return self._encode_invoke_on_key(map_put_codec, key_data, key=key_data, value=value_data,
+                                          thread_id=thread_id(),
+                                          ttl=to_millis(ttl), response_handler=response_handler)
 
     def _set_internal(self, key_data, value_data, ttl):
-        return self._encode_invoke_on_key(map_set_codec, key_data, key=key_data, value=value_data, thread_id=thread_id(),
+        return self._encode_invoke_on_key(map_set_codec, key_data, key=key_data, value=value_data,
+                                          thread_id=thread_id(),
                                           ttl=to_millis(ttl))
 
     def _try_remove_internal(self, key_data, timeout):
@@ -928,13 +957,15 @@ class Map(Proxy):
                                           value=new_value_data, thread_id=thread_id())
 
     def _replace_internal(self, key_data, value_data):
-        return self._encode_invoke_on_key(map_replace_codec, key_data, key=key_data, value=value_data, thread_id=thread_id())
+        return self._encode_invoke_on_key(map_replace_codec, key_data, key=key_data, value=value_data,
+                                          thread_id=thread_id())
 
     def _evict_internal(self, key_data):
         return self._encode_invoke_on_key(map_evict_codec, key_data, key=key_data, thread_id=thread_id())
 
     def _load_all_internal(self, key_data_list, replace_existing_values):
-        return self._encode_invoke(map_load_given_keys_codec, keys=key_data_list, replace_existing_values=replace_existing_values)
+        return self._encode_invoke(map_load_given_keys_codec, keys=key_data_list,
+                                   replace_existing_values=replace_existing_values)
 
     def _execute_on_key_internal(self, key_data, entry_processor):
         return self._encode_invoke_on_key(map_execute_on_key_codec, key_data, key=key_data,
@@ -945,6 +976,7 @@ class MapFeatNearCache(Map):
     """
     Map proxy implementation featuring Near Cache
     """
+
     def __init__(self, client, service_name, name):
         super(MapFeatNearCache, self).__init__(client, service_name, name)
         self._invalidation_listener_id = None

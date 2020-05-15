@@ -964,10 +964,6 @@ Type of the index.
 """
 
 
-class IndexType(object):
-    pass
-
-
 class IndexConfig(object):
     DEFAULT_TYPE = INDEX_TYPE.SORTED
     """
@@ -979,12 +975,12 @@ class IndexConfig(object):
     Name of the index.
     """
 
-    index_type = DEFAULT_TYPE
+    type = DEFAULT_TYPE
     """
     Type of the index.
     """
 
-    attributes = []
+    attributes = None
     """
     Indexed attributes
     """
@@ -995,9 +991,10 @@ class IndexConfig(object):
         if name:
             self.name = name
         if index_type:
-            self.index_type = index_type
-        if attributes:
-            self.attributes = attributes
+            self.type = index_type
+
+        self.attributes = attributes or []
+
         if other:
             self.bitmap_index_options = other
 
@@ -1006,30 +1003,31 @@ class IndexConfig(object):
         self.attributes.append(attribute)
         return self
 
-    def __str__(self):
-        return "IndexConfig[" \
-               "name: {}" \
-               ", type: {}" \
-               ", attributes: {}" \
-               "bitmap_index_options: {}]".format(self.name,
-                                                  self.index_type,
-                                                  self.attributes,
-                                                  self.bitmap_index_options)
-
     def get_bitmap_index_options(self):
         if not self.bitmap_index_options:
             self.bitmap_index_options = BitmapIndexOptions()
 
         return self.bitmap_index_options
 
+    def __str__(self):
+        return "IndexConfig[" \
+               "name: {}" \
+               ", type: {}" \
+               ", attributes: {}" \
+               "bitmap_index_options: {}]".format(self.name,
+                                                  self.type,
+                                                  self.attributes,
+                                                  self.bitmap_index_options)
+
 
 class BitmapIndexOptions(object):
-    unique_key = DEFAULT_UNIQUE_KEY
-    unique_key_transformation = DEFAULT_UNIQUE_KEY_TRANSFORMATION
+    def __init__(self, unique_key=None, unique_key_transformation=None):
+        self.unique_key = unique_key or DEFAULT_UNIQUE_KEY
+        self.unique_key_transformation = unique_key_transformation or DEFAULT_UNIQUE_KEY_TRANSFORMATION
 
-    def __init__(self, unique_key, unique_key_transformation):
-        self.unique_key = unique_key
-        self.unique_key_transformation = unique_key_transformation
+    def __str__(self):
+        return "BitmapIndexOptions[unique_key: {}, unique_key_transformation: {}]"\
+            .format(self.unique_key, self.unique_key_transformation)
 
 
 class ConfigPatternMatcher(object):

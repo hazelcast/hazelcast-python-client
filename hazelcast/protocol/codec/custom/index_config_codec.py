@@ -19,8 +19,9 @@ class IndexConfigCodec(object):
         FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, index_config.type)
         client_message.add(initial_frame)
 
-        CodecUtil.encode_nullable(client_message, index_config.name(), StringCodec.encode)
+        CodecUtil.encode_nullable(client_message, index_config.name, StringCodec.encode)
         ListMultiFrameCodec.encode(client_message, index_config.attributes, StringCodec.encode)
+        CodecUtil.encode_nullable(client_message, index_config.bitmap_index_options, BitmapIndexOptionsCodec.encode)
 
         client_message.add(END_FRAME)
 
@@ -34,7 +35,8 @@ class IndexConfigCodec(object):
 
         name = CodecUtil.decode_nullable(iterator, StringCodec.decode)
         attributes = ListMultiFrameCodec.decode(iterator, StringCodec.decode)
+        bitmap_index_options = CodecUtil.decode_nullable(iterator, BitmapIndexOptionsCodec.decode)
 
         CodecUtil.fast_forward_to_end_frame(iterator)
 
-        return IndexConfig(name, type, attributes)
+        return IndexConfig(name, type, attributes, bitmap_index_options)
