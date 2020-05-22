@@ -1,14 +1,10 @@
-<<<<<<< HEAD
-$serverVersion = "3.12.5"
-=======
 $serverVersion = "4.0"
->>>>>>> in progress
 
 $hazelcastTestVersion=$serverVersion
 $hazelcastEnterpriseTestVersion=$serverVersion
 $hazelcastVersion=$serverVersion
 $hazelcastEnterpriseVersion=$serverVersion
-$hazelcastRCVersion="0.3-SNAPSHOT"
+$hazelcastRCVersion="0.7-SNAPSHOT"
 $snapshotRepo="https://oss.sonatype.org/content/repositories/snapshots"
 $releaseRepo="http://repo1.maven.apache.org/maven2"
 $enterpriseReleaseRepo="https://repository.hazelcast.com/release/"
@@ -66,7 +62,7 @@ if(Test-Path env:HAZELCAST_ENTERPRISE_KEY){
 pip install -r test-requirements.txt --user
 
 Write-Host Starting Hazelcast ...
-$remoteControllerApp = Start-Process -FilePath java -ArgumentList ( "-Dhazelcast.enterprise.license.key=$env:HAZELCAST_ENTERPRISE_KEY","-cp", "$classpath", "com.hazelcast.remotecontroller.SimpleTransportMain" ) -RedirectStandardOutput "rc_stdout.log" -RedirectStandardError "rc_stderr.log" -PassThru
+$remoteControllerApp = Start-Process -FilePath java -ArgumentList ( "-Dhazelcast.enterprise.license.key=$env:HAZELCAST_ENTERPRISE_KEY","-cp", "$classpath", "com.hazelcast.remotecontroller.SimpleTransportMain", "--use-simple-server" ) -RedirectStandardOutput "rc_stdout.log" -RedirectStandardError "rc_stderr.log" -PassThru
 
 Write-Host Wait for Hazelcast to start ...
 Start-Sleep -s 15
