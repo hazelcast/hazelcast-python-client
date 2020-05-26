@@ -117,11 +117,11 @@ class ProxyManager(object):
         def encode_remove_listener(registration_id):
             return client_remove_distributed_object_listener_codec.encode_request(registration_id)
 
-        return self._client._listener.register_listener(request, decode_add_listener,
+        return self._client.listener.register_listener(request, decode_add_listener,
                                                         encode_remove_listener, event_handler)
 
     def remove_distributed_object_listener(self, registration_id):
-        return self._client._listener.deregister_listener(registration_id)
+        return self._client.listener.deregister_listener(registration_id)
 
     def _find_next_proxy_address(self):
         # TODO: filter out lite members
