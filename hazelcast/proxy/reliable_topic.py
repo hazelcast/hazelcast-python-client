@@ -251,7 +251,7 @@ class ReliableTopic(Proxy):
         Subscribes to this reliable topic. When someone publishes a message on this topic, on_message() method of
         ReliableTopicListener is called.
 
-        :param ReliableTopicListener: (Class), class to be used when a message is published.
+        :param reliable_topic_listener: (Class), class to be used when a message is published.
         :return: (str), a registration id which is used as a key to remove the listener.
         """
         if not isinstance(reliable_topic_listener, ReliableMessageListener):
