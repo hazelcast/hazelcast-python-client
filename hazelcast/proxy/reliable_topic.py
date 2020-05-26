@@ -9,7 +9,6 @@ from hazelcast.proxy.base import Proxy, TopicMessage
 from hazelcast.proxy.ringbuffer import OVERFLOW_POLICY_FAIL, OVERFLOW_POLICY_OVERWRITE
 from hazelcast.serialization.reliable_topic import ReliableTopicMessage
 from hazelcast.util import current_time_in_millis
-from hazelcast.six.moves import queue
 
 _INITIAL_BACKOFF = 0.1
 _MAX_BACKOFF = 2
@@ -84,7 +83,6 @@ class _MessageListener(object):
         self._cancelled_lock = threading.Lock()
         self._cancelled = False
         self._sequence = 0
-        self._q = queue.Queue()
 
     def start(self):
         tail_seq = self._proxy.ringbuffer.tail_sequence()
@@ -289,7 +287,6 @@ class ReliableTopic(Proxy):
 
         :param message: (object), the message to be published.
         """
-        # TODO: We need a publisher_address?
         item = ReliableTopicMessage(
             publish_time=current_time_in_millis(),
             publisher_address="",

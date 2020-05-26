@@ -116,7 +116,6 @@ class ReliableTopicTest(SingleMemberTestCase):
                 self._collector(event)
 
             def is_terminal(self):
-                # TODO: Gereksiz?
                 return False
 
         reliable_listener = TestReliableMessageListenerNotTerminal(collector)
