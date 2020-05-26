@@ -83,3 +83,33 @@ class ProxyManager(object):
 
     def get_distributed_objects(self):
         return to_list(self._proxies.values())
+<<<<<<< HEAD
+=======
+
+    def add_distributed_object_listener(self, listener_func):
+        is_smart = self._client.config.network_config.smart_routing
+        request = client_add_distributed_object_listener_codec.encode_request(is_smart)
+
+        def handle_distributed_object_event(**kwargs):
+            event = DistributedObjectEvent(**kwargs)
+            listener_func(event)
+
+        def event_handler(client_message):
+            return client_add_distributed_object_listener_codec.handle(client_message, handle_distributed_object_event)
+
+        def decode_add_listener(response):
+            return client_add_distributed_object_listener_codec.decode_response(response)["response"]
+
+        def encode_remove_listener(registration_id):
+            return client_remove_distributed_object_listener_codec.encode_request(registration_id)
+
+        return self._client.listener.register_listener(request, decode_add_listener,
+                                                        encode_remove_listener, event_handler)
+
+    def remove_distributed_object_listener(self, registration_id):
+        return self._client.listener.deregister_listener(registration_id)
+
+    def _find_next_proxy_address(self):
+        # TODO: filter out lite members
+        return self._client.load_balancer.next_address()
+>>>>>>> Client does not have _listener, but instead listener as the reference to the listener service
