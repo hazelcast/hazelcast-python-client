@@ -93,27 +93,36 @@ class _MessageListener(object):
         self._proxy.client.reactor.add_timer(0, self._next)
 
     def _handle_illegal_argument_error(self):
-        head_seq = self._proxy.ringbuffer.head_sequence().result()
-        self._proxy.logger.warning("MessageListener {} on topic {} requested a too large sequence. Jumping from old "
-                                   "sequence: {} to sequence: {}".format(self._id, self._proxy.name, self._sequence,
-                                                                         head_seq))
-        self._sequence = head_seq
-        self._next()
+        def on_response(res):
+            head_seq = res.result()
+            self._proxy.logger.warning("MessageListener {} on topic {} requested a too large sequence. Jumping from "
+                                       "old sequence: {} to sequence: {}".format(self._id, self._proxy.name,
+                                                                                 self._sequence,
+                                                                                 head_seq))
+            self._sequence = head_seq
+            self._next()
+
+        future = self._proxy.ringbuffer.head_sequence()
+        future.add_done_callback(on_response)
 
     def _handle_stale_sequence_error(self):
-        head_seq = self._proxy.ringbuffer.head_sequence().result()
-        if self._listener.is_loss_tolerant:
-            self._sequence = head_seq
-            self._proxy.logger.warning("Topic {} ran into a stale sequence. Jumping from old sequence {} to new "
-                                       "sequence {}".format(self._proxy.name, self._sequence, head_seq))
-            self._next()
-            return True
+        def on_response(res):
+            head_seq = res.result()
+            if self._listener.is_loss_tolerant:
+                self._proxy.logger.warning("Topic {} ran into a stale sequence. Jumping from old sequence {} to new "
+                                           "sequence {}".format(self._proxy.name, self._sequence, head_seq))
+                self._sequence = head_seq
+                self._next()
 
-        self._proxy.logger.warning(
-            "Terminating Message Listener: {} on topic: {}. Reason: The listener was too slow or the retention "
-            "period of the message has been violated. Head: {}, sequence: {}".format(self._id, self._proxy.name,
-                                                                                     head_seq, self._sequence))
-        return False
+            else:
+                self._proxy.logger.warning(
+                    "Terminating Message Listener: {} on topic: {}. Reason: The listener was too slow or the retention "
+                    "period of the message has been violated. Head: {}, sequence: {}".format(self._id, self._proxy.name,
+                                                                                             head_seq, self._sequence))
+                self._cancel_and_remove_listener()
+
+        future = self._proxy.ringbuffer.head_sequence()
+        future.add_done_callback(on_response)
 
     def _handle_operation_timeout_error(self):
         self._proxy.logger.info("Message Listener ", self._proxy.id, "on topic: ", self._proxy.name, " timed out. " +
@@ -126,8 +135,8 @@ class _MessageListener(object):
             self._handle_illegal_argument_error()
             return
         elif isinstance(exception, StaleSequenceError):
-            if self._handle_stale_sequence_error():
-                return
+            self._handle_stale_sequence_error()
+            return
         elif isinstance(exception, OperationTimeoutError):
             self._handle_operation_timeout_error()
             return
