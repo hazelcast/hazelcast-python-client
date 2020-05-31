@@ -4,7 +4,7 @@ from datetime import datetime
 
 import hazelcast
 from hazelcast import ClientConfig
-from hazelcast.config import ReliableTopicConfig, TOPIC_OVERLOAD_POLICY
+from hazelcast.config import ReliableTopicConfig, TOPIC_OVERLOAD_POLICY, ClientProperties
 from hazelcast.exception import IllegalArgumentError, TopicOverflowError
 from hazelcast.proxy.reliable_topic import ReliableMessageListener
 from hazelcast.proxy.ringbuffer import OVERFLOW_POLICY_FAIL, OVERFLOW_POLICY_OVERWRITE
@@ -24,6 +24,17 @@ class TestReliableMessageListener(ReliableMessageListener):
 
     def on_message(self, event):
         self._collector(event)
+
+
+class TestReliableMessageListenerLossTolerant(ReliableMessageListener):
+    def __init__(self, collector):
+        self._collector = collector
+
+    def on_message(self, event):
+        self._collector(event)
+
+    def is_loss_tolerant(self):
+        return True
 
 
 class ReliableTopicTest(SingleMemberTestCase):
@@ -291,4 +302,76 @@ class ReliableTopicTest(SingleMemberTestCase):
         self.assertEqual(num, 11)
         if time_diff.seconds <= 2:
             self.fail("expected at least 2 seconds delay got %s" % time_diff.seconds)
+
+    def test_stale(self):
+        collector = event_collector()
+        self.reliable_topic = self.client.get_reliable_topic("stale").blocking()
+        reliable_listener = TestReliableMessageListenerLossTolerant(collector)
+        self.registration_id = self.reliable_topic.add_listener(reliable_listener)
+
+        items = self.generate_items(20)
+        self.reliable_topic.ringbuffer.add_all(items, overflow_policy=OVERFLOW_POLICY_OVERWRITE)
+
+        def assert_event():
+            self.assertEqual(len(collector.events), 10)
+            event = collector.events[9]
+            self.assertEqual(event.message, 20)
+
+        self.assertTrueEventually(assert_event, 5)
+
+    def test_distributed_object_destroyed(self):
+        config = ClientConfig()
+        config.network_config.connection_attempt_limit = 10
+        config.set_property(ClientProperties.INVOCATION_TIMEOUT_SECONDS.name, 10)
+        config.set_property("hazelcast.serialization.input.returns.bytearray", True)
+
+
+        client_two = hazelcast.HazelcastClient(self.configure_client(config))
+        # TODO: shutdown
+
+        collector = event_collector()
+        self.reliable_topic = client_two.get_reliable_topic("x")
+        reliable_listener = TestReliableMessageListenerLossTolerant(collector)
+        self.registration_id = self.reliable_topic.add_listener(reliable_listener)
+
+        self.rc.shutdownCluster(self.cluster.id)
+        self.cluster = self.create_cluster(self.rc, self.configure_cluster())
+        self.cluster.start_member()
+
+        self.reliable_topic.publish("aa")
+
+        def assert_event():
+            self.assertEqual(len(collector.events), 1)
+            event = collector.events[0]
+            self.assertEqual(event.message, "aa")
+
+        self.assertTrueEventually(assert_event, 5)
+
+    def test_distributed_object_destroyed_error(self):
+        collector = event_collector()
+        self.reliable_topic = self.client.get_reliable_topic("differentReliableTopic")
+        reliable_listener = TestReliableMessageListenerLossTolerant(collector)
+        self.registration_id = self.reliable_topic.add_listener(reliable_listener)
+        self.reliable_topic.destroy()
+
+        def assert_event():
+            self.assertEqual(len(collector.events), 0)
+
+        self.assertTrueEventually(assert_event, 5)
+
+    def test_client_not_active_error(self):
+        config = ClientConfig()
+        config.set_property("hazelcast.serialization.input.returns.bytearray", True)
+        client_two = hazelcast.HazelcastClient(self.configure_client(config))
+
+        collector = event_collector()
+        self.reliable_topic = self.client.get_reliable_topic("differentReliableTopic")
+        reliable_listener = TestReliableMessageListenerLossTolerant(collector)
+        self.registration_id = self.reliable_topic.add_listener(reliable_listener)
+        client_two.shutdown()
+
+        def assert_event():
+            self.assertEqual(len(collector.events), 0)
+
+        self.assertTrueEventually(assert_event, 5)
 
