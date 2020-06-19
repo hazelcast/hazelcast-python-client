@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("a3a2cda225ac728b06f852cc4c8f9ee3")
+# Generated("38873f188abc247e7b0ef4d45464b685")
 
 # hex: 0x000300
 REQUEST_MESSAGE_TYPE = 768
@@ -34,8 +34,8 @@ def encode_request():
     client_message.retryable = False
     client_message.operation_name = "Client.AddClusterViewListener"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
     client_message.add(initial_frame)
     return client_message
 
@@ -43,7 +43,7 @@ def encode_request():
 def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict()
-    #empty initial frame
+    # empty initial frame
     iterator.next()
     return response
 
@@ -53,11 +53,11 @@ def handle(client_message, handle_members_view_event=None, handle_partitions_vie
     iterator = client_message.frame_iterator()
     if message_type == EVENT_MEMBERS_VIEW_MESSAGE_TYPE and handle_members_view_event is not None:
         initial_frame = iterator.next()
-        version = FixedSizeTypesCodec.decode_int(initial_frame.content, EVENT_MEMBERS_VIEW_VERSION_FIELD_OFFSET)
-        member_infos = ListMultiFrameCodec.decode(iterator, MemberInfoCodec.decode)
+        version = fixed_size_types_codec.decode_int(initial_frame.content, EVENT_MEMBERS_VIEW_VERSION_FIELD_OFFSET)
+        member_infos = list_multi_frame_codec.decode(iterator, member_info_codec.decode)
         handle_members_view_event(version=version, member_infos=member_infos)
     if message_type == EVENT_PARTITIONS_VIEW_MESSAGE_TYPE and handle_partitions_view_event is not None:
         initial_frame = iterator.next()
-        version = FixedSizeTypesCodec.decode_int(initial_frame.content, EVENT_PARTITIONS_VIEW_VERSION_FIELD_OFFSET)
-        partitions = EntryListUUIDListIntegerCodec.decode(iterator)
+        version = fixed_size_types_codec.decode_int(initial_frame.content, EVENT_PARTITIONS_VIEW_VERSION_FIELD_OFFSET)
+        partitions = entry_list_uuid_list_integer_codec.decode(iterator)
         handle_partitions_view_event(version=version, partitions=partitions)

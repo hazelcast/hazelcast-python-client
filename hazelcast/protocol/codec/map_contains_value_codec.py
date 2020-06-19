@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("23445af8c64f04e2b41b13bd756a5db7")
+# Generated("dbb497b5af6f67622d04872c276f06b8")
 
 # hex: 0x010700
 REQUEST_MESSAGE_TYPE = 67328
@@ -28,11 +28,11 @@ def encode_request(name, value):
     client_message.retryable = True
     client_message.operation_name = "Map.ContainsValue"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
     client_message.add(initial_frame)
-    StringCodec.encode(client_message, name)
-    DataCodec.encode(client_message, value)
+    string_codec.encode(client_message, name)
+    data_codec.encode(client_message, value)
     return client_message
 
 
@@ -40,7 +40,7 @@ def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict(response=None)
     initial_frame = iterator.next()
-    response["response"] = FixedSizeTypesCodec.decode_boolean(initial_frame.content, RESPONSE_RESPONSE_FIELD_OFFSET)
+    response["response"] = fixed_size_types_codec.decode_boolean(initial_frame.content, RESPONSE_RESPONSE_FIELD_OFFSET)
     return response
 
 

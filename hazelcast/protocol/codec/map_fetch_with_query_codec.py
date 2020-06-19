@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("7a756da6c610c075099030b54ded1898")
+# Generated("d769b398646d466d9850b7ad9273dbc0")
 
 # hex: 0x014000
 REQUEST_MESSAGE_TYPE = 81920
@@ -27,24 +27,24 @@ def encode_request(name, iteration_pointers, batch, projection, predicate):
     client_message.retryable = True
     client_message.operation_name = "Map.FetchWithQuery"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, REQUEST_BATCH_FIELD_OFFSET, batch)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_int(initial_frame.content, REQUEST_BATCH_FIELD_OFFSET, batch)
     client_message.add(initial_frame)
-    StringCodec.encode(client_message, name)
-    EntryListIntegerIntegerCodec.encode(client_message, iteration_pointers)
-    DataCodec.encode(client_message, projection)
-    DataCodec.encode(client_message, predicate)
+    string_codec.encode(client_message, name)
+    entry_list_integer_integer_codec.encode(client_message, iteration_pointers)
+    data_codec.encode(client_message, projection)
+    data_codec.encode(client_message, predicate)
     return client_message
 
 
 def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict(results=None, iterationPointers=None)
-    #empty initial frame
+    # empty initial frame
     iterator.next()
-    response["results"] = ListMultiFrameCodec.decode_contains_nullable(iterator, DataCodec.decode)
-    response["iterationPointers"] = EntryListIntegerIntegerCodec.decode(iterator)
+    response["results"] = list_multi_frame_codec.decode_contains_nullable(iterator, data_codec.decode)
+    response["iterationPointers"] = entry_list_integer_integer_codec.decode(iterator)
     return response
 
 

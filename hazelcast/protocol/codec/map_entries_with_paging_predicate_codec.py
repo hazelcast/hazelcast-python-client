@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("80d86bcc808a697b7dfa3a98aae79537")
+# Generated("06bb214ed42d9181735feb180752957f")
 
 # hex: 0x013600
 REQUEST_MESSAGE_TYPE = 79360
@@ -26,21 +26,21 @@ def encode_request(name, predicate):
     client_message.retryable = True
     client_message.operation_name = "Map.EntriesWithPagingPredicate"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
     client_message.add(initial_frame)
-    StringCodec.encode(client_message, name)
-    PagingPredicateHolderCodec.encode(client_message, predicate)
+    string_codec.encode(client_message, name)
+    paging_predicate_holder_codec.encode(client_message, predicate)
     return client_message
 
 
 def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict(response=None, anchorDataList=None)
-    #empty initial frame
+    # empty initial frame
     iterator.next()
-    response["response"] = ImmutableLazyDataList(EntryListCodec.decode(iterator, DataCodec.decode, DataCodec.decode),to_object)
-    response["anchorDataList"] = AnchorDataListHolderCodec.decode(iterator)
+    response["response"] = ImmutableLazyDataList(entry_list_codec.decode(iterator, data_codec.decode, data_codec.decode), to_object)
+    response["anchorDataList"] = anchor_data_list_holder_codec.decode(iterator)
     return response
 
 

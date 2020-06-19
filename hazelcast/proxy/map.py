@@ -13,7 +13,7 @@ from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_entry
     map_remove_entry_listener_codec, map_replace_codec, map_replace_if_same_codec, map_set_codec, map_try_lock_codec, \
     map_try_put_codec, map_try_remove_codec, map_unlock_codec, map_values_codec, map_values_with_predicate_codec, \
     map_add_interceptor_codec, map_execute_on_all_keys_codec, map_execute_on_key_codec, map_execute_on_keys_codec, \
-    map_execute_with_predicate_codec, map_add_near_cache_entry_listener_codec
+    map_execute_with_predicate_codec
 from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType, get_entry_listener_flags, MAX_SIZE
 from hazelcast.util import IndexUtil, check_not_none, thread_id, to_millis
 from hazelcast import six
@@ -122,15 +122,15 @@ class Map(Proxy):
             return self._register_listener(map_add_entry_listener_to_key_codec.encode_request(
                 self.name, key_data, include_value, flags, self._is_smart),
                 lambda r: map_add_entry_listener_to_key_codec.decode_response(r)['response'],
-                lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name,reg_id),
-                lambda m: map_add_entry_listener_to_key_codec.handle(m, handle_event_entry,self._to_object))
+                lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name, reg_id),
+                lambda m: map_add_entry_listener_to_key_codec.handle(m, handle_event_entry, self._to_object))
 
         elif not key and predicate:
             predicate = self._to_data(predicate)
             return self._register_listener(map_add_entry_listener_with_predicate_codec.encode_request(
                 self.name, predicate, include_value, flags, self._is_smart),
                 lambda r: map_add_entry_listener_with_predicate_codec.decode_response(r)['response'],
-                lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name,reg_id),
+                lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name, reg_id),
                 lambda m: map_add_entry_listener_with_predicate_codec.handle(m, handle_event_entry, self._to_object))
 
         return self._register_listener(

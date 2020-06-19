@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("683efa7ba508436a34808363d7c69c47")
+# Generated("18eee240792ba559d587dbc070b9dd37")
 
 # hex: 0x010200
 REQUEST_MESSAGE_TYPE = 66048
@@ -27,21 +27,21 @@ def encode_request(name, key, thread_id):
     client_message.retryable = True
     client_message.operation_name = "Map.Get"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
-    FixedSizeTypesCodec.encode_long(initial_frame.content, REQUEST_THREAD_ID_FIELD_OFFSET, thread_id)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_long(initial_frame.content, REQUEST_THREAD_ID_FIELD_OFFSET, thread_id)
     client_message.add(initial_frame)
-    StringCodec.encode(client_message, name)
-    DataCodec.encode(client_message, key)
+    string_codec.encode(client_message, name)
+    data_codec.encode(client_message, key)
     return client_message
 
 
 def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict(response=None)
-    #empty initial frame
+    # empty initial frame
     iterator.next()
-    response["response"] = to_object(CodecUtil.decode_nullable(iterator, DataCodec.decode))
+    response["response"] = to_object(codec_util.decode_nullable(iterator, data_codec.decode))
     return response
 
 

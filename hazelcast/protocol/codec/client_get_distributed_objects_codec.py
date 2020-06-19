@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("31e1b00f9410d0a916fd71c1941a6025")
+# Generated("d0d30887f5aa09ddd8c8dbcfb957ff8a")
 
 # hex: 0x000800
 REQUEST_MESSAGE_TYPE = 2048
@@ -26,8 +26,8 @@ def encode_request():
     client_message.retryable = False
     client_message.operation_name = "Client.GetDistributedObjects"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
     client_message.add(initial_frame)
     return client_message
 
@@ -35,9 +35,9 @@ def encode_request():
 def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict(response=None)
-    #empty initial frame
+    # empty initial frame
     iterator.next()
-    response["response"] = ListMultiFrameCodec.decode(iterator, DistributedObjectInfoCodec.decode)
+    response["response"] = list_multi_frame_codec.decode(iterator, distributed_object_info_codec.decode)
     return response
 
 

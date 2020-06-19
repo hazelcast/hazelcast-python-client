@@ -114,6 +114,7 @@ class SingleMemberTestCase(HazelcastTestCase):
 
     @classmethod
     def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
         return config
 
     @classmethod

@@ -3,7 +3,7 @@ import logging.config
 import sys
 import json
 
-from hazelcast.cluster import ClusterService, RandomLoadBalancer, RoundRobinLoadBalancer, ClientClusterViewService
+from hazelcast.cluster import ClusterService, RandomLoadBalancer, RoundRobinLoadBalancer, ClusterViewListenerService
 from hazelcast.config import ClientConfig, ClientProperties
 from hazelcast.connection import ConnectionManager, DefaultAddressProvider
 from hazelcast.core import DistributedObjectInfo
@@ -40,8 +40,7 @@ class HazelcastClient(object):
         self.id = HazelcastClient.CLIENT_ID.get_and_increment()
         self.name = self._create_client_name()
         self._init_logger()
-        self._logger_extras = {"client_name": self.name, "group_name": self.config.group_config.name}
-        self._log_group_password_info()
+        self._logger_extras = {"client_name": self.name, "cluster_name": self.config.cluster_name}
         self.lifecycle = LifecycleService(self, self.config, self._logger_extras)
         self.reactor = AsyncoreReactor(self._logger_extras)
         self._address_provider = self._create_address_provider()
@@ -61,23 +60,22 @@ class HazelcastClient(object):
         self.near_cache_manager = NearCacheManager(self)
         self.statistics = Statistics(self)
         # self.error_factory = ErrorFactory()
-        self.client_cluster_view_listener_service = ClientClusterViewService(self)
+        self.cluster_view_listener_service = ClusterViewListenerService(self)
         self._start()
 
     def _start(self):
         self.reactor.start()
         try:
+            self.lifecycle.start()
             self.invoker.start()
-            self.client_cluster_view_listener_service.start()
-            # self.cluster.start()
+            configured_listeners = self.config.membership_listeners
+            self.cluster.start(configured_listeners)
+            self.cluster_view_listener_service.start()
             self.connection_manager.start()
-            # self.heartbeat.start()
-
             self.cluster.wait_initial_membership_fetched()
+            self.connection_manager.connect_to_all_cluster_members()
             self.listener.start()
             self.load_balancer.init_load_balancer(self.cluster, self.config)
-            # self.client_cluster_view_listener_service.start()
-            self.partition_service.start()
             self.statistics.start()
         except:
             self.reactor.shutdown()
@@ -312,13 +310,11 @@ class HazelcastClient(object):
         self.lifecycle.shutdown()
 
     def do_shutdown(self):
-
         self.near_cache_manager.destroy_all_near_caches()
         self.proxy.clear()
         self.connection_manager.shutdown()
         self.invoker.is_shutdown = False
         self.statistics.shutdown()
-        self.partition_service.shutdown()
         # todo self.lifecycle.shutdown()
         self.cluster.shutdown()
         self.reactor.shutdown()
@@ -439,11 +435,3 @@ class HazelcastClient(object):
         else:
             logging.config.dictConfig(DEFAULT_LOGGING)
             self.logger.setLevel(logger_config.level)
-
-    def _log_group_password_info(self):
-        if self.config.group_config.password:
-            self.logger.info("A non-empty group password is configured for the Hazelcast client. "
-                             "Starting with Hazelcast IMDG version 3.11, clients with the same group name, "
-                             "but with different group passwords (that do not use authentication) will be "
-                             "accepted to a cluster. The group password configuration will be removed "
-                             "completely in a future release.", extra=self._logger_extras)

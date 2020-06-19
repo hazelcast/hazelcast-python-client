@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("0874e656721d30c645ed6c5cfb26eb6a")
+# Generated("3b349eaa8318e91f8459be0bd2cce00f")
 
 # hex: 0x013D00
 REQUEST_MESSAGE_TYPE = 81152
@@ -27,21 +27,21 @@ def encode_request(names, uuid):
     client_message.retryable = False
     client_message.operation_name = "Map.FetchNearCacheInvalidationMetadata"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
-    FixedSizeTypesCodec.encode_uuid(initial_frame.content, REQUEST_UUID_FIELD_OFFSET, uuid)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_uuid(initial_frame.content, REQUEST_UUID_FIELD_OFFSET, uuid)
     client_message.add(initial_frame)
-    ListMultiFrameCodec.encode(client_message, names, StringCodec.encode)
+    list_multi_frame_codec.encode(client_message, names, string_codec.encode)
     return client_message
 
 
 def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict(namePartitionSequenceList=None, partitionUuidList=None)
-    #empty initial frame
+    # empty initial frame
     iterator.next()
-    response["namePartitionSequenceList"] = EntryListCodec.decode(iterator, StringCodec.decode, EntryListIntegerLongCodec.decode)
-    response["partitionUuidList"] = EntryListIntegerUUIDCodec.decode(iterator)
+    response["namePartitionSequenceList"] = entry_list_codec.decode(iterator, string_codec.decode, entry_list_integer_long_codec.decode)
+    response["partitionUuidList"] = entry_list_integer_uuid_codec.decode(iterator)
     return response
 
 

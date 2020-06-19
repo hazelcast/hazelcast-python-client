@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("038be4435de1f0ab21e436df15460019")
+# Generated("5ee5407f1e23c8dc5f49b8899f6d1185")
 
 # hex: 0x000700
 REQUEST_MESSAGE_TYPE = 1792
@@ -29,9 +29,9 @@ def encode_request(registration_id):
     client_message.retryable = True
     client_message.operation_name = "Client.RemovePartitionLostListener"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
-    FixedSizeTypesCodec.encode_uuid(initial_frame.content, REQUEST_REGISTRATION_ID_FIELD_OFFSET, registration_id)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_uuid(initial_frame.content, REQUEST_REGISTRATION_ID_FIELD_OFFSET, registration_id)
     client_message.add(initial_frame)
     return client_message
 
@@ -40,7 +40,7 @@ def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict(response=None)
     initial_frame = iterator.next()
-    response["response"] = FixedSizeTypesCodec.decode_boolean(initial_frame.content, RESPONSE_RESPONSE_FIELD_OFFSET)
+    response["response"] = fixed_size_types_codec.decode_boolean(initial_frame.content, RESPONSE_RESPONSE_FIELD_OFFSET)
     return response
 
 

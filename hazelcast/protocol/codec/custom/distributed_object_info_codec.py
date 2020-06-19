@@ -4,28 +4,26 @@ from hazelcast.protocol.codec.builtin import *
 from hazelcast.protocol.codec.custom import *
 from hazelcast.core import DistributedObjectInfo
 
-# Generated("c8b1c42a96f0be9b24404cb9d0215c94")
+# Generated("321dd7ac7c1cfdd6065d2bd050972b3b")
 
 
 
-class DistributedObjectInfoCodec(object):
-    @staticmethod
-    def encode(client_message, distributed_object_info):
-        client_message.add(BEGIN_FRAME)
+def encode(client_message, distributed_object_info):
+    client_message.add(BEGIN_FRAME)
 
-        StringCodec.encode(client_message, distributed_object_info.service_name)
-        StringCodec.encode(client_message, distributed_object_info.name)
+    string_codec.encode(client_message, distributed_object_info.service_name)
+    string_codec.encode(client_message, distributed_object_info.name)
 
-        client_message.add(END_FRAME)
+    client_message.add(END_FRAME)
 
-    @staticmethod
-    def decode(iterator):
-        # begin frame
-        iterator.next()
 
-        service_name = StringCodec.decode(iterator)
-        name = StringCodec.decode(iterator)
+def decode(iterator):
+    # begin frame
+    iterator.next()
 
-        CodecUtil.fast_forward_to_end_frame(iterator)
+    service_name = string_codec.decode(iterator)
+    name = string_codec.decode(iterator)
 
-        return DistributedObjectInfo(service_name, name)
+    codec_util.fast_forward_to_end_frame(iterator)
+
+    return DistributedObjectInfo(service_name, name)

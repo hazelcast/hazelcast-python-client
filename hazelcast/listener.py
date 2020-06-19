@@ -29,7 +29,7 @@ class ListenerService(object):
         self._client = client
         self._invocation_service = client.invoker
         self.is_smart = client.config.network_config.smart_routing
-        self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
+        self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
         self._active_registrations = {}  # Dict of user_registration_id, ListenerRegistration
         self._registration_lock = threading.RLock()
         self._event_handlers = {}
@@ -42,8 +42,9 @@ class ListenerService(object):
             last_exception = None
             for member in cluster_service.members:
                 try:
-                    self._client.connection_manager.get_or_connect(member.uuid).result()
+                    self._client.connection_manager.get_or_connect(member.address).result()
                 except Exception as e:
+                    print(e)
                     last_failed_member = member
                     last_exception = e
             if last_exception is None:
@@ -67,7 +68,8 @@ class ListenerService(object):
 
     def register_listener(self, registration_request, decode_register_response, encode_deregister_request, handler):
         if self.is_smart:
-            self.try_sync_connect_to_all_members()
+            # self.try_sync_connect_to_all_members()
+            pass
 
         with self._registration_lock:
             user_registration_id = str(uuid4())

@@ -1,8 +1,7 @@
 import logging
-import threading
+import itertools
 
 from hazelcast.hash import hash_to_index
-from hazelcast.protocol.codec import client_get_partitions_codec
 from hazelcast import six
 
 PARTITION_UPDATE_INTERVAL = 10
@@ -17,28 +16,9 @@ class PartitionService(object):
 
     def __init__(self, client):
         self._client = client
-        self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
+        self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
         self.partition_count = 0
         self.partition_table = PartitionTable(None, -1, {})
-
-    def start(self):
-        """
-        Starts the partition service.
-        """
-        self.logger.debug("Starting partition service", extra=self._logger_extras)
-
-        def partition_updater():
-            self._do_refresh()
-            self.timer = self._client.reactor.add_timer(PARTITION_UPDATE_INTERVAL, partition_updater)
-
-        self.timer = self._client.reactor.add_timer(PARTITION_UPDATE_INTERVAL, partition_updater)
-
-    def shutdown(self):
-        """
-        Shutdowns the partition service.
-        """
-        if self.timer:
-            self.timer.cancel()
 
     def refresh(self):
         """
@@ -53,14 +33,15 @@ class PartitionService(object):
         :param partition_id: (int), the partition id.
         :return: (:class:`uuid.UUID`), owner of partition or ``None`` if it's not set yet.
         """
-        #print("get partition owner {}".format(partition_id not in self.partition_table.partitions))
-        if not self.partition_table.partitions or partition_id not in list(self.partition_table.partitions.values())[0]:
+        if not self.partition_table.partitions or \
+                partition_id not in set(itertools.chain.from_iterable(self.partition_table.partitions.values())):
             return None
+
         for key, value in self.partition_table.partitions.items():
             if partition_id in value:
-                #print("key:{}".format(key))
                 return key
-        #return self.partition_table.partitions.get(partition_id, None)
+
+        return None
 
     def get_partition_id(self, key):
         """
@@ -91,15 +72,6 @@ class PartitionService(object):
         self.partition_table.partition_state_version = -1
         self.partition_table.partitions = {}
 
-    def process_partition_response(self, message):
-        partitions = client_get_partitions_codec.decode_response(message)["partitions"]
-        partitions_dict = {}
-        for addr, partition_list in six.iteritems(partitions):
-            for partition in partition_list:
-                partitions_dict[partition] = addr
-        self.partition_table.partitions.update(partitions_dict)
-        self.logger.debug("Finished updating partitions", extra=self._logger_extras)
-
     def handle_partitions_view_event(self, connection, partitions, partition_state_version):
 
         logging.debug("Handling new partition table with  partitionStateVersion: {}".format(partition_state_version),
@@ -112,17 +84,14 @@ class PartitionService(object):
                 dict_partitions = {}
                 for i, j in partitions:
                     dict_partitions[i] = j
-                self.partition_table.connection = connection
-                self.partition_table.partition_state_version = partition_state_version
-                self.partition_table.partitions = dict_partitions
-                # self.partition_table = PartitionTable(connection, partition_state_version, dict_partitions)
+                new_meta_data = PartitionTable(connection, partition_state_version, dict_partitions)
             else:
-                self.partition_table.connection = connection
-                self.partition_table.partition_state_version = partition_state_version
-                self.partition_table.partitions = partitions
-                # self.partition_table = PartitionTable(connection, partition_state_version, partitions)
-            logging.debug("Applied partition table with partitionStateVersion : " + str(partition_state_version),
-                          extra=self._logger_extras)
+                new_meta_data = PartitionTable(connection, partition_state_version, partitions)
+
+            if self.partition_table != new_meta_data:
+                logging.debug("Applied partition table with partitionStateVersion : {}".format(partition_state_version),
+                              extra=self._logger_extras)
+                self.partition_table = new_meta_data
 
     def should_be_applied(self, connection, partitions, partition_state_version, current):
         if not partitions:
@@ -138,7 +107,9 @@ class PartitionService(object):
                             + ", new connection " + str(connection), extra=self._logger_extras)
             return True
         if partition_state_version <= current.partition_state_version:
-            logging.debug("{} {} response state version is old".format(partition_state_version,  current.partition_state_version), extra=self._logger_extras)
+            logging.debug(
+                "{} {} response state version is old".format(partition_state_version, current.partition_state_version),
+                extra=self._logger_extras)
             return False
 
         return True
@@ -169,3 +140,9 @@ class PartitionTable(object):
         self.partitions = partitions
         self.partition_state_version = partition_state_version
         self.connection = connection
+
+    def __eq__(self, other):
+        if not isinstance(other, PartitionTable):
+            return False
+
+        return self.partition_state_version == other.partition_state_version and self.partitions == other.partitions

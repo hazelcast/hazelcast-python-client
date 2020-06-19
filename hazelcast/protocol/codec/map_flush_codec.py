@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("1a77eb5cfd3f1b9c2551515d74e048cc")
+# Generated("e967a4ce13010a96df1bf930908cb4b6")
 
 # hex: 0x010A00
 REQUEST_MESSAGE_TYPE = 68096
@@ -26,17 +26,17 @@ def encode_request(name):
     client_message.retryable = False
     client_message.operation_name = "Map.Flush"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
     client_message.add(initial_frame)
-    StringCodec.encode(client_message, name)
+    string_codec.encode(client_message, name)
     return client_message
 
 
 def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict()
-    #empty initial frame
+    # empty initial frame
     iterator.next()
     return response
 

@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("7556ee4335c157bbb5cbe423ab426392")
+# Generated("527ebf794aa509a213ca37dd873784c3")
 
 # hex: 0x000B00
 REQUEST_MESSAGE_TYPE = 2816
@@ -26,8 +26,8 @@ def encode_request():
     client_message.retryable = True
     client_message.operation_name = "Client.Ping"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
     client_message.add(initial_frame)
     return client_message
 
@@ -35,7 +35,7 @@ def encode_request():
 def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict()
-    #empty initial frame
+    # empty initial frame
     iterator.next()
     return response
 

@@ -20,6 +20,7 @@ class HeartbeatTest(HazelcastTestCase):
         self.member = self.rc.startMember(self.cluster.id)
         self.config = ClientConfig()
 
+        self.config.cluster_name = self.cluster.id
         self.config.set_property(ClientProperties.HEARTBEAT_INTERVAL.name, 500)
         self.config.set_property(ClientProperties.HEARTBEAT_TIMEOUT.name, 2000)
 

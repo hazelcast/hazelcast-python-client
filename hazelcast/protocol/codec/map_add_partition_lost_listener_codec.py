@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("8dc40649967e21f9c83bea0ea5358f39")
+# Generated("2471f868a0930fde26a5fbf7affa5c97")
 
 # hex: 0x011B00
 REQUEST_MESSAGE_TYPE = 72448
@@ -34,11 +34,11 @@ def encode_request(name, local_only):
     client_message.retryable = False
     client_message.operation_name = "Map.AddPartitionLostListener"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
-    FixedSizeTypesCodec.encode_boolean(initial_frame.content, REQUEST_LOCAL_ONLY_FIELD_OFFSET, local_only)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_boolean(initial_frame.content, REQUEST_LOCAL_ONLY_FIELD_OFFSET, local_only)
     client_message.add(initial_frame)
-    StringCodec.encode(client_message, name)
+    string_codec.encode(client_message, name)
     return client_message
 
 
@@ -46,7 +46,7 @@ def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict(response=None)
     initial_frame = iterator.next()
-    response["response"] = FixedSizeTypesCodec.decode_uuid(initial_frame.content, RESPONSE_RESPONSE_FIELD_OFFSET)
+    response["response"] = fixed_size_types_codec.decode_uuid(initial_frame.content, RESPONSE_RESPONSE_FIELD_OFFSET)
     return response
 
 
@@ -55,6 +55,6 @@ def handle(client_message, handle_map_partition_lost_event=None, to_object=None)
     iterator = client_message.frame_iterator()
     if message_type == EVENT_MAP_PARTITION_LOST_MESSAGE_TYPE and handle_map_partition_lost_event is not None:
         initial_frame = iterator.next()
-        partition_id = FixedSizeTypesCodec.decode_int(initial_frame.content, EVENT_MAP_PARTITION_LOST_PARTITION_ID_FIELD_OFFSET)
-        uuid = FixedSizeTypesCodec.decode_uuid(initial_frame.content, EVENT_MAP_PARTITION_LOST_UUID_FIELD_OFFSET)
+        partition_id = fixed_size_types_codec.decode_int(initial_frame.content, EVENT_MAP_PARTITION_LOST_PARTITION_ID_FIELD_OFFSET)
+        uuid = fixed_size_types_codec.decode_uuid(initial_frame.content, EVENT_MAP_PARTITION_LOST_UUID_FIELD_OFFSET)
         handle_map_partition_lost_event(partition_id=partition_id, uuid=uuid)

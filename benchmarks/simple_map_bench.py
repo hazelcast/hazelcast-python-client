@@ -26,8 +26,7 @@ def do_benchmark():
     logger = logging.getLogger("main")
 
     config = hazelcast.ClientConfig()
-    config.group_config.name = "dev"
-    config.group_config.password = "dev-pass"
+    config.cluster_name = "hazelcast"
 
     try:
         from tests.hzrc.client import HzRemoteController

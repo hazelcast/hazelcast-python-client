@@ -3,7 +3,7 @@ import hazelcast
 if __name__ == "__main__":
     # Create configuration for the client
     config = hazelcast.ClientConfig()
-    print("Cluster name: {}".format(config.group_config.name))
+    print("Cluster name: {}".format(config.cluster_name))
 
     # Add member's host:port to the configuration.
     # For each member on your Hazelcast cluster, you should add its host:port pair to the configuration.

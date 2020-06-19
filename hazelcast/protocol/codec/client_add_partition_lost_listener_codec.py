@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("3b7773cc5e134067329753c9ea7efc13")
+# Generated("16d414f65c5340bfc7655021b584966d")
 
 # hex: 0x000600
 REQUEST_MESSAGE_TYPE = 1536
@@ -35,9 +35,9 @@ def encode_request(local_only):
     client_message.retryable = False
     client_message.operation_name = "Client.AddPartitionLostListener"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
-    FixedSizeTypesCodec.encode_boolean(initial_frame.content, REQUEST_LOCAL_ONLY_FIELD_OFFSET, local_only)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_boolean(initial_frame.content, REQUEST_LOCAL_ONLY_FIELD_OFFSET, local_only)
     client_message.add(initial_frame)
     return client_message
 
@@ -46,7 +46,7 @@ def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict(response=None)
     initial_frame = iterator.next()
-    response["response"] = FixedSizeTypesCodec.decode_uuid(initial_frame.content, RESPONSE_RESPONSE_FIELD_OFFSET)
+    response["response"] = fixed_size_types_codec.decode_uuid(initial_frame.content, RESPONSE_RESPONSE_FIELD_OFFSET)
     return response
 
 
@@ -55,7 +55,7 @@ def handle(client_message, handle_partition_lost_event=None, to_object=None):
     iterator = client_message.frame_iterator()
     if message_type == EVENT_PARTITION_LOST_MESSAGE_TYPE and handle_partition_lost_event is not None:
         initial_frame = iterator.next()
-        partition_id = FixedSizeTypesCodec.decode_int(initial_frame.content, EVENT_PARTITION_LOST_PARTITION_ID_FIELD_OFFSET)
-        lost_backup_count = FixedSizeTypesCodec.decode_int(initial_frame.content, EVENT_PARTITION_LOST_LOST_BACKUP_COUNT_FIELD_OFFSET)
-        source = FixedSizeTypesCodec.decode_uuid(initial_frame.content, EVENT_PARTITION_LOST_SOURCE_FIELD_OFFSET)
+        partition_id = fixed_size_types_codec.decode_int(initial_frame.content, EVENT_PARTITION_LOST_PARTITION_ID_FIELD_OFFSET)
+        lost_backup_count = fixed_size_types_codec.decode_int(initial_frame.content, EVENT_PARTITION_LOST_LOST_BACKUP_COUNT_FIELD_OFFSET)
+        source = fixed_size_types_codec.decode_uuid(initial_frame.content, EVENT_PARTITION_LOST_SOURCE_FIELD_OFFSET)
         handle_partition_lost_event(partition_id=partition_id, lost_backup_count=lost_backup_count, source=source)

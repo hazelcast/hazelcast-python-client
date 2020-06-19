@@ -3,41 +3,39 @@ import hazelcast.protocol.bits as Bits
 from hazelcast.protocol.codec.builtin import *
 from hazelcast.protocol.codec.custom import *
 from hazelcast.protocol.exception.error_holder import ErrorHolder
-from hazelcast.protocol.codec.custom.stack_trace_element_codec import StackTraceElementCodec
+from hazelcast.protocol.codec.custom import stack_trace_element_codec
 
-# Generated("354ce4fad0ac8cee9d69f137cd4ee206")
+# Generated("a62058dc55372029c465a20dbdaae981")
 
 ERROR_CODE_FIELD_OFFSET = 0
 INITIAL_FRAME_SIZE = ERROR_CODE_FIELD_OFFSET + Bits.INT_SIZE_IN_BYTES
 
 
-class ErrorHolderCodec(object):
-    @staticmethod
-    def encode(client_message, error_holder):
-        client_message.add(BEGIN_FRAME)
+def encode(client_message, error_holder):
+    client_message.add(BEGIN_FRAME)
 
-        initial_frame = ClientMessage.Frame(bytearray(INITIAL_FRAME_SIZE))
-        FixedSizeTypesCodec.encode_int(initial_frame.content, ERROR_CODE_FIELD_OFFSET, error_holder.error_code)
-        client_message.add(initial_frame)
+    initial_frame = ClientMessage.Frame(bytearray(INITIAL_FRAME_SIZE))
+    fixed_size_types_codec.encode_int(initial_frame.content, ERROR_CODE_FIELD_OFFSET, error_holder.error_code)
+    client_message.add(initial_frame)
 
-        StringCodec.encode(client_message, error_holder.class_name)
-        CodecUtil.encode_nullable(client_message, error_holder.message(), StringCodec.encode)
-        ListMultiFrameCodec.encode(client_message, error_holder.stack_trace_elements, StackTraceElementCodec.encode)
+    string_codec.encode(client_message, error_holder.class_name)
+    codec_util.encode_nullable(client_message, error_holder.message, string_codec.encode)
+    list_multi_frame_codec.encode(client_message, error_holder.stack_trace_elements, stack_trace_element_codec.encode)
 
-        client_message.add(END_FRAME)
+    client_message.add(END_FRAME)
 
-    @staticmethod
-    def decode(iterator):
-        # begin frame
-        iterator.next()
 
-        initial_frame = iterator.next()
-        error_code = FixedSizeTypesCodec.decode_int(initial_frame.content, ERROR_CODE_FIELD_OFFSET)
+def decode(iterator):
+    # begin frame
+    iterator.next()
 
-        class_name = StringCodec.decode(iterator)
-        message = CodecUtil.decode_nullable(iterator, StringCodec.decode)
-        stack_trace_elements = ListMultiFrameCodec.decode(iterator, StackTraceElementCodec.decode)
+    initial_frame = iterator.next()
+    error_code = fixed_size_types_codec.decode_int(initial_frame.content, ERROR_CODE_FIELD_OFFSET)
 
-        CodecUtil.fast_forward_to_end_frame(iterator)
+    class_name = string_codec.decode(iterator)
+    message = codec_util.decode_nullable(iterator, string_codec.decode)
+    stack_trace_elements = list_multi_frame_codec.decode(iterator, stack_trace_element_codec.decode)
 
-        return ErrorHolder(error_code, class_name, message, stack_trace_elements)
+    codec_util.fast_forward_to_end_frame(iterator)
+
+    return ErrorHolder(error_code, class_name, message, stack_trace_elements)

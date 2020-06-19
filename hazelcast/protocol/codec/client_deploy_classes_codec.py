@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("24312adfeba0624190372b45810d5595")
+# Generated("ae9aca0540133d559ab514354a45ed0d")
 
 # hex: 0x000D00
 REQUEST_MESSAGE_TYPE = 3328
@@ -26,17 +26,17 @@ def encode_request(class_definitions):
     client_message.retryable = False
     client_message.operation_name = "Client.DeployClasses"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
     client_message.add(initial_frame)
-    EntryListCodec.encode(client_message, class_definitions, StringCodec.encode, byteArrayCodec.encode)
+    entry_list_codec.encode(client_message, class_definitions, string_codec.encode, byte_array_codec.encode)
     return client_message
 
 
 def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict()
-    #empty initial frame
+    # empty initial frame
     iterator.next()
     return response
 

@@ -7,48 +7,23 @@ from hazelcast.util import enum
 from hazelcast.serialization.api import IdentifiedDataSerializable
 
 
-class Member(object):
-    """
-    Represents a member in the cluster with its address, uuid, lite member status and attributes.
-    """
-    def __init__(self, address, uuid, is_lite_member=False, attributes={}):
+class MemberInfo(object):
+    def __init__(self, address, uuid, attributes={}, is_lite_member=False, version=None):
         self.address = address
         self.uuid = uuid
-        self.is_lite_member = is_lite_member
+        self.lite_member = is_lite_member
         self.attributes = attributes
+        self.version = version
 
     def __str__(self):
-        return "Member [{}]:{} - {}".format(self.address.host, self.address.port, self.uuid)
+        return "MemberInfo [{}]:{} - {}".format(self.address.host, self.address.port, self.uuid)
 
     def __repr__(self):
-        return "Member(host={}, port={}, uuid={}, liteMember={}, attributes={})" \
-            .format(self.address.host, self.address.port, self.uuid, self.is_lite_member, self.attributes)
+        return "MemberInfo(host={}, port={}, uuid={}, liteMember={}, attributes={})" \
+            .format(self.address.host, self.address.port, self.uuid, self.lite_member, self.attributes)
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.address == other.address and self.uuid == other.uuid
-
-
-class MemberInfo(object):
-    def __init__(self, address, uuid, attributes, lite_member, version):
-        self.address = address
-        self.uuid = uuid
-        self.attributes = attributes
-        self.lite_member = lite_member
-        self.version = version
-
-    def __eq__(self, other):
-        if other is None:
-            return False
-
-        if self.address != other.address:
-            return False
-
-        return self.uuid == other.uuid if self.uuid is not None else other.uuid is None
-
-    def __str__(self):
-        return """
-        Member[uuid: {}, address: {}, lite_member: {}, member_list_join_version: {}]
-        """.format(self.uuid, self.address, self.lite_member, self.version)
 
 
 class MemberVersion(object):
@@ -130,69 +105,7 @@ class DistributedObjectEvent(object):
                "event_type={}]".format(self.name, self.service_name, self.event_type)
 
 
-class EntryView(object):
-    """
-    EntryView represents a readonly view of a map entry.
-    """
-    key = None
-    """
-    The key of the entry.
-    """
-    value = None
-    """
-    The value of the entry.
-    """
-    cost = None
-    """
-    The cost in bytes of the entry.
-    """
-    creation_time = None
-    """
-    The creation time of the entry.
-    """
-    expiration_time = None
-    """
-    The expiration time of the entry.
-    """
-    hits = None
-    """
-    Number of hits of the entry.
-    """
-    last_access_time = None
-    """
-    The last access time for the entry.
-    """
-    last_stored_time = None
-    """
-    The last store time for the value.
-    """
-    last_update_time = None
-    """
-    The last time the value was updated.
-    """
-    version = None
-    """
-    The version of the entry.
-    """
-    eviction_criteria_number = None
-    """
-    The criteria number for eviction.
-    """
-    ttl = None
-    """
-    The last set time to live second.
-    """
-
-    def __repr__(self):
-        return "EntryView(key=%s, value=%s, cost=%s, creation_time=%s, expiration_time=%s, hits=%s, last_access_time=%s, " \
-               "last_stored_time=%s, last_update_time=%s, version=%s, eviction_criteria_number=%s, ttl=%s" % (
-                   self.key, self.value, self.cost, self.creation_time, self.expiration_time, self.hits,
-                   self.last_access_time, self.last_stored_time, self.last_update_time, self.version,
-                   self.eviction_criteria_number, self.ttl)
-
-
-# TODO: check if these super classes is necessary to extend.
-class SimpleEntryView(EntryView, IdentifiedDataSerializable):
+class SimpleEntryView(object):
     def __init__(self, key, value, cost, creation_time, expiration_time, hits, last_access_time, last_stored_time,
                  last_update_time, version, ttl, max_idle):
         self.key = key
@@ -209,11 +122,12 @@ class SimpleEntryView(EntryView, IdentifiedDataSerializable):
         self.max_idle = max_idle
 
     def __repr__(self):
-        return "EntryView(key=%s, value=%s, cost=%s, creation_time=%s, expiration_time=%s, hits=%s, last_access_time=%s, " \
-               "last_stored_time=%s, last_update_time=%s, version=%s, ttl=%s, max_idle=%s" % (
+        return "SimpleEntryView(key=%s, value=%s, cost=%s, creation_time=%s, expiration_time=%s, hits=%s, " \
+               "last_access_time=%s, last_stored_time=%s, last_update_time=%s, version=%s, ttl=%s, max_idle=%s" % (
                    self.key, self.value, self.cost, self.creation_time, self.expiration_time, self.hits,
                    self.last_access_time, self.last_stored_time, self.last_update_time, self.version,
                    self.ttl, self.max_idle)
+
 
 class MemberSelector(object):
     """

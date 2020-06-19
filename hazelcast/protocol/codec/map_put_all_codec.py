@@ -11,13 +11,14 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("8920cbc59d0c46a82c58295c26aec0a3")
+# Generated("23681164cc4e33faf9c8f6d1b9b246f2")
 
 # hex: 0x012C00
 REQUEST_MESSAGE_TYPE = 76800
 # hex: 0x012C01
 RESPONSE_MESSAGE_TYPE = 76801
-REQUEST_INITIAL_FRAME_SIZE = PARTITION_ID_FIELD_OFFSET + Bits.INT_SIZE_IN_BYTES
+REQUEST_TRIGGER_MAP_LOADER_FIELD_OFFSET = PARTITION_ID_FIELD_OFFSET + Bits.INT_SIZE_IN_BYTES
+REQUEST_INITIAL_FRAME_SIZE = REQUEST_TRIGGER_MAP_LOADER_FIELD_OFFSET + Bits.BOOLEAN_SIZE_IN_BYTES
 RESPONSE_INITIAL_FRAME_SIZE = RESPONSE_BACKUP_ACKS_FIELD_OFFSET + Bits.BYTE_SIZE_IN_BYTES
 
 
@@ -26,18 +27,19 @@ def encode_request(name, entries):
     client_message.retryable = False
     client_message.operation_name = "Map.PutAll"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    # fixed_size_types_codec.encode_boolean(initial_frame.content, REQUEST_TRIGGER_MAP_LOADER_FIELD_OFFSET, trigger_map_loader)
     client_message.add(initial_frame)
-    StringCodec.encode(client_message, name)
-    EntryListCodec.encode(client_message, entries, DataCodec.encode, DataCodec.encode)
+    string_codec.encode(client_message, name)
+    entry_list_codec.encode(client_message, entries, data_codec.encode, data_codec.encode)
     return client_message
 
 
 def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict()
-    #empty initial frame
+    # empty initial frame
     iterator.next()
     return response
 

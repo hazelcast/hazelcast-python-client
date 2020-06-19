@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("269c51175eaf12e2c9d53e7ef437a991")
+# Generated("02a986ff36b91fc1f53fe27ae7feb1f9")
 
 # hex: 0x011700
 REQUEST_MESSAGE_TYPE = 71424
@@ -37,14 +37,14 @@ def encode_request(name, predicate, include_value, listener_flags, local_only):
     client_message.retryable = False
     client_message.operation_name = "Map.AddEntryListenerWithPredicate"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
-    FixedSizeTypesCodec.encode_boolean(initial_frame.content, REQUEST_INCLUDE_VALUE_FIELD_OFFSET, include_value)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, REQUEST_LISTENER_FLAGS_FIELD_OFFSET, listener_flags)
-    FixedSizeTypesCodec.encode_boolean(initial_frame.content, REQUEST_LOCAL_ONLY_FIELD_OFFSET, local_only)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_boolean(initial_frame.content, REQUEST_INCLUDE_VALUE_FIELD_OFFSET, include_value)
+    fixed_size_types_codec.encode_int(initial_frame.content, REQUEST_LISTENER_FLAGS_FIELD_OFFSET, listener_flags)
+    fixed_size_types_codec.encode_boolean(initial_frame.content, REQUEST_LOCAL_ONLY_FIELD_OFFSET, local_only)
     client_message.add(initial_frame)
-    StringCodec.encode(client_message, name)
-    DataCodec.encode(client_message, predicate)
+    string_codec.encode(client_message, name)
+    data_codec.encode(client_message, predicate)
     return client_message
 
 
@@ -52,7 +52,7 @@ def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict(response=None)
     initial_frame = iterator.next()
-    response["response"] = FixedSizeTypesCodec.decode_uuid(initial_frame.content, RESPONSE_RESPONSE_FIELD_OFFSET)
+    response["response"] = fixed_size_types_codec.decode_uuid(initial_frame.content, RESPONSE_RESPONSE_FIELD_OFFSET)
     return response
 
 
@@ -61,11 +61,11 @@ def handle(client_message, handle_entry_event=None, to_object=None):
     iterator = client_message.frame_iterator()
     if message_type == EVENT_ENTRY_MESSAGE_TYPE and handle_entry_event is not None:
         initial_frame = iterator.next()
-        event_type = FixedSizeTypesCodec.decode_int(initial_frame.content, EVENT_ENTRY_EVENT_TYPE_FIELD_OFFSET)
-        uuid = FixedSizeTypesCodec.decode_uuid(initial_frame.content, EVENT_ENTRY_UUID_FIELD_OFFSET)
-        number_of_affected_entries = FixedSizeTypesCodec.decode_int(initial_frame.content, EVENT_ENTRY_NUMBER_OF_AFFECTED_ENTRIES_FIELD_OFFSET)
-        key = to_object(CodecUtil.decode_nullable(iterator, DataCodec.decode))
-        value = to_object(CodecUtil.decode_nullable(iterator, DataCodec.decode))
-        old_value = to_object(CodecUtil.decode_nullable(iterator, DataCodec.decode))
-        merging_value = to_object(CodecUtil.decode_nullable(iterator, DataCodec.decode))
+        event_type = fixed_size_types_codec.decode_int(initial_frame.content, EVENT_ENTRY_EVENT_TYPE_FIELD_OFFSET)
+        uuid = fixed_size_types_codec.decode_uuid(initial_frame.content, EVENT_ENTRY_UUID_FIELD_OFFSET)
+        number_of_affected_entries = fixed_size_types_codec.decode_int(initial_frame.content, EVENT_ENTRY_NUMBER_OF_AFFECTED_ENTRIES_FIELD_OFFSET)
+        key = to_object(codec_util.decode_nullable(iterator, data_codec.decode))
+        value = to_object(codec_util.decode_nullable(iterator, data_codec.decode))
+        old_value = to_object(codec_util.decode_nullable(iterator, data_codec.decode))
+        merging_value = to_object(codec_util.decode_nullable(iterator, data_codec.decode))
         handle_entry_event(key=key, value=value, old_value=old_value, merging_value=merging_value, event_type=event_type, uuid=uuid, number_of_affected_entries=number_of_affected_entries)

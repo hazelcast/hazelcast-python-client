@@ -46,7 +46,7 @@ class AsyncoreReactor(object):
         while self._is_live:
             try:
                 asyncore.loop(count=1, timeout=0.01, map=self._map)
-                #self._check_timers()
+                self._check_timers()
             except select.error as err:
                 # TODO: parse error type to catch only error "9"
                 self.logger.warning("Connection closed by server", extra=self._logger_extras)
@@ -236,7 +236,6 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         return not self._closed and self.sent_protocol_bytes
 
     def write(self, data):
-        #print("sending msg")
         # if write queue is empty, send the data right away, otherwise add to queue
         if len(self._write_queue) == 0 and self._write_lock.acquire(False):
             try:

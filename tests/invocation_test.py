@@ -10,6 +10,7 @@ class InvocationTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
         config.set_property(ClientProperties.INVOCATION_TIMEOUT_SECONDS.name, 1)
+        config.cluster_name = cls.cluster.id
         return config
 
     def test_invocation_timeout(self):

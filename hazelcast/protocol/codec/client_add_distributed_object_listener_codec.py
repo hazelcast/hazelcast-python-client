@@ -11,15 +11,14 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("2a932651253418c4243ba2ec165f998b")
+# Generated("8c5c915122b5264a32875f29dba71e07")
 
 # hex: 0x000900
 REQUEST_MESSAGE_TYPE = 2304
 # hex: 0x000901
 RESPONSE_MESSAGE_TYPE = 2305
 REQUEST_LOCAL_ONLY_FIELD_OFFSET = PARTITION_ID_FIELD_OFFSET + Bits.INT_SIZE_IN_BYTES
-REQUEST_INTERNAL_FIELD_OFFSET = REQUEST_LOCAL_ONLY_FIELD_OFFSET + Bits.BOOLEAN_SIZE_IN_BYTES
-REQUEST_INITIAL_FRAME_SIZE = REQUEST_INTERNAL_FIELD_OFFSET + Bits.BOOLEAN_SIZE_IN_BYTES
+REQUEST_INITIAL_FRAME_SIZE = REQUEST_LOCAL_ONLY_FIELD_OFFSET + Bits.BOOLEAN_SIZE_IN_BYTES
 RESPONSE_RESPONSE_FIELD_OFFSET = RESPONSE_BACKUP_ACKS_FIELD_OFFSET + Bits.BYTE_SIZE_IN_BYTES
 
 RESPONSE_INITIAL_FRAME_SIZE = RESPONSE_RESPONSE_FIELD_OFFSET + Bits.UUID_SIZE_IN_BYTES
@@ -29,15 +28,14 @@ EVENT_DISTRIBUTED_OBJECT_INITIAL_FRAME_SIZE = EVENT_DISTRIBUTED_OBJECT_SOURCE_FI
 EVENT_DISTRIBUTED_OBJECT_MESSAGE_TYPE = 2306
 
 
-def encode_request(local_only, internal):
+def encode_request(local_only):
     client_message = ClientMessage.create_for_encode()
     client_message.retryable = False
     client_message.operation_name = "Client.AddDistributedObjectListener"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
-    FixedSizeTypesCodec.encode_boolean(initial_frame.content, REQUEST_LOCAL_ONLY_FIELD_OFFSET, local_only)
-    FixedSizeTypesCodec.encode_boolean(initial_frame.content, REQUEST_INTERNAL_FIELD_OFFSET, internal)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_boolean(initial_frame.content, REQUEST_LOCAL_ONLY_FIELD_OFFSET, local_only)
     client_message.add(initial_frame)
     return client_message
 
@@ -46,7 +44,7 @@ def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict(response=None)
     initial_frame = iterator.next()
-    response["response"] = FixedSizeTypesCodec.decode_uuid(initial_frame.content, RESPONSE_RESPONSE_FIELD_OFFSET)
+    response["response"] = fixed_size_types_codec.decode_uuid(initial_frame.content, RESPONSE_RESPONSE_FIELD_OFFSET)
     return response
 
 
@@ -55,8 +53,8 @@ def handle(client_message, handle_distributed_object_event=None, to_object=None)
     iterator = client_message.frame_iterator()
     if message_type == EVENT_DISTRIBUTED_OBJECT_MESSAGE_TYPE and handle_distributed_object_event is not None:
         initial_frame = iterator.next()
-        source = FixedSizeTypesCodec.decode_uuid(initial_frame.content, EVENT_DISTRIBUTED_OBJECT_SOURCE_FIELD_OFFSET)
-        name = StringCodec.decode(iterator)
-        service_name = StringCodec.decode(iterator)
-        event_type = StringCodec.decode(iterator)
+        source = fixed_size_types_codec.decode_uuid(initial_frame.content, EVENT_DISTRIBUTED_OBJECT_SOURCE_FIELD_OFFSET)
+        name = string_codec.decode(iterator)
+        service_name = string_codec.decode(iterator)
+        event_type = string_codec.decode(iterator)
         handle_distributed_object_event(name=name, service_name=service_name, event_type=event_type, source=source)

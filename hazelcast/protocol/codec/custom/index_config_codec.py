@@ -4,39 +4,37 @@ from hazelcast.protocol.codec.builtin import *
 from hazelcast.protocol.codec.custom import *
 from hazelcast.config import IndexConfig
 
-# Generated("6735605f2429ef2b7c8fb14748bd0c1f")
+# Generated("f4ec29bc3b6874ba2d676eb9c9b6dd1b")
 
 TYPE_FIELD_OFFSET = 0
 INITIAL_FRAME_SIZE = TYPE_FIELD_OFFSET + Bits.INT_SIZE_IN_BYTES
 
 
-class IndexConfigCodec(object):
-    @staticmethod
-    def encode(client_message, index_config):
-        client_message.add(BEGIN_FRAME)
+def encode(client_message, index_config):
+    client_message.add(BEGIN_FRAME)
 
-        initial_frame = ClientMessage.Frame(bytearray(INITIAL_FRAME_SIZE))
-        FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, index_config.type)
-        client_message.add(initial_frame)
+    initial_frame = ClientMessage.Frame(bytearray(INITIAL_FRAME_SIZE))
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, index_config.type)
+    client_message.add(initial_frame)
 
-        CodecUtil.encode_nullable(client_message, index_config.name, StringCodec.encode)
-        ListMultiFrameCodec.encode(client_message, index_config.attributes, StringCodec.encode)
-        CodecUtil.encode_nullable(client_message, index_config.bitmap_index_options, BitmapIndexOptionsCodec.encode)
+    codec_util.encode_nullable(client_message, index_config.name, string_codec.encode)
+    list_multi_frame_codec.encode(client_message, index_config.attributes, string_codec.encode)
+    codec_util.encode_nullable(client_message, index_config.bitmap_index_options, bitmap_index_options_codec.encode)
 
-        client_message.add(END_FRAME)
+    client_message.add(END_FRAME)
 
-    @staticmethod
-    def decode(iterator):
-        # begin frame
-        iterator.next()
 
-        initial_frame = iterator.next()
-        type = FixedSizeTypesCodec.decode_int(initial_frame.content, TYPE_FIELD_OFFSET)
+def decode(iterator):
+    # begin frame
+    iterator.next()
 
-        name = CodecUtil.decode_nullable(iterator, StringCodec.decode)
-        attributes = ListMultiFrameCodec.decode(iterator, StringCodec.decode)
-        bitmap_index_options = CodecUtil.decode_nullable(iterator, BitmapIndexOptionsCodec.decode)
+    initial_frame = iterator.next()
+    type = fixed_size_types_codec.decode_int(initial_frame.content, TYPE_FIELD_OFFSET)
 
-        CodecUtil.fast_forward_to_end_frame(iterator)
+    name = codec_util.decode_nullable(iterator, string_codec.decode)
+    attributes = list_multi_frame_codec.decode(iterator, string_codec.decode)
+    bitmap_index_options = codec_util.decode_nullable(iterator, bitmap_index_options_codec.decode)
 
-        return IndexConfig(name, type, attributes, bitmap_index_options)
+    codec_util.fast_forward_to_end_frame(iterator)
+
+    return IndexConfig(name, type, attributes, bitmap_index_options)

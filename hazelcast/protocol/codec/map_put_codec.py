@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("d3be6b935373bbdbb1e453a83f10ff01")
+# Generated("d3f827a1b88fa585c87a2fec3901c5ad")
 
 # hex: 0x010100
 REQUEST_MESSAGE_TYPE = 65792
@@ -28,23 +28,23 @@ def encode_request(name, key, value, thread_id, ttl):
     client_message.retryable = False
     client_message.operation_name = "Map.Put"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
-    FixedSizeTypesCodec.encode_long(initial_frame.content, REQUEST_THREAD_ID_FIELD_OFFSET, thread_id)
-    FixedSizeTypesCodec.encode_long(initial_frame.content, REQUEST_TTL_FIELD_OFFSET, ttl)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_long(initial_frame.content, REQUEST_THREAD_ID_FIELD_OFFSET, thread_id)
+    fixed_size_types_codec.encode_long(initial_frame.content, REQUEST_TTL_FIELD_OFFSET, ttl)
     client_message.add(initial_frame)
-    StringCodec.encode(client_message, name)
-    DataCodec.encode(client_message, key)
-    DataCodec.encode(client_message, value)
+    string_codec.encode(client_message, name)
+    data_codec.encode(client_message, key)
+    data_codec.encode(client_message, value)
     return client_message
 
 
 def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict(response=None)
-    #empty initial frame
+    # empty initial frame
     iterator.next()
-    response["response"] = CodecUtil.decode_nullable(iterator, DataCodec.decode)
+    response["response"] = to_object(codec_util.decode_nullable(iterator, data_codec.decode))
     return response
 
 

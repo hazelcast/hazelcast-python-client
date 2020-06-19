@@ -12,6 +12,7 @@ class ListenerTest(HazelcastTestCase):
         self.m2 = self.cluster.start_member()
         self.m3 = self.cluster.start_member()
         self.client_config = ClientConfig()
+        self.client_config.cluster_name = self.cluster.id
         self.collector = event_collector()
 
     def tearDown(self):
@@ -23,7 +24,8 @@ class ListenerTest(HazelcastTestCase):
         self.client_config.network_config.smart_routing = True
         client = self.create_client(self.client_config)
         map = client.get_map(random_string()).blocking()
-        key_m1 = generate_key_owned_by_instance(client, self.m1.address)
+        map.put('key', 'value')
+        key_m1 = generate_key_owned_by_instance(client, self.m1.uuid)
         map.put(key_m1, 'value1')
         map.add_entry_listener(updated_func=self.collector)
         self.m1.shutdown()

@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("122ca7c2d41ba6ae01871d7a93c283e3")
+# Generated("fd969391df125e16e458f61b662ab7be")
 
 # hex: 0x013A00
 REQUEST_MESSAGE_TYPE = 80384
@@ -26,21 +26,21 @@ def encode_request(name, aggregator, predicate):
     client_message.retryable = True
     client_message.operation_name = "Map.AggregateWithPredicate"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
     client_message.add(initial_frame)
-    StringCodec.encode(client_message, name)
-    DataCodec.encode(client_message, aggregator)
-    DataCodec.encode(client_message, predicate)
+    string_codec.encode(client_message, name)
+    data_codec.encode(client_message, aggregator)
+    data_codec.encode(client_message, predicate)
     return client_message
 
 
 def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict(response=None)
-    #empty initial frame
+    # empty initial frame
     iterator.next()
-    response["response"] = to_object(CodecUtil.decode_nullable(iterator, DataCodec.decode))
+    response["response"] = to_object(codec_util.decode_nullable(iterator, data_codec.decode))
     return response
 
 

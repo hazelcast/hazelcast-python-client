@@ -1,6 +1,6 @@
 from hazelcast.protocol.client_message import ClientMessage,RESPONSE_BACKUP_ACKS_FIELD_OFFSET,UNFRAGMENTED_MESSAGE
 from hazelcast.protocol.bits import BYTE_SIZE_IN_BYTES
-from hazelcast.protocol.codec.builtin.list_multi_frame_codec import ListMultiFrameCodec
+from hazelcast.protocol.codec.builtin import list_multi_frame_codec
 # from hazelcast.protocol.codec.custom.error_holder_codec import ErrorHolderCodec
 
 
@@ -14,7 +14,7 @@ class ErrorsCodec:
         initial_frame = ClientMessage.Frame(bytearray(INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
         client_message.add(initial_frame)
         client_message.set_message_type(EXCEPTION_MESSAGE_TYPE)
-        ListMultiFrameCodec.encode(client_message, error_holders, ErrorHolderCodec.encode)
+        list_multi_frame_codec.encode(client_message, error_holders, ErrorHolderCodec.encode)
         return client_message
 
     @staticmethod

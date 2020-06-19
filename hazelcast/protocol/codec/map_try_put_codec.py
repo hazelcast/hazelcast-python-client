@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("8aeca5da56f47f1d5c7782a92392dfb7")
+# Generated("92e00b2be9ea714bd46c8612cbf1e44c")
 
 # hex: 0x010C00
 REQUEST_MESSAGE_TYPE = 68608
@@ -30,14 +30,14 @@ def encode_request(name, key, value, thread_id, timeout):
     client_message.retryable = False
     client_message.operation_name = "Map.TryPut"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
-    FixedSizeTypesCodec.encode_long(initial_frame.content, REQUEST_THREAD_ID_FIELD_OFFSET, thread_id)
-    FixedSizeTypesCodec.encode_long(initial_frame.content, REQUEST_TIMEOUT_FIELD_OFFSET, timeout)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_long(initial_frame.content, REQUEST_THREAD_ID_FIELD_OFFSET, thread_id)
+    fixed_size_types_codec.encode_long(initial_frame.content, REQUEST_TIMEOUT_FIELD_OFFSET, timeout)
     client_message.add(initial_frame)
-    StringCodec.encode(client_message, name)
-    DataCodec.encode(client_message, key)
-    DataCodec.encode(client_message, value)
+    string_codec.encode(client_message, name)
+    data_codec.encode(client_message, key)
+    data_codec.encode(client_message, value)
     return client_message
 
 
@@ -45,7 +45,7 @@ def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict(response=None)
     initial_frame = iterator.next()
-    response["response"] = FixedSizeTypesCodec.decode_boolean(initial_frame.content, RESPONSE_RESPONSE_FIELD_OFFSET)
+    response["response"] = fixed_size_types_codec.decode_boolean(initial_frame.content, RESPONSE_RESPONSE_FIELD_OFFSET)
     return response
 
 

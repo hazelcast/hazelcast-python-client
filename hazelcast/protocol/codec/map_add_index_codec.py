@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("9b8625fc6bb9b5841fb8f2425e5be22c")
+# Generated("e3ba824f416bbe642ab597cedea4e3e1")
 
 # hex: 0x012900
 REQUEST_MESSAGE_TYPE = 76032
@@ -26,18 +26,18 @@ def encode_request(name, index_config):
     client_message.retryable = False
     client_message.operation_name = "Map.AddIndex"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
     client_message.add(initial_frame)
-    StringCodec.encode(client_message, name)
-    IndexConfigCodec.encode(client_message, index_config)
+    string_codec.encode(client_message, name)
+    index_config_codec.encode(client_message, index_config)
     return client_message
 
 
 def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict()
-    #empty initial frame
+    # empty initial frame
     iterator.next()
     return response
 

@@ -3,9 +3,8 @@ import hazelcast
 if __name__ == "__main__":
     config = hazelcast.ClientConfig()
 
-    # Set up group name and password for authentication
-    config.group_config.name = "name"
-    config.group_config.password = "password"
+    # Set up cluster name
+    config.cluster_name = "hazelcast"
 
     # Enable SSL for encryption. Default CA certificates will be used.
     config.network_config.ssl_config.enabled = True

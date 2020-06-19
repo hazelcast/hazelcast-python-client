@@ -24,6 +24,7 @@ class ClusterTest(HazelcastTestCase):
 
         member = self.cluster.start_member()
 
+        config.cluster_name = self.cluster.id
         self.create_client(config)
 
         self.assertEqual(len(events), 1)

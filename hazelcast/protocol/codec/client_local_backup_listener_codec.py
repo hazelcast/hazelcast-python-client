@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("d2697ac2980786fc304080baaff6c93c")
+# Generated("3feff9254a197f023719f6d357b6a150")
 
 # hex: 0x000F00
 REQUEST_MESSAGE_TYPE = 3840
@@ -32,8 +32,8 @@ def encode_request():
     client_message.retryable = False
     client_message.operation_name = "Client.LocalBackupListener"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
     client_message.add(initial_frame)
     return client_message
 
@@ -42,7 +42,7 @@ def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict(response=None)
     initial_frame = iterator.next()
-    response["response"] = FixedSizeTypesCodec.decode_uuid(initial_frame.content, RESPONSE_RESPONSE_FIELD_OFFSET)
+    response["response"] = fixed_size_types_codec.decode_uuid(initial_frame.content, RESPONSE_RESPONSE_FIELD_OFFSET)
     return response
 
 
@@ -51,5 +51,5 @@ def handle(client_message, handle_backup_event=None, to_object=None):
     iterator = client_message.frame_iterator()
     if message_type == EVENT_BACKUP_MESSAGE_TYPE and handle_backup_event is not None:
         initial_frame = iterator.next()
-        source_invocation_correlation_id = FixedSizeTypesCodec.decode_long(initial_frame.content, EVENT_BACKUP_SOURCE_INVOCATION_CORRELATION_ID_FIELD_OFFSET)
+        source_invocation_correlation_id = fixed_size_types_codec.decode_long(initial_frame.content, EVENT_BACKUP_SOURCE_INVOCATION_CORRELATION_ID_FIELD_OFFSET)
         handle_backup_event(source_invocation_correlation_id=source_invocation_correlation_id)

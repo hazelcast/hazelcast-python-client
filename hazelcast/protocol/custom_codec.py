@@ -3,7 +3,7 @@ Hazelcast client protocol codecs
 """
 
 from collections import namedtuple
-from hazelcast.core import Member, DistributedObjectInfo, EntryView, Address
+from hazelcast.core import MemberInfo, DistributedObjectInfo, Address
 # TODO: Potential cyclic dependent import
 # from hazelcast.protocol.codec.builtin import ErrorsCodec
 from hazelcast.six.moves import range
@@ -16,7 +16,7 @@ class MemberCodec(object):
     def encode(cls, client_message, member):
         AddressCodec.encode(client_message, member.address)
         client_message.append_str(member.uuid)
-        client_message.append_bool(member.is_lite_member)
+        client_message.append_bool(member.lite_member)
         client_message.append_int(len(member.attributes))
         for key, value in member.attributes:
             client_message.append_str(key)
@@ -33,7 +33,7 @@ class MemberCodec(object):
             key = client_message.read_str()
             value = client_message.read_str()
             attributes[key] = value
-        return Member(address, uuid, lite_member, attributes)
+        return MemberInfo(address, uuid, lite_member, attributes)
 
 
 class AddressCodec(object):
@@ -58,41 +58,6 @@ class DistributedObjectInfoCodec(object):
         service_name = client_message.read_str()
         name = client_message.read_str()
         return DistributedObjectInfo(name, service_name)
-
-
-class EntryViewCodec(object):
-    @classmethod
-    def encode(cls, client_message, entry_view):
-        client_message.append_data(entry_view.key)
-        client_message.append_data(entry_view.value)
-        client_message.append_long(entry_view.cost)
-        client_message.append_long(entry_view.cost)
-        client_message.append_long(entry_view.creationTime)
-        client_message.append_long(entry_view.expirationTime)
-        client_message.append_long(entry_view.hits)
-        client_message.append_long(entry_view.lastAccessTime)
-        client_message.append_long(entry_view.lastStoredTime)
-        client_message.append_long(entry_view.lastUpdateTime)
-        client_message.append_long(entry_view.version)
-        client_message.append_long(entry_view.evictionCriteriaNumber)
-        client_message.append_long(entry_view.ttl)
-
-    @classmethod
-    def decode(cls, client_message, to_object):
-        entry_view = EntryView()
-        entry_view.key = to_object(client_message.read_data())
-        entry_view.value = to_object(client_message.read_data())
-        entry_view.cost = client_message.read_long()
-        entry_view.creation_time = client_message.read_long()
-        entry_view.expiration_time = client_message.read_long()
-        entry_view.hits = client_message.read_long()
-        entry_view.last_access_time = client_message.read_long()
-        entry_view.last_stored_time = client_message.read_long()
-        entry_view.last_update_time = client_message.read_long()
-        entry_view.version = client_message.read_long()
-        entry_view.eviction_criteria_number = client_message.read_long()
-        entry_view.ttl = client_message.read_long()
-        return entry_view
 
 
 class QueryCacheEventDataCodec(object):
@@ -148,8 +113,8 @@ class ErrorCodec(object):
 
 from hazelcast.protocol.client_message import ClientMessage,RESPONSE_BACKUP_ACKS_FIELD_OFFSET,UNFRAGMENTED_MESSAGE
 from hazelcast.protocol.bits import BYTE_SIZE_IN_BYTES
-from hazelcast.protocol.codec.builtin.list_multi_frame_codec import ListMultiFrameCodec
-from hazelcast.protocol.codec.custom.error_holder_codec import ErrorHolderCodec
+from hazelcast.protocol.codec.builtin import list_multi_frame_codec
+from hazelcast.protocol.codec.custom import error_holder_codec
 
 INITIAL_FRAME_SIZE = RESPONSE_BACKUP_ACKS_FIELD_OFFSET + BYTE_SIZE_IN_BYTES
 
@@ -160,7 +125,7 @@ class ErrorsCodec:
         initial_frame = ClientMessage.Frame(bytearray(INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
         client_message.add(initial_frame)
         client_message.set_message_type(EXCEPTION_MESSAGE_TYPE)
-        ListMultiFrameCodec.encode(client_message, error_holders, ErrorHolderCodec.encode)
+        list_multi_frame_codec.encode(client_message, error_holders, error_holder_codec.encode)
         return client_message
 
     @staticmethod
@@ -168,4 +133,4 @@ class ErrorsCodec:
         iterator = client_message.frame_iterator()
 
         iterator.next()
-        return ListMultiFrameCodec.decode(iterator, ErrorHolderCodec.decode)
+        return list_multi_frame_codec.decode(iterator, error_holder_codec.decode)

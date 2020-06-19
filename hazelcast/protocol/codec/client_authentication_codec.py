@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("8df1617cd90ada231e08652eae51ca88")
+# Generated("41c2bb28a5ad88f1fcb285ec109fc98b")
 
 # hex: 0x000100
 REQUEST_MESSAGE_TYPE = 256
@@ -35,18 +35,18 @@ def encode_request(cluster_name, username, password, uuid, client_type, serializ
     client_message.retryable = True
     client_message.operation_name = "Client.Authentication"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
-    FixedSizeTypesCodec.encode_uuid(initial_frame.content, REQUEST_UUID_FIELD_OFFSET, uuid)
-    FixedSizeTypesCodec.encode_byte(initial_frame.content, REQUEST_SERIALIZATION_VERSION_FIELD_OFFSET, serialization_version)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_uuid(initial_frame.content, REQUEST_UUID_FIELD_OFFSET, uuid)
+    fixed_size_types_codec.encode_byte(initial_frame.content, REQUEST_SERIALIZATION_VERSION_FIELD_OFFSET, serialization_version)
     client_message.add(initial_frame)
-    StringCodec.encode(client_message, cluster_name)
-    CodecUtil.encode_nullable(client_message, username, StringCodec.encode)
-    CodecUtil.encode_nullable(client_message, password, StringCodec.encode)
-    StringCodec.encode(client_message, client_type)
-    StringCodec.encode(client_message, client_hazelcast_version)
-    StringCodec.encode(client_message, client_name)
-    ListMultiFrameCodec.encode(client_message, labels, StringCodec.encode)
+    string_codec.encode(client_message, cluster_name)
+    codec_util.encode_nullable(client_message, username, string_codec.encode)
+    codec_util.encode_nullable(client_message, password, string_codec.encode)
+    string_codec.encode(client_message, client_type)
+    string_codec.encode(client_message, client_hazelcast_version)
+    string_codec.encode(client_message, client_name)
+    list_multi_frame_codec.encode(client_message, labels, string_codec.encode)
     return client_message
 
 
@@ -54,14 +54,14 @@ def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict(status=None, address=None, memberUuid=None, serializationVersion=None, serverHazelcastVersion=None, partitionCount=None, clusterId=None, failoverSupported=None)
     initial_frame = iterator.next()
-    response["status"] = FixedSizeTypesCodec.decode_byte(initial_frame.content, RESPONSE_STATUS_FIELD_OFFSET)
-    response["memberUuid"] = FixedSizeTypesCodec.decode_uuid(initial_frame.content, RESPONSE_MEMBER_UUID_FIELD_OFFSET)
-    response["serializationVersion"] = FixedSizeTypesCodec.decode_byte(initial_frame.content, RESPONSE_SERIALIZATION_VERSION_FIELD_OFFSET)
-    response["partitionCount"] = FixedSizeTypesCodec.decode_int(initial_frame.content, RESPONSE_PARTITION_COUNT_FIELD_OFFSET)
-    response["clusterId"] = FixedSizeTypesCodec.decode_uuid(initial_frame.content, RESPONSE_CLUSTER_ID_FIELD_OFFSET)
-    response["failoverSupported"] = FixedSizeTypesCodec.decode_boolean(initial_frame.content, RESPONSE_FAILOVER_SUPPORTED_FIELD_OFFSET)
-    response["address"] = CodecUtil.decode_nullable(iterator, AddressCodec.decode)
-    response["serverHazelcastVersion"] = StringCodec.decode(iterator)
+    response["status"] = fixed_size_types_codec.decode_byte(initial_frame.content, RESPONSE_STATUS_FIELD_OFFSET)
+    response["memberUuid"] = fixed_size_types_codec.decode_uuid(initial_frame.content, RESPONSE_MEMBER_UUID_FIELD_OFFSET)
+    response["serializationVersion"] = fixed_size_types_codec.decode_byte(initial_frame.content, RESPONSE_SERIALIZATION_VERSION_FIELD_OFFSET)
+    response["partitionCount"] = fixed_size_types_codec.decode_int(initial_frame.content, RESPONSE_PARTITION_COUNT_FIELD_OFFSET)
+    response["clusterId"] = fixed_size_types_codec.decode_uuid(initial_frame.content, RESPONSE_CLUSTER_ID_FIELD_OFFSET)
+    response["failoverSupported"] = fixed_size_types_codec.decode_boolean(initial_frame.content, RESPONSE_FAILOVER_SUPPORTED_FIELD_OFFSET)
+    response["address"] = codec_util.decode_nullable(iterator, address_codec.decode)
+    response["serverHazelcastVersion"] = string_codec.decode(iterator)
     return response
 
 

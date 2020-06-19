@@ -4,35 +4,33 @@ from hazelcast.protocol.codec.builtin import *
 from hazelcast.protocol.codec.custom import *
 from hazelcast.core import Address
 
-# Generated("8f840d62b43c43faba3173642c83a984")
+# Generated("6cea8795fb28f977aeb22fbca3290c3b")
 
 PORT_FIELD_OFFSET = 0
 INITIAL_FRAME_SIZE = PORT_FIELD_OFFSET + Bits.INT_SIZE_IN_BYTES
 
 
-class AddressCodec(object):
-    @staticmethod
-    def encode(client_message, address):
-        client_message.add(BEGIN_FRAME)
+def encode(client_message, address):
+    client_message.add(BEGIN_FRAME)
 
-        initial_frame = ClientMessage.Frame(bytearray(INITIAL_FRAME_SIZE))
-        FixedSizeTypesCodec.encode_int(initial_frame.content, PORT_FIELD_OFFSET, address.port)
-        client_message.add(initial_frame)
+    initial_frame = ClientMessage.Frame(bytearray(INITIAL_FRAME_SIZE))
+    fixed_size_types_codec.encode_int(initial_frame.content, PORT_FIELD_OFFSET, address.port)
+    client_message.add(initial_frame)
 
-        StringCodec.encode(client_message, address.host)
+    string_codec.encode(client_message, address.host)
 
-        client_message.add(END_FRAME)
+    client_message.add(END_FRAME)
 
-    @staticmethod
-    def decode(iterator):
-        # begin frame
-        iterator.next()
 
-        initial_frame = iterator.next()
-        port = FixedSizeTypesCodec.decode_int(initial_frame.content, PORT_FIELD_OFFSET)
+def decode(iterator):
+    # begin frame
+    iterator.next()
 
-        host = StringCodec.decode(iterator)
+    initial_frame = iterator.next()
+    port = fixed_size_types_codec.decode_int(initial_frame.content, PORT_FIELD_OFFSET)
 
-        CodecUtil.fast_forward_to_end_frame(iterator)
+    host = string_codec.decode(iterator)
 
-        return Address(host, port)
+    codec_util.fast_forward_to_end_frame(iterator)
+
+    return Address(host, port)

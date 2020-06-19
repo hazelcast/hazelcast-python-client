@@ -10,65 +10,61 @@ BOOLEAN_SIZE_IN_BYTES = Bits.BOOLEAN_SIZE_IN_BYTES
 UUID_SIZE_IN_BYTES = Bits.BOOLEAN_SIZE_IN_BYTES + Bits.LONG_SIZE_IN_BYTES * 2
 
 
-class FixedSizeTypesCodec:
+def encode_int(buffer, pos, value):
+	struct.pack_into(Bits.FMT_LE_INT, buffer, pos, value)
 
-	@staticmethod
-	def encode_int(buffer, pos, value):
-		struct.pack_into(Bits.FMT_LE_INT, buffer, pos, value)
 
-	@staticmethod
-	def decode_int(buffer, pos):
-		return struct.unpack_from(Bits.FMT_LE_INT, buffer, pos)[0]
+def decode_int(buffer, pos):
+	return struct.unpack_from(Bits.FMT_LE_INT, buffer, pos)[0]
 
-	@staticmethod
-	def decode_enum(buffer, pos):
-		return FixedSizeTypesCodec.decode_int(buffer, pos)
 
-	@staticmethod
-	def encode_long(buffer, pos, value):
-		struct.pack_into(Bits.FMT_LE_LONG, buffer, pos, value)
+def decode_enum(buffer, pos):
+	return decode_int(buffer, pos)
 
-	@staticmethod
-	def decode_long(buffer, pos):
-		return struct.unpack_from(Bits.FMT_LE_LONG, buffer, pos)[0]
 
-	@staticmethod
-	def decode_long_unsigned(buffer, pos):
-		return struct.unpack_from(Bits.FMT_LE_ULONG, buffer, pos)[0]
+def encode_long(buffer, pos, value):
+	struct.pack_into(Bits.FMT_LE_LONG, buffer, pos, value)
 
-	@staticmethod
-	def encode_uuid(buffer, pos, value):
-		is_null = value is None
-		FixedSizeTypesCodec.encode_boolean(buffer, pos, is_null)
-		if is_null:
-			return
 
-		msb, lsb = struct.unpack(">qq", value.bytes)
-		FixedSizeTypesCodec.encode_long(buffer, pos + Bits.BOOLEAN_SIZE_IN_BYTES, msb)
-		FixedSizeTypesCodec.encode_long(buffer, pos + Bits.BOOLEAN_SIZE_IN_BYTES + Bits.LONG_SIZE_IN_BYTES, lsb)
+def decode_long(buffer, pos):
+	return struct.unpack_from(Bits.FMT_LE_LONG, buffer, pos)[0]
 
-	@staticmethod
-	def decode_uuid(buffer, pos):
-		is_null = FixedSizeTypesCodec.decode_boolean(buffer, pos)
-		if is_null:
-			return None
-		msb = FixedSizeTypesCodec.decode_long_unsigned(buffer, pos + Bits.BOOLEAN_SIZE_IN_BYTES)
-		lsb = FixedSizeTypesCodec.decode_long_unsigned(buffer, pos + Bits.BOOLEAN_SIZE_IN_BYTES + Bits.LONG_SIZE_IN_BYTES)
-		return uuid.UUID(int=(lsb & 0xffffffffffffffff) | (msb << 64))
 
-	@staticmethod
-	def encode_boolean(buffer, pos, value):
-		buffer[pos] = 1 if value else 0
+def decode_long_unsigned(buffer, pos):
+	return struct.unpack_from(Bits.FMT_LE_ULONG, buffer, pos)[0]
 
-	@staticmethod
-	def decode_boolean(buffer, pos):
-		return buffer[pos] == 1
 
-	@staticmethod
-	def encode_byte(buffer, pos, value):
-		buffer[pos] = value
+def encode_uuid(buffer, pos, value):
+	is_null = value is None
+	encode_boolean(buffer, pos, is_null)
+	if is_null:
+		return
 
-	@staticmethod
-	def decode_byte(buffer, pos):
-		return buffer[pos]
+	msb, lsb = struct.unpack(">qq", value.bytes)
+	encode_long(buffer, pos + Bits.BOOLEAN_SIZE_IN_BYTES, msb)
+	encode_long(buffer, pos + Bits.BOOLEAN_SIZE_IN_BYTES + Bits.LONG_SIZE_IN_BYTES, lsb)
 
+
+def decode_uuid(buffer, pos):
+	is_null = decode_boolean(buffer, pos)
+	if is_null:
+		return None
+	msb = decode_long_unsigned(buffer, pos + Bits.BOOLEAN_SIZE_IN_BYTES)
+	lsb = decode_long_unsigned(buffer, pos + Bits.BOOLEAN_SIZE_IN_BYTES + Bits.LONG_SIZE_IN_BYTES)
+	return uuid.UUID(int=(lsb & 0xffffffffffffffff) | (msb << 64))
+
+
+def encode_boolean(buffer, pos, value):
+	buffer[pos] = 1 if value else 0
+
+
+def decode_boolean(buffer, pos):
+	return buffer[pos] == 1
+
+
+def encode_byte(buffer, pos, value):
+	buffer[pos] = value
+
+
+def decode_byte(buffer, pos):
+	return buffer[pos]

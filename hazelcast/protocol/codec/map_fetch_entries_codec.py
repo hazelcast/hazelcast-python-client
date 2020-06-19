@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("b793108ac3b084e3957de2e17338f8c3")
+# Generated("205f33b5f98ad63c51a964074d38c344")
 
 # hex: 0x013800
 REQUEST_MESSAGE_TYPE = 79872
@@ -27,22 +27,22 @@ def encode_request(name, iteration_pointers, batch):
     client_message.retryable = True
     client_message.operation_name = "Map.FetchEntries"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, REQUEST_BATCH_FIELD_OFFSET, batch)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_int(initial_frame.content, REQUEST_BATCH_FIELD_OFFSET, batch)
     client_message.add(initial_frame)
-    StringCodec.encode(client_message, name)
-    EntryListIntegerIntegerCodec.encode(client_message, iteration_pointers)
+    string_codec.encode(client_message, name)
+    entry_list_integer_integer_codec.encode(client_message, iteration_pointers)
     return client_message
 
 
 def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict(iterationPointers=None, entries=None)
-    #empty initial frame
+    # empty initial frame
     iterator.next()
-    response["iterationPointers"] = EntryListIntegerIntegerCodec.decode(iterator)
-    response["entries"] = ImmutableLazyDataList(EntryListCodec.decode(iterator, DataCodec.decode, DataCodec.decode),to_object)
+    response["iterationPointers"] = entry_list_integer_integer_codec.decode(iterator)
+    response["entries"] = ImmutableLazyDataList(entry_list_codec.decode(iterator, data_codec.decode, data_codec.decode), to_object)
     return response
 
 

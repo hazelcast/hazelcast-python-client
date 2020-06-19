@@ -1,6 +1,6 @@
 import unittest
 
-from hazelcast.core import Address, Member
+from hazelcast.core import Address, MemberInfo
 from hazelcast.util import get_possible_addresses, get_provider_addresses
 from hazelcast.connection import DefaultAddressProvider
 from hazelcast.config import ClientNetworkConfig
@@ -53,7 +53,7 @@ class AddressTest(unittest.TestCase):
 
     def test_addresses_and_members(self):
         self.network_config.addresses = ["127.0.0.1:5701"]
-        member_list = [Member(Address("10.0.0.1", 5703), "uuid1"), Member(Address("10.0.0.2", 5701), "uuid2")]
+        member_list = [MemberInfo(Address("10.0.0.1", 5703), "uuid1"), MemberInfo(Address("10.0.0.2", 5701), "uuid2")]
         provider_addresses = get_provider_addresses([self.address_provider])
         addresses = get_possible_addresses(provider_addresses, member_list)
 

@@ -27,8 +27,7 @@ def init():
     logger = logging.getLogger("main")
 
     config = hazelcast.ClientConfig()
-    config.group_config.name = "dev"
-    config.group_config.password = "dev-pass"
+    config.cluster_name = "hazelcast"
     config.network_config.addresses.append("127.0.0.1")
 
     near_cache_config = NearCacheConfig(MAP_NAME)

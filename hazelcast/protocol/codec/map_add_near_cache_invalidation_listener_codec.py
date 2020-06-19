@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("bfec311a8792db26b0213e8dd3f4d55e")
+# Generated("82c2523d61a5b82e7aa86ffb071eb86f")
 
 # hex: 0x013F00
 REQUEST_MESSAGE_TYPE = 81664
@@ -39,12 +39,12 @@ def encode_request(name, listener_flags, local_only):
     client_message.retryable = False
     client_message.operation_name = "Map.AddNearCacheInvalidationListener"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, REQUEST_LISTENER_FLAGS_FIELD_OFFSET, listener_flags)
-    FixedSizeTypesCodec.encode_boolean(initial_frame.content, REQUEST_LOCAL_ONLY_FIELD_OFFSET, local_only)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_int(initial_frame.content, REQUEST_LISTENER_FLAGS_FIELD_OFFSET, listener_flags)
+    fixed_size_types_codec.encode_boolean(initial_frame.content, REQUEST_LOCAL_ONLY_FIELD_OFFSET, local_only)
     client_message.add(initial_frame)
-    StringCodec.encode(client_message, name)
+    string_codec.encode(client_message, name)
     return client_message
 
 
@@ -52,7 +52,7 @@ def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict(response=None)
     initial_frame = iterator.next()
-    response["response"] = FixedSizeTypesCodec.decode_uuid(initial_frame.content, RESPONSE_RESPONSE_FIELD_OFFSET)
+    response["response"] = fixed_size_types_codec.decode_uuid(initial_frame.content, RESPONSE_RESPONSE_FIELD_OFFSET)
     return response
 
 
@@ -61,16 +61,16 @@ def handle(client_message, handle_i_map_invalidation_event=None, handle_i_map_ba
     iterator = client_message.frame_iterator()
     if message_type == EVENT_I_MAP_INVALIDATION_MESSAGE_TYPE and handle_i_map_invalidation_event is not None:
         initial_frame = iterator.next()
-        source_uuid = FixedSizeTypesCodec.decode_uuid(initial_frame.content, EVENT_I_MAP_INVALIDATION_SOURCE_UUID_FIELD_OFFSET)
-        partition_uuid = FixedSizeTypesCodec.decode_uuid(initial_frame.content, EVENT_I_MAP_INVALIDATION_PARTITION_UUID_FIELD_OFFSET)
-        sequence = FixedSizeTypesCodec.decode_long(initial_frame.content, EVENT_I_MAP_INVALIDATION_SEQUENCE_FIELD_OFFSET)
-        key = to_object(CodecUtil.decode_nullable(iterator, DataCodec.decode))
+        source_uuid = fixed_size_types_codec.decode_uuid(initial_frame.content, EVENT_I_MAP_INVALIDATION_SOURCE_UUID_FIELD_OFFSET)
+        partition_uuid = fixed_size_types_codec.decode_uuid(initial_frame.content, EVENT_I_MAP_INVALIDATION_PARTITION_UUID_FIELD_OFFSET)
+        sequence = fixed_size_types_codec.decode_long(initial_frame.content, EVENT_I_MAP_INVALIDATION_SEQUENCE_FIELD_OFFSET)
+        key = to_object(codec_util.decode_nullable(iterator, data_codec.decode))
         handle_i_map_invalidation_event(key=key, source_uuid=source_uuid, partition_uuid=partition_uuid, sequence=sequence)
     if message_type == EVENT_I_MAP_BATCH_INVALIDATION_MESSAGE_TYPE and handle_i_map_batch_invalidation_event is not None:
-        #empty initial frame
+        # empty initial frame
         iterator.next()
-        keys = ImmutableLazyDataList(ListMultiFrameCodec.decode(iterator, DataCodec.decode),to_object)
-        source_uuids = ListUUIDCodec.decode(iterator)
-        partition_uuids = ListUUIDCodec.decode(iterator)
-        sequences = ListLongCodec.decode(iterator)
+        keys = ImmutableLazyDataList(list_multi_frame_codec.decode(iterator, data_codec.decode), to_object)
+        source_uuids = list_uuid_codec.decode(iterator)
+        partition_uuids = list_uuid_codec.decode(iterator)
+        sequences = list_long_codec.decode(iterator)
         handle_i_map_batch_invalidation_event(keys=keys, source_uuids=source_uuids, partition_uuids=partition_uuids, sequences=sequences)

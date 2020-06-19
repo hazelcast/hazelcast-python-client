@@ -54,13 +54,6 @@ class ClientMessage(object):
         self.retryable = None
         self.operation_name = ""
 
-    # BEGIN_FRAME = ClientMessage.Frame(bytearray(), BEGIN_DATA_STRUCTURE_FLAG)
-    # END_FRAME = ClientMessage.Frame(bytearray(), END_DATA_STRUCTURE_FLAG)
-
-    # @property
-    # def NULL_FRAME(self):
-    #    return self.Frame(bytearray(), IS_NULL_FLAG)
-
     @staticmethod
     def create_for_decode(start_frame):
         return ClientMessage(start_frame=start_frame)

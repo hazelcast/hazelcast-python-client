@@ -28,14 +28,6 @@ class MultiMap(Proxy):
         :param clear_all_func: Function to be called when entries are cleared from map (optional).
         :return: (str), a registration id which is used as a key to remove the listener.
         """
-        if key:
-            key_data = self._to_data(key)
-            request = multi_map_add_entry_listener_to_key_codec.encode_request(
-                name=self.name, key=key_data, include_value=include_value, local_only=False)
-        else:
-            request = multi_map_add_entry_listener_codec.encode_request(
-                name=self.name, include_value=include_value, local_only=False)
-
         def handle_event_entry(**_kwargs):
             event = EntryEvent(self._to_object, **_kwargs)
             if event.event_type == EntryEventType.added and added_func:
@@ -45,10 +37,19 @@ class MultiMap(Proxy):
             elif event.event_type == EntryEventType.clear_all and clear_all_func:
                 clear_all_func(event)
 
-        return self._register_listener(
-            request, lambda r: multi_map_add_entry_listener_codec.decode_response(r)['response'],
-            lambda reg_id: multi_map_remove_entry_listener_codec.encode_request(self.name, reg_id),
-            lambda m: multi_map_add_entry_listener_codec.handle(m, handle_event_entry))
+        if key:
+            key_data = self._to_data(key)
+            return self._register_listener(multi_map_add_entry_listener_to_key_codec.encode_request(
+                name=self.name, key=key_data, include_value=include_value, local_only=False),
+                lambda r: multi_map_add_entry_listener_to_key_codec.decode_response(r)['response'],
+                lambda reg_id: multi_map_remove_entry_listener_codec.encode_request(self.name, reg_id),
+                lambda m: multi_map_add_entry_listener_to_key_codec.handle(m, handle_event_entry, self._to_object))
+        else:
+            return self._register_listener(multi_map_add_entry_listener_codec.encode_request(
+                name=self.name, include_value=include_value, local_only=False),
+                lambda r: multi_map_add_entry_listener_codec.decode_response(r)['response'],
+                lambda reg_id: multi_map_remove_entry_listener_codec.encode_request(self.name, reg_id),
+                lambda m: multi_map_add_entry_listener_codec.handle(m, handle_event_entry, self._to_object))
 
     def contains_key(self, key):
         """

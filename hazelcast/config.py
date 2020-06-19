@@ -8,16 +8,6 @@ import os
 from hazelcast.serialization.api import StreamSerializer
 from hazelcast.util import validate_type, validate_serializer, enum, TimeUnit, IndexUtil
 
-DEFAULT_GROUP_NAME = "dev"
-"""
-Default group name of the connected Hazelcast cluster
-"""
-
-DEFAULT_GROUP_PASSWORD = "dev-pass"
-"""
-Default password of connected Hazelcast cluster
-"""
-
 INTEGER_TYPE = enum(VAR=0, BYTE=1, SHORT=2, INT=3, LONG=4, BIG_INT=5)
 """
 Integer type options that can be used by serialization service.
@@ -111,9 +101,6 @@ class ClientConfig(object):
         self._properties = {}
         """Config properties"""
 
-        self.group_config = GroupConfig()
-        """The group configuration"""
-
         self.network_config = ClientNetworkConfig()
         """The network configuration for addresses to connect, smart-routing, socket-options..."""
 
@@ -148,34 +135,6 @@ class ClientConfig(object):
         self.cluster_name = DEFAULT_CLUSTER_NAME
 
         self.labels = set()
-
-        # TODO: self.load_balancer
-
-    def add_membership_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
-        """
-        Helper method for adding membership listeners
-
-        :param member_added: (Function), Function to be called when a member is added, in the form of f(member)
-        (optional).
-        :param member_removed: (Function), Function to be called when a member is removed, in the form of f(member)
-        (optional).
-        :param fire_for_existing: if True, already existing members will fire member_added event (optional).
-        :return: `self` for cascading configuration
-        """
-        self.membership_listeners.append((member_added, member_removed, fire_for_existing))
-        return self
-
-    def add_lifecycle_listener(self, lifecycle_state_changed=None):
-        """
-        Helper method for adding lifecycle listeners.
-
-        :param lifecycle_state_changed: (Function), Function to be called when lifecycle state is changed (optional).
-        In the form of f(state).
-        :return: `self` for cascading configuration
-        """
-        if lifecycle_state_changed:
-            self.lifecycle_listeners.append(lifecycle_state_changed)
-        return self
 
     def add_near_cache_config(self, near_cache_config):
         """
@@ -230,34 +189,6 @@ class ClientConfig(object):
         return self
 
 
-class GroupConfig(object):
-    """
-    The Group Configuration is the container class for name and password of the cluster.
-    """
-
-    def __init__(self):
-        self.name = DEFAULT_GROUP_NAME
-        """The group name of the cluster"""
-        self.password = DEFAULT_GROUP_PASSWORD
-        """The password of the cluster"""
-
-
-class ListenerConfig(object):
-    """
-    Configurations for LifecycleListeners. These are registered as soon as client started.
-    """
-    def __init__(self):
-        self.lifecycle_listeners = []
-        self.membership_listeners = []
-
-    def add_lifecycle_listener(self, listener):
-        self.lifecycle_listeners.append(listener)
-
-    def add_membership_listener(self, membership_listener):
-        self.membership_listeners.append(membership_listener)
-
-
-
 class ClientNetworkConfig(object):
     """
     Network related configuration parameters.
@@ -267,14 +198,6 @@ class ClientNetworkConfig(object):
         self.addresses = []
         """The candidate address list that client will use to establish initial connection"""
         """Example usage: addresses.append("127.0.0.1:5701") """
-        self.connection_attempt_limit = 2
-        """
-        While client is trying to connect initially to one of the members in the addressList, all might be not
-        available. Instead of giving up, throwing Error and stopping client, it will attempt to retry as much as defined
-        by this parameter.
-        """
-        self.connection_attempt_period = 3
-        """Period for the next attempt to find a member to connect"""
         self.connection_timeout = 5.0
         """
         Socket connection timeout is a float, giving in seconds, or None.

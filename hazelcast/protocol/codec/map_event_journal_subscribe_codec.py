@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("aeefec9aa23b95ca278272bf7e63daac")
+# Generated("4564ce841e4b98cbdd4cafb5a29b4176")
 
 # hex: 0x014100
 REQUEST_MESSAGE_TYPE = 82176
@@ -29,10 +29,10 @@ def encode_request(name):
     client_message.retryable = True
     client_message.operation_name = "Map.EventJournalSubscribe"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
     client_message.add(initial_frame)
-    StringCodec.encode(client_message, name)
+    string_codec.encode(client_message, name)
     return client_message
 
 
@@ -40,8 +40,8 @@ def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict(oldestSequence=None, newestSequence=None)
     initial_frame = iterator.next()
-    response["oldestSequence"] = FixedSizeTypesCodec.decode_long(initial_frame.content, RESPONSE_OLDEST_SEQUENCE_FIELD_OFFSET)
-    response["newestSequence"] = FixedSizeTypesCodec.decode_long(initial_frame.content, RESPONSE_NEWEST_SEQUENCE_FIELD_OFFSET)
+    response["oldestSequence"] = fixed_size_types_codec.decode_long(initial_frame.content, RESPONSE_OLDEST_SEQUENCE_FIELD_OFFSET)
+    response["newestSequence"] = fixed_size_types_codec.decode_long(initial_frame.content, RESPONSE_NEWEST_SEQUENCE_FIELD_OFFSET)
     return response
 
 

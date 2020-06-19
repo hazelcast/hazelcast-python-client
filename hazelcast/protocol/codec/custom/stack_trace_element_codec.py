@@ -4,39 +4,37 @@ from hazelcast.protocol.codec.builtin import *
 from hazelcast.protocol.codec.custom import *
 from hazelcast.protocol.stack_trace_element import StackTraceElement
 
-# Generated("157abeb4d8b033bea86ab07fd0a06738")
+# Generated("1ca4e0aeac0877057ba53b2356a10ee0")
 
 LINE_NUMBER_FIELD_OFFSET = 0
 INITIAL_FRAME_SIZE = LINE_NUMBER_FIELD_OFFSET + Bits.INT_SIZE_IN_BYTES
 
 
-class StackTraceElementCodec(object):
-    @staticmethod
-    def encode(client_message, stack_trace_element):
-        client_message.add(BEGIN_FRAME)
+def encode(client_message, stack_trace_element):
+    client_message.add(BEGIN_FRAME)
 
-        initial_frame = ClientMessage.Frame(bytearray(INITIAL_FRAME_SIZE))
-        FixedSizeTypesCodec.encode_int(initial_frame.content, LINE_NUMBER_FIELD_OFFSET, stack_trace_element.line_number)
-        client_message.add(initial_frame)
+    initial_frame = ClientMessage.Frame(bytearray(INITIAL_FRAME_SIZE))
+    fixed_size_types_codec.encode_int(initial_frame.content, LINE_NUMBER_FIELD_OFFSET, stack_trace_element.line_number)
+    client_message.add(initial_frame)
 
-        StringCodec.encode(client_message, stack_trace_element.class_name)
-        StringCodec.encode(client_message, stack_trace_element.method_name)
-        CodecUtil.encode_nullable(client_message, stack_trace_element.file_name(), StringCodec.encode)
+    string_codec.encode(client_message, stack_trace_element.class_name)
+    string_codec.encode(client_message, stack_trace_element.method_name)
+    codec_util.encode_nullable(client_message, stack_trace_element.file_name, string_codec.encode)
 
-        client_message.add(END_FRAME)
+    client_message.add(END_FRAME)
 
-    @staticmethod
-    def decode(iterator):
-        # begin frame
-        iterator.next()
 
-        initial_frame = iterator.next()
-        line_number = FixedSizeTypesCodec.decode_int(initial_frame.content, LINE_NUMBER_FIELD_OFFSET)
+def decode(iterator):
+    # begin frame
+    iterator.next()
 
-        class_name = StringCodec.decode(iterator)
-        method_name = StringCodec.decode(iterator)
-        file_name = CodecUtil.decode_nullable(iterator, StringCodec.decode)
+    initial_frame = iterator.next()
+    line_number = fixed_size_types_codec.decode_int(initial_frame.content, LINE_NUMBER_FIELD_OFFSET)
 
-        CodecUtil.fast_forward_to_end_frame(iterator)
+    class_name = string_codec.decode(iterator)
+    method_name = string_codec.decode(iterator)
+    file_name = codec_util.decode_nullable(iterator, string_codec.decode)
 
-        return StackTraceElement(class_name, method_name, file_name, line_number)
+    codec_util.fast_forward_to_end_frame(iterator)
+
+    return StackTraceElement(class_name, method_name, file_name, line_number)

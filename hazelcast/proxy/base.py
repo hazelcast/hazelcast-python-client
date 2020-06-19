@@ -70,7 +70,7 @@ class Proxy(object):
     def _encode_invoke_on_partition(self, codec, _partition_id, response_handler=default_response_handler,
                                     invocation_timeout=None, **kwargs):
         request = codec.encode_request(name=self.name, **kwargs)
-        return self._client.invoker.invoke_on_partition(request, _partition_id, invocation_timeout).continue_with(response_handler,
+        return self._client.invoker.invoke_on_partition(request, _partition_id).continue_with(response_handler,
                                                                                                                   codec, self._to_object)
 
     def blocking(self):

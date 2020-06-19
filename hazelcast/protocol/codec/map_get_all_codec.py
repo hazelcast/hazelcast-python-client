@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("b23ca4102b9de1c402d1967f46ff3eb0")
+# Generated("3c6bed1b7919fb2999b33b495ef38fc8")
 
 # hex: 0x012300
 REQUEST_MESSAGE_TYPE = 74496
@@ -26,20 +26,20 @@ def encode_request(name, keys):
     client_message.retryable = False
     client_message.operation_name = "Map.GetAll"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
     client_message.add(initial_frame)
-    StringCodec.encode(client_message, name)
-    ListMultiFrameCodec.encode(client_message, keys, DataCodec.encode)
+    string_codec.encode(client_message, name)
+    list_multi_frame_codec.encode(client_message, keys, data_codec.encode)
     return client_message
 
 
 def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict(response=None)
-    #empty initial frame
+    # empty initial frame
     iterator.next()
-    response["response"] = ImmutableLazyDataList(EntryListCodec.decode(iterator, DataCodec.decode, DataCodec.decode),to_object)
+    response["response"] = ImmutableLazyDataList(entry_list_codec.decode(iterator, data_codec.decode, data_codec.decode), to_object)
     return response
 
 

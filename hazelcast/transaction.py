@@ -3,12 +3,12 @@ import threading
 import time
 from hazelcast.exception import HazelcastInstanceNotActiveError, TransactionError
 from hazelcast.future import make_blocking
-from hazelcast.protocol.codec import transaction_create_codec, transaction_commit_codec, transaction_rollback_codec
-from hazelcast.proxy.transactional_list import TransactionalList
-from hazelcast.proxy.transactional_map import TransactionalMap
-from hazelcast.proxy.transactional_multi_map import TransactionalMultiMap
-from hazelcast.proxy.transactional_queue import TransactionalQueue
-from hazelcast.proxy.transactional_set import TransactionalSet
+# from hazelcast.protocol.codec import transaction_create_codec, transaction_commit_codec, transaction_rollback_codec
+# from hazelcast.proxy.transactional_list import TransactionalList
+# from hazelcast.proxy.transactional_map import TransactionalMap
+# from hazelcast.proxy.transactional_multi_map import TransactionalMultiMap
+# from hazelcast.proxy.transactional_queue import TransactionalQueue
+# from hazelcast.proxy.transactional_set import TransactionalSet
 from hazelcast.util import thread_id
 from hazelcast.six.moves import range
 
@@ -47,7 +47,7 @@ class TransactionManager(object):
 
     def __init__(self, client):
         self._client = client
-        self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
+        self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
 
     def _connect(self):
         for count in range(0, RETRY_COUNT):

@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("402dfa1f39dd7c3a0686d52534e68da0")
+# Generated("7fdcbfdd019fcc44dab4c631d1fb6965")
 
 # hex: 0x000C00
 REQUEST_MESSAGE_TYPE = 3072
@@ -27,19 +27,19 @@ def encode_request(timestamp, client_attributes, metrics_blob):
     client_message.retryable = False
     client_message.operation_name = "Client.Statistics"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
-    FixedSizeTypesCodec.encode_long(initial_frame.content, REQUEST_TIMESTAMP_FIELD_OFFSET, timestamp)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_long(initial_frame.content, REQUEST_TIMESTAMP_FIELD_OFFSET, timestamp)
     client_message.add(initial_frame)
-    StringCodec.encode(client_message, client_attributes)
-    ByteArrayCodec.encode(client_message, metrics_blob)
+    string_codec.encode(client_message, client_attributes)
+    byte_array_codec.encode(client_message, metrics_blob)
     return client_message
 
 
 def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict()
-    #empty initial frame
+    # empty initial frame
     iterator.next()
     return response
 

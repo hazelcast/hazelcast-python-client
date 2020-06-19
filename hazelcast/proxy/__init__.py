@@ -1,22 +1,24 @@
-from hazelcast.protocol.codec import client_create_proxy_codec, client_destroy_proxy_codec
-#from hazelcast.proxy.atomic_long import AtomicLong
-#from hazelcast.proxy.atomic_reference import AtomicReference
-#from hazelcast.proxy.count_down_latch import CountDownLatch
-#from hazelcast.proxy.executor import Executor
-from hazelcast.proxy.id_generator import IdGenerator
-from hazelcast.proxy.list import List
-#from hazelcast.proxy.lock import Lock
+from hazelcast.protocol.codec import client_create_proxy_codec, client_destroy_proxy_codec, \
+    client_add_distributed_object_listener_codec, client_remove_distributed_object_listener_codec
+# from hazelcast.proxy.atomic_long import AtomicLong
+# from hazelcast.proxy.atomic_reference import AtomicReference
+# from hazelcast.proxy.count_down_latch import CountDownLatch
+# from hazelcast.proxy.executor import Executor
+# from hazelcast.proxy.id_generator import IdGenerator
+# from hazelcast.proxy.list import List
+# from hazelcast.proxy.lock import Lock
 from hazelcast.proxy.map import create_map_proxy
-from hazelcast.proxy.multi_map import MultiMap
-from hazelcast.proxy.queue import Queue
-from hazelcast.proxy.reliable_topic import ReliableTopic
-from hazelcast.proxy.replicated_map import ReplicatedMap
-from hazelcast.proxy.ringbuffer import Ringbuffer
-#from hazelcast.proxy.semaphore import Semaphore
-from hazelcast.proxy.set import Set
-from hazelcast.proxy.topic import Topic
-from hazelcast.proxy.pn_counter import PNCounter
-from hazelcast.proxy.flake_id_generator import FlakeIdGenerator
+# from hazelcast.proxy.multi_map import MultiMap
+# from hazelcast.proxy.queue import Queue
+# from hazelcast.proxy.reliable_topic import ReliableTopic
+# from hazelcast.proxy.replicated_map import ReplicatedMap
+# from hazelcast.proxy.ringbuffer import Ringbuffer
+# from hazelcast.proxy.semaphore import Semaphore
+# from hazelcast.proxy.set import Set
+# from hazelcast.proxy.topic import Topic
+# from hazelcast.proxy.pn_counter import PNCounter
+# from hazelcast.proxy.flake_id_generator import FlakeIdGenerator
+from hazelcast.core import DistributedObjectEvent
 from hazelcast.util import to_list
 
 ATOMIC_LONG_SERVICE = "hz:impl:atomicLongService"
@@ -41,24 +43,24 @@ FLAKE_ID_GENERATOR_SERVICE = "hz:impl:flakeIdGeneratorService"
 ID_GENERATOR_ATOMIC_LONG_PREFIX = "hz:atomic:idGenerator:"
 
 _proxy_init = {
-    #ATOMIC_LONG_SERVICE: AtomicLong,
-    #ATOMIC_REFERENCE_SERVICE: AtomicReference,
-    #COUNT_DOWN_LATCH_SERVICE: CountDownLatch,
-    ID_GENERATOR_SERVICE: IdGenerator,
-    #EXECUTOR_SERVICE: Executor,
-    LIST_SERVICE: List,
-    #LOCK_SERVICE: Lock,
+    # ATOMIC_LONG_SERVICE: AtomicLong,
+    # ATOMIC_REFERENCE_SERVICE: AtomicReference,
+    # COUNT_DOWN_LATCH_SERVICE: CountDownLatch,
+    # ID_GENERATOR_SERVICE: IdGenerator,
+    # EXECUTOR_SERVICE: Executor,
+    # LIST_SERVICE: List,
+    # LOCK_SERVICE: Lock,
     MAP_SERVICE: create_map_proxy,
-    MULTI_MAP_SERVICE: MultiMap,
-    QUEUE_SERVICE: Queue,
-    RELIABLE_TOPIC_SERVICE: ReliableTopic,
-    REPLICATED_MAP_SERVICE: ReplicatedMap,
-    RINGBUFFER_SERVICE: Ringbuffer,
-    #SEMAPHORE_SERVICE: Semaphore,
-    SET_SERVICE: Set,
-    TOPIC_SERVICE: Topic,
-    PN_COUNTER_SERVICE: PNCounter,
-    FLAKE_ID_GENERATOR_SERVICE: FlakeIdGenerator
+    # MULTI_MAP_SERVICE: MultiMap,
+    # QUEUE_SERVICE: Queue,
+    # RELIABLE_TOPIC_SERVICE: ReliableTopic,
+    # REPLICATED_MAP_SERVICE: ReplicatedMap,
+    # RINGBUFFER_SERVICE: Ringbuffer,
+    # SEMAPHORE_SERVICE: Semaphore,
+    # SET_SERVICE: Set,
+    # TOPIC_SERVICE: Topic,
+    # PN_COUNTER_SERVICE: PNCounter,
+    # FLAKE_ID_GENERATOR_SERVICE: FlakeIdGenerator
 }
 
 

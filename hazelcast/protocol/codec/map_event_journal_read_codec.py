@@ -11,7 +11,7 @@ from hazelcast.util import ImmutableLazyDataList
  * and regenerate it.
 """
 
-# Generated("32919fd8d105ba9bfbd88932bd9ecb8d")
+# Generated("2b1fae0542981743fbf4a81220282e70")
 
 # hex: 0x014200
 REQUEST_MESSAGE_TYPE = 82432
@@ -32,15 +32,15 @@ def encode_request(name, start_sequence, min_size, max_size, predicate, projecti
     client_message.retryable = True
     client_message.operation_name = "Map.EventJournalRead"
     initial_frame = ClientMessage.Frame(bytearray(REQUEST_INITIAL_FRAME_SIZE), UNFRAGMENTED_MESSAGE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
-    FixedSizeTypesCodec.encode_long(initial_frame.content, REQUEST_START_SEQUENCE_FIELD_OFFSET, start_sequence)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, REQUEST_MIN_SIZE_FIELD_OFFSET, min_size)
-    FixedSizeTypesCodec.encode_int(initial_frame.content, REQUEST_MAX_SIZE_FIELD_OFFSET, max_size)
+    fixed_size_types_codec.encode_int(initial_frame.content, TYPE_FIELD_OFFSET, REQUEST_MESSAGE_TYPE)
+    fixed_size_types_codec.encode_int(initial_frame.content, PARTITION_ID_FIELD_OFFSET, -1)
+    fixed_size_types_codec.encode_long(initial_frame.content, REQUEST_START_SEQUENCE_FIELD_OFFSET, start_sequence)
+    fixed_size_types_codec.encode_int(initial_frame.content, REQUEST_MIN_SIZE_FIELD_OFFSET, min_size)
+    fixed_size_types_codec.encode_int(initial_frame.content, REQUEST_MAX_SIZE_FIELD_OFFSET, max_size)
     client_message.add(initial_frame)
-    StringCodec.encode(client_message, name)
-    CodecUtil.encode_nullable(client_message, predicate, DataCodec.encode)
-    CodecUtil.encode_nullable(client_message, projection, DataCodec.encode)
+    string_codec.encode(client_message, name)
+    codec_util.encode_nullable(client_message, predicate, data_codec.encode)
+    codec_util.encode_nullable(client_message, projection, data_codec.encode)
     return client_message
 
 
@@ -48,10 +48,10 @@ def decode_response(client_message, to_object=None):
     iterator = client_message.frame_iterator()
     response = dict(readCount=None, items=None, itemSeqs=None, nextSeq=None)
     initial_frame = iterator.next()
-    response["readCount"] = FixedSizeTypesCodec.decode_int(initial_frame.content, RESPONSE_READ_COUNT_FIELD_OFFSET)
-    response["nextSeq"] = FixedSizeTypesCodec.decode_long(initial_frame.content, RESPONSE_NEXT_SEQ_FIELD_OFFSET)
-    response["items"] = ImmutableLazyDataList(ListMultiFrameCodec.decode(iterator, DataCodec.decode),to_object)
-    response["itemSeqs"] = CodecUtil.decode_nullable(iterator, LongArrayCodec.decode)
+    response["readCount"] = fixed_size_types_codec.decode_int(initial_frame.content, RESPONSE_READ_COUNT_FIELD_OFFSET)
+    response["nextSeq"] = fixed_size_types_codec.decode_long(initial_frame.content, RESPONSE_NEXT_SEQ_FIELD_OFFSET)
+    response["items"] = ImmutableLazyDataList(list_multi_frame_codec.decode(iterator, data_codec.decode), to_object)
+    response["itemSeqs"] = codec_util.decode_nullable(iterator, long_array_codec.decode)
     return response
 
 
