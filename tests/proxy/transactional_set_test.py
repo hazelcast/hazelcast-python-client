@@ -1,7 +1,10 @@
+from unittest import skip
+
 from tests.base import SingleMemberTestCase
 from tests.util import random_string, configure_logging
 
 
+@skip('Below proxy is currently unsupported')
 class TransactionalSetTest(SingleMemberTestCase):
     def setUp(self):
         configure_logging()

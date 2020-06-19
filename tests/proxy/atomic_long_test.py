@@ -2,6 +2,7 @@ from hazelcast.exception import HazelcastSerializationError
 from hazelcast.serialization.api import IdentifiedDataSerializable
 from tests.base import SingleMemberTestCase
 from tests.util import random_string
+from unittest import skip
 
 FACTORY_ID = 1
 
@@ -19,6 +20,7 @@ class Function(IdentifiedDataSerializable):
         return self.CLASS_ID
 
 
+@skip('Below proxy is currently unsupported')
 class AtomicLongTest(SingleMemberTestCase):
     def setUp(self):
         self.atomic_long = self.client.get_atomic_long(random_string()).blocking()

@@ -5,8 +5,10 @@ from tests.base import SingleMemberTestCase
 from tests.util import random_string
 from hazelcast import six
 from hazelcast.six.moves import range
+from unittest import skip
 
 
+@skip('Below proxy is currently unsupported')
 class CountDownLatchTest(SingleMemberTestCase):
     def setUp(self):
         self.latch = self.client.get_count_down_latch(random_string()).blocking()

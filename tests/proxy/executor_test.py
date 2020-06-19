@@ -2,10 +2,12 @@ from hazelcast.exception import HazelcastSerializationError
 from hazelcast.serialization.api import IdentifiedDataSerializable
 from tests.base import SingleMemberTestCase
 from tests.util import random_string
+from unittest import skip
 
 FACTORY_ID = 1
 
 
+@skip('Below proxy is currently unsupported')
 class Task(IdentifiedDataSerializable):
     CLASS_ID = 1
 

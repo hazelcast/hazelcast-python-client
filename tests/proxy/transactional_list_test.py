@@ -1,7 +1,10 @@
+from unittest import skip
+
 from tests.base import SingleMemberTestCase
 from tests.util import random_string
 
 
+@skip('Below proxy is currently unsupported')
 class TransactionalListTest(SingleMemberTestCase):
     def setUp(self):
         self.list = self.client.get_list(random_string()).blocking()

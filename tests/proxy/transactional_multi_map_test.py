@@ -1,8 +1,11 @@
+from unittest import skip
+
 from tests.base import SingleMemberTestCase
 from tests.util import random_string
 from hazelcast import six
 
 
+@skip('Below proxy is currently unsupported')
 class TransactionalMultiMapTest(SingleMemberTestCase):
     def setUp(self):
         self.multi_map = self.client.get_multi_map(random_string()).blocking()

@@ -1,4 +1,5 @@
 import time
+from unittest import skip
 
 from hazelcast.proxy.base import EntryEventType
 from hazelcast.serialization.predicate import SqlPredicate
@@ -8,6 +9,7 @@ from hazelcast import six
 from hazelcast.six.moves import range
 
 
+@skip('Below proxy is currently unsupported')
 class ReplicatedMapTest(SingleMemberTestCase):
     def setUp(self):
         self.replicated_map = self.client.get_replicated_map(random_string()).blocking()

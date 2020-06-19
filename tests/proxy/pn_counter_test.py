@@ -1,4 +1,5 @@
 import os
+from unittest import skip
 
 from tests.base import SingleMemberTestCase, HazelcastTestCase
 from tests.util import configure_logging, get_abs_path, set_attr
@@ -6,6 +7,7 @@ from hazelcast.exception import ConsistencyLostError, NoDataMemberInClusterError
 from hazelcast import HazelcastClient
 
 
+@skip('Below proxy is currently unsupported')
 @set_attr(category=3.10)
 class PNCounterBasicTest(SingleMemberTestCase):
     def setUp(self):

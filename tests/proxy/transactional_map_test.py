@@ -1,9 +1,12 @@
+from unittest import skip
+
 from hazelcast.serialization.predicate import SqlPredicate
 from tests.base import SingleMemberTestCase
 from tests.util import random_string
 from hazelcast import six
 
 
+@skip('Below proxy is currently unsupported')
 class TransactionalMapTest(SingleMemberTestCase):
     def setUp(self):
         self.map = self.client.get_map(random_string()).blocking()

@@ -1,7 +1,10 @@
+from unittest import skip
+
 from tests.base import SingleMemberTestCase
 from tests.util import random_string, event_collector
 
 
+@skip('Below proxy is currently unsupported')
 class TopicTest(SingleMemberTestCase):
     def setUp(self):
         self.topic = self.client.get_topic(random_string()).blocking()

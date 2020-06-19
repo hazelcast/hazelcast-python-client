@@ -2,8 +2,10 @@ from hazelcast.exception import HazelcastSerializationError
 from tests.base import SingleMemberTestCase
 from tests.proxy.atomic_long_test import Function, FACTORY_ID
 from tests.util import random_string
+from unittest import skip
 
 
+@skip('Below proxy is currently unsupported')
 class AtomicReferenceTest(SingleMemberTestCase):
     def setUp(self):
         self.atomic_reference = self.client.get_atomic_reference(random_string()).blocking()

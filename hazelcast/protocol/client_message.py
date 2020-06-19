@@ -120,10 +120,11 @@ class ClientMessage(object):
         return frame_length
 
     def merge(self, fragment):
-        # skip the first element
-        fragment_message_start_frame = fragment.start_frame.next
-        self.end_frame.next = fragment_message_start_frame
+        self.end_frame.next = fragment.start_frame
         self.end_frame = fragment.end_frame
+
+    def drop_fragmentation_frame(self):
+        self.start_frame = self.start_frame.next
 
     def clone(self):
         client_message = ClientMessage(start_frame=self.start_frame)
@@ -149,9 +150,9 @@ class ClientMessage(object):
                 format(self.get_frame_length(), self.operation_name, self.retryable)
 
             begin_fragment = self.is_flag_set(self.start_frame.flags, BEGIN_FRAGMENT_FLAG)
-            un_fragmented = self.is_flag_set(self.start_frame.flags, UNFRAGMENTED_MESSAGE)
+            unfragmented = self.is_flag_set(self.start_frame.flags, UNFRAGMENTED_MESSAGE)
 
-            if un_fragmented:
+            if unfragmented:
                 is_event = self.is_flag_set(self.start_frame.flags, IS_EVENT_FLAG)
                 s += ", correlationId={}, messageType={}, isEvent={}". \
                     format(self.get_correlation_id(), self.get_message_type(), is_event)
@@ -167,7 +168,7 @@ class ClientMessage(object):
                                                       FRAGMENTATION_ID_OFFSET)
                 s += ", fragmentationId={}".format(fragmentation_id)
             s += ", isFragmented={1}]"
-            return s.format(self.connection, not un_fragmented)
+            return s.format(self.connection, not unfragmented)
 
     class ForwardFrameIterator(object):
         def __init__(self, start):

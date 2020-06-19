@@ -11,6 +11,7 @@ from hazelcast import six
 from hazelcast.six.moves import range
 
 
+@skip('Below proxy is currently unsupported')
 class MultiMapTest(SingleMemberTestCase):
     def setUp(self):
         self.multi_map = self.client.get_multi_map(random_string()).blocking()

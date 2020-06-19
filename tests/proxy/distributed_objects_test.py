@@ -5,8 +5,10 @@ from hazelcast.proxy import MAP_SERVICE
 from tests.base import SingleMemberTestCase
 from tests.util import event_collector
 from hazelcast import six
+from unittest import skip
 
 
+@skip('Below proxy is currently unsupported')
 class DistributedObjectsTest(SingleMemberTestCase):
     @classmethod
     def setUpClass(cls):

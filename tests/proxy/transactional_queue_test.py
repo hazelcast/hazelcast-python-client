@@ -1,11 +1,13 @@
 import os
 from time import sleep
+from unittest import skip
 
 from tests.base import SingleMemberTestCase
 from tests.util import random_string
 from hazelcast.six.moves import range
 
 
+@skip('Below proxy is currently unsupported')
 class TransactionalQueueTest(SingleMemberTestCase):
     @classmethod
     def configure_cluster(cls):

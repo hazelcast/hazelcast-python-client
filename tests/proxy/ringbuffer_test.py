@@ -1,4 +1,5 @@
 import os
+from unittest import skip
 
 from hazelcast.proxy.ringbuffer import OVERFLOW_POLICY_FAIL, MAX_BATCH_SIZE
 from tests.base import SingleMemberTestCase
@@ -8,6 +9,7 @@ from hazelcast.six.moves import range
 CAPACITY = 10
 
 
+@skip('Below proxy is currently unsupported')
 class RingBufferTest(SingleMemberTestCase):
     @classmethod
     def configure_cluster(cls):

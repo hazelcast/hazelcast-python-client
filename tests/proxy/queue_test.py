@@ -1,4 +1,5 @@
 import os
+from unittest import skip
 
 from hazelcast.proxy.base import ItemEventType
 from hazelcast.proxy.queue import Full
@@ -7,6 +8,7 @@ from tests.util import random_string, event_collector
 from hazelcast import six
 
 
+@skip('Below proxy is currently unsupported')
 class QueueTest(SingleMemberTestCase):
     @classmethod
     def configure_cluster(cls):

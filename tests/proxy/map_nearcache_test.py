@@ -1,4 +1,5 @@
 import os
+from unittest import skip
 
 from tests.hzrc.ttypes import Lang
 
@@ -9,6 +10,7 @@ from hazelcast.six.moves import range
 from hazelcast import six
 
 
+@skip('Below proxy is currently unsupported')
 class MapTest(SingleMemberTestCase):
     @classmethod
     def configure_cluster(cls):

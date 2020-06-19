@@ -1,6 +1,7 @@
 import threading
 import time
 import random
+from unittest import skip
 
 from tests.base import SingleMemberTestCase, HazelcastTestCase
 from tests.hzrc.ttypes import Lang
@@ -20,6 +21,7 @@ NUM_IDS_IN_THREADS = 100000
 AUTO_BATCHER_BASE = 10
 
 
+@skip('Below proxy is currently unsupported')
 @set_attr(category=3.10)
 class FlakeIdGeneratorConfigTest(HazelcastTestCase):
     def setUp(self):

@@ -24,15 +24,11 @@ class ClientMessageDecoder:
             if ClientMessage.is_flag_set(flags, UNFRAGMENTED_MESSAGE):
                 self.handle_message(self.active_reader.client_message)
             else:
-                frame_iterator = self.active_reader.client_message.frame_iterator()
                 message = self.active_reader.client_message
-                # ignore the fragmentation frame
-                frame_iterator.next()
-                start_frame = frame_iterator.next()
+                message.drop_fragmentation_frame()
                 fragmentation_id = struct.unpack_from(FMT_LE_LONG, first_frame.content, FRAGMENTATION_ID_OFFSET)
                 if ClientMessage.is_flag_set(flags, BEGIN_FRAGMENT_FLAG):
-                    self.builder_by_session_id_map[fragmentation_id] = ClientMessage(start_frame=start_frame,
-                                                                                     end_frame=message.end_frame)
+                    self.builder_by_session_id_map[fragmentation_id] = message
                 elif ClientMessage.is_flag_set(flags, END_FRAGMENT_FLAG):
                     client_message = self.merge_into_existing_client_message(fragmentation_id)
                     self.handle_message(client_message)

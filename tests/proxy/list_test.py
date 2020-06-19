@@ -2,8 +2,10 @@ from hazelcast.proxy.base import ItemEventType
 from tests.base import SingleMemberTestCase
 from tests.util import random_string, event_collector
 from hazelcast import six
+from unittest import skip
 
 
+@skip('Below proxy is currently unsupported')
 class ListTest(SingleMemberTestCase):
     def setUp(self):
         self.list = self.client.get_list(random_string()).blocking()

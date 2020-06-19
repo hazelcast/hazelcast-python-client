@@ -2,8 +2,10 @@ import time
 from threading import Event
 from tests.base import SingleMemberTestCase
 from tests.util import random_string, generate_key_owned_by_instance
+from unittest import skip
 
 
+@skip('Below proxy is currently unsupported')
 class LockTest(SingleMemberTestCase):
     def setUp(self):
         self.lock = self.client.get_lock(random_string()).blocking()

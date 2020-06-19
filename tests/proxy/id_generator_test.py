@@ -1,8 +1,10 @@
 from hazelcast.proxy.id_generator import BLOCK_SIZE
 from tests.base import SingleMemberTestCase
 from tests.util import random_string
+from unittest import skip
 
 
+@skip('Below proxy is currently unsupported')
 class IdGeneratorTest(SingleMemberTestCase):
     def setUp(self):
         self.id_gen = self.client.get_id_generator(random_string()).blocking()
