@@ -67,7 +67,7 @@
   * [7.5. Distributed Events](#75-distributed-events)
     * [7.5.1. Cluster Events](#751-cluster-events)
       * [7.5.1.1. Listening for Member Events](#7511-listening-for-member-events)
-      * [7.5.1.2. Listenring for Distributed Object Events](#7512-listening-for-distributed-object-events)
+      * [7.5.1.2. Listening for Distributed Object Events](#7512-listening-for-distributed-object-events)
       * [7.5.1.3. Listening for Lifecycle Events](#7513-listening-for-lifecycle-events)
     * [7.5.2. Distributed Data Structure Events](#752-distributed-data-structure-events)
       * [7.5.2.1. Listening for Map Events](#7521-listening-for-map-events)
@@ -1109,21 +1109,19 @@ As explained in the [TLS/SSL section](#61-tlsssl), Hazelcast members have key st
 
 ## 5.8. Enabling Hazelcast Cloud Discovery
 
-The purpose of Hazelcast Cloud Discovery is to provide the clients the means to use IP addresses provided by `hazelcast orchestrator`. To enable Hazelcast Cloud Discovery, specify a token for the `discovery_token` field and set the `enabled` field to `True`.
- 
-The following is the example configuration.
+Python client can discover and connect to Hazelcast clusters running on [Hazelcast Cloud](https://cloud.hazelcast.com/).
+For this, provide authentication information as `group_config`, enable `cloud_config` and set your `discovery_token` as shown below.
 
 ```python
-config.group_config.name = "hazel"
-config.group_config.password = "cast"
-
-config.network_config.ssl_config.enabled = True
+config.group_config.name = "YOUR_CLUSTER_NAME"
+config.group_config.password = "YOUR_CLUSTER_PASSWORD"
 
 config.network_config.cloud_config.enabled = True
-config.network_config.cloud_config.discovery_token = "dc9220bc5d9"
+config.network_config.cloud_config.discovery_token = "YOUR_CLUSTER_DISCOVERY_TOKEN"
 ```
 
-To be able to connect to the provided IP addresses, you should use secure TLS/SSL connection between the client and members. Therefore, you should enable the SSL configuration as described in the [TLS/SSL for Hazelcast Python Client section](#612-tlsssl-for-hazelcast-python-clients).
+If you have enabled encryption for your cluster, you should also enable TLS/SSL configuration to secure communication between your 
+client and cluster members as described in the [TLS/SSL for Hazelcast Python Client section](#612-tlsssl-for-hazelcast-python-clients). 
 
 # 6. Securing Client Connection
 
