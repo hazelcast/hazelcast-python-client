@@ -8,18 +8,18 @@ from hazelcast.serialization.api import IdentifiedDataSerializable
 
 
 class MemberInfo(object):
-    def __init__(self, address, uuid, attributes={}, is_lite_member=False, version=None):
+    def __init__(self, address, uuid, attributes=None, is_lite_member=False, version=None):
         self.address = address
         self.uuid = uuid
         self.lite_member = is_lite_member
-        self.attributes = attributes
+        self.attributes = attributes if attributes else {}
         self.version = version
 
     def __str__(self):
-        return "MemberInfo [{}]:{} - {}".format(self.address.host, self.address.port, self.uuid)
+        return "Member [{}]:{} - {}".format(self.address.host, self.address.port, self.uuid)
 
     def __repr__(self):
-        return "MemberInfo(host={}, port={}, uuid={}, liteMember={}, attributes={})" \
+        return "Member (host={}, port={}, uuid={}, liteMember={}, attributes={})" \
             .format(self.address.host, self.address.port, self.uuid, self.lite_member, self.attributes)
 
     def __eq__(self, other):

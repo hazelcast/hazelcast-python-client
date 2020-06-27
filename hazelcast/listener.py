@@ -32,7 +32,6 @@ class ListenerService(object):
         self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
         self._active_registrations = {}  # Dict of user_registration_id, ListenerRegistration
         self._registration_lock = threading.RLock()
-        self._event_handlers = {}
 
     def try_sync_connect_to_all_members(self):
         cluster_service = self._client.cluster
@@ -115,7 +114,6 @@ class ListenerService(object):
 
         return future.continue_with(callback)
 
-
     def deregister_listener(self, user_registration_id):
         check_not_none(user_registration_id, "None userRegistrationId is not allowed!")
 
@@ -129,7 +127,7 @@ class ListenerService(object):
                     server_registration_id = event_registration.server_registration_id
                     deregister_request = listener_registration.encode_deregister_request(server_registration_id)
                     self._invocation_service.invoke_on_connection(deregister_request, connection).result()
-                    self.remove_event_handler(event_registration.correlation_id)
+                    self._invocation_service._remove_event_handler(event_registration.correlation_id)
                     listener_registration.connection_registrations.pop(connection)
                 except:
                     if connection.live():
@@ -150,22 +148,7 @@ class ListenerService(object):
             for listener_registration in self._active_registrations.values():
                 event_registration = listener_registration.connection_registrations.pop(connection, None)
                 if event_registration is not None:
-                    self.remove_event_handler(event_registration.correlation_id)
+                    self._invocation_service._remove_event_handler(event_registration.correlation_id)
 
     def start(self):
         self._client.connection_manager.add_listener(self.connection_added, self.connection_removed)
-
-    def handle_client_message(self, message):
-        correlation_id = message.get_correlation_id()
-        if correlation_id not in self._event_handlers:
-            self.logger.warning("Got event message with unknown correlation id: %s", message, extra=self._logger_extras)
-        else:
-            event_handler = self._event_handlers.get(correlation_id)
-            event_handler(message)
-
-    def add_event_handler(self, correlation_id, event_handler):
-        self._event_handlers[correlation_id] = event_handler
-
-    def remove_event_handler(self, correlation_id):
-        self._event_handlers.pop(correlation_id, None)
-

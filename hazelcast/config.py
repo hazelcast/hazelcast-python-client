@@ -108,7 +108,7 @@ class ClientConfig(object):
         """Custom load balancer used to distribute the operations to multiple Endpoints."""
 
         self.membership_listeners = []
-        """Membership listeners, an array of tuple (member_added, member_removed, fire_for_existing)"""
+        """Membership listeners, an array of MembershipListener"""
 
         self.lifecycle_listeners = []
         """ Lifecycle Listeners, an array of Functions of f(state)"""

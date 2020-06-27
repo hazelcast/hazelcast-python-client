@@ -11,9 +11,7 @@ from hazelcast.protocol.custom_codec import EXCEPTION_MESSAGE_TYPE, ErrorCodec
 from hazelcast.util import AtomicInteger
 from hazelcast.six.moves import queue
 from hazelcast import six
-from hazelcast.protocol.client_message import ClientMessage, BACKUP_EVENT_FLAG, IS_EVENT_FLAG, BACKUP_AWARE_FLAG
-
-import uuid
+from hazelcast.protocol.client_message import ClientMessage, IS_EVENT_FLAG, BACKUP_AWARE_FLAG
 
 
 class Invocation(object):
@@ -74,6 +72,7 @@ class InvocationService(object):
         self.invocation_timeout = self._init_invocation_timeout()
         self._listener_service = None
         self.is_shutdown = False
+        self.event_handlers = {}
 
         if client.config.network_config.smart_routing:
             self.invoke = self.invoke_smart
@@ -81,9 +80,6 @@ class InvocationService(object):
         else:
             self.invoke = self.invoke_non_smart
             self._is_backup_ack_to_client_enabled = False
-
-        # self._client.connection_manager.add_listener(on_connection_closed=self.cleanup_connection)
-        # client.heartbeat.add_listener(on_heartbeat_stopped=self._heartbeat_stopped)
 
     def start(self):
         self._listener_service = self._client.listener
@@ -138,12 +134,12 @@ class InvocationService(object):
 
         return invocation.future
 
-    def invoke_non_smart(self, invocation, ignore_heartbeat=False):
+    def invoke_non_smart(self, invocation):
+        invocation.invoke_count += 1
         if invocation.has_connection():
             self._send(invocation, invocation.connection)
         else:
-            addr = self._client.cluster.owner_connection_address
-            self._send_to_address(invocation, addr)
+            self._invoke_on_random_connection(invocation)
         return invocation.future
 
     def cleanup_connection(self, connection, cause):
@@ -162,7 +158,7 @@ class InvocationService(object):
     def _invoke_on_uuid(self, invocation, remote_uuid):
         connection = self._client.connection_manager.get_connection(remote_uuid)
         if connection is None:
-            self.logger.debug(f'Client is not connected to target: {remote_uuid}', extra=self._logger_extras)
+            self.logger.debug('Client is not connected to target: {}'.format(remote_uuid), extra=self._logger_extras)
             return False
 
         return self._send(invocation, connection)
@@ -216,26 +212,22 @@ class InvocationService(object):
             invocation.timer = self._client.reactor.add_timer_absolute(invocation.timeout, invocation.on_timeout)
 
         if invocation.event_handler is not None:
-            self._listener_service.add_event_handler(correlation_id, invocation.event_handler)
+            self._register_invocation(invocation)
 
         self.logger.debug("Sending %s to %s", message, connection, extra=self._logger_extras)
-
-        """if not ignore_heartbeat and not connection.heartbeating:
-            self._handle_exception(invocation, TargetDisconnectedError("%s has stopped heart beating." % connection))
-            return"""
 
         invocation.sent_connection = connection
         try:
             connection.send_message(message)
         except IOError as e:
             if invocation.event_handler is not None:
-                self._listener_service.remove_event_handler(correlation_id)
+                self._remove_event_handler(correlation_id)
             self._handle_exception(invocation, e)
             return False
 
         return True
 
-    def _register_invocation(self, invocation, connection):
+    def _register_invocation(self, invocation):
         message = invocation.request
         correlation_id = message.get_correlation_id()
         if invocation.has_partition_id():
@@ -243,14 +235,22 @@ class InvocationService(object):
         else:
             message.set_partition_id(-1)
 
+        if invocation.event_handler:
+            self.event_handlers[correlation_id] = invocation
 
-    def _handle_client_message(self, message):
+        self._pending[correlation_id] = invocation
+
+    def _remove_event_handler(self, id):
+        self.event_handlers.pop(id)
+
+    def handle_client_message(self, message):
         correlation_id = message.get_correlation_id()
-        if ClientMessage.is_flag_set(message.header_flags, BACKUP_EVENT_FLAG):
-            pass
 
-        elif ClientMessage.is_flag_set(message.header_flags, IS_EVENT_FLAG):
-            self._listener_service.handle_client_message(message)
+        if ClientMessage.is_flag_set(message.header_flags, IS_EVENT_FLAG):
+            
+            invocation = self.event_handlers.get(correlation_id)
+            if invocation:
+                invocation.event_handler(message)
             return
         if correlation_id not in self._pending:
             self.logger.warning("Got message with unknown correlation id: %s", message, extra=self._logger_extras)

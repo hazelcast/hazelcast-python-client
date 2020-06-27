@@ -66,20 +66,21 @@ class Statistics(object):
             self._statistics_timer.cancel()
 
     def _send_statistics(self):
-        owner_connection = self._get_owner_connection()
-        if owner_connection is None:
-            self.logger.debug("Cannot send client statistics to the server. No owner connection.",
+        collection_timestamp = current_time()
+        connection = self._client.connection_manager.get_random_connection()
+        if connection is None:
+            self.logger.debug("Can not send client statistics to the server. No connection found.",
                               extra=self._logger_extras)
             return
 
         stats = []
-        self._fill_metrics(stats, owner_connection)
+        self._fill_metrics(stats, connection)
         self._add_near_cache_stats(stats)
         self._add_runtime_and_os_stats(stats)
-        self._send_stats_to_owner("".join(stats), owner_connection)
+        self._send_stats(collection_timestamp, "".join(stats), connection)
 
-    def _send_stats_to_owner(self, stats, owner_connection):
-        request = client_statistics_codec.encode_request(stats)
+    def _send_stats(self, collection_timestamp, stats, owner_connection):
+        request = client_statistics_codec.encode_request(collection_timestamp, stats, bytearray())
         self._client.invoker.invoke_on_connection(request, owner_connection)
 
     def _add_runtime_and_os_stats(self, stats):

@@ -1,9 +1,8 @@
 import logging
 import logging.config
-import sys
 import json
 
-from hazelcast.cluster import ClusterService, RandomLoadBalancer, RoundRobinLoadBalancer, ClusterViewListenerService
+from hazelcast.cluster import ClusterService, RoundRobinLoadBalancer, ClusterViewListenerService
 from hazelcast.config import ClientConfig, ClientProperties
 from hazelcast.connection import ConnectionManager, DefaultAddressProvider
 from hazelcast.core import DistributedObjectInfo
@@ -13,9 +12,10 @@ from hazelcast.lifecycle import LifecycleService
 from hazelcast.partition import PartitionService
 from hazelcast.protocol.codec import client_get_distributed_objects_codec
 from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE, LIST_SERVICE, SET_SERVICE, MULTI_MAP_SERVICE, \
-    REPLICATED_MAP_SERVICE, ATOMIC_LONG_SERVICE, ATOMIC_REFERENCE_SERVICE, RINGBUFFER_SERVICE, COUNT_DOWN_LATCH_SERVICE, \
-    TOPIC_SERVICE, RELIABLE_TOPIC_SERVICE, SEMAPHORE_SERVICE, LOCK_SERVICE, ID_GENERATOR_SERVICE, \
-    ID_GENERATOR_ATOMIC_LONG_PREFIX, EXECUTOR_SERVICE, PN_COUNTER_SERVICE, FLAKE_ID_GENERATOR_SERVICE
+    REPLICATED_MAP_SERVICE, ATOMIC_LONG_SERVICE, ATOMIC_REFERENCE_SERVICE, RINGBUFFER_SERVICE, \
+    COUNT_DOWN_LATCH_SERVICE, TOPIC_SERVICE, RELIABLE_TOPIC_SERVICE, SEMAPHORE_SERVICE, LOCK_SERVICE, \
+    ID_GENERATOR_SERVICE, ID_GENERATOR_ATOMIC_LONG_PREFIX, EXECUTOR_SERVICE, PN_COUNTER_SERVICE, \
+    FLAKE_ID_GENERATOR_SERVICE
 from hazelcast.near_cache import NearCacheManager
 from hazelcast.reactor import AsyncoreReactor
 from hazelcast.serialization import SerializationServiceV1
@@ -45,7 +45,7 @@ class HazelcastClient(object):
         self.reactor = AsyncoreReactor(self._logger_extras)
         self._address_provider = self._create_address_provider()
 
-        self.cluster = ClusterService(self.config, self)
+        self.cluster = ClusterService(self)
         self.load_balancer = self._init_load_balancer()
         self.connection_manager = ConnectionManager(self, self.reactor.new_connection)
         self.invoker = InvocationService(self)
@@ -72,8 +72,8 @@ class HazelcastClient(object):
             self.cluster.start(configured_listeners)
             self.cluster_view_listener_service.start()
             self.connection_manager.start()
-            self.cluster.wait_initial_membership_fetched()
-            self.connection_manager.connect_to_all_cluster_members()
+            self.cluster.wait_initial_membership_fetched()\
+                .continue_with(self.connection_manager.connect_to_all_cluster_members)
             self.listener.start()
             self.load_balancer.init_load_balancer(self.cluster, self.config)
             self.statistics.start()
@@ -316,7 +316,6 @@ class HazelcastClient(object):
         self.invoker.is_shutdown = False
         self.statistics.shutdown()
         # todo self.lifecycle.shutdown()
-        self.cluster.shutdown()
         self.reactor.shutdown()
 
         self.logger.info("Client shutdown.", extra=self._logger_extras)
@@ -346,7 +345,7 @@ class HazelcastClient(object):
 
         return DefaultAddressProvider(network_config)
 
-    def _create_address_providers(self):
+    def create_address_providers(self):
         network_config = self.config.network_config
         address_providers = []
 

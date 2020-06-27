@@ -528,7 +528,7 @@ class IndexUtil(object):
 
     @staticmethod
     # TODO: Fix this later
-    def canonicalize_attribute(attribute: str):
+    def canonicalize_attribute(attribute):
         return re.sub(IndexUtil.THIS_PATTERN, "", attribute)
 
 

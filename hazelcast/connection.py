@@ -4,14 +4,15 @@ import sys
 import threading
 import time
 import random
+import uuid
 
 from hazelcast.exception import AuthenticationError, HazelcastIllegalStateError, ClientNotAllowedInClusterError
 from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture, Future
 from hazelcast.protocol.client_message import ClientMessage, ClientMessageBuilder
 from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
 from hazelcast.serialization import INT_SIZE_IN_BYTES, FMT_LE_INT
-from hazelcast.util import AtomicInteger, parse_addresses, calculate_version, enum, get_provider_addresses \
-    , get_possible_addresses
+from hazelcast.util import AtomicInteger, parse_addresses, calculate_version, enum, get_provider_addresses, \
+    get_possible_addresses
 from hazelcast.version import CLIENT_TYPE, CLIENT_VERSION, SERIALIZATION_VERSION
 from hazelcast import six
 from hazelcast.protocol.client_message_writer import ClientMessageWriter
@@ -58,6 +59,7 @@ class ConnectionManager(object):
 
         self.connect_to_cluster_task_submitted = False
         self.connect_to_all_cluster_members_task = None
+        self.client_uuid = uuid.uuid4()
 
     def start(self):
         """
@@ -68,7 +70,7 @@ class ConnectionManager(object):
         def callback(f):
             if f.result() and self.is_smart_routing_enabled:
                 self.heartbeat_manager.start()
-                self.connect_to_all_cluster_members_task = self._client.reactor.\
+                self.connect_to_all_cluster_members_task = self._client.reactor. \
                     add_timer(1, self.connect_to_all_cluster_members)
                 return
 
@@ -116,13 +118,11 @@ class ConnectionManager(object):
                 return None
 
     def _cluster_authenticator(self, connection):
-        uuid = self._client.cluster.uuid
-
         request = client_authentication_codec.encode_request(
             cluster_name=self._client.config.cluster_name,
             username=None,
             password=None,
-            uuid=uuid,
+            uuid=self.client_uuid,
             client_type=CLIENT_TYPE,
             serialization_version=SERIALIZATION_VERSION,
             client_hazelcast_version=CLIENT_VERSION,
@@ -149,7 +149,8 @@ class ConnectionManager(object):
 
         :param address: (:class:`~hazelcast.core.Address`), the address to connect to.
         :param authenticator: (Function), function to be used for authentication (optional).
-        :return: (:class:`~hazelcast.connection.Connection`), the existing connection or it returns a Future which includes asynchronously.
+        :return: (:class:`~hazelcast.connection.Connection`), the existing connection or it returns a Future which
+        includes asynchronously.
         """
         if address in [connection.remote_address for connection in self.connections.values()]:
             return ImmediateFuture(self.connections[self.get_connection_by_address(address).remote_uuid])
@@ -168,7 +169,8 @@ class ConnectionManager(object):
                                                                self._client.config.network_config.connection_timeout,
                                                                self._client.config.network_config.socket_options,
                                                                connection_closed_callback=self._connection_closed,
-                                                               message_callback=self._client.invoker._handle_client_message,
+                                                               message_callback=self._client.invoker
+                                                               .handle_client_message,
                                                                network_config=self._client.config.network_config)
                     except IOError:
                         return ImmediateExceptionFuture(sys.exc_info()[1], sys.exc_info()[2])
@@ -254,7 +256,6 @@ class ConnectionManager(object):
                 if self.client_state == CLIENT_STATE.INITIALIZED_ON_CLUSTER:
                     self._client.lifecycle.fire_lifecycle_event(LIFECYCLE_STATE_CLIENT_DISCONNECTED)
 
-
     def connect_to_cluster(self):
         if self.async_start:
             return self.submit_connect_to_cluster_task()
@@ -294,7 +295,7 @@ class ConnectionManager(object):
         current_attempt = 1
         self.wait_strategy.reset()
         while True:
-            provider_addresses = get_provider_addresses(self._client._create_address_providers())
+            provider_addresses = get_provider_addresses(self._client.create_address_providers())
             addresses = get_possible_addresses(provider_addresses, self._client.cluster.get_member_list())
 
             for address in addresses:
@@ -332,7 +333,7 @@ class ConnectionManager(object):
             cluster_name=self._client.config.cluster_name,
             username=None,
             password=None,
-            uuid=self._client.cluster.uuid,
+            uuid=self.client_uuid,
             client_type=CLIENT_TYPE,
             serialization_version=SERIALIZATION_VERSION,
             client_hazelcast_version=CLIENT_VERSION,
@@ -365,14 +366,14 @@ class ConnectionManager(object):
         new_cluster_id = parameters["clusterId"]
         connection.is_owner = True
         initial_connection = len(self.connections) == 0
-        changed_cluster = initial_connection and self.cluster_id is not None and \
-                          new_cluster_id != self.cluster_id
+        changed_cluster = initial_connection and self.cluster_id is not None and new_cluster_id != self.cluster_id
+
         if changed_cluster:
             self.logger.warning("Switching from current cluster: {} to new cluster: {}"
                                 .format(self.cluster_id, new_cluster_id))
             self._client.on_cluster_restart()
 
-        # TODO: Active connections key type might need to be str
+        # TODO: Key type of active connections might need to be str
         self.connections[parameters["memberUuid"]] = connection
 
         if initial_connection:
@@ -448,7 +449,7 @@ class ConnectionManager(object):
         for member in self._client.cluster.members:
             self.get_or_connect(member.address)
 
-        self.connect_to_all_cluster_members_task = self._client.reactor.\
+        self.connect_to_all_cluster_members_task = self._client.reactor. \
             add_timer(1, self.connect_to_all_cluster_members)
 
     def try_connect_to_all_cluster_members(self, members):
@@ -463,7 +464,7 @@ class ConnectionManager(object):
             return
 
         self.alive = False
-        self._connection_listeners.clear()
+        del self._connection_listeners[:]
         self.heartbeat_manager.shutdown()
 
 
@@ -524,7 +525,7 @@ class HeartbeatManager(object):
             self._client.invoker.invoke_on_connection(request, connection)
 
     @staticmethod
-    def _on_heartbeat_stopped(self, connection):
+    def _on_heartbeat_stopped(connection):
         connection.close(TargetDisconnectedError("Heartbeat timed out to connection {})".format(connection)))
 
 

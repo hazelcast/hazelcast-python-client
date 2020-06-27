@@ -2,10 +2,7 @@ from hazelcast.protocol.client_message import ClientMessage
 
 
 def encode(client_message, value):
-    if not isinstance(value, str):
-        client_message.add(ClientMessage.Frame(bytearray(value.name, "utf-8")))
-    else:
-        client_message.add(ClientMessage.Frame(bytearray(value, "utf-8")))
+    client_message.add(ClientMessage.Frame(bytearray(value, "utf-8")))
 
 
 def decode(iterator_or_frame):

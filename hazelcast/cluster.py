@@ -1,20 +1,14 @@
-import logging
 import random
-import threading
 import time
 import uuid
+import logging
+import threading
 
-from hazelcast.exception import HazelcastError, AuthenticationError, TargetDisconnectedError
-from hazelcast.lifecycle import LIFECYCLE_STATE_CLIENT_CONNECTED, LIFECYCLE_STATE_CLIENT_DISCONNECTED
-from hazelcast.protocol.codec import client_authentication_codec
-from hazelcast.util import get_possible_addresses, get_provider_addresses, calculate_version
-from hazelcast.version import CLIENT_TYPE, CLIENT_VERSION, SERIALIZATION_VERSION
+from hazelcast.exception import TargetDisconnectedError
 from hazelcast.protocol.codec import client_add_cluster_view_listener_codec
 from hazelcast.invocation import Invocation
 from hazelcast.core import MemberInfo
 from hazelcast.future import Future
-import logging
-import threading
 
 # Membership Event Types
 MEMBER_ADDED = 1
@@ -29,12 +23,6 @@ class MemberListSnapshot(object):
     def __len__(self):
         return len(self.members)
 
-    def __str__(self):
-        return "MemberListSnapshot"
-
-    def __repr__(self):
-        return "MemberListSnapshot"
-
 
 EMPTY_SNAPSHOT = MemberListSnapshot(-1, {})
 
@@ -48,32 +36,23 @@ class ClusterService(object):
     """
     logger = logging.getLogger("HazelcastClient.ClusterService")
 
-    def __init__(self, config, client):
-        self.semaphore_ = threading.Semaphore()
-        self._config = config
+    def __init__(self, client):
+        self._semaphore = threading.Semaphore()
         self._client = client
-        self._logger_extras = {"client_name": client.name, "cluster_name": config.cluster_name}
+        self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
         self._members = {}
         self.owner_connection_address = None
-        # self.owner_uuid = None
         self.uuid = uuid.uuid4()
         self.listeners = {}
         self.member_list_snapshot = EMPTY_SNAPSHOT
 
-        for listener in config.membership_listeners:
-            self.add_listener(*listener)
-
         # self._address_providers = address_providers
-        self._initial_list_fetched = threading.Event()
         # self._client.connection_manager.add_listener(on_connection_closed=self._connection_closed)
         # self._client.heartbeat.add_listener(on_heartbeat_stopped=self._heartbeat_stopped)
 
     def start(self, configured_listeners):
         for listener in configured_listeners:
             self.add_membership_listener(listener)
-
-    def shutdown(self):
-        pass
 
     def size(self):
         """
@@ -135,41 +114,9 @@ class ClusterService(object):
                 event = InitialMembershipEvent(members)
                 listener.init(event)
 
-    def _authenticate_manager(self, connection):
-        request = client_authentication_codec.encode_request(
-            cluster_name=self._config.cluster_name,
-            username=None,
-            password=None,
-            uuid=self.uuid,
-            client_type=CLIENT_TYPE,
-            serialization_version=SERIALIZATION_VERSION,
-            client_hazelcast_version=CLIENT_VERSION,
-            client_name=self._client.name,
-            labels=[])
-
-        def callback(f):
-            parameters = client_authentication_codec.decode_response(f.result())
-            if parameters["status"] != 0:  # TODO: handle other statuses
-                raise AuthenticationError("Authentication failed.")
-            connection.remote_address = parameters["address"]
-            connection.is_owner = True
-            # self.owner_uuid = parameters["owner_uuid"]
-            self.uuid = parameters["memberUuid"]
-            self._client.partition_service.partition_count = parameters["partitionCount"]
-            connection.server_version_str = parameters.get("serverHazelcastVersion", "")
-            connection.server_version = calculate_version(connection.server_version_str)
-            return connection
-
-        return self._client.invoker.invoke_on_connection(request, connection).continue_with(callback)
-
     def _log_member_list(self):
         self.logger.info("New member list:\n\nMembers [%d] {\n%s\n}\n", self.size(),
                          "\n".join(["\t" + str(x) for x in self.get_member_list()]), extra=self._logger_extras)
-
-    def _heartbeat_stopped(self, connection):
-        if connection.remote_address == self.owner_connection_address:
-            self._client.connection_manager.close_connection(connection.remote_address, TargetDisconnectedError(
-                "%s stopped heart beating." % connection))
 
     def get_member_by_uuid(self, member_uuid):
         """
@@ -217,9 +164,9 @@ class ClusterService(object):
         return list(self._members.values())
 
     def wait_initial_membership_fetched(self):
-        future = Future()
-        future.set_result(self.semaphore_.acquire())
-        return future
+        f = Future()
+        f.set_result(self._semaphore.acquire())
+        return f
 
     def handle_members_view_event(self, version=None, member_infos=None):
         assert version and member_infos
@@ -230,7 +177,7 @@ class ClusterService(object):
         if self.member_list_snapshot is EMPTY_SNAPSHOT:
             self.apply_initial_state(version, member_infos)
 
-            self.semaphore_.release()
+            self._semaphore.release()
             # self._log_member_list()
             return
 
@@ -283,13 +230,14 @@ class ClusterService(object):
         snapshot = self.create_snapshot(version, member_infos)
         self.member_list_snapshot = snapshot
         # TODO: self._logger_extras has a class which is not printable
-        # self.logger.info("MemberListSnapshot")
+
         members = snapshot.members.values()
         self._members = snapshot.members
+        self._log_member_list()
         event = InitialMembershipEvent(members)
 
         for listener in self.listeners.values():
-            if isinstance(listener, InitialMembershipEvent):
+            if isinstance(listener, MembershipListener):
                 listener.init(event)
 
     def create_snapshot(self, member_list_version, member_infos):
@@ -325,7 +273,6 @@ class ClusterViewListenerService(object):
 
     def connection_removed(self, connection, cause):
         self.try_reregister_to_random_connection(connection)
-        pass
 
     def try_reregister_to_random_connection(self, old_connection):
         if self.listener_added_connection is not old_connection:
@@ -434,6 +381,9 @@ class MembershipEvent(object):
 
 
 class MembershipListener(object):
+    def init(self, event):
+        raise NotImplementedError
+
     def member_added(self, membership):
         raise NotImplementedError
 
