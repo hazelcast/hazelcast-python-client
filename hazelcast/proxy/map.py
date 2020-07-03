@@ -13,7 +13,7 @@ from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_entry
     map_remove_entry_listener_codec, map_replace_codec, map_replace_if_same_codec, map_set_codec, map_try_lock_codec, \
     map_try_put_codec, map_try_remove_codec, map_unlock_codec, map_values_codec, map_values_with_predicate_codec, \
     map_add_interceptor_codec, map_execute_on_all_keys_codec, map_execute_on_key_codec, map_execute_on_keys_codec, \
-    map_execute_with_predicate_codec, map_add_near_cache_entry_listener_codec
+    map_execute_with_predicate_codec, map_add_near_cache_entry_listener_codec, map_aggregate_codec, map_aggregate_with_predicate_codec
 from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType, get_entry_listener_flags, MAX_SIZE
 from hazelcast.util import check_not_none, thread_id, to_millis
 from hazelcast import six
@@ -158,6 +158,28 @@ class Map(Proxy):
         :return: (str),id of registered interceptor.
         """
         return self._encode_invoke(map_add_interceptor_codec, interceptor=self._to_data(interceptor))
+
+    def aggregate(self, aggregator, predicate=None):
+        """
+        Applies the aggregation logic on all map entries and returns the result
+
+        Fast-Aggregations are the successor of the Map-Reduce Aggregators.
+        They are equivalent to the Map-Reduce Aggregators in most of the use-cases, but instead of running on the Map-Reduce
+        engine they run on the Query infrastructure. Their performance is tens to hundreds times better due to the fact
+        that they run in parallel for each partition and are highly optimized for speed and low memory consumption.
+
+        :param aggregator: aggregator to aggregate the entries with
+        :param predicate: predicate to filter the entries with
+        :return: the result of the given type
+        """
+        check_not_none(aggregator, "aggregator can't be None")
+        aggregator_data = self._to_data(aggregator)
+
+        if predicate:
+            predicate_data = self._to_data(predicate)
+            return self._encode_invoke(map_aggregate_with_predicate_codec, aggregator=aggregator_data, predicate=predicate_data)
+        else:
+            return self._encode_invoke(map_aggregate_codec, aggregator=aggregator_data)
 
     def clear(self):
         """
@@ -825,6 +847,7 @@ class Map(Proxy):
             return self._encode_invoke(map_values_codec)
 
     # internals
+
     def _contains_key_internal(self, key_data):
         return self._encode_invoke_on_key(map_contains_key_codec, key_data, key=key_data, thread_id=thread_id())
 

@@ -39,7 +39,7 @@ class HazelcastClient(object):
         self.properties = ClientProperties(self.config.get_properties())
         self.id = HazelcastClient.CLIENT_ID.get_and_increment()
         self.name = self._create_client_name()
-        self._init_logger()
+        #self._init_logger()
         self._logger_extras = {"client_name": self.name, "group_name": self.config.group_config.name}
         self._log_group_password_info()
         self.lifecycle = LifecycleService(self.config, self._logger_extras)

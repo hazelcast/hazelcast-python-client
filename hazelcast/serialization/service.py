@@ -1,4 +1,17 @@
 from hazelcast.exception import HazelcastSerializationError
+from hazelcast.proxy import aggregator
+from hazelcast.proxy.aggregator import CountAggregator,\
+    FloatAverageAggregator,\
+    FloatSumAggregator,\
+    FixedPointSumAggregator,\
+    FloatingPointSumAggregator, \
+    SumAggregator, \
+    MaxAggregator, \
+    MinAggregator, \
+    AverageAggregator, \
+    MaxByAggregator, \
+    MinByAggregator, \
+    DistinctValuesAggregator
 from hazelcast.serialization.base import BaseSerializationService
 from hazelcast.serialization.portable.classdef import FieldType
 from hazelcast.serialization.portable.context import PortableContext
@@ -16,20 +29,41 @@ def default_partition_strategy(key):
     return None
 
 
+def _init_factories(data_serializable_factories):
+    factories = {aggregator.FACTORY_ID: {CountAggregator.CLASS_ID: CountAggregator,
+                                         AverageAggregator.CLASS_ID: AverageAggregator,
+                                         FixedPointSumAggregator.CLASS_ID: FixedPointSumAggregator,
+                                         SumAggregator.CLASS_ID: SumAggregator,
+                                         MinAggregator.CLASS_ID: MinAggregator,
+                                         FloatSumAggregator.CLASS_ID: FloatSumAggregator,
+                                         FloatAverageAggregator.CLASS_ID: FloatAverageAggregator,
+                                         FloatingPointSumAggregator.CLASS_ID: FloatingPointSumAggregator,
+                                         MaxAggregator.CLASS_ID: MaxAggregator,
+                                         MaxByAggregator.CLASS_ID: MaxByAggregator,
+                                         MinByAggregator.CLASS_ID: MinByAggregator,
+                                         DistinctValuesAggregator.CLASS_ID: DistinctValuesAggregator}}
+    factories.update(data_serializable_factories)
+    return factories
+
+
 class SerializationServiceV1(BaseSerializationService):
 
-    def __init__(self, serialization_config, properties=ClientProperties({}), version=1, global_partition_strategy=default_partition_strategy,
+    def __init__(self, serialization_config, properties=ClientProperties({}), version=1,
+                 global_partition_strategy=default_partition_strategy,
                  output_buffer_size=DEFAULT_OUT_BUFFER_SIZE):
         super(SerializationServiceV1, self).__init__(version, global_partition_strategy, output_buffer_size,
                                                      serialization_config.is_big_endian,
                                                      serialization_config.default_integer_type)
         self._portable_context = PortableContext(self, serialization_config.portable_version)
-        self.register_class_definitions(serialization_config.class_definitions, serialization_config.check_class_def_errors)
-        self._registry._portable_serializer = PortableSerializer(self._portable_context, serialization_config.portable_factories)
+        self.register_class_definitions(serialization_config.class_definitions,
+                                        serialization_config.check_class_def_errors)
+        self._registry._portable_serializer = PortableSerializer(self._portable_context,
+                                                                 serialization_config.portable_factories)
 
         # merge configured factories with built in ones
-        factories = {}
-        factories.update(serialization_config.data_serializable_factories)
+        # factories = {}
+        # factories.update(serialization_config.data_serializable_factories)
+        factories = _init_factories(serialization_config.data_serializable_factories)
         self._registry._data_serializer = IdentifiedDataSerializer(factories)
         self._register_constant_serializers()
 
@@ -99,5 +133,5 @@ class SerializationServiceV1(BaseSerializationService):
                     self._portable_context.register_class_definition(nested_cd)
                 elif check_error:
                     raise HazelcastSerializationError(
-                            "Could not find registered ClassDefinition for class-id:{}".format(fd.class_id))
+                        "Could not find registered ClassDefinition for class-id:{}".format(fd.class_id))
         self._portable_context.register_class_definition(cd)
