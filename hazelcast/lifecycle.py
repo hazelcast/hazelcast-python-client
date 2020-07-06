@@ -16,7 +16,7 @@ LIFECYCLE_STATE_SHUTDOWN = "SHUTDOWN"
 """Fired when the member is shut down is completed."""
 
 LIFECYCLE_STATE_CLIENT_CONNECTED = "CONNECTED"
-"""Fired when a client is disconnected from the member."""
+"""Fired when a client is connected to the member."""
 
 LIFECYCLE_STATE_CLIENT_DISCONNECTED = "DISCONNECTED"
 """Fired when a client is disconnected from the member."""
@@ -41,7 +41,7 @@ class LifecycleService(object):
             self.add_listener(listener)
 
         self._git_info = create_git_info()
-        self.is_live = True
+        self.is_live = False
         # self.fire_lifecycle_event(LIFECYCLE_STATE_STARTING)
 
     def add_listener(self, on_lifecycle_change):

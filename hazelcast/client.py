@@ -1,6 +1,7 @@
 import logging
 import logging.config
 import json
+import uuid
 
 from hazelcast.cluster import ClusterService, RoundRobinLoadBalancer, ClusterViewListenerService
 from hazelcast.config import ClientConfig, ClientProperties
@@ -39,18 +40,17 @@ class HazelcastClient(object):
         self.properties = ClientProperties(self.config.get_properties())
         self.id = HazelcastClient.CLIENT_ID.get_and_increment()
         self.name = self._create_client_name()
+        self.uuid = uuid.uuid4()
         self._init_logger()
         self._logger_extras = {"client_name": self.name, "cluster_name": self.config.cluster_name}
         self.lifecycle = LifecycleService(self, self.config, self._logger_extras)
         self.reactor = AsyncoreReactor(self._logger_extras)
         self._address_provider = self._create_address_provider()
-
-        self.cluster = ClusterService(self)
         self.load_balancer = self._init_load_balancer()
+        self.cluster = ClusterService(self)
         self.connection_manager = ConnectionManager(self, self.reactor.new_connection)
         self.invoker = InvocationService(self)
         self.listener = ListenerService(self)
-        self.load_balancer = self._init_load_balancer()
         self.partition_service = PartitionService(self)
         self.proxy = ProxyManager(self)
         self.serialization_service = SerializationServiceV1(serialization_config=self.config.serialization_config,
@@ -369,51 +369,6 @@ class HazelcastClient(object):
             return HazelcastCloudAddressProvider(host, url, self._get_connection_timeout(), self._logger_extras)
 
         return None
-
-    """
-        def _create_address_translator(self):
-        network_config = self.config.network_config
-        cloud_config = network_config.cloud_config
-        cloud_discovery_token = self.properties.get(self.properties.HAZELCAST_CLOUD_DISCOVERY_TOKEN)
-
-        address_list_provided = len(network_config.addresses) != 0
-        if cloud_discovery_token != "" and cloud_config.enabled:
-            raise HazelcastIllegalStateError("Ambiguous Hazelcast.cloud configuration. "
-                                             "Both property based and client configuration based settings are provided "
-                                             "for Hazelcast cloud discovery together. Use only one.")
-
-        hazelcast_cloud_enabled = cloud_discovery_token != "" or cloud_config.enabled
-        self._is_discovery_configuration_consistent(address_list_provided, hazelcast_cloud_enabled)
-
-        if hazelcast_cloud_enabled:
-            if cloud_config.enabled:
-                discovery_token = cloud_config.discovery_token
-            else:
-                discovery_token = cloud_discovery_token
-            host, url = HazelcastCloudDiscovery.get_host_and_url(self.config.get_properties(), discovery_token)
-            return HazelcastCloudAddressTranslator(host, url, self._get_connection_timeout(), self._logger_extras)
-
-        return DefaultAddressTranslator()
-
-    def _get_connection_timeout(self):
-        network_config = self.config.network_config
-        conn_timeout = network_config.connection_timeout
-        return sys.maxsize if conn_timeout == 0 else conn_timeout
-
-    def _is_discovery_configuration_consistent(self, address_list_provided, hazelcast_cloud_enabled):
-        count = 0
-        if address_list_provided:
-            count += 1
-        if hazelcast_cloud_enabled:
-            count += 1
-
-        if count > 1:
-            raise HazelcastIllegalStateError("Only one discovery method can be enabled at a time. "
-                                             "Cluster members given explicitly: {}"
-                                             ", Hazelcast.cloud enabled: {}".format(address_list_provided,
-                                                                                    hazelcast_cloud_enabled))
-
-    """
 
     def on_cluster_restart(self):
         self.logger.info("Clearing local state of the client, because of a cluster restart", extra=self._logger_extras)

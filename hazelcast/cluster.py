@@ -41,7 +41,6 @@ class ClusterService(object):
         self._client = client
         self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
         self._members = {}
-        self.owner_connection_address = None
         self.uuid = uuid.uuid4()
         self.listeners = {}
         self.member_list_snapshot = EMPTY_SNAPSHOT
@@ -297,25 +296,41 @@ class ClusterViewListenerService(object):
 
         invocation = Invocation(self.client.invoker, client_message, connection=connection)
 
-        handler = self.ClusterViewListenerHandler(connection, self)
+        """  """
+        handler = self.ClusterViewListenerHandler(connection, self)           
         future = self.client.invoker.invoke_on_connection(client_message,
                                                           connection,
                                                           event_handler=
                                                           lambda m: client_add_cluster_view_listener_codec.handle(m,
-        handle_partitions_view_event=lambda version, partitions: self.partition_service.handle_partitions_view_event(connection, partitions, version),
-        handle_members_view_event=self.cluster_service.handle_members_view_event))
+                                                                                                                  handle_partitions_view_event=lambda
+                                                                                                                      version,
+                                                                                                                      partitions: self.partition_service.handle_partitions_view_event(
+                                                                                                                      connection,
+                                                                                                                      partitions,
+                                                                                                                      version),
+                                                                                                                  handle_members_view_event=self.cluster_service.handle_members_view_event))
         invocation.event_handler = handler
+
         self.logger.debug("Register attempt of ClusterViewListenerHandler to " + repr(connection))
 
         def callback(f):
             try:
                 f.result()
-            except Exception as e:
-                # print(str(e))
+            except Exception:
                 self.try_reregister_to_random_connection(connection)
 
         # invocation.future.add_done_callback(callback)
         future.add_done_callback(callback)
+
+    def _create_cluster_view_listener_handler(self, connection):
+        return lambda m: client_add_cluster_view_listener_codec.handle(m,
+                                                                       handle_partitions_view_event=lambda version,
+                                                                                                           partitions:
+                                                                       self.partition_service.
+                                                                       handle_partitions_view_event(
+                                                                           connection, partitions, version),
+                                                                       handle_members_view_event=self.cluster_service.
+                                                                       handle_members_view_event)
 
     class ClusterViewListenerHandler:
         def __init__(self, connection, client_cluster_view_service):

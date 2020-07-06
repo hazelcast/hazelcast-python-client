@@ -3,7 +3,7 @@ import hazelcast
 if __name__ == "__main__":
     # Connect
     config = hazelcast.ClientConfig()
-    config.network_config.addresses.append("127.0.0.1:5701")
+    # config.network_config.addresses.append("127.0.0.1:5701")
     client = hazelcast.HazelcastClient(config)
 
     # Get a map that is stored on the server side. We can access it from the client

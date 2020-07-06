@@ -39,7 +39,6 @@ class AsyncoreReactor(object):
         self._thread.daemon = True
         self._thread.start()
 
-
     def _loop(self):
         self.logger.debug("Starting Reactor Thread", extra=self._logger_extras)
         Future._threading_locals.is_reactor_thread = True

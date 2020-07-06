@@ -4,7 +4,6 @@ import sys
 import threading
 import time
 import random
-import uuid
 
 from hazelcast.exception import AuthenticationError, HazelcastIllegalStateError, ClientNotAllowedInClusterError
 from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture, Future
@@ -40,12 +39,12 @@ class ConnectionManager(object):
         self._new_connection_mutex = threading.RLock()
         self._io_thread = None
         self._client = client
+        self.client_uuid = client.uuid
         self._load_balancer = client.load_balancer
         self._connection_timeout_millis = self.init_connection_timeout_millis()
         self.heartbeat_manager = HeartbeatManager(client, self)
         self.connections = {}
         self._pending_connections = {}
-        self._socket_map = {}
         self._new_connection_func = new_connection_func
         self._connection_listeners = []
         self._logger_extras = {"client_name": client.name, "group_name": client.config.cluster_name}
@@ -56,10 +55,8 @@ class ConnectionManager(object):
         self.reconnect_mode = self.connection_strategy_config.reconnect_mode
         self.client_state = CLIENT_STATE.INITIAL
         self.alive = False
-
         self.connect_to_cluster_task_submitted = False
         self.connect_to_all_cluster_members_task = None
-        self.client_uuid = uuid.uuid4()
 
     def start(self):
         """
@@ -488,12 +485,7 @@ class HeartbeatManager(object):
         Starts sending periodic HeartBeat operations.
         """
 
-        def _heartbeat():
-            if not self._client.lifecycle.is_live:
-                return
-            self._heartbeat()
-
-        self._heartbeat_timer = self._client.reactor.add_timer(self._heartbeat_interval, _heartbeat)
+        self._heartbeat_timer = self._client.reactor.add_timer(self._heartbeat_interval, self._heartbeat)
 
     def shutdown(self):
         """
@@ -503,9 +495,13 @@ class HeartbeatManager(object):
             self._heartbeat_timer.cancel()
 
     def _heartbeat(self):
+        if not self._client.lifecycle.is_live:
+            return
         now = time.time()
         for connection in list(self._client.connection_manager.connections.values()):
             self._check_connection(now, connection)
+
+        self._heartbeat_timer = self._client.reactor.add_timer(self._heartbeat_interval, self._heartbeat)
 
     def _check_connection(self, now, connection):
         if not connection.live():

@@ -7,7 +7,7 @@ from hazelcast.exception import create_exception, HazelcastInstanceNotActiveErro
     TargetDisconnectedError, HazelcastClientNotActiveException, TargetNotMemberError
 from hazelcast.future import Future
 from hazelcast.lifecycle import LIFECYCLE_STATE_CLIENT_CONNECTED
-from hazelcast.protocol.custom_codec import EXCEPTION_MESSAGE_TYPE, ErrorCodec
+from hazelcast.protocol.error_factory import EXCEPTION_MESSAGE_TYPE, ErrorCodec
 from hazelcast.util import AtomicInteger
 from hazelcast.six.moves import queue
 from hazelcast import six
@@ -247,7 +247,6 @@ class InvocationService(object):
         correlation_id = message.get_correlation_id()
 
         if ClientMessage.is_flag_set(message.header_flags, IS_EVENT_FLAG):
-            
             invocation = self.event_handlers.get(correlation_id)
             if invocation:
                 invocation.event_handler(message)

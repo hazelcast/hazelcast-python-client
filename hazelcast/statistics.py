@@ -173,28 +173,6 @@ class Statistics(object):
     def _add_empty_stat(self, stats, name, key_prefix=None):
         self._add_stat(stats, name, Statistics._EMPTY_STAT_VALUE, key_prefix)
 
-    def _get_owner_connection(self):
-        current_owner_address = self._client.cluster.owner_connection_address
-        connection = self._client.connection_manager.get_connection(current_owner_address)
-
-        if connection is None:
-            return None
-
-        server_version = connection.server_version
-        if server_version < Statistics._SINCE_VERSION:
-            # do not print too many logs if connected to an old version server
-            if self._cached_owner_address and self._cached_owner_address != current_owner_address:
-                self.logger.debug("Client statistics cannot be sent to server {} since,"
-                                  "connected owner server version is less than the minimum supported server version ,"
-                                  "{}.".format(current_owner_address, Statistics._SINCE_VERSION_STRING),
-                                  extra=self._logger_extras)
-
-            # cache the last connected server address for decreasing the log prints
-            self._cached_owner_address = current_owner_address
-            return None
-
-        return connection
-
     def _get_name_with_prefix(self, name):
         return [Statistics._NEAR_CACHE_CATEGORY_PREFIX, self._escape_special_characters(name)]
 

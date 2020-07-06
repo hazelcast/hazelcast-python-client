@@ -20,7 +20,6 @@ class ClientMessageWriter(object):
 
             while True:
                 is_last_frame = self.current_frame.next is None
-                # print("ct: {},is last: {}".format(current_thread().name, is_last_frame))
                 if self.write_frame(self.current_frame, is_last_frame):
                     self.write_offset = -1
                     if is_last_frame:

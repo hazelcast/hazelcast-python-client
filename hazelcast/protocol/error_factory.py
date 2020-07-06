@@ -3,84 +3,13 @@ Hazelcast client protocol codecs
 """
 
 from collections import namedtuple
-from hazelcast.core import MemberInfo, DistributedObjectInfo, Address
 # TODO: Potential cyclic dependent import
-# from hazelcast.protocol.codec.builtin import ErrorsCodec
-from hazelcast.six.moves import range
+# from hazelcast.protocol.codec.builtin import errors_codec
 
 EXCEPTION_MESSAGE_TYPE = 0
 
 
-class MemberCodec(object):
-    @classmethod
-    def encode(cls, client_message, member):
-        AddressCodec.encode(client_message, member.address)
-        client_message.append_str(member.uuid)
-        client_message.append_bool(member.lite_member)
-        client_message.append_int(len(member.attributes))
-        for key, value in member.attributes:
-            client_message.append_str(key)
-            client_message.append_str(value)
-
-    @classmethod
-    def decode(cls, client_message, to_object=None):
-        address = AddressCodec.decode(client_message)
-        uuid = client_message.read_str()
-        lite_member = client_message.read_bool()
-        attribute_size = client_message.read_int()
-        attributes = {}
-        for i in range(0, attribute_size, 1):
-            key = client_message.read_str()
-            value = client_message.read_str()
-            attributes[key] = value
-        return MemberInfo(address, uuid, lite_member, attributes)
-
-
-class AddressCodec(object):
-    @classmethod
-    def encode(cls, client_message, obj):
-        client_message.append_str(obj.host).append_int(obj.port)
-
-    @classmethod
-    def decode(cls, client_message, to_object=None):
-        host = client_message.read_str()
-        port = client_message.read_int()
-        return Address(host, port)
-
-
-class DistributedObjectInfoCodec(object):
-    @classmethod
-    def encode(cls, client_message, obj):
-        client_message.append_str(obj.service_name).append_str(obj.name)
-
-    @classmethod
-    def decode(cls, client_message):
-        service_name = client_message.read_str()
-        name = client_message.read_str()
-        return DistributedObjectInfo(name, service_name)
-
-
-class QueryCacheEventDataCodec(object):
-    @classmethod
-    def encode(cls, client_message, obj):
-        pass
-
-    @classmethod
-    def decode(cls, client_message, to_object=None):
-        pass
-
-
 StackTraceElement = namedtuple('StackTraceElement', ['declaring_class', 'method_name', 'file_name', 'line_number'])
-
-
-class ExceptionFactory(object):
-    _code_to_factory = {}
-
-    def __init__(self):
-        self.register()
-
-    def register(self, code, exception_factory):
-        self._code_to_factory[code] = exception_factory
 
 
 class ErrorCodec(object):
@@ -110,7 +39,6 @@ class ErrorCodec(object):
                % (self.error_code, self.class_name, self.message)
 
 
-
 from hazelcast.protocol.client_message import ClientMessage,RESPONSE_BACKUP_ACKS_FIELD_OFFSET,UNFRAGMENTED_MESSAGE
 from hazelcast.protocol.bits import BYTE_SIZE_IN_BYTES
 from hazelcast.protocol.codec.builtin import list_multi_frame_codec
@@ -134,3 +62,5 @@ class ErrorsCodec:
 
         iterator.next()
         return list_multi_frame_codec.decode(iterator, error_holder_codec.decode)
+
+

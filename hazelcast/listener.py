@@ -33,43 +33,10 @@ class ListenerService(object):
         self._active_registrations = {}  # Dict of user_registration_id, ListenerRegistration
         self._registration_lock = threading.RLock()
 
-    def try_sync_connect_to_all_members(self):
-        cluster_service = self._client.cluster
-        start_millis = current_time_in_millis()
-        while True:
-            last_failed_member = None
-            last_exception = None
-            for member in cluster_service.members:
-                try:
-                    self._client.connection_manager.get_or_connect(member.address).result()
-                except Exception as e:
-                    print(e)
-                    last_failed_member = member
-                    last_exception = e
-            if last_exception is None:
-                break
-            self.time_out_or_sleep_before_next_try(start_millis, last_failed_member, last_exception)
-            if not self._client.lifecycle.is_live:
-                break
-
-    def time_out_or_sleep_before_next_try(self, start_millis, last_failed_member, last_exception):
-        now_in_millis = current_time_in_millis()
-        elapsed_millis = now_in_millis - start_millis
-        invocation_time_out_millis = self._invocation_service.invocation_timeout * 1000
-        timed_out = elapsed_millis > invocation_time_out_millis
-        if timed_out:
-            raise OperationTimeoutError\
-                ("Registering listeners is timed out. Last failed member: %s, Current time: %s, Start time: %s, "
-                 "Client invocation timeout: %s, Elapsed time: %s ms, Cause: %s", last_failed_member, now_in_millis,
-                 start_millis, invocation_time_out_millis, elapsed_millis, last_exception.args[0])
-        else:
-            sleep(self._invocation_service.invocation_retry_pause)  # sleep before next try
+    def start(self):
+        self._client.connection_manager.add_listener(self.connection_added, self.connection_removed)
 
     def register_listener(self, registration_request, decode_register_response, encode_deregister_request, handler):
-        if self.is_smart:
-            # self.try_sync_connect_to_all_members()
-            pass
-
         with self._registration_lock:
             user_registration_id = str(uuid4())
             listener_registration = ListenerRegistration(registration_request, decode_register_response,
@@ -149,6 +116,3 @@ class ListenerService(object):
                 event_registration = listener_registration.connection_registrations.pop(connection, None)
                 if event_registration is not None:
                     self._invocation_service._remove_event_handler(event_registration.correlation_id)
-
-    def start(self):
-        self._client.connection_manager.add_listener(self.connection_added, self.connection_removed)

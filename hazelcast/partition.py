@@ -20,12 +20,6 @@ class PartitionService(object):
         self.partition_count = 0
         self.partition_table = PartitionTable(None, -1, {})
 
-    def refresh(self):
-        """
-        Refreshes the partition service.
-        """
-        self._client.reactor.add_timer(0, self._do_refresh)
-
     def get_partition_owner(self, partition_id):
         """
         Gets the owner of the partition if it's set. Otherwise it returns None.
@@ -120,9 +114,6 @@ class PartitionService(object):
             return True
 
         return self.partition_count == new_partition_count
-
-    def _do_refresh(self):
-        pass
 
 
 def string_partition_strategy(key):
