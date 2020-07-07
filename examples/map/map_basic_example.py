@@ -1,11 +1,7 @@
 import hazelcast
 
 if __name__ == "__main__":
-
-    config = hazelcast.ClientConfig()
-    config.network_config.addresses.append("127.0.0.1:5701")
-    #config.network_config.smart_routing = False
-    client = hazelcast.HazelcastClient(config)
+    client = hazelcast.HazelcastClient()
 
     my_map = client.get_map("my-map")
 

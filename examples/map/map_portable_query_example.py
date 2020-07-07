@@ -42,9 +42,6 @@ if __name__ == '__main__':
 
     client = hazelcast.HazelcastClient(config)
 
-    import logging
-    config.logger_config.level = logging.DEBUG
-
     my_map = client.get_map("employee-map")
     #
     my_map.put(0, Employee("Jack", 28))
@@ -55,11 +52,13 @@ if __name__ == '__main__':
 
     predicate = sql("age <= 29")
 
+
     def values_callback(f):
         result_set = f.result()
         print("Query Result Size: {}".format(len(result_set)))
         for value in result_set:
             print("value: {}".format(value))
+
 
     my_map.values(predicate).add_done_callback(values_callback)
 

@@ -294,22 +294,20 @@ class ClusterViewListenerService(object):
 
         client_message = client_add_cluster_view_listener_codec.encode_request()
 
-        invocation = Invocation(self.client.invoker, client_message, connection=connection)
-
-        """  """
-        handler = self.ClusterViewListenerHandler(connection, self)           
-        future = self.client.invoker.invoke_on_connection(client_message,
-                                                          connection,
-                                                          event_handler=
-                                                          lambda m: client_add_cluster_view_listener_codec.handle(m,
-                                                                                                                  handle_partitions_view_event=lambda
-                                                                                                                      version,
-                                                                                                                      partitions: self.partition_service.handle_partitions_view_event(
-                                                                                                                      connection,
-                                                                                                                      partitions,
-                                                                                                                      version),
-                                                                                                                  handle_members_view_event=self.cluster_service.handle_members_view_event))
-        invocation.event_handler = handler
+        future = self.client.invoker.invoke_on_connection(
+            client_message,
+            connection,
+            event_handler=
+            lambda m: client_add_cluster_view_listener_codec.handle(m,
+                                                                    handle_partitions_view_event=lambda version,
+                                                                    partitions:
+                                                                    self.partition_service.
+                                                                    handle_partitions_view_event(
+                                                                        connection,
+                                                                        partitions,
+                                                                        version),
+                                                                    handle_members_view_event=self.cluster_service.
+                                                                    handle_members_view_event))
 
         self.logger.debug("Register attempt of ClusterViewListenerHandler to " + repr(connection))
 
@@ -319,46 +317,7 @@ class ClusterViewListenerService(object):
             except Exception:
                 self.try_reregister_to_random_connection(connection)
 
-        # invocation.future.add_done_callback(callback)
         future.add_done_callback(callback)
-
-    def _create_cluster_view_listener_handler(self, connection):
-        return lambda m: client_add_cluster_view_listener_codec.handle(m,
-                                                                       handle_partitions_view_event=lambda version,
-                                                                                                           partitions:
-                                                                       self.partition_service.
-                                                                       handle_partitions_view_event(
-                                                                           connection, partitions, version),
-                                                                       handle_members_view_event=self.cluster_service.
-                                                                       handle_members_view_event)
-
-    class ClusterViewListenerHandler:
-        def __init__(self, connection, client_cluster_view_service):
-            self.connection = connection
-            self.client_cluster_view_service = client_cluster_view_service
-
-        def on_listener_register(self, connection):
-            ClusterViewListenerService.logger.debug("Registered ClusterViewListenerHandler to " + repr(connection))
-
-        def handle_members_view_event(self, client_message):
-            request = client_add_cluster_view_listener_codec.encode_request()
-            self.client_cluster_view_service.client.listener.register_listener(
-                request,
-                lambda r: client_add_cluster_view_listener_codec.decode_response(r),
-                lambda: None,
-                lambda m: client_add_cluster_view_listener_codec.handle(m, handle_members_view_event=
-                self.client_cluster_view_service.cluster_service.handle_members_view_event))
-
-        def handle_partitions_view_event(self):
-            request = client_add_cluster_view_listener_codec.encode_request()
-            self.client_cluster_view_service.client.listener.register_listener(
-                request,
-                lambda r: client_add_cluster_view_listener_codec.decode_response(r),
-                lambda: None,
-                lambda m: client_add_cluster_view_listener_codec.handle(m,
-                                                                        handle_partitions_view_event=self.client_cluster_view_service.partition_service.handle_partitions_view_event
-                                                                        ,
-                                                                        handle_members_view_event=self.client_cluster_view_service.cluster_service.handle_members_view_event))
 
 
 class InitialMembershipEvent(object):

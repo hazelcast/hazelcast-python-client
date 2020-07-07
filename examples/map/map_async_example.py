@@ -9,9 +9,7 @@ def fill_map(hz_map, count=10):
 
 
 if __name__ == "__main__":
-    config = hazelcast.ClientConfig()
-    #config.network_config.smart_routing = False
-    client = hazelcast.HazelcastClient(config)
+    client = hazelcast.HazelcastClient()
 
     my_map = client.get_map("async-map")
     fill_map(my_map)

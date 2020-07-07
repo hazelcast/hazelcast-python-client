@@ -94,7 +94,6 @@ class AsyncoreReactor(object):
                 else:
                     raise
         self._map.clear()
-        # todo this is blocking call and prevents process to finish
         self._thread.join()
 
     def new_connection(self, client, address, connect_timeout, socket_options, connection_closed_callback, message_callback,
@@ -202,10 +201,8 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         self.bytes_written += len(data_read)
         self.last_read_in_seconds = time.time()
         self.client_message_decoder.on_read()
-        #self.receive_message()
 
     def handle_write(self):
-        #print("sending msg")
         with self._write_lock:
             try:
                 data = self._write_queue.popleft()

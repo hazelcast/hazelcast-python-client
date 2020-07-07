@@ -62,8 +62,6 @@ def generate_key_owned_by_instance(client, instance):
     while True:
         key = random_string()
         partition_id = client.partition_service.get_partition_id(key)
-        print("{}-{}".format(type(client.partition_service.get_partition_owner(partition_id)), type(instance)))
-        print("{} {}: {}".format(str(client.partition_service.get_partition_owner(partition_id)), instance, str(client.partition_service.get_partition_owner(partition_id)) == instance))
         if str(client.partition_service.get_partition_owner(partition_id)) == instance:
             return key
 

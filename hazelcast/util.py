@@ -531,7 +531,6 @@ class IndexUtil(object):
     def canonicalize_attribute(attribute):
         return re.sub(IndexUtil.THIS_PATTERN, "", attribute)
 
-
     @staticmethod
     def get_index_type_name(index_type):
         if index_type == INDEX_TYPE.SORTED:

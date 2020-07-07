@@ -59,7 +59,6 @@ class ListenerService(object):
         registration_map = listener_registration.connection_registrations
 
         if connection in registration_map:
-            print("None returned")
             return
 
         registration_request = listener_registration.registration_request.clone()
