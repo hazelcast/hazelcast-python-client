@@ -4,9 +4,8 @@ FACTORY_ID = -41
 
 
 class AbstractAggregator(IdentifiedDataSerializable):
-    attribute_path: str
 
-    def __init__(self, attribute_path):
+    def __init__(self, attribute_path= ""):
         self.attribute_path = attribute_path
 
     def get_factory_id(self):
@@ -143,7 +142,7 @@ class MinAggregator(AbstractAggregator):
 
     def write_data(self, output):
         output.write_utf(self.attribute_path)
-        output.write_object(0)
+        output.write_object(None)
 
 
 class SumAggregator(AbstractAggregator):
@@ -175,8 +174,8 @@ class MaxByAggregator(AbstractAggregator):
 
     def write_data(self, output):
         output.write_utf(self.attribute_path)
-        output.write_object(0)
-        output.write_object(0)
+        output.write_object(None)
+        output.write_object(None)
 
 
 class MinByAggregator(AbstractAggregator):
@@ -193,8 +192,8 @@ class MinByAggregator(AbstractAggregator):
 
     def write_data(self, output):
         output.write_utf(self.attribute_path)
-        output.write_object(0)
-        output.write_object(0)
+        output.write_object(None)
+        output.write_object(None)
 
 
 class DistinctValuesAggregator(AbstractAggregator):
@@ -223,12 +222,23 @@ class DistinctValuesAggregator(AbstractAggregator):
 class CanonicalizingHashSet(AbstractAggregator):
 
     CLASS_ID = 19
-"""
+
+    map = {}
+
     def get_class_id(self):
         return self.CLASS_ID
 
     def read_data(self, input):
+        self.attribute_path = input.read_utf()
+        count = input.read_int()
+
+        for _ in range(0, count):
+            element = input.read_object()
+        #    map[ce] = element
         
 
     def write_data(self, output):
-"""
+        output.write_int(self.map.size())
+
+        for element in self:
+            output.write_object(element)

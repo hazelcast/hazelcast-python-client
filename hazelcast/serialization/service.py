@@ -11,7 +11,7 @@ from hazelcast.proxy.aggregator import CountAggregator,\
     AverageAggregator, \
     MaxByAggregator, \
     MinByAggregator, \
-    DistinctValuesAggregator
+    DistinctValuesAggregator, CanonicalizingHashSet
 from hazelcast.serialization.base import BaseSerializationService
 from hazelcast.serialization.portable.classdef import FieldType
 from hazelcast.serialization.portable.context import PortableContext
@@ -41,7 +41,8 @@ def _init_factories(data_serializable_factories):
                                          MaxAggregator.CLASS_ID: MaxAggregator,
                                          MaxByAggregator.CLASS_ID: MaxByAggregator,
                                          MinByAggregator.CLASS_ID: MinByAggregator,
-                                         DistinctValuesAggregator.CLASS_ID: DistinctValuesAggregator}}
+                                         DistinctValuesAggregator.CLASS_ID: DistinctValuesAggregator,
+                                         CanonicalizingHashSet.CLASS_ID: CanonicalizingHashSet}}
     factories.update(data_serializable_factories)
     return factories
 

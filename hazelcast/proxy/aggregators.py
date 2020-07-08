@@ -9,7 +9,7 @@ from hazelcast.proxy.aggregator import CountAggregator,\
     AverageAggregator, \
     MaxByAggregator, \
     MinByAggregator, \
-    DistinctValuesAggregator
+    DistinctValuesAggregator, CanonicalizingHashSet
 
 
 def count(attribute_path=None):
@@ -139,6 +139,5 @@ def distinct_values(attribute_path=None):
     Aggregation result type is a Set of R.
     """
     return DistinctValuesAggregator(attribute_path)
-
 
 

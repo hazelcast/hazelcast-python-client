@@ -1,3 +1,4 @@
+from hazelcast.core import HazelcastJsonValue
 from hazelcast.proxy import MAP_SERVICE
 from hazelcast.proxy import aggregators
 from hazelcast.serialization import predicate
@@ -7,6 +8,12 @@ from hazelcast import six
 
 
 class MapAggregatorTest(SingleMemberTestCase):
+
+    def setUp(self):
+        self.map = self.client.get_map("test-map").blocking()
+
+    def tearDown(self):
+        self.map.destroy()
 
     def _fill_map(self, count, map):
         for n in range(0, count):
@@ -19,222 +26,162 @@ class MapAggregatorTest(SingleMemberTestCase):
         return map
 
     def test_count(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(50, test_map.aggregate(aggregators.count()))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(50, self.map.aggregate(aggregators.count()))
 
     def test_count_with_attribute_path(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(50, test_map.aggregate(aggregators.count(attribute_path="this")))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(50, self.map.aggregate(aggregators.count(attribute_path="this")))
 
     def test_count_with_predicate(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(47, test_map.aggregate(aggregators.count(), predicate.is_greater_than("this", 2)))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(47, self.map.aggregate(aggregators.count(), predicate.is_greater_than("this", 2)))
 
     def test_float_average(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(24.5, test_map.aggregate(aggregators.float_avg()))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(24.5, self.map.aggregate(aggregators.float_avg()))
 
     def test_float_average_with_attribute_path(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(24.5, test_map.aggregate(aggregators.float_avg(attribute_path="this")))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(24.5, self.map.aggregate(aggregators.float_avg(attribute_path="this")))
 
     def test_float_average_with_predicate(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(48.5, test_map.aggregate(aggregators.float_avg(),predicate.is_greater_than("this",47)))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(48.5, self.map.aggregate(aggregators.float_avg(),predicate.is_greater_than("this",47)))
 
     def test_float_sum(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(1225, test_map.aggregate(aggregators.float_sum()))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(1225, self.map.aggregate(aggregators.float_sum()))
 
     def test_float_sum_with_attribute_path(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(1225, test_map.aggregate(aggregators.float_sum(attribute_path="this")))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(1225, self.map.aggregate(aggregators.float_sum(attribute_path="this")))
 
     def test_float_sum_with_predicate(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(144, test_map.aggregate(aggregators.float_sum(), predicate.is_greater_than("this",46)))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(144, self.map.aggregate(aggregators.float_sum(), predicate.is_greater_than("this",46)))
 
     def test_average(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(24.5, test_map.aggregate(aggregators.average()))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(24.5, self.map.aggregate(aggregators.average()))
 
     def test_average_with_attribute_path(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(24.5, test_map.aggregate(aggregators.average(attribute_path="this")))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(24.5, self.map.aggregate(aggregators.average(attribute_path="this")))
 
     def test_average_with_predicate(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(48.5, test_map.aggregate(aggregators.average(), predicate.is_greater_than("this", 47)))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(48.5, self.map.aggregate(aggregators.average(), predicate.is_greater_than("this", 47)))
 
     def test_max(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(49, test_map.aggregate(aggregators.max()))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(49, self.map.aggregate(aggregators.max()))
 
     def test_max_with_attribute_path(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(49, test_map.aggregate(aggregators.max(attribute_path="this")))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(49, self.map.aggregate(aggregators.max(attribute_path="this")))
 
     def test_max_with_predicate(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(3, test_map.aggregate(aggregators.max(), predicate.is_less_than("this", 4)))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(3, self.map.aggregate(aggregators.max(), predicate.is_less_than("this", 4)))
 
     def test_min(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(0, test_map.aggregate(aggregators.min()))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(0, self.map.aggregate(aggregators.min()))
 
     def test_min_with_attribute_path(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(0, test_map.aggregate(aggregators.min(attribute_path="this")))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(0, self.map.aggregate(aggregators.min(attribute_path="this")))
 
     def test_min_with_predicate(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(1, test_map.aggregate(aggregators.min(), predicate.is_not_equal_to("this", 0)))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(27, self.map.aggregate(aggregators.min(), predicate.is_greater_than("this", 26)))
 
     def test_sum(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(1225, test_map.aggregate(aggregators.sum()))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(1225, self.map.aggregate(aggregators.sum()))
 
     def test_sum_with_attribute_path(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(1225, test_map.aggregate(aggregators.sum(attribute_path="this")))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(1225, self.map.aggregate(aggregators.sum(attribute_path="this")))
 
     def test_sum_with_predicate(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(97, test_map.aggregate(aggregators.sum(), predicate.is_greater_than("this", 47)))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(97, self.map.aggregate(aggregators.sum(), predicate.is_greater_than("this", 47)))
 
     def test_fixed_point_sum(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(1225, test_map.aggregate(aggregators.fixed_point_sum()))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(1225, self.map.aggregate(aggregators.fixed_point_sum()))
 
     def test_fixed_point_sum_with_attribute_path(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(1225, test_map.aggregate(aggregators.fixed_point_sum(attribute_path="this")))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(1225, self.map.aggregate(aggregators.fixed_point_sum(attribute_path="this")))
 
     def test_fixed_point_sum_with_predicate(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(144, test_map.aggregate(aggregators.fixed_point_sum(), predicate.is_greater_than("this", 46)))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(144, self.map.aggregate(aggregators.fixed_point_sum(), predicate.is_greater_than("this", 46)))
 
     def test_floating_point_sum(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(1225, test_map.aggregate(aggregators.floating_point_sum()))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(1225, self.map.aggregate(aggregators.floating_point_sum()))
 
     def test_floating_point_sum_with_attribute_path(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(1225, test_map.aggregate(aggregators.floating_point_sum(attribute_path="this")))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(1225, self.map.aggregate(aggregators.floating_point_sum(attribute_path="this")))
 
     def test_floating_point_sum_with_predicate(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(144, test_map.aggregate(aggregators.floating_point_sum(), predicate.is_greater_than("this", 46)))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(144, self.map.aggregate(aggregators.floating_point_sum(), predicate.is_greater_than("this", 46)))
 
     def test_distinct_values(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map_same(50, test_map, 1)
-        self.assertEqual([1, 1], test_map.aggregate(aggregators.distinct_values()))
-        test_map.destroy()
+        self._fill_map_same(50, self.map, 1)
+        self.assertEqual([1, 1], self.map.aggregate(aggregators.distinct_values()))
+        #six.assertCountEqual
 
     def test_distinct_values_with_attribute_path(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(test_map, test_map.aggregate(aggregators.distinct_values(attribute_path="this")))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(self.map, self.map.aggregate(aggregators.distinct_values(attribute_path="this")))
 
     def test_distinct_values_with_predicate(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(test_map, test_map.aggregate(aggregators.distinct_values(), predicate.is_less_than("this", 50)))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(self.map, self.map.aggregate(aggregators.distinct_values(), predicate.is_less_than("this", 50)))
 
     def test_max_by(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(49, test_map.aggregate(aggregators.max_by()))
-        test_map.destroy()
+        a = HazelcastJsonValue({"name": "Alice", "age": 35})
+        b = HazelcastJsonValue({"name": "Bob", "age": 22})
+        c = HazelcastJsonValue({"name": "Can", "age": 37})
+        self.map.put(0, a)
+        self.map.put(1, b)
+        self.map.put(2, c)
+        #self.map.values()
+        self.assertEqual(c, self.map.aggregate(aggregators.max_by("age")))
 
     def test_max_by_with_attribute_path(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(49, test_map.aggregate(aggregators.max_by(attribute_path="this")))
-        test_map.destroy()
+        a = HazelcastJsonValue({"name": "Alice", "age": 35})
+        b = HazelcastJsonValue({"name": "Bob", "age": 22})
+        c = HazelcastJsonValue({"name": "Can", "age": 37})
+        self.map.put(0, a)
+        self.map.put(1, b)
+        self.map.put(2, c)
+        self.assertEqual(c, self.map.aggregate(aggregators.max_by(attribute_path="age")))
 
     def test_max_by_with_predicate(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(3, test_map.aggregate(aggregators.max_by(), predicate.is_less_than("this", 4)))
-        test_map.destroy()
+        a = HazelcastJsonValue({"name": "Alice", "age": 35})
+        b = HazelcastJsonValue({"name": "Bob", "age": 22})
+        c = HazelcastJsonValue({"name": "Can", "age": 37})
+        self.map.put(0, a)
+        self.map.put(1, b)
+        self.map.put(2, c)
+        self.assertEqual(a, self.map.aggregate(aggregators.max_by("age"), predicate.is_less_than("age", 36 )))
 
     def test_min_by(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(0, test_map.aggregate(aggregators.min_by()))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(0, self.map.aggregate(aggregators.min_by()))
 
     def test_min_by_with_attribute_path(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(0, test_map.aggregate(aggregators.min_by(attribute_path="this")))
-        test_map.destroy()
+        self._fill_map(50, self.map)
+        self.assertEqual(0, self.map.aggregate(aggregators.min_by(attribute_path="this")))
 
     def test_min_by_with_predicate(self):
-        test_map = self.client.get_map("test_map").blocking()
-        self._fill_map(50, test_map)
-        self.assertEqual(48, test_map.aggregate(aggregators.min_by(), predicate.is_greater_than("this", 47)))
-        test_map.destroy()
-
-#json string hz jsonvalue
-#distinct check
-
-
+        self._fill_map(50, self.map)
+        self.assertEqual(48, self.map.aggregate(aggregators.min_by(), predicate.is_greater_than("this", 47)))

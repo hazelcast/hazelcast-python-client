@@ -24,6 +24,9 @@ class NoneSerializer(BaseSerializer):
     def read(self, inp):
         return None
 
+    def write(self, out, obj):
+        pass
+
     # "write(self, out, obj)" is never called so not implemented here
 
     def get_type_id(self):
