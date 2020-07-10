@@ -160,42 +160,6 @@ class SumAggregator(AbstractAggregator):
         output.write_long(0)
 
 
-class MaxByAggregator(AbstractAggregator):
-
-    CLASS_ID = 17
-
-    def get_class_id(self):
-        return self.CLASS_ID
-
-    def read_data(self, input):
-        self.attribute_path = input.read_utf()
-        input.read_object(self)
-        input.read_object(self)
-
-    def write_data(self, output):
-        output.write_utf(self.attribute_path)
-        output.write_object(None)
-        output.write_object(None)
-
-
-class MinByAggregator(AbstractAggregator):
-
-    CLASS_ID = 18
-
-    def get_class_id(self):
-        return self.CLASS_ID
-
-    def read_data(self, input):
-        self.attribute_path = input.read_utf()
-        input.read_object(self)
-        input.read_object(self)
-
-    def write_data(self, output):
-        output.write_utf(self.attribute_path)
-        output.write_object(None)
-        output.write_object(None)
-
-
 class DistinctValuesAggregator(AbstractAggregator):
 
     CLASS_ID = 5
@@ -203,42 +167,29 @@ class DistinctValuesAggregator(AbstractAggregator):
     def get_class_id(self):
         return self.CLASS_ID
 
-    values = set()
-
     def read_data(self, input):
-
-        self.attribute_path = input.read_utf()
-        count = input.read_int
-        for _ in range(0, count):
-            value = input.read_object()
-            self.values.add(value)
+        pass
 
     def write_data(self, output):
         output.write_utf(self.attribute_path)
-        output.write_int(len(self.values))
-        for value in self.values:
-            output.write_object(value)
+        output.write_int(0)
+
 
 class CanonicalizingHashSet(AbstractAggregator):
-
     CLASS_ID = 19
 
-    map = {}
+    def __init__(self, attribute_path=None):
+        AbstractAggregator.__init__(self, attribute_path)
+        self.values = set()
 
     def get_class_id(self):
         return self.CLASS_ID
 
     def read_data(self, input):
-        self.attribute_path = input.read_utf()
         count = input.read_int()
-
         for _ in range(0, count):
             element = input.read_object()
-        #    map[ce] = element
-        
+            self.values.add(element)
 
     def write_data(self, output):
-        output.write_int(self.map.size())
-
-        for element in self:
-            output.write_object(element)
+        pass

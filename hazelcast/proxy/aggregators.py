@@ -7,9 +7,7 @@ from hazelcast.proxy.aggregator import CountAggregator,\
     MaxAggregator, \
     MinAggregator, \
     AverageAggregator, \
-    MaxByAggregator, \
-    MinByAggregator, \
-    DistinctValuesAggregator, CanonicalizingHashSet
+    DistinctValuesAggregator
 
 
 def count(attribute_path=None):
@@ -105,30 +103,6 @@ def sum(attribute_path=None):
     Aggregation result type is number.
     """
     return SumAggregator(attribute_path)
-
-
-def max_by(attribute_path=None):
-    """
-    :param attribute_path: extracts values from this path if given
-    :return: an aggregator that calculates the max of the input values extracted from the given attributePath
-    and returns the input item containing the maximum value. If multiple items contain the maximum value,
-    any of them is returned.
-    Accepts null input values and null extracted values.
-    Accepts generic Comparable input values.
-    """
-    return MaxByAggregator(attribute_path)
-
-
-def min_by(attribute_path=None):
-    """
-    :param attribute_path: extracts values from this path if given
-    :return: an aggregator that calculates the min of the input values extracted from the given attributePath
-    and returns the input item containing the minimum value. If multiple items contain the minimum value,
-    any of them is returned.
-    Accepts null input values and null extracted values.
-    Accepts generic Comparable input values.
-    """
-    return MinByAggregator(attribute_path)
 
 
 def distinct_values(attribute_path=None):

@@ -135,53 +135,12 @@ class MapAggregatorTest(SingleMemberTestCase):
 
     def test_distinct_values(self):
         self._fill_map_same(50, self.map, 1)
-        self.assertEqual([1, 1], self.map.aggregate(aggregators.distinct_values()))
-        #six.assertCountEqual
+        six.assertCountEqual(self, [1], self.map.aggregate(aggregators.distinct_values()).values)
 
     def test_distinct_values_with_attribute_path(self):
-        self._fill_map(50, self.map)
-        self.assertEqual(self.map, self.map.aggregate(aggregators.distinct_values(attribute_path="this")))
+        self._fill_map_same(50, self.map, 1)
+        six.assertCountEqual(self, [1], self.map.aggregate(aggregators.distinct_values(attribute_path="this")).values)
 
     def test_distinct_values_with_predicate(self):
-        self._fill_map(50, self.map)
-        self.assertEqual(self.map, self.map.aggregate(aggregators.distinct_values(), predicate.is_less_than("this", 50)))
-
-    def test_max_by(self):
-        a = HazelcastJsonValue({"name": "Alice", "age": 35})
-        b = HazelcastJsonValue({"name": "Bob", "age": 22})
-        c = HazelcastJsonValue({"name": "Can", "age": 37})
-        self.map.put(0, a)
-        self.map.put(1, b)
-        self.map.put(2, c)
-        #self.map.values()
-        self.assertEqual(c, self.map.aggregate(aggregators.max_by("age")))
-
-    def test_max_by_with_attribute_path(self):
-        a = HazelcastJsonValue({"name": "Alice", "age": 35})
-        b = HazelcastJsonValue({"name": "Bob", "age": 22})
-        c = HazelcastJsonValue({"name": "Can", "age": 37})
-        self.map.put(0, a)
-        self.map.put(1, b)
-        self.map.put(2, c)
-        self.assertEqual(c, self.map.aggregate(aggregators.max_by(attribute_path="age")))
-
-    def test_max_by_with_predicate(self):
-        a = HazelcastJsonValue({"name": "Alice", "age": 35})
-        b = HazelcastJsonValue({"name": "Bob", "age": 22})
-        c = HazelcastJsonValue({"name": "Can", "age": 37})
-        self.map.put(0, a)
-        self.map.put(1, b)
-        self.map.put(2, c)
-        self.assertEqual(a, self.map.aggregate(aggregators.max_by("age"), predicate.is_less_than("age", 36 )))
-
-    def test_min_by(self):
-        self._fill_map(50, self.map)
-        self.assertEqual(0, self.map.aggregate(aggregators.min_by()))
-
-    def test_min_by_with_attribute_path(self):
-        self._fill_map(50, self.map)
-        self.assertEqual(0, self.map.aggregate(aggregators.min_by(attribute_path="this")))
-
-    def test_min_by_with_predicate(self):
-        self._fill_map(50, self.map)
-        self.assertEqual(48, self.map.aggregate(aggregators.min_by(), predicate.is_greater_than("this", 47)))
+        self._fill_map_same(50, self.map,1)
+        self.assertEqual(0, len(self.map.aggregate(aggregators.distinct_values(), predicate.is_greater_than("this", 2)).values))

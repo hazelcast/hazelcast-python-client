@@ -9,8 +9,6 @@ from hazelcast.proxy.aggregator import CountAggregator,\
     MaxAggregator, \
     MinAggregator, \
     AverageAggregator, \
-    MaxByAggregator, \
-    MinByAggregator, \
     DistinctValuesAggregator, CanonicalizingHashSet
 from hazelcast.serialization.base import BaseSerializationService
 from hazelcast.serialization.portable.classdef import FieldType
@@ -39,8 +37,6 @@ def _init_factories(data_serializable_factories):
                                          FloatAverageAggregator.CLASS_ID: FloatAverageAggregator,
                                          FloatingPointSumAggregator.CLASS_ID: FloatingPointSumAggregator,
                                          MaxAggregator.CLASS_ID: MaxAggregator,
-                                         MaxByAggregator.CLASS_ID: MaxByAggregator,
-                                         MinByAggregator.CLASS_ID: MinByAggregator,
                                          DistinctValuesAggregator.CLASS_ID: DistinctValuesAggregator,
                                          CanonicalizingHashSet.CLASS_ID: CanonicalizingHashSet}}
     factories.update(data_serializable_factories)
