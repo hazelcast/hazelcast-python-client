@@ -221,3 +221,24 @@ class HazelcastJsonValue(object):
         :return: (object), Python object represented by the original string
         """
         return json.loads(self._json_string)
+
+
+class Comparator(object):
+    """
+    Comparator provides an interface to a comparator object to compare two map entries in a distributed map.
+    A comparator class with the same functionality should be registered on
+    Hazelcast server in order to be used in PagingPredicate.
+    """
+    def compare(self, entry1, entry2):
+        """
+        This method is used to determine order of entries when sorting.
+        - If return value is a negative value, [entry1] comes after [entry2],
+        - If return value is a positive value, [entry1] comes before [entry2],
+        - If return value is 0, [entry1] and [entry2] are indistinguishable in this sorting mechanism.
+            Their order with respect to each other is undefined.
+        This method must always return the same result given the same pair of keys.
+        :param entry1: (K,V pair), first entry
+        :param entry2: (K,V pair), second entry
+        :return: (int), order index
+        """
+        raise NotImplementedError()

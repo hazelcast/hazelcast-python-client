@@ -13,10 +13,12 @@ from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_entry
     map_remove_entry_listener_codec, map_replace_codec, map_replace_if_same_codec, map_set_codec, map_try_lock_codec, \
     map_try_put_codec, map_try_remove_codec, map_unlock_codec, map_values_codec, map_values_with_predicate_codec, \
     map_add_interceptor_codec, map_execute_on_all_keys_codec, map_execute_on_key_codec, map_execute_on_keys_codec, \
-    map_execute_with_predicate_codec, map_add_near_cache_entry_listener_codec
+    map_execute_with_predicate_codec, map_add_near_cache_entry_listener_codec, map_entries_with_paging_predicate_codec,\
+    map_key_set_with_paging_predicate_codec, map_values_with_paging_predicate_codec
 from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType, get_entry_listener_flags, MAX_SIZE
-from hazelcast.util import check_not_none, thread_id, to_millis
+from hazelcast.util import check_not_none, thread_id, to_millis, get_sorted_query_result_set
 from hazelcast import six
+from hazelcast.serialization.predicate import PagingPredicate, ITERATION_TYPE
 
 
 class Map(Proxy):
@@ -227,7 +229,13 @@ class Map(Proxy):
         """
         if predicate:
             predicate_data = self._to_data(predicate)
-            return self._encode_invoke(map_entries_with_predicate_codec, predicate=predicate_data)
+            if isinstance(predicate, PagingPredicate):
+                predicate.set_iteration_type = ITERATION_TYPE.ENTRY
+                result_list = self._encode_invoke(map_entries_with_paging_predicate_codec, predicate=predicate_data)
+                return get_sorted_query_result_set(result_list, predicate)
+
+            else:
+                return self._encode_invoke(map_entries_with_predicate_codec, predicate=predicate_data)
         else:
             return self._encode_invoke(map_entry_set_codec)
 
@@ -442,7 +450,12 @@ class Map(Proxy):
         """
         if predicate:
             predicate_data = self._to_data(predicate)
-            return self._encode_invoke(map_key_set_with_predicate_codec, predicate=predicate_data)
+            if isinstance(predicate, PagingPredicate):
+                predicate.set_iteration_type = ITERATION_TYPE.KEY
+                result_list = self._encode_invoke(map_key_set_with_paging_predicate_codec, predicate=predicate_data)
+                return get_sorted_query_result_set(result_list, predicate)
+            else:
+                return self._encode_invoke(map_key_set_with_predicate_codec, predicate=predicate_data)
         else:
             return self._encode_invoke(map_key_set_codec)
 
@@ -820,7 +833,12 @@ class Map(Proxy):
         """
         if predicate:
             predicate_data = self._to_data(predicate)
-            return self._encode_invoke(map_values_with_predicate_codec, predicate=predicate_data)
+            if isinstance(predicate, PagingPredicate):
+                predicate.set_iteration_type = ITERATION_TYPE.VALUE
+                result_list = self._encode_invoke(map_values_with_paging_predicate_codec, predicate=predicate_data)
+                return get_sorted_query_result_set(result_list, predicate)
+            else:
+                return self._encode_invoke(map_values_with_predicate_codec, predicate=predicate_data)
         else:
             return self._encode_invoke(map_values_codec)
 
