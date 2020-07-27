@@ -82,7 +82,9 @@ class ClassDefinition(object):
     def get_field_class_id(self, field_name):
         fd = self.get_field(field_name)
         if fd:
-            return fd.class_id
+            if fd.class_def:
+                return fd.class_def.class_id
+            return 0
         raise ValueError("Unknown field: {}".format(field_name))
 
     def get_field_count(self):
@@ -103,7 +105,7 @@ class ClassDefinition(object):
         return "fid:{}, cid:{}, v:{}, fields:{}".format(self.factory_id, self.class_id, self.version, self.field_defs)
 
     def __hash__(self):
-        result = self.factory_id * 31 + self.class_id
+        result = self.class_id
         result = 17 * result + self.version
         return result
 
