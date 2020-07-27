@@ -16,9 +16,9 @@ from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_entry
     map_execute_with_predicate_codec, map_add_near_cache_entry_listener_codec, map_entries_with_paging_predicate_codec,\
     map_key_set_with_paging_predicate_codec, map_values_with_paging_predicate_codec
 from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType, get_entry_listener_flags, MAX_SIZE
-from hazelcast.util import check_not_none, thread_id, to_millis, get_sorted_query_result_set
+from hazelcast.util import check_not_none, thread_id, to_millis, get_sorted_query_result_set, ITERATION_TYPE
 from hazelcast import six
-from hazelcast.serialization.predicate import PagingPredicate, ITERATION_TYPE
+from hazelcast.serialization.predicate import PagingPredicate
 
 
 class Map(Proxy):

@@ -1,13 +1,14 @@
 import os
 
-from tests.base import HazelcastTestCase
+from tests.base import HazelcastTestCase, SingleMemberTestCase
 from tests.util import configure_logging, get_abs_path, random_string
-from hazelcast.serialization.predicate import PagingPredicate, is_greater_than_or_equal_to, is_less_than_or_equal_to
-from hazelcast import HazelcastClient
+from hazelcast.serialization.predicate import PREDICATE_FACTORY_ID, PagingPredicate, is_greater_than_or_equal_to
+from hazelcast import HazelcastClient, ClientConfig
 from hazelcast.six import assertCountEqual
 
 
 class MapPagingPredicateTest(HazelcastTestCase):
+
     @classmethod
     def setUpClass(cls):
         configure_logging()
@@ -17,7 +18,10 @@ class MapPagingPredicateTest(HazelcastTestCase):
         self.cluster = self.create_cluster(self.rc, self._configure_cluster())
         self.member1 = self.cluster.start_member()
         self.member2 = self.cluster.start_member()
-        self.client = HazelcastClient()
+        the_factory = {PagingPredicate.CLASS_ID: PagingPredicate}
+        config = ClientConfig()
+        config.serialization_config.data_serializable_factories[PREDICATE_FACTORY_ID] = the_factory
+        self.client = HazelcastClient(config)
         self.map = self.client.get_map(random_string()).blocking()
 
     def tearDown(self):
@@ -129,22 +133,22 @@ class MapPagingPredicateTest(HazelcastTestCase):
         paging.set_page(4)
         assertCountEqual(self, list(self.map.values(paging)), [49])
 
-    @HazelcastTestCase.skip('Paging predicate with equal values will be supported in Hazelcast 4.0')
-    def _test_equal_values_paging(self):
-        self._fill_map_numeric()
-
-        # keys[50 - 99], values[0 - 49]:
-        for i in range(50, 100):
-            self.map.put(i, i - 50)
-
-        paging = PagingPredicate(is_less_than_or_equal_to('this', 8), 5)
-        assertCountEqual(self, list(self.map.values(paging)), [0, 0, 1, 1, 2])
-        paging.next_page()
-        assertCountEqual(self, list(self.map.values(paging)), [2, 3, 3, 4, 4])
-        paging.next_page()
-        assertCountEqual(self, list(self.map.values(paging)), [5, 5, 6, 6, 7])
-        paging.next_page()
-        assertCountEqual(self, list(self.map.values(paging)), [7, 8, 8])
+    # @HazelcastTestCase.skip('Paging predicate with equal values will be supported in Hazelcast 4.0')
+    # def _test_equal_values_paging(self):
+    #     self._fill_map_numeric()
+    #
+    #     # keys[50 - 99], values[0 - 49]:
+    #     for i in range(50, 100):
+    #         self.map.put(i, i - 50)
+    #
+    #     paging = PagingPredicate(is_less_than_or_equal_to('this', 8), 5)
+    #     assertCountEqual(self, list(self.map.values(paging)), [0, 0, 1, 1, 2])
+    #     paging.next_page()
+    #     assertCountEqual(self, list(self.map.values(paging)), [2, 3, 3, 4, 4])
+    #     paging.next_page()
+    #     assertCountEqual(self, list(self.map.values(paging)), [5, 5, 6, 6, 7])
+    #     paging.next_page()
+    #     assertCountEqual(self, list(self.map.values(paging)), [7, 8, 8])
 
     # TODO: Add custom comparator tests!!!
     # case for values of custom class objects that are not "comparable" and no comparator provided.

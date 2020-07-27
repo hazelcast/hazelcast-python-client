@@ -8,7 +8,7 @@ from collections import Sequence, Iterable
 from hazelcast import six
 from hazelcast.six.moves import range
 from hazelcast.version import GIT_COMMIT_ID, GIT_COMMIT_DATE, CLIENT_VERSION
-from hazelcast.serialization.predicate import ITERATION_TYPE
+#from hazelcast.serialization.predicate import PagingPredicate
 
 DEFAULT_ADDRESS = "127.0.0.1"
 DEFAULT_PORT = 5701
@@ -376,6 +376,9 @@ def cmp_to_key(cmp):
         def __ne__(self, other):
             return cmp(self.obj, other.obj) != 0
     return K
+
+
+ITERATION_TYPE = enum(KEY=0, VALUE=1, ENTRY=2)
 
 
 def get_sorted_query_result_set(result_list, paging_predicate):

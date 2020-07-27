@@ -1,9 +1,7 @@
 from hazelcast.serialization.api import IdentifiedDataSerializable
-from hazelcast.util import enum
+from hazelcast.util import ITERATION_TYPE
 
 PREDICATE_FACTORY_ID = -32
-
-ITERATION_TYPE = enum(KEY=0, VALUE=1, ENTRY=2)
 
 
 class Predicate(IdentifiedDataSerializable):
@@ -218,7 +216,7 @@ class PagingPredicate(Predicate):
         Creates a Paging predicate with provided page size, internal predicate, and optional comparator.
         :param predicate: predicate to filter the results
         :param page_size: page size of each result set
-        :param comparator: (Optional) a serializable comparator object used to sort the results.
+        :param comparator: (Optional) a comparator object used to sort the results.
             Defines compare method on (K,V) tuples. Must be an implementation of hazelcast.core.Comparator
             WARNING: comparator must extend Comparator, and either IdentifiedDataSerializable or Portable.
         """
@@ -265,6 +263,9 @@ class PagingPredicate(Predicate):
         return self.page
 
     def set_iteration_type(self, iter_type):
+        """
+        :param iter_type: (ITERATION_TYPE)
+        """
         self.iteration_type = iter_type
 
     def set_anchor(self, nearest_page, anchor):
