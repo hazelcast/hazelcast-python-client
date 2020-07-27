@@ -887,7 +887,7 @@ class PortableWriter(object):
 
     def write_portable(self, field_name, portable):
         """
-        Writes a Portabl
+        Writes a Portable
 
         :param field_name: (str), name of the field.
         :param portable: (:class:`hazelcast.serialization.api.Portable`, portable to be written.

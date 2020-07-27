@@ -80,24 +80,37 @@ class SerializationServiceV1(BaseSerializationService):
         self._registry.safe_register_serializer(self._registry._python_serializer)
 
     def register_class_definitions(self, class_definitions, check_error):
-        class_defs = dict()
+        factory_map = dict()
         for cd in class_definitions:
-            if cd in class_defs:
-                raise HazelcastSerializationError("Duplicate registration found for class-id:{}".format(cd.class_id))
-            class_defs[cd.class_id] = cd
-        for cd in class_definitions:
-            self.register_class_definition(cd, class_defs, check_error)
+            factory_id = cd.factory_id
+            class_def_map = factory_map.get(factory_id)
+            if not class_def_map:
+                class_def_map = {}
+                factory_map[factory_id] = class_def_map
+            class_id = cd.class_id
+            if not class_def_map.get(class_id):
+                class_def_map[class_id] = cd
 
-    def register_class_definition(self, cd, class_defs, check_error):
+        for cd in class_definitions:
+            self.register_class_definition(cd, factory_map, check_error)
+
+    def register_class_definition(self, cd, factory_map, check_error):
+        if not factory_map[cd.factory_id].get(cd.class_id):
+            factory_map[cd.factory_id][cd.class_id] = cd
+        if cd != factory_map[cd.factory_id][cd.class_id]:
+            raise HazelcastSerializationError("Duplicate registration found for class-id:{}".format(cd.class_id))
         field_names = cd.get_field_names()
         for field_name in field_names:
             fd = cd.get_field(field_name)
             if fd.field_type == FieldType.PORTABLE or fd.field_type == FieldType.PORTABLE_ARRAY:
-                nested_cd = class_defs.get(fd.class_id, None)
+                fid = fd.class_def.factory_id
+                cid = fd.class_def.class_id
+                class_def_map = factory_map[fid]
+                nested_cd = fd.class_def or class_def_map.get(cid, None)
                 if nested_cd is not None:
-                    self.register_class_definition(nested_cd, class_defs, check_error)
+                    self.register_class_definition(nested_cd, factory_map, check_error)
                     self._portable_context.register_class_definition(nested_cd)
                 elif check_error:
                     raise HazelcastSerializationError(
-                            "Could not find registered ClassDefinition for class-id:{}".format(fd.class_id))
+                            "Could not find registered ClassDefinition for class-id:{}".format(fd.class_def.class_id))
         self._portable_context.register_class_definition(cd)

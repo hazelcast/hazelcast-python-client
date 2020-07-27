@@ -102,8 +102,8 @@ class DefaultPortableWriter(PortableWriter):
         is_none = portable is None
         self._out.write_boolean(is_none)
 
-        self._out.write_int(fd.factory_id)
-        self._out.write_int(fd.class_id)
+        self._out.write_int(fd.class_def.factory_id)
+        self._out.write_int(fd.class_def.class_id)
 
         if not is_none:
             _check_portable_attributes(fd, portable)
@@ -113,8 +113,8 @@ class DefaultPortableWriter(PortableWriter):
         fd = self._set_position(field_name, FieldType.PORTABLE_ARRAY)
         _len = NULL_ARRAY_LENGTH if values is None else len(values)
         self._out.write_int(_len)
-        self._out.write_int(fd.factory_id)
-        self._out.write_int(fd.class_id)
+        self._out.write_int(fd.class_def.factory_id)
+        self._out.write_int(fd.class_def.class_id)
         if _len > 0:
             _offset = self._out.position()
             self._out.write_zero_bytes(_len * 4)
@@ -170,11 +170,11 @@ class DefaultPortableWriter(PortableWriter):
 
 
 def _check_portable_attributes(field_def, portable):
-    if field_def.factory_id != portable.get_factory_id():
+    if field_def.class_def.factory_id != portable.get_factory_id():
         raise HazelcastSerializationError("Wrong Portable type! Generic portable types are not supported! "
                                           "Expected factory-id: {}, Actual factory-id: {}"
                                           .format(field_def.factory_id, portable.get_factory_id()))
-    if field_def.class_id != portable.get_class_id():
+    if field_def.class_def.class_id != portable.get_class_id():
         raise HazelcastSerializationError("Wrong Portable type! Generic portable types are not supported! "
                                           "Expected class-id: {}, Actual class-id: {}"
                                           .format(field_def.class_id, portable.get_class_id()))

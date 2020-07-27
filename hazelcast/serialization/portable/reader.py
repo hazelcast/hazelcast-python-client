@@ -4,6 +4,7 @@ from hazelcast.serialization.api import PortableReader
 from hazelcast.serialization.portable.classdef import FieldType
 from hazelcast.six.moves import range
 
+
 class DefaultPortableReader(PortableReader):
     def __init__(self, portable_serializer, data_input, class_def):
         self._portable_serializer = portable_serializer
@@ -270,10 +271,11 @@ class DefaultPortableReader(PortableReader):
 
 
 def _check_factory_and_class(field_def, factory_id, class_id):
-    if factory_id != field_def.factory_id:
-        raise ValueError("Invalid factoryId! Expected: {}, Current: {}".format(factory_id, field_def.factory_id))
-    if class_id != field_def.class_id:
-        raise ValueError("Invalid classId! Expected: {}, Current: {}".format(class_id, field_def.class_id))
+    if factory_id != field_def.class_def.factory_id:
+        raise ValueError("Invalid factoryId! Expected: {}, Current: {}"
+                         .format(factory_id, field_def.class_def.factory_id))
+    if class_id != field_def.class_def.class_id:
+        raise ValueError("Invalid classId! Expected: {}, Current: {}".format(class_id, field_def.class_def.class_id))
 
 
 class MorphingPortableReader(DefaultPortableReader):

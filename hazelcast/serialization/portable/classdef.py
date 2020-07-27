@@ -27,26 +27,22 @@ FieldType = enum(
 
 
 class FieldDefinition(object):
-    def __init__(self, index, field_name, field_type, version, factory_id=0, class_id=0):
+    def __init__(self, index, field_name, field_type, class_def=None):
         self.index = index
         self.field_name = field_name
         self.field_type = field_type
-        self.version = version
-        self.factory_id = factory_id
-        self.class_id = class_id
+        self.class_def = class_def
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) \
-               and (self.index, self.field_name, self.field_type, self.version, self.factory_id, self.class_id) == \
-                   (other.index, other.field_name, other.field_type, other.version, other.factory_id, other.class_id)
+        return isinstance(other, self.__class__) and self.index == other.index and \
+               self.field_name == other.field_name and self.field_type == other.field_type \
+               and self.class_def == self.class_def
 
     def __repr__(self):
-        return "FieldDefinition[ ix:{}, name:{}, type:{}, version:{}, fid:{}, cid:{}]".format(self.index,
-                                                                                              self.field_name,
-                                                                                              self.field_type,
-                                                                                              self.version,
-                                                                                              self.factory_id,
-                                                                                              self.class_id)
+        return "FieldDefinition[ ix:{}, name:{}, type:{}, class_def:{}]".format(self.index,
+                                                                                self.field_name,
+                                                                                self.field_type,
+                                                                                self.class_def)
 
 
 class ClassDefinition(object):
@@ -97,8 +93,8 @@ class ClassDefinition(object):
             self.version = version
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and (self.factory_id, self.class_id, self.version, self.field_defs) == \
-                                                     (other.factory_id, other.class_id, other.version, other.field_defs)
+        return isinstance(other, self.__class__) and self.factory_id == other.factory_id and self.class_id == \
+               other.class_id and self.version == other.version and self.field_defs == other.field_defs
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -107,7 +103,9 @@ class ClassDefinition(object):
         return "fid:{}, cid:{}, v:{}, fields:{}".format(self.factory_id, self.class_id, self.version, self.field_defs)
 
     def __hash__(self):
-        return id(self)//16
+        result = self.factory_id * 31 + self.class_id
+        result = 17 * result + self.version
+        return result
 
 
 class ClassDefinitionBuilder(object):
@@ -123,87 +121,85 @@ class ClassDefinitionBuilder(object):
     def add_portable_field(self, field_name, class_def):
         if class_def.class_id is None or class_def.class_id == 0:
             raise ValueError("Portable class id cannot be zero!")
-        self._add_field_by_type(field_name, FieldType.PORTABLE, class_def.version,
-                                class_def.factory_id, class_def.class_id)
+        self._add_field_by_type(field_name, FieldType.PORTABLE, class_def=class_def)
         return self
 
     def add_byte_field(self, field_name):
-        self._add_field_by_type(field_name, FieldType.BYTE, self.version)
+        self._add_field_by_type(field_name, FieldType.BYTE)
         return self
 
     def add_boolean_field(self, field_name):
-        self._add_field_by_type(field_name, FieldType.BOOLEAN, self.version)
+        self._add_field_by_type(field_name, FieldType.BOOLEAN)
         return self
 
     def add_char_field(self, field_name):
-        self._add_field_by_type(field_name, FieldType.CHAR, self.version)
+        self._add_field_by_type(field_name, FieldType.CHAR)
         return self
 
     def add_short_field(self, field_name):
-        self._add_field_by_type(field_name, FieldType.SHORT, self.version)
+        self._add_field_by_type(field_name, FieldType.SHORT)
         return self
 
     def add_int_field(self, field_name):
-        self._add_field_by_type(field_name, FieldType.INT, self.version)
+        self._add_field_by_type(field_name, FieldType.INT)
         return self
 
     def add_long_field(self, field_name):
-        self._add_field_by_type(field_name, FieldType.LONG, self.version)
+        self._add_field_by_type(field_name, FieldType.LONG)
         return self
 
     def add_float_field(self, field_name):
-        self._add_field_by_type(field_name, FieldType.FLOAT, self.version)
+        self._add_field_by_type(field_name, FieldType.FLOAT)
         return self
 
     def add_double_field(self, field_name):
-        self._add_field_by_type(field_name, FieldType.DOUBLE, self.version)
+        self._add_field_by_type(field_name, FieldType.DOUBLE)
         return self
 
     def add_utf_field(self, field_name):
-        self._add_field_by_type(field_name, FieldType.UTF, self.version)
+        self._add_field_by_type(field_name, FieldType.UTF)
         return self
 
     def add_portable_array_field(self, field_name, class_def):
         if class_def.class_id is None or class_def.class_id == 0:
             raise ValueError("Portable class id cannot be zero!")
-        self._add_field_by_type(field_name, FieldType.PORTABLE_ARRAY, class_def.version,
-                                class_def.factory_id, class_def.class_id)
+        self._add_field_by_type(field_name, FieldType.PORTABLE_ARRAY, class_def=class_def)
         return self
 
     def add_byte_array_field(self, field_name):
-        self._add_field_by_type(field_name, FieldType.BYTE_ARRAY, self.version)
+        self._add_field_by_type(field_name, FieldType.BYTE_ARRAY)
         return self
 
     def add_boolean_array_field(self, field_name):
-        self._add_field_by_type(field_name, FieldType.BOOLEAN_ARRAY, self.version)
+        self._add_field_by_type(field_name, FieldType.BOOLEAN_ARRAY)
         return self
 
     def add_char_array_field(self, field_name):
-        self._add_field_by_type(field_name, FieldType.CHAR_ARRAY, self.version)
+        self._add_field_by_type(field_name, FieldType.CHAR_ARRAY)
         return self
 
     def add_short_array_field(self, field_name):
-        self._add_field_by_type(field_name, FieldType.SHORT_ARRAY, self.version)
+        self._add_field_by_type(field_name, FieldType.SHORT_ARRAY)
         return self
 
     def add_int_array_field(self, field_name):
-        self._add_field_by_type(field_name, FieldType.INT_ARRAY, self.version)
+        self._add_field_by_type(field_name, FieldType.INT_ARRAY)
         return self
 
     def add_long_array_field(self, field_name):
-        self._add_field_by_type(field_name, FieldType.LONG_ARRAY, self.version)
+        self._add_field_by_type(field_name, FieldType.LONG_ARRAY)
         return self
 
     def add_float_array_field(self, field_name):
-        self._add_field_by_type(field_name, FieldType.FLOAT_ARRAY, self.version)
+        self._add_field_by_type(field_name, FieldType.FLOAT_ARRAY)
         return self
 
     def add_double_array_field(self, field_name):
-        self._add_field_by_type(field_name, FieldType.DOUBLE_ARRAY, self.version)
+        self._add_field_by_type(field_name, FieldType.DOUBLE_ARRAY)
         return self
 
     def add_utf_array_field(self, field_name):
-        self._add_field_by_type(field_name, FieldType.UTF_ARRAY, self.version)
+        self._add_field_by_type(field_name, FieldType.UTF_ARRAY)
         return self
 
     def add_field_def(self, field_def):
@@ -221,9 +217,9 @@ class ClassDefinitionBuilder(object):
             cd.add_field_def(field_def)
         return cd
 
-    def _add_field_by_type(self, field_name, field_type, version, factory_id=0, class_id=0):
+    def _add_field_by_type(self, field_name, field_type, class_def=None):
         self._check()
-        self._field_defs.append(FieldDefinition(self._index, field_name, field_type, version, factory_id, class_id))
+        self._field_defs.append(FieldDefinition(self._index, field_name, field_type, class_def=class_def))
         self._index += 1
 
     def _check(self):
