@@ -376,22 +376,40 @@ class PortableSerializationTestCase(unittest.TestCase):
 
         self.assertEqual(p, ss2.to_object(data))
 
-    def test_duplicate_portable_registration(self):
+    def test_duplicate_portable_registration_with_different_fields(self):
         serialization_config = hazelcast.SerializationConfig()
 
         class_def_inner = ClassDefinitionBuilder(FACTORY_ID, 2).add_utf_field("name").build()
         class_def = ClassDefinitionBuilder(FACTORY_ID, 1).add_portable_field("child", class_def_inner).build()
 
-        class_def2 = ClassDefinitionBuilder(FACTORY_ID, 1).add_utf_field("param_str") \
-            .add_int_field("param_int").build()
+        class_def2 = ClassDefinitionBuilder(FACTORY_ID, 1).add_utf_field("param_str").build()
 
         serialization_config.class_definitions.add(class_def)
         serialization_config.class_definitions.add(class_def2)
 
+        self.assertEqual(len(serialization_config.class_definitions), 2)
+
         with self.assertRaises(HazelcastSerializationError):
             SerializationServiceV1(serialization_config)
 
-    def test_duplicate_portable_registration2(self):
+    def test_duplicate_portable_registration_with_different_fields2(self):
+        serialization_config = hazelcast.SerializationConfig()
+
+        class_def_inner = ClassDefinitionBuilder(FACTORY_ID, 2).add_utf_field("name").build()
+        class_def = ClassDefinitionBuilder(FACTORY_ID, 1).add_portable_field("child", class_def_inner).build()
+        # another CD instance for the same class but different fields
+        class_def2 = ClassDefinitionBuilder(FACTORY_ID, 1).add_portable_field("child", class_def_inner) \
+            .add_utf_field("param_str").build()
+
+        serialization_config.class_definitions.add(class_def)
+        serialization_config.class_definitions.add(class_def2)
+
+        self.assertEqual(len(serialization_config.class_definitions), 2)
+
+        with self.assertRaises(HazelcastSerializationError):
+            SerializationServiceV1(serialization_config)
+
+    def test_duplicate_portable_registration_with_different_version(self):
         serialization_config = hazelcast.SerializationConfig()
 
         class_def_inner = ClassDefinitionBuilder(FACTORY_ID, 2).add_utf_field("name").build()
@@ -403,20 +421,7 @@ class PortableSerializationTestCase(unittest.TestCase):
         serialization_config.class_definitions.add(class_def)
         serialization_config.class_definitions.add(class_def2)
 
-        with self.assertRaises(HazelcastSerializationError):
-            SerializationServiceV1(serialization_config)
-
-    def test_duplicate_portable_registration3(self):
-        serialization_config = hazelcast.SerializationConfig()
-
-        class_def_inner = ClassDefinitionBuilder(FACTORY_ID, 2).add_utf_field("name").build()
-        class_def = ClassDefinitionBuilder(FACTORY_ID, 1).add_portable_field("child", class_def_inner).build()
-        # another CD instance for the same class but different fields
-        class_def2 = ClassDefinitionBuilder(FACTORY_ID, 1).add_portable_field("child", class_def_inner) \
-            .add_utf_field("param_str").build()
-
-        serialization_config.class_definitions.add(class_def)
-        serialization_config.class_definitions.add(class_def2)
+        self.assertEqual(len(serialization_config.class_definitions), 2)
 
         with self.assertRaises(HazelcastSerializationError):
             SerializationServiceV1(serialization_config)

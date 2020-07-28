@@ -106,7 +106,7 @@ class ClassDefinition(object):
 
     def __hash__(self):
         result = self.class_id
-        result = 17 * result + self.version
+        result = 31 * result + self.version
         return result
 
 
