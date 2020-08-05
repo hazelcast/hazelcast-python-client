@@ -228,13 +228,14 @@ class Map(Proxy):
         .. seealso:: :class:`~hazelcast.serialization.predicate.Predicate` for more info about predicates.
         """
         if predicate:
-            predicate_data = self._to_data(predicate)
             if isinstance(predicate, PagingPredicate):
                 predicate.set_iteration_type = ITERATION_TYPE.ENTRY
-                result_list = self._encode_invoke(map_entries_with_paging_predicate_codec, predicate=predicate_data)
-                return get_sorted_query_result_set(result_list, predicate)
+                predicate_data = self._to_data(predicate)
+                result_list_future = self._encode_invoke(map_entries_with_paging_predicate_codec, predicate=predicate_data)
+                return result_list_future.continue_with(get_sorted_query_result_set, predicate)
 
             else:
+                predicate_data = self._to_data(predicate)
                 return self._encode_invoke(map_entries_with_predicate_codec, predicate=predicate_data)
         else:
             return self._encode_invoke(map_entry_set_codec)
@@ -449,12 +450,13 @@ class Map(Proxy):
         .. seealso:: :class:`~hazelcast.serialization.predicate.Predicate` for more info about predicates.
         """
         if predicate:
-            predicate_data = self._to_data(predicate)
             if isinstance(predicate, PagingPredicate):
-                predicate.set_iteration_type = ITERATION_TYPE.KEY
-                result_list = self._encode_invoke(map_key_set_with_paging_predicate_codec, predicate=predicate_data)
-                return get_sorted_query_result_set(result_list, predicate)
+                predicate.set_iteration_type(ITERATION_TYPE.KEY)
+                predicate_data = self._to_data(predicate)
+                result_list_future = self._encode_invoke(map_key_set_with_paging_predicate_codec, predicate=predicate_data)
+                return result_list_future.continue_with(get_sorted_query_result_set, predicate)
             else:
+                predicate_data = self._to_data(predicate)
                 return self._encode_invoke(map_key_set_with_predicate_codec, predicate=predicate_data)
         else:
             return self._encode_invoke(map_key_set_codec)
@@ -832,12 +834,13 @@ class Map(Proxy):
         .. seealso:: :class:`~hazelcast.serialization.predicate.Predicate` for more info about predicates.
         """
         if predicate:
-            predicate_data = self._to_data(predicate)
             if isinstance(predicate, PagingPredicate):
-                predicate.set_iteration_type = ITERATION_TYPE.VALUE
-                result_list = self._encode_invoke(map_values_with_paging_predicate_codec, predicate=predicate_data)
-                return get_sorted_query_result_set(result_list, predicate)
+                predicate.set_iteration_type(ITERATION_TYPE.VALUE)
+                predicate_data = self._to_data(predicate)
+                result_list_future = self._encode_invoke(map_values_with_paging_predicate_codec, predicate=predicate_data)
+                return result_list_future.continue_with(get_sorted_query_result_set, predicate)
             else:
+                predicate_data = self._to_data(predicate)
                 return self._encode_invoke(map_values_with_predicate_codec, predicate=predicate_data)
         else:
             return self._encode_invoke(map_values_codec)

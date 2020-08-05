@@ -209,7 +209,7 @@ class TruePredicate(Predicate):
 class PagingPredicate(Predicate):
     CLASS_ID = 15
 
-    NULL_ANCHOR = [-1, None]
+    NULL_ANCHOR = (-1, None)
 
     def __init__(self, predicate, page_size, comparator=None):
         """
@@ -232,16 +232,16 @@ class PagingPredicate(Predicate):
         self.anchor_list = []  # List of pairs: (nearest page, (K, V))
 
     def __repr__(self):
-        # TODO: Add string tests in PredicateStrTest
-        return "PagingPredicate(predicate='%s', page_size=%s, comparator=%s)" % (self.internal_predicate,
-                                                                                 self.page_size, self.comparator)
+        return "PagingPredicate(predicate=%s, page_size=%s, comparator=%s)" % (self.internal_predicate,
+                                                                               self.page_size, self.comparator)
 
     def write_data(self, object_data_output):
         object_data_output.write_object(self.internal_predicate)
         object_data_output.write_object(self.comparator)
-        object_data_output.write_int(self.page_size)
         object_data_output.write_int(self.page)
-        object_data_output.write_utf(self.iteration_type.name)
+        object_data_output.write_int(self.page_size)
+        object_data_output.write_utf(ITERATION_TYPE.reverse.get(self.iteration_type, None))
+        object_data_output.write_int(len(self.anchor_list))
         for anchor_entry in self.anchor_list:
             object_data_output.write_int(anchor_entry[0])
             object_data_output.write_object(anchor_entry[1][0])
@@ -271,9 +271,9 @@ class PagingPredicate(Predicate):
     def set_anchor(self, nearest_page, anchor):
         anchor_entry = (nearest_page, anchor)
         anchor_count = len(self.anchor_list)
-        if self.page < anchor_count:
-            self.anchor_list[self.page] = anchor_entry
-        elif self.page == anchor_count:
+        if nearest_page < anchor_count:
+            self.anchor_list[nearest_page] = anchor_entry
+        elif nearest_page == anchor_count:
             self.anchor_list.append(anchor_entry)
         else:
             raise IndexError('Anchor index is not correct, expected: ' + str(self.page) + 'found: ' + str(anchor_count))

@@ -381,12 +381,13 @@ def cmp_to_key(cmp):
 ITERATION_TYPE = enum(KEY=0, VALUE=1, ENTRY=2)
 
 
-def get_sorted_query_result_set(result_list, paging_predicate):
+def get_sorted_query_result_set(result_list_future, paging_predicate):
     """
     :param result_list, a list of (K,V) pairs to sort and slice based on paging_predicate attributes.
     :param paging_predicate
     :return: list of sorted query results
     """
+    result_list = result_list_future.result()
     if len(result_list) == 0:
         return []
 
@@ -425,7 +426,7 @@ def _set_anchor(result_list, paging_predicate, nearest_page):
     :param nearest_page is the index of the page that the last anchor belongs to
     """
     list_size = len(result_list)
-    assert list_size == 0
+    assert list_size > 0
     page = paging_predicate.get_page()
     page_size = paging_predicate.get_page_size()
     for i in range(page_size, list_size, page_size):
