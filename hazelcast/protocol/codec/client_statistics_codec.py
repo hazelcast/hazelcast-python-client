@@ -1,27 +1,21 @@
 from hazelcast.serialization.bits import *
-from hazelcast.protocol.client_message import ClientMessage
-from hazelcast.protocol.codec.client_message_type import *
+from hazelcast.protocol.builtin import FixSizedTypesCodec
+from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer
+from hazelcast.protocol.builtin import StringCodec
+from hazelcast.protocol.builtin import ByteArrayCodec
 
-REQUEST_TYPE = CLIENT_STATISTICS
-RESPONSE_TYPE = 100
-RETRYABLE = False
+# hex: 0x000C00
+_REQUEST_MESSAGE_TYPE = 3072
+# hex: 0x000C01
+_RESPONSE_MESSAGE_TYPE = 3073
 
-
-def calculate_size(stats):
-    """ Calculates the request payload size"""
-    data_size = 0
-    data_size += calculate_size_str(stats)
-    return data_size
-
-
-def encode_request(stats):
-    """ Encode request into client_message"""
-    client_message = ClientMessage(payload_size=calculate_size(stats))
-    client_message.set_message_type(REQUEST_TYPE)
-    client_message.set_retryable(RETRYABLE)
-    client_message.append_str(stats)
-    client_message.update_frame_length()
-    return client_message
+_REQUEST_TIMESTAMP_OFFSET = REQUEST_HEADER_SIZE
+_REQUEST_INITIAL_FRAME_SIZE = _REQUEST_TIMESTAMP_OFFSET + LONG_SIZE_IN_BYTES
 
 
-# Empty decode_response(client_message), this message has no parameters to decode
+def encode_request(timestamp, client_attributes, metrics_blob):
+    buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
+    FixSizedTypesCodec.encode_long(buf, _REQUEST_TIMESTAMP_OFFSET, timestamp)
+    StringCodec.encode(buf, client_attributes)
+    ByteArrayCodec.encode(buf, metrics_blob)
+    return OutboundMessage(buf, False)

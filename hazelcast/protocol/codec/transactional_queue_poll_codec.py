@@ -1,38 +1,30 @@
 from hazelcast.serialization.bits import *
-from hazelcast.protocol.client_message import ClientMessage
-from hazelcast.protocol.codec.transactional_queue_message_type import *
+from hazelcast.protocol.builtin import FixSizedTypesCodec
+from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer
+from hazelcast.protocol.builtin import StringCodec
+from hazelcast.protocol.builtin import DataCodec
+from hazelcast.protocol.builtin import CodecUtil
 
-REQUEST_TYPE = TRANSACTIONALQUEUE_POLL
-RESPONSE_TYPE = 105
-RETRYABLE = False
+# hex: 0x120300
+_REQUEST_MESSAGE_TYPE = 1180416
+# hex: 0x120301
+_RESPONSE_MESSAGE_TYPE = 1180417
 
-
-def calculate_size(name, txn_id, thread_id, timeout):
-    """ Calculates the request payload size"""
-    data_size = 0
-    data_size += calculate_size_str(name)
-    data_size += calculate_size_str(txn_id)
-    data_size += LONG_SIZE_IN_BYTES
-    data_size += LONG_SIZE_IN_BYTES
-    return data_size
+_REQUEST_TXN_ID_OFFSET = REQUEST_HEADER_SIZE
+_REQUEST_THREAD_ID_OFFSET = _REQUEST_TXN_ID_OFFSET + UUID_SIZE_IN_BYTES
+_REQUEST_TIMEOUT_OFFSET = _REQUEST_THREAD_ID_OFFSET + LONG_SIZE_IN_BYTES
+_REQUEST_INITIAL_FRAME_SIZE = _REQUEST_TIMEOUT_OFFSET + LONG_SIZE_IN_BYTES
 
 
 def encode_request(name, txn_id, thread_id, timeout):
-    """ Encode request into client_message"""
-    client_message = ClientMessage(payload_size=calculate_size(name, txn_id, thread_id, timeout))
-    client_message.set_message_type(REQUEST_TYPE)
-    client_message.set_retryable(RETRYABLE)
-    client_message.append_str(name)
-    client_message.append_str(txn_id)
-    client_message.append_long(thread_id)
-    client_message.append_long(timeout)
-    client_message.update_frame_length()
-    return client_message
+    buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
+    FixSizedTypesCodec.encode_uuid(buf, _REQUEST_TXN_ID_OFFSET, txn_id)
+    FixSizedTypesCodec.encode_long(buf, _REQUEST_THREAD_ID_OFFSET, thread_id)
+    FixSizedTypesCodec.encode_long(buf, _REQUEST_TIMEOUT_OFFSET, timeout)
+    StringCodec.encode(buf, name)
+    return OutboundMessage(buf, False)
 
 
-def decode_response(client_message, to_object=None):
-    """ Decode response from client message"""
-    parameters = dict(response=None)
-    if not client_message.read_bool():
-        parameters['response'] = to_object(client_message.read_data())
-    return parameters
+def decode_response(msg):
+    msg.next_frame()
+    return CodecUtil.decode_nullable(msg, DataCodec.decode)

@@ -1,38 +1,27 @@
 from hazelcast.serialization.bits import *
-from hazelcast.protocol.client_message import ClientMessage
-from hazelcast.protocol.codec.executor_service_message_type import *
+from hazelcast.protocol.builtin import FixSizedTypesCodec
+from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer
+from hazelcast.protocol.builtin import StringCodec
+from hazelcast.protocol.builtin import DataCodec
+from hazelcast.protocol.builtin import CodecUtil
 
-REQUEST_TYPE = EXECUTORSERVICE_SUBMITTOPARTITION
-RESPONSE_TYPE = 105
-RETRYABLE = False
+# hex: 0x080500
+_REQUEST_MESSAGE_TYPE = 525568
+# hex: 0x080501
+_RESPONSE_MESSAGE_TYPE = 525569
 
-
-def calculate_size(name, uuid, callable, partition_id):
-    """ Calculates the request payload size"""
-    data_size = 0
-    data_size += calculate_size_str(name)
-    data_size += calculate_size_str(uuid)
-    data_size += calculate_size_data(callable)
-    data_size += INT_SIZE_IN_BYTES
-    return data_size
+_REQUEST_UUID_OFFSET = REQUEST_HEADER_SIZE
+_REQUEST_INITIAL_FRAME_SIZE = _REQUEST_UUID_OFFSET + UUID_SIZE_IN_BYTES
 
 
-def encode_request(name, uuid, callable, partition_id):
-    """ Encode request into client_message"""
-    client_message = ClientMessage(payload_size=calculate_size(name, uuid, callable, partition_id))
-    client_message.set_message_type(REQUEST_TYPE)
-    client_message.set_retryable(RETRYABLE)
-    client_message.append_str(name)
-    client_message.append_str(uuid)
-    client_message.append_data(callable)
-    client_message.append_int(partition_id)
-    client_message.update_frame_length()
-    return client_message
+def encode_request(name, uuid, callable):
+    buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
+    FixSizedTypesCodec.encode_uuid(buf, _REQUEST_UUID_OFFSET, uuid)
+    StringCodec.encode(buf, name)
+    DataCodec.encode(buf, callable)
+    return OutboundMessage(buf, False)
 
 
-def decode_response(client_message, to_object=None):
-    """ Decode response from client message"""
-    parameters = dict(response=None)
-    if not client_message.read_bool():
-        parameters['response'] = to_object(client_message.read_data())
-    return parameters
+def decode_response(msg):
+    msg.next_frame()
+    return CodecUtil.decode_nullable(msg, DataCodec.decode)

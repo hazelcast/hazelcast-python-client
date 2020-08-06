@@ -1,7 +1,6 @@
 from struct import unpack_from
 
 from hazelcast.hash import murmur_hash3_x86_32
-from hazelcast.serialization.bits import *
 from hazelcast.serialization.serialization_const import *
 
 PARTITION_HASH_OFFSET = 0

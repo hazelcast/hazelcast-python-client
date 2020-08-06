@@ -1,48 +1,44 @@
 from hazelcast.serialization.bits import *
-from hazelcast.protocol.client_message import ClientMessage
-from hazelcast.protocol.codec.queue_message_type import *
-from hazelcast.protocol.event_response_const import *
+from hazelcast.protocol.builtin import FixSizedTypesCodec
+from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer, RESPONSE_HEADER_SIZE, EVENT_HEADER_SIZE
+from hazelcast.protocol.builtin import StringCodec
+from hazelcast.protocol.builtin import DataCodec
+from hazelcast.protocol.builtin import CodecUtil
 
-REQUEST_TYPE = QUEUE_ADDLISTENER
-RESPONSE_TYPE = 104
-RETRYABLE = False
+# hex: 0x031100
+_REQUEST_MESSAGE_TYPE = 200960
+# hex: 0x031101
+_RESPONSE_MESSAGE_TYPE = 200961
+# hex: 0x031102
+_EVENT_ITEM_MESSAGE_TYPE = 200962
 
-
-def calculate_size(name, include_value, local_only):
-    """ Calculates the request payload size"""
-    data_size = 0
-    data_size += calculate_size_str(name)
-    data_size += BOOLEAN_SIZE_IN_BYTES
-    data_size += BOOLEAN_SIZE_IN_BYTES
-    return data_size
+_REQUEST_INCLUDE_VALUE_OFFSET = REQUEST_HEADER_SIZE
+_REQUEST_LOCAL_ONLY_OFFSET = _REQUEST_INCLUDE_VALUE_OFFSET + BOOLEAN_SIZE_IN_BYTES
+_REQUEST_INITIAL_FRAME_SIZE = _REQUEST_LOCAL_ONLY_OFFSET + BOOLEAN_SIZE_IN_BYTES
+_RESPONSE_RESPONSE_OFFSET = RESPONSE_HEADER_SIZE
+_EVENT_ITEM_UUID_OFFSET = EVENT_HEADER_SIZE
+_EVENT_ITEM_EVENT_TYPE_OFFSET = _EVENT_ITEM_UUID_OFFSET + UUID_SIZE_IN_BYTES
 
 
 def encode_request(name, include_value, local_only):
-    """ Encode request into client_message"""
-    client_message = ClientMessage(payload_size=calculate_size(name, include_value, local_only))
-    client_message.set_message_type(REQUEST_TYPE)
-    client_message.set_retryable(RETRYABLE)
-    client_message.append_str(name)
-    client_message.append_bool(include_value)
-    client_message.append_bool(local_only)
-    client_message.update_frame_length()
-    return client_message
+    buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
+    FixSizedTypesCodec.encode_boolean(buf, _REQUEST_INCLUDE_VALUE_OFFSET, include_value)
+    FixSizedTypesCodec.encode_boolean(buf, _REQUEST_LOCAL_ONLY_OFFSET, local_only)
+    StringCodec.encode(buf, name)
+    return OutboundMessage(buf, False)
 
 
-def decode_response(client_message, to_object=None):
-    """ Decode response from client message"""
-    parameters = dict(response=None)
-    parameters['response'] = client_message.read_str()
-    return parameters
+def decode_response(msg):
+    initial_frame = msg.next_frame()
+    return FixSizedTypesCodec.decode_uuid(initial_frame.buf, _RESPONSE_RESPONSE_OFFSET)
 
 
-def handle(client_message, handle_event_item=None, to_object=None):
-    """ Event handler """
-    message_type = client_message.get_message_type()
-    if message_type == EVENT_ITEM and handle_event_item is not None:
-        item = None
-        if not client_message.read_bool():
-            item = client_message.read_data()
-        uuid = client_message.read_str()
-        event_type = client_message.read_int()
-        handle_event_item(item=item, uuid=uuid, event_type=event_type)
+def handle(msg, handle_item_event=None):
+    message_type = msg.get_message_type()
+    if message_type == _EVENT_ITEM_MESSAGE_TYPE and handle_item_event is not None:
+        initial_frame = msg.next_frame()
+        uuid = FixSizedTypesCodec.decode_uuid(initial_frame.buf, _EVENT_ITEM_UUID_OFFSET)
+        event_type = FixSizedTypesCodec.decode_int(initial_frame.buf, _EVENT_ITEM_EVENT_TYPE_OFFSET)
+        item = CodecUtil.decode_nullable(msg, DataCodec.decode)
+        handle_item_event(item, uuid, event_type)
+        return

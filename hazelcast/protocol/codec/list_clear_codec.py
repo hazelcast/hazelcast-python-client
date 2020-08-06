@@ -1,27 +1,15 @@
-from hazelcast.serialization.bits import *
-from hazelcast.protocol.client_message import ClientMessage
-from hazelcast.protocol.codec.list_message_type import *
+from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer
+from hazelcast.protocol.builtin import StringCodec
 
-REQUEST_TYPE = LIST_CLEAR
-RESPONSE_TYPE = 100
-RETRYABLE = False
+# hex: 0x050900
+_REQUEST_MESSAGE_TYPE = 329984
+# hex: 0x050901
+_RESPONSE_MESSAGE_TYPE = 329985
 
-
-def calculate_size(name):
-    """ Calculates the request payload size"""
-    data_size = 0
-    data_size += calculate_size_str(name)
-    return data_size
+_REQUEST_INITIAL_FRAME_SIZE = REQUEST_HEADER_SIZE
 
 
 def encode_request(name):
-    """ Encode request into client_message"""
-    client_message = ClientMessage(payload_size=calculate_size(name))
-    client_message.set_message_type(REQUEST_TYPE)
-    client_message.set_retryable(RETRYABLE)
-    client_message.append_str(name)
-    client_message.update_frame_length()
-    return client_message
-
-
-# Empty decode_response(client_message), this message has no parameters to decode
+    buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
+    StringCodec.encode(buf, name)
+    return OutboundMessage(buf, False)

@@ -1,45 +1,39 @@
 from hazelcast.serialization.bits import *
-from hazelcast.protocol.client_message import ClientMessage
-from hazelcast.protocol.custom_codec import *
-from hazelcast.protocol.codec.client_message_type import *
-from hazelcast.protocol.event_response_const import *
+from hazelcast.protocol.builtin import FixSizedTypesCodec
+from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer, RESPONSE_HEADER_SIZE, EVENT_HEADER_SIZE
 
-REQUEST_TYPE = CLIENT_ADDPARTITIONLOSTLISTENER
-RESPONSE_TYPE = 104
-RETRYABLE = False
+# hex: 0x000600
+_REQUEST_MESSAGE_TYPE = 1536
+# hex: 0x000601
+_RESPONSE_MESSAGE_TYPE = 1537
+# hex: 0x000602
+_EVENT_PARTITION_LOST_MESSAGE_TYPE = 1538
 
-
-def calculate_size(local_only):
-    """ Calculates the request payload size"""
-    data_size = 0
-    data_size += BOOLEAN_SIZE_IN_BYTES
-    return data_size
+_REQUEST_LOCAL_ONLY_OFFSET = REQUEST_HEADER_SIZE
+_REQUEST_INITIAL_FRAME_SIZE = _REQUEST_LOCAL_ONLY_OFFSET + BOOLEAN_SIZE_IN_BYTES
+_RESPONSE_RESPONSE_OFFSET = RESPONSE_HEADER_SIZE
+_EVENT_PARTITION_LOST_PARTITION_ID_OFFSET = EVENT_HEADER_SIZE
+_EVENT_PARTITION_LOST_LOST_BACKUP_COUNT_OFFSET = _EVENT_PARTITION_LOST_PARTITION_ID_OFFSET + INT_SIZE_IN_BYTES
+_EVENT_PARTITION_LOST_SOURCE_OFFSET = _EVENT_PARTITION_LOST_LOST_BACKUP_COUNT_OFFSET + INT_SIZE_IN_BYTES
 
 
 def encode_request(local_only):
-    """ Encode request into client_message"""
-    client_message = ClientMessage(payload_size=calculate_size(local_only))
-    client_message.set_message_type(REQUEST_TYPE)
-    client_message.set_retryable(RETRYABLE)
-    client_message.append_bool(local_only)
-    client_message.update_frame_length()
-    return client_message
+    buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
+    FixSizedTypesCodec.encode_boolean(buf, _REQUEST_LOCAL_ONLY_OFFSET, local_only)
+    return OutboundMessage(buf, False)
 
 
-def decode_response(client_message, to_object=None):
-    """ Decode response from client message"""
-    parameters = dict(response=None)
-    parameters['response'] = client_message.read_str()
-    return parameters
+def decode_response(msg):
+    initial_frame = msg.next_frame()
+    return FixSizedTypesCodec.decode_uuid(initial_frame.buf, _RESPONSE_RESPONSE_OFFSET)
 
 
-def handle(client_message, handle_event_partition_lost=None, to_object=None):
-    """ Event handler """
-    message_type = client_message.get_message_type()
-    if message_type == EVENT_PARTITIONLOST and handle_event_partition_lost is not None:
-        partition_id = client_message.read_int()
-        lost_backup_count = client_message.read_int()
-        source = None
-        if not client_message.read_bool():
-            source = AddressCodec.decode(client_message, to_object)
-        handle_event_partition_lost(partition_id=partition_id, lost_backup_count=lost_backup_count, source=source)
+def handle(msg, handle_partition_lost_event=None):
+    message_type = msg.get_message_type()
+    if message_type == _EVENT_PARTITION_LOST_MESSAGE_TYPE and handle_partition_lost_event is not None:
+        initial_frame = msg.next_frame()
+        partition_id = FixSizedTypesCodec.decode_int(initial_frame.buf, _EVENT_PARTITION_LOST_PARTITION_ID_OFFSET)
+        lost_backup_count = FixSizedTypesCodec.decode_int(initial_frame.buf, _EVENT_PARTITION_LOST_LOST_BACKUP_COUNT_OFFSET)
+        source = FixSizedTypesCodec.decode_uuid(initial_frame.buf, _EVENT_PARTITION_LOST_SOURCE_OFFSET)
+        handle_partition_lost_event(partition_id, lost_backup_count, source)
+        return

@@ -1,28 +1,25 @@
 from hazelcast.serialization.bits import *
-from hazelcast.protocol.client_message import ClientMessage
-from hazelcast.protocol.codec.list_message_type import *
+from hazelcast.protocol.builtin import FixSizedTypesCodec
+from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer, RESPONSE_HEADER_SIZE
+from hazelcast.protocol.builtin import StringCodec
 
-REQUEST_TYPE = LIST_REMOVELISTENER
-RESPONSE_TYPE = 101
-RETRYABLE = True
+# hex: 0x050C00
+_REQUEST_MESSAGE_TYPE = 330752
+# hex: 0x050C01
+_RESPONSE_MESSAGE_TYPE = 330753
 
-
-def calculate_size(name, registration_id):
-    """ Calculates the request payload size"""
-    data_size = 0
-    data_size += calculate_size_str(name)
-    data_size += calculate_size_str(registration_id)
-    return data_size
+_REQUEST_REGISTRATION_ID_OFFSET = REQUEST_HEADER_SIZE
+_REQUEST_INITIAL_FRAME_SIZE = _REQUEST_REGISTRATION_ID_OFFSET + UUID_SIZE_IN_BYTES
+_RESPONSE_RESPONSE_OFFSET = RESPONSE_HEADER_SIZE
 
 
 def encode_request(name, registration_id):
-    """ Encode request into client_message"""
-    client_message = ClientMessage(payload_size=calculate_size(name, registration_id))
-    client_message.set_message_type(REQUEST_TYPE)
-    client_message.set_retryable(RETRYABLE)
-    client_message.append_str(name)
-    client_message.append_str(registration_id)
-    client_message.update_frame_length()
-    return client_message
+    buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
+    FixSizedTypesCodec.encode_uuid(buf, _REQUEST_REGISTRATION_ID_OFFSET, registration_id)
+    StringCodec.encode(buf, name)
+    return OutboundMessage(buf, True)
 
-# Empty decode_response because response is not used to determine the return value.
+
+def decode_response(msg):
+    initial_frame = msg.next_frame()
+    return FixSizedTypesCodec.decode_boolean(initial_frame.buf, _RESPONSE_RESPONSE_OFFSET)
