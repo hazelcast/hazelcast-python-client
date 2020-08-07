@@ -171,11 +171,9 @@ class MapPagingPredicateTest(HazelcastTestCase):
     Test for paging predicate with custom comparator
     """
     def test_key_set_paging_with_custom_comparator(self):
-        # TODO: This test should pass when internal predicate is [is_ilike('this', 'key-%)].
-        #  Undesired behavior should be fixed.
         self._fill_map_custom_comp()
         custom_cmp = CustomComparator(type=1, iteration_type=ITERATION_TYPE.KEY)
-        paging = PagingPredicate(is_ilike('this', 'value-%'), 6, custom_cmp)
+        paging = PagingPredicate(is_ilike('__key', 'key-%'), 6, custom_cmp)
 
         key_set_page_1 = self.map.key_set(paging).result()
         paging.next_page()
