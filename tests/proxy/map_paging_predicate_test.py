@@ -1,13 +1,12 @@
 import os
 
 from tests.base import HazelcastTestCase
-from tests.util import configure_logging, get_abs_path, random_string
-from hazelcast.serialization.predicate import PagingPredicate, is_greater_than_or_equal_to
-from hazelcast.serialization.api import IdentifiedDataSerializable
+from tests.util import configure_logging, get_abs_path, random_string, fill_map
+from tests.custom_comparator import CustomComparator
+from hazelcast.serialization.predicate import PagingPredicate, is_greater_than_or_equal_to, is_ilike, true
 from hazelcast import HazelcastClient
 from hazelcast.six import assertCountEqual
-from hazelcast.core import Comparator
-from examples.serialization.identified_data_serializable_example import Student
+from hazelcast.util import ITERATION_TYPE
 
 
 class MapPagingPredicateTest(HazelcastTestCase):
@@ -34,7 +33,7 @@ class MapPagingPredicateTest(HazelcastTestCase):
     """
     # Time out for assertTrueEventually set to 30. Could it be shorter?
     def test_entry_set_with_paging_predicate(self):
-        self._fill_map()
+        self._fill_map_simple()
         entry_set = self.map.entry_set(PagingPredicate(is_greater_than_or_equal_to('this', 3), 1)).result()
 
         def assert_event():
@@ -44,7 +43,7 @@ class MapPagingPredicateTest(HazelcastTestCase):
         self.assertTrueEventually(assert_event)
 
     def test_key_set_with_paging_predicate(self):
-        self._fill_map()
+        self._fill_map_simple()
         key_set = self.map.key_set(PagingPredicate(is_greater_than_or_equal_to('this', 3), 1)).result()
 
         def assert_event():
@@ -54,7 +53,7 @@ class MapPagingPredicateTest(HazelcastTestCase):
         self.assertTrueEventually(assert_event)
 
     def test_values_with_paging_predicate(self):
-        self._fill_map()
+        self._fill_map_simple()
         values = self.map.values(PagingPredicate(is_greater_than_or_equal_to('this', 3), 1)).result()
 
         def assert_event():
@@ -171,55 +170,69 @@ class MapPagingPredicateTest(HazelcastTestCase):
     """
     Test for paging predicate with custom comparator
     """
-    def test_with_custom_comparator(self):
-        # TODO: Register Student and StudentComparator factories on client and server side.
-        self._fill_map_student()
-        paging = PagingPredicate(is_greater_than_or_equal_to('this', 96), 2)
-        self.assertTrueEventually(lambda: assertCountEqual(self, self.map.values(paging).result(), [100.0, 99.0]))
+    def test_key_set_paging_with_custom_comparator(self):
+        # TODO: This test should pass when internal predicate is [is_ilike('this', 'key-%)].
+        #  Undesired behavior should be fixed.
+        self._fill_map_custom_comp()
+        custom_cmp = CustomComparator(type=1, iteration_type=ITERATION_TYPE.KEY)
+        paging = PagingPredicate(is_ilike('this', 'value-%'), 6, custom_cmp)
+
+        key_set_page_1 = self.map.key_set(paging).result()
         paging.next_page()
-        self.assertTrueEventually(lambda: assertCountEqual(self, self.map.values(paging).result(), [98.0, 97.0]))
+        key_set_page_2 = self.map.key_set(paging).result()
         paging.next_page()
-        self.assertTrueEventually(lambda: assertCountEqual(self, self.map.values(paging).result(), [96.0]))
+        key_set_page_3 = self.map.key_set(paging).result()
 
-    class StudentComparator(Comparator, IdentifiedDataSerializable):
-        # How should I register this to the client side and Java side?
-        FACTORY_ID = 2
-        CLASS_ID = 1
+        def assert_event():
+            assertCountEqual(self, key_set_page_1, ['key-9', 'key-8', 'key-7', 'key-6', 'key-5', 'key-4'])
+            assertCountEqual(self, key_set_page_2, ['key-3', 'key-2', 'key-1', 'key-0'])
+            assertCountEqual(self, key_set_page_3, [])
 
-        def compare(self, student1, student2):
-            """
-            Sort according to grade point average (gpa).
-            :param student1: (studentID, Student) studentID is an int
-            :param student2: (studentID, Student) studentID is an int
-            :return: positive int if student1 has higher GPA, 0 if both GPAs equal,
-            negative int if student2 has higher GPA
-            """
-            return student1.gpa - student2.gpa
+        self.assertTrueEventually(assert_event)
 
-        def get_factory_id(self):
-            return self.FACTORY_ID
+    def test_values_paging_with_custom_comparator(self):
+        self._fill_map_custom_comp_2()
+        custom_cmp = CustomComparator(type=2, iteration_type=ITERATION_TYPE.VALUE)
+        paging = PagingPredicate(None, 6, custom_cmp)
 
-        def get_class_id(self):
-            return self.CLASS_ID
+        values_page_1 = self.map.values(paging).result()
+        paging.next_page()
+        values_page_2 = self.map.values(paging).result()
+        paging.next_page()
+        values_page_3 = self.map.values(paging).result()
 
-        def read_data(self, object_data_input):
-            pass
+        def assert_event():
+            assertCountEqual(self, values_page_1, ['A', 'BB', 'CCC', 'DDDD', 'EEEEE', 'FFFFFF'])
+            assertCountEqual(self, values_page_2, ['GGGGGGG', 'HHHHHHHH', 'IIIIIIIII', 'JJJJJJJJJJ'])
+            assertCountEqual(self, values_page_3, [])
 
-        def write_data(self, object_data_output):
-            pass
+        self.assertTrueEventually(assert_event)
 
-    def _fill_map(self):
+    def test_entry_set_paging_with_custom_comparator(self):
+        self._fill_map_custom_comp_2()
+        custom_cmp = CustomComparator(type=2, iteration_type=ITERATION_TYPE.ENTRY)
+        paging = PagingPredicate(None, 2, custom_cmp)
+
+        page1 = self.map.entry_set(paging).result()
+        self.assertTrueEventually(lambda: assertCountEqual(self, page1, [('key-65', 'A'), ('key-66', 'BB')]))
+
+    def _fill_map_simple(self):
         self.map.put('key-1', 1)
         self.map.put('key-2', 2)
         self.map.put('key-3', 3)
 
     def _fill_map_numeric(self, count=50):
-        for n in range(count):
-            self.map.put(n, n)
+        for i in range(count):
+            self.map.put(i, i)
 
-    def _fill_map_student(self, count=10):
-        for n in range(count):
-            self.map.put(n, Student(id=count, gpa=100.0-count))
+    def _fill_map_custom_comp(self, count=10):
+        for i in range(count):
+            self.map.put('key-'+str(i), 'value-'+str(i))
+            self.map.put('keyx-' + str(i), 'valuex-' + str(i))
+
+    def _fill_map_custom_comp_2(self):
+        for i in range(65, 75):
+            self.map.put('key-'+str(i), chr(i)*(i-64))
 
     def _configure_cluster(self):
         current_directory = os.path.dirname(__file__)

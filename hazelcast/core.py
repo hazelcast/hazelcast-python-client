@@ -237,7 +237,7 @@ class Comparator(object):
         - If return value is a positive value, [entry1] comes before [entry2],
         - If return value is 0, [entry1] and [entry2] are indistinguishable in this sorting mechanism.
             Their order with respect to each other is undefined.
-        This method must always return the same result given the same pair of keys.
+        This method must always return the same result given the same pair of entries.
         :param entry1: (K,V pair), first entry
         :param entry2: (K,V pair), second entry
         :return: (int), order index

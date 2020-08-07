@@ -383,7 +383,8 @@ ITERATION_TYPE = enum(KEY=0, VALUE=1, ENTRY=2)
 
 def get_sorted_query_result_set(result_list_future, paging_predicate):
     """
-    :param result_list, a list of (K,V) pairs to sort and slice based on paging_predicate attributes.
+    :param result_list_future, a future that returns a list of (K,V) pairs to sort and slice based on paging_predicate
+    attributes.
     :param paging_predicate
     :return: list of sorted query results
     """
