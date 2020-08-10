@@ -226,9 +226,10 @@ class HazelcastJsonValue(object):
 class Comparator(object):
     """
     Comparator provides an interface to a comparator object to compare two map entries in a distributed map.
-    (Must be serializable)
-    A comparator class with the same functionality should be registered on
-    Hazelcast server in order to be used in PagingPredicate.
+    The custom comparator class must also extend either Portable or IdentifiedDataSerializable to be
+    Hazelcast-serializable.
+    A comparator class with the same functionality should be registered on Hazelcast server in order to be used
+    in PagingPredicate.
     """
     def compare(self, entry1, entry2):
         """

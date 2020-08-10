@@ -1,9 +1,11 @@
 import os
+import unittest
 
 from tests.base import HazelcastTestCase
-from tests.util import configure_logging, get_abs_path, random_string, fill_map
+from tests.util import configure_logging, get_abs_path, random_string
 from tests.custom_comparator import CustomComparator
-from hazelcast.serialization.predicate import PagingPredicate, is_greater_than_or_equal_to, is_ilike, true
+from hazelcast.serialization.predicate import PagingPredicate, is_greater_than_or_equal_to, is_less_than_or_equal_to, \
+    is_ilike
 from hazelcast import HazelcastClient
 from hazelcast.six import assertCountEqual
 from hazelcast.util import ITERATION_TYPE
@@ -148,24 +150,25 @@ class MapPagingPredicateTest(HazelcastTestCase):
         paging = PagingPredicate(is_greater_than_or_equal_to('this', 30), 2)
         assertCountEqual(self, self.map.values(paging).result(), [])
 
-    # @HazelcastTestCase.skip('Paging predicate with equal values will be supported in Hazelcast 4.0')
-    # def _test_equal_values_paging(self):
-    #     self._fill_map_numeric()
-    #
-    #     # keys[50 - 99], values[0 - 49]:
-    #     for i in range(50, 100):
-    #         self.map.put(i, i - 50)
-    #
-    #     paging = PagingPredicate(is_less_than_or_equal_to('this', 8), 5)
-    #     def assert_event():
-    #         assertCountEqual(self, self.map.values(paging).result(), [0, 0, 1, 1, 2])
-    #         paging.next_page()
-    #         assertCountEqual(self, self.map.values(paging).result(), [2, 3, 3, 4, 4])
-    #         paging.next_page()
-    #         assertCountEqual(self, self.map.values(paging).result(), [5, 5, 6, 6, 7])
-    #         paging.next_page()
-    #         assertCountEqual(self, self.map.values(paging).result(), [7, 8, 8])
-    #     self.assertTrueEventually(assert_event)
+    @unittest.skip('Paging predicate with duplicate values will be supported in Hazelcast 4.0')
+    def _test_equal_values_paging(self):
+        self._fill_map_numeric()
+
+        # keys[50 - 99], values[0 - 49]:
+        for i in range(50, 100):
+            self.map.put(i, i - 50)
+
+        paging = PagingPredicate(is_less_than_or_equal_to('this', 8), 5)
+
+        def assert_event():
+            assertCountEqual(self, self.map.values(paging).result(), [0, 0, 1, 1, 2])
+            paging.next_page()
+            assertCountEqual(self, self.map.values(paging).result(), [2, 3, 3, 4, 4])
+            paging.next_page()
+            assertCountEqual(self, self.map.values(paging).result(), [5, 5, 6, 6, 7])
+            paging.next_page()
+            assertCountEqual(self, self.map.values(paging).result(), [7, 8, 8])
+        self.assertTrueEventually(assert_event)
 
     """
     Test for paging predicate with custom comparator
