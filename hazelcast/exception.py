@@ -368,6 +368,11 @@ class HazelcastCertificationError(HazelcastError):
     pass
 
 
+class ClientOfflineError(HazelcastError):
+    def __init__(self):
+        super(ClientOfflineError, self).__init__("No connection found to cluster")
+
+
 ERROR_CODE_TO_ERROR = {
     ARRAY_INDEX_OUT_OF_BOUNDS: ArrayIndexOutOfBoundsError,
     ARRAY_STORE: ArrayStoreError,

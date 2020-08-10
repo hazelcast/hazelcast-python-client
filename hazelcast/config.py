@@ -8,15 +8,6 @@ import os
 from hazelcast.serialization.api import StreamSerializer
 from hazelcast.util import validate_type, validate_serializer, enum, TimeUnit
 
-DEFAULT_GROUP_NAME = "dev"
-"""
-Default group name of the connected Hazelcast cluster
-"""
-
-DEFAULT_GROUP_PASSWORD = "dev-pass"
-"""
-Default password of connected Hazelcast cluster
-"""
 
 INTEGER_TYPE = enum(VAR=0, BYTE=1, SHORT=2, INT=3, LONG=4, BIG_INT=5)
 """
@@ -28,14 +19,13 @@ Integer type options that can be used by serialization service.
 * INT: Python int will be interpreted as a four byte int
 * LONG: Python int will be interpreted as an eight byte int
 * BIG_INT: Python int will be interpreted as Java BigInteger. This option can handle python long values with "bit_length > 64"
-
 """
 
 EVICTION_POLICY = enum(NONE=0, LRU=1, LFU=2, RANDOM=3)
 """
 Near Cache eviction policy options
 
-* NONE : No evcition
+* NONE : No eviction
 * LRU : Least Recently Used items will be evicted
 * LFU : Least frequently Used items will be evicted
 * RANDOM : Items will be evicted randomly
@@ -46,9 +36,8 @@ IN_MEMORY_FORMAT = enum(BINARY=0, OBJECT=1)
 """
 Near Cache in memory format of the values.
 
-* BINARY : Binary format, hazelcast serializated bytearray format
+* BINARY : Binary format, hazelcast serialized bytearray format
 * OBJECT : The actual objects used
-
 """
 
 PROTOCOL = enum(SSLv2=0, SSLv3=1, SSL=2, TLSv1=3, TLSv1_1=4, TLSv1_2=5, TLSv1_3=6, TLS=7)
@@ -67,11 +56,13 @@ SSL protocol options.
 * TLSv1_3 requires at least Python 2.7.15 or Python 3.7 build with OpenSSL 1.1.1+
 """
 
-DEFAULT_MAX_ENTRY_COUNT = 10000
-DEFAULT_SAMPLING_COUNT = 8
-DEFAULT_SAMPLING_POOL_SIZE = 16
+_DEFAULT_CLUSTER_NAME = "dev"
 
-MAXIMUM_PREFETCH_COUNT = 100000
+_DEFAULT_MAX_ENTRY_COUNT = 10000
+_DEFAULT_SAMPLING_COUNT = 8
+_DEFAULT_SAMPLING_POOL_SIZE = 16
+
+_MAXIMUM_PREFETCH_COUNT = 100000
 
 
 class ClientConfig(object):
@@ -83,14 +74,24 @@ class ClientConfig(object):
     """
 
     def __init__(self):
-        self._properties = {}
-        """Config properties"""
+        self.client_name = None
+        """Name of the client"""
 
-        self.group_config = GroupConfig()
-        """The group configuration"""
+        self.cluster_name = _DEFAULT_CLUSTER_NAME
 
         self.network_config = ClientNetworkConfig()
         """The network configuration for addresses to connect, smart-routing, socket-options..."""
+        """ Lifecycle Listeners, an array of Functions of f(state)"""
+        """Flake ID generator configuration which maps "config-name" : FlakeIdGeneratorConfig """
+
+        self.serialization_config = SerializationConfig()
+        """Hazelcast serialization configuration"""
+
+        self.near_cache_configs = {}  # map_name:NearCacheConfig
+        """Near Cache configuration which maps "map-name : NearCacheConfig"""
+
+        self._properties = {}
+        """Config properties"""
 
         self.load_balancer = None
         """Custom load balancer used to distribute the operations to multiple Endpoints."""
@@ -99,22 +100,11 @@ class ClientConfig(object):
         """Membership listeners, an array of tuple (member_added, member_removed, fire_for_existing)"""
 
         self.lifecycle_listeners = []
-        """ Lifecycle Listeners, an array of Functions of f(state)"""
-
-        self.near_cache_configs = {}  # map_name:NearCacheConfig
-        """Near Cache configuration which maps "map-name : NearCacheConfig"""
 
         self.flake_id_generator_configs = {}
-        """Flake ID generator configuration which maps "config-name" : FlakeIdGeneratorConfig """
-
-        self.serialization_config = SerializationConfig()
-        """Hazelcast serialization configuration"""
 
         self.logger_config = LoggerConfig()
         """Logger configuration."""
-
-        self.client_name = ""
-        """Name of the client"""
 
     def add_membership_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
         """
@@ -195,18 +185,6 @@ class ClientConfig(object):
         return self
 
 
-class GroupConfig(object):
-    """
-    The Group Configuration is the container class for name and password of the cluster.
-    """
-
-    def __init__(self):
-        self.name = DEFAULT_GROUP_NAME
-        """The group name of the cluster"""
-        self.password = DEFAULT_GROUP_PASSWORD
-        """The password of the cluster"""
-
-
 class ClientNetworkConfig(object):
     """
     Network related configuration parameters.
@@ -214,22 +192,18 @@ class ClientNetworkConfig(object):
 
     def __init__(self):
         self.addresses = []
-        """The candidate address list that client will use to establish initial connection"""
-        """Example usage: addresses.append("127.0.0.1:5701") """
-        self.connection_attempt_limit = 2
+        """The candidate address list that client will use to establish initial connection
+        
+            >>> addresses.append("127.0.0.1:5701")
         """
-        While client is trying to connect initially to one of the members in the addressList, all might be not
-        available. Instead of giving up, throwing Error and stopping client, it will attempt to retry as much as defined
-        by this parameter.
-        """
-        self.connection_attempt_period = 3
-        """Period for the next attempt to find a member to connect"""
+
         self.connection_timeout = 5.0
         """
         Socket connection timeout is a float, giving in seconds, or None.
         Setting a timeout of None disables the timeout feature and is equivalent to block the socket until it connects.
         Setting a timeout of zero is the same as disables blocking on connect.
         """
+
         self.socket_options = []
         """
         Array of Unix socket options.
@@ -243,6 +217,7 @@ class ClientNetworkConfig(object):
 
         Please see the Unix manual for level and option. Level and option constant are in python std lib socket module
         """
+
         self.redo_operation = False
         """
         If true, client will redo the operations that were executing on the server and client lost the connection.
@@ -250,14 +225,17 @@ class ClientNetworkConfig(object):
         application is performed or not. For idempotent operations this is harmless, but for non idempotent ones
         retrying can cause to undesirable effects. Note that the redo can perform on any member.
         """
+
         self.smart_routing = True
         """
         If true, client will route the key based operations to owner of the key at the best effort. Note that it uses a
         cached value of partition count and doesn't guarantee that the operation will always be executed on the owner.
         The cached table is updated every 10 seconds.
         """
+
         self.ssl_config = SSLConfig()
         """SSL configurations for the client."""
+
         self.cloud_config = ClientCloudConfig()
         """Hazelcast Cloud configuration to let the client connect the cluster via Hazelcast.cloud"""
 
@@ -395,14 +373,17 @@ class NearCacheConfig(object):
     def __init__(self, name="default"):
         self._name = name
         self.invalidate_on_change = True
-        """Should a value is invalidated and removed in case of any map data updating operations such as replace, remove etc."""
+        """Should a value is invalidated and removed in case of any map data 
+        updating operations such as replace, remove etc.
+        """
+
         self._in_memory_format = IN_MEMORY_FORMAT.BINARY
         self._time_to_live_seconds = None
         self._max_idle_seconds = None
-        self._eviction_policy = EVICTION_POLICY.NONE
-        self._eviction_max_size = DEFAULT_MAX_ENTRY_COUNT
-        self._eviction_sampling_count = DEFAULT_SAMPLING_COUNT
-        self._eviction_sampling_pool_size = DEFAULT_SAMPLING_POOL_SIZE
+        self._eviction_policy = EVICTION_POLICY.LRU
+        self._eviction_max_size = _DEFAULT_MAX_ENTRY_COUNT
+        self._eviction_sampling_count = _DEFAULT_SAMPLING_COUNT
+        self._eviction_sampling_pool_size = _DEFAULT_SAMPLING_POOL_SIZE
 
     @property
     def name(self):
@@ -494,6 +475,39 @@ class NearCacheConfig(object):
         self._eviction_sampling_pool_size = eviction_sampling_pool_size
 
 
+RECONNECT_MODE = enum(OFF=0, ON=1, ASYNC=2)
+"""
+* OFF   : Prevent reconnect to cluster after a disconnect.
+* ON    : Reconnect to cluster by blocking invocations.
+* ASYNC : Reconnect to cluster without blocking invocations. Invocations will receive ClientOfflineError
+"""
+
+
+class ConnectionStrategyConfig(object):
+    """Connection strategy configuration is used for setting custom strategies and configuring strategy parameters."""
+
+    def __init__(self):
+        self.async_start = False
+        self.reconnect_mode = RECONNECT_MODE.ON
+        self.connection_retry_config = ConnectionRetryConfig()
+
+
+_DEFAULT_INITIAL_BACKOFF_MILLIS = 1000
+_DEFAULT_MAX_BACKOFF_MILLIS = 30000
+_DEFAULT_CLUSTER_CONNECT_TIMEOUT_MILLIS = 20000
+_DEFAULT_MULTIPLIER = 1
+_DEFAULT_JITTER = 0
+
+
+class ConnectionRetryConfig(object):
+    def __init__(self):
+        self._initial_backoff_millis = _DEFAULT_INITIAL_BACKOFF_MILLIS
+        self._max_backoff_millis = _DEFAULT_MAX_BACKOFF_MILLIS
+        self._multiplier = _DEFAULT_MULTIPLIER
+        self._connect_timeout_millis = _DEFAULT_CLUSTER_CONNECT_TIMEOUT_MILLIS
+        self._jitter = _DEFAULT_JITTER
+
+
 class SSLConfig(object):
     """
     SSL configuration.
@@ -580,8 +594,8 @@ class FlakeIdGeneratorConfig(object):
 
     @prefetch_count.setter
     def prefetch_count(self, prefetch_count):
-        if not (0 < prefetch_count <= MAXIMUM_PREFETCH_COUNT):
-            raise ValueError("Prefetch count must be 1..{}, not {}".format(MAXIMUM_PREFETCH_COUNT, prefetch_count))
+        if not (0 < prefetch_count <= _MAXIMUM_PREFETCH_COUNT):
+            raise ValueError("Prefetch count must be 1..{}, not {}".format(_MAXIMUM_PREFETCH_COUNT, prefetch_count))
         self._prefetch_count = prefetch_count
 
     @property

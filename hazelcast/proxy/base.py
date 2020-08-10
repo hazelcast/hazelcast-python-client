@@ -29,7 +29,6 @@ class Proxy(object):
     def __init__(self, client, service_name, name):
         self.service_name = service_name
         self.name = name
-        self.partition_key = string_partition_strategy(self.name)
         self._client = client
         self.logger = logging.getLogger("HazelcastClient.%s(%s)" % (type(self).__name__, name))
         self._to_object = client.serialization_service.to_object
@@ -85,12 +84,14 @@ class PartitionSpecificProxy(Proxy):
     """
     def __init__(self, client, service_name, name):
         super(PartitionSpecificProxy, self).__init__(client, service_name, name)
-        self._partition_id = self._client.partition_service.get_partition_id(self.partition_key)
+        partition_key = client.serialization_service.to_data(string_partition_strategy(self.name))
+        self._partition_id = client.partition_service.get_partition_id(partition_key)
 
     def _encode_invoke(self, codec, response_handler=default_response_handler, invocation_timeout=None, **kwargs):
         return super(PartitionSpecificProxy, self)._encode_invoke_on_partition(codec, self._partition_id,
                                                                                response_handler=response_handler,
-                                                                               invocation_timeout=invocation_timeout, **kwargs)
+                                                                               invocation_timeout=invocation_timeout,
+                                                                               **kwargs)
 
 
 class TransactionalProxy(object):

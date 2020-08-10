@@ -5,7 +5,7 @@ import random
 from tests.base import SingleMemberTestCase, HazelcastTestCase
 from tests.hzrc.ttypes import Lang
 from tests.util import configure_logging, set_attr
-from hazelcast.config import ClientConfig, FlakeIdGeneratorConfig, MAXIMUM_PREFETCH_COUNT
+from hazelcast.config import ClientConfig, FlakeIdGeneratorConfig, _MAXIMUM_PREFETCH_COUNT
 from hazelcast.client import HazelcastClient
 from hazelcast.util import to_millis
 from hazelcast.proxy.flake_id_generator import _IdBatch, _Block, _AutoBatcher
@@ -48,7 +48,7 @@ class FlakeIdGeneratorConfigTest(HazelcastTestCase):
 
     def test_prefetch_count_max_size(self):
         with self.assertRaises(ValueError):
-            self.flake_id_config.prefetch_count = MAXIMUM_PREFETCH_COUNT + 1
+            self.flake_id_config.prefetch_count = _MAXIMUM_PREFETCH_COUNT + 1
 
 
 @set_attr(category=3.10)
