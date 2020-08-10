@@ -3,10 +3,12 @@ import struct
 import sys
 import threading
 import time
+import io
 
 from hazelcast.exception import AuthenticationError
 from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
-from hazelcast.protocol.client_message import BEGIN_END_FLAG, ClientMessage, ClientMessageBuilder
+from hazelcast.protocol.client_message import BEGIN_END_FLAG, ClientMessage, ClientMessageBuilder, \
+    SIZE_OF_FRAME_LENGTH_AND_FLAGS, Frame, InboundMessage
 from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
 from hazelcast.serialization import INT_SIZE_IN_BYTES, FMT_LE_INT
 from hazelcast.util import AtomicInteger, parse_addresses, calculate_version
@@ -256,6 +258,84 @@ class Heartbeat(object):
                 callback(connection)
 
 
+_frame_header = struct.Struct('<iH')
+
+
+class _Reader(object):
+    def __init__(self, builder):
+        self._buf = io.BytesIO()
+        self._builder = builder
+        self._bytes_read = 0
+        self._bytes_written = 0
+        self._frame_size = 0
+        self._frame_flags = 0
+        self._message = None
+
+    def read(self, data):
+        self._buf.seek(self._bytes_written)
+        self._buf.write(data)
+        self._bytes_written += len(data)
+
+    def process(self):
+        message = self._read_message()
+        while message:
+            self._builder.on_message(message)
+            # TODO: handle fragmented messages
+            message = self._read_message()
+
+    def _read_message(self):
+        while True:
+            if self._read_frame():
+                if self._message.end_frame.is_end_frame():
+                    msg = self._message
+                    self._reset()
+                    return msg
+            else:
+                return None
+
+    def _read_frame(self):
+        n = self.length
+        if n < SIZE_OF_FRAME_LENGTH_AND_FLAGS:
+            # we don't have even the frame length and flags ready
+            return False
+
+        if self._frame_size == 0:
+            self._read_frame_size_and_flags()
+
+        if n < self._frame_size:
+            return False
+
+        self._buf.seek(self._bytes_read)
+        data = self._buf.read(self._frame_size)
+        self._bytes_read += self._frame_size
+        self._frame_size = 0
+        # No need to reset flags since it will be overwritten on the next read_frame_size_and_flags call
+        frame = Frame(data, self._frame_flags)
+        if not self._message:
+            self._message = InboundMessage(frame)
+        else:
+            self._message.add_frame(frame)
+        return True
+
+    def _read_frame_size_and_flags(self):
+        self._buf.seek(self._bytes_read)
+        header_data = self._buf.read(SIZE_OF_FRAME_LENGTH_AND_FLAGS)
+        self._frame_size, self._frame_flags = _frame_header.unpack_from(header_data, self._bytes_read)
+        self._bytes_read += SIZE_OF_FRAME_LENGTH_AND_FLAGS
+
+    def _reset(self):
+        if self._bytes_written == self._bytes_read:
+            self._buf.seek(0)
+            self._buf.truncate()
+            self._bytes_written = 0
+            self._bytes_read = 0
+        self._message = None
+
+    @property
+    def length(self):
+        return self._bytes_written - self._bytes_read
+
+
 class Connection(object):
     """
     Connection object which stores connection related information and operations.
@@ -273,12 +353,12 @@ class Connection(object):
         self.logger = logging.getLogger("HazelcastClient.Connection[%s](%s:%d)" % (self.id, address.host, address.port))
         self._connection_closed_callback = connection_closed_callback
         self._builder = ClientMessageBuilder(message_callback)
-        self._read_buffer = bytearray()
         self.last_read_in_seconds = 0
         self.last_write_in_seconds = 0
         self.start_time_in_seconds = 0
         self.server_version_str = ""
         self.server_version = 0
+        self._reader = _Reader(self._builder)
 
     def live(self):
         """
@@ -299,19 +379,6 @@ class Connection(object):
 
         message.add_flag(BEGIN_END_FLAG)
         self.write(message.buffer)
-
-    def receive_message(self):
-        """
-        Receives a message from this connection.
-        """
-        # split frames
-        while len(self._read_buffer) >= INT_SIZE_IN_BYTES:
-            frame_length = struct.unpack_from(FMT_LE_INT, self._read_buffer, 0)[0]
-            if frame_length > len(self._read_buffer):
-                return
-            message = ClientMessage(memoryview(self._read_buffer)[:frame_length])
-            self._read_buffer = self._read_buffer[frame_length:]
-            self._builder.on_message(message)
 
     def write(self, data):
         """

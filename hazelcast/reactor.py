@@ -191,9 +191,16 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         self.logger.debug("Connected to %s", self._address, extra=self._logger_extras)
 
     def handle_read(self):
-        self._read_buffer.extend(self.recv(self.read_buffer_size))
-        self.last_read_in_seconds = time.time()
-        self.receive_message()
+        reader = self._reader
+        while True:
+            data = self.recv(self.read_buffer_size)
+            reader.read(data)
+            self.last_read_in_seconds = time.time()
+            if len(data) < self.read_buffer_size:
+                break
+
+        if reader.length:
+            reader.process()
 
     def handle_write(self):
         with self._write_lock:
