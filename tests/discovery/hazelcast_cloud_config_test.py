@@ -2,7 +2,7 @@ from unittest import TestCase
 from hazelcast.client import HazelcastClient, ClientProperties
 from hazelcast.config import ClientConfig, ClientCloudConfig
 from hazelcast.discovery import HazelcastCloudDiscovery
-from hazelcast.exception import HazelcastIllegalStateError
+from hazelcast.exception import IllegalStateError
 
 
 class HazelcastCloudConfigTest(TestCase):
@@ -33,7 +33,7 @@ class HazelcastCloudConfigTest(TestCase):
     def test_cloud_config_with_property_and_client_configuration(self):
         self.config.network_config.cloud_config.enabled = True
         self.config.set_property(ClientProperties.HAZELCAST_CLOUD_DISCOVERY_TOKEN.name, self.token)
-        with self.assertRaises(HazelcastIllegalStateError):
+        with self.assertRaises(IllegalStateError):
             client = HazelcastClient(self.config)
 
     def test_custom_cloud_url(self):

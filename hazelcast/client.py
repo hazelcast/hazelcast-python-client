@@ -23,7 +23,7 @@ from hazelcast.statistics import Statistics
 from hazelcast.transaction import TWO_PHASE, TransactionManager
 from hazelcast.util import AtomicInteger, DEFAULT_LOGGING
 from hazelcast.discovery import HazelcastCloudAddressProvider, HazelcastCloudAddressTranslator, HazelcastCloudDiscovery
-from hazelcast.exception import HazelcastIllegalStateError
+from hazelcast.exception import IllegalStateError
 
 
 class HazelcastClient(object):
@@ -40,7 +40,7 @@ class HazelcastClient(object):
         self.id = HazelcastClient.CLIENT_ID.get_and_increment()
         self.name = self._create_client_name()
         self._init_logger()
-        self._logger_extras = {"client_name": self.name, "group_name": self.config.group_config.name}
+        self._logger_extras = {"client_name": self.name, "cluster_name": self.config.cluster_name}
         self._log_group_password_info()
         self.lifecycle = LifecycleService(self.config, self._logger_extras)
         self.reactor = AsyncoreReactor(self._logger_extras)
@@ -342,7 +342,7 @@ class HazelcastClient(object):
 
         address_list_provided = len(network_config.addresses) != 0
         if cloud_discovery_token != "" and cloud_config.enabled:
-            raise HazelcastIllegalStateError("Ambiguous Hazelcast.cloud configuration. "
+            raise IllegalStateError("Ambiguous Hazelcast.cloud configuration. "
                                              "Both property based and client configuration based settings are provided "
                                              "for Hazelcast cloud discovery together. Use only one.")
 
@@ -372,7 +372,7 @@ class HazelcastClient(object):
             count += 1
 
         if count > 1:
-            raise HazelcastIllegalStateError("Only one discovery method can be enabled at a time. "
+            raise IllegalStateError("Only one discovery method can be enabled at a time. "
                                              "Cluster members given explicitly: {}"
                                              ", Hazelcast.cloud enabled: {}".format(address_list_provided,
                                                                                     hazelcast_cloud_enabled))

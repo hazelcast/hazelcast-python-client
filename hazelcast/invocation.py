@@ -63,7 +63,7 @@ class InvocationService(object):
         self._pending = {}
         self._next_correlation_id = AtomicInteger(1)
         self._client = client
-        self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
+        self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
         self._event_queue = queue.Queue()
         self._is_redo_operation = client.config.network_config.redo_operation
         self.invocation_retry_pause = self._init_invocation_retry_pause()

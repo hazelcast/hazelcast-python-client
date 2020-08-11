@@ -326,9 +326,9 @@ class VersionMessageFilter(logging.Filter):
 class HazelcastFormatter(logging.Formatter):
     def format(self, record):
         client_name = getattr(record, "client_name", None)
-        group_name = getattr(record, "group_name", None)
-        if client_name and group_name:
-            record.msg = "[" + group_name + "] [" + client_name + "] " + record.msg
+        cluster_name = getattr(record, "cluster_name", None)
+        if client_name and cluster_name:
+            record.msg = "[" + cluster_name + "] [" + client_name + "] " + record.msg
         return super(HazelcastFormatter, self).format(record)
 
 

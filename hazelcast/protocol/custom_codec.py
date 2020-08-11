@@ -3,7 +3,7 @@ Hazelcast client protocol codecs
 """
 
 from collections import namedtuple
-from hazelcast.core import Member, DistributedObjectInfo, EntryView, Address
+from hazelcast.core import MemberInfo, DistributedObjectInfo, EntryView, Address
 from hazelcast.six.moves import range
 
 EXCEPTION_MESSAGE_TYPE = 109
@@ -31,7 +31,7 @@ class MemberCodec(object):
             key = client_message.read_str()
             value = client_message.read_str()
             attributes[key] = value
-        return Member(address, uuid, lite_member, attributes)
+        return MemberInfo(address, uuid, lite_member, attributes)
 
 
 class AddressCodec(object):

@@ -47,7 +47,7 @@ class TransactionManager(object):
 
     def __init__(self, client):
         self._client = client
-        self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
+        self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
 
     def _connect(self):
         for count in range(0, RETRY_COUNT):

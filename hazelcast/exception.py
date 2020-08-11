@@ -113,7 +113,7 @@ class IllegalMonitorStateError(HazelcastError):
     pass
 
 
-class HazelcastIllegalStateError(HazelcastError):
+class IllegalStateError(HazelcastError):
     pass
 
 
@@ -398,7 +398,7 @@ ERROR_CODE_TO_ERROR = {
     ILLEGAL_ACCESS_EXCEPTION: IllegalAccessException,
     ILLEGAL_ACCESS_ERROR: IllegalAccessError,
     ILLEGAL_MONITOR_STATE: IllegalMonitorStateError,
-    ILLEGAL_STATE: HazelcastIllegalStateError,
+    ILLEGAL_STATE: IllegalStateError,
     ILLEGAL_THREAD_STATE: IllegalThreadStateError,
     INDEX_OUT_OF_BOUNDS: IndexOutOfBoundsError,
     INTERRUPTED: HazelcastInterruptedError,

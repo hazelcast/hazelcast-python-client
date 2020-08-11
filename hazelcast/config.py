@@ -106,6 +106,9 @@ class ClientConfig(object):
         self.logger_config = LoggerConfig()
         """Logger configuration."""
 
+        self.labels = set()
+        """Labels for the client to be sent to the cluster."""
+
     def add_membership_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
         """
         Helper method for adding membership listeners

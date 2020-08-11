@@ -30,7 +30,7 @@ class Statistics(object):
 
     def __init__(self, client):
         self._client = client
-        self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
+        self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
         self._enabled = client.properties.get_bool(ClientProperties.STATISTICS_ENABLED)
         self._cached_owner_address = None
         self._statistics_timer = None

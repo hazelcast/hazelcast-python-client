@@ -224,7 +224,7 @@ class PNCounter(Proxy):
             self.logger.debug("Exception occurred while invoking operation on target {}, "
                               "choosing different target. Cause: {}".format(target, ex),
                               extra={"client_name": self._client.name,
-                                     "group_name": self._client.config.group_config.name}
+                                     "cluster_name": self._client.config.cluster_name}
 )
             if excluded_addresses == PNCounter._EMPTY_ADDRESS_LIST:
                 excluded_addresses = []

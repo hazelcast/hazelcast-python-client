@@ -35,7 +35,7 @@ class ConnectionManager(object):
         self._new_connection_func = new_connection_func
         self._connection_listeners = []
         self._address_translator = address_translator
-        self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
+        self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
 
     def add_listener(self, on_connection_opened=None, on_connection_closed=None):
         """
@@ -192,7 +192,7 @@ class Heartbeat(object):
     def __init__(self, client):
         self._client = client
         self._listeners = []
-        self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
+        self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
 
         self._heartbeat_timeout = client.properties.get_seconds_positive_or_default(client.properties.HEARTBEAT_TIMEOUT)
         self._heartbeat_interval = client.properties.get_seconds_positive_or_default(client.properties.HEARTBEAT_INTERVAL)

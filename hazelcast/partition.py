@@ -26,7 +26,7 @@ class PartitionService(object):
     def __init__(self, client):
         self.partition_count = 0
         self._client = client
-        self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
+        self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
         self._partition_table = _PartitionTable(None, -1, dict())
 
     def handle_partitions_view_event(self, conn, partitions, version):

@@ -29,7 +29,7 @@ class ListenerService(object):
         self._client = client
         self._invocation_service = client.invoker
         self.is_smart = client.config.network_config.smart_routing
-        self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
+        self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
         self._active_registrations = {}  # Dict of user_registration_id, ListenerRegistration
         self._registration_lock = threading.RLock()
         self._event_handlers = {}

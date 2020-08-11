@@ -6,25 +6,34 @@ from hazelcast import util
 from hazelcast.util import enum
 
 
-class Member(object):
+class MemberInfo(object):
+    __slots__ = ("address", "uuid", "attributes", "lite_member", "version")
+
     """
-    Represents a member in the cluster with its address, uuid, lite member status and attributes.
+    Represents a member in the cluster with its address, uuid, lite member status, attributes and version.
     """
-    def __init__(self, address, uuid, is_lite_member=False, attributes={}):
+    def __init__(self, address, uuid, attributes, lite_member, version, *args):
         self.address = address
         self.uuid = uuid
-        self.is_lite_member = is_lite_member
         self.attributes = attributes
+        self.lite_member = lite_member
+        self.version = version
 
     def __str__(self):
-        return "Member [{}]:{} - {}".format(self.address.host, self.address.port, self.uuid)
+        return "Member [%s]:%s - %s" % (self.address.host, self.address.port, self.uuid)
 
     def __repr__(self):
-        return "Member(host={}, port={}, uuid={}, liteMember={}, attributes={})" \
-            .format(self.address.host, self.address.port, self.uuid, self.is_lite_member, self.attributes)
+        return "Member(address=%s, uuid=%s, attributes=%s, lite_member=%s, version=%s)" \
+               % (self.address, self.uuid, self.attributes, self.lite_member, self.version)
+
+    def __hash__(self):
+        return hash((self.address, self.uuid))
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.address == other.address and self.uuid == other.uuid
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 class Address(object):
@@ -42,7 +51,10 @@ class Address(object):
         return hash((self.host, self.port))
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and (self.host, self.port) == (other.host, other.port)
+        return isinstance(other, self.__class__) and self.host == other.host and self.port == other.port
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 class DistributedObjectInfo(object):
