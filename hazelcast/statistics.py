@@ -134,7 +134,7 @@ class Statistics(object):
         self._add_stat(stats, "enterprise", "false")
         self._add_stat(stats, "clientType", CLIENT_TYPE)
         self._add_stat(stats, "clientVersion", CLIENT_VERSION)
-        self._add_stat(stats, "clusterConnectionTimestamp", to_millis(owner_connection.start_time_in_seconds))
+        self._add_stat(stats, "clusterConnectionTimestamp", to_millis(owner_connection.start_time))
 
         local_host, local_ip = owner_connection.socket.getsockname()
         local_address = str(local_host) + ":" + str(local_ip)

@@ -12,7 +12,7 @@ from hazelcast.protocol.client_message import BEGIN_END_FLAG, ClientMessage, Cli
     SIZE_OF_FRAME_LENGTH_AND_FLAGS, Frame, InboundMessage
 from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
 from hazelcast.serialization import INT_SIZE_IN_BYTES, FMT_LE_INT
-from hazelcast.util import AtomicInteger, parse_addresses, calculate_version
+from hazelcast.util import AtomicInteger, parse_addresses, calculate_version, UNKNOWN_VERSION
 from hazelcast.version import CLIENT_TYPE, CLIENT_VERSION, SERIALIZATION_VERSION
 from hazelcast import six, HazelcastClient
 
@@ -222,13 +222,13 @@ class HeartbeatManager(object):
         if not connection.is_alive():
             return
 
-        if (now - connection.last_read_in_seconds) > self._heartbeat_timeout:
+        if (now - connection.last_read_time) > self._heartbeat_timeout:
             if connection.is_alive():
                 self.logger.warning("Heartbeat failed over the connection: %s" % connection)
                 connection.close("Heartbeat timed out",
                                  TargetDisconnectedError("Heartbeat timed out to connection %s" % connection))
 
-        if (now - connection.last_write_in_seconds) > self._heartbeat_interval:
+        if (now - connection.last_write_time) > self._heartbeat_interval:
             request = client_ping_codec.encode_request()
             invoker = self._client.invoker
             invocation = Invocation(invoker, request, connection=connection)
@@ -317,68 +317,86 @@ class Connection(object):
     """
     Connection object which stores connection related information and operations.
     """
-    _closed = False
-    endpoint = None
-    heartbeating = True
-    is_owner = False
-    counter = AtomicInteger()
 
-    def __init__(self, address, connection_closed_callback, message_callback, logger_extras=None):
-        self._address = (address.host, address.port)
+    def __init__(self, conn_manager, conn_id, message_callback, logger_extras=None):
+        self.remote_address = None
+        self.remote_uuid = None
+        self.last_read_time = 0
+        self.last_write_time = 0
+        self.start_time = 0
+        self.logger = logging.getLogger("HazelcastClient.Connection[%d]" % conn_id)
+        self.server_version = UNKNOWN_VERSION
+        self.server_version_str = None
+        self.live = True
+
+        self._conn_manager = conn_manager
         self._logger_extras = logger_extras
-        self.id = self.counter.get_and_increment()
-        self.logger = logging.getLogger("HazelcastClient.Connection[%s](%s:%d)" % (self.id, address.host, address.port))
-        self._connection_closed_callback = connection_closed_callback
+        self._id = conn_id
         self._builder = ClientMessageBuilder(message_callback)
-        self.last_read_in_seconds = 0
-        self.last_write_in_seconds = 0
-        self.start_time_in_seconds = 0
-        self.server_version_str = ""
-        self.server_version = 0
         self._reader = _Reader(self._builder)
-
-    def live(self):
-        """
-        Determines whether this connection is live or not.
-
-        :return: (bool), ``true`` if the connection is live, ``false`` otherwise.
-        """
-        return not self._closed
 
     def send_message(self, message):
         """
         Sends a message to this connection.
 
         :param message: (Message), message to be sent to this connection.
+        :return: (bool),
         """
-        if not self.live():
-            raise IOError("Connection is not live.")
+        if not self.live:
+            return False
 
-        message.add_flag(BEGIN_END_FLAG)
-        self.write(message.buffer)
+        self._write(message.buf)
+        return True
 
-    def write(self, data):
-        """
-        Writes data to this connection when sending messages.
-
-        :param data: (Data), data to be written to connection.
-        """
-        # must be implemented by subclass
-        raise NotImplementedError
-
-    def close(self, cause):
+    def close(self, reason, cause):
         """
         Closes the connection.
 
-        :param cause: (Exception), the cause of closing the connection.
+        :param reason: (str), The reason this connection is going to be closed. Is allowed to be None.
+        :param cause: (Exception), The exception responsible for closing this connection. Is allowed to be None.
         """
-        raise NotImplementedError
+        if not self.live:
+            return
+
+        self.live = False
+        self._log_close(reason, cause)
+        try:
+            self._inner_close()
+        except:
+            self.logger.exception("Error while closing the the connection")
+        self._conn_manager.on_conn_close(self)
+
+    def _log_close(self, reason, cause):
+        msg = "%s closed. Reason: %s"
+        if reason:
+            r = reason
+        elif cause:
+            r = cause
+        else:
+            r = "Socket explicitly closed"
+
+        if self._conn_manager.live:
+            self.logger.info(msg % (self, r))
+        else:
+            self.logger.debug(msg % (self, r))
+
+    def _inner_close(self):
+        raise NotImplementedError()
+
+    def _write(self, buf):
+        raise NotImplementedError()
 
     def __repr__(self):
-        return "Connection(address=%s, id=%s)" % (self._address, self.id)
+        return "Connection(address=%s, id=%s)" % (self.remote_address, self._id)
+
+    def __eq__(self, other):
+        return isinstance(other, Connection) and self._id == other._id
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __hash__(self):
-        return self.id
+        return self._id
 
 
 class DefaultAddressProvider(object):

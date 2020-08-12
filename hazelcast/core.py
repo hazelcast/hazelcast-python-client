@@ -30,7 +30,7 @@ class MemberInfo(object):
         return hash((self.address, self.uuid))
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.address == other.address and self.uuid == other.uuid
+        return isinstance(other, MemberInfo) and self.address == other.address and self.uuid == other.uuid
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -51,7 +51,7 @@ class Address(object):
         return hash((self.host, self.port))
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.host == other.host and self.port == other.port
+        return isinstance(other, Address) and self.host == other.host and self.port == other.port
 
     def __ne__(self, other):
         return not self.__eq__(other)

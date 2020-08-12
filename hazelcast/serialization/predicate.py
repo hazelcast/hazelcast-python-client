@@ -204,6 +204,7 @@ class TruePredicate(Predicate):
     def __repr__(self):
         return "TruePredicate()"
 
+
 sql = SqlPredicate
 is_equal_to = EqualPredicate
 is_not_equal_to = NotEqualPredicate

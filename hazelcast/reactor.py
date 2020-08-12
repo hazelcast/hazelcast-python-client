@@ -85,7 +85,7 @@ class AsyncoreReactor(object):
         self._is_live = False
         for connection in list(self._map.values()):
             try:
-                connection.close(HazelcastError("Client is shutting down"))
+                connection.close(None, HazelcastError("Client is shutting down"))
             except OSError as connection:
                 if connection.args[0] == socket.EBADF:
                     pass
@@ -94,10 +94,9 @@ class AsyncoreReactor(object):
         self._map.clear()
         self._thread.join()
 
-    def new_connection(self, address, connect_timeout, socket_options, connection_closed_callback, message_callback,
-                       network_config):
-        return AsyncoreConnection(self._map, address, connect_timeout, socket_options,
-                                  connection_closed_callback, message_callback, network_config, self._logger_extras)
+    def connection_factory(self, conn_manager, conn_id, address, network_config, message_callback):
+        return AsyncoreConnection(self._map, conn_manager, conn_id, address,
+                                  network_config, message_callback, self._logger_extras)
 
     def _cleanup_timer(self, timer):
         try:
@@ -119,15 +118,15 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
     sent_protocol_bytes = False
     read_buffer_size = BUFFER_SIZE
 
-    def __init__(self, map, address, connect_timeout, socket_options, connection_closed_callback,
-                 message_callback, network_config, logger_extras=None):
-        asyncore.dispatcher.__init__(self, map=map)
-        Connection.__init__(self, address, connection_closed_callback, message_callback, logger_extras)
+    def __init__(self, dispatcher_map, conn_manager, conn_id, address, network_config, message_callback, logger_extras):
+        asyncore.dispatcher.__init__(self, map=dispatcher_map)
+        Connection.__init__(self, conn_manager, conn_id, message_callback, logger_extras)
+        self._connected_address = address
 
         self._write_lock = threading.Lock()
         self._write_queue = deque()
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.settimeout(connect_timeout)
+        self.socket.settimeout(network_config.connection_timeout)
 
         # set tcp no delay
         self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
@@ -135,13 +134,13 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, BUFFER_SIZE)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, BUFFER_SIZE)
 
-        for socket_option in socket_options:
+        for socket_option in network_config.socket_options:
             if socket_option.option is socket.SO_RCVBUF:
                 self.read_buffer_size = socket_option.value
 
             self.socket.setsockopt(socket_option.level, socket_option.option, socket_option.value)
 
-        self.connect(self._address)
+        self.connect((address.host, address.port))
 
         ssl_config = network_config.ssl_config
         if ssl and ssl_config.enabled:
@@ -184,18 +183,18 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         # the socket should be non-blocking from now on
         self.socket.settimeout(0)
 
-        self._write_queue.append(b"CB2")
+        self._write_queue.append(b"CP2")
 
     def handle_connect(self):
-        self.start_time_in_seconds = time.time()
-        self.logger.debug("Connected to %s", self._address, extra=self._logger_extras)
+        self.start_time = time.time()
+        self.logger.debug("Connected to %s", self._connected_address, extra=self._logger_extras)
 
     def handle_read(self):
         reader = self._reader
         while True:
             data = self.recv(self.read_buffer_size)
             reader.read(data)
-            self.last_read_in_seconds = time.time()
+            self.last_read_time = time.time()
             if len(data) < self.read_buffer_size:
                 break
 
@@ -209,49 +208,46 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
             except IndexError:
                 return
             sent = self.send(data)
-            self.last_write_in_seconds = time.time()
+            self.last_write_time = time.time()
             self.sent_protocol_bytes = True
             if sent < len(data):
                 self._write_queue.appendleft(data[sent:])
 
     def handle_close(self):
         self.logger.warning("Connection closed by server", extra=self._logger_extras)
-        self.close(IOError("Connection closed by server"))
+        self.close(None, IOError("Connection closed by server"))
 
     def handle_error(self):
         error = sys.exc_info()[1]
         if sys.exc_info()[0] is socket.error:
             if error.errno != errno.EAGAIN and error.errno != errno.EDEADLK:
                 self.logger.exception("Received error", extra=self._logger_extras)
-                self.close(IOError(error))
+                self.close(None, IOError(error))
         else:
-            self.logger.warning("Received unexpected error: " + str(error), extra=self._logger_extras)
+            self.logger.warning("Received unexpected error: %s" % error, extra=self._logger_extras)
 
     def readable(self):
         return not self._closed and self.sent_protocol_bytes
 
-    def write(self, data):
+    def _write(self, buf):
         # if write queue is empty, send the data right away, otherwise add to queue
         if len(self._write_queue) == 0 and self._write_lock.acquire(False):
             try:
-                sent = self.send(data)
-                self.last_write_in_seconds = time.time()
-                if sent < len(data):
+                sent = self.send(buf)
+                self.last_write_time = time.time()
+                if sent < len(buf):
                     self.logger.info("Adding to queue", extra=self._logger_extras)
-                    self._write_queue.appendleft(data[sent:])
+                    self._write_queue.appendleft(buf[sent:])
             finally:
                 self._write_lock.release()
         else:
-            self._write_queue.append(data)
+            self._write_queue.append(buf)
 
     def writable(self):
         return len(self._write_queue) > 0
 
-    def close(self, cause):
-        if not self._closed:
-            self._closed = True
-            asyncore.dispatcher.close(self)
-            self._connection_closed_callback(self, cause)
+    def _inner_close(self):
+        asyncore.dispatcher.close(self)
 
 
 @total_ordering

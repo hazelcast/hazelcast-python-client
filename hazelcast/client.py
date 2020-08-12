@@ -46,7 +46,7 @@ class HazelcastClient(object):
         self.reactor = AsyncoreReactor(self._logger_extras)
         self._address_providers = self._create_address_providers()
         self._address_translator = self._create_address_translator()
-        self.connection_manager = ConnectionManager(self, self.reactor.new_connection, self._address_translator)
+        self.connection_manager = ConnectionManager(self, self.reactor.connection_factory, self._address_translator)
         self.heartbeat = HeartbeatManager(self)
         self.invoker = InvocationService(self)
         self.listener = ListenerService(self)
