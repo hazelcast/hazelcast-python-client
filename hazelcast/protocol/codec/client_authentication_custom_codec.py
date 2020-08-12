@@ -4,7 +4,7 @@ from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SI
 from hazelcast.protocol.builtin import StringCodec
 from hazelcast.protocol.builtin import ByteArrayCodec
 from hazelcast.protocol.builtin import ListMultiFrameCodec
-from hazelcast.protocol.codec.custom import AddressCodec
+from hazelcast.protocol.codec.custom.address_codec import AddressCodec
 from hazelcast.protocol.builtin import CodecUtil
 
 # hex: 0x000200

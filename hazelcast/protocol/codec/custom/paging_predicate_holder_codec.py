@@ -2,7 +2,7 @@ from hazelcast.protocol.builtin import FixSizedTypesCodec, CodecUtil
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import END_FRAME_BUF, SIZE_OF_FRAME_LENGTH_AND_FLAGS, create_initial_buffer_custom
 from hazelcast.protocol import PagingPredicateHolder
-from hazelcast.protocol.codec.custom import AnchorDataListHolderCodec
+from hazelcast.protocol.codec.custom.anchor_data_list_holder_codec import AnchorDataListHolderCodec
 from hazelcast.protocol.builtin import DataCodec
 
 _PAGE_SIZE_OFFSET = 2 * SIZE_OF_FRAME_LENGTH_AND_FLAGS

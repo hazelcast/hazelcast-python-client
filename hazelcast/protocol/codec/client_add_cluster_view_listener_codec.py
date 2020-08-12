@@ -1,8 +1,7 @@
-from hazelcast.serialization.bits import *
 from hazelcast.protocol.builtin import FixSizedTypesCodec
 from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer, EVENT_HEADER_SIZE
 from hazelcast.protocol.builtin import ListMultiFrameCodec
-from hazelcast.protocol.codec.custom import MemberInfoCodec
+from hazelcast.protocol.codec.custom.member_info_codec import MemberInfoCodec
 from hazelcast.protocol.builtin import EntryListUUIDListIntegerCodec
 
 # hex: 0x000300

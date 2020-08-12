@@ -1,10 +1,10 @@
 from hazelcast.protocol.builtin import FixSizedTypesCodec, CodecUtil
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import END_FRAME_BUF, SIZE_OF_FRAME_LENGTH_AND_FLAGS, create_initial_buffer_custom
-from hazelcast.protocol import ErrorHolder
+# TODO import from hazelcast.protocol import ErrorHolder
 from hazelcast.protocol.builtin import StringCodec
 from hazelcast.protocol.builtin import ListMultiFrameCodec
-from hazelcast.protocol.codec.custom import StackTraceElementCodec
+from hazelcast.protocol.codec.custom.stack_trace_element_codec import StackTraceElementCodec
 
 _ERROR_CODE_OFFSET = 2 * SIZE_OF_FRAME_LENGTH_AND_FLAGS
 _INITIAL_FRAME_SIZE = _ERROR_CODE_OFFSET + INT_SIZE_IN_BYTES - 2 * SIZE_OF_FRAME_LENGTH_AND_FLAGS

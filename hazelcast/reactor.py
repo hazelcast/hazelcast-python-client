@@ -11,8 +11,8 @@ from collections import deque
 from functools import total_ordering
 
 from hazelcast import six
-from hazelcast.config import PROTOCOL
 from hazelcast.connection import Connection, BUFFER_SIZE
+from hazelcast.core import PROTOCOL
 from hazelcast.exception import HazelcastError
 from hazelcast.future import Future
 from hazelcast.six.moves import queue

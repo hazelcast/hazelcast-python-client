@@ -1,7 +1,7 @@
 from hazelcast.protocol.builtin import FixSizedTypesCodec, CodecUtil
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import END_FRAME_BUF, SIZE_OF_FRAME_LENGTH_AND_FLAGS, create_initial_buffer_custom
-from hazelcast.core import SimpleEntryView
+# TODO import from hazelcast.core import SimpleEntryView
 from hazelcast.protocol.builtin import DataCodec
 
 _COST_OFFSET = 2 * SIZE_OF_FRAME_LENGTH_AND_FLAGS

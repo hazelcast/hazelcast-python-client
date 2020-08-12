@@ -1,9 +1,9 @@
 from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer
 from hazelcast.protocol.builtin import StringCodec
-from hazelcast.protocol.codec.custom import PagingPredicateHolderCodec
+from hazelcast.protocol.codec.custom.paging_predicate_holder_codec import PagingPredicateHolderCodec
 from hazelcast.protocol.builtin import EntryListCodec
 from hazelcast.protocol.builtin import DataCodec
-from hazelcast.protocol.codec.custom import AnchorDataListHolderCodec
+from hazelcast.protocol.codec.custom.anchor_data_list_holder_codec import AnchorDataListHolderCodec
 
 # hex: 0x013600
 _REQUEST_MESSAGE_TYPE = 79360

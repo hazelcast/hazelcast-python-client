@@ -1,4 +1,3 @@
-from hazelcast.serialization.bits import *
 from hazelcast.protocol.builtin import FixSizedTypesCodec
 from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer, RESPONSE_HEADER_SIZE, EVENT_HEADER_SIZE
 

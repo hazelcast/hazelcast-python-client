@@ -5,7 +5,7 @@ import json
 
 from hazelcast.cluster import ClusterService, RandomLoadBalancer
 from hazelcast.config import ClientConfig, ClientProperties
-from hazelcast.connection import ConnectionManager, HeartbeatManager, DefaultAddressProvider, DefaultAddressTranslator
+from hazelcast.connection import ConnectionManager, HeartbeatManager, DefaultAddressProvider
 from hazelcast.core import DistributedObjectInfo
 from hazelcast.invocation import InvocationService
 from hazelcast.listener import ListenerService
@@ -13,8 +13,8 @@ from hazelcast.lifecycle import LifecycleService, LIFECYCLE_STATE_SHUTTING_DOWN,
 from hazelcast.partition import PartitionService
 from hazelcast.protocol.codec import client_get_distributed_objects_codec
 from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE, LIST_SERVICE, SET_SERVICE, MULTI_MAP_SERVICE, \
-    REPLICATED_MAP_SERVICE, ATOMIC_LONG_SERVICE, ATOMIC_REFERENCE_SERVICE, RINGBUFFER_SERVICE, COUNT_DOWN_LATCH_SERVICE, \
-    TOPIC_SERVICE, RELIABLE_TOPIC_SERVICE, SEMAPHORE_SERVICE, LOCK_SERVICE, ID_GENERATOR_SERVICE, \
+    REPLICATED_MAP_SERVICE, RINGBUFFER_SERVICE, \
+    TOPIC_SERVICE, RELIABLE_TOPIC_SERVICE, ID_GENERATOR_SERVICE, \
     ID_GENERATOR_ATOMIC_LONG_PREFIX, EXECUTOR_SERVICE, PN_COUNTER_SERVICE, FLAKE_ID_GENERATOR_SERVICE
 from hazelcast.near_cache import NearCacheManager
 from hazelcast.reactor import AsyncoreReactor
@@ -22,7 +22,7 @@ from hazelcast.serialization import SerializationServiceV1
 from hazelcast.statistics import Statistics
 from hazelcast.transaction import TWO_PHASE, TransactionManager
 from hazelcast.util import AtomicInteger, DEFAULT_LOGGING
-from hazelcast.discovery import HazelcastCloudAddressProvider, HazelcastCloudAddressTranslator, HazelcastCloudDiscovery
+from hazelcast.discovery import HazelcastCloudAddressProvider, HazelcastCloudDiscovery
 from hazelcast.exception import IllegalStateError
 
 

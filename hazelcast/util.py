@@ -2,11 +2,9 @@ import itertools
 import threading
 import time
 import logging
-import hazelcast
 from collections import Sequence, Iterable
 
 from hazelcast import six
-from hazelcast.six.moves import range
 from hazelcast.version import GIT_COMMIT_ID, GIT_COMMIT_DATE, CLIENT_VERSION
 
 DEFAULT_ADDRESS = "127.0.0.1"

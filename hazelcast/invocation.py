@@ -7,7 +7,6 @@ from hazelcast.exception import create_exception, HazelcastInstanceNotActiveErro
     TargetDisconnectedError, HazelcastClientNotActiveException, TargetNotMemberError
 from hazelcast.future import Future
 from hazelcast.lifecycle import LIFECYCLE_STATE_CONNECTED
-from hazelcast.protocol.client_message import LISTENER_FLAG
 from hazelcast.protocol.custom_codec import EXCEPTION_MESSAGE_TYPE, ErrorCodec
 from hazelcast.util import AtomicInteger
 from hazelcast.six.moves import queue

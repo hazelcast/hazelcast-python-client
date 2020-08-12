@@ -5,56 +5,10 @@ Hazelcast Client Configuration module contains configuration classes and various
 import logging
 import os
 
+from hazelcast.core import EVICTION_POLICY, IN_MEMORY_FORMAT
 from hazelcast.serialization.api import StreamSerializer
 from hazelcast.util import validate_type, validate_serializer, enum, TimeUnit
 
-
-INTEGER_TYPE = enum(VAR=0, BYTE=1, SHORT=2, INT=3, LONG=4, BIG_INT=5)
-"""
-Integer type options that can be used by serialization service.
-
-* VAR : variable size integer (this option can be problematic on static type clients like java or .NET)
-* BYTE: Python int will be interpreted as a single byte int
-* SHORT: Python int will be interpreted as a double byte int
-* INT: Python int will be interpreted as a four byte int
-* LONG: Python int will be interpreted as an eight byte int
-* BIG_INT: Python int will be interpreted as Java BigInteger. This option can handle python long values with "bit_length > 64"
-"""
-
-EVICTION_POLICY = enum(NONE=0, LRU=1, LFU=2, RANDOM=3)
-"""
-Near Cache eviction policy options
-
-* NONE : No eviction
-* LRU : Least Recently Used items will be evicted
-* LFU : Least frequently Used items will be evicted
-* RANDOM : Items will be evicted randomly
-
-"""
-
-IN_MEMORY_FORMAT = enum(BINARY=0, OBJECT=1)
-"""
-Near Cache in memory format of the values.
-
-* BINARY : Binary format, hazelcast serialized bytearray format
-* OBJECT : The actual objects used
-"""
-
-PROTOCOL = enum(SSLv2=0, SSLv3=1, SSL=2, TLSv1=3, TLSv1_1=4, TLSv1_2=5, TLSv1_3=6, TLS=7)
-"""
-SSL protocol options.
-
-* SSLv2     : SSL 2.O Protocol. RFC 6176 prohibits SSL 2.0. Please use TLSv1+
-* SSLv3     : SSL 3.0 Protocol. RFC 7568 prohibits SSL 3.0. Please use TLSv1+
-* SSL       : Alias for SSL 3.0
-* TLSv1     : TLS 1.0 Protocol described in RFC 2246
-* TLSv1_1   : TLS 1.1 Protocol described in RFC 4346
-* TLSv1_2   : TLS 1.2 Protocol described in RFC 5246
-* TLSv1_3   : TLS 1.3 Protocol described in RFC 8446
-* TLS       : Alias for TLS 1.2
-* TLSv1+ requires at least Python 2.7.9 or Python 3.4 build with OpenSSL 1.0.1+ 
-* TLSv1_3 requires at least Python 2.7.15 or Python 3.7 build with OpenSSL 1.1.1+
-"""
 
 _DEFAULT_CLUSTER_NAME = "dev"
 

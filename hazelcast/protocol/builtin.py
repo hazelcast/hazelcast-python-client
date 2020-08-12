@@ -6,7 +6,6 @@ from hazelcast.protocol.client_message import NULL_FRAME_BUF, BEGIN_FRAME_BUF, E
 from hazelcast.serialization import LONG_SIZE_IN_BYTES, UUID_SIZE_IN_BYTES, LE_INT, LE_LONG, BOOLEAN_SIZE_IN_BYTES, \
     INT_SIZE_IN_BYTES
 from hazelcast.serialization.data import Data
-from hazelcast.protocol.codec.custom import ErrorHolderCodec
 
 
 class CodecUtil(object):
@@ -176,13 +175,6 @@ class EntryListUUIDListIntegerCodec(object):
         for i in range(n):
             result.append((keys[i], values[i]))
         return result
-
-
-class ErrorsCodec(object):
-    @staticmethod
-    def decode(msg):
-        msg.next_frame()
-        return ListMultiFrameCodec.decode(msg, ErrorHolderCodec.decode)
 
 
 _UUID_MSB_SHIFT = 64
@@ -428,3 +420,12 @@ class StringCodec(object):
     def decode(msg):
         return msg.next_frame().buf.decode("utf-8")
 
+
+from hazelcast.protocol.codec.custom.error_holder_codec import ErrorHolderCodec
+
+
+class ErrorsCodec(object):
+    @staticmethod
+    def decode(msg):
+        msg.next_frame()
+        return ListMultiFrameCodec.decode(msg, ErrorHolderCodec.decode)

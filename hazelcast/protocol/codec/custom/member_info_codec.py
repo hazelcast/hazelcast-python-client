@@ -2,10 +2,10 @@ from hazelcast.protocol.builtin import FixSizedTypesCodec, CodecUtil
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import END_FRAME_BUF, SIZE_OF_FRAME_LENGTH_AND_FLAGS, create_initial_buffer_custom
 from hazelcast.core import MemberInfo
-from hazelcast.protocol.codec.custom import AddressCodec
+from hazelcast.protocol.codec.custom.address_codec import AddressCodec
 from hazelcast.protocol.builtin import MapCodec
 from hazelcast.protocol.builtin import StringCodec
-from hazelcast.protocol.codec.custom import MemberVersionCodec
+from hazelcast.protocol.codec.custom.member_version_codec import MemberVersionCodec
 
 _UUID_OFFSET = 2 * SIZE_OF_FRAME_LENGTH_AND_FLAGS
 _LITE_MEMBER_OFFSET = _UUID_OFFSET + UUID_SIZE_IN_BYTES
