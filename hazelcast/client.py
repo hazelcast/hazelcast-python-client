@@ -5,7 +5,7 @@ import json
 
 from hazelcast.cluster import ClusterService, RandomLoadBalancer
 from hazelcast.config import ClientConfig, ClientProperties
-from hazelcast.connection import ConnectionManager, Heartbeat, DefaultAddressProvider, DefaultAddressTranslator
+from hazelcast.connection import ConnectionManager, HeartbeatManager, DefaultAddressProvider, DefaultAddressTranslator
 from hazelcast.core import DistributedObjectInfo
 from hazelcast.invocation import InvocationService
 from hazelcast.listener import ListenerService
@@ -47,7 +47,7 @@ class HazelcastClient(object):
         self._address_providers = self._create_address_providers()
         self._address_translator = self._create_address_translator()
         self.connection_manager = ConnectionManager(self, self.reactor.new_connection, self._address_translator)
-        self.heartbeat = Heartbeat(self)
+        self.heartbeat = HeartbeatManager(self)
         self.invoker = InvocationService(self)
         self.listener = ListenerService(self)
         self.cluster = ClusterService(self.config, self, self._address_providers)

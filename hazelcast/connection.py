@@ -5,15 +5,16 @@ import threading
 import time
 import io
 
-from hazelcast.exception import AuthenticationError
+from hazelcast.exception import AuthenticationError, TargetDisconnectedError
 from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
+from hazelcast.invocation import Invocation
 from hazelcast.protocol.client_message import BEGIN_END_FLAG, ClientMessage, ClientMessageBuilder, \
     SIZE_OF_FRAME_LENGTH_AND_FLAGS, Frame, InboundMessage
 from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
 from hazelcast.serialization import INT_SIZE_IN_BYTES, FMT_LE_INT
 from hazelcast.util import AtomicInteger, parse_addresses, calculate_version
 from hazelcast.version import CLIENT_TYPE, CLIENT_VERSION, SERIALIZATION_VERSION
-from hazelcast import six
+from hazelcast import six, HazelcastClient
 
 BUFFER_SIZE = 128000
 PROTOCOL_VERSION = 1
@@ -182,29 +183,30 @@ class ConnectionManager(object):
             return False
 
 
-class Heartbeat(object):
-    """
-    HeartBeat Service.
-    """
+class HeartbeatManager(object):
     _heartbeat_timer = None
-    logger = logging.getLogger("HazelcastClient.HeartbeatService")
+    logger = logging.getLogger("HazelcastClient.HeartbeatManager")
 
     def __init__(self, client):
         self._client = client
-        self._listeners = []
+        self._conn_manager = client.connection_manager
         self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
 
-        self._heartbeat_timeout = client.properties.get_seconds_positive_or_default(client.properties.HEARTBEAT_TIMEOUT)
-        self._heartbeat_interval = client.properties.get_seconds_positive_or_default(client.properties.HEARTBEAT_INTERVAL)
+        props = client.properties
+        self._heartbeat_timeout = props.get_seconds_positive_or_default(props.HEARTBEAT_TIMEOUT)
+        self._heartbeat_interval = props.get_seconds_positive_or_default(props.HEARTBEAT_INTERVAL)
 
     def start(self):
         """
         Starts sending periodic HeartBeat operations.
         """
         def _heartbeat():
-            if not self._client.lifecycle.is_live:
+            if not self._conn_manager.is_alive:
                 return
-            self._heartbeat()
+
+            now = time.time()
+            for conn in self._conn_manager.get_active_connections():
+                self._check_connection(now, conn)
             self._heartbeat_timer = self._client.reactor.add_timer(self._heartbeat_interval, _heartbeat)
 
         self._heartbeat_timer = self._client.reactor.add_timer(self._heartbeat_interval, _heartbeat)
@@ -216,46 +218,21 @@ class Heartbeat(object):
         if self._heartbeat_timer:
             self._heartbeat_timer.cancel()
 
-    def add_listener(self, on_heartbeat_restored=None, on_heartbeat_stopped=None):
-        """
-        Registers a HeartBeat listener. Listener is invoked when a HeartBeat related event occurs.
+    def _check_connection(self, now, connection):
+        if not connection.is_alive():
+            return
 
-        :param on_heartbeat_restored: (Function), function to be called when a HeartBeat is restored (optional).
-        :param on_heartbeat_stopped:  (Function), function to be called when a HeartBeat is stopped (optional).
-        """
-        self._listeners.append((on_heartbeat_restored, on_heartbeat_stopped))
+        if (now - connection.last_read_in_seconds) > self._heartbeat_timeout:
+            if connection.is_alive():
+                self.logger.warning("Heartbeat failed over the connection: %s" % connection)
+                connection.close("Heartbeat timed out",
+                                 TargetDisconnectedError("Heartbeat timed out to connection %s" % connection))
 
-    def _heartbeat(self):
-        now = time.time()
-        for connection in list(self._client.connection_manager.connections.values()):
-            time_since_last_read = now - connection.last_read_in_seconds
-            time_since_last_write = now - connection.last_write_in_seconds
-            if time_since_last_read > self._heartbeat_timeout:
-                if connection.heartbeating:
-                    self.logger.warning(
-                        "Heartbeat: Did not hear back after %ss from %s" % (time_since_last_read, connection),
-                        extra=self._logger_extras)
-                    self._on_heartbeat_stopped(connection)
-            else:
-                if not connection.heartbeating:
-                    self._on_heartbeat_restored(connection)
-
-            if time_since_last_write > self._heartbeat_interval:
-                request = client_ping_codec.encode_request()
-                self._client.invoker.invoke_on_connection(request, connection, ignore_heartbeat=True)
-
-    def _on_heartbeat_restored(self, connection):
-        self.logger.info("Heartbeat: Heartbeat restored for connection %s" % connection, extra=self._logger_extras)
-        connection.heartbeating = True
-        for callback, _ in self._listeners:
-            if callback:
-                callback(connection)
-
-    def _on_heartbeat_stopped(self, connection):
-        connection.heartbeating = False
-        for _, callback in self._listeners:
-            if callback:
-                callback(connection)
+        if (now - connection.last_write_in_seconds) > self._heartbeat_interval:
+            request = client_ping_codec.encode_request()
+            invoker = self._client.invoker
+            invocation = Invocation(invoker, request, connection=connection)
+            invoker.invoke_urgent(invocation)
 
 
 _frame_header = struct.Struct('<iH')
