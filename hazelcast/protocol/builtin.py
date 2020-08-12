@@ -418,7 +418,7 @@ class MapCodec(object):
 
 class StringCodec(object):
     @staticmethod
-    def encode(buf, value: str):
+    def encode(buf, value):
         value_bytes = value.encode("utf-8")
         header = bytearray(SIZE_OF_FRAME_LENGTH_AND_FLAGS)
         LE_INT.pack_into(header, 0, SIZE_OF_FRAME_LENGTH_AND_FLAGS + len(value_bytes))

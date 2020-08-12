@@ -1,3 +1,6 @@
+import errno
+import socket
+
 from hazelcast.serialization.bits import *
 
 SIZE_OF_FRAME_LENGTH_AND_FLAGS = INT_SIZE_IN_BYTES + SHORT_SIZE_IN_BYTES
@@ -166,3 +169,28 @@ LE_UINT16.pack_into(BEGIN_FRAME_BUF, INT_SIZE_IN_BYTES, _BEGIN_DATA_STRUCTURE_FL
 END_FRAME_BUF = bytearray(SIZE_OF_FRAME_LENGTH_AND_FLAGS)
 LE_INT.pack_into(END_FRAME_BUF, 0, SIZE_OF_FRAME_LENGTH_AND_FLAGS)
 LE_UINT16.pack_into(END_FRAME_BUF, INT_SIZE_IN_BYTES, _END_DATA_STRUCTURE_FLAG)
+
+
+class ClientMessageBuilder(object):
+    def __init__(self, message_callback):
+        self._fragmented_messages = dict()
+        self._message_callback = message_callback
+
+    def on_message(self, client_message):
+        if client_message.start_frame.has_unfragmented_message_flags():
+            self._message_callback(client_message)
+        else:
+            fragmentation_frame = client_message.start_frame
+            fragmentation_id = client_message.get_fragmentation_id()
+            client_message.drop_fragmentation_frame()
+            if fragmentation_frame.has_begin_fragment_flag():
+                self._fragmented_messages[fragmentation_id] = client_message
+            else:
+                try:
+                    existing_message = self._fragmented_messages[fragmentation_id]
+                except KeyError:
+                    raise socket.error(errno.EIO, "A message without the begin part is received.")
+                existing_message.merge(client_message)
+                if fragmentation_frame.has_end_fragment_flag():
+                    self._message_callback(existing_message)
+                    del self._fragmented_messages[fragmentation_id]

@@ -160,25 +160,6 @@ def enum(**enums):
     return type('Enum', (), enums)
 
 
-def _parse_address(address):
-    if ":" in address:
-        host, port = address.split(":")
-        return [hazelcast.core.Address(host, int(port))]
-    return [hazelcast.core.Address(address, p) for p in range(DEFAULT_PORT, DEFAULT_PORT + 3)]
-
-
-def get_possible_addresses(addresses=[], member_list=[]):
-    return set((addresses + [m.address for m in member_list])) or _parse_address(DEFAULT_ADDRESS)
-
-
-def get_provider_addresses(providers=[]):
-    return list(itertools.chain(*[p.load_addresses() for p in providers]))
-
-
-def parse_addresses(addresses=[]):
-    return list(itertools.chain(*[_parse_address(a) for a in addresses]))
-
-
 class ImmutableLazyDataList(Sequence):
     def __init__(self, list_data, to_object):
         super(ImmutableLazyDataList, self).__init__()

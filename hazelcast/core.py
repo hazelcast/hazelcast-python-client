@@ -57,6 +57,46 @@ class Address(object):
         return not self.__eq__(other)
 
 
+class AddressHelper(object):
+    @staticmethod
+    def get_possible_addresses(address):
+        address = AddressHelper.address_from_str(address)
+        possible_port = address.port
+        port_try_count = 1
+        if possible_port == -1:
+            port_try_count = 3
+            possible_port = 5701
+
+        addresses = []
+        for i in range(port_try_count):
+            addresses.append(Address(address.host, possible_port + i))
+
+        # primary, secondary
+        return [addresses.pop(0)], addresses
+
+    @staticmethod
+    def address_from_str(address, port=-1):
+        bracket_start_idx = address.find("[")
+        bracket_end_idx = address.find("]", bracket_start_idx)
+        colon_idx = address.find(":")
+        last_colon_idx = address.rfind(":")
+
+        if -1 < colon_idx < last_colon_idx:
+            # IPv6
+            if bracket_start_idx == 0 and bracket_end_idx > bracket_start_idx:
+                host = address[bracket_start_idx + 1: bracket_end_idx]
+                if last_colon_idx == (bracket_end_idx + 1):
+                    port = int(address[last_colon_idx + 1:])
+            else:
+                host = address
+        elif colon_idx > 0 and colon_idx == last_colon_idx:
+            host = address[:colon_idx]
+            port = int(address[colon_idx + 1:])
+        else:
+            host = address
+        return Address(host, port)
+
+
 class DistributedObjectInfo(object):
     """
     Represents name of the Distributed Object and the name of service which it belongs to.

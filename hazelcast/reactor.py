@@ -9,6 +9,8 @@ import time
 
 from collections import deque
 from functools import total_ordering
+
+from hazelcast import six
 from hazelcast.config import PROTOCOL
 from hazelcast.connection import Connection, BUFFER_SIZE
 from hazelcast.exception import HazelcastError
@@ -126,7 +128,12 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         self._write_lock = threading.Lock()
         self._write_queue = deque()
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.settimeout(network_config.connection_timeout)
+
+        timeout = network_config.connection_timeout
+        if timeout == 0:
+            timeout = six.MAX_SIZE
+
+        self.socket.settimeout(timeout)
 
         # set tcp no delay
         self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)

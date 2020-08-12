@@ -5,16 +5,16 @@ import threading
 import time
 import io
 
+from hazelcast.core import AddressHelper
 from hazelcast.exception import AuthenticationError, TargetDisconnectedError
 from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
 from hazelcast.invocation import Invocation
-from hazelcast.protocol.client_message import BEGIN_END_FLAG, ClientMessage, ClientMessageBuilder, \
-    SIZE_OF_FRAME_LENGTH_AND_FLAGS, Frame, InboundMessage
+from hazelcast.protocol.client_message import SIZE_OF_FRAME_LENGTH_AND_FLAGS, Frame, InboundMessage, \
+    ClientMessageBuilder
 from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
-from hazelcast.serialization import INT_SIZE_IN_BYTES, FMT_LE_INT
-from hazelcast.util import AtomicInteger, parse_addresses, calculate_version, UNKNOWN_VERSION
+from hazelcast.util import AtomicInteger, calculate_version, UNKNOWN_VERSION
 from hazelcast.version import CLIENT_TYPE, CLIENT_VERSION, SERIALIZATION_VERSION
-from hazelcast import six, HazelcastClient
+from hazelcast import six
 
 BUFFER_SIZE = 128000
 PROTOCOL_VERSION = 1
@@ -26,14 +26,13 @@ class ConnectionManager(object):
     """
     logger = logging.getLogger("HazelcastClient.ConnectionManager")
 
-    def __init__(self, client, new_connection_func, address_translator):
+    def __init__(self, client, connection_factory, address_translator):
         self._new_connection_mutex = threading.RLock()
-        self._io_thread = None
         self._client = client
         self.connections = {}
         self._pending_connections = {}
         self._socket_map = {}
-        self._new_connection_func = new_connection_func
+        self._connection_factory = connection_factory
         self._connection_listeners = []
         self._address_translator = address_translator
         self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
@@ -109,12 +108,12 @@ class ConnectionManager(object):
                         translated_address = self._address_translator.translate(address)
                         if translated_address is None:
                             raise ValueError("Address translator could not translate address: {}".format(address))
-                        connection = self._new_connection_func(translated_address,
-                                                               self._client.config.network_config.connection_timeout,
-                                                               self._client.config.network_config.socket_options,
-                                                               connection_closed_callback=self._connection_closed,
-                                                               message_callback=self._client.invoker._handle_client_message,
-                                                               network_config=self._client.config.network_config)
+                        connection = self._connection_factory(translated_address,
+                                                              self._client.config.network_config.connection_timeout,
+                                                              self._client.config.network_config.socket_options,
+                                                              connection_closed_callback=self._connection_closed,
+                                                              message_callback=self._client.invoker._handle_client_message,
+                                                              network_config=self._client.config.network_config)
                     except IOError:
                         return ImmediateExceptionFuture(sys.exc_info()[1], sys.exc_info()[2])
 
@@ -257,7 +256,6 @@ class _Reader(object):
         message = self._read_message()
         while message:
             self._builder.on_message(message)
-            # TODO: handle fragmented messages
             message = self._read_message()
 
     def _read_message(self):
@@ -402,29 +400,33 @@ class Connection(object):
 class DefaultAddressProvider(object):
     """
     Provides initial addresses for client to find and connect to a node.
-    Loads addresses from the Hazelcast configuration.
+    It also provides a no-op translator.
     """
-    def __init__(self, network_config):
-        self._network_config = network_config
+    def __init__(self, addresses):
+        self._addresses = addresses
 
     def load_addresses(self):
         """
-        :return: (Sequence), The possible member addresses to connect to.
+        :return: (Tuple), The possible primary and secondary member addresses to connect to.
         """
-        return parse_addresses(self._network_config.addresses)
+        configured_addresses = self._addresses
 
+        if not configured_addresses:
+            configured_addresses = ["127.0.0.1"]
 
-class DefaultAddressTranslator(object):
-    """
-    DefaultAddressTranslator is a no-op. It always returns the given address.
-    """
+        primaries = []
+        secondaries = []
+        for address in configured_addresses:
+            p, s = AddressHelper.get_possible_addresses(address)
+            primaries.extend(p)
+            secondaries.extend(s)
+
+        return primaries, secondaries
+
     def translate(self, address):
         """
-        :param address: (:class:`~hazelcast.core.Address`), address to be translated.
-        :return: (:class:`~hazelcast.core.Address`), translated address.
+        No-op address translator. It is there to provide the same API
+        with other address providers.
         """
         return address
 
-    def refresh(self):
-        """Refreshes the internal lookup table if necessary."""
-        pass

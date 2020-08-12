@@ -1,16 +1,12 @@
 import logging
 import random
 import threading
-import time
 import uuid
 from collections import OrderedDict
 
-from hazelcast import HazelcastClient, six
-from hazelcast.exception import HazelcastError, AuthenticationError, TargetDisconnectedError, IllegalStateError
-from hazelcast.lifecycle import LIFECYCLE_STATE_CONNECTED, LIFECYCLE_STATE_DISCONNECTED
-from hazelcast.protocol.codec import client_add_membership_listener_codec, client_authentication_codec
-from hazelcast.util import get_possible_addresses, get_provider_addresses, calculate_version, check_not_none
-from hazelcast.version import CLIENT_TYPE, CLIENT_VERSION, SERIALIZATION_VERSION
+from hazelcast import six
+from hazelcast.exception import TargetDisconnectedError, IllegalStateError
+from hazelcast.util import check_not_none
 
 # Membership Event Types
 MEMBER_ADDED = 1
@@ -23,6 +19,7 @@ class _MemberListSnapshot(object):
     def __init__(self, version, members):
         self.version = version
         self.members = members
+
 
 class ClientInfo(object):
     __slots__ = ("uuid", "address", "name", "labels")
@@ -54,7 +51,7 @@ class ClusterService(object):
     """
     logger = logging.getLogger("HazelcastClient.ClusterService")
 
-    def __init__(self, client: HazelcastClient):
+    def __init__(self, client):
         self._client = client
         config = client.config
         self._logger_extras = {"client_name": client.name, "cluster_name": config.cluster_name}
