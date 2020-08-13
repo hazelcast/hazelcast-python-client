@@ -24,9 +24,9 @@ if __name__ == "__main__":
     # Select the protocol used in SSL communication. This step is optional. Default is TLSv1_2
     ssl_config.protocol = PROTOCOL.TLSv1_3
 
-    config.network_config.ssl_config = ssl_config
+    config.network.ssl = ssl_config
 
-    config.network_config.addresses.append("foo.bar.com:8888")
+    config.network.addresses.append("foo.bar.com:8888")
 
     # Start a new Hazelcast client with SSL configuration.
     client = hazelcast.HazelcastClient(config)

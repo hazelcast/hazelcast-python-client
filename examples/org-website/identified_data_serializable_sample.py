@@ -30,7 +30,7 @@ class Employee(IdentifiedDataSerializable):
 if __name__ == "__main__":
     config = ClientConfig()
     my_factory = {Employee.CLASS_ID: Employee}
-    config.serialization_config.add_data_serializable_factory(Employee.FACTORY_ID, my_factory)
+    config.serialization.add_data_serializable_factory(Employee.FACTORY_ID, my_factory)
     # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
     hz = hazelcast.HazelcastClient(config)
     # Employee can be used here

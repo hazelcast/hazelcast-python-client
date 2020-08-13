@@ -22,11 +22,12 @@ try:
 except ImportError:
     ssl = None
 
+logger = logging.getLogger(__name__)
+
 
 class AsyncoreReactor(object):
     _thread = None
     _is_live = False
-    logger = logging.getLogger("HazelcastClient.AsyncoreReactor")
 
     def __init__(self, logger_extras=None):
         self._logger_extras = logger_extras
@@ -40,7 +41,7 @@ class AsyncoreReactor(object):
         self._thread.start()
 
     def _loop(self):
-        self.logger.debug("Starting Reactor Thread", extra=self._logger_extras)
+        logger.debug("Starting Reactor Thread", extra=self._logger_extras)
         Future._threading_locals.is_reactor_thread = True
         while self._is_live:
             try:
@@ -48,13 +49,13 @@ class AsyncoreReactor(object):
                 self._check_timers()
             except select.error as err:
                 # TODO: parse error type to catch only error "9"
-                self.logger.warning("Connection closed by server", extra=self._logger_extras)
+                logger.warning("Connection closed by server", extra=self._logger_extras)
                 pass
             except:
-                self.logger.exception("Error in Reactor Thread", extra=self._logger_extras)
+                logger.exception("Error in Reactor Thread", extra=self._logger_extras)
                 # TODO: shutdown client
                 return
-        self.logger.debug("Reactor Thread exited. %s" % self._timers.qsize(), extra=self._logger_extras)
+        logger.debug("Reactor Thread exited. %s" % self._timers.qsize(), extra=self._logger_extras)
         self._cleanup_all_timers()
 
     def _check_timers(self):
@@ -102,7 +103,7 @@ class AsyncoreReactor(object):
 
     def _cleanup_timer(self, timer):
         try:
-            self.logger.debug("Cancel timer %s" % timer, extra=self._logger_extras)
+            logger.debug("Cancel timer %s" % timer, extra=self._logger_extras)
             self._timers.queue.remove((timer.end, timer))
         except ValueError:
             pass
@@ -130,8 +131,8 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
 
         timeout = network_config.connection_timeout
-        if timeout == 0:
-            timeout = six.MAX_SIZE
+        if not timeout:
+            timeout = six.MAXSIZE
 
         self.socket.settimeout(timeout)
 
@@ -149,7 +150,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
         self.connect((address.host, address.port))
 
-        ssl_config = network_config.ssl_config
+        ssl_config = network_config.ssl
         if ssl and ssl_config.enabled:
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
 
@@ -194,7 +195,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
     def handle_connect(self):
         self.start_time = time.time()
-        self.logger.debug("Connected to %s", self._connected_address, extra=self._logger_extras)
+        logger.debug("Connected to %s", self._connected_address, extra=self._logger_extras)
 
     def handle_read(self):
         reader = self._reader
@@ -221,17 +222,17 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
                 self._write_queue.appendleft(data[sent:])
 
     def handle_close(self):
-        self.logger.warning("Connection closed by server", extra=self._logger_extras)
+        logger.warning("Connection closed by server", extra=self._logger_extras)
         self.close(None, IOError("Connection closed by server"))
 
     def handle_error(self):
         error = sys.exc_info()[1]
         if sys.exc_info()[0] is socket.error:
             if error.errno != errno.EAGAIN and error.errno != errno.EDEADLK:
-                self.logger.exception("Received error", extra=self._logger_extras)
+                logger.exception("Received error", extra=self._logger_extras)
                 self.close(None, IOError(error))
         else:
-            self.logger.warning("Received unexpected error: %s" % error, extra=self._logger_extras)
+            logger.warning("Received unexpected error: %s" % error, extra=self._logger_extras)
 
     def readable(self):
         return not self._closed and self.sent_protocol_bytes
@@ -243,7 +244,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
                 sent = self.send(buf)
                 self.last_write_time = time.time()
                 if sent < len(buf):
-                    self.logger.info("Adding to queue", extra=self._logger_extras)
+                    logger.info("Adding to queue", extra=self._logger_extras)
                     self._write_queue.appendleft(buf[sent:])
             finally:
                 self._write_lock.release()

@@ -40,8 +40,8 @@ class MapTest(SingleMemberTestCase):
 
     @classmethod
     def configure_client(cls, config):
-        config.serialization_config.add_data_serializable_factory(EntryProcessor.FACTORY_ID,
-                                                                  {EntryProcessor.CLASS_ID: EntryProcessor})
+        config.serialization.add_data_serializable_factory(EntryProcessor.FACTORY_ID,
+                                                           {EntryProcessor.CLASS_ID: EntryProcessor})
         return config
 
     def setUp(self):

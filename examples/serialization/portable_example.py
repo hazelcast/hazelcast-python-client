@@ -32,7 +32,7 @@ class Engineer(Portable):
 if __name__ == "__main__":
     config = hazelcast.ClientConfig()
     factory = {Engineer.CLASS_ID: Engineer}
-    config.serialization_config.add_portable_factory(Engineer.FACTORY_ID, factory)
+    config.serialization.add_portable_factory(Engineer.FACTORY_ID, factory)
 
     client = hazelcast.HazelcastClient(config)
 

@@ -12,12 +12,13 @@ from hazelcast.proxy.transactional_set import TransactionalSet
 from hazelcast.util import thread_id
 from hazelcast.six.moves import range
 
+logger = logging.getLogger(__name__)
+
 _STATE_ACTIVE = "active"
 _STATE_NOT_STARTED = "not_started"
 _STATE_COMMITTED = "committed"
 _STATE_ROLLED_BACK = "rolled_back"
 _STATE_PARTIAL_COMMIT = "rolling_back"
-
 
 TWO_PHASE = 1
 """
@@ -43,7 +44,6 @@ class TransactionManager(object):
     """
     Manages the execution of client transactions and provides Transaction objects.
     """
-    logger = logging.getLogger("HazelcastClient.TransactionManager")
 
     def __init__(self, client):
         self._client = client
@@ -55,8 +55,8 @@ class TransactionManager(object):
                 address = self._client.load_balancer.next_address()
                 return self._client.connection_manager.get_or_connect(address).result()
             except (IOError, HazelcastInstanceNotActiveError):
-                self.logger.debug("Could not get a connection for the transaction. Attempt %d of %d", count,
-                                  RETRY_COUNT, exc_info=True, extra=self._logger_extras)
+                logger.debug("Could not get a connection for the transaction. Attempt %d of %d", count,
+                             RETRY_COUNT, exc_info=True, extra=self._logger_extras)
                 if count + 1 == RETRY_COUNT:
                     raise
 
@@ -84,7 +84,6 @@ class Transaction(object):
     start_time = None
     _locals = threading.local()
     thread_id = None
-    logger = logging.getLogger("HazelcastClient.Transaction")
 
     def __init__(self, client, connection, timeout, durability, transaction_type):
         self.connection = connection
@@ -106,7 +105,8 @@ class Transaction(object):
         self.start_time = time.time()
         self.thread_id = thread_id()
         try:
-            request = transaction_create_codec.encode_request(timeout=int(self.timeout * 1000), durability=self.durability,
+            request = transaction_create_codec.encode_request(timeout=int(self.timeout * 1000),
+                                                              durability=self.durability,
                                                               transaction_type=self.transaction_type,
                                                               thread_id=self.thread_id)
             response = self.client.invoker.invoke_on_connection(request, self.connection).result()

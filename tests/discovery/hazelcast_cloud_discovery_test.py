@@ -133,8 +133,8 @@ class HazelcastCloudDiscoveryTest(TestCase):
 
     def test_client_with_cloud_discovery(self):
         config = ClientConfig()
-        config.network_config.cloud_config.enabled = True
-        config.network_config.cloud_config.discovery_token = TOKEN
+        config.network.cloud.enabled = True
+        config.network.cloud.discovery_token = TOKEN
 
         config.set_property(HazelcastCloudDiscovery.CLOUD_URL_BASE_PROPERTY.name, HOST + ":" + str(self.server.port))
         client = TestClient(config)

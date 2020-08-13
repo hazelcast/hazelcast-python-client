@@ -41,7 +41,7 @@ class FlakeIdGenerator(Proxy):
     def __init__(self, client, service_name, name):
         super(FlakeIdGenerator, self).__init__(client, service_name, name)
 
-        config = client.config.flake_id_generator_configs.get(name, None)
+        config = client.config.flake_id_generators.get(name, None)
         if config is None:
             config = FlakeIdGeneratorConfig()
 

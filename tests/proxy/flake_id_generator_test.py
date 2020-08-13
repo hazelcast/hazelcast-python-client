@@ -251,7 +251,7 @@ class FlakeIdGeneratorIdOutOfRangeTest(HazelcastTestCase):
         self.assertTrueEventually(lambda: response.success and response.result is not None)
 
         config = ClientConfig()
-        config.network_config.smart_routing = False
+        config.network.smart_routing = False
         client = HazelcastClient(config)
 
         generator = client.get_flake_id_generator("test").blocking()

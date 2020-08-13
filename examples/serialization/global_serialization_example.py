@@ -36,7 +36,7 @@ class GlobalSerializer(StreamSerializer):
 
 if __name__ == "__main__":
     config = hazelcast.ClientConfig()
-    config.serialization_config.global_serializer = GlobalSerializer
+    config.serialization.global_serializer = GlobalSerializer
 
     client = hazelcast.HazelcastClient(config)
 

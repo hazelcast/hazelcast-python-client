@@ -113,7 +113,7 @@ class StatisticsTest(HazelcastTestCase):
         map_name = random_string()
 
         near_cache_config = NearCacheConfig(map_name)
-        config.near_cache_configs[map_name] = near_cache_config
+        config.near_caches[map_name] = near_cache_config
 
         client = HazelcastClient(config)
         client_uuid = client.cluster.uuid
@@ -163,7 +163,7 @@ class StatisticsTest(HazelcastTestCase):
         map_name = random_string() + ",t=es\\t"
 
         near_cache_config = NearCacheConfig(map_name)
-        config.near_cache_configs[map_name] = near_cache_config
+        config.near_caches[map_name] = near_cache_config
 
         client = HazelcastClient(config)
         client_uuid = client.cluster.uuid
@@ -187,7 +187,7 @@ class StatisticsTest(HazelcastTestCase):
         map_name = random_string()
 
         near_cache_config = NearCacheConfig(map_name)
-        config.near_cache_configs[map_name] = near_cache_config
+        config.near_caches[map_name] = near_cache_config
 
         client = HazelcastClient(config)
         client_uuid = client.cluster.uuid

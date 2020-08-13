@@ -23,11 +23,11 @@ class ReconnectTest(HazelcastTestCase):
 
     def test_start_client_with_no_member(self):
         config = ClientConfig()
-        config.network_config.addresses.append("127.0.0.1:5701")
-        config.network_config.addresses.append("127.0.0.1:5702")
-        config.network_config.addresses.append("127.0.0.1:5703")
-        config.network_config.connection_attempt_limit = 2
-        config.network_config.connection_attempt_period = 0.1
+        config.network.addresses.append("127.0.0.1:5701")
+        config.network.addresses.append("127.0.0.1:5702")
+        config.network.addresses.append("127.0.0.1:5703")
+        config.network.connection_attempt_limit = 2
+        config.network.connection_attempt_period = 0.1
         with self.assertRaises(HazelcastError):
             self.create_client(config)
 
@@ -35,14 +35,14 @@ class ReconnectTest(HazelcastTestCase):
         t = Thread(target=self.cluster.start_member)
         t.start()
         config = ClientConfig()
-        config.network_config.connection_attempt_limit = 10
+        config.network.connection_attempt_limit = 10
         self.create_client(config)
         t.join()
 
     def test_restart_member(self):
         member = self.cluster.start_member()
         config = ClientConfig()
-        config.network_config.connection_attempt_limit = 10
+        config.network.connection_attempt_limit = 10
         client = self.create_client(config)
 
         state = [None]
@@ -60,7 +60,7 @@ class ReconnectTest(HazelcastTestCase):
     def test_listener_re_register(self):
         member = self.cluster.start_member()
         config = ClientConfig()
-        config.network_config.connection_attempt_limit = 10
+        config.network.connection_attempt_limit = 10
         client = self.create_client(config)
 
         map = client.get_map("map")
@@ -91,7 +91,7 @@ class ReconnectTest(HazelcastTestCase):
     def test_member_list_after_reconnect(self):
         old_member = self.cluster.start_member()
         config = ClientConfig()
-        config.network_config.connection_attempt_limit = 10
+        config.network.connection_attempt_limit = 10
         client = self.create_client(config)
         old_member.shutdown()
 
@@ -106,9 +106,9 @@ class ReconnectTest(HazelcastTestCase):
     def test_reconnect_toNewNode_ViaLastMemberList(self):
         old_member = self.cluster.start_member()
         config = ClientConfig()
-        config.network_config.addresses.append("127.0.0.1:5701")
-        config.network_config.smart_routing = False
-        config.network_config.connection_attempt_limit = 100
+        config.network.addresses.append("127.0.0.1:5701")
+        config.network.smart_routing = False
+        config.network.connection_attempt_limit = 100
         client = self.create_client(config)
         new_member = self.cluster.start_member()
         old_member.shutdown()

@@ -86,7 +86,7 @@ class ProxyManager(object):
         return to_list(self._proxies.values())
 
     def add_distributed_object_listener(self, listener_func):
-        is_smart = self._client.config.network_config.smart_routing
+        is_smart = self._client.config.network.smart_routing
         request = client_add_distributed_object_listener_codec.encode_request(is_smart)
 
         def handle_distributed_object_event(**kwargs):

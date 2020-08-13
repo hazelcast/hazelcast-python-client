@@ -3,7 +3,7 @@ import hazelcast
 if __name__ == "__main__":
     # Connect
     config = hazelcast.ClientConfig()
-    config.network_config.addresses.append("127.0.0.1:5701")
+    config.network.addresses.append("127.0.0.1:5701")
     client = hazelcast.HazelcastClient(config)
 
     # We can access maps on the server from the client. Let's access the greetings map that we created already

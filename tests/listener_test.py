@@ -20,7 +20,7 @@ class ListenerTest(HazelcastTestCase):
 
     # -------------------------- test_remove_member ----------------------- #
     def test_smart_listener_remove_member(self):
-        self.client_config.network_config.smart_routing = True
+        self.client_config.network.smart_routing = True
         client = self.create_client(self.client_config)
         map = client.get_map(random_string()).blocking()
         key_m1 = generate_key_owned_by_instance(client, self.m1.address)
@@ -34,7 +34,7 @@ class ListenerTest(HazelcastTestCase):
         self.assertTrueEventually(assert_event)
 
     def test_non_smart_listener_remove_connected_member(self):
-        self.client_config.network_config.smart_routing = False
+        self.client_config.network.smart_routing = False
         client = self.create_client(self.client_config)
         map = client.get_map(random_string()).blocking()
         map.add_entry_listener(added_func=self.collector)
@@ -60,7 +60,7 @@ class ListenerTest(HazelcastTestCase):
 
     # -------------------------- test_add_member ----------------------- #
     def test_smart_listener_add_member(self):
-        self.client_config.network_config.smart_routing = True
+        self.client_config.network.smart_routing = True
         client = self.create_client(self.client_config)
         map = client.get_map(random_string()).blocking()
         map.add_entry_listener(added_func=self.collector)
@@ -73,7 +73,7 @@ class ListenerTest(HazelcastTestCase):
         self.assertTrueEventually(assert_event)
 
     def test_non_smart_listener_add_member(self):
-        self.client_config.network_config.smart_routing = True
+        self.client_config.network.smart_routing = True
         client = self.create_client(self.client_config)
         map = client.get_map(random_string()).blocking()
         map.add_entry_listener(added_func=self.collector)

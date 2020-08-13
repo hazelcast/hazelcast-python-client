@@ -35,7 +35,7 @@ class CustomSerializer(StreamSerializer):
 
 if __name__ == "__main__":
     config = hazelcast.ClientConfig()
-    config.serialization_config.set_custom_serializer(type(TimeOfDay), CustomSerializer)
+    config.serialization.set_custom_serializer(type(TimeOfDay), CustomSerializer)
 
     client = hazelcast.HazelcastClient(config)
 

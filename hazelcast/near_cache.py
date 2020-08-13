@@ -248,7 +248,7 @@ class NearCacheManager(object):
     def get_or_create_near_cache(self, name):
         near_cache = self._caches.get(name, None)
         if not near_cache:
-            near_cache_config = self._client.config.near_cache_configs.get(name, None)
+            near_cache_config = self._client.config.near_caches.get(name, None)
             if not near_cache_config:
                 raise ValueError("Cannot find a near cache configuration with the name '{}'".format(name))
 

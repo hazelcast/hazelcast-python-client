@@ -336,7 +336,7 @@ You need to provide the IP address and port of at least one member in your clust
 import hazelcast
 
 config = hazelcast.ClientConfig()
-config.network_config.addresses.append("IP-address:port")
+config.network.addresses.append("IP-address:port")
 ```
 
 ### 1.4.3. Client System Properties
@@ -657,7 +657,7 @@ desired aspects. An example is shown below.
 
 ```python
 config = hazelcast.ClientConfig()
-config.network_config.addresses.append("127.0.0.1:5701")
+config.network.addresses.append("127.0.0.1:5701")
 client = hazelcast.HazelcastClient(config)
 ```
 
@@ -753,7 +753,7 @@ Note that the keys of the dictionary should be the same as the class IDs of thei
 The last step is to register the `IdentifiedDataSerializable factory` to the `SerializationConfig`.
 
 ```python
-config.serialization_config.data_serializable_factories[1] = factory
+config.serialization.data_serializable_factories[1] = factory
 ```
 
 Note that the ID that is passed to the `SerializationConfig` is same as the factory ID that the `Address` class returns.
@@ -813,7 +813,7 @@ Note that the keys of the dictionary should be the same as the class IDs of thei
 The last step is to register the `Portable factory` to the `SerializationConfig`.
 
 ```python
-config.serialization_config.data_serializable_factories[1] = factory
+config.serialization.data_serializable_factories[1] = factory
 ```
 
 Note that the ID that is passed to the `SerializationConfig` is same as the factory ID that `Foo` class returns.
@@ -934,7 +934,7 @@ Note that the serializer `id` must be unique as Hazelcast will use it to lookup 
 
 
 ```python
-config.serialization_config.set_custom_serializer(Musician, MusicianSerializer)
+config.serialization.set_custom_serializer(Musician, MusicianSerializer)
 ```
 
 From now on, Hazelcast will use `MusicianSerializer` to serialize `Musician` objects.
@@ -1007,7 +1007,7 @@ You should register the global serializer in the configuration.
 
 
 ```python
-config.serialization_config.global_serializer = GlobalSerializer
+config.serialization.global_serializer = GlobalSerializer
 ```
 
 # 5. Setting Up Client Network
@@ -1017,12 +1017,12 @@ All network related configuration of Hazelcast Python client is performed via th
 Here is an example of configuring the network for Python Client programmatically.
 
 ```python
-config.network_config.addresses.extend(["10.1.1.21""10.1.1.22:5703"])
-config.network_config.smart_routing = True
-config.network_config.redo_operation = True
-config.network_config.connection_timeout = 6.0
-config.network_config.connection_attempt_period = 5.0
-config.network_config.connection_attempt_limit = 5
+config.network.addresses.extend(["10.1.1.21""10.1.1.22:5703"])
+config.network.smart_routing = True
+config.network.redo_operation = True
+config.network.connection_timeout = 6.0
+config.network.connection_attempt_period = 5.0
+config.network.connection_attempt_limit = 5
 ```
 
 ## 5.1. Providing Member Addresses
@@ -1032,8 +1032,8 @@ list to find an alive member. Although it may be enough to give only one address
 (since all members communicate with each other), it is recommended that you give the addresses for all the members.
 
 ```python
-config.network_config.addresses.append("10.1.1.21") # single value
-config.network_config.addresses.extend(["10.1.1.23", "10.1.1.22:5703"]) # multiple values
+config.network.addresses.append("10.1.1.21") # single value
+config.network.addresses.extend(["10.1.1.23", "10.1.1.22:5703"]) # multiple values
 ```
 
 If the port part is omitted, then 5701, 5702 and 5703 will be tried in a random order.
@@ -1048,7 +1048,7 @@ for the description of smart and unisocket modes.
 The following is an example configuration.
 
 ```python
-config.network_config.smart_routing = True
+config.network.smart_routing = True
 ```
 
 Its default value is `True` (smart client mode).
@@ -1058,7 +1058,7 @@ Its default value is `True` (smart client mode).
 It enables/disables redo-able operations. While sending the requests to the related members, the operations can fail due to various reasons. Read-only operations are retried by default. If you want to enable retry for the other operations, you can set the `redo_operation` to `True`.
 
 ```python
-config.network_config.redo_operation = True
+config.network.redo_operation = True
 ```
 
 Its default value is `False` (disabled).
@@ -1071,7 +1071,7 @@ If the member does not respond within the timeout, the client will retry to conn
 The following is an example configuration.
 
 ```python
-config.network_config.connection_timeout = 6.0
+config.network.connection_timeout = 6.0
 ```
 
 Its default value is `5.0` seconds.
@@ -1083,7 +1083,7 @@ While the client is trying to connect initially to one of the members in the `Cl
 The following is an example configuration.
 
 ```python
-config.network_config.connection_attempt_limit = 5
+config.network.connection_attempt_limit = 5
 ```
 
 Its default value is `2`.
@@ -1095,7 +1095,7 @@ Connection attempt period is the duration in seconds between the connection atte
 The following is an example configuration.
 
 ```python
-config.network_config.connection_attempt_period = 5.0
+config.network.connection_attempt_period = 5.0
 ```
 
 Its default value is `3.0` seconds.
@@ -1117,10 +1117,10 @@ The following is the example configuration.
 config.group_config.name = "hazel"
 config.group_config.password = "cast"
 
-config.network_config.ssl_config.enabled = True
+config.network.ssl.enabled = True
 
-config.network_config.cloud_config.enabled = True
-config.network_config.cloud_config.discovery_token = "dc9220bc5d9"
+config.network.cloud.enabled = True
+config.network.cloud.discovery_token = "dc9220bc5d9"
 ```
 
 To be able to connect to the provided IP addresses, you should use secure TLS/SSL connection between the client and members. Therefore, you should enable the SSL configuration as described in the [TLS/SSL for Hazelcast Python Client section](#612-tlsssl-for-hazelcast-python-clients).
@@ -1152,13 +1152,13 @@ import hazelcast
 from hazelcast.config import PROTOCOL
 
 config = hazelcast.ClientConfig()
-config.network_config.ssl_config.enabled = True
-config.network_config.ssl_config.cafile = "/home/hazelcast/cafile.pem"
-config.network_config.ssl_config.certfile = "/home/hazelcast/certfile.pem"
-config.network_config.ssl_config.keyfile = "/home/hazelcast/keyfile.pem"
-config.network_config.ssl_config.password = "hazelcast"
-config.network_config.ssl_config.protocol = PROTOCOL.TLSv1_3
-config.network_config.ssl_config.ciphers = "DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA"
+config.network.ssl.enabled = True
+config.network.ssl.cafile = "/home/hazelcast/cafile.pem"
+config.network.ssl.certfile = "/home/hazelcast/certfile.pem"
+config.network.ssl.keyfile = "/home/hazelcast/keyfile.pem"
+config.network.ssl.password = "hazelcast"
+config.network.ssl.protocol = PROTOCOL.TLSv1_3
+config.network.ssl.ciphers = "DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA"
 ```
 
 ##### Enabling TLS/SSL
@@ -1169,7 +1169,7 @@ Setting this option to `False` will result in discarding the other `SSLConfig` o
 The following is an example configuration:
 
 ```python
-config.network_config.ssl_config.enabled = True
+config.network.ssl.enabled = True
 ```
 
 Default value is `False` (disabled). 
@@ -1182,7 +1182,7 @@ When SSL is enabled and `cafile` is not set, a set of default CA certificates fr
 The following is an example configuration:
 
 ```python
-config.network_config.ssl_config.cafile = "/home/hazelcast/cafile.pem"
+config.network.ssl.cafile = "/home/hazelcast/cafile.pem"
 ```
 
 ##### Setting Client Certificate
@@ -1195,7 +1195,7 @@ Client certificate can be set using the `certfile`. This option should point to 
 The following is an example configuration:
 
 ```python
-config.network_config.ssl_config.certfile = "/home/hazelcast/certfile.pem"
+config.network.ssl.certfile = "/home/hazelcast/certfile.pem"
 ```
 
 ##### Setting Private Key
@@ -1216,7 +1216,7 @@ If this option is not set, private key will be taken from `certfile`. In this ca
 The following is an example configuration:
 
 ```python
-config.network_config.ssl_config.keyfile = "/home/hazelcast/keyfile.pem"
+config.network.ssl.keyfile = "/home/hazelcast/keyfile.pem"
 ```
 
 ##### Setting Password of the Private Key
@@ -1229,7 +1229,7 @@ Alternatively a string, bytes or bytearray value may be supplied directly as the
 The following is an example configuration:
 
 ```python
-config.network_config.ssl_config.password = "hazelcast"
+config.network.ssl.password = "hazelcast"
 ```
 
 ##### Setting the Protocol
@@ -1252,7 +1252,7 @@ These protocol versions can be selected using the `hazelcast.config.PROTOCOL` as
 ```python
 from hazelcast.config import PROTOCOL
 
-config.network_config.ssl_config.protocol = PROTOCOL.TLSv1_3
+config.network.ssl.protocol = PROTOCOL.TLSv1_3
 ``` 
 
 > Note that the Hazelcast Python client and the Hazelcast members should have the same protocol version in order for TLS/SSL to work. In case of the protocol mismatch, connection attempts will be refused.
@@ -1271,7 +1271,7 @@ Note that, when this option is not set, all the available ciphers will be offere
 The following is an example configuration:
 
 ```python
-config.network_config.ssl_config.ciphers = "DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA"
+config.network.ssl.ciphers = "DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA"
 ``` 
 
 #### 6.1.3. Mutual Authentication
@@ -1317,7 +1317,7 @@ import hazelcast
 
 config = hazelcast.ClientConfig()
 config.group_config.name = "dev"
-config.network_config.addresses.append("10.90.0.1")
+config.network.addresses.append("10.90.0.1")
 ```
 
 The second step is initializing the `HazelcastClient` to be connected to the cluster:

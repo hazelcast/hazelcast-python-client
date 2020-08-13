@@ -6,6 +6,8 @@ from hazelcast.exception import OperationTimeoutError, HazelcastError
 from hazelcast.util import current_time_in_millis, check_not_none
 from time import sleep
 
+logger = logging.getLogger(__name__)
+
 
 class ListenerRegistration(object):
     def __init__(self, registration_request, decode_register_response, encode_deregister_request, handler):
@@ -23,12 +25,11 @@ class EventRegistration(object):
 
 
 class ListenerService(object):
-    logger = logging.getLogger("HazelcastClient.ListenerService")
 
     def __init__(self, client):
         self._client = client
         self._invocation_service = client.invoker
-        self.is_smart = client.config.network_config.smart_routing
+        self.is_smart = client.config.network.smart_routing
         self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
         self._active_registrations = {}  # Dict of user_registration_id, ListenerRegistration
         self._registration_lock = threading.RLock()
@@ -58,7 +59,7 @@ class ListenerService(object):
         invocation_time_out_millis = self._invocation_service.invocation_timeout * 1000
         timed_out = elapsed_millis > invocation_time_out_millis
         if timed_out:
-            raise OperationTimeoutError\
+            raise OperationTimeoutError \
                 ("Registering listeners is timed out. Last failed member: %s, Current time: %s, Start time: %s, "
                  "Client invocation timeout: %s, Elapsed time: %s ms, Cause: %s", last_failed_member, now_in_millis,
                  start_millis, invocation_time_out_millis, elapsed_millis, last_exception.args[0])
@@ -78,7 +79,7 @@ class ListenerService(object):
             active_connections = self._client.connection_manager.connections
             for connection in active_connections.values():
                 try:
-                    self.register_listener_on_connection_async(user_registration_id, listener_registration, connection)\
+                    self.register_listener_on_connection_async(user_registration_id, listener_registration, connection) \
                         .result()
                 except:
                     if connection.live():
@@ -105,8 +106,8 @@ class ListenerService(object):
                 registration_map[connection] = registration
             except Exception as e:
                 if connection.live():
-                    self.logger.warning("Listener %s can not be added to a new connection: %s, reason: %s",
-                                        user_registration_id, connection, e.args[0], extra=self._logger_extras)
+                    logger.warning("Listener %s can not be added to a new connection: %s, reason: %s",
+                                   user_registration_id, connection, e.args[0], extra=self._logger_extras)
                 raise e
 
         return future.continue_with(callback)
@@ -129,8 +130,8 @@ class ListenerService(object):
                 except:
                     if connection.live():
                         successful = False
-                        self.logger.warning("Deregistration for listener with ID %s has failed to address %s ",
-                                            user_registration_id, "address", exc_info=True, extra=self._logger_extras)
+                        logger.warning("Deregistration for listener with ID %s has failed to address %s ",
+                                       user_registration_id, "address", exc_info=True, extra=self._logger_extras)
             if successful:
                 self._active_registrations.pop(user_registration_id)
             return successful
@@ -153,7 +154,7 @@ class ListenerService(object):
     def handle_client_message(self, message):
         correlation_id = message.get_correlation_id()
         if correlation_id not in self._event_handlers:
-            self.logger.warning("Got event message with unknown correlation id: %s", message, extra=self._logger_extras)
+            logger.warning("Got event message with unknown correlation id: %s", message, extra=self._logger_extras)
         else:
             event_handler = self._event_handlers.get(correlation_id)
             event_handler(message)

@@ -30,7 +30,6 @@ class Proxy(object):
         self.service_name = service_name
         self.name = name
         self._client = client
-        self.logger = logging.getLogger("HazelcastClient.%s(%s)" % (type(self).__name__, name))
         self._to_object = client.serialization_service.to_object
         self._to_data = client.serialization_service.to_data
         self._register_listener = client.listener.register_listener

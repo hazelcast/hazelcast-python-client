@@ -934,7 +934,7 @@ class MapFeatNearCache(Map):
                 lambda m: map_add_near_cache_entry_listener_codec.handle(m, self._handle_invalidation,
                                                                          self._handle_batch_invalidation))
         except:
-            self.logger.severe("-----------------\n Near Cache is not initialized!!! \n-----------------")
+            pass
 
     def _remove_near_cache_invalidation_listener(self):
         if self._invalidation_listener_id:
@@ -1053,7 +1053,7 @@ class MapFeatNearCache(Map):
 
 
 def create_map_proxy(client, service_name, name, **kwargs):
-    near_cache_config = client.config.near_cache_configs.get(name, None)
+    near_cache_config = client.config.near_caches.get(name, None)
     if near_cache_config is None:
         return Map(client=client, service_name=service_name, name=name)
     else:

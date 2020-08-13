@@ -43,7 +43,7 @@ def generate_users(users):
 if __name__ == "__main__":
     config = ClientConfig()
     portable_factory = {User.CLASS_ID: User}
-    config.serialization_config.add_portable_factory(User.FACTORY_ID, portable_factory)
+    config.serialization.add_portable_factory(User.FACTORY_ID, portable_factory)
     # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
     hz = hazelcast.HazelcastClient(config)
     # Get a Distributed Map called "users"

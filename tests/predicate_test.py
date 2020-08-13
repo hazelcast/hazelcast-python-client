@@ -220,7 +220,7 @@ class PredicatePortableTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
         the_factory = {InnerPortable.CLASS_ID: InnerPortable}
-        config.serialization_config.portable_factories[FACTORY_ID] = the_factory
+        config.serialization.portable_factories[FACTORY_ID] = the_factory
         return config
 
     def setUp(self):
@@ -300,7 +300,7 @@ class NestedPredicatePortableTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
         factory = {1: NestedPredicatePortableTest.Body, 2: NestedPredicatePortableTest.Limb}
-        config.serialization_config.portable_factories[FACTORY_ID] = factory
+        config.serialization.portable_factories[FACTORY_ID] = factory
         return config
 
     def setUp(self):

@@ -235,8 +235,8 @@ the_factory = {SerializationV1Portable.CLASS_ID: SerializationV1Portable, InnerP
 class PortableSerializationTestCase(unittest.TestCase):
     def test_encode_decode(self):
         config = hazelcast.ClientConfig()
-        config.serialization_config.portable_factories[FACTORY_ID] = the_factory
-        service = SerializationServiceV1(config.serialization_config)
+        config.serialization.portable_factories[FACTORY_ID] = the_factory
+        service = SerializationServiceV1(config.serialization)
         obj = create_portable()
         self.assertTrue(obj.inner_portable)
 
@@ -247,9 +247,9 @@ class PortableSerializationTestCase(unittest.TestCase):
 
     def test_encode_decode_2(self):
         config = hazelcast.ClientConfig()
-        config.serialization_config.portable_factories[FACTORY_ID] = the_factory
-        service = SerializationServiceV1(config.serialization_config)
-        service2 = SerializationServiceV1(config.serialization_config)
+        config.serialization.portable_factories[FACTORY_ID] = the_factory
+        service = SerializationServiceV1(config.serialization)
+        service2 = SerializationServiceV1(config.serialization)
         obj = create_portable()
         self.assertTrue(obj.inner_portable)
 
@@ -259,8 +259,8 @@ class PortableSerializationTestCase(unittest.TestCase):
 
     def test_portable_context(self):
         config = hazelcast.ClientConfig()
-        config.serialization_config.portable_factories[FACTORY_ID] = the_factory
-        service = SerializationServiceV1(config.serialization_config)
+        config.serialization.portable_factories[FACTORY_ID] = the_factory
+        service = SerializationServiceV1(config.serialization)
         obj = create_portable()
         self.assertTrue(obj.inner_portable)
 
@@ -271,11 +271,11 @@ class PortableSerializationTestCase(unittest.TestCase):
 
     def test_portable_null_fields(self):
         config = hazelcast.ClientConfig()
-        config.serialization_config.portable_factories[FACTORY_ID] = the_factory
-        service = SerializationServiceV1(config.serialization_config)
+        config.serialization.portable_factories[FACTORY_ID] = the_factory
+        service = SerializationServiceV1(config.serialization)
         service.to_data(create_portable())
 
-        service2 = SerializationServiceV1(config.serialization_config)
+        service2 = SerializationServiceV1(config.serialization)
         obj = SerializationV1Portable()
 
         data = service.to_data(obj)
@@ -313,13 +313,13 @@ class PortableSerializationTestCase(unittest.TestCase):
         class_def = builder.build()
 
         config = hazelcast.ClientConfig()
-        config.serialization_config.portable_factories[FACTORY_ID] = the_factory
+        config.serialization.portable_factories[FACTORY_ID] = the_factory
 
-        config.serialization_config.class_definitions.add(class_def)
-        config.serialization_config.class_definitions.add(class_def_inner)
+        config.serialization.class_definitions.add(class_def)
+        config.serialization.class_definitions.add(class_def_inner)
 
-        service = SerializationServiceV1(config.serialization_config)
-        service2 = SerializationServiceV1(config.serialization_config)
+        service = SerializationServiceV1(config.serialization)
+        service2 = SerializationServiceV1(config.serialization)
         obj = SerializationV1Portable()
 
         data = service.to_data(obj)
@@ -328,8 +328,8 @@ class PortableSerializationTestCase(unittest.TestCase):
 
     def test_portable_read_without_factory(self):
         config = hazelcast.ClientConfig()
-        config.serialization_config.portable_factories[FACTORY_ID] = the_factory
-        service = SerializationServiceV1(config.serialization_config)
+        config.serialization.portable_factories[FACTORY_ID] = the_factory
+        service = SerializationServiceV1(config.serialization)
         service2 = SerializationServiceV1(hazelcast.SerializationConfig())
         obj = create_portable()
         self.assertTrue(obj.inner_portable)

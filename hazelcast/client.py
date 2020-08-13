@@ -25,6 +25,8 @@ from hazelcast.util import AtomicInteger, DEFAULT_LOGGING
 from hazelcast.discovery import HazelcastCloudAddressProvider, HazelcastCloudDiscovery
 from hazelcast.exception import IllegalStateError
 
+logger = logging.getLogger(__name__)
+
 
 class HazelcastClient(object):
     """
@@ -32,7 +34,6 @@ class HazelcastClient(object):
     """
     CLIENT_ID = AtomicInteger()
     _config = None
-    logger = logging.getLogger("HazelcastClient")
 
     def __init__(self, config=None):
         self.config = config or ClientConfig()
@@ -54,7 +55,8 @@ class HazelcastClient(object):
         self.partition_service = PartitionService(self)
         self.proxy = ProxyManager(self)
         self.load_balancer = RandomLoadBalancer(self.cluster)
-        self.serialization_service = SerializationServiceV1(serialization_config=self.config.serialization_config, properties=self.properties)
+        self.serialization_service = SerializationServiceV1(serialization_config=self.config.serialization,
+                                                            properties=self.properties)
         self.transaction_manager = TransactionManager(self)
         self.lock_reference_id_generator = AtomicInteger(1)
         self.near_cache_manager = NearCacheManager(self)
@@ -73,7 +75,7 @@ class HazelcastClient(object):
         except:
             self.reactor.shutdown()
             raise
-        self.logger.info("Client started.", extra=self._logger_extras)
+        logger.info("Client started.", extra=self._logger_extras)
 
     def get_atomic_long(self, name):
         """
@@ -308,13 +310,13 @@ class HazelcastClient(object):
             self.cluster.shutdown()
             self.reactor.shutdown()
             self.lifecycle.fire_lifecycle_event(LIFECYCLE_STATE_SHUTDOWN)
-            self.logger.info("Client shutdown.", extra=self._logger_extras)
+            logger.info("Client shutdown.", extra=self._logger_extras)
 
     def _create_address_providers(self):
-        network_config = self.config.network_config
+        network_config = self.config.network
         address_providers = []
 
-        cloud_config = network_config.cloud_config
+        cloud_config = network_config.cloud
         cloud_address_provider = self._init_cloud_address_provider(cloud_config)
         if cloud_address_provider:
             address_providers.append(cloud_address_provider)
@@ -336,15 +338,15 @@ class HazelcastClient(object):
         return None
 
     def _create_address_translator(self):
-        network_config = self.config.network_config
-        cloud_config = network_config.cloud_config
+        network_config = self.config.network
+        cloud_config = network_config.cloud
         cloud_discovery_token = self.properties.get(self.properties.HAZELCAST_CLOUD_DISCOVERY_TOKEN)
 
         address_list_provided = len(network_config.addresses) != 0
         if cloud_discovery_token != "" and cloud_config.enabled:
             raise IllegalStateError("Ambiguous Hazelcast.cloud configuration. "
-                                             "Both property based and client configuration based settings are provided "
-                                             "for Hazelcast cloud discovery together. Use only one.")
+                                    "Both property based and client configuration based settings are provided "
+                                    "for Hazelcast cloud discovery together. Use only one.")
 
         hazelcast_cloud_enabled = cloud_discovery_token != "" or cloud_config.enabled
         self._is_discovery_configuration_consistent(address_list_provided, hazelcast_cloud_enabled)
@@ -360,7 +362,7 @@ class HazelcastClient(object):
         return DefaultAddressTranslator()
 
     def _get_connection_timeout(self):
-        network_config = self.config.network_config
+        network_config = self.config.network
         conn_timeout = network_config.connection_timeout
         return sys.maxsize if conn_timeout == 0 else conn_timeout
 
@@ -373,9 +375,9 @@ class HazelcastClient(object):
 
         if count > 1:
             raise IllegalStateError("Only one discovery method can be enabled at a time. "
-                                             "Cluster members given explicitly: {}"
-                                             ", Hazelcast.cloud enabled: {}".format(address_list_provided,
-                                                                                    hazelcast_cloud_enabled))
+                                    "Cluster members given explicitly: {}"
+                                    ", Hazelcast.cloud enabled: {}".format(address_list_provided,
+                                                                           hazelcast_cloud_enabled))
 
     def _create_client_name(self):
         if self.config.client_name:
@@ -390,12 +392,12 @@ class HazelcastClient(object):
                 logging.config.dictConfig(json_config)
         else:
             logging.config.dictConfig(DEFAULT_LOGGING)
-            self.logger.setLevel(logger_config.level)
+            logger.setLevel(logger_config.level)
 
     def _log_group_password_info(self):
         if self.config.group_config.password:
-            self.logger.info("A non-empty group password is configured for the Hazelcast client. "
-                             "Starting with Hazelcast IMDG version 3.11, clients with the same group name, "
-                             "but with different group passwords (that do not use authentication) will be "
-                             "accepted to a cluster. The group password configuration will be removed "
-                             "completely in a future release.", extra=self._logger_extras)
+            logger.info("A non-empty group password is configured for the Hazelcast client. "
+                        "Starting with Hazelcast IMDG version 3.11, clients with the same group name, "
+                        "but with different group passwords (that do not use authentication) will be "
+                        "accepted to a cluster. The group password configuration will be removed "
+                        "completely in a future release.", extra=self._logger_extras)

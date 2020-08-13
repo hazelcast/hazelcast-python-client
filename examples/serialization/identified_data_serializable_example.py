@@ -32,7 +32,7 @@ class Student(IdentifiedDataSerializable):
 if __name__ == "__main__":
     config = hazelcast.ClientConfig()
     factory = {Student.CLASS_ID: Student}
-    config.serialization_config.add_data_serializable_factory(Student.FACTORY_ID, factory)
+    config.serialization.add_data_serializable_factory(Student.FACTORY_ID, factory)
 
     client = hazelcast.HazelcastClient(config)
 

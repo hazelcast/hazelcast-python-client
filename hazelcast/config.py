@@ -33,15 +33,17 @@ class ClientConfig(object):
 
         self.cluster_name = _DEFAULT_CLUSTER_NAME
 
-        self.network_config = ClientNetworkConfig()
+        self.network = ClientNetworkConfig()
         """The network configuration for addresses to connect, smart-routing, socket-options..."""
         """ Lifecycle Listeners, an array of Functions of f(state)"""
         """Flake ID generator configuration which maps "config-name" : FlakeIdGeneratorConfig """
 
-        self.serialization_config = SerializationConfig()
+        self.connection_strategy = ConnectionStrategyConfig()
+
+        self.serialization = SerializationConfig()
         """Hazelcast serialization configuration"""
 
-        self.near_cache_configs = {}  # map_name:NearCacheConfig
+        self.near_caches = {}  # map_name:NearCacheConfig
         """Near Cache configuration which maps "map-name : NearCacheConfig"""
 
         self._properties = {}
@@ -55,7 +57,7 @@ class ClientConfig(object):
 
         self.lifecycle_listeners = []
 
-        self.flake_id_generator_configs = {}
+        self.flake_id_generators = {}
 
         self.logger_config = LoggerConfig()
         """Logger configuration."""
@@ -96,7 +98,7 @@ class ClientConfig(object):
         :param near_cache_config: (NearCacheConfig), the near_cache config to add.
         :return: `self` for cascading configuration.
         """
-        self.near_cache_configs[near_cache_config.name] = near_cache_config
+        self.near_caches[near_cache_config.name] = near_cache_config
         return self
 
     def add_flake_id_generator_config(self, flake_id_generator_config):
@@ -106,7 +108,7 @@ class ClientConfig(object):
         :param flake_id_generator_config: (FlakeIdGeneratorConfig), the configuration to add
         :return: `self` for cascading configuration
         """
-        self.flake_id_generator_configs[flake_id_generator_config.name] = flake_id_generator_config
+        self.flake_id_generators[flake_id_generator_config.name] = flake_id_generator_config
         return self
 
     def get_property_or_default(self, key, default):
@@ -190,10 +192,10 @@ class ClientNetworkConfig(object):
         The cached table is updated every 10 seconds.
         """
 
-        self.ssl_config = SSLConfig()
+        self.ssl = SSLConfig()
         """SSL configurations for the client."""
 
-        self.cloud_config = ClientCloudConfig()
+        self.cloud = ClientCloudConfig()
         """Hazelcast Cloud configuration to let the client connect the cluster via Hazelcast.cloud"""
 
 
@@ -446,22 +448,22 @@ class ConnectionStrategyConfig(object):
     def __init__(self):
         self.async_start = False
         self.reconnect_mode = RECONNECT_MODE.ON
-        self.connection_retry_config = ConnectionRetryConfig()
+        self.connection_retry = ConnectionRetryConfig()
 
 
-_DEFAULT_INITIAL_BACKOFF_MILLIS = 1000
-_DEFAULT_MAX_BACKOFF_MILLIS = 30000
-_DEFAULT_CLUSTER_CONNECT_TIMEOUT_MILLIS = 20000
+_DEFAULT_INITIAL_BACKOFF = 1
+_DEFAULT_MAX_BACKOFF = 30
+_DEFAULT_CLUSTER_CONNECT_TIMEOUT = 20
 _DEFAULT_MULTIPLIER = 1
 _DEFAULT_JITTER = 0
 
 
 class ConnectionRetryConfig(object):
     def __init__(self):
-        self._initial_backoff_millis = _DEFAULT_INITIAL_BACKOFF_MILLIS
-        self._max_backoff_millis = _DEFAULT_MAX_BACKOFF_MILLIS
+        self._initial_backoff = _DEFAULT_INITIAL_BACKOFF
+        self._max_backoff = _DEFAULT_MAX_BACKOFF
         self._multiplier = _DEFAULT_MULTIPLIER
-        self._connect_timeout_millis = _DEFAULT_CLUSTER_CONNECT_TIMEOUT_MILLIS
+        self._connect_timeout = _DEFAULT_CLUSTER_CONNECT_TIMEOUT
         self._jitter = _DEFAULT_JITTER
 
 

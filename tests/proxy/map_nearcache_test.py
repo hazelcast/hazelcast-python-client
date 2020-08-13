@@ -26,7 +26,7 @@ class MapTest(SingleMemberTestCase):
         return super(MapTest, cls).configure_client(config)
 
     def setUp(self):
-        name = list(self.client.config.near_cache_configs.values())[0].name
+        name = list(self.client.config.near_caches.values())[0].name
         self.map = self.client.get_map(name).blocking()
 
     def tearDown(self):

@@ -42,15 +42,15 @@ def get_ssl_config(enable_ssl=False,
                    attempt_limit=1):
     config = ClientConfig()
 
-    config.network_config.ssl_config.enabled = enable_ssl
-    config.network_config.ssl_config.cafile = cafile
-    config.network_config.ssl_config.certfile = certfile
-    config.network_config.ssl_config.keyfile = keyfile
-    config.network_config.ssl_config.password = password
-    config.network_config.ssl_config.protocol = protocol
-    config.network_config.ssl_config.ciphers = ciphers
+    config.network.ssl.enabled = enable_ssl
+    config.network.ssl.cafile = cafile
+    config.network.ssl.certfile = certfile
+    config.network.ssl.keyfile = keyfile
+    config.network.ssl.password = password
+    config.network.ssl.protocol = protocol
+    config.network.ssl.ciphers = ciphers
 
-    config.network_config.connection_attempt_limit = attempt_limit
+    config.network.connection_attempt_limit = attempt_limit
     return config
 
 

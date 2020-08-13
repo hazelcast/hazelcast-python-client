@@ -22,7 +22,7 @@ class GlobalSerializer(StreamSerializer):
 
 if __name__ == "__main__":
     config = ClientConfig()
-    config.serialization_config.global_serializer = GlobalSerializer
+    config.serialization.global_serializer = GlobalSerializer
     # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
     hz = hazelcast.HazelcastClient(config)
     # GlobalSerializer will serialize/deserialize all non-builtin types

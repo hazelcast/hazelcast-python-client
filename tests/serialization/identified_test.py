@@ -122,8 +122,8 @@ class IdentifiedSerializationTestCase(unittest.TestCase):
 
     def test_encode_decode(self):
         config = hazelcast.ClientConfig()
-        config.serialization_config.data_serializable_factories[FACTORY_ID] = the_factory
-        service = SerializationServiceV1(config.serialization_config)
+        config.serialization.data_serializable_factories[FACTORY_ID] = the_factory
+        service = SerializationServiceV1(config.serialization)
         obj = create_identified()
         data = service.to_data(obj)
 
@@ -133,15 +133,15 @@ class IdentifiedSerializationTestCase(unittest.TestCase):
     def test_encode_decode_respect_bytearray_fields(self):
         config = hazelcast.ClientConfig()
         config.set_property("hazelcast.serialization.input.returns.bytearray", True)
-        config.serialization_config.data_serializable_factories[FACTORY_ID] = the_factory
-        service = SerializationServiceV1(config.serialization_config, properties=ClientProperties(config.get_properties()))
+        config.serialization.data_serializable_factories[FACTORY_ID] = the_factory
+        service = SerializationServiceV1(config.serialization, properties=ClientProperties(config.get_properties()))
         obj = create_identified_with_bytearray()
         data = service.to_data(obj)
 
         obj2 = service.to_object(data)
         self.assertTrue(obj == obj2)
 
-        service = SerializationServiceV1(config.serialization_config)
+        service = SerializationServiceV1(config.serialization)
 
         obj2 = service.to_object(data)
         self.assertFalse(obj == obj2)

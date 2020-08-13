@@ -12,6 +12,8 @@ from hazelcast.util import AtomicInteger
 from hazelcast.six.moves import queue
 from hazelcast import six
 
+logger = logging.getLogger(__name__)
+
 
 class Invocation(object):
     sent_connection = None
@@ -56,7 +58,6 @@ class Invocation(object):
 
 
 class InvocationService(object):
-    logger = logging.getLogger("HazelcastClient.InvocationService")
 
     def __init__(self, client):
         self._pending = {}
@@ -64,12 +65,12 @@ class InvocationService(object):
         self._client = client
         self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
         self._event_queue = queue.Queue()
-        self._is_redo_operation = client.config.network_config.redo_operation
+        self._is_redo_operation = client.config.network.redo_operation
         self.invocation_retry_pause = self._init_invocation_retry_pause()
         self.invocation_timeout = self._init_invocation_timeout()
         self._listener_service = None
 
-        if client.config.network_config.smart_routing:
+        if client.config.network.smart_routing:
             self.invoke = self.invoke_smart
         else:
             self.invoke = self.invoke_non_smart
@@ -181,7 +182,7 @@ class InvocationService(object):
         if invocation.event_handler is not None:
             self._listener_service.add_event_handler(correlation_id, invocation.event_handler)
 
-        self.logger.debug("Sending %s to %s", message, connection, extra=self._logger_extras)
+        logger.debug("Sending %s to %s", message, connection, extra=self._logger_extras)
 
         if not ignore_heartbeat and not connection.heartbeating:
             self._handle_exception(invocation, TargetDisconnectedError("%s has stopped heart beating." % connection))
@@ -201,7 +202,7 @@ class InvocationService(object):
             self._listener_service.handle_client_message(message)
             return
         if correlation_id not in self._pending:
-            self.logger.warning("Got message with unknown correlation id: %s", message, extra=self._logger_extras)
+            logger.warning("Got message with unknown correlation id: %s", message, extra=self._logger_extras)
             return
         invocation = self._pending.pop(correlation_id)
 
@@ -215,12 +216,12 @@ class InvocationService(object):
         try:
             invocation.event_handler(message)
         except:
-            self.logger.warning("Error handling event %s", message, exc_info=True, extra=self._logger_extras)
+            logger.warning("Error handling event %s", message, exc_info=True, extra=self._logger_extras)
 
     def _handle_exception(self, invocation, error, traceback=None):
-        if self.logger.isEnabledFor(logging.DEBUG):
-            self.logger.debug("Got exception for request %s: %s: %s", invocation.request, type(error).__name__, error,
-                              extra=self._logger_extras)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Got exception for request %s: %s: %s", invocation.request, type(error).__name__, error,
+                         extra=self._logger_extras)
 
         if not self._client.lifecycle.is_live:
             invocation.set_exception(HazelcastClientNotActiveException(error.args[0]), traceback)
@@ -235,9 +236,9 @@ class InvocationService(object):
             return
 
         if invocation.timeout < time.time():
-            if self.logger.isEnabledFor(logging.DEBUG):
-                self.logger.debug('Error will not be retried because invocation timed out: %s', error,
-                                  extra=self._logger_extras)
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug('Error will not be retried because invocation timed out: %s', error,
+                             extra=self._logger_extras)
             invocation.set_exception(TimeoutError(
                 '%s timed out because an error occurred after invocation timeout: %s' % (invocation.request, error),
                 traceback))

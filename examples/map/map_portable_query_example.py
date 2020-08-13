@@ -37,7 +37,7 @@ class Employee(Portable):
 if __name__ == '__main__':
     config = hazelcast.ClientConfig()
 
-    config.serialization_config.portable_factories[Employee.FACTORY_ID] = \
+    config.serialization.portable_factories[Employee.FACTORY_ID] = \
         {Employee.CLASS_ID: Employee}
 
     client = hazelcast.HazelcastClient(config)

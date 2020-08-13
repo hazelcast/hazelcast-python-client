@@ -8,11 +8,11 @@ if __name__ == "__main__":
     config.group_config.password = "password"
 
     # Enable SSL for encryption. Default CA certificates will be used.
-    config.network_config.ssl_config.enabled = True
+    config.network.ssl.enabled = True
 
     # Enable Hazelcast.Cloud configuration and set the token of your cluster.
-    config.network_config.cloud_config.enabled = True
-    config.network_config.cloud_config.discovery_token = "token"
+    config.network.cloud.enabled = True
+    config.network.cloud.discovery_token = "token"
 
     # Start a new Hazelcast client with this configuration.
     client = hazelcast.HazelcastClient(config)

@@ -9,12 +9,13 @@ LIFECYCLE_STATE_DISCONNECTED = "DISCONNECTED"
 LIFECYCLE_STATE_SHUTTING_DOWN = "SHUTTING_DOWN"
 LIFECYCLE_STATE_SHUTDOWN = "SHUTDOWN"
 
+logger = logging.getLogger(__name__)
+
 
 class LifecycleService(object):
     """
     LifecycleService allows you to shutdown, terminate, and listen to LifecycleEvent's on HazelcastInstances.
     """
-    logger = logging.getLogger("HazelcastClient.LifecycleService")
     state = None
 
     def __init__(self, config, logger_extras=None):
@@ -62,9 +63,9 @@ class LifecycleService(object):
             self.is_live = False
 
         self.state = new_state
-        self.logger.info(self._git_info + "HazelcastClient is %s", new_state, extra=self._logger_extras)
+        logger.info(self._git_info + "HazelcastClient is %s", new_state, extra=self._logger_extras)
         for listener in list(self._listeners.values()):
             try:
                 listener(new_state)
             except:
-                self.logger.exception("Exception in lifecycle listener", extra=self._logger_extras)
+                logger.exception("Exception in lifecycle listener", extra=self._logger_extras)

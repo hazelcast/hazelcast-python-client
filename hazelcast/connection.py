@@ -1,4 +1,5 @@
 import logging
+import random
 import struct
 import sys
 import threading
@@ -16,26 +17,117 @@ from hazelcast.util import AtomicInteger, calculate_version, UNKNOWN_VERSION
 from hazelcast.version import CLIENT_TYPE, CLIENT_VERSION, SERIALIZATION_VERSION
 from hazelcast import six
 
+logger = logging.getLogger(__name__)
+
 BUFFER_SIZE = 128000
 PROTOCOL_VERSION = 1
+
+
+class _WaitStrategy(object):
+    def __init__(self, initial_backoff, max_backoff, multiplier,
+                 cluster_connect_timeout, jitter, logger_extras):
+        self._initial_backoff = initial_backoff
+        self._max_backoff = max_backoff
+        self._multiplier = multiplier
+        self._cluster_connect_timeout = cluster_connect_timeout
+        self._jitter = jitter
+        self._attempt = None
+        self._cluster_connect_attempt_begin = None
+        self._current_backoff = None
+        self._logger_extras = logger_extras
+
+    def reset(self):
+        self._attempt = 0
+        self._cluster_connect_attempt_begin = time.time()
+        self._current_backoff = min(self._max_backoff, self._initial_backoff)
+
+    def sleep(self):
+        self._attempt += 1
+        now = time.time()
+        time_passed = now - self._cluster_connect_attempt_begin
+        if time_passed > self._cluster_connect_timeout:
+            logger.warning("Unable to get live cluster connection, cluster connect timeout (%d) is reached. "
+                           "Attempt %d." % (self._cluster_connect_timeout, self._attempt), extra=self._logger_extras)
+            return False
+
+        # random between (-jitter * current_backoff, jitter * current_backoff)
+        sleep_time = self._current_backoff + self._current_backoff * self._jitter * (2 * random.random() - 1)
+        sleep_time = min(sleep_time, self._cluster_connect_timeout - time_passed)
+        logger.warning("Unable to get live cluster connection, retry in %ds, attempt: %d, "
+                       "cluster connect timeout: %ds, max backoff: %ds"
+                       % (sleep_time, self._attempt, self._cluster_connect_timeout, self._max_backoff),
+                       extra=self._logger_extras)
+        time.sleep(sleep_time)
+        self._current_backoff = min(self._current_backoff * self._multiplier, self._max_backoff)
+        return True
 
 
 class ConnectionManager(object):
     """
     ConnectionManager is responsible for managing :mod:`Connection` objects.
     """
-    logger = logging.getLogger("HazelcastClient.ConnectionManager")
 
     def __init__(self, client, connection_factory, address_translator):
         self._new_connection_mutex = threading.RLock()
-        self._client = client
         self.connections = {}
         self._pending_connections = {}
         self._socket_map = {}
         self._connection_factory = connection_factory
         self._connection_listeners = []
         self._address_translator = address_translator
-        self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
+
+        self.live = False
+        self._client = client
+        config = self._client.config
+        self._smart_routing_enabled = config.network
+        self._heartbeat_manager = _HeartbeatManager(self._client)
+        self._wait_strategy = self._init_wait_strategy(config)
+        self._connect_all_members_timer = None
+        self._logger_extras = {"client_name": self._client.name, "cluster_name": config.cluster_name}
+
+    def _init_wait_strategy(self, config):
+        retry_config = config.connection_strategy.retry
+        return _WaitStrategy(retry_config.initial_backoff, retry_config.max_backoff, retry_config.multiplier,
+                             retry_config.cluster_connect_timeout, retry_config.jitter, self._logger_extras)
+
+    def _start_connect_all_members_timer(self):
+        connecting_addresses = set()
+
+        def run():
+            lifecycle = self._client.lifecycle
+            if not lifecycle.live:
+                return
+
+            cluster = self._client.cluster
+            for member in cluster.get_members():
+                address = member.address
+
+                if not self.get_connection_from_address(address) and address not in connecting_addresses:
+                    if not lifecycle.live:
+                        continue  # TODO should we break here?
+
+                    if not self.get_connection(member.uuid):
+                        self.get_or_connect(address).add_done_callback(lambda: connecting_addresses.remove(address))
+
+            self._connect_all_members_timer = self._client.reactor.add_timer(1, run)
+
+        self._connect_all_members_timer = self._client.reactor.add_timer(1, run)
+
+    def start(self):
+        if self.live:
+            return
+
+        self.live = True
+        self._heartbeat_manager.start()
+        self._connect_to_cluster()
+        if self._smart_routing_enabled:
+            self._start_connect_all_members_timer()
+
+
+
+
+
+
 
     def add_listener(self, on_connection_opened=None, on_connection_closed=None):
         """
@@ -109,11 +201,11 @@ class ConnectionManager(object):
                         if translated_address is None:
                             raise ValueError("Address translator could not translate address: {}".format(address))
                         connection = self._connection_factory(translated_address,
-                                                              self._client.config.network_config.connection_timeout,
-                                                              self._client.config.network_config.socket_options,
+                                                              self._client.config.network.connection_timeout,
+                                                              self._client.config.network.socket_options,
                                                               connection_closed_callback=self._connection_closed,
                                                               message_callback=self._client.invoker._handle_client_message,
-                                                              network_config=self._client.config.network_config)
+                                                              network_config=self._client.config.network)
                     except IOError:
                         return ImmediateExceptionFuture(sys.exc_info()[1], sys.exc_info()[2])
 
@@ -132,7 +224,7 @@ class ConnectionManager(object):
         :return: Result of authentication.
         """
         if f.is_success():
-            self.logger.info("Authenticated with %s", f.result(), extra=self._logger_extras)
+            logger.info("Authenticated with %s", f.result(), extra=self._logger_extras)
             with self._new_connection_mutex:
                 self.connections[connection.endpoint] = f.result()
                 try:
@@ -144,7 +236,7 @@ class ConnectionManager(object):
                     on_connection_opened(f.result())
             return f.result()
         else:
-            self.logger.debug("Error opening %s", connection, extra=self._logger_extras)
+            logger.debug("Error opening %s", connection, extra=self._logger_extras)
             with self._new_connection_mutex:
                 try:
                     self._pending_connections.pop(address)
@@ -178,13 +270,12 @@ class ConnectionManager(object):
             connection = self.connections[address]
             connection.close(cause)
         except KeyError:
-            self.logger.warning("No connection with %s was found to close.", address, extra=self._logger_extras)
+            logger.warning("No connection with %s was found to close.", address, extra=self._logger_extras)
             return False
 
 
-class HeartbeatManager(object):
+class _HeartbeatManager(object):
     _heartbeat_timer = None
-    logger = logging.getLogger("HazelcastClient.HeartbeatManager")
 
     def __init__(self, client):
         self._client = client
@@ -199,6 +290,7 @@ class HeartbeatManager(object):
         """
         Starts sending periodic HeartBeat operations.
         """
+
         def _heartbeat():
             if not self._conn_manager.is_alive:
                 return
@@ -223,7 +315,7 @@ class HeartbeatManager(object):
 
         if (now - connection.last_read_time) > self._heartbeat_timeout:
             if connection.is_alive():
-                self.logger.warning("Heartbeat failed over the connection: %s" % connection)
+                logger.warning("Heartbeat failed over the connection: %s" % connection)
                 connection.close("Heartbeat timed out",
                                  TargetDisconnectedError("Heartbeat timed out to connection %s" % connection))
 
@@ -322,7 +414,6 @@ class Connection(object):
         self.last_read_time = 0
         self.last_write_time = 0
         self.start_time = 0
-        self.logger = logging.getLogger("HazelcastClient.Connection[%d]" % conn_id)
         self.server_version = UNKNOWN_VERSION
         self.server_version_str = None
         self.live = True
@@ -361,7 +452,7 @@ class Connection(object):
         try:
             self._inner_close()
         except:
-            self.logger.exception("Error while closing the the connection")
+            logger.exception("Error while closing the the connection %s" % self)
         self._conn_manager.on_conn_close(self)
 
     def _log_close(self, reason, cause):
@@ -374,9 +465,9 @@ class Connection(object):
             r = "Socket explicitly closed"
 
         if self._conn_manager.live:
-            self.logger.info(msg % (self, r))
+            logger.info(msg % (self, r))
         else:
-            self.logger.debug(msg % (self, r))
+            logger.debug(msg % (self, r))
 
     def _inner_close(self):
         raise NotImplementedError()
@@ -402,6 +493,7 @@ class DefaultAddressProvider(object):
     Provides initial addresses for client to find and connect to a node.
     It also provides a no-op translator.
     """
+
     def __init__(self, addresses):
         self._addresses = addresses
 
@@ -429,4 +521,3 @@ class DefaultAddressProvider(object):
         with other address providers.
         """
         return address
-

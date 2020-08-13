@@ -9,13 +9,15 @@ from hazelcast import six
 
 try:
     import psutil
+
     PSUTIL_ENABLED = True
 except ImportError:
     PSUTIL_ENABLED = False
 
+logger = logging.getLogger(__name__)
+
 
 class Statistics(object):
-
     _SINCE_VERSION_STRING = "3.9"
     _SINCE_VERSION = calculate_version(_SINCE_VERSION_STRING)
 
@@ -25,8 +27,6 @@ class Statistics(object):
     _EMPTY_STAT_VALUE = ""
 
     _DEFAULT_PROBE_VALUE = 0
-
-    logger = logging.getLogger("HazelcastClient.Statistics")
 
     def __init__(self, client):
         self._client = client
@@ -45,11 +45,11 @@ class Statistics(object):
             default_period = self._client.properties.get_seconds_positive_or_default(
                 ClientProperties.STATISTICS_PERIOD_SECONDS)
 
-            self.logger.warning("Provided client statistics {} cannot be less than or equal to 0."
-                                "You provided {} as the configuration. Client will use the default value "
-                                "{} instead.".format(ClientProperties.STATISTICS_PERIOD_SECONDS.name,
-                                                     period,
-                                                     default_period), extra=self._logger_extras)
+            logger.warning("Provided client statistics {} cannot be less than or equal to 0."
+                           "You provided {} as the configuration. Client will use the default value "
+                           "{} instead.".format(ClientProperties.STATISTICS_PERIOD_SECONDS.name,
+                                                period,
+                                                default_period), extra=self._logger_extras)
             period = default_period
 
         def _statistics_task():
@@ -58,8 +58,8 @@ class Statistics(object):
 
         self._statistics_timer = self._client.reactor.add_timer(period, _statistics_task)
 
-        self.logger.info("Client statistics enabled with the period of {} seconds.".format(period),
-                         extra=self._logger_extras)
+        logger.info("Client statistics enabled with the period of {} seconds.".format(period),
+                    extra=self._logger_extras)
 
     def shutdown(self):
         if self._statistics_timer:
@@ -68,8 +68,8 @@ class Statistics(object):
     def _send_statistics(self):
         owner_connection = self._get_owner_connection()
         if owner_connection is None:
-            self.logger.debug("Cannot send client statistics to the server. No owner connection.",
-                              extra=self._logger_extras)
+            logger.debug("Cannot send client statistics to the server. No owner connection.",
+                         extra=self._logger_extras)
             return
 
         stats = []
@@ -183,10 +183,10 @@ class Statistics(object):
         if server_version < Statistics._SINCE_VERSION:
             # do not print too many logs if connected to an old version server
             if self._cached_owner_address and self._cached_owner_address != current_owner_address:
-                self.logger.debug("Client statistics cannot be sent to server {} since,"
-                                  "connected owner server version is less than the minimum supported server version ,"
-                                  "{}.".format(current_owner_address, Statistics._SINCE_VERSION_STRING),
-                                  extra=self._logger_extras)
+                logger.debug("Client statistics cannot be sent to server {} since,"
+                             "connected owner server version is less than the minimum supported server version ,"
+                             "{}.".format(current_owner_address, Statistics._SINCE_VERSION_STRING),
+                             extra=self._logger_extras)
 
             # cache the last connected server address for decreasing the log prints
             self._cached_owner_address = current_owner_address
@@ -204,19 +204,20 @@ class Statistics(object):
     def _can_collect_stat(self, name):
         return name not in self._failed_gauges
 
+    @staticmethod
     def _safe_psutil_stat_collector(func):
         def safe_wrapper(self, psutil_stats, probe_name, *args):
             # Decorated function's signature must match with above
             try:
                 stat = func(self, psutil_stats, probe_name, *args)
             except AttributeError as ae:
-                self.logger.debug("Unable to register psutil method used for the probe {}. "
-                                  "Cause: {}".format(probe_name, ae), extra=self._logger_extras)
+                logger.debug("Unable to register psutil method used for the probe {}. "
+                             "Cause: {}".format(probe_name, ae), extra=self._logger_extras)
                 self._failed_gauges.add(probe_name)
                 return
             except Exception as ex:
-                self.logger.warning("Failed to access the probe {}. Cause: {}".format(probe_name, ex),
-                                    extra=self._logger_extras)
+                logger.warning("Failed to access the probe {}. Cause: {}".format(probe_name, ex),
+                               extra=self._logger_extras)
                 stat = self._DEFAULT_PROBE_VALUE
 
             psutil_stats[probe_name] = stat
@@ -301,5 +302,3 @@ class Statistics(object):
     @_safe_psutil_stat_collector
     def _collect_process_uptime(self, psutil_stats, probe_name, process):
         return to_millis(current_time() - process.create_time())
-
-

@@ -33,7 +33,7 @@ class Customer(Portable):
 if __name__ == "__main__":
     config = ClientConfig()
     my_factory = {Customer.CLASS_ID: Customer}
-    config.serialization_config.add_portable_factory(Customer.FACTORY_ID, my_factory)
+    config.serialization.add_portable_factory(Customer.FACTORY_ID, my_factory)
     # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
     hz = hazelcast.HazelcastClient(config)
     # Customer can be used here

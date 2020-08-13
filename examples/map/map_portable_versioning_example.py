@@ -125,17 +125,17 @@ if __name__ == '__main__':
 
     # Let's now configure 3 clients with 3 different versions of Employee.
     config = hazelcast.ClientConfig()
-    config.serialization_config.portable_factories[Employee.FACTORY_ID] = \
+    config.serialization.portable_factories[Employee.FACTORY_ID] = \
         {Employee.CLASS_ID: Employee}
     client = hazelcast.HazelcastClient(config)
 
     config2 = hazelcast.ClientConfig()
-    config2.serialization_config.portable_factories[Employee2.FACTORY_ID] = \
+    config2.serialization.portable_factories[Employee2.FACTORY_ID] = \
         {Employee2.CLASS_ID: Employee2}
     client2 = hazelcast.HazelcastClient(config2)
 
     config3 = hazelcast.ClientConfig()
-    config3.serialization_config.portable_factories[Employee3.FACTORY_ID] = \
+    config3.serialization.portable_factories[Employee3.FACTORY_ID] = \
         {Employee3.CLASS_ID: Employee3}
     client3 = hazelcast.HazelcastClient(config3)
 

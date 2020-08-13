@@ -12,7 +12,7 @@ class HazelcastCloudConfigTest(TestCase):
         self.config = ClientConfig()
 
     def test_cloud_config_defaults(self):
-        cloud_config = self.config.network_config.cloud_config
+        cloud_config = self.config.network.cloud
         self.assertEqual(False, cloud_config.enabled)
         self.assertEqual("", cloud_config.discovery_token)
 
@@ -20,9 +20,9 @@ class HazelcastCloudConfigTest(TestCase):
         cloud_config = ClientCloudConfig()
         cloud_config.enabled = True
         cloud_config.discovery_token = self.token
-        self.config.network_config.cloud_config = cloud_config
-        self.assertEqual(True, self.config.network_config.cloud_config.enabled)
-        self.assertEqual(self.token, self.config.network_config.cloud_config.discovery_token)
+        self.config.network.cloud = cloud_config
+        self.assertEqual(True, self.config.network.cloud.enabled)
+        self.assertEqual(self.token, self.config.network.cloud.discovery_token)
 
     def test_cloud_config_with_property(self):
         self.config.set_property(ClientProperties.HAZELCAST_CLOUD_DISCOVERY_TOKEN.name, self.token)
@@ -31,7 +31,7 @@ class HazelcastCloudConfigTest(TestCase):
         self.assertEqual(self.token, token)
 
     def test_cloud_config_with_property_and_client_configuration(self):
-        self.config.network_config.cloud_config.enabled = True
+        self.config.network.cloud.enabled = True
         self.config.set_property(ClientProperties.HAZELCAST_CLOUD_DISCOVERY_TOKEN.name, self.token)
         with self.assertRaises(IllegalStateError):
             client = HazelcastClient(self.config)
