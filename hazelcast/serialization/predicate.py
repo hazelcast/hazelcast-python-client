@@ -209,7 +209,7 @@ class TruePredicate(Predicate):
 class PagingPredicate(Predicate):
     CLASS_ID = 15
 
-    NULL_ANCHOR = (-1, None)
+    __NULL_ANCHOR = (-1, None)
 
     def __init__(self, predicate, page_size, comparator=None):
         """
@@ -229,34 +229,49 @@ class PagingPredicate(Predicate):
         self.page_size = page_size
         self.page = 0  # initialized to be on first page
         self.iteration_type = ITERATION_TYPE.ENTRY  # ENTRY as default.
-        self.anchor_list = []  # List of pairs: (nearest page, (K, V))
+        self.anchor_list = []  # List of pairs: (nearest page, (anchor key, anchor value))
 
     def __repr__(self):
         return "PagingPredicate(predicate=%s, page_size=%s, comparator=%s)" % (self.internal_predicate,
                                                                                self.page_size, self.comparator)
 
-    def write_data(self, object_data_output):
-        object_data_output.write_object(self.internal_predicate)
-        object_data_output.write_object(self.comparator)
-        object_data_output.write_int(self.page)
-        object_data_output.write_int(self.page_size)
-        object_data_output.write_utf(ITERATION_TYPE.reverse.get(self.iteration_type, None))
-        object_data_output.write_int(len(self.anchor_list))
-        for anchor_entry in self.anchor_list:
-            object_data_output.write_int(anchor_entry[0])
-            object_data_output.write_object(anchor_entry[1][0])
-            object_data_output.write_object(anchor_entry[1][1])
+    def write_data(self, output):
+        output.write_object(self.internal_predicate)
+        output.write_object(self.comparator)
+        output.write_int(self.page)
+        output.write_int(self.page_size)
+        output.write_utf(ITERATION_TYPE.reverse.get(self.iteration_type, None))
+        output.write_int(len(self.anchor_list))
+        for nearest_page, (anchor_key, anchor_value) in self.anchor_list:
+            output.write_int(nearest_page)
+            output.write_object(anchor_key)
+            output.write_object(anchor_value)
 
     def next_page(self):
+        """
+        Sets page index to next page. If new index is out of range, the query results that this paging predicate will
+        retrieve will be an empty list.
+        :return (int) current page index
+        """
         self.page += 1
         return self.page
 
     def previous_page(self):
+        """
+        If current page index is 0, this method does nothing. Otherwise, it sets page index to previous page.
+        :return (int) current page index
+        """
         if self.page != 0:
             self.page -= 1
         return self.page
 
     def set_page(self, page_no):
+        """
+        Sets page index to specified page_no.
+        If page_no is out of range, the query results that this paging predicate will retrieve will be an empty list.
+        :param page_no: (int) greater than or equal to 0.
+        :return (int) current page index
+        """
         if page_no < 0:
             raise ValueError('page_no should be positive or 0.')
         self.page = page_no
@@ -301,7 +316,7 @@ class PagingPredicate(Predicate):
         """
         anchor_count = len(self.anchor_list)
         if self.page == 0 or anchor_count == 0:
-            return PagingPredicate.NULL_ANCHOR
+            return PagingPredicate.__NULL_ANCHOR
         return self.anchor_list[self.page - 1] if self.page < anchor_count else self.anchor_list[anchor_count - 1]
 
     def get_iteration_type(self):

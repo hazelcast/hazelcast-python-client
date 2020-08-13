@@ -8,7 +8,6 @@ from collections import Sequence, Iterable
 from hazelcast import six
 from hazelcast.six.moves import range
 from hazelcast.version import GIT_COMMIT_ID, GIT_COMMIT_DATE, CLIENT_VERSION
-#from hazelcast.serialization.predicate import PagingPredicate
 
 DEFAULT_ADDRESS = "127.0.0.1"
 DEFAULT_PORT = 5701
@@ -349,7 +348,9 @@ def to_list(*args, **kwargs):
 
 
 def cmp_to_key(cmp):
-    # 'Convert a cmp= function into a key= function'
+    """
+    Converts a cmp= function into a key= function to be used in list.sort()
+    """
     if cmp is None:
         return None
 
@@ -358,7 +359,6 @@ def cmp_to_key(cmp):
             self.obj = obj
 
         def __lt__(self, other):
-
             return cmp(self.obj, other.obj) < 0
 
         def __gt__(self, other):
@@ -386,7 +386,7 @@ def get_sorted_query_result_set(result_list_future, paging_predicate):
     :param result_list_future, a future that returns a list of (K,V) pairs to sort and slice based on paging_predicate
     attributes.
     :param paging_predicate
-    :return: list of sorted query results
+    :return list of sorted query results
     """
     result_list = result_list_future.result()
     if len(result_list) == 0:
@@ -410,14 +410,12 @@ def get_sorted_query_result_set(result_list_future, paging_predicate):
 
     _set_anchor(result_list, paging_predicate, nearest_page)
 
-    sorted_query_result_set = result_list[begin:end]
-
     if iteration_type == ITERATION_TYPE.ENTRY:
-        return sorted_query_result_set[:]
+        return result_list[begin:end]
     elif iteration_type == ITERATION_TYPE.KEY:
-        return [x[0] for x in sorted_query_result_set]
+        return [result_list[i][0] for i in range(begin, end)]
     elif iteration_type == ITERATION_TYPE.VALUE:
-        return [x[1] for x in sorted_query_result_set]
+        return [result_list[i][1] for i in range(begin, end)]
 
 
 def _set_anchor(result_list, paging_predicate, nearest_page):
@@ -427,7 +425,6 @@ def _set_anchor(result_list, paging_predicate, nearest_page):
     :param nearest_page is the index of the page that the last anchor belongs to
     """
     list_size = len(result_list)
-    assert list_size > 0
     page = paging_predicate.get_page()
     page_size = paging_predicate.get_page_size()
     for i in range(page_size, list_size, page_size):
@@ -435,6 +432,8 @@ def _set_anchor(result_list, paging_predicate, nearest_page):
             anchor = result_list[i-1]
             nearest_page += 1
             paging_predicate.set_anchor(nearest_page, anchor)
+        else:
+            break
 
 
 def _get_comparison_key(comparator, iteration_type):
@@ -443,7 +442,7 @@ def _get_comparison_key(comparator, iteration_type):
     :param iteration_type
     :return: key function to be used in sorting
     """
-    if comparator is not None:
+    if comparator:
         return cmp_to_key(comparator.compare)
     else:
         if iteration_type == ITERATION_TYPE.KEY:

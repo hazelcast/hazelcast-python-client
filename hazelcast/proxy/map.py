@@ -229,7 +229,7 @@ class Map(Proxy):
         """
         if predicate:
             if isinstance(predicate, PagingPredicate):
-                predicate.set_iteration_type = ITERATION_TYPE.ENTRY
+                predicate.set_iteration_type(ITERATION_TYPE.ENTRY)
                 predicate_data = self._to_data(predicate)
                 result_list_future = self._encode_invoke(map_entries_with_paging_predicate_codec, predicate=predicate_data)
                 return result_list_future.continue_with(get_sorted_query_result_set, predicate)

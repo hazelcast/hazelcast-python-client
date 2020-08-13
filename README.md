@@ -2280,9 +2280,9 @@ students_fourth = student_map.values(paging_predicate)
 
 If you want to sort the result in a specific way before paging, you need to specify a custom comparator object that extends `hazelcast.core.Comparator`, which
 provides an interface to a comparator object to compare two map entries in a distributed map. Also, this comparator class should extend one of `IdentifiedDataSerializable` or `Portable` to be Hazelcast-serializable.
-After implementing this class in Python, you need to implement the Java equivalent of it and its factory. The Java equivalent of the comparator should implement `java.util.Comparator`. Note that the `Compare` function of `Comparator` on the Java side is the equivalent of the `compare` function of `Comparator` on the Python side.
+After implementing this class in Python, you need to implement the Java equivalent of it and its factory. The Java equivalent of the comparator should implement `java.util.Comparator`. Note that the `compare` function of `Comparator` on the Java side is the equivalent of the `compare` function of `Comparator` on the Python side.
 When you implement the Comparator and its factory, you can add them to the CLASSPATH of the server side.
-See the Adding User Library to CLASSPATH section.
+See the [Adding User Library to CLASSPATH](#1212-adding-user-library-to-classpath) section.
 
 If no custom comparator is specified for paging, Python will sort the query results according to built-in sorting key.
 
