@@ -204,7 +204,6 @@ class Statistics(object):
     def _can_collect_stat(self, name):
         return name not in self._failed_gauges
 
-    @staticmethod
     def _safe_psutil_stat_collector(func):
         def safe_wrapper(self, psutil_stats, probe_name, *args):
             # Decorated function's signature must match with above

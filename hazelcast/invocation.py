@@ -4,7 +4,7 @@ import time
 import functools
 
 from hazelcast.exception import create_exception, HazelcastInstanceNotActiveError, is_retryable_error, TimeoutError, \
-    TargetDisconnectedError, HazelcastClientNotActiveException, TargetNotMemberError
+    TargetDisconnectedError, HazelcastClientNotActiveError, TargetNotMemberError
 from hazelcast.future import Future
 from hazelcast.lifecycle import LIFECYCLE_STATE_CONNECTED
 from hazelcast.protocol.custom_codec import EXCEPTION_MESSAGE_TYPE, ErrorCodec
@@ -224,7 +224,7 @@ class InvocationService(object):
                          extra=self._logger_extras)
 
         if not self._client.lifecycle.is_live:
-            invocation.set_exception(HazelcastClientNotActiveException(error.args[0]), traceback)
+            invocation.set_exception(HazelcastClientNotActiveError(error.args[0]), traceback)
             return
 
         if self._is_not_allowed_to_retry_on_selection(invocation, error):

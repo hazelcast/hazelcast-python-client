@@ -5,15 +5,18 @@ import sys
 import threading
 import time
 import io
+import uuid
+from collections import OrderedDict
 
 from hazelcast.core import AddressHelper
-from hazelcast.exception import AuthenticationError, TargetDisconnectedError
+from hazelcast.exception import AuthenticationError, TargetDisconnectedError, HazelcastClientNotActiveError, \
+    InvalidConfigurationError, ClientNotAllowedInClusterError, IllegalStateError
 from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
 from hazelcast.invocation import Invocation
 from hazelcast.protocol.client_message import SIZE_OF_FRAME_LENGTH_AND_FLAGS, Frame, InboundMessage, \
     ClientMessageBuilder
 from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
-from hazelcast.util import AtomicInteger, calculate_version, UNKNOWN_VERSION
+from hazelcast.util import AtomicInteger, calculate_version, UNKNOWN_VERSION, enum
 from hazelcast.version import CLIENT_TYPE, CLIENT_VERSION, SERIALIZATION_VERSION
 from hazelcast import six
 
@@ -62,16 +65,16 @@ class _WaitStrategy(object):
         return True
 
 
+_AuthenticationStatus = enum(AUTHENTICATED=0, CREDENTIALS_FAILED=1,
+                             SERIALIZATION_VERSION_MISMATCH=2, NOT_ALLOWED_IN_CLUSTER=3)
+
 class ConnectionManager(object):
     """
     ConnectionManager is responsible for managing :mod:`Connection` objects.
     """
 
-    def __init__(self, client, connection_factory, address_translator):
+    def __init__(self, client, connection_factory, address_provider):
         self._new_connection_mutex = threading.RLock()
-        self.connections = {}
-        self._pending_connections = {}
-        self._socket_map = {}
         self._connection_factory = connection_factory
         self._connection_listeners = []
         self._address_translator = address_translator
@@ -83,6 +86,18 @@ class ConnectionManager(object):
         self._heartbeat_manager = _HeartbeatManager(self._client)
         self._wait_strategy = self._init_wait_strategy(config)
         self._connect_all_members_timer = None
+        self._async_start = config.connection_strategy.async_start
+        self._connect_to_cluster_timer_started = False
+        self._connect_to_cluster_timer = None
+        self._active_connections = dict()  # access should be synchronized with self._conn_mux
+        self._pending_connections = dict()  # access should be synchronized with self._conn_mux
+        props = self._client.properties
+        self._shuffle_member_list = props.get_bool(props.SHUFFLE_MEMBER_LIST)
+        self._address_provider = address_provider
+        self._conn_mux = threading.RLock()
+        self._connection_id_generator = AtomicInteger()
+        self._client_uuid = uuid.uuid4()
+        self._labels = config.labels
         self._logger_extras = {"client_name": self._client.name, "cluster_name": config.cluster_name}
 
     def _init_wait_strategy(self, config):
@@ -123,11 +138,156 @@ class ConnectionManager(object):
         if self._smart_routing_enabled:
             self._start_connect_all_members_timer()
 
+    def connect_to_all_cluster_members(self):
+        if not self._smart_routing_enabled:
+            return
+
+        for member in self._client.cluster.get_members():
+            try:
+                self._get_or_connect(member.address).result()
+            except:
+                pass
+
+    def _connect_to_cluster(self):
+        if self._async_start:
+            # TODO should be executed in another thread
+            # self._start_connect_to_cluster_timer()
+            pass
+        else:
+            self._sync_connect_to_cluster()
+
+    def _start_connect_to_cluster_timer(self):
+        if self._connect_to_cluster_timer_started:
+            return
+
+        def _start():
+            try:
+                self._sync_connect_to_cluster()
+                self._connect_to_cluster_timer_started = False
+                if not self._active_connections:
+                    reactor = self._client.reactor
+                    self._connect_to_cluster_timer = reactor.add_timer(0, self._start_connect_to_cluster_timer)
+            except:
+                logger.exception("Could not connect to any cluster, shutting down the client")
+                self._shutdown_client()
+
+        self._connect_to_cluster_timer = self._client.reactor.add_timer(0, _start)
+        self._connect_to_cluster_timer_started = True
+
+    def _shutdown_client(self):
+        try:
+            self._client.lifecycle.shutdown()
+        except:
+            logger.exception("Exception during client shutdown")
+
+    def _sync_connect_to_cluster(self):
+        tried_addresses = set()
+        self._wait_strategy.reset()
+        try:
+            while True:
+                for address in self._get_possible_addresses(self._address_provider):
+                    self._check_client_active()
+                    tried_addresses.add(address)
+                    connection = self._connect(address)
+                    if connection:
+                        return
+                # If the address providers load no addresses (which seems to be possible),
+                # then the above loop is not entered and the lifecycle check is missing,
+                # hence we need to repeat the same check at this point.
+                self._check_client_active()
+                if not self._wait_strategy.sleep():
+                    break
+        except (ClientNotAllowedInClusterError, InvalidConfigurationError):
+            cluster_name = self._client.config.cluster_name
+            logger.exception("Stopped trying on cluster %s" % cluster_name)
+
+        cluster_name = self._client.config.cluster_name
+        logger.info("Unable to connect to any address from the cluster with name: %s. "
+                    "The following addresses were tried: %s" % (cluster_name, tried_addresses))
+        if self._client.lifecycle.live:
+            msg = "Unable to connect to any cluster"
+        else:
+            msg = "Client is being shutdown"
+        raise IllegalStateError(msg)
+
+    def _connect(self, address):
+        logger.info("Trying to connect to %s" % address)
+        try:
+            return self._get_or_connect(address).result()
+        except (ClientNotAllowedInClusterError, InvalidConfigurationError) as e:
+            logger.exception("Error during initial connection to %s" % address)
+            raise e
+        except:
+            logger.exception("Error during initial connection to %s" % address)
+            return None
+
+    def _get_or_connect(self, address):
+        with self._conn_mux:
+            addr = self._active_connections.get(address, None)
+            if addr:
+                return ImmediateFuture(addr)
+            else:
+                pending = self._pending_connections.get(address, None)
+                if pending:
+                    return pending
+                else:
+                    try:
+                        translated = self._address_provider.translate(address)
+                        if not translated:
+                            return ImmediateExceptionFuture(
+                                ValueError("Address translator could not translate address %s" % address))
+
+                        connection = self._connection_factory(self, self._connection_id_generator.get_and_increment(),
+                                                              translated, self._client.config.network,
+                                                              self._client.invoker.handle_mesasge)
+                    except IOError:
+                        return ImmediateExceptionFuture(sys.exc_info()[1], sys.exc_info()[2])
+
+                    future = self._authenticate(connection).continue_with(self._on_auth, connection, translated)
+                    self._pending_connections[translated] = future
+                    return future
+
+    def _authenticate(self, connection):
+        client = self._client
+        cluster_name = client.config.cluster_name
+        client_name = client.name
+        request = client_authentication_codec.encode_request(cluster_name, None, None, self._client_uuid,
+                                                             CLIENT_TYPE, SERIALIZATION_VERSION, CLIENT_VERSION,
+                                                             client_name, self._labels)
+        return client.invoker.invoke_on_connection(request, connection)
+
+    def _on_auth(self, response, connection, address):
+        response = client_authentication_codec.decode_response(response)
+        status = response["status"]
+        if status == _AuthenticationStatus.AUTHENTICATED:
 
 
+    def _handle_successful_auth(self, connection, response):
+        pass
 
+    def _check_client_active(self):
+        if not self._client.lifecycle.live:
+            raise HazelcastClientNotActiveError()
 
+    def _get_possible_addresses(self, address_provider):
+        member_addresses = list(map(lambda m: (m.address, None), self._client.cluster.get_members()))
 
+        if self._shuffle_member_list:
+            random.shuffle(member_addresses)
+
+        addresses = OrderedDict(member_addresses)
+        primaries, secondaries = address_provider.load_addresses()
+        if self._shuffle_member_list:
+            random.shuffle(primaries)
+            random.shuffle(secondaries)
+
+        for address in primaries:
+            addresses[address] = None
+
+        for address in secondaries:
+            addresses[address] = None
+
+        return six.iterkeys(addresses)
 
     def add_listener(self, on_connection_opened=None, on_connection_closed=None):
         """
@@ -188,31 +348,7 @@ class ConnectionManager(object):
         :param authenticator: (Function), function to be used for authentication (optional).
         :return: (:class:`~hazelcast.connection.Connection`), the existing connection or it returns a Future which includes asynchronously.
         """
-        if address in self.connections:
-            return ImmediateFuture(self.connections[address])
-        else:
-            with self._new_connection_mutex:
-                if address in self._pending_connections:
-                    return self._pending_connections[address]
-                else:
-                    authenticator = authenticator or self._cluster_authenticator
-                    try:
-                        translated_address = self._address_translator.translate(address)
-                        if translated_address is None:
-                            raise ValueError("Address translator could not translate address: {}".format(address))
-                        connection = self._connection_factory(translated_address,
-                                                              self._client.config.network.connection_timeout,
-                                                              self._client.config.network.socket_options,
-                                                              connection_closed_callback=self._connection_closed,
-                                                              message_callback=self._client.invoker._handle_client_message,
-                                                              network_config=self._client.config.network)
-                    except IOError:
-                        return ImmediateExceptionFuture(sys.exc_info()[1], sys.exc_info()[2])
-
-                    future = authenticator(connection).continue_with(self.on_auth, connection, address)
-                    if not future.done():
-                        self._pending_connections[address] = future
-                    return future
+        pass
 
     def on_auth(self, f, connection, address):
         """

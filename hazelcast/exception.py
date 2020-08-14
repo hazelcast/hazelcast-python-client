@@ -360,8 +360,9 @@ class ConsistencyLostError(HazelcastError):
     pass
 
 
-class HazelcastClientNotActiveException(ValueError):
-    pass
+class HazelcastClientNotActiveError(ValueError):
+    def __init__(self):
+        super(HazelcastClientNotActiveError, self).__init__("Client is not active")
 
 
 class HazelcastCertificationError(HazelcastError):
@@ -371,6 +372,10 @@ class HazelcastCertificationError(HazelcastError):
 class ClientOfflineError(HazelcastError):
     def __init__(self):
         super(ClientOfflineError, self).__init__("No connection found to cluster")
+
+
+class ClientNotAllowedInClusterError(HazelcastError):
+    pass
 
 
 ERROR_CODE_TO_ERROR = {

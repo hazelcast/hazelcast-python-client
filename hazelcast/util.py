@@ -130,7 +130,8 @@ class AtomicInteger(object):
     AtomicInteger is an Integer which can work atomically.
     """
     def __init__(self, initial=0):
-        self.count = itertools.count(start=initial)
+        self._mux = threading.RLock()
+        self._counter = initial
 
     def get_and_increment(self):
         """
@@ -138,14 +139,10 @@ class AtomicInteger(object):
 
         :return: (int), current value of AtomicInteger.
         """
-        return next(self.count)
-
-    def set(self, value):
-        """
-        Sets the value of this AtomicInteger.
-        :param value: (int), the new value of AtomicInteger.
-        """
-        self.count = itertools.count(start=value)
+        with self._mux:
+            res = self._counter
+            self._counter += 1
+            return res
 
 
 def enum(**enums):

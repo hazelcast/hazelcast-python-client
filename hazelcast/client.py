@@ -5,7 +5,7 @@ import json
 
 from hazelcast.cluster import ClusterService, RandomLoadBalancer
 from hazelcast.config import ClientConfig, ClientProperties
-from hazelcast.connection import ConnectionManager, HeartbeatManager, DefaultAddressProvider
+from hazelcast.connection import ConnectionManager, DefaultAddressProvider
 from hazelcast.core import DistributedObjectInfo
 from hazelcast.invocation import InvocationService
 from hazelcast.listener import ListenerService

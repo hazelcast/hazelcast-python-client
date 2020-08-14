@@ -679,10 +679,11 @@ class ClientProperties(object):
     Period in seconds to collect statistics.
     """
 
-    SERIALIZATION_INPUT_RETURNS_BYTEARRAY = ClientProperty("hazelcast.serialization.input.returns.bytearray", False)
+    SHUFFLE_MEMBER_LIST = ClientProperty("hazelcast.client.shuffle.member.list", True)
     """
-    Input#read_byte_array returns a List if property is False, otherwise it will return a byte-array.
-    Changing this to True, gives a considerable performance benefit.
+    Client shuffles the given member list to prevent all clients to connect to the same node when
+    this property is set to true. When it is set to false, the client tries to connect to the nodes
+    in the given order.
     """
 
     def __init__(self, properties):

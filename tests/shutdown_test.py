@@ -1,5 +1,5 @@
 from hazelcast import ClientConfig
-from hazelcast.exception import HazelcastClientNotActiveException
+from hazelcast.exception import HazelcastClientNotActiveError
 from tests.base import HazelcastTestCase
 from tests.util import configure_logging
 
@@ -23,6 +23,6 @@ class ShutdownTest(HazelcastTestCase):
         my_map = client.get_map("test")
         my_map.put("key", "value").result()
         member.shutdown()
-        with self.assertRaises(HazelcastClientNotActiveException):
+        with self.assertRaises(HazelcastClientNotActiveError):
             while True:
                 my_map.get("key").result()
