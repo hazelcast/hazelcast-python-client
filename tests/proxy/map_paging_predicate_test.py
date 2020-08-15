@@ -14,29 +14,37 @@ from hazelcast.core import Comparator
 
 class MapPagingPredicateTest(HazelcastTestCase):
 
+    @staticmethod
+    def _configure_cluster():
+        current_directory = os.path.dirname(__file__)
+        with open(get_abs_path(current_directory, "hazelcast.xml"), "r") as f:
+            return f.read()
+
     @classmethod
     def setUpClass(cls):
         configure_logging()
+        cls.rc = cls.create_rc()
+        cls.cluster = cls.create_cluster(cls.rc, MapPagingPredicateTest._configure_cluster())
+        cls.member1 = cls.cluster.start_member()
+        cls.member2 = cls.cluster.start_member()
+        cls.client = HazelcastClient()
+        cls.map = cls.client.get_map(random_string()).blocking()
 
     def setUp(self):
-        self.rc = self.create_rc()
-        self.cluster = self.create_cluster(self.rc, self._configure_cluster())
-        self.member1 = self.cluster.start_member()
-        self.member2 = self.cluster.start_member()
-        self.client = HazelcastClient()
-        self.map = self.client.get_map(random_string())
+        self.map.clear()
 
-    def tearDown(self):
-        self.map.destroy()
-        self.client.shutdown()
-        self.rc.exit()
+    @classmethod
+    def tearDownClass(cls):
+        cls.map.destroy()
+        cls.client.shutdown()
+        cls.rc.exit()
 
     """
     Tests for proxy: comparator None
     """
     def test_entry_set_with_paging_predicate(self):
         self._fill_map_simple()
-        entry_set = self.map.entry_set(PagingPredicate(is_greater_than_or_equal_to('this', 3), 1)).result()
+        entry_set = self.map.entry_set(PagingPredicate(is_greater_than_or_equal_to('this', 3), 1))
 
         def assert_event():
             self.assertEqual(len(entry_set), 1)
@@ -46,7 +54,7 @@ class MapPagingPredicateTest(HazelcastTestCase):
 
     def test_key_set_with_paging_predicate(self):
         self._fill_map_simple()
-        key_set = self.map.key_set(PagingPredicate(is_greater_than_or_equal_to('this', 3), 1)).result()
+        key_set = self.map.key_set(PagingPredicate(is_greater_than_or_equal_to('this', 3), 1))
 
         def assert_event():
             self.assertEqual(len(key_set), 1)
@@ -56,7 +64,7 @@ class MapPagingPredicateTest(HazelcastTestCase):
 
     def test_values_with_paging_predicate(self):
         self._fill_map_simple()
-        values = self.map.values(PagingPredicate(is_greater_than_or_equal_to('this', 3), 1)).result()
+        values = self.map.values(PagingPredicate(is_greater_than_or_equal_to('this', 3), 1))
 
         def assert_event():
             self.assertEqual(len(values), 1)
@@ -72,7 +80,7 @@ class MapPagingPredicateTest(HazelcastTestCase):
         paging = PagingPredicate(is_greater_than_or_equal_to('this', 40), 2)
 
         def assert_event():
-            assertCountEqual(self, self.map.values(paging).result(), [40, 41])
+            assertCountEqual(self, self.map.values(paging), [40, 41])
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -82,7 +90,7 @@ class MapPagingPredicateTest(HazelcastTestCase):
         paging.next_page()
 
         def assert_event():
-            assertCountEqual(self, self.map.values(paging).result(), [42, 43])
+            assertCountEqual(self, self.map.values(paging), [42, 43])
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -92,7 +100,7 @@ class MapPagingPredicateTest(HazelcastTestCase):
         paging.set_page(4)
 
         def assert_event():
-            assertCountEqual(self, self.map.values(paging).result(), [48, 49])
+            assertCountEqual(self, self.map.values(paging), [48, 49])
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -112,7 +120,7 @@ class MapPagingPredicateTest(HazelcastTestCase):
         paging.previous_page()
 
         def assert_event():
-            assertCountEqual(self, self.map.values(paging).result(), [46, 47])
+            assertCountEqual(self, self.map.values(paging), [46, 47])
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -124,7 +132,7 @@ class MapPagingPredicateTest(HazelcastTestCase):
         paging.previous_page()
 
         def assert_event():
-            assertCountEqual(self, self.map.values(paging).result(), [46, 47])
+            assertCountEqual(self, self.map.values(paging), [46, 47])
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -136,7 +144,7 @@ class MapPagingPredicateTest(HazelcastTestCase):
         paging.next_page()
 
         def assert_event():
-            assertCountEqual(self, self.map.values(paging).result(), [48, 49])
+            assertCountEqual(self, self.map.values(paging), [48, 49])
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -147,7 +155,7 @@ class MapPagingPredicateTest(HazelcastTestCase):
         paging.set_page(10)
 
         def assert_event():
-            assertCountEqual(self, self.map.values(paging).result(), [])
+            assertCountEqual(self, self.map.values(paging), [])
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -158,7 +166,7 @@ class MapPagingPredicateTest(HazelcastTestCase):
         paging.previous_page()
 
         def assert_event():
-            assertCountEqual(self, self.map.values(paging).result(), [40, 41])
+            assertCountEqual(self, self.map.values(paging), [40, 41])
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -170,7 +178,7 @@ class MapPagingPredicateTest(HazelcastTestCase):
         paging.next_page()
 
         def assert_event():
-            assertCountEqual(self, self.map.values(paging).result(), [])
+            assertCountEqual(self, self.map.values(paging), [])
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -181,14 +189,14 @@ class MapPagingPredicateTest(HazelcastTestCase):
         paging.set_page(4)
 
         def assert_event():
-            assertCountEqual(self, self.map.values(paging).result(), [49])
+            assertCountEqual(self, self.map.values(paging), [49])
 
         self.assertTrueEventually(assert_event, 5)
 
     def test_empty_map(self):
         # Empty map should return empty list.
         paging = PagingPredicate(is_greater_than_or_equal_to('this', 30), 2)
-        assertCountEqual(self, self.map.values(paging).result(), [])
+        assertCountEqual(self, self.map.values(paging), [])
 
     @unittest.skip('Paging predicate with duplicate values will be supported in Hazelcast 4.0')
     def _test_equal_values_paging(self):
@@ -201,13 +209,13 @@ class MapPagingPredicateTest(HazelcastTestCase):
         paging = PagingPredicate(is_less_than_or_equal_to('this', 8), 5)
 
         def assert_event():
-            assertCountEqual(self, self.map.values(paging).result(), [0, 0, 1, 1, 2])
+            assertCountEqual(self, self.map.values(paging), [0, 0, 1, 1, 2])
             paging.next_page()
-            assertCountEqual(self, self.map.values(paging).result(), [2, 3, 3, 4, 4])
+            assertCountEqual(self, self.map.values(paging), [2, 3, 3, 4, 4])
             paging.next_page()
-            assertCountEqual(self, self.map.values(paging).result(), [5, 5, 6, 6, 7])
+            assertCountEqual(self, self.map.values(paging), [5, 5, 6, 6, 7])
             paging.next_page()
-            assertCountEqual(self, self.map.values(paging).result(), [7, 8, 8])
+            assertCountEqual(self, self.map.values(paging), [7, 8, 8])
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -219,29 +227,29 @@ class MapPagingPredicateTest(HazelcastTestCase):
         custom_cmp = CustomComparator(type=1, iteration_type=ITERATION_TYPE.KEY)
         paging = PagingPredicate(is_ilike('__key', 'key-%'), 6, custom_cmp)
 
-        key_set_page_1 = self.map.key_set(paging).result()
+        key_set_page_1 = self.map.key_set(paging)
         paging.next_page()
-        key_set_page_2 = self.map.key_set(paging).result()
+        key_set_page_2 = self.map.key_set(paging)
         paging.next_page()
-        key_set_page_3 = self.map.key_set(paging).result()
+        key_set_page_3 = self.map.key_set(paging)
 
         def assert_event():
             assertCountEqual(self, key_set_page_1, ['key-9', 'key-8', 'key-7', 'key-6', 'key-5', 'key-4'])
             assertCountEqual(self, key_set_page_2, ['key-3', 'key-2', 'key-1', 'key-0'])
             assertCountEqual(self, key_set_page_3, [])
 
-        self.assertTrueEventually(assert_event, 5)
+        self.assertTrueEventually(assert_event, 30)
 
     def test_values_paging_with_custom_comparator(self):
         self._fill_map_custom_comp_2()
         custom_cmp = CustomComparator(type=2, iteration_type=ITERATION_TYPE.VALUE)
         paging = PagingPredicate(None, 6, custom_cmp)
 
-        values_page_1 = self.map.values(paging).result()
+        values_page_1 = self.map.values(paging)
         paging.next_page()
-        values_page_2 = self.map.values(paging).result()
+        values_page_2 = self.map.values(paging)
         paging.next_page()
-        values_page_3 = self.map.values(paging).result()
+        values_page_3 = self.map.values(paging)
 
         def assert_event():
             assertCountEqual(self, values_page_1, ['A', 'BB', 'CCC', 'DDDD', 'EEEEE', 'FFFFFF'])
@@ -255,7 +263,7 @@ class MapPagingPredicateTest(HazelcastTestCase):
         custom_cmp = CustomComparator(type=2, iteration_type=ITERATION_TYPE.ENTRY)
         paging = PagingPredicate(None, 2, custom_cmp)
 
-        page1 = self.map.entry_set(paging).result()
+        page1 = self.map.entry_set(paging)
 
         def assert_event():
             assertCountEqual(self, page1, [('key-65', 'A'), ('key-66', 'BB')])
@@ -278,11 +286,6 @@ class MapPagingPredicateTest(HazelcastTestCase):
 
     def _fill_map_custom_comp_2(self):
         self.map.put_all({'key-'+str(i): chr(i)*(i-64) for i in range(65, 75)})
-
-    def _configure_cluster(self):
-        current_directory = os.path.dirname(__file__)
-        with open(get_abs_path(current_directory, "hazelcast.xml"), "r") as f:
-            return f.read()
 
 
 class CustomComparator(Comparator, IdentifiedDataSerializable):

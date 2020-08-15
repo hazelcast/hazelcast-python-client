@@ -2284,7 +2284,9 @@ After implementing this class in Python, you need to implement the Java equivale
 When you implement the Comparator and its factory, you can add them to the CLASSPATH of the server side.
 See the [Adding User Library to CLASSPATH](#1212-adding-user-library-to-classpath) section.
 
-If no custom comparator is specified for paging, Python will sort the query results according to built-in sorting key.
+If a comparator is not specified for `PagingPredicate`, but you want to get a collection of keys or values page by page, this collection must be 
+an instance of Java `Comparable` (i.e., it must implement `java.lang.Comparable`). Otherwise, the `java.lang.IllegalArgument` exception is thrown.
+It should also be Python-comparable, that is its Python implementation should include the `__lt__()` method.
 
 Also, you can access a specific page more easily with the help of the `set_page()` method. This way, if you make a query for page index 99, for example, it will get all 100 pages at once instead of reaching the 100th page one by one using the `next_page()` function.
 See the code sample under `examples.map.map_paging_predicate_example` for more detail.
