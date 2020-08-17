@@ -74,24 +74,35 @@ class PartitionService(object):
 
         return hash_to_index(key.get_partition_hash(), count)
 
-    def _should_be_applied(self, conn, partitions, version, current, should_log):
+    def check_and_set_partition_count(self, partition_count):
+        """
+        :param partition_count: (int)
+        :return: (bool), True if partition count can be set for the first time,
+            or it is equal to one that is already available, returns False otherwise
+        """
+        if self.partition_count == 0:
+            self.partition_count = partition_count
+            return True
+        return self.partition_count == partition_count
+
+    def _should_be_applied(self, connection, partitions, version, current, should_log):
         if not partitions:
             if should_log:
                 logger.debug("Partition view will not be applied since response is empty. "
-                             "Sending connection: %s, version: %s, current table: %s" % (conn, version, current),
+                             "Sending connection: %s, version: %s, current table: %s" % (connection, version, current),
                              extra=self._logger_extras)
             return False
 
-        if conn != current.connection:
+        if connection != current.connection:
             if should_log:
                 logger.debug("Partition view event coming from a new connection. Old: %s, new: %s"
-                             % (current.connection, conn), extra=self._logger_extras)
+                             % (current.connection, connection), extra=self._logger_extras)
             return True
 
         if version <= current.version:
             if should_log:
                 logger.debug("Partition view will not be applied since response state version is older. "
-                             "Sending connection: %s, version: %s, current table: %s" % (conn, version, current),
+                             "Sending connection: %s, version: %s, current table: %s" % (connection, version, current),
                              extra=self._logger_extras)
             return False
 

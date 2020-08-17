@@ -186,10 +186,10 @@ class ClientMessageBuilder(object):
             if fragmentation_frame.has_begin_fragment_flag():
                 self._fragmented_messages[fragmentation_id] = client_message
             else:
-                try:
-                    existing_message = self._fragmented_messages[fragmentation_id]
-                except KeyError:
+                existing_message = self._fragmented_messages.get(fragmentation_id, None)
+                if not existing_message:
                     raise socket.error(errno.EIO, "A message without the begin part is received.")
+
                 existing_message.merge(client_message)
                 if fragmentation_frame.has_end_fragment_flag():
                     self._message_callback(existing_message)

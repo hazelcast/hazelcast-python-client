@@ -1,13 +1,23 @@
 import logging
 import uuid
 
-from hazelcast.util import create_git_info
+from hazelcast.util import create_git_info, enum
 
 LIFECYCLE_STATE_STARTING = "STARTING"
 LIFECYCLE_STATE_CONNECTED = "CONNECTED"
 LIFECYCLE_STATE_DISCONNECTED = "DISCONNECTED"
 LIFECYCLE_STATE_SHUTTING_DOWN = "SHUTTING_DOWN"
 LIFECYCLE_STATE_SHUTDOWN = "SHUTDOWN"
+
+LifecycleState = enum(
+    STARTING="STARTING",
+    STARTED="STARTED",
+    SHUTTING_DOWN="SHUTTING_DOWN",
+    SHUTDOWN="SHUTDOWN",
+    CONNECTED="CONNECTED",
+    DISCONNECTED="DISCONNECTED",
+)
+
 
 logger = logging.getLogger(__name__)
 

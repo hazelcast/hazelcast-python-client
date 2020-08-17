@@ -12,7 +12,7 @@ from functools import total_ordering
 
 from hazelcast import six
 from hazelcast.connection import Connection, BUFFER_SIZE
-from hazelcast.core import PROTOCOL
+from hazelcast.core import PROTOCOL, Address
 from hazelcast.exception import HazelcastError
 from hazelcast.future import Future
 from hazelcast.six.moves import queue
@@ -97,8 +97,8 @@ class AsyncoreReactor(object):
         self._map.clear()
         self._thread.join()
 
-    def connection_factory(self, conn_manager, conn_id, address, network_config, message_callback):
-        return AsyncoreConnection(self._map, conn_manager, conn_id, address,
+    def connection_factory(self, connection_manager, connection_id, address, network_config, message_callback):
+        return AsyncoreConnection(self._map, connection_manager, connection_id, address,
                                   network_config, message_callback, self._logger_extras)
 
     def _cleanup_timer(self, timer):
@@ -121,9 +121,10 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
     sent_protocol_bytes = False
     read_buffer_size = BUFFER_SIZE
 
-    def __init__(self, dispatcher_map, conn_manager, conn_id, address, network_config, message_callback, logger_extras):
+    def __init__(self, dispatcher_map, connection_manager, connection_id, address,
+                 network_config, message_callback, logger_extras):
         asyncore.dispatcher.__init__(self, map=dispatcher_map)
-        Connection.__init__(self, conn_manager, conn_id, message_callback, logger_extras)
+        Connection.__init__(self, connection_manager, connection_id, message_callback, logger_extras)
         self._connected_address = address
 
         self._write_lock = threading.Lock()
@@ -190,6 +191,8 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
         # the socket should be non-blocking from now on
         self.socket.settimeout(0)
+
+        self.local_address = Address(*self.socket.getsockname())
 
         self._write_queue.append(b"CP2")
 

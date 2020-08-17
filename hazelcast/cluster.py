@@ -57,7 +57,7 @@ class ClusterService(object):
         config = client.config
         self._logger_extras = {"client_name": client.name, "cluster_name": config.cluster_name}
         self._labels = frozenset(config.labels)
-        self._conn_manager = client.connection_manager
+        self._connection_manager = client.connection_manager
         self._listeners = {}
         self._member_list_snapshot = _EMPTY_SNAPSHOT
         self._initial_list_fetched = threading.Event()
@@ -104,10 +104,10 @@ class ClusterService(object):
 
         :return: (:class: `~hazelcast.cluster.ClientInfo`), client info
         """
-        conn_manager = self._conn_manager
-        conn = conn_manager.get_random_connection()
-        local_addr = None if not conn else conn.get_local_address()
-        return ClientInfo(conn_manager.get_client_uuid(), local_addr, self._client.name, self._labels)
+        connection_manager = self._connection_manager
+        connection = connection_manager.get_random_connection()
+        local_address = None if not connection else connection.get_local_address()
+        return ClientInfo(connection_manager.get_client_uuid(), local_address, self._client.name, self._labels)
 
     def add_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
         """
@@ -201,10 +201,11 @@ class ClusterService(object):
                 new_members.append(member)
 
         for dead_member in dead_members:
-            conn = self._conn_manager.get_connection(dead_member.uuid)
-            if conn:
-                conn.close(None, TargetDisconnectedError("The client has closed the connection to this member, after "
-                                                         "receiving a member left event from the cluster. %s" % conn))
+            connection = self._connection_manager.get_connection(dead_member.uuid)
+            if connection:
+                connection.close(None, TargetDisconnectedError("The client has closed the connection to this member, "
+                                                               "after receiving a member left event from the cluster. "
+                                                               "%s" % connection))
 
         if (len(new_members) + len(dead_members)) > 0:
             if len(new.members) > 0:
