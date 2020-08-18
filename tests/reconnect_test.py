@@ -75,7 +75,7 @@ class ReconnectTest(HazelcastTestCase):
         count = AtomicInteger()
 
         def assert_events():
-            if client.lifecycle.is_live:
+            if client.lifecycle.live:
                 while True:
                     try:
                         map.put("key-%d" % count.get_and_increment(), "value").result()

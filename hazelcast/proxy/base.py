@@ -34,7 +34,7 @@ class Proxy(object):
         self._to_data = client.serialization_service.to_data
         self._register_listener = client.listener.register_listener
         self._deregister_listener = client.listener.deregister_listener
-        self._is_smart = client.listener.is_smart
+        self._is_smart = client.config.network.smart_routing
 
     def destroy(self):
         """

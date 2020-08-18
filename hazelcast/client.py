@@ -301,7 +301,7 @@ class HazelcastClient(object):
         """
         Shuts down this HazelcastClient.
         """
-        if self.lifecycle.is_live:
+        if self.lifecycle.live:
             self.lifecycle.fire_lifecycle_event(LIFECYCLE_STATE_SHUTTING_DOWN)
             self.near_cache_manager.destroy_all_near_caches()
             self.statistics.shutdown()

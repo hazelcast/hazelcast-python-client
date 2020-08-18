@@ -223,7 +223,7 @@ class InvocationService(object):
             logger.debug("Got exception for request %s: %s: %s", invocation.request, type(error).__name__, error,
                          extra=self._logger_extras)
 
-        if not self._client.lifecycle.is_live:
+        if not self._client.lifecycle.live:
             invocation.set_exception(HazelcastClientNotActiveError(error.args[0]), traceback)
             return
 
