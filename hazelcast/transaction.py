@@ -3,6 +3,7 @@ import threading
 import time
 from hazelcast.exception import HazelcastInstanceNotActiveError, TransactionError
 from hazelcast.future import make_blocking
+from hazelcast.invocation import Invocation
 from hazelcast.protocol.codec import transaction_create_codec, transaction_commit_codec, transaction_rollback_codec
 from hazelcast.proxy.transactional_list import TransactionalList
 from hazelcast.proxy.transactional_map import TransactionalMap
@@ -109,7 +110,9 @@ class Transaction(object):
                                                               durability=self.durability,
                                                               transaction_type=self.transaction_type,
                                                               thread_id=self.thread_id)
-            response = self.client.invoker.invoke_on_connection(request, self.connection).result()
+            invocation = Invocation(request, connection=self.connection)
+            self.client.invoker.invoke(invocation)
+            response = invocation.future.result()
             self.id = transaction_create_codec.decode_response(response)["response"]
             self.state = _STATE_ACTIVE
         except:
@@ -126,7 +129,9 @@ class Transaction(object):
         try:
             self._check_timeout()
             request = transaction_commit_codec.encode_request(self.id, self.thread_id)
-            self.client.invoker.invoke_on_connection(request, self.connection).result()
+            invocation = Invocation(request, connection=self.connection)
+            self.client.invoker.invoke(invocation)
+            invocation.future.result()
             self.state = _STATE_COMMITTED
         except:
             self.state = _STATE_PARTIAL_COMMIT
@@ -144,7 +149,9 @@ class Transaction(object):
         try:
             if self.state != _STATE_PARTIAL_COMMIT:
                 request = transaction_rollback_codec.encode_request(self.id, self.thread_id)
-                self.client.invoker.invoke_on_connection(request, self.connection).result()
+                invocation = Invocation(request, connection=self.connection)
+                self.client.invoker.invoke(invocation)
+                invocation.future.result()
             self.state = _STATE_ROLLED_BACK
         finally:
             self._locals.transaction_exists = False

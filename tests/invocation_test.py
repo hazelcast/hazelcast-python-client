@@ -22,4 +22,4 @@ class InvocationTest(SingleMemberTestCase):
 
         invocation.has_partition_id = mocked_has_partition_id
         with self.assertRaises(TimeoutError):
-            invocation_service.invoke(invocation).result()
+            invocation_service._invoke(invocation).result()

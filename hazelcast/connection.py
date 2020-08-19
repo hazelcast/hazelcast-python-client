@@ -11,7 +11,7 @@ from collections import OrderedDict
 from hazelcast.config import RECONNECT_MODE
 from hazelcast.core import AddressHelper
 from hazelcast.exception import AuthenticationError, TargetDisconnectedError, HazelcastClientNotActiveError, \
-    InvalidConfigurationError, ClientNotAllowedInClusterError, IllegalStateError
+    InvalidConfigurationError, ClientNotAllowedInClusterError, IllegalStateError, ClientOfflineError
 from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
 from hazelcast.invocation import Invocation
 from hazelcast.lifecycle import LifecycleState
@@ -188,6 +188,15 @@ class ConnectionManager(object):
             logger.debug("Destroying %s, but there is no mapping for %s in the connection dictionary"
                          % (connection, remote_uuid), extra=self._logger_extras)
 
+    def check_invocation_allowed(self):
+        if self.active_connections:
+            return
+
+        if self._async_start or self._reconnect_mode == RECONNECT_MODE.ASYNC:
+            raise ClientOfflineError()
+        else:
+            raise IOError("No connection found to cluster")
+
     def _trigger_cluster_reconnection(self):
         if self._reconnect_mode == RECONNECT_MODE.OFF:
             logger.info("Reconnect mode is OFF. Shutting down the client", extra=self._logger_extras)
@@ -333,7 +342,10 @@ class ConnectionManager(object):
         request = client_authentication_codec.encode_request(cluster_name, None, None, self._client_uuid,
                                                              CLIENT_TYPE, SERIALIZATION_VERSION, CLIENT_VERSION,
                                                              client_name, self._labels)
-        return client.invoker.invoke_on_connection(request, connection)
+
+        invocation = Invocation(request, connection=connection)
+        client.invoker.invoke(invocation)
+        return invocation.future
 
     def _on_auth(self, response, connection, address):
         if response.is_success():
@@ -490,8 +502,8 @@ class _HeartbeatManager(object):
         if (now - connection.last_write_time) > self._heartbeat_interval:
             request = client_ping_codec.encode_request()
             invoker = self._client.invoker
-            invocation = Invocation(invoker, request, connection=connection)
-            invoker.invoke_urgent(invocation)
+            invocation = Invocation(request, connection=connection, urgent=True)
+            invoker.invoke(invocation)
 
 
 _frame_header = struct.Struct('<iH')

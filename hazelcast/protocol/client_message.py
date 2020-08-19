@@ -68,6 +68,9 @@ class OutboundMessage(object):
     def set_correlation_id(self, correlation_id):
         LE_LONG.pack_into(self.buf, _OUTBOUND_MESSAGE_CORRELATION_ID_OFFSET, correlation_id)
 
+    def get_correlation_id(self):
+        return LE_LONG.unpack_from(self.buf, _OUTBOUND_MESSAGE_CORRELATION_ID_OFFSET)[0]
+
     def set_partition_id(self, partition_id):
         LE_INT.pack_into(self.buf, _OUTBOUND_MESSAGE_PARTITION_ID_OFFSET, partition_id)
 

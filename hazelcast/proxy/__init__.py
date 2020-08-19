@@ -1,4 +1,5 @@
 from hazelcast.core import DistributedObjectEvent
+from hazelcast.invocation import Invocation
 from hazelcast.protocol.codec import client_create_proxy_codec, client_destroy_proxy_codec, \
     client_add_distributed_object_listener_codec, client_remove_distributed_object_listener_codec
 from hazelcast.proxy.executor import Executor
@@ -65,9 +66,10 @@ class ProxyManager(object):
 
     def create_proxy(self, service_name, name, create_on_remote, **kwargs):
         if create_on_remote:
-            message = client_create_proxy_codec.encode_request(name=name, service_name=service_name,
-                                                               target=self._find_next_proxy_address())
-            self._client.invoker.invoke_on_random_target(message).result()
+            request = client_create_proxy_codec.encode_request(name=name, service_name=service_name)
+            invocation = Invocation(request)
+            self._client.invoker.invoke(invocation)
+            invocation.future.result()
 
         return _proxy_init[service_name](client=self._client, service_name=service_name, name=name, **kwargs)
 
@@ -76,8 +78,10 @@ class ProxyManager(object):
         try:
             self._proxies.pop(ns)
             if destroy_on_remote:
-                message = client_destroy_proxy_codec.encode_request(name=name, service_name=service_name)
-                self._client.invoker.invoke_on_random_target(message).result()
+                request = client_destroy_proxy_codec.encode_request(name=name, service_name=service_name)
+                invocation = Invocation(request)
+                self._client.invoker.invoke(invocation)
+                invocation.future.result()
             return True
         except KeyError:
             return False
@@ -107,7 +111,3 @@ class ProxyManager(object):
 
     def remove_distributed_object_listener(self, registration_id):
         return self._client.listener.deregister_listener(registration_id)
-
-    def _find_next_proxy_address(self):
-        # TODO: filter out lite members
-        return self._client.load_balancer.next_address()

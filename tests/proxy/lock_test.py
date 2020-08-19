@@ -86,7 +86,7 @@ class LockTest(SingleMemberTestCase):
         key_owner = self.cluster.start_member()
 
         invocation_timeout_seconds = 1
-        self.client.invoker.invocation_timeout = invocation_timeout_seconds
+        self.client.invoker._invocation_timeout = invocation_timeout_seconds
 
         key = generate_key_owned_by_instance(self.client, key_owner.address)
         server_lock = self.client.get_lock(key).blocking()
@@ -117,4 +117,4 @@ class LockTest(SingleMemberTestCase):
             self.assertSetEventually(e)
         finally:
             # revert the invocation timeout change for other tests since client instance is only created once.
-            self.client.invoker.invocation_timeout = self.client.properties.INVOCATION_TIMEOUT_SECONDS.default_value
+            self.client.invoker._invocation_timeout = self.client.properties.INVOCATION_TIMEOUT_SECONDS.default_value

@@ -30,7 +30,7 @@ class PartitionService(object):
         self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
         self._partition_table = _PartitionTable(None, -1, dict())
 
-    def handle_partitions_view_event(self, conn, partitions, version):
+    def handle_partitions_view_event(self, connection, partitions, version):
         """Handles the incoming partition view event and updates the partition table
         if it is not empty, coming from a new connection or not stale.
         """
@@ -40,11 +40,11 @@ class PartitionService(object):
                          extra=self._logger_extras)
 
         table = self._partition_table
-        if not self._should_be_applied(conn, partitions, version, table, should_log):
+        if not self._should_be_applied(connection, partitions, version, table, should_log):
             return
 
         new_partitions = self._prepare_partitions(partitions)
-        new_table = _PartitionTable(conn, version, new_partitions)
+        new_table = _PartitionTable(connection, version, new_partitions)
         self._partition_table = new_table
 
     def get_partition_owner(self, partition_id):

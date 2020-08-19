@@ -5,6 +5,8 @@ from uuid import uuid4
 from hazelcast import six
 from hazelcast.exception import HazelcastError
 from hazelcast.future import combine_futures
+from hazelcast.invocation import Invocation
+from hazelcast.protocol.codec import client_add_cluster_view_listener_codec
 from hazelcast.util import check_not_none
 
 logger = logging.getLogger(__name__)
@@ -78,7 +80,9 @@ class ListenerService(object):
                 try:
                     server_registration_id = event_registration.server_registration_id
                     deregister_request = listener_registration.encode_deregister_request(server_registration_id)
-                    self._invocation_service.invoke_on_connection(deregister_request, connection).result()
+                    invocation = Invocation(deregister_request, connection=connection)
+                    self._invocation_service.invoke(invocation)
+                    invocation.future.result()
                     self.remove_event_handler(event_registration.correlation_id)
                     listener_registration.connection_registrations.pop(connection)
                 except:
@@ -91,8 +95,7 @@ class ListenerService(object):
 
             return successful
 
-    def handle_client_message(self, message):
-        correlation_id = message.get_correlation_id()
+    def handle_client_message(self, message, correlation_id):
         handler = self._event_handlers.get(correlation_id, None)
         if handler:
             handler(message)
@@ -112,8 +115,9 @@ class ListenerService(object):
             return
 
         registration_request = listener_registration.registration_request.clone()
-        future = self._invocation_service.invoke_on_connection(registration_request, connection,
-                                                               event_handler=listener_registration.handler)
+        invocation = Invocation(registration_request, connection=connection,
+                                event_handler=listener_registration.handler)
+        self._invocation_service.invoke(invocation)
 
         def callback(f):
             try:
@@ -128,7 +132,7 @@ class ListenerService(object):
                                      user_registration_id, connection, extra=self._logger_extras)
                 raise e
 
-        return future.continue_with(callback)
+        return invocation.future.continue_with(callback)
 
     def _connection_added(self, connection):
         with self._registration_lock:
@@ -141,3 +145,63 @@ class ListenerService(object):
                 event_registration = listener_registration.connection_registrations.pop(connection, None)
                 if event_registration:
                     self.remove_event_handler(event_registration.correlation_id)
+
+
+class ClusterViewListenerService(object):
+    def __init__(self, client, logger_extras):
+        self._client = client
+        self._logger_extras = logger_extras
+        self._connection_manager = client.connection_manager
+        self._partition_service = client.partition
+        self._cluster_service = client.cluster
+        self._listener_added_connection = None
+
+    def start(self):
+        self._connection_manager.add_listener(self._connection_added, self._connection_removed)
+
+    def _connection_added(self, connection):
+        self._try_register(connection)
+
+    def _connection_removed(self, connection):
+        self._try_register_to_random_connection(connection)
+
+    def _try_register_to_random_connection(self, old_connection):
+        if self._listener_added_connection is not old_connection:
+            return
+        self._listener_added_connection = None
+        new_connection = self._connection_manager.get_random_connection()
+        if new_connection:
+            self._try_register(new_connection)
+
+    def _try_register(self, connection):
+        if not self._listener_added_connection:
+            return
+
+        self._cluster_service.clear_member_list_version()
+        self._listener_added_connection = connection
+        request = client_add_cluster_view_listener_codec.encode_request()
+        invocation = Invocation(request, connection=connection, event_handler=self._handler(connection))
+        self._client.invoker.invoke(invocation)
+
+        def callback(f):
+            try:
+                f.result()
+            except:
+                self._try_register_to_random_connection(connection)
+
+        invocation.future.add_done_callback(callback)
+
+    def _handler(self, connection):
+        def handle_partitions_view_event(version, partitions):
+            self._partition_service.handle_partitions_view_event(connection, partitions, version)
+
+        def handle_members_view_event(member_list_version, member_infos):
+            self._cluster_service.handle_members_view_event(member_list_version, member_infos)
+
+        def inner(message):
+            client_add_cluster_view_listener_codec.handle(message, handle_members_view_event,
+                                                          handle_partitions_view_event)
+
+        return inner
+
+

@@ -1,6 +1,7 @@
 import logging
 
 from hazelcast.future import make_blocking
+from hazelcast.invocation import Invocation
 from hazelcast.partition import string_partition_strategy
 from hazelcast.util import enum, thread_id
 from hazelcast import six
@@ -30,6 +31,7 @@ class Proxy(object):
         self.service_name = service_name
         self.name = name
         self._client = client
+        self._invoker = client.invoker
         self._to_object = client.serialization_service.to_object
         self._to_data = client.serialization_service.to_data
         self._register_listener = client.listener.register_listener
@@ -53,21 +55,30 @@ class Proxy(object):
 
     def _encode_invoke(self, codec, response_handler=default_response_handler, **kwargs):
         request = codec.encode_request(name=self.name, **kwargs)
-        return self._client.invoker.invoke_on_random_target(request).continue_with(response_handler, codec, self._to_object)
+        invocation = Invocation(request)
+        self._invoker.invoke(invocation)
+        return invocation.future.continue_with(response_handler, codec, self._to_object)
 
-    def _encode_invoke_on_target(self, codec, _address, response_handler=default_response_handler, **kwargs):
+    def _encode_invoke_on_target(self, codec, uuid, response_handler=default_response_handler, **kwargs):
         request = codec.encode_request(name=self.name, **kwargs)
-        return self._client.invoker.invoke_on_target(request, _address).continue_with(response_handler, codec, self._to_object)
+        invocation = Invocation(request, uuid=uuid)
+        self._invoker.invoke(invocation)
+        return invocation.future.continue_with(response_handler, codec, self._to_object)
 
-    def _encode_invoke_on_key(self, codec, key_data, invocation_timeout=None, **kwargs):
+    def _encode_invoke_on_key(self, codec, key_data, invocation_timeout=None,
+                              response_handler=default_response_handler, **kwargs):
         partition_id = self._client.partition_service.get_partition_id(key_data)
-        return self._encode_invoke_on_partition(codec, partition_id, invocation_timeout=invocation_timeout, **kwargs)
+        request = codec.encode_request(name=self.name, **kwargs)
+        invocation = Invocation(request, partition_id=partition_id, timeout=invocation_timeout)
+        self._invoker.invoke(invocation)
+        return invocation.future.continue_with(response_handler, codec, self._to_object)
 
-    def _encode_invoke_on_partition(self, codec, _partition_id, response_handler=default_response_handler,
+    def _encode_invoke_on_partition(self, codec, partition_id, response_handler=default_response_handler,
                                     invocation_timeout=None, **kwargs):
         request = codec.encode_request(name=self.name, **kwargs)
-        return self._client.invoker.invoke_on_partition(request, _partition_id, invocation_timeout).continue_with(response_handler,
-                                                                                                                  codec, self._to_object)
+        invocation = Invocation(request, partition_id=partition_id, timeout=invocation_timeout)
+        self._invoker.invoke(invocation)
+        return invocation.future.continue_with(response_handler, codec, self._to_object)
 
     def blocking(self):
         """
@@ -105,8 +116,10 @@ class TransactionalProxy(object):
 
     def _encode_invoke(self, codec, response_handler=default_response_handler, **kwargs):
         request = codec.encode_request(name=self.name, txn_id=self.transaction.id, thread_id=thread_id(), **kwargs)
-        return self.transaction.client.invoker.invoke_on_connection(request, self.transaction.connection).continue_with(
-                response_handler, codec, self._to_object)
+        invocation = Invocation(request, connection=self.transaction.connection)
+        self.transaction.client.invoker.invoke(invocation)
+
+        return invocation.future.continue_with(response_handler, codec, self._to_object)
 
     def __repr__(self):
         return '%s(name="%s")' % (type(self).__name__, self.name)
