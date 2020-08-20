@@ -28,7 +28,7 @@ def encode_request(name, predicate, include_value, listener_flags, local_only):
     FixSizedTypesCodec.encode_int(buf, _REQUEST_LISTENER_FLAGS_OFFSET, listener_flags)
     FixSizedTypesCodec.encode_boolean(buf, _REQUEST_LOCAL_ONLY_OFFSET, local_only)
     StringCodec.encode(buf, name)
-    DataCodec.encode(buf, predicate)
+    DataCodec.encode(buf, predicate, True)
     return OutboundMessage(buf, False)
 
 

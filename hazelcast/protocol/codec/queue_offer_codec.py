@@ -18,7 +18,7 @@ def encode_request(name, value, timeout_millis):
     buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
     FixSizedTypesCodec.encode_long(buf, _REQUEST_TIMEOUT_MILLIS_OFFSET, timeout_millis)
     StringCodec.encode(buf, name)
-    DataCodec.encode(buf, value)
+    DataCodec.encode(buf, value, True)
     return OutboundMessage(buf, False)
 
 

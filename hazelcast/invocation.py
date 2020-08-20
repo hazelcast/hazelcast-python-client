@@ -55,18 +55,36 @@ class InvocationService(object):
         self._is_redo_operation = client.config.network.redo_operation
         self._invocation_timeout = self._init_invocation_timeout()
         self._invocation_retry_pause = self._init_invocation_retry_pause()
-        self._listener_service = None
+        self._listener_service = client.listener
 
         if client.config.network.smart_routing:
-            self._invoke = self._invoke_smart
+            self.invoke = self._invoke_smart
         else:
-            self._invoke = self._invoke_non_smart
+            self.invoke = self._invoke_non_smart
 
         self._client.connection_manager.add_listener(on_connection_closed=self._cleanup_connection)
-        self._partition_service = client.partition
+        self._partition_service = client.partition_service
         self._connection_manager = client.connection_manager
         self._check_invocation_allowed_fn = self._connection_manager.check_invocation_allowed
         self._shutdown = False
+
+    def handle_client_message(self, message):
+        correlation_id = message.get_correlation_id()
+
+        if message.start_frame.has_event_flag():
+            self._listener_service.handle_client_message(message, correlation_id)
+            return
+
+        invocation = self._pending.pop(correlation_id, None)
+        if not invocation:
+            logger.warning("Got message with unknown correlation id: %s", message, extra=self._logger_extras)
+            return
+
+        if message.get_message_type() == EXCEPTION_MESSAGE_TYPE:
+            error = create_exception(ErrorCodec(message))
+            return self._handle_exception(invocation, error)
+
+        invocation.set_response(message)
 
     def start(self):
         self._listener_service = self._client.listener
@@ -76,15 +94,35 @@ class InvocationService(object):
         for invocation in six.itervalues(self._pending):
             self._handle_exception(invocation, HazelcastClientNotActiveError())
 
+    def _invoke_on_partition_owner(self, invocation, partition_id):
+        owner_uuid = self._partition_service.get_partition_owner(partition_id)
+        if not owner_uuid:
+            logger.debug("Partition owner is not assigned yet")
+            return False
+        return self._invoke_on_target(invocation, owner_uuid)
+
+    def _invoke_on_target(self, invocation, owner_uuid):
+        connection = self._connection_manager.get_connection(owner_uuid)
+        if not connection:
+            logger.debug("Client is not connected to target: %s" % owner_uuid)
+            return False
+        return self._send(invocation, connection)
+
+    def _invoke_on_random_connection(self, invocation):
+        connection = self._connection_manager.get_random_connection()
+        if not connection:
+            logger.debug("No connection found to invoke")
+            return False
+        return self._send(invocation, connection)
+
     def _invoke_smart(self, invocation):
+        if not invocation.timeout:
+            invocation.timeout = self._invocation_timeout + time.time()
+
         try:
             if not invocation.urgent:
                 self._check_invocation_allowed_fn()
 
-            if not invocation.timeout:
-                invocation.timeout = self._invocation_timeout + time.time()
-
-            # Try to send to a connection
             connection = invocation.connection
             if connection:
                 invoked = self._send(invocation, connection)
@@ -92,61 +130,29 @@ class InvocationService(object):
                     self._handle_exception(invocation, IOError("Could not invoke on connection %s" % connection))
                 return
 
-            # Try to send to a partition owner
-            partition_id = invocation.partition_id
-            if partition_id != -1:
-                owner_uuid = self._partition_service.get_partition_owner(invocation.partition_id)
-                if not owner_uuid:
-                    self._handle_exception(invocation, IOError("Partition owner is not assigned yet. "
-                                                               "No connection found to invoke."))
-                    return
+            if invocation.partition_id != -1:
+                invoked = self._invoke_on_partition_owner(invocation, invocation.partition_id)
+            elif invocation.uuid:
+                invoked = self._invoke_on_target(invocation, invocation.uuid)
+            else:
+                invoked = self._invoke_on_random_connection(invocation)
 
-                connection = self._connection_manager.get_connection(owner_uuid)
-                if not connection:
-                    self._handle_exception(invocation, IOError("Client is not connected to target: %s. "
-                                                               "No connection found to invoke." % owner_uuid))
-                    return
+            if not invoked:
+                invoked = self._invoke_on_random_connection(invocation)
 
-                invoked = self._send(invocation, connection)
-                if not invoked:
-                    self._handle_exception(invocation, IOError("Could not invoke on connection %s" % connection))
-                return
-
-            # Try to send to a target
-            uuid = invocation.uuid
-            if uuid:
-                connection = self._connection_manager.get_connection(uuid)
-                if not connection:
-                    self._handle_exception(invocation, IOError("Client is not connected to target: %s. "
-                                                               "No connection found to invoke." % uuid))
-                    return
-
-                invoked = self._send(invocation, connection)
-                if not invoked:
-                    self._handle_exception(invocation, IOError("Could not invoke on connection %s" % connection))
-                return
-
-            # Try to send to a random connection
-            connection = self._connection_manager.get_random_connection()
-            if not connection:
-                self._handle_exception(invocation, IOError("No connection found to invoke."))
-                return
-
-            invoked = self._send(invocation, connection)
             if not invoked:
                 self._handle_exception(invocation, IOError("No connection found to invoke"))
         except Exception as e:
             self._handle_exception(invocation, e)
 
     def _invoke_non_smart(self, invocation):
+        if not invocation.timeout:
+            invocation.timeout = self._invocation_timeout + time.time()
+
         try:
             if not invocation.urgent:
                 self._check_invocation_allowed_fn()
 
-            if not invocation.timeout:
-                invocation.timeout = self._invocation_timeout + time.time()
-
-            # Try to send to a connection
             connection = invocation.connection
             if connection:
                 invoked = self._send(invocation, connection)
@@ -154,14 +160,7 @@ class InvocationService(object):
                     self._handle_exception(invocation, IOError("Could not invoke on connection %s" % connection))
                 return
 
-            # Try to send to a random connection
-            connection = self._connection_manager.get_random_connection()
-            if not connection:
-                self._handle_exception(invocation, IOError("No connection found to invoke."))
-                return
-
-            invoked = self._send(invocation, connection)
-            if not invoked:
+            if not self._invoke_on_random_connection(invocation):
                 self._handle_exception(invocation, IOError("No connection found to invoke"))
         except Exception as e:
             self._handle_exception(invocation, e)
@@ -244,21 +243,3 @@ class InvocationService(object):
             return invocation.request.retryable or self._is_redo_operation
 
         return False
-
-    def _handle_client_message(self, message):
-        correlation_id = message.get_correlation_id()
-
-        if message.start_frame.has_event_flag():
-            self._listener_service.handle_client_message(message, correlation_id)
-            return
-
-        invocation = self._pending.pop(correlation_id, None)
-        if not invocation:
-            logger.warning("Got message with unknown correlation id: %s", message, extra=self._logger_extras)
-            return
-
-        if message.get_message_type() == EXCEPTION_MESSAGE_TYPE:
-            error = create_exception(ErrorCodec(message))
-            return self._handle_exception(invocation, error)
-
-        invocation.set_response(message)

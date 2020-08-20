@@ -27,7 +27,7 @@ def encode_request(name, start_sequence, min_size, max_size, predicate, projecti
     FixSizedTypesCodec.encode_int(buf, _REQUEST_MAX_SIZE_OFFSET, max_size)
     StringCodec.encode(buf, name)
     CodecUtil.encode_nullable(buf, predicate, DataCodec.encode)
-    CodecUtil.encode_nullable(buf, projection, DataCodec.encode)
+    CodecUtil.encode_nullable(buf, projection, DataCodec.encode, True)
     return OutboundMessage(buf, True)
 
 

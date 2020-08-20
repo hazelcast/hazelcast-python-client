@@ -361,8 +361,8 @@ class ConsistencyLostError(HazelcastError):
 
 
 class HazelcastClientNotActiveError(ValueError):
-    def __init__(self):
-        super(HazelcastClientNotActiveError, self).__init__("Client is not active")
+    def __init__(self, message="Client is not active"):
+        super(HazelcastClientNotActiveError, self).__init__(message)
 
 
 class HazelcastCertificationError(HazelcastError):

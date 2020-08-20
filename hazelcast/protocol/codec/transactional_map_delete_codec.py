@@ -19,5 +19,5 @@ def encode_request(name, txn_id, thread_id, key):
     FixSizedTypesCodec.encode_uuid(buf, _REQUEST_TXN_ID_OFFSET, txn_id)
     FixSizedTypesCodec.encode_long(buf, _REQUEST_THREAD_ID_OFFSET, thread_id)
     StringCodec.encode(buf, name)
-    DataCodec.encode(buf, key)
+    DataCodec.encode(buf, key, True)
     return OutboundMessage(buf, False)

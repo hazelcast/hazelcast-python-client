@@ -15,5 +15,5 @@ _REQUEST_INITIAL_FRAME_SIZE = _REQUEST_REPLACE_EXISTING_VALUES_OFFSET + BOOLEAN_
 def encode_request(name, replace_existing_values):
     buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
     FixSizedTypesCodec.encode_boolean(buf, _REQUEST_REPLACE_EXISTING_VALUES_OFFSET, replace_existing_values)
-    StringCodec.encode(buf, name)
+    StringCodec.encode(buf, name, True)
     return OutboundMessage(buf, False)

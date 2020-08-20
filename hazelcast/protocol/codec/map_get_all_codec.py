@@ -15,7 +15,7 @@ _REQUEST_INITIAL_FRAME_SIZE = REQUEST_HEADER_SIZE
 def encode_request(name, keys):
     buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
     StringCodec.encode(buf, name)
-    ListMultiFrameCodec.encode(buf, keys, DataCodec.encode)
+    ListMultiFrameCodec.encode(buf, keys, DataCodec.encode, True)
     return OutboundMessage(buf, False)
 
 

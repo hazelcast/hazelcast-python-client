@@ -17,5 +17,5 @@ def encode_request(timestamp, client_attributes, metrics_blob):
     buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
     FixSizedTypesCodec.encode_long(buf, _REQUEST_TIMESTAMP_OFFSET, timestamp)
     StringCodec.encode(buf, client_attributes)
-    ByteArrayCodec.encode(buf, metrics_blob)
+    ByteArrayCodec.encode(buf, metrics_blob, True)
     return OutboundMessage(buf, False)

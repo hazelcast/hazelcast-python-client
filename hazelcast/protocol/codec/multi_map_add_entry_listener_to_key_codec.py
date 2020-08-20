@@ -26,7 +26,7 @@ def encode_request(name, key, include_value, local_only):
     FixSizedTypesCodec.encode_boolean(buf, _REQUEST_INCLUDE_VALUE_OFFSET, include_value)
     FixSizedTypesCodec.encode_boolean(buf, _REQUEST_LOCAL_ONLY_OFFSET, local_only)
     StringCodec.encode(buf, name)
-    DataCodec.encode(buf, key)
+    DataCodec.encode(buf, key, True)
     return OutboundMessage(buf, False)
 
 

@@ -86,11 +86,4 @@ class LifecycleService(object):
         self.fire_lifecycle_event(LifecycleState.STARTED)
 
     def shutdown(self):
-        if not self.live:
-            return
-
         self.live = False
-        self.fire_lifecycle_event(LifecycleState.SHUTTING_DOWN)
-        self._client.do_shutdown()
-        self.fire_lifecycle_event(LifecycleState.SHUTDOWN)
-

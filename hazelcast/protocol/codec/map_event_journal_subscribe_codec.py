@@ -15,7 +15,7 @@ _RESPONSE_NEWEST_SEQUENCE_OFFSET = _RESPONSE_OLDEST_SEQUENCE_OFFSET + LONG_SIZE_
 
 def encode_request(name):
     buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
-    StringCodec.encode(buf, name)
+    StringCodec.encode(buf, name, True)
     return OutboundMessage(buf, True)
 
 

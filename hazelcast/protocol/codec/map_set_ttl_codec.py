@@ -18,7 +18,7 @@ def encode_request(name, key, ttl):
     buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
     FixSizedTypesCodec.encode_long(buf, _REQUEST_TTL_OFFSET, ttl)
     StringCodec.encode(buf, name)
-    DataCodec.encode(buf, key)
+    DataCodec.encode(buf, key, True)
     return OutboundMessage(buf, False)
 
 

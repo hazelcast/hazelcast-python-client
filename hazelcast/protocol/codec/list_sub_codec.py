@@ -19,7 +19,7 @@ def encode_request(name, _from, to):
     buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
     FixSizedTypesCodec.encode_int(buf, _REQUEST_FROM_OFFSET, _from)
     FixSizedTypesCodec.encode_int(buf, _REQUEST_TO_OFFSET, to)
-    StringCodec.encode(buf, name)
+    StringCodec.encode(buf, name, True)
     return OutboundMessage(buf, True)
 
 

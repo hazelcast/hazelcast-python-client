@@ -31,20 +31,25 @@ _IS_EVENT_FLAG = 1 << 9
 
 
 # For codecs
-def create_initial_buffer(size, message_type):
+def create_initial_buffer(size, message_type, is_final=False):
     size += SIZE_OF_FRAME_LENGTH_AND_FLAGS
     buf = bytearray(size)
     LE_INT.pack_into(buf, 0, size)
-    LE_UINT16.pack_into(buf, INT_SIZE_IN_BYTES, _UNFRAGMENTED_MESSAGE_FLAGS)
+    flags = _UNFRAGMENTED_MESSAGE_FLAGS
+    if is_final:
+        flags |= _IS_FINAL_FLAG
+    LE_UINT16.pack_into(buf, INT_SIZE_IN_BYTES, flags)
     LE_INT.pack_into(buf, _OUTBOUND_MESSAGE_MESSAGE_TYPE_OFFSET, message_type)
     LE_INT.pack_into(buf, _OUTBOUND_MESSAGE_PARTITION_ID_OFFSET, -1)
     return buf
 
 
 # For custom codecs
-def create_initial_buffer_custom(size, is_begin_frame):
+def create_initial_buffer_custom(size, is_begin_frame=False):
     size += SIZE_OF_FRAME_LENGTH_AND_FLAGS
     if is_begin_frame:
+        # Needed for custom codecs that does not have initial frame at first
+        # but requires later due to new fix sized parameters
         buf = bytearray(size)
         LE_INT.pack_into(buf, 0, size)
         LE_UINT16.pack_into(buf, INT_SIZE_IN_BYTES, _BEGIN_DATA_STRUCTURE_FLAG)
@@ -165,6 +170,11 @@ NULL_FRAME_BUF = bytearray(SIZE_OF_FRAME_LENGTH_AND_FLAGS)
 LE_INT.pack_into(NULL_FRAME_BUF, 0, SIZE_OF_FRAME_LENGTH_AND_FLAGS)
 LE_UINT16.pack_into(NULL_FRAME_BUF, INT_SIZE_IN_BYTES, _IS_NULL_FLAG)
 
+# Has IS_NULL and IS_FINAL flags
+NULL_FINAL_FRAME_BUF = bytearray(SIZE_OF_FRAME_LENGTH_AND_FLAGS)
+LE_INT.pack_into(NULL_FINAL_FRAME_BUF, 0, SIZE_OF_FRAME_LENGTH_AND_FLAGS)
+LE_UINT16.pack_into(NULL_FINAL_FRAME_BUF, INT_SIZE_IN_BYTES, _IS_NULL_FLAG | _IS_FINAL_FLAG)
+
 BEGIN_FRAME_BUF = bytearray(SIZE_OF_FRAME_LENGTH_AND_FLAGS)
 LE_INT.pack_into(BEGIN_FRAME_BUF, 0, SIZE_OF_FRAME_LENGTH_AND_FLAGS)
 LE_UINT16.pack_into(BEGIN_FRAME_BUF, INT_SIZE_IN_BYTES, _BEGIN_DATA_STRUCTURE_FLAG)
@@ -172,6 +182,11 @@ LE_UINT16.pack_into(BEGIN_FRAME_BUF, INT_SIZE_IN_BYTES, _BEGIN_DATA_STRUCTURE_FL
 END_FRAME_BUF = bytearray(SIZE_OF_FRAME_LENGTH_AND_FLAGS)
 LE_INT.pack_into(END_FRAME_BUF, 0, SIZE_OF_FRAME_LENGTH_AND_FLAGS)
 LE_UINT16.pack_into(END_FRAME_BUF, INT_SIZE_IN_BYTES, _END_DATA_STRUCTURE_FLAG)
+
+# Has END_DATA_STRUCTURE and IS_FINAL flags
+END_FINAL_FRAME_BUF = bytearray(SIZE_OF_FRAME_LENGTH_AND_FLAGS)
+LE_INT.pack_into(END_FINAL_FRAME_BUF, 0, SIZE_OF_FRAME_LENGTH_AND_FLAGS)
+LE_UINT16.pack_into(END_FINAL_FRAME_BUF, INT_SIZE_IN_BYTES, _END_DATA_STRUCTURE_FLAG | _IS_FINAL_FLAG)
 
 
 class ClientMessageBuilder(object):

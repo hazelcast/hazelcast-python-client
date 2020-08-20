@@ -21,7 +21,7 @@ _EVENT_TOPIC_UUID_OFFSET = _EVENT_TOPIC_PUBLISH_TIME_OFFSET + LONG_SIZE_IN_BYTES
 def encode_request(name, local_only):
     buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
     FixSizedTypesCodec.encode_boolean(buf, _REQUEST_LOCAL_ONLY_OFFSET, local_only)
-    StringCodec.encode(buf, name)
+    StringCodec.encode(buf, name, True)
     return OutboundMessage(buf, False)
 
 

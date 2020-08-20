@@ -23,7 +23,7 @@ def encode_request(name, delta, get_before_update, replica_timestamps, target_re
     FixSizedTypesCodec.encode_boolean(buf, _REQUEST_GET_BEFORE_UPDATE_OFFSET, get_before_update)
     FixSizedTypesCodec.encode_uuid(buf, _REQUEST_TARGET_REPLICA_UUID_OFFSET, target_replica_uuid)
     StringCodec.encode(buf, name)
-    EntryListUUIDLongCodec.encode(buf, replica_timestamps)
+    EntryListUUIDLongCodec.encode(buf, replica_timestamps, True)
     return OutboundMessage(buf, False)
 
 

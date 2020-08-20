@@ -235,10 +235,10 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
                 logger.exception("Received error", extra=self._logger_extras)
                 self.close(None, IOError(error))
         else:
-            logger.warning("Received unexpected error: %s" % error, extra=self._logger_extras)
+            logger.exception("Received unexpected error: %s" % error, extra=self._logger_extras)
 
     def readable(self):
-        return not self._closed and self.sent_protocol_bytes
+        return self.live and self.sent_protocol_bytes
 
     def _write(self, buf):
         # if write queue is empty, send the data right away, otherwise add to queue

@@ -20,6 +20,7 @@ LE_UINT8 = struct.Struct("<B")
 LE_INT16 = struct.Struct("<h")
 LE_UINT16 = struct.Struct("<H")
 LE_LONG = struct.Struct("<q")
+LE_ULONG = struct.Struct("<Q")
 LE_FLOAT = struct.Struct("<f")
 LE_DOUBLE = struct.Struct("<d")
 

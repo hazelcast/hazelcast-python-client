@@ -19,7 +19,7 @@ _EVENT_PARTITIONS_VIEW_VERSION_OFFSET = EVENT_HEADER_SIZE
 
 
 def encode_request():
-    buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
+    buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE, True)
     return OutboundMessage(buf, False)
 
 

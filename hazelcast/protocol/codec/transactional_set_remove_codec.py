@@ -20,7 +20,7 @@ def encode_request(name, txn_id, thread_id, item):
     FixSizedTypesCodec.encode_uuid(buf, _REQUEST_TXN_ID_OFFSET, txn_id)
     FixSizedTypesCodec.encode_long(buf, _REQUEST_THREAD_ID_OFFSET, thread_id)
     StringCodec.encode(buf, name)
-    DataCodec.encode(buf, item)
+    DataCodec.encode(buf, item, True)
     return OutboundMessage(buf, False)
 
 

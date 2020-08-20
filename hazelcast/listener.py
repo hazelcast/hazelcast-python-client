@@ -37,7 +37,7 @@ class ListenerService(object):
     def __init__(self, client):
         self._client = client
         self._connection_manager = client.connection_manager
-        self._invocation_service = client.invoker
+        self._invocation_service = None
         self._is_smart = client.config.network.smart_routing
         self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
         self._active_registrations = {}  # Dict of user_registration_id, ListenerRegistration
@@ -45,6 +45,7 @@ class ListenerService(object):
         self._event_handlers = {}
 
     def start(self):
+        self._invocation_service = self._client.invoker
         self._client.connection_manager.add_listener(self._connection_added, self._connection_removed)
 
     def register_listener(self, registration_request, decode_register_response, encode_deregister_request, handler):
@@ -148,11 +149,10 @@ class ListenerService(object):
 
 
 class ClusterViewListenerService(object):
-    def __init__(self, client, logger_extras):
+    def __init__(self, client):
         self._client = client
-        self._logger_extras = logger_extras
         self._connection_manager = client.connection_manager
-        self._partition_service = client.partition
+        self._partition_service = client.partition_service
         self._cluster_service = client.cluster
         self._listener_added_connection = None
 
@@ -162,7 +162,7 @@ class ClusterViewListenerService(object):
     def _connection_added(self, connection):
         self._try_register(connection)
 
-    def _connection_removed(self, connection):
+    def _connection_removed(self, connection, _):
         self._try_register_to_random_connection(connection)
 
     def _try_register_to_random_connection(self, old_connection):
@@ -174,13 +174,13 @@ class ClusterViewListenerService(object):
             self._try_register(new_connection)
 
     def _try_register(self, connection):
-        if not self._listener_added_connection:
+        if self._listener_added_connection:
             return
 
         self._cluster_service.clear_member_list_version()
         self._listener_added_connection = connection
         request = client_add_cluster_view_listener_codec.encode_request()
-        invocation = Invocation(request, connection=connection, event_handler=self._handler(connection))
+        invocation = Invocation(request, connection=connection, event_handler=self._handler(connection), urgent=True)
         self._client.invoker.invoke(invocation)
 
         def callback(f):

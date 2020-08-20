@@ -20,7 +20,7 @@ def encode_request(name, key, thread_id, timeout):
     FixSizedTypesCodec.encode_long(buf, _REQUEST_THREAD_ID_OFFSET, thread_id)
     FixSizedTypesCodec.encode_long(buf, _REQUEST_TIMEOUT_OFFSET, timeout)
     StringCodec.encode(buf, name)
-    DataCodec.encode(buf, key)
+    DataCodec.encode(buf, key, True)
     return OutboundMessage(buf, False)
 
 

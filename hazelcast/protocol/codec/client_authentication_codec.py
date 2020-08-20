@@ -32,7 +32,7 @@ def encode_request(cluster_name, username, password, uuid, client_type, serializ
     StringCodec.encode(buf, client_type)
     StringCodec.encode(buf, client_hazelcast_version)
     StringCodec.encode(buf, client_name)
-    ListMultiFrameCodec.encode(buf, labels, StringCodec.encode)
+    ListMultiFrameCodec.encode(buf, labels, StringCodec.encode, True)
     return OutboundMessage(buf, True)
 
 

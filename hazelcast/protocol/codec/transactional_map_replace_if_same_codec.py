@@ -22,7 +22,7 @@ def encode_request(name, txn_id, thread_id, key, old_value, new_value):
     StringCodec.encode(buf, name)
     DataCodec.encode(buf, key)
     DataCodec.encode(buf, old_value)
-    DataCodec.encode(buf, new_value)
+    DataCodec.encode(buf, new_value, True)
     return OutboundMessage(buf, False)
 
 

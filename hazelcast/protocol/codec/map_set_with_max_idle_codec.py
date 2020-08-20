@@ -23,7 +23,7 @@ def encode_request(name, key, value, thread_id, ttl, max_idle):
     FixSizedTypesCodec.encode_long(buf, _REQUEST_MAX_IDLE_OFFSET, max_idle)
     StringCodec.encode(buf, name)
     DataCodec.encode(buf, key)
-    DataCodec.encode(buf, value)
+    DataCodec.encode(buf, value, True)
     return OutboundMessage(buf, False)
 
 

@@ -5,7 +5,6 @@ from hazelcast import six
 from hazelcast import util
 from hazelcast.util import enum
 
-
 INTEGER_TYPE = enum(VAR=0, BYTE=1, SHORT=2, INT=3, LONG=4, BIG_INT=5)
 """
 Integer type options that can be used by serialization service.
@@ -60,6 +59,7 @@ class MemberInfo(object):
     """
     Represents a member in the cluster with its address, uuid, lite member status, attributes and version.
     """
+
     def __init__(self, address, uuid, attributes, lite_member, version, *args):
         self.address = address
         self.uuid = uuid
@@ -88,6 +88,7 @@ class Address(object):
     """
     Represents an address of a member in the cluster.
     """
+
     def __init__(self, host, port):
         self.host = host
         self.port = port
@@ -149,6 +150,7 @@ class DistributedObjectInfo(object):
     """
     Represents name of the Distributed Object and the name of service which it belongs to.
     """
+
     def __init__(self, name, service_name):
         self.name = name
         self.service_name = service_name
@@ -190,7 +192,7 @@ class DistributedObjectEvent(object):
                "event_type={}]".format(self.name, self.service_name, self.event_type)
 
 
-class EntryView(object):
+class SimpleEntryView(object):
     """
     EntryView represents a readonly view of a map entry.
     """
@@ -244,11 +246,12 @@ class EntryView(object):
     """
 
     def __repr__(self):
-        return "EntryView(key=%s, value=%s, cost=%s, creation_time=%s, expiration_time=%s, hits=%s, last_access_time=%s, " \
-               "last_stored_time=%s, last_update_time=%s, version=%s, eviction_criteria_number=%s, ttl=%s" % (
-                   self.key, self.value, self.cost, self.creation_time, self.expiration_time, self.hits,
-                   self.last_access_time, self.last_stored_time, self.last_update_time, self.version,
-                   self.eviction_criteria_number, self.ttl)
+        return "SimpleEntryView(key=%s, value=%s, cost=%s, creation_time=%s, " \
+               "expiration_time=%s, hits=%s, last_access_time=%s, last_stored_time=%s, " \
+               "last_update_time=%s, version=%s, eviction_criteria_number=%s, ttl=%s" \
+               % (self.key, self.value, self.cost, self.creation_time, self.expiration_time, self.hits,
+                  self.last_access_time, self.last_stored_time, self.last_update_time, self.version,
+                  self.eviction_criteria_number, self.ttl)
 
 
 class MemberSelector(object):
@@ -259,6 +262,7 @@ class MemberSelector(object):
     member in the cluster and it is up to the implementation to decide
     if the member is going to be used or not.
     """
+
     def select(self, member):
         """
         Decides if the given member will be part of an operation or not.
@@ -298,6 +302,7 @@ class HazelcastJsonValue(object):
 
     None values are not allowed.
     """
+
     def __init__(self, value):
         util.check_not_none(value, "JSON string or the object cannot be None.")
         if isinstance(value, six.string_types):
@@ -321,3 +326,12 @@ class HazelcastJsonValue(object):
         :return: (object), Python object represented by the original string
         """
         return json.loads(self._json_string)
+
+
+class MemberVersion(object):
+    __slots__ = ("major", "minor", "patch")
+
+    def __init__(self, major, minor, patch):
+        self.major = major
+        self.minor = minor
+        self.patch = patch

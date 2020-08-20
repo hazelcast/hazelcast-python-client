@@ -14,7 +14,7 @@ _RESPONSE_RESPONSE_OFFSET = RESPONSE_HEADER_SIZE
 
 
 def encode_request(uuid, interrupt):
-    buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
+    buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE, True)
     FixSizedTypesCodec.encode_uuid(buf, _REQUEST_UUID_OFFSET, uuid)
     FixSizedTypesCodec.encode_boolean(buf, _REQUEST_INTERRUPT_OFFSET, interrupt)
     return OutboundMessage(buf, False)

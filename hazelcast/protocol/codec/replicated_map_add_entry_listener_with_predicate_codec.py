@@ -24,7 +24,7 @@ def encode_request(name, predicate, local_only):
     buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
     FixSizedTypesCodec.encode_boolean(buf, _REQUEST_LOCAL_ONLY_OFFSET, local_only)
     StringCodec.encode(buf, name)
-    DataCodec.encode(buf, predicate)
+    DataCodec.encode(buf, predicate, True)
     return OutboundMessage(buf, False)
 
 

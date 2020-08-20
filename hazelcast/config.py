@@ -5,7 +5,7 @@ Hazelcast Client Configuration module contains configuration classes and various
 import logging
 import os
 
-from hazelcast.core import EVICTION_POLICY, IN_MEMORY_FORMAT
+from hazelcast.core import EVICTION_POLICY, IN_MEMORY_FORMAT, PROTOCOL, INTEGER_TYPE
 from hazelcast.serialization.api import StreamSerializer
 from hazelcast.util import validate_type, validate_serializer, enum, TimeUnit
 
@@ -460,11 +460,11 @@ _DEFAULT_JITTER = 0
 
 class ConnectionRetryConfig(object):
     def __init__(self):
-        self._initial_backoff = _DEFAULT_INITIAL_BACKOFF
-        self._max_backoff = _DEFAULT_MAX_BACKOFF
-        self._multiplier = _DEFAULT_MULTIPLIER
-        self._connect_timeout = _DEFAULT_CLUSTER_CONNECT_TIMEOUT
-        self._jitter = _DEFAULT_JITTER
+        self.initial_backoff = _DEFAULT_INITIAL_BACKOFF
+        self.max_backoff = _DEFAULT_MAX_BACKOFF
+        self.multiplier = _DEFAULT_MULTIPLIER
+        self.cluster_connect_timeout = _DEFAULT_CLUSTER_CONNECT_TIMEOUT
+        self.jitter = _DEFAULT_JITTER
 
 
 class SSLConfig(object):

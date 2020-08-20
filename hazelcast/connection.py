@@ -82,8 +82,9 @@ class ConnectionManager(object):
 
         self._client = client
         self._connection_factory = connection_factory
-        self._heartbeat_manager = _HeartbeatManager(self._client)
+        self._heartbeat_manager = _HeartbeatManager(self._client, self)
         config = self._client.config
+        self._logger_extras = {"client_name": self._client.name, "cluster_name": config.cluster_name}
         self._smart_routing_enabled = config.network.smart_routing
         self._wait_strategy = self._init_wait_strategy(config)
         self._reconnect_mode = config.connection_strategy.reconnect_mode
@@ -101,8 +102,7 @@ class ConnectionManager(object):
         self._client_uuid = uuid.uuid4()
         self._labels = config.labels
         self._cluster_id = None
-        self._load_balancer = client.load_balancer
-        self._logger_extras = {"client_name": self._client.name, "cluster_name": config.cluster_name}
+        self._load_balancer = None
 
     def add_listener(self, on_connection_opened=None, on_connection_closed=None):
         """
@@ -141,10 +141,30 @@ class ConnectionManager(object):
             return
 
         self.live = True
+        self._load_balancer = self._client.load_balancer
         self._heartbeat_manager.start()
         self._connect_to_cluster()
         if self._smart_routing_enabled:
             self._start_connect_all_members_timer()
+
+    def shutdown(self):
+        if not self.live:
+            return
+
+        self.live = False
+        if self._connect_all_members_timer:
+            self._connect_all_members_timer.cancel()
+
+        self._heartbeat_manager.shutdown()
+        for connection_future in self._pending_connections:
+            connection_future.set_exception(HazelcastClientNotActiveError("Hazelcast client is shutting down"))
+
+        for connection in six.itervalues(self.active_connections):
+            connection.close("Hazelcast client is shutting down", None)
+
+        self._connection_listeners.clear()
+        self.active_connections.clear()
+        self._pending_connections.clear()
 
     def connect_to_all_cluster_members(self):
         if not self._smart_routing_enabled:
@@ -181,7 +201,7 @@ class ConnectionManager(object):
             for _, on_connection_closed in self._connection_listeners:
                 if on_connection_closed:
                     try:
-                        on_connection_closed(connection)
+                        on_connection_closed(connection, cause)
                     except:
                         logger.exception("Exception in connection listener", extra=self._logger_extras)
         else:
@@ -204,10 +224,11 @@ class ConnectionManager(object):
             return
 
         if self._client.lifecycle.live:
-            self._start_connect_to_cluster_timer()
+            pass
+            # self._start_connect_to_cluster_timer()
 
     def _init_wait_strategy(self, config):
-        retry_config = config.connection_strategy.retry
+        retry_config = config.connection_strategy.connection_retry
         return _WaitStrategy(retry_config.initial_backoff, retry_config.max_backoff, retry_config.multiplier,
                              retry_config.cluster_connect_timeout, retry_config.jitter, self._logger_extras)
 
@@ -327,7 +348,7 @@ class ConnectionManager(object):
 
                         connection = self._connection_factory(self, self._connection_id_generator.get_and_increment(),
                                                               translated, self._client.config.network,
-                                                              self._client.invoker.handle_mesasge)
+                                                              self._client.invoker.handle_client_message)
                     except IOError:
                         return ImmediateExceptionFuture(sys.exc_info()[1], sys.exc_info()[2])
 
@@ -343,7 +364,7 @@ class ConnectionManager(object):
                                                              CLIENT_TYPE, SERIALIZATION_VERSION, CLIENT_VERSION,
                                                              client_name, self._labels)
 
-        invocation = Invocation(request, connection=connection)
+        invocation = Invocation(request, connection=connection, urgent=True)
         client.invoker.invoke(invocation)
         return invocation.future
 
@@ -352,7 +373,7 @@ class ConnectionManager(object):
             response = client_authentication_codec.decode_response(response.result())
             status = response["status"]
             if status == _AuthenticationStatus.AUTHENTICATED:
-               return self._handle_successful_auth(response, connection, address)
+                return self._handle_successful_auth(response, connection, address)
 
             if status == _AuthenticationStatus.CREDENTIALS_FAILED:
                 err = AuthenticationError("Authentication failed. The configured cluster name on "
@@ -387,7 +408,7 @@ class ConnectionManager(object):
         new_cluster_id = response["cluster_id"]
 
         is_initial_connection = not self.active_connections
-        changed_cluster = is_initial_connection and self._cluster_id and self._cluster_id != new_cluster_id
+        changed_cluster = is_initial_connection and self._cluster_id is not None and self._cluster_id != new_cluster_id
         if changed_cluster:
             logger.warning("Switching from current cluster: %s to new cluster: %s" % (self._cluster_id, new_cluster_id),
                            extra=self._logger_extras)
@@ -422,12 +443,12 @@ class ConnectionManager(object):
         lifecycle.fire_lifecycle_event(state)
 
     def _check_partition_count(self, partition_count):
-        partition = self._client.partition
-        if not partition.check_and_set_partition_count(partition_count):
+        partition_service = self._client.partition_service
+        if not partition_service.check_and_set_partition_count(partition_count):
             raise ClientNotAllowedInClusterError("Client can not work with this cluster because it has a "
                                                  "different partition count. Expected partition count: %d, "
                                                  "Member partition count: %d"
-                                                 % (partition.partition_count, partition_count))
+                                                 % (partition_service.partition_count, partition_count))
 
     def _check_client_active(self):
         if not self._client.lifecycle.live:
@@ -457,9 +478,9 @@ class ConnectionManager(object):
 class _HeartbeatManager(object):
     _heartbeat_timer = None
 
-    def __init__(self, client):
+    def __init__(self, client, connection_manager):
         self._client = client
-        self._connection_manager = client.connection_manager
+        self._connection_manager = connection_manager
         self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
 
         props = client.properties
@@ -472,11 +493,11 @@ class _HeartbeatManager(object):
         """
 
         def _heartbeat():
-            if not self._connection_manager.is_alive:
+            if not self._connection_manager.live:
                 return
 
             now = time.time()
-            for connection in self._connection_manager.get_active_connections():
+            for connection in six.itervalues(self._connection_manager.active_connections):
                 self._check_connection(now, connection)
             self._heartbeat_timer = self._client.reactor.add_timer(self._heartbeat_interval, _heartbeat)
 
@@ -490,11 +511,11 @@ class _HeartbeatManager(object):
             self._heartbeat_timer.cancel()
 
     def _check_connection(self, now, connection):
-        if not connection.is_alive():
+        if not connection.live:
             return
 
         if (now - connection.last_read_time) > self._heartbeat_timeout:
-            if connection.is_alive():
+            if connection.live:
                 logger.warning("Heartbeat failed over the connection: %s" % connection, extra=self._logger_extras)
                 connection.close("Heartbeat timed out",
                                  TargetDisconnectedError("Heartbeat timed out to connection %s" % connection))
@@ -533,7 +554,7 @@ class _Reader(object):
     def _read_message(self):
         while True:
             if self._read_frame():
-                if self._message.end_frame.is_end_frame():
+                if self._message.end_frame.is_final_frame():
                     msg = self._message
                     self._reset()
                     return msg
@@ -553,8 +574,9 @@ class _Reader(object):
             return False
 
         self._buf.seek(self._bytes_read)
-        data = self._buf.read(self._frame_size)
-        self._bytes_read += self._frame_size
+        size = self._frame_size - SIZE_OF_FRAME_LENGTH_AND_FLAGS
+        data = self._buf.read(size)
+        self._bytes_read += size
         self._frame_size = 0
         # No need to reset flags since it will be overwritten on the next read_frame_size_and_flags call
         frame = Frame(data, self._frame_flags)
@@ -567,7 +589,7 @@ class _Reader(object):
     def _read_frame_size_and_flags(self):
         self._buf.seek(self._bytes_read)
         header_data = self._buf.read(SIZE_OF_FRAME_LENGTH_AND_FLAGS)
-        self._frame_size, self._frame_flags = _frame_header.unpack_from(header_data, self._bytes_read)
+        self._frame_size, self._frame_flags = _frame_header.unpack_from(header_data, 0)
         self._bytes_read += SIZE_OF_FRAME_LENGTH_AND_FLAGS
 
     def _reset(self):
@@ -634,7 +656,7 @@ class Connection(object):
             self._inner_close()
         except:
             logger.exception("Error while closing the the connection %s" % self, extra=self._logger_extras)
-        self._connection_manager.on_connection_close(self)
+        self._connection_manager.on_connection_close(self, cause)
 
     def _log_close(self, reason, cause):
         msg = "%s closed. Reason: %s"

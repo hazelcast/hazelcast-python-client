@@ -62,6 +62,10 @@ class ClusterService(object):
         self._member_list_snapshot = _EMPTY_SNAPSHOT
         self._initial_list_fetched = threading.Event()
 
+    def start(self, membership_listeners):
+        for listener in membership_listeners:
+            self.add_listener(*listener)
+
     def get_member(self, member_uuid):
         """Gets the member with the given UUID.
 
@@ -236,9 +240,9 @@ class RandomLoadBalancer(object):
     def __init__(self, cluster):
         self._cluster = cluster
 
-    def next_address(self):
+    def next(self):
         try:
-            return random.choice(self._cluster.get_member_list()).address
+            return random.choice(self._cluster.get_members())
         except IndexError:
             return None
 

@@ -8,14 +8,15 @@ from hazelcast.config import ClientConfig, ClientProperties
 from hazelcast.connection import ConnectionManager, DefaultAddressProvider
 from hazelcast.core import DistributedObjectInfo
 from hazelcast.invocation import InvocationService
-from hazelcast.listener import ListenerService
-from hazelcast.lifecycle import LifecycleService, LIFECYCLE_STATE_SHUTTING_DOWN, LIFECYCLE_STATE_SHUTDOWN
+from hazelcast.listener import ListenerService, ClusterViewListenerService
+from hazelcast.lifecycle import LifecycleService, LIFECYCLE_STATE_SHUTTING_DOWN, LIFECYCLE_STATE_SHUTDOWN, \
+    LifecycleState
 from hazelcast.partition import PartitionService
 from hazelcast.protocol.codec import client_get_distributed_objects_codec
 from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE, LIST_SERVICE, SET_SERVICE, MULTI_MAP_SERVICE, \
     REPLICATED_MAP_SERVICE, RINGBUFFER_SERVICE, \
-    TOPIC_SERVICE, RELIABLE_TOPIC_SERVICE, ID_GENERATOR_SERVICE, \
-    ID_GENERATOR_ATOMIC_LONG_PREFIX, EXECUTOR_SERVICE, PN_COUNTER_SERVICE, FLAKE_ID_GENERATOR_SERVICE
+    TOPIC_SERVICE, RELIABLE_TOPIC_SERVICE, \
+    EXECUTOR_SERVICE, PN_COUNTER_SERVICE, FLAKE_ID_GENERATOR_SERVICE
 from hazelcast.near_cache import NearCacheManager
 from hazelcast.reactor import AsyncoreReactor
 from hazelcast.serialization import SerializationServiceV1
@@ -42,67 +43,43 @@ class HazelcastClient(object):
         self.name = self._create_client_name()
         self._init_logger()
         self._logger_extras = {"client_name": self.name, "cluster_name": self.config.cluster_name}
-        self._log_group_password_info()
-        self.lifecycle = LifecycleService(self.config, self._logger_extras)
+        self.lifecycle = LifecycleService(self, self._logger_extras)
         self.reactor = AsyncoreReactor(self._logger_extras)
-        self._address_providers = self._create_address_providers()
-        self._address_translator = self._create_address_translator()
-        self.connection_manager = ConnectionManager(self, self.reactor.connection_factory, self._address_translator)
-        self.heartbeat = HeartbeatManager(self)
-        self.invoker = InvocationService(self)
-        self.listener = ListenerService(self)
-        self.cluster = ClusterService(self.config, self, self._address_providers)
-        self.partition_service = PartitionService(self)
-        self.proxy = ProxyManager(self)
+        self._address_provider = self._create_address_provider()
+        self.connection_manager = ConnectionManager(self, self.reactor.connection_factory, self._address_provider)
+        self.cluster = ClusterService(self)
         self.load_balancer = RandomLoadBalancer(self.cluster)
-        self.serialization_service = SerializationServiceV1(serialization_config=self.config.serialization,
-                                                            properties=self.properties)
+        self.partition_service = PartitionService(self)
+        self.listener = ListenerService(self)
+        self.invoker = InvocationService(self)
+        self.proxy = ProxyManager(self)
+        self.serialization_service = SerializationServiceV1(serialization_config=self.config.serialization)
         self.transaction_manager = TransactionManager(self)
         self.lock_reference_id_generator = AtomicInteger(1)
         self.near_cache_manager = NearCacheManager(self)
         self.statistics = Statistics(self)
+        self.cluster_view_listener = ClusterViewListenerService(self)
         self._start()
 
     def _start(self):
         self.reactor.start()
         try:
-            self.invoker.start()
-            self.cluster.start()
-            self.heartbeat.start()
+            self.lifecycle.start()
+            membership_listeners = self.config.membership_listeners
+            self.cluster.start(membership_listeners)
+            self.cluster_view_listener.start()
+            self.connection_manager.start()
+            connection_strategy = self.config.connection_strategy
+            if not connection_strategy.async_start:
+                self.cluster.wait_initial_member_list_fetched()
+                self.connection_manager.connect_to_all_cluster_members()
+
             self.listener.start()
-            self.partition_service.start()
             self.statistics.start()
         except:
             self.reactor.shutdown()
             raise
         logger.info("Client started.", extra=self._logger_extras)
-
-    def get_atomic_long(self, name):
-        """
-        Creates cluster-wide :class:`~hazelcast.proxy.atomic_long.AtomicLong`.
-
-        :param name: (str), name of the AtomicLong proxy.
-        :return: (:class:`~hazelcast.proxy.atomic_long.AtomicLong`), AtomicLong proxy for the given name.
-        """
-        return self.proxy.get_or_create(ATOMIC_LONG_SERVICE, name)
-
-    def get_atomic_reference(self, name):
-        """
-        Creates cluster-wide :class:`~hazelcast.proxy.atomic_reference.AtomicReference`.
-
-        :param name: (str), name of the AtomicReference proxy.
-        :return: (:class:`~hazelcast.proxy.atomic_reference.AtomicReference`), AtomicReference proxy for the given name.
-        """
-        return self.proxy.get_or_create(ATOMIC_REFERENCE_SERVICE, name)
-
-    def get_count_down_latch(self, name):
-        """
-        Creates cluster-wide :class:`~hazelcast.proxy.count_down_latch.CountDownLatch`.
-
-        :param name: (str), name of the CountDownLatch proxy.
-        :return: (:class:`~hazelcast.proxy.count_down_latch.CountDownLatch`), CountDownLatch proxy for the given name.
-        """
-        return self.proxy.get_or_create(COUNT_DOWN_LATCH_SERVICE, name)
 
     def get_executor(self, name):
         """
@@ -122,16 +99,6 @@ class HazelcastClient(object):
         """
         return self.proxy.get_or_create(FLAKE_ID_GENERATOR_SERVICE, name)
 
-    def get_id_generator(self, name):
-        """
-        Creates cluster-wide :class:`~hazelcast.proxy.id_generator.IdGenerator`.
-
-        :param name: (str), name of the IdGenerator proxy.
-        :return: (:class:`~hazelcast.proxy.id_generator.IdGenerator`), IdGenerator proxy for the given name.
-        """
-        atomic_long = self.get_atomic_long(ID_GENERATOR_ATOMIC_LONG_PREFIX + name)
-        return self.proxy.get_or_create(ID_GENERATOR_SERVICE, name, atomic_long=atomic_long)
-
     def get_queue(self, name):
         """
         Returns the distributed queue instance with the specified name.
@@ -149,15 +116,6 @@ class HazelcastClient(object):
         :return: (:class:`~hazelcast.proxy.list.List`), distributed list instance with the specified name.
         """
         return self.proxy.get_or_create(LIST_SERVICE, name)
-
-    def get_lock(self, name):
-        """
-        Returns the distributed lock instance with the specified name.
-
-        :param name: (str), name of the distributed lock.
-        :return: (:class:`~hazelcast.proxy.lock.Lock`), distributed lock instance with the specified name.
-        """
-        return self.proxy.get_or_create(LOCK_SERVICE, name)
 
     def get_map(self, name):
         """
@@ -213,15 +171,6 @@ class HazelcastClient(object):
         """
 
         return self.proxy.get_or_create(RINGBUFFER_SERVICE, name)
-
-    def get_semaphore(self, name):
-        """
-        Returns the distributed Semaphore instance with the specified name.
-
-        :param name: (str), name of the distributed Semaphore.
-        :return: (:class:`~hazelcast.proxy.semaphore.Semaphore`), distributed Semaphore instance with the specified name.
-        """
-        return self.proxy.get_or_create(SEMAPHORE_SERVICE, name)
 
     def get_set(self, name):
         """
@@ -302,27 +251,30 @@ class HazelcastClient(object):
         Shuts down this HazelcastClient.
         """
         if self.lifecycle.live:
-            self.lifecycle.fire_lifecycle_event(LIFECYCLE_STATE_SHUTTING_DOWN)
+            self.lifecycle.fire_lifecycle_event(LifecycleState.SHUTTING_DOWN)
             self.near_cache_manager.destroy_all_near_caches()
+            self.connection_manager.shutdown()
+            self.invoker.shutdown()
             self.statistics.shutdown()
-            self.partition_service.shutdown()
-            self.heartbeat.shutdown()
-            self.cluster.shutdown()
-            self.reactor.shutdown()
-            self.lifecycle.fire_lifecycle_event(LIFECYCLE_STATE_SHUTDOWN)
+            self.lifecycle.fire_lifecycle_event(LifecycleState.SHUTDOWN)
+            self.lifecycle.shutdown()
             logger.info("Client shutdown.", extra=self._logger_extras)
 
-    def _create_address_providers(self):
+    def _create_address_provider(self):
         network_config = self.config.network
-        address_providers = []
-
+        address_list_provided = len(network_config.addresses) != 0
         cloud_config = network_config.cloud
+        cloud_enabled = cloud_config.enabled or cloud_config.discovery_token != ""
+        if address_list_provided and cloud_enabled:
+            raise IllegalStateError("Only one discovery method can be enabled at a time. "
+                                    "Cluster members given explicitly: %s, Hazelcast Cloud enabled: %s"
+                                    % (address_list_provided, cloud_enabled))
+
         cloud_address_provider = self._init_cloud_address_provider(cloud_config)
         if cloud_address_provider:
-            address_providers.append(cloud_address_provider)
+            return cloud_address_provider
 
-        address_providers.append(DefaultAddressProvider(network_config))
-        return address_providers
+        return DefaultAddressProvider(network_config.addresses)
 
     def _init_cloud_address_provider(self, cloud_config):
         if cloud_config.enabled:
@@ -337,47 +289,10 @@ class HazelcastClient(object):
 
         return None
 
-    def _create_address_translator(self):
-        network_config = self.config.network
-        cloud_config = network_config.cloud
-        cloud_discovery_token = self.properties.get(self.properties.HAZELCAST_CLOUD_DISCOVERY_TOKEN)
-
-        address_list_provided = len(network_config.addresses) != 0
-        if cloud_discovery_token != "" and cloud_config.enabled:
-            raise IllegalStateError("Ambiguous Hazelcast.cloud configuration. "
-                                    "Both property based and client configuration based settings are provided "
-                                    "for Hazelcast cloud discovery together. Use only one.")
-
-        hazelcast_cloud_enabled = cloud_discovery_token != "" or cloud_config.enabled
-        self._is_discovery_configuration_consistent(address_list_provided, hazelcast_cloud_enabled)
-
-        if hazelcast_cloud_enabled:
-            if cloud_config.enabled:
-                discovery_token = cloud_config.discovery_token
-            else:
-                discovery_token = cloud_discovery_token
-            host, url = HazelcastCloudDiscovery.get_host_and_url(self.config.get_properties(), discovery_token)
-            return HazelcastCloudAddressTranslator(host, url, self._get_connection_timeout(), self._logger_extras)
-
-        return DefaultAddressTranslator()
-
     def _get_connection_timeout(self):
         network_config = self.config.network
         conn_timeout = network_config.connection_timeout
         return sys.maxsize if conn_timeout == 0 else conn_timeout
-
-    def _is_discovery_configuration_consistent(self, address_list_provided, hazelcast_cloud_enabled):
-        count = 0
-        if address_list_provided:
-            count += 1
-        if hazelcast_cloud_enabled:
-            count += 1
-
-        if count > 1:
-            raise IllegalStateError("Only one discovery method can be enabled at a time. "
-                                    "Cluster members given explicitly: {}"
-                                    ", Hazelcast.cloud enabled: {}".format(address_list_provided,
-                                                                           hazelcast_cloud_enabled))
 
     def _create_client_name(self):
         if self.config.client_name:
@@ -393,11 +308,3 @@ class HazelcastClient(object):
         else:
             logging.config.dictConfig(DEFAULT_LOGGING)
             logger.setLevel(logger_config.level)
-
-    def _log_group_password_info(self):
-        if self.config.group_config.password:
-            logger.info("A non-empty group password is configured for the Hazelcast client. "
-                        "Starting with Hazelcast IMDG version 3.11, clients with the same group name, "
-                        "but with different group passwords (that do not use authentication) will be "
-                        "accepted to a cluster. The group password configuration will be removed "
-                        "completely in a future release.", extra=self._logger_extras)

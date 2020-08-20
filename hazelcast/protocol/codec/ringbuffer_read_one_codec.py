@@ -17,7 +17,7 @@ _REQUEST_INITIAL_FRAME_SIZE = _REQUEST_SEQUENCE_OFFSET + LONG_SIZE_IN_BYTES
 def encode_request(name, sequence):
     buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
     FixSizedTypesCodec.encode_long(buf, _REQUEST_SEQUENCE_OFFSET, sequence)
-    StringCodec.encode(buf, name)
+    StringCodec.encode(buf, name, True)
     return OutboundMessage(buf, True)
 
 

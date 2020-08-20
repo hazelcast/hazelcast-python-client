@@ -3,7 +3,7 @@ Hazelcast client protocol codecs
 """
 
 from collections import namedtuple
-from hazelcast.core import MemberInfo, DistributedObjectInfo, EntryView, Address
+from hazelcast.core import MemberInfo, DistributedObjectInfo, SimpleEntryView, Address
 from hazelcast.six.moves import range
 
 EXCEPTION_MESSAGE_TYPE = 109
@@ -77,7 +77,7 @@ class EntryViewCodec(object):
 
     @classmethod
     def decode(cls, client_message, to_object):
-        entry_view = EntryView()
+        entry_view = SimpleEntryView()
         entry_view.key = to_object(client_message.read_data())
         entry_view.value = to_object(client_message.read_data())
         entry_view.cost = client_message.read_long()

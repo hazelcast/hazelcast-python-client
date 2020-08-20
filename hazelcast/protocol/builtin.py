@@ -2,9 +2,9 @@ import uuid
 
 from hazelcast import six
 from hazelcast.protocol.client_message import NULL_FRAME_BUF, BEGIN_FRAME_BUF, END_FRAME_BUF, \
-    SIZE_OF_FRAME_LENGTH_AND_FLAGS
+    SIZE_OF_FRAME_LENGTH_AND_FLAGS, _IS_FINAL_FLAG, NULL_FINAL_FRAME_BUF, END_FINAL_FRAME_BUF
 from hazelcast.serialization import LONG_SIZE_IN_BYTES, UUID_SIZE_IN_BYTES, LE_INT, LE_LONG, BOOLEAN_SIZE_IN_BYTES, \
-    INT_SIZE_IN_BYTES
+    INT_SIZE_IN_BYTES, LE_ULONG, LE_UINT16
 from hazelcast.serialization.data import Data
 
 
@@ -22,11 +22,14 @@ class CodecUtil(object):
                 num_expected_end_frames += 1
 
     @staticmethod
-    def encode_nullable(buf, value, encoder):
+    def encode_nullable(buf, value, encoder, is_final=False):
         if value is None:
-            buf.extend(NULL_FRAME_BUF)
+            if is_final:
+                buf.extend(NULL_FINAL_FRAME_BUF)
+            else:
+                buf.extend(NULL_FRAME_BUF)
         else:
-            encoder(buf, value)
+            encoder(buf, value, is_final)
 
     @staticmethod
     def decode_nullable(msg, decoder):
@@ -53,9 +56,12 @@ class CodecUtil(object):
 
 class ByteArrayCodec(object):
     @staticmethod
-    def encode(buf, value):
+    def encode(buf, value, is_final=False):
         header = bytearray(SIZE_OF_FRAME_LENGTH_AND_FLAGS)
         LE_INT.pack_into(header, 0, SIZE_OF_FRAME_LENGTH_AND_FLAGS + len(value))
+        if is_final:
+            LE_UINT16.pack_into(header, INT_SIZE_IN_BYTES, _IS_FINAL_FLAG)
+        buf.extend(header)
         buf.extend(value)
 
     @staticmethod
@@ -65,10 +71,13 @@ class ByteArrayCodec(object):
 
 class DataCodec(object):
     @staticmethod
-    def encode(buf, value):
+    def encode(buf, value, is_final=False):
         value_bytes = value.to_bytes()
         header = bytearray(SIZE_OF_FRAME_LENGTH_AND_FLAGS)
         LE_INT.pack_into(header, 0, SIZE_OF_FRAME_LENGTH_AND_FLAGS + len(value_bytes))
+        if is_final:
+            LE_UINT16.pack_into(header, INT_SIZE_IN_BYTES, _IS_FINAL_FLAG)
+        buf.extend(header)
         buf.extend(value_bytes)
 
     @staticmethod
@@ -76,11 +85,14 @@ class DataCodec(object):
         return Data(msg.next_frame().buf)
 
     @staticmethod
-    def encode_nullable(buf, value):
+    def encode_nullable(buf, value, is_final=False):
         if value is None:
-            buf.extend(NULL_FRAME_BUF)
+            if is_final:
+                buf.extend(NULL_FINAL_FRAME_BUF)
+            else:
+                buf.extend(NULL_FRAME_BUF)
         else:
-            DataCodec.encode(buf, value)
+            DataCodec.encode(buf, value, is_final)
 
     @staticmethod
     def decode_nullable(msg):
@@ -92,19 +104,25 @@ class DataCodec(object):
 
 class EntryListCodec(object):
     @staticmethod
-    def encode(buf, entries, key_encoder, value_encoder):
+    def encode(buf, entries, key_encoder, value_encoder, is_final=False):
         buf.extend(BEGIN_FRAME_BUF)
         for key, value in entries:
             key_encoder(buf, key)
             value_encoder(buf, value)
-        buf.extend(END_FRAME_BUF)
+        if is_final:
+            buf.extend(END_FINAL_FRAME_BUF)
+        else:
+            buf.extend(END_FRAME_BUF)
 
     @staticmethod
-    def encode_nullable(buf, entries, key_encoder, value_encoder):
+    def encode_nullable(buf, entries, key_encoder, value_encoder, is_final=False):
         if entries is None:
-            buf.extend(NULL_FRAME_BUF)
+            if is_final:
+                buf.extend(NULL_FINAL_FRAME_BUF)
+            else:
+                buf.extend(NULL_FRAME_BUF)
         else:
-            EntryListCodec.encode(buf, entries, key_encoder, value_encoder)
+            EntryListCodec.encode(buf, entries, key_encoder, value_encoder, is_final)
 
     @staticmethod
     def decode(msg, key_decoder, value_decoder):
@@ -132,9 +150,11 @@ _UUID_LONG_ENTRY_SIZE_IN_BYTES = UUID_SIZE_IN_BYTES + LONG_SIZE_IN_BYTES
 class EntryListUUIDLongCodec(object):
 
     @staticmethod
-    def encode(buf, entries):
+    def encode(buf, entries, is_final=False):
         n = len(entries)
         b = bytearray(SIZE_OF_FRAME_LENGTH_AND_FLAGS + n * _UUID_LONG_ENTRY_SIZE_IN_BYTES)
+        if is_final:
+            LE_UINT16.pack_into(b, INT_SIZE_IN_BYTES, _IS_FINAL_FLAG)
         for i in range(n):
             key, value = entries[i]
             o = SIZE_OF_FRAME_LENGTH_AND_FLAGS + i * _UUID_LONG_ENTRY_SIZE_IN_BYTES
@@ -145,7 +165,7 @@ class EntryListUUIDLongCodec(object):
     @staticmethod
     def decode(msg):
         b = msg.next_frame().buf
-        n = len(b) / _UUID_LONG_ENTRY_SIZE_IN_BYTES
+        n = len(b) // _UUID_LONG_ENTRY_SIZE_IN_BYTES
         result = []
         for i in range(n):
             o = i * _UUID_LONG_ENTRY_SIZE_IN_BYTES
@@ -157,14 +177,14 @@ class EntryListUUIDLongCodec(object):
 
 class EntryListUUIDListIntegerCodec(object):
     @staticmethod
-    def encode(buf, entries):
+    def encode(buf, entries, is_final=False):
         keys = []
         buf.extend(BEGIN_FRAME_BUF)
         for key, value in six.iteritems(entries):
             keys.append(key)
             ListIntegerCodec.encode(buf, value)
         buf.extend(END_FRAME_BUF)
-        ListUUIDCodec.encode(buf, keys)
+        ListUUIDCodec.encode(buf, keys, is_final)
 
     @staticmethod
     def decode(msg):
@@ -225,8 +245,8 @@ class FixSizedTypesCodec(object):
             return
 
         o = offset + BOOLEAN_SIZE_IN_BYTES
-        FixSizedTypesCodec.encode_long(buf, o, value.int >> _UUID_MSB_SHIFT)
-        FixSizedTypesCodec.encode_long(buf, o + LONG_SIZE_IN_BYTES, value.int & _UUID_LSB_MASK)
+        LE_ULONG.pack_into(buf, o, value.int >> _UUID_MSB_SHIFT)
+        LE_ULONG.pack_into(buf, o + LONG_SIZE_IN_BYTES, value.int & _UUID_LSB_MASK)
 
     @staticmethod
     def decode_uuid(buf, offset):
@@ -242,9 +262,11 @@ class FixSizedTypesCodec(object):
 
 class ListIntegerCodec(object):
     @staticmethod
-    def encode(buf, arr):
+    def encode(buf, arr, is_final=False):
         n = len(arr)
         b = bytearray(SIZE_OF_FRAME_LENGTH_AND_FLAGS + n * INT_SIZE_IN_BYTES)
+        if is_final:
+            LE_UINT16.pack_into(b, INT_SIZE_IN_BYTES, _IS_FINAL_FLAG)
         for i in range(n):
             FixSizedTypesCodec.encode_int(b, SIZE_OF_FRAME_LENGTH_AND_FLAGS + i * INT_SIZE_IN_BYTES, arr[i])
         buf.extend(b)
@@ -252,7 +274,7 @@ class ListIntegerCodec(object):
     @staticmethod
     def decode(msg):
         b = msg.next_frame().buf
-        n = len(b) / INT_SIZE_IN_BYTES
+        n = len(b) // INT_SIZE_IN_BYTES
         result = []
         for i in range(n):
             result.append(FixSizedTypesCodec.decode_int(b, i * INT_SIZE_IN_BYTES))
@@ -261,9 +283,11 @@ class ListIntegerCodec(object):
 
 class ListLongCodec(object):
     @staticmethod
-    def encode(buf, arr):
+    def encode(buf, arr, is_final=False):
         n = len(arr)
         b = bytearray(SIZE_OF_FRAME_LENGTH_AND_FLAGS + n * LONG_SIZE_IN_BYTES)
+        if is_final:
+            LE_UINT16.pack_into(b, INT_SIZE_IN_BYTES, _IS_FINAL_FLAG)
         for i in range(n):
             FixSizedTypesCodec.encode_int(b, SIZE_OF_FRAME_LENGTH_AND_FLAGS + i * LONG_SIZE_IN_BYTES, arr[i])
         buf.extend(b)
@@ -271,7 +295,7 @@ class ListLongCodec(object):
     @staticmethod
     def decode(msg):
         b = msg.next_frame().buf
-        n = len(b) / LONG_SIZE_IN_BYTES
+        n = len(b) // LONG_SIZE_IN_BYTES
         result = []
         for i in range(n):
             result.append(FixSizedTypesCodec.decode_int(b, i * LONG_SIZE_IN_BYTES))
@@ -280,28 +304,37 @@ class ListLongCodec(object):
 
 class ListMultiFrameCodec(object):
     @staticmethod
-    def encode(buf, arr, encoder):
+    def encode(buf, arr, encoder, is_final=False):
         buf.extend(BEGIN_FRAME_BUF)
         for item in arr:
             encoder(buf, item)
-        buf.extend(END_FRAME_BUF)
+        if is_final:
+            buf.extend(END_FINAL_FRAME_BUF)
+        else:
+            buf.extend(END_FRAME_BUF)
 
     @staticmethod
-    def encode_contains_nullable(buf, arr, encoder):
+    def encode_contains_nullable(buf, arr, encoder, is_final=False):
         buf.extend(BEGIN_FRAME_BUF)
         for item in arr:
             if item is None:
                 buf.extend(NULL_FRAME_BUF)
             else:
                 encoder(buf, item)
-        buf.extend(END_FRAME_BUF)
+        if is_final:
+            buf.extend(END_FINAL_FRAME_BUF)
+        else:
+            buf.extend(END_FRAME_BUF)
 
     @staticmethod
-    def encode_nullable(buf, arr, encoder):
+    def encode_nullable(buf, arr, encoder, is_final=False):
         if arr is None:
-            buf.extend(NULL_FRAME_BUF)
+            if is_final:
+                buf.extend(NULL_FINAL_FRAME_BUF)
+            else:
+                buf.extend(NULL_FRAME_BUF)
         else:
-            ListMultiFrameCodec.encode(buf, arr, encoder)
+            ListMultiFrameCodec.encode(buf, arr, encoder, is_final)
 
     @staticmethod
     def decode(msg, decoder):
@@ -336,9 +369,11 @@ class ListMultiFrameCodec(object):
 
 class ListUUIDCodec(object):
     @staticmethod
-    def encode(buf, arr):
+    def encode(buf, arr, is_final=False):
         n = len(arr)
         b = bytearray(SIZE_OF_FRAME_LENGTH_AND_FLAGS + n * UUID_SIZE_IN_BYTES)
+        if is_final:
+            LE_UINT16.pack_into(b, INT_SIZE_IN_BYTES, _IS_FINAL_FLAG)
         for i in range(n):
             FixSizedTypesCodec.encode_uuid(b, SIZE_OF_FRAME_LENGTH_AND_FLAGS + i * UUID_SIZE_IN_BYTES, arr[i])
         buf.extend(b)
@@ -346,7 +381,7 @@ class ListUUIDCodec(object):
     @staticmethod
     def decode(msg):
         b = msg.next_frame().buf
-        n = len(b) / UUID_SIZE_IN_BYTES
+        n = len(b) // UUID_SIZE_IN_BYTES
         result = []
         for i in range(n):
             result.append(FixSizedTypesCodec.decode_uuid(b, i * UUID_SIZE_IN_BYTES))
@@ -355,9 +390,11 @@ class ListUUIDCodec(object):
 
 class LongArrayCodec(object):
     @staticmethod
-    def encode(buf, arr):
+    def encode(buf, arr, is_final=False):
         n = len(arr)
         b = bytearray(SIZE_OF_FRAME_LENGTH_AND_FLAGS + n * LONG_SIZE_IN_BYTES)
+        if is_final:
+            LE_UINT16.pack_into(b, INT_SIZE_IN_BYTES, _IS_FINAL_FLAG)
         for i in range(n):
             FixSizedTypesCodec.encode_uuid(b, SIZE_OF_FRAME_LENGTH_AND_FLAGS + i * LONG_SIZE_IN_BYTES, arr[i])
         buf.extend(b)
@@ -365,7 +402,7 @@ class LongArrayCodec(object):
     @staticmethod
     def decode(msg):
         b = msg.next_frame().buf
-        n = len(b) / LONG_SIZE_IN_BYTES
+        n = len(b) // LONG_SIZE_IN_BYTES
         result = []
         for i in range(n):
             result.append(FixSizedTypesCodec.decode_uuid(b, i * LONG_SIZE_IN_BYTES))
@@ -374,19 +411,25 @@ class LongArrayCodec(object):
 
 class MapCodec(object):
     @staticmethod
-    def encode(buf, m, key_encoder, value_encoder):
+    def encode(buf, m, key_encoder, value_encoder, is_final=False):
         buf.extend(BEGIN_FRAME_BUF)
         for key, value in six.iteritems(m):
             key_encoder(buf, key)
             value_encoder(buf, value)
-        buf.extend(END_FRAME_BUF)
+        if is_final:
+            buf.extend(END_FINAL_FRAME_BUF)
+        else:
+            buf.extend(END_FRAME_BUF)
 
     @staticmethod
-    def encode_nullable(buf, m, key_encoder, value_encoder):
+    def encode_nullable(buf, m, key_encoder, value_encoder, is_final=False):
         if m is None:
-            buf.extend(NULL_FRAME_BUF)
+            if is_final:
+                buf.extend(NULL_FINAL_FRAME_BUF)
+            else:
+                buf.extend(NULL_FRAME_BUF)
         else:
-            MapCodec.encode(buf, m, key_encoder, value_encoder)
+            MapCodec.encode(buf, m, key_encoder, value_encoder, is_final)
 
     @staticmethod
     def decode(msg, key_decoder, value_decoder):
@@ -410,10 +453,13 @@ class MapCodec(object):
 
 class StringCodec(object):
     @staticmethod
-    def encode(buf, value):
+    def encode(buf, value, is_final=False):
         value_bytes = value.encode("utf-8")
         header = bytearray(SIZE_OF_FRAME_LENGTH_AND_FLAGS)
         LE_INT.pack_into(header, 0, SIZE_OF_FRAME_LENGTH_AND_FLAGS + len(value_bytes))
+        if is_final:
+            LE_UINT16.pack_into(header, INT_SIZE_IN_BYTES, _IS_FINAL_FLAG)
+        buf.extend(header)
         buf.extend(value_bytes)
 
     @staticmethod

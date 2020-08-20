@@ -36,7 +36,7 @@ class PartitionService(object):
         """
         should_log = logger.isEnabledFor(logging.DEBUG)
         if should_log:
-            logger.debug("Handling new partition table with version: " + version,
+            logger.debug("Handling new partition table with version: %s" % version,
                          extra=self._logger_extras)
 
         table = self._partition_table
@@ -111,7 +111,7 @@ class PartitionService(object):
     @staticmethod
     def _prepare_partitions(partitions):
         new_partitions = dict()
-        for uuid, partition_list in six.iteritems(partitions):
+        for uuid, partition_list in partitions:
             for partition in partition_list:
                 new_partitions[partition] = uuid
         return new_partitions

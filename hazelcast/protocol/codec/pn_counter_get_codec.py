@@ -19,7 +19,7 @@ def encode_request(name, replica_timestamps, target_replica_uuid):
     buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
     FixSizedTypesCodec.encode_uuid(buf, _REQUEST_TARGET_REPLICA_UUID_OFFSET, target_replica_uuid)
     StringCodec.encode(buf, name)
-    EntryListUUIDLongCodec.encode(buf, replica_timestamps)
+    EntryListUUIDLongCodec.encode(buf, replica_timestamps, True)
     return OutboundMessage(buf, True)
 
 

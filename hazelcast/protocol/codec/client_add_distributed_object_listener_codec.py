@@ -17,7 +17,7 @@ _EVENT_DISTRIBUTED_OBJECT_SOURCE_OFFSET = EVENT_HEADER_SIZE
 
 
 def encode_request(local_only):
-    buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
+    buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE, True)
     FixSizedTypesCodec.encode_boolean(buf, _REQUEST_LOCAL_ONLY_OFFSET, local_only)
     return OutboundMessage(buf, False)
 
