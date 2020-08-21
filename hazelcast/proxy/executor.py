@@ -25,9 +25,9 @@ class Executor(Proxy):
         partition_id = self._client.partition_service.get_partition_id(key_data)
 
         uuid = self._get_uuid()
-        return self._encode_invoke_on_partition(executor_service_submit_to_partition_codec, partition_id,
-                                                uuid=uuid, callable=self._to_data(task),
-                                                partition_id=partition_id)
+        return self._invoke_on_partition(executor_service_submit_to_partition_codec, partition_id,
+                                         uuid=uuid, callable=self._to_data(task),
+                                         partition_id=partition_id)
 
     def execute_on_member(self, member, task):
         """
@@ -72,18 +72,18 @@ class Executor(Proxy):
 
         :return: (bool), ``true`` if this executor has been shut down.
         """
-        return self._encode_invoke(executor_service_is_shutdown_codec)
+        return self._invoke(executor_service_is_shutdown_codec)
 
     def shutdown(self):
         """
         Initiates a shutdown process which works orderly. Tasks that were submitted before shutdown are executed but new
         task will not be accepted.
         """
-        return self._encode_invoke(executor_service_shutdown_codec)
+        return self._invoke(executor_service_shutdown_codec)
 
     def _execute_on_member(self, address, uuid, task_data):
-        return self._encode_invoke_on_target(executor_service_submit_to_address_codec, address, uuid=uuid,
-                                             callable=task_data, address=address)
+        return self._invoke_on_target(executor_service_submit_to_address_codec, address, uuid=uuid,
+                                      callable=task_data, address=address)
 
     def _get_uuid(self):
         return str(uuid4())

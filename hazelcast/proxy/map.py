@@ -1,6 +1,7 @@
 import itertools
 
 from hazelcast.future import combine_futures, ImmediateFuture
+from hazelcast.invocation import Invocation
 from hazelcast.near_cache import NearCache
 from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_entry_listener_to_key_codec, \
     map_add_entry_listener_with_predicate_codec, map_add_entry_listener_to_key_with_predicate_codec, \
@@ -15,7 +16,7 @@ from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_entry
     map_add_interceptor_codec, map_execute_on_all_keys_codec, map_execute_on_key_codec, map_execute_on_keys_codec, \
     map_execute_with_predicate_codec
 from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType, get_entry_listener_flags, MAX_SIZE
-from hazelcast.util import check_not_none, thread_id, to_millis
+from hazelcast.util import check_not_none, thread_id, to_millis, ImmutableLazyDataList
 from hazelcast import six
 
 
@@ -55,7 +56,7 @@ class Map(Proxy):
     """
     def __init__(self, client, service_name, name):
         super(Map, self).__init__(client, service_name, name)
-        self.reference_id_generator = self._client.lock_reference_id_generator
+        self._reference_id_generator = self._client.lock_reference_id_generator
 
     def add_entry_listener(self, include_value=False, key=None, predicate=None, added_func=None, removed_func=None,
                            updated_func=None, evicted_func=None, evict_all_func=None, clear_all_func=None,
@@ -148,7 +149,9 @@ class Map(Proxy):
         :param attribute: (str), index attribute of the value.
         :param ordered: (bool), for ordering the index or not (optional).
         """
-        return self._encode_invoke(map_add_index_codec, attribute=attribute, ordered=ordered)
+
+        # TODO implement add index logic
+        return self._invoke(map_add_index_codec, attribute=attribute, ordered=ordered)
 
     def add_interceptor(self, interceptor):
         """
@@ -157,7 +160,10 @@ class Map(Proxy):
         :param interceptor: (object), interceptor for the map which includes user defined methods.
         :return: (str),id of registered interceptor.
         """
-        return self._encode_invoke(map_add_interceptor_codec, interceptor=self._to_data(interceptor))
+        interceptor_data = self._to_data(interceptor)
+
+        request = map_add_interceptor_codec.encode_request(self.name, interceptor_data)
+        return self._invoke(request, map_add_interceptor_codec.decode_response)
 
     def clear(self):
         """
@@ -165,7 +171,8 @@ class Map(Proxy):
 
         The MAP_CLEARED event is fired for any registered listeners.
         """
-        return self._encode_invoke(map_clear_codec)
+        request = map_clear_codec.encode_request(self.name)
+        return self._invoke(request)
 
     def contains_key(self, key):
         """
@@ -190,7 +197,9 @@ class Map(Proxy):
         """
         check_not_none(value, "value can't be None")
         value_data = self._to_data(value)
-        return self._encode_invoke(map_contains_value_codec, value=value_data)
+
+        request = map_contains_value_codec.encode_request(self.name, value_data)
+        return self._invoke(request, map_contains_value_codec.decode_response)
 
     def delete(self, key):
         """
@@ -226,10 +235,18 @@ class Map(Proxy):
         .. seealso:: :class:`~hazelcast.serialization.predicate.Predicate` for more info about predicates.
         """
         if predicate:
+            def handler(message):
+                return ImmutableLazyDataList(map_entries_with_predicate_codec.decode_response(message), self._to_object)
+
             predicate_data = self._to_data(predicate)
-            return self._encode_invoke(map_entries_with_predicate_codec, predicate=predicate_data)
+            request = map_entries_with_predicate_codec.encode_request(self.name, predicate_data)
         else:
-            return self._encode_invoke(map_entry_set_codec)
+            def handler(message):
+                return ImmutableLazyDataList(map_entry_set_codec.decode_response(message), self._to_object)
+
+            request = map_entry_set_codec.encode_request(self.name)
+
+        return self._invoke(request, handler)
 
     def evict(self, key):
         """
@@ -251,7 +268,8 @@ class Map(Proxy):
 
         The EVICT_ALL event is fired for any registered listeners.
         """
-        return self._encode_invoke(map_evict_all_codec)
+        request = map_evict_all_codec.encode_request(self.name)
+        return self._invoke(request)
 
     def execute_on_entries(self, entry_processor, predicate=None):
         """
@@ -268,9 +286,20 @@ class Map(Proxy):
         .. seealso:: :class:`~hazelcast.serialization.predicate.Predicate` for more info about predicates.
         """
         if predicate:
-            return self._encode_invoke(map_execute_with_predicate_codec, entry_processor=self._to_data(entry_processor),
-                                       predicate=self._to_data(predicate))
-        return self._encode_invoke(map_execute_on_all_keys_codec, entry_processor=self._to_data(entry_processor))
+            def handler(message):
+                return ImmutableLazyDataList(map_execute_with_predicate_codec.decode_response(message), self._to_object)
+
+            entry_processor_data = self._to_data(entry_processor)
+            predicate_data = self._to_data(predicate)
+            request = map_execute_with_predicate_codec.encode_request(self.name, entry_processor_data, predicate_data)
+        else:
+            def handler(message):
+                return ImmutableLazyDataList(map_execute_on_all_keys_codec.decode_response(message), self._to_object)
+
+            entry_processor_data = self._to_data(entry_processor)
+            request = map_execute_on_all_keys_codec.encode_request(self.name, entry_processor_data)
+
+        return self._invoke(request, handler)
 
     def execute_on_key(self, key, entry_processor):
         """
@@ -308,14 +337,20 @@ class Map(Proxy):
         if len(keys) == 0:
             return ImmediateFuture([])
 
-        return self._encode_invoke(map_execute_on_keys_codec, entry_processor=self._to_data(entry_processor),
-                                   keys=key_list)
+        def handler(message):
+            return ImmutableLazyDataList(map_execute_on_keys_codec.decode_response(message), self._to_object)
+
+        entry_processor_data = self._to_data(entry_processor)
+        request = map_execute_on_keys_codec.encode_request(self.name, entry_processor_data, key_list)
+        return self._invoke(request, handler)
 
     def flush(self):
         """
         Flushes all the local dirty entries.
         """
-        return self._encode_invoke(map_flush_codec)
+
+        request = map_flush_codec.encode_request(self.name)
+        return self._invoke(request)
 
     def force_unlock(self, key):
         """
@@ -329,8 +364,10 @@ class Map(Proxy):
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(map_force_unlock_codec, key_data, key=key_data,
-                                          reference_id=self.reference_id_generator.get_and_increment())
+
+        request = map_force_unlock_codec.encode_request(self.name, key_data,
+                                                        self._reference_id_generator.get_and_increment())
+        return self._invoke_on_key(request, key_data)
 
     def get(self, key):
         """
@@ -402,8 +439,20 @@ class Map(Proxy):
         .. seealso:: :class:`~hazelcast.core.EntryView` for more info about EntryView.
         """
         check_not_none(key, "key can't be None")
+
+        def handler(message):
+            response = map_get_entry_view_codec.decode_response(message)
+            entry_view = response["response"]
+            if not entry_view:
+                return None
+
+            entry_view.key = self._to_object(entry_view.key)
+            entry_view.value = self._to_object(entry_view.value)
+            return entry_view
+
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(map_get_entry_view_codec, key_data, key=key_data, thread_id=thread_id())
+        request = map_get_entry_view_codec.encode_request(self.name, key_data, thread_id())
+        return self._invoke_on_key(request, key_data, handler)
 
     def is_empty(self):
         """
@@ -411,7 +460,8 @@ class Map(Proxy):
 
         :return: (bool), ``true`` if this map contains no key-value mappings.
         """
-        return self._encode_invoke(map_is_empty_codec)
+        request = map_is_empty_codec.encode_request(self.name)
+        return self._invoke(request, map_is_empty_codec.decode_response)
 
     def is_locked(self, key):
         """
@@ -425,7 +475,9 @@ class Map(Proxy):
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(map_is_locked_codec, key_data, key=key_data)
+
+        request = map_is_locked_codec.encode_request(self.name, key_data)
+        return self._invoke_on_key(request, key_data, map_is_locked_codec.decode_response)
 
     def key_set(self, predicate=None):
         """
@@ -441,10 +493,18 @@ class Map(Proxy):
         .. seealso:: :class:`~hazelcast.serialization.predicate.Predicate` for more info about predicates.
         """
         if predicate:
+            def handler(message):
+                return ImmutableLazyDataList(map_key_set_with_predicate_codec.decode_response(message), self._to_object)
+
             predicate_data = self._to_data(predicate)
-            return self._encode_invoke(map_key_set_with_predicate_codec, predicate=predicate_data)
+            request = map_key_set_with_predicate_codec.encode_request(self.name, predicate_data)
         else:
-            return self._encode_invoke(map_key_set_codec)
+            def handler(message):
+                return ImmutableLazyDataList(map_key_set_codec.decode_response(message), self._to_object)
+
+            request = map_key_set_codec.encode_request(self.name)
+
+        return self._invoke(request, handler)
 
     def load_all(self, keys=None, replace_existing_values=True):
         """
@@ -458,7 +518,8 @@ class Map(Proxy):
             key_data_list = list(map(self._to_data, keys))
             return self._load_all_internal(key_data_list, replace_existing_values)
         else:
-            return self._encode_invoke(map_load_all_codec, replace_existing_values=replace_existing_values)
+            request = map_load_all_codec.encode_request(self.name, replace_existing_values)
+            return self._invoke(request)
 
     def lock(self, key, ttl=-1):
         """
@@ -485,9 +546,13 @@ class Map(Proxy):
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(map_lock_codec, key_data, invocation_timeout=MAX_SIZE, key=key_data,
-                                          thread_id=thread_id(), ttl=to_millis(ttl),
-                                          reference_id=self.reference_id_generator.get_and_increment())
+
+        request = map_lock_codec.encode_request(self.name, key_data, thread_id(), to_millis(ttl),
+                                                self._reference_id_generator.get_and_increment())
+        partition_id = self._client.partition_service.get_partition_id(key_data)
+        invocation = Invocation(request, partition_id=partition_id, timeout=MAX_SIZE)
+        self._invoker.invoke(invocation)
+        return invocation.future
 
     def put(self, key, value, ttl=-1):
         """
@@ -540,7 +605,8 @@ class Map(Proxy):
 
         futures = []
         for partition_id, entry_list in six.iteritems(partition_map):
-            future = self._encode_invoke_on_partition(map_put_all_codec, partition_id, entries=dict(entry_list))
+            request = map_put_all_codec.encode_request(self.name, entry_list, False)  # TODO trigger map loader
+            future = self._invoke_on_partition(request, partition_id)
             futures.append(future)
 
         return combine_futures(*futures)
@@ -731,7 +797,8 @@ class Map(Proxy):
 
         :return: (int), number of entries in this map.
         """
-        return self._encode_invoke(map_size_codec)
+        request = map_size_codec.encode_request(self.name)
+        return self._invoke(request, map_size_codec.decode_response)
 
     def try_lock(self, key, ttl=-1, timeout=0):
         """
@@ -753,10 +820,13 @@ class Map(Proxy):
         check_not_none(key, "key can't be None")
 
         key_data = self._to_data(key)
-
-        return self._encode_invoke_on_key(map_try_lock_codec, key_data, invocation_timeout=MAX_SIZE, key=key_data,
-                                          thread_id=thread_id(), lease=to_millis(ttl), timeout=to_millis(timeout),
-                                          reference_id=self.reference_id_generator.get_and_increment())
+        request = map_try_lock_codec.encode_request(self.name, key_data, thread_id(),
+                                                    to_millis(ttl), to_millis(timeout),
+                                                    self._reference_id_generator.get_and_increment())
+        partition_id = self._client.partition_service.get_partition_id(key_data)
+        invocation = Invocation(request, partition_id=partition_id, timeout=MAX_SIZE)
+        self._invoker.invoke(invocation)
+        return invocation.future
 
     def try_put(self, key, value, timeout=0):
         """
@@ -800,9 +870,9 @@ class Map(Proxy):
         check_not_none(key, "key can't be None")
 
         key_data = self._to_data(key)
-
-        return self._encode_invoke_on_key(map_unlock_codec, key_data, key=key_data, thread_id=thread_id(),
-                                          reference_id=self.reference_id_generator.get_and_increment())
+        request = map_unlock_codec.encode_request(self.name, key_data, thread_id(),
+                                                  self._reference_id_generator.get_and_increment())
+        return self._invoke_on_key(request, key_data)
 
     def values(self, predicate=None):
         """
@@ -819,23 +889,41 @@ class Map(Proxy):
         .. seealso:: :class:`~hazelcast.serialization.predicate.Predicate` for more info about predicates.
         """
         if predicate:
+            def handler(message):
+                return ImmutableLazyDataList(map_values_with_predicate_codec.decode_response(message), self._to_object)
+
             predicate_data = self._to_data(predicate)
-            return self._encode_invoke(map_values_with_predicate_codec, predicate=predicate_data)
+            request = map_values_with_predicate_codec.encode_request(self.name, predicate_data)
         else:
-            return self._encode_invoke(map_values_codec)
+            def handler(message):
+                return ImmutableLazyDataList(map_values_codec.decode_response(message), self._to_object)
+
+            request = map_values_codec.encode_request(self.name)
+
+        return self._invoke(request, handler)
 
     # internals
     def _contains_key_internal(self, key_data):
-        return self._encode_invoke_on_key(map_contains_key_codec, key_data, key=key_data, thread_id=thread_id())
+        request = map_contains_key_codec.encode_request(self.name, key_data, thread_id())
+        return self._invoke_on_key(request, key_data, map_contains_key_codec.decode_response)
 
     def _get_internal(self, key_data):
-        return self._encode_invoke_on_key(map_get_codec, key_data, key=key_data, thread_id=thread_id())
+        def handler(message):
+            return self._to_object(map_get_codec.decode_response(message))
+
+        request = map_get_codec.encode_request(self.name, key_data, thread_id())
+        return self._invoke_on_key(request, key_data, handler)
 
     def _get_all_internal(self, partition_to_keys, futures=None):
         if futures is None:
             futures = []
+
+        def handler(message):
+            return ImmutableLazyDataList(map_get_all_codec.decode_response(message), self._to_object)
+
         for partition_id, key_dict in six.iteritems(partition_to_keys):
-            future = self._encode_invoke_on_partition(map_get_all_codec, partition_id, keys=list(key_dict.values()))
+            request = map_get_all_codec.encode_request(self.name, six.itervalues(key_dict))
+            future = self._invoke_on_partition(request, partition_id, handler)
             futures.append(future)
 
         def merge(f):
@@ -844,55 +932,77 @@ class Map(Proxy):
         return combine_futures(*futures).continue_with(merge)
 
     def _remove_internal(self, key_data):
-        return self._encode_invoke_on_key(map_remove_codec, key_data, key=key_data, thread_id=thread_id())
+        def handler(message):
+            return self._to_object(map_remove_codec.decode_response(message))
+
+        request = map_remove_codec.encode_request(self.name, key_data, thread_id())
+        return self._invoke_on_key(request, key_data, handler)
 
     def _remove_if_same_internal_(self, key_data, value_data):
-        return self._encode_invoke_on_key(map_remove_if_same_codec, key_data, key=key_data, value=value_data,
-                                          thread_id=thread_id())
+        request = map_remove_if_same_codec.encode_request(self.name, key_data, value_data, thread_id())
+        return self._invoke_on_key(request, key_data)
 
     def _delete_internal(self, key_data):
-        return self._encode_invoke_on_key(map_delete_codec, key_data, key=key_data, thread_id=thread_id())
+        request = map_delete_codec.encode_request(self.name, key_data, thread_id())
+        return self._invoke_on_key(request, key_data)
 
     def _put_internal(self, key_data, value_data, ttl):
-        return self._encode_invoke_on_key(map_put_codec, key_data, key=key_data, value=value_data, thread_id=thread_id(),
-                                          ttl=to_millis(ttl))
+        def handler(message):
+            return self._to_object(map_put_codec.decode_response(message))
+
+        request = map_put_codec.encode_request(self.name, key_data, value_data, thread_id(), to_millis(ttl))
+        return self._invoke_on_key(request, key_data, handler)
 
     def _set_internal(self, key_data, value_data, ttl):
-        return self._encode_invoke_on_key(map_set_codec, key_data, key=key_data, value=value_data, thread_id=thread_id(),
-                                          ttl=to_millis(ttl))
+        request = map_set_codec.encode_request(self.name, key_data, value_data, thread_id(), to_millis(ttl))
+        return self._invoke_on_key(request, key_data)
 
     def _try_remove_internal(self, key_data, timeout):
-        return self._encode_invoke_on_key(map_try_remove_codec, key_data, key=key_data, thread_id=thread_id(),
-                                          timeout=to_millis(timeout))
+        request = map_try_remove_codec.encode_request(self.name, key_data, thread_id(), to_millis(timeout))
+        return self._invoke_on_key(request, key_data, map_try_remove_codec.decode_response)
 
     def _try_put_internal(self, key_data, value_data, timeout):
-        return self._encode_invoke_on_key(map_try_put_codec, key_data, key=key_data, value=value_data,
-                                          thread_id=thread_id(), timeout=to_millis(timeout))
+        request = map_try_put_codec.encode_request(self.name, key_data, value_data, thread_id(), to_millis(timeout))
+        return self._invoke_on_key(request, key_data, map_try_put_codec.decode_response)
 
     def _put_transient_internal(self, key_data, value_data, ttl):
-        return self._encode_invoke_on_key(map_put_transient_codec, key_data, key=key_data, value=value_data,
-                                          thread_id=thread_id(), ttl=to_millis(ttl))
+        request = map_put_transient_codec.encode_request(self.name, key_data, value_data, thread_id(), to_millis(ttl))
+        return self._invoke_on_key(request, key_data)
 
     def _put_if_absent_internal(self, key_data, value_data, ttl):
-        return self._encode_invoke_on_key(map_put_if_absent_codec, key_data, key=key_data, value=value_data,
-                                          thread_id=thread_id(), ttl=to_millis(ttl))
+        def handler(message):
+            return self._to_object(map_put_if_absent_codec.decode_response(message))
+
+        request = map_put_if_absent_codec.encode_request(self.name, key_data, value_data, thread_id(), to_millis(ttl))
+        return self._invoke_on_key(request, key_data, handler)
 
     def _replace_if_same_internal(self, key_data, old_value_data, new_value_data):
-        return self._encode_invoke_on_key(map_replace_if_same_codec, key_data, key=key_data, test_value=old_value_data,
-                                          value=new_value_data, thread_id=thread_id())
+        request = map_replace_if_same_codec.encode_request(self.name, key_data, old_value_data, new_value_data,
+                                                           thread_id())
+        return self._invoke_on_key(request, key_data, map_replace_if_same_codec.decode_response)
 
     def _replace_internal(self, key_data, value_data):
-        return self._encode_invoke_on_key(map_replace_codec, key_data, key=key_data, value=value_data, thread_id=thread_id())
+        def handler(message):
+            return self._to_object(map_replace_codec.decode_response(message))
+
+        request = map_replace_codec.encode_request(self.name, key_data, value_data, thread_id())
+        return self._invoke_on_key(request, key_data, handler)
 
     def _evict_internal(self, key_data):
-        return self._encode_invoke_on_key(map_evict_codec, key_data, key=key_data, thread_id=thread_id())
+        request = map_evict_codec.encode_request(self.name, key_data, thread_id())
+        return self._invoke_on_key(request, key_data, map_evict_codec.decode_response)
 
     def _load_all_internal(self, key_data_list, replace_existing_values):
-        return self._encode_invoke(map_load_given_keys_codec, keys=key_data_list, replace_existing_values=replace_existing_values)
+        request = map_load_given_keys_codec.encode_request(self.name, key_data_list, replace_existing_values)
+        return self._invoke(request)
 
     def _execute_on_key_internal(self, key_data, entry_processor):
-        return self._encode_invoke_on_key(map_execute_on_key_codec, key_data, key=key_data,
-                                          entry_processor=self._to_data(entry_processor), thread_id=thread_id())
+        def handler(message):
+            return self._to_object(map_execute_on_key_codec.decode_response(message))
+
+        entry_processor_data = self._to_data(entry_processor)
+        request = map_execute_on_key_codec.encode_request(self.name, entry_processor_data, key_data, thread_id())
+        return self._invoke_on_key(request, key_data, handler)
 
 
 class MapFeatNearCache(Map):

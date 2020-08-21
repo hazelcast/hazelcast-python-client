@@ -43,7 +43,8 @@ class Topic(PartitionSpecificProxy):
         :param message: (object), the message to be published.
         """
         message_data = self._to_data(message)
-        self._encode_invoke(topic_publish_codec, message=message_data)
+        request = topic_publish_codec.encode_request(self.name, message_data)
+        return self._invoke(request)
 
     def remove_listener(self, registration_id):
         """

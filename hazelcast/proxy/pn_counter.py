@@ -2,7 +2,6 @@ import functools
 import logging
 import random
 
-from hazelcast.core import DataMemberSelector
 from hazelcast.future import Future
 from hazelcast.proxy.base import Proxy
 from hazelcast.cluster import VectorClock
@@ -74,7 +73,6 @@ class PNCounter(Proxy):
 
         :return: (int), the current value of the counter.
         """
-
         return self._invoke_internal(pn_counter_get_codec)
 
     def get_and_add(self, delta):
@@ -208,11 +206,10 @@ class PNCounter(Proxy):
             delegated_future.set_exception(NoDataMemberInClusterError("Cannot invoke operations on a CRDT because "
                                                                       "the cluster does not contain any data members"))
             return
+        request = codec.encode_request(name=self.name, replica_timestamps=self._observed_clock.entry_set(),
+                                       target_replica_uuid=target.uuid, **kwargs)
 
-        future = self._encode_invoke_on_target(codec, target, self._response_handler,
-                                               replica_timestamps=self._observed_clock.entry_set(),
-                                               target_replica=target,
-                                               **kwargs)
+        future = self._invoke_on_target(request, target.uuid, codec.decode_response)
 
         checker_func = functools.partial(self._check_invocation_result, delegated_future=delegated_future,
                                          excluded_addresses=excluded_addresses, target=target, codec=codec, **kwargs)
@@ -251,14 +248,14 @@ class PNCounter(Proxy):
         return replica_addresses[random_replica_index]
 
     def _get_replica_addresses(self, excluded_addresses):
-        data_members = self._client.cluster.get_members(DataMemberSelector())
+        data_members = self._client.cluster.get_members(lambda member: not member.lite_member)
         replica_count = self._get_max_configured_replica_count()
 
         current_count = min(replica_count, len(data_members))
         replica_addresses = []
 
         for i in range(current_count):
-            member_address = data_members[i].address
+            member_address = data_members[i]
             if member_address not in excluded_addresses:
                 replica_addresses.append(member_address)
 
@@ -268,7 +265,8 @@ class PNCounter(Proxy):
         if self._max_replica_count > 0:
             return self._max_replica_count
 
-        count = self._encode_invoke(pn_counter_get_configured_replica_count_codec).result()
+        request = pn_counter_get_configured_replica_count_codec.encode_request(self.name)
+        count = self._invoke(request, pn_counter_get_configured_replica_count_codec.decode_response).result()
         self._max_replica_count = count
         return self._max_replica_count
 
@@ -283,8 +281,3 @@ class PNCounter(Proxy):
             vector_clock.set_replica_timestamp(replica_id, timestamp)
 
         return vector_clock
-
-    def _response_handler(self, future, codec, to_object):
-        response = future.result()
-        if response:
-            return codec.decode_response(response, to_object)

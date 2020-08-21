@@ -12,12 +12,16 @@ from hazelcast import six
 logger = logging.getLogger(__name__)
 
 
+def _no_op_response_handler(_):
+    return None
+
+
 class Invocation(object):
     __slots__ = ("request", "timeout", "partition_id", "uuid", "connection", "event_handler",
-                 "future", "sent_connection", "timer", "urgent")
+                 "future", "sent_connection", "timer", "urgent", "response_handler")
 
-    def __init__(self, request, partition_id=-1, uuid=None,
-                 connection=None, event_handler=None, urgent=False, timeout=None):
+    def __init__(self, request, partition_id=-1, uuid=None, connection=None,
+                 event_handler=None, urgent=False, timeout=None, response_handler=_no_op_response_handler):
         self.request = request
         self.partition_id = partition_id
         self.uuid = uuid
@@ -29,11 +33,12 @@ class Invocation(object):
         self.timeout = None
         self.sent_connection = None
         self.timer = None
+        self.response_handler = response_handler
 
     def set_response(self, response):
         if self.timer:
             self.timer.cancel()
-        self.future.set_result(response)
+        self.future.set_result(self.response_handler(response))
 
     def set_exception(self, exception, traceback=None):
         if self.timer:

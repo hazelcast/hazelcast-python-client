@@ -14,7 +14,7 @@ from hazelcast.protocol.codec import \
     set_size_codec
 
 from hazelcast.proxy.base import PartitionSpecificProxy, ItemEvent, ItemEventType
-from hazelcast.util import check_not_none
+from hazelcast.util import check_not_none, ImmutableLazyDataList
 
 
 class Set(PartitionSpecificProxy):
@@ -30,7 +30,8 @@ class Set(PartitionSpecificProxy):
         """
         check_not_none(item, "Value can't be None")
         element_data = self._to_data(item)
-        return self._encode_invoke(set_add_codec, value=element_data)
+        request = set_add_codec.encode_request(self.name, element_data)
+        return self._invoke(request, set_add_codec.decode_response)
 
     def add_all(self, items):
         """
@@ -44,7 +45,9 @@ class Set(PartitionSpecificProxy):
         for item in items:
             check_not_none(item, "Value can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke(set_add_all_codec, value_list=data_items)
+
+        request = set_add_all_codec.encode_request(self.name, data_items)
+        return self._invoke(request, set_add_all_codec.decode_response)
 
     def add_listener(self, include_value=False, item_added_func=None, item_removed_func=None):
         """
@@ -77,7 +80,8 @@ class Set(PartitionSpecificProxy):
         """
         Clears the set. Set will be empty with this call.
         """
-        return self._encode_invoke(set_clear_codec)
+        request = set_clear_codec.encode_request(self.name)
+        return self._invoke(request)
 
     def contains(self, item):
         """
@@ -88,7 +92,8 @@ class Set(PartitionSpecificProxy):
         """
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)
-        return self._encode_invoke(set_contains_codec, value=item_data)
+        request = set_contains_codec.encode_request(self.name, item_data)
+        return self._invoke(request, set_contains_codec.decode_response)
 
     def contains_all(self, items):
         """
@@ -102,7 +107,9 @@ class Set(PartitionSpecificProxy):
         for item in items:
             check_not_none(item, "Value can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke(set_contains_all_codec, items=data_items)
+
+        request = set_contains_all_codec.encode_request(self.name, data_items)
+        return self._invoke(request, set_contains_all_codec.decode_response)
 
     def get_all(self):
         """
@@ -110,7 +117,11 @@ class Set(PartitionSpecificProxy):
 
         :return: (Sequence), list of the items in this set.
         """
-        return self._encode_invoke(set_get_all_codec)
+        def handler(message):
+            return ImmutableLazyDataList(set_get_all_codec.decode_response(message), self._to_object)
+
+        request = set_get_all_codec.encode_request(self.name)
+        return self._invoke(request, handler)
 
     def is_empty(self):
         """
@@ -118,7 +129,8 @@ class Set(PartitionSpecificProxy):
 
         :return: (bool), ``true`` if this set is empty, ``false`` otherwise.
         """
-        return self._encode_invoke(set_is_empty_codec)
+        request = set_is_empty_codec.encode_request(self.name)
+        return self._invoke(request, set_is_empty_codec.decode_response)
 
     def remove(self, item):
         """
@@ -129,7 +141,8 @@ class Set(PartitionSpecificProxy):
         """
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)
-        return self._encode_invoke(set_remove_codec, value=item_data)
+        request = set_remove_codec.encode_request(self.name, item_data)
+        return self._invoke(request, set_remove_codec.decode_response)
 
     def remove_all(self, items):
         """
@@ -143,7 +156,9 @@ class Set(PartitionSpecificProxy):
         for item in items:
             check_not_none(item, "Value can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke(set_compare_and_remove_all_codec, values=data_items)
+
+        request = set_compare_and_remove_all_codec.encode_request(self.name, data_items)
+        return self._invoke(request, set_compare_and_remove_all_codec.decode_response)
 
     def remove_listener(self, registration_id):
         """
@@ -167,7 +182,9 @@ class Set(PartitionSpecificProxy):
         for item in items:
             check_not_none(item, "Value can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke(set_compare_and_retain_all_codec, values=data_items)
+
+        request = set_compare_and_retain_all_codec.encode_request(self.name, data_items)
+        return self._invoke(request, set_compare_and_retain_all_codec.decode_response)
 
     def size(self):
         """
@@ -175,4 +192,5 @@ class Set(PartitionSpecificProxy):
 
         :return: (int), number of items in this set.
         """
-        return self._encode_invoke(set_size_codec)
+        request = set_size_codec.encode_request(self.name)
+        return self._invoke(request, set_size_codec.decode_response)

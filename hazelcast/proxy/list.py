@@ -22,7 +22,7 @@ from hazelcast.protocol.codec import list_add_all_codec, \
     list_size_codec, \
     list_sub_codec
 from hazelcast.proxy.base import PartitionSpecificProxy, ItemEvent, ItemEventType
-from hazelcast.util import check_not_none
+from hazelcast.util import check_not_none, ImmutableLazyDataList
 
 
 class List(PartitionSpecificProxy):
@@ -41,7 +41,8 @@ class List(PartitionSpecificProxy):
         """
         check_not_none(item, "Value can't be None")
         element_data = self._to_data(item)
-        return self._encode_invoke(list_add_codec, value=element_data)
+        request = list_add_codec.encode_request(self.name, element_data)
+        return self._invoke(request, list_add_codec.decode_response)
 
     def add_at(self, index, item):
         """
@@ -53,7 +54,9 @@ class List(PartitionSpecificProxy):
         """
         check_not_none(item, "Value can't be None")
         element_data = self._to_data(item)
-        return self._encode_invoke(list_add_with_index_codec, index=index, value=element_data)
+
+        request = list_add_with_index_codec.encode_request(self.name, index, element_data)
+        return self._invoke(request)
 
     def add_all(self, items):
         """
@@ -68,7 +71,9 @@ class List(PartitionSpecificProxy):
         for item in items:
             check_not_none(item, "Value can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke(list_add_all_codec, value_list=data_items)
+
+        request = list_add_all_codec.encode_request(self.name, data_items)
+        return self._invoke(request, list_add_all_codec.decode_response)
 
     def add_all_at(self, index, items):
         """
@@ -85,7 +90,9 @@ class List(PartitionSpecificProxy):
         for item in items:
             check_not_none(item, "Value can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke(list_add_all_with_index_codec, index=index, value_list=data_items)
+
+        request = list_add_all_with_index_codec.encode_request(self.name, index, data_items)
+        return self._invoke(request, list_add_all_with_index_codec.decode_response)
 
     def add_listener(self, include_value=False, item_added_func=None, item_removed_func=None):
         """
@@ -118,7 +125,8 @@ class List(PartitionSpecificProxy):
         """
         Clears the list. List will be empty with this call.
         """
-        return self._encode_invoke(list_clear_codec)
+        request = list_clear_codec.encode_request(self.name)
+        return self._invoke(request)
 
     def contains(self, item):
         """
@@ -129,7 +137,9 @@ class List(PartitionSpecificProxy):
         """
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)
-        return self._encode_invoke(list_contains_codec, value=item_data)
+
+        request = list_contains_codec.encode_request(self.name, item_data)
+        return self._invoke(request, list_contains_codec.decode_response)
 
     def contains_all(self, items):
         """
@@ -143,7 +153,9 @@ class List(PartitionSpecificProxy):
         for item in items:
             check_not_none(item, "item can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke(list_contains_all_codec, values=data_items)
+
+        request = list_contains_all_codec.encode_request(self.name, data_items)
+        return self._invoke(request, list_contains_all_codec.decode_response)
 
     def get(self, index):
         """
@@ -152,7 +164,11 @@ class List(PartitionSpecificProxy):
         :param index: (int), the specified index of the item to be returned.
         :return: (object), the item in the specified position in this list.
         """
-        return self._encode_invoke(list_get_codec, index=index)
+        def handler(message):
+            return self._to_object(list_get_codec.decode_response(message))
+
+        request = list_get_codec.encode_request(self.name, index)
+        return self._invoke(request, handler)
 
     def get_all(self):
         """
@@ -160,7 +176,11 @@ class List(PartitionSpecificProxy):
 
         :return: (Sequence), list that includes all of the items in this list.
         """
-        return self._encode_invoke(list_get_all_codec)
+        def handler(message):
+            return ImmutableLazyDataList(list_get_all_codec.decode_response(message), self._to_object)
+
+        request = list_get_all_codec.encode_request(self.name)
+        return self._invoke(request, handler)
 
     def iterator(self):
         """
@@ -168,7 +188,11 @@ class List(PartitionSpecificProxy):
 
         :return: (Sequence), an iterator over the elements in this list in proper sequence.
         """
-        return self._encode_invoke(list_iterator_codec)
+        def handler(message):
+            return ImmutableLazyDataList(list_iterator_codec.decode_response(message), self._to_object)
+
+        request = list_iterator_codec.encode_request(self.name)
+        return self._invoke(request, handler)
 
     def index_of(self, item):
         """
@@ -180,7 +204,9 @@ class List(PartitionSpecificProxy):
         """
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)
-        return self._encode_invoke(list_index_of_codec, value=item_data)
+
+        request = list_index_of_codec.encode_request(self.name, item_data)
+        return self._invoke(request, list_index_of_codec.decode_response)
 
     def is_empty(self):
         """
@@ -188,7 +214,9 @@ class List(PartitionSpecificProxy):
 
         :return: (bool), ``true`` if this list contains no elements.
         """
-        return self._encode_invoke(list_is_empty_codec)
+
+        request = list_is_empty_codec.encode_request(self.name)
+        return self._invoke(request, list_is_empty_codec.decode_response)
 
     def last_index_of(self, item):
         """
@@ -200,7 +228,9 @@ class List(PartitionSpecificProxy):
         """
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)
-        return self._encode_invoke(list_last_index_of_codec, value=item_data)
+
+        request = list_last_index_of_codec.encode_request(self.name, item_data)
+        return self._invoke(request, list_last_index_of_codec.decode_response)
 
     def list_iterator(self, index=0):
         """
@@ -209,7 +239,11 @@ class List(PartitionSpecificProxy):
         :param index: (int), index of first element to be returned from the list iterator (optional).
         :return: (Sequence), a list iterator of the elements in this list.
         """
-        return self._encode_invoke(list_list_iterator_codec, index=index)
+        def handler(message):
+            return ImmutableLazyDataList(list_list_iterator_codec.decode_response(message), self._to_object)
+
+        request = list_list_iterator_codec.encode_request(self.name, index)
+        return self._invoke(request, handler)
 
     def remove(self, item):
         """
@@ -220,7 +254,9 @@ class List(PartitionSpecificProxy):
         """
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)
-        return self._encode_invoke(list_remove_codec, value=item_data)
+
+        request = list_remove_codec.encode_request(self.name, item_data)
+        return self._invoke(request, list_remove_codec.decode_response)
 
     def remove_at(self, index):
         """
@@ -230,7 +266,11 @@ class List(PartitionSpecificProxy):
         :param index: (int), index of the item to be removed.
         :return: (object), the item previously at the specified index.
         """
-        return self._encode_invoke(list_remove_with_index_codec, index=index)
+        def handler(message):
+            return self._to_object(list_remove_with_index_codec.decode_response(message))
+
+        request = list_remove_with_index_codec.encode_request(self.name, index)
+        return self._invoke(request, handler)
 
     def remove_all(self, items):
         """
@@ -244,7 +284,9 @@ class List(PartitionSpecificProxy):
         for item in items:
             check_not_none(item, "Value can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke(list_compare_and_remove_all_codec, values=data_items)
+
+        request = list_compare_and_remove_all_codec.encode_request(self.name, data_items)
+        return self._invoke(request, list_compare_and_remove_all_codec.decode_response)
 
     def remove_listener(self, registration_id):
         """
@@ -268,7 +310,9 @@ class List(PartitionSpecificProxy):
         for item in items:
             check_not_none(item, "Value can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke(list_compare_and_retain_all_codec, values=data_items)
+
+        request = list_compare_and_retain_all_codec.encode_request(self.name, data_items)
+        return self._invoke(request, list_compare_and_retain_all_codec.decode_response)
 
     def size(self):
         """
@@ -276,7 +320,9 @@ class List(PartitionSpecificProxy):
 
         :return: (int), number of the elements in this list.
         """
-        return self._encode_invoke(list_size_codec)
+
+        request = list_size_codec.encode_request(self.name)
+        return self._invoke(request, list_size_codec.decode_response)
 
     def set_at(self, index, item):
         """
@@ -288,7 +334,12 @@ class List(PartitionSpecificProxy):
         """
         check_not_none(item, "Value can't be None")
         element_data = self._to_data(item)
-        return self._encode_invoke(list_set_codec, index=index, value=element_data)
+
+        def handler(message):
+            return self._to_object(list_set_codec.decode_response(message))
+
+        request = list_set_codec.encode_request(self.name, index, element_data)
+        return self._invoke(request, handler)
 
     def sub_list(self, from_index, to_index):
         """
@@ -300,4 +351,8 @@ class List(PartitionSpecificProxy):
         :param to_index: (int), th end point(exclusive) of the sub_list.
         :return: (Sequence), a view of the specified range within this list.
         """
-        return self._encode_invoke(list_sub_codec, from_=from_index, to=to_index)
+        def handler(message):
+            return ImmutableLazyDataList(list_sub_codec.decode_response(message), self._to_object)
+
+        request = list_sub_codec.encode_request(self.name, from_index, to_index)
+        return self._invoke(request, handler)

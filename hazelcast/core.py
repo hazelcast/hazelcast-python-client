@@ -196,54 +196,67 @@ class SimpleEntryView(object):
     """
     EntryView represents a readonly view of a map entry.
     """
-    key = None
-    """
-    The key of the entry.
-    """
-    value = None
-    """
-    The value of the entry.
-    """
-    cost = None
-    """
-    The cost in bytes of the entry.
-    """
-    creation_time = None
-    """
-    The creation time of the entry.
-    """
-    expiration_time = None
-    """
-    The expiration time of the entry.
-    """
-    hits = None
-    """
-    Number of hits of the entry.
-    """
-    last_access_time = None
-    """
-    The last access time for the entry.
-    """
-    last_stored_time = None
-    """
-    The last store time for the value.
-    """
-    last_update_time = None
-    """
-    The last time the value was updated.
-    """
-    version = None
-    """
-    The version of the entry.
-    """
-    eviction_criteria_number = None
-    """
-    The criteria number for eviction.
-    """
-    ttl = None
-    """
-    The last set time to live second.
-    """
+    def __init__(self, key, value, cost, creation_time, expiration_time, hits, last_access_time,
+                 last_stored_time, last_update_time, version, ttl, max_idle):
+        self.key = key
+        """
+        The key of the entry.
+        """
+
+        self.value = value
+        """
+        The value of the entry.
+        """
+
+        self.cost = cost
+        """
+        The cost in bytes of the entry.
+        """
+
+        self.creation_time = creation_time
+        """
+        The creation time of the entry.
+        """
+
+        self.expiration_time = expiration_time
+        """
+        The expiration time of the entry.
+        """
+
+        self.hits = hits
+        """
+        Number of hits of the entry.
+        """
+
+        self.last_access_time = last_access_time
+        """
+        The last access time for the entry.
+        """
+
+        self.last_stored_time = last_stored_time
+        """
+        The last store time for the value.
+        """
+
+        self.last_update_time = last_update_time
+        """
+        The last time the value was updated.
+        """
+
+        self.version = version
+        """
+        The version of the entry.
+        """
+
+        self.ttl = ttl
+        """
+        The last set time to live milliseconds.
+        """
+
+        self.max_idle = max_idle
+        """
+        The last set max idle time in milliseconds.
+        """
 
     def __repr__(self):
         return "SimpleEntryView(key=%s, value=%s, cost=%s, creation_time=%s, " \

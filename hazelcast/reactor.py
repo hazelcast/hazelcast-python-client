@@ -103,7 +103,6 @@ class AsyncoreReactor(object):
 
     def _cleanup_timer(self, timer):
         try:
-            logger.debug("Cancel timer %s" % timer, extra=self._logger_extras)
             self._timers.queue.remove((timer.end, timer))
         except ValueError:
             pass

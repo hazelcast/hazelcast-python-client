@@ -245,11 +245,12 @@ class ConnectionManager(object):
                 address = member.address
 
                 if not self.get_connection_from_address(address) and address not in connecting_addresses:
+                    connecting_addresses.add(address)
                     if not lifecycle.live:
                         continue  # TODO should we break here?
 
                     if not self.get_connection(member.uuid):
-                        self._get_or_connect(address).add_done_callback(lambda: connecting_addresses.remove(address))
+                        self._get_or_connect(address).add_done_callback(lambda f: connecting_addresses.discard(address))
 
             self._connect_all_members_timer = self._client.reactor.add_timer(1, run)
 
@@ -364,7 +365,7 @@ class ConnectionManager(object):
                                                              CLIENT_TYPE, SERIALIZATION_VERSION, CLIENT_VERSION,
                                                              client_name, self._labels)
 
-        invocation = Invocation(request, connection=connection, urgent=True)
+        invocation = Invocation(request, connection=connection, urgent=True, response_handler=lambda m: m)
         client.invoker.invoke(invocation)
         return invocation.future
 

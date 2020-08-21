@@ -1,7 +1,7 @@
 from hazelcast.protocol.codec import transactional_set_add_codec, transactional_set_remove_codec, \
     transactional_set_size_codec
 from hazelcast.proxy.base import TransactionalProxy
-from hazelcast.util import check_not_none
+from hazelcast.util import check_not_none, thread_id
 
 
 class TransactionalSet(TransactionalProxy):
@@ -16,7 +16,9 @@ class TransactionalSet(TransactionalProxy):
         :return: (bool), ``true`` if item is added successfully, ``false`` otherwise.
         """
         check_not_none(item, "item can't be none")
-        return self._encode_invoke(transactional_set_add_codec, item=self._to_data(item))
+        item_data = self._to_data(item)
+        request = transactional_set_add_codec.encode_request(self.name, self.transaction.id, thread_id(), item_data)
+        return self._invoke(request, transactional_set_add_codec.decode_response)
 
     def remove(self, item):
         """
@@ -26,7 +28,9 @@ class TransactionalSet(TransactionalProxy):
         :return: (bool), ``true`` if item is remove successfully, ``false`` otherwise.
         """
         check_not_none(item, "item can't be none")
-        return self._encode_invoke(transactional_set_remove_codec, item=self._to_data(item))
+        item_data = self._to_data(item)
+        request = transactional_set_remove_codec.encode_request(self.name, self.transaction.id, thread_id(), item_data)
+        return self._invoke(request, transactional_set_remove_codec.decode_response)
 
     def size(self):
         """
@@ -34,4 +38,5 @@ class TransactionalSet(TransactionalProxy):
 
         :return: (int), size of the set.
         """
-        return self._encode_invoke(transactional_set_size_codec)
+        request = transactional_set_size_codec.encode_request(self.name, self.transaction.id, thread_id())
+        return self._invoke(request, transactional_set_size_codec.decode_response)

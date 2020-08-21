@@ -6,8 +6,8 @@ from hazelcast.protocol.codec import replicated_map_clear_codec, replicated_map_
     replicated_map_is_empty_codec, replicated_map_key_set_codec, replicated_map_put_all_codec, replicated_map_put_codec, \
     replicated_map_remove_codec, replicated_map_remove_entry_listener_codec, replicated_map_size_codec, \
     replicated_map_values_codec
-from hazelcast.proxy.base import Proxy, default_response_handler, EntryEvent, EntryEventType
-from hazelcast.util import to_millis, check_not_none
+from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType
+from hazelcast.util import to_millis, check_not_none, ImmutableLazyDataList
 from hazelcast import six
 
 
@@ -22,7 +22,9 @@ class ReplicatedMap(Proxy):
     When a new node joins the cluster, the new node initially will request existing values from older nodes and
     replicate them locally.
     """
-    _partition_id = None
+    def __init__(self, client, service_name, name):
+        super(ReplicatedMap, self).__init__(client, service_name, name)
+        self._partition_id = randint(0, client.partition_service.partition_count - 1)
 
     def add_entry_listener(self, key=None, predicate=None, added_func=None, removed_func=None, updated_func=None,
                            evicted_func=None, clear_all_func=None):
@@ -78,7 +80,8 @@ class ReplicatedMap(Proxy):
         """
         Wipes data out of the replicated map.
         """
-        return self._encode_invoke(replicated_map_clear_codec)
+        request = replicated_map_clear_codec.encode_request(self.name)
+        return self._invoke(request)
 
     def contains_key(self, key):
         """
@@ -92,7 +95,8 @@ class ReplicatedMap(Proxy):
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(replicated_map_contains_key_codec, key_data, key=key_data)
+        request = replicated_map_contains_key_codec.encode_request(self.name, key_data)
+        return self._invoke_on_key(request, key_data, replicated_map_contains_key_codec.decode_response)
 
     def contains_value(self, value):
         """
@@ -102,7 +106,10 @@ class ReplicatedMap(Proxy):
         :return: (bool), ``true`` if this map contains an entry for the specified value.
         """
         check_not_none(value, "value can't be None")
-        return self._encode_invoke_on_target_partition(replicated_map_contains_value_codec, value=self._to_data(value))
+        value_data = self._to_data(value)
+        request = replicated_map_contains_value_codec.encode_request(self.name, value_data)
+        return self._invoke_on_partition(request, self._partition_id,
+replicated_map_contains_value_codec.decode_response)
 
     def entry_set(self):
         """
@@ -113,7 +120,11 @@ class ReplicatedMap(Proxy):
 
         :return: (Sequence), the list of key-value tuples in the map.
         """
-        return self._encode_invoke_on_target_partition(replicated_map_entry_set_codec)
+        def handler(message):
+            return ImmutableLazyDataList(replicated_map_entry_set_codec.decode_response(message), self._to_object)
+
+        request = replicated_map_entry_set_codec.encode_request(self.name)
+        return self._invoke_on_partition(request, self._partition_id, handler)
 
     def get(self, key):
         """
@@ -124,11 +135,16 @@ class ReplicatedMap(Proxy):
         and equals defined in the key's class.**
 
         :param key: (object), the specified key.
-        :return: (Sequence), the list of the values associated with the specified key.
+        :return: (object), the value associated with the specified key.
         """
         check_not_none(key, "key can't be None")
+
+        def handler(message):
+            return self._to_object(replicated_map_get_codec.decode_response(message))
+
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(replicated_map_get_codec, key_data, key=key_data)
+        request = replicated_map_get_codec.encode_request(self.name, key_data)
+        return self._invoke_on_key(request, key_data, handler)
 
     def is_empty(self):
         """
@@ -136,7 +152,9 @@ class ReplicatedMap(Proxy):
 
         :return: (bool), ``true`` if this map contains no key-value mappings.
         """
-        return self._encode_invoke_on_target_partition(replicated_map_is_empty_codec)
+        request = replicated_map_is_empty_codec.encode_request(self.name)
+        return self._invoke_on_partition(request, self.partition_id,
+                                         replicated_map_is_empty_codec.decode_response)
 
     def key_set(self):
         """
@@ -147,7 +165,11 @@ class ReplicatedMap(Proxy):
 
         :return: (Sequence), a list of the clone of the keys.
         """
-        return self._encode_invoke_on_target_partition(replicated_map_key_set_codec)
+        def handler(message):
+            return ImmutableLazyDataList(replicated_map_key_set_codec.decode_response(message), self._to_object)
+
+        request = replicated_map_key_set_codec.encode_request(self.name)
+        return self._invoke_on_partition(request, self._partition_id, handler)
 
     def put(self, key, value, ttl=0):
         """
@@ -163,24 +185,30 @@ class ReplicatedMap(Proxy):
         """
         check_not_none(key, "key can't be None")
         check_not_none(key, "value can't be None")
+
+        def handler(message):
+            return self._to_object(replicated_map_put_codec.decode_response(message))
+
         key_data = self._to_data(key)
         value_data = self._to_data(value)
-        return self._encode_invoke_on_key(replicated_map_put_codec, key_data, key=key_data, value=value_data,
-                                          ttl=to_millis(ttl))
+        request = replicated_map_put_codec.encode_request(self.name, key_data, value_data, to_millis(ttl))
+        return self._invoke_on_key(request, key_data, handler)
 
-    def put_all(self, map):
+    def put_all(self, source):
         """
         Copies all of the mappings from the specified map to this map. No atomicity guarantees are
         given. In the case of a failure, some of the key-value tuples may get written, while others are not.
 
-        :param map: (dict), map which includes mappings to be stored in this map.
+        :param source: (dict), map which includes mappings to be stored in this map.
         """
-        entries = {}
-        for key, value in six.iteritems(map):
+        entries = []
+        for key, value in six.iteritems(source):
             check_not_none(key, "key can't be None")
             check_not_none(value, "value can't be None")
-            entries[self._to_data(key)] = self._to_data(value)
-        self._encode_invoke(replicated_map_put_all_codec, entries=entries)
+            entries.append((self._to_data(key), self._to_data(value)))
+
+        request = replicated_map_put_all_codec.encode_request(self.name, entries)
+        return self._invoke(request)
 
     def remove(self, key):
         """
@@ -194,8 +222,13 @@ class ReplicatedMap(Proxy):
         :return: (object), the previous value associated with key, or None if there was no mapping for key.
         """
         check_not_none(key, "key can't be None")
+
+        def handler(message):
+            return self._to_object(replicated_map_remove_codec.decode_response(message))
+
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(replicated_map_remove_codec, key_data, key=key_data)
+        request = replicated_map_remove_codec.encode_request(self.name, key_data)
+        return self._invoke_on_key(request, key_data, handler)
 
     def remove_entry_listener(self, registration_id):
         """
@@ -212,7 +245,8 @@ class ReplicatedMap(Proxy):
 
         :return: (int), number of entries in this multimap.
         """
-        return self._encode_invoke_on_target_partition(replicated_map_size_codec)
+        request = replicated_map_size_codec.encode_request(self.name)
+        return self._invoke_on_partition(request, self._partition_id, replicated_map_size_codec.decode_response)
 
     def values(self):
         """
@@ -224,12 +258,8 @@ class ReplicatedMap(Proxy):
 
         :return: (Sequence), the list of values in the map.
         """
-        return self._encode_invoke_on_target_partition(replicated_map_values_codec)
+        def handler(message):
+            return ImmutableLazyDataList(replicated_map_values_codec.decode_response(message), self._to_object)
 
-    def _get_partition_id(self):
-        if not self._partition_id:
-            self._partition_id = randint(0, self._client.partition_service.get_partition_count() - 1)
-        return self._partition_id
-
-    def _encode_invoke_on_target_partition(self, codec, response_handler=default_response_handler, **kwargs):
-        return self._encode_invoke_on_partition(codec, self._get_partition_id(), response_handler, **kwargs)
+        request = replicated_map_values_codec.encode_request(self.name)
+        return self._invoke_on_partition(request, self._partition_id, handler)

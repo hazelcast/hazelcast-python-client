@@ -152,14 +152,16 @@ class EntryListUUIDLongCodec(object):
     @staticmethod
     def encode(buf, entries, is_final=False):
         n = len(entries)
-        b = bytearray(SIZE_OF_FRAME_LENGTH_AND_FLAGS + n * _UUID_LONG_ENTRY_SIZE_IN_BYTES)
+        size = SIZE_OF_FRAME_LENGTH_AND_FLAGS + n * _UUID_LONG_ENTRY_SIZE_IN_BYTES
+        b = bytearray(size)
+        LE_INT.pack_into(b, 0, size)
         if is_final:
             LE_UINT16.pack_into(b, INT_SIZE_IN_BYTES, _IS_FINAL_FLAG)
         for i in range(n):
             key, value = entries[i]
             o = SIZE_OF_FRAME_LENGTH_AND_FLAGS + i * _UUID_LONG_ENTRY_SIZE_IN_BYTES
             FixSizedTypesCodec.encode_uuid(b, o, key)
-            FixSizedTypesCodec.encode_uuid(b, o + UUID_SIZE_IN_BYTES, value)
+            FixSizedTypesCodec.encode_long(b, o + UUID_SIZE_IN_BYTES, value)
         buf.extend(b)
 
     @staticmethod
@@ -170,7 +172,7 @@ class EntryListUUIDLongCodec(object):
         for i in range(n):
             o = i * _UUID_LONG_ENTRY_SIZE_IN_BYTES
             key = FixSizedTypesCodec.decode_uuid(b, o)
-            value = FixSizedTypesCodec.decode_uuid(b, o + UUID_SIZE_IN_BYTES)
+            value = FixSizedTypesCodec.decode_long(b, o + UUID_SIZE_IN_BYTES)
             result.append((key, value))
         return result
 
@@ -264,7 +266,9 @@ class ListIntegerCodec(object):
     @staticmethod
     def encode(buf, arr, is_final=False):
         n = len(arr)
-        b = bytearray(SIZE_OF_FRAME_LENGTH_AND_FLAGS + n * INT_SIZE_IN_BYTES)
+        size = SIZE_OF_FRAME_LENGTH_AND_FLAGS + n * INT_SIZE_IN_BYTES
+        b = bytearray(size)
+        LE_INT.pack_into(b, 0, size)
         if is_final:
             LE_UINT16.pack_into(b, INT_SIZE_IN_BYTES, _IS_FINAL_FLAG)
         for i in range(n):
@@ -285,7 +289,9 @@ class ListLongCodec(object):
     @staticmethod
     def encode(buf, arr, is_final=False):
         n = len(arr)
-        b = bytearray(SIZE_OF_FRAME_LENGTH_AND_FLAGS + n * LONG_SIZE_IN_BYTES)
+        size = SIZE_OF_FRAME_LENGTH_AND_FLAGS + n * LONG_SIZE_IN_BYTES
+        b = bytearray(size)
+        LE_INT.pack_into(b, 0, size)
         if is_final:
             LE_UINT16.pack_into(b, INT_SIZE_IN_BYTES, _IS_FINAL_FLAG)
         for i in range(n):
@@ -371,7 +377,9 @@ class ListUUIDCodec(object):
     @staticmethod
     def encode(buf, arr, is_final=False):
         n = len(arr)
-        b = bytearray(SIZE_OF_FRAME_LENGTH_AND_FLAGS + n * UUID_SIZE_IN_BYTES)
+        size = SIZE_OF_FRAME_LENGTH_AND_FLAGS + n * UUID_SIZE_IN_BYTES
+        b = bytearray(size)
+        LE_INT.pack_into(b, 0, size)
         if is_final:
             LE_UINT16.pack_into(b, INT_SIZE_IN_BYTES, _IS_FINAL_FLAG)
         for i in range(n):
@@ -392,11 +400,13 @@ class LongArrayCodec(object):
     @staticmethod
     def encode(buf, arr, is_final=False):
         n = len(arr)
-        b = bytearray(SIZE_OF_FRAME_LENGTH_AND_FLAGS + n * LONG_SIZE_IN_BYTES)
+        size = SIZE_OF_FRAME_LENGTH_AND_FLAGS + n * LONG_SIZE_IN_BYTES
+        b = bytearray(size)
+        LE_INT.pack_into(b, 0, size)
         if is_final:
             LE_UINT16.pack_into(b, INT_SIZE_IN_BYTES, _IS_FINAL_FLAG)
         for i in range(n):
-            FixSizedTypesCodec.encode_uuid(b, SIZE_OF_FRAME_LENGTH_AND_FLAGS + i * LONG_SIZE_IN_BYTES, arr[i])
+            FixSizedTypesCodec.encode_long(b, SIZE_OF_FRAME_LENGTH_AND_FLAGS + i * LONG_SIZE_IN_BYTES, arr[i])
         buf.extend(b)
 
     @staticmethod
@@ -405,7 +415,7 @@ class LongArrayCodec(object):
         n = len(b) // LONG_SIZE_IN_BYTES
         result = []
         for i in range(n):
-            result.append(FixSizedTypesCodec.decode_uuid(b, i * LONG_SIZE_IN_BYTES))
+            result.append(FixSizedTypesCodec.decode_long(b, i * LONG_SIZE_IN_BYTES))
         return result
 
 

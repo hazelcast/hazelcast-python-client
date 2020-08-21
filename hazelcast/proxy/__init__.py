@@ -3,7 +3,6 @@ from hazelcast.invocation import Invocation
 from hazelcast.protocol.codec import client_create_proxy_codec, client_destroy_proxy_codec, \
     client_add_distributed_object_listener_codec, client_remove_distributed_object_listener_codec
 from hazelcast.proxy.executor import Executor
-from hazelcast.proxy.id_generator import IdGenerator
 from hazelcast.proxy.list import List
 from hazelcast.proxy.map import create_map_proxy
 from hazelcast.proxy.multi_map import MultiMap
@@ -17,7 +16,6 @@ from hazelcast.proxy.pn_counter import PNCounter
 from hazelcast.proxy.flake_id_generator import FlakeIdGenerator
 from hazelcast.util import to_list
 
-ID_GENERATOR_SERVICE = "hz:impl:idGeneratorService"
 EXECUTOR_SERVICE = "hz:impl:executorService"
 LIST_SERVICE = "hz:impl:listService"
 MULTI_MAP_SERVICE = "hz:impl:multiMapService"
@@ -31,10 +29,7 @@ TOPIC_SERVICE = "hz:impl:topicService"
 PN_COUNTER_SERVICE = "hz:impl:PNCounterService"
 FLAKE_ID_GENERATOR_SERVICE = "hz:impl:flakeIdGeneratorService"
 
-ID_GENERATOR_ATOMIC_LONG_PREFIX = "hz:atomic:idGenerator:"
-
 _proxy_init = {
-    ID_GENERATOR_SERVICE: IdGenerator,
     EXECUTOR_SERVICE: Executor,
     LIST_SERVICE: List,
     MAP_SERVICE: create_map_proxy,
