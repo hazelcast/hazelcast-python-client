@@ -1,7 +1,7 @@
 import logging
 import threading
 import time
-from hazelcast.exception import HazelcastInstanceNotActiveError, TransactionError
+from hazelcast.exception import HazelcastInstanceNotActiveError, TransactionError, IllegalStateError
 from hazelcast.future import make_blocking
 from hazelcast.invocation import Invocation
 from hazelcast.protocol.codec import transaction_create_codec, transaction_commit_codec, transaction_rollback_codec
@@ -52,14 +52,14 @@ class TransactionManager(object):
 
     def _connect(self):
         for count in range(0, RETRY_COUNT):
-            try:
-                address = self._client.load_balancer.next_address()
-                return self._client.connection_manager.get_or_connect(address).result()
-            except (IOError, HazelcastInstanceNotActiveError):
-                logger.debug("Could not get a connection for the transaction. Attempt %d of %d", count,
-                             RETRY_COUNT, exc_info=True, extra=self._logger_extras)
-                if count + 1 == RETRY_COUNT:
-                    raise
+            connection = self._client.connection_manager.get_random_connection()
+            if connection:
+                return connection
+
+            logger.debug("Could not get a connection for the transaction. Attempt %d of %d", count,
+                         RETRY_COUNT, exc_info=True, extra=self._logger_extras)
+            if count + 1 == RETRY_COUNT:
+                raise IllegalStateError("No active connection is found")
 
     def new_transaction(self, timeout, durability, transaction_type):
         """
@@ -110,10 +110,10 @@ class Transaction(object):
                                                               durability=self.durability,
                                                               transaction_type=self.transaction_type,
                                                               thread_id=self.thread_id)
-            invocation = Invocation(request, connection=self.connection)
+            invocation = Invocation(request, connection=self.connection, response_handler=lambda m: m)
             self.client.invoker.invoke(invocation)
             response = invocation.future.result()
-            self.id = transaction_create_codec.decode_response(response)["response"]
+            self.id = transaction_create_codec.decode_response(response)
             self.state = _STATE_ACTIVE
         except:
             self._locals.transaction_exists = False

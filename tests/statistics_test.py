@@ -7,10 +7,9 @@ from hazelcast.client import HazelcastClient
 from hazelcast.config import ClientConfig, ClientProperties, NearCacheConfig
 from hazelcast.version import CLIENT_VERSION, CLIENT_TYPE
 from tests.hzrc.ttypes import Lang
-from tests.util import random_string, set_attr
+from tests.util import random_string
 
 
-@set_attr(category=3.09)
 class StatisticsTest(HazelcastTestCase):
 
     DEFAULT_STATS_PERIOD = 3

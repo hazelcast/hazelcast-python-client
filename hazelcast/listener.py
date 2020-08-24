@@ -61,7 +61,7 @@ class ListenerService(object):
                 futures.append(future)
 
             try:
-                combine_futures(*futures)
+                combine_futures(*futures).result()
             except:
                 self.deregister_listener(registration_id)
                 raise HazelcastError("Listener cannot be added")
@@ -77,7 +77,8 @@ class ListenerService(object):
                 return False
 
             successful = True
-            for connection, event_registration in six.iteritems(listener_registration.connection_registrations):
+            # Need to copy items to avoid getting runtime modification errors
+            for connection, event_registration in list(six.iteritems(listener_registration.connection_registrations)):
                 try:
                     server_registration_id = event_registration.server_registration_id
                     deregister_request = listener_registration.encode_deregister_request(server_registration_id)
@@ -115,9 +116,9 @@ class ListenerService(object):
         if connection in registration_map:
             return
 
-        registration_request = listener_registration.registration_request.clone()
+        registration_request = listener_registration.registration_request.copy()
         invocation = Invocation(registration_request, connection=connection,
-                                event_handler=listener_registration.handler)
+                                event_handler=listener_registration.handler, response_handler=lambda m: m)
         self._invocation_service.invoke(invocation)
 
         def callback(f):
@@ -128,7 +129,7 @@ class ListenerService(object):
                 registration = _EventRegistration(server_registration_id, correlation_id)
                 registration_map[connection] = registration
             except Exception as e:
-                if connection.live():
+                if connection.live:
                     logger.exception("Listener %s can not be added to a new connection: %s",
                                      user_registration_id, connection, extra=self._logger_extras)
                 raise e

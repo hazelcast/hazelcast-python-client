@@ -105,7 +105,7 @@ class TransactionalProxy(object):
 
 
 ItemEventType = enum(added=1, removed=2)
-EntryEventType = enum(added=1, removed=2, updated=4, evicted=8, evict_all=16, clear_all=32, merged=64, expired=128,
+EntryEventType = enum(added=1, removed=2, updated=4, evicted=8, expired=16, evict_all=32, clear_all=64, merged=128,
                       invalidation=256, loaded=512)
 
 
@@ -130,8 +130,9 @@ class EntryEvent(object):
     """
     Map Entry event.
     """
-    def __init__(self, to_object, key, old_value, value, merging_value, event_type, uuid,
+    def __init__(self, to_object, key, value, old_value, merging_value, event_type, uuid,
                  number_of_affected_entries):
+        self._to_object = to_object
         self._key_data = key
         self._value_data = value
         self._old_value_data = old_value
@@ -139,7 +140,6 @@ class EntryEvent(object):
         self.event_type = event_type
         self.uuid = uuid
         self.number_of_affected_entries = number_of_affected_entries
-        self._to_object = to_object
 
     @property
     def key(self):
@@ -162,10 +162,10 @@ class EntryEvent(object):
         return self._to_object(self._merging_value_data)
 
     def __repr__(self):
-        return "EntryEvent(key=%s, old_value=%s, value=%s, merging_value=%s, event_type=%s, uuid=%s, " \
+        return "EntryEvent(key=%s, value=%s, old_value=%s, merging_value=%s, event_type=%s, uuid=%s, " \
                "number_of_affected_entries=%s)" % (
-                   self.key, self.old_value, self.value, self.merging_value, self.event_type, self.uuid,
-                   self.number_of_affected_entries)
+                   self.key, self.value, self.old_value, self.merging_value, EntryEventType.reverse[self.event_type],
+                   self.uuid, self.number_of_affected_entries)
 
 
 class TopicMessage(object):

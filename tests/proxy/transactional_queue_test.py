@@ -8,6 +8,11 @@ from hazelcast.six.moves import range
 
 class TransactionalQueueTest(SingleMemberTestCase):
     @classmethod
+    def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
+        return config
+
+    @classmethod
     def configure_cluster(cls):
         path = os.path.abspath(__file__)
         dir_path = os.path.dirname(path)

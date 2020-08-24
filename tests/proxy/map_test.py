@@ -1,11 +1,11 @@
 import time
 import os
-from hazelcast.exception import HazelcastError, HazelcastSerializationError
+from hazelcast.exception import HazelcastError
 from hazelcast.proxy.map import EntryEventType
 from hazelcast.serialization.api import IdentifiedDataSerializable
 from hazelcast.serialization.predicate import SqlPredicate
 from tests.base import SingleMemberTestCase
-from tests.util import random_string, event_collector, fill_map, set_attr
+from tests.util import random_string, event_collector, fill_map
 from hazelcast import six
 from hazelcast.six.moves import range
 
@@ -40,6 +40,7 @@ class MapTest(SingleMemberTestCase):
 
     @classmethod
     def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
         config.serialization.add_data_serializable_factory(EntryProcessor.FACTORY_ID,
                                                            {EntryProcessor.CLASS_ID: EntryProcessor})
         return config
@@ -273,15 +274,16 @@ class MapTest(SingleMemberTestCase):
 
         self.assertEqual(entry_view.key, "key")
         self.assertEqual(entry_view.value, "new_value")
+        self.assertIsNotNone(entry_view.cost)
         self.assertIsNotNone(entry_view.creation_time)
         self.assertIsNotNone(entry_view.expiration_time)
         self.assertEqual(entry_view.hits, 2)
-        self.assertEqual(entry_view.version, 1)
-        self.assertEqual(entry_view.eviction_criteria_number, 0)
         self.assertIsNotNone(entry_view.last_access_time)
         self.assertIsNotNone(entry_view.last_stored_time)
         self.assertIsNotNone(entry_view.last_update_time)
+        self.assertEqual(entry_view.version, 1)
         self.assertIsNotNone(entry_view.ttl)
+        self.assertIsNotNone(entry_view.max_idle)
 
     def test_is_empty(self):
         self.map.put("key", "value")
@@ -412,7 +414,7 @@ class MapTest(SingleMemberTestCase):
         with self.assertRaises(AssertionError) as cm:
             self.map.remove_entry_listener(None)
         e = cm.exception
-        self.assertEqual(e.args[0],"None userRegistrationId is not allowed!")
+        self.assertEqual(e.args[0], "None user_registration_id is not allowed!")
 
     def test_replace(self):
         self.map.put("key", "value")
@@ -513,6 +515,11 @@ class MapTest(SingleMemberTestCase):
 
 class MapStoreTest(SingleMemberTestCase):
     @classmethod
+    def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
+        return config
+
+    @classmethod
     def configure_cluster(cls):
         path = os.path.abspath(__file__)
         dir_path = os.path.dirname(path)
@@ -566,7 +573,6 @@ class MapStoreTest(SingleMemberTestCase):
         self.map.evict_all()
         self.assertEqual(self.map.size(), 0)
 
-    @set_attr(category=3.11)
     def test_add_entry_listener_item_loaded(self):
         collector = event_collector()
         self.map.add_entry_listener(include_value=True, loaded_func=collector)

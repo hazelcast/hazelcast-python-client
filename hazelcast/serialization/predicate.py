@@ -1,6 +1,6 @@
 from hazelcast.serialization.api import IdentifiedDataSerializable
 
-PREDICATE_FACTORY_ID = -32
+PREDICATE_FACTORY_ID = -20
 
 
 class Predicate(IdentifiedDataSerializable):

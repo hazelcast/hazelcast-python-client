@@ -4,7 +4,7 @@ from hazelcast import six
 from hazelcast.protocol.client_message import NULL_FRAME_BUF, BEGIN_FRAME_BUF, END_FRAME_BUF, \
     SIZE_OF_FRAME_LENGTH_AND_FLAGS, _IS_FINAL_FLAG, NULL_FINAL_FRAME_BUF, END_FINAL_FRAME_BUF
 from hazelcast.serialization import LONG_SIZE_IN_BYTES, UUID_SIZE_IN_BYTES, LE_INT, LE_LONG, BOOLEAN_SIZE_IN_BYTES, \
-    INT_SIZE_IN_BYTES, LE_ULONG, LE_UINT16
+    INT_SIZE_IN_BYTES, LE_ULONG, LE_UINT16, LE_INT8
 from hazelcast.serialization.data import Data
 
 
@@ -233,11 +233,11 @@ class FixSizedTypesCodec(object):
 
     @staticmethod
     def encode_byte(buf, offset, value):
-        buf[offset] = value
+        LE_INT8.pack_into(buf, offset, value)
 
     @staticmethod
     def decode_byte(buf, offset):
-        return buf[offset]
+        return LE_INT8.unpack_from(buf, offset)[0]
 
     @staticmethod
     def encode_uuid(buf, offset, value):
@@ -475,13 +475,3 @@ class StringCodec(object):
     @staticmethod
     def decode(msg):
         return msg.next_frame().buf.decode("utf-8")
-
-
-from hazelcast.protocol.codec.custom.error_holder_codec import ErrorHolderCodec
-
-
-class ErrorsCodec(object):
-    @staticmethod
-    def decode(msg):
-        msg.next_frame()
-        return ListMultiFrameCodec.decode(msg, ErrorHolderCodec.decode)

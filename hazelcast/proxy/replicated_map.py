@@ -44,22 +44,26 @@ class ReplicatedMap(Proxy):
         .. seealso:: :class:`~hazelcast.serialization.predicate.Predicate` for more info about predicates.
         """
         if key and predicate:
+            codec = replicated_map_add_entry_listener_to_key_with_predicate_codec
             key_data = self._to_data(key)
             predicate_data = self._to_data(predicate)
-            request = replicated_map_add_entry_listener_to_key_with_predicate_codec.encode_request(
-                self.name, key_data, predicate_data, self._is_smart)
+            request = codec.encode_request(self.name, key_data, predicate_data, self._is_smart)
         elif key and not predicate:
+            codec = replicated_map_add_entry_listener_to_key_codec
             key_data = self._to_data(key)
-            request = replicated_map_add_entry_listener_to_key_codec.encode_request(self.name, key_data, self._is_smart)
+            request = codec.encode_request(self.name, key_data, self._is_smart)
         elif not key and predicate:
+            codec = replicated_map_add_entry_listener_with_predicate_codec
             predicate = self._to_data(predicate)
-            request = replicated_map_add_entry_listener_with_predicate_codec.encode_request(
+            request = codec.encode_request(
                 self.name, predicate, self._is_smart)
         else:
-            request = replicated_map_add_entry_listener_codec.encode_request(self.name, self._is_smart)
+            codec = replicated_map_add_entry_listener_codec
+            request = codec.encode_request(self.name, self._is_smart)
 
-        def handle_event_entry(**_kwargs):
-            event = EntryEvent(self._to_object, **_kwargs)
+        def handle_event_entry(key, value, old_value, merging_value, event_type, uuid, number_of_affected_entries):
+            event = EntryEvent(self._to_object, key, value, old_value, merging_value,
+                               event_type, uuid, number_of_affected_entries)
             if event.event_type == EntryEventType.added and added_func:
                 added_func(event)
             elif event.event_type == EntryEventType.removed and removed_func:
@@ -72,9 +76,9 @@ class ReplicatedMap(Proxy):
                 clear_all_func(event)
 
         return self._register_listener(
-            request, lambda r: replicated_map_add_entry_listener_codec.decode_response(r)['response'],
+            request, lambda r: codec.decode_response(r),
             lambda reg_id: replicated_map_remove_entry_listener_codec.encode_request(self.name, reg_id),
-            lambda m: replicated_map_add_entry_listener_codec.handle(m, handle_event_entry))
+            lambda m: codec.handle(m, handle_event_entry))
 
     def clear(self):
         """
@@ -153,8 +157,7 @@ replicated_map_contains_value_codec.decode_response)
         :return: (bool), ``true`` if this map contains no key-value mappings.
         """
         request = replicated_map_is_empty_codec.encode_request(self.name)
-        return self._invoke_on_partition(request, self.partition_id,
-                                         replicated_map_is_empty_codec.decode_response)
+        return self._invoke_on_partition(request, self._partition_id, replicated_map_is_empty_codec.decode_response)
 
     def key_set(self):
         """

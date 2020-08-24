@@ -3,6 +3,11 @@ from tests.util import random_string, configure_logging
 
 
 class TransactionalSetTest(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
+        return config
+
     def setUp(self):
         configure_logging()
         self.set = self.client.get_set(random_string()).blocking()

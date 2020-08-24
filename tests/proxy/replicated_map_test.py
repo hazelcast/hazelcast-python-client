@@ -9,6 +9,11 @@ from hazelcast.six.moves import range
 
 
 class ReplicatedMapTest(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
+        return config
+
     def setUp(self):
         self.replicated_map = self.client.get_replicated_map(random_string()).blocking()
 

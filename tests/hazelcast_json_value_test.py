@@ -3,7 +3,6 @@ import json
 from hazelcast.core import HazelcastJsonValue
 from hazelcast.serialization.predicate import is_greater_than, is_equal_to
 from tests.base import SingleMemberTestCase
-from tests.util import set_attr
 from unittest import TestCase
 
 
@@ -38,7 +37,6 @@ class HazelcastJsonValueTest(TestCase):
         self.assertEqual(self.json_obj, json_value.loads())
 
 
-@set_attr(category=3.12)
 class HazelcastJsonValueWithMapTest(SingleMemberTestCase):
     @classmethod
     def setUpClass(cls):

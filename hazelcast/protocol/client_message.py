@@ -79,6 +79,9 @@ class OutboundMessage(object):
     def set_partition_id(self, partition_id):
         LE_INT.pack_into(self.buf, _OUTBOUND_MESSAGE_PARTITION_ID_OFFSET, partition_id)
 
+    def copy(self):
+        return OutboundMessage(bytearray(self.buf), self.retryable)
+
     def __repr__(self):
         message_type = LE_INT.unpack_from(self.buf, _OUTBOUND_MESSAGE_MESSAGE_TYPE_OFFSET)[0]
         correlation_id = self.get_correlation_id()

@@ -151,12 +151,12 @@ class DistributedObjectInfo(object):
     Represents name of the Distributed Object and the name of service which it belongs to.
     """
 
-    def __init__(self, name, service_name):
-        self.name = name
+    def __init__(self, service_name, name):
         self.service_name = service_name
+        self.name = name
 
     def __repr__(self):
-        return "DistributedObjectInfo(name={}, serviceName={})".format(self.name, self.service_name)
+        return "DistributedObjectInfo(serviceName=%s, name=%s)" % (self.service_name, self.name)
 
     def __hash__(self):
         return hash((self.name, self.service_name))
@@ -181,15 +181,15 @@ class DistributedObjectEvent(object):
     Distributed Object Event
     """
 
-    def __init__(self, name, service_name, event_type):
+    def __init__(self, name, service_name, event_type, source):
         self.name = name
         self.service_name = service_name
         self.event_type = DistributedObjectEventType.reverse.get(event_type, None)
+        self.source = source
 
     def __repr__(self):
-        return "DistributedObjectEvent[name={}, " \
-               "service_name={}, " \
-               "event_type={}]".format(self.name, self.service_name, self.event_type)
+        return "DistributedObjectEvent(name=%s, service_name=%s, event_type=%s, source=%s)" \
+               % (self.name, self.service_name, self.event_type, self.source)
 
 
 class SimpleEntryView(object):

@@ -20,6 +20,11 @@ class Task(IdentifiedDataSerializable):
 
 
 class ExecutorTest(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
+        return config
+
     def setUp(self):
         self.executor = self.client.get_executor(random_string()).blocking()
 

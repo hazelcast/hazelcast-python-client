@@ -75,11 +75,12 @@ class Queue(PartitionSpecificProxy):
         :param item_removed_func: Function to be called when an item is deleted from this set (optional).
         :return: (str), a registration id which is used as a key to remove the listener.
         """
-        request = queue_add_listener_codec.encode_request(self.name, include_value, self._is_smart)
+        codec = queue_add_listener_codec
+        request = codec.encode_request(self.name, include_value, self._is_smart)
 
         def handle_event_item(item, uuid, event_type):
             item = item if include_value else None
-            member = self._client.cluster.get_member_by_uuid(uuid)
+            member = self._client.cluster.get_member(uuid)
 
             item_event = ItemEvent(self.name, item, event_type, member, self._to_object)
             if event_type == ItemEventType.added:
@@ -89,9 +90,9 @@ class Queue(PartitionSpecificProxy):
                 if item_removed_func:
                     item_removed_func(item_event)
 
-        return self._register_listener(request, lambda r: queue_add_listener_codec.decode_response(r)['response'],
+        return self._register_listener(request, lambda r: codec.decode_response(r),
                                        lambda reg_id: queue_remove_listener_codec.encode_request(self.name, reg_id),
-                                       lambda m: queue_add_listener_codec.handle(m, handle_event_item))
+                                       lambda m: codec.handle(m, handle_event_item))
 
     def clear(self):
         """

@@ -1,4 +1,3 @@
-from hazelcast.exception import HazelcastSerializationError
 from hazelcast.serialization.base import BaseSerializationService
 from hazelcast.serialization.portable.classdef import FieldType
 from hazelcast.serialization.portable.context import PortableContext

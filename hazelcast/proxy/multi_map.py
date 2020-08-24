@@ -29,15 +29,16 @@ class MultiMap(Proxy):
         :return: (str), a registration id which is used as a key to remove the listener.
         """
         if key:
+            codec = multi_map_add_entry_listener_to_key_codec
             key_data = self._to_data(key)
-            request = multi_map_add_entry_listener_to_key_codec.encode_request(
-                name=self.name, key=key_data, include_value=include_value, local_only=False)
+            request = codec.encode_request(self.name, key_data, include_value, False)
         else:
-            request = multi_map_add_entry_listener_codec.encode_request(
-                name=self.name, include_value=include_value, local_only=False)
+            codec = multi_map_add_entry_listener_codec
+            request = codec.encode_request(self.name, include_value, False)
 
-        def handle_event_entry(**_kwargs):
-            event = EntryEvent(self._to_object, **_kwargs)
+        def handle_event_entry(key, value, old_value, merging_value, event_type, uuid, number_of_affected_entries):
+            event = EntryEvent(self._to_object, key, value, old_value, merging_value,
+                               event_type, uuid, number_of_affected_entries)
             if event.event_type == EntryEventType.added and added_func:
                 added_func(event)
             elif event.event_type == EntryEventType.removed and removed_func:
@@ -46,9 +47,9 @@ class MultiMap(Proxy):
                 clear_all_func(event)
 
         return self._register_listener(
-            request, lambda r: multi_map_add_entry_listener_codec.decode_response(r)['response'],
+            request, lambda r: codec.decode_response(r),
             lambda reg_id: multi_map_remove_entry_listener_codec.encode_request(self.name, reg_id),
-            lambda m: multi_map_add_entry_listener_codec.handle(m, handle_event_entry))
+            lambda m: codec.handle(m, handle_event_entry))
 
     def contains_key(self, key):
         """

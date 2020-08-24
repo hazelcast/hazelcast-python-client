@@ -19,6 +19,8 @@ class MapTest(SingleMemberTestCase):
 
     @classmethod
     def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
+
         near_cache_config = NearCacheConfig(random_string())
         # near_cache_config.time_to_live_seconds = 1000
         # near_cache_config.max_idle_seconds = 1000

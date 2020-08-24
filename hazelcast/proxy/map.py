@@ -14,7 +14,7 @@ from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_entry
     map_remove_entry_listener_codec, map_replace_codec, map_replace_if_same_codec, map_set_codec, map_try_lock_codec, \
     map_try_put_codec, map_try_remove_codec, map_unlock_codec, map_values_codec, map_values_with_predicate_codec, \
     map_add_interceptor_codec, map_execute_on_all_keys_codec, map_execute_on_key_codec, map_execute_on_keys_codec, \
-    map_execute_with_predicate_codec
+    map_execute_with_predicate_codec, map_add_near_cache_invalidation_listener_codec
 from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType, get_entry_listener_flags, MAX_SIZE
 from hazelcast.util import check_not_none, thread_id, to_millis, ImmutableLazyDataList
 from hazelcast import six
@@ -86,23 +86,26 @@ class Map(Proxy):
                                          merged=merged_func, expired=expired_func, loaded=loaded_func)
 
         if key and predicate:
+            codec = map_add_entry_listener_to_key_with_predicate_codec
             key_data = self._to_data(key)
             predicate_data = self._to_data(predicate)
-            request = map_add_entry_listener_to_key_with_predicate_codec.encode_request(
-                self.name, key_data, predicate_data, include_value, flags, self._is_smart)
+            request = codec.encode_request(self.name, key_data, predicate_data, include_value, flags, self._is_smart)
         elif key and not predicate:
+            codec = map_add_entry_listener_to_key_codec
             key_data = self._to_data(key)
-            request = map_add_entry_listener_to_key_codec.encode_request(
-                self.name, key_data, include_value, flags, self._is_smart)
+            request = codec.encode_request(self.name, key_data, include_value, flags, self._is_smart)
         elif not key and predicate:
+            codec = map_add_entry_listener_with_predicate_codec
             predicate = self._to_data(predicate)
-            request = map_add_entry_listener_with_predicate_codec.encode_request(
-                self.name, predicate, include_value, flags, self._is_smart)
+            request = codec.encode_request(self.name, predicate, include_value, flags, self._is_smart)
         else:
-            request = map_add_entry_listener_codec.encode_request(self.name, include_value, flags, self._is_smart)
+            codec = map_add_entry_listener_codec
+            request = codec.encode_request(self.name, include_value, flags, self._is_smart)
 
-        def handle_event_entry(**_kwargs):
-            event = EntryEvent(self._to_object, **_kwargs)
+        def handle_event_entry(key_, value, old_value, merging_value, event_type, uuid, number_of_affected_entries):
+            event = EntryEvent(self._to_object, key_, value, old_value, merging_value,
+                               event_type, uuid, number_of_affected_entries)
+
             if event.event_type == EntryEventType.added:
                 added_func(event)
             elif event.event_type == EntryEventType.removed:
@@ -122,9 +125,9 @@ class Map(Proxy):
             elif event.event_type == EntryEventType.loaded:
                 loaded_func(event)
 
-        return self._register_listener(request, lambda r: map_add_entry_listener_codec.decode_response(r)['response'],
+        return self._register_listener(request, lambda r: codec.decode_response(r),
                                        lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name, reg_id),
-                                       lambda m: map_add_entry_listener_codec.handle(m, handle_event_entry))
+                                       lambda m: codec.handle(m, handle_event_entry))
 
     def add_index(self, attribute, ordered=False):
         """
@@ -824,7 +827,8 @@ class Map(Proxy):
                                                     to_millis(ttl), to_millis(timeout),
                                                     self._reference_id_generator.get_and_increment())
         partition_id = self._client.partition_service.get_partition_id(key_data)
-        invocation = Invocation(request, partition_id=partition_id, timeout=MAX_SIZE)
+        invocation = Invocation(request, partition_id=partition_id, timeout=MAX_SIZE,
+                                response_handler=map_try_lock_codec.decode_response)
         self._invoker.invoke(invocation)
         return invocation.future
 
@@ -940,7 +944,7 @@ class Map(Proxy):
 
     def _remove_if_same_internal_(self, key_data, value_data):
         request = map_remove_if_same_codec.encode_request(self.name, key_data, value_data, thread_id())
-        return self._invoke_on_key(request, key_data)
+        return self._invoke_on_key(request, key_data, response_handler=map_remove_if_same_codec.decode_response)
 
     def _delete_internal(self, key_data):
         request = map_delete_codec.encode_request(self.name, key_data, thread_id())
@@ -1036,13 +1040,12 @@ class MapFeatNearCache(Map):
 
     def _add_near_cache_invalidation_listener(self):
         try:
-            request = map_add_near_cache_entry_listener_codec.encode_request(self.name, EntryEventType.invalidation,
-                                                                             self._is_smart)
+            codec = map_add_near_cache_invalidation_listener_codec
+            request = codec.encode_request(self.name, EntryEventType.invalidation, self._is_smart)
             self._invalidation_listener_id = self._register_listener(
-                request, lambda r: map_add_near_cache_entry_listener_codec.decode_response(r)['response'],
+                request, lambda r: codec.decode_response(r),
                 lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name, reg_id),
-                lambda m: map_add_near_cache_entry_listener_codec.handle(m, self._handle_invalidation,
-                                                                         self._handle_batch_invalidation))
+                lambda m: codec.handle(m, self._handle_invalidation, self._handle_batch_invalidation))
         except:
             pass
 
@@ -1050,7 +1053,7 @@ class MapFeatNearCache(Map):
         if self._invalidation_listener_id:
             self.remove_entry_listener(self._invalidation_listener_id)
 
-    def _handle_invalidation(self, key):
+    def _handle_invalidation(self, key, source_uuid, partition_uuid, sequence):
         # key is always ``Data``
         # null key means near cache has to remove all entries in it.
         # see MapAddNearCacheEntryListenerMessageTask.
@@ -1059,7 +1062,7 @@ class MapFeatNearCache(Map):
         else:
             self._invalidate_cache(key)
 
-    def _handle_batch_invalidation(self, keys):
+    def _handle_batch_invalidation(self, keys, source_uuids, partition_uuids, sequences):
         # key_list is always list of ``Data``
         for key_data in keys:
             self._invalidate_cache(key_data)

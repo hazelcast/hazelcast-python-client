@@ -156,13 +156,14 @@ class ConnectionManager(object):
             self._connect_all_members_timer.cancel()
 
         self._heartbeat_manager.shutdown()
-        for connection_future in self._pending_connections:
+        for connection_future in six.itervalues(self._pending_connections):
             connection_future.set_exception(HazelcastClientNotActiveError("Hazelcast client is shutting down"))
 
-        for connection in six.itervalues(self.active_connections):
+        # Need to create copy of connection values to avoid modification errors on runtime
+        for connection in list(six.itervalues(self.active_connections)):
             connection.close("Hazelcast client is shutting down", None)
 
-        self._connection_listeners.clear()
+        self._connection_listeners = []
         self.active_connections.clear()
         self._pending_connections.clear()
 

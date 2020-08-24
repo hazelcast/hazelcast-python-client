@@ -62,7 +62,7 @@ class Set(PartitionSpecificProxy):
 
         def handle_event_item(item, uuid, event_type):
             item = item if include_value else None
-            member = self._client.cluster.get_member_by_uuid(uuid)
+            member = self._client.cluster.get_member(uuid)
 
             item_event = ItemEvent(self.name, item, event_type, member, self._to_object)
             if event_type == ItemEventType.added:
@@ -72,7 +72,7 @@ class Set(PartitionSpecificProxy):
                 if item_removed_func:
                     item_removed_func(item_event)
 
-        return self._register_listener(request, lambda r: set_add_listener_codec.decode_response(r)['response'],
+        return self._register_listener(request, lambda r: set_add_listener_codec.decode_response(r),
                                        lambda reg_id: set_remove_listener_codec.encode_request(self.name, reg_id),
                                        lambda m: set_add_listener_codec.handle(m, handle_event_item))
 

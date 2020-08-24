@@ -6,13 +6,13 @@ else
     USER=""
 fi
 
-HZ_VERSION="3.12.5"
+HZ_VERSION="4.0"
 
 HAZELCAST_TEST_VERSION=${HZ_VERSION}
 HAZELCAST_ENTERPRISE_TEST_VERSION=${HZ_VERSION}
 HAZELCAST_VERSION=${HZ_VERSION}
 HAZELCAST_ENTERPRISE_VERSION=${HZ_VERSION}
-HAZELCAST_RC_VERSION="0.3-SNAPSHOT"
+HAZELCAST_RC_VERSION="0.7-SNAPSHOT"
 SNAPSHOT_REPO="https://oss.sonatype.org/content/repositories/snapshots"
 RELEASE_REPO="http://repo1.maven.apache.org/maven2"
 ENTERPRISE_RELEASE_REPO="https://repository.hazelcast.com/release/"
@@ -94,7 +94,7 @@ fi
 
 pip install -r test-requirements.txt ${USER} --no-cache-dir
 
-java -Dhazelcast.enterprise.license.key=${HAZELCAST_ENTERPRISE_KEY} -cp ${CLASSPATH} com.hazelcast.remotecontroller.Main>rc_stdout.log 2>rc_stderr.log &
+java -Dhazelcast.enterprise.license.key=${HAZELCAST_ENTERPRISE_KEY} -cp ${CLASSPATH} com.hazelcast.remotecontroller.Main --use-simple-server>rc_stdout.log 2>rc_stderr.log &
 
 sleep 15
 

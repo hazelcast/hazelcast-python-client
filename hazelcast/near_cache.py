@@ -1,4 +1,3 @@
-import logging
 import random
 
 from hazelcast.config import EVICTION_POLICY, IN_MEMORY_FORMAT

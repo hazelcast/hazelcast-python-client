@@ -7,7 +7,7 @@ from hazelcast.cluster import ClusterService, RandomLoadBalancer
 from hazelcast.config import ClientConfig, ClientProperties
 from hazelcast.connection import ConnectionManager, DefaultAddressProvider
 from hazelcast.core import DistributedObjectInfo
-from hazelcast.invocation import InvocationService
+from hazelcast.invocation import InvocationService, Invocation
 from hazelcast.listener import ListenerService, ClusterViewListenerService
 from hazelcast.lifecycle import LifecycleService, LIFECYCLE_STATE_SHUTTING_DOWN, LIFECYCLE_STATE_SHUTDOWN, \
     LifecycleState
@@ -228,14 +228,14 @@ class HazelcastClient(object):
         :return:(Sequence), List of instances created by Hazelcast.
         """
         request = client_get_distributed_objects_codec.encode_request()
-        to_object = self.serialization_service.to_object
-        future = self.invoker.invoke_on_random_target(request)
-        response = client_get_distributed_objects_codec.decode_response(future.result(), to_object)["response"]
+        invocation = Invocation(request, response_handler=lambda m: m)
+        self.invoker.invoke(invocation)
+        response = client_get_distributed_objects_codec.decode_response(invocation.future.result())
 
         distributed_objects = self.proxy.get_distributed_objects()
         local_distributed_object_infos = set()
         for dist_obj in distributed_objects:
-            local_distributed_object_infos.add(DistributedObjectInfo(dist_obj.name, dist_obj.service_name))
+            local_distributed_object_infos.add(DistributedObjectInfo(dist_obj.service_name, dist_obj.name))
 
         for dist_obj_info in response:
             local_distributed_object_infos.discard(dist_obj_info)

@@ -2,10 +2,10 @@ import logging
 import time
 import functools
 
-from hazelcast.exception import create_exception, HazelcastInstanceNotActiveError, is_retryable_error, TimeoutError, \
-    TargetDisconnectedError, HazelcastClientNotActiveError, TargetNotMemberError
+from hazelcast.exception import create_error_from_message, HazelcastInstanceNotActiveError, is_retryable_error, \
+    HazelcastTimeoutError, TargetDisconnectedError, HazelcastClientNotActiveError, TargetNotMemberError, \
+    EXCEPTION_MESSAGE_TYPE
 from hazelcast.future import Future
-from hazelcast.protocol.custom_codec import EXCEPTION_MESSAGE_TYPE, ErrorCodec
 from hazelcast.util import AtomicInteger
 from hazelcast import six
 
@@ -46,7 +46,7 @@ class Invocation(object):
         self.future.set_exception(exception, traceback)
 
     def on_timeout(self):
-        self.set_exception(TimeoutError("Request timed out."))
+        self.set_exception(HazelcastTimeoutError("Request timed out."))
 
 
 class InvocationService(object):
@@ -86,7 +86,7 @@ class InvocationService(object):
             return
 
         if message.get_message_type() == EXCEPTION_MESSAGE_TYPE:
-            error = create_exception(ErrorCodec(message))
+            error = create_error_from_message(message)
             return self._handle_exception(invocation, error)
 
         invocation.set_response(message)
@@ -96,7 +96,7 @@ class InvocationService(object):
 
     def shutdown(self):
         self._shutdown = True
-        for invocation in six.itervalues(self._pending):
+        for invocation in list(six.itervalues(self._pending)):
             self._handle_exception(invocation, HazelcastClientNotActiveError())
 
     def _invoke_on_partition_owner(self, invocation, partition_id):
@@ -226,12 +226,12 @@ class InvocationService(object):
 
         if invocation.timeout < time.time():
             logger.debug("Error will not be retried because invocation timed out: %s", error, extra=self._logger_extras)
-            invocation.set_exception(TimeoutError("Request timed out because an error occurred after "
-                                                  "invocation timeout: %s" % error, traceback))
+            invocation.set_exception(HazelcastTimeoutError("Request timed out because an error occurred after "
+                                                           "invocation timeout: %s" % error, traceback))
             self._pending.pop(invocation.request.get_correlation_id(), None)
             return
 
-        invoke_func = functools.partial(self._invoke, invocation)
+        invoke_func = functools.partial(self.invoke, invocation)
         self._client.reactor.add_timer(self._invocation_retry_pause, invoke_func)
 
     def _should_retry(self, invocation, error):

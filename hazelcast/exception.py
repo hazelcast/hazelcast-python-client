@@ -1,4 +1,6 @@
-from hazelcast.protocol.error_codes import *
+import socket
+
+EXCEPTION_MESSAGE_TYPE = 0
 
 
 def retryable(cls):
@@ -175,7 +177,7 @@ class QueryResultSizeExceededError(HazelcastError):
     pass
 
 
-class QuorumError(HazelcastError):
+class SplitBrainProtectionError(HazelcastError):
     pass
 
 
@@ -184,10 +186,6 @@ class ReachedMaxSizeError(HazelcastError):
 
 
 class RejectedExecutionError(HazelcastError):
-    pass
-
-
-class RemoteMapReduceError(HazelcastError):
     pass
 
 
@@ -230,15 +228,11 @@ class TargetNotMemberError(HazelcastError):
     pass
 
 
-class TimeoutError(HazelcastError):
+class HazelcastTimeoutError(HazelcastError):
     pass
 
 
 class TopicOverloadError(HazelcastError):
-    pass
-
-
-class TopologyChangedError(HazelcastError):
     pass
 
 
@@ -378,111 +372,264 @@ class ClientNotAllowedInClusterError(HazelcastError):
     pass
 
 
-ERROR_CODE_TO_ERROR = {
-    ARRAY_INDEX_OUT_OF_BOUNDS: ArrayIndexOutOfBoundsError,
-    ARRAY_STORE: ArrayStoreError,
-    AUTHENTICATION: AuthenticationError,
-    CACHE_NOT_EXISTS: CacheNotExistsError,
-    CALLER_NOT_MEMBER: CallerNotMemberError,
-    CANCELLATION: CancellationError,
-    CLASS_CAST: ClassCastError,
-    CLASS_NOT_FOUND: ClassNotFoundError,
-    CONCURRENT_MODIFICATION: ConcurrentModificationError,
-    CONFIG_MISMATCH: ConfigMismatchError,
-    CONFIGURATION: ConfigurationError,
-    DISTRIBUTED_OBJECT_DESTROYED: DistributedObjectDestroyedError,
-    DUPLICATE_INSTANCE_NAME: DuplicateInstanceNameError,
-    EOF: HazelcastEOFError,
-    EXECUTION: ExecutionError,
-    HAZELCAST: HazelcastError,
-    HAZELCAST_INSTANCE_NOT_ACTIVE: HazelcastInstanceNotActiveError,
-    HAZELCAST_OVERLOAD: HazelcastOverloadError,
-    HAZELCAST_SERIALIZATION: HazelcastSerializationError,
-    IO: HazelcastIOError,
-    ILLEGAL_ARGUMENT: IllegalArgumentError,
-    ILLEGAL_ACCESS_EXCEPTION: IllegalAccessException,
-    ILLEGAL_ACCESS_ERROR: IllegalAccessError,
-    ILLEGAL_MONITOR_STATE: IllegalMonitorStateError,
-    ILLEGAL_STATE: IllegalStateError,
-    ILLEGAL_THREAD_STATE: IllegalThreadStateError,
-    INDEX_OUT_OF_BOUNDS: IndexOutOfBoundsError,
-    INTERRUPTED: HazelcastInterruptedError,
-    INVALID_ADDRESS: InvalidAddressError,
-    INVALID_CONFIGURATION: InvalidConfigurationError,
-    MEMBER_LEFT: MemberLeftError,
-    NEGATIVE_ARRAY_SIZE: NegativeArraySizeError,
-    NO_SUCH_ELEMENT: NoSuchElementError,
-    NOT_SERIALIZABLE: NotSerializableError,
-    NULL_POINTER: NullPointerError,
-    OPERATION_TIMEOUT: OperationTimeoutError,
-    PARTITION_MIGRATING: PartitionMigratingError,
-    QUERY: QueryError,
-    QUERY_RESULT_SIZE_EXCEEDED: QueryResultSizeExceededError,
-    QUORUM: QuorumError,
-    REACHED_MAX_SIZE: ReachedMaxSizeError,
-    REJECTED_EXECUTION: RejectedExecutionError,
-    REMOTE_MAP_REDUCE: RemoteMapReduceError,
-    RESPONSE_ALREADY_SENT: ResponseAlreadySentError,
-    RETRYABLE_HAZELCAST: RetryableHazelcastError,
-    RETRYABLE_IO: RetryableIOError,
-    RUNTIME: HazelcastRuntimeError,
-    SECURITY: SecurityError,
-    SOCKET: SocketError,
-    STALE_SEQUENCE: StaleSequenceError,
-    TARGET_DISCONNECTED: TargetDisconnectedError,
-    TARGET_NOT_MEMBER: TargetNotMemberError,
-    TIMEOUT: TimeoutError,
-    TOPIC_OVERLOAD: TopicOverloadError,
-    TOPOLOGY_CHANGED: TopologyChangedError,
-    TRANSACTION: TransactionError,
-    TRANSACTION_NOT_ACTIVE: TransactionNotActiveError,
-    TRANSACTION_TIMED_OUT: TransactionTimedOutError,
-    URI_SYNTAX: URISyntaxError,
-    UTF_DATA_FORMAT: UTFDataFormatError,
-    UNSUPPORTED_OPERATION: UnsupportedOperationError,
-    WRONG_TARGET: WrongTargetError,
-    XA: XAError,
-    ACCESS_CONTROL: AccessControlError,
-    LOGIN: LoginError,
-    UNSUPPORTED_CALLBACK: UnsupportedCallbackError,
-    NO_DATA_MEMBER: NoDataMemberInClusterError,
-    REPLICATED_MAP_CANT_BE_CREATED: ReplicatedMapCantBeCreatedOnLiteMemberError,
-    MAX_MESSAGE_SIZE_EXCEEDED: MaxMessageSizeExceededError,
-    WAN_REPLICATION_QUEUE_FULL: WANReplicationQueueFullError,
-    ASSERTION_ERROR: HazelcastAssertionError,
-    OUT_OF_MEMORY_ERROR: OutOfMemoryError,
-    STACK_OVERFLOW_ERROR: StackOverflowError,
-    NATIVE_OUT_OF_MEMORY_ERROR: NativeOutOfMemoryError,
-    SERVICE_NOT_FOUND: ServiceNotFoundError,
-    STALE_TASK_ID: StaleTaskIdError,
-    DUPLICATE_TASK: DuplicateTaskError,
-    STALE_TASK: StaleTaskError,
-    LOCAL_MEMBER_RESET: LocalMemberResetError,
-    INDETERMINATE_OPERATION_STATE: IndeterminateOperationStateError,
-    FLAKE_ID_NODE_ID_OUT_OF_RANGE_EXCEPTION: NodeIdOutOfRangeError,
-    TARGET_NOT_REPLICA_EXCEPTION: TargetNotReplicaError,
-    MUTATION_DISALLOWED_EXCEPTION: MutationDisallowedError,
-    CONSISTENCY_LOST_EXCEPTION: ConsistencyLostError,
+class VersionMismatchError(HazelcastError):
+    pass
+
+
+class NoSuchMethodError(HazelcastError):
+    pass
+
+
+class NoSuchMethodException(HazelcastError):
+    pass
+
+
+class NoSuchFieldError(HazelcastError):
+    pass
+
+
+class NoSuchFieldException(HazelcastError):
+    pass
+
+
+class NoClassDefFoundError(HazelcastError):
+    pass
+
+
+class UndefinedErrorCodeError(HazelcastError):
+    pass
+
+
+# Error Codes
+_UNDEFINED = 0
+_ARRAY_INDEX_OUT_OF_BOUNDS = 1
+_ARRAY_STORE = 2
+_AUTHENTICATION = 3
+_CACHE = 4
+_CACHE_LOADER = 5
+_CACHE_NOT_EXISTS = 6
+_CACHE_WRITER = 7
+_CALLER_NOT_MEMBER = 8
+_CANCELLATION = 9
+_CLASS_CAST = 10
+_CLASS_NOT_FOUND = 11
+_CONCURRENT_MODIFICATION = 12
+_CONFIG_MISMATCH = 13
+_DISTRIBUTED_OBJECT_DESTROYED = 14
+_EOF = 15
+_ENTRY_PROCESSOR = 16
+_EXECUTION = 17
+_HAZELCAST = 18
+_HAZELCAST_INSTANCE_NOT_ACTIVE = 19
+_HAZELCAST_OVERLOAD = 20
+_HAZELCAST_SERIALIZATION = 21
+_IO = 22
+_ILLEGAL_ARGUMENT = 23
+_ILLEGAL_ACCESS_EXCEPTION = 24
+_ILLEGAL_ACCESS_ERROR = 25
+_ILLEGAL_MONITOR_STATE = 26
+_ILLEGAL_STATE = 27
+_ILLEGAL_THREAD_STATE = 28
+_INDEX_OUT_OF_BOUNDS = 29
+_INTERRUPTED = 30
+_INVALID_ADDRESS = 31
+_INVALID_CONFIGURATION = 32
+_MEMBER_LEFT = 33
+_NEGATIVE_ARRAY_SIZE = 34
+_NO_SUCH_ELEMENT = 35
+_NOT_SERIALIZABLE = 36
+_NULL_POINTER = 37
+_OPERATION_TIMEOUT = 38
+_PARTITION_MIGRATING = 39
+_QUERY = 40
+_QUERY_RESULT_SIZE_EXCEEDED = 41
+_SPLIT_BRAIN_PROTECTION = 42
+_REACHED_MAX_SIZE = 43
+_REJECTED_EXECUTION = 44
+_RESPONSE_ALREADY_SENT = 45
+_RETRYABLE_HAZELCAST = 46
+_RETRYABLE_IO = 47
+_RUNTIME = 48
+_SECURITY = 49
+_SOCKET = 50
+_STALE_SEQUENCE = 51
+_TARGET_DISCONNECTED = 52
+_TARGET_NOT_MEMBER = 53
+_TIMEOUT = 54
+_TOPIC_OVERLOAD = 55
+_TRANSACTION = 56
+_TRANSACTION_NOT_ACTIVE = 57
+_TRANSACTION_TIMED_OUT = 58
+_URI_SYNTAX = 59
+_UTF_DATA_FORMAT = 60
+_UNSUPPORTED_OPERATION = 61
+_WRONG_TARGET = 62
+_XA = 63
+_ACCESS_CONTROL = 64
+_LOGIN = 65
+_UNSUPPORTED_CALLBACK = 66
+_NO_DATA_MEMBER = 67
+_REPLICATED_MAP_CANT_BE_CREATED = 68
+_MAX_MESSAGE_SIZE_EXCEEDED = 69
+_WAN_REPLICATION_QUEUE_FULL = 70
+_ASSERTION_ERROR = 71
+_OUT_OF_MEMORY_ERROR = 72
+_STACK_OVERFLOW_ERROR = 73
+_NATIVE_OUT_OF_MEMORY_ERROR = 74
+_SERVICE_NOT_FOUND = 75
+_STALE_TASK_ID = 76
+_DUPLICATE_TASK = 77
+_STALE_TASK = 78
+_LOCAL_MEMBER_RESET = 79
+_INDETERMINATE_OPERATION_STATE = 80
+_FLAKE_ID_NODE_ID_OUT_OF_RANGE_EXCEPTION = 81
+_TARGET_NOT_REPLICA_EXCEPTION = 82
+_MUTATION_DISALLOWED_EXCEPTION = 83
+_CONSISTENCY_LOST_EXCEPTION = 84
+_SESSION_EXPIRED_EXCEPTION = 85
+_WAIT_KEY_CANCELLED_EXCEPTION = 86
+_LOCK_ACQUIRE_LIMIT_REACHED_EXCEPTION = 87
+_LOCK_OWNERSHIP_LOST_EXCEPTION = 88
+_CP_GROUP_DESTROYED_EXCEPTION = 89
+_CANNOT_REPLICATE_EXCEPTION = 90
+_LEADER_DEMOTED_EXCEPTION = 91
+_STALE_APPEND_REQUEST_EXCEPTION = 92
+_NOT_LEADER_EXCEPTION = 93
+_VERSION_MISMATCH_EXCEPTION = 94
+_NO_SUCH_METHOD_ERROR = 95
+_NO_SUCH_METHOD_EXCEPTION = 96
+_NO_SUCH_FIELD_ERROR = 97
+_NO_SUCH_FIELD_EXCEPTION = 98
+_NO_CLASS_DEF_FOUND_ERROR = 99
+
+_ERROR_CODE_TO_ERROR = {
+    _ARRAY_INDEX_OUT_OF_BOUNDS: ArrayIndexOutOfBoundsError,
+    _ARRAY_STORE: ArrayStoreError,
+    _AUTHENTICATION: AuthenticationError,
+    _CACHE_NOT_EXISTS: CacheNotExistsError,
+    _CALLER_NOT_MEMBER: CallerNotMemberError,
+    _CANCELLATION: CancellationError,
+    _CLASS_CAST: ClassCastError,
+    _CLASS_NOT_FOUND: ClassNotFoundError,
+    _CONCURRENT_MODIFICATION: ConcurrentModificationError,
+    _CONFIG_MISMATCH: ConfigMismatchError,
+    _DISTRIBUTED_OBJECT_DESTROYED: DistributedObjectDestroyedError,
+    _EOF: HazelcastEOFError,
+    _EXECUTION: ExecutionError,
+    _HAZELCAST: HazelcastError,
+    _HAZELCAST_INSTANCE_NOT_ACTIVE: HazelcastInstanceNotActiveError,
+    _HAZELCAST_OVERLOAD: HazelcastOverloadError,
+    _HAZELCAST_SERIALIZATION: HazelcastSerializationError,
+    _IO: HazelcastIOError,
+    _ILLEGAL_ARGUMENT: IllegalArgumentError,
+    _ILLEGAL_ACCESS_EXCEPTION: IllegalAccessException,
+    _ILLEGAL_ACCESS_ERROR: IllegalAccessError,
+    _ILLEGAL_MONITOR_STATE: IllegalMonitorStateError,
+    _ILLEGAL_STATE: IllegalStateError,
+    _ILLEGAL_THREAD_STATE: IllegalThreadStateError,
+    _INDEX_OUT_OF_BOUNDS: IndexOutOfBoundsError,
+    _INTERRUPTED: HazelcastInterruptedError,
+    _INVALID_ADDRESS: InvalidAddressError,
+    _INVALID_CONFIGURATION: InvalidConfigurationError,
+    _MEMBER_LEFT: MemberLeftError,
+    _NEGATIVE_ARRAY_SIZE: NegativeArraySizeError,
+    _NO_SUCH_ELEMENT: NoSuchElementError,
+    _NOT_SERIALIZABLE: NotSerializableError,
+    _NULL_POINTER: NullPointerError,
+    _OPERATION_TIMEOUT: OperationTimeoutError,
+    _PARTITION_MIGRATING: PartitionMigratingError,
+    _QUERY: QueryError,
+    _QUERY_RESULT_SIZE_EXCEEDED: QueryResultSizeExceededError,
+    _SPLIT_BRAIN_PROTECTION: SplitBrainProtectionError,
+    _REACHED_MAX_SIZE: ReachedMaxSizeError,
+    _REJECTED_EXECUTION: RejectedExecutionError,
+    _RESPONSE_ALREADY_SENT: ResponseAlreadySentError,
+    _RETRYABLE_HAZELCAST: RetryableHazelcastError,
+    _RETRYABLE_IO: RetryableIOError,
+    _RUNTIME: HazelcastRuntimeError,
+    _SECURITY: SecurityError,
+    _SOCKET: socket.error,
+    _STALE_SEQUENCE: StaleSequenceError,
+    _TARGET_DISCONNECTED: TargetDisconnectedError,
+    _TARGET_NOT_MEMBER: TargetNotMemberError,
+    _TIMEOUT: HazelcastTimeoutError,
+    _TOPIC_OVERLOAD: TopicOverloadError,
+    _TRANSACTION: TransactionError,
+    _TRANSACTION_NOT_ACTIVE: TransactionNotActiveError,
+    _TRANSACTION_TIMED_OUT: TransactionTimedOutError,
+    _URI_SYNTAX: URISyntaxError,
+    _UTF_DATA_FORMAT: UTFDataFormatError,
+    _UNSUPPORTED_OPERATION: UnsupportedOperationError,
+    _WRONG_TARGET: WrongTargetError,
+    _XA: XAError,
+    _ACCESS_CONTROL: AccessControlError,
+    _LOGIN: LoginError,
+    _UNSUPPORTED_CALLBACK: UnsupportedCallbackError,
+    _NO_DATA_MEMBER: NoDataMemberInClusterError,
+    _REPLICATED_MAP_CANT_BE_CREATED: ReplicatedMapCantBeCreatedOnLiteMemberError,
+    _MAX_MESSAGE_SIZE_EXCEEDED: MaxMessageSizeExceededError,
+    _WAN_REPLICATION_QUEUE_FULL: WANReplicationQueueFullError,
+    _ASSERTION_ERROR: HazelcastAssertionError,
+    _OUT_OF_MEMORY_ERROR: OutOfMemoryError,
+    _STACK_OVERFLOW_ERROR: StackOverflowError,
+    _NATIVE_OUT_OF_MEMORY_ERROR: NativeOutOfMemoryError,
+    _SERVICE_NOT_FOUND: ServiceNotFoundError,
+    _STALE_TASK_ID: StaleTaskIdError,
+    _DUPLICATE_TASK: DuplicateTaskError,
+    _STALE_TASK: StaleTaskError,
+    _LOCAL_MEMBER_RESET: LocalMemberResetError,
+    _INDETERMINATE_OPERATION_STATE: IndeterminateOperationStateError,
+    _FLAKE_ID_NODE_ID_OUT_OF_RANGE_EXCEPTION: NodeIdOutOfRangeError,
+    _TARGET_NOT_REPLICA_EXCEPTION: TargetNotReplicaError,
+    _MUTATION_DISALLOWED_EXCEPTION: MutationDisallowedError,
+    _CONSISTENCY_LOST_EXCEPTION: ConsistencyLostError,
+    _VERSION_MISMATCH_EXCEPTION: VersionMismatchError,
+    _NO_SUCH_METHOD_ERROR: NoSuchMethodError,
+    _NO_SUCH_METHOD_EXCEPTION: NoSuchMethodException,
+    _NO_SUCH_FIELD_ERROR: NoSuchFieldError,
+    _NO_SUCH_FIELD_EXCEPTION: NoSuchFieldException,
+    _NO_CLASS_DEF_FOUND_ERROR: NoClassDefFoundError,
 }
 
+from hazelcast.protocol.builtin import ListMultiFrameCodec
+from hazelcast.protocol.codec.custom.error_holder_codec import ErrorHolderCodec
 
-def create_exception(error_codec):
+
+class _ErrorsCodec(object):
+    @staticmethod
+    def decode(msg):
+        msg.next_frame()
+        return ListMultiFrameCodec.decode(msg, ErrorHolderCodec.decode)
+
+
+def create_error_from_message(error_message):
     """
     Creates an exception with given error codec.
 
-    :param error_codec: (Error Codec), error codec which includes the class name, message and exception trace.
+    :param error_message: (ClientMessage), error message which includes the class name, message and exception trace.
     :return: (Exception), the created exception.
     """
-    if error_codec.error_code in ERROR_CODE_TO_ERROR:
-        return ERROR_CODE_TO_ERROR[error_codec.error_code](error_codec.message)
+    error_holders = _ErrorsCodec.decode(error_message)
+    return _create_error(error_holders, 0)
+
+
+def _create_error(error_holders, idx):
+    if idx == len(error_holders):
+        return None
+
+    error_holder = error_holders[idx]
+    error_class = _ERROR_CODE_TO_ERROR.get(error_holder.error_code, None)
 
     stack_trace = "\n".join(
-        ["\tat %s.%s(%s:%s)" % (x.declaring_class, x.method_name, x.file_name, x.line_number) for x in
-         error_codec.stack_trace])
-    message = "Got exception from server:\n %s: %s\n %s" % (error_codec.class_name,
-                                                            error_codec.message,
+        ["\tat %s.%s(%s:%s)" % (x.class_name, x.method_name, x.file_name, x.line_number) for x in
+         error_holder.stack_trace_elements])
+    message = "Got exception from server:\n %s: %s\n %s" % (error_holder.class_name,
+                                                            error_holder.message,
                                                             stack_trace)
-    return HazelcastError(message)
+    if error_class:
+        return error_class(message, _create_error(error_holders, idx + 1))
+    else:
+        return UndefinedErrorCodeError(message, error_holder.class_name)
 
 
 def is_retryable_error(error):

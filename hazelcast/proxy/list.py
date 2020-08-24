@@ -107,7 +107,7 @@ class List(PartitionSpecificProxy):
 
         def handle_event_item(item, uuid, event_type):
             item = item if include_value else None
-            member = self._client.cluster.get_member_by_uuid(uuid)
+            member = self._client.cluster.get_member(uuid)
 
             item_event = ItemEvent(self.name, item, event_type, member, self._to_object)
             if event_type == ItemEventType.added:
@@ -117,7 +117,7 @@ class List(PartitionSpecificProxy):
                 if item_removed_func:
                     item_removed_func(item_event)
 
-        return self._register_listener(request, lambda r: list_add_listener_codec.decode_response(r)['response'],
+        return self._register_listener(request, lambda r: list_add_listener_codec.decode_response(r),
                                        lambda reg_id: list_remove_listener_codec.encode_request(self.name, reg_id),
                                        lambda m: list_add_listener_codec.handle(m, handle_event_item))
 
