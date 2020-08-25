@@ -32,16 +32,15 @@ def fill_map(map, size=10, key_prefix="key", value_prefix="val"):
     return entries
 
 
-def get_ssl_config(enable_ssl=False,
+def get_ssl_config(cluster_name, enable_ssl=False,
                    cafile=None,
                    certfile=None,
                    keyfile=None,
                    password=None,
                    protocol=PROTOCOL.TLS,
-                   ciphers=None,
-                   attempt_limit=1):
+                   ciphers=None):
     config = ClientConfig()
-
+    config.cluster_name = cluster_name
     config.network.ssl.enabled = enable_ssl
     config.network.ssl.cafile = cafile
     config.network.ssl.certfile = certfile
@@ -50,7 +49,7 @@ def get_ssl_config(enable_ssl=False,
     config.network.ssl.protocol = protocol
     config.network.ssl.ciphers = ciphers
 
-    config.network.connection_attempt_limit = attempt_limit
+    config.connection_strategy.connection_retry.cluster_connect_timeout = 2
     return config
 
 

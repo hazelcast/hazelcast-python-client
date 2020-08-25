@@ -124,7 +124,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
                  network_config, message_callback, logger_extras):
         asyncore.dispatcher.__init__(self, map=dispatcher_map)
         Connection.__init__(self, connection_manager, connection_id, message_callback, logger_extras)
-        self._connected_address = address
+        self.connected_address = address
 
         self._write_lock = threading.Lock()
         self._write_queue = deque()
@@ -197,7 +197,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
     def handle_connect(self):
         self.start_time = time.time()
-        logger.debug("Connected to %s", self._connected_address, extra=self._logger_extras)
+        logger.debug("Connected to %s", self.connected_address, extra=self._logger_extras)
 
     def handle_read(self):
         reader = self._reader

@@ -78,10 +78,12 @@ class _ObjectDataOutput(ObjectDataOutput):
         self._pos += DOUBLE_SIZE_IN_BYTES
 
     def write_utf(self, val):
-        _len = len(val) if val is not None else NULL_ARRAY_LENGTH
-        self.write_int(_len)
-        if _len > 0:
-            self.write_from(val.encode("utf-8"))
+        if val is None:
+            self.write_int(NULL_ARRAY_LENGTH)
+        else:
+            encoded_data = val.encode("utf-8")
+            self.write_int(len(encoded_data))
+            self.write_from(encoded_data)
 
     def write_byte_array(self, val):
         _len = len(val) if val is not None else NULL_ARRAY_LENGTH

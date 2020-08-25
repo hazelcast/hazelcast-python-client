@@ -178,22 +178,22 @@ class ConnectionManager(object):
                 pass
 
     def on_connection_close(self, connection, cause):
-        remote_address = connection.remote_address
+        connected_address = connection.connected_address
         remote_uuid = connection.remote_uuid
-        if not remote_address:
+
+        if not connected_address:
             logger.debug("Destroying %s, but it has no remote address, hence nothing is "
                          "removed from the connection dictionary" % connection, extra=self._logger_extras)
-            return
 
         with self._connection_lock:
-            pending = self._pending_connections.pop(remote_address, None)
+            pending = self._pending_connections.pop(connected_address, None)
             connection = self.active_connections.pop(remote_uuid, None)
 
         if pending:
             pending.set_exception(cause)
 
         if connection:
-            logger.info("Removed connection to %s:%s, connection: %s" % (remote_address, remote_uuid, connection),
+            logger.info("Removed connection to %s:%s, connection: %s" % (connected_address, remote_uuid, connection),
                         extra=self._logger_extras)
             if not self.active_connections:
                 self._fire_lifecycle_event(LifecycleState.DISCONNECTED)
@@ -614,8 +614,9 @@ class Connection(object):
 
     def __init__(self, connection_manager, connection_id, message_callback, logger_extras=None):
         self.remote_address = None
-        self.local_address = None
         self.remote_uuid = None
+        self.connected_address = None
+        self.local_address = None
         self.last_read_time = 0
         self.last_write_time = 0
         self.start_time = 0

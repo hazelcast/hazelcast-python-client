@@ -220,8 +220,8 @@ def create_portable():
     identified = create_identified()
     inner_portable = InnerPortable("Inner Text", 666)
     long_var = long("1341431221l") if six.PY2 else 1341431221
-    return SerializationV1Portable(99, True, 'c', 11, 1234134, long_var, 1.0, 2.0, [1, 2, 3], [True, False, True],
-                                   ['a', 'b', 'c'],
+    return SerializationV1Portable(99, True, 'c', 11, 1234134, long_var, 1.0, 2.0, bytearray([1, 2, 3]),
+                                   [True, False, True], ['a', 'b', 'c'],
                                    [1, 2, 3], [4, 2, 3], [11, 2, 3], [1.0, 2.0, 3.0],
                                    [11.0, 22.0, 33.0], "the string text",
                                    ["item1", "item2", "item3"], inner_portable,

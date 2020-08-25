@@ -21,35 +21,8 @@ class HzRemoteController(RemoteController.Iface):
             self.remote_controller = RemoteController.Client(protocol)
             # Connect!
             transport.open()
-        except Thrift.TException as tx:
-            self.logger.warn('%s' % tx.message)
-
-    def terminateMember(self, cluster_id, member_id):
-        return self.remote_controller.terminateMember(cluster_id, member_id)
-
-    def terminateCluster(self, cluster_id):
-        return self.remote_controller.terminateCluster(cluster_id)
-
-    def startMember(self, cluster_id):
-        return self.remote_controller.startMember(cluster_id)
-
-    def splitMemberFromCluster(self, member_id):
-        return self.remote_controller.splitMemberFromCluster(member_id)
-
-    def shutdownMember(self, cluster_id, member_id):
-        return self.remote_controller.shutdownMember(cluster_id, member_id)
-
-    def shutdownCluster(self, cluster_id):
-        return self.remote_controller.shutdownCluster(cluster_id)
-
-    def mergeMemberToCluster(self, cluster_id, member_id):
-        return self.remote_controller.mergeMemberToCluster(cluster_id, member_id)
-
-    def executeOnController(self, cluster_id, script, lang):
-        return self.remote_controller.executeOnController(cluster_id, script, lang)
-
-    def createCluster(self, hz_version, xml_config):
-        return self.remote_controller.createCluster(hz_version, xml_config)
+        except Thrift.TException:
+            self.logger.exception('Something went wrong while connecting to remote controller.')
 
     def ping(self):
         return self.remote_controller.ping()
@@ -60,3 +33,39 @@ class HzRemoteController(RemoteController.Iface):
     def exit(self):
         self.remote_controller.exit()
         self.remote_controller._iprot.trans.close()
+
+    def createCluster(self, hz_version, xml_config):
+        return self.remote_controller.createCluster(hz_version, xml_config)
+
+    def createClusterKeepClusterName(self, hz_version, xml_config):
+        return self.remote_controller.createClusterKeepClusterName(hz_version, xml_config)
+
+    def startMember(self, cluster_id):
+        return self.remote_controller.startMember(cluster_id)
+
+    def shutdownMember(self, cluster_id, member_id):
+        return self.remote_controller.shutdownMember(cluster_id, member_id)
+
+    def terminateMember(self, cluster_id, member_id):
+        return self.remote_controller.terminateMember(cluster_id, member_id)
+
+    def suspendMember(self, cluster_id, member_id):
+        return self.remote_controller.suspendMember(cluster_id, member_id)
+
+    def resumeMember(self, cluster_id, member_id):
+        return self.remote_controller.resumeMember(cluster_id, member_id)
+
+    def shutdownCluster(self, cluster_id):
+        return self.remote_controller.shutdownCluster(cluster_id)
+
+    def terminateCluster(self, cluster_id):
+        return self.remote_controller.terminateCluster(cluster_id)
+
+    def splitMemberFromCluster(self, member_id):
+        return self.remote_controller.splitMemberFromCluster(member_id)
+
+    def mergeMemberToCluster(self, cluster_id, member_id):
+        return self.remote_controller.mergeMemberToCluster(cluster_id, member_id)
+
+    def executeOnController(self, cluster_id, script, lang):
+        return self.remote_controller.executeOnController(cluster_id, script, lang)

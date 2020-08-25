@@ -248,6 +248,7 @@ class FlakeIdGeneratorIdOutOfRangeTest(HazelcastTestCase):
         self.assertTrueEventually(lambda: response.success and response.result is not None)
 
         config = ClientConfig()
+        config.cluster_name = self.cluster.id
         config.network.smart_routing = False
         client = HazelcastClient(config)
 
@@ -266,7 +267,9 @@ class FlakeIdGeneratorIdOutOfRangeTest(HazelcastTestCase):
         response2 = self._assign_out_of_range_node_id(self.cluster.id, 1)
         self.assertTrueEventually(lambda: response2.success and response2.result is not None)
 
-        client = HazelcastClient()
+        config = ClientConfig()
+        config.cluster_name = self.cluster.id
+        client = HazelcastClient(config)
         generator = client.get_flake_id_generator("test").blocking()
 
         with self.assertRaises(HazelcastError):

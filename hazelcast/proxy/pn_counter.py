@@ -199,7 +199,7 @@ class PNCounter(Proxy):
 
     def _set_result_or_error(self, delegated_future, excluded_addresses, last_error, codec, **kwargs):
         target = self._get_crdt_operation_target(excluded_addresses)
-        if target is None:
+        if not target:
             if last_error:
                 delegated_future.set_exception(last_error)
                 return
@@ -221,9 +221,11 @@ class PNCounter(Proxy):
             self._update_observed_replica_timestamp(result["replica_timestamps"])
             delegated_future.set_result(result["value"])
         except Exception as ex:
-            logger.debug("Exception occurred while invoking operation on target {}, "
-                         "choosing different target. Cause: {}".format(target, ex),
-                         extra={"client_name": self._client.name, "cluster_name": self._client.config.cluster_name})
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.exception("Exception occurred while invoking operation on target %s, "
+                                 "choosing different target" % target,
+                                 extra={"client_name": self._client.name,
+                                        "cluster_name": self._client.config.cluster_name})
             if excluded_addresses == PNCounter._EMPTY_ADDRESS_LIST:
                 excluded_addresses = []
 

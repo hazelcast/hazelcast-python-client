@@ -306,23 +306,6 @@ class JavaClassSerializer(BaseSerializer):
         return JAVA_DEFAULT_TYPE_CLASS
 
 
-class JavaEnumSerializer(BaseSerializer):
-    def read(self, inp):
-        """
-        :param inp:
-        :return: a tuple of (Enum-name, Enum-value-name)
-        """
-        return tuple(inp.read_utf(), inp.read_utf())
-
-    def write(self, out, obj):
-        enum_name, enum_val_name = obj
-        out.write_utf(enum_name)
-        out.write_utf(enum_val_name)
-
-    def get_type_id(self):
-        return JAVA_DEFAULT_TYPE_ENUM
-
-
 class ArrayListSerializer(BaseSerializer):
     def read(self, inp):
         size = inp.read_int()

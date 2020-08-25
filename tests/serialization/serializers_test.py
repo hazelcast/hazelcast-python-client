@@ -11,6 +11,11 @@ from tests.hzrc.ttypes import Lang
 
 
 class SerializersTestCase(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
+        return config
+
     def setUp(self):
         config = SerializationConfig()
         config.default_integer_type = INTEGER_TYPE.BIG_INT

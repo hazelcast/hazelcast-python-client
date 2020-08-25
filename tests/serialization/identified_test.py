@@ -3,7 +3,6 @@ import unittest
 import hazelcast
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.serialization.api import IdentifiedDataSerializable
-from hazelcast.config import ClientProperties
 
 FACTORY_ID = 1
 
@@ -105,14 +104,10 @@ class SerializationV1Identified(IdentifiedDataSerializable):
 
 
 def create_identified():
-    return SerializationV1Identified(99, True, 'c', 11, 1234134, 1341431221, 1.0, 2.0, [1, 2, 3], [True, False, True],
-                                     ['a', 'b', 'c'], [1, 2, 3], [4, 2, 3], [11, 2, 3], [1.0, 2.0, 3.0], [11.0, 22.0, 33.0],
-                                     "the string text", ["item1", "item2", "item3"])
-
-def create_identified_with_bytearray():
-    return SerializationV1Identified(99, True, 'c', 11, 1234134, 1341431221, 1.0, 2.0, bytes([1, 2, 3]), [True, False, True],
-                                     ['a', 'b', 'c'], [1, 2, 3], [4, 2, 3], [11, 2, 3], [1.0, 2.0, 3.0], [11.0, 22.0, 33.0],
-                                     "the string text", ["item1", "item2", "item3"])
+    return SerializationV1Identified(99, True, 'c', 11, 1234134, 1341431221, 1.0, 2.0, bytearray([1, 2, 3]),
+                                     [True, False, True], ['a', 'b', 'c'], [1, 2, 3], [4, 2, 3], [11, 2, 3],
+                                     [1.0, 2.0, 3.0], [11.0, 22.0, 33.0], "the string text",
+                                     ["item1", "item2", "item3"])
 
 
 the_factory = {SerializationV1Identified.CLASS_ID: SerializationV1Identified}
@@ -129,19 +124,3 @@ class IdentifiedSerializationTestCase(unittest.TestCase):
 
         obj2 = service.to_object(data)
         self.assertTrue(obj == obj2)
-
-    def test_encode_decode_respect_bytearray_fields(self):
-        config = hazelcast.ClientConfig()
-        config.set_property("hazelcast.serialization.input.returns.bytearray", True)
-        config.serialization.data_serializable_factories[FACTORY_ID] = the_factory
-        service = SerializationServiceV1(config.serialization, properties=ClientProperties(config.get_properties()))
-        obj = create_identified_with_bytearray()
-        data = service.to_data(obj)
-
-        obj2 = service.to_object(data)
-        self.assertTrue(obj == obj2)
-
-        service = SerializationServiceV1(config.serialization)
-
-        obj2 = service.to_object(data)
-        self.assertFalse(obj == obj2)

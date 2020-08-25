@@ -110,6 +110,7 @@ class SingleMemberTestCase(HazelcastTestCase):
     @classmethod
     def tearDownClass(cls):
         cls.client.shutdown()
+        cls.rc.terminateCluster(cls.cluster.id)
         cls.rc.exit()
 
     @classmethod

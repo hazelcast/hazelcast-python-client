@@ -67,7 +67,6 @@ class InvocationService(object):
         else:
             self.invoke = self._invoke_non_smart
 
-        self._client.connection_manager.add_listener(on_connection_closed=self._cleanup_connection)
         self._partition_service = client.partition_service
         self._connection_manager = client.connection_manager
         self._check_invocation_allowed_fn = self._connection_manager.check_invocation_allowed
@@ -170,11 +169,6 @@ class InvocationService(object):
         except Exception as e:
             self._handle_exception(invocation, e)
 
-    def _cleanup_connection(self, connection, cause):
-        for correlation_id, invocation in six.iteritems(self._pending):
-            if invocation.sent_connection == connection:
-                self._handle_exception(invocation, cause)
-
     def _init_invocation_retry_pause(self):
         invocation_retry_pause = self._client.properties.get_seconds_positive_or_default(
             self._client.properties.INVOCATION_RETRY_PAUSE_MILLIS)
@@ -201,7 +195,7 @@ class InvocationService(object):
         if invocation.event_handler:
             self._listener_service.add_event_handler(correlation_id, invocation.event_handler)
 
-        # logger.debug("Sending %s to %s", message, connection, extra=self._logger_extras)
+        logger.debug("Sending %s to %s", message, connection, extra=self._logger_extras)
 
         if not connection.send_message(message):
             if invocation.event_handler:
@@ -211,8 +205,7 @@ class InvocationService(object):
 
     def _handle_exception(self, invocation, error, traceback=None):
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("Got exception for request %s: %s: %s", invocation.request, type(error).__name__, error,
-                         extra=self._logger_extras)
+            logger.exception("Got exception for request %s" % invocation.request, extra=self._logger_extras)
 
         if not self._client.lifecycle.live:
             invocation.set_exception(HazelcastClientNotActiveError(), traceback)

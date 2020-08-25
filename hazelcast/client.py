@@ -77,7 +77,7 @@ class HazelcastClient(object):
             self.listener.start()
             self.statistics.start()
         except:
-            self.reactor.shutdown()
+            self.shutdown()
             raise
         logger.info("Client started.", extra=self._logger_extras)
 
@@ -258,6 +258,7 @@ class HazelcastClient(object):
             self.statistics.shutdown()
             self.lifecycle.fire_lifecycle_event(LifecycleState.SHUTDOWN)
             self.lifecycle.shutdown()
+            self.reactor.shutdown()
             logger.info("Client shutdown.", extra=self._logger_extras)
 
     def _create_address_provider(self):

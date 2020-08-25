@@ -508,8 +508,7 @@ class MapTest(SingleMemberTestCase):
 
     def _fill_map(self, count=10):
         map = {"key-%d" % x: "value-%d" % x for x in range(0, count)}
-        for k, v in six.iteritems(map):
-            self.map.put(k, v)
+        self.map.put_all(map)
         return map
 
 
