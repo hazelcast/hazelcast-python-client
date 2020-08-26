@@ -91,13 +91,13 @@ class ConnectionManager(object):
         self._connection_listeners = []
         self._connect_all_members_timer = None
         self._async_start = config.connection_strategy.async_start
-        self._connect_to_cluster_timer_started = False
-        self._connect_to_cluster_timer = None
+        self._connect_to_cluster_thread_running = False
+        self._connect_to_cluster_thread = None
         self._pending_connections = dict()
         props = self._client.properties
         self._shuffle_member_list = props.get_bool(props.SHUFFLE_MEMBER_LIST)
         self._address_provider = address_provider
-        self._connection_lock = threading.RLock()
+        self._lock = threading.RLock()
         self._connection_id_generator = AtomicInteger()
         self._client_uuid = uuid.uuid4()
         self._labels = config.labels
@@ -185,7 +185,7 @@ class ConnectionManager(object):
             logger.debug("Destroying %s, but it has no remote address, hence nothing is "
                          "removed from the connection dictionary" % connection, extra=self._logger_extras)
 
-        with self._connection_lock:
+        with self._lock:
             pending = self._pending_connections.pop(connected_address, None)
             connection = self.active_connections.pop(remote_uuid, None)
 
@@ -225,8 +225,7 @@ class ConnectionManager(object):
             return
 
         if self._client.lifecycle.live:
-            pass
-            # self._start_connect_to_cluster_timer()
+            self._start_connect_to_cluster_thread()
 
     def _init_wait_strategy(self, config):
         retry_config = config.connection_strategy.connection_retry
@@ -259,34 +258,39 @@ class ConnectionManager(object):
 
     def _connect_to_cluster(self):
         if self._async_start:
-            # TODO should be executed in another thread
-            # self._start_connect_to_cluster_timer()
-            pass
+            self._start_connect_to_cluster_thread()
         else:
             self._sync_connect_to_cluster()
 
-    def _start_connect_to_cluster_timer(self):
-        if self._connect_to_cluster_timer_started:
-            return
+    def _start_connect_to_cluster_thread(self):
+        with self._lock:
+            if self._connect_to_cluster_thread_running:
+                return
 
-        def _start():
+            self._connect_to_cluster_thread_running = True
+
+        def run():
             try:
-                self._sync_connect_to_cluster()
-                self._connect_to_cluster_timer_started = False
-                if not self.active_connections:
-                    reactor = self._client.reactor
-                    self._connect_to_cluster_timer = reactor.add_timer(0, self._start_connect_to_cluster_timer)
+                while True:
+                    self._sync_connect_to_cluster()
+                    if self.active_connections:
+                        return
             except:
                 logger.exception("Could not connect to any cluster, shutting down the client",
                                  extra=self._logger_extras)
                 self._shutdown_client()
+            finally:
+                self._connect_to_cluster_thread_running = False
 
-        self._connect_to_cluster_timer = self._client.reactor.add_timer(0, _start)
-        self._connect_to_cluster_timer_started = True
+        t = threading.Thread(target=run, name='hazelcast_async_connection')
+        t.daemon = True
+
+        self._connect_to_cluster_thread = t
+        t.start()
 
     def _shutdown_client(self):
         try:
-            self._client.lifecycle.shutdown()
+            self._client.shutdown()
         except:
             logger.exception("Exception during client shutdown", extra=self._logger_extras)
 
@@ -295,7 +299,7 @@ class ConnectionManager(object):
         self._wait_strategy.reset()
         try:
             while True:
-                for address in self._get_possible_addresses(self._address_provider):
+                for address in self._get_possible_addresses():
                     self._check_client_active()
                     tried_addresses.add(address)
                     connection = self._connect(address)
@@ -333,7 +337,7 @@ class ConnectionManager(object):
             return None
 
     def _get_or_connect(self, address):
-        with self._connection_lock:
+        with self._lock:
             addr = self.get_connection_from_address(address)
             if addr:
                 return ImmediateFuture(addr)
@@ -392,7 +396,7 @@ class ConnectionManager(object):
         else:
             e = response.exception()
             connection.close("Failed to authenticate connection", e)
-            with self._connection_lock:
+            with self._lock:
                 self._pending_connections.pop(address, None)
             six.reraise(e.__class__, e, response.traceback())
 
@@ -416,7 +420,7 @@ class ConnectionManager(object):
                            extra=self._logger_extras)
             self._client.on_cluster_restart()
 
-        with self._connection_lock:
+        with self._lock:
             self.active_connections[response["member_uuid"]] = connection
             self._pending_connections.pop(address, None)
 
@@ -456,14 +460,14 @@ class ConnectionManager(object):
         if not self._client.lifecycle.live:
             raise HazelcastClientNotActiveError()
 
-    def _get_possible_addresses(self, address_provider):
+    def _get_possible_addresses(self):
         member_addresses = list(map(lambda m: (m.address, None), self._client.cluster.get_members()))
 
         if self._shuffle_member_list:
             random.shuffle(member_addresses)
 
         addresses = OrderedDict(member_addresses)
-        primaries, secondaries = address_provider.load_addresses()
+        primaries, secondaries = self._address_provider.load_addresses()
         if self._shuffle_member_list:
             random.shuffle(primaries)
             random.shuffle(secondaries)

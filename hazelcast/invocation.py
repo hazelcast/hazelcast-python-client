@@ -205,7 +205,8 @@ class InvocationService(object):
 
     def _handle_exception(self, invocation, error, traceback=None):
         if logger.isEnabledFor(logging.DEBUG):
-            logger.exception("Got exception for request %s" % invocation.request, extra=self._logger_extras)
+            logger.debug("Got exception for request %s, error: %s" % (invocation.request, error),
+                         extra=self._logger_extras)
 
         if not self._client.lifecycle.live:
             invocation.set_exception(HazelcastClientNotActiveError(), traceback)

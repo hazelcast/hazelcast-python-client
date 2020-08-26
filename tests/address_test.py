@@ -1,61 +1,58 @@
 import unittest
 
-from hazelcast.core import Address, MemberInfo
-from hazelcast.util import get_possible_addresses, get_provider_addresses
+from hazelcast.core import Address, MemberInfo, AddressHelper
 from hazelcast.connection import DefaultAddressProvider
 from hazelcast.config import ClientNetworkConfig
 from hazelcast import six
 
 
-class AddressTest(unittest.TestCase):
+class AddressHelperTest(unittest.TestCase):
+    v4_address = "127.0.0.1"
+    v6_address = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+    localhost = "localhost"
+    port = 8080
+    default_port = 5701
+    default_port_count = 3
 
-    def setUp(self):
-        self.network_config = ClientNetworkConfig()
-        self.address_provider = DefaultAddressProvider(self.network_config)
+    def test_v4_address_with_port(self):
+        self._validate_with_port(self.v4_address + ":" + str(self.port), self.v4_address, self.port)
 
-    def test_no_given_address(self):
-        self.network_config.addresses = []
-        provider_addresses = get_provider_addresses([self.address_provider])
-        addresses = get_possible_addresses(provider_addresses)
-        six.assertCountEqual(self, addresses,
-                              [Address("127.0.0.1", 5701), Address("127.0.0.1", 5702), Address("127.0.0.1", 5703)])
+    def test_v4_address_without_port(self):
+        self._validate_without_port(self.v4_address, self.v4_address)
 
-    def test_single_given_address_with_no_port(self):
-        self.network_config.addresses = ["127.0.0.1"]
-        provider_addresses = get_provider_addresses([self.address_provider])
-        addresses = get_possible_addresses(provider_addresses)
+    def test_v6_address_with_port(self):
+        self._validate_with_port("[" + self.v6_address + "]:" + str(self.port), self.v6_address, self.port)
 
-        six.assertCountEqual(self, addresses,
-                              [Address("127.0.0.1", 5701), Address("127.0.0.1", 5702), Address("127.0.0.1", 5703)])
+    def test_v6_address_without_port(self):
+        self._validate_without_port(self.v6_address, self.v6_address)
 
-    def test_single_address_and_port(self):
-        self.network_config.addresses = ["127.0.0.1:5701"]
-        provider_addresses = get_provider_addresses([self.address_provider])
-        addresses = get_possible_addresses(provider_addresses)
+    def test_v6_address_without_port_with_brackets(self):
+        self._validate_without_port("[" + self.v6_address + "]", self.v6_address)
 
-        six.assertCountEqual(self, addresses, [Address("127.0.0.1", 5701)])
+    def test_localhost_with_port(self):
+        self._validate_with_port(self.localhost + ":" + str(self.port), self.localhost, self.port)
 
-    def test_multiple_addresses(self):
-        self.network_config.addresses = ["127.0.0.1:5701", "10.0.0.1"]
-        provider_addresses = get_provider_addresses([self.address_provider])
-        addresses = get_possible_addresses(provider_addresses)
+    def test_localhost_without_port(self):
+        self._validate_without_port(self.localhost, self.localhost)
 
-        six.assertCountEqual(self, addresses,
-                              [Address("127.0.0.1", 5701), Address("10.0.0.1", 5701), Address("10.0.0.1", 5702),
-                               Address("10.0.0.1", 5703)])
+    def _validate_with_port(self, address, host, port):
+        primaries, secondaries = AddressHelper.get_possible_addresses(address)
+        self.assertEqual(1, len(primaries))
+        self.assertEqual(0, len(secondaries))
 
-    def test_multiple_addresses_non_unique(self):
-        self.network_config.addresses = ["127.0.0.1:5701", "127.0.0.1:5701"]
-        provider_addresses = get_provider_addresses([self.address_provider])
-        addresses = get_possible_addresses(provider_addresses)
+        address = primaries[0]
+        self.assertEqual(host, address.host)
+        self.assertEqual(port, address.port)
 
-        six.assertCountEqual(self, addresses, [Address("127.0.0.1", 5701)])
+    def _validate_without_port(self, address, host):
+        primaries, secondaries = AddressHelper.get_possible_addresses(address)
+        self.assertEqual(1, len(primaries))
+        self.assertEqual(self.default_port_count - 1, len(secondaries))
 
-    def test_addresses_and_members(self):
-        self.network_config.addresses = ["127.0.0.1:5701"]
-        member_list = [MemberInfo(Address("10.0.0.1", 5703), "uuid1"), MemberInfo(Address("10.0.0.2", 5701), "uuid2")]
-        provider_addresses = get_provider_addresses([self.address_provider])
-        addresses = get_possible_addresses(provider_addresses, member_list)
-
-        six.assertCountEqual(self, addresses,
-                              [Address("127.0.0.1", 5701), Address("10.0.0.1", 5703), Address("10.0.0.2", 5701)])
+        for i in range(self.default_port_count):
+            if i == 0:
+                address = primaries[i]
+            else:
+                address = secondaries[i - 1]
+            self.assertEqual(host, address.host)
+            self.assertEqual(self.default_port + i, address.port)

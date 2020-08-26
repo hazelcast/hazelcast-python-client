@@ -138,15 +138,15 @@ class HazelcastCloudDiscoveryTest(TestCase):
 
         config.set_property(HazelcastCloudDiscovery.CLOUD_URL_BASE_PROPERTY.name, HOST + ":" + str(self.server.port))
         client = TestClient(config)
-        client._address_translator.cloud_discovery._ctx = self.ctx
-        client._address_providers[0].cloud_discovery._ctx = self.ctx
+        client._address_provider.cloud_discovery._ctx = self.ctx
 
-        private_addresses = client._address_providers[0].load_addresses()
+        private_addresses, secondaries = client._address_provider.load_addresses()
 
         six.assertCountEqual(self, list(ADDRESSES.keys()), private_addresses)
+        six.assertCountEqual(self, secondaries, [])
 
         for private_address in private_addresses:
-            translated_address = client._address_translator.translate(private_address)
+            translated_address = client._address_provider.translate(private_address)
             self.assertEqual(ADDRESSES[private_address], translated_address)
 
 
