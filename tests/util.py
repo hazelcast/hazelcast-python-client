@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 
 from uuid import uuid4
 from hazelcast.config import ClientConfig, PROTOCOL
@@ -10,7 +11,8 @@ def random_string():
 
 
 def configure_logging(log_level=logging.INFO):
-    logging.basicConfig(format='%(asctime)s%(msecs)03d [%(threadName)s][%(name)s] %(levelname)s: %(message)s', datefmt="%H:%M:%S,")
+    logging.basicConfig(format='%(asctime)s%(msecs)03d [%(threadName)s][%(name)s] %(levelname)s: %(message)s',
+                        datefmt="%H:%M:%S,")
     logging.getLogger().setLevel(log_level)
 
 
@@ -57,11 +59,20 @@ def get_abs_path(cur_dir, file_name):
     return os.path.abspath(os.path.join(cur_dir, file_name))
 
 
-def generate_key_owned_by_instance(client, instance):
+def wait_for_partition_table(client):
+    m = client.get_map(random_string()).blocking()
+    while not client.partition_service._partition_table.partitions:
+        m.put(random_string(), 0)
+        time.sleep(0.1)
+
+
+def generate_key_owned_by_instance(client, uuid):
     while True:
         key = random_string()
-        partition_id = client.partition_service.get_partition_id(key)
-        if client.partition_service.get_partition_owner(partition_id) == instance:
+        data = client.serialization_service.to_data(key)
+        partition_id = client.partition_service.get_partition_id(data)
+        owner = str(client.partition_service.get_partition_owner(partition_id))
+        if owner == uuid:
             return key
 
 
@@ -76,8 +87,8 @@ def set_attr(*args, **kwargs):
     return wrap_ob
 
 
-def open_connection_to_address(client, address):
-    key = generate_key_owned_by_instance(client, address)
+def open_connection_to_address(client, uuid):
+    key = generate_key_owned_by_instance(client, uuid)
     m = client.get_map(random_string()).blocking()
     m.put(key, 0)
     m.destroy()

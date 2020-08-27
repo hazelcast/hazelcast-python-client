@@ -4,12 +4,6 @@ import uuid
 from hazelcast import six
 from hazelcast.util import create_git_info, enum
 
-LIFECYCLE_STATE_STARTING = "STARTING"
-LIFECYCLE_STATE_CONNECTED = "CONNECTED"
-LIFECYCLE_STATE_DISCONNECTED = "DISCONNECTED"
-LIFECYCLE_STATE_SHUTTING_DOWN = "SHUTTING_DOWN"
-LIFECYCLE_STATE_SHUTDOWN = "SHUTDOWN"
-
 LifecycleState = enum(
     STARTING="STARTING",
     STARTED="STARTED",
@@ -29,7 +23,7 @@ class LifecycleService(object):
     """
 
     def __init__(self, client, logger_extras):
-        self.live = True
+        self.live = False
         self._listeners = {}
         self._client = client
         self._logger_extras = logger_extras

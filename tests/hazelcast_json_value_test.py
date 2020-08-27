@@ -44,6 +44,11 @@ class HazelcastJsonValueWithMapTest(SingleMemberTestCase):
         cls.json_str = '{"key": "value"}'
         cls.json_obj = {"key": "value"}
 
+    @classmethod
+    def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
+        return config
+
     def setUp(self):
         self.map = self.client.get_map("json-test").blocking()
 

@@ -7,6 +7,32 @@ from hazelcast.protocol.codec import client_authentication_codec
 READ_HEADER = "00" * 20 + "1600"
 
 
+class OutboundMessageTest(unittest.TestCase):
+    def test_header_fields(self):
+        # 6 bytes for the length + flags + 4 bytes message type + 8 bytes correlation id + 4 bytes partition id
+        buf = bytearray(22)
+        message = OutboundMessage(buf, False)
+        self.assertFalse(message.retryable)
+        message.set_correlation_id(42)
+        message.set_partition_id(23)
+
+        correlation_id = LE_LONG.unpack_from(message.buf, 6 + 4)[0]
+        partition_id = LE_INT.unpack_from(message.buf, 6 + 4 + 8)[0]
+        self.assertEqual(42, correlation_id)
+        self.assertEqual(42, message.get_correlation_id())
+        self.assertEqual(23, partition_id)
+
+    def test_copy(self):
+        buf = bytearray(range(20))
+        message = OutboundMessage(buf, True)
+
+        copy = message.copy()
+        self.assertTrue(copy.retryable)
+        buf[0] = 99
+        self.assertEqual(99, message.buf[0])
+        self.assertEqual(0, copy.buf[0])  # should be a deep copy
+
+
 class ClientMessageTest(unittest.TestCase):
     def test_header_fields(self):
         message = ClientMessage(payload_size=30)

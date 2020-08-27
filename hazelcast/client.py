@@ -9,8 +9,7 @@ from hazelcast.connection import ConnectionManager, DefaultAddressProvider
 from hazelcast.core import DistributedObjectInfo
 from hazelcast.invocation import InvocationService, Invocation
 from hazelcast.listener import ListenerService, ClusterViewListenerService
-from hazelcast.lifecycle import LifecycleService, LIFECYCLE_STATE_SHUTTING_DOWN, LIFECYCLE_STATE_SHUTDOWN, \
-    LifecycleState
+from hazelcast.lifecycle import LifecycleService, LifecycleState
 from hazelcast.partition import PartitionService
 from hazelcast.protocol.codec import client_get_distributed_objects_codec
 from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE, LIST_SERVICE, SET_SERVICE, MULTI_MAP_SERVICE, \
@@ -252,12 +251,12 @@ class HazelcastClient(object):
         """
         if self.lifecycle.live:
             self.lifecycle.fire_lifecycle_event(LifecycleState.SHUTTING_DOWN)
+            self.lifecycle.shutdown()
             self.near_cache_manager.destroy_all_near_caches()
             self.connection_manager.shutdown()
             self.invoker.shutdown()
             self.statistics.shutdown()
             self.lifecycle.fire_lifecycle_event(LifecycleState.SHUTDOWN)
-            self.lifecycle.shutdown()
             self.reactor.shutdown()
             logger.info("Client shutdown.", extra=self._logger_extras)
 

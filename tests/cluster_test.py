@@ -1,16 +1,28 @@
 import hazelcast
+from hazelcast import ClientConfig
 from tests.base import HazelcastTestCase
+from tests.util import configure_logging
 
 
 class ClusterTest(HazelcastTestCase):
     rc = None
 
+    @classmethod
+    def setUpClass(cls):
+        configure_logging()
+
     def setUp(self):
         self.rc = self.create_rc()
         self.cluster = self.create_cluster(self.rc)
 
+    def create_config(self):
+        config = ClientConfig()
+        config.cluster_name = self.cluster.id
+        return config
+
     def tearDown(self):
         self.shutdown_all_clients()
+        self.rc.terminateCluster(self.cluster.id)
         self.rc.exit()
 
     def test_initial_membership_listener(self):
@@ -19,7 +31,7 @@ class ClusterTest(HazelcastTestCase):
         def member_added(m):
             events.append(m)
 
-        config = hazelcast.ClientConfig()
+        config = self.create_config()
         config.membership_listeners.append((member_added, None))
 
         member = self.cluster.start_member()
@@ -27,7 +39,7 @@ class ClusterTest(HazelcastTestCase):
         self.create_client(config)
 
         self.assertEqual(len(events), 1)
-        self.assertEqual(events[0].uuid, member.uuid)
+        self.assertEqual(str(events[0].uuid), member.uuid)
         self.assertEqual(events[0].address, member.address)
 
     def test_for_existing_members(self):
@@ -37,12 +49,13 @@ class ClusterTest(HazelcastTestCase):
             events.append(member)
 
         member = self.cluster.start_member()
-        client = self.create_client()
+        config = self.create_config()
+        client = self.create_client(config)
 
         client.cluster.add_listener(member_added, fire_for_existing=True)
 
         self.assertEqual(len(events), 1)
-        self.assertEqual(events[0].uuid, member.uuid)
+        self.assertEqual(str(events[0].uuid), member.uuid)
         self.assertEqual(events[0].address, member.address)
 
     def test_member_added(self):
@@ -52,7 +65,8 @@ class ClusterTest(HazelcastTestCase):
             events.append(member)
 
         self.cluster.start_member()
-        client = self.create_client()
+        config = self.create_config()
+        client = self.create_client(config)
 
         client.cluster.add_listener(member_added, fire_for_existing=True)
 
@@ -60,7 +74,7 @@ class ClusterTest(HazelcastTestCase):
 
         def assertion():
             self.assertEqual(len(events), 2)
-            self.assertEqual(events[1].uuid, new_member.uuid)
+            self.assertEqual(str(events[1].uuid), new_member.uuid)
             self.assertEqual(events[1].address, new_member.address)
 
         self.assertTrueEventually(assertion)
@@ -74,7 +88,8 @@ class ClusterTest(HazelcastTestCase):
         self.cluster.start_member()
         member_to_remove = self.cluster.start_member()
 
-        client = self.create_client()
+        config = self.create_config()
+        client = self.create_client(config)
 
         client.cluster.add_listener(member_removed=member_removed)
 
@@ -82,31 +97,30 @@ class ClusterTest(HazelcastTestCase):
 
         def assertion():
             self.assertEqual(len(events), 1)
-            self.assertEqual(events[0].uuid, member_to_remove.uuid)
+            self.assertEqual(str(events[0].uuid), member_to_remove.uuid)
             self.assertEqual(events[0].address, member_to_remove.address)
 
         self.assertTrueEventually(assertion)
 
     def test_exception_in_membership_listener(self):
-        def listener(e):
+        def listener(_):
             raise RuntimeError("error")
 
-        config = hazelcast.ClientConfig()
+        config = self.create_config()
         config.membership_listeners.append((listener, listener))
         self.cluster.start_member()
         self.create_client(config)
 
-    def test_cluster_service_get_members_by_property(self):
+    def test_cluster_service_get_members(self):
         self.cluster.start_member()
-        client = self.create_client()
+        config = self.create_config()
+        client = self.create_client(config)
 
-        self.assertEqual(1, len(client.cluster.members))
+        self.assertEqual(1, len(client.cluster.get_members()))
 
-    def test_cluster_service_cant_set_members(self):
-        self.cluster.start_member()
-        client = self.create_client()
+    def test_cluster_service_get_members_with_selector(self):
+        member = self.cluster.start_member()
+        config = self.create_config()
+        client = self.create_client(config)
 
-        with self.assertRaises(AttributeError):
-            client.cluster.members = []
-
-
+        self.assertEqual(0, len(client.cluster.get_members(lambda m: member.address != m.address)))

@@ -188,12 +188,18 @@ class ClusterService(object):
         for removed_member in removals:
             for _, handler in six.itervalues(self._listeners):
                 if handler:
-                    handler(removed_member)
+                    try:
+                        handler(removed_member)
+                    except:
+                        logger.exception("Exception in membership lister", extra=self._logger_extras)
 
         for added_member in additions:
             for handler, _ in six.itervalues(self._listeners):
                 if handler:
-                    handler(added_member)
+                    try:
+                        handler(added_member)
+                    except:
+                        logger.exception("Exception in membership lister", extra=self._logger_extras)
 
     def _detect_membership_events(self, old, new):
         new_members = []

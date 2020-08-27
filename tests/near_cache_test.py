@@ -5,16 +5,13 @@ from hazelcast import SerializationConfig
 from hazelcast.config import NearCacheConfig
 from hazelcast.near_cache import *
 from hazelcast.serialization import SerializationServiceV1
-from tests.util import random_string
-from hazelcast import six
+from tests.util import random_string, configure_logging
 from hazelcast.six.moves import range
 
 
 class NearCacheTestCase(unittest.TestCase):
     def setUp(self):
-        logging.basicConfig(format='%(asctime)s%(msecs)03d [%(name)s] %(levelname)s: %(message)s', datefmt="%H:%M%:%S,")
-        logging.getLogger().setLevel(logging.DEBUG)
-
+        configure_logging()
         self.service = SerializationServiceV1(serialization_config=SerializationConfig())
 
     def tearDown(self):
@@ -39,7 +36,6 @@ class NearCacheTestCase(unittest.TestCase):
 
     def test_DataRecord_expire_time(self):
         now = current_time()
-        six.print_(int(now), now)
         data_rec = DataRecord("key", "value", create_time=now, ttl_seconds=1)
         sleep(2)
         self.assertTrue(data_rec.is_expired(max_idle_seconds=1000))

@@ -503,7 +503,7 @@ class _HeartbeatManager(object):
                 return
 
             now = time.time()
-            for connection in six.itervalues(self._connection_manager.active_connections):
+            for connection in list(self._connection_manager.active_connections.values()):
                 self._check_connection(now, connection)
             self._heartbeat_timer = self._client.reactor.add_timer(self._heartbeat_interval, _heartbeat)
 

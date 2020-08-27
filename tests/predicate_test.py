@@ -77,6 +77,11 @@ class PredicateStrTest(TestCase):
 
 
 class PredicateTest(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
+        return config
+
     def setUp(self):
         self.map = self.client.get_map(random_string()).blocking()
 
@@ -219,6 +224,7 @@ class PredicateTest(SingleMemberTestCase):
 class PredicatePortableTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
         the_factory = {InnerPortable.CLASS_ID: InnerPortable}
         config.serialization.portable_factories[FACTORY_ID] = the_factory
         return config
@@ -298,6 +304,7 @@ class NestedPredicatePortableTest(SingleMemberTestCase):
 
     @classmethod
     def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
         factory = {1: NestedPredicatePortableTest.Body, 2: NestedPredicatePortableTest.Limb}
         config.serialization.portable_factories[FACTORY_ID] = factory
         return config

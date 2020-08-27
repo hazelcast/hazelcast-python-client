@@ -1,9 +1,6 @@
 import unittest
 
-from hazelcast.core import Address, MemberInfo, AddressHelper
-from hazelcast.connection import DefaultAddressProvider
-from hazelcast.config import ClientNetworkConfig
-from hazelcast import six
+from hazelcast.core import AddressHelper
 
 
 class AddressHelperTest(unittest.TestCase):
