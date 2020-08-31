@@ -243,7 +243,7 @@ class FutureTest(unittest.TestCase):
     def test_callback_throws_exception(self):
         f = Future()
 
-        def invalid_func():
+        def invalid_func(_):
             raise RuntimeError("error!")
 
         f.add_done_callback(invalid_func)
@@ -253,7 +253,7 @@ class FutureTest(unittest.TestCase):
         f = Future()
         e = RuntimeError("error")
 
-        def continue_func(f):
+        def continue_func(_):
             raise e
 
         n = f.continue_with(continue_func)

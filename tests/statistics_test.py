@@ -11,7 +11,6 @@ from tests.util import random_string
 
 
 class StatisticsTest(HazelcastTestCase):
-
     DEFAULT_STATS_PERIOD = 3
     STATS_PERIOD = 1
 
@@ -26,9 +25,11 @@ class StatisticsTest(HazelcastTestCase):
         cls.rc.exit()
 
     def test_statistics_disabled_by_default(self):
-        client = HazelcastClient()
+        config = ClientConfig()
+        config.cluster_name = self.cluster.id
+        client = HazelcastClient(config)
         time.sleep(2 * self.DEFAULT_STATS_PERIOD)
-        client_uuid = client.cluster.uuid
+        client_uuid = client.connection_manager.client_uuid
 
         response = self._get_client_stats_from_server(client_uuid)
 
@@ -38,10 +39,11 @@ class StatisticsTest(HazelcastTestCase):
 
     def test_statistics_disabled_with_wrong_value(self):
         config = ClientConfig()
+        config.cluster_name = self.cluster.id
         config.set_property(ClientProperties.STATISTICS_ENABLED.name, "truee")
         config.set_property(ClientProperties.STATISTICS_PERIOD_SECONDS.name, self.STATS_PERIOD)
         client = HazelcastClient(config)
-        client_uuid = client.cluster.uuid
+        client_uuid = client.connection_manager.client_uuid
 
         time.sleep(2 * self.STATS_PERIOD)
         response = self._get_client_stats_from_server(client_uuid)
@@ -52,9 +54,10 @@ class StatisticsTest(HazelcastTestCase):
 
     def test_statistics_enabled(self):
         config = ClientConfig()
+        config.cluster_name = self.cluster.id
         config.set_property(ClientProperties.STATISTICS_ENABLED.name, True)
         client = HazelcastClient(config)
-        client_uuid = client.cluster.uuid
+        client_uuid = client.connection_manager.client_uuid
 
         time.sleep(2 * self.DEFAULT_STATS_PERIOD)
         self._wait_for_statistics_collection(client_uuid)
@@ -66,8 +69,10 @@ class StatisticsTest(HazelcastTestCase):
         environ[ClientProperties.STATISTICS_ENABLED.name] = "true"
         environ[ClientProperties.STATISTICS_PERIOD_SECONDS.name] = str(self.STATS_PERIOD)
 
-        client = HazelcastClient()
-        client_uuid = client.cluster.uuid
+        config = ClientConfig()
+        config.cluster_name = self.cluster.id
+        client = HazelcastClient(config)
+        client_uuid = client.connection_manager.client_uuid
 
         time.sleep(2 * self.STATS_PERIOD)
         self._wait_for_statistics_collection(client_uuid)
@@ -78,10 +83,11 @@ class StatisticsTest(HazelcastTestCase):
 
     def test_statistics_period(self):
         config = ClientConfig()
+        config.cluster_name = self.cluster.id
         config.set_property(ClientProperties.STATISTICS_ENABLED.name, True)
         config.set_property(ClientProperties.STATISTICS_PERIOD_SECONDS.name, self.STATS_PERIOD)
         client = HazelcastClient(config)
-        client_uuid = client.cluster.uuid
+        client_uuid = client.connection_manager.client_uuid
 
         time.sleep(2 * self.STATS_PERIOD)
         response1 = self._wait_for_statistics_collection(client_uuid)
@@ -94,10 +100,11 @@ class StatisticsTest(HazelcastTestCase):
 
     def test_statistics_enabled_with_negative_period(self):
         config = ClientConfig()
+        config.cluster_name = self.cluster.id
         config.set_property(ClientProperties.STATISTICS_ENABLED.name, True)
         config.set_property(ClientProperties.STATISTICS_PERIOD_SECONDS.name, -1 * self.STATS_PERIOD)
         client = HazelcastClient(config)
-        client_uuid = client.cluster.uuid
+        client_uuid = client.connection_manager.client_uuid
 
         time.sleep(2 * self.DEFAULT_STATS_PERIOD)
         self._wait_for_statistics_collection(client_uuid)
@@ -106,6 +113,7 @@ class StatisticsTest(HazelcastTestCase):
 
     def test_statistics_content(self):
         config = ClientConfig()
+        config.cluster_name = self.cluster.id
         config.set_property(ClientProperties.STATISTICS_ENABLED.name, True)
         config.set_property(ClientProperties.STATISTICS_PERIOD_SECONDS.name, self.STATS_PERIOD)
 
@@ -115,15 +123,16 @@ class StatisticsTest(HazelcastTestCase):
         config.near_caches[map_name] = near_cache_config
 
         client = HazelcastClient(config)
-        client_uuid = client.cluster.uuid
+        client_uuid = client.connection_manager.client_uuid
 
-        test_map = client.get_map(map_name).blocking()
+        client.get_map(map_name).blocking()
 
         time.sleep(2 * self.STATS_PERIOD)
         response = self._wait_for_statistics_collection(client_uuid)
 
         result = response.result.decode("utf-8")
-        local_address = self._get_local_address(client)
+        info = client.cluster.get_local_client()
+        local_address = "%s:%s" % (info.address.host, info.address.port)
 
         # Check near cache and client statistics
         self.assertEqual(1, result.count("clientName=" + client.name))
@@ -156,6 +165,7 @@ class StatisticsTest(HazelcastTestCase):
 
     def test_special_characters(self):
         config = ClientConfig()
+        config.cluster_name = self.cluster.id
         config.set_property(ClientProperties.STATISTICS_ENABLED.name, True)
         config.set_property(ClientProperties.STATISTICS_PERIOD_SECONDS.name, self.STATS_PERIOD)
 
@@ -165,9 +175,9 @@ class StatisticsTest(HazelcastTestCase):
         config.near_caches[map_name] = near_cache_config
 
         client = HazelcastClient(config)
-        client_uuid = client.cluster.uuid
+        client_uuid = client.connection_manager.client_uuid
 
-        test_map = client.get_map(map_name).blocking()
+        client.get_map(map_name).blocking()
 
         time.sleep(2 * self.STATS_PERIOD)
         response = self._wait_for_statistics_collection(client_uuid)
@@ -180,6 +190,7 @@ class StatisticsTest(HazelcastTestCase):
 
     def test_near_cache_stats(self):
         config = ClientConfig()
+        config.cluster_name = self.cluster.id
         config.set_property(ClientProperties.STATISTICS_ENABLED.name, True)
         config.set_property(ClientProperties.STATISTICS_PERIOD_SECONDS.name, self.STATS_PERIOD)
 
@@ -189,7 +200,7 @@ class StatisticsTest(HazelcastTestCase):
         config.near_caches[map_name] = near_cache_config
 
         client = HazelcastClient(config)
-        client_uuid = client.cluster.uuid
+        client_uuid = client.connection_manager.client_uuid
 
         test_map = client.get_map(map_name).blocking()
 
@@ -206,10 +217,10 @@ class StatisticsTest(HazelcastTestCase):
         self.assertEqual(1, result.count("nc." + map_name + ".invalidationRequests=0"))
 
         test_map.put(1, 2)  # invalidation request
-        test_map.get(1)     # cache miss
-        test_map.get(1)     # cache hit
+        test_map.get(1)  # cache miss
+        test_map.get(1)  # cache hit
         test_map.put(1, 3)  # invalidation + invalidation request
-        test_map.get(1)     # cache miss
+        test_map.get(1)  # cache miss
 
         time.sleep(2 * self.STATS_PERIOD)
         response = self._wait_for_statistics_collection(client_uuid)
@@ -226,21 +237,15 @@ class StatisticsTest(HazelcastTestCase):
         client.shutdown()
 
     def _get_client_stats_from_server(self, client_uuid):
-        script = "clients=instance_0.getClientService().getConnectedClients().toArray()\n" \
-                 "for(i=0;i<clients.length;i++) {\n" \
-                 "   if (clients[i].getUuid().equals(\"%s\")) {\n" \
-                 "       result=clients[i].getClientStatistics();\n" \
-                 "       break;" \
-                 "   }\n" \
-                 "}\n" % client_uuid
+        script = "stats = instance_0.getOriginal().node.getClientEngine().getClientStatistics()\n" \
+                 "keys = stats.keySet().toArray()\n" \
+                 "for(i=0; i < keys.length; i++) {\n" \
+                 "  if (keys[i].toString().equals(\"%s\")) {\n" \
+                 "    result = stats.get(keys[i]).clientAttributes()\n" \
+                 "    break\n" \
+                 "  }\n}\n" % client_uuid
 
         return self.rc.executeOnController(self.cluster.id, script, Lang.JAVASCRIPT)
-
-    def _get_local_address(self, client):
-        owner_address = client.cluster.owner_connection_address
-        connection = client.connection_manager.get_connection(owner_address)
-        host, port = connection.socket.getsockname()
-        return str(host) + ":" + str(port)
 
     def _unescape_special_chars(self, value):
         return value.replace("\\,", ",").replace("\\=", "=").replace("\\.", ".").replace("\\\\", "\\")

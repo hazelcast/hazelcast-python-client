@@ -20,6 +20,7 @@ class SmartListenerTest(HazelcastTestCase):
 
     def setUp(self):
         client_config = ClientConfig()
+        client_config.cluster_name = self.cluster.id
         client_config.network.smart_routing = True
         self.client = self.create_client(client_config)
         self.collector = event_collector()

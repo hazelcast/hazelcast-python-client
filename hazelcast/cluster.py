@@ -110,8 +110,8 @@ class ClusterService(object):
         """
         connection_manager = self._connection_manager
         connection = connection_manager.get_random_connection()
-        local_address = None if not connection else connection.get_local_address()
-        return ClientInfo(connection_manager.get_client_uuid(), local_address, self._client.name, self._labels)
+        local_address = None if not connection else connection.local_address
+        return ClientInfo(connection_manager.client_uuid, local_address, self._client.name, self._labels)
 
     def add_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
         """

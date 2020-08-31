@@ -1,6 +1,7 @@
 import logging
 import os
 
+from hazelcast.invocation import Invocation
 from hazelcast.protocol.codec import client_statistics_codec
 from hazelcast.util import calculate_version, current_time_in_millis, to_millis, to_nanos, current_time
 from hazelcast.config import ClientProperties
@@ -18,9 +19,6 @@ logger = logging.getLogger(__name__)
 
 
 class Statistics(object):
-    _SINCE_VERSION_STRING = "3.9"
-    _SINCE_VERSION = calculate_version(_SINCE_VERSION_STRING)
-
     _NEAR_CACHE_CATEGORY_PREFIX = "nc."
     _STAT_SEPARATOR = ","
     _KEY_VALUE_SEPARATOR = "="
@@ -66,21 +64,23 @@ class Statistics(object):
             self._statistics_timer.cancel()
 
     def _send_statistics(self):
-        owner_connection = self._get_owner_connection()
-        if owner_connection is None:
-            logger.debug("Cannot send client statistics to the server. No owner connection.",
+        connection = self._client.connection_manager.get_random_connection()
+        if not connection:
+            logger.debug("Cannot send client statistics to the server. No connection found.",
                          extra=self._logger_extras)
             return
 
+        collection_timestamp = current_time_in_millis()
         stats = []
-        self._fill_metrics(stats, owner_connection)
+        self._fill_metrics(stats, connection)
         self._add_near_cache_stats(stats)
         self._add_runtime_and_os_stats(stats)
-        self._send_stats_to_owner("".join(stats), owner_connection)
+        self._send_stats_to_owner(collection_timestamp, "".join(stats), connection)
 
-    def _send_stats_to_owner(self, stats, owner_connection):
-        request = client_statistics_codec.encode_request(stats)
-        self._client.invoker.invoke_on_connection(request, owner_connection)
+    def _send_stats_to_owner(self, collection_timestamp, stats, connection):
+        request = client_statistics_codec.encode_request(collection_timestamp, stats, bytearray(0))
+        invocation = Invocation(request, connection=connection)
+        self._client.invoker.invoke(invocation)
 
     def _add_runtime_and_os_stats(self, stats):
         os_and_runtime_stats = self._get_os_and_runtime_stats()
@@ -129,20 +129,20 @@ class Statistics(object):
 
         return psutil_stats
 
-    def _fill_metrics(self, stats, owner_connection):
+    def _fill_metrics(self, stats, connection):
         self._add_stat(stats, "lastStatisticsCollectionTime", current_time_in_millis())
         self._add_stat(stats, "enterprise", "false")
         self._add_stat(stats, "clientType", CLIENT_TYPE)
         self._add_stat(stats, "clientVersion", CLIENT_VERSION)
-        self._add_stat(stats, "clusterConnectionTimestamp", to_millis(owner_connection.start_time))
+        self._add_stat(stats, "clusterConnectionTimestamp", to_millis(connection.start_time))
 
-        local_host, local_ip = owner_connection.socket.getsockname()
-        local_address = str(local_host) + ":" + str(local_ip)
+        local_address = connection.local_address
+        local_address = str(local_address.host) + ":" + str(local_address.port)
         self._add_stat(stats, "clientAddress", local_address)
         self._add_stat(stats, "clientName", self._client.name)
 
     def _add_near_cache_stats(self, stats):
-        for near_cache in self._client.near_cache_manager.list_all_near_caches():
+        for near_cache in self._client.near_cache_manager.list_near_caches():
             near_cache_name_with_prefix = self._get_name_with_prefix(near_cache.name)
             near_cache_name_with_prefix.append(".")
             prefix = "".join(near_cache_name_with_prefix)
@@ -171,28 +171,6 @@ class Statistics(object):
 
     def _add_empty_stat(self, stats, name, key_prefix=None):
         self._add_stat(stats, name, Statistics._EMPTY_STAT_VALUE, key_prefix)
-
-    def _get_owner_connection(self):
-        current_owner_address = self._client.cluster.owner_connection_address
-        connection = self._client.connection_manager.get_connection(current_owner_address)
-
-        if connection is None:
-            return None
-
-        server_version = connection.server_version
-        if server_version < Statistics._SINCE_VERSION:
-            # do not print too many logs if connected to an old version server
-            if self._cached_owner_address and self._cached_owner_address != current_owner_address:
-                logger.debug("Client statistics cannot be sent to server {} since,"
-                             "connected owner server version is less than the minimum supported server version ,"
-                             "{}.".format(current_owner_address, Statistics._SINCE_VERSION_STRING),
-                             extra=self._logger_extras)
-
-            # cache the last connected server address for decreasing the log prints
-            self._cached_owner_address = current_owner_address
-            return None
-
-        return connection
 
     def _get_name_with_prefix(self, name):
         return [Statistics._NEAR_CACHE_CATEGORY_PREFIX, self._escape_special_characters(name)]

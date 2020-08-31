@@ -79,6 +79,7 @@ class ConnectionManager(object):
     def __init__(self, client, connection_factory, address_provider):
         self.live = False
         self.active_connections = dict()
+        self.client_uuid = uuid.uuid4()
 
         self._client = client
         self._connection_factory = connection_factory
@@ -99,7 +100,6 @@ class ConnectionManager(object):
         self._address_provider = address_provider
         self._lock = threading.RLock()
         self._connection_id_generator = AtomicInteger()
-        self._client_uuid = uuid.uuid4()
         self._labels = config.labels
         self._cluster_id = None
         self._load_balancer = None
@@ -366,7 +366,7 @@ class ConnectionManager(object):
         client = self._client
         cluster_name = client.config.cluster_name
         client_name = client.name
-        request = client_authentication_codec.encode_request(cluster_name, None, None, self._client_uuid,
+        request = client_authentication_codec.encode_request(cluster_name, None, None, self.client_uuid,
                                                              CLIENT_TYPE, SERIALIZATION_VERSION, CLIENT_VERSION,
                                                              client_name, self._labels)
 
@@ -418,7 +418,7 @@ class ConnectionManager(object):
         if changed_cluster:
             logger.warning("Switching from current cluster: %s to new cluster: %s" % (self._cluster_id, new_cluster_id),
                            extra=self._logger_extras)
-            self._client.on_cluster_restart()
+            self._on_cluster_restart()
 
         with self._lock:
             self.active_connections[response["member_uuid"]] = connection
@@ -443,6 +443,11 @@ class ConnectionManager(object):
             self.on_connection_close(connection, None)
 
         return connection
+
+    def _on_cluster_restart(self):
+        client = self._client
+        client.near_cache_manager.clear_near_caches()
+        client.cluster.clear_member_list_version()
 
     def _fire_lifecycle_event(self, state):
         lifecycle = self._client.lifecycle

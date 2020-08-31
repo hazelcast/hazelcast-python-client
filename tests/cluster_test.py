@@ -1,4 +1,3 @@
-import hazelcast
 from hazelcast import ClientConfig
 from tests.base import HazelcastTestCase
 from tests.util import configure_logging

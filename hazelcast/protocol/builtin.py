@@ -182,7 +182,7 @@ class EntryListUUIDListIntegerCodec(object):
     def encode(buf, entries, is_final=False):
         keys = []
         buf.extend(BEGIN_FRAME_BUF)
-        for key, value in six.iteritems(entries):
+        for key, value in entries:
             keys.append(key)
             ListIntegerCodec.encode(buf, value)
         buf.extend(END_FRAME_BUF)
@@ -295,7 +295,7 @@ class ListLongCodec(object):
         if is_final:
             LE_UINT16.pack_into(b, INT_SIZE_IN_BYTES, _IS_FINAL_FLAG)
         for i in range(n):
-            FixSizedTypesCodec.encode_int(b, SIZE_OF_FRAME_LENGTH_AND_FLAGS + i * LONG_SIZE_IN_BYTES, arr[i])
+            FixSizedTypesCodec.encode_long(b, SIZE_OF_FRAME_LENGTH_AND_FLAGS + i * LONG_SIZE_IN_BYTES, arr[i])
         buf.extend(b)
 
     @staticmethod
@@ -304,7 +304,7 @@ class ListLongCodec(object):
         n = len(b) // LONG_SIZE_IN_BYTES
         result = []
         for i in range(n):
-            result.append(FixSizedTypesCodec.decode_int(b, i * LONG_SIZE_IN_BYTES))
+            result.append(FixSizedTypesCodec.decode_long(b, i * LONG_SIZE_IN_BYTES))
         return result
 
 
@@ -370,7 +370,7 @@ class ListMultiFrameCodec(object):
         if CodecUtil.next_frame_is_null_frame(msg):
             return None
         else:
-            ListMultiFrameCodec.decode(msg, decoder)
+            return ListMultiFrameCodec.decode(msg, decoder)
 
 
 class ListUUIDCodec(object):

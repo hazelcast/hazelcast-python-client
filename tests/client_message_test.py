@@ -1,10 +1,17 @@
 # coding: utf-8
 import unittest
+import uuid
 
+from hazelcast.connection import _Reader
+from hazelcast.exception import _ErrorsCodec
+from hazelcast.protocol import ErrorHolder
+from hazelcast.protocol.builtin import CodecUtil, FixSizedTypesCodec, ByteArrayCodec, DataCodec, EntryListCodec, \
+    StringCodec, EntryListUUIDListIntegerCodec, EntryListUUIDLongCodec, ListMultiFrameCodec, ListIntegerCodec, \
+    ListLongCodec, ListUUIDCodec, MapCodec
 from hazelcast.protocol.client_message import *
 from hazelcast.protocol.codec import client_authentication_codec
-
-READ_HEADER = "00" * 20 + "1600"
+from hazelcast.protocol.codec.custom.error_holder_codec import ErrorHolderCodec
+from hazelcast.serialization.data import Data
 
 
 class OutboundMessageTest(unittest.TestCase):
@@ -33,210 +40,274 @@ class OutboundMessageTest(unittest.TestCase):
         self.assertEqual(0, copy.buf[0])  # should be a deep copy
 
 
-class ClientMessageTest(unittest.TestCase):
-    def test_header_fields(self):
-        message = ClientMessage(payload_size=30)
+BEGIN_FRAME = Frame(bytearray(0), 1 << 12)
+END_FRAME = Frame(bytearray(), 1 << 11)
 
-        correlation_id = 6474838
-        message_type = 987
-        flags = 5
-        partition_id = 27
-        frame_length = 100
-        data_offset = 17
 
-        message.set_correlation_id(correlation_id)
-        message.set_message_type(message_type)
-        message.set_flags(flags)
-        message.set_partition_id(partition_id)
-        message.set_frame_length(frame_length)
-        message.set_data_offset(data_offset)
+class InboundMessageTest(unittest.TestCase):
+    def test_fast_forward(self):
+        message = InboundMessage(BEGIN_FRAME.copy())
 
-        self.assertEqual(correlation_id, message.get_correlation_id())
-        self.assertEqual(message_type, message.get_message_type())
-        self.assertEqual(flags, message.get_flags())
-        self.assertEqual(partition_id, message.get_partition_id())
-        self.assertEqual(frame_length, message.get_frame_length())
-        self.assertEqual(data_offset, message.get_data_offset())
+        # New custom-typed parameter with its own begin and end frames
+        message.add_frame(BEGIN_FRAME.copy())
+        message.add_frame(Frame(bytearray(0), 0))
+        message.add_frame(END_FRAME.copy())
 
-    def test_append_byte(self):
-        message = ClientMessage(payload_size=30)
+        message.add_frame(END_FRAME.copy())
 
-        message.append_byte(0x21)
-        message.append_byte(0xF2)
-        message.append_byte(0x34)
+        # begin frame
+        message.next_frame()
+        CodecUtil.fast_forward_to_end_frame(message)
+        self.assertFalse(message.has_next_frame())
 
-        data_offset = message.get_data_offset()
-        self.assertEqual(b"21f234", binascii.hexlify(message.buffer[data_offset:data_offset + 3]))
 
-    def test_append_bool(self):
-        message = ClientMessage(payload_size=30)
+class EncodeDecodeTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.reader = _Reader(None)
 
-        message.append_bool(True)
+    def setUp(self):
+        self.buf = create_initial_buffer(50, 0, True)
+        self.message = OutboundMessage(self.buf, False)
 
-        data_offset = message.get_data_offset()
-        self.assertEqual(b"01", binascii.hexlify(message.buffer[data_offset:data_offset + 1]))
+    def write_and_decode(self):
+        self.reader.read(self.message.buf)
+        return self.reader._read_message()
 
-    def test_append_int(self):
-        message = ClientMessage(payload_size=30)
+    def mark_initial_frame_as_non_final(self):
+        flags = 1 << 11 | 1 << 12
+        LE_UINT16.pack_into(self.buf, INT_SIZE_IN_BYTES, flags)
 
-        message.append_int(0x1feeddcc)
+    def test_byte(self):
+        FixSizedTypesCodec.encode_byte(self.buf, 16, 3)
+        message = self.write_and_decode()
+        buf = message.next_frame().buf
+        self.assertEqual(3, FixSizedTypesCodec.decode_byte(buf, 10))
 
-        data_offset = message.get_data_offset()
-        self.assertEqual(b"ccddee1f", binascii.hexlify(message.buffer[data_offset:data_offset + 4]))
+    def test_boolean(self):
+        FixSizedTypesCodec.encode_boolean(self.buf, 16, True)
+        message = self.write_and_decode()
+        buf = message.next_frame().buf
+        self.assertEqual(True, FixSizedTypesCodec.decode_boolean(buf, 10))
 
-    def test_append_long(self):
-        message = ClientMessage(payload_size=30)
+    def test_int(self):
+        FixSizedTypesCodec.encode_int(self.buf, 16, 1234)
+        message = self.write_and_decode()
+        buf = message.next_frame().buf
+        self.assertEqual(1234, FixSizedTypesCodec.decode_int(buf, 10))
 
-        message.append_long(0x1feeddccbbaa8765)
+    def test_uuid(self):
+        random_uuid = uuid.uuid4()
+        FixSizedTypesCodec.encode_uuid(self.buf, 16, random_uuid)
+        message = self.write_and_decode()
+        buf = message.next_frame().buf
+        self.assertEqual(random_uuid, FixSizedTypesCodec.decode_uuid(buf, 10))
 
-        data_offset = message.get_data_offset()
-        self.assertEqual(b"6587aabbccddee1f", binascii.hexlify(message.buffer[data_offset:data_offset + 8]))
+    def test_none_uuid(self):
+        FixSizedTypesCodec.encode_uuid(self.buf, 16, None)
+        message = self.write_and_decode()
+        buf = message.next_frame().buf
+        self.assertIsNone(FixSizedTypesCodec.decode_uuid(buf, 10))
 
-    def test_append_str(self):
-        message = ClientMessage(payload_size=30)
+    def test_long(self):
+        FixSizedTypesCodec.encode_long(self.buf, 16, 1234567890123)
+        message = self.write_and_decode()
+        buf = message.next_frame().buf
+        self.assertEqual(1234567890123, FixSizedTypesCodec.decode_long(buf, 10))
 
-        frame_length = 1
-        flags = 2
-        message_type = 3
-        correlation_id = 4
-        partition_id = 5
+    def test_byte_array(self):
+        self.mark_initial_frame_as_non_final()
+        b = "abc©☺𩸽".encode("utf-8")
+        ByteArrayCodec.encode(self.buf, b, True)
+        message = self.write_and_decode()
+        message.next_frame()  # initial frame
+        self.assertEqual(b, ByteArrayCodec.decode(message))
 
-        message.set_correlation_id(correlation_id)
-        message.set_message_type(message_type)
-        message.set_flags(flags)
-        message.set_partition_id(partition_id)
-        message.set_frame_length(frame_length)
+    def test_data(self):
+        self.mark_initial_frame_as_non_final()
+        data = Data("123456789".encode("utf-8"))
+        DataCodec.encode(self.buf, data)
+        DataCodec.encode_nullable(self.buf, data)
+        DataCodec.encode_nullable(self.buf, None, True)
+        message = self.write_and_decode()
+        message.next_frame()  # initial frame
+        self.assertEqual(data, DataCodec.decode(message))
+        self.assertEqual(data, DataCodec.decode_nullable(message))
+        self.assertIsNone(DataCodec.decode_nullable(message))
 
-        message.append_str("abc")
+    def test_entry_list(self):
+        self.mark_initial_frame_as_non_final()
+        entries = [("a", "1"), ("b", "2"), ("c", "3")]
+        EntryListCodec.encode(self.buf, entries, StringCodec.encode, StringCodec.encode)
+        EntryListCodec.encode_nullable(self.buf, entries, StringCodec.encode, StringCodec.encode)
+        EntryListCodec.encode_nullable(self.buf, None, StringCodec.encode, StringCodec.encode, True)
+        message = self.write_and_decode()
+        message.next_frame()  # initial frame
+        self.assertEqual(entries, EntryListCodec.decode(message, StringCodec.decode, StringCodec.decode))
+        self.assertEqual(entries, EntryListCodec.decode_nullable(message, StringCodec.decode, StringCodec.decode))
+        self.assertIsNone(EntryListCodec.decode_nullable(message, StringCodec.decode, StringCodec.decode))
 
-        # buffer content should be
-        # 01000000 00 02 0300 0400000000000000 05000000 1600 03000000 616263 0000000000000000000000000000000000000000000000
-        self.assertEqual(b"01000000", binascii.hexlify(message.buffer[0:4]))
-        self.assertEqual(b"00", binascii.hexlify(message.buffer[4:5]))
-        self.assertEqual(b"02", binascii.hexlify(message.buffer[5:6]))
-        self.assertEqual(b"0300", binascii.hexlify(message.buffer[6:8]))
-        self.assertEqual(b"0400000000000000", binascii.hexlify(message.buffer[8:16]))
-        self.assertEqual(b"05000000", binascii.hexlify(message.buffer[16:20]))
-        self.assertEqual(b"1600", binascii.hexlify(message.buffer[20:22]))
-        self.assertEqual(b"03000000", binascii.hexlify(message.buffer[22:26]))
-        self.assertEqual(b"616263", binascii.hexlify(message.buffer[26:29]))
+    def test_uuid_integer_list_entry_list(self):
+        self.mark_initial_frame_as_non_final()
+        entries = [(uuid.uuid4(), [1, 2]), (uuid.uuid4(), [3, 4]), (uuid.uuid4(), [5, 6])]
+        EntryListUUIDListIntegerCodec.encode(self.buf, entries, True)
+        message = self.write_and_decode()
+        message.next_frame()  # initial frame
+        self.assertEqual(entries, EntryListUUIDListIntegerCodec.decode(message))
 
-    def test_read_byte(self):
-        hexstr = READ_HEADER + "78"
-        buf = binascii.unhexlify(hexstr)
+    def test_uuid_long_entry_list(self):
+        self.mark_initial_frame_as_non_final()
+        entries = [(uuid.uuid4(), 0xCAFE), (uuid.uuid4(), 0xBABE), (uuid.uuid4(), 56789123123123)]
+        EntryListUUIDLongCodec.encode(self.buf, entries, True)
+        message = self.write_and_decode()
+        message.next_frame()  # initial frame
+        self.assertEqual(entries, EntryListUUIDLongCodec.decode(message))
 
-        message = ClientMessage(buff=buf)
-        self.assertEqual(0x78, message.read_byte())
+    def test_errors(self):
+        self.mark_initial_frame_as_non_final()
+        holder = ErrorHolder(-12345, "class", "message", [])
+        ListMultiFrameCodec.encode(self.buf, [holder], ErrorHolderCodec.encode, True)
+        message = self.write_and_decode()
+        self.assertEqual([holder], _ErrorsCodec.decode(message))
 
-    def test_read_bool(self):
-        hexstr = READ_HEADER + "01"
-        buf = binascii.unhexlify(hexstr)
+    def test_integer_list(self):
+        self.mark_initial_frame_as_non_final()
+        l = [0xCAFE, 0xBABE, -9999999]
+        ListIntegerCodec.encode(self.buf, l, True)
+        message = self.write_and_decode()
+        message.next_frame()  # initial frame
+        self.assertEqual(l, ListIntegerCodec.decode(message))
 
-        message = ClientMessage(buff=buf)
-        self.assertEqual(True, message.read_bool())
+    def test_long_list(self):
+        self.mark_initial_frame_as_non_final()
+        l = [1, -2, 56789123123123]
+        ListLongCodec.encode(self.buf, l, True)
+        message = self.write_and_decode()
+        message.next_frame()  # initial frame
+        self.assertEqual(l, ListLongCodec.decode(message))
 
-    def test_read_int(self):
-        hexstr = READ_HEADER + "12345678"
-        buf = binascii.unhexlify(hexstr)
+    def test_list(self):
+        self.mark_initial_frame_as_non_final()
+        l = ["a", "b", "c", "😃"]
+        ListMultiFrameCodec.encode(self.buf, l, StringCodec.encode)
+        ListMultiFrameCodec.encode_nullable(self.buf, l, StringCodec.encode)
+        ListMultiFrameCodec.encode_nullable(self.buf, None, StringCodec.encode)
+        ListMultiFrameCodec.encode_contains_nullable(self.buf, l, StringCodec.encode)
+        ListMultiFrameCodec.encode_contains_nullable(self.buf, [None], StringCodec.encode, True)
+        message = self.write_and_decode()
+        message.next_frame()  # initial frame
+        self.assertEqual(l, ListMultiFrameCodec.decode(message, StringCodec.decode))
+        self.assertEqual(l, ListMultiFrameCodec.decode_nullable(message, StringCodec.decode))
+        self.assertIsNone(ListMultiFrameCodec.decode_nullable(message, StringCodec.decode))
+        self.assertEqual(l, ListMultiFrameCodec.decode_contains_nullable(message, StringCodec.decode))
+        self.assertEqual([None], ListMultiFrameCodec.decode_contains_nullable(message, StringCodec.decode))
 
-        message = ClientMessage(buff=buf)
-        self.assertEqual(0x78563412, message.read_int())
+    def test_uuid_list(self):
+        self.mark_initial_frame_as_non_final()
+        l = [uuid.uuid4(), uuid.uuid4(), uuid.uuid4()]
+        ListUUIDCodec.encode(self.buf, l, True)
+        message = self.write_and_decode()
+        message.next_frame()  # initial frame
+        self.assertEqual(l, ListUUIDCodec.decode(message))
 
-    def test_read_long(self):
-        hexstr = READ_HEADER + "6587aabbccddee1f"
-        buf = binascii.unhexlify(hexstr)
+    def test_map(self):
+        self.mark_initial_frame_as_non_final()
+        m = dict()
+        m["a"] = "b"
+        m["c"] = "d"
+        m["e"] = "f"
+        MapCodec.encode(self.buf, m, StringCodec.encode, StringCodec.encode)
+        MapCodec.encode_nullable(self.buf, m, StringCodec.encode, StringCodec.encode)
+        MapCodec.encode_nullable(self.buf, None, StringCodec.encode, StringCodec.encode, True)
+        message = self.write_and_decode()
+        message.next_frame()  # initial frame
+        self.assertEqual(m, MapCodec.decode(message, StringCodec.decode, StringCodec.decode))
+        self.assertEqual(m, MapCodec.decode_nullable(message, StringCodec.decode, StringCodec.decode))
+        self.assertIsNone(MapCodec.decode_nullable(message, StringCodec.decode, StringCodec.decode))
 
-        message = ClientMessage(buff=buf)
-        self.assertEqual(0x1feeddccbbaa8765, message.read_long())
+    def test_string(self):
+        self.mark_initial_frame_as_non_final()
+        string = "abc©☺𩸽🐶😁"
+        StringCodec.encode(self.buf, string, True)
+        message = self.write_and_decode()
+        message.next_frame()  # initial frame
+        self.assertEqual(string, StringCodec.decode(message))
 
-    def test_read_str(self):
-        hexstr = READ_HEADER + "03000000616263"
-        buf = binascii.unhexlify(hexstr)
+    def test_nullable(self):
+        self.mark_initial_frame_as_non_final()
+        CodecUtil.encode_nullable(self.buf, "a", StringCodec.encode)
+        CodecUtil.encode_nullable(self.buf, None, StringCodec.encode, True)
+        message = self.write_and_decode()
+        message.next_frame()  # initial frame
+        self.assertEqual("a", CodecUtil.decode_nullable(message, StringCodec.decode))
+        self.assertIsNone(CodecUtil.decode_nullable(message, StringCodec.decode))
 
-        message = ClientMessage(buff=buf)
-        self.assertEqual("abc", message.read_str())
 
-    def test_no_flag(self):
-        message = ClientMessage(payload_size=30)
-        message.set_flags(0)
+class _MutableInteger(object):
+    def __init__(self, initial_value):
+        self.value = initial_value
 
-        self.assertFalse(message.is_flag_set(BEGIN_FLAG))
-        self.assertFalse(message.is_flag_set(END_FLAG))
-        self.assertFalse(message.is_flag_set(LISTENER_FLAG))
-
-    def test_set_flag_begin(self):
-        message = ClientMessage(payload_size=30)
-        message.set_flags(0)
-
-        message.add_flag(BEGIN_FLAG)
-
-        self.assertTrue(message.is_flag_set(BEGIN_FLAG))
-        self.assertFalse(message.is_flag_set(END_FLAG))
-        self.assertFalse(message.is_flag_set(LISTENER_FLAG))
-
-    def test_set_flag_end(self):
-        message = ClientMessage(payload_size=30)
-        message.set_flags(0)
-
-        message.add_flag(END_FLAG)
-
-        self.assertFalse(message.is_flag_set(BEGIN_FLAG))
-        self.assertTrue(message.is_flag_set(END_FLAG))
-        self.assertFalse(message.is_flag_set(LISTENER_FLAG))
-
-    def test_set_flag_listener(self):
-        message = ClientMessage(payload_size=30)
-        message.set_flags(0)
-
-        message.add_flag(LISTENER_FLAG)
-
-        self.assertFalse(message.is_flag_set(BEGIN_FLAG))
-        self.assertFalse(message.is_flag_set(END_FLAG))
-        self.assertTrue(message.is_flag_set(LISTENER_FLAG))
-
-    def test_clone(self):
-        message = ClientMessage(payload_size=0)
-        message.set_flags(0)
-
-        message.add_flag(LISTENER_FLAG)
-        clone = message.clone()
-        clone.add_flag(BEGIN_FLAG)
-
-        self.assertTrue(message.is_flag_set(LISTENER_FLAG))
-        self.assertTrue(clone.is_flag_set(LISTENER_FLAG))
-        self.assertFalse(message.is_flag_set(BEGIN_FLAG))
-        self.assertTrue(clone.is_flag_set(BEGIN_FLAG))
+    def increment(self):
+        self.value += 1
 
 
 class ClientMessageBuilderTest(unittest.TestCase):
-    def test_message_accumulate(self):
-        message = client_authentication_codec.encode_request("user", "pass", "uuid", "owner-uuid", True, "PYH", 1, "3.10")
-        message.set_correlation_id(1)
+    @classmethod
+    def setUpClass(cls):
+        cls.reader = _Reader(None)
 
-        def message_callback(merged_message):
-            self.assertTrue(merged_message.is_flag_set(BEGIN_END_FLAG))
-            self.assertEqual(merged_message.get_frame_length(), message.get_frame_length())
-            self.assertEqual(merged_message.get_correlation_id(), message.get_correlation_id())
+    def setUp(self):
+        self.counter = _MutableInteger(0)
+        self.builder = ClientMessageBuilder(lambda m: self.counter.increment())
 
-        builder = ClientMessageBuilder(message_callback=message_callback)
+    def test_unfragmented_message(self):
+        request = client_authentication_codec.encode_request("dev", "user", "pass", uuid.uuid4(),
+                                                             "PYH", 1, "4.0", "python", [])
+        self.reader.read(request.buf)
+        message = self.reader._read_message()
+        self.builder.on_message(message)
+        self.assertEqual(1, self.counter.value)
 
-        header = message.buffer[0:message.get_data_offset()]
-        payload = message.buffer[message.get_data_offset():]
+    def test_fragmented_message(self):
+        size = SIZE_OF_FRAME_LENGTH_AND_FLAGS + LONG_SIZE_IN_BYTES
+        fragmentation_id = 1234567890123
+        begin_buf = bytearray(size)
+        LE_INT.pack_into(begin_buf, 0, size)
+        LE_UINT16.pack_into(begin_buf, INT_SIZE_IN_BYTES, 1 << 15)
+        LE_LONG.pack_into(begin_buf, SIZE_OF_FRAME_LENGTH_AND_FLAGS, fragmentation_id)
+        StringCodec.encode(begin_buf, "a", True)
 
-        indx_1 = len(payload) // 3
-        indx_2 = 2 * len(payload) // 3
+        middle_buf = bytearray(size)
+        LE_INT.pack_into(middle_buf, 0, size)
+        LE_LONG.pack_into(middle_buf, SIZE_OF_FRAME_LENGTH_AND_FLAGS, fragmentation_id)
+        StringCodec.encode(middle_buf, "b", True)
 
-        p1 = payload[0:indx_1]
-        p2 = payload[indx_1: indx_2]
-        p3 = payload[indx_2:]
+        end_buf = bytearray(size)
+        LE_INT.pack_into(end_buf, 0, size)
+        LE_UINT16.pack_into(end_buf, INT_SIZE_IN_BYTES, 1 << 14)
+        LE_LONG.pack_into(end_buf, SIZE_OF_FRAME_LENGTH_AND_FLAGS, fragmentation_id)
+        StringCodec.encode(end_buf, "c", True)
 
-        cm1 = ClientMessage(buff=header + p1)
-        cm2 = ClientMessage(buff=header + p2)
-        cm3 = ClientMessage(buff=header + p3)
-        cm1.add_flag(BEGIN_FLAG)
-        cm3.add_flag(END_FLAG)
+        self.reader.read(begin_buf)
+        begin_message = self.reader._read_message()
+        self.builder.on_message(begin_message)
+        self.assertEqual(0, self.counter.value)
+        self.assertEqual(1, len(self.builder._fragmented_messages))
+        fragmented_message = self.builder._fragmented_messages[fragmentation_id]
+        self.assertIsNotNone(fragmented_message)
+        self.assertEqual("a", fragmented_message.end_frame.buf.decode("utf-8"))
 
-        builder.on_message(cm1)
-        builder.on_message(cm2)
-        builder.on_message(cm3)
+        self.reader.read(middle_buf)
+        middle_message = self.reader._read_message()
+        self.builder.on_message(middle_message)
+        self.assertEqual(0, self.counter.value)
+        self.assertEqual(1, len(self.builder._fragmented_messages))
+        fragmented_message = self.builder._fragmented_messages[fragmentation_id]
+        self.assertIsNotNone(fragmented_message)
+        self.assertEqual("b", fragmented_message.end_frame.buf.decode("utf-8"))
 
+        self.reader.read(end_buf)
+        end_message = self.reader._read_message()
+        self.builder.on_message(end_message)
+        self.assertEqual(1, self.counter.value)
+        self.assertEqual(0, len(self.builder._fragmented_messages))

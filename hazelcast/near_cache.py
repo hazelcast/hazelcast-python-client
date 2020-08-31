@@ -1,5 +1,6 @@
 import random
 
+from hazelcast import six
 from hazelcast.config import EVICTION_POLICY, IN_MEMORY_FORMAT
 from hazelcast.util import current_time
 from hazelcast.six.moves import range
@@ -266,6 +267,10 @@ class NearCacheManager(object):
 
         return near_cache
 
+    def clear_near_caches(self):
+        for cache in six.itervalues(self._caches):
+            cache._clear()
+
     def destroy_near_cache(self, name):
         try:
             near_cache = self._caches.pop(name)
@@ -273,9 +278,9 @@ class NearCacheManager(object):
         except KeyError:
             pass
 
-    def destroy_all_near_caches(self):
+    def destroy_near_caches(self):
         for key in list(self._caches.keys()):
             self.destroy_near_cache(key)
 
-    def list_all_near_caches(self):
+    def list_near_caches(self):
         return list(self._caches.values())

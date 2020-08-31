@@ -3,7 +3,7 @@ from time import sleep
 
 from hazelcast import ClientConfig
 from hazelcast.exception import HazelcastError, TargetDisconnectedError
-from hazelcast.lifecycle import LIFECYCLE_STATE_DISCONNECTED, LIFECYCLE_STATE_CONNECTED
+from hazelcast.lifecycle import LifecycleState
 from hazelcast.util import AtomicInteger
 from tests.base import HazelcastTestCase
 from tests.util import configure_logging, event_collector
@@ -26,8 +26,7 @@ class ReconnectTest(HazelcastTestCase):
         config.network.addresses.append("127.0.0.1:5701")
         config.network.addresses.append("127.0.0.1:5702")
         config.network.addresses.append("127.0.0.1:5703")
-        config.network.connection_attempt_limit = 2
-        config.network.connection_attempt_period = 0.1
+        config.connection_strategy.connection_retry.cluster_connect_timeout = 2
         with self.assertRaises(HazelcastError):
             self.create_client(config)
 
@@ -35,14 +34,16 @@ class ReconnectTest(HazelcastTestCase):
         t = Thread(target=self.cluster.start_member)
         t.start()
         config = ClientConfig()
-        config.network.connection_attempt_limit = 10
+        config.cluster_name = self.cluster.id
+        config.connection_strategy.connection_retry.cluster_connect_timeout = 5
         self.create_client(config)
         t.join()
 
     def test_restart_member(self):
         member = self.cluster.start_member()
         config = ClientConfig()
-        config.network.connection_attempt_limit = 10
+        config.cluster_name = self.cluster.id
+        config.connection_strategy.connection_retry.cluster_connect_timeout = 5
         client = self.create_client(config)
 
         state = [None]
@@ -53,14 +54,15 @@ class ReconnectTest(HazelcastTestCase):
         client.lifecycle.add_listener(listener)
 
         member.shutdown()
-        self.assertTrueEventually(lambda: self.assertEqual(state[0], LIFECYCLE_STATE_DISCONNECTED))
+        self.assertTrueEventually(lambda: self.assertEqual(state[0], LifecycleState.DISCONNECTED))
         self.cluster.start_member()
-        self.assertTrueEventually(lambda: self.assertEqual(state[0], LIFECYCLE_STATE_CONNECTED))
+        self.assertTrueEventually(lambda: self.assertEqual(state[0], LifecycleState.CONNECTED))
 
     def test_listener_re_register(self):
         member = self.cluster.start_member()
         config = ClientConfig()
-        config.network.connection_attempt_limit = 10
+        config.cluster_name = self.cluster.id
+        config.connection_strategy.connection_retry.cluster_connect_timeout = 5
         client = self.create_client(config)
 
         map = client.get_map("map")
@@ -91,7 +93,8 @@ class ReconnectTest(HazelcastTestCase):
     def test_member_list_after_reconnect(self):
         old_member = self.cluster.start_member()
         config = ClientConfig()
-        config.network.connection_attempt_limit = 10
+        config.cluster_name = self.cluster.id
+        config.connection_strategy.connection_retry.cluster_connect_timeout = 5
         client = self.create_client(config)
         old_member.shutdown()
 
@@ -99,22 +102,23 @@ class ReconnectTest(HazelcastTestCase):
 
         def assert_member_list():
             self.assertEqual(1, client.cluster.size())
-            self.assertEqual(new_member.uuid, client.cluster.get_member_list()[0].uuid)
+            self.assertEqual(new_member.uuid, str(client.cluster.get_members()[0].uuid))
 
         self.assertTrueEventually(assert_member_list)
 
     def test_reconnect_toNewNode_ViaLastMemberList(self):
         old_member = self.cluster.start_member()
         config = ClientConfig()
+        config.cluster_name = self.cluster.id
         config.network.addresses.append("127.0.0.1:5701")
         config.network.smart_routing = False
-        config.network.connection_attempt_limit = 100
+        config.connection_strategy.connection_retry.cluster_connect_timeout = 10
         client = self.create_client(config)
         new_member = self.cluster.start_member()
         old_member.shutdown()
 
         def assert_member_list():
             self.assertEqual(1, client.cluster.size())
-            self.assertEqual(new_member.uuid, client.cluster.get_member_list()[0].uuid)
+            self.assertEqual(new_member.uuid, str(client.cluster.get_members()[0].uuid))
 
         self.assertTrueEventually(assert_member_list)

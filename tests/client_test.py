@@ -1,9 +1,10 @@
 import time
 
-from tests.base import HazelcastTestCase
+from tests.base import HazelcastTestCase, SingleMemberTestCase
 from hazelcast.config import ClientConfig, ClientProperties
 from hazelcast.client import HazelcastClient
 from hazelcast.lifecycle import LifecycleState
+from tests.hzrc.ttypes import Lang
 from tests.util import configure_logging
 
 
@@ -70,3 +71,40 @@ class ClientTest(HazelcastTestCase):
         client1.shutdown()
         client2.shutdown()
         rc.exit()
+
+
+class ClientLabelsTest(HazelcastTestCase):
+    @classmethod
+    def setUpClass(cls):
+        configure_logging()
+        cls.rc = cls.create_rc()
+        cls.cluster = cls.create_cluster(cls.rc)
+        cls.cluster.start_member()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.rc.terminateCluster(cls.cluster.id)
+        cls.rc.exit()
+
+    def tearDown(self):
+        self.shutdown_all_clients()
+
+    def test_default_config(self):
+        config = ClientConfig()
+        config.cluster_name = self.cluster.id
+
+        self.create_client(config)
+        self.assertIsNone(self.get_labels_from_member())
+
+    def test_provided_labels_are_received(self):
+        config = ClientConfig()
+        config.cluster_name = self.cluster.id
+        config.labels.add("test-label")
+        self.create_client(config)
+        self.assertEqual(b"test-label", self.get_labels_from_member())
+
+    def get_labels_from_member(self):
+        script = "var client = instance_0.getClientService().getConnectedClients().iterator().next();\n" \
+                 "result = client.getLabels().iterator().next();\n"
+        return self.rc.executeOnController(self.cluster.id, script, Lang.JAVASCRIPT).result
+
