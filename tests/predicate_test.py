@@ -2,7 +2,7 @@ from unittest import TestCase, skip
 
 from hazelcast.serialization.predicate import is_equal_to, and_, is_between, is_less_than, \
     is_less_than_or_equal_to, is_greater_than, is_greater_than_or_equal_to, or_, is_not_equal_to, not_, is_like, \
-    is_ilike, matches_regex, sql, true, false, is_in, is_instance_of
+    is_ilike, matches_regex, sql, true, false, is_in, is_instance_of, PagingPredicate
 from hazelcast.serialization.api import Portable
 from tests.base import SingleMemberTestCase
 from tests.serialization.portable_test import InnerPortable, FACTORY_ID
@@ -74,6 +74,12 @@ class PredicateStrTest(TestCase):
     def test_false(self):
         predicate = false()
         self.assertEqual(str(predicate), "FalsePredicate()")
+
+    def test_paging(self):
+        # TODO: str test for custom comparator
+        predicate = PagingPredicate(is_greater_than_or_equal_to('this', 10), 5)
+        self.assertEqual(str(predicate), "PagingPredicate(predicate=GreaterLessPredicate(attribute='this', value=10,"
+                                         " is_equal=True, is_less=False), page_size=5, comparator=None)")
 
 
 class PredicateTest(SingleMemberTestCase):

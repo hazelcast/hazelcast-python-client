@@ -345,3 +345,112 @@ def create_git_info():
 
 def to_list(*args, **kwargs):
     return list(*args, **kwargs)
+
+
+def cmp_to_key(cmp):
+    """
+    Converts a cmp= function into a key= function to be used in list.sort()
+    """
+    if cmp is None:
+        return None
+
+    class K:
+        def __init__(self, obj, *args):
+            self.obj = obj
+
+        def __lt__(self, other):
+            return cmp(self.obj, other.obj) < 0
+
+        def __gt__(self, other):
+            return cmp(self.obj, other.obj) > 0
+
+        def __eq__(self, other):
+            return cmp(self.obj, other.obj) == 0
+
+        def __le__(self, other):
+            return cmp(self.obj, other.obj) <= 0
+
+        def __ge__(self, other):
+            return cmp(self.obj, other.obj) >= 0
+
+        def __ne__(self, other):
+            return cmp(self.obj, other.obj) != 0
+    return K
+
+
+ITERATION_TYPE = enum(KEY=0, VALUE=1, ENTRY=2)
+
+
+def get_sorted_query_result_set(result_list_future, paging_predicate):
+    """
+    :param result_list_future, a future that returns a list of (K,V) pairs to sort and slice based on paging_predicate
+    attributes.
+    :param paging_predicate
+    :return list of sorted query results
+    """
+    result_list = result_list_future.result()
+    if len(result_list) == 0:
+        return []
+
+    comparator = paging_predicate.comparator
+    iteration_type = paging_predicate.iteration_type
+
+    result_list.sort(key=_get_comparison_key(comparator, iteration_type))
+
+    nearest_anchor_entry = paging_predicate.get_nearest_anchor_entry()
+    nearest_page = nearest_anchor_entry[0]  # first element in anchor entry pair is index of nearest page.
+    page = paging_predicate.page
+    page_size = paging_predicate.page_size
+    list_size = len(result_list)
+
+    begin = page_size * (page - nearest_page - 1)
+    if begin > list_size:
+        return []
+    end = min(begin + page_size, list_size)
+
+    _set_anchor(result_list, paging_predicate, nearest_page)
+
+    if iteration_type == ITERATION_TYPE.ENTRY:
+        return result_list[begin:end]
+    elif iteration_type == ITERATION_TYPE.KEY:
+        return [result_list[i][0] for i in range(begin, end)]
+    elif iteration_type == ITERATION_TYPE.VALUE:
+        return [result_list[i][1] for i in range(begin, end)]
+
+
+def _set_anchor(result_list, paging_predicate, nearest_page):
+    """
+    :param result_list, a list of (K,V) pairs to sort and slice based on paging_predicate
+    :param paging_predicate
+    :param nearest_page is the index of the page that the last anchor belongs to
+    """
+    list_size = len(result_list)
+    page = paging_predicate.page
+    page_size = paging_predicate.page_size
+    for i in range(page_size, list_size, page_size):
+        if nearest_page < page:
+            anchor = result_list[i-1]
+            nearest_page += 1
+            paging_predicate.set_anchor(nearest_page, anchor)
+        else:
+            break
+
+
+def _get_comparison_key(comparator, iteration_type):
+    """
+    :param comparator: Comparator object if specified in paging predicate, or None.
+    :param iteration_type
+    :return: key function to be used in sorting
+    """
+    if comparator:
+        return cmp_to_key(comparator.compare)
+    else:
+        if iteration_type == ITERATION_TYPE.KEY:
+            return lambda entry: entry[0]
+        elif iteration_type == ITERATION_TYPE.VALUE:
+            return lambda entry: entry[1]
+        elif iteration_type == ITERATION_TYPE.ENTRY:
+            # Entries are not comparable, we cannot compare them
+            # So keys can be used instead of map entries.
+            return lambda entry: entry[0]
+

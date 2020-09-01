@@ -79,6 +79,7 @@
       * [7.7.1.2. Querying by Combining Predicates with AND, OR, NOT](#7712-querying-by-combining-predicates-with-and-or-not)
       * [7.7.1.3. Querying with SQL](#7713-querying-with-sql)
       * [7.7.1.4. Querying with JSON Strings](#7714-querying-with-json-strings)
+      * [7.7.1.5. Filtering with Paging Predicates](#7715-filtering-with-paging-predicates)
   * [7.8. Performance](#78-performance)
     * [7.8.1. Near Cache](#781-near-cache)
       * [7.8.1.1. Configuring Near Cache](#7811-configuring-near-cache)
@@ -2242,6 +2243,53 @@ department_with_peter = departments.values(is_equal_to("people[any].name", "Pete
 ```
 
 `HazelcastJsonValue` is a lightweight wrapper around your JSON strings. It is used merely as a way to indicate that the contained string should be treated as a valid JSON value. Hazelcast does not check the validity of JSON strings put into to the maps. Putting an invalid JSON string into a map is permissible. However, in that case whether such an entry is going to be returned or not from a query is not defined.
+
+#### 7.7.1.5. Filtering with Paging Predicates
+
+The Python client provides paging for defined predicates. With its `PagingPredicate` class, you can get a list of keys, values, or entries page by page by filtering them with predicates and giving the size of the pages. Also, you can sort the entries by specifying comparators.
+
+In the example code below:
+
+The `greater_equal_predicate` gets values from the "students" map. This predicate has a filter to retrieve the objects with an "age" greater than or equal to 18.
+
+Then a `PagingPredicate` is constructed in which the page size is 5, so that there are five objects in each page. The first time the values are called creates the first page.
+
+It gets subsequent pages with the `next_page()` method of `PagingPredicate` and querying the map again with the updated `PagingPredicate`.
+
+```python
+from hazelcast.serialization.predicate import is_greater_than_or_equal_to, paging_predicate
+from hazelcast import HazelcastClient
+
+student_map = HazelcastClient().get_map('students').blocking()
+greater_equal_predicate = is_greater_than_or_equal_to('age', 18)
+paging_predicate = paging_predicate(greater_equal_predicate, 5)
+
+# Retrieve first page:
+students_first = student_map.values(paging_predicate)
+# ...
+# Set up next page:
+paging_predicate.next_page()
+
+# Retrieve next page:
+students_second = student_map.values(paging_predicate)
+
+# Set page to fourth page and retrieve (page index = page no - 1):
+paging_predicate.page = 3
+students_fourth = student_map.values(paging_predicate)
+```
+
+If you want to sort the result in a specific way before paging, you need to specify a custom comparator object that extends `hazelcast.core.Comparator`, which
+provides an interface to a comparator object to compare two map entries in a distributed map. Also, this comparator class should extend one of `IdentifiedDataSerializable` or `Portable` to be Hazelcast-serializable.
+After implementing this class in Python, you need to implement the Java equivalent of it and its factory. The Java equivalent of the comparator should implement `java.util.Comparator`. Note that the `compare` function of `Comparator` on the Java side is the equivalent of the `compare` function of `Comparator` on the Python side.
+When you implement the Comparator and its factory, you can add them to the CLASSPATH of the server side.
+See the [Adding User Library to CLASSPATH](#1212-adding-user-library-to-classpath) section.
+
+If a comparator is not specified for `PagingPredicate`, but you want to get a collection of keys or values page by page, this collection must be 
+an instance of Java `Comparable` (i.e., it must implement `java.lang.Comparable`). Otherwise, the `java.lang.IllegalArgument` exception is thrown.
+It should also be Python-comparable, that is its Python implementation should include the `__lt__()` method.
+
+Also, you can access a specific page more easily by accessing the field `paging_predicate.page`. This way, if you make a query for page index 99, for example, it will get all 100 pages at once instead of reaching the 100th page one by one using the `next_page()` function.
+See the code sample under `examples.map.map_paging_predicate_example` for more detail.
 
 ## 7.8. Performance
 
