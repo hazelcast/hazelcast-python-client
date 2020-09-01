@@ -1,5 +1,6 @@
 from unittest import TestCase, skip
 
+from hazelcast.config import IndexConfig
 from hazelcast.serialization.predicate import is_equal_to, and_, is_between, is_less_than, \
     is_less_than_or_equal_to, is_greater_than, is_greater_than_or_equal_to, or_, is_not_equal_to, not_, is_like, \
     is_ilike, matches_regex, sql, true, false, is_in, is_instance_of
@@ -319,10 +320,12 @@ class NestedPredicatePortableTest(SingleMemberTestCase):
 
     def test_adding_indexes(self):
         # single-attribute index
-        self.map.add_index("name", True)
+        single_index = IndexConfig(attributes=["name"])
+        self.map.add_index(single_index)
 
         # nested-attribute index
-        self.map.add_index("limb.name", True)
+        nested_index = IndexConfig(attributes=["limb.name"])
+        self.map.add_index(nested_index)
 
     def test_single_attribute_query_portable_predicates(self):
         predicate = is_equal_to("limb.name", "hand")

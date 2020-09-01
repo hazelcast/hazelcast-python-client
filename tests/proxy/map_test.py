@@ -1,5 +1,8 @@
 import time
 import os
+
+from hazelcast.config import IndexConfig
+from hazelcast.core import INDEX_TYPE
 from hazelcast.exception import HazelcastError
 from hazelcast.proxy.map import EntryEventType
 from hazelcast.serialization.api import IdentifiedDataSerializable
@@ -144,7 +147,20 @@ class MapTest(SingleMemberTestCase):
         self.assertTrueEventually(assert_event, 5)
 
     def test_add_index(self):
-        self.map.add_index("field", True)
+        ordered_index = IndexConfig("length", attributes=["this"])
+        unordered_index = IndexConfig("length", INDEX_TYPE.HASH, ["this"])
+        self.map.add_index(ordered_index)
+        self.map.add_index(unordered_index)
+
+    def test_add_index_duplicate_fields(self):
+        config = IndexConfig("length", attributes=["this", "this"])
+        with self.assertRaises(ValueError):
+            self.map.add_index(config)
+
+    def test_add_index_invalid_attribute(self):
+        config = IndexConfig("length", attributes=["this.x."])
+        with self.assertRaises(ValueError):
+            self.map.add_index(config)
 
     def test_clear(self):
         self._fill_map()

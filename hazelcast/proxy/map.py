@@ -1,5 +1,6 @@
 import itertools
 
+from hazelcast.config import IndexUtil
 from hazelcast.future import combine_futures, ImmediateFuture
 from hazelcast.invocation import Invocation
 from hazelcast.near_cache import NearCache
@@ -14,7 +15,7 @@ from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_entry
     map_remove_entry_listener_codec, map_replace_codec, map_replace_if_same_codec, map_set_codec, map_try_lock_codec, \
     map_try_put_codec, map_try_remove_codec, map_unlock_codec, map_values_codec, map_values_with_predicate_codec, \
     map_add_interceptor_codec, map_execute_on_all_keys_codec, map_execute_on_key_codec, map_execute_on_keys_codec, \
-    map_execute_with_predicate_codec, map_add_near_cache_invalidation_listener_codec
+    map_execute_with_predicate_codec, map_add_near_cache_invalidation_listener_codec, map_add_index_codec
 from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType, get_entry_listener_flags, MAX_SIZE
 from hazelcast.util import check_not_none, thread_id, to_millis, ImmutableLazyDataList
 from hazelcast import six
@@ -129,7 +130,7 @@ class Map(Proxy):
                                        lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name, reg_id),
                                        lambda m: codec.handle(m, handle_event_entry))
 
-    def add_index(self, attribute, ordered=False):
+    def add_index(self, index_config):
         """
         Adds an index to this map for the specified entries so that queries can run faster.
 
@@ -144,17 +145,27 @@ class Map(Proxy):
                 >>>     #methods
 
             If you query your values mostly based on age and active fields, you should consider indexing these.
-                >>> map = self.client.get_map("employees")
-                >>> map.add_index("age" , true) #ordered, since we have ranged queries for this field
-                >>> map.add_index("active", false) #not ordered, because boolean field cannot have range
+                >>> employees = self.client.get_map("employees")
+                >>> employees.add_index(IndexConfig("age")) # Sorted index for range queries
+                >>> employees.add_index(IndexConfig("active", INDEX_TYPE.HASH)) # Hash index for equality predicates
 
+        Index attribute should either have a getter method or be public.
+        You should also make sure to add the indexes before adding
+        entries to this map.
 
-        :param attribute: (str), index attribute of the value.
-        :param ordered: (bool), for ordering the index or not (optional).
+        Indexing time is executed in parallel on each partition by operation threads. The Map
+        is not blocked during this operation.
+        The time taken in proportional to the size of the Map and the number Members.
+
+        Until the index finishes being created, any searches for the attribute will use a full Map scan,
+        thus avoiding using a partially built index and returning incorrect results.
+
+        :param index_config: (:class:`~hazelcast.config.IndexConfig`), index config.
         """
-
-        # TODO implement add index logic
-        return self._invoke(map_add_index_codec, attribute=attribute, ordered=ordered)
+        check_not_none(index_config, "Index config cannot be None")
+        validated = IndexUtil.validate_and_normalize(self.name, index_config)
+        request = map_add_index_codec.encode_request(self.name, validated)
+        return self._invoke(request)
 
     def add_interceptor(self, interceptor):
         """

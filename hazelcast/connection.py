@@ -221,7 +221,7 @@ class ConnectionManager(object):
     def _trigger_cluster_reconnection(self):
         if self._reconnect_mode == RECONNECT_MODE.OFF:
             logger.info("Reconnect mode is OFF. Shutting down the client", extra=self._logger_extras)
-            self._shutdown_client()
+            self._shutdown_client_with_external_thread()
             return
 
         if self._client.lifecycle.live:
@@ -278,7 +278,7 @@ class ConnectionManager(object):
             except:
                 logger.exception("Could not connect to any cluster, shutting down the client",
                                  extra=self._logger_extras)
-                self._shutdown_client()
+                self._shutdown_client_with_external_thread()
             finally:
                 self._connect_to_cluster_thread_running = False
 
@@ -288,11 +288,15 @@ class ConnectionManager(object):
         self._connect_to_cluster_thread = t
         t.start()
 
-    def _shutdown_client(self):
-        try:
-            self._client.shutdown()
-        except:
-            logger.exception("Exception during client shutdown", extra=self._logger_extras)
+    def _shutdown_client_with_external_thread(self):
+        def inner():
+            try:
+                self._client.shutdown()
+            except:
+                logger.exception("Exception during client shutdown", extra=self._logger_extras)
+
+        t = threading.Thread(target=inner, name=self._client.name + ".client_shutdown")
+        t.start()
 
     def _sync_connect_to_cluster(self):
         tried_addresses = set()

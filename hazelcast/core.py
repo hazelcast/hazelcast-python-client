@@ -52,6 +52,34 @@ SSL protocol options.
 * TLSv1_3 requires at least Python 2.7.15 or Python 3.7 build with OpenSSL 1.1.1+
 """
 
+QUERY_CONSTANTS = enum(KEY_ATTRIBUTE_NAME="__key", THIS_ATTRIBUTE_NAME="this")
+"""
+Contains constants for Query.
+* KEY_ATTRIBUTE_NAME  : Attribute name of the key.
+* THIS_ATTRIBUTE_NAME : Attribute name of the "this"
+"""
+
+UNIQUE_KEY_TRANSFORMATION = enum(OBJECT=0, LONG=1, RAW=2)
+"""
+Defines an assortment of transformations which can be applied to 
+BitmapIndexOptions#getUniqueKey() unique key values.
+* OBJECT : Extracted unique key value is interpreted as an object value. 
+    Non-negative unique ID is assigned to every distinct object value.
+* LONG   : Extracted unique key value is interpreted as a whole integer value of byte, short, int or long type. 
+    The extracted value is upcasted to long (if necessary) and unique non-negative ID is assigned 
+    to every distinct value.
+* RAW    : Extracted unique key value is interpreted as a whole integer value of byte, short, int or long type. 
+    The extracted value is upcasted to long (if necessary) and the resulting value is used directly as an ID.
+"""
+
+INDEX_TYPE = enum(SORTED=0, HASH=1, BITMAP=2)
+"""
+Type of the index.
+* SORTED : Sorted index. Can be used with equality and range predicates.
+* HASH   : Hash index. Can be used with equality predicates.
+* BITMAP : Bitmap index. Can be used with equality predicates.
+"""
+
 
 class MemberInfo(object):
     __slots__ = ("address", "uuid", "attributes", "lite_member", "version")

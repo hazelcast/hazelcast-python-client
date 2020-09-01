@@ -4,11 +4,12 @@ Hazelcast Client Configuration module contains configuration classes and various
 """
 import logging
 import os
+import re
 
-from hazelcast.core import EVICTION_POLICY, IN_MEMORY_FORMAT, PROTOCOL, INTEGER_TYPE
+from hazelcast.core import EVICTION_POLICY, IN_MEMORY_FORMAT, PROTOCOL, INTEGER_TYPE, INDEX_TYPE, QUERY_CONSTANTS, \
+    UNIQUE_KEY_TRANSFORMATION
 from hazelcast.serialization.api import StreamSerializer
-from hazelcast.util import validate_type, validate_serializer, enum, TimeUnit
-
+from hazelcast.util import validate_type, validate_serializer, enum, TimeUnit, check_not_none
 
 _DEFAULT_CLUSTER_NAME = "dev"
 
@@ -614,6 +615,164 @@ class LoggerConfig(object):
         than 50 is enough to turn off the default
         logger. 
         """
+
+
+class BitmapIndexOptions(object):
+    """
+    Configures indexing options specific to bitmap indexes
+    """
+
+    def __init__(self, unique_key=QUERY_CONSTANTS.KEY_ATTRIBUTE_NAME,
+                 unique_key_transformation=UNIQUE_KEY_TRANSFORMATION.OBJECT):
+        self.unique_key = unique_key
+        """
+        Source of values which uniquely identify each entry being inserted into an index.
+        """
+
+        self.unique_key_transformation = unique_key_transformation
+        """
+        Unique key transformation configured in this index. The transformation is 
+        applied to every value extracted from unique key attribute
+        """
+
+    def __repr__(self):
+        return "BitmapIndexOptions(unique_key=%s, unique_key_transformation=%s)" \
+               % (self.unique_key, self.unique_key_transformation)
+
+
+class IndexConfig(object):
+    """
+    Configuration of an index. Hazelcast support two types of indexes: sorted index and hash index.
+    Sorted indexes could be used with equality and range predicates and have logarithmic search time.
+    Hash indexes could be used with equality predicates and have constant search time assuming the hash
+    function of the indexed field disperses the elements properly.
+    Index could be created on one or more attributes.
+    """
+
+    def __init__(self, name=None, type=INDEX_TYPE.SORTED, attributes=None, bitmap_index_options=None):
+        self.name = name
+        """Name of the index"""
+
+        self.type = type
+        """Type of the index"""
+
+        self.attributes = attributes or []
+        """Indexed attributes"""
+
+        self.bitmap_index_options = bitmap_index_options or BitmapIndexOptions()
+        """Bitmap index options"""
+
+    def add_attribute(self, attribute):
+        IndexUtil.validate_attribute(attribute)
+        self.attributes.append(attribute)
+
+    def __repr__(self):
+        return "IndexConfig(name=%s, type=%s, attributes=%s, bitmap_index_options=%s)" \
+               % (self.name, self.type, self.attributes, self.bitmap_index_options)
+
+
+class IndexUtil(object):
+    _MAX_ATTRIBUTES = 255
+    """Maximum number of attributes allowed in the index."""
+
+    _THIS_PATTERN = re.compile(r"^this\.")
+    """Pattern to stripe away "this." prefix."""
+
+    @staticmethod
+    def validate_attribute(attribute):
+        check_not_none(attribute, "Attribute name cannot be None")
+
+        stripped_attribute = attribute.strip()
+        if not stripped_attribute:
+            raise ValueError("Attribute name cannot be empty")
+
+        if stripped_attribute.endswith("."):
+            raise ValueError("Attribute name cannot end with dot: %s" % attribute)
+
+    @staticmethod
+    def validate_and_normalize(map_name, index_config):
+        original_attributes = index_config.attributes
+        if not original_attributes:
+            raise ValueError("Index must have at least one attribute: %s" % index_config)
+
+        if len(original_attributes) > IndexUtil._MAX_ATTRIBUTES:
+            raise ValueError("Index cannot have more than %s attributes %s" % (IndexUtil._MAX_ATTRIBUTES, index_config))
+
+        from hazelcast.core import INDEX_TYPE
+        if index_config.type == INDEX_TYPE.BITMAP and len(original_attributes) > 1:
+            raise ValueError("Composite bitmap indexes are not supported: %s" % index_config)
+
+        normalized_attributes = []
+        for original_attribute in original_attributes:
+            IndexUtil.validate_attribute(original_attribute)
+
+            original_attribute = original_attribute.strip()
+            normalized_attribute = IndexUtil.canonicalize_attribute(original_attribute)
+
+            try:
+                idx = normalized_attributes.index(normalized_attribute)
+            except ValueError:
+                pass
+            else:
+                duplicate_original_attribute = original_attributes[idx]
+                if duplicate_original_attribute == original_attribute:
+                    raise ValueError("Duplicate attribute name [attribute_name=%s, index_config=%s]"
+                                     % (original_attribute, index_config))
+                else:
+                    raise ValueError("Duplicate attribute names [attribute_name1=%s, attribute_name2=%s, "
+                                     "index_config=%s]"
+                                     % (duplicate_original_attribute, original_attribute, index_config))
+
+            normalized_attributes.append(normalized_attribute)
+
+        name = index_config.name
+        if name and not name.strip():
+            name = None
+
+        normalized_config = IndexUtil.build_normalized_config(map_name, index_config.type, name,
+                                                              normalized_attributes)
+        if index_config.type == INDEX_TYPE.BITMAP:
+            unique_key = index_config.bitmap_index_options.unique_key
+            unique_key_transformation = index_config.bitmap_index_options.unique_key_transformation
+            IndexUtil.validate_attribute(unique_key)
+            unique_key = IndexUtil.canonicalize_attribute(unique_key)
+            normalized_config.bitmap_index_options.unique_key = unique_key
+            normalized_config.bitmap_index_options.unique_key_transformation = unique_key_transformation
+
+        return normalized_config
+
+    @staticmethod
+    def canonicalize_attribute(attribute):
+        return re.sub(IndexUtil._THIS_PATTERN, "", attribute)
+
+    @staticmethod
+    def build_normalized_config(map_name, index_type, index_name, normalized_attributes):
+        new_config = IndexConfig()
+        new_config.type = index_type
+
+        name = map_name + "_" + IndexUtil._index_type_to_name(index_type) if index_name is None else None
+        for normalized_attribute in normalized_attributes:
+            new_config.add_attribute(normalized_attribute)
+            if name:
+                name += "_" + normalized_attribute
+
+        if name:
+            index_name = name
+
+        new_config.name = index_name
+        return new_config
+
+    @staticmethod
+    def _index_type_to_name(index_type):
+        from hazelcast.core import INDEX_TYPE
+        if index_type == INDEX_TYPE.SORTED:
+            return "sorted"
+        elif index_type == INDEX_TYPE.HASH:
+            return "hash"
+        elif index_type == INDEX_TYPE.BITMAP:
+            return "bitmap"
+        else:
+            raise ValueError("Unsupported index type %s" % index_type)
 
 
 class ClientProperty(object):

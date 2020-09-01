@@ -86,6 +86,7 @@ class AsyncoreReactor(object):
         if not self._is_live:
             return
         self._is_live = False
+
         for connection in list(self._map.values()):
             try:
                 connection.close(None, HazelcastError("Client is shutting down"))

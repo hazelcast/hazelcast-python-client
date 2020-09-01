@@ -1,4 +1,3 @@
-import itertools
 import threading
 import time
 import logging
