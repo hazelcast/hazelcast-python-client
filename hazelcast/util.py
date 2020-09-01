@@ -392,15 +392,15 @@ def get_sorted_query_result_set(result_list_future, paging_predicate):
     if len(result_list) == 0:
         return []
 
-    comparator = paging_predicate.get_comparator()
-    iteration_type = paging_predicate.get_iteration_type()
+    comparator = paging_predicate.comparator
+    iteration_type = paging_predicate.iteration_type
 
     result_list.sort(key=_get_comparison_key(comparator, iteration_type))
 
     nearest_anchor_entry = paging_predicate.get_nearest_anchor_entry()
     nearest_page = nearest_anchor_entry[0]  # first element in anchor entry pair is index of nearest page.
-    page = paging_predicate.get_page()
-    page_size = paging_predicate.get_page_size()
+    page = paging_predicate.page
+    page_size = paging_predicate.page_size
     list_size = len(result_list)
 
     begin = page_size * (page - nearest_page - 1)
@@ -425,8 +425,8 @@ def _set_anchor(result_list, paging_predicate, nearest_page):
     :param nearest_page is the index of the page that the last anchor belongs to
     """
     list_size = len(result_list)
-    page = paging_predicate.get_page()
-    page_size = paging_predicate.get_page_size()
+    page = paging_predicate.page
+    page_size = paging_predicate.page_size
     for i in range(page_size, list_size, page_size):
         if nearest_page < page:
             anchor = result_list[i-1]

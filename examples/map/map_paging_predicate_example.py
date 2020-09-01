@@ -22,5 +22,5 @@ if __name__ == "__main__":
     grades_second_page = student_grades_map.values(paging_predicate)  # [96, 97]
 
     # Set page to fourth page and retrieve (page index = page no - 1):
-    paging_predicate.set_page(3)
+    paging_predicate.page = 3
     grades_fourth_page = student_grades_map.values(paging_predicate)  # [100]

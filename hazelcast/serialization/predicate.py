@@ -222,24 +222,24 @@ class PagingPredicate(Predicate):
         """
         if isinstance(predicate, PagingPredicate):
             raise TypeError('Nested paging predicate not supported.')
-        self.internal_predicate = predicate
-        self.comparator = comparator
+        self._internal_predicate = predicate
+        self._comparator = comparator
         if page_size <= 0:
             raise ValueError('page_size should be greater than 0.')
-        self.page_size = page_size
-        self.page = 0  # initialized to be on first page
+        self._page_size = page_size
+        self._page = 0  # initialized to be on first page
         self.iteration_type = ITERATION_TYPE.ENTRY  # ENTRY as default.
         self.anchor_list = []  # List of pairs: (nearest page, (anchor key, anchor value))
 
     def __repr__(self):
-        return "PagingPredicate(predicate=%s, page_size=%s, comparator=%s)" % (self.internal_predicate,
+        return "PagingPredicate(predicate=%s, page_size=%s, comparator=%s)" % (self._internal_predicate,
                                                                                self.page_size, self.comparator)
 
     def write_data(self, output):
-        output.write_object(self.internal_predicate)
+        output.write_object(self._internal_predicate)
         output.write_object(self.comparator)
         output.write_int(self.page)
-        output.write_int(self.page_size)
+        output.write_int(self._page_size)
         output.write_utf(ITERATION_TYPE.reverse.get(self.iteration_type, None))
         output.write_int(len(self.anchor_list))
         for nearest_page, (anchor_key, anchor_value) in self.anchor_list:
@@ -265,24 +265,6 @@ class PagingPredicate(Predicate):
             self.page -= 1
         return self.page
 
-    def set_page(self, page_no):
-        """
-        Sets page index to specified page_no.
-        If page_no is out of range, the query results that this paging predicate will retrieve will be an empty list.
-        :param page_no: (int) greater than or equal to 0.
-        :return (int) current page index
-        """
-        if page_no < 0:
-            raise ValueError('page_no should be positive or 0.')
-        self.page = page_no
-        return self.page
-
-    def set_iteration_type(self, iter_type):
-        """
-        :param iter_type: (ITERATION_TYPE)
-        """
-        self.iteration_type = iter_type
-
     def set_anchor(self, nearest_page, anchor):
         anchor_entry = (nearest_page, anchor)
         anchor_count = len(self.anchor_list)
@@ -298,20 +280,13 @@ class PagingPredicate(Predicate):
         self.anchor_list.clear()
         self.page = 0
 
-    def get_page(self):
-        return self.page
-
-    def get_page_size(self):
-        return self.page_size
-
     def get_nearest_anchor_entry(self):
         """
         After each query, an anchor entry is set for that page.
         For the next query user may set an arbitrary page.
         For example: user queried first 5 pages which means first 5 anchor is available
         if the next query is for the 10th page then the nearest anchor belongs to page 5
-        but if the next query is for the 3nd page then the nearest anchor belongs to page 2
-
+        but if the next query is for the 3nd page then the nearest anchor belongs to page 2.
         :return nearest anchored entry for current page
         """
         anchor_count = len(self.anchor_list)
@@ -319,17 +294,32 @@ class PagingPredicate(Predicate):
             return PagingPredicate.__NULL_ANCHOR
         return self.anchor_list[self.page - 1] if self.page < anchor_count else self.anchor_list[anchor_count - 1]
 
-    def get_iteration_type(self):
-        return self.iteration_type
+    @property
+    def page(self):
+        return self._page
 
-    def get_comparator(self):
-        return self.comparator
+    @page.setter
+    def page(self, page_no):
+        """
+        Sets page index to specified page_no.
+        If page_no is out of range, the query results that this paging predicate will retrieve will be an empty list.
+        :param page_no: (int) greater than or equal to 0.
+        """
+        if page_no < 0:
+            raise ValueError('page_no should be positive or 0.')
+        self._page = page_no
 
-    def get_predicate(self):
-        """
-        :return: internal predicate for this paging predicate.
-        """
-        return self.internal_predicate
+    @property
+    def page_size(self):
+        return self._page_size
+
+    @property
+    def internal_predicate(self):
+        return self._internal_predicate
+
+    @property
+    def comparator(self):
+        return self._comparator
 
 
 sql = SqlPredicate

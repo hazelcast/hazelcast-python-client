@@ -2257,12 +2257,12 @@ Then a `PagingPredicate` is constructed in which the page size is 5, so that the
 It gets subsequent pages with the `next_page()` method of `PagingPredicate` and querying the map again with the updated `PagingPredicate`.
 
 ```python
-from hazelcast.serialization.predicate import is_greater_than_or_equal_to, PagingPredicate
+from hazelcast.serialization.predicate import is_greater_than_or_equal_to, paging_predicate
 from hazelcast import HazelcastClient
 
 student_map = HazelcastClient().get_map('students').blocking()
 greater_equal_predicate = is_greater_than_or_equal_to('age', 18)
-paging_predicate = PagingPredicate(greater_equal_predicate, 5)
+paging_predicate = paging_predicate(greater_equal_predicate, 5)
 
 # Retrieve first page:
 students_first = student_map.values(paging_predicate)
@@ -2274,7 +2274,7 @@ paging_predicate.next_page()
 students_second = student_map.values(paging_predicate)
 
 # Set page to fourth page and retrieve (page index = page no - 1):
-paging_predicate.set_page(3)
+paging_predicate.page = 3
 students_fourth = student_map.values(paging_predicate)
 ```
 
@@ -2288,7 +2288,7 @@ If a comparator is not specified for `PagingPredicate`, but you want to get a co
 an instance of Java `Comparable` (i.e., it must implement `java.lang.Comparable`). Otherwise, the `java.lang.IllegalArgument` exception is thrown.
 It should also be Python-comparable, that is its Python implementation should include the `__lt__()` method.
 
-Also, you can access a specific page more easily with the help of the `set_page()` method. This way, if you make a query for page index 99, for example, it will get all 100 pages at once instead of reaching the 100th page one by one using the `next_page()` function.
+Also, you can access a specific page more easily by accessing the field `paging_predicate.page`. This way, if you make a query for page index 99, for example, it will get all 100 pages at once instead of reaching the 100th page one by one using the `next_page()` function.
 See the code sample under `examples.map.map_paging_predicate_example` for more detail.
 
 ## 7.8. Performance

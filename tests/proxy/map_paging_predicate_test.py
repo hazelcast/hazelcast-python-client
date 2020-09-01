@@ -77,29 +77,29 @@ class MapPagingPredicateTest(HazelcastTestCase):
     def test_set_page(self):
         self._fill_map_numeric()
         paging = PagingPredicate(is_greater_than_or_equal_to('this', 40), 2)
-        paging.set_page(4)
+        paging.page = 4
         assertCountEqual(self, self.map.values(paging), [48, 49])
 
     def test_get_page(self):
         paging = PagingPredicate(is_greater_than_or_equal_to('this', 40), 2)
-        paging.set_page(4)
-        self.assertEqual(paging.get_page(), 4)
+        paging.page = 4
+        self.assertEqual(paging.page, 4)
 
-    def test_get_page_size(self):
+    def test_page_size(self):
         paging = PagingPredicate(is_greater_than_or_equal_to('this', 40), 2)
-        self.assertEqual(paging.get_page_size(), 2)
+        self.assertEqual(paging.page_size, 2)
 
     def test_previous_page(self):
         self._fill_map_numeric()
         paging = PagingPredicate(is_greater_than_or_equal_to('this', 40), 2)
-        paging.set_page(4)
+        paging.page = 4
         paging.previous_page()
         assertCountEqual(self, self.map.values(paging), [46, 47])
 
     def test_get_4th_then_previous_page(self):
         self._fill_map_numeric()
         paging = PagingPredicate(is_greater_than_or_equal_to('this', 40), 2)
-        paging.set_page(4)
+        paging.page = 4
         self.map.values(paging)
         paging.previous_page()
         assertCountEqual(self, self.map.values(paging), [46, 47])
@@ -107,7 +107,7 @@ class MapPagingPredicateTest(HazelcastTestCase):
     def test_get_3rd_then_next_page(self):
         self._fill_map_numeric()
         paging = PagingPredicate(is_greater_than_or_equal_to('this', 40), 2)
-        paging.set_page(3)
+        paging.page = 3
         self.map.values(paging)
         paging.next_page()
         assertCountEqual(self, self.map.values(paging), [48, 49])
@@ -116,7 +116,7 @@ class MapPagingPredicateTest(HazelcastTestCase):
         # Trying to get page 10, which is out of range, should return empty list.
         self._fill_map_numeric()
         paging = PagingPredicate(is_greater_than_or_equal_to('this', 40), 2)
-        paging.set_page(10)
+        paging.page = 10
         assertCountEqual(self, self.map.values(paging), [])
 
     def test_nonexistent_previous_page(self):
@@ -130,7 +130,7 @@ class MapPagingPredicateTest(HazelcastTestCase):
         # Trying to get next page while already at last page should return empty list.
         self._fill_map_numeric()
         paging = PagingPredicate(is_greater_than_or_equal_to('this', 40), 2)
-        paging.set_page(4)
+        paging.page = 4
         paging.next_page()
         assertCountEqual(self, self.map.values(paging), [])
 
@@ -138,7 +138,7 @@ class MapPagingPredicateTest(HazelcastTestCase):
         # Page size set to 2, but last page only has 1 element.
         self._fill_map_numeric()
         paging = PagingPredicate(is_greater_than_or_equal_to('this', 41), 2)
-        paging.set_page(4)
+        paging.page = 4
         assertCountEqual(self, self.map.values(paging), [49])
 
     def test_empty_map(self):
@@ -147,7 +147,7 @@ class MapPagingPredicateTest(HazelcastTestCase):
         assertCountEqual(self, self.map.values(paging), [])
 
     @unittest.skip('Paging predicate with duplicate values will be supported in Hazelcast 4.0')
-    def _test_equal_values_paging(self):
+    def test_equal_values_paging(self):
         self._fill_map_numeric()
 
         # keys[50 - 99], values[0 - 49]:
