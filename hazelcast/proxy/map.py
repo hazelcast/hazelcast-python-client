@@ -738,7 +738,7 @@ class Map(Proxy):
         check_not_none(key, "key can't be None")
         check_not_none(ttl, "ttl can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(map_set_ttl_codec, key_data, key=key_data, ttl=to_millis(ttl))
+        return self._set_ttl_internal(key_data, ttl)
 
     def size(self):
         """
@@ -876,6 +876,9 @@ class Map(Proxy):
         return self._encode_invoke_on_key(map_set_codec, key_data, key=key_data, value=value_data, thread_id=thread_id(),
                                           ttl=to_millis(ttl))
 
+    def _set_ttl_internal(self, key_data, ttl):
+        return self._encode_invoke_on_key(map_set_ttl_codec, key_data, key=key_data, ttl=to_millis(ttl))
+ 
     def _try_remove_internal(self, key_data, timeout):
         return self._encode_invoke_on_key(map_try_remove_codec, key_data, key=key_data, thread_id=thread_id(),
                                           timeout=to_millis(timeout))
@@ -1021,6 +1024,10 @@ class MapFeatNearCache(Map):
     def _set_internal(self, key_data, value_data, ttl):
         self._invalidate_cache(key_data)
         return super(MapFeatNearCache, self)._set_internal(key_data, value_data, ttl)
+
+    def _set_ttl_internal(self, key_data, ttl):
+        self._invalidate_cache(key_data)
+        return super(MapFeatNearCache, self)._set_ttl_internal(key_data, ttl)
 
     def _replace_internal(self, key_data, value_data):
         self._invalidate_cache(key_data)
