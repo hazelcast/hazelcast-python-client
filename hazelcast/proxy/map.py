@@ -10,10 +10,10 @@ from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_entry
     map_is_locked_codec, map_key_set_codec, map_key_set_with_predicate_codec, map_load_all_codec, \
     map_load_given_keys_codec, map_lock_codec, map_put_codec, map_put_all_codec, map_put_if_absent_codec, \
     map_put_transient_codec, map_size_codec, map_remove_codec, map_remove_if_same_codec, \
-    map_remove_entry_listener_codec, map_replace_codec, map_replace_if_same_codec, map_set_codec, map_try_lock_codec, \
-    map_try_put_codec, map_try_remove_codec, map_unlock_codec, map_values_codec, map_values_with_predicate_codec, \
-    map_add_interceptor_codec, map_execute_on_all_keys_codec, map_execute_on_key_codec, map_execute_on_keys_codec, \
-    map_execute_with_predicate_codec, map_add_near_cache_entry_listener_codec
+    map_remove_entry_listener_codec, map_replace_codec, map_replace_if_same_codec, map_set_codec, map_set_ttl_codec, \
+    map_try_lock_codec, map_try_put_codec, map_try_remove_codec, map_unlock_codec, map_values_codec, \
+    map_values_with_predicate_codec, map_add_interceptor_codec, map_execute_on_all_keys_codec, map_execute_on_key_codec, \
+    map_execute_on_keys_codec, map_execute_with_predicate_codec, map_add_near_cache_entry_listener_codec
 from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType, get_entry_listener_flags, MAX_SIZE
 from hazelcast.util import check_not_none, thread_id, to_millis
 from hazelcast import six
@@ -725,6 +725,21 @@ class Map(Proxy):
         value_data = self._to_data(value)
         return self._set_internal(key_data, value_data, ttl)
 
+    def set_ttl(self, key, ttl):
+        """
+        Updates the TTL (time to live) value of the entry specified by the given key with a new TTL value. New TTL 
+        value is valid starting from the time this operation is invoked, not since the time the entry was created.
+        If the entry does not exist or is already expired, this call has no effect.
+
+        :param key: (object), the key of the map entry.
+        :param ttl: (int), maximum time for this entry to stay in the map (0 means infinite,
+            negative means map config default)
+        """
+        check_not_none(key, "key can't be None")
+        check_not_none(ttl, "ttl can't be None")
+        key_data = self._to_data(key)
+        return self._set_ttl_internal(key_data, ttl)
+
     def size(self):
         """
         Returns the number of entries in this map.
@@ -861,6 +876,9 @@ class Map(Proxy):
         return self._encode_invoke_on_key(map_set_codec, key_data, key=key_data, value=value_data, thread_id=thread_id(),
                                           ttl=to_millis(ttl))
 
+    def _set_ttl_internal(self, key_data, ttl):
+        return self._encode_invoke_on_key(map_set_ttl_codec, key_data, key=key_data, ttl=to_millis(ttl))
+ 
     def _try_remove_internal(self, key_data, timeout):
         return self._encode_invoke_on_key(map_try_remove_codec, key_data, key=key_data, thread_id=thread_id(),
                                           timeout=to_millis(timeout))
@@ -1006,6 +1024,10 @@ class MapFeatNearCache(Map):
     def _set_internal(self, key_data, value_data, ttl):
         self._invalidate_cache(key_data)
         return super(MapFeatNearCache, self)._set_internal(key_data, value_data, ttl)
+
+    def _set_ttl_internal(self, key_data, ttl):
+        self._invalidate_cache(key_data)
+        return super(MapFeatNearCache, self)._set_ttl_internal(key_data, ttl)
 
     def _replace_internal(self, key_data, value_data):
         self._invalidate_cache(key_data)
