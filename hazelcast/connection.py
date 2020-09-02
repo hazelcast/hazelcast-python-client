@@ -534,9 +534,9 @@ class _HeartbeatManager(object):
 
         if (now - connection.last_write_time) > self._heartbeat_interval:
             request = client_ping_codec.encode_request()
-            invoker = self._client.invocation_service
+            invocation_service = self._client.invocation_service
             invocation = Invocation(request, connection=connection, urgent=True)
-            invoker.invoke(invocation)
+            invocation_service.invoke(invocation)
 
 
 _frame_header = struct.Struct('<iH')

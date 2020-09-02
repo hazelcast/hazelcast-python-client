@@ -565,7 +565,7 @@ class Map(Proxy):
                                                 self._reference_id_generator.get_and_increment())
         partition_id = self._client.partition_service.get_partition_id(key_data)
         invocation = Invocation(request, partition_id=partition_id, timeout=MAX_SIZE)
-        self._invoker.invoke(invocation)
+        self._invocation_service.invoke(invocation)
         return invocation.future
 
     def put(self, key, value, ttl=-1):
@@ -854,7 +854,7 @@ class Map(Proxy):
         partition_id = self._client.partition_service.get_partition_id(key_data)
         invocation = Invocation(request, partition_id=partition_id, timeout=MAX_SIZE,
                                 response_handler=map_try_lock_codec.decode_response)
-        self._invoker.invoke(invocation)
+        self._invocation_service.invoke(invocation)
         return invocation.future
 
     def try_put(self, key, value, timeout=0):

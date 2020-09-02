@@ -19,7 +19,7 @@ class Proxy(object):
         self.service_name = service_name
         self.name = name
         self._client = client
-        self._invoker = client.invocation_service
+        self._invocation_service = client.invocation_service
         self._to_object = client.serialization_service.to_object
         self._to_data = client.serialization_service.to_data
         self._register_listener = client.listener_service.register_listener
@@ -43,23 +43,23 @@ class Proxy(object):
 
     def _invoke(self, request, response_handler=_no_op_response_handler):
         invocation = Invocation(request, response_handler=response_handler)
-        self._invoker.invoke(invocation)
+        self._invocation_service.invoke(invocation)
         return invocation.future
 
     def _invoke_on_target(self, request, uuid, response_handler=_no_op_response_handler):
         invocation = Invocation(request, uuid=uuid, response_handler=response_handler)
-        self._invoker.invoke(invocation)
+        self._invocation_service.invoke(invocation)
         return invocation.future
 
     def _invoke_on_key(self, request, key_data, response_handler=_no_op_response_handler):
         partition_id = self._client.partition_service.get_partition_id(key_data)
         invocation = Invocation(request, partition_id=partition_id, response_handler=response_handler)
-        self._invoker.invoke(invocation)
+        self._invocation_service.invoke(invocation)
         return invocation.future
 
     def _invoke_on_partition(self, request, partition_id, response_handler=_no_op_response_handler):
         invocation = Invocation(request, partition_id=partition_id, response_handler=response_handler)
-        self._invoker.invoke(invocation)
+        self._invocation_service.invoke(invocation)
         return invocation.future
 
     def blocking(self):
@@ -81,7 +81,7 @@ class PartitionSpecificProxy(Proxy):
 
     def _invoke(self, request, response_handler=_no_op_response_handler):
         invocation = Invocation(request, partition_id=self._partition_id, response_handler=response_handler)
-        self._invoker.invoke(invocation)
+        self._invocation_service.invoke(invocation)
         return invocation.future
 
 
