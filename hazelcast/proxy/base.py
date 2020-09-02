@@ -19,11 +19,11 @@ class Proxy(object):
         self.service_name = service_name
         self.name = name
         self._client = client
-        self._invoker = client.invoker
+        self._invoker = client.invocation_service
         self._to_object = client.serialization_service.to_object
         self._to_data = client.serialization_service.to_data
-        self._register_listener = client.listener.register_listener
-        self._deregister_listener = client.listener.deregister_listener
+        self._register_listener = client.listener_service.register_listener
+        self._deregister_listener = client.listener_service.deregister_listener
         self._is_smart = client.config.network.smart_routing
 
     def destroy(self):
@@ -33,7 +33,7 @@ class Proxy(object):
         :return: (bool), ``true`` if this proxy is deleted successfully, ``false`` otherwise.
         """
         self._on_destroy()
-        return self._client.proxy.destroy_proxy(self.service_name, self.name)
+        return self._client.proxy_manager.destroy_proxy(self.service_name, self.name)
 
     def _on_destroy(self):
         pass
@@ -97,7 +97,7 @@ class TransactionalProxy(object):
 
     def _invoke(self, request, response_handler=_no_op_response_handler):
         invocation = Invocation(request, connection=self.transaction.connection, response_handler=response_handler)
-        self.transaction.client.invoker.invoke(invocation)
+        self.transaction.client.invocation_service.invoke(invocation)
         return invocation.future
 
     def __repr__(self):

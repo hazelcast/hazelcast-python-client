@@ -38,7 +38,7 @@ class SSLTest(HazelcastTestCase):
         client = HazelcastClient(get_ssl_config(cluster.id, True,
                                                 get_abs_path(self.current_directory, "server1-cert.pem"),
                                                 protocol=PROTOCOL.TLSv1))
-        self.assertTrue(client.lifecycle.live)
+        self.assertTrue(client.lifecycle_service.running)
         client.shutdown()
 
     def test_ssl_enabled_trust_default_certificates(self):
@@ -47,7 +47,7 @@ class SSLTest(HazelcastTestCase):
         cluster.start_member()
 
         client = HazelcastClient(get_ssl_config(cluster.id, True, protocol=PROTOCOL.TLSv1))
-        self.assertTrue(client.lifecycle.live)
+        self.assertTrue(client.lifecycle_service.running)
         client.shutdown()
 
     def test_ssl_enabled_dont_trust_self_signed_certificates(self):
@@ -79,7 +79,7 @@ class SSLTest(HazelcastTestCase):
                                                 protocol=PROTOCOL.TLSv1,
                                                 ciphers="DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA:DHE-RSA-DES-"
                                                         "CBC3-SHA:DHE-RSA-DES-CBC3-SHA:DHE-DSS-DES-CBC3-SHA"))
-        self.assertTrue(client.lifecycle.live)
+        self.assertTrue(client.lifecycle_service.running)
         client.shutdown()
 
     def test_ssl_enabled_with_invalid_ciphers(self):

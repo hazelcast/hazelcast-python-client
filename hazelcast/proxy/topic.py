@@ -28,7 +28,7 @@ class Topic(PartitionSpecificProxy):
         request = codec.encode_request(self.name, self._is_smart)
 
         def handle(item, publish_time, uuid):
-            member = self._client.cluster.get_member(uuid)
+            member = self._client.cluster_service.get_member(uuid)
             item_event = TopicMessage(self.name, item, publish_time, member, self._to_object)
             on_message(item_event)
 

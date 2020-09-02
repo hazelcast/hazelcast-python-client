@@ -46,7 +46,7 @@ class ClientTest(HazelcastTestCase):
             return event_collector
 
         collector = lifecycle_event_collector()
-        client1.lifecycle.add_listener(collector)
+        client1.lifecycle_service.add_listener(collector)
 
         config2 = ClientConfig()
         config2.cluster_name = cluster.id

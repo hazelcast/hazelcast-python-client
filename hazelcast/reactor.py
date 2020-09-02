@@ -11,7 +11,7 @@ from collections import deque
 from functools import total_ordering
 
 from hazelcast import six
-from hazelcast.connection import Connection, BUFFER_SIZE
+from hazelcast.connection import Connection
 from hazelcast.core import PROTOCOL, Address
 from hazelcast.exception import HazelcastError
 from hazelcast.future import Future
@@ -117,9 +117,12 @@ class AsyncoreReactor(object):
                 return
 
 
+_BUFFER_SIZE = 128000
+
+
 class AsyncoreConnection(Connection, asyncore.dispatcher):
     sent_protocol_bytes = False
-    read_buffer_size = BUFFER_SIZE
+    read_buffer_size = _BUFFER_SIZE
 
     def __init__(self, dispatcher_map, connection_manager, connection_id, address,
                  network_config, message_callback, logger_extras):
@@ -140,8 +143,8 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         # set tcp no delay
         self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         # set socket buffer
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, BUFFER_SIZE)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, BUFFER_SIZE)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, _BUFFER_SIZE)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, _BUFFER_SIZE)
 
         for socket_option in network_config.socket_options:
             if socket_option.option is socket.SO_RCVBUF:
@@ -260,15 +263,22 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
     def _inner_close(self):
         asyncore.dispatcher.close(self)
 
+    def __repr__(self):
+        return "Connection(id=%s, live=%s, remote_address=%s)" % (self._id, self.live, self.remote_address)
+
+    def __str__(self):
+        return self.__repr__()
+
 
 @total_ordering
 class Timer(object):
-    canceled = False
+    __slots__ = ("end", "timer_ended_cb", "timer_canceled_cb", "canceled")
 
     def __init__(self, end, timer_ended_cb, timer_canceled_cb):
         self.end = end
         self.timer_ended_cb = timer_ended_cb
         self.timer_canceled_cb = timer_canceled_cb
+        self.canceled = False
 
     def __eq__(self, other):
         return self.end == other.end

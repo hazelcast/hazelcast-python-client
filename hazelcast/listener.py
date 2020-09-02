@@ -45,7 +45,7 @@ class ListenerService(object):
         self._event_handlers = {}
 
     def start(self):
-        self._invocation_service = self._client.invoker
+        self._invocation_service = self._client.invocation_service
         self._client.connection_manager.add_listener(self._connection_added, self._connection_removed)
 
     def register_listener(self, registration_request, decode_register_response, encode_deregister_request, handler):
@@ -88,7 +88,7 @@ class ListenerService(object):
                     self.remove_event_handler(event_registration.correlation_id)
                     listener_registration.connection_registrations.pop(connection)
                 except:
-                    if connection.live():
+                    if connection.live:
                         successful = False
                         logger.warning("Deregistration for listener with ID %s has failed to address %s ",
                                        user_registration_id, "address", exc_info=True, extra=self._logger_extras)
@@ -154,7 +154,7 @@ class ClusterViewListenerService(object):
         self._client = client
         self._connection_manager = client.connection_manager
         self._partition_service = client.partition_service
-        self._cluster_service = client.cluster
+        self._cluster_service = client.cluster_service
         self._listener_added_connection = None
 
     def start(self):
@@ -182,7 +182,7 @@ class ClusterViewListenerService(object):
         self._listener_added_connection = connection
         request = client_add_cluster_view_listener_codec.encode_request()
         invocation = Invocation(request, connection=connection, event_handler=self._handler(connection), urgent=True)
-        self._client.invoker.invoke(invocation)
+        self._client.invocation_service.invoke(invocation)
 
         def callback(f):
             try:

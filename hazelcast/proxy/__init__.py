@@ -63,7 +63,7 @@ class ProxyManager(object):
         if create_on_remote:
             request = client_create_proxy_codec.encode_request(name=name, service_name=service_name)
             invocation = Invocation(request)
-            self._client.invoker.invoke(invocation)
+            self._client.invocation_service.invoke(invocation)
             invocation.future.result()
 
         return _proxy_init[service_name](client=self._client, service_name=service_name, name=name, **kwargs)
@@ -75,7 +75,7 @@ class ProxyManager(object):
             if destroy_on_remote:
                 request = client_destroy_proxy_codec.encode_request(name=name, service_name=service_name)
                 invocation = Invocation(request)
-                self._client.invoker.invoke(invocation)
+                self._client.invocation_service.invoke(invocation)
                 invocation.future.result()
             return True
         except KeyError:
@@ -101,8 +101,8 @@ class ProxyManager(object):
         def encode_remove_listener(registration_id):
             return client_remove_distributed_object_listener_codec.encode_request(registration_id)
 
-        return self._client.listener.register_listener(request, decode_add_listener,
-                                                       encode_remove_listener, event_handler)
+        return self._client.listener_service.register_listener(request, decode_add_listener,
+                                                               encode_remove_listener, event_handler)
 
     def remove_distributed_object_listener(self, registration_id):
-        return self._client.listener.deregister_listener(registration_id)
+        return self._client.listener_service.deregister_listener(registration_id)

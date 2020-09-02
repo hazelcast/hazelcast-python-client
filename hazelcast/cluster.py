@@ -10,10 +10,6 @@ from hazelcast.util import check_not_none
 
 logger = logging.getLogger(__name__)
 
-# Membership Event Types
-MEMBER_ADDED = 1
-MEMBER_REMOVED = 2
-
 
 class _MemberListSnapshot(object):
     __slots__ = ("version", "members")
@@ -24,6 +20,10 @@ class _MemberListSnapshot(object):
 
 
 class ClientInfo(object):
+    """
+    Local information of the client.
+    """
+
     __slots__ = ("uuid", "address", "name", "labels")
 
     def __init__(self, client_uuid, address, name, labels):
@@ -237,20 +237,73 @@ class ClusterService(object):
         return _MemberListSnapshot(version, new_members)
 
 
-class RandomLoadBalancer(object):
-    """
-    RandomLoadBalancer make the Client send operations randomly on members not to increase the load on a specific
-    member.
-    """
+class AbstractLoadBalancer(object):
+    """Load balancer allows you to send operations to one of a number of endpoints (Members).
+    It is up to the implementation to use different load balancing policies.
 
-    def __init__(self, cluster):
-        self._cluster = cluster
+    If the client is configured with smart routing,
+    only the operations that are not key based will be routed to the endpoint
+    returned by the load balancer. If it is not, the load balancer will not be used.
+    """
+    def __init__(self):
+        self._cluster_service = None
+        self._members = []
+
+    def init(self, cluster_service, config):
+        """
+        Initializes the load balancer.
+
+        :param cluster_service: (:class:`~hazelcast.cluster.ClusterService`), The cluster service to select members from
+        :param config: (:class:`~hazelcast.config.ClientConfig`), The client config
+        :return:
+        """
+        self._cluster_service = cluster_service
+        cluster_service.add_listener(self._listener, self._listener, True)
 
     def next(self):
-        try:
-            return random.choice(self._cluster.get_members())
-        except IndexError:
+        """
+        Returns the next member to route to.
+        :return: (:class:`~hazelcast.core.Member`), Returns the next member or None if no member is available
+        """
+        raise NotImplementedError("next")
+
+    def _listener(self, _):
+        self._members = self._cluster_service.get_members()
+
+
+class RoundRobinLB(AbstractLoadBalancer):
+    """A load balancer implementation that relies on using round robin
+    to a next member to send a request to.
+
+    Round robin is done based on best effort basis, the order of members for concurrent calls to
+    the next() is not guaranteed.
+    """
+
+    def __init__(self):
+        super(RoundRobinLB, self).__init__()
+        self._idx = 0
+
+    def next(self):
+        members = self._members
+        if not members:
             return None
+
+        n = len(members)
+        idx = self._idx % n
+        self._idx += 1
+        return members[idx]
+
+
+class RandomLB(AbstractLoadBalancer):
+    """A load balancer that selects a random member to route to.
+    """
+
+    def next(self):
+        members = self._members
+        if not members:
+            return None
+        idx = random.randrange(0, len(members))
+        return members[idx]
 
 
 class VectorClock(object):

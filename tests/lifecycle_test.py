@@ -36,7 +36,7 @@ class LifecycleTest(HazelcastTestCase):
         config = ClientConfig()
         config.cluster_name = self.cluster.id
         client = self.create_client(config)
-        client.lifecycle.add_listener(collector)
+        client.lifecycle_service.add_listener(collector)
         client.shutdown()
 
         self.assertEqual(collector.events,
@@ -49,7 +49,7 @@ class LifecycleTest(HazelcastTestCase):
         config = ClientConfig()
         config.cluster_name = self.cluster.id
         client = self.create_client(config)
-        client.lifecycle.add_listener(collector)
+        client.lifecycle_service.add_listener(collector)
         member.shutdown()
         self.assertEqual(collector.events, [LifecycleState.DISCONNECTED])
         client.shutdown()
@@ -61,8 +61,8 @@ class LifecycleTest(HazelcastTestCase):
         config = ClientConfig()
         config.cluster_name = self.cluster.id
         client = self.create_client(config)
-        registration_id = client.lifecycle.add_listener(collector)
-        client.lifecycle.remove_listener(registration_id)
+        registration_id = client.lifecycle_service.add_listener(collector)
+        client.lifecycle_service.remove_listener(registration_id)
         client.shutdown()
 
         self.assertEqual(collector.events, [])

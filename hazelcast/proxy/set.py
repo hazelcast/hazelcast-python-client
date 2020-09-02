@@ -62,7 +62,7 @@ class Set(PartitionSpecificProxy):
 
         def handle_event_item(item, uuid, event_type):
             item = item if include_value else None
-            member = self._client.cluster.get_member(uuid)
+            member = self._client.cluster_service.get_member(uuid)
 
             item_event = ItemEvent(self.name, item, event_type, member, self._to_object)
             if event_type == ItemEventType.added:

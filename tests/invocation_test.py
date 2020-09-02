@@ -16,7 +16,7 @@ class InvocationTest(SingleMemberTestCase):
 
     def test_invocation_timeout(self):
         request = OutboundMessage(bytearray(22), True)
-        invocation_service = self.client.invoker
+        invocation_service = self.client.invocation_service
         invocation = Invocation(request, partition_id=1)
 
         def mock(*args):

@@ -33,13 +33,13 @@ class ClientConfig(object):
         """Name of the client"""
 
         self.cluster_name = _DEFAULT_CLUSTER_NAME
+        """Name of the cluster to connect to. By default, set to `dev`."""
 
         self.network = ClientNetworkConfig()
         """The network configuration for addresses to connect, smart-routing, socket-options..."""
-        """ Lifecycle Listeners, an array of Functions of f(state)"""
-        """Flake ID generator configuration which maps "config-name" : FlakeIdGeneratorConfig """
 
         self.connection_strategy = ConnectionStrategyConfig()
+        """Connection strategy config of the client"""
 
         self.serialization = SerializationConfig()
         """Hazelcast serialization configuration"""
@@ -57,8 +57,10 @@ class ClientConfig(object):
         """Membership listeners, an array of tuple (member_added, member_removed, fire_for_existing)"""
 
         self.lifecycle_listeners = []
+        """ Lifecycle Listeners, an array of Functions of f(state)"""
 
         self.flake_id_generators = {}
+        """Flake ID generator configuration which maps "config-name" : FlakeIdGeneratorConfig """
 
         self.logger_config = LoggerConfig()
         """Logger configuration."""
@@ -210,8 +212,10 @@ class SocketOption(object):
     def __init__(self, level, option, value):
         self.level = level
         """Option level. See the Unix manual for detail."""
+
         self.option = option
         """The actual socket option. The actual socket option."""
+
         self.value = value
         """Socket option value. The value argument can either be an integer or a string"""
 
@@ -227,6 +231,7 @@ class SerializationConfig(object):
         Portable version will be used to differentiate two versions of the same class that have changes on the class,
         like adding/removing a field or changing a type of a field.
         """
+
         self.data_serializable_factories = {}
         """
         Dictionary of factory-id and corresponding IdentifiedDataserializable factories. A Factory is a simple
@@ -238,6 +243,7 @@ class SerializationConfig(object):
             >>> serialization_config.data_serializable_factories[FACTORY_ID] = my_factory
 
         """
+
         self.portable_factories = {}
         """
         Dictionary of factory-id and corresponding portable factories. A Factory is a simple dictionary with entries of
@@ -248,20 +254,25 @@ class SerializationConfig(object):
             >>> portable_factory = {PortableClass_0.CLASS_ID : PortableClass_0, PortableClass_1.CLASS_ID : PortableClass_1}
             >>> serialization_config.portable_factories[FACTORY_ID] = portable_factory
         """
+
         self.class_definitions = set()
         """
         Set of all Portable class definitions.
         """
+
         self.check_class_def_errors = True
         """Configured Portable Class definitions should be validated for errors or not."""
+
         self.is_big_endian = True
         """Hazelcast Serialization is big endian or not."""
+
         self.default_integer_type = INTEGER_TYPE.INT
         """
         Python has variable length int/long type. In order to match this with static fixed length Java server, this option
         defines the length of the int/long.
         One of the values of :const:`INTEGER_TYPE` can be assigned. Please see :const:`INTEGER_TYPE` documentation for details of the options.
         """
+
         self._global_serializer = None
         self._custom_serializers = {}
 
@@ -448,8 +459,18 @@ class ConnectionStrategyConfig(object):
 
     def __init__(self):
         self.async_start = False
+        """Enables non-blocking start mode of HazelcastClient. When set to True, the client 
+        creation will not wait to connect to cluster. The client instance will throw exceptions
+        until it connects to cluster and becomes ready. If set to False, HazelcastClient will block
+        until a cluster connection established and it is ready to use the client instance.
+        By default, set to False.
+        """
+
         self.reconnect_mode = RECONNECT_MODE.ON
+        """Defines how a client reconnects to cluster after a disconnect."""
+
         self.connection_retry = ConnectionRetryConfig()
+        """Connection retry config to be used by the client."""
 
 
 _DEFAULT_INITIAL_BACKOFF = 1
@@ -460,12 +481,37 @@ _DEFAULT_JITTER = 0
 
 
 class ConnectionRetryConfig(object):
+    """Connection retry config controls the period among connection establish retries
+    and defines when the client should give up retrying. Supports exponential behaviour
+    with jitter for wait periods.
+    """
+
     def __init__(self):
         self.initial_backoff = _DEFAULT_INITIAL_BACKOFF
+        """Defines wait period in seconds after the first failure before retrying.
+        Must be non-negative. By default, set to 1.
+        """
+
         self.max_backoff = _DEFAULT_MAX_BACKOFF
-        self.multiplier = _DEFAULT_MULTIPLIER
+        """Defines an upper bound for the backoff interval in seconds. Must be non-negative. 
+        By default, set to 30 seconds.
+        """
+
         self.cluster_connect_timeout = _DEFAULT_CLUSTER_CONNECT_TIMEOUT
+        """Defines timeout value in seconds for the client to give up a connection
+        attempt to the cluster. Must be non-negative. By default, set to 20 seconds.
+        """
+
+        self.multiplier = _DEFAULT_MULTIPLIER
+        """Defines the factor with which to multiply backoff after a failed retry.
+        Must be greater than or equal to 1. By default, set to 1.
+        """
+
         self.jitter = _DEFAULT_JITTER
+        """Defines how much to randomize backoffs. At each iteration the calculated
+        back-off is randomized via following method in pseudo-code
+        Random(-jitter * current_backoff, jitter * current_backoff).
+        Must be in range [0.0, 1.0]. By default, set to `0` (no randomization)."""
 
 
 class SSLConfig(object):
@@ -587,6 +633,7 @@ class ClientCloudConfig(object):
     def __init__(self):
         self.enabled = False
         """Enables/disables cloud config."""
+
         self.discovery_token = ""
         """Hazelcast Cloud Discovery token of your cluster."""
 
@@ -606,6 +653,7 @@ class LoggerConfig(object):
         ``Configuration dictionary schema`` described in the logging 
         module of the standard library.
         """
+
         self.level = logging.INFO
         """
         Sets the logging level for the default logging

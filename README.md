@@ -1735,7 +1735,7 @@ The `ClusterService` class exposes an `add_listener()` method that allows one or
 The following is a membership listener registration by using the `add_listener()` method.
 
 ```python
-client.cluster.add_listener(member_added=lambda m: print("Member Added: The address is {}".format(m.address)))
+client.cluster_service.add_listener(member_added=lambda m: print("Member Added: The address is {}".format(m.address)))
 ```
 
 #### 7.5.1.2. Listening for Distributed Object Events

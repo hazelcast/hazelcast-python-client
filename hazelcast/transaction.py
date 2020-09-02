@@ -111,7 +111,7 @@ class Transaction(object):
                                                               transaction_type=self.transaction_type,
                                                               thread_id=self.thread_id)
             invocation = Invocation(request, connection=self.connection, response_handler=lambda m: m)
-            self.client.invoker.invoke(invocation)
+            self.client.invocation_service.invoke(invocation)
             response = invocation.future.result()
             self.id = transaction_create_codec.decode_response(response)
             self.state = _STATE_ACTIVE
@@ -130,7 +130,7 @@ class Transaction(object):
             self._check_timeout()
             request = transaction_commit_codec.encode_request(self.id, self.thread_id)
             invocation = Invocation(request, connection=self.connection)
-            self.client.invoker.invoke(invocation)
+            self.client.invocation_service.invoke(invocation)
             invocation.future.result()
             self.state = _STATE_COMMITTED
         except:
@@ -150,7 +150,7 @@ class Transaction(object):
             if self.state != _STATE_PARTIAL_COMMIT:
                 request = transaction_rollback_codec.encode_request(self.id, self.thread_id)
                 invocation = Invocation(request, connection=self.connection)
-                self.client.invoker.invoke(invocation)
+                self.client.invocation_service.invoke(invocation)
                 invocation.future.result()
             self.state = _STATE_ROLLED_BACK
         finally:

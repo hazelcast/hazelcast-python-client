@@ -129,7 +129,7 @@ class ConnectionStrategyTest(HazelcastTestCase):
         self.rc.startMember(self.cluster.id)
 
         connected_collector = collector(LifecycleState.CONNECTED)
-        self.client.lifecycle.add_listener(connected_collector)
+        self.client.lifecycle_service.add_listener(connected_collector)
         self.assertTrueEventually(lambda: self.assertEqual(1, len(connected_collector.events)))
 
         m.put(1, 1)

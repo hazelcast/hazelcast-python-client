@@ -1,6 +1,5 @@
 import logging
 
-from hazelcast import six
 from hazelcast.exception import ClientOfflineError
 from hazelcast.hash import hash_to_index
 

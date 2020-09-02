@@ -12,7 +12,7 @@ def member_removed(member):
 
 if __name__ == "__main__":
     client = hazelcast.HazelcastClient()
-    client.cluster.add_listener(member_added, member_removed, True)
+    client.cluster_service.add_listener(member_added, member_removed, True)
 
     # Add/Remove member now to see the listeners in action
     time.sleep(100)

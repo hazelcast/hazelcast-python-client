@@ -3,7 +3,7 @@ import logging.config
 import sys
 import json
 
-from hazelcast.cluster import ClusterService, RandomLoadBalancer
+from hazelcast.cluster import ClusterService, RoundRobinLB
 from hazelcast.config import ClientConfig, ClientProperties
 from hazelcast.connection import ConnectionManager, DefaultAddressProvider
 from hazelcast.core import DistributedObjectInfo
@@ -32,49 +32,49 @@ class HazelcastClient(object):
     """
     Hazelcast Client.
     """
-    CLIENT_ID = AtomicInteger()
-    _config = None
+    _CLIENT_ID = AtomicInteger()
 
     def __init__(self, config=None):
         self.config = config or ClientConfig()
         self.properties = ClientProperties(self.config.get_properties())
-        self.id = HazelcastClient.CLIENT_ID.get_and_increment()
+        self._id = HazelcastClient._CLIENT_ID.get_and_increment()
         self.name = self._create_client_name()
         self._init_logger()
         self._logger_extras = {"client_name": self.name, "cluster_name": self.config.cluster_name}
-        self.lifecycle = LifecycleService(self, self._logger_extras)
+        self.lifecycle_service = LifecycleService(self, self._logger_extras)
         self.reactor = AsyncoreReactor(self._logger_extras)
         self._address_provider = self._create_address_provider()
         self.connection_manager = ConnectionManager(self, self.reactor.connection_factory, self._address_provider)
-        self.cluster = ClusterService(self)
-        self.load_balancer = RandomLoadBalancer(self.cluster)
+        self.cluster_service = ClusterService(self)
+        self.load_balancer = self._init_load_balancer(config)
         self.partition_service = PartitionService(self)
-        self.listener = ListenerService(self)
-        self.invoker = InvocationService(self)
-        self.proxy = ProxyManager(self)
+        self.listener_service = ListenerService(self)
+        self.invocation_service = InvocationService(self)
+        self.proxy_manager = ProxyManager(self)
         self.serialization_service = SerializationServiceV1(serialization_config=self.config.serialization)
-        self.transaction_manager = TransactionManager(self)
+        self._transaction_manager = TransactionManager(self)
         self.lock_reference_id_generator = AtomicInteger(1)
         self.near_cache_manager = NearCacheManager(self)
-        self.statistics = Statistics(self)
-        self.cluster_view_listener = ClusterViewListenerService(self)
+        self._statistics = Statistics(self)
+        self._cluster_view_listener = ClusterViewListenerService(self)
         self._start()
 
     def _start(self):
         self.reactor.start()
         try:
-            self.lifecycle.start()
+            self.lifecycle_service.start()
+            self.load_balancer.init(self.cluster_service, self.config)
             membership_listeners = self.config.membership_listeners
-            self.cluster.start(membership_listeners)
-            self.cluster_view_listener.start()
+            self.cluster_service.start(membership_listeners)
+            self._cluster_view_listener.start()
             self.connection_manager.start()
             connection_strategy = self.config.connection_strategy
             if not connection_strategy.async_start:
-                self.cluster.wait_initial_member_list_fetched()
+                self.cluster_service.wait_initial_member_list_fetched()
                 self.connection_manager.connect_to_all_cluster_members()
 
-            self.listener.start()
-            self.statistics.start()
+            self.listener_service.start()
+            self._statistics.start()
         except:
             self.shutdown()
             raise
@@ -87,7 +87,7 @@ class HazelcastClient(object):
         :param name: (str), name of the Executor proxy.
         :return: (:class:`~hazelcast.proxy.executor.Executor`), Executor proxy for the given name.
         """
-        return self.proxy.get_or_create(EXECUTOR_SERVICE, name)
+        return self.proxy_manager.get_or_create(EXECUTOR_SERVICE, name)
 
     def get_flake_id_generator(self, name):
         """
@@ -96,7 +96,7 @@ class HazelcastClient(object):
         :param name: (str), name of the FlakeIdGenerator proxy.
         :return: (:class:`~hazelcast.proxy.flake_id_generator.FlakeIdGenerator`), FlakeIdGenerator proxy for the given name
         """
-        return self.proxy.get_or_create(FLAKE_ID_GENERATOR_SERVICE, name)
+        return self.proxy_manager.get_or_create(FLAKE_ID_GENERATOR_SERVICE, name)
 
     def get_queue(self, name):
         """
@@ -105,7 +105,7 @@ class HazelcastClient(object):
         :param name: (str), name of the distributed queue.
         :return: (:class:`~hazelcast.proxy.queue.Queue`), distributed queue instance with the specified name.
         """
-        return self.proxy.get_or_create(QUEUE_SERVICE, name)
+        return self.proxy_manager.get_or_create(QUEUE_SERVICE, name)
 
     def get_list(self, name):
         """
@@ -114,7 +114,7 @@ class HazelcastClient(object):
         :param name: (str), name of the distributed list.
         :return: (:class:`~hazelcast.proxy.list.List`), distributed list instance with the specified name.
         """
-        return self.proxy.get_or_create(LIST_SERVICE, name)
+        return self.proxy_manager.get_or_create(LIST_SERVICE, name)
 
     def get_map(self, name):
         """
@@ -123,7 +123,7 @@ class HazelcastClient(object):
         :param name: (str), name of the distributed map.
         :return: (:class:`~hazelcast.proxy.map.Map`), distributed map instance with the specified name.
         """
-        return self.proxy.get_or_create(MAP_SERVICE, name)
+        return self.proxy_manager.get_or_create(MAP_SERVICE, name)
 
     def get_multi_map(self, name):
         """
@@ -132,7 +132,7 @@ class HazelcastClient(object):
         :param name: (str), name of the distributed MultiMap.
         :return: (:class:`~hazelcast.proxy.multi_map.MultiMap`), distributed MultiMap instance with the specified name.
         """
-        return self.proxy.get_or_create(MULTI_MAP_SERVICE, name)
+        return self.proxy_manager.get_or_create(MULTI_MAP_SERVICE, name)
 
     def get_pn_counter(self, name):
         """
@@ -141,7 +141,7 @@ class HazelcastClient(object):
         :param name: (str), name of the PN Counter.
         :return: (:class:`~hazelcast.proxy.pn_counter.PNCounter`), the PN Counter.
         """
-        return self.proxy.get_or_create(PN_COUNTER_SERVICE, name)
+        return self.proxy_manager.get_or_create(PN_COUNTER_SERVICE, name)
 
     def get_reliable_topic(self, name):
         """
@@ -150,7 +150,7 @@ class HazelcastClient(object):
         :param name: (str), name of the ReliableTopic.
         :return: (:class:`~hazelcast.proxy.reliable_topic.ReliableTopic`), the ReliableTopic.
         """
-        return self.proxy.get_or_create(RELIABLE_TOPIC_SERVICE, name)
+        return self.proxy_manager.get_or_create(RELIABLE_TOPIC_SERVICE, name)
 
     def get_replicated_map(self, name):
         """
@@ -159,7 +159,7 @@ class HazelcastClient(object):
         :param name: (str), name of the distributed ReplicatedMap.
         :return: (:class:`~hazelcast.proxy.replicated_map.ReplicatedMap`), distributed ReplicatedMap instance with the specified name.
         """
-        return self.proxy.get_or_create(REPLICATED_MAP_SERVICE, name)
+        return self.proxy_manager.get_or_create(REPLICATED_MAP_SERVICE, name)
 
     def get_ringbuffer(self, name):
         """
@@ -169,7 +169,7 @@ class HazelcastClient(object):
         :return: (:class:`~hazelcast.proxy.ringbuffer.RingBuffer`), distributed RingBuffer instance with the specified name.
         """
 
-        return self.proxy.get_or_create(RINGBUFFER_SERVICE, name)
+        return self.proxy_manager.get_or_create(RINGBUFFER_SERVICE, name)
 
     def get_set(self, name):
         """
@@ -178,7 +178,7 @@ class HazelcastClient(object):
         :param name: (str), name of the distributed Set.
         :return: (:class:`~hazelcast.proxy.set.Set`), distributed Set instance with the specified name.
         """
-        return self.proxy.get_or_create(SET_SERVICE, name)
+        return self.proxy_manager.get_or_create(SET_SERVICE, name)
 
     def get_topic(self, name):
         """
@@ -187,7 +187,7 @@ class HazelcastClient(object):
         :param name: (str), name of the Topic.
         :return: (:class:`~hazelcast.proxy.topic.Topic`), the Topic.
         """
-        return self.proxy.get_or_create(TOPIC_SERVICE, name)
+        return self.proxy_manager.get_or_create(TOPIC_SERVICE, name)
 
     def new_transaction(self, timeout=120, durability=1, type=TWO_PHASE):
         """
@@ -201,7 +201,7 @@ class HazelcastClient(object):
         :param type: (Transaction Type), the transaction type which can be :const:`~hazelcast.transaction.TWO_PHASE` or :const:`~hazelcast.transaction.ONE_PHASE`
         :return: (:class:`~hazelcast.transaction.Transaction`), new Transaction associated with the current thread.
         """
-        return self.transaction_manager.new_transaction(timeout, durability, type)
+        return self._transaction_manager.new_transaction(timeout, durability, type)
 
     def add_distributed_object_listener(self, listener_func):
         """
@@ -210,7 +210,7 @@ class HazelcastClient(object):
         :param listener_func: Function to be called when a distributed object is created or destroyed.
         :return: (str), a registration id which is used as a key to remove the listener.
         """
-        return self.proxy.add_distributed_object_listener(listener_func)
+        return self.proxy_manager.add_distributed_object_listener(listener_func)
 
     def remove_distributed_object_listener(self, registration_id):
         """
@@ -218,7 +218,7 @@ class HazelcastClient(object):
         :param registration_id: (str), id of registered listener.
         :return: (bool), ``true`` if registration is removed, ``false`` otherwise.
         """
-        return self.proxy.remove_distributed_object_listener(registration_id)
+        return self.proxy_manager.remove_distributed_object_listener(registration_id)
 
     def get_distributed_objects(self):
         """
@@ -228,35 +228,35 @@ class HazelcastClient(object):
         """
         request = client_get_distributed_objects_codec.encode_request()
         invocation = Invocation(request, response_handler=lambda m: m)
-        self.invoker.invoke(invocation)
+        self.invocation_service.invoke(invocation)
         response = client_get_distributed_objects_codec.decode_response(invocation.future.result())
 
-        distributed_objects = self.proxy.get_distributed_objects()
+        distributed_objects = self.proxy_manager.get_distributed_objects()
         local_distributed_object_infos = set()
         for dist_obj in distributed_objects:
             local_distributed_object_infos.add(DistributedObjectInfo(dist_obj.service_name, dist_obj.name))
 
         for dist_obj_info in response:
             local_distributed_object_infos.discard(dist_obj_info)
-            self.proxy.get_or_create(dist_obj_info.service_name, dist_obj_info.name, create_on_remote=False)
+            self.proxy_manager.get_or_create(dist_obj_info.service_name, dist_obj_info.name, create_on_remote=False)
 
         for dist_obj_info in local_distributed_object_infos:
-            self.proxy.destroy_proxy(dist_obj_info.service_name, dist_obj_info.name, destroy_on_remote=False)
+            self.proxy_manager.destroy_proxy(dist_obj_info.service_name, dist_obj_info.name, destroy_on_remote=False)
 
-        return self.proxy.get_distributed_objects()
+        return self.proxy_manager.get_distributed_objects()
 
     def shutdown(self):
         """
         Shuts down this HazelcastClient.
         """
-        if self.lifecycle.live:
-            self.lifecycle.fire_lifecycle_event(LifecycleState.SHUTTING_DOWN)
-            self.lifecycle.shutdown()
+        if self.lifecycle_service.running:
+            self.lifecycle_service.fire_lifecycle_event(LifecycleState.SHUTTING_DOWN)
+            self.lifecycle_service.shutdown()
             self.near_cache_manager.destroy_near_caches()
             self.connection_manager.shutdown()
-            self.invoker.shutdown()
-            self.statistics.shutdown()
-            self.lifecycle.fire_lifecycle_event(LifecycleState.SHUTDOWN)
+            self.invocation_service.shutdown()
+            self._statistics.shutdown()
+            self.lifecycle_service.fire_lifecycle_event(LifecycleState.SHUTDOWN)
             self.reactor.shutdown()
             logger.info("Client shutdown.", extra=self._logger_extras)
 
@@ -297,7 +297,7 @@ class HazelcastClient(object):
     def _create_client_name(self):
         if self.config.client_name:
             return self.config.client_name
-        return "hz.client_" + str(self.id)
+        return "hz.client_" + str(self._id)
 
     def _init_logger(self):
         logger_config = self.config.logger_config
@@ -308,3 +308,10 @@ class HazelcastClient(object):
         else:
             logging.config.dictConfig(DEFAULT_LOGGING)
             logger.setLevel(logger_config.level)
+
+    @staticmethod
+    def _init_load_balancer(config):
+        load_balancer = config.load_balancer
+        if not load_balancer:
+            load_balancer = RoundRobinLB()
+        return load_balancer

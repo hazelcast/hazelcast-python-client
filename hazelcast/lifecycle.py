@@ -23,12 +23,12 @@ class LifecycleService(object):
     """
 
     def __init__(self, client, logger_extras):
-        self.live = False
+        self.running = False
         self._listeners = {}
         self._client = client
         self._logger_extras = logger_extras
 
-        for listener in self._client.config.lifecycle_listeners:
+        for listener in client.config.lifecycle_listeners:
             self.add_listener(listener)
 
         self._git_info = create_git_info()
@@ -72,12 +72,12 @@ class LifecycleService(object):
                     logger.exception("Exception in lifecycle listener", extra=self._logger_extras)
 
     def start(self):
-        if self.live:
+        if self.running:
             return
 
         self.fire_lifecycle_event(LifecycleState.STARTING)
-        self.live = True
+        self.running = True
         self.fire_lifecycle_event(LifecycleState.STARTED)
 
     def shutdown(self):
-        self.live = False
+        self.running = False

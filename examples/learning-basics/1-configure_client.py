@@ -12,7 +12,7 @@ if __name__ == "__main__":
 
     # Create a client using the configuration above
     client = hazelcast.HazelcastClient(config)
-    print("Client is {}".format(client.lifecycle.state))
+    print("Client is {}".format(client.lifecycle_service.state))
 
     # Disconnect the client and shutdown
     client.shutdown()

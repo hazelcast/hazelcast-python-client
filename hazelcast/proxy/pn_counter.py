@@ -250,7 +250,7 @@ class PNCounter(Proxy):
         return replica_addresses[random_replica_index]
 
     def _get_replica_addresses(self, excluded_addresses):
-        data_members = self._client.cluster.get_members(lambda member: not member.lite_member)
+        data_members = self._client.cluster_service.get_members(lambda member: not member.lite_member)
         replica_count = self._get_max_configured_replica_count()
 
         current_count = min(replica_count, len(data_members))

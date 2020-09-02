@@ -33,7 +33,7 @@ class MutualAuthenticationTest(HazelcastTestCase):
                                                 get_abs_path(self.current_directory, "client1-cert.pem"),
                                                 get_abs_path(self.current_directory, "client1-key.pem"),
                                                 protocol=PROTOCOL.TLSv1))
-        self.assertTrue(client.lifecycle.live)
+        self.assertTrue(client.lifecycle_service.running)
         client.shutdown()
 
     def test_ma_required_server_not_authenticated(self):
@@ -77,7 +77,7 @@ class MutualAuthenticationTest(HazelcastTestCase):
                                                 get_abs_path(self.current_directory, "client1-cert.pem"),
                                                 get_abs_path(self.current_directory, "client1-key.pem"),
                                                 protocol=PROTOCOL.TLSv1))
-        self.assertTrue(client.lifecycle.live)
+        self.assertTrue(client.lifecycle_service.running)
         client.shutdown()
 
     def test_ma_optional_server_not_authenticated(self):
@@ -127,7 +127,7 @@ class MutualAuthenticationTest(HazelcastTestCase):
         client = HazelcastClient(
             get_ssl_config(cluster.id, True, get_abs_path(self.current_directory, "server1-cert.pem"),
                            protocol=PROTOCOL.TLSv1))
-        self.assertTrue(client.lifecycle.live)
+        self.assertTrue(client.lifecycle_service.running)
         client.shutdown()
 
     def configure_cluster(self, is_ma_required):

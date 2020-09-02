@@ -131,7 +131,7 @@ class StatisticsTest(HazelcastTestCase):
         response = self._wait_for_statistics_collection(client_uuid)
 
         result = response.result.decode("utf-8")
-        info = client.cluster.get_local_client()
+        info = client.cluster_service.get_local_client()
         local_address = "%s:%s" % (info.address.host, info.address.port)
 
         # Check near cache and client statistics

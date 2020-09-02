@@ -3,7 +3,7 @@ import os
 
 from hazelcast.invocation import Invocation
 from hazelcast.protocol.codec import client_statistics_codec
-from hazelcast.util import calculate_version, current_time_in_millis, to_millis, to_nanos, current_time
+from hazelcast.util import current_time_in_millis, to_millis, to_nanos, current_time
 from hazelcast.config import ClientProperties
 from hazelcast.version import CLIENT_VERSION, CLIENT_TYPE
 from hazelcast import six
@@ -80,7 +80,7 @@ class Statistics(object):
     def _send_stats_to_owner(self, collection_timestamp, stats, connection):
         request = client_statistics_codec.encode_request(collection_timestamp, stats, bytearray(0))
         invocation = Invocation(request, connection=connection)
-        self._client.invoker.invoke(invocation)
+        self._client.invocation_service.invoke(invocation)
 
     def _add_runtime_and_os_stats(self, stats):
         os_and_runtime_stats = self._get_os_and_runtime_stats()

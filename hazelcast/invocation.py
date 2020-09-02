@@ -60,7 +60,7 @@ class InvocationService(object):
         self._is_redo_operation = client.config.network.redo_operation
         self._invocation_timeout = self._init_invocation_timeout()
         self._invocation_retry_pause = self._init_invocation_retry_pause()
-        self._listener_service = client.listener
+        self._listener_service = client.listener_service
 
         if client.config.network.smart_routing:
             self.invoke = self._invoke_smart
@@ -91,7 +91,7 @@ class InvocationService(object):
         invocation.set_response(message)
 
     def start(self):
-        self._listener_service = self._client.listener
+        self._listener_service = self._client.listener_service
 
     def shutdown(self):
         self._shutdown = True
@@ -208,7 +208,7 @@ class InvocationService(object):
             logger.debug("Got exception for request %s, error: %s" % (invocation.request, error),
                          extra=self._logger_extras)
 
-        if not self._client.lifecycle.live:
+        if not self._client.lifecycle_service.running:
             invocation.set_exception(HazelcastClientNotActiveError(), traceback)
             self._pending.pop(invocation.request.get_correlation_id(), None)
             return

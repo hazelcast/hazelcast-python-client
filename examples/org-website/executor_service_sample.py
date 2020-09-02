@@ -29,7 +29,7 @@ if __name__ == "__main__":
     # Get the Distributed Executor Service
     ex = hz.get_executor("my-distributed-executor")
     # Get the an Hazelcast Cluster Member
-    member = hz.cluster.get_member_list()[0]
+    member = hz.cluster_service.get_member_list()[0]
     # Submit the MessagePrinter Runnable to the first Hazelcast Cluster Member
     ex.execute_on_member(member, MessagePrinter("message to very first member of the cluster"))
     # Submit the MessagePrinter Runnable to all Hazelcast Cluster Members

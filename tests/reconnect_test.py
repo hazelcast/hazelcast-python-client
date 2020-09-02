@@ -51,7 +51,7 @@ class ReconnectTest(HazelcastTestCase):
         def listener(s):
             state[0] = s
 
-        client.lifecycle.add_listener(listener)
+        client.lifecycle_service.add_listener(listener)
 
         member.shutdown()
         self.assertTrueEventually(lambda: self.assertEqual(state[0], LifecycleState.DISCONNECTED))
@@ -77,7 +77,7 @@ class ReconnectTest(HazelcastTestCase):
         count = AtomicInteger()
 
         def assert_events():
-            if client.lifecycle.live:
+            if client.lifecycle_service.running:
                 while True:
                     try:
                         map.put("key-%d" % count.get_and_increment(), "value").result()
@@ -101,8 +101,8 @@ class ReconnectTest(HazelcastTestCase):
         new_member = self.cluster.start_member()
 
         def assert_member_list():
-            self.assertEqual(1, client.cluster.size())
-            self.assertEqual(new_member.uuid, str(client.cluster.get_members()[0].uuid))
+            self.assertEqual(1, client.cluster_service.size())
+            self.assertEqual(new_member.uuid, str(client.cluster_service.get_members()[0].uuid))
 
         self.assertTrueEventually(assert_member_list)
 
@@ -118,7 +118,7 @@ class ReconnectTest(HazelcastTestCase):
         old_member.shutdown()
 
         def assert_member_list():
-            self.assertEqual(1, client.cluster.size())
-            self.assertEqual(new_member.uuid, str(client.cluster.get_members()[0].uuid))
+            self.assertEqual(1, client.cluster_service.size())
+            self.assertEqual(new_member.uuid, str(client.cluster_service.get_members()[0].uuid))
 
         self.assertTrueEventually(assert_member_list)

@@ -1,4 +1,7 @@
-from hazelcast import ClientConfig
+import unittest
+
+from hazelcast import ClientConfig, HazelcastClient, six
+from hazelcast.cluster import RandomLB, RoundRobinLB
 from tests.base import HazelcastTestCase
 from tests.util import configure_logging
 
@@ -51,7 +54,7 @@ class ClusterTest(HazelcastTestCase):
         config = self.create_config()
         client = self.create_client(config)
 
-        client.cluster.add_listener(member_added, fire_for_existing=True)
+        client.cluster_service.add_listener(member_added, fire_for_existing=True)
 
         self.assertEqual(len(events), 1)
         self.assertEqual(str(events[0].uuid), member.uuid)
@@ -67,7 +70,7 @@ class ClusterTest(HazelcastTestCase):
         config = self.create_config()
         client = self.create_client(config)
 
-        client.cluster.add_listener(member_added, fire_for_existing=True)
+        client.cluster_service.add_listener(member_added, fire_for_existing=True)
 
         new_member = self.cluster.start_member()
 
@@ -90,7 +93,7 @@ class ClusterTest(HazelcastTestCase):
         config = self.create_config()
         client = self.create_client(config)
 
-        client.cluster.add_listener(member_removed=member_removed)
+        client.cluster_service.add_listener(member_removed=member_removed)
 
         member_to_remove.shutdown()
 
@@ -115,11 +118,99 @@ class ClusterTest(HazelcastTestCase):
         config = self.create_config()
         client = self.create_client(config)
 
-        self.assertEqual(1, len(client.cluster.get_members()))
+        self.assertEqual(1, len(client.cluster_service.get_members()))
 
     def test_cluster_service_get_members_with_selector(self):
         member = self.cluster.start_member()
         config = self.create_config()
         client = self.create_client(config)
 
-        self.assertEqual(0, len(client.cluster.get_members(lambda m: member.address != m.address)))
+        self.assertEqual(0, len(client.cluster_service.get_members(lambda m: member.address != m.address)))
+
+
+class _MockClusterService(object):
+    def __init__(self, members):
+        self._members = members
+
+    def add_listener(self, listener, *_):
+        for m in self._members:
+            listener(m)
+
+    def get_members(self):
+        return self._members
+
+
+class LoadBalancersTest(unittest.TestCase):
+    def test_random_lb_with_no_members(self):
+        cluster = _MockClusterService([])
+        lb = RandomLB()
+        lb.init(cluster, None)
+        self.assertIsNone(lb.next())
+
+    def test_round_robin_lb_with_no_members(self):
+        cluster = _MockClusterService([])
+        lb = RoundRobinLB()
+        lb.init(cluster, None)
+        self.assertIsNone(lb.next())
+
+    def test_random_lb_with_members(self):
+        cluster = _MockClusterService([0, 1, 2])
+        lb = RandomLB()
+        lb.init(cluster, None)
+        for _ in range(10):
+            self.assertTrue(0 <= lb.next() <= 2)
+
+    def test_round_robin_lb_with_members(self):
+        cluster = _MockClusterService([0, 1, 2])
+        lb = RoundRobinLB()
+        lb.init(cluster, None)
+        for i in range(10):
+            self.assertEqual(i % 3, lb.next())
+
+
+class LoadBalancersWithRealClusterTest(HazelcastTestCase):
+    @classmethod
+    def setUpClass(cls):
+        configure_logging()
+        cls.rc = cls.create_rc()
+        cls.cluster = cls.create_cluster(cls.rc, None)
+        cls.member1 = cls.cluster.start_member()
+        cls.member2 = cls.cluster.start_member()
+        cls.addresses = [cls.member1.address, cls.member2.address]
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.rc.terminateCluster(cls.cluster.id)
+        cls.rc.exit()
+
+    def test_random_load_balancer(self):
+        config = ClientConfig()
+        config.cluster_name = self.cluster.id
+        config.load_balancer = RandomLB()
+        client = HazelcastClient(config)
+        self.assertTrue(client.lifecycle_service.running)
+
+        lb = client.load_balancer
+        self.assertTrue(isinstance(lb, RandomLB))
+
+        six.assertCountEqual(self, self.addresses, list(map(lambda m: m.address, lb._members)))
+        for _ in range(10):
+            self.assertTrue(lb.next().address in self.addresses)
+
+        client.shutdown()
+
+    def test_round_robin_load_balancer(self):
+        config = ClientConfig()
+        config.cluster_name = self.cluster.id
+        config.load_balancer = RoundRobinLB()
+        client = HazelcastClient(config)
+        self.assertTrue(client.lifecycle_service.running)
+
+        lb = client.load_balancer
+        self.assertTrue(isinstance(lb, RoundRobinLB))
+
+        six.assertCountEqual(self, self.addresses, list(map(lambda m: m.address, lb._members)))
+        for i in range(10):
+            self.assertEqual(self.addresses[i % len(self.addresses)], lb.next().address)
+
+        client.shutdown()
