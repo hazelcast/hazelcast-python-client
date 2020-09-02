@@ -455,7 +455,7 @@ class MapTest(SingleMemberTestCase):
         self.map.set("key", "value")
 
         self.assertEqual(self.map.get("key"), "value")
-    
+
     def test_set_ttl(self):
         self.map.put("key", "value")
         self.map.set_ttl("key", 0.1)
