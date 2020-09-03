@@ -14,13 +14,11 @@ LifecycleState = enum(
 )
 
 
-logger = logging.getLogger(__name__)
-
-
 class LifecycleService(object):
     """
     LifecycleService allows you to shutdown, terminate, and listen to LifecycleEvent's on HazelcastInstances.
     """
+    logger = logging.getLogger("HazelcastClient.LifecycleService")
 
     def __init__(self, client, logger_extras):
         self.running = False
@@ -63,13 +61,13 @@ class LifecycleService(object):
 
         :param new_state: (Lifecycle State), the new state of the instance.
         """
-        logger.info(self._git_info + "HazelcastClient is %s", new_state, extra=self._logger_extras)
+        self.logger.info(self._git_info + "HazelcastClient is %s", new_state, extra=self._logger_extras)
         for on_state_change in six.itervalues(self._listeners):
             if on_state_change:
                 try:
                     on_state_change(new_state)
                 except:
-                    logger.exception("Exception in lifecycle listener", extra=self._logger_extras)
+                    self.logger.exception("Exception in lifecycle listener", extra=self._logger_extras)
 
     def start(self):
         if self.running:

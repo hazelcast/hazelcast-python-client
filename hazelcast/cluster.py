@@ -8,8 +8,6 @@ from hazelcast import six
 from hazelcast.exception import TargetDisconnectedError, IllegalStateError
 from hazelcast.util import check_not_none
 
-logger = logging.getLogger(__name__)
-
 
 class _MemberListSnapshot(object):
     __slots__ = ("version", "members")
@@ -51,6 +49,7 @@ class ClusterService(object):
     """Cluster service for Hazelcast clients.
     Allows to retrieve Hazelcast members of the cluster, e.g. by their Address or UUID.
     """
+    logger = logging.getLogger("HazelcastClient.ClusterService")
 
     def __init__(self, client):
         self._client = client
@@ -160,8 +159,8 @@ class ClusterService(object):
             raise IllegalStateError("Could not get initial member list from cluster!")
 
     def clear_member_list_version(self):
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("Resetting the member list version", extra=self._logger_extras)
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug("Resetting the member list version", extra=self._logger_extras)
 
         current = self._member_list_snapshot
         if current is not _EMPTY_SNAPSHOT:
@@ -169,8 +168,8 @@ class ClusterService(object):
 
     def handle_members_view_event(self, version, member_infos):
         snapshot = self._create_snapshot(version, member_infos)
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("Handling new snapshot with membership version: %s, member string: %s"
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug("Handling new snapshot with membership version: %s, member string: %s"
                          % (version, self._members_string(snapshot)), extra=self._logger_extras)
 
         current = self._member_list_snapshot
@@ -191,7 +190,7 @@ class ClusterService(object):
                     try:
                         handler(removed_member)
                     except:
-                        logger.exception("Exception in membership lister", extra=self._logger_extras)
+                        self.logger.exception("Exception in membership lister", extra=self._logger_extras)
 
         for added_member in additions:
             for handler, _ in six.itervalues(self._listeners):
@@ -199,7 +198,7 @@ class ClusterService(object):
                     try:
                         handler(added_member)
                     except:
-                        logger.exception("Exception in membership lister", extra=self._logger_extras)
+                        self.logger.exception("Exception in membership lister", extra=self._logger_extras)
 
     def _detect_membership_events(self, old, new):
         new_members = []
@@ -219,7 +218,7 @@ class ClusterService(object):
 
         if (len(new_members) + len(dead_members)) > 0:
             if len(new.members) > 0:
-                logger.info(self._members_string(new), extra=self._logger_extras)
+                self.logger.info(self._members_string(new), extra=self._logger_extras)
 
         return dead_members, new_members
 

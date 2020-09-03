@@ -2,7 +2,7 @@ import hazelcast
 
 from hazelcast import ClientConfig
 from hazelcast.serialization.api import Portable
-from hazelcast.serialization.predicate import SqlPredicate, and_, is_between, is_equal_to
+from hazelcast.serialization.predicate import sql, and_, is_between, is_equal_to
 
 
 class User(Portable):
@@ -31,7 +31,7 @@ class User(Portable):
         return self.CLASS_ID
 
     def __repr__(self):
-        return "User[username='{}', age={}, active={}]".format(self.username, self.age, self.active)
+        return "User(username=%s, age=%s, active=%s]" % (self.username, self.age, self.active)
 
 
 def generate_users(users):
@@ -40,25 +40,24 @@ def generate_users(users):
     users.put("Freddy", User("Freddy", 23, True))
 
 
-if __name__ == "__main__":
-    config = ClientConfig()
-    portable_factory = {User.CLASS_ID: User}
-    config.serialization.add_portable_factory(User.FACTORY_ID, portable_factory)
-    # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
-    hz = hazelcast.HazelcastClient(config)
-    # Get a Distributed Map called "users"
-    users = hz.get_map("users").blocking()
-    # Add some users to the Distributed Map
-    generate_users(users)
-    # Create a Predicate from a String (a SQL like Where clause)
-    sql_query = SqlPredicate("active AND age BETWEEN 18 AND 21)")
-    # Creating the same Predicate as above but with a builder
-    criteria_query = and_(is_equal_to("active", True), is_between("age", 18, 21))
-    # Get result collections using the two different Predicates
-    result1 = users.values(sql_query)
-    result2 = users.values(criteria_query)
-    # Print out the results
-    print(result1)
-    print(result2)
-    # Shutdown this Hazelcast Client
-    hz.shutdown()
+config = ClientConfig()
+portable_factory = {User.CLASS_ID: User}
+config.serialization.add_portable_factory(User.FACTORY_ID, portable_factory)
+# Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
+hz = hazelcast.HazelcastClient(config)
+# Get a Distributed Map called "users"
+users = hz.get_map("users").blocking()
+# Add some users to the Distributed Map
+generate_users(users)
+# Create a Predicate from a String (a SQL like Where clause)
+sql_query = sql("active AND age BETWEEN 18 AND 21)")
+# Creating the same Predicate as above but with a builder
+criteria_query = and_(is_equal_to("active", True), is_between("age", 18, 21))
+# Get result collections using the two different Predicates
+result1 = users.values(sql_query)
+result2 = users.values(criteria_query)
+# Print out the results
+print(result1)
+print(result2)
+# Shutdown this Hazelcast Client
+hz.shutdown()

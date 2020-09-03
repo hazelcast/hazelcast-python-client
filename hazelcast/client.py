@@ -25,14 +25,13 @@ from hazelcast.util import AtomicInteger, DEFAULT_LOGGING
 from hazelcast.discovery import HazelcastCloudAddressProvider, HazelcastCloudDiscovery
 from hazelcast.exception import IllegalStateError
 
-logger = logging.getLogger(__name__)
-
 
 class HazelcastClient(object):
     """
     Hazelcast Client.
     """
     _CLIENT_ID = AtomicInteger()
+    logger = logging.getLogger("HazelcastClient")
 
     def __init__(self, config=None):
         self.config = config or ClientConfig()
@@ -46,7 +45,7 @@ class HazelcastClient(object):
         self._address_provider = self._create_address_provider()
         self.connection_manager = ConnectionManager(self, self.reactor.connection_factory, self._address_provider)
         self.cluster_service = ClusterService(self)
-        self.load_balancer = self._init_load_balancer(config)
+        self.load_balancer = self._init_load_balancer(self.config)
         self.partition_service = PartitionService(self)
         self.listener_service = ListenerService(self)
         self.invocation_service = InvocationService(self)
@@ -78,7 +77,7 @@ class HazelcastClient(object):
         except:
             self.shutdown()
             raise
-        logger.info("Client started.", extra=self._logger_extras)
+        self.logger.info("Client started.", extra=self._logger_extras)
 
     def get_executor(self, name):
         """
@@ -258,7 +257,7 @@ class HazelcastClient(object):
             self._statistics.shutdown()
             self.lifecycle_service.fire_lifecycle_event(LifecycleState.SHUTDOWN)
             self.reactor.shutdown()
-            logger.info("Client shutdown.", extra=self._logger_extras)
+            self.logger.info("Client shutdown.", extra=self._logger_extras)
 
     def _create_address_provider(self):
         network_config = self.config.network
@@ -307,7 +306,7 @@ class HazelcastClient(object):
                 logging.config.dictConfig(json_config)
         else:
             logging.config.dictConfig(DEFAULT_LOGGING)
-            logger.setLevel(logger_config.level)
+            self.logger.setLevel(logger_config.level)
 
     @staticmethod
     def _init_load_balancer(config):

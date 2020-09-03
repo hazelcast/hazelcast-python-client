@@ -31,6 +31,7 @@ class LoggerConfigTest(HazelcastTestCase):
         self.assertIsNone(logger_config.config_file)
 
         config = ClientConfig()
+        config.cluster_name = self.cluster.id
         config.logger_config = logger_config
 
         client = HazelcastClient(config)
@@ -68,6 +69,7 @@ class LoggerConfigTest(HazelcastTestCase):
         self.assertIsNone(logger_config.config_file)
 
         config = ClientConfig()
+        config.cluster_name = self.cluster.id
         config.logger_config = logger_config
 
         client = HazelcastClient(config)
@@ -106,6 +108,7 @@ class LoggerConfigTest(HazelcastTestCase):
         self.assertEqual(config_path, logger_config.config_file)
 
         config = ClientConfig()
+        config.cluster_name = self.cluster.id
         config.logger_config = logger_config
 
         client = HazelcastClient(config)
@@ -135,8 +138,10 @@ class LoggerConfigTest(HazelcastTestCase):
         client.shutdown()
 
     def test_default_configuration_multiple_clients(self):
-        client1 = HazelcastClient()
-        client2 = HazelcastClient()
+        config = ClientConfig()
+        config.cluster_name = self.cluster.id
+        client1 = HazelcastClient(config)
+        client2 = HazelcastClient(config)
 
         out = StringIO()
 
@@ -156,6 +161,7 @@ class LoggerConfigTest(HazelcastTestCase):
 
     def test_same_custom_configuration_file_with_multiple_clients(self):
         config = ClientConfig()
+        config.cluster_name = self.cluster.id
 
         config_file = get_abs_path(self.CUR_DIR, "simple_config.json")
         config.logger_config.configuration_file = config_file
@@ -179,7 +185,9 @@ class LoggerConfigTest(HazelcastTestCase):
         client2.shutdown()
 
     def test_default_logger_output(self):
-        client = HazelcastClient()
+        config = ClientConfig()
+        config.cluster_name = self.cluster.id
+        client = HazelcastClient(config)
 
         out = StringIO()
 
@@ -204,6 +212,7 @@ class LoggerConfigTest(HazelcastTestCase):
 
     def test_custom_configuration_output(self):
         config = ClientConfig()
+        config.cluster_name = self.cluster.id
         config_file = get_abs_path(self.CUR_DIR, "detailed_config.json")
 
         config.logger_config.config_file = config_file

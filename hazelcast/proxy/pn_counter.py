@@ -10,8 +10,6 @@ from hazelcast.protocol.codec import pn_counter_add_codec, pn_counter_get_codec,
 from hazelcast.exception import NoDataMemberInClusterError
 from hazelcast.six.moves import range
 
-logger = logging.getLogger(__name__)
-
 
 class PNCounter(Proxy):
     """
@@ -221,11 +219,10 @@ class PNCounter(Proxy):
             self._update_observed_replica_timestamp(result["replica_timestamps"])
             delegated_future.set_result(result["value"])
         except Exception as ex:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.exception("Exception occurred while invoking operation on target %s, "
-                                 "choosing different target" % target,
-                                 extra={"client_name": self._client.name,
-                                        "cluster_name": self._client.config.cluster_name})
+            self.logger.exception("Exception occurred while invoking operation on target %s, "
+                                  "choosing different target" % target,
+                                  extra={"client_name": self._client.name,
+                                         "cluster_name": self._client.config.cluster_name})
             if excluded_addresses == PNCounter._EMPTY_ADDRESS_LIST:
                 excluded_addresses = []
 

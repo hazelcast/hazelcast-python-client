@@ -29,23 +29,22 @@ class Engineer(Portable):
         return self.CLASS_ID
 
 
-if __name__ == "__main__":
-    config = hazelcast.ClientConfig()
-    factory = {Engineer.CLASS_ID: Engineer}
-    config.serialization.add_portable_factory(Engineer.FACTORY_ID, factory)
+config = hazelcast.ClientConfig()
+factory = {Engineer.CLASS_ID: Engineer}
+config.serialization.add_portable_factory(Engineer.FACTORY_ID, factory)
 
-    client = hazelcast.HazelcastClient(config)
+client = hazelcast.HazelcastClient(config)
 
-    my_map = client.get_map("map")
+my_map = client.get_map("map")
 
-    engineer = Engineer("John Doe", 30, ["Python", "Java", "C#", "C++", "Node.js", "Go"])
+engineer = Engineer("John Doe", 30, ["Python", "Java", "C#", "C++", "Node.js", "Go"])
 
-    my_map.put("engineer1", engineer)
+my_map.put("engineer1", engineer)
 
-    returned_engineer = my_map.get("engineer1").result()
+returned_engineer = my_map.get("engineer1").result()
 
-    print("Name: {}\nAge: {}\nLanguages: {}".format(returned_engineer.name,
-                                                    returned_engineer.age,
-                                                    returned_engineer.languages))
+print("Name: {}\nAge: {}\nLanguages: {}".format(returned_engineer.name,
+                                                returned_engineer.age,
+                                                returned_engineer.languages))
 
-    client.shutdown()
+client.shutdown()

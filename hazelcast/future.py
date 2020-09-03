@@ -5,8 +5,6 @@ import threading
 from hazelcast.util import AtomicInteger
 from hazelcast import six
 
-logger = logging.getLogger(__name__)
-
 NONE_RESULT = object()
 
 
@@ -18,6 +16,7 @@ class Future(object):
     _exception = None
     _traceback = None
     _threading_locals = threading.local()
+    logger = logging.getLogger("HazelcastClient.Future")
 
     def __init__(self):
         self._callbacks = []
@@ -129,7 +128,7 @@ class Future(object):
         try:
             callback(self)
         except:
-            logger.exception("Exception when invoking callback")
+            self.logger.exception("Exception when invoking callback")
 
     def continue_with(self, continuation_func, *args):
         """

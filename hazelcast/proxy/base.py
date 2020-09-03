@@ -1,3 +1,5 @@
+import logging
+
 from hazelcast.future import make_blocking
 from hazelcast.invocation import Invocation
 from hazelcast.partition import string_partition_strategy
@@ -18,6 +20,7 @@ class Proxy(object):
     def __init__(self, client, service_name, name):
         self.service_name = service_name
         self.name = name
+        self.logger = logging.getLogger("HazelcastClient.%s(%s)" % (type(self).__name__, name))
         self._client = client
         self._invocation_service = client.invocation_service
         self._to_object = client.serialization_service.to_object

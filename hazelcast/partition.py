@@ -3,8 +3,6 @@ import logging
 from hazelcast.exception import ClientOfflineError
 from hazelcast.hash import hash_to_index
 
-logger = logging.getLogger(__name__)
-
 
 class _PartitionTable(object):
     __slots__ = ("connection", "version", "partitions")
@@ -22,6 +20,7 @@ class PartitionService(object):
     """
     Allows to retrieve information about the partition count, the partition owner or the partitionId of a key.
     """
+    logger = logging.getLogger("HazelcastClient.PartitionService")
 
     def __init__(self, client):
         self.partition_count = 0
@@ -33,10 +32,10 @@ class PartitionService(object):
         """Handles the incoming partition view event and updates the partition table
         if it is not empty, coming from a new connection or not stale.
         """
-        should_log = logger.isEnabledFor(logging.DEBUG)
+        should_log = self.logger.isEnabledFor(logging.DEBUG)
         if should_log:
-            logger.debug("Handling new partition table with version: %s" % version,
-                         extra=self._logger_extras)
+            self.logger.debug("Handling new partition table with version: %s" % version,
+                              extra=self._logger_extras)
 
         table = self._partition_table
         if not self._should_be_applied(connection, partitions, version, table, should_log):
@@ -87,22 +86,24 @@ class PartitionService(object):
     def _should_be_applied(self, connection, partitions, version, current, should_log):
         if not partitions:
             if should_log:
-                logger.debug("Partition view will not be applied since response is empty. "
-                             "Sending connection: %s, version: %s, current table: %s" % (connection, version, current),
-                             extra=self._logger_extras)
+                self.logger.debug("Partition view will not be applied since response is empty. "
+                                  "Sending connection: %s, version: %s, current table: %s"
+                                  % (connection, version, current),
+                                  extra=self._logger_extras)
             return False
 
         if connection != current.connection:
             if should_log:
-                logger.debug("Partition view event coming from a new connection. Old: %s, new: %s"
-                             % (current.connection, connection), extra=self._logger_extras)
+                self.logger.debug("Partition view event coming from a new connection. Old: %s, new: %s"
+                                  % (current.connection, connection), extra=self._logger_extras)
             return True
 
         if version <= current.version:
             if should_log:
-                logger.debug("Partition view will not be applied since response state version is older. "
-                             "Sending connection: %s, version: %s, current table: %s" % (connection, version, current),
-                             extra=self._logger_extras)
+                self.logger.debug("Partition view will not be applied since response state version is older. "
+                                  "Sending connection: %s, version: %s, current table: %s"
+                                  % (connection, version, current),
+                                  extra=self._logger_extras)
             return False
 
         return True

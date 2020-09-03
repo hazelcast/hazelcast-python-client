@@ -22,12 +22,11 @@ try:
 except ImportError:
     ssl = None
 
-logger = logging.getLogger(__name__)
-
 
 class AsyncoreReactor(object):
     _thread = None
     _is_live = False
+    logger = logging.getLogger("HazelcastClient.AsyncoreReactor")
 
     def __init__(self, logger_extras=None):
         self._logger_extras = logger_extras
@@ -41,7 +40,7 @@ class AsyncoreReactor(object):
         self._thread.start()
 
     def _loop(self):
-        logger.debug("Starting Reactor Thread", extra=self._logger_extras)
+        self.logger.debug("Starting Reactor Thread", extra=self._logger_extras)
         Future._threading_locals.is_reactor_thread = True
         while self._is_live:
             try:
@@ -49,13 +48,13 @@ class AsyncoreReactor(object):
                 self._check_timers()
             except select.error as err:
                 # TODO: parse error type to catch only error "9"
-                logger.warning("Connection closed by server", extra=self._logger_extras)
+                self.logger.warning("Connection closed by server", extra=self._logger_extras)
                 pass
             except:
-                logger.exception("Error in Reactor Thread", extra=self._logger_extras)
+                self.logger.exception("Error in Reactor Thread", extra=self._logger_extras)
                 # TODO: shutdown client
                 return
-        logger.debug("Reactor Thread exited. %s" % self._timers.qsize(), extra=self._logger_extras)
+        self.logger.debug("Reactor Thread exited. %s" % self._timers.qsize(), extra=self._logger_extras)
         self._cleanup_all_timers()
 
     def _check_timers(self):
@@ -201,7 +200,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
     def handle_connect(self):
         self.start_time = time.time()
-        logger.debug("Connected to %s", self.connected_address, extra=self._logger_extras)
+        self.logger.debug("Connected to %s", self.connected_address, extra=self._logger_extras)
 
     def handle_read(self):
         reader = self._reader
@@ -228,17 +227,17 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
                 self._write_queue.appendleft(data[sent:])
 
     def handle_close(self):
-        logger.warning("Connection closed by server", extra=self._logger_extras)
+        self.logger.warning("Connection closed by server", extra=self._logger_extras)
         self.close(None, IOError("Connection closed by server"))
 
     def handle_error(self):
         error = sys.exc_info()[1]
         if sys.exc_info()[0] is socket.error:
             if error.errno != errno.EAGAIN and error.errno != errno.EDEADLK:
-                logger.exception("Received error", extra=self._logger_extras)
+                self.logger.exception("Received error", extra=self._logger_extras)
                 self.close(None, IOError(error))
         else:
-            logger.exception("Received unexpected error: %s" % error, extra=self._logger_extras)
+            self.logger.exception("Received unexpected error: %s" % error, extra=self._logger_extras)
 
     def readable(self):
         return self.live and self.sent_protocol_bytes
@@ -250,7 +249,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
                 sent = self.send(buf)
                 self.last_write_time = time.time()
                 if sent < len(buf):
-                    logger.info("Adding to queue", extra=self._logger_extras)
+                    self.logger.info("Adding to queue", extra=self._logger_extras)
                     self._write_queue.appendleft(buf[sent:])
             finally:
                 self._write_lock.release()

@@ -9,11 +9,9 @@ from hazelcast.future import Future
 from hazelcast.util import AtomicInteger
 from hazelcast import six
 
-logger = logging.getLogger(__name__)
-
 
 def _no_op_response_handler(_):
-    return None
+    pass
 
 
 class Invocation(object):
@@ -38,7 +36,11 @@ class Invocation(object):
     def set_response(self, response):
         if self.timer:
             self.timer.cancel()
-        self.future.set_result(self.response_handler(response))
+        try:
+            result = self.response_handler(response)
+            self.future.set_result(result)
+        except Exception as e:
+            self.future.set_exception(e)
 
     def set_exception(self, exception, traceback=None):
         if self.timer:
@@ -50,23 +52,23 @@ class Invocation(object):
 
 
 class InvocationService(object):
+    logger = logging.getLogger("HazelcastClient.InvocationService")
 
     def __init__(self, client):
-
-        self._pending = {}
-        self._next_correlation_id = AtomicInteger(1)
-        self._client = client
-        self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
-        self._is_redo_operation = client.config.network.redo_operation
-        self._invocation_timeout = self._init_invocation_timeout()
-        self._invocation_retry_pause = self._init_invocation_retry_pause()
-        self._listener_service = client.listener_service
-
-        if client.config.network.smart_routing:
+        config = client.config
+        if config.network.smart_routing:
             self.invoke = self._invoke_smart
         else:
             self.invoke = self._invoke_non_smart
 
+        self._pending = {}
+        self._next_correlation_id = AtomicInteger(1)
+        self._client = client
+        self._logger_extras = {"client_name": client.name, "cluster_name": config.cluster_name}
+        self._is_redo_operation = config.network.redo_operation
+        self._invocation_timeout = self._init_invocation_timeout()
+        self._invocation_retry_pause = self._init_invocation_retry_pause()
+        self._listener_service = client.listener_service
         self._partition_service = client.partition_service
         self._connection_manager = client.connection_manager
         self._check_invocation_allowed_fn = self._connection_manager.check_invocation_allowed
@@ -81,7 +83,7 @@ class InvocationService(object):
 
         invocation = self._pending.pop(correlation_id, None)
         if not invocation:
-            logger.warning("Got message with unknown correlation id: %s", message, extra=self._logger_extras)
+            self.logger.warning("Got message with unknown correlation id: %s", message, extra=self._logger_extras)
             return
 
         if message.get_message_type() == EXCEPTION_MESSAGE_TYPE:
@@ -101,21 +103,21 @@ class InvocationService(object):
     def _invoke_on_partition_owner(self, invocation, partition_id):
         owner_uuid = self._partition_service.get_partition_owner(partition_id)
         if not owner_uuid:
-            logger.debug("Partition owner is not assigned yet")
+            self.logger.debug("Partition owner is not assigned yet", extra=self._logger_extras)
             return False
         return self._invoke_on_target(invocation, owner_uuid)
 
     def _invoke_on_target(self, invocation, owner_uuid):
         connection = self._connection_manager.get_connection(owner_uuid)
         if not connection:
-            logger.debug("Client is not connected to target: %s" % owner_uuid)
+            self.logger.debug("Client is not connected to target: %s" % owner_uuid, extra=self._logger_extras)
             return False
         return self._send(invocation, connection)
 
     def _invoke_on_random_connection(self, invocation):
         connection = self._connection_manager.get_random_connection()
         if not connection:
-            logger.debug("No connection found to invoke")
+            self.logger.debug("No connection found to invoke", extra=self._logger_extras)
             return False
         return self._send(invocation, connection)
 
@@ -195,7 +197,7 @@ class InvocationService(object):
         if invocation.event_handler:
             self._listener_service.add_event_handler(correlation_id, invocation.event_handler)
 
-        logger.debug("Sending %s to %s", message, connection, extra=self._logger_extras)
+        self.logger.debug("Sending %s to %s", message, connection, extra=self._logger_extras)
 
         if not connection.send_message(message):
             if invocation.event_handler:
@@ -204,9 +206,9 @@ class InvocationService(object):
         return True
 
     def _handle_exception(self, invocation, error, traceback=None):
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("Got exception for request %s, error: %s" % (invocation.request, error),
-                         extra=self._logger_extras)
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug("Got exception for request %s, error: %s" % (invocation.request, error),
+                              extra=self._logger_extras)
 
         if not self._client.lifecycle_service.running:
             invocation.set_exception(HazelcastClientNotActiveError(), traceback)
@@ -219,7 +221,8 @@ class InvocationService(object):
             return
 
         if invocation.timeout < time.time():
-            logger.debug("Error will not be retried because invocation timed out: %s", error, extra=self._logger_extras)
+            self.logger.debug("Error will not be retried because invocation timed out: %s", error,
+                              extra=self._logger_extras)
             invocation.set_exception(HazelcastTimeoutError("Request timed out because an error occurred after "
                                                            "invocation timeout: %s" % error, traceback))
             self._pending.pop(invocation.request.get_correlation_id(), None)

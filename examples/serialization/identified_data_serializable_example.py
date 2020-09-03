@@ -29,23 +29,22 @@ class Student(IdentifiedDataSerializable):
         return self.CLASS_ID
 
 
-if __name__ == "__main__":
-    config = hazelcast.ClientConfig()
-    factory = {Student.CLASS_ID: Student}
-    config.serialization.add_data_serializable_factory(Student.FACTORY_ID, factory)
+config = hazelcast.ClientConfig()
+factory = {Student.CLASS_ID: Student}
+config.serialization.add_data_serializable_factory(Student.FACTORY_ID, factory)
 
-    client = hazelcast.HazelcastClient(config)
+client = hazelcast.HazelcastClient(config)
 
-    my_map = client.get_map("map")
+my_map = client.get_map("map")
 
-    student = Student(1, "John Doe", 3.0)
+student = Student(1, "John Doe", 3.0)
 
-    my_map.put("student1", student)
+my_map.put("student1", student)
 
-    returned_student = my_map.get("student1").result()
+returned_student = my_map.get("student1").result()
 
-    print("ID: {}\nName: {}\nGPA: {}".format(returned_student.id,
-                                             returned_student.name,
-                                             returned_student.gpa))
+print("ID: {}\nName: {}\nGPA: {}".format(returned_student.id,
+                                         returned_student.name,
+                                         returned_student.gpa))
 
-    client.shutdown()
+client.shutdown()

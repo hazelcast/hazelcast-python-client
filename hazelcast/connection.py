@@ -22,10 +22,10 @@ from hazelcast.util import AtomicInteger, calculate_version, UNKNOWN_VERSION, en
 from hazelcast.version import CLIENT_TYPE, CLIENT_VERSION, SERIALIZATION_VERSION
 from hazelcast import six
 
-logger = logging.getLogger(__name__)
-
 
 class _WaitStrategy(object):
+    logger = logging.getLogger("HazelcastClient.WaitStrategy")
+
     def __init__(self, initial_backoff, max_backoff, multiplier,
                  cluster_connect_timeout, jitter, logger_extras):
         self._initial_backoff = initial_backoff
@@ -48,17 +48,18 @@ class _WaitStrategy(object):
         now = time.time()
         time_passed = now - self._cluster_connect_attempt_begin
         if time_passed > self._cluster_connect_timeout:
-            logger.warning("Unable to get live cluster connection, cluster connect timeout (%d) is reached. "
-                           "Attempt %d." % (self._cluster_connect_timeout, self._attempt), extra=self._logger_extras)
+            self.logger.warning("Unable to get live cluster connection, cluster connect timeout (%d) is reached. "
+                                "Attempt %d." % (self._cluster_connect_timeout, self._attempt),
+                                extra=self._logger_extras)
             return False
 
         # random between (-jitter * current_backoff, jitter * current_backoff)
         sleep_time = self._current_backoff + self._current_backoff * self._jitter * (2 * random.random() - 1)
         sleep_time = min(sleep_time, self._cluster_connect_timeout - time_passed)
-        logger.warning("Unable to get live cluster connection, retry in %ds, attempt: %d, "
-                       "cluster connect timeout: %ds, max backoff: %ds"
-                       % (sleep_time, self._attempt, self._cluster_connect_timeout, self._max_backoff),
-                       extra=self._logger_extras)
+        self.logger.warning("Unable to get live cluster connection, retry in %ds, attempt: %d, "
+                            "cluster connect timeout: %ds, max backoff: %ds"
+                            % (sleep_time, self._attempt, self._cluster_connect_timeout, self._max_backoff),
+                            extra=self._logger_extras)
         time.sleep(sleep_time)
         self._current_backoff = min(self._current_backoff * self._multiplier, self._max_backoff)
         return True
@@ -72,6 +73,7 @@ class ConnectionManager(object):
     """
     ConnectionManager is responsible for managing :mod:`Connection` objects.
     """
+    logger = logging.getLogger("HazelcastClient.ConnectionManager")
 
     def __init__(self, client, connection_factory, address_provider):
         self.live = False
@@ -174,13 +176,13 @@ class ConnectionManager(object):
             except:
                 pass
 
-    def on_connection_close(self, connection, cause):
-        connected_address = connection.connected_address
-        remote_uuid = connection.remote_uuid
+    def on_connection_close(self, closed_connection, cause):
+        connected_address = closed_connection.connected_address
+        remote_uuid = closed_connection.remote_uuid
 
         if not connected_address:
-            logger.debug("Destroying %s, but it has no remote address, hence nothing is "
-                         "removed from the connection dictionary" % connection, extra=self._logger_extras)
+            self.logger.debug("Destroying %s, but it has no remote address, hence nothing is "
+                              "removed from the connection dictionary" % closed_connection, extra=self._logger_extras)
 
         with self._lock:
             pending = self._pending_connections.pop(connected_address, None)
@@ -190,8 +192,9 @@ class ConnectionManager(object):
             pending.set_exception(cause)
 
         if connection:
-            logger.info("Removed connection to %s:%s, connection: %s" % (connected_address, remote_uuid, connection),
-                        extra=self._logger_extras)
+            self.logger.info("Removed connection to %s:%s, connection: %s"
+                             % (connected_address, remote_uuid, connection),
+                             extra=self._logger_extras)
             if not self.active_connections:
                 self._fire_lifecycle_event(LifecycleState.DISCONNECTED)
                 self._trigger_cluster_reconnection()
@@ -201,10 +204,11 @@ class ConnectionManager(object):
                     try:
                         on_connection_closed(connection, cause)
                     except:
-                        logger.exception("Exception in connection listener", extra=self._logger_extras)
+                        self.logger.exception("Exception in connection listener", extra=self._logger_extras)
         else:
-            logger.debug("Destroying %s, but there is no mapping for %s in the connection dictionary"
-                         % (connection, remote_uuid), extra=self._logger_extras)
+            if remote_uuid:
+                self.logger.debug("Destroying %s, but there is no mapping for %s in the connection dictionary"
+                                  % (closed_connection, remote_uuid), extra=self._logger_extras)
 
     def check_invocation_allowed(self):
         if self.active_connections:
@@ -217,7 +221,7 @@ class ConnectionManager(object):
 
     def _trigger_cluster_reconnection(self):
         if self._reconnect_mode == RECONNECT_MODE.OFF:
-            logger.info("Reconnect mode is OFF. Shutting down the client", extra=self._logger_extras)
+            self.logger.info("Reconnect mode is OFF. Shutting down the client", extra=self._logger_extras)
             self._shutdown_client_with_external_thread()
             return
 
@@ -273,8 +277,8 @@ class ConnectionManager(object):
                     if self.active_connections:
                         return
             except:
-                logger.exception("Could not connect to any cluster, shutting down the client",
-                                 extra=self._logger_extras)
+                self.logger.exception("Could not connect to any cluster, shutting down the client",
+                                      extra=self._logger_extras)
                 self._shutdown_client_with_external_thread()
             finally:
                 self._connect_to_cluster_thread_running = False
@@ -290,7 +294,7 @@ class ConnectionManager(object):
             try:
                 self._client.shutdown()
             except:
-                logger.exception("Exception during client shutdown", extra=self._logger_extras)
+                self.logger.exception("Exception during client shutdown", extra=self._logger_extras)
 
         t = threading.Thread(target=inner, name=self._client.name + ".client_shutdown")
         t.start()
@@ -314,12 +318,12 @@ class ConnectionManager(object):
                     break
         except (ClientNotAllowedInClusterError, InvalidConfigurationError):
             cluster_name = self._client.config.cluster_name
-            logger.exception("Stopped trying on cluster %s" % cluster_name, extra=self._logger_extras)
+            self.logger.exception("Stopped trying on cluster %s" % cluster_name, extra=self._logger_extras)
 
         cluster_name = self._client.config.cluster_name
-        logger.info("Unable to connect to any address from the cluster with name: %s. "
-                    "The following addresses were tried: %s" % (cluster_name, tried_addresses),
-                    extra=self._logger_extras)
+        self.logger.info("Unable to connect to any address from the cluster with name: %s. "
+                         "The following addresses were tried: %s" % (cluster_name, tried_addresses),
+                         extra=self._logger_extras)
         if self._client.lifecycle_service.running:
             msg = "Unable to connect to any cluster"
         else:
@@ -327,14 +331,14 @@ class ConnectionManager(object):
         raise IllegalStateError(msg)
 
     def _connect(self, address):
-        logger.info("Trying to connect to %s" % address, extra=self._logger_extras)
+        self.logger.info("Trying to connect to %s" % address, extra=self._logger_extras)
         try:
             return self._get_or_connect(address).result()
         except (ClientNotAllowedInClusterError, InvalidConfigurationError) as e:
-            logger.exception("Error during initial connection to %s" % address, extra=self._logger_extras)
+            self.logger.warning("Error during initial connection to %s: %s" % (address, e), extra=self._logger_extras)
             raise e
-        except:
-            logger.exception("Error during initial connection to %s" % address, extra=self._logger_extras)
+        except Exception as e:
+            self.logger.warning("Error during initial connection to %s: %s" % (address, e), extra=self._logger_extras)
             return None
 
     def _get_or_connect(self, address):
@@ -417,8 +421,9 @@ class ConnectionManager(object):
         is_initial_connection = not self.active_connections
         changed_cluster = is_initial_connection and self._cluster_id is not None and self._cluster_id != new_cluster_id
         if changed_cluster:
-            logger.warning("Switching from current cluster: %s to new cluster: %s" % (self._cluster_id, new_cluster_id),
-                           extra=self._logger_extras)
+            self.logger.warning("Switching from current cluster: %s to new cluster: %s"
+                                % (self._cluster_id, new_cluster_id),
+                                extra=self._logger_extras)
             self._on_cluster_restart()
 
         with self._lock:
@@ -429,16 +434,16 @@ class ConnectionManager(object):
             self._cluster_id = new_cluster_id
             self._fire_lifecycle_event(LifecycleState.CONNECTED)
 
-        logger.info("Authenticated with server %s:%s, server version: %s, local address: %s"
-                    % (remote_address, remote_uuid, server_version_str, connection.local_address),
-                    extra=self._logger_extras)
+        self.logger.info("Authenticated with server %s:%s, server version: %s, local address: %s"
+                         % (remote_address, remote_uuid, server_version_str, connection.local_address),
+                         extra=self._logger_extras)
 
         for on_connection_opened, _ in self._connection_listeners:
             if on_connection_opened:
                 try:
                     on_connection_opened(connection)
                 except:
-                    logger.exception("Exception in connection listener", extra=self._logger_extras)
+                    self.logger.exception("Exception in connection listener", extra=self._logger_extras)
 
         if not connection.live:
             self.on_connection_close(connection, None)
@@ -489,6 +494,7 @@ class ConnectionManager(object):
 
 class _HeartbeatManager(object):
     _heartbeat_timer = None
+    logger = logging.getLogger("HazelcastClient.HeartbeatManager")
 
     def __init__(self, client, connection_manager):
         self._client = client
@@ -528,7 +534,7 @@ class _HeartbeatManager(object):
 
         if (now - connection.last_read_time) > self._heartbeat_timeout:
             if connection.live:
-                logger.warning("Heartbeat failed over the connection: %s" % connection, extra=self._logger_extras)
+                self.logger.warning("Heartbeat failed over the connection: %s" % connection, extra=self._logger_extras)
                 connection.close("Heartbeat timed out",
                                  TargetDisconnectedError("Heartbeat timed out to connection %s" % connection))
 
@@ -633,6 +639,7 @@ class Connection(object):
         self.server_version = UNKNOWN_VERSION
         self.live = True
         self.close_cause = None
+        self.logger = logging.getLogger("HazelcastClient.Connection[%s]" % connection_id)
 
         self._connection_manager = connection_manager
         self._logger_extras = logger_extras
@@ -668,7 +675,7 @@ class Connection(object):
         try:
             self._inner_close()
         except:
-            logger.exception("Error while closing the the connection %s" % self, extra=self._logger_extras)
+            self.logger.exception("Error while closing the the connection %s" % self, extra=self._logger_extras)
         self._connection_manager.on_connection_close(self, cause)
 
     def _log_close(self, reason, cause):
@@ -681,9 +688,9 @@ class Connection(object):
             r = "Socket explicitly closed"
 
         if self._connection_manager.live:
-            logger.info(msg % (self, r), extra=self._logger_extras)
+            self.logger.info(msg % (self, r), extra=self._logger_extras)
         else:
-            logger.debug(msg % (self, r), extra=self._logger_extras)
+            self.logger.debug(msg % (self, r), extra=self._logger_extras)
 
     def _inner_close(self):
         raise NotImplementedError()

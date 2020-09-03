@@ -34,24 +34,22 @@ class GlobalSerializer(StreamSerializer):
         pass
 
 
-if __name__ == "__main__":
-    config = hazelcast.ClientConfig()
-    config.serialization.global_serializer = GlobalSerializer
+config = hazelcast.ClientConfig()
+config.serialization.global_serializer = GlobalSerializer
 
-    client = hazelcast.HazelcastClient(config)
+client = hazelcast.HazelcastClient(config)
 
-    group = ColorGroup(id=1,
-                       name="Reds",
-                       colors=["Crimson", "Red", "Ruby", "Maroon"])
+group = ColorGroup(id=1, name="Reds",
+                   colors=["Crimson", "Red", "Ruby", "Maroon"])
 
-    my_map = client.get_map("map")
+my_map = client.get_map("map")
 
-    my_map.put("group1", group)
+my_map.put("group1", group)
 
-    color_group = my_map.get("group1").result()
+color_group = my_map.get("group1").result()
 
-    print("ID: {}\nName: {}\nColor: {}".format(color_group.id,
-                                               color_group.name,
-                                               color_group.colors))
+print("ID: {}\nName: {}\nColor: {}".format(color_group.id,
+                                           color_group.name,
+                                           color_group.colors))
 
-    client.shutdown()
+client.shutdown()

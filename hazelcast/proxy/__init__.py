@@ -55,11 +55,11 @@ class ProxyManager(object):
         if ns in self._proxies:
             return self._proxies[ns]
 
-        proxy = self.create_proxy(service_name, name, create_on_remote, **kwargs)
+        proxy = self._create_proxy(service_name, name, create_on_remote, **kwargs)
         self._proxies[ns] = proxy
         return proxy
 
-    def create_proxy(self, service_name, name, create_on_remote, **kwargs):
+    def _create_proxy(self, service_name, name, create_on_remote, **kwargs):
         if create_on_remote:
             request = client_create_proxy_codec.encode_request(name=name, service_name=service_name)
             invocation = Invocation(request)

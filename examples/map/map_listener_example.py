@@ -1,3 +1,5 @@
+import time
+
 import hazelcast
 
 
@@ -15,15 +17,16 @@ def entry_updated(event):
                                                                             event.value))
 
 
-if __name__ == "__main__":
-    client = hazelcast.HazelcastClient()
+client = hazelcast.HazelcastClient()
 
-    my_map = client.get_map("listener-map").blocking()
+my_map = client.get_map("listener-map").blocking()
 
-    my_map.add_entry_listener(True, added_func=entry_added, removed_func=entry_removed, updated_func=entry_updated)
+my_map.add_entry_listener(True, added_func=entry_added, removed_func=entry_removed, updated_func=entry_updated)
 
-    my_map.put("key", "value")
-    my_map.put("key", "new value")
-    my_map.remove("key")
+my_map.put("key", "value")
+my_map.put("key", "new value")
+my_map.remove("key")
 
-    client.shutdown()
+time.sleep(3)
+
+client.shutdown()

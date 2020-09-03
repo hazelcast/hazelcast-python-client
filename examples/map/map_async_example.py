@@ -4,29 +4,30 @@ import time
 
 
 def fill_map(hz_map, count=10):
-    for i in range(count):
-        hz_map.put("key-" + str(i), "value-" + str(i))
+    entries = {"key-" + str(i): "value-" + str(i) for i in range(count)}
+    hz_map.put_all(entries)
 
 
-if __name__ == "__main__":
-    client = hazelcast.HazelcastClient()
+def put_callback(future):
+    print("Map put: {}".format(future.result()))
 
-    my_map = client.get_map("async-map")
-    fill_map(my_map)
 
-    print("Map size: {}".format(my_map.size().result()))
+def contains_callback(future):
+    print("Map contains: {}".format(future.result()))
 
-    def put_callback(future):
-        print("Map put: {}".format(future.result()))
 
-    my_map.put("key", "async-value").add_done_callback(put_callback)
+client = hazelcast.HazelcastClient()
 
-    def contains_callback(future):
-        print("Map contains: {}".format(future.result()))
+my_map = client.get_map("async-map")
+fill_map(my_map)
 
-    key = random.random()
-    print("Random key: {}".format(key))
-    my_map.contains_key(key).add_done_callback(contains_callback)
+print("Map size: {}".format(my_map.size().result()))
 
-    time.sleep(10)
-    client.shutdown()
+my_map.put("key", "async-value").add_done_callback(put_callback)
+
+key = random.random()
+print("Random key: {}".format(key))
+my_map.contains_key(key).add_done_callback(contains_callback)
+
+time.sleep(3)
+client.shutdown()

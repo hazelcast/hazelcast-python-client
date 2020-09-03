@@ -9,8 +9,6 @@ from hazelcast.invocation import Invocation
 from hazelcast.protocol.codec import client_add_cluster_view_listener_codec
 from hazelcast.util import check_not_none
 
-logger = logging.getLogger(__name__)
-
 
 class _ListenerRegistration(object):
     __slots__ = ("registration_request", "decode_register_response", "encode_deregister_request",
@@ -33,6 +31,7 @@ class _EventRegistration(object):
 
 
 class ListenerService(object):
+    logger = logging.getLogger("HazelcastClient.ListenerService")
 
     def __init__(self, client):
         self._client = client
@@ -90,8 +89,8 @@ class ListenerService(object):
                 except:
                     if connection.live:
                         successful = False
-                        logger.warning("Deregistration for listener with ID %s has failed to address %s ",
-                                       user_registration_id, "address", exc_info=True, extra=self._logger_extras)
+                        self.logger.warning("Deregistration for listener with ID %s has failed to address %s ",
+                                            user_registration_id, "address", exc_info=True, extra=self._logger_extras)
             if successful:
                 self._active_registrations.pop(user_registration_id)
 
@@ -102,7 +101,7 @@ class ListenerService(object):
         if handler:
             handler(message)
         else:
-            logger.warning("Got event message with unknown correlation id: %s", message, extra=self._logger_extras)
+            self.logger.warning("Got event message with unknown correlation id: %s", message, extra=self._logger_extras)
 
     def add_event_handler(self, correlation_id, event_handler):
         self._event_handlers[correlation_id] = event_handler
@@ -130,8 +129,8 @@ class ListenerService(object):
                 registration_map[connection] = registration
             except Exception as e:
                 if connection.live:
-                    logger.exception("Listener %s can not be added to a new connection: %s",
-                                     user_registration_id, connection, extra=self._logger_extras)
+                    self.logger.exception("Listener %s can not be added to a new connection: %s",
+                                          user_registration_id, connection, extra=self._logger_extras)
                 raise e
 
         return invocation.future.continue_with(callback)
