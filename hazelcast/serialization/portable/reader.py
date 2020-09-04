@@ -1,4 +1,4 @@
-from hazelcast.exception import HazelcastSerializationError
+from hazelcast.errors import HazelcastSerializationError
 from hazelcast.serialization import bits
 from hazelcast.serialization.api import PortableReader
 from hazelcast.serialization.portable.classdef import FieldType

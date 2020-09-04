@@ -1,7 +1,7 @@
 import time
 
 from hazelcast.config import ClientProperties
-from hazelcast.exception import HazelcastTimeoutError
+from hazelcast.errors import HazelcastTimeoutError
 from hazelcast.invocation import Invocation
 from hazelcast.protocol.client_message import OutboundMessage
 from tests.base import SingleMemberTestCase

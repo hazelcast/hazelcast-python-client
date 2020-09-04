@@ -1,5 +1,19 @@
 #!/bin/bash
 
+function cleanup {
+    if [ "x${rcPid}" != "x" ]
+    then
+        echo "Killing remote controller server with pid ${rcPid}"
+        kill -9 "${rcPid}"
+    fi
+    exit
+}
+
+# Disables printing security sensitive data to the logs
+set +x
+
+trap cleanup EXIT
+
 if [ "$1" = "--local" ] ; then
     USER="--user"
 else
@@ -94,9 +108,30 @@ fi
 
 pip install -r test-requirements.txt ${USER} --no-cache-dir
 
-java -Dhazelcast.enterprise.license.key=${HAZELCAST_ENTERPRISE_KEY} -cp ${CLASSPATH} com.hazelcast.remotecontroller.Main --use-simple-server>rc_stdout.log 2>rc_stderr.log &
+java -Dhazelcast.enterprise.license.key="${HAZELCAST_ENTERPRISE_KEY}" -cp ${CLASSPATH} com.hazelcast.remotecontroller.Main --use-simple-server>rc_stdout.log 2>rc_stderr.log &
+rcPid=$!
 
-sleep 15
+DEFAULT_TIMEOUT=30 #seconds
+SERVER_PORT=9701
+
+timeout=${DEFAULT_TIMEOUT}
+
+while [ ${timeout} -gt 0 ]
+do
+    netstat -an  | grep "${SERVER_PORT} "> /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        break
+    fi
+
+    sleep 1
+
+    timeout=$((timeout-1))
+done
+
+if [ ${timeout} -eq 0 ]; then
+    echo "Server could not start on port ${SERVER_PORT} in $DEFAULT_TIMEOUT seconds. Test FAILED."
+    exit 1
+fi
 
 if [ "$USER" = "--user" ] ; then
     ~/.local/bin/nosetests -v --with-xunit --with-coverage --cover-xml --cover-package=hazelcast --cover-inclusive --nologcapture

@@ -5,7 +5,7 @@ import uuid
 from collections import OrderedDict
 
 from hazelcast import six
-from hazelcast.exception import TargetDisconnectedError, IllegalStateError
+from hazelcast.errors import TargetDisconnectedError, IllegalStateError
 from hazelcast.util import check_not_none
 
 

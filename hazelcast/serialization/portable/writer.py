@@ -1,5 +1,5 @@
 import hazelcast.util as util
-from hazelcast.exception import HazelcastSerializationError
+from hazelcast.errors import HazelcastSerializationError
 from hazelcast.serialization import INT_SIZE_IN_BYTES, NULL_ARRAY_LENGTH
 from hazelcast.serialization.api import PortableWriter
 from hazelcast.serialization.output import EmptyObjectDataOutput

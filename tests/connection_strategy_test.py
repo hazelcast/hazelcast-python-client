@@ -1,6 +1,6 @@
 from hazelcast import ClientConfig, HazelcastClient, six
 from hazelcast.config import RECONNECT_MODE
-from hazelcast.exception import ClientOfflineError, HazelcastClientNotActiveError
+from hazelcast.errors import ClientOfflineError, HazelcastClientNotActiveError
 from hazelcast.lifecycle import LifecycleState
 from tests.base import HazelcastTestCase
 from tests.util import random_string, configure_logging
@@ -11,6 +11,10 @@ class ConnectionStrategyTest(HazelcastTestCase):
     def setUpClass(cls):
         configure_logging()
         cls.rc = cls.create_rc()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.rc.exit()
 
     def setUp(self):
         self.client = None

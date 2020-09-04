@@ -2,7 +2,7 @@ from unittest import TestCase
 from hazelcast.client import HazelcastClient, ClientProperties
 from hazelcast.config import ClientConfig, ClientCloudConfig
 from hazelcast.discovery import HazelcastCloudDiscovery
-from hazelcast.exception import IllegalStateError
+from hazelcast.errors import IllegalStateError
 
 
 class HazelcastCloudConfigTest(TestCase):

@@ -1,7 +1,7 @@
 import json
 import logging
 
-from hazelcast.exception import HazelcastCertificationError
+from hazelcast.errors import HazelcastCertificationError
 from hazelcast.core import AddressHelper
 from hazelcast.config import ClientProperty
 from hazelcast.six.moves import http_client

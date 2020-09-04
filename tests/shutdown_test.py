@@ -1,5 +1,5 @@
 from hazelcast import ClientConfig
-from hazelcast.exception import HazelcastClientNotActiveError
+from hazelcast.errors import HazelcastClientNotActiveError
 from tests.base import HazelcastTestCase
 from tests.util import configure_logging
 

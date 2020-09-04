@@ -1,6 +1,6 @@
 import time
 
-from tests.base import HazelcastTestCase, SingleMemberTestCase
+from tests.base import HazelcastTestCase
 from hazelcast.config import ClientConfig, ClientProperties
 from hazelcast.client import HazelcastClient
 from hazelcast.lifecycle import LifecycleState

@@ -10,7 +10,7 @@ from collections import OrderedDict
 
 from hazelcast.config import RECONNECT_MODE
 from hazelcast.core import AddressHelper
-from hazelcast.exception import AuthenticationError, TargetDisconnectedError, HazelcastClientNotActiveError, \
+from hazelcast.errors import AuthenticationError, TargetDisconnectedError, HazelcastClientNotActiveError, \
     InvalidConfigurationError, ClientNotAllowedInClusterError, IllegalStateError, ClientOfflineError
 from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
 from hazelcast.invocation import Invocation
@@ -290,6 +290,8 @@ class ConnectionManager(object):
         t.start()
 
     def _shutdown_client_with_external_thread(self):
+        # This may be called from the reactor thread so it's better to initiate shutdown
+        # from another thread
         def inner():
             try:
                 self._client.shutdown()
@@ -401,8 +403,7 @@ class ConnectionManager(object):
         else:
             e = response.exception()
             connection.close("Failed to authenticate connection", e)
-            with self._lock:
-                self._pending_connections.pop(address, None)
+            self._pending_connections.pop(address, None)
             six.reraise(e.__class__, e, response.traceback())
 
     def _handle_successful_auth(self, response, connection, address):

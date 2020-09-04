@@ -7,7 +7,7 @@ from hazelcast.proxy.base import Proxy
 from hazelcast.cluster import VectorClock
 from hazelcast.protocol.codec import pn_counter_add_codec, pn_counter_get_codec, \
     pn_counter_get_configured_replica_count_codec
-from hazelcast.exception import NoDataMemberInClusterError
+from hazelcast.errors import NoDataMemberInClusterError
 from hazelcast.six.moves import range
 
 

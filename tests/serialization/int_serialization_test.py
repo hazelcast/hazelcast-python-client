@@ -1,7 +1,7 @@
 import unittest
 
 from hazelcast.config import SerializationConfig, INTEGER_TYPE
-from hazelcast.exception import HazelcastSerializationError
+from hazelcast.errors import HazelcastSerializationError
 from hazelcast.serialization.serialization_const import CONSTANT_TYPE_BYTE, CONSTANT_TYPE_SHORT, CONSTANT_TYPE_INTEGER, \
     CONSTANT_TYPE_LONG
 from hazelcast.serialization.service import SerializationServiceV1

@@ -10,7 +10,7 @@ from hazelcast.client import HazelcastClient
 from hazelcast.util import to_millis
 from hazelcast.proxy.flake_id_generator import _IdBatch, _Block, _AutoBatcher
 from hazelcast.future import ImmediateFuture
-from hazelcast.exception import HazelcastError
+from hazelcast.errors import HazelcastError
 
 FLAKE_ID_STEP = 1 << 16
 SHORT_TERM_BATCH_SIZE = 3

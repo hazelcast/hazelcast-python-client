@@ -2,7 +2,7 @@ import time
 
 import itertools
 
-from hazelcast.exception import HazelcastError
+from hazelcast.errors import HazelcastError
 from hazelcast.proxy.map import EntryEventType
 from tests.base import SingleMemberTestCase
 from tests.util import random_string, event_collector

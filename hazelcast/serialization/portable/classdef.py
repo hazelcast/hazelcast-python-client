@@ -1,4 +1,4 @@
-from hazelcast.exception import HazelcastSerializationError
+from hazelcast.errors import HazelcastSerializationError
 from hazelcast.util import enum
 from hazelcast import six
 

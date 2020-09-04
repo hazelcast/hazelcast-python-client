@@ -2,7 +2,7 @@ import logging
 import time
 import functools
 
-from hazelcast.exception import create_error_from_message, HazelcastInstanceNotActiveError, is_retryable_error, \
+from hazelcast.errors import create_error_from_message, HazelcastInstanceNotActiveError, is_retryable_error, \
     HazelcastTimeoutError, TargetDisconnectedError, HazelcastClientNotActiveError, TargetNotMemberError, \
     EXCEPTION_MESSAGE_TYPE
 from hazelcast.future import Future

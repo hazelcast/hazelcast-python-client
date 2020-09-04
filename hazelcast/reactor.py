@@ -13,7 +13,7 @@ from functools import total_ordering
 from hazelcast import six
 from hazelcast.connection import Connection
 from hazelcast.core import PROTOCOL, Address
-from hazelcast.exception import HazelcastError
+from hazelcast.errors import HazelcastError
 from hazelcast.future import Future
 from hazelcast.six.moves import queue
 

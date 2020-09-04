@@ -3,7 +3,7 @@ from threading import Thread
 
 import hazelcast
 import hazelcast.transaction
-from hazelcast.exception import TransactionError
+from hazelcast.errors import TransactionError
 from tests.base import SingleMemberTestCase
 
 

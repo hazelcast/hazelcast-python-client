@@ -18,7 +18,14 @@ class HazelcastError(Exception):
     """
     General HazelcastError class.
     """
-    pass
+    def __init__(self, message=None, cause=None):
+        super(HazelcastError, self).__init__(message, cause)
+
+    def __str__(self):
+        message, cause = self.args
+        if cause:
+            return "%s\nCaused by: %s" % (message, str(cause))
+        return message
 
 
 class ArrayIndexOutOfBoundsError(HazelcastError):
@@ -623,9 +630,7 @@ def _create_error(error_holders, idx):
     stack_trace = "\n".join(
         ["\tat %s.%s(%s:%s)" % (x.class_name, x.method_name, x.file_name, x.line_number) for x in
          error_holder.stack_trace_elements])
-    message = "Got exception from server:\n %s: %s\n %s" % (error_holder.class_name,
-                                                            error_holder.message,
-                                                            stack_trace)
+    message = "Exception from server: %s: %s\n %s" % (error_holder.class_name, error_holder.message, stack_trace)
     if error_class:
         return error_class(message, _create_error(error_holders, idx + 1))
     else:

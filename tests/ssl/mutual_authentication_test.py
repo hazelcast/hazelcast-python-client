@@ -3,7 +3,7 @@ import os
 from tests.base import HazelcastTestCase
 from hazelcast.client import HazelcastClient
 from hazelcast.config import PROTOCOL
-from hazelcast.exception import HazelcastError
+from hazelcast.errors import HazelcastError
 from tests.util import get_ssl_config, configure_logging, get_abs_path, set_attr
 
 

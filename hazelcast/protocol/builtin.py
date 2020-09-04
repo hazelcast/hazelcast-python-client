@@ -223,13 +223,13 @@ class FixSizedTypesCodec(object):
     @staticmethod
     def encode_boolean(buf, offset, value):
         if value:
-            buf[offset] = 1
+            LE_INT8.pack_into(buf, offset, 1)
         else:
-            buf[offset] = 0
+            LE_INT8.pack_into(buf, offset, 0)
 
     @staticmethod
     def decode_boolean(buf, offset):
-        return buf[offset] == 1
+        return LE_INT8.unpack_from(buf, offset)[0] == 1
 
     @staticmethod
     def encode_byte(buf, offset, value):

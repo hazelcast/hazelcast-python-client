@@ -3,7 +3,7 @@ import threading
 from uuid import uuid4
 
 from hazelcast import six
-from hazelcast.exception import HazelcastError
+from hazelcast.errors import HazelcastError
 from hazelcast.future import combine_futures
 from hazelcast.invocation import Invocation
 from hazelcast.protocol.codec import client_add_cluster_view_listener_codec

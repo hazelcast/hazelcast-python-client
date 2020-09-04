@@ -1,7 +1,7 @@
 import logging
 import threading
 import time
-from hazelcast.exception import TransactionError, IllegalStateError
+from hazelcast.errors import TransactionError, IllegalStateError
 from hazelcast.future import make_blocking
 from hazelcast.invocation import Invocation
 from hazelcast.protocol.codec import transaction_create_codec, transaction_commit_codec, transaction_rollback_codec

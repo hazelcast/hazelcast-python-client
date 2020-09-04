@@ -1,5 +1,5 @@
 import hazelcast.util as util
-from hazelcast.exception import HazelcastSerializationError
+from hazelcast.errors import HazelcastSerializationError
 from hazelcast.serialization.api import StreamSerializer, Portable
 from hazelcast.serialization.portable.reader import DefaultPortableReader, MorphingPortableReader
 from hazelcast.serialization.portable.writer import DefaultPortableWriter

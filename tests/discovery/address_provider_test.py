@@ -3,7 +3,7 @@ from hazelcast.connection import DefaultAddressProvider
 from hazelcast.discovery import HazelcastCloudAddressProvider
 from hazelcast.config import ClientConfig
 from hazelcast import HazelcastClient
-from hazelcast.exception import IllegalStateError
+from hazelcast.errors import IllegalStateError
 
 
 class _TestClient(HazelcastClient):

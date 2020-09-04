@@ -23,7 +23,7 @@ from hazelcast.statistics import Statistics
 from hazelcast.transaction import TWO_PHASE, TransactionManager
 from hazelcast.util import AtomicInteger, DEFAULT_LOGGING
 from hazelcast.discovery import HazelcastCloudAddressProvider, HazelcastCloudDiscovery
-from hazelcast.exception import IllegalStateError
+from hazelcast.errors import IllegalStateError
 
 
 class HazelcastClient(object):

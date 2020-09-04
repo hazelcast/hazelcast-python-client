@@ -2,7 +2,7 @@ from threading import Thread
 from time import sleep
 
 from hazelcast import ClientConfig
-from hazelcast.exception import HazelcastError, TargetDisconnectedError
+from hazelcast.errors import HazelcastError, TargetDisconnectedError
 from hazelcast.lifecycle import LifecycleState
 from hazelcast.util import AtomicInteger
 from tests.base import HazelcastTestCase

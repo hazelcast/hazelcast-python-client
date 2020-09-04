@@ -4,7 +4,7 @@ from threading import RLock
 from hazelcast.core import INTEGER_TYPE
 from hazelcast.serialization.api import *
 from hazelcast.serialization.data import *
-from hazelcast.exception import HazelcastInstanceNotActiveError, HazelcastSerializationError
+from hazelcast.errors import HazelcastInstanceNotActiveError
 from hazelcast.serialization.input import _ObjectDataInput
 from hazelcast.serialization.output import _ObjectDataOutput
 from hazelcast.serialization.serializer import *

@@ -1,13 +1,12 @@
 import unittest
 
 import hazelcast
-from hazelcast.exception import HazelcastSerializationError
+from hazelcast.errors import HazelcastSerializationError
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.serialization.api import Portable
 from hazelcast.serialization.portable.classdef import ClassDefinitionBuilder
 from tests.serialization.identified_test import create_identified, SerializationV1Identified
 from hazelcast import six
-from hazelcast.config import ClientProperties
 
 if not six.PY2:
     long = int

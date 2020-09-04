@@ -1,5 +1,5 @@
 import hazelcast
-from hazelcast.exception import HazelcastSerializationError
+from hazelcast.errors import HazelcastSerializationError
 
 from hazelcast.serialization.api import Portable
 

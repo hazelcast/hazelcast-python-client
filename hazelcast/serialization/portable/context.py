@@ -1,7 +1,7 @@
 import threading
 
 from hazelcast import util
-from hazelcast.exception import HazelcastSerializationError
+from hazelcast.errors import HazelcastSerializationError
 from hazelcast.serialization import bits
 from hazelcast.serialization.portable.classdef import ClassDefinition, ClassDefinitionBuilder, FieldType, FieldDefinition
 from hazelcast.serialization.portable.writer import ClassDefinitionWriter

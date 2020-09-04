@@ -6,7 +6,7 @@ from hazelcast.six.moves import BaseHTTPServer
 from hazelcast import six
 from unittest import TestCase
 from hazelcast.core import Address
-from hazelcast.exception import HazelcastCertificationError
+from hazelcast.errors import HazelcastCertificationError
 from hazelcast.discovery import HazelcastCloudDiscovery
 from hazelcast.config import ClientConfig
 from hazelcast.client import HazelcastClient

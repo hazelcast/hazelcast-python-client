@@ -2,7 +2,7 @@ import os
 
 from tests.base import SingleMemberTestCase, HazelcastTestCase
 from tests.util import configure_logging, get_abs_path
-from hazelcast.exception import ConsistencyLostError, NoDataMemberInClusterError
+from hazelcast.errors import ConsistencyLostError, NoDataMemberInClusterError
 from hazelcast import HazelcastClient, ClientConfig
 
 
