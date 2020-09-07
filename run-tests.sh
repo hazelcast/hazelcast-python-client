@@ -111,27 +111,7 @@ pip install -r test-requirements.txt ${USER} --no-cache-dir
 java -Dhazelcast.enterprise.license.key="${HAZELCAST_ENTERPRISE_KEY}" -cp ${CLASSPATH} com.hazelcast.remotecontroller.Main --use-simple-server>rc_stdout.log 2>rc_stderr.log &
 rcPid=$!
 
-DEFAULT_TIMEOUT=30 #seconds
-SERVER_PORT=9701
-
-timeout=${DEFAULT_TIMEOUT}
-
-while [ ${timeout} -gt 0 ]
-do
-    netstat -an  | grep "${SERVER_PORT} "> /dev/null 2>&1
-    if [ $? -eq 0 ]; then
-        break
-    fi
-
-    sleep 1
-
-    timeout=$((timeout-1))
-done
-
-if [ ${timeout} -eq 0 ]; then
-    echo "Server could not start on port ${SERVER_PORT} in $DEFAULT_TIMEOUT seconds. Test FAILED."
-    exit 1
-fi
+sleep 15
 
 if [ "$USER" = "--user" ] ; then
     ~/.local/bin/nosetests -v --with-xunit --with-coverage --cover-xml --cover-package=hazelcast --cover-inclusive --nologcapture
