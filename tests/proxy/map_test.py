@@ -1,8 +1,7 @@
 import time
 import os
 
-from hazelcast.config import IndexConfig
-from hazelcast.core import INDEX_TYPE
+from hazelcast.config import IndexConfig, INDEX_TYPE
 from hazelcast.errors import HazelcastError
 from hazelcast.proxy.map import EntryEventType
 from hazelcast.serialization.api import IdentifiedDataSerializable

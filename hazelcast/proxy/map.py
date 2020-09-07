@@ -1,6 +1,6 @@
 import itertools
 
-from hazelcast.config import IndexUtil
+from hazelcast.config import _IndexUtil
 from hazelcast.future import combine_futures, ImmediateFuture
 from hazelcast.invocation import Invocation
 from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_entry_listener_to_key_codec, \
@@ -163,7 +163,7 @@ class Map(Proxy):
         :param index_config: (:class:`~hazelcast.config.IndexConfig`), index config.
         """
         check_not_none(index_config, "Index config cannot be None")
-        validated = IndexUtil.validate_and_normalize(self.name, index_config)
+        validated = _IndexUtil.validate_and_normalize(self.name, index_config)
         request = map_add_index_codec.encode_request(self.name, validated)
         return self._invoke(request)
 

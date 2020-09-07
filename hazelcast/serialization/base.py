@@ -1,7 +1,7 @@
 import sys
 from threading import RLock
 
-from hazelcast.core import INTEGER_TYPE
+from hazelcast.config import INTEGER_TYPE
 from hazelcast.serialization.api import *
 from hazelcast.serialization.data import *
 from hazelcast.errors import HazelcastInstanceNotActiveError, HazelcastSerializationError

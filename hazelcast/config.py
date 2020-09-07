@@ -6,10 +6,83 @@ import logging
 import os
 import re
 
-from hazelcast.core import EVICTION_POLICY, IN_MEMORY_FORMAT, PROTOCOL, INTEGER_TYPE, INDEX_TYPE, QUERY_CONSTANTS, \
-    UNIQUE_KEY_TRANSFORMATION
 from hazelcast.serialization.api import StreamSerializer
 from hazelcast.util import validate_type, validate_serializer, enum, TimeUnit, check_not_none
+
+INTEGER_TYPE = enum(VAR=0, BYTE=1, SHORT=2, INT=3, LONG=4, BIG_INT=5)
+"""
+Integer type options that can be used by serialization service.
+
+* VAR : variable size integer (this option can be problematic on static type clients like java or .NET)
+* BYTE: Python int will be interpreted as a single byte int
+* SHORT: Python int will be interpreted as a double byte int
+* INT: Python int will be interpreted as a four byte int
+* LONG: Python int will be interpreted as an eight byte int
+* BIG_INT: Python int will be interpreted as Java BigInteger. This option can handle python long values with "bit_length > 64"
+"""
+
+EVICTION_POLICY = enum(NONE=0, LRU=1, LFU=2, RANDOM=3)
+"""
+Near Cache eviction policy options
+
+* NONE : No eviction
+* LRU : Least Recently Used items will be evicted
+* LFU : Least frequently Used items will be evicted
+* RANDOM : Items will be evicted randomly
+
+"""
+
+IN_MEMORY_FORMAT = enum(BINARY=0, OBJECT=1)
+"""
+Near Cache in memory format of the values.
+
+* BINARY : Binary format, hazelcast serialized bytearray format
+* OBJECT : The actual objects used
+"""
+
+PROTOCOL = enum(SSLv2=0, SSLv3=1, SSL=2, TLSv1=3, TLSv1_1=4, TLSv1_2=5, TLSv1_3=6, TLS=7)
+"""
+SSL protocol options.
+
+* SSLv2     : SSL 2.O Protocol. RFC 6176 prohibits SSL 2.0. Please use TLSv1+
+* SSLv3     : SSL 3.0 Protocol. RFC 7568 prohibits SSL 3.0. Please use TLSv1+
+* SSL       : Alias for SSL 3.0
+* TLSv1     : TLS 1.0 Protocol described in RFC 2246
+* TLSv1_1   : TLS 1.1 Protocol described in RFC 4346
+* TLSv1_2   : TLS 1.2 Protocol described in RFC 5246
+* TLSv1_3   : TLS 1.3 Protocol described in RFC 8446
+* TLS       : Alias for TLS 1.2
+* TLSv1+ requires at least Python 2.7.9 or Python 3.4 build with OpenSSL 1.0.1+ 
+* TLSv1_3 requires at least Python 2.7.15 or Python 3.7 build with OpenSSL 1.1.1+
+"""
+
+QUERY_CONSTANTS = enum(KEY_ATTRIBUTE_NAME="__key", THIS_ATTRIBUTE_NAME="this")
+"""
+Contains constants for Query.
+* KEY_ATTRIBUTE_NAME  : Attribute name of the key.
+* THIS_ATTRIBUTE_NAME : Attribute name of the "this"
+"""
+
+UNIQUE_KEY_TRANSFORMATION = enum(OBJECT=0, LONG=1, RAW=2)
+"""
+Defines an assortment of transformations which can be applied to 
+BitmapIndexOptions#getUniqueKey() unique key values.
+* OBJECT : Extracted unique key value is interpreted as an object value. 
+    Non-negative unique ID is assigned to every distinct object value.
+* LONG   : Extracted unique key value is interpreted as a whole integer value of byte, short, int or long type. 
+    The extracted value is upcasted to long (if necessary) and unique non-negative ID is assigned 
+    to every distinct value.
+* RAW    : Extracted unique key value is interpreted as a whole integer value of byte, short, int or long type. 
+    The extracted value is upcasted to long (if necessary) and the resulting value is used directly as an ID.
+"""
+
+INDEX_TYPE = enum(SORTED=0, HASH=1, BITMAP=2)
+"""
+Type of the index.
+* SORTED : Sorted index. Can be used with equality and range predicates.
+* HASH   : Hash index. Can be used with equality predicates.
+* BITMAP : Bitmap index. Can be used with equality predicates.
+"""
 
 _DEFAULT_CLUSTER_NAME = "dev"
 
@@ -711,7 +784,7 @@ class IndexConfig(object):
         """Bitmap index options"""
 
     def add_attribute(self, attribute):
-        IndexUtil.validate_attribute(attribute)
+        _IndexUtil.validate_attribute(attribute)
         self.attributes.append(attribute)
 
     def __repr__(self):
@@ -719,7 +792,7 @@ class IndexConfig(object):
                % (self.name, self.type, self.attributes, self.bitmap_index_options)
 
 
-class IndexUtil(object):
+class _IndexUtil(object):
     _MAX_ATTRIBUTES = 255
     """Maximum number of attributes allowed in the index."""
 
@@ -743,19 +816,18 @@ class IndexUtil(object):
         if not original_attributes:
             raise ValueError("Index must have at least one attribute: %s" % index_config)
 
-        if len(original_attributes) > IndexUtil._MAX_ATTRIBUTES:
-            raise ValueError("Index cannot have more than %s attributes %s" % (IndexUtil._MAX_ATTRIBUTES, index_config))
+        if len(original_attributes) > _IndexUtil._MAX_ATTRIBUTES:
+            raise ValueError("Index cannot have more than %s attributes %s" % (_IndexUtil._MAX_ATTRIBUTES, index_config))
 
-        from hazelcast.core import INDEX_TYPE
         if index_config.type == INDEX_TYPE.BITMAP and len(original_attributes) > 1:
             raise ValueError("Composite bitmap indexes are not supported: %s" % index_config)
 
         normalized_attributes = []
         for original_attribute in original_attributes:
-            IndexUtil.validate_attribute(original_attribute)
+            _IndexUtil.validate_attribute(original_attribute)
 
             original_attribute = original_attribute.strip()
-            normalized_attribute = IndexUtil.canonicalize_attribute(original_attribute)
+            normalized_attribute = _IndexUtil.canonicalize_attribute(original_attribute)
 
             try:
                 idx = normalized_attributes.index(normalized_attribute)
@@ -777,13 +849,13 @@ class IndexUtil(object):
         if name and not name.strip():
             name = None
 
-        normalized_config = IndexUtil.build_normalized_config(map_name, index_config.type, name,
-                                                              normalized_attributes)
+        normalized_config = _IndexUtil.build_normalized_config(map_name, index_config.type, name,
+                                                               normalized_attributes)
         if index_config.type == INDEX_TYPE.BITMAP:
             unique_key = index_config.bitmap_index_options.unique_key
             unique_key_transformation = index_config.bitmap_index_options.unique_key_transformation
-            IndexUtil.validate_attribute(unique_key)
-            unique_key = IndexUtil.canonicalize_attribute(unique_key)
+            _IndexUtil.validate_attribute(unique_key)
+            unique_key = _IndexUtil.canonicalize_attribute(unique_key)
             normalized_config.bitmap_index_options.unique_key = unique_key
             normalized_config.bitmap_index_options.unique_key_transformation = unique_key_transformation
 
@@ -791,14 +863,14 @@ class IndexUtil(object):
 
     @staticmethod
     def canonicalize_attribute(attribute):
-        return re.sub(IndexUtil._THIS_PATTERN, "", attribute)
+        return re.sub(_IndexUtil._THIS_PATTERN, "", attribute)
 
     @staticmethod
     def build_normalized_config(map_name, index_type, index_name, normalized_attributes):
         new_config = IndexConfig()
         new_config.type = index_type
 
-        name = map_name + "_" + IndexUtil._index_type_to_name(index_type) if index_name is None else None
+        name = map_name + "_" + _IndexUtil._index_type_to_name(index_type) if index_name is None else None
         for normalized_attribute in normalized_attributes:
             new_config.add_attribute(normalized_attribute)
             if name:
@@ -812,7 +884,6 @@ class IndexUtil(object):
 
     @staticmethod
     def _index_type_to_name(index_type):
-        from hazelcast.core import INDEX_TYPE
         if index_type == INDEX_TYPE.SORTED:
             return "sorted"
         elif index_type == INDEX_TYPE.HASH:
