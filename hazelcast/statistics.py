@@ -49,6 +49,9 @@ class Statistics(object):
             period = default_period
 
         def _statistics_task():
+            if not self._client.lifecycle_service.running:
+                return
+
             self._send_statistics()
             self._statistics_timer = self._client.reactor.add_timer(period, _statistics_task)
 

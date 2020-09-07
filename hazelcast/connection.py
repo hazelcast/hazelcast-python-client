@@ -92,7 +92,6 @@ class ConnectionManager(object):
         self._connect_all_members_timer = None
         self._async_start = config.connection_strategy.async_start
         self._connect_to_cluster_thread_running = False
-        self._connect_to_cluster_thread = None
         self._pending_connections = dict()
         props = self._client.properties
         self._shuffle_member_list = props.get_bool(props.SHUFFLE_MEMBER_LIST)
@@ -188,17 +187,18 @@ class ConnectionManager(object):
             pending = self._pending_connections.pop(connected_address, None)
             connection = self.active_connections.pop(remote_uuid, None)
 
-        if pending:
-            pending.set_exception(cause)
+            if pending:
+                pending.set_exception(cause)
+
+            if connection:
+                self.logger.info("Removed connection to %s:%s, connection: %s"
+                                 % (connected_address, remote_uuid, connection),
+                                 extra=self._logger_extras)
+                if not self.active_connections:
+                    self._fire_lifecycle_event(LifecycleState.DISCONNECTED)
+                    self._trigger_cluster_reconnection()
 
         if connection:
-            self.logger.info("Removed connection to %s:%s, connection: %s"
-                             % (connected_address, remote_uuid, connection),
-                             extra=self._logger_extras)
-            if not self.active_connections:
-                self._fire_lifecycle_event(LifecycleState.DISCONNECTED)
-                self._trigger_cluster_reconnection()
-
             for _, on_connection_closed in self._connection_listeners:
                 if on_connection_closed:
                     try:
@@ -222,7 +222,7 @@ class ConnectionManager(object):
     def _trigger_cluster_reconnection(self):
         if self._reconnect_mode == RECONNECT_MODE.OFF:
             self.logger.info("Reconnect mode is OFF. Shutting down the client", extra=self._logger_extras)
-            self._shutdown_client_with_external_thread()
+            self._shutdown_client()
             return
 
         if self._client.lifecycle_service.running:
@@ -274,32 +274,24 @@ class ConnectionManager(object):
             try:
                 while True:
                     self._sync_connect_to_cluster()
-                    if self.active_connections:
-                        return
+                    with self._lock:
+                        if self.active_connections:
+                            self._connect_to_cluster_thread_running = False
+                            return
             except:
                 self.logger.exception("Could not connect to any cluster, shutting down the client",
                                       extra=self._logger_extras)
-                self._shutdown_client_with_external_thread()
-            finally:
-                self._connect_to_cluster_thread_running = False
+                self._shutdown_client()
 
         t = threading.Thread(target=run, name='hazelcast_async_connection')
         t.daemon = True
-
-        self._connect_to_cluster_thread = t
         t.start()
 
-    def _shutdown_client_with_external_thread(self):
-        # This may be called from the reactor thread so it's better to initiate shutdown
-        # from another thread
-        def inner():
-            try:
-                self._client.shutdown()
-            except:
-                self.logger.exception("Exception during client shutdown", extra=self._logger_extras)
-
-        t = threading.Thread(target=inner, name=self._client.name + ".client_shutdown")
-        t.start()
+    def _shutdown_client(self):
+        try:
+            self._client.shutdown()
+        except:
+            self.logger.exception("Exception during client shutdown", extra=self._logger_extras)
 
     def _sync_connect_to_cluster(self):
         tried_addresses = set()

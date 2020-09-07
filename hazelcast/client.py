@@ -2,6 +2,7 @@ import logging
 import logging.config
 import sys
 import json
+import threading
 
 from hazelcast.cluster import ClusterService, RoundRobinLB
 from hazelcast.config import ClientConfig, ClientProperties
@@ -56,6 +57,7 @@ class HazelcastClient(object):
         self.near_cache_manager = NearCacheManager(self)
         self._statistics = Statistics(self)
         self._cluster_view_listener = ClusterViewListenerService(self)
+        self._shutdown_lock = threading.RLock()
         self._start()
 
     def _start(self):
@@ -248,16 +250,16 @@ class HazelcastClient(object):
         """
         Shuts down this HazelcastClient.
         """
-        if self.lifecycle_service.running:
-            self.lifecycle_service.fire_lifecycle_event(LifecycleState.SHUTTING_DOWN)
-            self.lifecycle_service.shutdown()
-            self.near_cache_manager.destroy_near_caches()
-            self.connection_manager.shutdown()
-            self.invocation_service.shutdown()
-            self._statistics.shutdown()
-            self.lifecycle_service.fire_lifecycle_event(LifecycleState.SHUTDOWN)
-            self.reactor.shutdown()
-            self.logger.info("Client shutdown.", extra=self._logger_extras)
+        with self._shutdown_lock:
+            if self.lifecycle_service.running:
+                self.lifecycle_service.fire_lifecycle_event(LifecycleState.SHUTTING_DOWN)
+                self.lifecycle_service.shutdown()
+                self.near_cache_manager.destroy_near_caches()
+                self.connection_manager.shutdown()
+                self.invocation_service.shutdown()
+                self._statistics.shutdown()
+                self.reactor.shutdown()
+                self.lifecycle_service.fire_lifecycle_event(LifecycleState.SHUTDOWN)
 
     def _create_address_provider(self):
         network_config = self.config.network

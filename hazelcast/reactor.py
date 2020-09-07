@@ -61,7 +61,7 @@ class AsyncoreReactor(object):
         now = time.time()
         while not self._timers.empty():
             try:
-                _, timer = self._timers.queue[0]
+                timer = self._timers.queue[0][1]
             except IndexError:
                 return
 
@@ -84,6 +84,7 @@ class AsyncoreReactor(object):
     def shutdown(self):
         if not self._is_live:
             return
+
         self._is_live = False
 
         for connection in list(self._map.values()):
@@ -95,7 +96,8 @@ class AsyncoreReactor(object):
                 else:
                     raise
         self._map.clear()
-        self._thread.join()
+        if self._thread is not threading.current_thread():
+            self._thread.join()
 
     def connection_factory(self, connection_manager, connection_id, address, network_config, message_callback):
         return AsyncoreConnection(self._map, connection_manager, connection_id, address,
@@ -296,6 +298,8 @@ class Timer(object):
         if self.canceled:
             return True
 
-        if now > self.end:
+        if now >= self.end:
             self.timer_ended_cb()
             return True
+
+        return False

@@ -1,19 +1,20 @@
+import threading
+
 from hazelcast import ClientConfig
 from hazelcast.errors import HazelcastClientNotActiveError
 from tests.base import HazelcastTestCase
-from tests.util import configure_logging
 
 
 class ShutdownTest(HazelcastTestCase):
     rc = None
 
     def setUp(self):
-        configure_logging()
         self.rc = self.create_rc()
         self.cluster = self.create_cluster(self.rc)
 
     def tearDown(self):
         self.shutdown_all_clients()
+        self.rc.terminateCluster(self.cluster.id)
         self.rc.exit()
 
     def test_shutdown_not_hang_on_member_closed(self):
@@ -28,3 +29,29 @@ class ShutdownTest(HazelcastTestCase):
         with self.assertRaises(HazelcastClientNotActiveError):
             while True:
                 my_map.get("key").result()
+
+    def test_invocations_finalised_when_client_shutdowns(self):
+        self.cluster.start_member()
+        config = ClientConfig()
+        config.cluster_name = self.cluster.id
+        client = self.create_client(config)
+        m = client.get_map("test")
+        m.put("key", "value").result()
+
+        def run():
+            for _ in range(1000):
+                try:
+                    m.get("key").result()
+                except:
+                    pass
+
+        threads = []
+        for _ in range(10):
+            t = threading.Thread(target=run)
+            threads.append(t)
+            t.start()
+
+        client.shutdown()
+
+        for i in range(10):
+            threads[i].join(5)
