@@ -1,4 +1,5 @@
 import binascii
+import uuid
 from datetime import datetime
 from time import time
 
@@ -9,6 +10,8 @@ from hazelcast.serialization.api import StreamSerializer
 from hazelcast.serialization.base import HazelcastSerializationError
 from hazelcast.serialization.serialization_const import *
 from hazelcast.six.moves import range, cPickle
+
+from hazelcast.util import to_signed
 
 if not six.PY2:
     long = int
@@ -24,7 +27,8 @@ class NoneSerializer(BaseSerializer):
     def read(self, inp):
         return None
 
-    # "write(self, out, obj)" is never called so not implemented here
+    def write(self, out, obj):
+        pass
 
     def get_type_id(self):
         return CONSTANT_TYPE_NULL
@@ -78,10 +82,7 @@ class IntegerSerializer(BaseSerializer):
         return inp.read_int()
 
     def write(self, out, obj):
-        if obj.bit_length() < 32:
-            out.write_int(obj)
-        else:
-            raise ValueError("Serialization only supports 32 bit ints")
+        out.write_int(obj)
 
     def get_type_id(self):
         return CONSTANT_TYPE_INTEGER
@@ -92,10 +93,7 @@ class LongSerializer(BaseSerializer):
         return inp.read_long()
 
     def write(self, out, obj):
-        if obj.bit_length() < 64:
-            out.write_long(obj)
-        else:
-            raise ValueError("Serialization only supports 64 bit longs")
+        out.write_long(obj)
 
     def get_type_id(self):
         return CONSTANT_TYPE_LONG
@@ -134,6 +132,23 @@ class StringSerializer(BaseSerializer):
         return CONSTANT_TYPE_STRING
 
 
+class UuidSerializer(BaseSerializer):
+    def read(self, inp):
+        buf = bytearray(16)
+        inp.read_into(buf)
+        return uuid.UUID(bytes=bytes(buf))
+
+    def write(self, out, obj):
+        i = obj.int
+        msb = to_signed(i >> UUID_MSB_SHIFT, 64)
+        lsb = to_signed(i & UUID_LSB_MASK, 64)
+        out.write_long(msb)
+        out.write_long(lsb)
+
+    def get_type_id(self):
+        return CONSTANT_TYPE_UUID
+
+
 class HazelcastJsonValueSerializer(BaseSerializer):
     def read(self, inp):
         return HazelcastJsonValue(inp.read_utf())
@@ -160,7 +175,8 @@ class ByteArraySerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_byte_array()
 
-    # "write(self, out, obj)" is never called so not implemented here
+    def write(self, out, obj):
+        out.write_byte_array(obj)
 
     def get_type_id(self):
         return CONSTANT_TYPE_BYTE_ARRAY
