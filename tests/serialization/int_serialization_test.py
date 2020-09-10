@@ -1,6 +1,6 @@
 import unittest
 
-from hazelcast.config import SerializationConfig, INTEGER_TYPE
+from hazelcast.config import IntType, _Config
 from hazelcast.errors import HazelcastSerializationError
 from hazelcast.serialization.serialization_const import CONSTANT_TYPE_BYTE, CONSTANT_TYPE_SHORT, CONSTANT_TYPE_INTEGER, \
     CONSTANT_TYPE_LONG
@@ -15,9 +15,9 @@ big_int = 0x11223344556677881122334455667788
 
 class IntegerTestCase(unittest.TestCase):
     def test_dynamic_case(self):
-        config = SerializationConfig()
-        config.default_integer_type = INTEGER_TYPE.VAR
-        service = SerializationServiceV1(serialization_config=config)
+        config = _Config()
+        config.default_int_type = IntType.VAR
+        service = SerializationServiceV1(config)
 
         d1 = service.to_data(byte_val)
         d2 = service.to_data(short_val)
@@ -38,9 +38,9 @@ class IntegerTestCase(unittest.TestCase):
         self.assertEqual(v4, long_val)
 
     def test_byte_case(self):
-        config = SerializationConfig()
-        config.default_integer_type = INTEGER_TYPE.BYTE
-        service = SerializationServiceV1(serialization_config=config)
+        config = _Config()
+        config.default_int_type = IntType.BYTE
+        service = SerializationServiceV1(config)
 
         d1 = service.to_data(byte_val)
         v1 = service.to_object(d1)
@@ -51,9 +51,9 @@ class IntegerTestCase(unittest.TestCase):
             service.to_data(big_int)
 
     def test_short_case(self):
-        config = SerializationConfig()
-        config.default_integer_type = INTEGER_TYPE.SHORT
-        service = SerializationServiceV1(serialization_config=config)
+        config = _Config()
+        config.default_int_type = IntType.SHORT
+        service = SerializationServiceV1(config)
 
         d1 = service.to_data(byte_val)
         d2 = service.to_data(short_val)
@@ -68,9 +68,9 @@ class IntegerTestCase(unittest.TestCase):
             service.to_data(big_int)
 
     def test_int_case(self):
-        config = SerializationConfig()
-        config.default_integer_type = INTEGER_TYPE.INT
-        service = SerializationServiceV1(serialization_config=config)
+        config = _Config()
+        config.default_int_type = IntType.INT
+        service = SerializationServiceV1(config)
 
         d1 = service.to_data(byte_val)
         d2 = service.to_data(short_val)
@@ -89,9 +89,9 @@ class IntegerTestCase(unittest.TestCase):
             service.to_data(big_int)
 
     def test_long_case(self):
-        config = SerializationConfig()
-        config.default_integer_type = INTEGER_TYPE.LONG
-        service = SerializationServiceV1(serialization_config=config)
+        config = _Config()
+        config.default_int_type = IntType.LONG
+        service = SerializationServiceV1(config)
 
         d1 = service.to_data(byte_val)
         d2 = service.to_data(short_val)

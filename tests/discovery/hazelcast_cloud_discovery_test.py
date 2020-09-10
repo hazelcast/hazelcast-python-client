@@ -8,7 +8,6 @@ from unittest import TestCase
 from hazelcast.core import Address
 from hazelcast.errors import HazelcastCertificationError
 from hazelcast.discovery import HazelcastCloudDiscovery
-from hazelcast.config import ClientConfig
 from hazelcast.client import HazelcastClient
 from tests.util import get_abs_path
 
@@ -101,54 +100,57 @@ class HazelcastCloudDiscoveryTest(TestCase):
         cls.server.close_server()
 
     def test_found_response(self):
-        discovery = HazelcastCloudDiscovery(*get_params(HOST, self.server.port, CLOUD_URL, TOKEN))
+        discovery = create_discovery(HOST, self.server.port, CLOUD_URL, TOKEN)
         discovery._ctx = self.ctx
         addresses = discovery.discover_nodes()
 
         six.assertCountEqual(self, ADDRESSES, addresses)
 
     def test_private_link_response(self):
-        discovery = HazelcastCloudDiscovery(*get_params(HOST, self.server.port, CLOUD_URL, PRIVATE_LINK_TOKEN))
+        discovery = create_discovery(HOST, self.server.port, CLOUD_URL, PRIVATE_LINK_TOKEN)
         discovery._ctx = self.ctx
         addresses = discovery.discover_nodes()
 
         six.assertCountEqual(self, PRIVATE_LINK_ADDRESSES, addresses)
 
     def test_not_found_response(self):
-        discovery = HazelcastCloudDiscovery(*get_params(HOST, self.server.port, CLOUD_URL, "INVALID_TOKEN"))
+        discovery = create_discovery(HOST, self.server.port, CLOUD_URL, "INVALID_TOKEN")
         discovery._ctx = self.ctx
         with self.assertRaises(IOError):
             discovery.discover_nodes()
 
     def test_invalid_url(self):
-        discovery = HazelcastCloudDiscovery(*get_params(HOST, self.server.port, "/INVALID_URL", ""))
+        discovery = create_discovery(HOST, self.server.port, "/INVALID_URL", "")
         discovery._ctx = self.ctx
         with self.assertRaises(IOError):
             discovery.discover_nodes()
 
     def test_invalid_certificates(self):
-        discovery = HazelcastCloudDiscovery(*get_params(HOST, self.server.port, CLOUD_URL, TOKEN))
+        discovery = create_discovery(HOST, self.server.port, CLOUD_URL, TOKEN)
         with self.assertRaises(HazelcastCertificationError):
             discovery.discover_nodes()
 
     def test_client_with_cloud_discovery(self):
-        config = ClientConfig()
-        config.network.cloud.enabled = True
-        config.network.cloud.discovery_token = TOKEN
+        old = HazelcastCloudDiscovery._CLOUD_URL_BASE
+        try:
+            HazelcastCloudDiscovery._CLOUD_URL_BASE = "%s:%s" % (HOST, self.server.port)
+            client = TestClient(cloud_discovery_token=TOKEN)
+            client._address_provider.cloud_discovery._ctx = self.ctx
 
-        config.set_property(HazelcastCloudDiscovery.CLOUD_URL_BASE_PROPERTY.name, HOST + ":" + str(self.server.port))
-        client = TestClient(config)
-        client._address_provider.cloud_discovery._ctx = self.ctx
+            private_addresses, secondaries = client._address_provider.load_addresses()
 
-        private_addresses, secondaries = client._address_provider.load_addresses()
+            six.assertCountEqual(self, list(ADDRESSES.keys()), private_addresses)
+            six.assertCountEqual(self, secondaries, [])
 
-        six.assertCountEqual(self, list(ADDRESSES.keys()), private_addresses)
-        six.assertCountEqual(self, secondaries, [])
-
-        for private_address in private_addresses:
-            translated_address = client._address_provider.translate(private_address)
-            self.assertEqual(ADDRESSES[private_address], translated_address)
+            for private_address in private_addresses:
+                translated_address = client._address_provider.translate(private_address)
+                self.assertEqual(ADDRESSES[private_address], translated_address)
+        finally:
+            HazelcastCloudDiscovery._CLOUD_URL_BASE = old
 
 
-def get_params(host, port, url, token, timeout=5.0):
-    return host + ":" + str(port), url + token, timeout
+def create_discovery(host, port, url, token, timeout=5.0):
+    discovery = HazelcastCloudDiscovery(token, timeout)
+    discovery._CLOUD_URL_BASE = "%s:%s" % (host, port)
+    discovery._CLOUD_URL_PATH = url
+    return discovery

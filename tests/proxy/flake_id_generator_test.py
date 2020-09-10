@@ -5,9 +5,7 @@ import random
 from tests.base import SingleMemberTestCase, HazelcastTestCase
 from tests.hzrc.ttypes import Lang
 from tests.util import configure_logging
-from hazelcast.config import ClientConfig, FlakeIdGeneratorConfig, _MAXIMUM_PREFETCH_COUNT
 from hazelcast.client import HazelcastClient
-from hazelcast.util import to_millis
 from hazelcast.proxy.flake_id_generator import _IdBatch, _Block, _AutoBatcher
 from hazelcast.future import ImmediateFuture
 from hazelcast.errors import HazelcastError
@@ -20,44 +18,16 @@ NUM_IDS_IN_THREADS = 100000
 AUTO_BATCHER_BASE = 10
 
 
-class FlakeIdGeneratorConfigTest(HazelcastTestCase):
-    def setUp(self):
-        self.flake_id_config = FlakeIdGeneratorConfig()
-
-    def test_default_configuration(self):
-        self.assertEqual("default", self.flake_id_config.name)
-        self.assertEqual(100, self.flake_id_config.prefetch_count)
-        self.assertEqual(600000, self.flake_id_config.prefetch_validity_in_millis)
-
-    def test_custom_configuration(self):
-        self.flake_id_config.name = "test"
-        self.flake_id_config.prefetch_count = 333
-        self.flake_id_config.prefetch_validity_in_millis = 3333
-
-        self.assertEqual("test", self.flake_id_config.name)
-        self.assertEqual(333, self.flake_id_config.prefetch_count)
-        self.assertEqual(3333, self.flake_id_config.prefetch_validity_in_millis)
-
-    def test_prefetch_count_should_be_positive(self):
-        with self.assertRaises(ValueError):
-            self.flake_id_config.prefetch_count = 0
-
-        with self.assertRaises(ValueError):
-            self.flake_id_config.prefetch_count = -1
-
-    def test_prefetch_count_max_size(self):
-        with self.assertRaises(ValueError):
-            self.flake_id_config.prefetch_count = _MAXIMUM_PREFETCH_COUNT + 1
-
-
 class FlakeIdGeneratorTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
-        config.cluster_name = cls.cluster.id
-        flake_id_config = FlakeIdGeneratorConfig("short-term")
-        flake_id_config.prefetch_count = SHORT_TERM_BATCH_SIZE
-        flake_id_config.prefetch_validity_in_millis = to_millis(SHORT_TERM_VALIDITY_SECONDS)
-        config.add_flake_id_generator_config(flake_id_config)
+        config["cluster_name"] = cls.cluster.id
+        config["flake_id_generators"] = {
+            "short-term": {
+                "prefetch_count": SHORT_TERM_BATCH_SIZE,
+                "prefetch_validity": SHORT_TERM_VALIDITY_SECONDS,
+            }
+        }
         return config
 
     def setUp(self):
@@ -178,15 +148,15 @@ class FlakeIdGeneratorDataStructuresTest(HazelcastTestCase):
 
     def test_block_after_validity_period(self):
         id_batch = _IdBatch(-1, -2, 2)
-        block = _Block(id_batch, 1)
+        block = _Block(id_batch, 0.1)
 
         time.sleep(0.5)
 
-        self.assertTrueEventually(lambda: block.next_id() is None)
+        self.assertIsNone(block.next_id())
 
     def test_block_with_batch_exhaustion(self):
         id_batch = _IdBatch(100, 10000, 0)
-        block = _Block(id_batch, 1000)
+        block = _Block(id_batch, 1)
 
         self.assertIsNone(block.next_id())
 
@@ -247,10 +217,7 @@ class FlakeIdGeneratorIdOutOfRangeTest(HazelcastTestCase):
         response = self._assign_out_of_range_node_id(self.cluster.id, random.randint(0, 1))
         self.assertTrueEventually(lambda: response.success and response.result is not None)
 
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.network.smart_routing = False
-        client = HazelcastClient(config)
+        client = HazelcastClient(cluster_name=self.cluster.id, smart_routing=False)
 
         generator = client.get_flake_id_generator("test").blocking()
 
@@ -267,9 +234,7 @@ class FlakeIdGeneratorIdOutOfRangeTest(HazelcastTestCase):
         response2 = self._assign_out_of_range_node_id(self.cluster.id, 1)
         self.assertTrueEventually(lambda: response2.success and response2.result is not None)
 
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        client = HazelcastClient(config)
+        client = HazelcastClient(cluster_name=self.cluster.id)
         generator = client.get_flake_id_generator("test").blocking()
 
         with self.assertRaises(HazelcastError):

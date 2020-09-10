@@ -1,19 +1,18 @@
+import time
 from threading import Thread
 from time import sleep
 
-from hazelcast import ClientConfig
 from hazelcast.errors import HazelcastError, TargetDisconnectedError
 from hazelcast.lifecycle import LifecycleState
 from hazelcast.util import AtomicInteger
 from tests.base import HazelcastTestCase
-from tests.util import configure_logging, event_collector
+from tests.util import event_collector
 
 
 class ReconnectTest(HazelcastTestCase):
     rc = None
 
     def setUp(self):
-        configure_logging()
         self.rc = self.create_rc()
         self.cluster = self.create_cluster(self.rc)
 
@@ -22,29 +21,35 @@ class ReconnectTest(HazelcastTestCase):
         self.rc.exit()
 
     def test_start_client_with_no_member(self):
-        config = ClientConfig()
-        config.network.addresses.append("127.0.0.1:5701")
-        config.network.addresses.append("127.0.0.1:5702")
-        config.network.addresses.append("127.0.0.1:5703")
-        config.connection_strategy.connection_retry.cluster_connect_timeout = 2
         with self.assertRaises(HazelcastError):
-            self.create_client(config)
+            self.create_client({
+                "cluster_members": [
+                    "127.0.0.1:5701",
+                    "127.0.0.1:5702",
+                    "127.0.0.1:5703",
+                ],
+                "cluster_connect_timeout": 2,
+            })
 
     def test_start_client_before_member(self):
-        t = Thread(target=self.cluster.start_member)
+        def run():
+            time.sleep(1.0)
+            self.cluster.start_member()
+
+        t = Thread(target=run)
         t.start()
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.connection_strategy.connection_retry.cluster_connect_timeout = 5
-        self.create_client(config)
+        self.create_client({
+            "cluster_name": self.cluster.id,
+            "cluster_connect_timeout": 5.0,
+        })
         t.join()
 
     def test_restart_member(self):
         member = self.cluster.start_member()
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.connection_strategy.connection_retry.cluster_connect_timeout = 5
-        client = self.create_client(config)
+        client = self.create_client({
+            "cluster_name": self.cluster.id,
+            "cluster_connect_timeout": 5.0,
+        })
 
         state = [None]
 
@@ -60,10 +65,10 @@ class ReconnectTest(HazelcastTestCase):
 
     def test_listener_re_register(self):
         member = self.cluster.start_member()
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.connection_strategy.connection_retry.cluster_connect_timeout = 5
-        client = self.create_client(config)
+        client = self.create_client({
+            "cluster_name": self.cluster.id,
+            "cluster_connect_timeout": 5.0,
+        })
 
         map = client.get_map("map")
 
@@ -92,10 +97,10 @@ class ReconnectTest(HazelcastTestCase):
 
     def test_member_list_after_reconnect(self):
         old_member = self.cluster.start_member()
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.connection_strategy.connection_retry.cluster_connect_timeout = 5
-        client = self.create_client(config)
+        client = self.create_client({
+            "cluster_name": self.cluster.id,
+            "cluster_connect_timeout": 5.0,
+        })
         old_member.shutdown()
 
         new_member = self.cluster.start_member()
@@ -109,12 +114,14 @@ class ReconnectTest(HazelcastTestCase):
 
     def test_reconnect_toNewNode_ViaLastMemberList(self):
         old_member = self.cluster.start_member()
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.network.addresses.append("127.0.0.1:5701")
-        config.network.smart_routing = False
-        config.connection_strategy.connection_retry.cluster_connect_timeout = 10
-        client = self.create_client(config)
+        client = self.create_client({
+            "cluster_name": self.cluster.id,
+            "cluster_members": [
+                "127.0.0.1:5701",
+            ],
+            "smart_routing": False,
+            "cluster_connect_timeout": 10.0,
+        })
         new_member = self.cluster.start_member()
         old_member.shutdown()
 

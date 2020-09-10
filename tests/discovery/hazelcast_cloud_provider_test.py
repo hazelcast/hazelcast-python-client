@@ -17,9 +17,9 @@ class HazelcastCloudProviderTest(TestCase):
         self.expected_addresses[Address("10.0.0.1", 5702)] = Address("198.51.100.1", 5702)
         self.expected_addresses[Address("10.0.0.2", 5701)] = Address("198.51.100.2", 5701)
         self.expected_addresses[self.private_address] = self.public_address
-        self.cloud_discovery = HazelcastCloudDiscovery("", "", 0)
+        self.cloud_discovery = HazelcastCloudDiscovery("", 0)
         self.cloud_discovery.discover_nodes = lambda: self.expected_addresses
-        self.provider = HazelcastCloudAddressProvider("", "", 0)
+        self.provider = HazelcastCloudAddressProvider("", 0, None)
         self.provider.cloud_discovery = self.cloud_discovery
 
     def test_load_addresses(self):
@@ -58,9 +58,9 @@ class HazelcastCloudProviderTest(TestCase):
         self.assertIsNone(actual)
 
     def test_refresh_with_exception(self):
-        cloud_discovery = HazelcastCloudDiscovery("", "", 0)
+        cloud_discovery = HazelcastCloudDiscovery("", 0)
         cloud_discovery.discover_nodes = self.mock_discover_nodes_with_exception
-        provider = HazelcastCloudAddressProvider("", "", 0)
+        provider = HazelcastCloudAddressProvider("", 0, None)
         provider.cloud_discovery = cloud_discovery
         provider.refresh()
 

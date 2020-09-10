@@ -29,7 +29,7 @@ _APPENDAGE = ":CallableResult"  # defined on the server side
 class ExecutorTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
-        config.cluster_name = cls.cluster.id
+        config["cluster_name"] = cls.cluster.id
         return config
 
     @classmethod

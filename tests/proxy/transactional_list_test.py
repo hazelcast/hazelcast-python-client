@@ -5,7 +5,7 @@ from tests.util import random_string
 class TransactionalListTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
-        config.cluster_name = cls.cluster.id
+        config["cluster_name"] = cls.cluster.id
         return config
 
     def setUp(self):

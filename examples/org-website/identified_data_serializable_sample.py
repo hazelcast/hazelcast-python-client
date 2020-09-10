@@ -1,6 +1,5 @@
 import hazelcast
 
-from hazelcast import ClientConfig
 from hazelcast.serialization.api import IdentifiedDataSerializable
 
 
@@ -27,10 +26,11 @@ class Employee(IdentifiedDataSerializable):
         return self.CLASS_ID
 
 
-config = ClientConfig()
-my_factory = {Employee.CLASS_ID: Employee}
-config.serialization.add_data_serializable_factory(Employee.FACTORY_ID, my_factory)
 # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
-hz = hazelcast.HazelcastClient(config)
+hz = hazelcast.HazelcastClient(data_serializable_factories={
+    Employee.FACTORY_ID: {
+        Employee.CLASS_ID: Employee
+    }
+})
 # Employee can be used here
 hz.shutdown()

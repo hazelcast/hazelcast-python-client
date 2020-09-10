@@ -11,7 +11,7 @@ from collections import deque
 from functools import total_ordering
 
 from hazelcast import six
-from hazelcast.config import PROTOCOL
+from hazelcast.config import SSLProtocol
 from hazelcast.connection import Connection
 from hazelcast.core import Address
 from hazelcast.errors import HazelcastError
@@ -128,7 +128,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
     read_buffer_size = _BUFFER_SIZE
 
     def __init__(self, dispatcher_map, connection_manager, connection_id, address,
-                 network_config, message_callback, logger_extras):
+                 config, message_callback, logger_extras):
         asyncore.dispatcher.__init__(self, map=dispatcher_map)
         Connection.__init__(self, connection_manager, connection_id, message_callback, logger_extras)
         self.connected_address = address
@@ -137,7 +137,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         self._write_queue = deque()
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        timeout = network_config.connection_timeout
+        timeout = config.connection_timeout
         if not timeout:
             timeout = six.MAXSIZE
 
@@ -149,7 +149,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, _BUFFER_SIZE)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, _BUFFER_SIZE)
 
-        for socket_option in network_config.socket_options:
+        for socket_option in config.socket_options:
             if socket_option.option is socket.SO_RCVBUF:
                 self.read_buffer_size = socket_option.value
 
@@ -157,41 +157,40 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
         self.connect((address.host, address.port))
 
-        ssl_config = network_config.ssl
-        if ssl and ssl_config.enabled:
+        if ssl and config.ssl_enabled:
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
 
-            protocol = ssl_config.protocol
+            protocol = config.ssl_protocol
 
             # Use only the configured protocol
             try:
-                if protocol != PROTOCOL.SSLv2:
+                if protocol != SSLProtocol.SSLv2:
                     ssl_context.options |= ssl.OP_NO_SSLv2
-                if protocol != PROTOCOL.SSLv3 and protocol != PROTOCOL.SSL:
+                if protocol != SSLProtocol.SSLv3:
                     ssl_context.options |= ssl.OP_NO_SSLv3
-                if protocol != PROTOCOL.TLSv1:
+                if protocol != SSLProtocol.TLSv1:
                     ssl_context.options |= ssl.OP_NO_TLSv1
-                if protocol != PROTOCOL.TLSv1_1:
+                if protocol != SSLProtocol.TLSv1_1:
                     ssl_context.options |= ssl.OP_NO_TLSv1_1
-                if protocol != PROTOCOL.TLSv1_2 and protocol != PROTOCOL.TLS:
+                if protocol != SSLProtocol.TLSv1_2:
                     ssl_context.options |= ssl.OP_NO_TLSv1_2
-                if protocol != PROTOCOL.TLSv1_3:
+                if protocol != SSLProtocol.TLSv1_3:
                     ssl_context.options |= ssl.OP_NO_TLSv1_3
             except AttributeError:
                 pass
 
             ssl_context.verify_mode = ssl.CERT_REQUIRED
 
-            if ssl_config.cafile:
-                ssl_context.load_verify_locations(ssl_config.cafile)
+            if config.ssl_cafile:
+                ssl_context.load_verify_locations(config.ssl_cafile)
             else:
                 ssl_context.load_default_certs()
 
-            if ssl_config.certfile:
-                ssl_context.load_cert_chain(ssl_config.certfile, ssl_config.keyfile, ssl_config.password)
+            if config.ssl_certfile:
+                ssl_context.load_cert_chain(config.ssl_certfile, config.ssl_keyfile, config.ssl_password)
 
-            if ssl_config.ciphers:
-                ssl_context.set_ciphers(ssl_config.ciphers)
+            if config.ssl_ciphers:
+                ssl_context.set_ciphers(config.ssl_ciphers)
 
             self.socket = ssl_context.wrap_socket(self.socket)
 

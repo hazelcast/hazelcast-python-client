@@ -110,7 +110,7 @@ class List(PartitionSpecificProxy):
             member = self._context.cluster_service.get_member(uuid)
 
             item_event = ItemEvent(self.name, item, event_type, member, self._to_object)
-            if event_type == ItemEventType.added:
+            if event_type == ItemEventType.ADDED:
                 if item_added_func:
                     item_added_func(item_event)
             else:

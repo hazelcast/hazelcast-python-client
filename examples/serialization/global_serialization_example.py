@@ -12,6 +12,9 @@ class ColorGroup(object):
         self.name = name
         self.colors = colors
 
+    def __repr__(self):
+        return "ColorGroup(id=%s, name=%s, colors=%s)" % (self.id, self.name, self.colors)
+
 
 class GlobalSerializer(StreamSerializer):
     GLOBAL_SERIALIZER_ID = 5  # Should be greater than 0 and unique to each serializer
@@ -34,22 +37,18 @@ class GlobalSerializer(StreamSerializer):
         pass
 
 
-config = hazelcast.ClientConfig()
-config.serialization.global_serializer = GlobalSerializer
+client = hazelcast.HazelcastClient(global_serializer=GlobalSerializer)
 
-client = hazelcast.HazelcastClient(config)
-
-group = ColorGroup(id=1, name="Reds",
+group = ColorGroup(id=1,
+                   name="Reds",
                    colors=["Crimson", "Red", "Ruby", "Maroon"])
 
-my_map = client.get_map("map")
+my_map = client.get_map("map").blocking()
 
 my_map.put("group1", group)
 
-color_group = my_map.get("group1").result()
+color_group = my_map.get("group1")
 
-print("ID: {}\nName: {}\nColor: {}".format(color_group.id,
-                                           color_group.name,
-                                           color_group.colors))
+print("Received:", color_group)
 
 client.shutdown()

@@ -49,8 +49,6 @@ class PNCounter(Proxy):
     The CRDT state is kept entirely on non-lite (data) members. If there
     aren't any and the methods here are invoked on a lite member, they will
     fail with an NoDataMemberInClusterError.
-
-    Requires Hazelcast IMDG 3.10+.
     """
 
     _EMPTY_ADDRESS_LIST = []
@@ -66,7 +64,6 @@ class PNCounter(Proxy):
         Returns the current value of the counter.
 
         :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
-        :raises UnsupportedOperationError: if the cluster version is less than 3.10.
         :raises ConsistencyLostError: if the session guarantees have been lost.
 
         :return: (int), the current value of the counter.
@@ -78,7 +75,6 @@ class PNCounter(Proxy):
         Adds the given value to the current value and returns the previous value.
 
         :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
-        :raises UnsupportedOperationError: if the cluster version is less than 3.10.
         :raises ConsistencyLostError: if the session guarantees have been lost.
 
         :param delta: (int), the value to add.
@@ -92,7 +88,6 @@ class PNCounter(Proxy):
         Adds the given value to the current value and returns the updated value.
 
         :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
-        :raises UnsupportedOperationError: if the cluster version is less than 3.10.
         :raises ConsistencyLostError: if the session guarantees have been lost.
 
         :param delta: (int), the value to add.
@@ -106,7 +101,6 @@ class PNCounter(Proxy):
         Subtracts the given value from the current value and returns the previous value.
 
         :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
-        :raises UnsupportedOperationError: if the cluster version is less than 3.10.
         :raises ConsistencyLostError: if the session guarantees have been lost.
 
         :param delta: (int), the value to subtract.
@@ -120,7 +114,6 @@ class PNCounter(Proxy):
         Subtracts the given value from the current value and returns the updated value.
 
         :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
-        :raises UnsupportedOperationError: if the cluster version is less than 3.10.
         :raises ConsistencyLostError: if the session guarantees have been lost.
 
         :param delta: (int), the value to subtract.
@@ -134,7 +127,6 @@ class PNCounter(Proxy):
         Decrements the counter value by one and returns the previous value.
 
         :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
-        :raises UnsupportedOperationError: if the cluster version is less than 3.10.
         :raises ConsistencyLostError: if the session guarantees have been lost.
 
         :return: (int), the previous value.
@@ -147,7 +139,6 @@ class PNCounter(Proxy):
         Decrements the counter value by one and returns the updated value.
 
         :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
-        :raises UnsupportedOperationError: if the cluster version is less than 3.10.
         :raises ConsistencyLostError: if the session guarantees have been lost.
 
         :return: (int), the updated value.
@@ -160,7 +151,6 @@ class PNCounter(Proxy):
         Increments the counter value by one and returns the previous value.
 
         :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
-        :raises UnsupportedOperationError: if the cluster version is less than 3.10.
         :raises ConsistencyLostError: if the session guarantees have been lost.
 
         :return: (int), the previous value.

@@ -2,7 +2,7 @@
 import binascii
 import unittest
 
-from hazelcast.config import SerializationConfig
+from hazelcast.config import _Config
 from hazelcast.serialization.bits import *
 from hazelcast.serialization.data import Data
 from hazelcast.serialization.serialization_const import CONSTANT_TYPE_STRING
@@ -30,7 +30,7 @@ def to_data_byte(inp):
 
 class StringSerializationTestCase(unittest.TestCase):
     def setUp(self):
-        self.service = SerializationServiceV1(serialization_config=SerializationConfig())
+        self.service = SerializationServiceV1(_Config())
 
     def test_ascii_encode(self):
         data_byte = to_data_byte(TEST_DATA_ASCII)

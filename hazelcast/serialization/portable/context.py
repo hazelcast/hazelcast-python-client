@@ -114,7 +114,7 @@ class ClassDefinitionContext(object):
         try:
             current_version = self._current_class_versions[class_id]
             if current_version != version:
-                raise ValueError("Class-id: {} is already registered!".format(class_id))
+                raise ValueError("Class-id: %s is already registered!" % class_id)
         except KeyError:
             self._current_class_versions[class_id] = version
 
@@ -126,7 +126,7 @@ class ClassDefinitionContext(object):
             if class_def is None:
                 return None
             if class_def.factory_id != self._factory_id:
-                raise HazelcastSerializationError("Invalid factory-id! {} -> {}".format(self._factory_id, class_def))
+                raise HazelcastSerializationError("Invalid factory-id! %s -> %s" % (self._factory_id, class_def))
             if isinstance(class_def, ClassDefinition):
                 class_def.set_version_if_not_set(self._portable_version)
             combined_key = (class_def.class_id, class_def.version)
@@ -136,8 +136,8 @@ class ClassDefinitionContext(object):
             current_class_def = self._versioned_definitions[combined_key]
             if isinstance(current_class_def, ClassDefinition):
                 if current_class_def != class_def:
-                    raise HazelcastSerializationError("Incompatible class-definitions with same class-id: {} vs {}"
-                                                      .format(class_def, current_class_def))
+                    raise HazelcastSerializationError("Incompatible class-definitions with same class-id: %s vs %s"
+                                                      % (class_def, current_class_def))
                 return current_class_def
             self._versioned_definitions[combined_key] = class_def
             return class_def

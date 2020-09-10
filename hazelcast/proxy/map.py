@@ -1,6 +1,6 @@
 import itertools
 
-from hazelcast.config import _IndexUtil
+from hazelcast.config import IndexUtil, IndexType, IndexConfig
 from hazelcast.future import combine_futures, ImmediateFuture
 from hazelcast.invocation import Invocation
 from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_entry_listener_to_key_codec, \
@@ -82,9 +82,9 @@ class Map(Proxy):
 
         .. seealso:: :class:`~hazelcast.serialization.predicate.Predicate` for more info about predicates.
         """
-        flags = get_entry_listener_flags(added=added_func, removed=removed_func, updated=updated_func,
-                                         evicted=evicted_func, evict_all=evict_all_func, clear_all=clear_all_func,
-                                         merged=merged_func, expired=expired_func, loaded=loaded_func)
+        flags = get_entry_listener_flags(ADDED=added_func, REMOVED=removed_func, UPDATED=updated_func,
+                                         EVICTED=evicted_func, EXPIRED=expired_func, EVICT_ALL=evict_all_func,
+                                         CLEAR_ALL=clear_all_func, MERGED=merged_func, LOADED=loaded_func)
 
         if key and predicate:
             codec = map_add_entry_listener_to_key_with_predicate_codec
@@ -107,30 +107,30 @@ class Map(Proxy):
             event = EntryEvent(self._to_object, key_, value, old_value, merging_value,
                                event_type, uuid, number_of_affected_entries)
 
-            if event.event_type == EntryEventType.added:
+            if event.event_type == EntryEventType.ADDED:
                 added_func(event)
-            elif event.event_type == EntryEventType.removed:
+            elif event.event_type == EntryEventType.REMOVED:
                 removed_func(event)
-            elif event.event_type == EntryEventType.updated:
+            elif event.event_type == EntryEventType.UPDATED:
                 updated_func(event)
-            elif event.event_type == EntryEventType.evicted:
+            elif event.event_type == EntryEventType.EVICTED:
                 evicted_func(event)
-            elif event.event_type == EntryEventType.evict_all:
+            elif event.event_type == EntryEventType.EVICT_ALL:
                 evict_all_func(event)
-            elif event.event_type == EntryEventType.clear_all:
+            elif event.event_type == EntryEventType.CLEAR_ALL:
                 clear_all_func(event)
-            elif event.event_type == EntryEventType.merged:
+            elif event.event_type == EntryEventType.MERGED:
                 merged_func(event)
-            elif event.event_type == EntryEventType.expired:
+            elif event.event_type == EntryEventType.EXPIRED:
                 expired_func(event)
-            elif event.event_type == EntryEventType.loaded:
+            elif event.event_type == EntryEventType.LOADED:
                 loaded_func(event)
 
         return self._register_listener(request, lambda r: codec.decode_response(r),
                                        lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name, reg_id),
                                        lambda m: codec.handle(m, handle_event_entry))
 
-    def add_index(self, index_config):
+    def add_index(self, attributes=None, index_type=IndexType.SORTED, name=None, bitmap_index_options=None):
         """
         Adds an index to this map for the specified entries so that queries can run faster.
 
@@ -146,8 +146,8 @@ class Map(Proxy):
 
             If you query your values mostly based on age and active fields, you should consider indexing these.
                 >>> employees = self.client.get_map("employees")
-                >>> employees.add_index(IndexConfig("age")) # Sorted index for range queries
-                >>> employees.add_index(IndexConfig("active", INDEX_TYPE.HASH)) # Hash index for equality predicates
+                >>> employees.add_index(attributes=["age"]) # Sorted index for range queries
+                >>> employees.add_index(attributes=["active"], index_type=IndexType.HASH)) # Hash index for equality predicates
 
         Index attribute should either have a getter method or be public.
         You should also make sure to add the indexes before adding
@@ -160,10 +160,19 @@ class Map(Proxy):
         Until the index finishes being created, any searches for the attribute will use a full Map scan,
         thus avoiding using a partially built index and returning incorrect results.
 
-        :param index_config: (:class:`~hazelcast.config.IndexConfig`), index config.
+        :param attributes: (list), list of indexed attributes.
+        :param index_type: (:class:`~hazelcast.config.IndexType`), type of the index
+        :param name: (str), name of the index
+        :param bitmap_index_options: (dict), bitmap index options.
         """
-        check_not_none(index_config, "Index config cannot be None")
-        validated = _IndexUtil.validate_and_normalize(self.name, index_config)
+        d = {
+            "name": name,
+            "type": index_type,
+            "attributes": attributes,
+            "bitmap_index_options": bitmap_index_options,
+        }
+        config = IndexConfig.from_dict(d)
+        validated = IndexUtil.validate_and_normalize(self.name, config)
         request = map_add_index_codec.encode_request(self.name, validated)
         return self._invoke(request)
 
@@ -1070,7 +1079,7 @@ class MapFeatNearCache(Map):
     def _add_near_cache_invalidation_listener(self):
         try:
             codec = map_add_near_cache_invalidation_listener_codec
-            request = codec.encode_request(self.name, EntryEventType.invalidation, self._is_smart)
+            request = codec.encode_request(self.name, EntryEventType.INVALIDATION, self._is_smart)
             self._invalidation_listener_id = self._register_listener(
                 request, lambda r: codec.decode_response(r),
                 lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name, reg_id),

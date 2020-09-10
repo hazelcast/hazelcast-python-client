@@ -1,38 +1,25 @@
-import os
 import hazelcast
-from hazelcast.config import PROTOCOL
+from hazelcast.config import SSLProtocol
 
 # To use SSLConfig with mutual authentication, Hazelcast server should be started with
 # SSL and mutual authentication enabled
-config = hazelcast.ClientConfig()
-
-# SSL Config
-ssl_config = hazelcast.SSLConfig()
-ssl_config.enabled = True
-
-# Absolute path of PEM files should be given
-ssl_config.cafile = os.path.abspath("server.pem")
-
-# To use mutual authentication client certificate and private key should be provided
-ssl_config.certfile = os.path.abspath("client.pem")
-ssl_config.keyfile = os.path.abspath("client-key.pem")
-
-# If private key file is encrypted, password is required to decrypt it
-ssl_config.password = "key-file-password"
-
-# Select the protocol used in SSL communication. This step is optional. Default is TLSv1_2
-ssl_config.protocol = PROTOCOL.TLSv1_3
-
-config.network.ssl = ssl_config
-
-config.network.addresses.append("foo.bar.com:8888")
 
 # Start a new Hazelcast client with SSL configuration.
-client = hazelcast.HazelcastClient(config)
+client = hazelcast.HazelcastClient(cluster_members=["foo.bar.com:8888"],
+                                   ssl_enable=True,
+                                   # Absolute paths of PEM files must be given
+                                   ssl_cafile="/path/of/server.pem",
+                                   ssl_certfile="/path/of/client.pem",
+                                   ssl_keyfile="/path/of/client-private.pem",
+                                   # If private key is not password protected, skip the option below.
+                                   ssl_password="ssl_keyfile_password",
+                                   # Select the protocol used in SSL communication.
+                                   # This step is optional. Default is TLSv1_2
+                                   ssl_protocol=SSLProtocol.TLSv1_3)
 
-hz_map = client.get_map("ssl-map")
+hz_map = client.get_map("ssl-map").blocking()
 hz_map.put("key", "value")
 
-print(hz_map.get("key").result())
+print(hz_map.get("key"))
 
 client.shutdown()

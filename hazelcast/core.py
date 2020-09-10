@@ -3,7 +3,7 @@ import json
 
 from hazelcast import six
 from hazelcast import util
-from hazelcast.util import enum
+from hazelcast.util import with_reserved_items
 
 
 class MemberInfo(object):
@@ -13,7 +13,7 @@ class MemberInfo(object):
     Represents a member in the cluster with its address, uuid, lite member status, attributes and version.
     """
 
-    def __init__(self, address, uuid, attributes, lite_member, version, *args):
+    def __init__(self, address, uuid, attributes, lite_member, version, *_):
         self.address = address
         self.uuid = uuid
         self.attributes = attributes
@@ -120,13 +120,21 @@ class DistributedObjectInfo(object):
         return False
 
 
-DistributedObjectEventType = enum(CREATED="CREATED", DESTROYED="DESTROYED")
-"""
-Type of the distributed object event.
+@with_reserved_items
+class DistributedObjectEventType(object):
+    """
+    Type of the distributed object event.
+    """
 
-* CREATED : DistributedObject is created.
-* DESTROYED: DistributedObject is destroyed. 
-"""
+    CREATED = "CREATED"
+    """
+    DistributedObject is created.
+    """
+
+    DESTROYED = "DESTROYED"
+    """
+    DistributedObject is destroyed.
+    """
 
 
 class DistributedObjectEvent(object):
@@ -137,7 +145,7 @@ class DistributedObjectEvent(object):
     def __init__(self, name, service_name, event_type, source):
         self.name = name
         self.service_name = service_name
-        self.event_type = DistributedObjectEventType.reverse.get(event_type, None)
+        self.event_type = DistributedObjectEventType.reverse.get(event_type, event_type)
         self.source = source
 
     def __repr__(self):
@@ -214,10 +222,10 @@ class SimpleEntryView(object):
     def __repr__(self):
         return "SimpleEntryView(key=%s, value=%s, cost=%s, creation_time=%s, " \
                "expiration_time=%s, hits=%s, last_access_time=%s, last_stored_time=%s, " \
-               "last_update_time=%s, version=%s, eviction_criteria_number=%s, ttl=%s" \
+               "last_update_time=%s, version=%s, ttl=%s, max_idle=%s" \
                % (self.key, self.value, self.cost, self.creation_time, self.expiration_time, self.hits,
                   self.last_access_time, self.last_stored_time, self.last_update_time, self.version,
-                  self.eviction_criteria_number, self.ttl)
+                  self.ttl, self.max_idle)
 
 
 class MemberSelector(object):

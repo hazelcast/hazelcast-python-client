@@ -2,7 +2,6 @@ import os
 
 from tests.hzrc.ttypes import Lang
 
-from hazelcast.config import NearCacheConfig
 from tests.base import SingleMemberTestCase
 from tests.util import random_string
 from hazelcast.six.moves import range
@@ -19,16 +18,14 @@ class MapTest(SingleMemberTestCase):
 
     @classmethod
     def configure_client(cls, config):
-        config.cluster_name = cls.cluster.id
-
-        near_cache_config = NearCacheConfig(random_string())
-        # near_cache_config.time_to_live_seconds = 1000
-        # near_cache_config.max_idle_seconds = 1000
-        config.add_near_cache_config(near_cache_config)
-        return super(MapTest, cls).configure_client(config)
+        config["cluster_name"] = cls.cluster.id
+        config["near_caches"] = {
+            random_string(): {}
+        }
+        return config
 
     def setUp(self):
-        name = list(self.client.config.near_caches.values())[0].name
+        name = list(self.client.config.near_caches.keys())[0]
         self.map = self.client.get_map(name).blocking()
 
     def tearDown(self):

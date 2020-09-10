@@ -9,10 +9,10 @@ my_set.add("Item1")
 my_set.add("Item2")
 
 found = my_set.contains("Item2").result()
-print("Set contains Item2: {}".format(found))
+print("Set contains Item2:", found)
 
 items = my_set.get_all().result()
-print("Size of set: {}".format(len(items)))
+print("Size of set:", len(items))
 
 print("\nAll Items:")
 for item in items:

@@ -34,11 +34,11 @@ class Employee(Portable):
         return isinstance(other, Employee) and self.name == other.name and self.age == other.age
 
 
-config = hazelcast.ClientConfig()
-
-config.serialization.portable_factories[Employee.FACTORY_ID] = {Employee.CLASS_ID: Employee}
-
-client = hazelcast.HazelcastClient(config)
+client = hazelcast.HazelcastClient(portable_factories={
+    Employee.FACTORY_ID: {
+        Employee.CLASS_ID: Employee
+    }
+})
 
 my_map = client.get_map("employee-map")
 
@@ -46,16 +46,16 @@ my_map.put(0, Employee("Jack", 28))
 my_map.put(1, Employee("Jane", 29))
 my_map.put(2, Employee("Joe", 30))
 
-print("Map Size: {}".format(my_map.size().result()))
+print("Map Size:", my_map.size().result())
 
 predicate = sql("age <= 29")
 
 
 def values_callback(f):
     result_set = f.result()
-    print("Query Result Size: {}".format(len(result_set)))
+    print("Query Result Size:", len(result_set))
     for value in result_set:
-        print("value: {}".format(value))
+        print("Value:", value)
 
 
 my_map.values(predicate).add_done_callback(values_callback)

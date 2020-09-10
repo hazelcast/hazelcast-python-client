@@ -28,12 +28,15 @@ class Engineer(Portable):
     def get_class_id(self):
         return self.CLASS_ID
 
+    def __repr__(self):
+        return "Engineer(name=%s, age=%s, languages=%s)" % (self.name, self.age, self.languages)
 
-config = hazelcast.ClientConfig()
-factory = {Engineer.CLASS_ID: Engineer}
-config.serialization.add_portable_factory(Engineer.FACTORY_ID, factory)
 
-client = hazelcast.HazelcastClient(config)
+client = hazelcast.HazelcastClient(portable_factories={
+    Engineer.FACTORY_ID: {
+        Engineer.CLASS_ID: Engineer
+    }
+})
 
 my_map = client.get_map("map")
 
@@ -43,8 +46,6 @@ my_map.put("engineer1", engineer)
 
 returned_engineer = my_map.get("engineer1").result()
 
-print("Name: {}\nAge: {}\nLanguages: {}".format(returned_engineer.name,
-                                                returned_engineer.age,
-                                                returned_engineer.languages))
+print("Received", returned_engineer)
 
 client.shutdown()

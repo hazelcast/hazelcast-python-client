@@ -1,29 +1,30 @@
 from hazelcast.errors import HazelcastSerializationError
-from hazelcast.util import enum
 from hazelcast import six
+from hazelcast.util import with_reserved_items
 
-FieldType = enum(
-        PORTABLE=0,
-        BYTE=1,
-        BOOLEAN=2,
-        CHAR=3,
-        SHORT=4,
-        INT=5,
-        LONG=6,
-        FLOAT=7,
-        DOUBLE=8,
-        UTF=9,
-        PORTABLE_ARRAY=10,
-        BYTE_ARRAY=11,
-        BOOLEAN_ARRAY=12,
-        CHAR_ARRAY=13,
-        SHORT_ARRAY=14,
-        INT_ARRAY=15,
-        LONG_ARRAY=16,
-        FLOAT_ARRAY=17,
-        DOUBLE_ARRAY=18,
-        UTF_ARRAY=19
-)
+
+@with_reserved_items
+class FieldType(object):
+    PORTABLE = 0
+    BYTE = 1
+    BOOLEAN = 2
+    CHAR = 3
+    SHORT = 4
+    INT = 5
+    LONG = 6
+    FLOAT = 7
+    DOUBLE = 8
+    UTF = 9
+    PORTABLE_ARRAY = 10
+    BYTE_ARRAY = 11
+    BOOLEAN_ARRAY = 12
+    CHAR_ARRAY = 13
+    SHORT_ARRAY = 14
+    INT_ARRAY = 15
+    LONG_ARRAY = 16
+    FLOAT_ARRAY = 17
+    DOUBLE_ARRAY = 18
+    UTF_ARRAY = 19
 
 
 class FieldDefinition(object):
@@ -38,15 +39,18 @@ class FieldDefinition(object):
     def __eq__(self, other):
         return isinstance(other, self.__class__) \
                and (self.index, self.field_name, self.field_type, self.version, self.factory_id, self.class_id) == \
-                   (other.index, other.field_name, other.field_type, other.version, other.factory_id, other.class_id)
+               (other.index, other.field_name, other.field_type, other.version, other.factory_id, other.class_id)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __repr__(self):
-        return "FieldDefinition[ ix:{}, name:{}, type:{}, version:{}, fid:{}, cid:{}]".format(self.index,
-                                                                                              self.field_name,
-                                                                                              self.field_type,
-                                                                                              self.version,
-                                                                                              self.factory_id,
-                                                                                              self.class_id)
+        return "FieldDefinition(ix=%s, name=%s, type=%s, version=%s, fid=%s, cid=%s)" % (self.index,
+                                                                                         self.field_name,
+                                                                                         self.field_type,
+                                                                                         self.version,
+                                                                                         self.factory_id,
+                                                                                         self.class_id)
 
 
 class ClassDefinition(object):
@@ -67,7 +71,7 @@ class ClassDefinition(object):
                 for field in six.itervalues(self.field_defs):
                     if field.index == index:
                         return field
-            raise IndexError("Index is out of bound. Index: {} and size: {}".format(index, count))
+            raise IndexError("Index is out of bound. Index: %s and size: %s" % (index, count))
         else:
             return self.field_defs.get(field_name_or_index, None)
 
@@ -81,13 +85,13 @@ class ClassDefinition(object):
         fd = self.get_field(field_name)
         if fd:
             return fd.field_type
-        raise ValueError("Unknown field: {}".format(field_name))
+        raise ValueError("Unknown field: %s" % field_name)
 
     def get_field_class_id(self, field_name):
         fd = self.get_field(field_name)
         if fd:
             return fd.class_id
-        raise ValueError("Unknown field: {}".format(field_name))
+        raise ValueError("Unknown field: %s" % field_name)
 
     def get_field_count(self):
         return len(self.field_defs)
@@ -98,16 +102,16 @@ class ClassDefinition(object):
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and (self.factory_id, self.class_id, self.version, self.field_defs) == \
-                                                     (other.factory_id, other.class_id, other.version, other.field_defs)
+               (other.factory_id, other.class_id, other.version, other.field_defs)
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __repr__(self):
-        return "fid:{}, cid:{}, v:{}, fields:{}".format(self.factory_id, self.class_id, self.version, self.field_defs)
+        return "fid:%s, cid:%s, v:%s, fields:%s" % (self.factory_id, self.class_id, self.version, self.field_defs)
 
     def __hash__(self):
-        return id(self)//16
+        return hash((self.factory_id, self.class_id, self.version))
 
 
 class ClassDefinitionBuilder(object):
@@ -228,4 +232,4 @@ class ClassDefinitionBuilder(object):
 
     def _check(self):
         if self._done:
-            raise HazelcastSerializationError("ClassDefinition is already built for {}".format(self.class_id))
+            raise HazelcastSerializationError("ClassDefinition is already built for %s" % self.class_id)

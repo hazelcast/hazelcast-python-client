@@ -1,6 +1,5 @@
 import hazelcast
 
-from hazelcast import ClientConfig
 from hazelcast.serialization.api import Portable
 
 
@@ -30,10 +29,11 @@ class Customer(Portable):
         return self.CLASS_ID
 
 
-config = ClientConfig()
-my_factory = {Customer.CLASS_ID: Customer}
-config.serialization.add_portable_factory(Customer.FACTORY_ID, my_factory)
 # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
-hz = hazelcast.HazelcastClient(config)
+hz = hazelcast.HazelcastClient(portable_factories={
+    Customer.FACTORY_ID: {
+        Customer.CLASS_ID: Customer
+    }
+})
 # Customer can be used here
 hz.shutdown()

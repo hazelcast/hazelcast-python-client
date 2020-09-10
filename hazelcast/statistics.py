@@ -4,7 +4,6 @@ import os
 from hazelcast.invocation import Invocation
 from hazelcast.protocol.codec import client_statistics_codec
 from hazelcast.util import current_time_in_millis, to_millis, to_nanos, current_time
-from hazelcast.config import ClientProperties
 from hazelcast.version import CLIENT_VERSION, CLIENT_TYPE
 from hazelcast import six
 
@@ -32,7 +31,9 @@ class Statistics(object):
         self._invocation_service = invocation_service
         self._near_cache_manager = near_cache_manager
         self._logger_extras = logger_extras
-        self._enabled = client.properties.get_bool(ClientProperties.STATISTICS_ENABLED)
+        config = client.config
+        self._enabled = config.statistics_enabled
+        self._period = config.statistics_period
         self._statistics_timer = None
         self._failed_gauges = set()
 
@@ -40,27 +41,16 @@ class Statistics(object):
         if not self._enabled:
             return
 
-        period = self._client.properties.get_seconds(ClientProperties.STATISTICS_PERIOD_SECONDS)
-        if period <= 0:
-            default_period = self._client.properties.get_seconds_positive_or_default(
-                ClientProperties.STATISTICS_PERIOD_SECONDS)
-
-            self.logger.warning("Provided client statistics {} cannot be less than or equal to 0. "
-                                "You provided {} as the configuration. Client will use the default value "
-                                "{} instead.".format(ClientProperties.STATISTICS_PERIOD_SECONDS.name,
-                                                     period, default_period), extra=self._logger_extras)
-            period = default_period
-
         def _statistics_task():
             if not self._client.lifecycle_service.is_running():
                 return
 
             self._send_statistics()
-            self._statistics_timer = self._reactor.add_timer(period, _statistics_task)
+            self._statistics_timer = self._reactor.add_timer(self._period, _statistics_task)
 
-        self._statistics_timer = self._reactor.add_timer(period, _statistics_task)
+        self._statistics_timer = self._reactor.add_timer(self._period, _statistics_task)
 
-        self.logger.info("Client statistics enabled with the period of {} seconds.".format(period),
+        self.logger.info("Client statistics enabled with the period of %s seconds." % self._period,
                          extra=self._logger_extras)
 
     def shutdown(self):
@@ -192,12 +182,12 @@ class Statistics(object):
             try:
                 stat = func(self, psutil_stats, probe_name, *args)
             except AttributeError as ae:
-                self.logger.debug("Unable to register psutil method used for the probe {}. "
-                                  "Cause: {}".format(probe_name, ae), extra=self._logger_extras)
+                self.logger.debug("Unable to register psutil method used for the probe %s. "
+                                  "Cause: %s" % (probe_name, ae), extra=self._logger_extras)
                 self._failed_gauges.add(probe_name)
                 return
             except Exception as ex:
-                self.logger.warning("Failed to access the probe {}. Cause: {}".format(probe_name, ex),
+                self.logger.warning("Failed to access the probe %s. Cause: %s" % (probe_name, ex),
                                     extra=self._logger_extras)
                 stat = self._DEFAULT_PROBE_VALUE
 

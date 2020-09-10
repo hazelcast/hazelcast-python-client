@@ -1,15 +1,13 @@
 from tests.base import HazelcastTestCase
-from tests.util import configure_logging, random_string, event_collector
-from hazelcast.config import ClientConfig
+from tests.util import random_string, event_collector
 from time import sleep
 
 
 class SmartListenerTest(HazelcastTestCase):
     @classmethod
     def setUpClass(cls):
-        configure_logging()
         cls.rc = cls.create_rc()
-        cls.cluster = cls.create_cluster(cls.rc, None)  # Default config
+        cls.cluster = cls.create_cluster(cls.rc, None)
         cls.m1 = cls.cluster.start_member()
         cls.m2 = cls.cluster.start_member()
         cls.m3 = cls.cluster.start_member()
@@ -19,10 +17,10 @@ class SmartListenerTest(HazelcastTestCase):
         cls.rc.exit()
 
     def setUp(self):
-        client_config = ClientConfig()
-        client_config.cluster_name = self.cluster.id
-        client_config.network.smart_routing = True
-        self.client = self.create_client(client_config)
+        self.client = self.create_client({
+            "cluster_name": self.cluster.id,
+            "smart_routing": True,
+        })
         self.collector = event_collector()
 
     def tearDown(self):

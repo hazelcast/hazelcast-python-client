@@ -3,8 +3,8 @@ import time
 
 
 def on_message(event):
-    print("Got message: {}".format(event.message))
-    print("Publish time: {}\n".format(event.publish_time))
+    print("Got message:", event.message)
+    print("Publish time:", event.publish_time)
 
 
 client = hazelcast.HazelcastClient()

@@ -3,8 +3,8 @@ import threading
 import collections
 
 from hazelcast.proxy.base import Proxy, MAX_SIZE
-from hazelcast.config import FlakeIdGeneratorConfig
-from hazelcast.util import current_time_in_millis, TimeUnit, to_millis
+from hazelcast.config import _FlakeIdGeneratorConfig
+from hazelcast.util import TimeUnit, to_millis, current_time
 from hazelcast.protocol.codec import flake_id_generator_new_id_batch_codec
 from hazelcast.future import ImmediateFuture, Future
 
@@ -32,8 +32,6 @@ class FlakeIdGenerator(Proxy):
     member with join version smaller than 2^16 in the cluster. The remedy is to restart the cluster:
     nodeId will be assigned from zero again. Uniqueness after the restart will be preserved thanks to
     the timestamp component.
-
-    Requires Hazelcast IMDG 3.10
     """
     _BITS_NODE_ID = 16
     _BITS_SEQUENCE = 6
@@ -43,10 +41,9 @@ class FlakeIdGenerator(Proxy):
 
         config = context.config.flake_id_generators.get(name, None)
         if config is None:
-            config = FlakeIdGeneratorConfig()
+            config = _FlakeIdGeneratorConfig()
 
-        self._auto_batcher = _AutoBatcher(config.prefetch_count, config.prefetch_validity_in_millis,
-                                          self._new_id_batch)
+        self._auto_batcher = _AutoBatcher(config.prefetch_count, config.prefetch_validity, self._new_id_batch)
 
     def new_id(self):
         """
@@ -60,8 +57,6 @@ class FlakeIdGenerator(Proxy):
 
         :raises HazelcastError: if node ID for all members in the cluster is out of valid range.
             See "Node ID overflow" note above.
-        :raises UnsupportedOperationError: if the cluster version is below 3.10.
-
         :return: (int), new cluster-wide unique ID.
         """
         return self._auto_batcher.new_id()
@@ -97,9 +92,9 @@ class FlakeIdGenerator(Proxy):
 
 
 class _AutoBatcher(object):
-    def __init__(self, batch_size, validity_in_millis, id_generator):
+    def __init__(self, batch_size, validity, id_generator):
         self._batch_size = batch_size
-        self._validity_in_millis = validity_in_millis
+        self._validity = validity
         self._batch_id_supplier = id_generator
         self._block = _Block(_IdBatch(0, 0, 0), 0)
         self._lock = threading.RLock()
@@ -133,7 +128,7 @@ class _AutoBatcher(object):
         try:
             new_batch_required = False
             id_batch = future.result()
-            block = _Block(id_batch, self._validity_in_millis)
+            block = _Block(id_batch, self._validity)
             with self._lock:
                 while True:
                     try:
@@ -186,13 +181,13 @@ class _IdBatch(object):
 
 
 class _Block(object):
-    def __init__(self, id_batch, validity_in_millis):
+    def __init__(self, id_batch, validity):
         self._id_batch = id_batch
         self._iterator = iter(self._id_batch)
-        self._invalid_since = validity_in_millis + current_time_in_millis() if validity_in_millis > 0 else MAX_SIZE
+        self._invalid_since = validity + current_time() if validity > 0 else MAX_SIZE
 
     def next_id(self):
-        if self._invalid_since <= current_time_in_millis():
+        if self._invalid_since <= current_time():
             return None
 
         return next(self._iterator, None)

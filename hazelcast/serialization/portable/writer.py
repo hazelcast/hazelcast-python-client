@@ -146,13 +146,13 @@ class DefaultPortableWriter(PortableWriter):
             raise HazelcastSerializationError("Cannot write Portable fields after get_raw_data_output() is called!")
         fd = self._class_def.get_field(field_name)
         if fd is None:
-            raise HazelcastSerializationError("Invalid field name:'{}' for ClassDefinition(id:{} , version:{} )"
-                                              .format(field_name, self._class_def.class_id, self._class_def.version))
+            raise HazelcastSerializationError("Invalid field name:'%s' for ClassDefinition(id:%s , version:%s )"
+                                              % (field_name, self._class_def.class_id, self._class_def.version))
         if field_name not in self._writen_fields:
             self._write_field_def(fd.index, field_name, field_type)
             self._writen_fields.add(field_name)
         else:
-            raise HazelcastSerializationError("Field '{}' has already been written!".format(field_name))
+            raise HazelcastSerializationError("Field '%s' has already been written!" % field_name)
         return fd
 
     def _write_field_def(self, index, field_name, field_type):
@@ -172,12 +172,12 @@ class DefaultPortableWriter(PortableWriter):
 def _check_portable_attributes(field_def, portable):
     if field_def.factory_id != portable.get_factory_id():
         raise HazelcastSerializationError("Wrong Portable type! Generic portable types are not supported! "
-                                          "Expected factory-id: {}, Actual factory-id: {}"
-                                          .format(field_def.factory_id, portable.get_factory_id()))
+                                          "Expected factory-id: %s, Actual factory-id: %s"
+                                          % (field_def.factory_id, portable.get_factory_id()))
     if field_def.class_id != portable.get_class_id():
         raise HazelcastSerializationError("Wrong Portable type! Generic portable types are not supported! "
-                                          "Expected class-id: {}, Actual class-id: {}"
-                                          .format(field_def.class_id, portable.get_class_id()))
+                                          "Expected class-id: %s, Actual class-id: %s"
+                                          % (field_def.class_id, portable.get_class_id()))
 
 
 class ClassDefinitionWriter(PortableWriter):

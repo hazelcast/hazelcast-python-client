@@ -10,14 +10,10 @@ class CustomSerializableType(object):
 
 class CustomSerializer(StreamSerializer):
     def write(self, out, obj):
-        out.write_int(len(obj.value))
-        out.write_from(obj.value)
+        out.write_utf(obj.value)
 
     def read(self, inp):
-        length = inp.read_int()
-        result = bytearray(length)
-        inp.read_into(result, 0, length)
-        return CustomSerializableType(result.decode("utf-8"))
+        return CustomSerializableType(inp.read_utf())
 
     def get_type_id(self):
         return 10
@@ -26,10 +22,10 @@ class CustomSerializer(StreamSerializer):
         pass
 
 
-config = hazelcast.ClientConfig()
-config.serialization.set_custom_serializer(CustomSerializableType, CustomSerializer)
-
 # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
-hz = hazelcast.HazelcastClient(config)
+hz = hazelcast.HazelcastClient(custom_serializers={
+    CustomSerializableType: CustomSerializer
+})
+
 # CustomSerializer will serialize/deserialize CustomSerializable objects
 hz.shutdown()

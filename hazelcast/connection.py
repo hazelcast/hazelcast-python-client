@@ -8,7 +8,7 @@ import io
 import uuid
 from collections import OrderedDict
 
-from hazelcast.config import RECONNECT_MODE
+from hazelcast.config import ReconnectMode
 from hazelcast.core import AddressHelper
 from hazelcast.errors import AuthenticationError, TargetDisconnectedError, HazelcastClientNotActiveError, \
     InvalidConfigurationError, ClientNotAllowedInClusterError, IllegalStateError, ClientOfflineError
@@ -18,7 +18,7 @@ from hazelcast.lifecycle import LifecycleState
 from hazelcast.protocol.client_message import SIZE_OF_FRAME_LENGTH_AND_FLAGS, Frame, InboundMessage, \
     ClientMessageBuilder
 from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
-from hazelcast.util import AtomicInteger, calculate_version, UNKNOWN_VERSION, enum
+from hazelcast.util import AtomicInteger, calculate_version, UNKNOWN_VERSION
 from hazelcast.version import CLIENT_TYPE, CLIENT_VERSION, SERIALIZATION_VERSION
 from hazelcast import six
 
@@ -65,8 +65,11 @@ class _WaitStrategy(object):
         return True
 
 
-_AuthenticationStatus = enum(AUTHENTICATED=0, CREDENTIALS_FAILED=1,
-                             SERIALIZATION_VERSION_MISMATCH=2, NOT_ALLOWED_IN_CLUSTER=3)
+class _AuthenticationStatus(object):
+    AUTHENTICATED = 0
+    CREDENTIALS_FAILED = 1
+    SERIALIZATION_VERSION_MISMATCH = 2
+    NOT_ALLOWED_IN_CLUSTER = 3
 
 
 class ConnectionManager(object):
@@ -92,20 +95,19 @@ class ConnectionManager(object):
         self._near_cache_manager = near_cache_manager
         self._logger_extras = logger_extras
         config = self._client.config
-        self._smart_routing_enabled = config.network.smart_routing
+        self._smart_routing_enabled = config.smart_routing
         self._wait_strategy = self._init_wait_strategy(config)
-        self._reconnect_mode = config.connection_strategy.reconnect_mode
+        self._reconnect_mode = config.reconnect_mode
         self._heartbeat_manager = _HeartbeatManager(self, self._client, reactor, invocation_service, logger_extras)
         self._connection_listeners = []
         self._connect_all_members_timer = None
-        self._async_start = config.connection_strategy.async_start
+        self._async_start = config.async_start
         self._connect_to_cluster_thread_running = False
         self._pending_connections = dict()
-        props = self._client.properties
-        self._shuffle_member_list = props.get_bool(props.SHUFFLE_MEMBER_LIST)
+        self._shuffle_member_list = config.shuffle_member_list
         self._lock = threading.RLock()
         self._connection_id_generator = AtomicInteger()
-        self._labels = config.labels
+        self._labels = frozenset(config.labels)
         self._cluster_id = None
         self._load_balancer = None
 
@@ -221,13 +223,13 @@ class ConnectionManager(object):
         if self.active_connections:
             return
 
-        if self._async_start or self._reconnect_mode == RECONNECT_MODE.ASYNC:
+        if self._async_start or self._reconnect_mode == ReconnectMode.ASYNC:
             raise ClientOfflineError()
         else:
             raise IOError("No connection found to cluster")
 
     def _trigger_cluster_reconnection(self):
-        if self._reconnect_mode == RECONNECT_MODE.OFF:
+        if self._reconnect_mode == ReconnectMode.OFF:
             self.logger.info("Reconnect mode is OFF. Shutting down the client", extra=self._logger_extras)
             self._shutdown_client()
             return
@@ -236,9 +238,8 @@ class ConnectionManager(object):
             self._start_connect_to_cluster_thread()
 
     def _init_wait_strategy(self, config):
-        retry_config = config.connection_strategy.connection_retry
-        return _WaitStrategy(retry_config.initial_backoff, retry_config.max_backoff, retry_config.multiplier,
-                             retry_config.cluster_connect_timeout, retry_config.jitter, self._logger_extras)
+        return _WaitStrategy(config.retry_initial_backoff, config.retry_max_backoff, config.retry_multiplier,
+                             config.cluster_connect_timeout, config.retry_jitter, self._logger_extras)
 
     def _start_connect_all_members_timer(self):
         connecting_addresses = set()
@@ -362,7 +363,7 @@ class ConnectionManager(object):
 
                         factory = self._reactor.connection_factory
                         connection = factory(self, self._connection_id_generator.get_and_increment(),
-                                             translated, self._client.config.network,
+                                             translated, self._client.config,
                                              self._invocation_service.handle_client_message)
                     except IOError:
                         return ImmediateExceptionFuture(sys.exc_info()[1], sys.exc_info()[2])
@@ -499,10 +500,9 @@ class _HeartbeatManager(object):
         self._reactor = reactor
         self._invocation_service = invocation_service
         self._logger_extras = logger_extras
-
-        props = client.properties
-        self._heartbeat_timeout = props.get_seconds_positive_or_default(props.HEARTBEAT_TIMEOUT)
-        self._heartbeat_interval = props.get_seconds_positive_or_default(props.HEARTBEAT_INTERVAL)
+        config = client.config
+        self._heartbeat_timeout = config.heartbeat_timeout
+        self._heartbeat_interval = config.heartbeat_interval
 
     def start(self):
         """
@@ -532,10 +532,10 @@ class _HeartbeatManager(object):
             return
 
         if (now - connection.last_read_time) > self._heartbeat_timeout:
-            if connection.live:
-                self.logger.warning("Heartbeat failed over the connection: %s" % connection, extra=self._logger_extras)
-                connection.close("Heartbeat timed out",
-                                 TargetDisconnectedError("Heartbeat timed out to connection %s" % connection))
+            self.logger.warning("Heartbeat failed over the connection: %s" % connection, extra=self._logger_extras)
+            connection.close("Heartbeat timed out",
+                             TargetDisconnectedError("Heartbeat timed out to connection %s" % connection))
+            return
 
         if (now - connection.last_write_time) > self._heartbeat_interval:
             request = client_ping_codec.encode_request()

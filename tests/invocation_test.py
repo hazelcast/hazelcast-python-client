@@ -1,7 +1,6 @@
 import time
 
 import hazelcast
-from hazelcast.config import ClientProperties
 from hazelcast.errors import HazelcastTimeoutError
 from hazelcast.invocation import Invocation
 from hazelcast.protocol.client_message import OutboundMessage
@@ -21,13 +20,15 @@ class InvocationTest(HazelcastTestCase):
         cls.rc.exit()
 
     def setUp(self):
-        config = hazelcast.ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.set_property(ClientProperties.INVOCATION_TIMEOUT_SECONDS.name, 1)
-        self.client = hazelcast.HazelcastClient(config)
+        self.client = hazelcast.HazelcastClient(cluster_name=self.cluster.id, invocation_timeout=1)
 
     def tearDown(self):
         self.client.shutdown()
+
+    def configure_client(cls, config):
+        config["cluster_name"] = cls.cluster.id
+        config["invocation_timeout"] = 1
+        return config
 
     def test_invocation_timeout(self):
         request = OutboundMessage(bytearray(22), True)

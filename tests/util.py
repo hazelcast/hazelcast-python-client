@@ -3,7 +3,7 @@ import os
 import time
 
 from uuid import uuid4
-from hazelcast.config import ClientConfig, PROTOCOL
+from hazelcast.config import SSLProtocol
 
 
 def random_string():
@@ -39,19 +39,19 @@ def get_ssl_config(cluster_name, enable_ssl=False,
                    certfile=None,
                    keyfile=None,
                    password=None,
-                   protocol=PROTOCOL.TLS,
+                   protocol=SSLProtocol.TLSv1_2,
                    ciphers=None):
-    config = ClientConfig()
-    config.cluster_name = cluster_name
-    config.network.ssl.enabled = enable_ssl
-    config.network.ssl.cafile = cafile
-    config.network.ssl.certfile = certfile
-    config.network.ssl.keyfile = keyfile
-    config.network.ssl.password = password
-    config.network.ssl.protocol = protocol
-    config.network.ssl.ciphers = ciphers
-
-    config.connection_strategy.connection_retry.cluster_connect_timeout = 2
+    config = {
+        "cluster_name": cluster_name,
+        "ssl_enabled": enable_ssl,
+        "ssl_cafile": cafile,
+        "ssl_certfile": certfile,
+        "ssl_keyfile": keyfile,
+        "ssl_password": password,
+        "ssl_protocol": protocol,
+        "ssl_ciphers": ciphers,
+        "cluster_connect_timeout": 2,
+    }
     return config
 
 

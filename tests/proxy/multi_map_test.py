@@ -13,7 +13,7 @@ from hazelcast.six.moves import range
 class MultiMapTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
-        config.cluster_name = cls.cluster.id
+        config["cluster_name"] = cls.cluster.id
         return config
 
     def setUp(self):
@@ -30,7 +30,7 @@ class MultiMapTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key', event_type=EntryEventType.added, value='value')
+            self.assertEntryEvent(event, key='key', event_type=EntryEventType.ADDED, value='value')
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -43,7 +43,7 @@ class MultiMapTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key', event_type=EntryEventType.removed, old_value='value')
+            self.assertEntryEvent(event, key='key', event_type=EntryEventType.REMOVED, old_value='value')
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -56,7 +56,7 @@ class MultiMapTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, event_type=EntryEventType.clear_all, number_of_affected_entries=1)
+            self.assertEntryEvent(event, event_type=EntryEventType.CLEAR_ALL, number_of_affected_entries=1)
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -69,7 +69,7 @@ class MultiMapTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key1', event_type=EntryEventType.added, value='value1')
+            self.assertEntryEvent(event, key='key1', event_type=EntryEventType.ADDED, value='value1')
 
         self.assertTrueEventually(assert_event, 5)
 
