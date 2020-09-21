@@ -47,9 +47,6 @@ class Invocation(object):
             self.timer.cancel()
         self.future.set_exception(exception, traceback)
 
-    def on_timeout(self):
-        self.set_exception(HazelcastTimeoutError("Request timed out."))
-
 
 class InvocationService(object):
     logger = logging.getLogger("HazelcastClient.InvocationService")
@@ -192,7 +189,8 @@ class InvocationService(object):
 
         self._pending[correlation_id] = invocation
         if not invocation.timer:
-            invocation.timer = self._client.reactor.add_timer_absolute(invocation.timeout, invocation.on_timeout)
+            invocation.timer = self._client.reactor.add_timer_absolute(invocation.timeout,
+                                                                       self._on_invocation_timeout(invocation))
 
         if invocation.event_handler:
             self._listener_service.add_event_handler(correlation_id, invocation.event_handler)
@@ -245,3 +243,10 @@ class InvocationService(object):
             return invocation.request.retryable or self._is_redo_operation
 
         return False
+
+    def _on_invocation_timeout(self, invocation):
+        def inner():
+            invocation.set_exception(HazelcastTimeoutError("Request timed out."))
+            correlation_id = invocation.request.get_correlation_id()
+            self._pending.pop(correlation_id, None)
+        return inner

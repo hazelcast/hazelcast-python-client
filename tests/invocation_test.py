@@ -19,13 +19,26 @@ class InvocationTest(SingleMemberTestCase):
         invocation_service = self.client.invocation_service
         invocation = Invocation(request, partition_id=1)
 
-        def mock(*args):
+        def mock(*_):
             time.sleep(2)
             return False
 
         invocation_service._invoke_on_partition_owner = mock
         invocation_service._invoke_on_random_connection = lambda i: False
 
+        invocation_service.invoke(invocation)
         with self.assertRaises(HazelcastTimeoutError):
-            invocation_service.invoke(invocation)
             invocation.future.result()
+
+        self.assertEqual(0, len(invocation_service._pending))
+
+    def test_invocation_timeout_through_timer(self):
+        request = OutboundMessage(bytearray(22), True)
+        invocation_service = self.client.invocation_service
+        invocation = Invocation(request)
+        invocation_service.invoke(invocation)
+
+        with self.assertRaises(HazelcastTimeoutError):
+            invocation.future.result()
+
+        self.assertEqual(0, len(invocation_service._pending))
