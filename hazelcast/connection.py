@@ -336,10 +336,14 @@ class ConnectionManager(object):
             return None
 
     def _get_or_connect(self, address):
+        connection = self.get_connection_from_address(address)
+        if connection:
+            return ImmediateFuture(connection)
+
         with self._lock:
-            addr = self.get_connection_from_address(address)
-            if addr:
-                return ImmediateFuture(addr)
+            connection = self.get_connection_from_address(address)
+            if connection:
+                return ImmediateFuture(connection)
             else:
                 pending = self._pending_connections.get(address, None)
                 if pending:
