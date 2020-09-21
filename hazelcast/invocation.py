@@ -16,7 +16,7 @@ def _no_op_response_handler(_):
 
 class Invocation(object):
     __slots__ = ("request", "timeout", "partition_id", "uuid", "connection", "event_handler",
-                 "future", "sent_connection", "timer", "urgent", "response_handler")
+                 "future", "sent_connection", "urgent", "response_handler")
 
     def __init__(self, request, partition_id=-1, uuid=None, connection=None,
                  event_handler=None, urgent=False, timeout=None, response_handler=_no_op_response_handler):
@@ -30,12 +30,9 @@ class Invocation(object):
         self.future = Future()
         self.timeout = None
         self.sent_connection = None
-        self.timer = None
         self.response_handler = response_handler
 
     def set_response(self, response):
-        if self.timer:
-            self.timer.cancel()
         try:
             result = self.response_handler(response)
             self.future.set_result(result)
@@ -43,8 +40,6 @@ class Invocation(object):
             self.future.set_exception(e)
 
     def set_exception(self, exception, traceback=None):
-        if self.timer:
-            self.timer.cancel()
         self.future.set_exception(exception, traceback)
 
 
@@ -186,11 +181,7 @@ class InvocationService(object):
         message = invocation.request
         message.set_correlation_id(correlation_id)
         message.set_partition_id(invocation.partition_id)
-
         self._pending[correlation_id] = invocation
-        if not invocation.timer:
-            invocation.timer = self._client.reactor.add_timer_absolute(invocation.timeout,
-                                                                       self._on_invocation_timeout(invocation))
 
         if invocation.event_handler:
             self._listener_service.add_event_handler(correlation_id, invocation.event_handler)
@@ -243,10 +234,3 @@ class InvocationService(object):
             return invocation.request.retryable or self._is_redo_operation
 
         return False
-
-    def _on_invocation_timeout(self, invocation):
-        def inner():
-            invocation.set_exception(HazelcastTimeoutError("Request timed out."))
-            correlation_id = invocation.request.get_correlation_id()
-            self._pending.pop(correlation_id, None)
-        return inner
