@@ -88,6 +88,9 @@ class AsyncoreReactor(object):
 
         self._is_live = False
 
+        if self._thread is not threading.current_thread():
+            self._thread.join()
+
         for connection in list(self._map.values()):
             try:
                 connection.close(None, HazelcastError("Client is shutting down"))
@@ -97,8 +100,6 @@ class AsyncoreReactor(object):
                 else:
                     raise
         self._map.clear()
-        if self._thread is not threading.current_thread():
-            self._thread.join()
 
     def connection_factory(self, connection_manager, connection_id, address, network_config, message_callback):
         return AsyncoreConnection(self._map, connection_manager, connection_id, address,
