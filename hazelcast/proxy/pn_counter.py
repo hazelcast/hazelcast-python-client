@@ -12,9 +12,8 @@ from hazelcast.six.moves import range
 
 
 class PNCounter(Proxy):
-    """
-    PN (Positive-Negative) CRDT counter.
-
+    """PN (Positive-Negative) CRDT counter.
+    
     The counter supports adding and subtracting values as well as
     retrieving the current counter value.
     Each replica of this counter can perform operations locally without
@@ -24,19 +23,19 @@ class PNCounter(Proxy):
     identical, and any conflicting updates are merged automatically.
     If no new updates are made to the shared state, all nodes that can
     communicate will eventually have the same data.
-
+    
     When invoking updates from the client, the invocation is remote.
     This may lead to indeterminate state - the update may be applied but the
     response has not been received. In this case, the caller will be notified
     with a TargetDisconnectedError.
-
+    
     The read and write methods provide monotonic read and RYW (read-your-write)
     guarantees. These guarantees are session guarantees which means that if
     no replica with the previously observed state is reachable, the session
     guarantees are lost and the method invocation will throw a
     ConsistencyLostError. This does not mean
     that an update is lost. All of the updates are part of some replica and
-    will be eventually reflected in the state of all other replicas. This
+    will be eventually reflected in the state of all other replicas. This 
     exception just means that you cannot observe your own writes because
     all replicas that contain your updates are currently unreachable.
     After you have received a ConsistencyLostError, you can either
@@ -45,10 +44,10 @@ class PNCounter(Proxy):
     the reset() method. If you have called the reset() method,
     a new session is started with the next invocation to a CRDT replica.
 
-    NOTE:
-    The CRDT state is kept entirely on non-lite (data) members. If there
-    aren't any and the methods here are invoked on a lite member, they will
-    fail with an NoDataMemberInClusterError.
+    Notes:
+        The CRDT state is kept entirely on non-lite (data) members. If there
+        aren't any and the methods here are invoked on a lite member, they will
+        fail with an NoDataMemberInClusterError.
     """
 
     _EMPTY_ADDRESS_LIST = []
@@ -60,121 +59,138 @@ class PNCounter(Proxy):
         self._current_target_replica_address = None
 
     def get(self):
-        """
-        Returns the current value of the counter.
+        """Returns the current value of the counter.
 
-        :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
-        :raises ConsistencyLostError: if the session guarantees have been lost.
+        Returns:
+            hazelcast.future.Future[int]: The current value of the counter.
 
-        :return: (int), the current value of the counter.
+        Raises:
+            NoDataMemberInClusterError: if the cluster does not contain any data members.
+            ConsistencyLostError: if the session guarantees have been lost.
         """
         return self._invoke_internal(pn_counter_get_codec)
 
     def get_and_add(self, delta):
-        """
-        Adds the given value to the current value and returns the previous value.
+        """Adds the given value to the current value and returns the previous value.
 
-        :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
-        :raises ConsistencyLostError: if the session guarantees have been lost.
+        Args:
+          delta (int): The value to add.
 
-        :param delta: (int), the value to add.
-        :return: (int), the previous value.
+        Returns:
+            hazelcast.future.Future[int]: The previous value.
+
+        Raises:
+            NoDataMemberInClusterError: if the cluster does not contain any data members.
+            ConsistencyLostError: if the session guarantees have been lost.
         """
 
         return self._invoke_internal(pn_counter_add_codec, delta=delta, get_before_update=True)
 
     def add_and_get(self, delta):
-        """
-        Adds the given value to the current value and returns the updated value.
+        """Adds the given value to the current value and returns the updated value.
 
-        :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
-        :raises ConsistencyLostError: if the session guarantees have been lost.
+        Args:
+            delta (int): The value to add.
 
-        :param delta: (int), the value to add.
-        :return: (int), the updated value.
+        Returns:
+            hazelcast.future.Future[int]: The updated value.
+
+        Raises:
+            NoDataMemberInClusterError: if the cluster does not contain any data members.
+            ConsistencyLostError: if the session guarantees have been lost.
         """
 
         return self._invoke_internal(pn_counter_add_codec, delta=delta, get_before_update=False)
 
     def get_and_subtract(self, delta):
-        """
-        Subtracts the given value from the current value and returns the previous value.
+        """Subtracts the given value from the current value and returns the previous value.
 
-        :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
-        :raises ConsistencyLostError: if the session guarantees have been lost.
+        Args:
+            delta (int): The value to subtract.
 
-        :param delta: (int), the value to subtract.
-        :return: (int), the previous value.
+        Returns:
+            hazelcast.future.Future[int]: The previous value.
+
+        Raises:
+            NoDataMemberInClusterError: if the cluster does not contain any data members.
+            ConsistencyLostError: if the session guarantees have been lost.
         """
 
         return self._invoke_internal(pn_counter_add_codec, delta=-1 * delta, get_before_update=True)
 
     def subtract_and_get(self, delta):
-        """
-        Subtracts the given value from the current value and returns the updated value.
+        """Subtracts the given value from the current value and returns the updated value.
 
-        :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
-        :raises ConsistencyLostError: if the session guarantees have been lost.
+        Args:
+            delta (int): The value to subtract.
 
-        :param delta: (int), the value to subtract.
-        :return: (int), the updated value.
+        Returns:
+            hazelcast.future.Future[int]: The updated value.
+
+        Raises:
+            NoDataMemberInClusterError: if the cluster does not contain any data members.
+            ConsistencyLostError: if the session guarantees have been lost.
         """
 
         return self._invoke_internal(pn_counter_add_codec, delta=-1 * delta, get_before_update=False)
 
     def get_and_decrement(self):
-        """
-        Decrements the counter value by one and returns the previous value.
+        """Decrements the counter value by one and returns the previous value.
 
-        :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
-        :raises ConsistencyLostError: if the session guarantees have been lost.
+        Returns:
+            hazelcast.future.Future[int]: The previous value.
 
-        :return: (int), the previous value.
+        Raises:
+            NoDataMemberInClusterError: if the cluster does not contain any data members.
+            ConsistencyLostError: if the session guarantees have been lost.
         """
 
         return self._invoke_internal(pn_counter_add_codec, delta=-1, get_before_update=True)
 
     def decrement_and_get(self):
-        """
-        Decrements the counter value by one and returns the updated value.
+        """Decrements the counter value by one and returns the updated value.
 
-        :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
-        :raises ConsistencyLostError: if the session guarantees have been lost.
+        Returns:
+            hazelcast.future.Future[int]: The updated value.
 
-        :return: (int), the updated value.
+        Raises:
+            NoDataMemberInClusterError: if the cluster does not contain any data members.
+            ConsistencyLostError: if the session guarantees have been lost.
         """
 
         return self._invoke_internal(pn_counter_add_codec, delta=-1, get_before_update=False)
 
     def get_and_increment(self):
-        """
-        Increments the counter value by one and returns the previous value.
+        """Increments the counter value by one and returns the previous value.
 
-        :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
-        :raises ConsistencyLostError: if the session guarantees have been lost.
+        Returns:
+            hazelcast.future.Future[int]: The previous value.
 
-        :return: (int), the previous value.
+        Raises:
+            NoDataMemberInClusterError: if the cluster does not contain any data members.
+            ConsistencyLostError: if the session guarantees have been lost.
         """
 
         return self._invoke_internal(pn_counter_add_codec, delta=1, get_before_update=True)
 
     def increment_and_get(self):
-        """
-        Increments the counter value by one and returns the updated value.
+        """Increments the counter value by one and returns the updated value.
 
-        :raises NoDataMemberInClusterError: if the cluster does not contain any data members.
-        :raises UnsupportedOperationError: if the cluster version is less than 3.10.
-        :raises ConsistencyLostError: if the session guarantees have been lost.
+        Returns:
+            hazelcast.future.Future[int]: The updated value.
 
-        :return: (int), the updated value.
+        Raises:
+            NoDataMemberInClusterError: if the cluster does not contain any data members.
+            UnsupportedOperationError: if the cluster version is less than 3.10.
+            ConsistencyLostError: if the session guarantees have been lost.
         """
 
         return self._invoke_internal(pn_counter_add_codec, delta=1, get_before_update=False)
 
     def reset(self):
-        """
-        Resets the observed state by this PN counter. This method may be used
-        after a method invocation has thrown a `ConsistencyLostError`
+        """Resets the observed state by this PN counter.
+
+        This method may be used after a method invocation has thrown a ``ConsistencyLostError``
         to reset the proxy and to be able to start a new session.
         """
 

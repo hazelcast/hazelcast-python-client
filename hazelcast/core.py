@@ -38,9 +38,7 @@ class MemberInfo(object):
 
 
 class Address(object):
-    """
-    Represents an address of a member in the cluster.
-    """
+    """Represents an address of a member in the cluster."""
 
     def __init__(self, host, port):
         self.host = host
@@ -100,9 +98,7 @@ class AddressHelper(object):
 
 
 class DistributedObjectInfo(object):
-    """
-    Represents name of the Distributed Object and the name of service which it belongs to.
-    """
+    """Represents name of the Distributed Object and the name of service which it belongs to."""
 
     def __init__(self, service_name, name):
         self.service_name = service_name
@@ -122,9 +118,7 @@ class DistributedObjectInfo(object):
 
 @with_reversed_items
 class DistributedObjectEventType(object):
-    """
-    Type of the distributed object event.
-    """
+    """Type of the distributed object event."""
 
     CREATED = "CREATED"
     """
@@ -138,9 +132,7 @@ class DistributedObjectEventType(object):
 
 
 class DistributedObjectEvent(object):
-    """
-    Distributed Object Event
-    """
+    """Distributed Object Event"""
 
     def __init__(self, name, service_name, event_type, source):
         self.name = name
@@ -154,9 +146,7 @@ class DistributedObjectEvent(object):
 
 
 class SimpleEntryView(object):
-    """
-    EntryView represents a readonly view of a map entry.
-    """
+    """EntryView represents a readonly view of a map entry."""
     def __init__(self, key, value, cost, creation_time, expiration_time, hits, last_access_time,
                  last_stored_time, last_update_time, version, ttl, max_idle):
         self.key = key
@@ -228,52 +218,28 @@ class SimpleEntryView(object):
                   self.ttl, self.max_idle)
 
 
-class MemberSelector(object):
-    """
-    Subclasses of this class select members
-    that are capable of executing a special kind of task.
-    The select(Member) method is called for every available
-    member in the cluster and it is up to the implementation to decide
-    if the member is going to be used or not.
-    """
-
-    def select(self, member):
-        """
-        Decides if the given member will be part of an operation or not.
-
-        :param member: (:class:`~hazelcast.core.Member`), the member instance to decide upon.
-        :return: (bool), True if the member should take part in the operation, False otherwise.
-        """
-        raise NotImplementedError()
-
-
-class DataMemberSelector(MemberSelector):
-    def select(self, member):
-        return not member.is_lite_member
-
-
 class HazelcastJsonValue(object):
-    """
-    HazelcastJsonValue is a wrapper for JSON formatted strings. It is preferred
-    to store HazelcastJsonValue instead of Strings for JSON formatted strings.
+    """HazelcastJsonValue is a wrapper for JSON formatted strings.
+
+    It is preferred to store HazelcastJsonValue instead of Strings for JSON formatted strings.
     Users can run predicates and use indexes on the attributes of the underlying
     JSON strings.
-
+    
     HazelcastJsonValue is queried using Hazelcast's querying language.
     See `Distributed Query section <https://github.com/hazelcast/hazelcast-python-client#77-distributed-query>`_.
-
+    
     In terms of querying, numbers in JSON strings are treated as either
     Long or Double in the Java side. str, bool and None
     are treated as String, boolean and null respectively.
-
+    
     HazelcastJsonValue keeps given string as it is. Strings are not
     checked for being valid. Ill-formatted JSON strings may cause false
     positive or false negative results in queries.
-
+    
     HazelcastJsonValue can also be constructed from JSON serializable objects.
     In that case, objects are converted to JSON strings and stored as such.
     If an error occurs during the conversion, it is raised directly.
-
+    
     None values are not allowed.
     """
 
@@ -285,19 +251,19 @@ class HazelcastJsonValue(object):
             self._json_string = json.dumps(value)
 
     def to_string(self):
-        """
-        Returns unaltered string that was used to create this object.
-
-        :return: (str), original string
+        """Returns unaltered string that was used to create this object.
+        
+        Returns:
+            str: The original string.
         """
         return self._json_string
 
     def loads(self):
-        """
-        Deserializes the string that was used to create this object
+        """Deserializes the string that was used to create this object
         and returns as Python object.
-
-        :return: (object), Python object represented by the original string
+        
+        Returns:
+            any: The Python object represented by the original string.
         """
         return json.loads(self._json_string)
 

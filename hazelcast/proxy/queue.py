@@ -31,17 +31,19 @@ class Full(Exception):
 
 
 class Queue(PartitionSpecificProxy):
-    """
-    Concurrent, blocking, distributed, observable queue. Queue is not a partitioned data-structure. All of the Queue
-    content is stored in a single machine (and in the backup). Queue will not scale by adding more members
-    in the cluster.
+    """Concurrent, blocking, distributed, observable queue. 
+    
+    Queue is not a partitioned data-structure. All of the Queue content is stored in 
+    a single machine (and in the backup). Queue will not scale by adding more members in the cluster.
     """
     def add(self, item):
-        """
-        Adds the specified item to this queue if there is available space.
+        """Adds the specified item to this queue if there is available space.
 
-        :param item: (object), the specified item.
-        :return: (bool), ``true`` if element is successfully added, ``false`` otherwise.
+        Args:
+            item: The specified item.
+
+        Returns:
+            hazelcast.future.Future[bool]: ``True`` if element is successfully added, ``False`` otherwise.
         """
         def result_fnc(f):
             if f.result():
@@ -51,11 +53,13 @@ class Queue(PartitionSpecificProxy):
         return self.offer(item).continue_with(result_fnc)
 
     def add_all(self, items):
-        """
-        Adds the elements in the specified collection to this queue.
+        """Adds the elements in the specified collection to this queue.
 
-        :param items: (Collection), collection which includes the items to be added.
-        :return: (bool), ``true`` if this queue is changed after call, ``false`` otherwise.
+        Args:
+            items (list): Collection which includes the items to be added.
+
+        Returns:
+            hazelcast.future.Future[bool]: ``True`` if this queue is changed after call, ``False`` otherwise.
         """
         check_not_none(items, "Value can't be None")
         data_items = []
@@ -67,13 +71,15 @@ class Queue(PartitionSpecificProxy):
         return self._invoke(request, queue_add_all_codec.decode_response)
 
     def add_listener(self, include_value=False, item_added_func=None, item_removed_func=None):
-        """
-        Adds an item listener for this queue. Listener will be notified for all queue add/remove events.
+        """Adds an item listener for this queue. Listener will be notified for all queue add/remove events.
 
-        :param include_value: (bool), whether received events include the updated item or not (optional).
-        :param item_added_func: Function to be called when an item is added to this set (optional).
-        :param item_removed_func: Function to be called when an item is deleted from this set (optional).
-        :return: (str), a registration id which is used as a key to remove the listener.
+        Args:
+            include_value (bool): Whether received events include the updated item or not.
+            item_added_func (function): Function to be called when an item is added to this set.
+            item_removed_func (function): Function to be called when an item is deleted from this set.
+
+        Returns:
+            str: A registration id which is used as a key to remove the listener.
         """
         codec = queue_add_listener_codec
         request = codec.encode_request(self.name, include_value, self._is_smart)
@@ -95,18 +101,22 @@ class Queue(PartitionSpecificProxy):
                                        lambda m: codec.handle(m, handle_event_item))
 
     def clear(self):
-        """
-        Clears this queue. Queue will be empty after this call.
+        """Clears this queue. Queue will be empty after this call.
+        
+        Returns:
+            hazelcast.future.Future[None]:
         """
         request = queue_clear_codec.encode_request(self.name)
         return self._invoke(request)
 
     def contains(self, item):
-        """
-        Determines whether this queue contains the specified item or not.
+        """Determines whether this queue contains the specified item or not.
 
-        :param item: (object), the specified item to be searched.
-        :return: (bool), ``true`` if the specified item exists in this queue, ``false`` otherwise.
+        Args:
+            item: The specified item to be searched.
+
+        Returns:
+            hazelcast.future.Future[bool]: ``True`` if the specified item exists in this queue, ``False`` otherwise.
         """
         check_not_none(item, "Item can't be None")
         item_data = self._to_data(item)
@@ -114,11 +124,14 @@ class Queue(PartitionSpecificProxy):
         return self._invoke(request, queue_contains_codec.decode_response)
 
     def contains_all(self, items):
-        """
-        Determines whether this queue contains all of the items in the specified collection or not.
+        """Determines whether this queue contains all of the items in the specified collection or not.
 
-        :param items: (Collection), the specified collection which includes the items to be searched.
-        :return: (bool), ``true`` if all of the items in the specified collection exist in this queue, ``false`` otherwise.
+        Args:
+            items (list): The specified collection which includes the items to be searched.
+
+        Returns:
+            hazelcast.future.Future[bool]: ``True`` if all of the items in the specified collection exist
+                in this queue, ``False`` otherwise.
         """
         check_not_none(items, "Items can't be None")
         data_items = []
@@ -130,17 +143,19 @@ class Queue(PartitionSpecificProxy):
         return self._invoke(request, queue_contains_all_codec.decode_response)
 
     def drain_to(self, target_list, max_size=-1):
-        """
-        Transfers all available items to the given `target_list` and removes these items from this queue. If a max_size is
-        specified, it transfers at most the given number of items. In case of a failure, an item can exist in both
-        collections or none of them.
-
+        """Transfers all available items to the given `target_list` and removes these items from this queue. 
+        
+        If a max_size is specified, it transfers at most the given number of items. 
+        In case of a failure, an item can exist in both collections or none of them.
+        
         This operation may be more efficient than polling elements repeatedly and putting into collection.
 
-        :param target_list: (`list`), the list where the items in this queue will be transferred.
-        :param max_size: (int), the maximum number items to transfer (optional).
-        :return: (int), number of transferred items.
+        Args:
+            target_list (list): the list where the items in this queue will be transferred.
+            max_size (int): The maximum number items to transfer.
 
+        Returns:
+            hazelcast.future.Future[int]: Number of transferred items.
         """
         def handler(message):
             response = queue_drain_to_max_size_codec.decode_response(message)
@@ -151,10 +166,10 @@ class Queue(PartitionSpecificProxy):
         return self._invoke(request, handler)
 
     def iterator(self):
-        """
-        Returns all of the items in this queue.
-
-        :return: (Sequence), collection of items in this queue.
+        """Returns all of the items in this queue.
+        
+        Returns:
+            list: Collection of items in this queue.
         """
         def handler(message):
             return ImmutableLazyDataList(queue_iterator_codec.decode_response(message), self._to_object)
@@ -163,24 +178,28 @@ class Queue(PartitionSpecificProxy):
         return self._invoke(request, handler)
 
     def is_empty(self):
-        """
-        Determines whether this set is empty or not.
-
-        :return: (bool), ``true`` if this queue is empty, ``false`` otherwise.
+        """Determines whether this set is empty or not.
+        
+        Returns:
+            hazelcast.future.Future[bool]: ``True`` if this queue is empty, ``False`` otherwise.
         """
         request = queue_is_empty_codec.encode_request(self.name)
         return self._invoke(request, queue_is_empty_codec.decode_response)
 
     def offer(self, item, timeout=0):
-        """
-        Inserts the specified element into this queue if it is possible to do so immediately without violating capacity
-        restrictions. Returns ``true`` upon success. If there is no space currently available:
-            * If a timeout is provided, it waits until this timeout elapses and returns the result.
-            * If a timeout is not provided, returns ``false`` immediately.
+        """Inserts the specified element into this queue if it is possible to do so immediately 
+        without violating capacity restrictions. 
+        
+        If there is no space currently available:
+            - If a timeout is provided, it waits until this timeout elapses and returns the result.
+            - If a timeout is not provided, returns ``False`` immediately.
 
-        :param item: (object), the item to be added.
-        :param timeout: (long), maximum time in seconds to wait for addition (optional).
-        :return: (bool), ``true`` if the element was added to this queue, ``false`` otherwise.
+        Args:
+            item: The item to be added.
+            timeout (int): Maximum time in seconds to wait for addition.
+
+        Returns:
+            hazelcast.future.Future[bool]: ``True`` if the element was added to this queue, ``False`` otherwise.
         """
         check_not_none(item, "Value can't be None")
         element_data = self._to_data(item)
@@ -188,10 +207,10 @@ class Queue(PartitionSpecificProxy):
         return self._invoke(request, queue_offer_codec.decode_response)
 
     def peek(self):
-        """
-        Retrieves the head of queue without removing it from the queue. If the queue is empty, returns ``None``.
-
-        :return: (object), the head of this queue, or ``None`` if this queue is empty.
+        """Retrieves the head of queue without removing it from the queue. 
+        
+        Returns:
+            hazelcast.future.Future[any]: the head of this queue, or ``None`` if this queue is empty.
         """
         def handler(message):
             return self._to_object(queue_peek_codec.decode_response(message))
@@ -200,14 +219,18 @@ class Queue(PartitionSpecificProxy):
         return self._invoke(request, handler)
 
     def poll(self, timeout=0):
-        """
-        Retrieves and removes the head of this queue, if this queue is empty:
-            * If a timeout is provided, it waits until this timeout elapses and returns the result.
-            * If a timeout is not provided, returns ``None``.
+        """Retrieves and removes the head of this queue.
+        
+        If this queue is empty:
+            - If a timeout is provided, it waits until this timeout elapses and returns the result.
+            - If a timeout is not provided, returns ``None``.
 
-        :param timeout: (long), maximum time in seconds to wait for addition (optional).
-        :return: (object), the head of this queue, or ``None`` if this queue is empty or specified timeout elapses before an
-        item is added to the queue.
+        Args:
+            timeout (int): Maximum time in seconds to wait for addition.
+
+        Returns:
+            hazelcast.future.Future[any]: The head of this queue, or ``None`` if this queue is empty 
+                or specified timeout elapses before an item is added to the queue.
         """
         def handler(message):
             return self._to_object(queue_poll_codec.decode_response(message))
@@ -216,11 +239,15 @@ class Queue(PartitionSpecificProxy):
         return self._invoke(request, handler)
 
     def put(self, item):
-        """
-        Adds the specified element into this queue. If there is no space, it waits until necessary space becomes
-        available.
+        """Adds the specified element into this queue. 
+        
+        If there is no space, it waits until necessary space becomes available.
 
-        :param item: (object), the specified item.
+        Args:
+            item: The specified item.
+
+        Returns:
+            hazelcast.future.Future[None]:
         """
         check_not_none(item, "Value can't be None")
         element_data = self._to_data(item)
@@ -228,20 +255,22 @@ class Queue(PartitionSpecificProxy):
         return self._invoke(request)
 
     def remaining_capacity(self):
-        """
-        Returns the remaining capacity of this queue.
-
-        :return: (int), remaining capacity of this queue.
+        """Returns the remaining capacity of this queue.
+        
+        Returns:
+            hazelcast.future.Future[int]: Remaining capacity of this queue.
         """
         request = queue_remaining_capacity_codec.encode_request(self.name)
         return self._invoke(request, queue_remaining_capacity_codec.decode_response)
 
     def remove(self, item):
-        """
-        Removes the specified element from the queue if it exists.
+        """Removes the specified element from the queue if it exists.
 
-        :param item: (object), the specified element to be removed.
-        :return: (bool), ``true`` if the specified element exists in this queue.
+        Args:
+            item: The specified element to be removed.
+
+        Returns:
+            hazelcast.future.Future[bool]: ``True`` if the specified element exists in this queue, ``False`` otherwise.
         """
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)
@@ -249,11 +278,13 @@ class Queue(PartitionSpecificProxy):
         return self._invoke(request, queue_remove_codec.decode_response)
 
     def remove_all(self, items):
-        """
-        Removes all of the elements of the specified collection from this queue.
+        """Removes all of the elements of the specified collection from this queue.
 
-        :param items: (Collection), the specified collection.
-        :return: (bool), ``true`` if the call changed this queue, ``false`` otherwise.
+        Args:
+            items (list): The specified collection.
+
+        Returns:
+            hazelcast.future.Future[bool]: ``True`` if the call changed this queue, ``False`` otherwise.
         """
         check_not_none(items, "Value can't be None")
         data_items = []
@@ -265,21 +296,28 @@ class Queue(PartitionSpecificProxy):
         return self._invoke(request, queue_compare_and_remove_all_codec.decode_response)
 
     def remove_listener(self, registration_id):
-        """
-        Removes the specified item listener. Returns silently if the specified listener was not added before.
+        """Removes the specified item listener.
 
-        :param registration_id: (str), id of the listener to be deleted.
-        :return: (bool), ``true`` if the item listener is removed, ``false`` otherwise.
+        Returns silently if the specified listener was not added before.
+
+        Args:
+            registration_id (str): Id of the listener to be deleted.
+
+        Returns:
+            bool: ``True`` if the item listener is removed, ``False`` otherwise.
         """
         return self._deregister_listener(registration_id)
 
     def retain_all(self, items):
-        """
-        Removes the items which are not contained in the specified collection. In other words, only the items that
-        are contained in the specified collection will be retained.
+        """Removes the items which are not contained in the specified collection.
 
-        :param items: (Collection), collection which includes the elements to be retained in this set.
-        :return: (bool), ``true`` if this queue changed as a result of the call.
+        In other words, only the items that are contained in the specified collection will be retained.
+
+        Args:
+            items (list): Collection which includes the elements to be retained in this set.
+
+        Returns:
+            hazelcast.future.Future[bool]: ``True`` if this queue changed as a result of the call, ``False`` otherwise.
         """
         check_not_none(items, "Value can't be None")
         data_items = []
@@ -290,20 +328,21 @@ class Queue(PartitionSpecificProxy):
         return self._invoke(request, queue_compare_and_retain_all_codec.decode_response)
 
     def size(self):
-        """
-        Returns the number of elements in this collection. If the size is greater than sys.maxint, it returns
-        sys.maxint.
+        """Returns the number of elements in this collection.
 
-        :return: (int), size of the queue.
+        If the size is greater than ``2**31 - 1``, it returns ``2**31 - 1``
+        
+        Returns:
+            hazelcast.future.Future[int]: Size of the queue.
         """
         request = queue_size_codec.encode_request(self.name)
         return self._invoke(request, queue_size_codec.decode_response)
 
     def take(self):
-        """
-        Retrieves and removes the head of this queue, if necessary, waits until an item becomes available.
-
-        :return: (object), the head of this queue.
+        """Retrieves and removes the head of this queue, if necessary, waits until an item becomes available.
+        
+        Returns:
+            hazelcast.future.Future[any]: The head of this queue.
         """
         def handler(message):
             return self._to_object(queue_take_codec.decode_response(message))

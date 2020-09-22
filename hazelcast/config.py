@@ -14,9 +14,8 @@ from hazelcast.util import check_not_none, with_reversed_items, number_types, Lo
 
 @with_reversed_items
 class IntType(object):
-    """
-    Integer type options that can be used by serialization service.
-    """
+    """Integer type options that can be used by serialization service."""
+
     VAR = 0
     """
     Integer types will be serialized as 8, 16, 32, 64 bit integers
@@ -56,9 +55,7 @@ class IntType(object):
 
 @with_reversed_items
 class EvictionPolicy(object):
-    """
-    Near Cache eviction policy options.
-    """
+    """Near Cache eviction policy options."""
 
     NONE = 0
     """
@@ -83,9 +80,7 @@ class EvictionPolicy(object):
 
 @with_reversed_items
 class InMemoryFormat(object):
-    """
-    Near Cache in memory format of the values.
-    """
+    """Near Cache in memory format of the values."""
 
     BINARY = 0
     """
@@ -100,8 +95,7 @@ class InMemoryFormat(object):
 
 @with_reversed_items
 class SSLProtocol(object):
-    """
-    SSL protocol options.
+    """SSL protocol options.
 
     TLSv1+ requires at least Python 2.7.9 or Python 3.4 build with OpenSSL 1.0.1+
     TLSv1_3 requires at least Python 2.7.15 or Python 3.7 build with OpenSSL 1.1.1+
@@ -140,9 +134,7 @@ class SSLProtocol(object):
 
 @with_reversed_items
 class QueryConstants(object):
-    """
-    Contains constants for Query.
-    """
+    """Contains constants for Query."""
 
     KEY_ATTRIBUTE_NAME = "__key"
     """
@@ -157,10 +149,7 @@ class QueryConstants(object):
 
 @with_reversed_items
 class UniqueKeyTransformation(object):
-    """
-    Defines an assortment of transformations which can be applied to
-    unique key values.
-    """
+    """Defines an assortment of transformations which can be applied to unique key values."""
 
     OBJECT = 0
     """
@@ -184,9 +173,7 @@ class UniqueKeyTransformation(object):
 
 @with_reversed_items
 class IndexType(object):
-    """
-    Type of the index.
-    """
+    """Type of the index."""
 
     SORTED = 0
     """
@@ -206,9 +193,7 @@ class IndexType(object):
 
 @with_reversed_items
 class ReconnectMode(object):
-    """
-    Reconnect options.
-    """
+    """Reconnect options."""
 
     OFF = 0
     """

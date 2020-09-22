@@ -14,9 +14,8 @@ def _no_op_response_handler(_):
 
 
 class Proxy(object):
-    """
-    Provides basic functionality for Hazelcast Proxies.
-    """
+    """Provides basic functionality for Hazelcast Proxies."""
+
     def __init__(self, service_name, name, context):
         self.service_name = service_name
         self.name = name
@@ -33,10 +32,10 @@ class Proxy(object):
         self._is_smart = context.config.smart_routing
 
     def destroy(self):
-        """
-        Destroys this proxy.
+        """Destroys this proxy.
 
-        :return: (bool), ``true`` if this proxy is deleted successfully, ``false`` otherwise.
+        Returns:
+            bool: ``True`` if this proxy is destroyed successfully, ``False`` otherwise.
         """
         self._on_destroy()
         return self._context.proxy_manager.destroy_proxy(self.service_name, self.name)
@@ -69,17 +68,13 @@ class Proxy(object):
         return invocation.future
 
     def blocking(self):
-        """
-        Returns a version of this proxy with only blocking method calls.
-        :return: (Proxy), a version of this proxy with only blocking method calls.
-        """
+        """Returns a version of this proxy with only blocking method calls."""
         return make_blocking(self)
 
 
 class PartitionSpecificProxy(Proxy):
-    """
-    Provides basic functionality for Partition Specific Proxies.
-    """
+    """Provides basic functionality for Partition Specific Proxies."""
+
     def __init__(self, service_name, name, context):
         super(PartitionSpecificProxy, self).__init__(service_name, name, context)
         partition_key = context.serialization_service.to_data(string_partition_strategy(self.name))
@@ -92,9 +87,8 @@ class PartitionSpecificProxy(Proxy):
 
 
 class TransactionalProxy(object):
-    """
-    Provides an interface for all transactional distributed objects.
-    """
+    """Provides an interface for all transactional distributed objects."""
+
     def __init__(self, name, transaction, context):
         self.name = name
         self.transaction = transaction
@@ -114,9 +108,7 @@ class TransactionalProxy(object):
 
 @with_reversed_items
 class ItemEventType(object):
-    """
-    Type of item events.
-    """
+    """Type of item events."""
 
     ADDED = 1
     """
@@ -131,9 +123,7 @@ class ItemEventType(object):
 
 @with_reversed_items
 class EntryEventType(object):
-    """
-    Type of entry event.
-    """
+    """Type of entry event."""
 
     ADDED = 1
     """
@@ -187,9 +177,14 @@ class EntryEventType(object):
 
 
 class ItemEvent(object):
+    """Map Item event.
+
+    Attributes:
+        name (str): Name of the proxy that fired the event.
+        event_type (ItemEventType): Type of the event.
+        member (hazelcast.core.MemberInfo): Member that fired the event.
     """
-    Map Item event.
-    """
+
     def __init__(self, name, item_data, event_type, member, to_object):
         self.name = name
         self._item_data = item_data
@@ -204,8 +199,12 @@ class ItemEvent(object):
 
 
 class EntryEvent(object):
-    """
-    Map Entry event.
+    """Map Entry event.
+
+    Attributes:
+        event_type (EntryEventType): Type of the event.
+        uuid (uuid.UUID): UUID of the member that fired the event.
+        number_of_affected_entries (int): Number of affected entries by this event.
     """
     def __init__(self, to_object, key, value, old_value, merging_value, event_type, uuid,
                  number_of_affected_entries):
@@ -246,8 +245,12 @@ class EntryEvent(object):
 
 
 class TopicMessage(object):
-    """
-    Topic message.
+    """Topic message.
+
+    Attributes:
+        name (str): Name of the proxy that fired the event.
+        publish_time (int): UNIX time that the event is published as seconds.
+        member (hazelcast.core.MemberInfo): Member that fired the event.
     """
     def __init__(self, name, message_data, publish_time, member, to_object):
         self.name = name

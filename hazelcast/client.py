@@ -28,9 +28,8 @@ from hazelcast.errors import IllegalStateError
 
 
 class HazelcastClient(object):
-    """
-    Hazelcast Client.
-    """
+    """Hazelcast Client."""
+
     _CLIENT_ID = AtomicInteger()
     logger = logging.getLogger("HazelcastClient")
 
@@ -107,134 +106,163 @@ class HazelcastClient(object):
         self.logger.info("Client started.", extra=self._logger_extras)
 
     def get_executor(self, name):
-        """
-        Creates cluster-wide :class:`~hazelcast.proxy.executor.Executor`.
+        """Creates cluster-wide ExecutorService.
 
-        :param name: (str), name of the Executor proxy.
-        :return: (:class:`~hazelcast.proxy.executor.Executor`), Executor proxy for the given name.
+        Args:
+            name (str): Name of the Executor proxy.
+
+        Returns:
+            hazelcast.proxy.executor.Executor: Executor proxy for the given name.
         """
         return self._proxy_manager.get_or_create(EXECUTOR_SERVICE, name)
 
     def get_flake_id_generator(self, name):
-        """
-        Creates or returns a cluster-wide :class:`~hazelcast.proxy.flake_id_generator.FlakeIdGenerator`.
+        """Creates or returns a cluster-wide FlakeIdGenerator.
 
-        :param name: (str), name of the FlakeIdGenerator proxy.
-        :return: (:class:`~hazelcast.proxy.flake_id_generator.FlakeIdGenerator`), FlakeIdGenerator proxy for the given name
+        Args:
+            name (str): Name of the FlakeIdGenerator proxy.
+
+        Returns:
+            hazelcast.proxy.flake_id_generator.FlakeIdGenerator: FlakeIdGenerator proxy for the given name
+
         """
         return self._proxy_manager.get_or_create(FLAKE_ID_GENERATOR_SERVICE, name)
 
     def get_queue(self, name):
-        """
-        Returns the distributed queue instance with the specified name.
+        """Returns the distributed queue instance with the specified name.
 
-        :param name: (str), name of the distributed queue.
-        :return: (:class:`~hazelcast.proxy.queue.Queue`), distributed queue instance with the specified name.
+        Args:
+            name (str): Name of the distributed queue.
+
+        Returns:
+            hazelcast.proxy.queue.Queue: Distributed queue instance with the specified name.
         """
         return self._proxy_manager.get_or_create(QUEUE_SERVICE, name)
 
     def get_list(self, name):
-        """
-        Returns the distributed list instance with the specified name.
+        """Returns the distributed list instance with the specified name.
 
-        :param name: (str), name of the distributed list.
-        :return: (:class:`~hazelcast.proxy.list.List`), distributed list instance with the specified name.
+        Args:
+            name (str): Name of the distributed list.
+
+        Returns:
+            hazelcast.proxy.list.List: Distributed list instance with the specified name.
         """
         return self._proxy_manager.get_or_create(LIST_SERVICE, name)
 
     def get_map(self, name):
-        """
-        Returns the distributed map instance with the specified name.
+        """Returns the distributed map instance with the specified name.
 
-        :param name: (str), name of the distributed map.
-        :return: (:class:`~hazelcast.proxy.map.Map`), distributed map instance with the specified name.
+        Args:
+            name (str): Name of the distributed map.
+
+        Returns:
+            hazelcast.proxy.map.Map: Distributed map instance with the specified name.
         """
         return self._proxy_manager.get_or_create(MAP_SERVICE, name)
 
     def get_multi_map(self, name):
-        """
-        Returns the distributed MultiMap instance with the specified name.
+        """Returns the distributed MultiMap instance with the specified name.
 
-        :param name: (str), name of the distributed MultiMap.
-        :return: (:class:`~hazelcast.proxy.multi_map.MultiMap`), distributed MultiMap instance with the specified name.
+        Args:
+            name (str): Name of the distributed MultiMap.
+
+        Returns:
+            hazelcast.proxy.multi_map.MultiMap: Distributed MultiMap instance with the specified name.
         """
         return self._proxy_manager.get_or_create(MULTI_MAP_SERVICE, name)
 
     def get_pn_counter(self, name):
-        """
-        Returns the PN Counter instance with the specified name.
+        """Returns the PN Counter instance with the specified name.
 
-        :param name: (str), name of the PN Counter.
-        :return: (:class:`~hazelcast.proxy.pn_counter.PNCounter`), the PN Counter.
+        Args:
+            name (str): Name of the PN Counter.
+
+        Returns:
+            hazelcast.proxy.pn_counter.PNCounter: The PN Counter.
         """
         return self._proxy_manager.get_or_create(PN_COUNTER_SERVICE, name)
 
     def get_reliable_topic(self, name):
-        """
-        Returns the :class:`~hazelcast.proxy.reliable_topic.ReliableTopic` instance with the specified name.
+        """Returns the ReliableTopic instance with the specified name.
 
-        :param name: (str), name of the ReliableTopic.
-        :return: (:class:`~hazelcast.proxy.reliable_topic.ReliableTopic`), the ReliableTopic.
+        Args:
+            name (str): Name of the ReliableTopic.
+
+        Returns:
+            hazelcast.proxy.reliable_topic.ReliableTopic: The ReliableTopic.
         """
         return self._proxy_manager.get_or_create(RELIABLE_TOPIC_SERVICE, name)
 
     def get_replicated_map(self, name):
-        """
-        Returns the distributed ReplicatedMap instance with the specified name.
+        """Returns the distributed ReplicatedMap instance with the specified name.
 
-        :param name: (str), name of the distributed ReplicatedMap.
-        :return: (:class:`~hazelcast.proxy.replicated_map.ReplicatedMap`), distributed ReplicatedMap instance with the specified name.
+        Args:
+            name (str): Name of the distributed ReplicatedMap.
+
+        Returns:
+            hazelcast.proxy.replicated_map.ReplicatedMap: Distributed ReplicatedMap instance with the specified name.
         """
         return self._proxy_manager.get_or_create(REPLICATED_MAP_SERVICE, name)
 
     def get_ringbuffer(self, name):
-        """
-        Returns the distributed RingBuffer instance with the specified name.
+        """Returns the distributed Ringbuffer instance with the specified name.
 
-        :param name: (str), name of the distributed RingBuffer.
-        :return: (:class:`~hazelcast.proxy.ringbuffer.RingBuffer`), distributed RingBuffer instance with the specified name.
+        Args:
+            name (str): Name of the distributed Ringbuffer.
+
+        Returns:
+            hazelcast.proxy.ringbuffer.Ringbuffer: Distributed RingBuffer instance with the specified name.
         """
 
         return self._proxy_manager.get_or_create(RINGBUFFER_SERVICE, name)
 
     def get_set(self, name):
-        """
-        Returns the distributed Set instance with the specified name.
+        """Returns the distributed Set instance with the specified name.
 
-        :param name: (str), name of the distributed Set.
-        :return: (:class:`~hazelcast.proxy.set.Set`), distributed Set instance with the specified name.
+        Args:
+            name (str): Name of the distributed Set.
+
+        Returns:
+            hazelcast.proxy.set.Set: Distributed Set instance with the specified name.
         """
         return self._proxy_manager.get_or_create(SET_SERVICE, name)
 
     def get_topic(self, name):
-        """
-        Returns the :class:`~hazelcast.proxy.topic.Topic` instance with the specified name.
+        """Returns the Topic instance with the specified name.
 
-        :param name: (str), name of the Topic.
-        :return: (:class:`~hazelcast.proxy.topic.Topic`), the Topic.
+        Args:
+            name (str): Name of the Topic.
+
+        Returns:
+            hazelcast.proxy.topic.Topic: The Topic.
         """
         return self._proxy_manager.get_or_create(TOPIC_SERVICE, name)
 
     def new_transaction(self, timeout=120, durability=1, type=TWO_PHASE):
-        """
-        Creates a new :class:`~hazelcast.transaction.Transaction` associated with the current thread using default or given options.
+        """Creates a new Transaction associated with the current thread using default or given options.
 
-        :param timeout: (long), the timeout in seconds determines the maximum lifespan of a transaction. So if a
-            transaction is configured with a timeout of 2 minutes, then it will automatically rollback if it hasn't
-            committed yet.
-        :param durability: (int), the durability is the number of machines that can take over if a member fails during a
-        transaction commit or rollback
-        :param type: (Transaction Type), the transaction type which can be :const:`~hazelcast.transaction.TWO_PHASE` or :const:`~hazelcast.transaction.ONE_PHASE`
-        :return: (:class:`~hazelcast.transaction.Transaction`), new Transaction associated with the current thread.
+        Args:
+            timeout (int): The timeout in seconds determines the maximum lifespan of a transaction. So if a
+                transaction is configured with a timeout of 2 minutes, then it will automatically rollback if it hasn't
+                committed yet.
+            durability (int): The durability is the number of machines that can take over if a member fails during a
+                transaction commit or rollback.
+            type (int): The transaction type which can be ``TWO_PHASE`` or ``ONE_PHASE``.
+
+        Returns:
+            hazelcast.transaction.Transaction: New Transaction associated with the current thread.
         """
         return self._transaction_manager.new_transaction(timeout, durability, type)
 
     def add_distributed_object_listener(self, listener_func):
-        """
-        Adds a listener which will be notified when a
-        new distributed object is created or destroyed.
-        :param listener_func: Function to be called when a distributed object is created or destroyed.
-        :return: (str), a registration id which is used as a key to remove the listener.
+        """Adds a listener which will be notified when a new distributed object is created or destroyed.
+
+        Args:
+            listener_func (function): Function to be called when a distributed object is created or destroyed.
+
+        Returns:
+            str: A registration id which is used as a key to remove the listener.
         """
         is_smart = self.config.smart_routing
         request = client_add_distributed_object_listener_codec.encode_request(is_smart)
@@ -256,18 +284,25 @@ class HazelcastClient(object):
                                                         encode_remove_listener, event_handler)
 
     def remove_distributed_object_listener(self, registration_id):
-        """
-        Removes the specified distributed object listener. Returns silently if there is no such listener added before.
-        :param registration_id: (str), id of registered listener.
-        :return: (bool), ``true`` if registration is removed, ``false`` otherwise.
+        """Removes the specified distributed object listener.
+
+        Returns silently if there is no such listener added before.
+
+        Args:
+            registration_id (str): The id of registered listener.
+
+        Returns:
+            bool: ``True`` if registration is removed, ``False`` otherwise.
         """
         return self._listener_service.deregister_listener(registration_id)
 
     def get_distributed_objects(self):
-        """
-        Returns all distributed objects such as; queue, map, set, list, topic, lock, multimap.
+        """Returns all distributed objects such as; queue, map, set, list, topic, lock, multimap.
+
         Also, as a side effect, it clears the local instances of the destroyed proxies.
-        :return:(Sequence), List of instances created by Hazelcast.
+
+        Returns:
+            list[hazelcast.proxy.base.Proxy]: List of instances created by Hazelcast.
         """
         request = client_get_distributed_objects_codec.encode_request()
         invocation = Invocation(request, response_handler=lambda m: m)
@@ -289,9 +324,7 @@ class HazelcastClient(object):
         return self._proxy_manager.get_distributed_objects()
 
     def shutdown(self):
-        """
-        Shuts down this HazelcastClient.
-        """
+        """Shuts down this HazelcastClient."""
         with self._shutdown_lock:
             if self._internal_lifecycle_service.running:
                 self._internal_lifecycle_service.fire_lifecycle_event(LifecycleState.SHUTTING_DOWN)

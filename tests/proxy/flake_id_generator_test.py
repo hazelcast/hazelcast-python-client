@@ -40,11 +40,6 @@ class FlakeIdGeneratorTest(SingleMemberTestCase):
         flake_id = self.flake_id_generator.new_id()
         self.assertIsNotNone(flake_id)
 
-    def test_init(self):
-        current_id = self.flake_id_generator.new_id()
-        self.assertTrue(self.flake_id_generator.init(current_id / 2))
-        self.assertFalse(self.flake_id_generator.init(current_id * 2))
-
     def test_new_id_generates_unique_ids(self):
         id_set = set()
 

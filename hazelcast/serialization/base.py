@@ -44,11 +44,14 @@ class BaseSerializationService(object):
         self._active = True
 
     def to_data(self, obj, partitioning_strategy=None):
-        """
-        Serialize the input object into byte array representation
-        :param obj: input object
-        :param partitioning_strategy: function in the form of lambda key:partitioning_key
-        :return: Data object
+        """Serialize the input object into byte array representation
+
+        Args:
+            obj: Input object
+            partitioning_strategy (function): Function in the form of ``lambda key: partitioning_key``.
+
+        Returns:
+            hazelcast.serialization.data.Data: Data object
         """
         if obj is None:
             return None
@@ -72,10 +75,13 @@ class BaseSerializationService(object):
             # return out to pool
 
     def to_object(self, data):
-        """
-        Deserialize input data
-        :param data: serialized input Data object
-        :return: Deserialized object
+        """Deserialize input data
+
+        Args:
+            data (hazelcast.serialization.data.Data): Serialized input Data object
+
+        Returns:
+            any: Deserialized object
         """
         if not isinstance(data, Data):
             return data
@@ -159,10 +165,13 @@ class SerializerRegistry(object):
         self.int_type = int_type
 
     def serializer_by_type_id(self, type_id):
-        """
-        Find and return the serializer for the type-id
-        :param type_id: type-id the serializer
-        :return: the serializer
+        """Find and return the serializer for the type-id
+
+        Args:
+            type_id (int): Type id of the serializer
+
+        Returns:
+          The serializer
         """
         if type_id <= 0:
             indx = index_for_default_type(type_id)
@@ -172,18 +181,21 @@ class SerializerRegistry(object):
         return self._id_dic.get(type_id, None)
 
     def serializer_for(self, obj):
-        """
-            Searches for a serializer for the provided object
-            Serializers will be  searched in this order;
+        """Searches for a serializer for the provided object
 
-            1-NULL serializer
-            2-Default serializers, like primitives, arrays, string and some default types
-            3-Custom registered types by user
-            4-Global serializer if registered by user
-            4-pickle serialization as a fallback
+        Serializers will be  searched in this order;
 
-        :param obj: input object
-        :return: Serializer
+        - NULL serializer
+        - Default serializers, like primitives, arrays, string and some default types
+        - Custom registered types by user
+        - Global serializer if registered by user
+        - pickle serialization as a fallback
+
+        Args:
+            obj: Input object
+
+        Returns:
+            The serializer
         """
         # 1-NULL serializer
         if obj is None:

@@ -1,36 +1,7 @@
 from hazelcast.config import IndexConfig, IndexUtil, IndexType, QueryConstants, \
     UniqueKeyTransformation
-from hazelcast.util import TimeUnit, calculate_version
+from hazelcast.util import calculate_version
 from unittest import TestCase
-
-
-class TimeUnitTest(TestCase):
-    def test_nano_to_second(self):
-        self.assertEqual(0.1, TimeUnit.to_seconds(0.1e9, TimeUnit.NANOSECOND))
-
-    def test_micro_to_second(self):
-        self.assertEqual(2, TimeUnit.to_seconds(2e6, TimeUnit.MICROSECOND))
-
-    def test_milli_to_second(self):
-        self.assertEqual(3, TimeUnit.to_seconds(3e3, TimeUnit.MILLISECOND))
-
-    def test_second_to_second(self):
-        self.assertEqual(5.5, TimeUnit.to_seconds(5.5, TimeUnit.SECOND))
-
-    def test_minute_to_second(self):
-        self.assertEqual(60, TimeUnit.to_seconds(1, TimeUnit.MINUTE))
-
-    def test_hour_to_second(self):
-        self.assertEqual(1800, TimeUnit.to_seconds(0.5, TimeUnit.HOUR))
-
-    def test_numeric_string_to_second(self):
-        self.assertEqual(1, TimeUnit.to_seconds("1000", TimeUnit.MILLISECOND))
-
-    def test_unsupported_types_to_second(self):
-        types = ["str", True, None, list(), set(), dict()]
-        for type in types:
-            with self.assertRaises((TypeError, ValueError)):
-                TimeUnit.to_seconds(type, TimeUnit.SECOND)
 
 
 class VersionUtilTest(TestCase):

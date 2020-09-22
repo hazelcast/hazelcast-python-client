@@ -7,9 +7,7 @@ from hazelcast.util import create_git_info, with_reversed_items
 
 @with_reversed_items
 class LifecycleState(object):
-    """
-    Lifecycle states.
-    """
+    """Lifecycle states."""
 
     STARTING = "STARTING"
     """
@@ -55,8 +53,8 @@ class LifecycleService(object):
         """
         Checks whether or not the instance is running.
 
-        :return: ``True``, if the client is active and running, ``False`` otherwise.
-        :rtype: bool
+        Returns:
+            bool: ``True``, if the client is active and running, ``False`` otherwise.
         """
         return self._service.running
 
@@ -64,11 +62,11 @@ class LifecycleService(object):
         """
         Adds a listener to listen for lifecycle events.
 
-        :param on_state_change: Function to be called when lifecycle state is changed.
-        :type on_state_change: function
+        Args:
+            on_state_change (function): Function to be called when lifecycle state is changed.
 
-        :return: Registration id of the listener
-        :rtype: str
+        Returns:
+            str: Registration id of the listener
         """
         return self._service.add_listener(on_state_change)
 
@@ -76,11 +74,11 @@ class LifecycleService(object):
         """
         Removes a lifecycle listener.
 
-        :param registration_id: The id of the listener to be removed.
-        :type registration_id: str
+        Args:
+            registration_id (str): The id of the listener to be removed.
 
-        :return: ``True`` if the listener is removed successfully, ``False`` otherwise.
-        :rtype: bool
+        Returns:
+            bool: ``True`` if the listener is removed successfully, ``False`` otherwise.
         """
         self._service.remove_listener(registration_id)
 
@@ -125,6 +123,11 @@ class _InternalLifecycleService(object):
             return False
 
     def fire_lifecycle_event(self, new_state):
+        """Called when instance's state changes.
+
+        Args:
+            new_state (str): The new state of the instance.
+        """
         self.logger.info(self._git_info + "HazelcastClient is %s", new_state, extra=self._logger_extras)
         for on_state_change in six.itervalues(self._listeners):
             if on_state_change:

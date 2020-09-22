@@ -15,129 +15,67 @@ NANOSECONDS_IN_SECONDS = 1e9
 
 
 def check_not_none(val, message):
-    """
-    Tests if an argument is not ``None``.
-
-    :param val: (object), the argument tested to see if it is not ``None``.
-    :param message: (str), the error message.
-    """
     if val is None:
         raise AssertionError(message)
 
 
 def check_true(val, message):
-    """
-    Tests whether the provided expression is ``true``.
-
-    :param val: (bool), the expression tested to see if it is ``true``.
-    :param message: (str), the error message.
-    """
     if not val:
         raise AssertionError(message)
 
 
 def check_not_negative(val, message):
-    """
-    Tests if a value is not negative.
-
-    :param val: (Number), the value tested to see if it is not negative.
-    :param message: (str), the error message.
-    """
     if val < 0:
         raise AssertionError(message)
 
 
 def check_not_empty(collection, message):
-    """
-    Tests if a collection is not empty.
-
-    :param collection: (Collection), the collection tested to see if it is not empty.
-    :param message: (str), the error message.
-    """
     if not collection:
         raise AssertionError(message)
 
 
 def current_time():
-    """
-    Returns the current time of the system.
-
-    :return: (float), current time of the system.
-    """
     return time.time()
 
 
 def current_time_in_millis():
-    """
-    Returns the current time of the system in millis.
-    :return: (int), current time of the system in millis.
-    """
     return to_millis(current_time())
 
 
 def thread_id():
-    """
-    Returns the current thread's id.
-
-    :return: (int), current thread's id.
-    """
     return threading.currentThread().ident
 
 
 def to_millis(seconds):
-    """
-    Converts the time parameter in seconds to milliseconds.
-
-    :param seconds: (Number), the given time in seconds.
-    :return: (int), result of the conversation in milliseconds.
-    """
     return int(seconds * MILLISECONDS_IN_SECONDS)
 
 
 def to_nanos(seconds):
-    """
-    Converts the time parameter in seconds to nanoseconds.
-
-    :param seconds: (Number), the given time in seconds.
-    :return: (int), result of the conversation in nanoseconds.
-    """
     return int(seconds * NANOSECONDS_IN_SECONDS)
 
 
 def validate_type(_type):
-    """
-    Validates the type.
-
-    :param _type: (Type), the type to be validated.
-    """
     if not isinstance(_type, type):
         raise ValueError("Serializer should be an instance of %s" % _type.__name__)
 
 
 def validate_serializer(serializer, _type):
-    """
-    Validates the serializer for given type.
-
-    :param serializer: (Serializer), the serializer to be validated.
-    :param _type: (Type), type to be used for serializer validation.
-    """
     if not issubclass(serializer, _type):
         raise ValueError("Serializer should be an instance of %s" % _type.__name__)
 
 
 class AtomicInteger(object):
-    """
-    AtomicInteger is an Integer which can work atomically.
-    """
+    """An Integer which can work atomically."""
+
     def __init__(self, initial=0):
         self._mux = threading.RLock()
         self._counter = initial
 
     def get_and_increment(self):
-        """
-        Returns the current value and increment it.
-
-        :return: (int), current value of AtomicInteger.
+        """Returns the current value and increment it.
+        
+        Returns:
+            int: current value of AtomicInteger.
         """
         with self._mux:
             res = self._counter
@@ -193,30 +131,6 @@ def get_portable_version(portable, default_version):
     except AttributeError:
         version = default_version
     return version
-
-
-class TimeUnit(object):
-    """
-    Represents the time durations at given units in seconds.
-    """
-    NANOSECOND = 1e-9
-    MICROSECOND = 1e-6
-    MILLISECOND = 1e-3
-    SECOND = 1.0
-    MINUTE = 60.0
-    HOUR = 3600.0
-
-    @staticmethod
-    def to_seconds(value, time_unit):
-        """
-        :param value: (Number), value to be translated to seconds
-        :param time_unit: Time duration in seconds
-        :return: Value of the value in seconds
-        """
-        if isinstance(value, bool):
-            # bool is a subclass of int. Don't let bool and float multiplication.
-            raise TypeError
-        return float(value) * time_unit
 
 
 # Version utilities
@@ -339,23 +253,23 @@ none_type = type(None)
 class LoadBalancer(object):
     """Load balancer allows you to send operations to one of a number of endpoints (Members).
     It is up to the implementation to use different load balancing policies.
-
+    
     If the client is configured with smart routing,
     only the operations that are not key based will be routed to the endpoint
-    returned by the load balancer. If it is not, the load balancer will not be used.
     """
     def init(self, cluster_service):
-        """
-        Initializes the load balancer.
+        """Initializes the load balancer.
 
-        :param cluster_service: (:class:`~hazelcast.cluster.ClusterService`), The cluster service to select members from
+        Args:
+            cluster_service (hazelcast.cluster.ClusterService): The cluster service to select members from
         """
         raise NotImplementedError("init")
 
     def next(self):
-        """
-        Returns the next member to route to.
-        :return: (:class:`~hazelcast.core.Member`), Returns the next member or None if no member is available
+        """Returns the next member to route to.
+
+        Returns:
+            hazelcast.core.MemberInfo: the next member or ``None`` if no member is available.
         """
         raise NotImplementedError("next")
 
@@ -377,7 +291,7 @@ class _AbstractLoadBalancer(LoadBalancer):
 class RoundRobinLB(_AbstractLoadBalancer):
     """A load balancer implementation that relies on using round robin
     to a next member to send a request to.
-
+    
     Round robin is done based on best effort basis, the order of members for concurrent calls to
     the next() is not guaranteed.
     """
@@ -398,8 +312,7 @@ class RoundRobinLB(_AbstractLoadBalancer):
 
 
 class RandomLB(_AbstractLoadBalancer):
-    """A load balancer that selects a random member to route to.
-    """
+    """A load balancer that selects a random member to route to."""
 
     def next(self):
         members = self._members
