@@ -55,9 +55,9 @@ class Map(Proxy):
 
     This class does not allow ``None`` to be used as a key or value.
     """
-    def __init__(self, client, service_name, name):
-        super(Map, self).__init__(client, service_name, name)
-        self._reference_id_generator = self._client.lock_reference_id_generator
+    def __init__(self, service_name, name, context):
+        super(Map, self).__init__(service_name, name, context)
+        self._reference_id_generator = context.lock_reference_id_generator
 
     def add_entry_listener(self, include_value=False, key=None, predicate=None, added_func=None, removed_func=None,
                            updated_func=None, evicted_func=None, evict_all_func=None, clear_all_func=None,
@@ -422,7 +422,7 @@ class Map(Proxy):
         if not keys:
             return ImmediateFuture({})
 
-        partition_service = self._client.partition_service
+        partition_service = self._context.partition_service
         partition_to_keys = {}
 
         for key in keys:
@@ -563,7 +563,7 @@ class Map(Proxy):
 
         request = map_lock_codec.encode_request(self.name, key_data, thread_id(), to_millis(ttl),
                                                 self._reference_id_generator.get_and_increment())
-        partition_id = self._client.partition_service.get_partition_id(key_data)
+        partition_id = self._context.partition_service.get_partition_id(key_data)
         invocation = Invocation(request, partition_id=partition_id, timeout=MAX_SIZE)
         self._invocation_service.invoke(invocation)
         return invocation.future
@@ -604,7 +604,7 @@ class Map(Proxy):
         if not map:
             return ImmediateFuture(None)
 
-        partition_service = self._client.partition_service
+        partition_service = self._context.partition_service
         partition_map = {}
 
         for key, value in six.iteritems(map):
@@ -851,7 +851,7 @@ class Map(Proxy):
         request = map_try_lock_codec.encode_request(self.name, key_data, thread_id(),
                                                     to_millis(ttl), to_millis(timeout),
                                                     self._reference_id_generator.get_and_increment())
-        partition_id = self._client.partition_service.get_partition_id(key_data)
+        partition_id = self._context.partition_service.get_partition_id(key_data)
         invocation = Invocation(request, partition_id=partition_id, timeout=MAX_SIZE,
                                 response_handler=map_try_lock_codec.decode_response)
         self._invocation_service.invoke(invocation)
@@ -1042,10 +1042,10 @@ class MapFeatNearCache(Map):
     """
     Map proxy implementation featuring Near Cache
     """
-    def __init__(self, client, service_name, name):
-        super(MapFeatNearCache, self).__init__(client, service_name, name)
+    def __init__(self, service_name, name, context):
+        super(MapFeatNearCache, self).__init__(service_name, name, context)
         self._invalidation_listener_id = None
-        self._near_cache = client.near_cache_manager.get_or_create_near_cache(name)
+        self._near_cache = context.near_cache_manager.get_or_create_near_cache(name)
         if self._near_cache.invalidate_on_change:
             self._add_near_cache_invalidation_listener()
 
@@ -1198,9 +1198,9 @@ class MapFeatNearCache(Map):
         return super(MapFeatNearCache, self)._delete_internal(key_data)
 
 
-def create_map_proxy(client, service_name, name, **kwargs):
-    near_cache_config = client.config.near_caches.get(name, None)
+def create_map_proxy(service_name, name, context):
+    near_cache_config = context.config.near_caches.get(name, None)
     if near_cache_config is None:
-        return Map(client=client, service_name=service_name, name=name)
+        return Map(service_name, name, context)
     else:
-        return MapFeatNearCache(client=client, service_name=service_name, name=name)
+        return MapFeatNearCache(service_name, name, context)

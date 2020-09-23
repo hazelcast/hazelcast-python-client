@@ -29,7 +29,7 @@ class AsyncoreReactor(object):
     _is_live = False
     logger = logging.getLogger("HazelcastClient.AsyncoreReactor")
 
-    def __init__(self, logger_extras=None):
+    def __init__(self, logger_extras):
         self._logger_extras = logger_extras
         self._timers = queue.PriorityQueue()
         self._map = {}

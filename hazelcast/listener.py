@@ -33,19 +33,18 @@ class _EventRegistration(object):
 class ListenerService(object):
     logger = logging.getLogger("HazelcastClient.ListenerService")
 
-    def __init__(self, client):
+    def __init__(self, client, connection_manager, invocation_service, logger_extras):
         self._client = client
-        self._connection_manager = client.connection_manager
-        self._invocation_service = None
+        self._connection_manager = connection_manager
+        self._invocation_service = invocation_service
+        self._logger_extras = logger_extras
         self._is_smart = client.config.network.smart_routing
-        self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
         self._active_registrations = {}  # Dict of user_registration_id, ListenerRegistration
         self._registration_lock = threading.RLock()
         self._event_handlers = {}
 
     def start(self):
-        self._invocation_service = self._client.invocation_service
-        self._client.connection_manager.add_listener(self._connection_added, self._connection_removed)
+        self._connection_manager.add_listener(self._connection_added, self._connection_removed)
 
     def register_listener(self, registration_request, decode_register_response, encode_deregister_request, handler):
         with self._registration_lock:
@@ -149,11 +148,12 @@ class ListenerService(object):
 
 
 class ClusterViewListenerService(object):
-    def __init__(self, client):
+    def __init__(self, client, connection_manager, partition_service, cluster_service, invocation_service):
         self._client = client
-        self._connection_manager = client.connection_manager
-        self._partition_service = client.partition_service
-        self._cluster_service = client.cluster_service
+        self._partition_service = partition_service
+        self._connection_manager = connection_manager
+        self._cluster_service = cluster_service
+        self._invocation_service = invocation_service
         self._listener_added_connection = None
 
     def start(self):
@@ -181,7 +181,7 @@ class ClusterViewListenerService(object):
         self._listener_added_connection = connection
         request = client_add_cluster_view_listener_codec.encode_request()
         invocation = Invocation(request, connection=connection, event_handler=self._handler(connection), urgent=True)
-        self._client.invocation_service.invoke(invocation)
+        self._invocation_service.invoke(invocation)
 
         def callback(f):
             try:

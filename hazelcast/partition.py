@@ -20,12 +20,53 @@ class PartitionService(object):
     """
     Allows to retrieve information about the partition count, the partition owner or the partitionId of a key.
     """
+
+    def __init__(self, internal_partition_service):
+        self._service = internal_partition_service
+
+    def get_partition_owner(self, partition_id):
+        """
+        Returns the owner of the partition if it's set, ``None`` otherwise.
+
+        :param partition_id: The partition id.
+        :type partition_id: int
+
+        :return: Owner of partition
+        :rtype: :class:`uuid.UUID`
+        """
+        return self._service.get_partition_owner(partition_id)
+
+    def get_partition_id(self, key_data):
+        """
+        Returns the partition id for a key data.
+
+        :param key_data: The key data.
+        :type key_data: :class:`~hazelcast.serialization.data.Data`
+
+        :return: The partition id.
+        :rtype: int
+        """
+        return self._service.get_partition_id(key_data)
+
+    def get_partition_count(self):
+        """
+        Returns partition count of the connected cluster.
+
+        If partition table is not fetched yet, this method returns ``0``.
+
+        :return: The partition count
+        :rtype: int
+        """
+        return self._service.partition_count
+
+
+class _InternalPartitionService(object):
     logger = logging.getLogger("HazelcastClient.PartitionService")
 
-    def __init__(self, client):
+    def __init__(self, client, logger_extras):
         self.partition_count = 0
         self._client = client
-        self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
+        self._logger_extras = logger_extras
         self._partition_table = _PartitionTable(None, -1, dict())
 
     def handle_partitions_view_event(self, connection, partitions, version):
@@ -46,22 +87,10 @@ class PartitionService(object):
         self._partition_table = new_table
 
     def get_partition_owner(self, partition_id):
-        """
-        Returns the owner of the partition if it's set, None otherwise.
-
-        :param partition_id: (int), the partition id.
-        :return: (:class:`~uuid.UUID`), owner of partition
-        """
         table = self._partition_table
         return table.partitions.get(partition_id, None)
 
     def get_partition_id(self, key):
-        """
-        Returns the partition id for a Data key.
-
-        :param key: (object), the data key.
-        :return: (int), the partition id.
-        """
         count = self.partition_count
         if count == 0:
             # Partition count can not be zero for the SYNC mode.

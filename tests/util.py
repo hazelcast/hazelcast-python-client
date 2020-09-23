@@ -61,7 +61,7 @@ def get_abs_path(cur_dir, file_name):
 
 def wait_for_partition_table(client):
     m = client.get_map(random_string()).blocking()
-    while not client.partition_service._partition_table.partitions:
+    while not client._internal_partition_service._partition_table.partitions:
         m.put(random_string(), 0)
         time.sleep(0.1)
 
@@ -69,7 +69,7 @@ def wait_for_partition_table(client):
 def generate_key_owned_by_instance(client, uuid):
     while True:
         key = random_string()
-        data = client.serialization_service.to_data(key)
+        data = client._serialization_service.to_data(key)
         partition_id = client.partition_service.get_partition_id(data)
         owner = str(client.partition_service.get_partition_owner(partition_id))
         if owner == uuid:

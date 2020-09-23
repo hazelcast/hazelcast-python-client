@@ -22,9 +22,10 @@ class ReplicatedMap(Proxy):
     When a new node joins the cluster, the new node initially will request existing values from older nodes and
     replicate them locally.
     """
-    def __init__(self, client, service_name, name):
-        super(ReplicatedMap, self).__init__(client, service_name, name)
-        self._partition_id = randint(0, client.partition_service.partition_count - 1)
+    def __init__(self, service_name, name, context):
+        super(ReplicatedMap, self).__init__(service_name, name, context)
+        partition_service = context.partition_service
+        self._partition_id = randint(0, partition_service.partition_count - 1)
 
     def add_entry_listener(self, key=None, predicate=None, added_func=None, removed_func=None, updated_func=None,
                            evicted_func=None, clear_all_func=None):

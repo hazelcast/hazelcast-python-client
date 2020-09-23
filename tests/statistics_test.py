@@ -29,7 +29,7 @@ class StatisticsTest(HazelcastTestCase):
         config.cluster_name = self.cluster.id
         client = HazelcastClient(config)
         time.sleep(2 * self.DEFAULT_STATS_PERIOD)
-        client_uuid = client.connection_manager.client_uuid
+        client_uuid = client._connection_manager.client_uuid
 
         response = self._get_client_stats_from_server(client_uuid)
 
@@ -43,7 +43,7 @@ class StatisticsTest(HazelcastTestCase):
         config.set_property(ClientProperties.STATISTICS_ENABLED.name, "truee")
         config.set_property(ClientProperties.STATISTICS_PERIOD_SECONDS.name, self.STATS_PERIOD)
         client = HazelcastClient(config)
-        client_uuid = client.connection_manager.client_uuid
+        client_uuid = client._connection_manager.client_uuid
 
         time.sleep(2 * self.STATS_PERIOD)
         response = self._get_client_stats_from_server(client_uuid)
@@ -57,7 +57,7 @@ class StatisticsTest(HazelcastTestCase):
         config.cluster_name = self.cluster.id
         config.set_property(ClientProperties.STATISTICS_ENABLED.name, True)
         client = HazelcastClient(config)
-        client_uuid = client.connection_manager.client_uuid
+        client_uuid = client._connection_manager.client_uuid
 
         time.sleep(2 * self.DEFAULT_STATS_PERIOD)
         self._wait_for_statistics_collection(client_uuid)
@@ -72,7 +72,7 @@ class StatisticsTest(HazelcastTestCase):
         config = ClientConfig()
         config.cluster_name = self.cluster.id
         client = HazelcastClient(config)
-        client_uuid = client.connection_manager.client_uuid
+        client_uuid = client._connection_manager.client_uuid
 
         time.sleep(2 * self.STATS_PERIOD)
         self._wait_for_statistics_collection(client_uuid)
@@ -87,7 +87,7 @@ class StatisticsTest(HazelcastTestCase):
         config.set_property(ClientProperties.STATISTICS_ENABLED.name, True)
         config.set_property(ClientProperties.STATISTICS_PERIOD_SECONDS.name, self.STATS_PERIOD)
         client = HazelcastClient(config)
-        client_uuid = client.connection_manager.client_uuid
+        client_uuid = client._connection_manager.client_uuid
 
         time.sleep(2 * self.STATS_PERIOD)
         response1 = self._wait_for_statistics_collection(client_uuid)
@@ -104,7 +104,7 @@ class StatisticsTest(HazelcastTestCase):
         config.set_property(ClientProperties.STATISTICS_ENABLED.name, True)
         config.set_property(ClientProperties.STATISTICS_PERIOD_SECONDS.name, -1 * self.STATS_PERIOD)
         client = HazelcastClient(config)
-        client_uuid = client.connection_manager.client_uuid
+        client_uuid = client._connection_manager.client_uuid
 
         time.sleep(2 * self.DEFAULT_STATS_PERIOD)
         self._wait_for_statistics_collection(client_uuid)
@@ -123,7 +123,7 @@ class StatisticsTest(HazelcastTestCase):
         config.near_caches[map_name] = near_cache_config
 
         client = HazelcastClient(config)
-        client_uuid = client.connection_manager.client_uuid
+        client_uuid = client._connection_manager.client_uuid
 
         client.get_map(map_name).blocking()
 
@@ -131,7 +131,7 @@ class StatisticsTest(HazelcastTestCase):
         response = self._wait_for_statistics_collection(client_uuid)
 
         result = response.result.decode("utf-8")
-        info = client.cluster_service.get_local_client()
+        info = client._internal_cluster_service.get_local_client()
         local_address = "%s:%s" % (info.address.host, info.address.port)
 
         # Check near cache and client statistics
@@ -156,7 +156,7 @@ class StatisticsTest(HazelcastTestCase):
         # in different platforms. So, first try to get these statistics and then check the
         # response content
 
-        s = Statistics(client)
+        s = Statistics(client, None, None, None, None, None)
         psutil_stats = s._get_os_and_runtime_stats()
         for stat_name in psutil_stats:
             self.assertEqual(1, result.count(stat_name))
@@ -175,7 +175,7 @@ class StatisticsTest(HazelcastTestCase):
         config.near_caches[map_name] = near_cache_config
 
         client = HazelcastClient(config)
-        client_uuid = client.connection_manager.client_uuid
+        client_uuid = client._connection_manager.client_uuid
 
         client.get_map(map_name).blocking()
 
@@ -200,7 +200,7 @@ class StatisticsTest(HazelcastTestCase):
         config.near_caches[map_name] = near_cache_config
 
         client = HazelcastClient(config)
-        client_uuid = client.connection_manager.client_uuid
+        client_uuid = client._connection_manager.client_uuid
 
         test_map = client.get_map(map_name).blocking()
 

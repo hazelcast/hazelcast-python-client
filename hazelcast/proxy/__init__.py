@@ -1,7 +1,5 @@
-from hazelcast.core import DistributedObjectEvent
 from hazelcast.invocation import Invocation
-from hazelcast.protocol.codec import client_create_proxy_codec, client_destroy_proxy_codec, \
-    client_add_distributed_object_listener_codec, client_remove_distributed_object_listener_codec
+from hazelcast.protocol.codec import client_create_proxy_codec, client_destroy_proxy_codec
 from hazelcast.proxy.executor import Executor
 from hazelcast.proxy.list import List
 from hazelcast.proxy.map import create_map_proxy
@@ -46,36 +44,38 @@ _proxy_init = {
 
 
 class ProxyManager(object):
-    def __init__(self, client):
-        self._client = client
+    def __init__(self, context):
+        self._context = context
         self._proxies = {}
 
-    def get_or_create(self, service_name, name, create_on_remote=True, **kwargs):
+    def get_or_create(self, service_name, name, create_on_remote=True):
         ns = (service_name, name)
         if ns in self._proxies:
             return self._proxies[ns]
 
-        proxy = self._create_proxy(service_name, name, create_on_remote, **kwargs)
+        proxy = self._create_proxy(service_name, name, create_on_remote)
         self._proxies[ns] = proxy
         return proxy
 
-    def _create_proxy(self, service_name, name, create_on_remote, **kwargs):
+    def _create_proxy(self, service_name, name, create_on_remote):
         if create_on_remote:
-            request = client_create_proxy_codec.encode_request(name=name, service_name=service_name)
+            request = client_create_proxy_codec.encode_request(name, service_name)
             invocation = Invocation(request)
-            self._client.invocation_service.invoke(invocation)
+            invocation_service = self._context.invocation_service
+            invocation_service.invoke(invocation)
             invocation.future.result()
 
-        return _proxy_init[service_name](client=self._client, service_name=service_name, name=name, **kwargs)
+        return _proxy_init[service_name](service_name, name, self._context)
 
     def destroy_proxy(self, service_name, name, destroy_on_remote=True):
         ns = (service_name, name)
         try:
             self._proxies.pop(ns)
             if destroy_on_remote:
-                request = client_destroy_proxy_codec.encode_request(name=name, service_name=service_name)
+                request = client_destroy_proxy_codec.encode_request(name, service_name)
                 invocation = Invocation(request)
-                self._client.invocation_service.invoke(invocation)
+                invocation_service = self._context.invocation_service
+                invocation_service.invoke(invocation)
                 invocation.future.result()
             return True
         except KeyError:
@@ -83,26 +83,3 @@ class ProxyManager(object):
 
     def get_distributed_objects(self):
         return to_list(self._proxies.values())
-
-    def add_distributed_object_listener(self, listener_func):
-        is_smart = self._client.config.network.smart_routing
-        request = client_add_distributed_object_listener_codec.encode_request(is_smart)
-
-        def handle_distributed_object_event(name, service_name, event_type, source):
-            event = DistributedObjectEvent(name, service_name, event_type, source)
-            listener_func(event)
-
-        def event_handler(client_message):
-            return client_add_distributed_object_listener_codec.handle(client_message, handle_distributed_object_event)
-
-        def decode_add_listener(response):
-            return client_add_distributed_object_listener_codec.decode_response(response)
-
-        def encode_remove_listener(registration_id):
-            return client_remove_distributed_object_listener_codec.encode_request(registration_id)
-
-        return self._client.listener_service.register_listener(request, decode_add_listener,
-                                                               encode_remove_listener, event_handler)
-
-    def remove_distributed_object_listener(self, registration_id):
-        return self._client.listener_service.deregister_listener(registration_id)

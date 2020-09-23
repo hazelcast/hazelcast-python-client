@@ -12,9 +12,9 @@ class MultiMap(Proxy):
     """
     A specialized map whose keys can be associated with multiple values.
     """
-    def __init__(self, client, service_name, name):
-        super(MultiMap, self).__init__(client, service_name, name)
-        self._reference_id_generator = self._client.lock_reference_id_generator
+    def __init__(self, service_name, name, context):
+        super(MultiMap, self).__init__(service_name, name, context)
+        self._reference_id_generator = context.lock_reference_id_generator
 
     def add_entry_listener(self, include_value=False, key=None, added_func=None, removed_func=None, clear_all_func=None):
         """

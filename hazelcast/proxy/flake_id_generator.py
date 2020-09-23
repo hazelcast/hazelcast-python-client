@@ -38,10 +38,10 @@ class FlakeIdGenerator(Proxy):
     _BITS_NODE_ID = 16
     _BITS_SEQUENCE = 6
 
-    def __init__(self, client, service_name, name):
-        super(FlakeIdGenerator, self).__init__(client, service_name, name)
+    def __init__(self, service_name, name, context):
+        super(FlakeIdGenerator, self).__init__(service_name, name, context)
 
-        config = client.config.flake_id_generators.get(name, None)
+        config = context.config.flake_id_generators.get(name, None)
         if config is None:
             config = FlakeIdGeneratorConfig()
 

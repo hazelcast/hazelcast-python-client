@@ -3,7 +3,7 @@ import logging
 from hazelcast.future import make_blocking
 from hazelcast.invocation import Invocation
 from hazelcast.partition import string_partition_strategy
-from hazelcast.util import enum, thread_id
+from hazelcast.util import enum
 from hazelcast import six
 
 MAX_SIZE = float('inf')
@@ -17,17 +17,20 @@ class Proxy(object):
     """
     Provides basic functionality for Hazelcast Proxies.
     """
-    def __init__(self, client, service_name, name):
+    def __init__(self, service_name, name, context):
         self.service_name = service_name
         self.name = name
+        self._context = context
+        self._invocation_service = context.invocation_service
+        self._partition_service = context.partition_service
+        serialization_service = context.serialization_service
+        self._to_object = serialization_service.to_object
+        self._to_data = serialization_service.to_data
+        listener_service = context.listener_service
+        self._register_listener = listener_service.register_listener
+        self._deregister_listener = listener_service.deregister_listener
         self.logger = logging.getLogger("HazelcastClient.%s(%s)" % (type(self).__name__, name))
-        self._client = client
-        self._invocation_service = client.invocation_service
-        self._to_object = client.serialization_service.to_object
-        self._to_data = client.serialization_service.to_data
-        self._register_listener = client.listener_service.register_listener
-        self._deregister_listener = client.listener_service.deregister_listener
-        self._is_smart = client.config.network.smart_routing
+        self._is_smart = context.config.network.smart_routing
 
     def destroy(self):
         """
@@ -36,7 +39,7 @@ class Proxy(object):
         :return: (bool), ``true`` if this proxy is deleted successfully, ``false`` otherwise.
         """
         self._on_destroy()
-        return self._client.proxy_manager.destroy_proxy(self.service_name, self.name)
+        return self._context.proxy_manager.destroy_proxy(self.service_name, self.name)
 
     def _on_destroy(self):
         pass
@@ -55,7 +58,7 @@ class Proxy(object):
         return invocation.future
 
     def _invoke_on_key(self, request, key_data, response_handler=_no_op_response_handler):
-        partition_id = self._client.partition_service.get_partition_id(key_data)
+        partition_id = self._partition_service.get_partition_id(key_data)
         invocation = Invocation(request, partition_id=partition_id, response_handler=response_handler)
         self._invocation_service.invoke(invocation)
         return invocation.future
@@ -77,10 +80,10 @@ class PartitionSpecificProxy(Proxy):
     """
     Provides basic functionality for Partition Specific Proxies.
     """
-    def __init__(self, client, service_name, name):
-        super(PartitionSpecificProxy, self).__init__(client, service_name, name)
-        partition_key = client.serialization_service.to_data(string_partition_strategy(self.name))
-        self._partition_id = client.partition_service.get_partition_id(partition_key)
+    def __init__(self, service_name, name, context):
+        super(PartitionSpecificProxy, self).__init__(service_name, name, context)
+        partition_key = context.serialization_service.to_data(string_partition_strategy(self.name))
+        self._partition_id = context.partition_service.get_partition_id(partition_key)
 
     def _invoke(self, request, response_handler=_no_op_response_handler):
         invocation = Invocation(request, partition_id=self._partition_id, response_handler=response_handler)
@@ -92,15 +95,17 @@ class TransactionalProxy(object):
     """
     Provides an interface for all transactional distributed objects.
     """
-    def __init__(self, name, transaction):
+    def __init__(self, name, transaction, context):
         self.name = name
         self.transaction = transaction
-        self._to_object = transaction.client.serialization_service.to_object
-        self._to_data = transaction.client.serialization_service.to_data
+        self._invocation_service = context.invocation_service
+        serialization_service = context.serialization_service
+        self._to_object = serialization_service.to_object
+        self._to_data = serialization_service.to_data
 
     def _invoke(self, request, response_handler=_no_op_response_handler):
         invocation = Invocation(request, connection=self.transaction.connection, response_handler=response_handler)
-        self.transaction.client.invocation_service.invoke(invocation)
+        self._invocation_service.invoke(invocation)
         return invocation.future
 
     def __repr__(self):

@@ -31,7 +31,7 @@ class InvocationTest(HazelcastTestCase):
 
     def test_invocation_timeout(self):
         request = OutboundMessage(bytearray(22), True)
-        invocation_service = self.client.invocation_service
+        invocation_service = self.client._invocation_service
         invocation = Invocation(request, partition_id=1)
 
         def mock(*_):
@@ -47,7 +47,7 @@ class InvocationTest(HazelcastTestCase):
 
     def test_invocation_not_timed_out_when_there_is_no_exception(self):
         request = OutboundMessage(bytearray(22), True)
-        invocation_service = self.client.invocation_service
+        invocation_service = self.client._invocation_service
         invocation = Invocation(request)
         invocation_service.invoke(invocation)
 

@@ -17,7 +17,7 @@ class _MemberListSnapshot(object):
         self.members = members
 
 
-class ClientInfo(object):
+class _ClientInfo(object):
     """
     Local information of the client.
     """
@@ -46,49 +46,96 @@ _INITIAL_MEMBERS_TIMEOUT_SECONDS = 120
 
 
 class ClusterService(object):
-    """Cluster service for Hazelcast clients.
-    Allows to retrieve Hazelcast members of the cluster, e.g. by their Address or UUID.
     """
+    Cluster service for Hazelcast clients.
+
+    It provides access to the members in the cluster
+    and one can register for changes in the cluster members.
+    """
+
+    def __init__(self, internal_cluster_service):
+        self._service = internal_cluster_service
+
+    def add_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
+        """
+        Adds a membership listener to listen for membership updates.
+
+        It will be notified when a member is added to cluster or removed from cluster.
+        There is no check for duplicate registrations, so if you register the listener
+        twice, it will get events twice.
+
+        :param member_added: Function to be called when a member is added to the cluster.
+        :type member_added: function
+        :param member_removed: Function to be called when a member is removed from the cluster.
+        :type member_removed: function
+        :param fire_for_existing: Whether or not fire member_added for existing members.
+        :type fire_for_existing: bool
+
+        :return: Registration id of the listener which will be used for removing this listener.
+        :rtype: str
+        """
+        return self._service.add_listener(member_added, member_removed, fire_for_existing)
+
+    def remove_listener(self, registration_id):
+        """
+        Removes the specified membership listener.
+
+        :param registration_id: Registration id of the listener to be removed.
+        :type registration_id: str
+
+        :return: ``True`` if the registration is removed, ``False`` otherwise.
+        :rtype: bool
+        """
+        return self._service.remove_listener(registration_id)
+
+    def get_members(self, member_selector=None):
+        """
+        Lists the current members in the cluster.
+
+        Every member in the cluster returns the members in the same order.
+        To obtain the oldest member in the cluster, you can retrieve the first item in the list.
+
+        :param member_selector: Function to filter members to return.
+            If not provided, the returned list will contain all the available cluster members.
+        :type member_selector: function
+
+        :return: Current members in the cluster
+        :rtype: list[:class:`~hazelcast.core.MemberInfo`]
+        """
+        return self._service.get_members(member_selector)
+
+
+class _InternalClusterService(object):
     logger = logging.getLogger("HazelcastClient.ClusterService")
 
-    def __init__(self, client):
+    def __init__(self, client, logger_extras):
         self._client = client
+        self._connection_manager = None
+        self._logger_extras = logger_extras
         config = client.config
-        self._logger_extras = {"client_name": client.name, "cluster_name": config.cluster_name}
         self._labels = frozenset(config.labels)
-        self._connection_manager = client.connection_manager
         self._listeners = {}
         self._member_list_snapshot = _EMPTY_SNAPSHOT
         self._initial_list_fetched = threading.Event()
 
-    def start(self, membership_listeners):
+    def start(self, connection_manager, membership_listeners):
+        self._connection_manager = connection_manager
         for listener in membership_listeners:
             self.add_listener(*listener)
 
     def get_member(self, member_uuid):
-        """Gets the member with the given UUID.
-
-        :param member_uuid: (:class: `~uuid.UUID`), uuid of the desired member.
-        :return: (:class:`~hazelcast.core.Member`), the corresponding member.
-        """
         check_not_none(uuid, "UUID must not be null")
         snapshot = self._member_list_snapshot
         return snapshot.members.get(member_uuid, None)
 
-    def get_members(self, selector=None):
-        """
-        Returns the members that satisfy the given selector if any.
-
-        :param selector: (Function), Selector to be applied to the members.
-        :return: (List), List of members.
-        """
+    def get_members(self, member_selector=None):
         snapshot = self._member_list_snapshot
-        if not selector:
+        if not member_selector:
             return list(snapshot.members.values())
 
         members = []
         for member in six.itervalues(snapshot.members):
-            if selector(member):
+            if member_selector(member):
                 members.append(member)
         return members
 
@@ -110,20 +157,9 @@ class ClusterService(object):
         connection_manager = self._connection_manager
         connection = connection_manager.get_random_connection()
         local_address = None if not connection else connection.local_address
-        return ClientInfo(connection_manager.client_uuid, local_address, self._client.name, self._labels)
+        return _ClientInfo(connection_manager.client_uuid, local_address, self._client.name, self._labels)
 
     def add_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
-        """
-        Adds a membership listener to listen for membership updates, it will be notified when a member is added to
-        cluster or removed from cluster. There is no check for duplicate registrations, so if you register the listener
-        twice, it will get events twice.
-
-
-        :param member_added: (Function), function to be called when a member is added to the cluster (optional).
-        :param member_removed: (Function), function to be called when a member is removed to the cluster (optional).
-        :param fire_for_existing: (bool), whether or not fire member_added for existing members (optional).
-        :return: (str), registration id of the listener which will be used for removing this listener.
-        """
         registration_id = str(uuid.uuid4())
         self._listeners[registration_id] = (member_added, member_removed)
 

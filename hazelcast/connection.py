@@ -69,25 +69,33 @@ _AuthenticationStatus = enum(AUTHENTICATED=0, CREDENTIALS_FAILED=1,
                              SERIALIZATION_VERSION_MISMATCH=2, NOT_ALLOWED_IN_CLUSTER=3)
 
 
-class ConnectionManager(object):
+class _ConnectionManager(object):
     """
     ConnectionManager is responsible for managing :mod:`Connection` objects.
     """
     logger = logging.getLogger("HazelcastClient.ConnectionManager")
 
-    def __init__(self, client, connection_factory, address_provider):
+    def __init__(self, client, reactor, address_provider, lifecycle_service,
+                 partition_service, cluster_service, invocation_service,
+                 near_cache_manager, logger_extras):
         self.live = False
         self.active_connections = dict()
         self.client_uuid = uuid.uuid4()
 
         self._client = client
-        self._connection_factory = connection_factory
-        self._heartbeat_manager = _HeartbeatManager(self._client, self)
+        self._reactor = reactor
+        self._address_provider = address_provider
+        self._lifecycle_service = lifecycle_service
+        self._partition_service = partition_service
+        self._cluster_service = cluster_service
+        self._invocation_service = invocation_service
+        self._near_cache_manager = near_cache_manager
+        self._logger_extras = logger_extras
         config = self._client.config
-        self._logger_extras = {"client_name": self._client.name, "cluster_name": config.cluster_name}
         self._smart_routing_enabled = config.network.smart_routing
         self._wait_strategy = self._init_wait_strategy(config)
         self._reconnect_mode = config.connection_strategy.reconnect_mode
+        self._heartbeat_manager = _HeartbeatManager(self, self._client, reactor, invocation_service, logger_extras)
         self._connection_listeners = []
         self._connect_all_members_timer = None
         self._async_start = config.connection_strategy.async_start
@@ -95,7 +103,6 @@ class ConnectionManager(object):
         self._pending_connections = dict()
         props = self._client.properties
         self._shuffle_member_list = props.get_bool(props.SHUFFLE_MEMBER_LIST)
-        self._address_provider = address_provider
         self._lock = threading.RLock()
         self._connection_id_generator = AtomicInteger()
         self._labels = config.labels
@@ -134,12 +141,12 @@ class ConnectionManager(object):
 
         return None
 
-    def start(self):
+    def start(self, load_balancer):
         if self.live:
             return
 
         self.live = True
-        self._load_balancer = self._client.load_balancer
+        self._load_balancer = load_balancer
         self._heartbeat_manager.start()
         self._connect_to_cluster()
         if self._smart_routing_enabled:
@@ -169,7 +176,7 @@ class ConnectionManager(object):
         if not self._smart_routing_enabled:
             return
 
-        for member in self._client.cluster_service.get_members():
+        for member in self._cluster_service.get_members():
             try:
                 self._get_or_connect(member.address).result()
             except:
@@ -195,7 +202,7 @@ class ConnectionManager(object):
                                  % (connected_address, remote_uuid, connection),
                                  extra=self._logger_extras)
                 if not self.active_connections:
-                    self._fire_lifecycle_event(LifecycleState.DISCONNECTED)
+                    self._lifecycle_service.fire_lifecycle_event(LifecycleState.DISCONNECTED)
                     self._trigger_cluster_reconnection()
 
         if connection:
@@ -225,7 +232,7 @@ class ConnectionManager(object):
             self._shutdown_client()
             return
 
-        if self._client.lifecycle_service.running:
+        if self._lifecycle_service.running:
             self._start_connect_to_cluster_thread()
 
     def _init_wait_strategy(self, config):
@@ -237,25 +244,23 @@ class ConnectionManager(object):
         connecting_addresses = set()
 
         def run():
-            lifecycle = self._client.lifecycle_service
-            if not lifecycle.running:
+            if not self._lifecycle_service.running:
                 return
 
-            cluster = self._client.cluster_service
-            for member in cluster.get_members():
+            for member in self._cluster_service.get_members():
                 address = member.address
 
                 if not self.get_connection_from_address(address) and address not in connecting_addresses:
                     connecting_addresses.add(address)
-                    if not lifecycle.running:
-                        continue  # TODO should we break here?
+                    if not self._lifecycle_service.running:
+                        break
 
                     if not self.get_connection(member.uuid):
                         self._get_or_connect(address).add_done_callback(lambda f: connecting_addresses.discard(address))
 
-            self._connect_all_members_timer = self._client.reactor.add_timer(1, run)
+            self._connect_all_members_timer = self._reactor.add_timer(1, run)
 
-        self._connect_all_members_timer = self._client.reactor.add_timer(1, run)
+        self._connect_all_members_timer = self._reactor.add_timer(1, run)
 
     def _connect_to_cluster(self):
         if self._async_start:
@@ -318,7 +323,7 @@ class ConnectionManager(object):
         self.logger.info("Unable to connect to any address from the cluster with name: %s. "
                          "The following addresses were tried: %s" % (cluster_name, tried_addresses),
                          extra=self._logger_extras)
-        if self._client.lifecycle_service.running:
+        if self._lifecycle_service.running:
             msg = "Unable to connect to any cluster"
         else:
             msg = "Client is being shutdown"
@@ -355,9 +360,10 @@ class ConnectionManager(object):
                             return ImmediateExceptionFuture(
                                 ValueError("Address translator could not translate address %s" % address))
 
-                        connection = self._connection_factory(self, self._connection_id_generator.get_and_increment(),
-                                                              translated, self._client.config.network,
-                                                              self._client.invocation_service.handle_client_message)
+                        factory = self._reactor.connection_factory
+                        connection = factory(self, self._connection_id_generator.get_and_increment(),
+                                             translated, self._client.config.network,
+                                             self._invocation_service.handle_client_message)
                     except IOError:
                         return ImmediateExceptionFuture(sys.exc_info()[1], sys.exc_info()[2])
 
@@ -374,7 +380,7 @@ class ConnectionManager(object):
                                                              client_name, self._labels)
 
         invocation = Invocation(request, connection=connection, urgent=True, response_handler=lambda m: m)
-        client.invocation_service.invoke(invocation)
+        self._invocation_service.invoke(invocation)
         return invocation.future
 
     def _on_auth(self, response, connection, address):
@@ -429,7 +435,7 @@ class ConnectionManager(object):
 
         if is_initial_connection:
             self._cluster_id = new_cluster_id
-            self._fire_lifecycle_event(LifecycleState.CONNECTED)
+            self._lifecycle_service.fire_lifecycle_event(LifecycleState.CONNECTED)
 
         self.logger.info("Authenticated with server %s:%s, server version: %s, local address: %s"
                          % (remote_address, remote_uuid, server_version_str, connection.local_address),
@@ -448,28 +454,22 @@ class ConnectionManager(object):
         return connection
 
     def _on_cluster_restart(self):
-        client = self._client
-        client.near_cache_manager.clear_near_caches()
-        client.cluster_service.clear_member_list_version()
-
-    def _fire_lifecycle_event(self, state):
-        lifecycle = self._client.lifecycle_service
-        lifecycle.fire_lifecycle_event(state)
+        self._near_cache_manager.clear_near_caches()
+        self._cluster_service.clear_member_list_version()
 
     def _check_partition_count(self, partition_count):
-        partition_service = self._client.partition_service
-        if not partition_service.check_and_set_partition_count(partition_count):
+        if not self._partition_service.check_and_set_partition_count(partition_count):
             raise ClientNotAllowedInClusterError("Client can not work with this cluster because it has a "
                                                  "different partition count. Expected partition count: %d, "
                                                  "Member partition count: %d"
-                                                 % (partition_service.partition_count, partition_count))
+                                                 % (self._partition_service.partition_count, partition_count))
 
     def _check_client_active(self):
-        if not self._client.lifecycle_service.running:
+        if not self._lifecycle_service.running:
             raise HazelcastClientNotActiveError()
 
     def _get_possible_addresses(self):
-        member_addresses = list(map(lambda m: (m.address, None), self._client.cluster_service.get_members()))
+        member_addresses = list(map(lambda m: (m.address, None), self._cluster_service.get_members()))
 
         if self._shuffle_member_list:
             random.shuffle(member_addresses)
@@ -493,10 +493,12 @@ class _HeartbeatManager(object):
     _heartbeat_timer = None
     logger = logging.getLogger("HazelcastClient.HeartbeatManager")
 
-    def __init__(self, client, connection_manager):
-        self._client = client
+    def __init__(self, connection_manager, client, reactor, invocation_service, logger_extras):
         self._connection_manager = connection_manager
-        self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
+        self._client = client
+        self._reactor = reactor
+        self._invocation_service = invocation_service
+        self._logger_extras = logger_extras
 
         props = client.properties
         self._heartbeat_timeout = props.get_seconds_positive_or_default(props.HEARTBEAT_TIMEOUT)
@@ -514,9 +516,9 @@ class _HeartbeatManager(object):
             now = time.time()
             for connection in list(self._connection_manager.active_connections.values()):
                 self._check_connection(now, connection)
-            self._heartbeat_timer = self._client.reactor.add_timer(self._heartbeat_interval, _heartbeat)
+            self._heartbeat_timer = self._reactor.add_timer(self._heartbeat_interval, _heartbeat)
 
-        self._heartbeat_timer = self._client.reactor.add_timer(self._heartbeat_interval, _heartbeat)
+        self._heartbeat_timer = self._reactor.add_timer(self._heartbeat_interval, _heartbeat)
 
     def shutdown(self):
         """
@@ -537,9 +539,8 @@ class _HeartbeatManager(object):
 
         if (now - connection.last_write_time) > self._heartbeat_interval:
             request = client_ping_codec.encode_request()
-            invocation_service = self._client.invocation_service
             invocation = Invocation(request, connection=connection, urgent=True)
-            invocation_service.invoke(invocation)
+            self._invocation_service.invoke(invocation)
 
 
 _frame_header = struct.Struct('<iH')

@@ -25,11 +25,14 @@ class Statistics(object):
     _DEFAULT_PROBE_VALUE = 0
     logger = logging.getLogger("HazelcastClient.Statistics")
 
-    def __init__(self, client):
+    def __init__(self, client, reactor, connection_manager, invocation_service, near_cache_manager, logger_extras):
         self._client = client
-        self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
+        self._reactor = reactor
+        self._connection_manager = connection_manager
+        self._invocation_service = invocation_service
+        self._near_cache_manager = near_cache_manager
+        self._logger_extras = logger_extras
         self._enabled = client.properties.get_bool(ClientProperties.STATISTICS_ENABLED)
-        self._cached_owner_address = None
         self._statistics_timer = None
         self._failed_gauges = set()
 
@@ -49,13 +52,13 @@ class Statistics(object):
             period = default_period
 
         def _statistics_task():
-            if not self._client.lifecycle_service.running:
+            if not self._client.lifecycle_service.is_running():
                 return
 
             self._send_statistics()
-            self._statistics_timer = self._client.reactor.add_timer(period, _statistics_task)
+            self._statistics_timer = self._reactor.add_timer(period, _statistics_task)
 
-        self._statistics_timer = self._client.reactor.add_timer(period, _statistics_task)
+        self._statistics_timer = self._reactor.add_timer(period, _statistics_task)
 
         self.logger.info("Client statistics enabled with the period of {} seconds.".format(period),
                          extra=self._logger_extras)
@@ -65,7 +68,7 @@ class Statistics(object):
             self._statistics_timer.cancel()
 
     def _send_statistics(self):
-        connection = self._client.connection_manager.get_random_connection()
+        connection = self._connection_manager.get_random_connection()
         if not connection:
             self.logger.debug("Cannot send client statistics to the server. No connection found.",
                               extra=self._logger_extras)
@@ -81,7 +84,7 @@ class Statistics(object):
     def _send_stats_to_owner(self, collection_timestamp, stats, connection):
         request = client_statistics_codec.encode_request(collection_timestamp, stats, bytearray(0))
         invocation = Invocation(request, connection=connection)
-        self._client.invocation_service.invoke(invocation)
+        self._invocation_service.invoke(invocation)
 
     def _add_runtime_and_os_stats(self, stats):
         os_and_runtime_stats = self._get_os_and_runtime_stats()
@@ -143,7 +146,7 @@ class Statistics(object):
         self._add_stat(stats, "clientName", self._client.name)
 
     def _add_near_cache_stats(self, stats):
-        for near_cache in self._client.near_cache_manager.list_near_caches():
+        for near_cache in self._near_cache_manager.list_near_caches():
             near_cache_name_with_prefix = self._get_name_with_prefix(near_cache.name)
             near_cache_name_with_prefix.append(".")
             prefix = "".join(near_cache_name_with_prefix)

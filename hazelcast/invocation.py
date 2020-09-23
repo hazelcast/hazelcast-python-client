@@ -46,25 +46,32 @@ class Invocation(object):
 class InvocationService(object):
     logger = logging.getLogger("HazelcastClient.InvocationService")
 
-    def __init__(self, client):
+    def __init__(self, client, reactor, logger_extras):
         config = client.config
         if config.network.smart_routing:
             self.invoke = self._invoke_smart
         else:
             self.invoke = self._invoke_non_smart
 
+        self._client = client
+        self._reactor = reactor
+        self._logger_extras = logger_extras
+        self._partition_service = None
+        self._connection_manager = None
+        self._listener_service = None
+        self._check_invocation_allowed_fn = None
         self._pending = {}
         self._next_correlation_id = AtomicInteger(1)
-        self._client = client
-        self._logger_extras = {"client_name": client.name, "cluster_name": config.cluster_name}
         self._is_redo_operation = config.network.redo_operation
         self._invocation_timeout = self._init_invocation_timeout()
         self._invocation_retry_pause = self._init_invocation_retry_pause()
-        self._listener_service = client.listener_service
-        self._partition_service = client.partition_service
-        self._connection_manager = client.connection_manager
-        self._check_invocation_allowed_fn = self._connection_manager.check_invocation_allowed
         self._shutdown = False
+
+    def start(self, partition_service, connection_manager, listener_service):
+        self._partition_service = partition_service
+        self._connection_manager = connection_manager
+        self._listener_service = listener_service
+        self._check_invocation_allowed_fn = connection_manager.check_invocation_allowed
 
     def handle_client_message(self, message):
         correlation_id = message.get_correlation_id()
@@ -83,9 +90,6 @@ class InvocationService(object):
             return self._handle_exception(invocation, error)
 
         invocation.set_response(message)
-
-    def start(self):
-        self._listener_service = self._client.listener_service
 
     def shutdown(self):
         self._shutdown = True
@@ -199,7 +203,7 @@ class InvocationService(object):
             self.logger.debug("Got exception for request %s, error: %s" % (invocation.request, error),
                               extra=self._logger_extras)
 
-        if not self._client.lifecycle_service.running:
+        if not self._client.lifecycle_service.is_running():
             invocation.set_exception(HazelcastClientNotActiveError(), traceback)
             self._pending.pop(invocation.request.get_correlation_id(), None)
             return
@@ -218,7 +222,7 @@ class InvocationService(object):
             return
 
         invoke_func = functools.partial(self.invoke, invocation)
-        self._client.reactor.add_timer(self._invocation_retry_pause, invoke_func)
+        self._reactor.add_timer(self._invocation_retry_pause, invoke_func)
 
     def _should_retry(self, invocation, error):
         if invocation.connection and isinstance(error, (IOError, TargetDisconnectedError)):

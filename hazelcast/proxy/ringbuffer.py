@@ -48,8 +48,8 @@ class Ringbuffer(PartitionSpecificProxy):
     meaning that only 1 thread is able to take an item. A Ringbuffer.read is not destructive, so you can have multiple
     threads reading the same item multiple times.
     """
-    def __init__(self, client, service_name, name):
-        super(Ringbuffer, self).__init__(client, service_name, name)
+    def __init__(self, service_name, name, context):
+        super(Ringbuffer, self).__init__(service_name, name, context)
         self._capacity = None
 
     def capacity(self):

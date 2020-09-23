@@ -1,10 +1,8 @@
-import time
-
 from hazelcast import HazelcastClient
 from hazelcast.core import Address
 from tests.base import HazelcastTestCase
 from hazelcast.config import ClientConfig, ClientProperties
-from tests.util import configure_logging, open_connection_to_address, random_string, wait_for_partition_table
+from tests.util import configure_logging, open_connection_to_address, wait_for_partition_table
 
 
 class HeartbeatTest(HazelcastTestCase):
@@ -50,7 +48,7 @@ class HeartbeatTest(HazelcastTestCase):
         connection_added_collector = connection_collector()
         connection_removed_collector = connection_collector()
 
-        self.client.connection_manager.add_listener(connection_added_collector, connection_removed_collector)
+        self.client._connection_manager.add_listener(connection_added_collector, connection_removed_collector)
 
         self.simulate_heartbeat_lost(self.client, addr, 2)
 
@@ -66,5 +64,5 @@ class HeartbeatTest(HazelcastTestCase):
 
     @staticmethod
     def simulate_heartbeat_lost(client, address, timeout):
-        connection = client.connection_manager.get_connection_from_address(address)
+        connection = client._connection_manager.get_connection_from_address(address)
         connection.last_read_time -= timeout

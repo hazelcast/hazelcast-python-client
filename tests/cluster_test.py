@@ -188,9 +188,9 @@ class LoadBalancersWithRealClusterTest(HazelcastTestCase):
         config.cluster_name = self.cluster.id
         config.load_balancer = RandomLB()
         client = HazelcastClient(config)
-        self.assertTrue(client.lifecycle_service.running)
+        self.assertTrue(client.lifecycle_service.is_running())
 
-        lb = client.load_balancer
+        lb = client._load_balancer
         self.assertTrue(isinstance(lb, RandomLB))
 
         six.assertCountEqual(self, self.addresses, list(map(lambda m: m.address, lb._members)))
@@ -204,9 +204,9 @@ class LoadBalancersWithRealClusterTest(HazelcastTestCase):
         config.cluster_name = self.cluster.id
         config.load_balancer = RoundRobinLB()
         client = HazelcastClient(config)
-        self.assertTrue(client.lifecycle_service.running)
+        self.assertTrue(client.lifecycle_service.is_running())
 
-        lb = client.load_balancer
+        lb = client._load_balancer
         self.assertTrue(isinstance(lb, RoundRobinLB))
 
         six.assertCountEqual(self, self.addresses, list(map(lambda m: m.address, lb._members)))

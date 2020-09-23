@@ -55,8 +55,8 @@ class PNCounter(Proxy):
 
     _EMPTY_ADDRESS_LIST = []
 
-    def __init__(self, client, service_name, name):
-        super(PNCounter, self).__init__(client, service_name, name)
+    def __init__(self, service_name, name, context):
+        super(PNCounter, self).__init__(service_name, name, context)
         self._observed_clock = VectorClock()
         self._max_replica_count = 0
         self._current_target_replica_address = None
@@ -221,8 +221,7 @@ class PNCounter(Proxy):
         except Exception as ex:
             self.logger.exception("Exception occurred while invoking operation on target %s, "
                                   "choosing different target" % target,
-                                  extra={"client_name": self._client.name,
-                                         "cluster_name": self._client.config.cluster_name})
+                                  extra=self._context.logger_extras)
             if excluded_addresses == PNCounter._EMPTY_ADDRESS_LIST:
                 excluded_addresses = []
 
@@ -247,7 +246,7 @@ class PNCounter(Proxy):
         return replica_addresses[random_replica_index]
 
     def _get_replica_addresses(self, excluded_addresses):
-        data_members = self._client.cluster_service.get_members(lambda member: not member.lite_member)
+        data_members = self._context.cluster_service.get_members(lambda member: not member.lite_member)
         replica_count = self._get_max_configured_replica_count()
 
         current_count = min(replica_count, len(data_members))

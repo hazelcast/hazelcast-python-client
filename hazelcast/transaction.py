@@ -46,13 +46,14 @@ class TransactionManager(object):
     """
     logger = logging.getLogger("HazelcastClient.TransactionManager")
 
-    def __init__(self, client):
-        self._client = client
-        self._logger_extras = {"client_name": client.name, "cluster_name": client.config.cluster_name}
+    def __init__(self, context, logger_extras):
+        self._context = context
+        self._logger_extras = logger_extras
 
     def _connect(self):
+        connection_manager = self._context.connection_manager
         for count in range(0, RETRY_COUNT):
-            connection = self._client.connection_manager.get_random_connection()
+            connection = connection_manager.get_random_connection()
             if connection:
                 return connection
 
@@ -72,7 +73,7 @@ class TransactionManager(object):
         :return: (:class:`~hazelcast.transaction.Transaction`), new created Transaction.
         """
         connection = self._connect()
-        return Transaction(self._client, connection, timeout, durability, transaction_type)
+        return Transaction(self._context, connection, timeout, durability, transaction_type)
 
 
 class Transaction(object):
@@ -86,12 +87,12 @@ class Transaction(object):
     _locals = threading.local()
     thread_id = None
 
-    def __init__(self, client, connection, timeout, durability, transaction_type):
+    def __init__(self, context, connection, timeout, durability, transaction_type):
+        self._context = context
         self.connection = connection
         self.timeout = timeout
         self.durability = durability
         self.transaction_type = transaction_type
-        self.client = client
         self._objects = {}
 
     def begin(self):
@@ -111,7 +112,8 @@ class Transaction(object):
                                                               transaction_type=self.transaction_type,
                                                               thread_id=self.thread_id)
             invocation = Invocation(request, connection=self.connection, response_handler=lambda m: m)
-            self.client.invocation_service.invoke(invocation)
+            invocation_service = self._context.invocation_service
+            invocation_service.invoke(invocation)
             response = invocation.future.result()
             self.id = transaction_create_codec.decode_response(response)
             self.state = _STATE_ACTIVE
@@ -130,7 +132,8 @@ class Transaction(object):
             self._check_timeout()
             request = transaction_commit_codec.encode_request(self.id, self.thread_id)
             invocation = Invocation(request, connection=self.connection)
-            self.client.invocation_service.invoke(invocation)
+            invocation_service = self._context.invocation_service
+            invocation_service.invoke(invocation)
             invocation.future.result()
             self.state = _STATE_COMMITTED
         except:
@@ -150,7 +153,8 @@ class Transaction(object):
             if self.state != _STATE_PARTIAL_COMMIT:
                 request = transaction_rollback_codec.encode_request(self.id, self.thread_id)
                 invocation = Invocation(request, connection=self.connection)
-                self.client.invocation_service.invoke(invocation)
+                invocation_service = self._context.invocation_service
+                invocation_service.invoke(invocation)
                 invocation.future.result()
             self.state = _STATE_ROLLED_BACK
         finally:
@@ -209,7 +213,7 @@ class Transaction(object):
         try:
             return self._objects[key]
         except KeyError:
-            proxy = proxy_type(name, self)
+            proxy = proxy_type(name, self, self._context)
             self._objects[key] = proxy
             return make_blocking(proxy)
 

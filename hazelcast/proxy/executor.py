@@ -29,7 +29,7 @@ class Executor(Proxy):
         key_data = self._to_data(key)
         task_data = self._to_data(task)
 
-        partition_id = self._client.partition_service.get_partition_id(key_data)
+        partition_id = self._context.partition_service.get_partition_id(key_data)
         uuid = uuid4()
         request = executor_service_submit_to_partition_codec.encode_request(self.name, uuid, task_data)
         return self._invoke_on_partition(request, partition_id, handler)
@@ -70,7 +70,7 @@ class Executor(Proxy):
         :param task: (Task), the task executed on the all of the members.
         :return: (Map), :class:`~hazelcast.future.Future` tuples representing pending completion of the task on each member.
         """
-        return self.execute_on_members(self._client.cluster_service.get_members(), task)
+        return self.execute_on_members(self._context.cluster_service.get_members(), task)
 
     def is_shutdown(self):
         """
