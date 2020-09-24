@@ -335,10 +335,9 @@ class HazelcastClient(object):
     def _start(self):
         self._reactor.start()
         try:
+            self._invocation_service.init(self._internal_partition_service, self._connection_manager,
+                                          self._listener_service)
             self._internal_lifecycle_service.start()
-            self._invocation_service.start(self._internal_partition_service, self._connection_manager,
-                                           self._listener_service)
-            self._load_balancer.init(self.cluster_service)
             membership_listeners = self.config.membership_listeners
             self._internal_cluster_service.start(self._connection_manager, membership_listeners)
             self._cluster_view_listener.start()
@@ -348,6 +347,8 @@ class HazelcastClient(object):
                 self._connection_manager.connect_to_all_cluster_members()
 
             self._listener_service.start()
+            self._invocation_service.start()
+            self._load_balancer.init(self.cluster_service)
             self._statistics.start()
         except:
             self.shutdown()

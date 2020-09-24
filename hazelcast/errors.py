@@ -17,7 +17,7 @@ class HazelcastError(Exception):
         message, cause = self.args
         if cause:
             return "%s\nCaused by: %s" % (message, str(cause))
-        return message
+        return message or self.__class__.__name__
 
 
 class ArrayIndexOutOfBoundsError(HazelcastError):

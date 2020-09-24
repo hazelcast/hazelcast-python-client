@@ -239,6 +239,9 @@ def combine_futures(*futures):
     """
     expected = len(futures)
     results = []
+    if expected == 0:
+        return ImmediateFuture(results)
+
     completed = AtomicInteger()
     combined = Future()
 

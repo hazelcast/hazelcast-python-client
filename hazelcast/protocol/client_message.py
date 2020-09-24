@@ -28,6 +28,8 @@ _BEGIN_DATA_STRUCTURE_FLAG = 1 << 12
 _END_DATA_STRUCTURE_FLAG = 1 << 11
 _IS_NULL_FLAG = 1 << 10
 _IS_EVENT_FLAG = 1 << 9
+_IS_BACKUP_AWARE_FLAG = 1 << 8
+_IS_BACKUP_EVENT_FLAG = 1 << 7
 
 
 # For codecs
@@ -82,6 +84,11 @@ class OutboundMessage(object):
     def copy(self):
         return OutboundMessage(bytearray(self.buf), self.retryable)
 
+    def set_backup_aware_flag(self):
+        flags = LE_UINT16.unpack_from(self.buf, INT_SIZE_IN_BYTES)[0]
+        flags |= _IS_BACKUP_AWARE_FLAG
+        LE_UINT16.pack_into(self.buf, INT_SIZE_IN_BYTES, flags)
+
     def __repr__(self):
         message_type = LE_INT.unpack_from(self.buf, _OUTBOUND_MESSAGE_MESSAGE_TYPE_OFFSET)[0]
         correlation_id = self.get_correlation_id()
@@ -115,6 +122,9 @@ class Frame(object):
 
     def has_event_flag(self):
         return self._is_flag_set(_IS_EVENT_FLAG)
+
+    def has_backup_event_flag(self):
+        return self._is_flag_set(_IS_BACKUP_EVENT_FLAG)
 
     def has_unfragmented_message_flags(self):
         return self._is_flag_set(_UNFRAGMENTED_MESSAGE_FLAGS)
@@ -164,6 +174,9 @@ class InboundMessage(object):
 
     def get_fragmentation_id(self):
         return LE_LONG.unpack_from(self.start_frame.buf, _FRAGMENTATION_ID_OFFSET)[0]
+
+    def get_number_of_backup_acks(self):
+        return LE_UINT8.unpack_from(self.start_frame.buf, _RESPONSE_BACKUP_ACKS_OFFSET)[0]
 
     def merge(self, fragment):
         # should be called after calling drop_fragmentation_frame() on fragment

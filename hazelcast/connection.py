@@ -629,7 +629,7 @@ class Connection(object):
         self.start_time = 0
         self.server_version = UNKNOWN_VERSION
         self.live = True
-        self.close_cause = None
+        self.close_reason = None
         self.logger = logging.getLogger("HazelcastClient.Connection[%s]" % connection_id)
 
         self._connection_manager = connection_manager
@@ -664,6 +664,7 @@ class Connection(object):
             return
 
         self.live = False
+        self.close_reason = reason
         self._log_close(reason, cause)
         try:
             self._inner_close()

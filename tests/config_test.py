@@ -738,6 +738,52 @@ class ConfigTest(unittest.TestCase):
         config.logging_level = logging.DEBUG
         self.assertEqual(logging.DEBUG, config.logging_level)
 
+    def test_backup_ack_to_client_enabled(self):
+        config = self.config
+        self.assertTrue(config.backup_ack_to_client_enabled)
+
+        with self.assertRaises(TypeError):
+            config.backup_ack_to_client_enabled = None
+
+        config.backup_ack_to_client_enabled = False
+        self.assertFalse(config.backup_ack_to_client_enabled)
+
+    def test_clean_resources_period(self):
+        config = self.config
+        self.assertEqual(0.1, config.clean_resources_period)
+
+        with self.assertRaises(ValueError):
+            config.clean_resources_period = 0
+
+        with self.assertRaises(TypeError):
+            config.clean_resources_period = None
+
+        config.clean_resources_period = 1.0
+        self.assertEqual(1.0, config.clean_resources_period)
+
+    def test_operation_backup_timeout(self):
+        config = self.config
+        self.assertEqual(5.0, config.operation_backup_timeout)
+
+        with self.assertRaises(ValueError):
+            config.operation_backup_timeout = 0
+
+        with self.assertRaises(TypeError):
+            config.operation_backup_timeout = None
+
+        config.operation_backup_timeout = 10
+        self.assertEqual(10, config.operation_backup_timeout)
+
+    def test_fail_on_indeterminate_operation_state(self):
+        config = self.config
+        self.assertFalse(config.fail_on_indeterminate_operation_state)
+
+        with self.assertRaises(TypeError):
+            config.fail_on_indeterminate_operation_state = None
+
+        config.fail_on_indeterminate_operation_state = True
+        self.assertTrue(config.fail_on_indeterminate_operation_state)
+
 
 class IndexConfigTest(unittest.TestCase):
     def test_defaults(self):
