@@ -135,7 +135,7 @@ class ClientConfig(object):
         self.flake_id_generators = {}
         """Flake ID generator configuration which maps "config-name" : FlakeIdGeneratorConfig """
 
-        self.logger_config = LoggerConfig()
+        self.logger = LoggerConfig()
         """Logger configuration."""
 
         self.labels = set()

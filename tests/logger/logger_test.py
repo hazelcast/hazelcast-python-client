@@ -32,7 +32,7 @@ class LoggerConfigTest(HazelcastTestCase):
 
         config = ClientConfig()
         config.cluster_name = self.cluster.id
-        config.logger_config = logger_config
+        config.logger = logger_config
 
         client = HazelcastClient(config)
         self.assertEqual(logging.INFO, client.logger.level)
@@ -70,7 +70,7 @@ class LoggerConfigTest(HazelcastTestCase):
 
         config = ClientConfig()
         config.cluster_name = self.cluster.id
-        config.logger_config = logger_config
+        config.logger = logger_config
 
         client = HazelcastClient(config)
         self.assertEqual(logging.CRITICAL, client.logger.level)
@@ -109,7 +109,7 @@ class LoggerConfigTest(HazelcastTestCase):
 
         config = ClientConfig()
         config.cluster_name = self.cluster.id
-        config.logger_config = logger_config
+        config.logger = logger_config
 
         client = HazelcastClient(config)
         self.assertEqual(logging.ERROR, client.logger.getEffectiveLevel())
@@ -164,7 +164,7 @@ class LoggerConfigTest(HazelcastTestCase):
         config.cluster_name = self.cluster.id
 
         config_file = get_abs_path(self.CUR_DIR, "simple_config.json")
-        config.logger_config.configuration_file = config_file
+        config.logger.configuration_file = config_file
 
         client1 = HazelcastClient(config)
         client2 = HazelcastClient(config)
@@ -215,7 +215,7 @@ class LoggerConfigTest(HazelcastTestCase):
         config.cluster_name = self.cluster.id
         config_file = get_abs_path(self.CUR_DIR, "detailed_config.json")
 
-        config.logger_config.config_file = config_file
+        config.logger.config_file = config_file
 
         client = HazelcastClient(config)
 

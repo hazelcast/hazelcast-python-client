@@ -2356,10 +2356,10 @@ For example, setting the logging level to `logging.DEBUG` will cause all the log
 
 By default, the logging level is set to `logging.INFO`.
 
-To turn off the logging, you can set `ClientConfig.logger_config.level` to a value greater than the numeric value of `logging.CRITICAL`. For example, the configuration below turns off the logging for the Hazelcast Python client.
+To turn off the logging, you can set `ClientConfig.logger.level` to a value greater than the numeric value of `logging.CRITICAL`. For example, the configuration below turns off the logging for the Hazelcast Python client.
 
 ```python
-config.logger_config.level = 100  # Any value greater than 50 will turn off the logging
+config.logger.level = 100  # Any value greater than 50 will turn off the logging
 client = hazelcast.HazelcastClient(config)
 ``` 
 
@@ -2434,7 +2434,7 @@ class HazelcastFormatter(logging.Formatter):
 import hazelcast
 
 config = hazelcast.ClientConfig()
-config.logger_config.config_file = "/home/hazelcast/config.json"
+config.logger.config_file = "/home/hazelcast/config.json"
 
 client = hazelcast.HazelcastClient(config)
 

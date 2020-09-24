@@ -345,7 +345,7 @@ class HazelcastClient(object):
         return "hz.client_" + str(self._id)
 
     def _init_logger(self):
-        logger_config = self.config.logger_config
+        logger_config = self.config.logger
         if logger_config.config_file is not None:
             with open(logger_config.config_file, "r") as f:
                 json_config = json.loads(f.read())
