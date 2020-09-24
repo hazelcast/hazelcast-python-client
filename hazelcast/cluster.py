@@ -17,7 +17,7 @@ class _MemberListSnapshot(object):
         self.members = members
 
 
-class _ClientInfo(object):
+class ClientInfo(object):
     """
     Local information of the client.
     """
@@ -157,7 +157,7 @@ class _InternalClusterService(object):
         connection_manager = self._connection_manager
         connection = connection_manager.get_random_connection()
         local_address = None if not connection else connection.local_address
-        return _ClientInfo(connection_manager.client_uuid, local_address, self._client.name, self._labels)
+        return ClientInfo(connection_manager.client_uuid, local_address, self._client.name, self._labels)
 
     def add_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
         registration_id = str(uuid.uuid4())

@@ -6,7 +6,7 @@ import threading
 
 from hazelcast.cluster import ClusterService, RoundRobinLB, _InternalClusterService
 from hazelcast.config import ClientConfig, ClientProperties
-from hazelcast.connection import _ConnectionManager, DefaultAddressProvider
+from hazelcast.connection import ConnectionManager, DefaultAddressProvider
 from hazelcast.core import DistributedObjectInfo, DistributedObjectEvent
 from hazelcast.invocation import InvocationService, Invocation
 from hazelcast.listener import ListenerService, ClusterViewListenerService
@@ -54,13 +54,13 @@ class HazelcastClient(object):
         self.partition_service = PartitionService(self._internal_partition_service)
         self._internal_cluster_service = _InternalClusterService(self, self._logger_extras)
         self.cluster_service = ClusterService(self._internal_cluster_service)
-        self._connection_manager = _ConnectionManager(self, self._reactor, self._address_provider,
-                                                      self._internal_lifecycle_service,
-                                                      self._internal_partition_service,
-                                                      self._internal_cluster_service,
-                                                      self._invocation_service,
-                                                      self._near_cache_manager,
-                                                      self._logger_extras)
+        self._connection_manager = ConnectionManager(self, self._reactor, self._address_provider,
+                                                     self._internal_lifecycle_service,
+                                                     self._internal_partition_service,
+                                                     self._internal_cluster_service,
+                                                     self._invocation_service,
+                                                     self._near_cache_manager,
+                                                     self._logger_extras)
         self._load_balancer = self._init_load_balancer(self.config)
         self._listener_service = ListenerService(self, self._connection_manager,
                                                  self._invocation_service,

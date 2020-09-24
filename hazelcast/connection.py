@@ -69,7 +69,7 @@ _AuthenticationStatus = enum(AUTHENTICATED=0, CREDENTIALS_FAILED=1,
                              SERIALIZATION_VERSION_MISMATCH=2, NOT_ALLOWED_IN_CLUSTER=3)
 
 
-class _ConnectionManager(object):
+class ConnectionManager(object):
     """
     ConnectionManager is responsible for managing :mod:`Connection` objects.
     """
