@@ -1,16 +1,14 @@
-# TODO Fix this when we add CP Atomic Long
-
 import hazelcast
 
-# Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
+# Start the Hazelcast Client and connect to an already running
+# Hazelcast Cluster on 127.0.0.1
+# Note: CP Subsystem has to be enabled on the cluster
 hz = hazelcast.HazelcastClient()
-# Get an Atomic Counter, we'll call it "counter"
-counter = hz.get_atomic_long("counter").blocking()
-# Add and Get the "counter"
-counter.add_and_get(3)
-# value is 3
-# Display the "counter" value
-print("counter: {}".format(counter.get()))
-# Shutdown this Hazelcast Client
+# Get the AtomicLong counter from Cluster
+counter = hz.cp_subsystem.get_atomic_long("counter").blocking()
+# Add and get the counter
+value = counter.add_and_get(3)
+print("Counter value is", value)
+# Shutdown this Hazelcast client
 hz.shutdown()
 

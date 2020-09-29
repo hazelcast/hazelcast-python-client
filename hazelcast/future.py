@@ -146,7 +146,7 @@ class Future(object):
                 if isinstance(result, Future):
                     future._chain(result)
                 else:
-                    future.set_result(continuation_func(f, *args))
+                    future.set_result(result)
             except:
                 exception, traceback = sys.exc_info()[1:]
                 future.set_exception(exception, traceback)

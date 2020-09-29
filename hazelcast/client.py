@@ -7,6 +7,7 @@ from hazelcast.cluster import ClusterService, _InternalClusterService
 from hazelcast.config import _Config
 from hazelcast.connection import ConnectionManager, DefaultAddressProvider
 from hazelcast.core import DistributedObjectInfo, DistributedObjectEvent
+from hazelcast.cp import CPSubsystem
 from hazelcast.invocation import InvocationService, Invocation
 from hazelcast.listener import ListenerService, ClusterViewListenerService
 from hazelcast.lifecycle import LifecycleService, LifecycleState, _InternalLifecycleService
@@ -329,6 +330,7 @@ class HazelcastClient(object):
                                                  self._invocation_service,
                                                  self._logger_extras)
         self._proxy_manager = ProxyManager(self._context)
+        self.cp_subsystem = CPSubsystem(self._context)
         self._transaction_manager = TransactionManager(self._context, self._logger_extras)
         self._lock_reference_id_generator = AtomicInteger(1)
         self._statistics = Statistics(self, self._reactor, self._connection_manager,

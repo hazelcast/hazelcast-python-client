@@ -55,6 +55,8 @@
     * [7.4.10. Using PN Counter](#7410-using-pn-counter)
     * [7.4.11. Using Flake ID Generator](#7411-using-flake-id-generator)
         * [7.4.11.1. Configuring Flake ID Generator](#74111-configuring-flake-id-generator)
+    * [7.4.12. CP Subsystem](#7412-cp-subsystem)
+        * [7.4.12.1. Using Atomic Long](#74121-using-atomic-long)
   * [7.5. Distributed Events](#75-distributed-events)
     * [7.5.1. Cluster Events](#751-cluster-events)
       * [7.5.1.1. Listening for Member Events](#7511-listening-for-member-events)
@@ -1558,6 +1560,54 @@ The following are the descriptions of configuration elements and attributes:
 * keys of the dictionary: Name of the Flake ID Generator. 
 * `prefetch_count`: Count of IDs which are pre-fetched on the background when one call to `generator.newId()` is made. Its value must be in the range `1` - `100,000`. Its default value is `100`.
 * `prefetch_validity`: Specifies for how long the pre-fetched IDs can be used. After this time elapses, a new batch of IDs are fetched. Time unit is seconds. Its default value is `600` seconds (`10` minutes). The IDs contain a timestamp component, which ensures a rough global ordering of them. If an ID is assigned to an object that was created later, it will be out of order. If ordering is not important, set this value to `0`.
+
+### 7.4.12. CP Subsystem
+
+Hazelcast IMDG 4.0 introduces CP concurrency primitives with respect to the [CAP principle](http://awoc.wolski.fi/dlib/big-data/Brewer_podc_keynote_2000.pdf), 
+i.e., they always maintain [linearizability](https://aphyr.com/posts/313-strong-consistency-models) and prefer consistency to 
+availability during network partitions and client or server failures.
+
+All data structures within CP Subsystem are available through `client.cp_subsystem` component of the client.
+
+Before using Atomic Long, Lock, and Semaphore, CP Subsystem has to be enabled on cluster-side. 
+Refer to [CP Subsystem](https://docs.hazelcast.org/docs/latest/manual/html-single/#cp-subsystem) documentation for more information.
+
+Data structures in CP Subsystem run in CP groups. Each CP group elects its own Raft leader and runs the Raft consensus algorithm independently. 
+The CP data structures differ from the other Hazelcast data structures in two aspects. 
+First, an internal commit is performed on the METADATA CP group every time you fetch a proxy from this interface. 
+Hence, callers should cache returned proxy objects. Second, if you call `DistributedObject.destroy()` on a CP data structure proxy, 
+that data structure is terminated on the underlying CP group and cannot be reinitialized until the CP group is force-destroyed. 
+For this reason, please make sure that you are completely done with a CP data structure before destroying its proxy.
+
+#### 7.4.12.1. Using Atomic Long
+
+Hazelcast `AtomicLong` is the distributed implementation of atomic 64-bit integer counter. 
+It offers various atomic operations such as `get`, `set`, `get_and_set`, `compare_and_set` and `increment_and_get`. 
+This data structure is a part of CP Subsystem.
+
+An Atomic Long usage example is shown below.
+
+```python
+# Get an AtomicLong called "my-atomic-long"
+atomic_long = client.cp_subsystem.get_atomic_long("my-atomic-long").blocking()
+# Get current value
+value = atomic_long.get()
+print("Value:", value)
+# Prints:
+# Value: 0
+
+# Increment by 42
+atomic_long.add_and_get(42)
+# Set to 0 atomically if the current value is 42
+result = atomic_long.compare_and_set(42, 0)
+print ('CAS operation result:', result)
+# Prints:
+# CAS operation result: True
+```
+
+AtomicLong implementation does not offer exactly-once / effectively-once execution semantics. It goes with at-least-once execution semantics by default and can cause an API call to be committed multiple times in case of CP member failures. 
+It can be tuned to offer at-most-once execution semantics. Please see [`fail-on-indeterminate-operation-state`](https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#cp-subsystem-configuration) server-side setting.
+
 
 ## 7.5. Distributed Events
 
