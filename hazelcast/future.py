@@ -129,8 +129,10 @@ class Future(object):
         """Create a continuation that executes when the Future is completed.
 
         Args:
-            continuation_func (function): A function which takes the future as the only parameter.
+            continuation_func (function): A function which takes the Future as the only parameter.
                 Return value of the function will be set as the result of the continuation future.
+                If the return value of the function is another Future, it will be chained
+                to the returned Future.
             *args: Arguments to be passed into ``continuation_function``.
 
         Returns:
@@ -140,12 +142,31 @@ class Future(object):
 
         def callback(f):
             try:
-                future.set_result(continuation_func(f, *args))
+                result = continuation_func(f, *args)
+                if isinstance(result, Future):
+                    future._chain(result)
+                else:
+                    future.set_result(continuation_func(f, *args))
             except:
-                future.set_exception(sys.exc_info()[1], sys.exc_info()[2])
+                exception, traceback = sys.exc_info()[1:]
+                future.set_exception(exception, traceback)
 
         self.add_done_callback(callback)
         return future
+
+    def _chain(self, chained_future):
+        def callback(f):
+            try:
+                result = f.result()
+                if isinstance(result, Future):
+                    self._chain(result)
+                else:
+                    self.set_result(result)
+            except:
+                exception, traceback = sys.exc_info()[1:]
+                self.set_exception(exception, traceback)
+
+        chained_future.add_done_callback(callback)
 
 
 class _Event(object):

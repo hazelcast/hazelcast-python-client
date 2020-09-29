@@ -179,6 +179,36 @@ class FutureTest(unittest.TestCase):
         result = f.continue_with(continuation).result()
         self.assertEqual(1, result)
 
+    def test_continue_with_with_resolved_future(self):
+        f1 = Future()
+        f2 = Future()
+        f3 = f1.continue_with(lambda _: f2)
+        f1.set_result(0)
+        f2.set_result(1)
+
+        self.assertEqual(1, f3.result())
+
+    def test_continue_with_with_rejected_future(self):
+        f1 = Future()
+        f2 = Future()
+        f3 = f1.continue_with(lambda _: f2)
+        f1.set_result(0)
+        f2.set_exception(RuntimeError("error"))
+
+        with self.assertRaises(RuntimeError):
+            f3.result()
+
+    def test_continue_with_future_returning_future(self):
+        f1 = Future()
+        f2 = Future()
+        f3 = Future()
+        f4 = f1.continue_with(lambda _: f2)
+        f1.set_result(0)
+        f2.set_result(f3)
+        f3.set_result(1)
+
+        self.assertEqual(1, f4.result())
+
     def test_callback_called_exactly_once(self):
         for _ in range(0, 10000):
             f = Future()
