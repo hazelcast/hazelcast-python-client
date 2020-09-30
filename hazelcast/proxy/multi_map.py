@@ -369,11 +369,12 @@ class MultiMap(Proxy):
         """Tries to acquire the lock for the specified key. 
         
         When the lock is not available:
-            - If timeout is not provided, the current thread doesn't wait and returns ``false`` immediately.
-            - If a timeout is provided, the current thread becomes disabled for thread scheduling purposes and lies
-                dormant until one of the followings happens:
-                    - the lock is acquired by the current thread, or
-                    - the specified waiting time elapses.
+
+        - If timeout is not provided, the current thread doesn't wait and returns ``false`` immediately.
+        - If a timeout is provided, the current thread becomes disabled for thread scheduling purposes and lies
+          dormant until one of the followings happens:
+            - the lock is acquired by the current thread, or
+            - the specified waiting time elapses.
         
         If lease_time is provided, lock will be released after this time elapses.
 

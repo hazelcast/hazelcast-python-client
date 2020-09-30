@@ -56,8 +56,9 @@ class Data(object):
         """Returns partition hash calculated for serialized object.
 
         Partition hash is used to determine partition of a Data and is calculated using:
-            - PartitioningStrategy during serialization.
-            - If partition hash is not set then hash_code() is used.
+
+        - PartitioningStrategy during serialization.
+        - If partition hash is not set then hash_code() is used.
         
         Returns:
             int: Partition hash.

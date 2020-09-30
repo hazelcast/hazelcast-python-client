@@ -2,6 +2,7 @@ from hazelcast.protocol.codec import atomic_long_add_and_get_codec, atomic_long_
     atomic_long_get_codec, atomic_long_get_and_add_codec, atomic_long_get_and_set_codec, atomic_long_alter_codec, \
     atomic_long_apply_codec
 from hazelcast.proxy.cp import BaseCPProxy
+from hazelcast.util import check_not_none
 
 
 class AtomicLong(BaseCPProxy):
@@ -145,13 +146,18 @@ class AtomicLong(BaseCPProxy):
 
         Args:
             function (hazelcast.serialization.api.Portable or hazelcast.serialization.api.IdentifiedDataSerializable):
-                The function applied to the currently stored value.
+                The function that alters the currently stored value.
 
         Returns:
             hazelcast.future.Future[None]:
         """
+        check_not_none(function, "Function cannot be None")
         function_data = self._to_data(function)
         codec = atomic_long_alter_codec
+        # 1 means return the new value.
+        # There is no way to tell server to return nothing as of now (30.09.2020)
+        # The new value is `long` (comes with the initial frame) and we
+        # don't try to decode it. So, this shouldn't cause any problems.
         request = codec.encode_request(self._group_id, self._object_name, function_data, 1)
         return self._invoke(request)
 
@@ -166,13 +172,14 @@ class AtomicLong(BaseCPProxy):
 
         Args:
             function (hazelcast.serialization.api.Portable or hazelcast.serialization.api.IdentifiedDataSerializable):
-                The function applied to the currently stored value.
+                The function that alters the currently stored value.
 
         Returns:
             hazelcast.future.Future[int]: The new value.
         """
         function_data = self._to_data(function)
         codec = atomic_long_alter_codec
+        # 1 means return the new value.
         request = codec.encode_request(self._group_id, self._object_name, function_data, 1)
         return self._invoke(request, codec.decode_response)
 
@@ -187,13 +194,15 @@ class AtomicLong(BaseCPProxy):
 
         Args:
             function (hazelcast.serialization.api.Portable or hazelcast.serialization.api.IdentifiedDataSerializable):
-                The function applied to the currently stored value.
+                The function that alters the currently stored value.
 
         Returns:
             hazelcast.future.Future[int]: The old value.
         """
+        check_not_none(function, "Function cannot be None")
         function_data = self._to_data(function)
         codec = atomic_long_alter_codec
+        # 0 means return the old value.
         request = codec.encode_request(self._group_id, self._object_name, function_data, 0)
         return self._invoke(request, codec.decode_response)
 
@@ -213,6 +222,7 @@ class AtomicLong(BaseCPProxy):
         Returns:
             hazelcast.future.Future[any]: The result of the function application.
         """
+        check_not_none(function, "Function cannot be None")
         function_data = self._to_data(function)
         codec = atomic_long_apply_codec
         request = codec.encode_request(self._group_id, self._object_name, function_data)

@@ -5,14 +5,14 @@ from tests.util import set_attr
 
 
 class Multiplication(IdentifiedDataSerializable):
-    def __init__(self, multiplier=None):
+    def __init__(self, multiplier):
         self.multiplier = multiplier
 
     def write_data(self, object_data_output):
         object_data_output.write_long(self.multiplier)
 
     def read_data(self, object_data_input):
-        self.multiplier = object_data_input.read_long()
+        pass
 
     def get_factory_id(self):
         return 66
