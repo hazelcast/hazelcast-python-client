@@ -2,6 +2,7 @@ from hazelcast.invocation import Invocation
 from hazelcast.protocol.codec import cp_group_create_cp_group_codec
 from hazelcast.proxy.cp.atomic_long import AtomicLong
 from hazelcast.proxy.cp.atomic_reference import AtomicReference
+from hazelcast.proxy.cp.count_down_latch import CountDownLatch
 from hazelcast.util import check_true
 
 
@@ -74,6 +75,26 @@ class CPSubsystem(object):
         """
         return self._proxy_manager.get_or_create(ATOMIC_REFERENCE_SERVICE, name)
 
+    def get_count_down_latch(self, name):
+        """Returns the distributed CountDownLatch instance with given name.
+
+        The instance is created on CP Subsystem.
+
+        If no group name is given within the ``name`` argument, then the
+        CountDownLatch instance will be created on the DEFAULT CP group.
+        If a group name is given, like ``.get_count_down_latch("myLatch@group1")``,
+        the given group will be initialized first, if not initialized
+        already, and then the instance will be created on this group.
+
+        Args:
+            name (str): Name of the CountDownLatch.
+
+        Returns:
+            hazelcast.proxy.cp.count_down_latch.CountDownLatch: The CountDownLatch
+                proxy for the given name.
+        """
+        return self._proxy_manager.get_or_create(COUNT_DOWN_LATCH_SERVICE, name)
+
 
 _DEFAULT_GROUP_NAME = "default"
 
@@ -105,6 +126,7 @@ def _get_object_name_for_proxy(name):
 
 ATOMIC_LONG_SERVICE = "hz:raft:atomicLongService"
 ATOMIC_REFERENCE_SERVICE = "hz:raft:atomicRefService"
+COUNT_DOWN_LATCH_SERVICE = "hz:raft:countDownLatchService"
 
 
 class CPProxyManager(object):
@@ -120,6 +142,8 @@ class CPProxyManager(object):
             return AtomicLong(self._context, group_id, service_name, proxy_name, object_name)
         elif service_name == ATOMIC_REFERENCE_SERVICE:
             return AtomicReference(self._context, group_id, service_name, proxy_name, object_name)
+        elif service_name == COUNT_DOWN_LATCH_SERVICE:
+            return CountDownLatch(self._context, group_id, service_name, proxy_name, object_name)
 
     def _get_group_id(self, proxy_name):
         codec = cp_group_create_cp_group_codec

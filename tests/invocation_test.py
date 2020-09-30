@@ -5,7 +5,7 @@ from mock import MagicMock
 
 import hazelcast
 from hazelcast.config import _Config
-from hazelcast.errors import HazelcastTimeoutError, IndeterminateOperationStateError
+from hazelcast.errors import IndeterminateOperationStateError, OperationTimeoutError
 from hazelcast.invocation import Invocation, InvocationService
 from hazelcast.protocol.client_message import OutboundMessage
 from hazelcast.serialization import LE_INT
@@ -176,7 +176,7 @@ class InvocationTimeoutTest(HazelcastTestCase):
         invocation_service._invoke_on_random_connection = MagicMock(return_value=False)
 
         invocation_service.invoke(invocation)
-        with self.assertRaises(HazelcastTimeoutError):
+        with self.assertRaises(OperationTimeoutError):
             invocation.future.result()
 
     def test_invocation_not_timed_out_when_there_is_no_exception(self):

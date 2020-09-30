@@ -80,13 +80,21 @@ class AtomicInteger(object):
         """Returns the current value and increment it.
         
         Returns:
-            int: current value of AtomicInteger.
+            int: Current value of AtomicInteger.
         """
         with self._mux:
             res = self._counter
             self._counter += 1
             return res
 
+    def get(self):
+        """Returns the current value.
+
+        Returns:
+            int: The current value.
+        """
+        with self._mux:
+            return self._counter
 
 class ImmutableLazyDataList(Sequence):
     def __init__(self, list_data, to_object):
