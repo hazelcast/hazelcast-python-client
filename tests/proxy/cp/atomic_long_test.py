@@ -1,5 +1,24 @@
 from hazelcast.errors import DistributedObjectDestroyedError
+from hazelcast.serialization.api import IdentifiedDataSerializable
 from tests.proxy.cp import CPTestCase
+from tests.util import set_attr
+
+
+class Multiplication(IdentifiedDataSerializable):
+    def __init__(self, multiplier=None):
+        self.multiplier = multiplier
+
+    def write_data(self, object_data_output):
+        object_data_output.write_long(self.multiplier)
+
+    def read_data(self, object_data_input):
+        self.multiplier = object_data_input.read_long()
+
+    def get_factory_id(self):
+        return 66
+
+    def get_class_id(self):
+        return 16
 
 
 class AtomicLongTest(CPTestCase):
@@ -85,4 +104,32 @@ class AtomicLongTest(CPTestCase):
 
     def test_set(self):
         self.assertIsNone(self.atomic_long.set(42))
+        self.assertEqual(42, self.atomic_long.get())
+
+    @set_attr(category=4.01)
+    def test_alter(self):
+        # the class is defined in the 4.1 JAR
+        self.atomic_long.set(2)
+        self.assertIsNone(self.atomic_long.alter(Multiplication(5)))
+        self.assertEqual(10, self.atomic_long.get())
+
+    @set_attr(category=4.01)
+    def test_alter_and_get(self):
+        # the class is defined in the 4.1 JAR
+        self.atomic_long.set(-3)
+        self.assertEqual(-9, self.atomic_long.alter_and_get(Multiplication(3)))
+        self.assertEqual(-9, self.atomic_long.get())
+
+    @set_attr(category=4.01)
+    def test_get_and_alter(self):
+        # the class is defined in the 4.1 JAR
+        self.atomic_long.set(123)
+        self.assertEqual(123, self.atomic_long.get_and_alter(Multiplication(-1)))
+        self.assertEqual(-123, self.atomic_long.get())
+
+    @set_attr(category=4.01)
+    def test_apply(self):
+        # the class is defined in the 4.1 JAR
+        self.atomic_long.set(42)
+        self.assertEqual(84, self.atomic_long.apply(Multiplication(2)))
         self.assertEqual(42, self.atomic_long.get())

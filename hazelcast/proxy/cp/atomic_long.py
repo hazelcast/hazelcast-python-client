@@ -1,5 +1,6 @@
 from hazelcast.protocol.codec import atomic_long_add_and_get_codec, atomic_long_compare_and_set_codec, \
-    atomic_long_get_codec, atomic_long_get_and_add_codec, atomic_long_get_and_set_codec
+    atomic_long_get_codec, atomic_long_get_and_add_codec, atomic_long_get_and_set_codec, atomic_long_alter_codec, \
+    atomic_long_apply_codec
 from hazelcast.proxy.cp import BaseCPProxy
 
 
@@ -132,3 +133,91 @@ class AtomicLong(BaseCPProxy):
         codec = atomic_long_get_and_set_codec
         request = codec.encode_request(self._group_id, self._object_name, new_value)
         return self._invoke(request)
+
+    def alter(self, function):
+        """Alters the currently stored value by applying a function on it.
+
+        Notes:
+            ``function`` must be an instance of ``IdentifiedDataSerializable`` or
+            ``Portable`` that has a counterpart that implements the
+            `com.hazelcast.core.IFunction` interface registered on the server-side with
+            the actual implementation of the function to be applied.
+
+        Args:
+            function (hazelcast.serialization.api.Portable or hazelcast.serialization.api.IdentifiedDataSerializable):
+                The function applied to the currently stored value.
+
+        Returns:
+            hazelcast.future.Future[None]:
+        """
+        function_data = self._to_data(function)
+        codec = atomic_long_alter_codec
+        request = codec.encode_request(self._group_id, self._object_name, function_data, 1)
+        return self._invoke(request)
+
+    def alter_and_get(self, function):
+        """Alters the currently stored value by applying a function on it and gets the result.
+
+        Notes:
+            ``function`` must be an instance of ``IdentifiedDataSerializable`` or
+            ``Portable`` that has a counterpart that implements the
+            `com.hazelcast.core.IFunction` interface registered on the server-side with
+            the actual implementation of the function to be applied.
+
+        Args:
+            function (hazelcast.serialization.api.Portable or hazelcast.serialization.api.IdentifiedDataSerializable):
+                The function applied to the currently stored value.
+
+        Returns:
+            hazelcast.future.Future[int]: The new value.
+        """
+        function_data = self._to_data(function)
+        codec = atomic_long_alter_codec
+        request = codec.encode_request(self._group_id, self._object_name, function_data, 1)
+        return self._invoke(request, codec.decode_response)
+
+    def get_and_alter(self, function):
+        """Alters the currently stored value by applying a function on it on and gets the old value.
+
+        Notes:
+            ``function`` must be an instance of ``IdentifiedDataSerializable`` or
+            ``Portable`` that has a counterpart that implements the
+            `com.hazelcast.core.IFunction` interface registered on the server-side with
+            the actual implementation of the function to be applied.
+
+        Args:
+            function (hazelcast.serialization.api.Portable or hazelcast.serialization.api.IdentifiedDataSerializable):
+                The function applied to the currently stored value.
+
+        Returns:
+            hazelcast.future.Future[int]: The old value.
+        """
+        function_data = self._to_data(function)
+        codec = atomic_long_alter_codec
+        request = codec.encode_request(self._group_id, self._object_name, function_data, 0)
+        return self._invoke(request, codec.decode_response)
+
+    def apply(self, function):
+        """Applies a function on the value, the actual stored value will not change.
+
+        Notes:
+            ``function`` must be an instance of ``IdentifiedDataSerializable`` or
+            ``Portable`` that has a counterpart that implements the
+            `com.hazelcast.core.IFunction` interface registered on the server-side with
+            the actual implementation of the function to be applied.
+
+        Args:
+            function (hazelcast.serialization.api.Portable or hazelcast.serialization.api.IdentifiedDataSerializable):
+                The function applied to the currently stored value.
+
+        Returns:
+            hazelcast.future.Future[any]: The result of the function application.
+        """
+        function_data = self._to_data(function)
+        codec = atomic_long_apply_codec
+        request = codec.encode_request(self._group_id, self._object_name, function_data)
+
+        def handler(response):
+            return self._to_object(codec.decode_response(response))
+
+        return self._invoke(request, handler)
