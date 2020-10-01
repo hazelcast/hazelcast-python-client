@@ -391,7 +391,7 @@ class CombineFutureTest(unittest.TestCase):
     def test_combine_futures(self):
         f1, f2, f3 = Future(), Future(), Future()
 
-        combined = combine_futures(f1, f2, f3)
+        combined = combine_futures([f1, f2, f3])
 
         f1.set_result("done1")
         self.assertFalse(combined.done())
@@ -405,7 +405,7 @@ class CombineFutureTest(unittest.TestCase):
     def test_combine_futures_exception(self):
         f1, f2, f3 = Future(), Future(), Future()
 
-        combined = combine_futures(f1, f2, f3)
+        combined = combine_futures([f1, f2, f3])
 
         e = RuntimeError("error")
         f1.set_result("done")
@@ -415,14 +415,9 @@ class CombineFutureTest(unittest.TestCase):
         self.assertEqual(e, combined.exception())
 
     def test_combine_futures_with_empty_list(self):
-        combined = combine_futures()
-        combined2 = combine_futures(*[])
-
+        combined = combine_futures([])
         self.assertTrue(combined.done())
-        self.assertTrue(combined2.done())
-
         self.assertEqual([], combined.result())
-        self.assertEqual([], combined2.result())
 
 
 class MakeBlockingTest(unittest.TestCase):

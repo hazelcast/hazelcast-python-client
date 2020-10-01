@@ -60,3 +60,6 @@ class RaftGroupId(object):
 
     def __hash__(self):
         return hash((self.name, self.seed, self.id))
+
+    def __repr__(self):
+        return "RaftGroupId(name=%s, seed=%s, id=%s)" % (self.name, self.seed, self.id)

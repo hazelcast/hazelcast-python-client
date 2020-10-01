@@ -249,11 +249,11 @@ class ImmediateExceptionFuture(Future):
         self._invoke_cb(callback)
 
 
-def combine_futures(*futures):
+def combine_futures(futures):
     """Combines set of Futures.
 
     Args:
-        *futures (Future): Futures to be combined.
+        futures (list[Future]): List of Futures to be combined.
 
     Returns:
         Future: Result of the combination.

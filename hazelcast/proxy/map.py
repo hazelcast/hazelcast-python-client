@@ -696,7 +696,7 @@ class Map(Proxy):
             future = self._invoke_on_partition(request, partition_id)
             futures.append(future)
 
-        return combine_futures(*futures)
+        return combine_futures(futures)
 
     def put_if_absent(self, key, value, ttl=-1):
         """Associates the specified key with the given value if it is not already associated. 
@@ -1085,7 +1085,7 @@ class Map(Proxy):
         def merge(f):
             return dict(itertools.chain(*f.result()))
 
-        return combine_futures(*futures).continue_with(merge)
+        return combine_futures(futures).continue_with(merge)
 
     def _remove_internal(self, key_data):
         def handler(message):
