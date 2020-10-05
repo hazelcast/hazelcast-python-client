@@ -1,119 +1,149 @@
 import logging
-import threading
 
+from hazelcast.errors import ClientOfflineError
 from hazelcast.hash import hash_to_index
-from hazelcast.protocol.codec import client_get_partitions_codec
-from hazelcast import six
 
-PARTITION_UPDATE_INTERVAL = 10
+
+class _PartitionTable(object):
+    __slots__ = ("connection", "version", "partitions")
+
+    def __init__(self, connection, version, partitions):
+        self.connection = connection
+        self.version = version
+        self.partitions = partitions
+
+    def __repr__(self):
+        return "PartitionTable(connection=%s, version=%s)" % (self.connection, self.version)
 
 
 class PartitionService(object):
     """
-    An SPI service for accessing partition related information.
+    Allows to retrieve information about the partition count, the partition owner or the partitionId of a key.
     """
-    logger = logging.getLogger("HazelcastClient.PartitionService")
-    timer = None
 
-    def __init__(self, client):
-        self._client = client
-        self._logger_extras = {"client_name": client.name, "group_name": client.config.group_config.name}
-        self.partitions = {}
-
-    def start(self):
-        """
-        Starts the partition service.
-        """
-        self.logger.debug("Starting partition service", extra=self._logger_extras)
-
-        def partition_updater():
-            self._do_refresh()
-            self.timer = self._client.reactor.add_timer(PARTITION_UPDATE_INTERVAL, partition_updater)
-
-        self.timer = self._client.reactor.add_timer(PARTITION_UPDATE_INTERVAL, partition_updater)
-
-    def shutdown(self):
-        """
-        Shutdowns the partition service.
-        """
-        if self.timer:
-            self.timer.cancel()
-
-    def refresh(self):
-        """
-        Refreshes the partition service.
-        """
-        self._client.reactor.add_timer(0, self._do_refresh)
+    def __init__(self, internal_partition_service):
+        self._service = internal_partition_service
 
     def get_partition_owner(self, partition_id):
         """
-        Gets the owner of the partition if it's set. Otherwise it will trigger partition assignment.
+        Returns the owner of the partition if it's set, ``None`` otherwise.
 
-        :param partition_id: (int), the partition id.
-        :return: (:class:`~hazelcast.core.Address`), owner of partition or ``None`` if it's not set yet.
-        """
-        if partition_id not in self.partitions:
-            self._do_refresh()
-        return self.partitions.get(partition_id, None)
+        :param partition_id: The partition id.
+        :type partition_id: int
 
-    def get_partition_id(self, key):
+        :return: Owner of partition
+        :rtype: :class:`uuid.UUID`
         """
-        Returns the partition id for a Data key.
+        return self._service.get_partition_owner(partition_id)
 
-        :param key: (object), the data key.
-        :return: (int), the partition id.
+    def get_partition_id(self, key_data):
         """
-        data = self._client.serialization_service.to_data(key)
-        count = self.get_partition_count()
-        if count <= 0:
-            return 0
-        return hash_to_index(data.get_partition_hash(), count)
+        Returns the partition id for a key data.
+
+        :param key_data: The key data.
+        :type key_data: :class:`~hazelcast.serialization.data.Data`
+
+        :return: The partition id.
+        :rtype: int
+        """
+        return self._service.get_partition_id(key_data)
 
     def get_partition_count(self):
         """
-        Returns the number of partitions.
+        Returns partition count of the connected cluster.
 
-        :return: (int), the number of partitions.
+        If partition table is not fetched yet, this method returns ``0``.
+
+        :return: The partition count
+        :rtype: int
         """
-        if not self.partitions:
-            self._get_partition_count_blocking()
-        return len(self.partitions)
+        return self._service.partition_count
 
-    def _get_partition_count_blocking(self):
-        event = threading.Event()
-        while not event.isSet():
-            self._do_refresh(callback=lambda: event.set())
-            event.wait(timeout=1)
 
-    def _do_refresh(self, callback=None):
-        self.logger.debug("Start updating partitions", extra=self._logger_extras)
-        address = self._client.cluster.owner_connection_address
-        connection = self._client.connection_manager.get_connection(address)
-        if connection is None:
-            self.logger.debug("Could not update partition thread as owner connection is not available.",
+class _InternalPartitionService(object):
+    logger = logging.getLogger("HazelcastClient.PartitionService")
+
+    def __init__(self, client, logger_extras):
+        self.partition_count = 0
+        self._client = client
+        self._logger_extras = logger_extras
+        self._partition_table = _PartitionTable(None, -1, dict())
+
+    def handle_partitions_view_event(self, connection, partitions, version):
+        """Handles the incoming partition view event and updates the partition table
+        if it is not empty, coming from a new connection or not stale.
+        """
+        should_log = self.logger.isEnabledFor(logging.DEBUG)
+        if should_log:
+            self.logger.debug("Handling new partition table with version: %s" % version,
                               extra=self._logger_extras)
-            if callback:
-                callback()
+
+        table = self._partition_table
+        if not self._should_be_applied(connection, partitions, version, table, should_log):
             return
-        request = client_get_partitions_codec.encode_request()
 
-        def cb(f):
-            if f.is_success():
-                self.process_partition_response(f.result())
-                if callback:
-                    callback()
+        new_partitions = self._prepare_partitions(partitions)
+        new_table = _PartitionTable(connection, version, new_partitions)
+        self._partition_table = new_table
 
-        future = self._client.invoker.invoke_on_connection(request, connection)
-        future.add_done_callback(cb)
+    def get_partition_owner(self, partition_id):
+        table = self._partition_table
+        return table.partitions.get(partition_id, None)
 
-    def process_partition_response(self, message):
-        partitions = client_get_partitions_codec.decode_response(message)["partitions"]
-        partitions_dict = {}
-        for addr, partition_list in six.iteritems(partitions):
+    def get_partition_id(self, key):
+        count = self.partition_count
+        if count == 0:
+            # Partition count can not be zero for the SYNC mode.
+            # On the SYNC mode, we are waiting for the first connection to be established.
+            # We are initializing the partition count with the value coming from the server with authentication.
+            # This error is used only for ASYNC mode client.
+            raise ClientOfflineError()
+
+        return hash_to_index(key.get_partition_hash(), count)
+
+    def check_and_set_partition_count(self, partition_count):
+        """
+        :param partition_count: (int)
+        :return: (bool), True if partition count can be set for the first time,
+            or it is equal to one that is already available, returns False otherwise
+        """
+        if self.partition_count == 0:
+            self.partition_count = partition_count
+            return True
+        return self.partition_count == partition_count
+
+    def _should_be_applied(self, connection, partitions, version, current, should_log):
+        if not partitions:
+            if should_log:
+                self.logger.debug("Partition view will not be applied since response is empty. "
+                                  "Sending connection: %s, version: %s, current table: %s"
+                                  % (connection, version, current),
+                                  extra=self._logger_extras)
+            return False
+
+        if connection != current.connection:
+            if should_log:
+                self.logger.debug("Partition view event coming from a new connection. Old: %s, new: %s"
+                                  % (current.connection, connection), extra=self._logger_extras)
+            return True
+
+        if version <= current.version:
+            if should_log:
+                self.logger.debug("Partition view will not be applied since response state version is older. "
+                                  "Sending connection: %s, version: %s, current table: %s"
+                                  % (connection, version, current),
+                                  extra=self._logger_extras)
+            return False
+
+        return True
+
+    @staticmethod
+    def _prepare_partitions(partitions):
+        new_partitions = dict()
+        for uuid, partition_list in partitions:
             for partition in partition_list:
-                partitions_dict[partition] = addr
-        self.partitions.update(partitions_dict)
-        self.logger.debug("Finished updating partitions", extra=self._logger_extras)
+                new_partitions[partition] = uuid
+        return new_partitions
 
 
 def string_partition_strategy(key):

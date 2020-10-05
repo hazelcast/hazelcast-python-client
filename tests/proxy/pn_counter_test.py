@@ -1,13 +1,17 @@
 import os
 
 from tests.base import SingleMemberTestCase, HazelcastTestCase
-from tests.util import configure_logging, get_abs_path, set_attr
-from hazelcast.exception import ConsistencyLostError, NoDataMemberInClusterError
-from hazelcast import HazelcastClient
+from tests.util import configure_logging, get_abs_path
+from hazelcast.errors import ConsistencyLostError, NoDataMemberInClusterError
+from hazelcast import HazelcastClient, ClientConfig
 
 
-@set_attr(category=3.10)
 class PNCounterBasicTest(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
+        return config
+
     def setUp(self):
         self.pn_counter = self.client.get_pn_counter("pn-counter").blocking()
 
@@ -59,7 +63,6 @@ class PNCounterBasicTest(SingleMemberTestCase):
         self.assertEqual(expected_get_value, get_value)
 
 
-@set_attr(category=3.10)
 class PNCounterConsistencyTest(HazelcastTestCase):
     @classmethod
     def setUpClass(cls):
@@ -68,23 +71,24 @@ class PNCounterConsistencyTest(HazelcastTestCase):
     def setUp(self):
         self.rc = self.create_rc()
         self.cluster = self.create_cluster(self.rc, self._configure_cluster())
-        self.member1 = self.cluster.start_member()
-        self.member2 = self.cluster.start_member()
-        self.client = HazelcastClient()
+        self.cluster.start_member()
+        self.cluster.start_member()
+        config = ClientConfig()
+        config.cluster_name = self.cluster.id
+        self.client = HazelcastClient(config)
         self.pn_counter = self.client.get_pn_counter("pn-counter").blocking()
 
     def tearDown(self):
-        self.pn_counter.destroy()
         self.client.shutdown()
+        self.rc.terminateCluster(self.cluster.id)
         self.rc.exit()
 
     def test_consistency_lost_error_raised_when_target_terminates(self):
         self.pn_counter.add_and_get(3)
 
         replica_address = self.pn_counter._current_target_replica_address
-        member = self.client.cluster.get_member_by_address(replica_address)
 
-        self.rc.terminateMember(self.cluster.id, member.uuid)
+        self.rc.terminateMember(self.cluster.id, str(replica_address.uuid))
         with self.assertRaises(ConsistencyLostError):
             self.pn_counter.add_and_get(5)
 
@@ -92,9 +96,8 @@ class PNCounterConsistencyTest(HazelcastTestCase):
         self.pn_counter.add_and_get(3)
 
         replica_address = self.pn_counter._current_target_replica_address
-        member = self.client.cluster.get_member_by_address(replica_address)
 
-        self.rc.terminateMember(self.cluster.id, member.uuid)
+        self.rc.terminateMember(self.cluster.id, str(replica_address.uuid))
         self.pn_counter.reset()
         self.pn_counter.add_and_get(5)
 
@@ -104,8 +107,12 @@ class PNCounterConsistencyTest(HazelcastTestCase):
             return f.read()
 
 
-@set_attr(category=3.10)
 class PNCounterLiteMemberTest(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
+        return config
+
     @classmethod
     def configure_cluster(cls):
         current_directory = os.path.dirname(__file__)

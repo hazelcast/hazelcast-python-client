@@ -3,11 +3,16 @@ from threading import Thread
 
 import hazelcast
 import hazelcast.transaction
-from hazelcast.exception import TransactionError
+from hazelcast.errors import TransactionError
 from tests.base import SingleMemberTestCase
 
 
 class TransactionTest(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
+        return config
+
     def test_begin_and_commit_transaction(self):
         transaction = self.client.new_transaction()
         transaction.begin()

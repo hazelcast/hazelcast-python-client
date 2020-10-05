@@ -1,42 +1,36 @@
 import logging
 
 from hazelcast.future import make_blocking
+from hazelcast.invocation import Invocation
 from hazelcast.partition import string_partition_strategy
-from hazelcast.util import enum, thread_id
+from hazelcast.util import enum
 from hazelcast import six
 
 MAX_SIZE = float('inf')
 
 
-def default_response_handler(future, codec, to_object):
-    response = future.result()
-    if response:
-        try:
-            codec.decode_response
-        except AttributeError:
-            return
-        decoded_response = codec.decode_response(response, to_object)
-        try:
-            return decoded_response['response']
-        except AttributeError:
-            pass
+def _no_op_response_handler(_):
+    return None
 
 
 class Proxy(object):
     """
     Provides basic functionality for Hazelcast Proxies.
     """
-    def __init__(self, client, service_name, name):
+    def __init__(self, service_name, name, context):
         self.service_name = service_name
         self.name = name
-        self.partition_key = string_partition_strategy(self.name)
-        self._client = client
+        self._context = context
+        self._invocation_service = context.invocation_service
+        self._partition_service = context.partition_service
+        serialization_service = context.serialization_service
+        self._to_object = serialization_service.to_object
+        self._to_data = serialization_service.to_data
+        listener_service = context.listener_service
+        self._register_listener = listener_service.register_listener
+        self._deregister_listener = listener_service.deregister_listener
         self.logger = logging.getLogger("HazelcastClient.%s(%s)" % (type(self).__name__, name))
-        self._to_object = client.serialization_service.to_object
-        self._to_data = client.serialization_service.to_data
-        self._register_listener = client.listener.register_listener
-        self._deregister_listener = client.listener.deregister_listener
-        self._is_smart = client.listener.is_smart
+        self._is_smart = context.config.network.smart_routing
 
     def destroy(self):
         """
@@ -45,7 +39,7 @@ class Proxy(object):
         :return: (bool), ``true`` if this proxy is deleted successfully, ``false`` otherwise.
         """
         self._on_destroy()
-        return self._client.proxy.destroy_proxy(self.service_name, self.name)
+        return self._context.proxy_manager.destroy_proxy(self.service_name, self.name)
 
     def _on_destroy(self):
         pass
@@ -53,23 +47,26 @@ class Proxy(object):
     def __repr__(self):
         return '%s(name="%s")' % (type(self).__name__, self.name)
 
-    def _encode_invoke(self, codec, response_handler=default_response_handler, **kwargs):
-        request = codec.encode_request(name=self.name, **kwargs)
-        return self._client.invoker.invoke_on_random_target(request).continue_with(response_handler, codec, self._to_object)
+    def _invoke(self, request, response_handler=_no_op_response_handler):
+        invocation = Invocation(request, response_handler=response_handler)
+        self._invocation_service.invoke(invocation)
+        return invocation.future
 
-    def _encode_invoke_on_target(self, codec, _address, response_handler=default_response_handler, **kwargs):
-        request = codec.encode_request(name=self.name, **kwargs)
-        return self._client.invoker.invoke_on_target(request, _address).continue_with(response_handler, codec, self._to_object)
+    def _invoke_on_target(self, request, uuid, response_handler=_no_op_response_handler):
+        invocation = Invocation(request, uuid=uuid, response_handler=response_handler)
+        self._invocation_service.invoke(invocation)
+        return invocation.future
 
-    def _encode_invoke_on_key(self, codec, key_data, invocation_timeout=None, **kwargs):
-        partition_id = self._client.partition_service.get_partition_id(key_data)
-        return self._encode_invoke_on_partition(codec, partition_id, invocation_timeout=invocation_timeout, **kwargs)
+    def _invoke_on_key(self, request, key_data, response_handler=_no_op_response_handler):
+        partition_id = self._partition_service.get_partition_id(key_data)
+        invocation = Invocation(request, partition_id=partition_id, response_handler=response_handler)
+        self._invocation_service.invoke(invocation)
+        return invocation.future
 
-    def _encode_invoke_on_partition(self, codec, _partition_id, response_handler=default_response_handler,
-                                    invocation_timeout=None, **kwargs):
-        request = codec.encode_request(name=self.name, **kwargs)
-        return self._client.invoker.invoke_on_partition(request, _partition_id, invocation_timeout).continue_with(response_handler,
-                                                                                                                  codec, self._to_object)
+    def _invoke_on_partition(self, request, partition_id, response_handler=_no_op_response_handler):
+        invocation = Invocation(request, partition_id=partition_id, response_handler=response_handler)
+        self._invocation_service.invoke(invocation)
+        return invocation.future
 
     def blocking(self):
         """
@@ -83,37 +80,40 @@ class PartitionSpecificProxy(Proxy):
     """
     Provides basic functionality for Partition Specific Proxies.
     """
-    def __init__(self, client, service_name, name):
-        super(PartitionSpecificProxy, self).__init__(client, service_name, name)
-        self._partition_id = self._client.partition_service.get_partition_id(self.partition_key)
+    def __init__(self, service_name, name, context):
+        super(PartitionSpecificProxy, self).__init__(service_name, name, context)
+        partition_key = context.serialization_service.to_data(string_partition_strategy(self.name))
+        self._partition_id = context.partition_service.get_partition_id(partition_key)
 
-    def _encode_invoke(self, codec, response_handler=default_response_handler, invocation_timeout=None, **kwargs):
-        return super(PartitionSpecificProxy, self)._encode_invoke_on_partition(codec, self._partition_id,
-                                                                               response_handler=response_handler,
-                                                                               invocation_timeout=invocation_timeout, **kwargs)
+    def _invoke(self, request, response_handler=_no_op_response_handler):
+        invocation = Invocation(request, partition_id=self._partition_id, response_handler=response_handler)
+        self._invocation_service.invoke(invocation)
+        return invocation.future
 
 
 class TransactionalProxy(object):
     """
     Provides an interface for all transactional distributed objects.
     """
-    def __init__(self, name, transaction):
+    def __init__(self, name, transaction, context):
         self.name = name
         self.transaction = transaction
-        self._to_object = transaction.client.serialization_service.to_object
-        self._to_data = transaction.client.serialization_service.to_data
+        self._invocation_service = context.invocation_service
+        serialization_service = context.serialization_service
+        self._to_object = serialization_service.to_object
+        self._to_data = serialization_service.to_data
 
-    def _encode_invoke(self, codec, response_handler=default_response_handler, **kwargs):
-        request = codec.encode_request(name=self.name, txn_id=self.transaction.id, thread_id=thread_id(), **kwargs)
-        return self.transaction.client.invoker.invoke_on_connection(request, self.transaction.connection).continue_with(
-                response_handler, codec, self._to_object)
+    def _invoke(self, request, response_handler=_no_op_response_handler):
+        invocation = Invocation(request, connection=self.transaction.connection, response_handler=response_handler)
+        self._invocation_service.invoke(invocation)
+        return invocation.future
 
     def __repr__(self):
         return '%s(name="%s")' % (type(self).__name__, self.name)
 
 
 ItemEventType = enum(added=1, removed=2)
-EntryEventType = enum(added=1, removed=2, updated=4, evicted=8, evict_all=16, clear_all=32, merged=64, expired=128,
+EntryEventType = enum(added=1, removed=2, updated=4, evicted=8, expired=16, evict_all=32, clear_all=64, merged=128,
                       invalidation=256, loaded=512)
 
 
@@ -138,8 +138,9 @@ class EntryEvent(object):
     """
     Map Entry event.
     """
-    def __init__(self, to_object, key, old_value, value, merging_value, event_type, uuid,
+    def __init__(self, to_object, key, value, old_value, merging_value, event_type, uuid,
                  number_of_affected_entries):
+        self._to_object = to_object
         self._key_data = key
         self._value_data = value
         self._old_value_data = old_value
@@ -147,7 +148,6 @@ class EntryEvent(object):
         self.event_type = event_type
         self.uuid = uuid
         self.number_of_affected_entries = number_of_affected_entries
-        self._to_object = to_object
 
     @property
     def key(self):
@@ -170,10 +170,10 @@ class EntryEvent(object):
         return self._to_object(self._merging_value_data)
 
     def __repr__(self):
-        return "EntryEvent(key=%s, old_value=%s, value=%s, merging_value=%s, event_type=%s, uuid=%s, " \
+        return "EntryEvent(key=%s, value=%s, old_value=%s, merging_value=%s, event_type=%s, uuid=%s, " \
                "number_of_affected_entries=%s)" % (
-                   self.key, self.old_value, self.value, self.merging_value, self.event_type, self.uuid,
-                   self.number_of_affected_entries)
+                   self.key, self.value, self.old_value, self.merging_value, EntryEventType.reverse[self.event_type],
+                   self.uuid, self.number_of_affected_entries)
 
 
 class TopicMessage(object):

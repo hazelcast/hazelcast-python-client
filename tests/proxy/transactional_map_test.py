@@ -5,6 +5,11 @@ from hazelcast import six
 
 
 class TransactionalMapTest(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
+        return config
+
     def setUp(self):
         self.map = self.client.get_map(random_string()).blocking()
 

@@ -1,51 +1,40 @@
 from hazelcast.serialization.bits import *
-from hazelcast.protocol.client_message import ClientMessage
-from hazelcast.util import ImmutableLazyDataList
-from hazelcast.protocol.codec.ringbuffer_message_type import *
-from hazelcast.six.moves import range
+from hazelcast.protocol.builtin import FixSizedTypesCodec
+from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer, RESPONSE_HEADER_SIZE
+from hazelcast.protocol.builtin import StringCodec
+from hazelcast.protocol.builtin import DataCodec
+from hazelcast.protocol.builtin import CodecUtil
+from hazelcast.protocol.builtin import ListMultiFrameCodec
+from hazelcast.protocol.builtin import LongArrayCodec
 
-REQUEST_TYPE = RINGBUFFER_READMANY
-RESPONSE_TYPE = 115
-RETRYABLE = True
+# hex: 0x170900
+_REQUEST_MESSAGE_TYPE = 1509632
+# hex: 0x170901
+_RESPONSE_MESSAGE_TYPE = 1509633
 
-
-def calculate_size(name, start_sequence, min_count, max_count, filter):
-    """ Calculates the request payload size"""
-    data_size = 0
-    data_size += calculate_size_str(name)
-    data_size += LONG_SIZE_IN_BYTES
-    data_size += INT_SIZE_IN_BYTES
-    data_size += INT_SIZE_IN_BYTES
-    data_size += BOOLEAN_SIZE_IN_BYTES
-    if filter is not None:
-        data_size += calculate_size_data(filter)
-    return data_size
+_REQUEST_START_SEQUENCE_OFFSET = REQUEST_HEADER_SIZE
+_REQUEST_MIN_COUNT_OFFSET = _REQUEST_START_SEQUENCE_OFFSET + LONG_SIZE_IN_BYTES
+_REQUEST_MAX_COUNT_OFFSET = _REQUEST_MIN_COUNT_OFFSET + INT_SIZE_IN_BYTES
+_REQUEST_INITIAL_FRAME_SIZE = _REQUEST_MAX_COUNT_OFFSET + INT_SIZE_IN_BYTES
+_RESPONSE_READ_COUNT_OFFSET = RESPONSE_HEADER_SIZE
+_RESPONSE_NEXT_SEQ_OFFSET = _RESPONSE_READ_COUNT_OFFSET + INT_SIZE_IN_BYTES
 
 
 def encode_request(name, start_sequence, min_count, max_count, filter):
-    """ Encode request into client_message"""
-    client_message = ClientMessage(payload_size=calculate_size(name, start_sequence, min_count, max_count, filter))
-    client_message.set_message_type(REQUEST_TYPE)
-    client_message.set_retryable(RETRYABLE)
-    client_message.append_str(name)
-    client_message.append_long(start_sequence)
-    client_message.append_int(min_count)
-    client_message.append_int(max_count)
-    client_message.append_bool(filter is None)
-    if filter is not None:
-        client_message.append_data(filter)
-    client_message.update_frame_length()
-    return client_message
+    buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
+    FixSizedTypesCodec.encode_long(buf, _REQUEST_START_SEQUENCE_OFFSET, start_sequence)
+    FixSizedTypesCodec.encode_int(buf, _REQUEST_MIN_COUNT_OFFSET, min_count)
+    FixSizedTypesCodec.encode_int(buf, _REQUEST_MAX_COUNT_OFFSET, max_count)
+    StringCodec.encode(buf, name)
+    CodecUtil.encode_nullable(buf, filter, DataCodec.encode, True)
+    return OutboundMessage(buf, True)
 
 
-def decode_response(client_message, to_object=None):
-    """ Decode response from client message"""
-    parameters = dict(read_count=None, items=None)
-    parameters['read_count'] = client_message.read_int()
-    items_size = client_message.read_int()
-    items = []
-    for _ in range(0, items_size):
-        items_item = client_message.read_data()
-        items.append(items_item)
-    parameters['items'] = ImmutableLazyDataList(items, to_object)
-    return parameters
+def decode_response(msg):
+    initial_frame = msg.next_frame()
+    response = dict()
+    response["read_count"] = FixSizedTypesCodec.decode_int(initial_frame.buf, _RESPONSE_READ_COUNT_OFFSET)
+    response["next_seq"] = FixSizedTypesCodec.decode_long(initial_frame.buf, _RESPONSE_NEXT_SEQ_OFFSET)
+    response["items"] = ListMultiFrameCodec.decode(msg, DataCodec.decode)
+    response["item_seqs"] = CodecUtil.decode_nullable(msg, LongArrayCodec.decode)
+    return response

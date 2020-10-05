@@ -1,8 +1,9 @@
-from hazelcast.exception import HazelcastSerializationError
+from hazelcast.errors import HazelcastSerializationError
 from hazelcast.serialization import bits
 from hazelcast.serialization.api import PortableReader
 from hazelcast.serialization.portable.classdef import FieldType
 from hazelcast.six.moves import range
+
 
 class DefaultPortableReader(PortableReader):
     def __init__(self, portable_serializer, data_input, class_def):

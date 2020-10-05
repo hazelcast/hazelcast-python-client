@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 
 from uuid import uuid4
 from hazelcast.config import ClientConfig, PROTOCOL
@@ -10,7 +11,8 @@ def random_string():
 
 
 def configure_logging(log_level=logging.INFO):
-    logging.basicConfig(format='%(asctime)s%(msecs)03d [%(threadName)s][%(name)s] %(levelname)s: %(message)s', datefmt="%H:%M:%S,")
+    logging.basicConfig(format='%(asctime)s%(msecs)03d [%(threadName)s][%(name)s] %(levelname)s: %(message)s',
+                        datefmt="%H:%M:%S,")
     logging.getLogger().setLevel(log_level)
 
 
@@ -32,25 +34,24 @@ def fill_map(map, size=10, key_prefix="key", value_prefix="val"):
     return entries
 
 
-def get_ssl_config(enable_ssl=False,
+def get_ssl_config(cluster_name, enable_ssl=False,
                    cafile=None,
                    certfile=None,
                    keyfile=None,
                    password=None,
                    protocol=PROTOCOL.TLS,
-                   ciphers=None,
-                   attempt_limit=1):
+                   ciphers=None):
     config = ClientConfig()
+    config.cluster_name = cluster_name
+    config.network.ssl.enabled = enable_ssl
+    config.network.ssl.cafile = cafile
+    config.network.ssl.certfile = certfile
+    config.network.ssl.keyfile = keyfile
+    config.network.ssl.password = password
+    config.network.ssl.protocol = protocol
+    config.network.ssl.ciphers = ciphers
 
-    config.network_config.ssl_config.enabled = enable_ssl
-    config.network_config.ssl_config.cafile = cafile
-    config.network_config.ssl_config.certfile = certfile
-    config.network_config.ssl_config.keyfile = keyfile
-    config.network_config.ssl_config.password = password
-    config.network_config.ssl_config.protocol = protocol
-    config.network_config.ssl_config.ciphers = ciphers
-
-    config.network_config.connection_attempt_limit = attempt_limit
+    config.connection_strategy.connection_retry.cluster_connect_timeout = 2
     return config
 
 
@@ -58,11 +59,20 @@ def get_abs_path(cur_dir, file_name):
     return os.path.abspath(os.path.join(cur_dir, file_name))
 
 
-def generate_key_owned_by_instance(client, instance):
+def wait_for_partition_table(client):
+    m = client.get_map(random_string()).blocking()
+    while not client._internal_partition_service._partition_table.partitions:
+        m.put(random_string(), 0)
+        time.sleep(0.1)
+
+
+def generate_key_owned_by_instance(client, uuid):
     while True:
         key = random_string()
-        partition_id = client.partition_service.get_partition_id(key)
-        if client.partition_service.get_partition_owner(partition_id) == instance:
+        data = client._serialization_service.to_data(key)
+        partition_id = client.partition_service.get_partition_id(data)
+        owner = str(client.partition_service.get_partition_owner(partition_id))
+        if owner == uuid:
             return key
 
 
@@ -77,8 +87,8 @@ def set_attr(*args, **kwargs):
     return wrap_ob
 
 
-def open_connection_to_address(client, address):
-    key = generate_key_owned_by_instance(client, address)
+def open_connection_to_address(client, uuid):
+    key = generate_key_owned_by_instance(client, uuid)
     m = client.get_map(random_string()).blocking()
     m.put(key, 0)
     m.destroy()

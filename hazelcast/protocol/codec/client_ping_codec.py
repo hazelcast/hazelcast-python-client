@@ -1,24 +1,13 @@
-from hazelcast.protocol.client_message import ClientMessage
-from hazelcast.protocol.codec.client_message_type import *
+from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer
 
-REQUEST_TYPE = CLIENT_PING
-RESPONSE_TYPE = 100
-RETRYABLE = True
+# hex: 0x000B00
+_REQUEST_MESSAGE_TYPE = 2816
+# hex: 0x000B01
+_RESPONSE_MESSAGE_TYPE = 2817
 
-
-def calculate_size():
-    """ Calculates the request payload size"""
-    data_size = 0
-    return data_size
+_REQUEST_INITIAL_FRAME_SIZE = REQUEST_HEADER_SIZE
 
 
 def encode_request():
-    """ Encode request into client_message"""
-    client_message = ClientMessage(payload_size=calculate_size())
-    client_message.set_message_type(REQUEST_TYPE)
-    client_message.set_retryable(RETRYABLE)
-    client_message.update_frame_length()
-    return client_message
-
-
-# Empty decode_response(client_message), this message has no parameters to decode
+    buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE, True)
+    return OutboundMessage(buf, True)

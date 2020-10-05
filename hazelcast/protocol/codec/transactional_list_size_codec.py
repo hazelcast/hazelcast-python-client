@@ -1,35 +1,27 @@
 from hazelcast.serialization.bits import *
-from hazelcast.protocol.client_message import ClientMessage
-from hazelcast.protocol.codec.transactional_list_message_type import *
+from hazelcast.protocol.builtin import FixSizedTypesCodec
+from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer, RESPONSE_HEADER_SIZE
+from hazelcast.protocol.builtin import StringCodec
 
-REQUEST_TYPE = TRANSACTIONALLIST_SIZE
-RESPONSE_TYPE = 102
-RETRYABLE = False
+# hex: 0x110300
+_REQUEST_MESSAGE_TYPE = 1114880
+# hex: 0x110301
+_RESPONSE_MESSAGE_TYPE = 1114881
 
-
-def calculate_size(name, txn_id, thread_id):
-    """ Calculates the request payload size"""
-    data_size = 0
-    data_size += calculate_size_str(name)
-    data_size += calculate_size_str(txn_id)
-    data_size += LONG_SIZE_IN_BYTES
-    return data_size
+_REQUEST_TXN_ID_OFFSET = REQUEST_HEADER_SIZE
+_REQUEST_THREAD_ID_OFFSET = _REQUEST_TXN_ID_OFFSET + UUID_SIZE_IN_BYTES
+_REQUEST_INITIAL_FRAME_SIZE = _REQUEST_THREAD_ID_OFFSET + LONG_SIZE_IN_BYTES
+_RESPONSE_RESPONSE_OFFSET = RESPONSE_HEADER_SIZE
 
 
 def encode_request(name, txn_id, thread_id):
-    """ Encode request into client_message"""
-    client_message = ClientMessage(payload_size=calculate_size(name, txn_id, thread_id))
-    client_message.set_message_type(REQUEST_TYPE)
-    client_message.set_retryable(RETRYABLE)
-    client_message.append_str(name)
-    client_message.append_str(txn_id)
-    client_message.append_long(thread_id)
-    client_message.update_frame_length()
-    return client_message
+    buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
+    FixSizedTypesCodec.encode_uuid(buf, _REQUEST_TXN_ID_OFFSET, txn_id)
+    FixSizedTypesCodec.encode_long(buf, _REQUEST_THREAD_ID_OFFSET, thread_id)
+    StringCodec.encode(buf, name, True)
+    return OutboundMessage(buf, False)
 
 
-def decode_response(client_message, to_object=None):
-    """ Decode response from client message"""
-    parameters = dict(response=None)
-    parameters['response'] = client_message.read_int()
-    return parameters
+def decode_response(msg):
+    initial_frame = msg.next_frame()
+    return FixSizedTypesCodec.decode_int(initial_frame.buf, _RESPONSE_RESPONSE_OFFSET)

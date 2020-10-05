@@ -1,11 +1,13 @@
 import time
 import os
-from hazelcast.exception import HazelcastError, HazelcastSerializationError
+
+from hazelcast.config import IndexConfig, INDEX_TYPE
+from hazelcast.errors import HazelcastError
 from hazelcast.proxy.map import EntryEventType
 from hazelcast.serialization.api import IdentifiedDataSerializable
 from hazelcast.serialization.predicate import SqlPredicate
 from tests.base import SingleMemberTestCase
-from tests.util import random_string, event_collector, fill_map, set_attr
+from tests.util import random_string, event_collector, fill_map
 from hazelcast import six
 from hazelcast.six.moves import range
 
@@ -40,8 +42,9 @@ class MapTest(SingleMemberTestCase):
 
     @classmethod
     def configure_client(cls, config):
-        config.serialization_config.add_data_serializable_factory(EntryProcessor.FACTORY_ID,
-                                                                  {EntryProcessor.CLASS_ID: EntryProcessor})
+        config.cluster_name = cls.cluster.id
+        config.serialization.add_data_serializable_factory(EntryProcessor.FACTORY_ID,
+                                                           {EntryProcessor.CLASS_ID: EntryProcessor})
         return config
 
     def setUp(self):
@@ -143,7 +146,20 @@ class MapTest(SingleMemberTestCase):
         self.assertTrueEventually(assert_event, 5)
 
     def test_add_index(self):
-        self.map.add_index("field", True)
+        ordered_index = IndexConfig("length", attributes=["this"])
+        unordered_index = IndexConfig("length", INDEX_TYPE.HASH, ["this"])
+        self.map.add_index(ordered_index)
+        self.map.add_index(unordered_index)
+
+    def test_add_index_duplicate_fields(self):
+        config = IndexConfig("length", attributes=["this", "this"])
+        with self.assertRaises(ValueError):
+            self.map.add_index(config)
+
+    def test_add_index_invalid_attribute(self):
+        config = IndexConfig("length", attributes=["this.x."])
+        with self.assertRaises(ValueError):
+            self.map.add_index(config)
 
     def test_clear(self):
         self._fill_map()
@@ -273,15 +289,16 @@ class MapTest(SingleMemberTestCase):
 
         self.assertEqual(entry_view.key, "key")
         self.assertEqual(entry_view.value, "new_value")
+        self.assertIsNotNone(entry_view.cost)
         self.assertIsNotNone(entry_view.creation_time)
         self.assertIsNotNone(entry_view.expiration_time)
         self.assertEqual(entry_view.hits, 2)
-        self.assertEqual(entry_view.version, 1)
-        self.assertEqual(entry_view.eviction_criteria_number, 0)
         self.assertIsNotNone(entry_view.last_access_time)
         self.assertIsNotNone(entry_view.last_stored_time)
         self.assertIsNotNone(entry_view.last_update_time)
+        self.assertEqual(entry_view.version, 1)
         self.assertIsNotNone(entry_view.ttl)
+        self.assertIsNotNone(entry_view.max_idle)
 
     def test_is_empty(self):
         self.map.put("key", "value")
@@ -412,7 +429,7 @@ class MapTest(SingleMemberTestCase):
         with self.assertRaises(AssertionError) as cm:
             self.map.remove_entry_listener(None)
         e = cm.exception
-        self.assertEqual(e.args[0],"None userRegistrationId is not allowed!")
+        self.assertEqual(e.args[0], "None user_registration_id is not allowed!")
 
     def test_replace(self):
         self.map.put("key", "value")
@@ -437,7 +454,7 @@ class MapTest(SingleMemberTestCase):
         self.map.set("key", "value")
 
         self.assertEqual(self.map.get("key"), "value")
-    
+
     def test_set_ttl(self):
         self.map.put("key", "value")
         self.map.set_ttl("key", 0.1)
@@ -445,7 +462,7 @@ class MapTest(SingleMemberTestCase):
         def evicted():
             self.assertFalse(self.map.contains_key("key"))
 
-        self.assertTrueEventually(evicted, 1)
+        self.assertTrueEventually(evicted, 5)
 
     def test_size(self):
         self._fill_map()
@@ -506,12 +523,16 @@ class MapTest(SingleMemberTestCase):
 
     def _fill_map(self, count=10):
         map = {"key-%d" % x: "value-%d" % x for x in range(0, count)}
-        for k, v in six.iteritems(map):
-            self.map.put(k, v)
+        self.map.put_all(map)
         return map
 
 
 class MapStoreTest(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
+        return config
+
     @classmethod
     def configure_cluster(cls):
         path = os.path.abspath(__file__)
@@ -566,7 +587,6 @@ class MapStoreTest(SingleMemberTestCase):
         self.map.evict_all()
         self.assertEqual(self.map.size(), 0)
 
-    @set_attr(category=3.11)
     def test_add_entry_listener_item_loaded(self):
         collector = event_collector()
         self.map.add_entry_listener(include_value=True, loaded_func=collector)

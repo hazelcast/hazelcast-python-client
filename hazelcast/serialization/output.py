@@ -1,5 +1,3 @@
-import struct
-
 from hazelcast.serialization.api import *
 from hazelcast.serialization.bits import *
 from hazelcast.six.moves import range
@@ -13,12 +11,12 @@ class _ObjectDataOutput(ObjectDataOutput):
         self._is_big_endian = is_big_endian
         self._pos = 0
         # Local cache struct formats according to endianness
-        self._FMT_INT = FMT_BE_INT if self._is_big_endian else FMT_LE_INT
-        self._FMT_SHORT = FMT_BE_INT16 if self._is_big_endian else FMT_LE_INT16
+        self._FMT_INT = BE_INT if self._is_big_endian else LE_INT
+        self._FMT_SHORT = BE_INT16 if self._is_big_endian else LE_INT16
         self._CHAR_ENCODING = "utf_16_be" if self._is_big_endian else "utf_16_le"
-        self._FMT_LONG = FMT_BE_LONG if self._is_big_endian else FMT_LE_LONG
-        self._FMT_FLOAT = FMT_BE_FLOAT if self._is_big_endian else FMT_LE_FLOAT
-        self._FMT_DOUBLE = FMT_BE_DOUBLE if self._is_big_endian else FMT_LE_DOUBLE
+        self._FMT_LONG = BE_LONG if self._is_big_endian else LE_LONG
+        self._FMT_FLOAT = BE_FLOAT if self._is_big_endian else LE_FLOAT
+        self._FMT_DOUBLE = BE_DOUBLE if self._is_big_endian else LE_DOUBLE
 
     def _write(self, val):
         self._ensure_available(BYTE_SIZE_IN_BYTES)
@@ -44,7 +42,7 @@ class _ObjectDataOutput(ObjectDataOutput):
 
     def write_short(self, val):
         self._ensure_available(SHORT_SIZE_IN_BYTES)
-        struct.pack_into(self._FMT_SHORT, self._buffer, self._pos, val)
+        self._FMT_SHORT.pack_into(self._buffer, self._pos, val)
         self._pos += SHORT_SIZE_IN_BYTES
 
     def write_char(self, val):
@@ -54,36 +52,38 @@ class _ObjectDataOutput(ObjectDataOutput):
     def write_int(self, val, position=None):
         self._ensure_available(INT_SIZE_IN_BYTES)
         if position is None:
-            struct.pack_into(self._FMT_INT, self._buffer, self._pos, val)
+            self._FMT_INT.pack_into(self._buffer, self._pos, val)
             self._pos += INT_SIZE_IN_BYTES
         else:
-            struct.pack_into(self._FMT_INT, self._buffer, position, val)
+            self._FMT_INT.pack_into(self._buffer, position, val)
 
     def write_int_big_endian(self, val):
         self._ensure_available(INT_SIZE_IN_BYTES)
-        struct.pack_into(FMT_BE_INT, self._buffer, self._pos, val)
+        BE_INT.pack_into(self._buffer, self._pos, val)
         self._pos += INT_SIZE_IN_BYTES
 
     def write_long(self, val):
         self._ensure_available(LONG_SIZE_IN_BYTES)
-        struct.pack_into(self._FMT_LONG, self._buffer, self._pos, val)
+        self._FMT_LONG.pack_into(self._buffer, self._pos, val)
         self._pos += LONG_SIZE_IN_BYTES
 
     def write_float(self, val):
         self._ensure_available(FLOAT_SIZE_IN_BYTES)
-        struct.pack_into(self._FMT_FLOAT, self._buffer, self._pos, val)
+        self._FMT_FLOAT.pack_into(self._buffer, self._pos, val)
         self._pos += FLOAT_SIZE_IN_BYTES
 
     def write_double(self, val):
         self._ensure_available(DOUBLE_SIZE_IN_BYTES)
-        struct.pack_into(self._FMT_DOUBLE, self._buffer, self._pos, val)
+        self._FMT_DOUBLE.pack_into(self._buffer, self._pos, val)
         self._pos += DOUBLE_SIZE_IN_BYTES
 
     def write_utf(self, val):
-        _len = len(val) if val is not None else NULL_ARRAY_LENGTH
-        self.write_int(_len)
-        if _len > 0:
-            self.write_from(val.encode("utf-8"))
+        if val is None:
+            self.write_int(NULL_ARRAY_LENGTH)
+        else:
+            encoded_data = val.encode("utf-8")
+            self.write_int(len(encoded_data))
+            self.write_from(encoded_data)
 
     def write_byte_array(self, val):
         _len = len(val) if val is not None else NULL_ARRAY_LENGTH

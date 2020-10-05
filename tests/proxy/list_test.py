@@ -8,6 +8,11 @@ class ListTest(SingleMemberTestCase):
     def setUp(self):
         self.list = self.client.get_list(random_string()).blocking()
 
+    @classmethod
+    def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
+        return config
+
     def test_add_entry_listener_item_added(self):
         collector = event_collector()
         self.list.add_listener(include_value=False, item_added_func=collector)

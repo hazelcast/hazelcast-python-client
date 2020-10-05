@@ -8,6 +8,11 @@ class SetTest(SingleMemberTestCase):
     def setUp(self):
         self.set = self.client.get_set(random_string()).blocking()
 
+    @classmethod
+    def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
+        return config
+
     def test_add_entry_listener_item_added(self):
         collector = event_collector()
         self.set.add_listener(include_value=False, item_added_func=collector)

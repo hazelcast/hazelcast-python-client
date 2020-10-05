@@ -19,7 +19,7 @@ from hazelcast.protocol.codec import \
     queue_size_codec, \
     queue_take_codec
 from hazelcast.proxy.base import PartitionSpecificProxy, ItemEvent, ItemEventType
-from hazelcast.util import check_not_none, to_millis
+from hazelcast.util import check_not_none, to_millis, ImmutableLazyDataList
 
 
 class Empty(Exception):
@@ -62,7 +62,9 @@ class Queue(PartitionSpecificProxy):
         for item in items:
             check_not_none(item, "Value can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke(queue_add_all_codec, data_list=data_items)
+
+        request = queue_add_all_codec.encode_request(self.name, data_items)
+        return self._invoke(request, queue_add_all_codec.decode_response)
 
     def add_listener(self, include_value=False, item_added_func=None, item_removed_func=None):
         """
@@ -73,11 +75,12 @@ class Queue(PartitionSpecificProxy):
         :param item_removed_func: Function to be called when an item is deleted from this set (optional).
         :return: (str), a registration id which is used as a key to remove the listener.
         """
-        request = queue_add_listener_codec.encode_request(self.name, include_value, self._is_smart)
+        codec = queue_add_listener_codec
+        request = codec.encode_request(self.name, include_value, self._is_smart)
 
         def handle_event_item(item, uuid, event_type):
             item = item if include_value else None
-            member = self._client.cluster.get_member_by_uuid(uuid)
+            member = self._context.cluster_service.get_member(uuid)
 
             item_event = ItemEvent(self.name, item, event_type, member, self._to_object)
             if event_type == ItemEventType.added:
@@ -87,15 +90,16 @@ class Queue(PartitionSpecificProxy):
                 if item_removed_func:
                     item_removed_func(item_event)
 
-        return self._register_listener(request, lambda r: queue_add_listener_codec.decode_response(r)['response'],
+        return self._register_listener(request, lambda r: codec.decode_response(r),
                                        lambda reg_id: queue_remove_listener_codec.encode_request(self.name, reg_id),
-                                       lambda m: queue_add_listener_codec.handle(m, handle_event_item))
+                                       lambda m: codec.handle(m, handle_event_item))
 
     def clear(self):
         """
         Clears this queue. Queue will be empty after this call.
         """
-        return self._encode_invoke(queue_clear_codec)
+        request = queue_clear_codec.encode_request(self.name)
+        return self._invoke(request)
 
     def contains(self, item):
         """
@@ -106,7 +110,8 @@ class Queue(PartitionSpecificProxy):
         """
         check_not_none(item, "Item can't be None")
         item_data = self._to_data(item)
-        return self._encode_invoke(queue_contains_codec, value=item_data)
+        request = queue_contains_codec.encode_request(self.name, item_data)
+        return self._invoke(request, queue_contains_codec.decode_response)
 
     def contains_all(self, items):
         """
@@ -120,29 +125,30 @@ class Queue(PartitionSpecificProxy):
         for item in items:
             check_not_none(item, "item can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke(queue_contains_all_codec, data_list=data_items)
 
-    def drain_to(self, list, max_size=-1):
+        request = queue_contains_all_codec.encode_request(self.name, data_items)
+        return self._invoke(request, queue_contains_all_codec.decode_response)
+
+    def drain_to(self, target_list, max_size=-1):
         """
-        Transfers all available items to the given `list`_ and removes these items from this queue. If a max_size is
+        Transfers all available items to the given `target_list` and removes these items from this queue. If a max_size is
         specified, it transfers at most the given number of items. In case of a failure, an item can exist in both
         collections or none of them.
 
         This operation may be more efficient than polling elements repeatedly and putting into collection.
 
-        :param list: (`list`_), the list where the items in this queue will be transferred.
+        :param target_list: (`list`), the list where the items in this queue will be transferred.
         :param max_size: (int), the maximum number items to transfer (optional).
         :return: (int), number of transferred items.
 
-        .. _list: https://docs.python.org/2/library/functions.html#list
         """
-        def drain_result(f):
-            resp = f.result()
-            list.extend(resp)
-            return len(resp)
-
-        return self._encode_invoke(queue_drain_to_max_size_codec, max_size=max_size).continue_with(
-            drain_result)
+        def handler(message):
+            response = queue_drain_to_max_size_codec.decode_response(message)
+            target_list.extend(map(self._to_object, response))
+            return len(response)
+        
+        request = queue_drain_to_max_size_codec.encode_request(self.name, max_size)
+        return self._invoke(request, handler)
 
     def iterator(self):
         """
@@ -150,7 +156,11 @@ class Queue(PartitionSpecificProxy):
 
         :return: (Sequence), collection of items in this queue.
         """
-        return self._encode_invoke(queue_iterator_codec)
+        def handler(message):
+            return ImmutableLazyDataList(queue_iterator_codec.decode_response(message), self._to_object)
+
+        request = queue_iterator_codec.encode_request(self.name)
+        return self._invoke(request, handler)
 
     def is_empty(self):
         """
@@ -158,7 +168,8 @@ class Queue(PartitionSpecificProxy):
 
         :return: (bool), ``true`` if this queue is empty, ``false`` otherwise.
         """
-        return self._encode_invoke(queue_is_empty_codec)
+        request = queue_is_empty_codec.encode_request(self.name)
+        return self._invoke(request, queue_is_empty_codec.decode_response)
 
     def offer(self, item, timeout=0):
         """
@@ -173,7 +184,8 @@ class Queue(PartitionSpecificProxy):
         """
         check_not_none(item, "Value can't be None")
         element_data = self._to_data(item)
-        return self._encode_invoke(queue_offer_codec, value=element_data, timeout_millis=to_millis(timeout))
+        request = queue_offer_codec.encode_request(self.name, element_data, to_millis(timeout))
+        return self._invoke(request, queue_offer_codec.decode_response)
 
     def peek(self):
         """
@@ -181,7 +193,11 @@ class Queue(PartitionSpecificProxy):
 
         :return: (object), the head of this queue, or ``None`` if this queue is empty.
         """
-        return self._encode_invoke(queue_peek_codec)
+        def handler(message):
+            return self._to_object(queue_peek_codec.decode_response(message))
+
+        request = queue_peek_codec.encode_request(self.name)
+        return self._invoke(request, handler)
 
     def poll(self, timeout=0):
         """
@@ -193,7 +209,11 @@ class Queue(PartitionSpecificProxy):
         :return: (object), the head of this queue, or ``None`` if this queue is empty or specified timeout elapses before an
         item is added to the queue.
         """
-        return self._encode_invoke(queue_poll_codec, timeout_millis=to_millis(timeout))
+        def handler(message):
+            return self._to_object(queue_poll_codec.decode_response(message))
+
+        request = queue_poll_codec.encode_request(self.name, to_millis(timeout))
+        return self._invoke(request, handler)
 
     def put(self, item):
         """
@@ -204,7 +224,8 @@ class Queue(PartitionSpecificProxy):
         """
         check_not_none(item, "Value can't be None")
         element_data = self._to_data(item)
-        return self._encode_invoke(queue_put_codec, value=element_data)
+        request = queue_put_codec.encode_request(self.name, element_data)
+        return self._invoke(request)
 
     def remaining_capacity(self):
         """
@@ -212,7 +233,8 @@ class Queue(PartitionSpecificProxy):
 
         :return: (int), remaining capacity of this queue.
         """
-        return self._encode_invoke(queue_remaining_capacity_codec)
+        request = queue_remaining_capacity_codec.encode_request(self.name)
+        return self._invoke(request, queue_remaining_capacity_codec.decode_response)
 
     def remove(self, item):
         """
@@ -223,7 +245,8 @@ class Queue(PartitionSpecificProxy):
         """
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)
-        return self._encode_invoke(queue_remove_codec, value=item_data)
+        request = queue_remove_codec.encode_request(self.name, item_data)
+        return self._invoke(request, queue_remove_codec.decode_response)
 
     def remove_all(self, items):
         """
@@ -237,7 +260,9 @@ class Queue(PartitionSpecificProxy):
         for item in items:
             check_not_none(item, "Value can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke(queue_compare_and_remove_all_codec, data_list=data_items)
+
+        request = queue_compare_and_remove_all_codec.encode_request(self.name, data_items)
+        return self._invoke(request, queue_compare_and_remove_all_codec.decode_response)
 
     def remove_listener(self, registration_id):
         """
@@ -261,7 +286,8 @@ class Queue(PartitionSpecificProxy):
         for item in items:
             check_not_none(item, "Value can't be None")
             data_items.append(self._to_data(item))
-        return self._encode_invoke(queue_compare_and_retain_all_codec, data_list=data_items)
+        request = queue_compare_and_retain_all_codec.encode_request(self.name, data_items)
+        return self._invoke(request, queue_compare_and_retain_all_codec.decode_response)
 
     def size(self):
         """
@@ -270,7 +296,8 @@ class Queue(PartitionSpecificProxy):
 
         :return: (int), size of the queue.
         """
-        return self._encode_invoke(queue_size_codec)
+        request = queue_size_codec.encode_request(self.name)
+        return self._invoke(request, queue_size_codec.decode_response)
 
     def take(self):
         """
@@ -278,5 +305,8 @@ class Queue(PartitionSpecificProxy):
 
         :return: (object), the head of this queue.
         """
+        def handler(message):
+            return self._to_object(queue_take_codec.decode_response(message))
 
-        return self._encode_invoke(queue_take_codec)
+        request = queue_take_codec.encode_request(self.name)
+        return self._invoke(request, handler)

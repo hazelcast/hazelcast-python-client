@@ -1,11 +1,8 @@
-import struct
-
 from hazelcast.serialization.api import *
 from hazelcast.serialization.bits import *
 from hazelcast.serialization.data import Data
 from hazelcast import six
 from hazelcast.six.moves import range
-from hazelcast.config import ClientProperties
 
 
 class _ObjectDataInput(ObjectDataInput):
@@ -15,16 +12,15 @@ class _ObjectDataInput(ObjectDataInput):
         self._is_big_endian = is_big_endian
         self._pos = offset
         self._size = len(buff)
-        self._respect_bytearrays = False if serialization_service is None else serialization_service.properties.get_bool(ClientProperties.SERIALIZATION_INPUT_RETURNS_BYTEARRAY)
         # Local cache struct formats according to endianness
-        self._FMT_INT8 = FMT_BE_INT8 if self._is_big_endian else FMT_LE_INT8
-        self._FMT_UINT8 = FMT_BE_UINT8 if self._is_big_endian else FMT_LE_UINT8
-        self._FMT_INT = FMT_BE_INT if self._is_big_endian else FMT_LE_INT
-        self._FMT_SHORT = FMT_BE_INT16 if self._is_big_endian else FMT_LE_INT16
-        self._FMT_CHAR = FMT_BE_UINT16 if self._is_big_endian else FMT_LE_UINT16
-        self._FMT_LONG = FMT_BE_LONG if self._is_big_endian else FMT_LE_LONG
-        self._FMT_FLOAT = FMT_BE_FLOAT if self._is_big_endian else FMT_LE_FLOAT
-        self._FMT_DOUBLE = FMT_BE_DOUBLE if self._is_big_endian else FMT_LE_DOUBLE
+        self._FMT_INT8 = BE_INT8 if self._is_big_endian else LE_INT8
+        self._FMT_UINT8 = BE_UINT8 if self._is_big_endian else LE_UINT8
+        self._FMT_INT = BE_INT if self._is_big_endian else LE_INT
+        self._FMT_SHORT = BE_INT16 if self._is_big_endian else LE_INT16
+        self._FMT_CHAR = BE_UINT16 if self._is_big_endian else LE_UINT16
+        self._FMT_LONG = BE_LONG if self._is_big_endian else LE_LONG
+        self._FMT_FLOAT = BE_FLOAT if self._is_big_endian else LE_FLOAT
+        self._FMT_DOUBLE = BE_DOUBLE if self._is_big_endian else LE_DOUBLE
 
     def read_into(self, buff, offset=None, length=None):
         _off = offset if offset is not None else 0
@@ -86,23 +82,9 @@ class _ObjectDataInput(ObjectDataInput):
         length = self.read_int()
         if length == NULL_ARRAY_LENGTH:
             return None
-        result = bytearray()
-        for i in range(0, length):
-            _first_byte = self.read_byte() & 0xFF
-            b = _first_byte >> 4
-            if 0 <= b <= 7:
-                result.append(_first_byte)
-                continue
-            if 12 <= b <= 13:
-                result.append(_first_byte)
-                result.append(self.read_byte() & 0xFF)
-                continue
-            if b == 14:
-                result.append(_first_byte)
-                result.append(self.read_byte() & 0xFF)
-                result.append(self.read_byte() & 0xFF)
-                continue
-            raise UnicodeDecodeError("Malformed utf-8 content")
+        result = bytearray(length)
+        if length > 0:
+            self.read_into(result, 0, length)
         return result.decode("utf-8")
 
     def read_byte_array(self):
@@ -113,10 +95,7 @@ class _ObjectDataInput(ObjectDataInput):
         if length > 0:
             self.read_into(result, 0, length)
 
-        if self._respect_bytearrays:
-            return result
-
-        return list(result)
+        return result
 
     def read_boolean_array(self):
         return self._read_array_fnc(self.read_boolean)
@@ -171,10 +150,10 @@ class _ObjectDataInput(ObjectDataInput):
 
     def _read_from_buff(self, fmt, size, position=None):
         if position is None:
-            val = struct.unpack_from(fmt, self._buffer, self._pos)
+            val = fmt.unpack_from(self._buffer, self._pos)
             self._pos += size
         else:
-            val = struct.unpack_from(fmt, self._buffer, position)
+            val = fmt.unpack_from(self._buffer, position)
         return val[0]
 
     def _read_array_fnc(self, read_item_fnc):

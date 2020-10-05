@@ -1,9 +1,9 @@
-from hazelcast.future import ImmediateFuture
+from hazelcast.future import ImmediateFuture, Future
 from hazelcast.protocol.codec import ringbuffer_add_all_codec, ringbuffer_add_codec, ringbuffer_capacity_codec, \
     ringbuffer_head_sequence_codec, ringbuffer_read_many_codec, ringbuffer_read_one_codec, \
     ringbuffer_remaining_capacity_codec, ringbuffer_size_codec, ringbuffer_tail_sequence_codec
 from hazelcast.proxy.base import PartitionSpecificProxy
-from hazelcast.util import check_not_negative, check_not_none, check_not_empty, check_true
+from hazelcast.util import check_not_negative, check_not_none, check_not_empty, check_true, ImmutableLazyDataList
 
 OVERFLOW_POLICY_OVERWRITE = 0
 """
@@ -48,7 +48,9 @@ class Ringbuffer(PartitionSpecificProxy):
     meaning that only 1 thread is able to take an item. A Ringbuffer.read is not destructive, so you can have multiple
     threads reading the same item multiple times.
     """
-    _capacity = None
+    def __init__(self, service_name, name, context):
+        super(Ringbuffer, self).__init__(service_name, name, context)
+        self._capacity = None
 
     def capacity(self):
         """
@@ -57,11 +59,12 @@ class Ringbuffer(PartitionSpecificProxy):
         :return: (long), the capacity of Ringbuffer.
         """
         if not self._capacity:
-            def cache_capacity(f):
-                self._capacity = f.result()
-                return f.result()
+            def handler(message):
+                self._capacity = ringbuffer_capacity_codec.decode_response(message)
+                return self._capacity
 
-            return self._encode_invoke(ringbuffer_capacity_codec).continue_with(cache_capacity)
+            request = ringbuffer_capacity_codec.encode_request(self.name)
+            return self._invoke(request, handler)
         return ImmediateFuture(self._capacity)
 
     def size(self):
@@ -70,7 +73,8 @@ class Ringbuffer(PartitionSpecificProxy):
 
         :return: (long), the size of Ringbuffer.
         """
-        return self._encode_invoke(ringbuffer_size_codec)
+        request = ringbuffer_size_codec.encode_request(self.name)
+        return self._invoke(request, ringbuffer_size_codec.decode_response)
 
     def tail_sequence(self):
         """
@@ -79,7 +83,8 @@ class Ringbuffer(PartitionSpecificProxy):
 
         :return: (long), the sequence of the tail.
         """
-        return self._encode_invoke(ringbuffer_tail_sequence_codec)
+        request = ringbuffer_tail_sequence_codec.encode_request(self.name)
+        return self._invoke(request, ringbuffer_tail_sequence_codec.decode_response)
 
     def head_sequence(self):
         """
@@ -89,7 +94,8 @@ class Ringbuffer(PartitionSpecificProxy):
 
         :return: (long), the sequence of the head.
         """
-        return self._encode_invoke(ringbuffer_head_sequence_codec)
+        request = ringbuffer_head_sequence_codec.encode_request(self.name)
+        return self._invoke(request, ringbuffer_head_sequence_codec.decode_response)
 
     def remaining_capacity(self):
         """
@@ -97,7 +103,8 @@ class Ringbuffer(PartitionSpecificProxy):
 
         :return: (long), the remaining capacity of Ringbuffer.
         """
-        return self._encode_invoke(ringbuffer_remaining_capacity_codec)
+        request = ringbuffer_remaining_capacity_codec.encode_request(self.name)
+        return self._invoke(request, ringbuffer_remaining_capacity_codec.decode_response)
 
     def add(self, item, overflow_policy=OVERFLOW_POLICY_OVERWRITE):
         """
@@ -108,7 +115,9 @@ class Ringbuffer(PartitionSpecificProxy):
         :param overflow_policy: (int), the OverflowPolicy to be used when there is no space (optional).
         :return: (long), the sequenceId of the added item, or -1 if the add failed.
         """
-        return self._encode_invoke(ringbuffer_add_codec, value=self._to_data(item), overflow_policy=overflow_policy)
+        item_data = self._to_data(item)
+        request = ringbuffer_add_codec.encode_request(self.name, overflow_policy, item_data)
+        return self._invoke(request, ringbuffer_add_codec.decode_response)
 
     def add_all(self, items, overflow_policy=OVERFLOW_POLICY_OVERWRITE):
         """
@@ -126,11 +135,14 @@ class Ringbuffer(PartitionSpecificProxy):
         check_not_empty(items, "items can't be empty")
         if len(items) > MAX_BATCH_SIZE:
             raise AssertionError("Batch size can't be greater than %d" % MAX_BATCH_SIZE)
+
+        item_data_list = []
         for item in items:
             check_not_none(item, "item can't be None")
+            item_data_list.append(self._to_data(item))
 
-        item_list = [self._to_data(x) for x in items]
-        return self._encode_invoke(ringbuffer_add_all_codec, value_list=item_list, overflow_policy=overflow_policy)
+        request = ringbuffer_add_all_codec.encode_request(self.name, item_data_list, overflow_policy)
+        return self._invoke(request, ringbuffer_add_all_codec.decode_response)
 
     def read_one(self, sequence):
         """
@@ -141,7 +153,12 @@ class Ringbuffer(PartitionSpecificProxy):
         :return: (object), the read item.
         """
         check_not_negative(sequence, "sequence can't be smaller than 0")
-        return self._encode_invoke(ringbuffer_read_one_codec, sequence=sequence)
+
+        def handler(message):
+            return self._to_object(ringbuffer_read_one_codec.decode_response(message))
+
+        request = ringbuffer_read_one_codec.encode_request(self.name, sequence)
+        return self._invoke(request, handler)
 
     def read_many(self, start_sequence, min_count, max_count):
         """
@@ -157,13 +174,29 @@ class Ringbuffer(PartitionSpecificProxy):
         """
         check_not_negative(start_sequence, "sequence can't be smaller than 0")
         check_true(max_count >= min_count, "max count should be greater or equal to min count")
-        check_true(min_count <= self.capacity().result(), "min count should be smaller or equal to capacity")
         check_true(max_count < MAX_BATCH_SIZE, "max count can't be greater than %d" % MAX_BATCH_SIZE)
 
-        return self._encode_invoke(ringbuffer_read_many_codec, response_handler=self._read_many_response_handler,
-                                   start_sequence=start_sequence, min_count=min_count,
-                                   max_count=max_count, filter=None)
+        future = Future()
+        request = ringbuffer_read_many_codec.encode_request(self.name, start_sequence, min_count, max_count, None)
 
-    @staticmethod
-    def _read_many_response_handler(future, codec, to_object):
-        return codec.decode_response(future.result(), to_object)['items']
+        def handler(message):
+            return ImmutableLazyDataList(ringbuffer_read_many_codec.decode_response(message)["items"], self._to_object)
+
+        def check_capacity(capacity):
+            try:
+                capacity = capacity.result()
+                check_true(min_count <= capacity, "min count: %d should be smaller or equal to capacity: %d"
+                           % (min_count, capacity))
+                f = self._invoke(request, handler)
+                f.add_done_callback(set_result)
+            except Exception as e:
+                future.set_exception(e)
+
+        def set_result(f):
+            try:
+                future.set_result(f.result())
+            except Exception as e:
+                future.set_exception(e)
+
+        self.capacity().add_done_callback(check_capacity)
+        return future

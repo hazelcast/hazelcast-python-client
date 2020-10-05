@@ -1,9 +1,8 @@
 import time
-from unittest import skip
 
 import itertools
 
-from hazelcast.exception import HazelcastError
+from hazelcast.errors import HazelcastError
 from hazelcast.proxy.map import EntryEventType
 from tests.base import SingleMemberTestCase
 from tests.util import random_string, event_collector
@@ -12,6 +11,11 @@ from hazelcast.six.moves import range
 
 
 class MultiMapTest(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
+        return config
+
     def setUp(self):
         self.multi_map = self.client.get_multi_map(random_string()).blocking()
 

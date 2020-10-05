@@ -12,9 +12,13 @@ from hazelcast.six.moves import range
 
 
 class ThreadingTest(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
+        return config
+
     def setUp(self):
         self.map = self.client.get_map(random_string()).blocking()
-
 
     @attr("stress_test")
     @skip

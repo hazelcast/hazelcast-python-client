@@ -1,6 +1,6 @@
-import logging
 import random
 
+from hazelcast import six
 from hazelcast.config import EVICTION_POLICY, IN_MEMORY_FORMAT
 from hazelcast.util import current_time
 from hazelcast.six.moves import range
@@ -241,19 +241,20 @@ class NearCache(dict):
 
 
 class NearCacheManager(object):
-    def __init__(self, client):
+    def __init__(self, client, serialization_service):
         self._client = client
+        self._serialization_service = serialization_service
         self._caches = {}
 
     def get_or_create_near_cache(self, name):
         near_cache = self._caches.get(name, None)
         if not near_cache:
-            near_cache_config = self._client.config.near_cache_configs.get(name, None)
+            near_cache_config = self._client.config.near_caches.get(name, None)
             if not near_cache_config:
                 raise ValueError("Cannot find a near cache configuration with the name '{}'".format(name))
 
             near_cache = NearCache(near_cache_config.name,
-                                   self._client.serialization_service,
+                                   self._serialization_service,
                                    near_cache_config.in_memory_format,
                                    near_cache_config.time_to_live_seconds,
                                    near_cache_config.max_idle_seconds,
@@ -267,6 +268,10 @@ class NearCacheManager(object):
 
         return near_cache
 
+    def clear_near_caches(self):
+        for cache in six.itervalues(self._caches):
+            cache._clear()
+
     def destroy_near_cache(self, name):
         try:
             near_cache = self._caches.pop(name)
@@ -274,9 +279,9 @@ class NearCacheManager(object):
         except KeyError:
             pass
 
-    def destroy_all_near_caches(self):
+    def destroy_near_caches(self):
         for key in list(self._caches.keys()):
             self.destroy_near_cache(key)
 
-    def list_all_near_caches(self):
+    def list_near_caches(self):
         return list(self._caches.values())

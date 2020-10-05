@@ -5,16 +5,16 @@ from hazelcast.protocol.codec import multi_map_add_entry_listener_codec, multi_m
     multi_map_remove_entry_codec, multi_map_remove_entry_listener_codec, multi_map_size_codec, multi_map_try_lock_codec, \
     multi_map_unlock_codec, multi_map_value_count_codec, multi_map_values_codec
 from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType
-from hazelcast.util import check_not_none, thread_id, to_millis
+from hazelcast.util import check_not_none, thread_id, to_millis, ImmutableLazyDataList
 
 
 class MultiMap(Proxy):
     """
     A specialized map whose keys can be associated with multiple values.
     """
-    def __init__(self, client, service_name, name):
-        super(MultiMap, self).__init__(client, service_name, name)
-        self.reference_id_generator = self._client.lock_reference_id_generator
+    def __init__(self, service_name, name, context):
+        super(MultiMap, self).__init__(service_name, name, context)
+        self._reference_id_generator = context.lock_reference_id_generator
 
     def add_entry_listener(self, include_value=False, key=None, added_func=None, removed_func=None, clear_all_func=None):
         """
@@ -29,15 +29,16 @@ class MultiMap(Proxy):
         :return: (str), a registration id which is used as a key to remove the listener.
         """
         if key:
+            codec = multi_map_add_entry_listener_to_key_codec
             key_data = self._to_data(key)
-            request = multi_map_add_entry_listener_to_key_codec.encode_request(
-                name=self.name, key=key_data, include_value=include_value, local_only=False)
+            request = codec.encode_request(self.name, key_data, include_value, False)
         else:
-            request = multi_map_add_entry_listener_codec.encode_request(
-                name=self.name, include_value=include_value, local_only=False)
+            codec = multi_map_add_entry_listener_codec
+            request = codec.encode_request(self.name, include_value, False)
 
-        def handle_event_entry(**_kwargs):
-            event = EntryEvent(self._to_object, **_kwargs)
+        def handle_event_entry(key, value, old_value, merging_value, event_type, uuid, number_of_affected_entries):
+            event = EntryEvent(self._to_object, key, value, old_value, merging_value,
+                               event_type, uuid, number_of_affected_entries)
             if event.event_type == EntryEventType.added and added_func:
                 added_func(event)
             elif event.event_type == EntryEventType.removed and removed_func:
@@ -46,9 +47,9 @@ class MultiMap(Proxy):
                 clear_all_func(event)
 
         return self._register_listener(
-            request, lambda r: multi_map_add_entry_listener_codec.decode_response(r)['response'],
+            request, lambda r: codec.decode_response(r),
             lambda reg_id: multi_map_remove_entry_listener_codec.encode_request(self.name, reg_id),
-            lambda m: multi_map_add_entry_listener_codec.handle(m, handle_event_entry))
+            lambda m: codec.handle(m, handle_event_entry))
 
     def contains_key(self, key):
         """
@@ -62,8 +63,9 @@ class MultiMap(Proxy):
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(multi_map_contains_key_codec, key_data, key=key_data,
-                                          thread_id=thread_id())
+        
+        request = multi_map_contains_key_codec.encode_request(self.name, key_data, thread_id())
+        return self._invoke_on_key(request, key_data, multi_map_contains_key_codec.decode_response)
 
     def contains_value(self, value):
         """
@@ -74,7 +76,8 @@ class MultiMap(Proxy):
         """
         check_not_none(value, "value can't be None")
         value_data = self._to_data(value)
-        return self._encode_invoke(multi_map_contains_value_codec, value=value_data)
+        request = multi_map_contains_value_codec.encode_request(self.name, value_data)
+        return self._invoke(request, multi_map_contains_value_codec.decode_response)
 
     def contains_entry(self, key, value):
         """
@@ -88,14 +91,16 @@ class MultiMap(Proxy):
         check_not_none(value, "value can't be None")
         key_data = self._to_data(key)
         value_data = self._to_data(value)
-        return self._encode_invoke_on_key(multi_map_contains_entry_codec, key_data, key=key_data,
-                                          value=value_data, thread_id=thread_id())
+        
+        request = multi_map_contains_entry_codec.encode_request(self.name, key_data, value_data, thread_id())
+        return self._invoke_on_key(request, key_data, multi_map_contains_entry_codec.decode_response)
 
     def clear(self):
         """
         Clears the multimap. Removes all key-value tuples.
         """
-        return self._encode_invoke(multi_map_clear_codec)
+        request = multi_map_clear_codec.encode_request(self.name)
+        return self._invoke(request)
 
     def entry_set(self):
         """
@@ -106,7 +111,11 @@ class MultiMap(Proxy):
 
         :return: (Sequence), the list of key-value tuples in the multimap.
         """
-        return self._encode_invoke(multi_map_entry_set_codec)
+        def handler(message):
+            return ImmutableLazyDataList(multi_map_entry_set_codec.decode_response(message), self._to_object)
+
+        request = multi_map_entry_set_codec.encode_request(self.name)
+        return self._invoke(request, handler)
 
     def get(self, key):
         """
@@ -124,9 +133,13 @@ class MultiMap(Proxy):
         :return: (Sequence), the list of the values associated with the specified key.
         """
         check_not_none(key, "key can't be None")
+
+        def handler(message):
+            return ImmutableLazyDataList(multi_map_get_codec.decode_response(message), self._to_object)
+
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(multi_map_get_codec, key_data, key=key_data,
-                                          thread_id=thread_id())
+        request = multi_map_get_codec.encode_request(self.name, key_data, thread_id())
+        return self._invoke_on_key(request, key_data, handler)
 
     def is_locked(self, key):
         """
@@ -140,7 +153,9 @@ class MultiMap(Proxy):
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(multi_map_is_locked_codec, key_data, key=key_data)
+
+        request = multi_map_is_locked_codec.encode_request(self.name, key_data)
+        return self._invoke_on_key(request, key_data, multi_map_is_locked_codec.decode_response)
 
     def force_unlock(self, key):
         """
@@ -154,8 +169,9 @@ class MultiMap(Proxy):
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(multi_map_force_unlock_codec, key_data, key=key_data,
-                                          reference_id=self.reference_id_generator.get_and_increment())
+        request = multi_map_force_unlock_codec.encode_request(self.name, key_data,
+                                                              self._reference_id_generator.get_and_increment())
+        return self._invoke_on_key(request, key_data)
 
     def key_set(self):
         """
@@ -166,7 +182,11 @@ class MultiMap(Proxy):
 
         :return: (Sequence), a list of the clone of the keys.
         """
-        return self._encode_invoke(multi_map_key_set_codec)
+        def handler(message):
+            return ImmutableLazyDataList(multi_map_key_set_codec.decode_response(message), self._to_object)
+
+        request = multi_map_key_set_codec.encode_request(self.name)
+        return self._invoke(request, handler)
 
     def lock(self, key, lease_time=-1):
         """
@@ -188,9 +208,9 @@ class MultiMap(Proxy):
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(multi_map_lock_codec, key_data, key=key_data,
-                                          thread_id=thread_id(), ttl=to_millis(lease_time),
-                                          reference_id=self.reference_id_generator.get_and_increment())
+        request = multi_map_lock_codec.encode_request(self.name, key_data, thread_id(), to_millis(lease_time),
+                                                      self._reference_id_generator.get_and_increment())
+        return self._invoke_on_key(request, key_data)
 
     def remove(self, key, value):
         """
@@ -207,8 +227,8 @@ class MultiMap(Proxy):
         check_not_none(key, "value can't be None")
         key_data = self._to_data(key)
         value_data = self._to_data(value)
-        return self._encode_invoke_on_key(multi_map_remove_entry_codec, key_data, key=key_data,
-                                          value=value_data, thread_id=thread_id())
+        request = multi_map_remove_entry_codec.encode_request(self.name, key_data, value_data, thread_id())
+        return self._invoke_on_key(request, key_data, multi_map_remove_entry_codec.decode_response)
 
     def remove_all(self, key):
         """
@@ -225,9 +245,13 @@ class MultiMap(Proxy):
         :return: (Sequence), the collection of removed values associated with the given key.
         """
         check_not_none(key, "key can't be None")
+
+        def handler(message):
+            return ImmutableLazyDataList(multi_map_remove_codec.decode_response(message), self._to_object)
+
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(multi_map_remove_codec, key_data, key=key_data,
-                                          thread_id=thread_id())
+        request = multi_map_remove_codec.encode_request(self.name, key_data, thread_id())
+        return self._invoke_on_key(request, key_data, handler)
 
     def put(self, key, value):
         """
@@ -245,8 +269,8 @@ class MultiMap(Proxy):
         check_not_none(value, "value can't be None")
         key_data = self._to_data(key)
         value_data = self._to_data(value)
-        return self._encode_invoke_on_key(multi_map_put_codec, key_data, key=key_data, value=value_data,
-                                          thread_id=thread_id())
+        request = multi_map_put_codec.encode_request(self.name, key_data, value_data, thread_id())
+        return self._invoke_on_key(request, key_data, multi_map_put_codec.decode_response)
 
     def remove_entry_listener(self, registration_id):
         """
@@ -263,7 +287,8 @@ class MultiMap(Proxy):
 
         :return: (int), number of entries in this multimap.
         """
-        return self._encode_invoke(multi_map_size_codec)
+        request = multi_map_size_codec.encode_request(self.name)
+        return self._invoke(request, multi_map_size_codec.decode_response)
 
     def value_count(self, key):
         """
@@ -277,8 +302,8 @@ class MultiMap(Proxy):
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(multi_map_value_count_codec, key_data, key=key_data,
-                                          thread_id=thread_id())
+        request = multi_map_value_count_codec.encode_request(self.name, key_data, thread_id())
+        return self._invoke_on_key(request, key_data, multi_map_value_count_codec.decode_response)
 
     def values(self):
         """
@@ -290,7 +315,11 @@ class MultiMap(Proxy):
 
         :return: (Sequence), the list of values in the multimap.
         """
-        return self._encode_invoke(multi_map_values_codec)
+        def handler(message):
+            return ImmutableLazyDataList(multi_map_values_codec.decode_response(message), self._to_object)
+
+        request = multi_map_values_codec.encode_request(self.name)
+        return self._invoke(request, handler)
 
     def try_lock(self, key, lease_time=-1, timeout=-1):
         """
@@ -311,10 +340,10 @@ class MultiMap(Proxy):
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(multi_map_try_lock_codec, key_data, key=key_data,
-                                          thread_id=thread_id(), lease=to_millis(lease_time),
-                                          timeout=to_millis(timeout),
-                                          reference_id=self.reference_id_generator.get_and_increment())
+        request = multi_map_try_lock_codec.encode_request(self.name, key_data, thread_id(),
+                                                          to_millis(lease_time), to_millis(timeout),
+                                                          self._reference_id_generator.get_and_increment())
+        return self._invoke_on_key(request, key_data, multi_map_try_lock_codec.decode_response)
 
     def unlock(self, key):
         """
@@ -327,6 +356,6 @@ class MultiMap(Proxy):
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
-        return self._encode_invoke_on_key(multi_map_unlock_codec, key_data, key=key_data,
-                                          thread_id=thread_id(),
-                                          reference_id=self.reference_id_generator.get_and_increment())
+        request = multi_map_unlock_codec.encode_request(self.name, key_data, thread_id(),
+                                                        self._reference_id_generator.get_and_increment())
+        return self._invoke_on_key(request, key_data)

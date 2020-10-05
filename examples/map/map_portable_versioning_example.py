@@ -1,4 +1,5 @@
 import hazelcast
+from hazelcast.errors import HazelcastSerializationError
 
 from hazelcast.serialization.api import Portable
 
@@ -7,6 +8,7 @@ from hazelcast.serialization.api import Portable
 # With multiversion support, you can have two members that have different
 # versions of the same object, and Hazelcast will store both meta information and use the
 # correct one to serialize and deserialize portable objects depending on the member.
+
 
 # Default (version 1) Employee class.
 class Employee(Portable):
@@ -32,7 +34,7 @@ class Employee(Portable):
         return self.CLASS_ID
 
     def __str__(self):
-        return "Employee[ name:{} age:{} ]".format(self.name, self.age)
+        return "Employee(name:%s, age:%s)" % (self.name, self.age)
 
     def __eq__(self, other):
         return type(self) == type(other) and self.name == other.name and self.age == other.age
@@ -41,11 +43,12 @@ class Employee(Portable):
 # it is a good idea to upgrade the version of the class, rather than sticking to the global versioning
 # that is specified in the hazelcast.xml file.
 
+
 # Version 2: Added new field manager name (str).
 class Employee2(Portable):
     FACTORY_ID = 666
     CLASS_ID = 1
-    CLASS_VERSION = 2 # specifies version different than the global version
+    CLASS_VERSION = 2  # specifies version different than the global version
 
     def __init__(self, name=None, age=None, manager=None):
         self.name = name
@@ -73,10 +76,10 @@ class Employee2(Portable):
         return self.CLASS_VERSION
 
     def __str__(self):
-        return "Employee[ name:{} age:{} manager:{} ]".format(self.name, self.age, self.manager)
+        return "Employee(name:%s, age:%s, manager:%s)" % (self.name, self.age, self.manager)
 
     def __eq__(self, other):
-        return type(self) == type(other) and self.name == other.name and self.age == other.age \
+        return isinstance(other, Employee2) and self.name == other.name and self.age == other.age \
                and self.manager == other.manager
 
 
@@ -114,71 +117,66 @@ class Employee3(Portable):
         return self.CLASS_VERSION
 
     def __str__(self):
-        return "Employee[ name:{} age:{} manager:{} ]".format(self.name, self.age, self.manager)
+        return "Employee(name:%s, age:%s manager:%s)" % (self.name, self.age, self.manager)
 
     def __eq__(self, other):
-        return type(self) == type(other) and self.name == other.name and self.age == other.age \
+        return isinstance(other, Employee3) and self.name == other.name and self.age == other.age \
                and self.manager == other.manager
 
 
-if __name__ == '__main__':
+# Let's now configure 3 clients with 3 different versions of Employee.
+config = hazelcast.ClientConfig()
+config.serialization.portable_factories[Employee.FACTORY_ID] = {Employee.CLASS_ID: Employee}
+client = hazelcast.HazelcastClient(config)
 
-    # Let's now configure 3 clients with 3 different versions of Employee.
-    config = hazelcast.ClientConfig()
-    config.serialization_config.portable_factories[Employee.FACTORY_ID] = \
-        {Employee.CLASS_ID: Employee}
-    client = hazelcast.HazelcastClient(config)
+config2 = hazelcast.ClientConfig()
+config2.serialization.portable_factories[Employee2.FACTORY_ID] = {Employee2.CLASS_ID: Employee2}
+client2 = hazelcast.HazelcastClient(config2)
 
-    config2 = hazelcast.ClientConfig()
-    config2.serialization_config.portable_factories[Employee2.FACTORY_ID] = \
-        {Employee2.CLASS_ID: Employee2}
-    client2 = hazelcast.HazelcastClient(config2)
+config3 = hazelcast.ClientConfig()
+config3.serialization.portable_factories[Employee3.FACTORY_ID] = {Employee3.CLASS_ID: Employee3}
+client3 = hazelcast.HazelcastClient(config3)
 
-    config3 = hazelcast.ClientConfig()
-    config3.serialization_config.portable_factories[Employee3.FACTORY_ID] = \
-        {Employee3.CLASS_ID: Employee3}
-    client3 = hazelcast.HazelcastClient(config3)
+# Assume that a member joins a cluster with a newer version of a class.
+# If you modified the class by adding a new field, the new member's put operations include that
+# new field.
+my_map = client.get_map("employee-map").blocking()
+my_map2 = client2.get_map("employee-map").blocking()
 
-    # Assume that a member joins a cluster with a newer version of a class.
-    # If you modified the class by adding a new field, the new member's put operations include that
-    # new field.
-    my_map = client.get_map("employee-map").blocking()
-    my_map2 = client2.get_map("employee-map").blocking()
+my_map.clear()
+my_map.put(0, Employee("Jack", 28))
+my_map2.put(1, Employee2("Jane", 29, "Josh"))
 
-    my_map.clear()
-    my_map.put(0, Employee("Jack", 28))
-    my_map2.put(1, Employee2("Jane", 29, "Josh"))
+print('Map Size: {}'.format(my_map.size()))
 
-    print('Map Size: {}'.format(my_map.size()))
+# If this new member tries to get an object that was put from the older members, it
+# gets null for the newly added field.
+for v in my_map.values():
+    print(v)
 
-    # If this new member tries to get an object that was put from the older members, it
-    # gets null for the newly added field.
-    for v in my_map.values():
-        print(v)
+for v in my_map2.values():
+    print(v)
 
-    for v in my_map2.values():
-        print(v)
+# Let's try now to put a version 3 Employee object to the map and see what happens.
+my_map3 = client3.get_map("employee-map").blocking()
+my_map3.put(2, Employee3("Joe", "30", "Mary"))
 
-    # Let's try now to put a version 3 Employee object to the map and see what happens.
-    my_map3 = client3.get_map("employee-map").blocking()
-    my_map3.put(2, Employee3("Joe", "30", "Mary"))
+print('Map Size: {}'.format(my_map.size()))
 
-    print('Map Size: {}'.format(my_map.size()))
+# As clients with incompatible versions of the class try to access each other, a HazelcastSerializationError
+# is raised (caused by a TypeError).
+try:
+    # Client that has class with int type age field tries to read Employee3 object with String age field.
+    print(my_map.get(2))
+except HazelcastSerializationError as ex:
+    print("Failed due to: {}".format(ex))
 
-    # As clients with incompatible versions of the class try to access each other, a HazelcastSerializationError
-    # is raised (caused by a TypeError).
-    try:
-        # Client that has class with int type age field tries to read Employee3 object with String age field.
-        print(my_map.get(2))
-    except hazelcast.exception.HazelcastSerializationError as ex:
-        print("Failed due to: {}".format(ex))
+try:
+    # Client that has class with String type age field tries to read Employee object with int age field.
+    print(my_map3.get(0))
+except HazelcastSerializationError as ex:
+    print("Failed due to: {}".format(ex))
 
-    try:
-        # Client that has class with String type age field tries to read Employee object with int age field.
-        print(my_map3.get(0))
-    except hazelcast.exception.HazelcastSerializationError as ex:
-        print("Failed due to: {}".format(ex))
-
-    client.shutdown()
-    client2.shutdown()
-    client3.shutdown()
+client.shutdown()
+client2.shutdown()
+client3.shutdown()

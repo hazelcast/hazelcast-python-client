@@ -4,6 +4,11 @@ from hazelcast import six
 
 
 class TransactionalMultiMapTest(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
+        return config
+
     def setUp(self):
         self.multi_map = self.client.get_multi_map(random_string()).blocking()
 

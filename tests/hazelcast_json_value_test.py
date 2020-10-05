@@ -3,7 +3,6 @@ import json
 from hazelcast.core import HazelcastJsonValue
 from hazelcast.serialization.predicate import is_greater_than, is_equal_to
 from tests.base import SingleMemberTestCase
-from tests.util import set_attr
 from unittest import TestCase
 
 
@@ -38,13 +37,17 @@ class HazelcastJsonValueTest(TestCase):
         self.assertEqual(self.json_obj, json_value.loads())
 
 
-@set_attr(category=3.12)
 class HazelcastJsonValueWithMapTest(SingleMemberTestCase):
     @classmethod
     def setUpClass(cls):
         super(HazelcastJsonValueWithMapTest, cls).setUpClass()
         cls.json_str = '{"key": "value"}'
         cls.json_obj = {"key": "value"}
+
+    @classmethod
+    def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
+        return config
 
     def setUp(self):
         self.map = self.client.get_map("json-test").blocking()

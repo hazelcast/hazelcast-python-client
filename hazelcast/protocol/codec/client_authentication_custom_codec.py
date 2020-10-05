@@ -1,71 +1,50 @@
 from hazelcast.serialization.bits import *
-from hazelcast.protocol.client_message import ClientMessage
-from hazelcast.protocol.custom_codec import *
-from hazelcast.util import ImmutableLazyDataList
-from hazelcast.protocol.codec.client_message_type import *
-from hazelcast.six.moves import range
+from hazelcast.protocol.builtin import FixSizedTypesCodec
+from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer, RESPONSE_HEADER_SIZE
+from hazelcast.protocol.builtin import StringCodec
+from hazelcast.protocol.builtin import ByteArrayCodec
+from hazelcast.protocol.builtin import ListMultiFrameCodec
+from hazelcast.protocol.codec.custom.address_codec import AddressCodec
+from hazelcast.protocol.builtin import CodecUtil
 
-REQUEST_TYPE = CLIENT_AUTHENTICATIONCUSTOM
-RESPONSE_TYPE = 107
-RETRYABLE = True
+# hex: 0x000200
+_REQUEST_MESSAGE_TYPE = 512
+# hex: 0x000201
+_RESPONSE_MESSAGE_TYPE = 513
 
-
-def calculate_size(credentials, uuid, owner_uuid, is_owner_connection, client_type, serialization_version, client_hazelcast_version):
-    """ Calculates the request payload size"""
-    data_size = 0
-    data_size += calculate_size_data(credentials)
-    data_size += BOOLEAN_SIZE_IN_BYTES
-    if uuid is not None:
-        data_size += calculate_size_str(uuid)
-    data_size += BOOLEAN_SIZE_IN_BYTES
-    if owner_uuid is not None:
-        data_size += calculate_size_str(owner_uuid)
-    data_size += BOOLEAN_SIZE_IN_BYTES
-    data_size += calculate_size_str(client_type)
-    data_size += BYTE_SIZE_IN_BYTES
-    data_size += calculate_size_str(client_hazelcast_version)
-    return data_size
+_REQUEST_UUID_OFFSET = REQUEST_HEADER_SIZE
+_REQUEST_SERIALIZATION_VERSION_OFFSET = _REQUEST_UUID_OFFSET + UUID_SIZE_IN_BYTES
+_REQUEST_INITIAL_FRAME_SIZE = _REQUEST_SERIALIZATION_VERSION_OFFSET + BYTE_SIZE_IN_BYTES
+_RESPONSE_STATUS_OFFSET = RESPONSE_HEADER_SIZE
+_RESPONSE_MEMBER_UUID_OFFSET = _RESPONSE_STATUS_OFFSET + BYTE_SIZE_IN_BYTES
+_RESPONSE_SERIALIZATION_VERSION_OFFSET = _RESPONSE_MEMBER_UUID_OFFSET + UUID_SIZE_IN_BYTES
+_RESPONSE_PARTITION_COUNT_OFFSET = _RESPONSE_SERIALIZATION_VERSION_OFFSET + BYTE_SIZE_IN_BYTES
+_RESPONSE_CLUSTER_ID_OFFSET = _RESPONSE_PARTITION_COUNT_OFFSET + INT_SIZE_IN_BYTES
+_RESPONSE_FAILOVER_SUPPORTED_OFFSET = _RESPONSE_CLUSTER_ID_OFFSET + UUID_SIZE_IN_BYTES
 
 
-def encode_request(credentials, uuid, owner_uuid, is_owner_connection, client_type, serialization_version, client_hazelcast_version):
-    """ Encode request into client_message"""
-    client_message = ClientMessage(payload_size=calculate_size(credentials, uuid, owner_uuid, is_owner_connection, client_type, serialization_version, client_hazelcast_version))
-    client_message.set_message_type(REQUEST_TYPE)
-    client_message.set_retryable(RETRYABLE)
-    client_message.append_data(credentials)
-    client_message.append_bool(uuid is None)
-    if uuid is not None:
-        client_message.append_str(uuid)
-    client_message.append_bool(owner_uuid is None)
-    if owner_uuid is not None:
-        client_message.append_str(owner_uuid)
-    client_message.append_bool(is_owner_connection)
-    client_message.append_str(client_type)
-    client_message.append_byte(serialization_version)
-    client_message.append_str(client_hazelcast_version)
-    client_message.update_frame_length()
-    return client_message
+def encode_request(cluster_name, credentials, uuid, client_type, serialization_version, client_hazelcast_version, client_name, labels):
+    buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
+    FixSizedTypesCodec.encode_uuid(buf, _REQUEST_UUID_OFFSET, uuid)
+    FixSizedTypesCodec.encode_byte(buf, _REQUEST_SERIALIZATION_VERSION_OFFSET, serialization_version)
+    StringCodec.encode(buf, cluster_name)
+    ByteArrayCodec.encode(buf, credentials)
+    StringCodec.encode(buf, client_type)
+    StringCodec.encode(buf, client_hazelcast_version)
+    StringCodec.encode(buf, client_name)
+    ListMultiFrameCodec.encode(buf, labels, StringCodec.encode, True)
+    return OutboundMessage(buf, True)
 
 
-def decode_response(client_message, to_object=None):
-    """ Decode response from client message"""
-    parameters = dict(status=None, address=None, uuid=None, owner_uuid=None, serialization_version=None, server_hazelcast_version=None, client_unregistered_members=None)
-    parameters['status'] = client_message.read_byte()
-    if not client_message.read_bool():
-        parameters['address'] = AddressCodec.decode(client_message, to_object)
-    if not client_message.read_bool():
-        parameters['uuid'] = client_message.read_str()
-    if not client_message.read_bool():
-        parameters['owner_uuid'] = client_message.read_str()
-    parameters['serialization_version'] = client_message.read_byte()
-    if client_message.is_complete():
-        return parameters
-    parameters['server_hazelcast_version'] = client_message.read_str()
-    if not client_message.read_bool():
-        client_unregistered_members_size = client_message.read_int()
-        client_unregistered_members = []
-        for _ in range(0, client_unregistered_members_size):
-            client_unregistered_members_item = MemberCodec.decode(client_message, to_object)
-            client_unregistered_members.append(client_unregistered_members_item)
-        parameters['client_unregistered_members'] = ImmutableLazyDataList(client_unregistered_members, to_object)
-    return parameters
+def decode_response(msg):
+    initial_frame = msg.next_frame()
+    response = dict()
+    response["status"] = FixSizedTypesCodec.decode_byte(initial_frame.buf, _RESPONSE_STATUS_OFFSET)
+    response["member_uuid"] = FixSizedTypesCodec.decode_uuid(initial_frame.buf, _RESPONSE_MEMBER_UUID_OFFSET)
+    response["serialization_version"] = FixSizedTypesCodec.decode_byte(initial_frame.buf, _RESPONSE_SERIALIZATION_VERSION_OFFSET)
+    response["partition_count"] = FixSizedTypesCodec.decode_int(initial_frame.buf, _RESPONSE_PARTITION_COUNT_OFFSET)
+    response["cluster_id"] = FixSizedTypesCodec.decode_uuid(initial_frame.buf, _RESPONSE_CLUSTER_ID_OFFSET)
+    response["failover_supported"] = FixSizedTypesCodec.decode_boolean(initial_frame.buf, _RESPONSE_FAILOVER_SUPPORTED_OFFSET)
+    response["address"] = CodecUtil.decode_nullable(msg, AddressCodec.decode)
+    response["server_hazelcast_version"] = StringCodec.decode(msg)
+    return response

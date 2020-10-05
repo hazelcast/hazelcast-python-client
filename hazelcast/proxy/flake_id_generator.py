@@ -38,10 +38,10 @@ class FlakeIdGenerator(Proxy):
     _BITS_NODE_ID = 16
     _BITS_SEQUENCE = 6
 
-    def __init__(self, client, service_name, name):
-        super(FlakeIdGenerator, self).__init__(client, service_name, name)
+    def __init__(self, service_name, name, context):
+        super(FlakeIdGenerator, self).__init__(service_name, name, context)
 
-        config = client.config.flake_id_generator_configs.get(name, None)
+        config = context.config.flake_id_generators.get(name, None)
         if config is None:
             config = FlakeIdGeneratorConfig()
 
@@ -88,20 +88,12 @@ class FlakeIdGenerator(Proxy):
         return self.new_id().continue_with(lambda f: f.result() >= (id + reserve))
 
     def _new_id_batch(self, batch_size):
-        future = self._encode_invoke(flake_id_generator_new_id_batch_codec, self._response_handler,
-                                     batch_size=batch_size)
-
-        return future.continue_with(self._response_to_id_batch)
-
-    def _response_handler(self, future, codec, to_object):
-        response = future.result()
-        if response:
-            return codec.decode_response(response, to_object)
-
-    def _response_to_id_batch(self, future):
-        response = future.result()
-        if response:
+        def handler(message):
+            response = flake_id_generator_new_id_batch_codec.decode_response(message)
             return _IdBatch(response["base"], response["increment"], response["batch_size"])
+
+        request = flake_id_generator_new_id_batch_codec.encode_request(self.name, batch_size)
+        return self._invoke(request, handler)
 
 
 class _AutoBatcher(object):

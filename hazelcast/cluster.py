@@ -1,55 +1,143 @@
 import logging
 import random
 import threading
-import time
 import uuid
+from collections import OrderedDict
 
-from hazelcast.exception import HazelcastError, AuthenticationError, TargetDisconnectedError
-from hazelcast.lifecycle import LIFECYCLE_STATE_CONNECTED, LIFECYCLE_STATE_DISCONNECTED
-from hazelcast.protocol.codec import client_add_membership_listener_codec, client_authentication_codec
-from hazelcast.util import get_possible_addresses, get_provider_addresses, calculate_version
-from hazelcast.version import CLIENT_TYPE, CLIENT_VERSION, SERIALIZATION_VERSION
+from hazelcast import six
+from hazelcast.errors import TargetDisconnectedError, IllegalStateError
+from hazelcast.util import check_not_none
 
-# Membership Event Types
-MEMBER_ADDED = 1
-MEMBER_REMOVED = 2
+
+class _MemberListSnapshot(object):
+    __slots__ = ("version", "members")
+
+    def __init__(self, version, members):
+        self.version = version
+        self.members = members
+
+
+class ClientInfo(object):
+    """
+    Local information of the client.
+    """
+
+    __slots__ = ("uuid", "address", "name", "labels")
+
+    def __init__(self, client_uuid, address, name, labels):
+        self.uuid = client_uuid
+        """Unique id of this client instance."""
+
+        self.address = address
+        """Local address that is used to communicate with cluster."""
+
+        self.name = name
+        """Name of the client."""
+
+        self.labels = labels
+        """Read-only set of all labels of this client."""
+
+    def __repr__(self):
+        return "ClientInfo(uuid=%s, address=%s, name=%s, labels=%s)" % (self.uuid, self.address, self.name, self.labels)
+
+
+_EMPTY_SNAPSHOT = _MemberListSnapshot(-1, OrderedDict())
+_INITIAL_MEMBERS_TIMEOUT_SECONDS = 120
 
 
 class ClusterService(object):
     """
-    Hazelcast cluster service. It provides access to the members in the cluster and the client can register for changes
-    in the cluster members.
+    Cluster service for Hazelcast clients.
 
-    All the methods on the Cluster are thread-safe.
+    It provides access to the members in the cluster
+    and one can register for changes in the cluster members.
     """
+
+    def __init__(self, internal_cluster_service):
+        self._service = internal_cluster_service
+
+    def add_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
+        """
+        Adds a membership listener to listen for membership updates.
+
+        It will be notified when a member is added to cluster or removed from cluster.
+        There is no check for duplicate registrations, so if you register the listener
+        twice, it will get events twice.
+
+        :param member_added: Function to be called when a member is added to the cluster.
+        :type member_added: function
+        :param member_removed: Function to be called when a member is removed from the cluster.
+        :type member_removed: function
+        :param fire_for_existing: Whether or not fire member_added for existing members.
+        :type fire_for_existing: bool
+
+        :return: Registration id of the listener which will be used for removing this listener.
+        :rtype: str
+        """
+        return self._service.add_listener(member_added, member_removed, fire_for_existing)
+
+    def remove_listener(self, registration_id):
+        """
+        Removes the specified membership listener.
+
+        :param registration_id: Registration id of the listener to be removed.
+        :type registration_id: str
+
+        :return: ``True`` if the registration is removed, ``False`` otherwise.
+        :rtype: bool
+        """
+        return self._service.remove_listener(registration_id)
+
+    def get_members(self, member_selector=None):
+        """
+        Lists the current members in the cluster.
+
+        Every member in the cluster returns the members in the same order.
+        To obtain the oldest member in the cluster, you can retrieve the first item in the list.
+
+        :param member_selector: Function to filter members to return.
+            If not provided, the returned list will contain all the available cluster members.
+        :type member_selector: function
+
+        :return: Current members in the cluster
+        :rtype: list[:class:`~hazelcast.core.MemberInfo`]
+        """
+        return self._service.get_members(member_selector)
+
+
+class _InternalClusterService(object):
     logger = logging.getLogger("HazelcastClient.ClusterService")
 
-    def __init__(self, config, client, address_providers):
-        self._config = config
+    def __init__(self, client, logger_extras):
         self._client = client
-        self._logger_extras = {"client_name": client.name, "group_name": config.group_config.name}
-        self._members = {}
-        self.owner_connection_address = None
-        self.owner_uuid = None
-        self.uuid = None
-        self.listeners = {}
+        self._connection_manager = None
+        self._logger_extras = logger_extras
+        config = client.config
+        self._labels = frozenset(config.labels)
+        self._listeners = {}
+        self._member_list_snapshot = _EMPTY_SNAPSHOT
+        self._initial_list_fetched = threading.Event()
 
-        for listener in config.membership_listeners:
+    def start(self, connection_manager, membership_listeners):
+        self._connection_manager = connection_manager
+        for listener in membership_listeners:
             self.add_listener(*listener)
 
-        self._address_providers = address_providers
-        self._initial_list_fetched = threading.Event()
-        self._client.connection_manager.add_listener(on_connection_closed=self._connection_closed)
-        self._client.heartbeat.add_listener(on_heartbeat_stopped=self._heartbeat_stopped)
+    def get_member(self, member_uuid):
+        check_not_none(uuid, "UUID must not be null")
+        snapshot = self._member_list_snapshot
+        return snapshot.members.get(member_uuid, None)
 
-    def start(self):
-        """
-        Connects to cluster.
-        """
-        self._connect_to_cluster()
+    def get_members(self, member_selector=None):
+        snapshot = self._member_list_snapshot
+        if not member_selector:
+            return list(snapshot.members.values())
 
-    def shutdown(self):
-        pass
+        members = []
+        for member in six.itervalues(snapshot.members):
+            if member_selector(member):
+                members.append(member)
+        return members
 
     def size(self):
         """
@@ -57,25 +145,27 @@ class ClusterService(object):
 
         :return: (int), size of the cluster.
         """
-        return len(self._members)
+        snapshot = self._member_list_snapshot
+        return len(snapshot.members)
+
+    def get_local_client(self):
+        """
+        Returns the info representing the local client.
+
+        :return: (:class: `~hazelcast.cluster.ClientInfo`), client info
+        """
+        connection_manager = self._connection_manager
+        connection = connection_manager.get_random_connection()
+        local_address = None if not connection else connection.local_address
+        return ClientInfo(connection_manager.client_uuid, local_address, self._client.name, self._labels)
 
     def add_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
-        """
-        Adds a membership listener to listen for membership updates, it will be notified when a member is added to
-        cluster or removed from cluster. There is no check for duplicate registrations, so if you register the listener
-        twice, it will get events twice.
-
-
-        :param member_added: (Function), function to be called when a member is added to the cluster (optional).
-        :param member_removed: (Function), function to be called when a member is removed to the cluster (optional).
-        :param fire_for_existing: (bool), (optional).
-        :return: (str), registration id of the listener which will be used for removing this listener.
-        """
         registration_id = str(uuid.uuid4())
-        self.listeners[registration_id] = (member_added, member_removed)
+        self._listeners[registration_id] = (member_added, member_removed)
 
-        if fire_for_existing:
-            for member in self.get_member_list():
+        if fire_for_existing and member_added:
+            snapshot = self._member_list_snapshot
+            for member in six.itervalues(snapshot.members):
                 member_added(member)
 
         return registration_id
@@ -88,227 +178,167 @@ class ClusterService(object):
         :return: (bool), if the registration is removed, ``false`` otherwise.
         """
         try:
-            self.listeners.pop(registration_id)
+            self._listeners.pop(registration_id)
             return True
         except KeyError:
             return False
 
-    @property
-    def members(self):
+    def wait_initial_member_list_fetched(self):
         """
-        Returns the members in the cluster.
-        :return: (list), List of members.
+        Blocks until the initial member list is fetched from the cluster.
+        If it is not received within the timeout, an error is raised.
+
+        :raises IllegalStateError: If the member list could not be fetched
         """
-        return self.get_member_list()
+        fetched = self._initial_list_fetched.wait(_INITIAL_MEMBERS_TIMEOUT_SECONDS)
+        if not fetched:
+            raise IllegalStateError("Could not get initial member list from cluster!")
 
-    def _reconnect(self):
-        try:
-            self.logger.warning("Connection closed to owner node. Trying to reconnect.", extra=self._logger_extras)
-            self._connect_to_cluster()
-        except:
-            self.logger.exception("Could not reconnect to cluster. Shutting down client.", extra=self._logger_extras)
-            self._client.shutdown()
+    def clear_member_list_version(self):
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug("Resetting the member list version", extra=self._logger_extras)
 
-    def _connect_to_cluster(self):
-        current_attempt = 1
-        attempt_limit = self._config.network_config.connection_attempt_limit
-        retry_delay = self._config.network_config.connection_attempt_period
-        while current_attempt <= attempt_limit:
-            provider_addresses = get_provider_addresses(self._address_providers)
-            addresses = get_possible_addresses(provider_addresses, self.get_member_list())
+        current = self._member_list_snapshot
+        if current is not _EMPTY_SNAPSHOT:
+            self._member_list_snapshot = _MemberListSnapshot(0, current.members)
 
-            for address in addresses:
-                try:
-                    self.logger.info("Connecting to %s", address, extra=self._logger_extras)
-                    self._connect_to_address(address)
-                    return
-                except:
-                    self.logger.warning("Error connecting to %s ", address, exc_info=True, extra=self._logger_extras)
+    def handle_members_view_event(self, version, member_infos):
+        snapshot = self._create_snapshot(version, member_infos)
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug("Handling new snapshot with membership version: %s, member string: %s"
+                         % (version, self._members_string(snapshot)), extra=self._logger_extras)
 
-            if current_attempt >= attempt_limit:
-                self.logger.warning(
-                    "Unable to get alive cluster connection, attempt %d of %d",
-                    current_attempt, attempt_limit, extra=self._logger_extras)
-                break
+        current = self._member_list_snapshot
+        if version >= current.version:
+            self._apply_new_state_and_fire_events(current, snapshot)
 
-            self.logger.warning(
-                "Unable to get alive cluster connection, attempt %d of %d, trying again in %d seconds",
-                current_attempt, attempt_limit, retry_delay, extra=self._logger_extras)
-            current_attempt += 1
-            time.sleep(retry_delay)
+        if current is _EMPTY_SNAPSHOT:
+            self._initial_list_fetched.set()
 
-        error_msg = "Could not connect to any of %s after %d tries" % (addresses, attempt_limit)
-        raise HazelcastError(error_msg)
+    def _apply_new_state_and_fire_events(self, current, snapshot):
+        self._member_list_snapshot = snapshot
+        removals, additions = self._detect_membership_events(current, snapshot)
 
-    def _authenticate_manager(self, connection):
-        request = client_authentication_codec.encode_request(
-            username=self._config.group_config.name,
-            password=self._config.group_config.password,
-            uuid=self.uuid,
-            owner_uuid=self.owner_uuid,
-            is_owner_connection=True,
-            client_type=CLIENT_TYPE,
-            serialization_version=SERIALIZATION_VERSION,
-            client_hazelcast_version=CLIENT_VERSION)
+        # Removal events should be fired first
+        for removed_member in removals:
+            for _, handler in six.itervalues(self._listeners):
+                if handler:
+                    try:
+                        handler(removed_member)
+                    except:
+                        self.logger.exception("Exception in membership lister", extra=self._logger_extras)
 
-        def callback(f):
-            parameters = client_authentication_codec.decode_response(f.result())
-            if parameters["status"] != 0:  # TODO: handle other statuses
-                raise AuthenticationError("Authentication failed.")
-            connection.endpoint = parameters["address"]
-            connection.is_owner = True
-            self.owner_uuid = parameters["owner_uuid"]
-            self.uuid = parameters["uuid"]
-            connection.server_version_str = parameters.get("server_hazelcast_version", "")
-            connection.server_version = calculate_version(connection.server_version_str)
-            return connection
+        for added_member in additions:
+            for handler, _ in six.itervalues(self._listeners):
+                if handler:
+                    try:
+                        handler(added_member)
+                    except:
+                        self.logger.exception("Exception in membership lister", extra=self._logger_extras)
 
-        return self._client.invoker.invoke_on_connection(request, connection).continue_with(callback)
-
-    def _connect_to_address(self, address):
-        f = self._client.connection_manager.get_or_connect(address, self._authenticate_manager)
-        connection = f.result()
-        if not connection.is_owner:
-            self._authenticate_manager(connection).result()
-        self.owner_connection_address = connection.endpoint
-        self._init_membership_listener(connection)
-        self._client.lifecycle.fire_lifecycle_event(LIFECYCLE_STATE_CONNECTED)
-
-    def _init_membership_listener(self, connection):
-        request = client_add_membership_listener_codec.encode_request(False)
-
-        def handler(m):
-            client_add_membership_listener_codec.handle(m, self._handle_member, self._handle_member_list)
-
-        response = self._client.invoker.invoke_on_connection(request, connection, True, handler).result()
-        registration_id = client_add_membership_listener_codec.decode_response(response)["response"]
-        self.logger.debug("Registered membership listener with ID " + registration_id, extra=self._logger_extras)
-        self._initial_list_fetched.wait()
-
-    def _handle_member(self, member, event_type):
-        self.logger.debug("Got member event: %s, %s", member, event_type, extra=self._logger_extras)
-        if event_type == MEMBER_ADDED:
-            self._member_added(member)
-        elif event_type == MEMBER_REMOVED:
-            self._member_removed(member)
-
-        self._log_member_list()
-        self._client.partition_service.refresh()
-
-    def _handle_member_list(self, members):
-        self.logger.debug("Got initial member list: %s", members, extra=self._logger_extras)
-
-        for m in self.get_member_list():
+    def _detect_membership_events(self, old, new):
+        new_members = []
+        dead_members = set(six.itervalues(old.members))
+        for member in six.itervalues(new.members):
             try:
-                members.remove(m)
-            except ValueError:
-                self._member_removed(m)
-        for m in members:
-            self._member_added(m)
+                dead_members.remove(member)
+            except KeyError:
+                new_members.append(member)
 
-        self._log_member_list()
-        self._client.partition_service.refresh()
-        self._initial_list_fetched.set()
+        for dead_member in dead_members:
+            connection = self._connection_manager.get_connection(dead_member.uuid)
+            if connection:
+                connection.close(None, TargetDisconnectedError("The client has closed the connection to this member, "
+                                                               "after receiving a member left event from the cluster. "
+                                                               "%s" % connection))
 
-    def _member_added(self, member):
-        self._members[member.address] = member
-        for added, _ in list(self.listeners.values()):
-            if added:
-                try:
-                    added(member)
-                except:
-                    self.logger.exception("Exception in membership listener", extra=self._logger_extras)
+        if (len(new_members) + len(dead_members)) > 0:
+            if len(new.members) > 0:
+                self.logger.info(self._members_string(new), extra=self._logger_extras)
 
-    def _member_removed(self, member):
-        self._members.pop(member.address, None)
-        self._client.connection_manager.close_connection(member.address, TargetDisconnectedError(
-            "%s is no longer a member of the cluster" % member))
-        for _, removed in list(self.listeners.values()):
-            if removed:
-                try:
-                    removed(member)
-                except:
-                    self.logger.exception("Exception in membership listener", extra=self._logger_extras)
+        return dead_members, new_members
 
-    def _log_member_list(self):
-        self.logger.info("New member list:\n\nMembers [%d] {\n%s\n}\n", self.size(),
-                         "\n".join(["\t" + str(x) for x in self.get_member_list()]), extra=self._logger_extras)
+    @staticmethod
+    def _members_string(snapshot):
+        members = snapshot.members
+        n = len(members)
+        return "\n\nMembers [%s] {\n\t%s\n}\n" % (n, "\n\t".join(map(str, six.itervalues(members))))
 
-    def _connection_closed(self, connection, _):
-        if connection.endpoint and connection.endpoint == self.owner_connection_address \
-                and self._client.lifecycle.is_live:
-            self._client.lifecycle.fire_lifecycle_event(LIFECYCLE_STATE_DISCONNECTED)
-            self.owner_connection_address = None
-
-            # try to reconnect, on new thread
-            reconnect_thread = threading.Thread(target=self._reconnect,
-                                                name="hazelcast-cluster-reconnect-{:.4}".format(str(uuid.uuid4())))
-            reconnect_thread.daemon = True
-            reconnect_thread.start()
-
-    def _heartbeat_stopped(self, connection):
-        if connection.endpoint == self.owner_connection_address:
-            self._client.connection_manager.close_connection(connection.endpoint, TargetDisconnectedError(
-                "%s stopped heart beating." % connection))
-
-    def get_member_by_uuid(self, member_uuid):
-        """
-        Returns the member with specified member uuid.
-
-        :param member_uuid: (int), uuid of the desired member.
-        :return: (:class:`~hazelcast.core.Member`), the corresponding member.
-        """
-        for member in self.get_member_list():
-            if member.uuid == member_uuid:
-                return member
-
-    def get_member_by_address(self, address):
-        """
-        Returns the member with the specified address if it is in the
-        cluster, None otherwise.
-
-        :param address: (:class:`~hazelcast.core.Address`), address of the desired member.
-        :return: (:class:`~hazelcast.core.Member`), the corresponding member.
-        """
-        return self._members.get(address, None)
-
-    def get_members(self, selector):
-        """
-        Returns the members that satisfy the given selector.
-
-        :param selector: (:class:`~hazelcast.core.MemberSelector`), Selector to be applied to the members.
-        :return: (List), List of members.
-        """
-        members = []
-        for member in self.get_member_list():
-            if selector.select(member):
-                members.append(member)
-
-        return members
-
-    def get_member_list(self):
-        """
-        Returns all the members as a list.
-
-        :return: (List), List of members.
-        """
-        return list(self._members.values())
+    @staticmethod
+    def _create_snapshot(version, member_infos):
+        new_members = OrderedDict()
+        for member_info in member_infos:
+            new_members[member_info.uuid] = member_info
+        return _MemberListSnapshot(version, new_members)
 
 
-class RandomLoadBalancer(object):
+class AbstractLoadBalancer(object):
+    """Load balancer allows you to send operations to one of a number of endpoints (Members).
+    It is up to the implementation to use different load balancing policies.
+
+    If the client is configured with smart routing,
+    only the operations that are not key based will be routed to the endpoint
+    returned by the load balancer. If it is not, the load balancer will not be used.
     """
-    RandomLoadBalancer make the Client send operations randomly on members not to increase the load on a specific
-    member.
+    def __init__(self):
+        self._cluster_service = None
+        self._members = []
+
+    def init(self, cluster_service, config):
+        """
+        Initializes the load balancer.
+
+        :param cluster_service: (:class:`~hazelcast.cluster.ClusterService`), The cluster service to select members from
+        :param config: (:class:`~hazelcast.config.ClientConfig`), The client config
+        :return:
+        """
+        self._cluster_service = cluster_service
+        cluster_service.add_listener(self._listener, self._listener, True)
+
+    def next(self):
+        """
+        Returns the next member to route to.
+        :return: (:class:`~hazelcast.core.Member`), Returns the next member or None if no member is available
+        """
+        raise NotImplementedError("next")
+
+    def _listener(self, _):
+        self._members = self._cluster_service.get_members()
+
+
+class RoundRobinLB(AbstractLoadBalancer):
+    """A load balancer implementation that relies on using round robin
+    to a next member to send a request to.
+
+    Round robin is done based on best effort basis, the order of members for concurrent calls to
+    the next() is not guaranteed.
     """
 
-    def __init__(self, cluster):
-        self._cluster = cluster
+    def __init__(self):
+        super(RoundRobinLB, self).__init__()
+        self._idx = 0
 
-    def next_address(self):
-        try:
-            return random.choice(self._cluster.get_member_list()).address
-        except IndexError:
+    def next(self):
+        members = self._members
+        if not members:
             return None
+
+        n = len(members)
+        idx = self._idx % n
+        self._idx += 1
+        return members[idx]
+
+
+class RandomLB(AbstractLoadBalancer):
+    """A load balancer that selects a random member to route to.
+    """
+
+    def next(self):
+        members = self._members
+        if not members:
+            return None
+        idx = random.randrange(0, len(members))
+        return members[idx]
 
 
 class VectorClock(object):

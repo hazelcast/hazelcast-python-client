@@ -6,7 +6,7 @@ from hazelcast.six.moves import BaseHTTPServer
 from hazelcast import six
 from unittest import TestCase
 from hazelcast.core import Address
-from hazelcast.exception import HazelcastCertificationError
+from hazelcast.errors import HazelcastCertificationError
 from hazelcast.discovery import HazelcastCloudDiscovery
 from hazelcast.config import ClientConfig
 from hazelcast.client import HazelcastClient
@@ -133,20 +133,20 @@ class HazelcastCloudDiscoveryTest(TestCase):
 
     def test_client_with_cloud_discovery(self):
         config = ClientConfig()
-        config.network_config.cloud_config.enabled = True
-        config.network_config.cloud_config.discovery_token = TOKEN
+        config.network.cloud.enabled = True
+        config.network.cloud.discovery_token = TOKEN
 
         config.set_property(HazelcastCloudDiscovery.CLOUD_URL_BASE_PROPERTY.name, HOST + ":" + str(self.server.port))
         client = TestClient(config)
-        client._address_translator.cloud_discovery._ctx = self.ctx
-        client._address_providers[0].cloud_discovery._ctx = self.ctx
+        client._address_provider.cloud_discovery._ctx = self.ctx
 
-        private_addresses = client._address_providers[0].load_addresses()
+        private_addresses, secondaries = client._address_provider.load_addresses()
 
         six.assertCountEqual(self, list(ADDRESSES.keys()), private_addresses)
+        six.assertCountEqual(self, secondaries, [])
 
         for private_address in private_addresses:
-            translated_address = client._address_translator.translate(private_address)
+            translated_address = client._address_provider.translate(private_address)
             self.assertEqual(ADDRESSES[private_address], translated_address)
 
 

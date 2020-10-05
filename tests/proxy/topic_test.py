@@ -3,6 +3,11 @@ from tests.util import random_string, event_collector
 
 
 class TopicTest(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
+        return config
+
     def setUp(self):
         self.topic = self.client.get_topic(random_string()).blocking()
 

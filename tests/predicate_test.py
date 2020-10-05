@@ -1,12 +1,13 @@
 from unittest import TestCase, skip
 
+from hazelcast.config import IndexConfig
 from hazelcast.serialization.predicate import is_equal_to, and_, is_between, is_less_than, \
     is_less_than_or_equal_to, is_greater_than, is_greater_than_or_equal_to, or_, is_not_equal_to, not_, is_like, \
     is_ilike, matches_regex, sql, true, false, is_in, is_instance_of
 from hazelcast.serialization.api import Portable
 from tests.base import SingleMemberTestCase
 from tests.serialization.portable_test import InnerPortable, FACTORY_ID
-from tests.util import random_string, set_attr
+from tests.util import random_string
 from hazelcast import six
 from hazelcast.six.moves import range
 
@@ -77,6 +78,11 @@ class PredicateStrTest(TestCase):
 
 
 class PredicateTest(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
+        return config
+
     def setUp(self):
         self.map = self.client.get_map(random_string()).blocking()
 
@@ -219,8 +225,9 @@ class PredicateTest(SingleMemberTestCase):
 class PredicatePortableTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
         the_factory = {InnerPortable.CLASS_ID: InnerPortable}
-        config.serialization_config.portable_factories[FACTORY_ID] = the_factory
+        config.serialization.portable_factories[FACTORY_ID] = the_factory
         return config
 
     def setUp(self):
@@ -247,7 +254,6 @@ class PredicatePortableTest(SingleMemberTestCase):
             self.assertIn(k, map_keys)
 
 
-@set_attr(category=3.08)
 class NestedPredicatePortableTest(SingleMemberTestCase):
 
     class Body(Portable):
@@ -299,8 +305,9 @@ class NestedPredicatePortableTest(SingleMemberTestCase):
 
     @classmethod
     def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
         factory = {1: NestedPredicatePortableTest.Body, 2: NestedPredicatePortableTest.Limb}
-        config.serialization_config.portable_factories[FACTORY_ID] = factory
+        config.serialization.portable_factories[FACTORY_ID] = factory
         return config
 
     def setUp(self):
@@ -313,10 +320,12 @@ class NestedPredicatePortableTest(SingleMemberTestCase):
 
     def test_adding_indexes(self):
         # single-attribute index
-        self.map.add_index("name", True)
+        single_index = IndexConfig(attributes=["name"])
+        self.map.add_index(single_index)
 
         # nested-attribute index
-        self.map.add_index("limb.name", True)
+        nested_index = IndexConfig(attributes=["limb.name"])
+        self.map.add_index(nested_index)
 
     def test_single_attribute_query_portable_predicates(self):
         predicate = is_equal_to("limb.name", "hand")

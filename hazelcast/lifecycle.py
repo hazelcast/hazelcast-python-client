@@ -1,51 +1,93 @@
 import logging
 import uuid
 
-from hazelcast.util import create_git_info
+from hazelcast import six
+from hazelcast.util import create_git_info, enum
 
-LIFECYCLE_STATE_STARTING = "STARTING"
-LIFECYCLE_STATE_CONNECTED = "CONNECTED"
-LIFECYCLE_STATE_DISCONNECTED = "DISCONNECTED"
-LIFECYCLE_STATE_SHUTTING_DOWN = "SHUTTING_DOWN"
-LIFECYCLE_STATE_SHUTDOWN = "SHUTDOWN"
+LifecycleState = enum(
+    STARTING="STARTING",
+    STARTED="STARTED",
+    SHUTTING_DOWN="SHUTTING_DOWN",
+    SHUTDOWN="SHUTDOWN",
+    CONNECTED="CONNECTED",
+    DISCONNECTED="DISCONNECTED",
+)
 
 
 class LifecycleService(object):
     """
-    LifecycleService allows you to shutdown, terminate, and listen to LifecycleEvent's on HazelcastInstances.
+    Lifecycle service for the Hazelcast client. Allows to determine
+    state of the client and add or remove lifecycle listeners.
     """
-    logger = logging.getLogger("HazelcastClient.LifecycleService")
-    state = None
 
-    def __init__(self, config, logger_extras=None):
-        self._listeners = {}
-        self._logger_extras = logger_extras
+    def __init__(self, internal_lifecycle_service):
+        self._service = internal_lifecycle_service
 
-        for listener in config.lifecycle_listeners:
-            self.add_listener(listener)
-
-        self._git_info = create_git_info()
-        self.is_live = True
-        self.fire_lifecycle_event(LIFECYCLE_STATE_STARTING)
-
-    def add_listener(self, on_lifecycle_change):
+    def is_running(self):
         """
-        Add a listener object to listen for lifecycle events.
+        Checks whether or not the instance is running.
 
-        :param on_lifecycle_change: (Function), function to be called when LifeCycle state is changed.
-        :return: (str), id of the listener.
+        :return: ``True``, if the client is active and running, ``False`` otherwise.
+        :rtype: bool
         """
-        id = str(uuid.uuid4())
-        self._listeners[id] = on_lifecycle_change
-        return id
+        return self._service.running
+
+    def add_listener(self, on_state_change):
+        """
+        Adds a listener to listen for lifecycle events.
+
+        :param on_state_change: Function to be called when lifecycle state is changed.
+        :type on_state_change: function
+
+        :return: Registration id of the listener
+        :rtype: str
+        """
+        return self._service.add_listener(on_state_change)
 
     def remove_listener(self, registration_id):
         """
         Removes a lifecycle listener.
 
-        :param registration_id: (str), the id of the listener to be removed.
-        :return: (bool), ``true`` if the listener is removed successfully, ``false`` otherwise.
+        :param registration_id: The id of the listener to be removed.
+        :type registration_id: str
+
+        :return: ``True`` if the listener is removed successfully, ``False`` otherwise.
+        :rtype: bool
         """
+        self._service.remove_listener(registration_id)
+
+
+class _InternalLifecycleService(object):
+    logger = logging.getLogger("HazelcastClient.LifecycleService")
+
+    def __init__(self, client, logger_extras):
+        self._client = client
+        self._logger_extras = logger_extras
+        self.running = False
+        self._listeners = {}
+
+        for listener in client.config.lifecycle_listeners:
+            self.add_listener(listener)
+
+        self._git_info = create_git_info()
+
+    def start(self):
+        if self.running:
+            return
+
+        self.fire_lifecycle_event(LifecycleState.STARTING)
+        self.running = True
+        self.fire_lifecycle_event(LifecycleState.STARTED)
+
+    def shutdown(self):
+        self.running = False
+
+    def add_listener(self, on_state_change):
+        listener_id = str(uuid.uuid4())
+        self._listeners[listener_id] = on_state_change
+        return listener_id
+
+    def remove_listener(self, registration_id):
         try:
             self._listeners.pop(registration_id)
             return True
@@ -53,18 +95,10 @@ class LifecycleService(object):
             return False
 
     def fire_lifecycle_event(self, new_state):
-        """
-        Called when instance's state changes.
-
-        :param new_state: (Lifecycle State), the new state of the instance.
-        """
-        if new_state == LIFECYCLE_STATE_SHUTTING_DOWN:
-            self.is_live = False
-
-        self.state = new_state
         self.logger.info(self._git_info + "HazelcastClient is %s", new_state, extra=self._logger_extras)
-        for listener in list(self._listeners.values()):
-            try:
-                listener(new_state)
-            except:
-                self.logger.exception("Exception in lifecycle listener", extra=self._logger_extras)
+        for on_state_change in six.itervalues(self._listeners):
+            if on_state_change:
+                try:
+                    on_state_change(new_state)
+                except:
+                    self.logger.exception("Exception in lifecycle listener", extra=self._logger_extras)

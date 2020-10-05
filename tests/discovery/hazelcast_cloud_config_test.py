@@ -2,7 +2,7 @@ from unittest import TestCase
 from hazelcast.client import HazelcastClient, ClientProperties
 from hazelcast.config import ClientConfig, ClientCloudConfig
 from hazelcast.discovery import HazelcastCloudDiscovery
-from hazelcast.exception import HazelcastIllegalStateError
+from hazelcast.errors import IllegalStateError
 
 
 class HazelcastCloudConfigTest(TestCase):
@@ -12,7 +12,7 @@ class HazelcastCloudConfigTest(TestCase):
         self.config = ClientConfig()
 
     def test_cloud_config_defaults(self):
-        cloud_config = self.config.network_config.cloud_config
+        cloud_config = self.config.network.cloud
         self.assertEqual(False, cloud_config.enabled)
         self.assertEqual("", cloud_config.discovery_token)
 
@@ -20,9 +20,9 @@ class HazelcastCloudConfigTest(TestCase):
         cloud_config = ClientCloudConfig()
         cloud_config.enabled = True
         cloud_config.discovery_token = self.token
-        self.config.network_config.cloud_config = cloud_config
-        self.assertEqual(True, self.config.network_config.cloud_config.enabled)
-        self.assertEqual(self.token, self.config.network_config.cloud_config.discovery_token)
+        self.config.network.cloud = cloud_config
+        self.assertEqual(True, self.config.network.cloud.enabled)
+        self.assertEqual(self.token, self.config.network.cloud.discovery_token)
 
     def test_cloud_config_with_property(self):
         self.config.set_property(ClientProperties.HAZELCAST_CLOUD_DISCOVERY_TOKEN.name, self.token)
@@ -31,10 +31,11 @@ class HazelcastCloudConfigTest(TestCase):
         self.assertEqual(self.token, token)
 
     def test_cloud_config_with_property_and_client_configuration(self):
-        self.config.network_config.cloud_config.enabled = True
+        self.config.network.cloud.enabled = True
+        self.config.connection_strategy.connection_retry.cluster_connect_timeout = 2
         self.config.set_property(ClientProperties.HAZELCAST_CLOUD_DISCOVERY_TOKEN.name, self.token)
-        with self.assertRaises(HazelcastIllegalStateError):
-            client = HazelcastClient(self.config)
+        with self.assertRaises(IllegalStateError):
+            HazelcastClient(self.config)
 
     def test_custom_cloud_url(self):
         self.config.set_property(ClientProperties.HAZELCAST_CLOUD_DISCOVERY_TOKEN.name, self.token)

@@ -19,6 +19,8 @@ class MapTest(SingleMemberTestCase):
 
     @classmethod
     def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
+
         near_cache_config = NearCacheConfig(random_string())
         # near_cache_config.time_to_live_seconds = 1000
         # near_cache_config.max_idle_seconds = 1000
@@ -26,7 +28,7 @@ class MapTest(SingleMemberTestCase):
         return super(MapTest, cls).configure_client(config)
 
     def setUp(self):
-        name = list(self.client.config.near_cache_configs.values())[0].name
+        name = list(self.client.config.near_caches.values())[0].name
         self.map = self.client.get_map(name).blocking()
 
     def tearDown(self):

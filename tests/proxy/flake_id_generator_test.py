@@ -4,13 +4,13 @@ import random
 
 from tests.base import SingleMemberTestCase, HazelcastTestCase
 from tests.hzrc.ttypes import Lang
-from tests.util import configure_logging, set_attr
-from hazelcast.config import ClientConfig, FlakeIdGeneratorConfig, MAXIMUM_PREFETCH_COUNT
+from tests.util import configure_logging
+from hazelcast.config import ClientConfig, FlakeIdGeneratorConfig, _MAXIMUM_PREFETCH_COUNT
 from hazelcast.client import HazelcastClient
 from hazelcast.util import to_millis
 from hazelcast.proxy.flake_id_generator import _IdBatch, _Block, _AutoBatcher
 from hazelcast.future import ImmediateFuture
-from hazelcast.exception import HazelcastError
+from hazelcast.errors import HazelcastError
 
 FLAKE_ID_STEP = 1 << 16
 SHORT_TERM_BATCH_SIZE = 3
@@ -20,7 +20,6 @@ NUM_IDS_IN_THREADS = 100000
 AUTO_BATCHER_BASE = 10
 
 
-@set_attr(category=3.10)
 class FlakeIdGeneratorConfigTest(HazelcastTestCase):
     def setUp(self):
         self.flake_id_config = FlakeIdGeneratorConfig()
@@ -48,13 +47,13 @@ class FlakeIdGeneratorConfigTest(HazelcastTestCase):
 
     def test_prefetch_count_max_size(self):
         with self.assertRaises(ValueError):
-            self.flake_id_config.prefetch_count = MAXIMUM_PREFETCH_COUNT + 1
+            self.flake_id_config.prefetch_count = _MAXIMUM_PREFETCH_COUNT + 1
 
 
-@set_attr(category=3.10)
 class FlakeIdGeneratorTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
+        config.cluster_name = cls.cluster.id
         flake_id_config = FlakeIdGeneratorConfig("short-term")
         flake_id_config.prefetch_count = SHORT_TERM_BATCH_SIZE
         flake_id_config.prefetch_validity_in_millis = to_millis(SHORT_TERM_VALIDITY_SECONDS)
@@ -137,7 +136,6 @@ class FlakeIdGeneratorTest(SingleMemberTestCase):
         flake_id_generator.destroy()
 
 
-@set_attr(category=3.10)
 class FlakeIdGeneratorDataStructuresTest(HazelcastTestCase):
     def test_id_batch_as_iterator(self):
         base = 3
@@ -231,7 +229,6 @@ class FlakeIdGeneratorDataStructuresTest(HazelcastTestCase):
         return ImmediateFuture(_IdBatch(AUTO_BATCHER_BASE, FLAKE_ID_STEP, batch_size))
 
 
-@set_attr(category=3.10)
 class FlakeIdGeneratorIdOutOfRangeTest(HazelcastTestCase):
     @classmethod
     def setUpClass(cls):
@@ -251,7 +248,8 @@ class FlakeIdGeneratorIdOutOfRangeTest(HazelcastTestCase):
         self.assertTrueEventually(lambda: response.success and response.result is not None)
 
         config = ClientConfig()
-        config.network_config.smart_routing = False
+        config.cluster_name = self.cluster.id
+        config.network.smart_routing = False
         client = HazelcastClient(config)
 
         generator = client.get_flake_id_generator("test").blocking()
@@ -269,7 +267,9 @@ class FlakeIdGeneratorIdOutOfRangeTest(HazelcastTestCase):
         response2 = self._assign_out_of_range_node_id(self.cluster.id, 1)
         self.assertTrueEventually(lambda: response2.success and response2.result is not None)
 
-        client = HazelcastClient()
+        config = ClientConfig()
+        config.cluster_name = self.cluster.id
+        client = HazelcastClient(config)
         generator = client.get_flake_id_generator("test").blocking()
 
         with self.assertRaises(HazelcastError):

@@ -23,18 +23,17 @@ class MessagePrinter(Portable):
         return self.CLASS_ID
 
 
-if __name__ == "__main__":
-    # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
-    hz = hazelcast.HazelcastClient()
-    # Get the Distributed Executor Service
-    ex = hz.get_executor("my-distributed-executor")
-    # Get the an Hazelcast Cluster Member
-    member = hz.cluster.get_member_list()[0]
-    # Submit the MessagePrinter Runnable to the first Hazelcast Cluster Member
-    ex.execute_on_member(member, MessagePrinter("message to very first member of the cluster"))
-    # Submit the MessagePrinter Runnable to all Hazelcast Cluster Members
-    ex.execute_on_all_members(MessagePrinter("message to all members in the cluster"))
-    # Submit the MessagePrinter Runnable to the Hazelcast Cluster Member owning the key called "key"
-    ex.execute_on_key_owner("key", MessagePrinter("message to the member that owns the following key"))
-    # Shutdown this Hazelcast Client
-    hz.shutdown()
+# Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
+hz = hazelcast.HazelcastClient()
+# Get the Distributed Executor Service
+ex = hz.get_executor("my-distributed-executor")
+# Get the an Hazelcast Cluster Member
+member = hz.cluster_service.get_members()[0]
+# Submit the MessagePrinter Runnable to the first Hazelcast Cluster Member
+ex.execute_on_member(member, MessagePrinter("message to very first member of the cluster"))
+# Submit the MessagePrinter Runnable to all Hazelcast Cluster Members
+ex.execute_on_all_members(MessagePrinter("message to all members in the cluster"))
+# Submit the MessagePrinter Runnable to the Hazelcast Cluster Member owning the key called "key"
+ex.execute_on_key_owner("key", MessagePrinter("message to the member that owns the following key"))
+# Shutdown this Hazelcast Client
+hz.shutdown()

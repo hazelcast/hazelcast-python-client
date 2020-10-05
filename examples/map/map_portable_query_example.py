@@ -28,37 +28,37 @@ class Employee(Portable):
         return self.CLASS_ID
 
     def __str__(self):
-        return "Employee[ name:{} age:{} ]".format(self.name, self.age)
+        return "Employee(name:%s, age:%s)" % (self.name, self.age)
 
     def __eq__(self, other):
-        return type(self) == type(other) and self.name == other.name and self.age == other.age
+        return isinstance(other, Employee) and self.name == other.name and self.age == other.age
 
 
-if __name__ == '__main__':
-    config = hazelcast.ClientConfig()
+config = hazelcast.ClientConfig()
 
-    config.serialization_config.portable_factories[Employee.FACTORY_ID] = \
-        {Employee.CLASS_ID: Employee}
+config.serialization.portable_factories[Employee.FACTORY_ID] = {Employee.CLASS_ID: Employee}
 
-    client = hazelcast.HazelcastClient(config)
+client = hazelcast.HazelcastClient(config)
 
-    my_map = client.get_map("employee-map")
-    #
-    my_map.put(0, Employee("Jack", 28))
-    my_map.put(1, Employee("Jane", 29))
-    my_map.put(2, Employee("Joe", 30))
+my_map = client.get_map("employee-map")
 
-    print("Map Size: {}".format(my_map.size().result()))
+my_map.put(0, Employee("Jack", 28))
+my_map.put(1, Employee("Jane", 29))
+my_map.put(2, Employee("Joe", 30))
 
-    predicate = sql("age <= 29")
+print("Map Size: {}".format(my_map.size().result()))
 
-    def values_callback(f):
-        result_set = f.result()
-        print("Query Result Size: {}".format(len(result_set)))
-        for value in result_set:
-            print("value: {}".format(value))
+predicate = sql("age <= 29")
 
-    my_map.values(predicate).add_done_callback(values_callback)
 
-    time.sleep(10)
-    client.shutdown()
+def values_callback(f):
+    result_set = f.result()
+    print("Query Result Size: {}".format(len(result_set)))
+    for value in result_set:
+        print("value: {}".format(value))
+
+
+my_map.values(predicate).add_done_callback(values_callback)
+
+time.sleep(3)
+client.shutdown()

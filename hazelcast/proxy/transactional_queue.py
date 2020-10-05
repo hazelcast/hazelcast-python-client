@@ -1,7 +1,7 @@
 from hazelcast.protocol.codec import transactional_queue_offer_codec, transactional_queue_peek_codec, \
     transactional_queue_poll_codec, transactional_queue_size_codec, transactional_queue_take_codec
 from hazelcast.proxy.base import TransactionalProxy
-from hazelcast.util import check_not_none, to_millis
+from hazelcast.util import check_not_none, to_millis, thread_id
 
 
 class TransactionalQueue(TransactionalProxy):
@@ -17,8 +17,11 @@ class TransactionalQueue(TransactionalProxy):
         :return: (bool), ``true`` if the element was added to this queue, ``false`` otherwise.
         """
         check_not_none(item, "item can't be none")
-        return self._encode_invoke(transactional_queue_offer_codec, item=self._to_data(item),
-                                   timeout=to_millis(timeout))
+
+        item_data = self._to_data(item)
+        request = transactional_queue_offer_codec.encode_request(self.name, self.transaction.id, thread_id(),
+                                                                 item_data, to_millis(timeout))
+        return self._invoke(request, transactional_queue_offer_codec.decode_response)
 
     def take(self):
         """
@@ -26,27 +29,41 @@ class TransactionalQueue(TransactionalProxy):
 
         :return: (object), the head of this queue.
         """
-        return self._encode_invoke(transactional_queue_take_codec)
+        def handler(message):
+            return self._to_object(transactional_queue_take_codec.decode_response(message))
+
+        request = transactional_queue_take_codec.encode_request(self.name, self.transaction.id, thread_id())
+        return self._invoke(request, handler)
 
     def poll(self, timeout=0):
         """
         Transactional implementation of :func:`Queue.poll(timeout) <hazelcast.proxy.queue.Queue.poll>`
 
         :param timeout: (long), maximum time in seconds to wait for addition (optional).
-        :return: (object), the head of this queue, or ``None`` if this queue is empty or specified timeout elapses before an
-        item is added to the queue.
+        :return: (object), the head of this queue, or ``None`` if this queue is empty or specified timeout elapses
+            before an item is added to the queue.
         """
-        return self._encode_invoke(transactional_queue_poll_codec, timeout=to_millis(timeout))
+        def handler(message):
+            return self._to_object(transactional_queue_poll_codec.decode_response(message))
+
+        request = transactional_queue_poll_codec.encode_request(self.name, self.transaction.id, thread_id(),
+                                                                to_millis(timeout))
+        return self._invoke(request, handler)
 
     def peek(self, timeout=0):
         """
         Transactional implementation of :func:`Queue.peek(timeout) <hazelcast.proxy.queue.Queue.peek>`
 
         :param timeout: (long), maximum time in seconds to wait for addition (optional).
-        :return: (object), the head of this queue, or ``None`` if this queue is empty or specified timeout elapses before an
-        item is added to the queue.
+        :return: (object), the head of this queue, or ``None`` if this queue is empty or specified timeout elapses
+            before an item is added to the queue.
         """
-        return self._encode_invoke(transactional_queue_peek_codec, timeout=to_millis(timeout))
+        def handler(message):
+            return self._to_object(transactional_queue_peek_codec.decode_response(message))
+
+        request = transactional_queue_peek_codec.encode_request(self.name, self.transaction.id, thread_id(),
+                                                                to_millis(timeout))
+        return self._invoke(request, handler)
 
     def size(self):
         """
@@ -54,4 +71,5 @@ class TransactionalQueue(TransactionalProxy):
 
         :return: (int), size of the queue.
         """
-        return self._encode_invoke(transactional_queue_size_codec)
+        request = transactional_queue_size_codec.encode_request(self.name, self.transaction.id, thread_id())
+        return self._invoke(request, transactional_queue_size_codec.decode_response)

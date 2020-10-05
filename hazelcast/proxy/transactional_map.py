@@ -5,13 +5,14 @@ from hazelcast.protocol.codec import transactional_map_contains_key_codec, trans
     transactional_map_replace_codec, transactional_map_replace_if_same_codec, transactional_map_set_codec, \
     transactional_map_size_codec, transactional_map_values_codec, transactional_map_values_with_predicate_codec
 from hazelcast.proxy.base import TransactionalProxy
-from hazelcast.util import check_not_none, to_millis
+from hazelcast.util import check_not_none, to_millis, thread_id, ImmutableLazyDataList
 
 
 class TransactionalMap(TransactionalProxy):
     """
     Transactional implementation of :class:`~hazelcast.proxy.map.Map`.
     """
+
     def contains_key(self, key):
         """
         Transactional implementation of :func:`Map.contains_key(key) <hazelcast.proxy.map.Map.contains_key>`
@@ -20,7 +21,10 @@ class TransactionalMap(TransactionalProxy):
         :return: (bool), ``true`` if this map contains an entry for the specified key, ``false`` otherwise.
         """
         check_not_none(key, "key can't be none")
-        return self._encode_invoke(transactional_map_contains_key_codec, key=self._to_data(key))
+        key_data = self._to_data(key)
+        request = transactional_map_contains_key_codec.encode_request(self.name, self.transaction.id, thread_id(),
+                                                                      key_data)
+        return self._invoke(request, transactional_map_contains_key_codec.decode_response)
 
     def get(self, key):
         """
@@ -30,7 +34,13 @@ class TransactionalMap(TransactionalProxy):
         :return: (object), the value for the specified key.
         """
         check_not_none(key, "key can't be none")
-        return self._encode_invoke(transactional_map_get_codec, key=self._to_data(key))
+
+        def handler(message):
+            return self._to_object(transactional_map_get_codec.decode_response(message))
+
+        key_data = self._to_data(key)
+        request = transactional_map_get_codec.encode_request(self.name, self.transaction.id, thread_id(), key_data)
+        return self._invoke(request, handler)
 
     def get_for_update(self, key):
         """
@@ -44,7 +54,14 @@ class TransactionalMap(TransactionalProxy):
             :func:`Map.get(key) <hazelcast.proxy.map.Map.get>`
         """
         check_not_none(key, "key can't be none")
-        return self._encode_invoke(transactional_map_get_for_update_codec, key=self._to_data(key))
+
+        def handler(message):
+            return self._to_object(transactional_map_get_for_update_codec.decode_response(message))
+
+        key_data = self._to_data(key)
+        request = transactional_map_get_for_update_codec.encode_request(self.name, self.transaction.id, thread_id(),
+                                                                        key_data)
+        return self._invoke(request, handler)
 
     def size(self):
         """
@@ -52,7 +69,8 @@ class TransactionalMap(TransactionalProxy):
 
         :return: (int), number of entries in this map.
         """
-        return self._encode_invoke(transactional_map_size_codec)
+        request = transactional_map_size_codec.encode_request(self.name, self.transaction.id, thread_id())
+        return self._invoke(request, transactional_map_size_codec.decode_response)
 
     def is_empty(self):
         """
@@ -60,8 +78,8 @@ class TransactionalMap(TransactionalProxy):
 
         :return: (bool), ``true`` if this map contains no key-value mappings, ``false`` otherwise.
         """
-
-        return self._encode_invoke(transactional_map_is_empty_codec)
+        request = transactional_map_is_empty_codec.encode_request(self.name, self.transaction.id, thread_id())
+        return self._invoke(request, transactional_map_is_empty_codec.decode_response)
 
     def put(self, key, value, ttl=-1):
         """
@@ -77,8 +95,15 @@ class TransactionalMap(TransactionalProxy):
         """
         check_not_none(key, "key can't be none")
         check_not_none(value, "value can't be none")
-        return self._encode_invoke(transactional_map_put_codec, key=self._to_data(key),
-                                   value=self._to_data(value), ttl=to_millis(ttl))
+
+        def handler(message):
+            return self._to_object(transactional_map_put_codec.decode_response(message))
+
+        key_data = self._to_data(key)
+        value_data = self._to_data(value)
+        request = transactional_map_put_codec.encode_request(self.name, self.transaction.id, thread_id(), key_data,
+                                                             value_data, to_millis(ttl))
+        return self._invoke(request, handler)
 
     def put_if_absent(self, key, value):
         """
@@ -90,13 +115,19 @@ class TransactionalMap(TransactionalProxy):
 
         :param key: (object), key of the entry.
         :param value: (object), value of the entry.
-        :param ttl:  (int), maximum time in seconds for this entry to stay in the map (optional).
         :return: (object), old value of the entry.
         """
         check_not_none(key, "key can't be none")
         check_not_none(value, "value can't be none")
-        return self._encode_invoke(transactional_map_put_if_absent_codec, key=self._to_data(key),
-                                   value=self._to_data(value))
+
+        def handler(message):
+            return self._to_object(transactional_map_put_if_absent_codec.decode_response(message))
+
+        key_data = self._to_data(key)
+        value_data = self._to_data(value)
+        request = transactional_map_put_if_absent_codec.encode_request(self.name, self.transaction.id, thread_id(),
+                                                                       key_data, value_data)
+        return self._invoke(request, handler)
 
     def set(self, key, value):
         """
@@ -110,8 +141,12 @@ class TransactionalMap(TransactionalProxy):
         """
         check_not_none(key, "key can't be none")
         check_not_none(value, "value can't be none")
-        return self._encode_invoke(transactional_map_set_codec, key=self._to_data(key),
-                                   value=self._to_data(value))
+
+        key_data = self._to_data(key)
+        value_data = self._to_data(value)
+        request = transactional_map_set_codec.encode_request(self.name, self.transaction.id,
+                                                             thread_id(), key_data, value_data)
+        return self._invoke(request)
 
     def replace(self, key, value):
         """
@@ -126,8 +161,15 @@ class TransactionalMap(TransactionalProxy):
         """
         check_not_none(key, "key can't be none")
         check_not_none(value, "value can't be none")
-        return self._encode_invoke(transactional_map_replace_codec, key=self._to_data(key),
-                                   value=self._to_data(value))
+
+        def handler(message):
+            return self._to_object(transactional_map_replace_codec.decode_response(message))
+
+        key_data = self._to_data(key)
+        value_data = self._to_data(value)
+        request = transactional_map_replace_codec.encode_request(self.name, self.transaction.id, thread_id(),
+                                                                 key_data, value_data)
+        return self._invoke(request, handler)
 
     def replace_if_same(self, key, old_value, new_value):
         """
@@ -145,8 +187,13 @@ class TransactionalMap(TransactionalProxy):
         check_not_none(key, "key can't be none")
         check_not_none(old_value, "old_value can't be none")
         check_not_none(new_value, "new_value can't be none")
-        return self._encode_invoke(transactional_map_replace_if_same_codec, key=self._to_data(key),
-                                   old_value=self._to_data(old_value), new_value=self._to_data(new_value))
+
+        key_data = self._to_data(key)
+        old_value_data = self._to_data(old_value)
+        new_value_data = self._to_data(new_value)
+        request = transactional_map_replace_if_same_codec.encode_request(self.name, self.transaction.id, thread_id(),
+                                                                         key_data, old_value_data, new_value_data)
+        return self._invoke(request, transactional_map_replace_if_same_codec.decode_response)
 
     def remove(self, key):
         """
@@ -159,7 +206,13 @@ class TransactionalMap(TransactionalProxy):
         :return: (object), the previous value associated with key, or ``None`` if there was no mapping for key.
         """
         check_not_none(key, "key can't be none")
-        return self._encode_invoke(transactional_map_remove_codec, key=self._to_data(key))
+
+        def handler(message):
+            return self._to_object(transactional_map_remove_codec.decode_response(message))
+
+        key_data = self._to_data(key)
+        request = transactional_map_remove_codec.encode_request(self.name, self.transaction.id, thread_id(), key_data)
+        return self._invoke(request, handler)
 
     def remove_if_same(self, key, value):
         """
@@ -176,8 +229,12 @@ class TransactionalMap(TransactionalProxy):
 
         check_not_none(key, "key can't be none")
         check_not_none(value, "value can't be none")
-        return self._encode_invoke(transactional_map_remove_if_same_codec, key=self._to_data(key),
-                                   value=self._to_data(value))
+
+        key_data = self._to_data(key)
+        value_data = self._to_data(value)
+        request = transactional_map_remove_if_same_codec.encode_request(self.name, self.transaction.id, thread_id(),
+                                                                        key_data, value_data)
+        return self._invoke(request, transactional_map_remove_if_same_codec.decode_response)
 
     def delete(self, key):
         """
@@ -189,7 +246,10 @@ class TransactionalMap(TransactionalProxy):
         :param key: (object), key of the mapping to be deleted.
         """
         check_not_none(key, "key can't be none")
-        return self._encode_invoke(transactional_map_delete_codec, key=self._to_data(key))
+
+        key_data = self._to_data(key)
+        request = transactional_map_delete_codec.encode_request(self.name, self.transaction.id, thread_id(), key_data)
+        return self._invoke(request)
 
     def key_set(self, predicate=None):
         """
@@ -201,11 +261,21 @@ class TransactionalMap(TransactionalProxy):
         .. seealso::
             :class:`~hazelcast.serialization.predicate.Predicate` for more info about predicates.
         """
-
         if predicate:
-            return self._encode_invoke(transactional_map_key_set_with_predicate_codec,
-                                       predicate=self._to_data(predicate))
-        return self._encode_invoke(transactional_map_key_set_codec)
+            def handler(message):
+                return ImmutableLazyDataList(transactional_map_key_set_with_predicate_codec.decode_response(message),
+                                             self._to_object)
+
+            predicate_data = self._to_data(predicate)
+            request = transactional_map_key_set_with_predicate_codec.encode_request(self.name, self.transaction.id,
+                                                                                    thread_id(), predicate_data)
+        else:
+            def handler(message):
+                return ImmutableLazyDataList(transactional_map_key_set_codec.decode_response(message), self._to_object)
+
+            request = transactional_map_key_set_codec.encode_request(self.name, self.transaction.id, thread_id())
+
+        return self._invoke(request, handler)
 
     def values(self, predicate=None):
         """
@@ -218,6 +288,17 @@ class TransactionalMap(TransactionalProxy):
             :class:`~hazelcast.serialization.predicate.Predicate` for more info about predicates.
         """
         if predicate:
-            return self._encode_invoke(transactional_map_values_with_predicate_codec,
-                                       predicate=self._to_data(predicate))
-        return self._encode_invoke(transactional_map_values_codec)
+            def handler(message):
+                return ImmutableLazyDataList(transactional_map_values_with_predicate_codec.decode_response(message),
+                                             self._to_object)
+
+            predicate_data = self._to_data(predicate)
+            request = transactional_map_values_with_predicate_codec.encode_request(self.name, self.transaction.id,
+                                                                                   thread_id(), predicate_data)
+        else:
+            def handler(message):
+                return ImmutableLazyDataList(transactional_map_values_codec.decode_response(message), self._to_object)
+
+            request = transactional_map_values_codec.encode_request(self.name, self.transaction.id, thread_id())
+
+        return self._invoke(request, handler)

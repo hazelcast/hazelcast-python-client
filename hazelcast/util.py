@@ -1,12 +1,9 @@
-import itertools
 import threading
 import time
 import logging
-import hazelcast
 from collections import Sequence, Iterable
 
 from hazelcast import six
-from hazelcast.six.moves import range
 from hazelcast.version import GIT_COMMIT_ID, GIT_COMMIT_DATE, CLIENT_VERSION
 
 DEFAULT_ADDRESS = "127.0.0.1"
@@ -132,7 +129,8 @@ class AtomicInteger(object):
     AtomicInteger is an Integer which can work atomically.
     """
     def __init__(self, initial=0):
-        self.count = itertools.count(start=initial)
+        self._mux = threading.RLock()
+        self._counter = initial
 
     def get_and_increment(self):
         """
@@ -140,14 +138,10 @@ class AtomicInteger(object):
 
         :return: (int), current value of AtomicInteger.
         """
-        return next(self.count)
-
-    def set(self, value):
-        """
-        Sets the value of this AtomicInteger.
-        :param value: (int), the new value of AtomicInteger.
-        """
-        self.count = itertools.count(start=value)
+        with self._mux:
+            res = self._counter
+            self._counter += 1
+            return res
 
 
 def enum(**enums):
@@ -158,25 +152,6 @@ def enum(**enums):
     """
     enums['reverse'] = dict((value, key) for key, value in six.iteritems(enums))
     return type('Enum', (), enums)
-
-
-def _parse_address(address):
-    if ":" in address:
-        host, port = address.split(":")
-        return [hazelcast.core.Address(host, int(port))]
-    return [hazelcast.core.Address(address, p) for p in range(DEFAULT_PORT, DEFAULT_PORT + 3)]
-
-
-def get_possible_addresses(addresses=[], member_list=[]):
-    return set((addresses + [m.address for m in member_list])) or _parse_address(DEFAULT_ADDRESS)
-
-
-def get_provider_addresses(providers=[]):
-    return list(itertools.chain(*[p.load_addresses() for p in providers]))
-
-
-def parse_addresses(addresses=[]):
-    return list(itertools.chain(*[_parse_address(a) for a in addresses]))
 
 
 class ImmutableLazyDataList(Sequence):
@@ -326,9 +301,9 @@ class VersionMessageFilter(logging.Filter):
 class HazelcastFormatter(logging.Formatter):
     def format(self, record):
         client_name = getattr(record, "client_name", None)
-        group_name = getattr(record, "group_name", None)
-        if client_name and group_name:
-            record.msg = "[" + group_name + "] [" + client_name + "] " + record.msg
+        cluster_name = getattr(record, "cluster_name", None)
+        if client_name and cluster_name:
+            record.msg = "[" + cluster_name + "] [" + client_name + "] " + record.msg
         return super(HazelcastFormatter, self).format(record)
 
 

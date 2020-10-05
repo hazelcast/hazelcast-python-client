@@ -33,17 +33,16 @@ class CustomSerializer(StreamSerializer):
         pass
 
 
-if __name__ == "__main__":
-    config = hazelcast.ClientConfig()
-    config.serialization_config.set_custom_serializer(type(TimeOfDay), CustomSerializer)
+config = hazelcast.ClientConfig()
+config.serialization.set_custom_serializer(type(TimeOfDay), CustomSerializer)
 
-    client = hazelcast.HazelcastClient(config)
+client = hazelcast.HazelcastClient(config)
 
-    my_map = client.get_map("map")
-    time_of_day = TimeOfDay(13, 36, 59)
-    my_map.put("time", time_of_day)
+my_map = client.get_map("map")
+time_of_day = TimeOfDay(13, 36, 59)
+my_map.put("time", time_of_day)
 
-    time = my_map.get("time").result()
-    print("Time is {}:{}:{}".format(time.hour, time.minute, time.second))
+time = my_map.get("time").result()
+print("Time is {}:{}:{}".format(time.hour, time.minute, time.second))
 
-    client.shutdown()
+client.shutdown()

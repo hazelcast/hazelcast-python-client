@@ -1,42 +1,39 @@
 from hazelcast.serialization.bits import *
-from hazelcast.protocol.client_message import ClientMessage
-from hazelcast.protocol.codec.client_message_type import *
-from hazelcast.protocol.event_response_const import *
+from hazelcast.protocol.builtin import FixSizedTypesCodec
+from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer, RESPONSE_HEADER_SIZE, EVENT_HEADER_SIZE
+from hazelcast.protocol.builtin import StringCodec
 
-REQUEST_TYPE = CLIENT_ADDDISTRIBUTEDOBJECTLISTENER
-RESPONSE_TYPE = 104
-RETRYABLE = False
+# hex: 0x000900
+_REQUEST_MESSAGE_TYPE = 2304
+# hex: 0x000901
+_RESPONSE_MESSAGE_TYPE = 2305
+# hex: 0x000902
+_EVENT_DISTRIBUTED_OBJECT_MESSAGE_TYPE = 2306
 
-
-def calculate_size(local_only):
-    """ Calculates the request payload size"""
-    data_size = 0
-    data_size += BOOLEAN_SIZE_IN_BYTES
-    return data_size
+_REQUEST_LOCAL_ONLY_OFFSET = REQUEST_HEADER_SIZE
+_REQUEST_INITIAL_FRAME_SIZE = _REQUEST_LOCAL_ONLY_OFFSET + BOOLEAN_SIZE_IN_BYTES
+_RESPONSE_RESPONSE_OFFSET = RESPONSE_HEADER_SIZE
+_EVENT_DISTRIBUTED_OBJECT_SOURCE_OFFSET = EVENT_HEADER_SIZE
 
 
 def encode_request(local_only):
-    """ Encode request into client_message"""
-    client_message = ClientMessage(payload_size=calculate_size(local_only))
-    client_message.set_message_type(REQUEST_TYPE)
-    client_message.set_retryable(RETRYABLE)
-    client_message.append_bool(local_only)
-    client_message.update_frame_length()
-    return client_message
+    buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE, True)
+    FixSizedTypesCodec.encode_boolean(buf, _REQUEST_LOCAL_ONLY_OFFSET, local_only)
+    return OutboundMessage(buf, False)
 
 
-def decode_response(client_message, to_object=None):
-    """ Decode response from client message"""
-    parameters = dict(response=None)
-    parameters['response'] = client_message.read_str()
-    return parameters
+def decode_response(msg):
+    initial_frame = msg.next_frame()
+    return FixSizedTypesCodec.decode_uuid(initial_frame.buf, _RESPONSE_RESPONSE_OFFSET)
 
 
-def handle(client_message, handle_event_distributed_object=None, to_object=None):
-    """ Event handler """
-    message_type = client_message.get_message_type()
-    if message_type == EVENT_DISTRIBUTEDOBJECT and handle_event_distributed_object is not None:
-        name = client_message.read_str()
-        service_name = client_message.read_str()
-        event_type = client_message.read_str()
-        handle_event_distributed_object(name=name, service_name=service_name, event_type=event_type)
+def handle(msg, handle_distributed_object_event=None):
+    message_type = msg.get_message_type()
+    if message_type == _EVENT_DISTRIBUTED_OBJECT_MESSAGE_TYPE and handle_distributed_object_event is not None:
+        initial_frame = msg.next_frame()
+        source = FixSizedTypesCodec.decode_uuid(initial_frame.buf, _EVENT_DISTRIBUTED_OBJECT_SOURCE_OFFSET)
+        name = StringCodec.decode(msg)
+        service_name = StringCodec.decode(msg)
+        event_type = StringCodec.decode(msg)
+        handle_distributed_object_event(name, service_name, event_type, source)
+        return

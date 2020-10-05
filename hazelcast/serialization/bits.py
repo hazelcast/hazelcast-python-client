@@ -1,3 +1,5 @@
+import struct
+
 """
 Constants
 """
@@ -9,24 +11,27 @@ INT_SIZE_IN_BYTES = 4
 FLOAT_SIZE_IN_BYTES = 4
 LONG_SIZE_IN_BYTES = 8
 DOUBLE_SIZE_IN_BYTES = 8
+UUID_SIZE_IN_BYTES = 17  # bool + long + long
 
-FMT_LE_INT = "<i"
-FMT_LE_INT8 = "<b"
-FMT_LE_UINT8 = "<B"
-FMT_LE_INT16 = "<h"
-FMT_LE_UINT16 = "<H"
-FMT_LE_LONG = "<q"
-FMT_LE_FLOAT = "<f"
-FMT_LE_DOUBLE = "<d"
+LE_INT = struct.Struct("<i")
+LE_UINT = struct.Struct("<I")
+LE_INT8 = struct.Struct("<b")
+LE_UINT8 = struct.Struct("<B")
+LE_INT16 = struct.Struct("<h")
+LE_UINT16 = struct.Struct("<H")
+LE_LONG = struct.Struct("<q")
+LE_ULONG = struct.Struct("<Q")
+LE_FLOAT = struct.Struct("<f")
+LE_DOUBLE = struct.Struct("<d")
 
-FMT_BE_INT = ">i"
-FMT_BE_INT8 = ">b"
-FMT_BE_UINT8 = ">B"
-FMT_BE_INT16 = ">h"
-FMT_BE_UINT16 = ">H"
-FMT_BE_LONG = ">q"
-FMT_BE_FLOAT = ">f"
-FMT_BE_DOUBLE = ">d"
+BE_INT = struct.Struct(">i")
+BE_INT8 = struct.Struct(">b")
+BE_UINT8 = struct.Struct(">B")
+BE_INT16 = struct.Struct(">h")
+BE_UINT16 = struct.Struct(">H")
+BE_LONG = struct.Struct(">q")
+BE_FLOAT = struct.Struct(">f")
+BE_DOUBLE = struct.Struct(">d")
 
 BIG_ENDIAN = 2
 LITTLE_ENDIAN = 1

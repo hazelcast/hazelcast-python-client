@@ -4,19 +4,10 @@ Hazelcast Client Configuration module contains configuration classes and various
 """
 import logging
 import os
+import re
 
 from hazelcast.serialization.api import StreamSerializer
-from hazelcast.util import validate_type, validate_serializer, enum, TimeUnit
-
-DEFAULT_GROUP_NAME = "dev"
-"""
-Default group name of the connected Hazelcast cluster
-"""
-
-DEFAULT_GROUP_PASSWORD = "dev-pass"
-"""
-Default password of connected Hazelcast cluster
-"""
+from hazelcast.util import validate_type, validate_serializer, enum, TimeUnit, check_not_none
 
 INTEGER_TYPE = enum(VAR=0, BYTE=1, SHORT=2, INT=3, LONG=4, BIG_INT=5)
 """
@@ -28,14 +19,13 @@ Integer type options that can be used by serialization service.
 * INT: Python int will be interpreted as a four byte int
 * LONG: Python int will be interpreted as an eight byte int
 * BIG_INT: Python int will be interpreted as Java BigInteger. This option can handle python long values with "bit_length > 64"
-
 """
 
 EVICTION_POLICY = enum(NONE=0, LRU=1, LFU=2, RANDOM=3)
 """
 Near Cache eviction policy options
 
-* NONE : No evcition
+* NONE : No eviction
 * LRU : Least Recently Used items will be evicted
 * LFU : Least frequently Used items will be evicted
 * RANDOM : Items will be evicted randomly
@@ -46,9 +36,8 @@ IN_MEMORY_FORMAT = enum(BINARY=0, OBJECT=1)
 """
 Near Cache in memory format of the values.
 
-* BINARY : Binary format, hazelcast serializated bytearray format
+* BINARY : Binary format, hazelcast serialized bytearray format
 * OBJECT : The actual objects used
-
 """
 
 PROTOCOL = enum(SSLv2=0, SSLv3=1, SSL=2, TLSv1=3, TLSv1_1=4, TLSv1_2=5, TLSv1_3=6, TLS=7)
@@ -67,11 +56,41 @@ SSL protocol options.
 * TLSv1_3 requires at least Python 2.7.15 or Python 3.7 build with OpenSSL 1.1.1+
 """
 
-DEFAULT_MAX_ENTRY_COUNT = 10000
-DEFAULT_SAMPLING_COUNT = 8
-DEFAULT_SAMPLING_POOL_SIZE = 16
+QUERY_CONSTANTS = enum(KEY_ATTRIBUTE_NAME="__key", THIS_ATTRIBUTE_NAME="this")
+"""
+Contains constants for Query.
+* KEY_ATTRIBUTE_NAME  : Attribute name of the key.
+* THIS_ATTRIBUTE_NAME : Attribute name of the "this"
+"""
 
-MAXIMUM_PREFETCH_COUNT = 100000
+UNIQUE_KEY_TRANSFORMATION = enum(OBJECT=0, LONG=1, RAW=2)
+"""
+Defines an assortment of transformations which can be applied to 
+BitmapIndexOptions#getUniqueKey() unique key values.
+* OBJECT : Extracted unique key value is interpreted as an object value. 
+    Non-negative unique ID is assigned to every distinct object value.
+* LONG   : Extracted unique key value is interpreted as a whole integer value of byte, short, int or long type. 
+    The extracted value is upcasted to long (if necessary) and unique non-negative ID is assigned 
+    to every distinct value.
+* RAW    : Extracted unique key value is interpreted as a whole integer value of byte, short, int or long type. 
+    The extracted value is upcasted to long (if necessary) and the resulting value is used directly as an ID.
+"""
+
+INDEX_TYPE = enum(SORTED=0, HASH=1, BITMAP=2)
+"""
+Type of the index.
+* SORTED : Sorted index. Can be used with equality and range predicates.
+* HASH   : Hash index. Can be used with equality predicates.
+* BITMAP : Bitmap index. Can be used with equality predicates.
+"""
+
+_DEFAULT_CLUSTER_NAME = "dev"
+
+_DEFAULT_MAX_ENTRY_COUNT = 10000
+_DEFAULT_SAMPLING_COUNT = 8
+_DEFAULT_SAMPLING_POOL_SIZE = 16
+
+_MAXIMUM_PREFETCH_COUNT = 100000
 
 
 class ClientConfig(object):
@@ -83,14 +102,26 @@ class ClientConfig(object):
     """
 
     def __init__(self):
+        self.client_name = None
+        """Name of the client"""
+
+        self.cluster_name = _DEFAULT_CLUSTER_NAME
+        """Name of the cluster to connect to. By default, set to `dev`."""
+
+        self.network = ClientNetworkConfig()
+        """The network configuration for addresses to connect, smart-routing, socket-options..."""
+
+        self.connection_strategy = ConnectionStrategyConfig()
+        """Connection strategy config of the client"""
+
+        self.serialization = SerializationConfig()
+        """Hazelcast serialization configuration"""
+
+        self.near_caches = {}  # map_name:NearCacheConfig
+        """Near Cache configuration which maps "map-name : NearCacheConfig"""
+
         self._properties = {}
         """Config properties"""
-
-        self.group_config = GroupConfig()
-        """The group configuration"""
-
-        self.network_config = ClientNetworkConfig()
-        """The network configuration for addresses to connect, smart-routing, socket-options..."""
 
         self.load_balancer = None
         """Custom load balancer used to distribute the operations to multiple Endpoints."""
@@ -101,20 +132,14 @@ class ClientConfig(object):
         self.lifecycle_listeners = []
         """ Lifecycle Listeners, an array of Functions of f(state)"""
 
-        self.near_cache_configs = {}  # map_name:NearCacheConfig
-        """Near Cache configuration which maps "map-name : NearCacheConfig"""
-
-        self.flake_id_generator_configs = {}
+        self.flake_id_generators = {}
         """Flake ID generator configuration which maps "config-name" : FlakeIdGeneratorConfig """
 
-        self.serialization_config = SerializationConfig()
-        """Hazelcast serialization configuration"""
-
-        self.logger_config = LoggerConfig()
+        self.logger = LoggerConfig()
         """Logger configuration."""
 
-        self.client_name = ""
-        """Name of the client"""
+        self.labels = set()
+        """Labels for the client to be sent to the cluster."""
 
     def add_membership_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
         """
@@ -149,7 +174,7 @@ class ClientConfig(object):
         :param near_cache_config: (NearCacheConfig), the near_cache config to add.
         :return: `self` for cascading configuration.
         """
-        self.near_cache_configs[near_cache_config.name] = near_cache_config
+        self.near_caches[near_cache_config.name] = near_cache_config
         return self
 
     def add_flake_id_generator_config(self, flake_id_generator_config):
@@ -159,7 +184,7 @@ class ClientConfig(object):
         :param flake_id_generator_config: (FlakeIdGeneratorConfig), the configuration to add
         :return: `self` for cascading configuration
         """
-        self.flake_id_generator_configs[flake_id_generator_config.name] = flake_id_generator_config
+        self.flake_id_generators[flake_id_generator_config.name] = flake_id_generator_config
         return self
 
     def get_property_or_default(self, key, default):
@@ -195,18 +220,6 @@ class ClientConfig(object):
         return self
 
 
-class GroupConfig(object):
-    """
-    The Group Configuration is the container class for name and password of the cluster.
-    """
-
-    def __init__(self):
-        self.name = DEFAULT_GROUP_NAME
-        """The group name of the cluster"""
-        self.password = DEFAULT_GROUP_PASSWORD
-        """The password of the cluster"""
-
-
 class ClientNetworkConfig(object):
     """
     Network related configuration parameters.
@@ -214,22 +227,18 @@ class ClientNetworkConfig(object):
 
     def __init__(self):
         self.addresses = []
-        """The candidate address list that client will use to establish initial connection"""
-        """Example usage: addresses.append("127.0.0.1:5701") """
-        self.connection_attempt_limit = 2
+        """The candidate address list that client will use to establish initial connection
+        
+            >>> addresses.append("127.0.0.1:5701")
         """
-        While client is trying to connect initially to one of the members in the addressList, all might be not
-        available. Instead of giving up, throwing Error and stopping client, it will attempt to retry as much as defined
-        by this parameter.
-        """
-        self.connection_attempt_period = 3
-        """Period for the next attempt to find a member to connect"""
+
         self.connection_timeout = 5.0
         """
         Socket connection timeout is a float, giving in seconds, or None.
         Setting a timeout of None disables the timeout feature and is equivalent to block the socket until it connects.
         Setting a timeout of zero is the same as disables blocking on connect.
         """
+
         self.socket_options = []
         """
         Array of Unix socket options.
@@ -243,6 +252,7 @@ class ClientNetworkConfig(object):
 
         Please see the Unix manual for level and option. Level and option constant are in python std lib socket module
         """
+
         self.redo_operation = False
         """
         If true, client will redo the operations that were executing on the server and client lost the connection.
@@ -250,15 +260,18 @@ class ClientNetworkConfig(object):
         application is performed or not. For idempotent operations this is harmless, but for non idempotent ones
         retrying can cause to undesirable effects. Note that the redo can perform on any member.
         """
+
         self.smart_routing = True
         """
         If true, client will route the key based operations to owner of the key at the best effort. Note that it uses a
         cached value of partition count and doesn't guarantee that the operation will always be executed on the owner.
         The cached table is updated every 10 seconds.
         """
-        self.ssl_config = SSLConfig()
+
+        self.ssl = SSLConfig()
         """SSL configurations for the client."""
-        self.cloud_config = ClientCloudConfig()
+
+        self.cloud = ClientCloudConfig()
         """Hazelcast Cloud configuration to let the client connect the cluster via Hazelcast.cloud"""
 
 
@@ -272,8 +285,10 @@ class SocketOption(object):
     def __init__(self, level, option, value):
         self.level = level
         """Option level. See the Unix manual for detail."""
+
         self.option = option
         """The actual socket option. The actual socket option."""
+
         self.value = value
         """Socket option value. The value argument can either be an integer or a string"""
 
@@ -289,6 +304,7 @@ class SerializationConfig(object):
         Portable version will be used to differentiate two versions of the same class that have changes on the class,
         like adding/removing a field or changing a type of a field.
         """
+
         self.data_serializable_factories = {}
         """
         Dictionary of factory-id and corresponding IdentifiedDataserializable factories. A Factory is a simple
@@ -300,6 +316,7 @@ class SerializationConfig(object):
             >>> serialization_config.data_serializable_factories[FACTORY_ID] = my_factory
 
         """
+
         self.portable_factories = {}
         """
         Dictionary of factory-id and corresponding portable factories. A Factory is a simple dictionary with entries of
@@ -310,20 +327,25 @@ class SerializationConfig(object):
             >>> portable_factory = {PortableClass_0.CLASS_ID : PortableClass_0, PortableClass_1.CLASS_ID : PortableClass_1}
             >>> serialization_config.portable_factories[FACTORY_ID] = portable_factory
         """
+
         self.class_definitions = set()
         """
         Set of all Portable class definitions.
         """
+
         self.check_class_def_errors = True
         """Configured Portable Class definitions should be validated for errors or not."""
+
         self.is_big_endian = True
         """Hazelcast Serialization is big endian or not."""
+
         self.default_integer_type = INTEGER_TYPE.INT
         """
         Python has variable length int/long type. In order to match this with static fixed length Java server, this option
         defines the length of the int/long.
         One of the values of :const:`INTEGER_TYPE` can be assigned. Please see :const:`INTEGER_TYPE` documentation for details of the options.
         """
+
         self._global_serializer = None
         self._custom_serializers = {}
 
@@ -395,14 +417,17 @@ class NearCacheConfig(object):
     def __init__(self, name="default"):
         self._name = name
         self.invalidate_on_change = True
-        """Should a value is invalidated and removed in case of any map data updating operations such as replace, remove etc."""
+        """Should a value is invalidated and removed in case of any map data 
+        updating operations such as replace, remove etc.
+        """
+
         self._in_memory_format = IN_MEMORY_FORMAT.BINARY
         self._time_to_live_seconds = None
         self._max_idle_seconds = None
-        self._eviction_policy = EVICTION_POLICY.NONE
-        self._eviction_max_size = DEFAULT_MAX_ENTRY_COUNT
-        self._eviction_sampling_count = DEFAULT_SAMPLING_COUNT
-        self._eviction_sampling_pool_size = DEFAULT_SAMPLING_POOL_SIZE
+        self._eviction_policy = EVICTION_POLICY.LRU
+        self._eviction_max_size = _DEFAULT_MAX_ENTRY_COUNT
+        self._eviction_sampling_count = _DEFAULT_SAMPLING_COUNT
+        self._eviction_sampling_pool_size = _DEFAULT_SAMPLING_POOL_SIZE
 
     @property
     def name(self):
@@ -494,6 +519,74 @@ class NearCacheConfig(object):
         self._eviction_sampling_pool_size = eviction_sampling_pool_size
 
 
+RECONNECT_MODE = enum(OFF=0, ON=1, ASYNC=2)
+"""
+* OFF   : Prevent reconnect to cluster after a disconnect.
+* ON    : Reconnect to cluster by blocking invocations.
+* ASYNC : Reconnect to cluster without blocking invocations. Invocations will receive ClientOfflineError
+"""
+
+
+class ConnectionStrategyConfig(object):
+    """Connection strategy configuration is used for setting custom strategies and configuring strategy parameters."""
+
+    def __init__(self):
+        self.async_start = False
+        """Enables non-blocking start mode of HazelcastClient. When set to True, the client 
+        creation will not wait to connect to cluster. The client instance will throw exceptions
+        until it connects to cluster and becomes ready. If set to False, HazelcastClient will block
+        until a cluster connection established and it is ready to use the client instance.
+        By default, set to False.
+        """
+
+        self.reconnect_mode = RECONNECT_MODE.ON
+        """Defines how a client reconnects to cluster after a disconnect."""
+
+        self.connection_retry = ConnectionRetryConfig()
+        """Connection retry config to be used by the client."""
+
+
+_DEFAULT_INITIAL_BACKOFF = 1
+_DEFAULT_MAX_BACKOFF = 30
+_DEFAULT_CLUSTER_CONNECT_TIMEOUT = 20
+_DEFAULT_MULTIPLIER = 1
+_DEFAULT_JITTER = 0
+
+
+class ConnectionRetryConfig(object):
+    """Connection retry config controls the period among connection establish retries
+    and defines when the client should give up retrying. Supports exponential behaviour
+    with jitter for wait periods.
+    """
+
+    def __init__(self):
+        self.initial_backoff = _DEFAULT_INITIAL_BACKOFF
+        """Defines wait period in seconds after the first failure before retrying.
+        Must be non-negative. By default, set to 1.
+        """
+
+        self.max_backoff = _DEFAULT_MAX_BACKOFF
+        """Defines an upper bound for the backoff interval in seconds. Must be non-negative. 
+        By default, set to 30 seconds.
+        """
+
+        self.cluster_connect_timeout = _DEFAULT_CLUSTER_CONNECT_TIMEOUT
+        """Defines timeout value in seconds for the client to give up a connection
+        attempt to the cluster. Must be non-negative. By default, set to 20 seconds.
+        """
+
+        self.multiplier = _DEFAULT_MULTIPLIER
+        """Defines the factor with which to multiply backoff after a failed retry.
+        Must be greater than or equal to 1. By default, set to 1.
+        """
+
+        self.jitter = _DEFAULT_JITTER
+        """Defines how much to randomize backoffs. At each iteration the calculated
+        back-off is randomized via following method in pseudo-code
+        Random(-jitter * current_backoff, jitter * current_backoff).
+        Must be in range [0.0, 1.0]. By default, set to `0` (no randomization)."""
+
+
 class SSLConfig(object):
     """
     SSL configuration.
@@ -580,8 +673,8 @@ class FlakeIdGeneratorConfig(object):
 
     @prefetch_count.setter
     def prefetch_count(self, prefetch_count):
-        if not (0 < prefetch_count <= MAXIMUM_PREFETCH_COUNT):
-            raise ValueError("Prefetch count must be 1..{}, not {}".format(MAXIMUM_PREFETCH_COUNT, prefetch_count))
+        if not (0 < prefetch_count <= _MAXIMUM_PREFETCH_COUNT):
+            raise ValueError("Prefetch count must be 1..{}, not {}".format(_MAXIMUM_PREFETCH_COUNT, prefetch_count))
         self._prefetch_count = prefetch_count
 
     @property
@@ -613,6 +706,7 @@ class ClientCloudConfig(object):
     def __init__(self):
         self.enabled = False
         """Enables/disables cloud config."""
+
         self.discovery_token = ""
         """Hazelcast Cloud Discovery token of your cluster."""
 
@@ -632,6 +726,7 @@ class LoggerConfig(object):
         ``Configuration dictionary schema`` described in the logging 
         module of the standard library.
         """
+
         self.level = logging.INFO
         """
         Sets the logging level for the default logging
@@ -641,6 +736,162 @@ class LoggerConfig(object):
         than 50 is enough to turn off the default
         logger. 
         """
+
+
+class BitmapIndexOptions(object):
+    """
+    Configures indexing options specific to bitmap indexes
+    """
+
+    def __init__(self, unique_key=QUERY_CONSTANTS.KEY_ATTRIBUTE_NAME,
+                 unique_key_transformation=UNIQUE_KEY_TRANSFORMATION.OBJECT):
+        self.unique_key = unique_key
+        """
+        Source of values which uniquely identify each entry being inserted into an index.
+        """
+
+        self.unique_key_transformation = unique_key_transformation
+        """
+        Unique key transformation configured in this index. The transformation is 
+        applied to every value extracted from unique key attribute
+        """
+
+    def __repr__(self):
+        return "BitmapIndexOptions(unique_key=%s, unique_key_transformation=%s)" \
+               % (self.unique_key, self.unique_key_transformation)
+
+
+class IndexConfig(object):
+    """
+    Configuration of an index. Hazelcast support two types of indexes: sorted index and hash index.
+    Sorted indexes could be used with equality and range predicates and have logarithmic search time.
+    Hash indexes could be used with equality predicates and have constant search time assuming the hash
+    function of the indexed field disperses the elements properly.
+    Index could be created on one or more attributes.
+    """
+
+    def __init__(self, name=None, type=INDEX_TYPE.SORTED, attributes=None, bitmap_index_options=None):
+        self.name = name
+        """Name of the index"""
+
+        self.type = type
+        """Type of the index"""
+
+        self.attributes = attributes or []
+        """Indexed attributes"""
+
+        self.bitmap_index_options = bitmap_index_options or BitmapIndexOptions()
+        """Bitmap index options"""
+
+    def add_attribute(self, attribute):
+        _IndexUtil.validate_attribute(attribute)
+        self.attributes.append(attribute)
+
+    def __repr__(self):
+        return "IndexConfig(name=%s, type=%s, attributes=%s, bitmap_index_options=%s)" \
+               % (self.name, self.type, self.attributes, self.bitmap_index_options)
+
+
+class _IndexUtil(object):
+    _MAX_ATTRIBUTES = 255
+    """Maximum number of attributes allowed in the index."""
+
+    _THIS_PATTERN = re.compile(r"^this\.")
+    """Pattern to stripe away "this." prefix."""
+
+    @staticmethod
+    def validate_attribute(attribute):
+        check_not_none(attribute, "Attribute name cannot be None")
+
+        stripped_attribute = attribute.strip()
+        if not stripped_attribute:
+            raise ValueError("Attribute name cannot be empty")
+
+        if stripped_attribute.endswith("."):
+            raise ValueError("Attribute name cannot end with dot: %s" % attribute)
+
+    @staticmethod
+    def validate_and_normalize(map_name, index_config):
+        original_attributes = index_config.attributes
+        if not original_attributes:
+            raise ValueError("Index must have at least one attribute: %s" % index_config)
+
+        if len(original_attributes) > _IndexUtil._MAX_ATTRIBUTES:
+            raise ValueError("Index cannot have more than %s attributes %s" % (_IndexUtil._MAX_ATTRIBUTES, index_config))
+
+        if index_config.type == INDEX_TYPE.BITMAP and len(original_attributes) > 1:
+            raise ValueError("Composite bitmap indexes are not supported: %s" % index_config)
+
+        normalized_attributes = []
+        for original_attribute in original_attributes:
+            _IndexUtil.validate_attribute(original_attribute)
+
+            original_attribute = original_attribute.strip()
+            normalized_attribute = _IndexUtil.canonicalize_attribute(original_attribute)
+
+            try:
+                idx = normalized_attributes.index(normalized_attribute)
+            except ValueError:
+                pass
+            else:
+                duplicate_original_attribute = original_attributes[idx]
+                if duplicate_original_attribute == original_attribute:
+                    raise ValueError("Duplicate attribute name [attribute_name=%s, index_config=%s]"
+                                     % (original_attribute, index_config))
+                else:
+                    raise ValueError("Duplicate attribute names [attribute_name1=%s, attribute_name2=%s, "
+                                     "index_config=%s]"
+                                     % (duplicate_original_attribute, original_attribute, index_config))
+
+            normalized_attributes.append(normalized_attribute)
+
+        name = index_config.name
+        if name and not name.strip():
+            name = None
+
+        normalized_config = _IndexUtil.build_normalized_config(map_name, index_config.type, name,
+                                                               normalized_attributes)
+        if index_config.type == INDEX_TYPE.BITMAP:
+            unique_key = index_config.bitmap_index_options.unique_key
+            unique_key_transformation = index_config.bitmap_index_options.unique_key_transformation
+            _IndexUtil.validate_attribute(unique_key)
+            unique_key = _IndexUtil.canonicalize_attribute(unique_key)
+            normalized_config.bitmap_index_options.unique_key = unique_key
+            normalized_config.bitmap_index_options.unique_key_transformation = unique_key_transformation
+
+        return normalized_config
+
+    @staticmethod
+    def canonicalize_attribute(attribute):
+        return re.sub(_IndexUtil._THIS_PATTERN, "", attribute)
+
+    @staticmethod
+    def build_normalized_config(map_name, index_type, index_name, normalized_attributes):
+        new_config = IndexConfig()
+        new_config.type = index_type
+
+        name = map_name + "_" + _IndexUtil._index_type_to_name(index_type) if index_name is None else None
+        for normalized_attribute in normalized_attributes:
+            new_config.add_attribute(normalized_attribute)
+            if name:
+                name += "_" + normalized_attribute
+
+        if name:
+            index_name = name
+
+        new_config.name = index_name
+        return new_config
+
+    @staticmethod
+    def _index_type_to_name(index_type):
+        if index_type == INDEX_TYPE.SORTED:
+            return "sorted"
+        elif index_type == INDEX_TYPE.HASH:
+            return "hash"
+        elif index_type == INDEX_TYPE.BITMAP:
+            return "bitmap"
+        else:
+            raise ValueError("Unsupported index type %s" % index_type)
 
 
 class ClientProperty(object):
@@ -706,10 +957,11 @@ class ClientProperties(object):
     Period in seconds to collect statistics.
     """
 
-    SERIALIZATION_INPUT_RETURNS_BYTEARRAY = ClientProperty("hazelcast.serialization.input.returns.bytearray", False)
+    SHUFFLE_MEMBER_LIST = ClientProperty("hazelcast.client.shuffle.member.list", True)
     """
-    Input#read_byte_array returns a List if property is False, otherwise it will return a byte-array.
-    Changing this to True, gives a considerable performance benefit.
+    Client shuffles the given member list to prevent all clients to connect to the same node when
+    this property is set to true. When it is set to false, the client tries to connect to the nodes
+    in the given order.
     """
 
     def __init__(self, properties):

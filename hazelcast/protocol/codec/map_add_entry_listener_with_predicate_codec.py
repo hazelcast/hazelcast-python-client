@@ -1,62 +1,52 @@
 from hazelcast.serialization.bits import *
-from hazelcast.protocol.client_message import ClientMessage
-from hazelcast.protocol.codec.map_message_type import *
-from hazelcast.protocol.event_response_const import *
+from hazelcast.protocol.builtin import FixSizedTypesCodec
+from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer, RESPONSE_HEADER_SIZE, EVENT_HEADER_SIZE
+from hazelcast.protocol.builtin import StringCodec
+from hazelcast.protocol.builtin import DataCodec
+from hazelcast.protocol.builtin import CodecUtil
 
-REQUEST_TYPE = MAP_ADDENTRYLISTENERWITHPREDICATE
-RESPONSE_TYPE = 104
-RETRYABLE = False
+# hex: 0x011700
+_REQUEST_MESSAGE_TYPE = 71424
+# hex: 0x011701
+_RESPONSE_MESSAGE_TYPE = 71425
+# hex: 0x011702
+_EVENT_ENTRY_MESSAGE_TYPE = 71426
 
-
-def calculate_size(name, predicate, include_value, listener_flags, local_only):
-    """ Calculates the request payload size"""
-    data_size = 0
-    data_size += calculate_size_str(name)
-    data_size += calculate_size_data(predicate)
-    data_size += BOOLEAN_SIZE_IN_BYTES
-    data_size += INT_SIZE_IN_BYTES
-    data_size += BOOLEAN_SIZE_IN_BYTES
-    return data_size
+_REQUEST_INCLUDE_VALUE_OFFSET = REQUEST_HEADER_SIZE
+_REQUEST_LISTENER_FLAGS_OFFSET = _REQUEST_INCLUDE_VALUE_OFFSET + BOOLEAN_SIZE_IN_BYTES
+_REQUEST_LOCAL_ONLY_OFFSET = _REQUEST_LISTENER_FLAGS_OFFSET + INT_SIZE_IN_BYTES
+_REQUEST_INITIAL_FRAME_SIZE = _REQUEST_LOCAL_ONLY_OFFSET + BOOLEAN_SIZE_IN_BYTES
+_RESPONSE_RESPONSE_OFFSET = RESPONSE_HEADER_SIZE
+_EVENT_ENTRY_EVENT_TYPE_OFFSET = EVENT_HEADER_SIZE
+_EVENT_ENTRY_UUID_OFFSET = _EVENT_ENTRY_EVENT_TYPE_OFFSET + INT_SIZE_IN_BYTES
+_EVENT_ENTRY_NUMBER_OF_AFFECTED_ENTRIES_OFFSET = _EVENT_ENTRY_UUID_OFFSET + UUID_SIZE_IN_BYTES
 
 
 def encode_request(name, predicate, include_value, listener_flags, local_only):
-    """ Encode request into client_message"""
-    client_message = ClientMessage(payload_size=calculate_size(name, predicate, include_value, listener_flags, local_only))
-    client_message.set_message_type(REQUEST_TYPE)
-    client_message.set_retryable(RETRYABLE)
-    client_message.append_str(name)
-    client_message.append_data(predicate)
-    client_message.append_bool(include_value)
-    client_message.append_int(listener_flags)
-    client_message.append_bool(local_only)
-    client_message.update_frame_length()
-    return client_message
+    buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
+    FixSizedTypesCodec.encode_boolean(buf, _REQUEST_INCLUDE_VALUE_OFFSET, include_value)
+    FixSizedTypesCodec.encode_int(buf, _REQUEST_LISTENER_FLAGS_OFFSET, listener_flags)
+    FixSizedTypesCodec.encode_boolean(buf, _REQUEST_LOCAL_ONLY_OFFSET, local_only)
+    StringCodec.encode(buf, name)
+    DataCodec.encode(buf, predicate, True)
+    return OutboundMessage(buf, False)
 
 
-def decode_response(client_message, to_object=None):
-    """ Decode response from client message"""
-    parameters = dict(response=None)
-    parameters['response'] = client_message.read_str()
-    return parameters
+def decode_response(msg):
+    initial_frame = msg.next_frame()
+    return FixSizedTypesCodec.decode_uuid(initial_frame.buf, _RESPONSE_RESPONSE_OFFSET)
 
 
-def handle(client_message, handle_event_entry=None, to_object=None):
-    """ Event handler """
-    message_type = client_message.get_message_type()
-    if message_type == EVENT_ENTRY and handle_event_entry is not None:
-        key = None
-        if not client_message.read_bool():
-            key = client_message.read_data()
-        value = None
-        if not client_message.read_bool():
-            value = client_message.read_data()
-        old_value = None
-        if not client_message.read_bool():
-            old_value = client_message.read_data()
-        merging_value = None
-        if not client_message.read_bool():
-            merging_value = client_message.read_data()
-        event_type = client_message.read_int()
-        uuid = client_message.read_str()
-        number_of_affected_entries = client_message.read_int()
-        handle_event_entry(key=key, value=value, old_value=old_value, merging_value=merging_value, event_type=event_type, uuid=uuid, number_of_affected_entries=number_of_affected_entries)
+def handle(msg, handle_entry_event=None):
+    message_type = msg.get_message_type()
+    if message_type == _EVENT_ENTRY_MESSAGE_TYPE and handle_entry_event is not None:
+        initial_frame = msg.next_frame()
+        event_type = FixSizedTypesCodec.decode_int(initial_frame.buf, _EVENT_ENTRY_EVENT_TYPE_OFFSET)
+        uuid = FixSizedTypesCodec.decode_uuid(initial_frame.buf, _EVENT_ENTRY_UUID_OFFSET)
+        number_of_affected_entries = FixSizedTypesCodec.decode_int(initial_frame.buf, _EVENT_ENTRY_NUMBER_OF_AFFECTED_ENTRIES_OFFSET)
+        key = CodecUtil.decode_nullable(msg, DataCodec.decode)
+        value = CodecUtil.decode_nullable(msg, DataCodec.decode)
+        old_value = CodecUtil.decode_nullable(msg, DataCodec.decode)
+        merging_value = CodecUtil.decode_nullable(msg, DataCodec.decode)
+        handle_entry_event(key, value, old_value, merging_value, event_type, uuid, number_of_affected_entries)
+        return
