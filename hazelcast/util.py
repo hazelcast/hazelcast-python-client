@@ -320,3 +320,10 @@ def create_git_info():
 
 def to_list(*args, **kwargs):
     return list(*args, **kwargs)
+
+
+def to_signed(unsigned, bit_len):
+    mask = (1 << bit_len) - 1
+    if unsigned & (1 << (bit_len - 1)):
+        return unsigned | ~mask
+    return unsigned & mask

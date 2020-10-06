@@ -1,3 +1,5 @@
+import uuid
+
 from hazelcast.serialization.base import BaseSerializationService
 from hazelcast.serialization.portable.classdef import FieldType
 from hazelcast.serialization.portable.context import PortableContext
@@ -52,9 +54,10 @@ class SerializationServiceV1(BaseSerializationService):
         self._registry.register_constant_serializer(LongSerializer())
         self._registry.register_constant_serializer(FloatSerializer())
         self._registry.register_constant_serializer(DoubleSerializer(), float)
+        self._registry.register_constant_serializer(UuidSerializer(), uuid.UUID)
         self._registry.register_constant_serializer(StringSerializer())
         # Arrays of primitives and String
-        self._registry.register_constant_serializer(ByteArraySerializer())
+        self._registry.register_constant_serializer(ByteArraySerializer(), bytearray)
         self._registry.register_constant_serializer(BooleanArraySerializer())
         self._registry.register_constant_serializer(CharArraySerializer())
         self._registry.register_constant_serializer(ShortArraySerializer())
@@ -66,7 +69,6 @@ class SerializationServiceV1(BaseSerializationService):
         # EXTENSIONS
         self._registry.register_constant_serializer(DateTimeSerializer(), datetime)
         self._registry.register_constant_serializer(BigIntegerSerializer())
-        self._registry.register_constant_serializer(BigDecimalSerializer())
         self._registry.register_constant_serializer(JavaClassSerializer())
         self._registry.register_constant_serializer(ArrayListSerializer(), list)
         self._registry.register_constant_serializer(LinkedListSerializer())

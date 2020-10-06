@@ -31,7 +31,7 @@ class _ObjectDataOutput(ObjectDataOutput):
         elif length == 0:
             return
         self._ensure_available(_len)
-        self._buffer[self._pos: self._pos + _len] = buff[:]
+        self._buffer[self._pos: self._pos + _len] = buff
         self._pos += _len
 
     def write_boolean(self, boolean):

@@ -1,6 +1,7 @@
 import binascii
+import time
+import uuid
 from datetime import datetime
-from time import time
 
 from hazelcast import six
 from hazelcast.core import HazelcastJsonValue
@@ -9,6 +10,8 @@ from hazelcast.serialization.api import StreamSerializer
 from hazelcast.serialization.base import HazelcastSerializationError
 from hazelcast.serialization.serialization_const import *
 from hazelcast.six.moves import range, cPickle
+
+from hazelcast.util import to_signed
 
 if not six.PY2:
     long = int
@@ -24,7 +27,8 @@ class NoneSerializer(BaseSerializer):
     def read(self, inp):
         return None
 
-    # "write(self, out, obj)" is never called so not implemented here
+    def write(self, out, obj):
+        pass
 
     def get_type_id(self):
         return CONSTANT_TYPE_NULL
@@ -78,10 +82,7 @@ class IntegerSerializer(BaseSerializer):
         return inp.read_int()
 
     def write(self, out, obj):
-        if obj.bit_length() < 32:
-            out.write_int(obj)
-        else:
-            raise ValueError("Serialization only supports 32 bit ints")
+        out.write_int(obj)
 
     def get_type_id(self):
         return CONSTANT_TYPE_INTEGER
@@ -92,10 +93,7 @@ class LongSerializer(BaseSerializer):
         return inp.read_long()
 
     def write(self, out, obj):
-        if obj.bit_length() < 64:
-            out.write_long(obj)
-        else:
-            raise ValueError("Serialization only supports 64 bit longs")
+        out.write_long(obj)
 
     def get_type_id(self):
         return CONSTANT_TYPE_LONG
@@ -105,8 +103,7 @@ class FloatSerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_float()
 
-    def write(self, out, obj):
-        out.write_float(obj)
+    # "write(self, out, obj)" is never called so not implemented here
 
     def get_type_id(self):
         return CONSTANT_TYPE_FLOAT
@@ -132,6 +129,23 @@ class StringSerializer(BaseSerializer):
 
     def get_type_id(self):
         return CONSTANT_TYPE_STRING
+
+
+class UuidSerializer(BaseSerializer):
+    def read(self, inp):
+        buf = bytearray(16)
+        inp.read_into(buf)
+        return uuid.UUID(bytes=bytes(buf))
+
+    def write(self, out, obj):
+        i = obj.int
+        msb = to_signed(i >> UUID_MSB_SHIFT, 64)
+        lsb = to_signed(i & UUID_LSB_MASK, 64)
+        out.write_long(msb)
+        out.write_long(lsb)
+
+    def get_type_id(self):
+        return CONSTANT_TYPE_UUID
 
 
 class HazelcastJsonValueSerializer(BaseSerializer):
@@ -160,7 +174,8 @@ class ByteArraySerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_byte_array()
 
-    # "write(self, out, obj)" is never called so not implemented here
+    def write(self, out, obj):
+        out.write_byte_array(obj)
 
     def get_type_id(self):
         return CONSTANT_TYPE_BYTE_ARRAY
@@ -243,7 +258,7 @@ class DateTimeSerializer(BaseSerializer):
         return datetime.fromtimestamp(long_time / 1000.0)
 
     def write(self, out, obj):
-        long_time = long(time.mktime(obj.timetuple()))
+        long_time = long(time.mktime(obj.timetuple())) * 1000
         out.write_long(long_time)
 
     def get_type_id(self):
@@ -266,11 +281,11 @@ class BigIntegerSerializer(BaseSerializer):
         return int(binascii.hexlify(result), 16)
 
     def write(self, out, obj):
-        the_big_int = -obj-1 if obj < 0 else obj
+        the_big_int = -obj - 1 if obj < 0 else obj
         end_index = -1 if (type(obj) == long and six.PY2) else None
         hex_str = hex(the_big_int)[2:end_index]
         if len(hex_str) % 2 == 1:
-            prefix = '0' # "f" if obj < 0 else "0"
+            prefix = '0'  # "f" if obj < 0 else "0"
             hex_str = prefix + hex_str
         num_array = bytearray(binascii.unhexlify(bytearray(hex_str, encoding="utf-8")))
         if obj < 0:
@@ -284,23 +299,11 @@ class BigIntegerSerializer(BaseSerializer):
         return JAVA_DEFAULT_TYPE_BIG_INTEGER
 
 
-class BigDecimalSerializer(BaseSerializer):
-    def read(self, inp):
-        raise NotImplementedError("Big decimal numbers not supported")
-
-    def write(self, out, obj):
-        raise NotImplementedError("Big decimal numbers not supported")
-
-    def get_type_id(self):
-        return JAVA_DEFAULT_TYPE_BIG_DECIMAL
-
-
 class JavaClassSerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_utf()
 
-    def write(self, out, obj):
-        out.write_utf(obj)
+    # "write(self, out, obj)" is never called so not implemented here
 
     def get_type_id(self):
         return JAVA_DEFAULT_TYPE_CLASS
@@ -330,8 +333,7 @@ class LinkedListSerializer(BaseSerializer):
             return [inp.read_object() for _ in range(0, size)]
         return None
 
-    def write(self, out, obj):
-        raise NotImplementedError("writing Link lists not supported")
+    # "write(self, out, obj)" is never called so not implemented here
 
     def get_type_id(self):
         return JAVA_DEFAULT_TYPE_LINKED_LIST
@@ -368,11 +370,13 @@ class IdentifiedDataSerializer(BaseSerializer):
 
         factory = self._factories.get(factory_id, None)
         if factory is None:
-            raise HazelcastSerializationError("No DataSerializerFactory registered for namespace: {}".format(factory_id))
+            raise HazelcastSerializationError(
+                "No DataSerializerFactory registered for namespace: {}".format(factory_id))
         identified = factory.get(class_id, None)
         if identified is None:
             raise HazelcastSerializationError(
-                    "{} is not be able to create an instance for id: {} on factoryId: {}".format(factory, class_id, factory_id))
+                "{} is not be able to create an instance for id: {} on factoryId: {}".format(factory, class_id,
+                                                                                             factory_id))
         instance = identified()
         instance.read_data(inp)
         return instance

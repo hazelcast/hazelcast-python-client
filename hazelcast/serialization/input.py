@@ -27,7 +27,7 @@ class _ObjectDataInput(ObjectDataInput):
         _len = length if length is not None else len(buff)
         if _off < 0 or _len < 0 or (_off + _len) > len(self._buffer):
             raise IndexError()
-        elif length == 0:
+        elif _len == 0:
             return
         if self._pos > self._size:
             raise IndexError()

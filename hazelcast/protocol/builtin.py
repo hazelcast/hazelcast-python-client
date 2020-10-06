@@ -4,7 +4,7 @@ from hazelcast import six
 from hazelcast.protocol.client_message import NULL_FRAME_BUF, BEGIN_FRAME_BUF, END_FRAME_BUF, \
     SIZE_OF_FRAME_LENGTH_AND_FLAGS, _IS_FINAL_FLAG, NULL_FINAL_FRAME_BUF, END_FINAL_FRAME_BUF
 from hazelcast.serialization import LONG_SIZE_IN_BYTES, UUID_SIZE_IN_BYTES, LE_INT, LE_LONG, BOOLEAN_SIZE_IN_BYTES, \
-    INT_SIZE_IN_BYTES, LE_ULONG, LE_UINT16, LE_INT8
+    INT_SIZE_IN_BYTES, LE_ULONG, LE_UINT16, LE_INT8, UUID_MSB_SHIFT, UUID_LSB_MASK
 from hazelcast.serialization.data import Data
 
 
@@ -199,10 +199,6 @@ class EntryListUUIDListIntegerCodec(object):
         return result
 
 
-_UUID_MSB_SHIFT = 64
-_UUID_LSB_MASK = 0xFFFFFFFFFFFFFFFF
-
-
 class FixSizedTypesCodec(object):
     @staticmethod
     def encode_int(buf, offset, value):
@@ -247,8 +243,8 @@ class FixSizedTypesCodec(object):
             return
 
         o = offset + BOOLEAN_SIZE_IN_BYTES
-        LE_ULONG.pack_into(buf, o, value.int >> _UUID_MSB_SHIFT)
-        LE_ULONG.pack_into(buf, o + LONG_SIZE_IN_BYTES, value.int & _UUID_LSB_MASK)
+        LE_ULONG.pack_into(buf, o, value.int >> UUID_MSB_SHIFT)
+        LE_ULONG.pack_into(buf, o + LONG_SIZE_IN_BYTES, value.int & UUID_LSB_MASK)
 
     @staticmethod
     def decode_uuid(buf, offset):

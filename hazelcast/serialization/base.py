@@ -34,14 +34,6 @@ def index_for_default_type(type_id):
     return -type_id
 
 
-def is_dataserializable(obj):
-    return isinstance(obj, IdentifiedDataSerializable)
-
-
-def is_portable(obj):
-    return isinstance(obj, Portable)
-
-
 class BaseSerializationService(object):
     def __init__(self, version, global_partition_strategy, output_buffer_size, is_big_endian, int_type):
         self._registry = SerializerRegistry(int_type)
@@ -199,7 +191,8 @@ class SerializerRegistry(object):
 
         obj_type = type(obj)
 
-        # 2-Default serializers, Dataserializable, Portable, primitives, arrays, String and some helper types(BigInteger etc)
+        # 2-Default serializers, DataSerializable, Portable, primitives, arrays, String, UUID
+        # and some helper types(BigInteger etc)
         serializer = self.lookup_default_serializer(obj_type, obj)
 
         # 3-Custom registered types by user
@@ -219,15 +212,17 @@ class SerializerRegistry(object):
         return serializer
 
     def lookup_default_serializer(self, obj_type, obj):
-        if is_dataserializable(obj):
+        if isinstance(obj, IdentifiedDataSerializable):
             return self._data_serializer
-        if is_portable(obj):
+        if isinstance(obj, Portable):
             return self._portable_serializer
-        type_id = None
+
         if isinstance(obj, six.string_types):
-            type_id = CONSTANT_TYPE_STRING
+            return self.serializer_by_type_id(CONSTANT_TYPE_STRING)
+
+        type_id = None
         # LOCATE NUMERIC TYPES
-        elif obj_type in six.integer_types:
+        if obj_type in six.integer_types:
             if self.int_type == INTEGER_TYPE.BYTE:
                 type_id = CONSTANT_TYPE_BYTE
             elif self.int_type == INTEGER_TYPE.SHORT:
@@ -249,8 +244,10 @@ class SerializerRegistry(object):
                     type_id = CONSTANT_TYPE_LONG
                 else:
                     type_id = JAVA_DEFAULT_TYPE_BIG_INTEGER
-        return self.serializer_by_type_id(type_id) if type_id is not None else self._constant_type_dict.get(obj_type,
-                                                                                                            None)
+            if type_id:
+                return self.serializer_by_type_id(type_id)
+
+        return self._constant_type_dict.get(obj_type, None)
 
     def lookup_custom_serializer(self, obj_type):
         serializer = self._type_dict.get(obj_type, None)

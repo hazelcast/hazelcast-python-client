@@ -293,6 +293,12 @@ class HazelcastJsonValue(object):
         """
         return json.loads(self._json_string)
 
+    def __eq__(self, other):
+        return isinstance(other, HazelcastJsonValue) and self._json_string == other._json_string
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 
 class MemberVersion(object):
     __slots__ = ("major", "minor", "patch")
