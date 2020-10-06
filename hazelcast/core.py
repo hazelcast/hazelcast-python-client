@@ -3,7 +3,7 @@ import json
 
 from hazelcast import six
 from hazelcast import util
-from hazelcast.util import with_reserved_items
+from hazelcast.util import with_reversed_items
 
 
 class MemberInfo(object):
@@ -120,7 +120,7 @@ class DistributedObjectInfo(object):
         return False
 
 
-@with_reserved_items
+@with_reversed_items
 class DistributedObjectEventType(object):
     """
     Type of the distributed object event.

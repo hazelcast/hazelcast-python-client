@@ -4,7 +4,7 @@ from hazelcast.future import make_blocking
 from hazelcast.invocation import Invocation
 from hazelcast.partition import string_partition_strategy
 from hazelcast import six
-from hazelcast.util import with_reserved_items
+from hazelcast.util import with_reversed_items
 
 MAX_SIZE = float('inf')
 
@@ -112,7 +112,7 @@ class TransactionalProxy(object):
         return '%s(name="%s")' % (type(self).__name__, self.name)
 
 
-@with_reserved_items
+@with_reversed_items
 class ItemEventType(object):
     """
     Type of item events.
@@ -129,7 +129,7 @@ class ItemEventType(object):
     """
 
 
-@with_reserved_items
+@with_reversed_items
 class EntryEventType(object):
     """
     Type of entry event.

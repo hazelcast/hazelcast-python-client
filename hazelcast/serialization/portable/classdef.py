@@ -1,9 +1,9 @@
 from hazelcast.errors import HazelcastSerializationError
 from hazelcast import six
-from hazelcast.util import with_reserved_items
+from hazelcast.util import with_reversed_items
 
 
-@with_reserved_items
+@with_reversed_items
 class FieldType(object):
     PORTABLE = 0
     BYTE = 1

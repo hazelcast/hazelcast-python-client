@@ -9,10 +9,10 @@ from hazelcast import six
 from hazelcast.errors import InvalidConfigurationError
 from hazelcast.serialization.api import StreamSerializer, IdentifiedDataSerializable, Portable
 from hazelcast.serialization.portable.classdef import ClassDefinition
-from hazelcast.util import check_not_none, with_reserved_items, number_types, LoadBalancer, none_type
+from hazelcast.util import check_not_none, with_reversed_items, number_types, LoadBalancer, none_type
 
 
-@with_reserved_items
+@with_reversed_items
 class IntType(object):
     """
     Integer type options that can be used by serialization service.
@@ -54,7 +54,7 @@ class IntType(object):
     """
 
 
-@with_reserved_items
+@with_reversed_items
 class EvictionPolicy(object):
     """
     Near Cache eviction policy options.
@@ -81,7 +81,7 @@ class EvictionPolicy(object):
     """
 
 
-@with_reserved_items
+@with_reversed_items
 class InMemoryFormat(object):
     """
     Near Cache in memory format of the values.
@@ -98,7 +98,7 @@ class InMemoryFormat(object):
     """
 
 
-@with_reserved_items
+@with_reversed_items
 class SSLProtocol(object):
     """
     SSL protocol options.
@@ -138,7 +138,7 @@ class SSLProtocol(object):
     """
 
 
-@with_reserved_items
+@with_reversed_items
 class QueryConstants(object):
     """
     Contains constants for Query.
@@ -155,7 +155,7 @@ class QueryConstants(object):
     """
 
 
-@with_reserved_items
+@with_reversed_items
 class UniqueKeyTransformation(object):
     """
     Defines an assortment of transformations which can be applied to
@@ -182,7 +182,7 @@ class UniqueKeyTransformation(object):
     """
 
 
-@with_reserved_items
+@with_reversed_items
 class IndexType(object):
     """
     Type of the index.
@@ -204,7 +204,7 @@ class IndexType(object):
     """
 
 
-@with_reserved_items
+@with_reversed_items
 class ReconnectMode(object):
     """
     Reconnect options.

@@ -320,7 +320,7 @@ def to_signed(unsigned, bit_len):
     return unsigned & mask
 
 
-def with_reserved_items(cls):
+def with_reversed_items(cls):
     reversed_mappings = {}
     for attr_name, attr_value in six.iteritems(vars(cls)):
         if not (attr_name.startswith("_") or callable(getattr(cls, attr_name))):
