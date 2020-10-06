@@ -34,11 +34,7 @@ class HazelcastClient(object):
     _CLIENT_ID = AtomicInteger()
     logger = logging.getLogger("HazelcastClient")
 
-    def __init__(self, cluster_members=None, cluster_name=None, **kwargs):
-        kwargs.update({
-            "cluster_members": cluster_members,
-            "cluster_name": cluster_name
-        })
+    def __init__(self, **kwargs):
         config = _Config.from_dict(kwargs)
         self.config = config
         self._context = _ClientContext()
