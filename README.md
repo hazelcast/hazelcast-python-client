@@ -2377,20 +2377,12 @@ For example, setting the logging level to `logging.DEBUG` will cause all the log
 
 By default, the logging level is set to `logging.INFO`.
 
-<<<<<<< HEAD
-To turn off the logging, you can set `ClientConfig.logger.level` to a value greater than the numeric value of `logging.CRITICAL`. For example, the configuration below turns off the logging for the Hazelcast Python client.
-
-```python
-config.logger.level = 100  # Any value greater than 50 will turn off the logging
-client = hazelcast.HazelcastClient(config)
-=======
 ```python
 import logging
 
 client = hazelcast.HazelcastClient(
     logging_level=logging.DEBUG
 )
->>>>>>> Change configuration to keyword arguments
 ``` 
 
 #### Setting a Custom Logging Configuration
@@ -2425,7 +2417,6 @@ class HazelcastFormatter(logging.Formatter):
         return super(HazelcastFormatter, self).format(record)
 ```
 
-**some_package/test.py**
 ```python
 logging_config = {
     "version": 1,
@@ -2458,34 +2449,9 @@ logging_config = {
     }
 }
 
-<<<<<<< HEAD
-class VersionMessageFilter(logging.Filter):
-    def filter(self, record):
-        record.version_message = "[" + CLIENT_VERSION + "]"
-        return True
-        
-class HazelcastFormatter(logging.Formatter):
-    def format(self, record):
-        client_name = getattr(record, "client_name", None)
-        group_name = getattr(record, "group_name", None)
-        if client_name and group_name:
-            record.msg = "[" + group_name + "] [" + client_name + "] " + record.msg
-        return super(HazelcastFormatter, self).format(record)
-```
-
-**some_package/test.py**
-```python
-import hazelcast
-
-config = hazelcast.ClientConfig()
-config.logger.config_file = "/home/hazelcast/config.json"
-
-client = hazelcast.HazelcastClient(config)
-=======
 client = hazelcast.HazelcastClient(
     logging_config=logging_config
 )
->>>>>>> Change configuration to keyword arguments
 
 ## Some operations
 
