@@ -1,14 +1,12 @@
-from hazelcast import ClientConfig
 from hazelcast.lifecycle import LifecycleState
 from tests.base import HazelcastTestCase
-from tests.util import configure_logging, event_collector
+from tests.util import event_collector
 
 
 class LifecycleTest(HazelcastTestCase):
     rc = None
 
     def setUp(self):
-        configure_logging()
         self.rc = self.create_rc()
         self.cluster = self.create_cluster(self.rc)
 
@@ -18,11 +16,13 @@ class LifecycleTest(HazelcastTestCase):
 
     def test_lifecycle_listener_receives_events_in_order(self):
         collector = event_collector()
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.lifecycle_listeners.append(collector)
         self.cluster.start_member()
-        client = self.create_client(config)
+        client = self.create_client({
+            "cluster_name": self.cluster.id,
+            "lifecycle_listeners": [
+                collector,
+            ]
+        })
         client.shutdown()
 
         self.assertEqual(collector.events,
@@ -33,9 +33,9 @@ class LifecycleTest(HazelcastTestCase):
         self.cluster.start_member()
 
         collector = event_collector()
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        client = self.create_client(config)
+        client = self.create_client({
+            "cluster_name": self.cluster.id,
+        })
         client.lifecycle_service.add_listener(collector)
         client.shutdown()
 
@@ -46,9 +46,9 @@ class LifecycleTest(HazelcastTestCase):
         member = self.cluster.start_member()
 
         collector = event_collector()
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        client = self.create_client(config)
+        client = self.create_client({
+            "cluster_name": self.cluster.id,
+        })
         client.lifecycle_service.add_listener(collector)
         member.shutdown()
         self.assertEqual(collector.events, [LifecycleState.DISCONNECTED])
@@ -58,9 +58,9 @@ class LifecycleTest(HazelcastTestCase):
         collector = event_collector()
 
         self.cluster.start_member()
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        client = self.create_client(config)
+        client = self.create_client({
+            "cluster_name": self.cluster.id,
+        })
         registration_id = client.lifecycle_service.add_listener(collector)
         client.lifecycle_service.remove_listener(registration_id)
         client.shutdown()
@@ -70,8 +70,10 @@ class LifecycleTest(HazelcastTestCase):
     def test_exception_in_listener(self):
         def listener(_):
             raise RuntimeError("error")
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.lifecycle_listeners = [listener]
         self.cluster.start_member()
-        self.create_client(config)
+        self.create_client({
+            "cluster_name": self.cluster.id,
+            "lifecycle_listeners": [
+                listener,
+            ],
+        })

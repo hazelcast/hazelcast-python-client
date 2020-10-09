@@ -4,7 +4,7 @@ from hazelcast.core import DistributedObjectEventType
 from hazelcast.proxy import MAP_SERVICE
 from tests.base import SingleMemberTestCase
 from tests.util import event_collector
-from hazelcast import six, ClientConfig
+from hazelcast import six
 
 
 class DistributedObjectsTest(SingleMemberTestCase):
@@ -12,9 +12,9 @@ class DistributedObjectsTest(SingleMemberTestCase):
     def setUpClass(cls):
         cls.rc = cls.create_rc()
         cls.cluster = cls.create_cluster(cls.rc, cls.configure_cluster())
-        config = ClientConfig()
-        config.cluster_name = cls.cluster.id
-        cls.config = config
+        cls.config = {
+            "cluster_name": cls.cluster.id
+        }
 
     @classmethod
     def tearDownClass(cls):
@@ -22,7 +22,7 @@ class DistributedObjectsTest(SingleMemberTestCase):
 
     def setUp(self):
         self.member = self.cluster.start_member()
-        self.client = hazelcast.HazelcastClient(self.config)
+        self.client = hazelcast.HazelcastClient(**self.config)
 
     def tearDown(self):
         self.client.shutdown()
@@ -42,7 +42,7 @@ class DistributedObjectsTest(SingleMemberTestCase):
 
         six.assertCountEqual(self, [m], self.client.get_distributed_objects())
 
-        other_client = hazelcast.HazelcastClient(self.config)
+        other_client = hazelcast.HazelcastClient(**self.config)
         other_clients_map = other_client.get_map("map")
         other_clients_map.destroy()
 

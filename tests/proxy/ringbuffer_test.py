@@ -11,7 +11,7 @@ CAPACITY = 10
 class RingBufferTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
-        config.cluster_name = cls.cluster.id
+        config["cluster_name"] = cls.cluster.id
         return config
 
     @classmethod

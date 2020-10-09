@@ -371,12 +371,11 @@ class IdentifiedDataSerializer(BaseSerializer):
         factory = self._factories.get(factory_id, None)
         if factory is None:
             raise HazelcastSerializationError(
-                "No DataSerializerFactory registered for namespace: {}".format(factory_id))
+                "No DataSerializerFactory registered for namespace: %s" % factory_id)
         identified = factory.get(class_id, None)
         if identified is None:
             raise HazelcastSerializationError(
-                "{} is not be able to create an instance for id: {} on factoryId: {}".format(factory, class_id,
-                                                                                             factory_id))
+                "%s is not be able to create an instance for id: %s on factoryId: %s" % (factory, class_id, factory_id))
         instance = identified()
         instance.read_data(inp)
         return instance

@@ -1,26 +1,21 @@
 import unittest
 
-from hazelcast import ClientConfig, HazelcastClient, six
-from hazelcast.cluster import RandomLB, RoundRobinLB
+from hazelcast import HazelcastClient, six
+from hazelcast.util import RandomLB, RoundRobinLB
 from tests.base import HazelcastTestCase
-from tests.util import configure_logging
 
 
 class ClusterTest(HazelcastTestCase):
     rc = None
-
-    @classmethod
-    def setUpClass(cls):
-        configure_logging()
 
     def setUp(self):
         self.rc = self.create_rc()
         self.cluster = self.create_cluster(self.rc)
 
     def create_config(self):
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        return config
+        return {
+            "cluster_name": self.cluster.id,
+        }
 
     def tearDown(self):
         self.shutdown_all_clients()
@@ -34,7 +29,9 @@ class ClusterTest(HazelcastTestCase):
             events.append(m)
 
         config = self.create_config()
-        config.membership_listeners.append((member_added, None))
+        config["membership_listeners"] = [
+            (member_added, None)
+        ]
 
         member = self.cluster.start_member()
 
@@ -109,7 +106,9 @@ class ClusterTest(HazelcastTestCase):
             raise RuntimeError("error")
 
         config = self.create_config()
-        config.membership_listeners.append((listener, listener))
+        config["membership_listeners"] = [
+            (listener, listener)
+        ]
         self.cluster.start_member()
         self.create_client(config)
 
@@ -144,26 +143,26 @@ class LoadBalancersTest(unittest.TestCase):
     def test_random_lb_with_no_members(self):
         cluster = _MockClusterService([])
         lb = RandomLB()
-        lb.init(cluster, None)
+        lb.init(cluster)
         self.assertIsNone(lb.next())
 
     def test_round_robin_lb_with_no_members(self):
         cluster = _MockClusterService([])
         lb = RoundRobinLB()
-        lb.init(cluster, None)
+        lb.init(cluster)
         self.assertIsNone(lb.next())
 
     def test_random_lb_with_members(self):
         cluster = _MockClusterService([0, 1, 2])
         lb = RandomLB()
-        lb.init(cluster, None)
+        lb.init(cluster)
         for _ in range(10):
             self.assertTrue(0 <= lb.next() <= 2)
 
     def test_round_robin_lb_with_members(self):
         cluster = _MockClusterService([0, 1, 2])
         lb = RoundRobinLB()
-        lb.init(cluster, None)
+        lb.init(cluster)
         for i in range(10):
             self.assertEqual(i % 3, lb.next())
 
@@ -171,7 +170,6 @@ class LoadBalancersTest(unittest.TestCase):
 class LoadBalancersWithRealClusterTest(HazelcastTestCase):
     @classmethod
     def setUpClass(cls):
-        configure_logging()
         cls.rc = cls.create_rc()
         cls.cluster = cls.create_cluster(cls.rc, None)
         cls.member1 = cls.cluster.start_member()
@@ -184,10 +182,7 @@ class LoadBalancersWithRealClusterTest(HazelcastTestCase):
         cls.rc.exit()
 
     def test_random_load_balancer(self):
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.load_balancer = RandomLB()
-        client = HazelcastClient(config)
+        client = HazelcastClient(cluster_name=self.cluster.id, load_balancer=RandomLB())
         self.assertTrue(client.lifecycle_service.is_running())
 
         lb = client._load_balancer
@@ -200,10 +195,7 @@ class LoadBalancersWithRealClusterTest(HazelcastTestCase):
         client.shutdown()
 
     def test_round_robin_load_balancer(self):
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.load_balancer = RoundRobinLB()
-        client = HazelcastClient(config)
+        client = HazelcastClient(cluster_name=self.cluster.id, load_balancer=RoundRobinLB())
         self.assertTrue(client.lifecycle_service.is_running())
 
         lb = client._load_balancer

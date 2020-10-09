@@ -125,17 +125,23 @@ class Employee3(Portable):
 
 
 # Let's now configure 3 clients with 3 different versions of Employee.
-config = hazelcast.ClientConfig()
-config.serialization.portable_factories[Employee.FACTORY_ID] = {Employee.CLASS_ID: Employee}
-client = hazelcast.HazelcastClient(config)
+client = hazelcast.HazelcastClient(portable_factories={
+    Employee.FACTORY_ID: {
+        Employee.CLASS_ID: Employee
+    }
+})
 
-config2 = hazelcast.ClientConfig()
-config2.serialization.portable_factories[Employee2.FACTORY_ID] = {Employee2.CLASS_ID: Employee2}
-client2 = hazelcast.HazelcastClient(config2)
+client2 = hazelcast.HazelcastClient(portable_factories={
+    Employee2.FACTORY_ID: {
+        Employee2.CLASS_ID: Employee2
+    }
+})
 
-config3 = hazelcast.ClientConfig()
-config3.serialization.portable_factories[Employee3.FACTORY_ID] = {Employee3.CLASS_ID: Employee3}
-client3 = hazelcast.HazelcastClient(config3)
+client3 = hazelcast.HazelcastClient(portable_factories={
+    Employee3.FACTORY_ID: {
+        Employee3.CLASS_ID: Employee3
+    }
+})
 
 # Assume that a member joins a cluster with a newer version of a class.
 # If you modified the class by adding a new field, the new member's put operations include that
@@ -147,7 +153,7 @@ my_map.clear()
 my_map.put(0, Employee("Jack", 28))
 my_map2.put(1, Employee2("Jane", 29, "Josh"))
 
-print('Map Size: {}'.format(my_map.size()))
+print('Map Size: %s' % my_map.size())
 
 # If this new member tries to get an object that was put from the older members, it
 # gets null for the newly added field.
@@ -161,7 +167,7 @@ for v in my_map2.values():
 my_map3 = client3.get_map("employee-map").blocking()
 my_map3.put(2, Employee3("Joe", "30", "Mary"))
 
-print('Map Size: {}'.format(my_map.size()))
+print('Map Size: %s' % my_map.size())
 
 # As clients with incompatible versions of the class try to access each other, a HazelcastSerializationError
 # is raised (caused by a TypeError).
@@ -169,13 +175,13 @@ try:
     # Client that has class with int type age field tries to read Employee3 object with String age field.
     print(my_map.get(2))
 except HazelcastSerializationError as ex:
-    print("Failed due to: {}".format(ex))
+    print("Failed due to: %s" % ex)
 
 try:
     # Client that has class with String type age field tries to read Employee object with int age field.
     print(my_map3.get(0))
 except HazelcastSerializationError as ex:
-    print("Failed due to: {}".format(ex))
+    print("Failed due to: %s" % ex)
 
 client.shutdown()
 client2.shutdown()

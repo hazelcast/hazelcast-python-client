@@ -21,7 +21,7 @@ test_map2 = client.get_map(map_name)
 # This causes a DESTROYED event
 test_map.destroy()
 
-# Deregister the listener
+# De-register the listener
 client.remove_distributed_object_listener(reg_id)
 
 client.shutdown()

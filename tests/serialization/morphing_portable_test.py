@@ -1,6 +1,6 @@
 import unittest
 
-from hazelcast import SerializationConfig
+from hazelcast.config import _Config
 from hazelcast.serialization import SerializationServiceV1
 from tests.serialization.portable_test import create_portable, SerializationV1Portable, InnerPortable, FACTORY_ID
 from hazelcast import six
@@ -28,14 +28,18 @@ the_factory_2 = {SerializationV1Portable.CLASS_ID: MorphingPortable, InnerPortab
 
 class MorphingPortableTestCase(unittest.TestCase):
     def setUp(self):
-        config1 = SerializationConfig()
-        config1.add_portable_factory(FACTORY_ID, the_factory_1)
+        config1 = _Config()
+        config1.portable_factories = {
+            FACTORY_ID: the_factory_1
+        }
 
-        config2 = SerializationConfig()
-        config2.add_portable_factory(FACTORY_ID, the_factory_2)
+        config2 = _Config()
+        config2.portable_factories = {
+            FACTORY_ID: the_factory_2
+        }
 
-        self.service1 = SerializationServiceV1(serialization_config=config1)
-        self.service2 = SerializationServiceV1(serialization_config=config2)
+        self.service1 = SerializationServiceV1(config1)
+        self.service2 = SerializationServiceV1(config2)
 
         base_portable = create_portable()
         data = self.service1.to_data(base_portable)

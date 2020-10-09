@@ -1,6 +1,6 @@
 import unittest
 
-from hazelcast.config import SerializationConfig
+from hazelcast.config import _Config
 from hazelcast.serialization.api import StreamSerializer
 from hazelcast.serialization.service import SerializationServiceV1
 from hazelcast.six.moves import cPickle
@@ -88,10 +88,10 @@ class TheOtherCustomSerializer(StreamSerializer):
 
 class CustomSerializationTestCase(unittest.TestCase):
     def test_global_encode_decode(self):
-        config = SerializationConfig()
+        config = _Config()
         config.global_serializer = TestGlobalSerializer
 
-        service = SerializationServiceV1(serialization_config=config)
+        service = SerializationServiceV1(config)
         obj = CustomClass("uid", "some name", "description text")
         data = service.to_data(obj)
 
@@ -100,10 +100,12 @@ class CustomSerializationTestCase(unittest.TestCase):
         self.assertEqual("GLOBAL", obj2.source)
 
     def test_custom_serializer(self):
-        config = SerializationConfig()
-        config.set_custom_serializer(CustomClass, CustomSerializer)
+        config = _Config()
+        config.custom_serializers = {
+            CustomClass: CustomSerializer
+        }
 
-        service = SerializationServiceV1(serialization_config=config)
+        service = SerializationServiceV1(config)
         obj = CustomClass("uid", "some name", "description text")
         data = service.to_data(obj)
 
@@ -112,11 +114,13 @@ class CustomSerializationTestCase(unittest.TestCase):
         self.assertEqual("CUSTOM", obj2.source)
 
     def test_global_custom_serializer(self):
-        config = SerializationConfig()
-        config.set_custom_serializer(CustomClass, CustomSerializer)
+        config = _Config()
+        config.custom_serializers = {
+            CustomClass: CustomSerializer
+        }
         config.global_serializer = TestGlobalSerializer
 
-        service = SerializationServiceV1(serialization_config=config)
+        service = SerializationServiceV1(config)
         obj = CustomClass("uid", "some name", "description text")
         data = service.to_data(obj)
 
@@ -125,9 +129,11 @@ class CustomSerializationTestCase(unittest.TestCase):
         self.assertEqual("CUSTOM", obj2.source)
 
     def test_double_register_custom_serializer(self):
-        config = SerializationConfig()
-        config.set_custom_serializer(CustomClass, CustomSerializer)
-        service = SerializationServiceV1(serialization_config=config)
+        config = _Config()
+        config.custom_serializers = {
+            CustomClass: CustomSerializer
+        }
+        service = SerializationServiceV1(config)
 
         with self.assertRaises(ValueError):
             service._registry.safe_register_serializer(TheOtherCustomSerializer, CustomClass)

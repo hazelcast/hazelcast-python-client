@@ -1,20 +1,15 @@
 import hazelcast
 
-config = hazelcast.ClientConfig()
-flake_id_generator_config = hazelcast.FlakeIdGeneratorConfig()
-
-# Default value is 600000 (10 minutes)
-flake_id_generator_config.prefetch_validity_in_millis = 30000
-
-# Default value is 100
-flake_id_generator_config.prefetch_count = 50
-
-config.add_flake_id_generator_config(flake_id_generator_config)
-client = hazelcast.HazelcastClient(config)
+client = hazelcast.HazelcastClient(flake_id_generators={
+    "id-generator": {
+        "prefetch_count": 50,
+        "prefetch_validity": 30,
+    }
+})
 
 generator = client.get_flake_id_generator("id-generator").blocking()
 
 for _ in range(100):
-    print("Id: {}".format(generator.new_id()))
+    print("Id:", generator.new_id())
 
 client.shutdown()

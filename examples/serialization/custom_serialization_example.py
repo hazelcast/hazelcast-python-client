@@ -9,6 +9,9 @@ class TimeOfDay(object):
         self.minute = minute
         self.second = second
 
+    def __repr__(self):
+        return "TimeOfDay(hour=%s, minute=%s, second=%s)" % (self.hour, self.minute, self.second)
+
 
 class CustomSerializer(StreamSerializer):
     CUSTOM_SERIALIZER_ID = 4  # Should be greater than 0 and unique to each serializer
@@ -33,16 +36,15 @@ class CustomSerializer(StreamSerializer):
         pass
 
 
-config = hazelcast.ClientConfig()
-config.serialization.set_custom_serializer(type(TimeOfDay), CustomSerializer)
+client = hazelcast.HazelcastClient(custom_serializers={
+    TimeOfDay: CustomSerializer
+})
 
-client = hazelcast.HazelcastClient(config)
-
-my_map = client.get_map("map")
+my_map = client.get_map("map").blocking()
 time_of_day = TimeOfDay(13, 36, 59)
 my_map.put("time", time_of_day)
 
-time = my_map.get("time").result()
-print("Time is {}:{}:{}".format(time.hour, time.minute, time.second))
+time = my_map.get("time")
+print("Time is", time)
 
 client.shutdown()

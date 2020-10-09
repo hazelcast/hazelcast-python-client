@@ -48,7 +48,7 @@ class InvocationService(object):
 
     def __init__(self, client, reactor, logger_extras):
         config = client.config
-        if config.network.smart_routing:
+        if config.smart_routing:
             self.invoke = self._invoke_smart
         else:
             self.invoke = self._invoke_non_smart
@@ -62,9 +62,9 @@ class InvocationService(object):
         self._check_invocation_allowed_fn = None
         self._pending = {}
         self._next_correlation_id = AtomicInteger(1)
-        self._is_redo_operation = config.network.redo_operation
-        self._invocation_timeout = self._init_invocation_timeout()
-        self._invocation_retry_pause = self._init_invocation_retry_pause()
+        self._is_redo_operation = config.redo_operation
+        self._invocation_timeout = config.invocation_timeout
+        self._invocation_retry_pause = config.invocation_retry_pause
         self._shutdown = False
 
     def start(self, partition_service, connection_manager, listener_service):
@@ -166,16 +166,6 @@ class InvocationService(object):
                 self._handle_exception(invocation, IOError("No connection found to invoke"))
         except Exception as e:
             self._handle_exception(invocation, e)
-
-    def _init_invocation_retry_pause(self):
-        invocation_retry_pause = self._client.properties.get_seconds_positive_or_default(
-            self._client.properties.INVOCATION_RETRY_PAUSE_MILLIS)
-        return invocation_retry_pause
-
-    def _init_invocation_timeout(self):
-        invocation_timeout = self._client.properties.get_seconds_positive_or_default(
-            self._client.properties.INVOCATION_TIMEOUT_SECONDS)
-        return invocation_timeout
 
     def _send(self, invocation, connection):
         if self._shutdown:

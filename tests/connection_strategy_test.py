@@ -1,15 +1,14 @@
-from hazelcast import ClientConfig, HazelcastClient, six
-from hazelcast.config import RECONNECT_MODE
+from hazelcast import HazelcastClient, six
+from hazelcast.config import ReconnectMode
 from hazelcast.errors import ClientOfflineError, HazelcastClientNotActiveError
 from hazelcast.lifecycle import LifecycleState
 from tests.base import HazelcastTestCase
-from tests.util import random_string, configure_logging
+from tests.util import random_string
 
 
 class ConnectionStrategyTest(HazelcastTestCase):
     @classmethod
     def setUpClass(cls):
-        configure_logging()
         cls.rc = cls.create_rc()
 
     @classmethod
@@ -30,17 +29,13 @@ class ConnectionStrategyTest(HazelcastTestCase):
             self.cluster = None
 
     def test_async_start_with_no_cluster(self):
-        config = ClientConfig()
-        config.connection_strategy.async_start = True
-        self.client = HazelcastClient(config)
+        self.client = HazelcastClient(async_start=True)
 
         with self.assertRaises(ClientOfflineError):
             self.client.get_map(random_string())
 
     def test_async_start_with_no_cluster_throws_after_shutdown(self):
-        config = ClientConfig()
-        config.connection_strategy.async_start = True
-        self.client = HazelcastClient(config)
+        self.client = HazelcastClient(async_start=True)
 
         self.client.shutdown()
         with self.assertRaises(HazelcastClientNotActiveError):
@@ -49,10 +44,6 @@ class ConnectionStrategyTest(HazelcastTestCase):
     def test_async_start(self):
         self.cluster = self.rc.createCluster(None, None)
         self.rc.startMember(self.cluster.id)
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.network.addresses.append("localhost:5701")
-        config.connection_strategy.async_start = True
 
         def collector():
             events = []
@@ -64,8 +55,11 @@ class ConnectionStrategyTest(HazelcastTestCase):
             on_state_change.events = events
             return on_state_change
         event_collector = collector()
-        config.add_lifecycle_listener(event_collector)
-        self.client = HazelcastClient(config)
+
+        self.client = HazelcastClient(cluster_name=self.cluster.id,
+                                      cluster_members=["localhost:5701"],
+                                      async_start=True,
+                                      lifecycle_listeners=[event_collector])
 
         self.assertTrueEventually(lambda: self.assertEqual(1, len(event_collector.events)))
         self.client.get_map(random_string())
@@ -73,11 +67,6 @@ class ConnectionStrategyTest(HazelcastTestCase):
     def test_off_reconnect_mode(self):
         self.cluster = self.rc.createCluster(None, None)
         member = self.rc.startMember(self.cluster.id)
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.network.addresses.append("localhost:5701")
-        config.connection_strategy.reconnect_mode = RECONNECT_MODE.OFF
-        config.connection_strategy.connection_retry.cluster_connect_timeout = six.MAXSIZE
 
         def collector():
             events = []
@@ -89,8 +78,12 @@ class ConnectionStrategyTest(HazelcastTestCase):
             on_state_change.events = events
             return on_state_change
         event_collector = collector()
-        config.add_lifecycle_listener(event_collector)
-        self.client = HazelcastClient(config)
+
+        self.client = HazelcastClient(cluster_members=["localhost:5701"],
+                                      cluster_name=self.cluster.id,
+                                      reconnect_mode=ReconnectMode.OFF,
+                                      cluster_connect_timeout=six.MAXSIZE,
+                                      lifecycle_listeners=[event_collector])
         m = self.client.get_map(random_string()).blocking()
         # no exception at this point
         m.put(1, 1)
@@ -103,11 +96,6 @@ class ConnectionStrategyTest(HazelcastTestCase):
     def test_async_reconnect_mode(self):
         self.cluster = self.rc.createCluster(None, None)
         member = self.rc.startMember(self.cluster.id)
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.network.addresses.append("localhost:5701")
-        config.connection_strategy.reconnect_mode = RECONNECT_MODE.ASYNC
-        config.connection_strategy.connection_retry.cluster_connect_timeout = six.MAXSIZE
 
         def collector(event_type):
             events = []
@@ -119,8 +107,12 @@ class ConnectionStrategyTest(HazelcastTestCase):
             on_state_change.events = events
             return on_state_change
         disconnected_collector = collector(LifecycleState.DISCONNECTED)
-        config.add_lifecycle_listener(disconnected_collector)
-        self.client = HazelcastClient(config)
+
+        self.client = HazelcastClient(cluster_members=["localhost:5701"],
+                                      cluster_name=self.cluster.id,
+                                      reconnect_mode=ReconnectMode.ASYNC,
+                                      cluster_connect_timeout=six.MAXSIZE,
+                                      lifecycle_listeners=[disconnected_collector])
         m = self.client.get_map(random_string()).blocking()
         # no exception at this point
         m.put(1, 1)
@@ -139,9 +131,7 @@ class ConnectionStrategyTest(HazelcastTestCase):
         m.put(1, 1)
 
     def test_async_start_with_partition_specific_proxies(self):
-        config = ClientConfig()
-        config.connection_strategy.async_start = True
-        self.client = HazelcastClient(config)
+        self.client = HazelcastClient(async_start=True)
 
         with self.assertRaises(ClientOfflineError):
             self.client.get_list(random_string())

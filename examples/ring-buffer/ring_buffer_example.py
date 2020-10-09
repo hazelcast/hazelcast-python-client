@@ -2,13 +2,13 @@ import hazelcast
 
 client = hazelcast.HazelcastClient()
 
-ring_buffer = client.get_ringbuffer("ring-buffer")
-print("Capacity of the ring buffer: {}".format(ring_buffer.capacity().result()))
+rb = client.get_ringbuffer("ring-buffer").blocking()
+print("Capacity of the ring buffer:", rb.capacity())
 
-sequence = ring_buffer.add("First item").result()
-print("Size: {}".format(ring_buffer.size().result()))
+sequence = rb.add("First item")
+print("Size:", rb.size())
 
-item = ring_buffer.read_one(sequence).result()
-print("The item at the sequence {} is {}".format(sequence, item))
+item = rb.read_one(sequence)
+print("The item at the sequence %s is %s" % (sequence, item))
 
 client.shutdown()

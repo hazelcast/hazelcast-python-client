@@ -146,7 +146,7 @@ class _ObjectDataInput(ObjectDataInput):
         if _position < 0:
             raise ValueError
         if self._size - _position < size:
-            raise EOFError("Cannot read {} bytes!".format(size))
+            raise EOFError("Cannot read %s bytes!" % size)
 
     def _read_from_buff(self, fmt, size, position=None):
         if position is None:

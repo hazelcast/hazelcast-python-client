@@ -1,38 +1,18 @@
 import unittest
 from time import sleep
 
-from hazelcast import SerializationConfig
-from hazelcast.config import NearCacheConfig
+from hazelcast.config import _Config
 from hazelcast.near_cache import *
 from hazelcast.serialization import SerializationServiceV1
-from tests.util import random_string, configure_logging
 from hazelcast.six.moves import range
 
 
 class NearCacheTestCase(unittest.TestCase):
     def setUp(self):
-        configure_logging()
-        self.service = SerializationServiceV1(serialization_config=SerializationConfig())
+        self.service = SerializationServiceV1(_Config())
 
     def tearDown(self):
         self.service.destroy()
-
-    def test_near_cache_config(self):
-        config = NearCacheConfig(random_string())
-        with self.assertRaises(ValueError):
-            config.in_memory_format = 100
-
-        with self.assertRaises(ValueError):
-            config.eviction_policy = 100
-
-        with self.assertRaises(ValueError):
-            config.time_to_live_seconds = -1
-
-        with self.assertRaises(ValueError):
-            config.max_idle_seconds = -1
-
-        with self.assertRaises(ValueError):
-            config.eviction_max_size = 0
 
     def test_DataRecord_expire_time(self):
         now = current_time()
@@ -47,13 +27,13 @@ class NearCacheTestCase(unittest.TestCase):
         self.assertTrue(data_rec.is_expired(max_idle_seconds=1))
 
     def test_put_get_data(self):
-        near_cache = self.create_near_cache(self.service, IN_MEMORY_FORMAT.BINARY, 1000, 1000, EVICTION_POLICY.LRU, 1000)
+        near_cache = self.create_near_cache(self.service, InMemoryFormat.BINARY, 1000, 1000, EvictionPolicy.LRU, 1000)
         key_data = self.service.to_data("key")
         near_cache[key_data] = "value"
         self.assertEqual("value", near_cache[key_data])
 
     def test_put_get(self):
-        near_cache = self.create_near_cache(self.service, IN_MEMORY_FORMAT.OBJECT, 1000, 1000, EVICTION_POLICY.LRU, 1000)
+        near_cache = self.create_near_cache(self.service, InMemoryFormat.OBJECT, 1000, 1000, EvictionPolicy.LRU, 1000)
         for i in range(0, 10000):
             key = "key-{}".format(i)
             value = "value-{}".format(i)
@@ -63,7 +43,7 @@ class NearCacheTestCase(unittest.TestCase):
             self.assertGreaterEqual(near_cache.eviction_max_size * 1.1, near_cache.__len__())
 
     def test_expiry_time(self):
-        near_cache = self.create_near_cache(self.service, IN_MEMORY_FORMAT.OBJECT, 1, 1000, EVICTION_POLICY.LRU, 1000)
+        near_cache = self.create_near_cache(self.service, InMemoryFormat.OBJECT, 1, 1000, EvictionPolicy.LRU, 1000)
         for i in range(0, 1000):
             key = "key-{}".format(i)
             value = "value-{}".format(i)
@@ -79,7 +59,7 @@ class NearCacheTestCase(unittest.TestCase):
         self.assertGreater(expire, 8)
 
     def test_max_idle_time(self):
-        near_cache = self.create_near_cache(self.service, IN_MEMORY_FORMAT.OBJECT, 1000, 2, EVICTION_POLICY.LRU, 1000)
+        near_cache = self.create_near_cache(self.service, InMemoryFormat.OBJECT, 1000, 2, EvictionPolicy.LRU, 1000)
         for i in range(0, 1000):
             key = "key-{}".format(i)
             value = "value-{}".format(i)
@@ -92,7 +72,7 @@ class NearCacheTestCase(unittest.TestCase):
         self.assertEqual(expire, near_cache.eviction_sampling_count)
 
     def test_LRU_time(self):
-        near_cache = self.create_near_cache(self.service, IN_MEMORY_FORMAT.OBJECT, 1000, 1000, EVICTION_POLICY.LRU, 10000, 16, 16)
+        near_cache = self.create_near_cache(self.service, InMemoryFormat.OBJECT, 1000, 1000, EvictionPolicy.LRU, 10000, 16, 16)
         for i in range(0, 10000):
             key = "key-{}".format(i)
             value = "value-{}".format(i)
@@ -108,7 +88,7 @@ class NearCacheTestCase(unittest.TestCase):
         self.assertLess(evict, 10000)
 
     def test_LRU_time_with_update(self):
-        near_cache = self.create_near_cache(self.service, IN_MEMORY_FORMAT.OBJECT, 1000, 1000, EVICTION_POLICY.LRU, 10, 10, 10)
+        near_cache = self.create_near_cache(self.service, InMemoryFormat.OBJECT, 1000, 1000, EvictionPolicy.LRU, 10, 10, 10)
         for i in range(0, 10):
             key = "key-{}".format(i)
             value = "value-{}".format(i)
@@ -124,7 +104,7 @@ class NearCacheTestCase(unittest.TestCase):
             val = near_cache["key-9"]
 
     def test_LFU_time(self):
-        near_cache = self.create_near_cache(self.service, IN_MEMORY_FORMAT.BINARY, 1000, 1000, EVICTION_POLICY.LFU, 1000)
+        near_cache = self.create_near_cache(self.service, InMemoryFormat.BINARY, 1000, 1000, EvictionPolicy.LFU, 1000)
         for i in range(0, 1000):
             key = "key-{}".format(i)
             value = "value-{}".format(i)
@@ -141,7 +121,7 @@ class NearCacheTestCase(unittest.TestCase):
         self.assertLess(evict, 1000)
 
     def test_RANDOM_time(self):
-        near_cache = self.create_near_cache(self.service, IN_MEMORY_FORMAT.BINARY, 1000, 1000, EVICTION_POLICY.LFU, 1000)
+        near_cache = self.create_near_cache(self.service, InMemoryFormat.BINARY, 1000, 1000, EvictionPolicy.LFU, 1000)
         for i in range(0, 2000):
             key = "key-{}".format(i)
             value = "value-{}".format(i)

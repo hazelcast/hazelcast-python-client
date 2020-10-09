@@ -18,27 +18,28 @@ def default_partition_strategy(key):
 
 class SerializationServiceV1(BaseSerializationService):
 
-    def __init__(self, serialization_config, version=1, global_partition_strategy=default_partition_strategy,
+    def __init__(self, config, version=1,
+                 global_partition_strategy=default_partition_strategy,
                  output_buffer_size=DEFAULT_OUT_BUFFER_SIZE):
         super(SerializationServiceV1, self).__init__(version, global_partition_strategy, output_buffer_size,
-                                                     serialization_config.is_big_endian,
-                                                     serialization_config.default_integer_type)
-        self._portable_context = PortableContext(self, serialization_config.portable_version)
-        self.register_class_definitions(serialization_config.class_definitions, serialization_config.check_class_def_errors)
-        self._registry._portable_serializer = PortableSerializer(self._portable_context, serialization_config.portable_factories)
+                                                     config.is_big_endian,
+                                                     config.default_int_type)
+        self._portable_context = PortableContext(self, config.portable_version)
+        self.register_class_definitions(config.class_definitions, config.check_class_definition_errors)
+        self._registry._portable_serializer = PortableSerializer(self._portable_context, config.portable_factories)
 
         # merge configured factories with built in ones
         factories = {}
-        factories.update(serialization_config.data_serializable_factories)
+        factories.update(config.data_serializable_factories)
         self._registry._data_serializer = IdentifiedDataSerializer(factories)
         self._register_constant_serializers()
 
         # Register Custom Serializers
-        for _type, custom_serializer in six.iteritems(serialization_config.custom_serializers):
+        for _type, custom_serializer in six.iteritems(config.custom_serializers):
             self._registry.safe_register_serializer(custom_serializer(), _type)
 
         # Register Global Serializer
-        global_serializer = serialization_config.global_serializer
+        global_serializer = config.global_serializer
         if global_serializer:
             self._registry._global_serializer = global_serializer()
 
@@ -80,7 +81,7 @@ class SerializationServiceV1(BaseSerializationService):
         class_defs = dict()
         for cd in class_definitions:
             if cd in class_defs:
-                raise HazelcastSerializationError("Duplicate registration found for class-id:{}".format(cd.class_id))
+                raise HazelcastSerializationError("Duplicate registration found for class-id: %s" % cd.class_id)
             class_defs[cd.class_id] = cd
         for cd in class_definitions:
             self.register_class_definition(cd, class_defs, check_error)
@@ -96,5 +97,5 @@ class SerializationServiceV1(BaseSerializationService):
                     self._portable_context.register_class_definition(nested_cd)
                 elif check_error:
                     raise HazelcastSerializationError(
-                            "Could not find registered ClassDefinition for class-id:{}".format(fd.class_id))
+                            "Could not find registered ClassDefinition for class-id: %s" % fd.class_id)
         self._portable_context.register_class_definition(cd)

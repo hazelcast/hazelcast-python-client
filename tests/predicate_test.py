@@ -1,6 +1,5 @@
 from unittest import TestCase, skip
 
-from hazelcast.config import IndexConfig
 from hazelcast.serialization.predicate import is_equal_to, and_, is_between, is_less_than, \
     is_less_than_or_equal_to, is_greater_than, is_greater_than_or_equal_to, or_, is_not_equal_to, not_, is_like, \
     is_ilike, matches_regex, sql, true, false, is_in, is_instance_of
@@ -80,7 +79,7 @@ class PredicateStrTest(TestCase):
 class PredicateTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
-        config.cluster_name = cls.cluster.id
+        config["cluster_name"] = cls.cluster.id
         return config
 
     def setUp(self):
@@ -90,10 +89,9 @@ class PredicateTest(SingleMemberTestCase):
         self.map.destroy()
 
     def _fill_map(self, count=10):
-        map = {"key-%d" % x: "value-%d" % x for x in range(0, count)}
-        for k, v in six.iteritems(map):
-            self.map.put(k, v)
-        return map
+        m = {"key-%d" % x: "value-%d" % x for x in range(0, count)}
+        self.map.put_all(m)
+        return m
 
     def _fill_map_numeric(self, count=100):
         for n in range(0, count):
@@ -102,7 +100,7 @@ class PredicateTest(SingleMemberTestCase):
     def test_key_set(self):
         self._fill_map()
         key_set = self.map.key_set()
-        key_set_list = list(key_set)
+        list(key_set)
         key_set_list = list(key_set)
         assert key_set_list[0]
 
@@ -208,26 +206,25 @@ class PredicateTest(SingleMemberTestCase):
         six.assertCountEqual(self, self.map.key_set(predicate), ["key-1"])
 
     def test_true(self):
-        map = self._fill_map()
-
+        m = self._fill_map()
         predicate = true()
-
-        six.assertCountEqual(self, self.map.key_set(predicate), list(map.keys()))
+        six.assertCountEqual(self, self.map.key_set(predicate), list(m.keys()))
 
     def test_false(self):
-        map = self._fill_map()
-
+        self._fill_map()
         predicate = false()
-
         six.assertCountEqual(self, self.map.key_set(predicate), [])
 
 
 class PredicatePortableTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
-        config.cluster_name = cls.cluster.id
-        the_factory = {InnerPortable.CLASS_ID: InnerPortable}
-        config.serialization.portable_factories[FACTORY_ID] = the_factory
+        config["cluster_name"] = cls.cluster.id
+        config["portable_factories"] = {
+            FACTORY_ID: {
+                InnerPortable.CLASS_ID: InnerPortable
+            }
+        }
         return config
 
     def setUp(self):
@@ -237,10 +234,9 @@ class PredicatePortableTest(SingleMemberTestCase):
         self.map.destroy()
 
     def _fill_map(self, count=1000):
-        map = {InnerPortable("key-%d" % x, x): InnerPortable("value-%d" % x, x) for x in range(0, count)}
-        for k, v in six.iteritems(map):
-            self.map.put(k, v)
-        return map
+        m = {InnerPortable("key-%d" % x, x): InnerPortable("value-%d" % x, x) for x in range(0, count)}
+        self.map.put_all(m)
+        return m
 
     def test_predicate_portable_key(self):
         _map = self._fill_map()
@@ -305,9 +301,13 @@ class NestedPredicatePortableTest(SingleMemberTestCase):
 
     @classmethod
     def configure_client(cls, config):
-        config.cluster_name = cls.cluster.id
-        factory = {1: NestedPredicatePortableTest.Body, 2: NestedPredicatePortableTest.Limb}
-        config.serialization.portable_factories[FACTORY_ID] = factory
+        config["cluster_name"] = cls.cluster.id
+        config["portable_factories"] = {
+            FACTORY_ID: {
+                1: NestedPredicatePortableTest.Body,
+                2: NestedPredicatePortableTest.Limb,
+            },
+        }
         return config
 
     def setUp(self):
@@ -320,12 +320,10 @@ class NestedPredicatePortableTest(SingleMemberTestCase):
 
     def test_adding_indexes(self):
         # single-attribute index
-        single_index = IndexConfig(attributes=["name"])
-        self.map.add_index(single_index)
+        self.map.add_index(attributes=["name"])
 
         # nested-attribute index
-        nested_index = IndexConfig(attributes=["limb.name"])
-        self.map.add_index(nested_index)
+        self.map.add_index(attributes=["limb.name"])
 
     def test_single_attribute_query_portable_predicates(self):
         predicate = is_equal_to("limb.name", "hand")

@@ -1,6 +1,6 @@
 import unittest
 
-import hazelcast
+from hazelcast.config import _Config
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.serialization.api import IdentifiedDataSerializable
 
@@ -116,9 +116,11 @@ the_factory = {SerializationV1Identified.CLASS_ID: SerializationV1Identified}
 class IdentifiedSerializationTestCase(unittest.TestCase):
 
     def test_encode_decode(self):
-        config = hazelcast.ClientConfig()
-        config.serialization.data_serializable_factories[FACTORY_ID] = the_factory
-        service = SerializationServiceV1(config.serialization)
+        config = _Config()
+        config.data_serializable_factories = {
+            FACTORY_ID: the_factory
+        }
+        service = SerializationServiceV1(config)
         obj = create_identified()
         data = service.to_data(obj)
 

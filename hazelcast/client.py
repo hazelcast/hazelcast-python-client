@@ -1,11 +1,10 @@
 import logging
 import logging.config
-import sys
-import json
 import threading
 
-from hazelcast.cluster import ClusterService, RoundRobinLB, _InternalClusterService
-from hazelcast.config import ClientConfig, ClientProperties
+from hazelcast import six
+from hazelcast.cluster import ClusterService, _InternalClusterService
+from hazelcast.config import _Config
 from hazelcast.connection import ConnectionManager, DefaultAddressProvider
 from hazelcast.core import DistributedObjectInfo, DistributedObjectEvent
 from hazelcast.invocation import InvocationService, Invocation
@@ -23,8 +22,8 @@ from hazelcast.reactor import AsyncoreReactor
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.statistics import Statistics
 from hazelcast.transaction import TWO_PHASE, TransactionManager
-from hazelcast.util import AtomicInteger, DEFAULT_LOGGING
-from hazelcast.discovery import HazelcastCloudAddressProvider, HazelcastCloudDiscovery
+from hazelcast.util import AtomicInteger, DEFAULT_LOGGING, RoundRobinLB
+from hazelcast.discovery import HazelcastCloudAddressProvider
 from hazelcast.errors import IllegalStateError
 
 
@@ -35,16 +34,16 @@ class HazelcastClient(object):
     _CLIENT_ID = AtomicInteger()
     logger = logging.getLogger("HazelcastClient")
 
-    def __init__(self, config=None):
+    def __init__(self, **kwargs):
+        config = _Config.from_dict(kwargs)
+        self.config = config
         self._context = _ClientContext()
-        self.config = config or ClientConfig()
-        self.properties = ClientProperties(self.config.get_properties())
-        self._id = HazelcastClient._CLIENT_ID.get_and_increment()
-        self.name = self._create_client_name()
+        client_id = HazelcastClient._CLIENT_ID.get_and_increment()
+        self.name = self._create_client_name(client_id)
         self._init_logger()
         self._logger_extras = {"client_name": self.name, "cluster_name": self.config.cluster_name}
         self._reactor = AsyncoreReactor(self._logger_extras)
-        self._serialization_service = SerializationServiceV1(serialization_config=self.config.serialization)
+        self._serialization_service = SerializationServiceV1(config)
         self._near_cache_manager = NearCacheManager(self, self._serialization_service)
         self._internal_lifecycle_service = _InternalLifecycleService(self, self._logger_extras)
         self.lifecycle_service = LifecycleService(self._internal_lifecycle_service)
@@ -61,7 +60,7 @@ class HazelcastClient(object):
                                                      self._invocation_service,
                                                      self._near_cache_manager,
                                                      self._logger_extras)
-        self._load_balancer = self._init_load_balancer(self.config)
+        self._load_balancer = self._init_load_balancer(config)
         self._listener_service = ListenerService(self, self._connection_manager,
                                                  self._invocation_service,
                                                  self._logger_extras)
@@ -91,13 +90,12 @@ class HazelcastClient(object):
             self._internal_lifecycle_service.start()
             self._invocation_service.start(self._internal_partition_service, self._connection_manager,
                                            self._listener_service)
-            self._load_balancer.init(self.cluster_service, self.config)
+            self._load_balancer.init(self.cluster_service)
             membership_listeners = self.config.membership_listeners
             self._internal_cluster_service.start(self._connection_manager, membership_listeners)
             self._cluster_view_listener.start()
             self._connection_manager.start(self._load_balancer)
-            connection_strategy = self.config.connection_strategy
-            if not connection_strategy.async_start:
+            if not self.config.async_start:
                 self._internal_cluster_service.wait_initial_member_list_fetched()
                 self._connection_manager.connect_to_all_cluster_members()
 
@@ -238,7 +236,7 @@ class HazelcastClient(object):
         :param listener_func: Function to be called when a distributed object is created or destroyed.
         :return: (str), a registration id which is used as a key to remove the listener.
         """
-        is_smart = self.config.network.smart_routing
+        is_smart = self.config.smart_routing
         request = client_add_distributed_object_listener_codec.encode_request(is_smart)
 
         def handle_distributed_object_event(name, service_name, event_type, source):
@@ -306,53 +304,41 @@ class HazelcastClient(object):
                 self._internal_lifecycle_service.fire_lifecycle_event(LifecycleState.SHUTDOWN)
 
     def _create_address_provider(self):
-        network_config = self.config.network
-        address_list_provided = len(network_config.addresses) != 0
-        cloud_config = network_config.cloud
-        cloud_enabled = cloud_config.enabled or cloud_config.discovery_token != ""
+        config = self.config
+        cluster_members = config.cluster_members
+        address_list_provided = len(cluster_members) > 0
+        cloud_discovery_token = config.cloud_discovery_token
+        cloud_enabled = cloud_discovery_token is not None
         if address_list_provided and cloud_enabled:
             raise IllegalStateError("Only one discovery method can be enabled at a time. "
                                     "Cluster members given explicitly: %s, Hazelcast Cloud enabled: %s"
                                     % (address_list_provided, cloud_enabled))
 
-        cloud_address_provider = self._init_cloud_address_provider(cloud_config)
-        if cloud_address_provider:
-            return cloud_address_provider
+        if cloud_enabled:
+            connection_timeout = self._get_connection_timeout(config)
+            return HazelcastCloudAddressProvider(cloud_discovery_token, connection_timeout, self._logger_extras)
 
-        return DefaultAddressProvider(network_config.addresses)
-
-    def _init_cloud_address_provider(self, cloud_config):
-        if cloud_config.enabled:
-            discovery_token = cloud_config.discovery_token
-            host, url = HazelcastCloudDiscovery.get_host_and_url(self.config.get_properties(), discovery_token)
-            return HazelcastCloudAddressProvider(host, url, self._get_connection_timeout(), self._logger_extras)
-
-        cloud_token = self.properties.get(self.properties.HAZELCAST_CLOUD_DISCOVERY_TOKEN)
-        if cloud_token != "":
-            host, url = HazelcastCloudDiscovery.get_host_and_url(self.config.get_properties(), cloud_token)
-            return HazelcastCloudAddressProvider(host, url, self._get_connection_timeout(), self._logger_extras)
-
-        return None
-
-    def _get_connection_timeout(self):
-        network_config = self.config.network
-        conn_timeout = network_config.connection_timeout
-        return sys.maxsize if conn_timeout == 0 else conn_timeout
-
-    def _create_client_name(self):
-        if self.config.client_name:
-            return self.config.client_name
-        return "hz.client_" + str(self._id)
+        return DefaultAddressProvider(cluster_members)
 
     def _init_logger(self):
-        logger_config = self.config.logger
-        if logger_config.config_file is not None:
-            with open(logger_config.config_file, "r") as f:
-                json_config = json.loads(f.read())
-                logging.config.dictConfig(json_config)
+        config = self.config
+        logging_config = config.logging_config
+        if logging_config:
+            logging.config.dictConfig(logging_config)
         else:
             logging.config.dictConfig(DEFAULT_LOGGING)
-            self.logger.setLevel(logger_config.level)
+            self.logger.setLevel(config.logging_level)
+
+    def _create_client_name(self, client_id):
+        client_name = self.config.client_name
+        if client_name:
+            return client_name
+        return "hz.client_%s" % client_id
+
+    @staticmethod
+    def _get_connection_timeout(config):
+        timeout = config.connection_timeout
+        return six.MAXSIZE if timeout == 0 else timeout
 
     @staticmethod
     def _init_load_balancer(config):

@@ -5,15 +5,18 @@ from tests.util import random_string, event_collector
 class TopicTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
-        config.cluster_name = cls.cluster.id
+        config["cluster_name"] = cls.cluster.id
         return config
 
     def setUp(self):
         self.topic = self.client.get_topic(random_string()).blocking()
 
+    def tearDown(self):
+        self.topic.destroy()
+
     def test_add_listener(self):
         collector = event_collector()
-        reg_id = self.topic.add_listener(on_message=collector)
+        self.topic.add_listener(on_message=collector)
         self.topic.publish('item-value')
 
         def assert_event():

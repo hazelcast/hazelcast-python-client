@@ -1,10 +1,10 @@
 import datetime
+import json
 import logging
 import os
 
 from inspect import currentframe, getframeinfo
 from hazelcast import HazelcastClient
-from hazelcast.config import LoggerConfig, ClientConfig
 from hazelcast.six import StringIO
 from hazelcast.version import CLIENT_VERSION
 from tests.util import get_abs_path
@@ -25,16 +25,8 @@ class LoggerConfigTest(HazelcastTestCase):
         cls.rc.exit()
 
     def test_default_config(self):
-        logger_config = LoggerConfig()
+        client = HazelcastClient(cluster_name=self.cluster.id)
 
-        self.assertEqual(logging.INFO, logger_config.level)
-        self.assertIsNone(logger_config.config_file)
-
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.logger = logger_config
-
-        client = HazelcastClient(config)
         self.assertEqual(logging.INFO, client.logger.level)
         self.assertTrue(client.logger.isEnabledFor(logging.INFO))
         self.assertTrue(client.logger.isEnabledFor(logging.WARNING))
@@ -61,18 +53,8 @@ class LoggerConfigTest(HazelcastTestCase):
         client.shutdown()
 
     def test_non_default_configuration_level(self):
-        logger_config = LoggerConfig()
+        client = HazelcastClient(cluster_name=self.cluster.id, logging_level=logging.CRITICAL)
 
-        logger_config.level = logging.CRITICAL
-
-        self.assertEqual(logging.CRITICAL, logger_config.level)
-        self.assertIsNone(logger_config.config_file)
-
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.logger = logger_config
-
-        client = HazelcastClient(config)
         self.assertEqual(logging.CRITICAL, client.logger.level)
         self.assertFalse(client.logger.isEnabledFor(logging.INFO))
         self.assertFalse(client.logger.isEnabledFor(logging.WARNING))
@@ -99,19 +81,13 @@ class LoggerConfigTest(HazelcastTestCase):
         client.shutdown()
 
     def test_simple_custom_logging_configuration(self):
-        logger_config = LoggerConfig()
-
         # Outputs to stdout with the level of error
         config_path = get_abs_path(self.CUR_DIR, "simple_config.json")
-        logger_config.config_file = config_path
+        with open(config_path, "r") as f:
+            logging_config_data = f.read()
+            logging_config = json.loads(logging_config_data)
 
-        self.assertEqual(config_path, logger_config.config_file)
-
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.logger = logger_config
-
-        client = HazelcastClient(config)
+        client = HazelcastClient(cluster_name=self.cluster.id, logging_config=logging_config)
         self.assertEqual(logging.ERROR, client.logger.getEffectiveLevel())
         self.assertFalse(client.logger.isEnabledFor(logging.INFO))
         self.assertFalse(client.logger.isEnabledFor(logging.WARNING))
@@ -138,10 +114,11 @@ class LoggerConfigTest(HazelcastTestCase):
         client.shutdown()
 
     def test_default_configuration_multiple_clients(self):
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        client1 = HazelcastClient(config)
-        client2 = HazelcastClient(config)
+        config = {
+            "cluster_name": self.cluster.id
+        }
+        client1 = HazelcastClient(**config)
+        client2 = HazelcastClient(**config)
 
         out = StringIO()
 
@@ -160,14 +137,18 @@ class LoggerConfigTest(HazelcastTestCase):
         client2.shutdown()
 
     def test_same_custom_configuration_file_with_multiple_clients(self):
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
+        config_path = get_abs_path(self.CUR_DIR, "simple_config.json")
+        with open(config_path, "r") as f:
+            logging_config_data = f.read()
+            logging_config = json.loads(logging_config_data)
 
-        config_file = get_abs_path(self.CUR_DIR, "simple_config.json")
-        config.logger.configuration_file = config_file
+        config = {
+            "cluster_name": self.cluster.id,
+            "logging_config": logging_config,
+        }
 
-        client1 = HazelcastClient(config)
-        client2 = HazelcastClient(config)
+        client1 = HazelcastClient(**config)
+        client2 = HazelcastClient(**config)
 
         out = StringIO()
 
@@ -185,9 +166,7 @@ class LoggerConfigTest(HazelcastTestCase):
         client2.shutdown()
 
     def test_default_logger_output(self):
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        client = HazelcastClient(config)
+        client = HazelcastClient(cluster_name=self.cluster.id)
 
         out = StringIO()
 
@@ -211,13 +190,12 @@ class LoggerConfigTest(HazelcastTestCase):
         client.shutdown()
 
     def test_custom_configuration_output(self):
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config_file = get_abs_path(self.CUR_DIR, "detailed_config.json")
+        config_path = get_abs_path(self.CUR_DIR, "detailed_config.json")
+        with open(config_path, "r") as f:
+            logging_config_data = f.read()
+            logging_config = json.loads(logging_config_data)
 
-        config.logger.config_file = config_file
-
-        client = HazelcastClient(config)
+        client = HazelcastClient(cluster_name=self.cluster.id, logging_config=logging_config)
 
         std_out = StringIO()
         std_err = StringIO()

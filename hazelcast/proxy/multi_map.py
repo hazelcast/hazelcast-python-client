@@ -39,11 +39,11 @@ class MultiMap(Proxy):
         def handle_event_entry(key, value, old_value, merging_value, event_type, uuid, number_of_affected_entries):
             event = EntryEvent(self._to_object, key, value, old_value, merging_value,
                                event_type, uuid, number_of_affected_entries)
-            if event.event_type == EntryEventType.added and added_func:
+            if event.event_type == EntryEventType.ADDED and added_func:
                 added_func(event)
-            elif event.event_type == EntryEventType.removed and removed_func:
+            elif event.event_type == EntryEventType.REMOVED and removed_func:
                 removed_func(event)
-            elif event.event_type == EntryEventType.clear_all and clear_all_func:
+            elif event.event_type == EntryEventType.CLEAR_ALL and clear_all_func:
                 clear_all_func(event)
 
         return self._register_listener(

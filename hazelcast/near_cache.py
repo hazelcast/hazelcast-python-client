@@ -1,13 +1,13 @@
 import random
 
 from hazelcast import six
-from hazelcast.config import EVICTION_POLICY, IN_MEMORY_FORMAT
+from hazelcast.config import InMemoryFormat, EvictionPolicy
 from hazelcast.util import current_time
 from hazelcast.six.moves import range
 from sys import getsizeof
 
 
-def lru_key_func(x):
+def _lru_key_func(x):
     """
     Least Recently Used key function.
 
@@ -17,7 +17,7 @@ def lru_key_func(x):
     return x.last_access_time
 
 
-def lfu_key_func(x):
+def _lfu_key_func(x):
     """
     Least Frequently Used key function.
 
@@ -27,18 +27,22 @@ def lfu_key_func(x):
     return x.access_hit
 
 
-def random_key_func(x):
+def _random_key_func(_):
     """
     Random key function.
 
-    :param x: (:class:`~hazelcast.near_cache.DataRecord`)
+    :param _: (:class:`~hazelcast.near_cache.DataRecord`)
     :return: (int), 0.
     """
     return 0
 
 
-eviction_key_func = {EVICTION_POLICY.NONE: None, EVICTION_POLICY.LRU: lru_key_func, EVICTION_POLICY.LFU: lfu_key_func,
-                     EVICTION_POLICY.RANDOM: random_key_func}
+_eviction_key_func = {
+    EvictionPolicy.NONE: None,
+    EvictionPolicy.LRU: _lru_key_func,
+    EvictionPolicy.LFU: _lfu_key_func,
+    EvictionPolicy.RANDOM: _random_key_func
+}
 
 
 class DataRecord(object):
@@ -66,8 +70,8 @@ class DataRecord(object):
                (max_idle_seconds is not None and self.last_access_time + max_idle_seconds < now)
 
     def __repr__(self):
-        return "DataRecord[key:{}, value:{}, create_time:{}, expiration_time:{}, last_access_time={}, access_hit={}]" \
-            .format(self.key, self.value, self.create_time, self.expiration_time, self.last_access_time, self.access_hit)
+        return "DataRecord(key=%s, value=%s, create_time=%s, expiration_time=%s, last_access_time=%s, access_hit=%s)" \
+               % (self.key, self.value, self.create_time, self.expiration_time, self.last_access_time, self.access_hit)
 
 
 class NearCache(dict):
@@ -75,13 +79,13 @@ class NearCache(dict):
     NearCache is a local cache used by :class:`~hazelcast.proxy.map.MapFeatNearCache`.
     """
 
-    def __init__(self, name, serialization_service, in_memory_format, time_to_live_seconds, max_idle_seconds, invalidate_on_change,
+    def __init__(self, name, serialization_service, in_memory_format, time_to_live, max_idle, invalidate_on_change,
                  eviction_policy, eviction_max_size, eviction_sampling_count=None, eviction_sampling_pool_size=None):
         self.name = name
         self.serialization_service = serialization_service
         self.in_memory_format = in_memory_format
-        self.time_to_live_seconds = time_to_live_seconds
-        self.max_idle_seconds = max_idle_seconds
+        self.time_to_live = time_to_live
+        self.max_idle = max_idle
         self.invalidate_on_change = invalidate_on_change
         self.eviction_policy = eviction_policy
         self.eviction_max_size = eviction_max_size
@@ -101,7 +105,7 @@ class NearCache(dict):
             self.eviction_sampling_pool_size = self.eviction_max_size
 
         # internal
-        self._key_func = eviction_key_func[self.eviction_policy]
+        self._key_func = _eviction_key_func[self.eviction_policy]
         self._eviction_candidates = list()
         self._evictions = 0
         self._expirations = 0
@@ -133,33 +137,33 @@ class NearCache(dict):
     def __setitem__(self, key, value):
         self._do_eviction_if_required()
 
-        if self.in_memory_format == IN_MEMORY_FORMAT.BINARY:
+        if self.in_memory_format == InMemoryFormat.BINARY:
             value = self.serialization_service.to_data(value)
-        elif self.in_memory_format == IN_MEMORY_FORMAT.OBJECT:
+        elif self.in_memory_format == InMemoryFormat.OBJECT:
             value = self.serialization_service.to_object(value)
         else:
             raise ValueError("Invalid in-memory format!!!")
 
-        data_record = DataRecord(key, value, ttl_seconds=self.time_to_live_seconds)
+        data_record = DataRecord(key, value, ttl_seconds=self.time_to_live)
         super(NearCache, self).__setitem__(key, data_record)
 
     def __getitem__(self, key):
         try:
             value_record = super(NearCache, self).__getitem__(key)
-            if value_record.is_expired(self.max_idle_seconds):
+            if value_record.is_expired(self.max_idle):
                 super(NearCache, self).__delitem__(key)
                 raise KeyError
         except KeyError as ke:
             self._misses += 1
             raise ke
 
-        if self.eviction_policy == EVICTION_POLICY.LRU:
+        if self.eviction_policy == EvictionPolicy.LRU:
             value_record.last_access_time = current_time()
-        elif self.eviction_policy == EVICTION_POLICY.LFU:
+        elif self.eviction_policy == EvictionPolicy.LFU:
             value_record.access_hit += 1
         self._hits += 1
         return self.serialization_service.to_object(value_record.value) \
-            if self.in_memory_format == IN_MEMORY_FORMAT.BINARY else value_record.value
+            if self.in_memory_format == InMemoryFormat.BINARY else value_record.value
 
     def _do_eviction_if_required(self):
         if not self._is_eviction_required():
@@ -188,7 +192,7 @@ class NearCache(dict):
         start = self._random_index()
         for i in range(start, start + self.eviction_sampling_count):
             index = i if i < len(records) else i - len(records)
-            if records[index].is_expired(self.max_idle_seconds):
+            if records[index].is_expired(self.max_idle):
                 self._clean_expired_record(records[index].key)
             elif self._is_better_than_worse_entry(records[index]) or len(new_sample_pool) < self.eviction_sampling_pool_size:
                 new_sample_pool.add(records[index])
@@ -197,7 +201,7 @@ class NearCache(dict):
     def _scan_and_expire_collection(self, records):
         new_records = []
         for record in records:
-            if record.is_expired(self.max_idle_seconds):
+            if record.is_expired(self.max_idle):
                 self._clean_expired_record(record.key)
             else:
                 new_records.append(record)
@@ -211,7 +215,7 @@ class NearCache(dict):
                or (self._key_func(data_record) - self._key_func(self._eviction_candidates[-1])) < 0
 
     def _is_eviction_required(self):
-        return self.eviction_policy != EVICTION_POLICY.NONE and self.eviction_max_size <= self.__len__()
+        return self.eviction_policy != EvictionPolicy.NONE and self.eviction_max_size <= self.__len__()
 
     def _clean_expired_record(self, key):
         try:
@@ -237,7 +241,7 @@ class NearCache(dict):
         self._invalidation_requests += 1
 
     def __repr__(self):
-        return "NearCache[len:{}, evicted:{}]".format(self.__len__(), self._evictions)
+        return "NearCache(len=%s, evicted=%s)" % (self.__len__(), self._evictions)
 
 
 class NearCacheManager(object):
@@ -251,13 +255,13 @@ class NearCacheManager(object):
         if not near_cache:
             near_cache_config = self._client.config.near_caches.get(name, None)
             if not near_cache_config:
-                raise ValueError("Cannot find a near cache configuration with the name '{}'".format(name))
+                raise ValueError("Cannot find a near cache configuration with the name '%s'" % name)
 
-            near_cache = NearCache(near_cache_config.name,
+            near_cache = NearCache(name,
                                    self._serialization_service,
                                    near_cache_config.in_memory_format,
-                                   near_cache_config.time_to_live_seconds,
-                                   near_cache_config.max_idle_seconds,
+                                   near_cache_config.time_to_live,
+                                   near_cache_config.max_idle,
                                    near_cache_config.invalidate_on_change,
                                    near_cache_config.eviction_policy,
                                    near_cache_config.eviction_max_size,

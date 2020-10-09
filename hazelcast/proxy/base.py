@@ -3,8 +3,8 @@ import logging
 from hazelcast.future import make_blocking
 from hazelcast.invocation import Invocation
 from hazelcast.partition import string_partition_strategy
-from hazelcast.util import enum
 from hazelcast import six
+from hazelcast.util import with_reversed_items
 
 MAX_SIZE = float('inf')
 
@@ -30,7 +30,7 @@ class Proxy(object):
         self._register_listener = listener_service.register_listener
         self._deregister_listener = listener_service.deregister_listener
         self.logger = logging.getLogger("HazelcastClient.%s(%s)" % (type(self).__name__, name))
-        self._is_smart = context.config.network.smart_routing
+        self._is_smart = context.config.smart_routing
 
     def destroy(self):
         """
@@ -112,9 +112,78 @@ class TransactionalProxy(object):
         return '%s(name="%s")' % (type(self).__name__, self.name)
 
 
-ItemEventType = enum(added=1, removed=2)
-EntryEventType = enum(added=1, removed=2, updated=4, evicted=8, expired=16, evict_all=32, clear_all=64, merged=128,
-                      invalidation=256, loaded=512)
+@with_reversed_items
+class ItemEventType(object):
+    """
+    Type of item events.
+    """
+
+    ADDED = 1
+    """
+    Fired when an item is added.
+    """
+
+    REMOVED = 2
+    """
+    Fired when an item is removed.
+    """
+
+
+@with_reversed_items
+class EntryEventType(object):
+    """
+    Type of entry event.
+    """
+
+    ADDED = 1
+    """
+    Fired if an entry is added.
+    """
+
+    REMOVED = 2
+    """
+    Fired if an entry is removed.
+    """
+
+    UPDATED = 4
+    """
+    Fired if an entry is updated.
+    """
+
+    EVICTED = 8
+    """
+    Fired if an entry is evicted.
+    """
+
+    EXPIRED = 16
+    """
+    Fired if an entry is expired.
+    """
+
+    EVICT_ALL = 32
+    """
+    Fired if all entries are evicted.
+    """
+
+    CLEAR_ALL = 64
+    """
+    Fired if all entries are cleared.
+    """
+
+    MERGED = 128
+    """
+    Fired if an entry is merged after a network partition.
+    """
+
+    INVALIDATION = 256
+    """
+    Fired if an entry is invalidated.
+    """
+
+    LOADED = 512
+    """
+    Fired if an entry is loaded.
+    """
 
 
 class ItemEvent(object):

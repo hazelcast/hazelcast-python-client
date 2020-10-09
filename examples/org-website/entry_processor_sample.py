@@ -23,12 +23,12 @@ class IncEntryProcessor(IdentifiedDataSerializable):
 # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
 hz = hazelcast.HazelcastClient()
 # Get the Distributed Map from Cluster.
-map = hz.get_map("my-distributed-map").blocking()
+my_map = hz.get_map("my-distributed-map").blocking()
 # Put the integer value of 0 into the Distributed Map
-map.put("key", 0)
+my_map.put("key", 0)
 # Run the IncEntryProcessor class on the Hazelcast Cluster Member holding the key called "key"
-map.execute_on_key("key", IncEntryProcessor())
+my_map.execute_on_key("key", IncEntryProcessor())
 # Show that the IncEntryProcessor updated the value.
-print("new value: {}".format(map.get("key")))
+print("new value:", my_map.get("key"))
 # Shutdown this Hazelcast Client
 hz.shutdown()

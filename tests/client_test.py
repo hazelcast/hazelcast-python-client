@@ -1,7 +1,6 @@
 import time
 
 from tests.base import HazelcastTestCase
-from hazelcast.config import ClientConfig, ClientProperties
 from hazelcast.client import HazelcastClient
 from hazelcast.lifecycle import LifecycleState
 from tests.hzrc.ttypes import Lang
@@ -9,10 +8,6 @@ from tests.util import configure_logging
 
 
 class ClientTest(HazelcastTestCase):
-    @classmethod
-    def setUpClass(cls):
-        configure_logging()
-
     def test_client_only_listens(self):
         rc = self.create_rc()
         client_heartbeat_seconds = 8
@@ -22,17 +17,13 @@ class ClientTest(HazelcastTestCase):
            xsi:schemaLocation="http://www.hazelcast.com/schema/config
            http://www.hazelcast.com/schema/config/hazelcast-config-4.0.xsd">
             <properties>
-                <property name="hazelcast.client.max.no.heartbeat.seconds">{}</property>
+                <property name="hazelcast.client.max.no.heartbeat.seconds">%s</property>
             </properties>
-        </hazelcast>""".format(client_heartbeat_seconds)
+        </hazelcast>""" % client_heartbeat_seconds
         cluster = self.create_cluster(rc, cluster_config)
         cluster.start_member()
 
-        config = ClientConfig()
-        config.cluster_name = cluster.id
-        config.set_property(ClientProperties.HEARTBEAT_INTERVAL.name, 1000)
-
-        client1 = HazelcastClient(config)
+        client1 = HazelcastClient(cluster_name=cluster.id, heartbeat_interval=1)
 
         def lifecycle_event_collector():
             events = []
@@ -48,14 +39,12 @@ class ClientTest(HazelcastTestCase):
         collector = lifecycle_event_collector()
         client1.lifecycle_service.add_listener(collector)
 
-        config2 = ClientConfig()
-        config2.cluster_name = cluster.id
-        client2 = HazelcastClient(config2)
+        client2 = HazelcastClient(cluster_name=cluster.id)
 
         key = "topic-name"
         topic = client1.get_topic(key)
 
-        def message_listener(e):
+        def message_listener(_):
             pass
         
         topic.add_listener(message_listener)
@@ -90,17 +79,18 @@ class ClientLabelsTest(HazelcastTestCase):
         self.shutdown_all_clients()
 
     def test_default_config(self):
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-
-        self.create_client(config)
+        self.create_client({
+            "cluster_name": self.cluster.id
+        })
         self.assertIsNone(self.get_labels_from_member())
 
     def test_provided_labels_are_received(self):
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.labels.add("test-label")
-        self.create_client(config)
+        self.create_client({
+            "cluster_name": self.cluster.id,
+            "labels": [
+                "test-label",
+            ]
+        })
         self.assertEqual(b"test-label", self.get_labels_from_member())
 
     def get_labels_from_member(self):

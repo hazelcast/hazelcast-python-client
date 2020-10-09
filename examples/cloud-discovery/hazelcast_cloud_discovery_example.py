@@ -1,24 +1,18 @@
 import hazelcast
 
-config = hazelcast.ClientConfig()
-
-# Set up cluster name for authentication
-config.cluster_name.name = "YOUR_CLUSTER_NAME"
-
-# Enable Hazelcast.Cloud configuration and set the token of your cluster.
-config.network.cloud.enabled = True
-config.network.cloud.discovery_token = "YOUR_CLUSTER_DISCOVERY_TOKEN"
-
-# If you have enabled encryption for your cluster, also configure TLS/SSL for the client.
-# Otherwise, skip this step.
-config.network.ssl.enabled = True
-config.network.ssl.cafile = "/path/to/ca.pem"
-config.network.ssl.certfile = "/path/to/cert.pem"
-config.network.ssl.keyfile = "/path/to/key.pem"
-config.network.ssl.password = "YOUR_KEY_STORE_PASSWORD"
-
-# Start a new Hazelcast client with this configuration.
-client = hazelcast.HazelcastClient(config)
+client = hazelcast.HazelcastClient(
+    # Set up cluster name for authentication
+    cluster_name="YOUR_CLUSTER_NAME",
+    # Set the token of your cloud cluster
+    cloud_discovery_token="YOUR_CLUSTER_DISCOVERY_TOKEN",
+    # If you have enabled encryption for your cluster, also configure TLS/SSL for the client.
+    # Otherwise, skip options below.
+    ssl_enabled=True,
+    ssl_cafile="/path/to/ca.pem",
+    ssl_certfile="/path/to/cert.pem",
+    ssl_keyfile="/path/to/key.pem",
+    ssl_password="YOUR_KEY_STORE_PASSWORD"
+)
 
 my_map = client.get_map("map-on-the-cloud").blocking()
 my_map.put("key", "value")

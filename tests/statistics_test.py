@@ -1,10 +1,8 @@
 import time
-import os
 
 from tests.base import HazelcastTestCase
 from hazelcast.statistics import Statistics
 from hazelcast.client import HazelcastClient
-from hazelcast.config import ClientConfig, ClientProperties, NearCacheConfig
 from hazelcast.version import CLIENT_VERSION, CLIENT_TYPE
 from tests.hzrc.ttypes import Lang
 from tests.util import random_string
@@ -25,27 +23,10 @@ class StatisticsTest(HazelcastTestCase):
         cls.rc.exit()
 
     def test_statistics_disabled_by_default(self):
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        client = HazelcastClient(config)
+        client = HazelcastClient(cluster_name=self.cluster.id)
         time.sleep(2 * self.DEFAULT_STATS_PERIOD)
         client_uuid = client._connection_manager.client_uuid
 
-        response = self._get_client_stats_from_server(client_uuid)
-
-        self.assertTrue(response.success)
-        self.assertIsNone(response.result)
-        client.shutdown()
-
-    def test_statistics_disabled_with_wrong_value(self):
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.set_property(ClientProperties.STATISTICS_ENABLED.name, "truee")
-        config.set_property(ClientProperties.STATISTICS_PERIOD_SECONDS.name, self.STATS_PERIOD)
-        client = HazelcastClient(config)
-        client_uuid = client._connection_manager.client_uuid
-
-        time.sleep(2 * self.STATS_PERIOD)
         response = self._get_client_stats_from_server(client_uuid)
 
         self.assertTrue(response.success)
@@ -53,10 +34,7 @@ class StatisticsTest(HazelcastTestCase):
         client.shutdown()
 
     def test_statistics_enabled(self):
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.set_property(ClientProperties.STATISTICS_ENABLED.name, True)
-        client = HazelcastClient(config)
+        client = HazelcastClient(cluster_name=self.cluster.id, statistics_enabled=True)
         client_uuid = client._connection_manager.client_uuid
 
         time.sleep(2 * self.DEFAULT_STATS_PERIOD)
@@ -64,29 +42,10 @@ class StatisticsTest(HazelcastTestCase):
 
         client.shutdown()
 
-    def test_statistics_enabled_with_environment_variable(self):
-        environ = os.environ
-        environ[ClientProperties.STATISTICS_ENABLED.name] = "true"
-        environ[ClientProperties.STATISTICS_PERIOD_SECONDS.name] = str(self.STATS_PERIOD)
-
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        client = HazelcastClient(config)
-        client_uuid = client._connection_manager.client_uuid
-
-        time.sleep(2 * self.STATS_PERIOD)
-        self._wait_for_statistics_collection(client_uuid)
-
-        os.unsetenv(ClientProperties.STATISTICS_ENABLED.name)
-        os.unsetenv(ClientProperties.STATISTICS_PERIOD_SECONDS.name)
-        client.shutdown()
-
     def test_statistics_period(self):
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.set_property(ClientProperties.STATISTICS_ENABLED.name, True)
-        config.set_property(ClientProperties.STATISTICS_PERIOD_SECONDS.name, self.STATS_PERIOD)
-        client = HazelcastClient(config)
+        client = HazelcastClient(cluster_name=self.cluster.id,
+                                 statistics_enabled=True,
+                                 statistics_period=self.STATS_PERIOD)
         client_uuid = client._connection_manager.client_uuid
 
         time.sleep(2 * self.STATS_PERIOD)
@@ -98,31 +57,14 @@ class StatisticsTest(HazelcastTestCase):
         self.assertNotEqual(response1, response2)
         client.shutdown()
 
-    def test_statistics_enabled_with_negative_period(self):
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.set_property(ClientProperties.STATISTICS_ENABLED.name, True)
-        config.set_property(ClientProperties.STATISTICS_PERIOD_SECONDS.name, -1 * self.STATS_PERIOD)
-        client = HazelcastClient(config)
-        client_uuid = client._connection_manager.client_uuid
-
-        time.sleep(2 * self.DEFAULT_STATS_PERIOD)
-        self._wait_for_statistics_collection(client_uuid)
-
-        client.shutdown()
-
     def test_statistics_content(self):
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.set_property(ClientProperties.STATISTICS_ENABLED.name, True)
-        config.set_property(ClientProperties.STATISTICS_PERIOD_SECONDS.name, self.STATS_PERIOD)
-
         map_name = random_string()
-
-        near_cache_config = NearCacheConfig(map_name)
-        config.near_caches[map_name] = near_cache_config
-
-        client = HazelcastClient(config)
+        client = HazelcastClient(cluster_name=self.cluster.id,
+                                 statistics_enabled=True,
+                                 statistics_period=self.STATS_PERIOD,
+                                 near_caches={
+                                     map_name: {},
+                                 })
         client_uuid = client._connection_manager.client_uuid
 
         client.get_map(map_name).blocking()
@@ -164,17 +106,13 @@ class StatisticsTest(HazelcastTestCase):
         client.shutdown()
 
     def test_special_characters(self):
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.set_property(ClientProperties.STATISTICS_ENABLED.name, True)
-        config.set_property(ClientProperties.STATISTICS_PERIOD_SECONDS.name, self.STATS_PERIOD)
-
         map_name = random_string() + ",t=es\\t"
-
-        near_cache_config = NearCacheConfig(map_name)
-        config.near_caches[map_name] = near_cache_config
-
-        client = HazelcastClient(config)
+        client = HazelcastClient(cluster_name=self.cluster.id,
+                                 statistics_enabled=True,
+                                 statistics_period=self.STATS_PERIOD,
+                                 near_caches={
+                                     map_name: {},
+                                 })
         client_uuid = client._connection_manager.client_uuid
 
         client.get_map(map_name).blocking()
@@ -189,17 +127,13 @@ class StatisticsTest(HazelcastTestCase):
         client.shutdown()
 
     def test_near_cache_stats(self):
-        config = ClientConfig()
-        config.cluster_name = self.cluster.id
-        config.set_property(ClientProperties.STATISTICS_ENABLED.name, True)
-        config.set_property(ClientProperties.STATISTICS_PERIOD_SECONDS.name, self.STATS_PERIOD)
-
         map_name = random_string()
-
-        near_cache_config = NearCacheConfig(map_name)
-        config.near_caches[map_name] = near_cache_config
-
-        client = HazelcastClient(config)
+        client = HazelcastClient(cluster_name=self.cluster.id,
+                                 statistics_enabled=True,
+                                 statistics_period=self.STATS_PERIOD,
+                                 near_caches={
+                                     map_name: {},
+                                 })
         client_uuid = client._connection_manager.client_uuid
 
         test_map = client.get_map(map_name).blocking()

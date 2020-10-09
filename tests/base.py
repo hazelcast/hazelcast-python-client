@@ -44,7 +44,7 @@ class HazelcastTestCase(unittest.TestCase):
         return _Cluster(rc, rc.createCluster(None, config))
 
     def create_client(self, config=None):
-        client = hazelcast.HazelcastClient(config)
+        client = hazelcast.HazelcastClient(**config)
         self.clients.append(client)
         return client
 
@@ -100,12 +100,11 @@ class SingleMemberTestCase(HazelcastTestCase):
 
     @classmethod
     def setUpClass(cls):
-        configure_logging()
         cls.rc = cls.create_rc()
         cls.cluster = cls.create_cluster(cls.rc, cls.configure_cluster())
         cls.member = cls.cluster.start_member()
 
-        cls.client = hazelcast.HazelcastClient(cls.configure_client(hazelcast.ClientConfig()))
+        cls.client = hazelcast.HazelcastClient(**cls.configure_client(dict()))
 
     @classmethod
     def tearDownClass(cls):

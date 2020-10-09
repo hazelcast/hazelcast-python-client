@@ -1,7 +1,7 @@
 import time
 import os
 
-from hazelcast.config import IndexConfig, INDEX_TYPE
+from hazelcast.config import IndexType
 from hazelcast.errors import HazelcastError
 from hazelcast.proxy.map import EntryEventType
 from hazelcast.serialization.api import IdentifiedDataSerializable
@@ -42,9 +42,12 @@ class MapTest(SingleMemberTestCase):
 
     @classmethod
     def configure_client(cls, config):
-        config.cluster_name = cls.cluster.id
-        config.serialization.add_data_serializable_factory(EntryProcessor.FACTORY_ID,
-                                                           {EntryProcessor.CLASS_ID: EntryProcessor})
+        config["cluster_name"] = cls.cluster.id
+        config["data_serializable_factories"] = {
+            EntryProcessor.FACTORY_ID: {
+                EntryProcessor.CLASS_ID: EntryProcessor
+            }
+        }
         return config
 
     def setUp(self):
@@ -61,7 +64,7 @@ class MapTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key', event_type=EntryEventType.added, value='value')
+            self.assertEntryEvent(event, key='key', event_type=EntryEventType.ADDED, value='value')
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -74,7 +77,7 @@ class MapTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key', event_type=EntryEventType.removed, old_value='value')
+            self.assertEntryEvent(event, key='key', event_type=EntryEventType.REMOVED, old_value='value')
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -87,7 +90,7 @@ class MapTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key', event_type=EntryEventType.updated, old_value='value',
+            self.assertEntryEvent(event, key='key', event_type=EntryEventType.UPDATED, old_value='value',
                                   value='new_value')
 
         self.assertTrueEventually(assert_event, 5)
@@ -100,7 +103,7 @@ class MapTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key', event_type=EntryEventType.expired, old_value='value')
+            self.assertEntryEvent(event, key='key', event_type=EntryEventType.EXPIRED, old_value='value')
 
         self.assertTrueEventually(assert_event, 10)
 
@@ -113,7 +116,7 @@ class MapTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key1', event_type=EntryEventType.added, value='value1')
+            self.assertEntryEvent(event, key='key1', event_type=EntryEventType.ADDED, value='value1')
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -126,13 +129,14 @@ class MapTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key1', event_type=EntryEventType.added, value='value1')
+            self.assertEntryEvent(event, key='key1', event_type=EntryEventType.ADDED, value='value1')
 
         self.assertTrueEventually(assert_event, 5)
 
     def test_add_entry_listener_with_key_and_predicate(self):
         collector = event_collector()
-        self.map.add_entry_listener(key='key1', predicate=SqlPredicate("this == value3"), include_value=True, added_func=collector)
+        self.map.add_entry_listener(key='key1', predicate=SqlPredicate("this == value3"),
+                                    include_value=True, added_func=collector)
         self.map.put('key2', 'value2')
         self.map.put('key1', 'value1')
         self.map.remove('key1')
@@ -141,25 +145,24 @@ class MapTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key1', event_type=EntryEventType.added, value='value3')
+            self.assertEntryEvent(event, key='key1', event_type=EntryEventType.ADDED, value='value3')
 
         self.assertTrueEventually(assert_event, 5)
 
     def test_add_index(self):
-        ordered_index = IndexConfig("length", attributes=["this"])
-        unordered_index = IndexConfig("length", INDEX_TYPE.HASH, ["this"])
-        self.map.add_index(ordered_index)
-        self.map.add_index(unordered_index)
+        self.map.add_index(attributes=["this"])
+        self.map.add_index(attributes=["this"], index_type=IndexType.HASH)
+        self.map.add_index(attributes=["this"], index_type=IndexType.BITMAP, bitmap_index_options={
+            "unique_key": "this",
+        })
 
     def test_add_index_duplicate_fields(self):
-        config = IndexConfig("length", attributes=["this", "this"])
         with self.assertRaises(ValueError):
-            self.map.add_index(config)
+            self.map.add_index(attributes=["this", "this"])
 
     def test_add_index_invalid_attribute(self):
-        config = IndexConfig("length", attributes=["this.x."])
         with self.assertRaises(ValueError):
-            self.map.add_index(config)
+            self.map.add_index(attributes=["this.x."])
 
     def test_clear(self):
         self._fill_map()
@@ -214,8 +217,8 @@ class MapTest(SingleMemberTestCase):
         self.assertEqual(self.map.size(), 0)
 
     def test_execute_on_entries(self):
-        map = self._fill_map()
-        expected_entry_set = [(key, "processed") for key in map]
+        m = self._fill_map()
+        expected_entry_set = [(key, "processed") for key in m]
 
         values = self.map.execute_on_entries(EntryProcessor("processed"))
 
@@ -223,9 +226,9 @@ class MapTest(SingleMemberTestCase):
         six.assertCountEqual(self, expected_entry_set, values)
 
     def test_execute_on_entries_with_predicate(self):
-        map = self._fill_map()
-        expected_entry_set = [(key, "processed") if key < "key-5" else (key, map[key]) for key in map]
-        expected_values = [(key, "processed") for key in map if key < "key-5"]
+        m = self._fill_map()
+        expected_entry_set = [(key, "processed") if key < "key-5" else (key, m[key]) for key in m]
+        expected_values = [(key, "processed") for key in m if key < "key-5"]
 
         values = self.map.execute_on_entries(EntryProcessor("processed"), SqlPredicate("__key < 'key-5'"))
 
@@ -240,17 +243,17 @@ class MapTest(SingleMemberTestCase):
         self.assertEqual("processed", value)
 
     def test_execute_on_keys(self):
-        map = self._fill_map()
-        expected_entry_set = [(key, "processed") for key in map]
+        m = self._fill_map()
+        expected_entry_set = [(key, "processed") for key in m]
 
-        values = self.map.execute_on_keys(list(map.keys()), EntryProcessor("processed"))
+        values = self.map.execute_on_keys(list(m.keys()), EntryProcessor("processed"))
 
         six.assertCountEqual(self, expected_entry_set, self.map.entry_set())
         six.assertCountEqual(self, expected_entry_set, values)
 
     def test_execute_on_keys_with_empty_key_list(self):
-        map = self._fill_map()
-        expected_entry_set = [(key, map[key]) for key in map]
+        m = self._fill_map()
+        expected_entry_set = [(key, m[key]) for key in m]
 
         values = self.map.execute_on_keys([], EntryProcessor("processed"))
 
@@ -328,18 +331,6 @@ class MapTest(SingleMemberTestCase):
 
         self.assertEqual(self.map.key_set(SqlPredicate("this == 'value-1'")), ["key-1"])
 
-    def test_load_all(self):
-        keys = list(self._fill_map().keys())
-        # TODO: needs map store configuration
-        with self.assertRaises(HazelcastError):
-            self.map.load_all()
-
-    def test_load_all_with_keys(self):
-        keys = list(self._fill_map().keys())
-        # TODO: needs map store configuration
-        with self.assertRaises(HazelcastError):
-            self.map.load_all(["key-1", "key-2"])
-
     def test_lock(self):
         self.map.put("key", "value")
 
@@ -349,12 +340,12 @@ class MapTest(SingleMemberTestCase):
         self.assertFalse(self.map.try_put("key", "new_value", timeout=0.01))
 
     def test_put_all(self):
-        map = {"key-%d" % x: "value-%d" % x for x in range(0, 1000)}
-        self.map.put_all(map)
+        m = {"key-%d" % x: "value-%d" % x for x in range(0, 1000)}
+        self.map.put_all(m)
 
         entries = self.map.entry_set()
 
-        six.assertCountEqual(self, entries, six.iteritems(map))
+        six.assertCountEqual(self, entries, six.iteritems(m))
 
     def test_put_all_when_no_keys(self):
         self.assertIsNone(self.map.put_all({}))
@@ -415,11 +406,11 @@ class MapTest(SingleMemberTestCase):
 
     def test_remove_entry_listener(self):
         collector = event_collector()
-        id = self.map.add_entry_listener(added_func=collector)
+        reg_id = self.map.add_entry_listener(added_func=collector)
 
         self.map.put('key', 'value')
         self.assertTrueEventually(lambda: self.assertEqual(len(collector.events), 1))
-        self.map.remove_entry_listener(id)
+        self.map.remove_entry_listener(reg_id)
         self.map.put('key2', 'value')
 
         time.sleep(1)
@@ -522,15 +513,15 @@ class MapTest(SingleMemberTestCase):
         self.assertTrue(str(self.map).startswith("Map"))
 
     def _fill_map(self, count=10):
-        map = {"key-%d" % x: "value-%d" % x for x in range(0, count)}
-        self.map.put_all(map)
-        return map
+        m = {"key-%d" % x: "value-%d" % x for x in range(0, count)}
+        self.map.put_all(m)
+        return m
 
 
 class MapStoreTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
-        config.cluster_name = cls.cluster.id
+        config["cluster_name"] = cls.cluster.id
         return config
 
     @classmethod
@@ -597,6 +588,6 @@ class MapStoreTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key', value='value', event_type=EntryEventType.loaded)
+            self.assertEntryEvent(event, key='key', value='value', event_type=EntryEventType.LOADED)
 
         self.assertTrueEventually(assert_event, 10)

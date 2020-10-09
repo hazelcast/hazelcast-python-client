@@ -2,16 +2,44 @@ import logging
 import uuid
 
 from hazelcast import six
-from hazelcast.util import create_git_info, enum
+from hazelcast.util import create_git_info, with_reversed_items
 
-LifecycleState = enum(
-    STARTING="STARTING",
-    STARTED="STARTED",
-    SHUTTING_DOWN="SHUTTING_DOWN",
-    SHUTDOWN="SHUTDOWN",
-    CONNECTED="CONNECTED",
-    DISCONNECTED="DISCONNECTED",
-)
+
+@with_reversed_items
+class LifecycleState(object):
+    """
+    Lifecycle states.
+    """
+
+    STARTING = "STARTING"
+    """
+    The client is starting.
+    """
+
+    STARTED = "STARTED"
+    """
+    The client has started.
+    """
+
+    CONNECTED = "CONNECTED"
+    """
+    The client connected to a member.
+    """
+
+    SHUTTING_DOWN = "SHUTTING_DOWN"
+    """
+    The client is shutting down.
+    """
+
+    DISCONNECTED = "DISCONNECTED"
+    """
+    The client disconnected from a member.
+    """
+
+    SHUTDOWN = "SHUTDOWN"
+    """
+    The client has shutdown.
+    """
 
 
 class LifecycleService(object):
@@ -66,8 +94,10 @@ class _InternalLifecycleService(object):
         self.running = False
         self._listeners = {}
 
-        for listener in client.config.lifecycle_listeners:
-            self.add_listener(listener)
+        lifecycle_listeners = client.config.lifecycle_listeners
+        if lifecycle_listeners:
+            for listener in lifecycle_listeners:
+                self.add_listener(listener)
 
         self._git_info = create_git_info()
 

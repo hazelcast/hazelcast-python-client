@@ -5,7 +5,7 @@ import uuid
 
 from hazelcast import six
 from hazelcast.core import HazelcastJsonValue
-from hazelcast.config import SerializationConfig, INTEGER_TYPE
+from hazelcast.config import IntType, _Config
 from hazelcast.errors import HazelcastSerializationError
 from hazelcast.serialization import BE_INT, MAX_BYTE, MAX_SHORT, MAX_INT, MAX_LONG
 from hazelcast.serialization.predicate import *
@@ -31,7 +31,7 @@ class A(object):
 
 class SerializersTest(unittest.TestCase):
     def setUp(self):
-        self.service = SerializationServiceV1(SerializationConfig())
+        self.service = SerializationServiceV1(_Config())
 
     def tearDown(self):
         self.service.destroy()
@@ -121,7 +121,7 @@ class SerializersTest(unittest.TestCase):
 class SerializersLiveTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
-        config.cluster_name = cls.cluster.id
+        config["cluster_name"] = cls.cluster.id
         return config
 
     def setUp(self):
@@ -152,8 +152,8 @@ class SerializersLiveTest(SingleMemberTestCase):
         return response.success
 
     def replace_serialization_service(self, integer_type):
-        config = SerializationConfig()
-        config.default_integer_type = integer_type
+        config = _Config()
+        config.default_int_type = integer_type
         new_service = SerializationServiceV1(config)
         self.map._wrapped._to_data = new_service.to_data
         self.map._wrapped._to_object = new_service.to_object
@@ -166,7 +166,7 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(value, response)
 
     def test_byte(self):
-        self.replace_serialization_service(INTEGER_TYPE.BYTE)
+        self.replace_serialization_service(IntType.BYTE)
         value = (1 << 7) - 1
         self.map.set("key", value)
         self.assertEqual(value, self.map.get("key"))
@@ -174,7 +174,7 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(value, response)
 
     def test_short(self):
-        self.replace_serialization_service(INTEGER_TYPE.SHORT)
+        self.replace_serialization_service(IntType.SHORT)
         value = -1 * (1 << 15)
         self.map.set("key", value)
         self.assertEqual(value, self.map.get("key"))
@@ -189,7 +189,7 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(value, response)
 
     def test_long(self):
-        self.replace_serialization_service(INTEGER_TYPE.LONG)
+        self.replace_serialization_service(IntType.LONG)
         value = -1 * (1 << 63)
         self.map.set("key", value)
         self.assertEqual(value, self.map.get("key"))
@@ -260,7 +260,7 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertTrue(response.startswith(value.strftime("%a %b %d %H:%M:%S")))
 
     def test_big_integer(self):
-        self.replace_serialization_service(INTEGER_TYPE.BIG_INT)
+        self.replace_serialization_service(IntType.BIG_INT)
         value = 1 << 128
         self.map.set("key", value)
         self.assertEqual(value, self.map.get("key"))
@@ -268,7 +268,7 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(value, response)
 
     def test_variable_integer(self):
-        self.replace_serialization_service(INTEGER_TYPE.VAR)
+        self.replace_serialization_service(IntType.VAR)
         value = MAX_BYTE
         self.map.set("key", value)
         self.assertEqual(value, self.map.get("key"))

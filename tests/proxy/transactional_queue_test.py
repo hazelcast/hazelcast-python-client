@@ -9,7 +9,7 @@ from hazelcast.six.moves import range
 class TransactionalQueueTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
-        config.cluster_name = cls.cluster.id
+        config["cluster_name"] = cls.cluster.id
         return config
 
     @classmethod

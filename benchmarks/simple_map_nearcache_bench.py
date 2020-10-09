@@ -5,7 +5,7 @@ from os.path import dirname
 import time
 
 import hazelcast
-from hazelcast.config import NearCacheConfig, IN_MEMORY_FORMAT
+from hazelcast.config import NearCacheConfig, InMemoryFormat
 from hazelcast import six
 from hazelcast.six.moves import range
 
@@ -32,7 +32,7 @@ def init():
     config.network.addresses.append("127.0.0.1")
 
     near_cache_config = NearCacheConfig(MAP_NAME)
-    near_cache_config.in_memory_format = IN_MEMORY_FORMAT.OBJECT
+    near_cache_config.in_memory_format = InMemoryFormat.OBJECT
     config.add_near_cache_config(near_cache_config)
 
     try:

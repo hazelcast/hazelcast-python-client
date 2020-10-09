@@ -18,7 +18,7 @@ class DefaultPortableReader(PortableReader):
         except Exception:
             raise HazelcastSerializationError()
         if field_count != class_def.get_field_count():
-            raise ValueError("Field count({}) in stream does not match! {}".format(field_count, class_def))
+            raise ValueError("Field count(%s) in stream does not match! %s" % (field_count, class_def))
         self._offset = data_input.position()
         self._raw = False
 
@@ -85,7 +85,7 @@ class DefaultPortableReader(PortableReader):
             if fd is None:
                 raise self._create_unknown_field_exception(field_name)
             if fd.field_type != FieldType.PORTABLE:
-                raise HazelcastSerializationError("Not a Portable field: {}".format(field_name))
+                raise HazelcastSerializationError("Not a Portable field: %s" % field_name)
 
             pos = self._read_position_by_field_def(fd)
             self._in.set_position(pos)
@@ -191,7 +191,7 @@ class DefaultPortableReader(PortableReader):
             if fd is None:
                 raise self._create_unknown_field_exception(field_name)
             if fd.field_type != FieldType.PORTABLE_ARRAY:
-                raise HazelcastSerializationError("Not a portable array field: {}".format(field_name))
+                raise HazelcastSerializationError("Not a portable array field: %s" % field_name)
 
             pos = self._read_position_by_field_def(fd)
             self._in.set_position(pos)
@@ -232,7 +232,7 @@ class DefaultPortableReader(PortableReader):
         if fd is None:
             return self._read_nested_position(field_name, field_type)
         if fd.field_type != field_type:
-            raise HazelcastSerializationError("Not a '{}' field: {}".format(field_type, field_name))
+            raise HazelcastSerializationError("Not a '%s' field: %s" % (field_type, field_name))
         return self._read_position_by_field_def(fd)
 
     def _read_nested_position(self, field_name, field_type):
@@ -250,18 +250,18 @@ class DefaultPortableReader(PortableReader):
                 self._in.set_position(pos)
                 is_none = self._in.read_boolean()
                 if is_none:
-                    raise ValueError("Parent field is null: ".format(field_names[i]))
+                    raise ValueError("Parent field is null: %s" % field_names[i])
                 _reader = self._portable_serializer.create_default_reader(self._in)
             if fd is None:
                 raise self._create_unknown_field_exception(field_name)
             if fd.field_type != field_type:
-                raise HazelcastSerializationError("Not a '{}' field: {}".format(field_type, field_name))
+                raise HazelcastSerializationError("Not a '%s' field: %s" % (field_type, field_name))
             return _reader._read_position_by_field_def(fd)
         raise self._create_unknown_field_exception(field_name)
 
     def _create_unknown_field_exception(self, field_name):
-        return HazelcastSerializationError("Unknown field name: '{}' for ClassDefinition[ id: {}, version: {} ]"
-                                           .format(field_name, self._class_def.class_id, self._class_def.version))
+        return HazelcastSerializationError("Unknown field name: '%s' for ClassDefinition(id=%s, version=%s)"
+                                           % (field_name, self._class_def.class_id, self._class_def.version))
 
     def _read_position_by_field_def(self, fd):
         pos = self._in.read_int(self._offset + fd.index * bits.INT_SIZE_IN_BYTES)
@@ -272,9 +272,9 @@ class DefaultPortableReader(PortableReader):
 
 def _check_factory_and_class(field_def, factory_id, class_id):
     if factory_id != field_def.factory_id:
-        raise ValueError("Invalid factoryId! Expected: {}, Current: {}".format(factory_id, field_def.factory_id))
+        raise ValueError("Invalid factoryId! Expected: %s, Current: %s" % (factory_id, field_def.factory_id))
     if class_id != field_def.class_id:
-        raise ValueError("Invalid classId! Expected: {}, Current: {}".format(class_id, field_def.class_id))
+        raise ValueError("Invalid classId! Expected: %s, Current: %s" % (class_id, field_def.class_id))
 
 
 class MorphingPortableReader(DefaultPortableReader):
@@ -470,5 +470,5 @@ class MorphingPortableReader(DefaultPortableReader):
             raise self.create_incompatible_class_change_error(field_def, expected_type)
 
     def create_incompatible_class_change_error(self, field_def, expected_type):
-        return TypeError("Incompatible to read {} from {} while reading field :{} on {}"
-                         .format(expected_type, field_def.field_type, field_def.field_name, self._class_def))
+        return TypeError("Incompatible to read %s from %s while reading field: %s on %s"
+                         % (expected_type, field_def.field_type, field_def.field_name, self._class_def))

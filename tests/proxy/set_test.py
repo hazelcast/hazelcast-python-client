@@ -10,7 +10,7 @@ class SetTest(SingleMemberTestCase):
 
     @classmethod
     def configure_client(cls, config):
-        config.cluster_name = cls.cluster.id
+        config["cluster_name"] = cls.cluster.id
         return config
 
     def test_add_entry_listener_item_added(self):
@@ -22,7 +22,7 @@ class SetTest(SingleMemberTestCase):
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
             self.assertEqual(event.item, None)
-            self.assertEqual(event.event_type, ItemEventType.added)
+            self.assertEqual(event.event_type, ItemEventType.ADDED)
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -35,7 +35,7 @@ class SetTest(SingleMemberTestCase):
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
             self.assertEqual(event.item, 'item-value')
-            self.assertEqual(event.event_type, ItemEventType.added)
+            self.assertEqual(event.event_type, ItemEventType.ADDED)
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -49,7 +49,7 @@ class SetTest(SingleMemberTestCase):
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
             self.assertEqual(event.item, None)
-            self.assertEqual(event.event_type, ItemEventType.removed)
+            self.assertEqual(event.event_type, ItemEventType.REMOVED)
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -63,7 +63,7 @@ class SetTest(SingleMemberTestCase):
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
             self.assertEqual(event.item, 'item-value')
-            self.assertEqual(event.event_type, ItemEventType.removed)
+            self.assertEqual(event.event_type, ItemEventType.REMOVED)
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -78,7 +78,7 @@ class SetTest(SingleMemberTestCase):
             if len(collector.events) > 0:
                 event = collector.events[0]
                 self.assertEqual(event.item, None)
-                self.assertEqual(event.event_type, ItemEventType.added)
+                self.assertEqual(event.event_type, ItemEventType.ADDED)
 
         self.assertTrueEventually(assert_event, 5)
 
