@@ -58,8 +58,9 @@
     * [7.4.12. CP Subsystem](#7412-cp-subsystem)
         * [7.4.12.1. Using AtomicLong](#74121-using-atomiclong)
         * [7.4.12.2. Using Lock](#74122-using-lock)
-        * [7.4.12.3. Using CountDownLatch](#74123-using-countdownlatch)
-        * [7.4.12.4. Using AtomicReference](#74124-using-atomicreference)
+        * [7.4.12.3. Using Semaphore](#74123-using-semaphore)
+        * [7.4.12.3. Using CountDownLatch](#74124-using-countdownlatch)
+        * [7.4.12.4. Using AtomicReference](#74125-using-atomicreference)
   * [7.5. Distributed Events](#75-distributed-events)
     * [7.5.1. Cluster Events](#751-cluster-events)
       * [7.5.1.1. Listening for Member Events](#7511-listening-for-member-events)
@@ -1663,7 +1664,65 @@ After that, once Client-1 comes back alive, its write request will be rejected b
 
 You can read more about the fencing token idea in Martin Kleppmann's "How to do distributed locking" blog post and Google's Chubby paper.
 
-#### 7.4.12.3. Using CountDownLatch
+
+#### 7.4.12.3. Using Semaphore
+
+Hazelcast `Semaphore` is the distributed implementation of a linearizable and distributed semaphore. It offers multiple operations for acquiring the permits. 
+This data structure is a part of CP Subsystem.
+
+Semaphore is a cluster-wide counting semaphore. Conceptually, it maintains a set of permits. Each `acquire()` waits if necessary until a permit is available, and then takes it. 
+Dually, each `release()` adds a permit, potentially releasing a waiting acquirer. However, no actual permit objects are used; the semaphore just keeps a count of the number available and acts accordingly.
+
+A basic Semaphore usage example is shown below.
+
+```python
+# Get a Semaphore called "my-semaphore"
+semaphore = client.cp_subsystem.get_semaphore("my-semaphore").blocking()
+# Try to initialize the semaphore
+# (does nothing if the semaphore is already initialized)
+semaphore.init(3)
+# Acquire 3 permits out of 3
+semaphore.acquire(3)
+# Release 2 permits
+semaphore.release(2)
+# Check available permits
+available = semaphore.available_permits()
+print("Available:", available)
+# Prints:
+# Available: 2
+```
+
+Beware of the increased risk of indefinite postponement when using the multiple-permit acquire. If permits are released one by one, a caller waiting for one permit will acquire it before a caller waiting for multiple permits regardless of the call order. 
+Correct usage of a semaphore is established by programming convention in the application.
+
+As an alternative, potentially safer approach to the multiple-permit acquire, you can use the `try_acquire()` method of Semaphore. 
+It tries to acquire the permits in optimistic manner and immediately returns with a `bool` operation result. It also accepts an optional `timeout` argument which specifies the timeout in seconds to acquire the permits before giving up.
+
+```python
+# Try to acquire 2 permits
+success = semaphore.try_acquire(2)
+# Check for the result of the acquire request
+if success:
+    try:
+        pass
+        # Your guarded code goes here
+    finally:
+        # Make sure to release the permits
+        semaphore.release(2)
+```
+
+ Semaphore data structure has two variations:
+
+ * The default implementation is session-aware. In this one, when a caller makes its very first `acquire()` call, 
+ it starts a new CP session with the underlying CP group. Then, liveliness of the caller is tracked via this CP session. 
+ When the caller fails, permits acquired by this caller are automatically and safely released. 
+ However, the session-aware version comes with a limitation, that is, a Hazelcast client cannot release permits before acquiring them first. 
+ In other words, a client can release only the permits it has acquired earlier.
+ * The second implementation is sessionless. This one does not perform auto-cleanup of acquired permits on failures. 
+ Acquired permits are not bound to callers and permits can be released without acquiring first. However, you need to handle failed permit owners on your own. 
+ If a Hazelcast server or a client fails while holding some permits, they will not be automatically released. You can use the sessionless CP Semaphore implementation by enabling JDK compatibility `jdk-compatible` server-side setting. Refer to [Semaphore configuration](https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#semaphore-configuration) documentation for more details.
+
+#### 7.4.12.4. Using CountDownLatch
 
 Hazelcast `CountDownLatch` is the distributed implementation of a linearizable and distributed countdown latch. 
 This data structure is a cluster-wide synchronization aid that allows one or more callers to wait until a set of operations being performed in other callers completes. 
@@ -1699,7 +1758,7 @@ print("Count is zero:", count_is_zero)
 
 > **NOTE: CountDownLatch count can be reset with `try_set_count()` after a countdown has finished, but not during an active count.**
 
-#### 7.4.12.4. Using AtomicReference
+#### 7.4.12.5. Using AtomicReference
 
 Hazelcast `AtomicReference` is the distributed implementation of a linearizable object reference. 
 It provides a set of atomic operations allowing to modify the value behind the reference. 

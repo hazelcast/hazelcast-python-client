@@ -23,11 +23,11 @@
         <group-size>3</group-size>
         <semaphores>
             <semaphore>
-                <name>sessionless</name>
+                <name>sessionless*</name>
                 <jdk-compatible>true</jdk-compatible>
             </semaphore>
             <semaphore>
-                <name>sessionaware</name>
+                <name>sessionaware*</name>
                 <jdk-compatible>false</jdk-compatible>
             </semaphore>
         </semaphores>

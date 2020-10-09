@@ -58,5 +58,5 @@ setup(
         package_data={'hazelcast': ["git_info.json"]},
         install_requires=[],
         extras_require=extras,
-        tests_require=['thrift', 'nose', 'coverage', 'psutil', 'mock'],
+        tests_require=['thrift', 'nose', 'coverage', 'psutil', 'mock', 'parameterized'],
 )
