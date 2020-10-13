@@ -10,6 +10,7 @@ OVERFLOW_POLICY_OVERWRITE = 0
 Configuration property for DEFAULT overflow policy. When an item is tried to be added on full Ringbuffer, oldest item in
 the Ringbuffer is overwritten and item is added.
 """
+
 OVERFLOW_POLICY_FAIL = 1
 """
 Configuration property for overflow policy. When an item is tried to be added on full Ringbuffer, the call fails and
@@ -17,6 +18,7 @@ item is not added.
 
 The reason that FAIL exist is to give the opportunity to obey the ttl. If blocking behavior is required, this can be
 implemented using retrying in combination with an exponential backoff.
+
     >>> sleepMS = 100;
     >>> while true:
     >>>     result = ringbuffer.add(item, -1)
@@ -37,10 +39,11 @@ class Ringbuffer(PartitionSpecificProxy):
     A Ringbuffer has a capacity so it won't grow beyond that capacity and endanger the stability of the system. 
     If that capacity is exceeded, than the oldest item in the Ringbuffer is overwritten. 
     The Ringbuffer has 2 always incrementing sequences:
-        - Tail_sequence: This is the side where the youngest item is found. So the tail is the side of the Ringbuffer
-            where items are added to.
-        - Head_sequence: This is the side where the oldest items are found. So the head is the side where items gets
-            discarded.
+
+    - Tail_sequence: This is the side where the youngest item is found. So the tail is the side of the Ringbuffer
+      where items are added to.
+    - Head_sequence: This is the side where the oldest items are found. So the head is the side where items gets
+      discarded.
             
     The items in the Ringbuffer can be found by a sequence that is in between (inclusive) the head and tail sequence.
     

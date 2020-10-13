@@ -1,7 +1,8 @@
 Util
 ====
 
-.. automodule:: hazelcast.util
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. py:currentmodule:: hazelcast.util
+
+.. autoclass:: LoadBalancer
+.. autoclass:: RoundRobinLB
+.. autoclass:: RandomLB

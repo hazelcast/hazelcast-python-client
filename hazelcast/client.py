@@ -28,7 +28,256 @@ from hazelcast.errors import IllegalStateError
 
 
 class HazelcastClient(object):
-    """Hazelcast Client."""
+    """Hazelcast client instance to access access and manipulate
+    distributed data structures on the Hazelcast clusters.
+
+    Keyword Args:
+        cluster_members (list[str]): Candidate address list that client
+            will use to establish initial connection.
+            By default, set to ``["127.0.0.1"]``.
+        cluster_name (str): Name of the cluster to connect to. The name is
+            sent as part of the the client authentication message and may
+            be verified on the member. By default, set to ``dev``.
+        client_name (str): Name of the client instance. By default,
+            set to ``hz.client_${CLIENT_ID}``, where ``CLIENT_ID`` starts
+            from ``0`` and it is incremented by ``1`` for each new client.
+        connection_timeout (float): Socket timeout value in seconds for
+            client to connect member nodes. Setting this to ``0`` makes
+            the connection blocking. By default, set to ``5.0``.
+        socket_options (list[tuple]): List of socket option tuples. The
+            tuples must contain the parameters passed into the
+            :func:`socket.setsockopt` in the same order.
+        redo_operation (bool): When set to ``True``, the client will redo
+            the operations that were executing on the server in case if the
+            client lost connection. This can happen because of network problems,
+            or simply because the member died. However it is not clear whether
+            the operation was performed or not. For idempotent operations this is
+            harmless, but for non idempotent ones retrying can cause to undesirable
+            effects. Note that the redo can be processed on any member. By default,
+            set to ``False``.
+        smart_routing (bool): Enables smart mode for the client instead of
+            unisocket client. Smart clients send key based operations to owner of
+            the keys. Unisocket clients send all operations to a single node. By
+            default, set to ``True``.
+        ssl_enabled (bool): If it is ``True``, SSL is enabled. By default, set
+            to ``False``.
+        ssl_cafile (str): Absolute path of concatenated CA certificates used to
+            validate server's certificates in PEM format. When SSL is enabled and
+            cafile is not set, a set of default CA certificates from default
+            locations will be used.
+        ssl_certfile (str): Absolute path of the client certificate in PEM format.
+        ssl_keyfile (str): Absolute path of the private key file for the client
+            certificate in the PEM format. If this parameter is ``None``, private
+            key will be taken from the certfile.
+        ssl_password (str|bytes|bytearray|function): Password for decrypting the
+            keyfile if it is encrypted. The password may be a function to call to
+            get the password. It will be called with no arguments, and it should
+            return a string, bytes, or bytearray. If the return value is a string
+            it will be encoded as UTF-8 before using it to decrypt the key.
+            Alternatively a string, bytes, or bytearray value may be supplied
+            directly as the password.
+        ssl_protocol (int): Protocol version used in SSL communication.
+            By default, set to ``SSLProtocol.TLSv1_2``.
+        ssl_ciphers (str): String in the OpenSSL cipher list format to set the
+            available ciphers for sockets. More than one cipher can be set by
+            separating them with a colon.
+        cloud_discovery_token (str): Discovery token of the Hazelcast Cloud cluster.
+            When this value is set, Hazelcast Cloud discovery is enabled.
+        async_start (bool): Enables non-blocking start mode of :class:`HazelcastClient`.
+            When set to ``True``, the client creation will not wait to connect to
+            cluster. The client instance will throw exceptions until it connects to
+            cluster and becomes ready. If set to ``False``, :class:`HazelcastClient`
+            will block until a cluster connection established and it is ready to use
+            the client instance. By default, set to ``False``.
+        reconnect_mode (int): Defines how a client reconnects to cluster after a
+            disconnect. By default, set to ``ReconnectMode.ON``.
+        retry_initial_backoff (float): Wait period in seconds after the first failure
+            before retrying. Must be non-negative. By default, set to ``1.0``.
+        retry_max_backoff (float): Upper bound for the backoff interval in seconds.
+            Must be non-negative. By default, set to ``30.0``.
+        retry_jitter (float): Defines how much to randomize backoffs. At each iteration
+            the calculated back-off is randomized via following method in pseudo-code
+            ``Random(-jitter * current_backoff, jitter * current_backoff)``. Must be
+            in range ``[0.0, 1.0]``. By default, set to ``0.0`` (no randomization).
+        retry_multiplier (float): The factor with which to multiply backoff after a
+            failed retry. Must be greater than or equal to ``1``. By default,
+            set to ``1.0``.
+        cluster_connect_timeout (float): Timeout value in seconds for the client to
+            give up a connection attempt to the cluster. Must be non-negative.
+            By default, set to `20.0`.
+        portable_version (int): Default value for the portable version if the
+            class does not have the :func:`get_portable_version` method. Portable
+            versions are used to differentiate two versions of the
+            :class:`hazelcast.serialization.api.Portable` classes that have added
+            or removed fields, or fields with different types.
+        data_serializable_factories (dict[int, dict[int, class]]): Dictionary of
+            factory id and corresponding
+            :class:`hazelcast.serialization.api.IdentifiedDataSerializable` factories.
+            A factory is simply a dictionary with class id and callable class
+            constructors.
+
+            .. code-block:: python
+
+                FACTORY_ID = 1
+                CLASS_ID = 1
+
+                class SomeSerializable(IdentifiedDataSerializable):
+                    # omitting the implementation
+                    pass
+
+
+                client = HazelcastClient(data_serializable_factories={
+                    FACTORY_ID: {
+                        CLASS_ID: SomeSerializable
+                    }
+                })
+
+        portable_factories (dict[int, dict[int, class]]): Dictionary of
+            factory id and corresponding
+            :class:`hazelcast.serialization.api.Portable` factories.
+            A factory is simply a dictionary with class id and callable class
+            constructors.
+
+            .. code-block:: python
+
+                FACTORY_ID = 2
+                CLASS_ID = 2
+
+                class SomeSerializable(Portable):
+                    # omitting the implementation
+                    pass
+
+
+                client = HazelcastClient(portable_factories={
+                    FACTORY_ID: {
+                        CLASS_ID: SomeSerializable
+                    }
+                })
+
+        class_definitions (list[hazelcast.serialization.portable.classdef.ClassDefinition]):
+            List of all portable class definitions.
+        check_class_definition_errors (bool): When enabled, serialization system
+            will check for class definitions error at start and throw an
+            ``HazelcastSerializationError`` with error definition. By default,
+            set to ``True``.
+        is_big_endian (bool): Defines if big-endian is used as the byte order
+            for the serialization. By default, set to ``True``.
+        default_int_type (int): Defines how the ``int``/``long`` type is
+            represented on the cluster side. By default, it is serialized
+            as ``IntType.INT`` (``32`` bits).
+        global_serializer (hazelcast.serialization.api.StreamSerializer):
+            Defines the global serializer. This serializer
+            is registered as a fallback serializer to handle all other objects
+            if a serializer cannot be located for them.
+        custom_serializers (dict[class, hazelcast.serialization.api.StreamSerializer]):
+            Dictionary of class and the corresponding custom serializers.
+
+            .. code-block:: python
+
+                class SomeClass(object):
+                    # omitting the implementation
+                    pass
+
+
+                class SomeClassSerializer(StreamSerializer):
+                    # omitting the implementation
+                    pass
+
+                client = HazelcastClient(custom_serializers={
+                    SomeClass: SomeClassSerializer
+                })
+
+        near_caches (dict[str, dict[str, any]]): Dictionary of near cache
+            names and the corresponding near cache configurations as a dictionary.
+            The near cache configurations contains the following options.
+            When an option is missing from the configuration, it will be
+            set to its default value.
+
+            - **invalidate_on_change** (bool): Enables cluster-assisted invalidate
+              on change behavior. When set to ``True``, entries are invalidated
+              when they are changed in cluster. By default, set to ``True``.
+            - **in_memory_format** (int): Specifies in which format data will be
+              stored in the Near Cache. By default, set to ``InMemoryFormat.BINARY``.
+            - **time_to_live** (float): Maximum number of seconds that an entry can
+              stay in cache. When not set, entries won't be evicted due
+              to expiration.
+            - **max_idle** (float): Maximum number of seconds that an entry can stay
+              in the Near Cache until it is accessed. When not set, entries won't be
+              evicted due to inactivity.
+            - **eviction_policy** (int): Defines eviction policy configuration.
+              By default, set to ``EvictionPolicy.LRU``.
+            - **eviction_max_size** (int): Defines maximum number of entries kept in
+              the memory before eviction kicks in. By default, set to ``10000``.
+            - **eviction_sampling_count** (int): Number of random entries that are
+              evaluated to see if some of them are already expired. By default,
+              set to ``8``.
+            - **eviction_sampling_pool_size** (int): Size of the pool for eviction
+              candidates. The pool is kept sorted according to the eviction policy.
+              By default, set to ``16``.
+
+        load_balancer (hazelcast.util.LoadBalancer): Load balancer implementation
+            for the client
+        membership_listeners (list[tuple[function, function]]): List of membership
+            listener tuples. Tuples must be of size ``2``. The first element will
+            be the function to be called when a member is added, and the second
+            element will be the function to be called when the member is removed
+            with the :class:`hazelcast.core.MemberInfo` as the only parameter.
+            Any of the elements can be ``None``, but not at the same time.
+        lifecycle_listeners (list[function]): List of lifecycle listeners.
+            Listeners will be called with the new lifecycle state as the only
+            parameter when the client changes lifecycle states.
+        flake_id_generators (dict[str, dict[str, any]]): Dictionary of flake id
+            generator names and the corresponding flake id generator configurations
+            as a dictionary. The flake id generator configurations contains the
+            following options. When an option is missing from the configuration, it
+            will be set to its default value.
+
+            - **prefetch_count** (int): Defines how many IDs are pre-fetched on the
+              background when a new flake id is requested from the cluster. Should
+              be in the range ``1..100000``. By default, set to ``100``.
+            - **prefetch_validity** (float): Defines for how long the pre-fetched IDs
+              can be used. If this time elapsed, a new batch of IDs will be fetched.
+              Time unit is in seconds. By default, set to ``600`` (10 minutes).
+
+              The IDs contain timestamp component, which ensures rough global ordering
+              of IDs. If an ID is assigned to an object that was created much later,
+              it will be much out of order. If you don't care about ordering, set this
+              value to ``0`` for unlimited ID validity.
+
+        labels (list[str]): Labels for the client to be sent to the cluster.
+        heartbeat_interval (float): Time interval between the heartbeats sent by the
+            client to the member nodes in seconds. By default, set to ``5.0``.
+        heartbeat_timeout (float): If there is no message passing between the client
+            and a member within the given time via this property in seconds, the
+            connection will be closed. By default, set to ``60.0``.
+        invocation_timeout (float): When an invocation gets an exception because
+
+            - Member throws an exception.
+            - Connection between the client and member is closed.
+            - Client's heartbeat requests are timed out.
+
+            Time passed since invocation started is compared with this property.
+            If the time is already passed, then the exception is delegated to the user.
+            If not, the invocation is retried. Note that, if invocation gets no exception
+            and it is a long running one, then it will not get any exception, no matter
+            how small this timeout is set. Time unit is in seconds. By default,
+            set to ``120.0``.
+
+        invocation_retry_pause (float): Pause time between each retry cycle of an
+            invocation in seconds. By default, set to ``1.0``.
+        statistics_enabled (bool): When set to ``True``, client statistics collection
+            is enabled. By default, set to ``False``.
+        statistics_period (float): The period in seconds the statistics run.
+        shuffle_member_list (bool): Client shuffles the given member list to prevent
+            all clients to connect to the same node when this property is set to
+            ``True``. When it is set to ``False``, the client tries to connect to
+            the nodes in the given order. By default, set to ``True``.
+        logging_config (dict): The configuration to use as the logging config.
+            It must follow the configuration dictionary schema described in the
+            logging module of the standard library.
+        logging_level (int): Sets the logging level for the default logging
+            configuration. By default, set to ``logging.INFO``.
+    """
 
     _CLIENT_ID = AtomicInteger()
     logger = logging.getLogger("HazelcastClient")

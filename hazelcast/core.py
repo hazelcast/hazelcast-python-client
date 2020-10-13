@@ -7,18 +7,38 @@ from hazelcast.util import with_reversed_items
 
 
 class MemberInfo(object):
-    __slots__ = ("address", "uuid", "attributes", "lite_member", "version")
-
     """
     Represents a member in the cluster with its address, uuid, lite member status, attributes and version.
     """
 
+    __slots__ = ("address", "uuid", "attributes", "lite_member", "version")
+
     def __init__(self, address, uuid, attributes, lite_member, version, *_):
         self.address = address
+        """
+        hazelcast.core.Address: Address of the member.
+        """
+
         self.uuid = uuid
+        """
+        uuid.UUID: UUID of the member.
+        """
+
         self.attributes = attributes
+        """
+        dict[str, str]: Configured attributes of the member.
+        """
+
         self.lite_member = lite_member
+        """
+        bool: ``True`` if the member is a lite member, ``False`` otherwise.
+        Lite members do not own any partition.
+        """
+
         self.version = version
+        """
+        hazelcast.core.MemberVersion: Hazelcast codebase version of the member.
+        """
 
     def __str__(self):
         return "Member [%s]:%s - %s" % (self.address.host, self.address.port, self.uuid)
@@ -98,8 +118,6 @@ class AddressHelper(object):
 
 
 class DistributedObjectInfo(object):
-    """Represents name of the Distributed Object and the name of service which it belongs to."""
-
     def __init__(self, service_name, name):
         self.service_name = service_name
         self.name = name
@@ -136,9 +154,24 @@ class DistributedObjectEvent(object):
 
     def __init__(self, name, service_name, event_type, source):
         self.name = name
+        """
+        str: Name of the distributed object.
+        """
+
         self.service_name = service_name
+        """
+        str: Service name of the distributed object.
+        """
+
         self.event_type = DistributedObjectEventType.reverse.get(event_type, event_type)
+        """
+        str: Event type. Either ``CREATED`` or ``DESTROYED``.
+        """
+
         self.source = source
+        """
+        uuid.UUID: UUID of the member that fired the event.
+        """
 
     def __repr__(self):
         return "DistributedObjectEvent(name=%s, service_name=%s, event_type=%s, source=%s)" \
@@ -161,52 +194,52 @@ class SimpleEntryView(object):
 
         self.cost = cost
         """
-        The cost in bytes of the entry.
+        int: The cost in bytes of the entry.
         """
 
         self.creation_time = creation_time
         """
-        The creation time of the entry.
+        int: The creation time of the entry.
         """
 
         self.expiration_time = expiration_time
         """
-        The expiration time of the entry.
+        int: The expiration time of the entry.
         """
 
         self.hits = hits
         """
-        Number of hits of the entry.
+        int: Number of hits of the entry.
         """
 
         self.last_access_time = last_access_time
         """
-        The last access time for the entry.
+        int: The last access time for the entry.
         """
 
         self.last_stored_time = last_stored_time
         """
-        The last store time for the value.
+        int: The last store time for the value.
         """
 
         self.last_update_time = last_update_time
         """
-        The last time the value was updated.
+        int: The last time the value was updated.
         """
 
         self.version = version
         """
-        The version of the entry.
+        int: The version of the entry.
         """
 
         self.ttl = ttl
         """
-        The last set time to live milliseconds.
+        int: The last set time to live milliseconds.
         """
 
         self.max_idle = max_idle
         """
-        The last set max idle time in milliseconds.
+        int: The last set max idle time in milliseconds.
         """
 
     def __repr__(self):
@@ -275,6 +308,10 @@ class HazelcastJsonValue(object):
 
 
 class MemberVersion(object):
+    """
+    Determines the Hazelcast codebase version in terms of major.minor.patch version.
+    """
+
     __slots__ = ("major", "minor", "patch")
 
     def __init__(self, major, minor, patch):

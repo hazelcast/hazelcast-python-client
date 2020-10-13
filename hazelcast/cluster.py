@@ -263,10 +263,12 @@ class _InternalClusterService(object):
 class VectorClock(object):
     """Vector clock consisting of distinct replica logical clocks.
     
-    See https://en.wikipedia.org/wiki/Vector_clock
     The vector clock may be read from different thread but concurrent
     updates must be synchronized externally. There is no guarantee for
     concurrent updates.
+
+    See Also:
+        https://en.wikipedia.org/wiki/Vector_clock
     """
 
     def __init__(self):

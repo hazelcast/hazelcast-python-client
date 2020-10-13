@@ -1,7 +1,4 @@
 Hazelcast Cluster
 =================
 
-.. automodule:: hazelcast.cluster
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. autoclass:: hazelcast.cluster.ClusterService

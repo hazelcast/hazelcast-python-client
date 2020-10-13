@@ -4,14 +4,6 @@ EXCEPTION_MESSAGE_TYPE = 0
 
 
 def retryable(cls):
-    """Makes the given error retryable.
-
-    Args:
-        cls (hazelcast.errors.HazelcastError): The given error.
-
-    Returns:
-        hazelcast.errors.HazelcastError: The given error with retryable property.
-    """
     cls.retryable = True
     return cls
 
@@ -610,15 +602,6 @@ class _ErrorsCodec(object):
 
 
 def create_error_from_message(error_message):
-    """Creates an exception with given error codec.
-
-    Args:
-        error_message (hazelcast.protocol.client_message.InboundMessage): Error message which
-            includes the class name, message and exception trace.
-
-    Returns:
-        Exception: The created exception.
-    """
     error_holders = _ErrorsCodec.decode(error_message)
     return _create_error(error_holders, 0)
 
@@ -641,12 +624,4 @@ def _create_error(error_holders, idx):
 
 
 def is_retryable_error(error):
-    """Determines whether the given error is retryable or not.
-
-    Args:
-        error (hazelcast.errors.HazelcastError): The given error.
-
-    Returns:
-        bool: ``True`` if the given error is retryable, ``False`` otherwise.
-    """
     return hasattr(error, 'retryable')

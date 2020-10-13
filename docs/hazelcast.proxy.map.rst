@@ -1,7 +1,6 @@
 Map
 ====
 
-.. automodule:: hazelcast.proxy.map
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. py:currentmodule:: hazelcast.proxy.map
+
+.. autoclass:: Map

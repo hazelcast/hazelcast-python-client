@@ -56,8 +56,8 @@ class TransactionalMap(TransactionalProxy):
         Returns:
             hazelcast.future.Future[any]: The value for the specified key.
             
-        .. seealso::
-        :func:`Map.get(key) <hazelcast.proxy.map.Map.get>`
+        See Also:
+            :func:`Map.get(key) <hazelcast.proxy.map.Map.get>`
         """
         check_not_none(key, "key can't be none")
 
