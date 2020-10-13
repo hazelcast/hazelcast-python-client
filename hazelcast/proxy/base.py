@@ -4,7 +4,7 @@ from hazelcast.future import make_blocking
 from hazelcast.invocation import Invocation
 from hazelcast.partition import string_partition_strategy
 from hazelcast import six
-from hazelcast.util import with_reversed_items
+from hazelcast.util import get_attr_name
 
 MAX_SIZE = float('inf')
 
@@ -106,7 +106,6 @@ class TransactionalProxy(object):
         return '%s(name="%s")' % (type(self).__name__, self.name)
 
 
-@with_reversed_items
 class ItemEventType(object):
     """Type of item events."""
 
@@ -121,7 +120,6 @@ class ItemEventType(object):
     """
 
 
-@with_reversed_items
 class EntryEventType(object):
     """Type of entry event."""
 
@@ -206,6 +204,7 @@ class EntryEvent(object):
         uuid (uuid.UUID): UUID of the member that fired the event.
         number_of_affected_entries (int): Number of affected entries by this event.
     """
+
     def __init__(self, to_object, key, value, old_value, merging_value, event_type, uuid,
                  number_of_affected_entries):
         self._to_object = to_object
@@ -239,9 +238,9 @@ class EntryEvent(object):
 
     def __repr__(self):
         return "EntryEvent(key=%s, value=%s, old_value=%s, merging_value=%s, event_type=%s, uuid=%s, " \
-               "number_of_affected_entries=%s)" % (
-                   self.key, self.value, self.old_value, self.merging_value, EntryEventType.reverse[self.event_type],
-                   self.uuid, self.number_of_affected_entries)
+               "number_of_affected_entries=%s)" % (self.key, self.value, self.old_value, self.merging_value,
+                                                   get_attr_name(EntryEventType, self.event_type), self.uuid,
+                                                   self.number_of_affected_entries)
 
 
 class TopicMessage(object):
@@ -252,6 +251,7 @@ class TopicMessage(object):
         publish_time (int): UNIX time that the event is published as seconds.
         member (hazelcast.core.MemberInfo): Member that fired the event.
     """
+
     def __init__(self, name, message_data, publish_time, member, to_object):
         self.name = name
         self._message_data = message_data

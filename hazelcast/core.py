@@ -3,7 +3,6 @@ import json
 
 from hazelcast import six
 from hazelcast import util
-from hazelcast.util import with_reversed_items
 
 
 class MemberInfo(object):
@@ -62,7 +61,14 @@ class Address(object):
 
     def __init__(self, host, port):
         self.host = host
+        """
+        str: Host of the address.
+        """
+
         self.port = port
+        """
+        int: Port of the address.
+        """
 
     def __repr__(self):
         return "Address(host=%s, port=%d)" % (self.host, self.port)
@@ -134,7 +140,6 @@ class DistributedObjectInfo(object):
         return False
 
 
-@with_reversed_items
 class DistributedObjectEventType(object):
     """Type of the distributed object event."""
 
@@ -163,7 +168,7 @@ class DistributedObjectEvent(object):
         str: Service name of the distributed object.
         """
 
-        self.event_type = DistributedObjectEventType.reverse.get(event_type, event_type)
+        self.event_type = event_type
         """
         str: Event type. Either ``CREATED`` or ``DESTROYED``.
         """

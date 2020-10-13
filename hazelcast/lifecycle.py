@@ -2,10 +2,9 @@ import logging
 import uuid
 
 from hazelcast import six
-from hazelcast.util import create_git_info, with_reversed_items
+from hazelcast.util import create_git_info
 
 
-@with_reversed_items
 class LifecycleState(object):
     """Lifecycle states."""
 

@@ -234,16 +234,11 @@ def to_signed(unsigned, bit_len):
     return unsigned & mask
 
 
-def with_reversed_items(cls):
-    reversed_mappings = {}
+def get_attr_name(cls, value):
     for attr_name, attr_value in six.iteritems(vars(cls)):
-        if not (attr_name.startswith("_") or callable(getattr(cls, attr_name))):
-            reversed_mappings[attr_value] = attr_name
-
-    class ClsWithReservedItems(cls):
-        reverse = reversed_mappings
-
-    return ClsWithReservedItems
+        if attr_value == value:
+            return attr_name
+    return None
 
 
 number_types = (six.integer_types, float)
