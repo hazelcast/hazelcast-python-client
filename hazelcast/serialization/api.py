@@ -188,14 +188,6 @@ class ObjectDataOutput(object):
         """
         raise NotImplementedError()
 
-    def write_data(self, val):
-        """Writes a data to this output stream.
-
-        Args:
-            val (hazelcast.serialization.data.Data): The data to be written.
-        """
-        raise NotImplementedError()
-
     def to_byte_array(self):
         """Returns a copy of internal byte array.
 
@@ -395,14 +387,6 @@ class ObjectDataInput(object):
         
         Returns:
             The object read.
-        """
-        raise NotImplementedError()
-
-    def read_data(self):
-        """Reads a data from input stream and returns it.
-        
-        Returns:
-            hazelcast.serialization.data.Data: The data read.
         """
         raise NotImplementedError()
 

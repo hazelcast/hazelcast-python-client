@@ -118,10 +118,6 @@ class _ObjectDataOutput(ObjectDataOutput):
     def write_object(self, val):
         self._service.write_object(self, val)
 
-    def write_data(self, data):
-        payload = data.to_bytes() if data is not None else None
-        self.write_byte_array(payload)
-
     def to_byte_array(self):
         if self._buffer is None or self._pos == 0:
             return bytearray()

@@ -1,7 +1,4 @@
 Serialization
 =============
 
-.. toctree::
-
-   hazelcast.serialization.api
-   hazelcast.serialization.data
+.. automodule:: hazelcast.serialization.api
