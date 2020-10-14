@@ -51,6 +51,7 @@ class Invocation(object):
 
 class InvocationService(object):
     logger = logging.getLogger("HazelcastClient.InvocationService")
+    _CLEAN_RESOURCES_PERIOD = 0.1
 
     def __init__(self, client, reactor, logger_extras):
         config = client.config
@@ -74,7 +75,6 @@ class InvocationService(object):
         self._invocation_retry_pause = config.invocation_retry_pause
         self._backup_ack_to_client_enabled = smart_routing and config.backup_ack_to_client_enabled
         self._fail_on_indeterminate_state = config.fail_on_indeterminate_operation_state
-        self._clean_resources_period = config.clean_resources_period
         self._backup_timeout = config.operation_backup_timeout
         self._clean_resources_timer = None
         self._shutdown = False
@@ -318,9 +318,9 @@ class InvocationService(object):
                 if self._backup_ack_to_client_enabled:
                     self._detect_and_handle_backup_timeout(invocation, now)
 
-            self._clean_resources_timer = self._reactor.add_timer(self._clean_resources_period, run)
+            self._clean_resources_timer = self._reactor.add_timer(self._CLEAN_RESOURCES_PERIOD, run)
 
-        self._clean_resources_timer = self._reactor.add_timer(self._clean_resources_period, run)
+        self._clean_resources_timer = self._reactor.add_timer(self._CLEAN_RESOURCES_PERIOD, run)
 
     def _detect_and_handle_backup_timeout(self, invocation, now):
         if not invocation.pending_response:

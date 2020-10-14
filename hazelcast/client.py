@@ -277,6 +277,22 @@ class HazelcastClient(object):
             logging module of the standard library.
         logging_level (int): Sets the logging level for the default logging
             configuration. By default, set to ``logging.INFO``.
+        backup_ack_to_client_enabled (bool): Enables client to get backup
+            acknowledgements directly from the member that backups are applied,
+            which reduces number of hops and increases performance for smart clients.
+            This option has no effect for unisocket clients. By default, set
+            to ``True`` (enabled).
+        operation_backup_timeout (float): If an operation has backups, defines
+            how long the invocation will wait for acks from the backup replicas
+            in seconds. If acks are not received from some backups, there won't
+            be any rollback on other successful replicas. By default, set to ``5.0``.
+        fail_on_indeterminate_operation_state (bool): When enabled, if an operation
+            has sync backups and acks are not received from backup replicas in time,
+            or the member which owns primary replica of the target partition leaves
+            the cluster, then the invocation fails with
+            :class:`hazelcast.errors.IndeterminateOperationStateError`. However,
+            even if the invocation fails, there will not be any rollback on other
+            successful replicas. By default, set to ``False`` (do not fail).
     """
 
     _CLIENT_ID = AtomicInteger()

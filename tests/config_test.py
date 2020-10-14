@@ -748,19 +748,6 @@ class ConfigTest(unittest.TestCase):
         config.backup_ack_to_client_enabled = False
         self.assertFalse(config.backup_ack_to_client_enabled)
 
-    def test_clean_resources_period(self):
-        config = self.config
-        self.assertEqual(0.1, config.clean_resources_period)
-
-        with self.assertRaises(ValueError):
-            config.clean_resources_period = 0
-
-        with self.assertRaises(TypeError):
-            config.clean_resources_period = None
-
-        config.clean_resources_period = 1.0
-        self.assertEqual(1.0, config.clean_resources_period)
-
     def test_operation_backup_timeout(self):
         config = self.config
         self.assertEqual(5.0, config.operation_backup_timeout)

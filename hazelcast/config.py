@@ -458,8 +458,8 @@ class _Config(object):
                  "_labels", "_heartbeat_interval", "_heartbeat_timeout",
                  "_invocation_timeout", "_invocation_retry_pause", "_statistics_enabled",
                  "_statistics_period", "_shuffle_member_list", "_logging_config",
-                 "_logging_level", "_backup_ack_to_client_enabled", "_clean_resources_period",
-                 "_operation_backup_timeout", "_fail_on_indeterminate_operation_state")
+                 "_logging_level", "_backup_ack_to_client_enabled", "_operation_backup_timeout",
+                 "_fail_on_indeterminate_operation_state")
 
     def __init__(self):
         self._cluster_members = []
@@ -509,8 +509,7 @@ class _Config(object):
         self._logging_config = None
         self._logging_level = logging.INFO
         self._backup_ack_to_client_enabled = True
-        self._clean_resources_period = 0.1
-        self._operation_backup_timeout = 5
+        self._operation_backup_timeout = 5.0
         self._fail_on_indeterminate_operation_state = False
 
     @property
@@ -1146,20 +1145,6 @@ class _Config(object):
             self._backup_ack_to_client_enabled = value
         else:
             raise TypeError("backup_ack_to_client_enabled must be a boolean")
-
-    @property
-    def clean_resources_period(self):
-        return self._clean_resources_period
-
-    @clean_resources_period.setter
-    def clean_resources_period(self, value):
-        if isinstance(value, number_types):
-            if value > 0:
-                self._clean_resources_period = value
-            else:
-                raise ValueError("clean_resources_period must be positive")
-        else:
-            raise TypeError("clean_resources_period must be a number")
 
     @property
     def operation_backup_timeout(self):
