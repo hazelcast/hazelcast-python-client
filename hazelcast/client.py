@@ -1,5 +1,4 @@
 import logging
-import logging.config
 import threading
 
 from hazelcast import six
@@ -23,9 +22,11 @@ from hazelcast.reactor import AsyncoreReactor
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.statistics import Statistics
 from hazelcast.transaction import TWO_PHASE, TransactionManager
-from hazelcast.util import AtomicInteger, DEFAULT_LOGGING, RoundRobinLB
+from hazelcast.util import AtomicInteger, RoundRobinLB
 from hazelcast.discovery import HazelcastCloudAddressProvider
 from hazelcast.errors import IllegalStateError
+
+_logger = logging.getLogger(__name__)
 
 
 class HazelcastClient(object):
@@ -297,7 +298,6 @@ class HazelcastClient(object):
     """
 
     _CLIENT_ID = AtomicInteger()
-    logger = logging.getLogger("HazelcastClient")
 
     def __init__(self, **kwargs):
         config = _Config.from_dict(kwargs)
@@ -305,38 +305,33 @@ class HazelcastClient(object):
         self._context = _ClientContext()
         client_id = HazelcastClient._CLIENT_ID.get_and_increment()
         self.name = self._create_client_name(client_id)
-        self._init_logger()
-        self._logger_extras = {"client_name": self.name, "cluster_name": self.config.cluster_name}
-        self._reactor = AsyncoreReactor(self._logger_extras)
+        self._reactor = AsyncoreReactor()
         self._serialization_service = SerializationServiceV1(config)
         self._near_cache_manager = NearCacheManager(self, self._serialization_service)
-        self._internal_lifecycle_service = _InternalLifecycleService(self, self._logger_extras)
+        self._internal_lifecycle_service = _InternalLifecycleService(self)
         self.lifecycle_service = LifecycleService(self._internal_lifecycle_service)
-        self._invocation_service = InvocationService(self, self._reactor, self._logger_extras)
+        self._invocation_service = InvocationService(self, self._reactor)
         self._address_provider = self._create_address_provider()
-        self._internal_partition_service = _InternalPartitionService(self, self._logger_extras)
+        self._internal_partition_service = _InternalPartitionService(self)
         self.partition_service = PartitionService(self._internal_partition_service, self._serialization_service)
-        self._internal_cluster_service = _InternalClusterService(self, self._logger_extras)
+        self._internal_cluster_service = _InternalClusterService(self)
         self.cluster_service = ClusterService(self._internal_cluster_service)
         self._connection_manager = ConnectionManager(self, self._reactor, self._address_provider,
                                                      self._internal_lifecycle_service,
                                                      self._internal_partition_service,
                                                      self._internal_cluster_service,
                                                      self._invocation_service,
-                                                     self._near_cache_manager,
-                                                     self._logger_extras)
+                                                     self._near_cache_manager)
         self._load_balancer = self._init_load_balancer(config)
         self._listener_service = ListenerService(self, self._connection_manager,
-                                                 self._invocation_service,
-                                                 self._logger_extras)
+                                                 self._invocation_service)
         self._proxy_manager = ProxyManager(self._context)
         self.cp_subsystem = CPSubsystem(self._context)
         self._proxy_session_manager = ProxySessionManager(self._context)
-        self._transaction_manager = TransactionManager(self._context, self._logger_extras)
+        self._transaction_manager = TransactionManager(self._context)
         self._lock_reference_id_generator = AtomicInteger(1)
         self._statistics = Statistics(self, self._reactor, self._connection_manager,
-                                      self._invocation_service, self._near_cache_manager,
-                                      self._logger_extras)
+                                      self._invocation_service, self._near_cache_manager)
         self._cluster_view_listener = ClusterViewListenerService(self, self._connection_manager,
                                                                  self._internal_partition_service,
                                                                  self._internal_cluster_service,
@@ -349,7 +344,7 @@ class HazelcastClient(object):
         self._context.init_context(self.config, self._invocation_service, self._internal_partition_service,
                                    self._internal_cluster_service, self._connection_manager,
                                    self._serialization_service, self._listener_service, self._proxy_manager,
-                                   self._near_cache_manager, self._lock_reference_id_generator, self._logger_extras,
+                                   self._near_cache_manager, self._lock_reference_id_generator,
                                    self.name, self._proxy_session_manager, self._reactor)
 
     def _start(self):
@@ -373,7 +368,7 @@ class HazelcastClient(object):
         except:
             self.shutdown()
             raise
-        self.logger.info("Client started.", extra=self._logger_extras)
+        _logger.info("Client started")
 
     def get_executor(self, name):
         """Creates cluster-wide ExecutorService.
@@ -620,18 +615,9 @@ class HazelcastClient(object):
 
         if cloud_enabled:
             connection_timeout = self._get_connection_timeout(config)
-            return HazelcastCloudAddressProvider(cloud_discovery_token, connection_timeout, self._logger_extras)
+            return HazelcastCloudAddressProvider(cloud_discovery_token, connection_timeout)
 
         return DefaultAddressProvider(cluster_members)
-
-    def _init_logger(self):
-        config = self.config
-        logging_config = config.logging_config
-        if logging_config:
-            logging.config.dictConfig(logging_config)
-        else:
-            logging.config.dictConfig(DEFAULT_LOGGING)
-            self.logger.setLevel(config.logging_level)
 
     def _create_client_name(self, client_id):
         client_name = self.config.client_name
@@ -668,7 +654,6 @@ class _ClientContext(object):
         self.proxy_manager = None
         self.near_cache_manager = None
         self.lock_reference_id_generator = None
-        self.logger_extras = None
         self.name = None
         self.proxy_session_manager = None
         self.reactor = None
@@ -676,8 +661,7 @@ class _ClientContext(object):
     def init_context(self, config, invocation_service, partition_service,
                      cluster_service, connection_manager, serialization_service,
                      listener_service, proxy_manager, near_cache_manager,
-                     lock_reference_id_generator, logger_extras, name,
-                     proxy_session_manager, reactor):
+                     lock_reference_id_generator, name, proxy_session_manager, reactor):
         self.config = config
         self.invocation_service = invocation_service
         self.partition_service = partition_service
@@ -688,7 +672,6 @@ class _ClientContext(object):
         self.proxy_manager = proxy_manager
         self.near_cache_manager = near_cache_manager
         self.lock_reference_id_generator = lock_reference_id_generator
-        self.logger_extras = logger_extras
         self.name = name
         self.proxy_session_manager = proxy_session_manager
         self.reactor = reactor

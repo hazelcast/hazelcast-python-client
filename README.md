@@ -369,7 +369,11 @@ Now that we have a working cluster and we know how to configure both our cluster
 distributed map in the Python client.
 
 ```python
+import logging
 import hazelcast
+
+# Enable logging to see the logs
+logging.basicConfig(level=logging.INFO)
 
 # Connect to Hazelcast cluster
 client = hazelcast.HazelcastClient()
@@ -380,25 +384,22 @@ client.shutdown()
 This should print logs about the cluster members such as address, port and UUID to the `stderr`.
 
 ```
-Sep 03, 2020 02:33:31 PM HazelcastClient.LifecycleService
-INFO: [4.0.0] [dev] [hz.client_0] (20190802 - 85a237d) HazelcastClient is STARTING
-Sep 03, 2020 02:33:31 PM HazelcastClient.LifecycleService
-INFO: [4.0.0] [dev] [hz.client_0] (20190802 - 85a237d) HazelcastClient is STARTED
-Sep 03, 2020 02:33:31 PM HazelcastClient.ConnectionManager
-INFO: [4.0.0] [dev] [hz.client_0] Trying to connect to Address(host=127.0.0.1, port=5701)
-Sep 03, 2020 02:33:31 PM HazelcastClient.LifecycleService
-INFO: [4.0.0] [dev] [hz.client_0] (20190802 - 85a237d) HazelcastClient is CONNECTED
-Sep 03, 2020 02:33:31 PM HazelcastClient.ConnectionManager
-INFO: [4.0.0] [dev] [hz.client_0] Authenticated with server Address(host=192.168.1.10, port=5701):7362c66f-ef9f-4a6a-a003-f8b33dfd292a, server version: 4.1-SNAPSHOT, local address: Address(host=127.0.0.1, port=33376)
-Sep 03, 2020 02:33:31 PM HazelcastClient.ClusterService
-INFO: [4.0.0] [dev] [hz.client_0] 
+INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is STARTING
+INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is STARTED
+INFO:hazelcast.connection:Trying to connect to Address(host=127.0.0.1, port=5701)
+INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is CONNECTED
+INFO:hazelcast.connection:Authenticated with server Address(host=172.17.0.2, port=5701):7682c357-3bec-4841-b330-6f9ae0c08253, server version: 4.0, local address: Address(host=127.0.0.1, port=56718)
+INFO:hazelcast.cluster:
 
 Members [1] {
-	Member [192.168.1.10]:5701 - 7362c66f-ef9f-4a6a-a003-f8b33dfd292a
+	Member [172.17.0.2]:5701 - 7682c357-3bec-4841-b330-6f9ae0c08253
 }
 
-Sep 03, 2020 02:33:31 PM HazelcastClient
-INFO: [4.0.0] [dev] [hz.client_0] Client started.
+INFO:hazelcast.client:Client started
+INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is SHUTTING_DOWN
+INFO:hazelcast.connection:Removed connection to Address(host=127.0.0.1, port=5701):7682c357-3bec-4841-b330-6f9ae0c08253, connection: Connection(id=0, live=False, remote_address=Address(host=172.17.0.2, port=5701))
+INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is DISCONNECTED
+INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is SHUTDOWN
 ```
 
 Congratulations. You just started a Hazelcast Python client.
@@ -1915,41 +1916,28 @@ client = hazelcast.HazelcastClient(
 **Output:**
 
 ```
-Sep 03, 2020 05:00:29 PM HazelcastClient.LifecycleService
-INFO: [4.0.0] [dev] [hz.client_0] (20190802 - 85a237d) HazelcastClient is STARTING
+INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is STARTING
 Lifecycle Event >>> STARTING
-Sep 03, 2020 05:00:29 PM HazelcastClient.LifecycleService
-INFO: [4.0.0] [dev] [hz.client_0] (20190802 - 85a237d) HazelcastClient is STARTED
+INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is STARTED
 Lifecycle Event >>> STARTED
-Sep 03, 2020 05:00:29 PM HazelcastClient.ConnectionManager
-INFO: [4.0.0] [dev] [hz.client_0] Trying to connect to Address(host=127.0.0.1, port=5701)
-Sep 03, 2020 05:00:29 PM HazelcastClient.LifecycleService
-INFO: [4.0.0] [dev] [hz.client_0] (20190802 - 85a237d) HazelcastClient is CONNECTED
+INFO:hazelcast.connection:Trying to connect to Address(host=127.0.0.1, port=5701)
+INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is CONNECTED
 Lifecycle Event >>> CONNECTED
-Sep 03, 2020 05:00:29 PM HazelcastClient.ConnectionManager
-INFO: [4.0.0] [dev] [hz.client_0] Authenticated with server Address(host=192.168.1.10, port=5701):7362c66f-ef9f-4a6a-a003-f8b33dfd292a, server version: 4.1-SNAPSHOT, local address: Address(host=127.0.0.1, port=36302)
-Sep 03, 2020 05:00:29 PM HazelcastClient.ClusterService
-INFO: [4.0.0] [dev] [hz.client_0] 
+INFO:hazelcast.connection:Authenticated with server Address(host=172.17.0.2, port=5701):7682c357-3bec-4841-b330-6f9ae0c08253, server version: 4.0, local address: Address(host=127.0.0.1, port=56732)
+INFO:hazelcast.cluster:
 
 Members [1] {
-	Member [192.168.1.10]:5701 - 7362c66f-ef9f-4a6a-a003-f8b33dfd292a
+	Member [172.17.0.2]:5701 - 7682c357-3bec-4841-b330-6f9ae0c08253
 }
 
-Sep 03, 2020 05:00:29 PM HazelcastClient
-INFO: [4.0.0] [dev] [hz.client_0] Client started.
-Sep 03, 2020 05:00:29 PM HazelcastClient.LifecycleService
-INFO: [4.0.0] [dev] [hz.client_0] (20190802 - 85a237d) HazelcastClient is SHUTTING_DOWN
+INFO:hazelcast.client:Client started
+INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is SHUTTING_DOWN
 Lifecycle Event >>> SHUTTING_DOWN
-Sep 03, 2020 05:00:29 PM HazelcastClient.ConnectionManager
-INFO: [4.0.0] [dev] [hz.client_0] Removed connection to Address(host=127.0.0.1, port=5701):7362c66f-ef9f-4a6a-a003-f8b33dfd292a, connection: Connection(id=0, live=False, remote_address=Address(host=192.168.1.10, port=5701))
-Sep 03, 2020 05:00:29 PM HazelcastClient.LifecycleService
-INFO: [4.0.0] [dev] [hz.client_0] (20190802 - 85a237d) HazelcastClient is DISCONNECTED
+INFO:hazelcast.connection:Removed connection to Address(host=127.0.0.1, port=5701):7682c357-3bec-4841-b330-6f9ae0c08253, connection: Connection(id=0, live=False, remote_address=Address(host=172.17.0.2, port=5701))
+INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is DISCONNECTED
 Lifecycle Event >>> DISCONNECTED
-Sep 03, 2020 05:00:29 PM HazelcastClient.LifecycleService
-INFO: [4.0.0] [dev] [hz.client_0] (20190802 - 85a237d) HazelcastClient is SHUTDOWN
+INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is SHUTDOWN
 Lifecycle Event >>> SHUTDOWN
-Sep 03, 2020 05:00:29 PM HazelcastClient
-INFO: [4.0.0] [dev] [hz.client_0] Client shutdown.
 ```
 
 You can also add lifecycle listeners after client initialization using the `LifecycleService`.
@@ -2581,148 +2569,86 @@ After enabling the client statistics, you can monitor your clients using Hazelca
 
 ### 7.9.2 Logging Configuration
 
-Hazelcast Python client allows you to configure the logging through the arguments below. 
+Hazelcast Python client uses Python's builtin ``logging`` package to perform logging.
 
-These arguments allow you to set the logging level and a custom logging configuration to the Hazelcast Python client. 
+All the loggers used throughout the client are identified by their module names. Hence, one may configure the ``hazelcast``
+parent logger and use the same configuration for the child loggers such as ``hazelcast.lifecycle`` without an extra effort.
 
-By default, Hazelcast Python client will log to the `sys.stderr` with the `INFO` logging level and `%(asctime)s %(name)s\n%(levelname)s: %(version_message)s %(message)s` format where the `version_message` contains the information about the client version, cluster name and client name.
-
-Below is an example of the default logging configuration.
-
-**Output to the `sys.stderr`**
-```
-Sep 03, 2020 05:41:35 PM HazelcastClient.LifecycleService
-INFO: [4.0.0] [dev] [hz.client_0] (20190802 - 85a237d) HazelcastClient is STARTING
-Sep 03, 2020 05:41:35 PM HazelcastClient.LifecycleService
-INFO: [4.0.0] [dev] [hz.client_0] (20190802 - 85a237d) HazelcastClient is STARTED
-Sep 03, 2020 05:41:35 PM HazelcastClient.ConnectionManager
-INFO: [4.0.0] [dev] [hz.client_0] Trying to connect to Address(host=127.0.0.1, port=5701)
-Sep 03, 2020 05:41:35 PM HazelcastClient.LifecycleService
-INFO: [4.0.0] [dev] [hz.client_0] (20190802 - 85a237d) HazelcastClient is CONNECTED
-Sep 03, 2020 05:41:35 PM HazelcastClient.ConnectionManager
-INFO: [4.0.0] [dev] [hz.client_0] Authenticated with server Address(host=192.168.1.10, port=5701):7362c66f-ef9f-4a6a-a003-f8b33dfd292a, server version: 4.1-SNAPSHOT, local address: Address(host=127.0.0.1, port=37026)
-Sep 03, 2020 05:41:35 PM HazelcastClient.ClusterService
-INFO: [4.0.0] [dev] [hz.client_0] 
-
-Members [1] {
-	Member [192.168.1.10]:5701 - 7362c66f-ef9f-4a6a-a003-f8b33dfd292a
-}
-
-Sep 03, 2020 05:41:35 PM HazelcastClient
-INFO: [4.0.0] [dev] [hz.client_0] Client started.
-Sep 03, 2020 05:41:35 PM HazelcastClient.LifecycleService
-INFO: [4.0.0] [dev] [hz.client_0] (20190802 - 85a237d) HazelcastClient is SHUTTING_DOWN
-Sep 03, 2020 05:41:35 PM HazelcastClient.ConnectionManager
-INFO: [4.0.0] [dev] [hz.client_0] Removed connection to Address(host=127.0.0.1, port=5701):7362c66f-ef9f-4a6a-a003-f8b33dfd292a, connection: Connection(id=0, live=False, remote_address=Address(host=192.168.1.10, port=5701))
-Sep 03, 2020 05:41:35 PM HazelcastClient.LifecycleService
-INFO: [4.0.0] [dev] [hz.client_0] (20190802 - 85a237d) HazelcastClient is DISCONNECTED
-Sep 03, 2020 05:41:35 PM HazelcastClient.LifecycleService
-INFO: [4.0.0] [dev] [hz.client_0] (20190802 - 85a237d) HazelcastClient is SHUTDOWN
-Sep 03, 2020 05:41:35 PM HazelcastClient
-INFO: [4.0.0] [dev] [hz.client_0] Client shutdown.
-```
-
-#### Setting Logging Level
-
-Although you can not change the logging levels used within the Hazelcast Python client, you can specify a logging level that is used to threshold the logs that are at least as severe as your specified level using `logging_level` argument.
-
-Here is the table listing the default logging levels that come with the `logging` module and numeric values that represent their severity:
-
-| Level    | Numeric Value |
-|----------|---------------|
-| CRITICAL | 50            |
-| ERROR    | 40            |
-| WARNING  | 30            |
-| INFO     | 20            |
-| DEBUG    | 10            |
-| NOTSET   | 0             |
-
-For example, setting the logging level to `logging.DEBUG` will cause all the logging messages that are equal or higher than the `logging.DEBUG` in terms of severity to be emitted by your logger.
-
-By default, the logging level is set to `logging.INFO`.
+Below is an example of the logging configuration with ``INFO`` log level and a ``StreamHandler`` with a custom format, and its output.
 
 ```python
 import logging
+import hazelcast
 
-client = hazelcast.HazelcastClient(
-    logging_level=logging.DEBUG
-)
-``` 
+logger = logging.getLogger("hazelcast")
+logger.setLevel(logging.INFO)
 
-#### Setting a Custom Logging Configuration
+handler = logging.StreamHandler()
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
-`logging_config` argument can be used to configure the logger for the Hazelcast Python client entirely.
- 
-When set, this argument should contain the logging configuration as described in the [Configuration dictionary schema](https://docs.python.org/3/library/logging.config.html#logging-config-dictschema).
-
-When this field is set, the `level` field is simply discarded and configuration in this file is used.
-
-All Hazelcast Python client related loggers have `HazelcastClient` as their parent logger. So, you can configure logging for the `HazelcastClient` base logger and this logging configuration can be used for all client related loggers. 
-
-Let's replicate the default configuration used within the Hazelcast client with this configuration method.
-
-**some_package/log.py**
-```python
-import logging
-
-from hazelcast.version import CLIENT_VERSION
-
-class VersionMessageFilter(logging.Filter):
-    def filter(self, record):
-        record.version_message = "[" + CLIENT_VERSION + "]"
-        return True
-        
-class HazelcastFormatter(logging.Formatter):
-    def format(self, record):
-        client_name = getattr(record, "client_name", None)
-        cluster_name = getattr(record, "cluster_name", None)
-        if client_name and cluster_name:
-            record.msg = "[" + cluster_name + "] [" + client_name + "] " + record.msg
-        return super(HazelcastFormatter, self).format(record)
-```
-
-```python
-logging_config = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "filters": {
-        "version_message_filter": {
-            "()": "some_package.log.VersionMessageFilter"
-        }
-    },
-    "formatters": {
-        "hazelcast_formatter": {
-            "()": "some_package.log.HazelcastFormatter",
-            "format": "%(asctime)s %(name)s\n%(levelname)s: %(version_message)s %(message)s",
-            "datefmt": "%b %d, %Y %I:%M:%S %p"
-        }
-    },
-    "handlers": {
-        "console_handler": {
-            "class": "logging.StreamHandler",
-            "stream": "ext://sys.stdout",
-            "filters": ["version_message_filter"],
-            "formatter": "hazelcast_formatter"
-        }
-    },
-    "loggers": {
-        "HazelcastClient": {
-            "handlers": ["console_handler"],
-            "level": "INFO"
-        }
-    }
-}
-
-client = hazelcast.HazelcastClient(
-    logging_config=logging_config
-)
-
-## Some operations
+client = hazelcast.HazelcastClient()
 
 client.shutdown()
 ``` 
 
-To learn more about the `logging` module and its capabilities, please see the [logging cookbook](https://docs.python.org/3/howto/logging-cookbook.html) and [documentation](https://docs.python.org/3/library/logging.html) of the `logging` module.
+**Output**
+```
+2020-10-16 13:31:35,605 - hazelcast.lifecycle - INFO - HazelcastClient 4.0.0 is STARTING
+2020-10-16 13:31:35,605 - hazelcast.lifecycle - INFO - HazelcastClient 4.0.0 is STARTED
+2020-10-16 13:31:35,605 - hazelcast.connection - INFO - Trying to connect to Address(host=127.0.0.1, port=5701)
+2020-10-16 13:31:35,622 - hazelcast.lifecycle - INFO - HazelcastClient 4.0.0 is CONNECTED
+2020-10-16 13:31:35,622 - hazelcast.connection - INFO - Authenticated with server Address(host=172.17.0.2, port=5701):7682c357-3bec-4841-b330-6f9ae0c08253, server version: 4.0, local address: Address(host=127.0.0.1, port=56752)
+2020-10-16 13:31:35,623 - hazelcast.cluster - INFO - 
+
+Members [1] {
+	Member [172.17.0.2]:5701 - 7682c357-3bec-4841-b330-6f9ae0c08253
+}
+
+2020-10-16 13:31:35,624 - hazelcast.client - INFO - Client started
+2020-10-16 13:31:35,624 - hazelcast.lifecycle - INFO - HazelcastClient 4.0.0 is SHUTTING_DOWN
+2020-10-16 13:31:35,624 - hazelcast.connection - INFO - Removed connection to Address(host=127.0.0.1, port=5701):7682c357-3bec-4841-b330-6f9ae0c08253, connection: Connection(id=0, live=False, remote_address=Address(host=172.17.0.2, port=5701))
+2020-10-16 13:31:35,624 - hazelcast.lifecycle - INFO - HazelcastClient 4.0.0 is DISCONNECTED
+2020-10-16 13:31:35,634 - hazelcast.lifecycle - INFO - HazelcastClient 4.0.0 is SHUTDOWN
+```
+
+A handy alternative to above example would be configuring the root logger using the ``logging.basicConfig()`` utility method. Beware that,
+every logger is the child of the root logger in Python. Hence, configuring the root logger may have application level impact. Nonetheless,
+it is useful for the testing or development purposes.
+
+```python
+import logging
+import hazelcast
+
+logging.basicConfig(level=logging.INFO)
+
+client = hazelcast.HazelcastClient()
+
+client.shutdown()
+``` 
+
+**Output**
+```
+INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is STARTING
+INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is STARTED
+INFO:hazelcast.connection:Trying to connect to Address(host=127.0.0.1, port=5701)
+INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is CONNECTED
+INFO:hazelcast.connection:Authenticated with server Address(host=172.17.0.2, port=5701):7682c357-3bec-4841-b330-6f9ae0c08253, server version: 4.0, local address: Address(host=127.0.0.1, port=56758)
+INFO:hazelcast.cluster:
+
+Members [1] {
+	Member [172.17.0.2]:5701 - 7682c357-3bec-4841-b330-6f9ae0c08253
+}
+
+INFO:hazelcast.client:Client started
+INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is SHUTTING_DOWN
+INFO:hazelcast.connection:Removed connection to Address(host=127.0.0.1, port=5701):7682c357-3bec-4841-b330-6f9ae0c08253, connection: Connection(id=0, live=False, remote_address=Address(host=172.17.0.2, port=5701))
+INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is DISCONNECTED
+INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is SHUTDOWN
+```
+
+To learn more about the `logging` package and its capabilities, please see the [logging cookbook](https://docs.python.org/3/howto/logging-cookbook.html) and [documentation](https://docs.python.org/3/library/logging.html) of the `logging` package.
 
 
 ## 7.10. Defining Client Labels

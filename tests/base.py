@@ -5,7 +5,6 @@ from threading import Thread
 from tests.hzrc.client import HzRemoteController
 import hazelcast
 from hazelcast.core import Address
-from tests.util import configure_logging
 
 
 class _Member(object):

@@ -10,17 +10,17 @@ try:
 except ImportError:
     ssl = None
 
+_logger = logging.getLogger(__name__)
+
 
 class HazelcastCloudAddressProvider(object):
     """Provides initial addresses for client to find and connect to a node
     and resolves private IP addresses of Hazelcast Cloud service.
     """
-    logger = logging.getLogger("HazelcastClient.HazelcastCloudAddressProvider")
 
-    def __init__(self, token, connection_timeout, logger_extras):
+    def __init__(self, token, connection_timeout):
         self.cloud_discovery = HazelcastCloudDiscovery(token, connection_timeout)
         self._private_to_public = dict()
-        self._logger_extras = logger_extras
 
     def load_addresses(self):
         """Loads member addresses from Hazelcast Cloud endpoint.
@@ -34,8 +34,7 @@ class HazelcastCloudAddressProvider(object):
             # Every private address is primary
             return list(nodes.keys()), []
         except Exception as e:
-            self.logger.warning("Failed to load addresses from Hazelcast Cloud: %s" % e,
-                                extra=self._logger_extras)
+            _logger.warning("Failed to load addresses from Hazelcast Cloud: %s" % e)
         return [], []
 
     def translate(self, address):
@@ -63,8 +62,7 @@ class HazelcastCloudAddressProvider(object):
         try:
             self._private_to_public = self.cloud_discovery.discover_nodes()
         except Exception as e:
-            self.logger.warning("Failed to load addresses from Hazelcast.cloud: %s" % e,
-                                extra=self._logger_extras)
+            _logger.warning("Failed to load addresses from Hazelcast.cloud: %s" % e)
 
 
 class HazelcastCloudDiscovery(object):

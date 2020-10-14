@@ -10,6 +10,8 @@ from hazelcast.protocol.codec import client_local_backup_listener_codec
 from hazelcast.util import AtomicInteger
 from hazelcast import six
 
+_logger = logging.getLogger(__name__)
+
 
 def _no_op_response_handler(_):
     pass
@@ -50,10 +52,9 @@ class Invocation(object):
 
 
 class InvocationService(object):
-    logger = logging.getLogger("HazelcastClient.InvocationService")
     _CLEAN_RESOURCES_PERIOD = 0.1
 
-    def __init__(self, client, reactor, logger_extras):
+    def __init__(self, client, reactor):
         config = client.config
         smart_routing = config.smart_routing
         if smart_routing:
@@ -63,7 +64,6 @@ class InvocationService(object):
 
         self._client = client
         self._reactor = reactor
-        self._logger_extras = logger_extras
         self._partition_service = None
         self._connection_manager = None
         self._listener_service = None
@@ -100,7 +100,7 @@ class InvocationService(object):
 
         invocation = self._pending.get(correlation_id, None)
         if not invocation:
-            self.logger.warning("Got message with unknown correlation id: %s", message, extra=self._logger_extras)
+            _logger.warning("Got message with unknown correlation id: %s", message)
             return
 
         if message.get_message_type() == EXCEPTION_MESSAGE_TYPE:
@@ -122,21 +122,21 @@ class InvocationService(object):
     def _invoke_on_partition_owner(self, invocation, partition_id):
         owner_uuid = self._partition_service.get_partition_owner(partition_id)
         if not owner_uuid:
-            self.logger.debug("Partition owner is not assigned yet", extra=self._logger_extras)
+            _logger.debug("Partition owner is not assigned yet")
             return False
         return self._invoke_on_target(invocation, owner_uuid)
 
     def _invoke_on_target(self, invocation, owner_uuid):
         connection = self._connection_manager.get_connection(owner_uuid)
         if not connection:
-            self.logger.debug("Client is not connected to target: %s" % owner_uuid, extra=self._logger_extras)
+            _logger.debug("Client is not connected to target: %s" % owner_uuid)
             return False
         return self._send(invocation, connection)
 
     def _invoke_on_random_connection(self, invocation):
         connection = self._connection_manager.get_random_connection()
         if not connection:
-            self.logger.debug("No connection found to invoke", extra=self._logger_extras)
+            _logger.debug("No connection found to invoke")
             return False
         return self._send(invocation, connection)
 
@@ -206,7 +206,7 @@ class InvocationService(object):
         if invocation.event_handler:
             self._listener_service.add_event_handler(correlation_id, invocation.event_handler)
 
-        self.logger.debug("Sending %s to %s", message, connection, extra=self._logger_extras)
+        _logger.debug("Sending %s to %s", message, connection)
 
         if not connection.send_message(message):
             if invocation.event_handler:
@@ -217,8 +217,7 @@ class InvocationService(object):
         return True
 
     def _notify_error(self, invocation, error):
-        self.logger.debug("Got exception for request %s, error: %s" % (invocation.request, error),
-                          extra=self._logger_extras)
+        _logger.debug("Got exception for request %s, error: %s" % (invocation.request, error))
 
         if not self._client.lifecycle_service.is_running():
             self._complete_with_error(invocation, HazelcastClientNotActiveError())
@@ -229,8 +228,7 @@ class InvocationService(object):
             return
 
         if invocation.timeout < time.time():
-            self.logger.debug("Error will not be retried because invocation timed out: %s", error,
-                              extra=self._logger_extras)
+            _logger.debug("Error will not be retried because invocation timed out: %s", error)
             error = OperationTimeoutError("Request timed out because an error occurred "
                                           "after invocation timeout: %s" % error)
             self._complete_with_error(invocation, error)
@@ -270,8 +268,7 @@ class InvocationService(object):
     def _backup_event_handler(self, correlation_id):
         invocation = self._pending.get(correlation_id, None)
         if not invocation:
-            self.logger.debug("Invocation not found for backup event, invocation id %s" % correlation_id,
-                              extra=self._logger_extras)
+            _logger.debug("Invocation not found for backup event, invocation id %s" % correlation_id)
             return
         self._notify_backup_complete(invocation)
 

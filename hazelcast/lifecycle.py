@@ -1,8 +1,9 @@
 import logging
 import uuid
 
-from hazelcast import six
-from hazelcast.util import create_git_info
+from hazelcast import six, __version__
+
+_logger = logging.getLogger(__name__)
 
 
 class LifecycleState(object):
@@ -83,11 +84,8 @@ class LifecycleService(object):
 
 
 class _InternalLifecycleService(object):
-    logger = logging.getLogger("HazelcastClient.LifecycleService")
-
-    def __init__(self, client, logger_extras):
+    def __init__(self, client):
         self._client = client
-        self._logger_extras = logger_extras
         self.running = False
         self._listeners = {}
 
@@ -95,8 +93,6 @@ class _InternalLifecycleService(object):
         if lifecycle_listeners:
             for listener in lifecycle_listeners:
                 self.add_listener(listener)
-
-        self._git_info = create_git_info()
 
     def start(self):
         if self.running:
@@ -127,10 +123,10 @@ class _InternalLifecycleService(object):
         Args:
             new_state (str): The new state of the instance.
         """
-        self.logger.info(self._git_info + "HazelcastClient is %s", new_state, extra=self._logger_extras)
+        _logger.info("HazelcastClient %s is %s" % (__version__, new_state))
         for on_state_change in six.itervalues(self._listeners):
             if on_state_change:
                 try:
                     on_state_change(new_state)
                 except:
-                    self.logger.exception("Exception in lifecycle listener", extra=self._logger_extras)
+                    _logger.exception("Exception in lifecycle listener")

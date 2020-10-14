@@ -1,4 +1,3 @@
-import logging
 import unittest
 
 from hazelcast.config import _Config, SSLProtocol, ReconnectMode, IntType, InMemoryFormat, EvictionPolicy,\
@@ -717,26 +716,6 @@ class ConfigTest(unittest.TestCase):
 
         config.shuffle_member_list = False
         self.assertFalse(config.shuffle_member_list)
-
-    def test_logging_config(self):
-        config = self.config
-        self.assertIsNone(config.logging_config)
-
-        with self.assertRaises(TypeError):
-            config.logging_config = None
-
-        config.logging_config = {}
-        self.assertEqual({}, config.logging_config)
-
-    def test_logging_level(self):
-        config = self.config
-        self.assertEqual(logging.INFO, config.logging_level)
-
-        with self.assertRaises(TypeError):
-            config.logging_level = None
-
-        config.logging_level = logging.DEBUG
-        self.assertEqual(logging.DEBUG, config.logging_level)
 
     def test_backup_ack_to_client_enabled(self):
         config = self.config

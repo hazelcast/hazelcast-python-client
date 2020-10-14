@@ -1,11 +1,11 @@
 import logging
 import os
 
+from hazelcast.core import CLIENT_TYPE
 from hazelcast.invocation import Invocation
 from hazelcast.protocol.codec import client_statistics_codec
 from hazelcast.util import current_time_in_millis, to_millis, to_nanos, current_time
-from hazelcast.version import CLIENT_VERSION, CLIENT_TYPE
-from hazelcast import six
+from hazelcast import six, __version__
 
 try:
     import psutil
@@ -13,6 +13,8 @@ try:
     PSUTIL_ENABLED = True
 except ImportError:
     PSUTIL_ENABLED = False
+
+_logger = logging.getLogger(__name__)
 
 
 class Statistics(object):
@@ -22,15 +24,13 @@ class Statistics(object):
     _EMPTY_STAT_VALUE = ""
 
     _DEFAULT_PROBE_VALUE = 0
-    logger = logging.getLogger("HazelcastClient.Statistics")
 
-    def __init__(self, client, reactor, connection_manager, invocation_service, near_cache_manager, logger_extras):
+    def __init__(self, client, reactor, connection_manager, invocation_service, near_cache_manager):
         self._client = client
         self._reactor = reactor
         self._connection_manager = connection_manager
         self._invocation_service = invocation_service
         self._near_cache_manager = near_cache_manager
-        self._logger_extras = logger_extras
         config = client.config
         self._enabled = config.statistics_enabled
         self._period = config.statistics_period
@@ -50,8 +50,7 @@ class Statistics(object):
 
         self._statistics_timer = self._reactor.add_timer(self._period, _statistics_task)
 
-        self.logger.info("Client statistics enabled with the period of %s seconds." % self._period,
-                         extra=self._logger_extras)
+        _logger.info("Client statistics enabled with the period of %s seconds." % self._period)
 
     def shutdown(self):
         if self._statistics_timer:
@@ -60,8 +59,7 @@ class Statistics(object):
     def _send_statistics(self):
         connection = self._connection_manager.get_random_connection()
         if not connection:
-            self.logger.debug("Cannot send client statistics to the server. No connection found.",
-                              extra=self._logger_extras)
+            _logger.debug("Cannot send client statistics to the server. No connection found.")
             return
 
         collection_timestamp = current_time_in_millis()
@@ -127,7 +125,7 @@ class Statistics(object):
         self._add_stat(stats, "lastStatisticsCollectionTime", current_time_in_millis())
         self._add_stat(stats, "enterprise", "false")
         self._add_stat(stats, "clientType", CLIENT_TYPE)
-        self._add_stat(stats, "clientVersion", CLIENT_VERSION)
+        self._add_stat(stats, "clientVersion", __version__)
         self._add_stat(stats, "clusterConnectionTimestamp", to_millis(connection.start_time))
 
         local_address = connection.local_address
@@ -182,13 +180,12 @@ class Statistics(object):
             try:
                 stat = func(self, psutil_stats, probe_name, *args)
             except AttributeError as ae:
-                self.logger.debug("Unable to register psutil method used for the probe %s. "
-                                  "Cause: %s" % (probe_name, ae), extra=self._logger_extras)
+                _logger.debug("Unable to register psutil method used for the probe %s. "
+                              "Cause: %s" % (probe_name, ae))
                 self._failed_gauges.add(probe_name)
                 return
             except Exception as ex:
-                self.logger.warning("Failed to access the probe %s. Cause: %s" % (probe_name, ex),
-                                    extra=self._logger_extras)
+                _logger.warning("Failed to access the probe %s. Cause: %s" % (probe_name, ex))
                 stat = self._DEFAULT_PROBE_VALUE
 
             psutil_stats[probe_name] = stat

@@ -7,6 +7,8 @@ from hazelcast import six
 from hazelcast.errors import TargetDisconnectedError, IllegalStateError
 from hazelcast.util import check_not_none
 
+_logger = logging.getLogger(__name__)
+
 
 class _MemberListSnapshot(object):
     __slots__ = ("version", "members")
@@ -101,12 +103,10 @@ class ClusterService(object):
 
 
 class _InternalClusterService(object):
-    logger = logging.getLogger("HazelcastClient.ClusterService")
 
-    def __init__(self, client, logger_extras):
+    def __init__(self, client):
         self._client = client
         self._connection_manager = None
-        self._logger_extras = logger_extras
         config = client.config
         self._labels = frozenset(config.labels)
         self._listeners = {}
@@ -183,8 +183,8 @@ class _InternalClusterService(object):
             raise IllegalStateError("Could not get initial member list from cluster!")
 
     def clear_member_list_version(self):
-        if self.logger.isEnabledFor(logging.DEBUG):
-            self.logger.debug("Resetting the member list version", extra=self._logger_extras)
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug("Resetting the member list version")
 
         current = self._member_list_snapshot
         if current is not _EMPTY_SNAPSHOT:
@@ -192,9 +192,9 @@ class _InternalClusterService(object):
 
     def handle_members_view_event(self, version, member_infos):
         snapshot = self._create_snapshot(version, member_infos)
-        if self.logger.isEnabledFor(logging.DEBUG):
-            self.logger.debug("Handling new snapshot with membership version: %s, member string: %s"
-                         % (version, self._members_string(snapshot)), extra=self._logger_extras)
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug("Handling new snapshot with membership version: %s, member string: %s"
+                          % (version, self._members_string(snapshot)))
 
         current = self._member_list_snapshot
         if version >= current.version:
@@ -214,7 +214,7 @@ class _InternalClusterService(object):
                     try:
                         handler(removed_member)
                     except:
-                        self.logger.exception("Exception in membership lister", extra=self._logger_extras)
+                        _logger.exception("Exception in membership lister")
 
         for added_member in additions:
             for handler, _ in six.itervalues(self._listeners):
@@ -222,7 +222,7 @@ class _InternalClusterService(object):
                     try:
                         handler(added_member)
                     except:
-                        self.logger.exception("Exception in membership lister", extra=self._logger_extras)
+                        _logger.exception("Exception in membership lister")
 
     def _detect_membership_events(self, old, new):
         new_members = []
@@ -242,7 +242,7 @@ class _InternalClusterService(object):
 
         if (len(new_members) + len(dead_members)) > 0:
             if len(new.members) > 0:
-                self.logger.info(self._members_string(new), extra=self._logger_extras)
+                _logger.info(self._members_string(new))
 
         return dead_members, new_members
 

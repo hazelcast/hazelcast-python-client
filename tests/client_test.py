@@ -4,7 +4,6 @@ from tests.base import HazelcastTestCase
 from hazelcast.client import HazelcastClient
 from hazelcast.lifecycle import LifecycleState
 from tests.hzrc.ttypes import Lang
-from tests.util import configure_logging
 
 
 class ClientTest(HazelcastTestCase):
@@ -65,7 +64,6 @@ class ClientTest(HazelcastTestCase):
 class ClientLabelsTest(HazelcastTestCase):
     @classmethod
     def setUpClass(cls):
-        configure_logging()
         cls.rc = cls.create_rc()
         cls.cluster = cls.create_cluster(cls.rc)
         cls.cluster.start_member()

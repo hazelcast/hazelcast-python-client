@@ -10,6 +10,8 @@ from hazelcast.protocol.codec import pn_counter_add_codec, pn_counter_get_codec,
 from hazelcast.errors import NoDataMemberInClusterError
 from hazelcast.six.moves import range
 
+_logger = logging.getLogger(__name__)
+
 
 class PNCounter(Proxy):
     """PN (Positive-Negative) CRDT counter.
@@ -225,9 +227,8 @@ class PNCounter(Proxy):
             self._update_observed_replica_timestamp(result["replica_timestamps"])
             delegated_future.set_result(result["value"])
         except Exception as ex:
-            self.logger.exception("Exception occurred while invoking operation on target %s, "
-                                  "choosing different target" % target,
-                                  extra=self._context.logger_extras)
+            _logger.exception("Exception occurred while invoking operation on target %s, "
+                              "choosing different target" % target)
             if excluded_addresses == PNCounter._EMPTY_ADDRESS_LIST:
                 excluded_addresses = []
 

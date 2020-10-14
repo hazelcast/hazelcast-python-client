@@ -2,13 +2,8 @@ from setuptools import setup, find_packages
 from codecs import open
 from os import path
 from hazelcast import __version__
-from hazelcast.version import write_git_info, get_commit_id, get_commit_date
 
 here = path.abspath(path.dirname(__file__))
-
-commit_id = get_commit_id()
-commit_date = get_commit_date()
-write_git_info(here, commit_id, commit_date)
 
 # Get the long description from the README file
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
@@ -55,7 +50,6 @@ setup(
         keywords='hazelcast,hazelcast client,In-Memory Data Grid,Distributed Computing',
         packages=find_packages(exclude=['benchmarks', 'examples', 'examples.*', 'docs', 'tests', 'tests.*']),
         package_dir={'hazelcast': 'hazelcast'},
-        package_data={'hazelcast': ["git_info.json"]},
         install_requires=[],
         extras_require=extras,
         tests_require=['thrift', 'nose', 'coverage', 'psutil', 'mock', 'parameterized'],
