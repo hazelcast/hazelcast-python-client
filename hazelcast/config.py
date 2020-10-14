@@ -9,14 +9,12 @@ from hazelcast import six
 from hazelcast.errors import InvalidConfigurationError
 from hazelcast.serialization.api import StreamSerializer, IdentifiedDataSerializable, Portable
 from hazelcast.serialization.portable.classdef import ClassDefinition
-from hazelcast.util import check_not_none, with_reversed_items, number_types, LoadBalancer, none_type
+from hazelcast.util import check_not_none, number_types, LoadBalancer, none_type, get_attr_name
 
 
-@with_reversed_items
 class IntType(object):
-    """
-    Integer type options that can be used by serialization service.
-    """
+    """Integer type options that can be used by serialization service."""
+
     VAR = 0
     """
     Integer types will be serialized as 8, 16, 32, 64 bit integers
@@ -54,11 +52,8 @@ class IntType(object):
     """
 
 
-@with_reversed_items
 class EvictionPolicy(object):
-    """
-    Near Cache eviction policy options.
-    """
+    """Near Cache eviction policy options."""
 
     NONE = 0
     """
@@ -81,11 +76,8 @@ class EvictionPolicy(object):
     """
 
 
-@with_reversed_items
 class InMemoryFormat(object):
-    """
-    Near Cache in memory format of the values.
-    """
+    """Near Cache in memory format of the values."""
 
     BINARY = 0
     """
@@ -98,10 +90,8 @@ class InMemoryFormat(object):
     """
 
 
-@with_reversed_items
 class SSLProtocol(object):
-    """
-    SSL protocol options.
+    """SSL protocol options.
 
     TLSv1+ requires at least Python 2.7.9 or Python 3.4 build with OpenSSL 1.0.1+
     TLSv1_3 requires at least Python 2.7.15 or Python 3.7 build with OpenSSL 1.1.1+
@@ -138,11 +128,8 @@ class SSLProtocol(object):
     """
 
 
-@with_reversed_items
 class QueryConstants(object):
-    """
-    Contains constants for Query.
-    """
+    """Contains constants for Query."""
 
     KEY_ATTRIBUTE_NAME = "__key"
     """
@@ -155,12 +142,8 @@ class QueryConstants(object):
     """
 
 
-@with_reversed_items
 class UniqueKeyTransformation(object):
-    """
-    Defines an assortment of transformations which can be applied to
-    unique key values.
-    """
+    """Defines an assortment of transformations which can be applied to unique key values."""
 
     OBJECT = 0
     """
@@ -182,11 +165,8 @@ class UniqueKeyTransformation(object):
     """
 
 
-@with_reversed_items
 class IndexType(object):
-    """
-    Type of the index.
-    """
+    """Type of the index."""
 
     SORTED = 0
     """
@@ -204,11 +184,8 @@ class IndexType(object):
     """
 
 
-@with_reversed_items
 class ReconnectMode(object):
-    """
-    Reconnect options.
-    """
+    """Reconnect options."""
 
     OFF = 0
     """
@@ -244,7 +221,7 @@ class BitmapIndexOptions(object):
 
     @unique_key.setter
     def unique_key(self, value):
-        if value in QueryConstants.reverse:
+        if get_attr_name(QueryConstants, value):
             self._unique_key = value
         else:
             raise TypeError("unique_key must be of type QueryConstants")
@@ -255,7 +232,7 @@ class BitmapIndexOptions(object):
     
     @unique_key_transformation.setter
     def unique_key_transformation(self, value):
-        if value in UniqueKeyTransformation.reverse:
+        if get_attr_name(UniqueKeyTransformation, value):
             self._unique_key_transformation = value
         else:
             raise TypeError("unique_key_transformation must be of type UniqueKeyTransformation")
@@ -316,7 +293,7 @@ class IndexConfig(object):
 
     @type.setter
     def type(self, value):
-        if value in IndexType.reverse:
+        if get_attr_name(IndexType, value):
             self._type = value
         else:
             raise TypeError("type must be of type IndexType")
@@ -682,7 +659,7 @@ class _Config(object):
 
     @ssl_protocol.setter
     def ssl_protocol(self, value):
-        if value in SSLProtocol.reverse:
+        if get_attr_name(SSLProtocol, value):
             self._ssl_protocol = value
         else:
             raise TypeError("ssl_protocol must be of type SSLProtocol")
@@ -726,7 +703,7 @@ class _Config(object):
 
     @reconnect_mode.setter
     def reconnect_mode(self, value):
-        if value in ReconnectMode.reverse:
+        if get_attr_name(ReconnectMode, value):
             self._reconnect_mode = value
         else:
             raise TypeError("reconnect_mode must be a type of ReconnectMode")
@@ -904,7 +881,7 @@ class _Config(object):
 
     @default_int_type.setter
     def default_int_type(self, value):
-        if value in IntType.reverse:
+        if get_attr_name(IntType, value):
             self._default_int_type = value
         else:
             raise TypeError("default_int_type must be of type IntType")
@@ -1198,7 +1175,7 @@ class _NearCacheConfig(object):
 
     @in_memory_format.setter
     def in_memory_format(self, value):
-        if value in InMemoryFormat.reverse:
+        if get_attr_name(InMemoryFormat, value):
             self._in_memory_format = value
         else:
             raise TypeError("in_memory_format must be of the type InMemoryFormat")
@@ -1235,7 +1212,7 @@ class _NearCacheConfig(object):
 
     @eviction_policy.setter
     def eviction_policy(self, value):
-        if value in EvictionPolicy.reverse:
+        if get_attr_name(EvictionPolicy, value):
             self._eviction_policy = value
         else:
             raise TypeError("eviction_policy must be of type EvictionPolicy")

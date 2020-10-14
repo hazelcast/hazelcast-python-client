@@ -124,10 +124,6 @@ class _ObjectDataInput(ObjectDataInput):
     def read_object(self):
         return self._service.read_object(self)
 
-    def read_data(self):
-        buff = self.read_byte_array()
-        return Data(buff) if buff is not None else None
-
     def is_big_endian(self):
         return self._is_big_endian
 

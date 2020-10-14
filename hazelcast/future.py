@@ -9,9 +9,7 @@ NONE_RESULT = object()
 
 
 class Future(object):
-    """
-    Future is used for representing an asynchronous computation result.
-    """
+    """Future is used for representing an asynchronous computation result."""
     _result = None
     _exception = None
     _traceback = None
@@ -23,10 +21,10 @@ class Future(object):
         self._event = _Event()
 
     def set_result(self, result):
-        """
-        Sets the result of the Future.
+        """Sets the result of the Future.
 
-        :param result: Result of the Future.
+        Args:
+            result: Result of the Future.
         """
         if result is None:
             self._result = NONE_RESULT
@@ -36,11 +34,11 @@ class Future(object):
         self._invoke_callbacks()
 
     def set_exception(self, exception, traceback=None):
-        """
-        Sets the exception for this Future in case of errors.
+        """Sets the exception for this Future in case of errors.
 
-        :param exception: (Exception), exception to be threw in case of error.
-        :param traceback: (Function), function to be called on traceback (optional).
+        Args:
+            exception (Exception): Exception to be threw in case of error.
+            traceback (function): Function to be called on traceback.
         """
         if not isinstance(exception, BaseException):
             raise RuntimeError("Exception must be of BaseException type")
@@ -50,10 +48,10 @@ class Future(object):
         self._invoke_callbacks()
 
     def result(self):
-        """
-        Returns the result of the Future, which makes the call synchronous if the result has not been computed yet.
-
-        :return: Result of the Future.
+        """Returns the result of the Future, which makes the call synchronous if the result has not been computed yet.
+        
+        Returns:
+            Result of the Future.
         """
         self._reactor_check()
         self._event.wait()
@@ -71,40 +69,37 @@ class Future(object):
                     "Use add_done_callback instead.")
 
     def is_success(self):
-        """
-        Determines whether the result can be successfully computed or not.
-        """
+        """Determines whether the result can be successfully computed or not."""
         return self._result is not None
 
     def done(self):
-        """
-        Determines whether the result is computed or not.
-
-        :return: (bool), ``true`` if the result is computed, ``false`` otherwise.
+        """Determines whether the result is computed or not.
+        
+        Returns:
+            bool: ``True`` if the result is computed, ``False`` otherwise.
         """
         return self._event.is_set()
 
     def running(self):
-        """
-        Determines whether the asynchronous call, the computation is still running or not.
-
-        :return: (bool), ``true`` if the  result is being computed, ``false`` otherwise.
+        """Determines whether the asynchronous call, the computation is still running or not.
+        
+        Returns:
+            bool: ``True`` if the  result is being computed, ``False`` otherwise.
         """
         return not self.done()
 
     def exception(self):
-        """
-        Throws exception.
-        :return: (Exception), exception of this Future.
+        """Returns the exceptional result, if any.
+
+        Returns:
+            Exception: Exception of this Future.
         """
         self._reactor_check()
         self._event.wait()
         return self._exception
 
     def traceback(self):
-        """
-        Traceback function for the Future.
-        """
+        """Traceback function for the Future."""
         self._reactor_check()
         self._event.wait()
         return self._traceback
@@ -131,12 +126,15 @@ class Future(object):
             self.logger.exception("Exception when invoking callback")
 
     def continue_with(self, continuation_func, *args):
-        """
-        Create a continuation that executes when the Future is completed.
+        """Create a continuation that executes when the Future is completed.
 
-        :param continuation_func: A function which takes the future as the only parameter. Return value of the function
-        will be set as the result of the continuation future.
-        :return: A new Future which will be completed when the continuation is done.
+        Args:
+            continuation_func (function): A function which takes the future as the only parameter.
+                Return value of the function will be set as the result of the continuation future.
+            *args: Arguments to be passed into ``continuation_function``.
+
+        Returns:
+            Future: A new Future which will be completed when the continuation is done.
         """
         future = Future()
 
@@ -231,11 +229,13 @@ class ImmediateExceptionFuture(Future):
 
 
 def combine_futures(*futures):
-    """
-    Combines set of Futures.
+    """Combines set of Futures.
 
-    :param futures: (Futures), Futures to be combined.
-    :return: Result of the combination.
+    Args:
+        *futures (Future): Futures to be combined.
+
+    Returns:
+        Future: Result of the combination.
     """
     expected = len(futures)
     results = []
@@ -281,9 +281,12 @@ class _BlockingWrapper(object):
 
 
 def make_blocking(instance):
-    """
-    Takes an instance and returns an object whose methods which return non-blocking Future become blocking calls.
-    :param instance: (object), a non-blocking instance.
-    :return: (object), blocking version of given non-blocking instance.
+    """Takes an instance and returns an object whose methods which return non-blocking Future become blocking calls.
+
+    Args:
+        instance: A non-blocking instance.
+
+    Returns:
+        Blocking version of given non-blocking instance.
     """
     return _BlockingWrapper(instance)

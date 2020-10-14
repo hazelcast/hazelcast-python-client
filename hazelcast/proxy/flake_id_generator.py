@@ -4,20 +4,19 @@ import collections
 
 from hazelcast.proxy.base import Proxy, MAX_SIZE
 from hazelcast.config import _FlakeIdGeneratorConfig
-from hazelcast.util import TimeUnit, to_millis, current_time
+from hazelcast.util import current_time
 from hazelcast.protocol.codec import flake_id_generator_new_id_batch_codec
 from hazelcast.future import ImmediateFuture, Future
 
 
 class FlakeIdGenerator(Proxy):
-    """
-    A cluster-wide unique ID generator. Generated IDs are int (long in case of the Python 2 on 32 bit architectures)
+    """A cluster-wide unique ID generator. Generated IDs are int (long in case of the Python 2 on 32 bit architectures)
     values and are k-ordered (roughly ordered). IDs are in the range from 0 to 2^63 - 1.
-
+    
     The IDs contain timestamp component and a node ID component, which is assigned when the member
     joins the cluster. This allows the IDs to be ordered and unique without any coordination between
     members, which makes the generator safe even in split-brain scenario.
-
+    
     Timestamp component is in milliseconds since 1.1.2018, 0:00 UTC and has 41 bits. This caps
     the useful lifespan of the generator to little less than 70 years (until ~2088). The sequence component
     is 6 bits. If more than 64 IDs are requested in single millisecond, IDs will gracefully overflow to the next
@@ -25,13 +24,12 @@ class FlakeIdGenerator(Proxy):
     by more than 15 seconds, if IDs are requested at higher rate, the call will block. Note, however, that
     clients are able to generate even faster because each call goes to a different (random) member and
     the 64 IDs/ms limit is for single member.
-
-    **Node ID overflow**
-
-    It is possible to generate IDs on any member or client as long as there is at least one
-    member with join version smaller than 2^16 in the cluster. The remedy is to restart the cluster:
-    nodeId will be assigned from zero again. Uniqueness after the restart will be preserved thanks to
-    the timestamp component.
+    
+    Node ID overflow:
+        It is possible to generate IDs on any member or client as long as there is at least one
+        member with join version smaller than 2^16 in the cluster. The remedy is to restart the cluster:
+        nodeId will be assigned from zero again. Uniqueness after the restart will be preserved thanks to
+        the timestamp component.
     """
     _BITS_NODE_ID = 16
     _BITS_SEQUENCE = 6
@@ -46,41 +44,22 @@ class FlakeIdGenerator(Proxy):
         self._auto_batcher = _AutoBatcher(config.prefetch_count, config.prefetch_validity, self._new_id_batch)
 
     def new_id(self):
-        """
-        Generates and returns a cluster-wide unique ID.
-
+        """Generates and returns a cluster-wide unique ID.
+        
         This method goes to a random member and gets a batch of IDs, which will then be returned
-        locally for limited time. The pre-fetch size and the validity time can be configured, see
-        :class:`hazelcast.config.FlakeIdGeneratorConfig`.
+        locally for limited time. The pre-fetch size and the validity time can be configured.
+        
+        Note:
+            Values returned from this method may not be strictly ordered.
 
-        Note: Values returned from this method may not be strictly ordered.
+        Returns:
+          hazelcast.future.Future[int], new cluster-wide unique ID.
 
-        :raises HazelcastError: if node ID for all members in the cluster is out of valid range.
-            See "Node ID overflow" note above.
-        :return: (int), new cluster-wide unique ID.
+        Raises:
+            HazelcastError: if node ID for all members in the cluster is out of valid range.
+                See ``Node ID overflow`` note above.
         """
         return self._auto_batcher.new_id()
-
-    def init(self, id):
-        """
-        This method does nothing and will simply tell if the next ID
-        will be larger than the given ID.
-        You don't need to call this method on cluster restart - uniqueness is preserved thanks to the
-        timestamp component of the ID.
-        This method exists to make :class:`~hazelcast.proxy.FlakeIdGenerator` drop-in replacement
-        for the deprecated :class:`~hazelcast.proxy.IdGenerator`.
-
-        :param id: (int), ID to compare.
-        :return: (bool), True if the next ID will be larger than the supplied id, False otherwise.
-        """
-
-        # Add 1 hour worth of IDs as a reserve: due to long batch validity some clients might be still getting
-        # older IDs. 1 hour is just a safe enough value, not a real guarantee: some clients might have longer
-        # validity.
-        # The init method should normally be called before any client generated IDs: in this case no reserve is
-        # needed, so we don't want to increase the reserve excessively.
-        reserve = to_millis(TimeUnit.HOUR) << (FlakeIdGenerator._BITS_NODE_ID + FlakeIdGenerator._BITS_SEQUENCE)
-        return self.new_id().continue_with(lambda f: f.result() >= (id + reserve))
 
     def _new_id_batch(self, batch_size):
         def handler(message):

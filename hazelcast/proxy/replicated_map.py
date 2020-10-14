@@ -12,13 +12,12 @@ from hazelcast import six
 
 
 class ReplicatedMap(Proxy):
-    """
-    A ReplicatedMap is a map-like data structure with weak consistency and values locally stored on every node of the
+    """A ReplicatedMap is a map-like data structure with weak consistency and values locally stored on every node of the
     cluster.
-
+    
     Whenever a value is written asynchronously, the new value will be internally distributed to all existing cluster
     members, and eventually every node will have the new value.
-
+    
     When a new node joins the cluster, the new node initially will request existing values from older nodes and
     replicate them locally.
     """
@@ -29,20 +28,21 @@ class ReplicatedMap(Proxy):
 
     def add_entry_listener(self, key=None, predicate=None, added_func=None, removed_func=None, updated_func=None,
                            evicted_func=None, clear_all_func=None):
-        """
-        Adds a continuous entry listener for this map. Listener will get notified for map events filtered with given
-        parameters.
+        """Adds a continuous entry listener for this map. 
+        
+        Listener will get notified for map events filtered with given parameters.
 
-        :param key: (object), key for filtering the events (optional).
-        :param predicate: (Predicate), predicate for filtering the events (optional).
-        :param added_func: Function to be called when an entry is added to map (optional).
-        :param removed_func: Function to be called when an entry is removed from map (optional).
-        :param updated_func: Function to be called when an entry is updated (optional).
-        :param evicted_func: Function to be called when an entry is evicted from map (optional).
-        :param clear_all_func: Function to be called when entries are cleared from map (optional).
-        :return: (str), a registration id which is used as a key to remove the listener.
+        Args:
+            key: Key for filtering the events.
+            predicate (hazelcast.serialization.predicate.Predicate): Predicate for filtering the events.
+            added_func (function): Function to be called when an entry is added to map.
+            removed_func (function): Function to be called when an entry is removed from map.
+            updated_func (function): Function to be called when an entry is updated.
+            evicted_func (function): Function to be called when an entry is evicted from map.
+            clear_all_func (function): Function to be called when entries are cleared from map.
 
-        .. seealso:: :class:`~hazelcast.serialization.predicate.Predicate` for more info about predicates.
+        Returns:
+            str: A registration id which is used as a key to remove the listener.
         """
         if key and predicate:
             codec = replicated_map_add_entry_listener_to_key_with_predicate_codec
@@ -82,21 +82,27 @@ class ReplicatedMap(Proxy):
             lambda m: codec.handle(m, handle_event_entry))
 
     def clear(self):
-        """
-        Wipes data out of the replicated map.
+        """Wipes data out of the replicated map.
+        
+        Returns:
+            hazelcast.future.Future[None]:
         """
         request = replicated_map_clear_codec.encode_request(self.name)
         return self._invoke(request)
 
     def contains_key(self, key):
-        """
-        Determines whether this map contains an entry with the key.
+        """Determines whether this map contains an entry with the key.
+        
+        Warning: 
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form of the key, not the 
+            actual implementations of ``__hash__`` and ``__eq__`` defined in key's class.
 
-        **Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
-        of __hash__ and __eq__ defined in key's class.**
+        Args:
+            key: The specified key.
 
-        :param key: (object), the specified key.
-        :return: (bool), ``true`` if this map contains an entry for the specified key.
+        Returns:
+            hazelcast.future.Future[bool]: ``True`` if this map contains an entry for the specified key, 
+                ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
@@ -104,26 +110,29 @@ class ReplicatedMap(Proxy):
         return self._invoke_on_key(request, key_data, replicated_map_contains_key_codec.decode_response)
 
     def contains_value(self, value):
-        """
-        Determines whether this map contains one or more keys for the specified value.
+        """Determines whether this map contains one or more keys for the specified value.
 
-        :param value: (object), the specified value.
-        :return: (bool), ``true`` if this map contains an entry for the specified value.
+        Args:
+            value: The specified value.
+
+        Returns:
+            hazelcast.future.Future[bool]: ``True`` if this map contains an entry for the specified value,
+                ``False`` otherwise.
         """
         check_not_none(value, "value can't be None")
         value_data = self._to_data(value)
         request = replicated_map_contains_value_codec.encode_request(self.name, value_data)
-        return self._invoke_on_partition(request, self._partition_id,
-replicated_map_contains_value_codec.decode_response)
+        return self._invoke_on_partition(request, self._partition_id, 
+                                         replicated_map_contains_value_codec.decode_response)
 
     def entry_set(self):
-        """
-        Returns a List clone of the mappings contained in this map.
+        """Returns a List clone of the mappings contained in this map.
+        
+        Warning:
+            The list is NOT backed by the map, so changes to the map are NOT reflected in the list, and vice-versa.
 
-        **Warning:
-        The list is NOT backed by the map, so changes to the map are NOT reflected in the list, and vice-versa.**
-
-        :return: (Sequence), the list of key-value tuples in the map.
+        Returns:
+            hazelcast.future.Future[list[tuple]]: The list of key-value tuples in the map.
         """
         def handler(message):
             return ImmutableLazyDataList(replicated_map_entry_set_codec.decode_response(message), self._to_object)
@@ -132,15 +141,17 @@ replicated_map_contains_value_codec.decode_response)
         return self._invoke_on_partition(request, self._partition_id, handler)
 
     def get(self, key):
-        """
-        Returns the value for the specified key, or None if this map does not contain this key.
+        """Returns the value for the specified key, or ``None`` if this map does not contain this key.
+        
+        Warning: 
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form of the key, not the 
+            actual implementations of ``__hash__`` and ``__eq__`` defined in key's class.
 
-        **Warning:
-        This method uses hashCode and equals of the binary form of the key, not the actual implementations of hashCode
-        and equals defined in the key's class.**
+        Args:
+            key: The specified key.
 
-        :param key: (object), the specified key.
-        :return: (object), the value associated with the specified key.
+        Returns:
+            hazelcast.future.Future[any]: The value associated with the specified key.
         """
         check_not_none(key, "key can't be None")
 
@@ -152,22 +163,22 @@ replicated_map_contains_value_codec.decode_response)
         return self._invoke_on_key(request, key_data, handler)
 
     def is_empty(self):
-        """
-        Returns ``true`` if this map contains no key-value mappings.
-
-        :return: (bool), ``true`` if this map contains no key-value mappings.
+        """Returns ``True`` if this map contains no key-value mappings.
+        
+        Returns:
+            hazelcast.future.Future[bool]: ``True`` if this map contains no key-value mappings.
         """
         request = replicated_map_is_empty_codec.encode_request(self.name)
         return self._invoke_on_partition(request, self._partition_id, replicated_map_is_empty_codec.decode_response)
 
     def key_set(self):
-        """
-        Returns the list of keys in the ReplicatedMap.
-
-        **Warning:
-        The list is NOT backed by the map, so changes to the map are NOT reflected in the list, and vice-versa.**
-
-        :return: (Sequence), a list of the clone of the keys.
+        """Returns the list of keys in the ReplicatedMap.
+        
+        Warning:
+            The list is NOT backed by the map, so changes to the map are NOT reflected in the list, and vice-versa.
+        
+        Returns:
+            hazelcast.future.Future[list]: A list of the clone of the keys.
         """
         def handler(message):
             return ImmutableLazyDataList(replicated_map_key_set_codec.decode_response(message), self._to_object)
@@ -176,16 +187,20 @@ replicated_map_contains_value_codec.decode_response)
         return self._invoke_on_partition(request, self._partition_id, handler)
 
     def put(self, key, value, ttl=0):
-        """
-        Associates the specified value with the specified key in this map. If the map previously contained a mapping for
-        the key, the old value is replaced by the specified value. If ttl is provided, entry will expire and get evicted
-        after the ttl.
+        """Associates the specified value with the specified key in this map. 
+        
+        If the map previously contained a mapping for the key, the old value is replaced by the specified value. 
+        If ttl is provided, entry will expire and get evicted after the ttl.
 
-        :param key: (object), the specified key.
-        :param value: (object), the value to associate with the key.
-        :param ttl: (int), maximum time in seconds for this entry to stay, if not provided, the value configured on
-            server side configuration will be used(optional).
-        :return: (object), previous value associated with key or None if there was no mapping for key.
+        Args:
+            key: The specified key.
+            value: The value to associate with the key.
+            ttl (int): Maximum time in seconds for this entry to stay, if not provided, the value configured 
+                on server side configuration will be used.
+
+        Returns:
+            hazelcast.future.Future[any]: Previous value associated with key or ``None`` 
+                if there was no mapping for key.
         """
         check_not_none(key, "key can't be None")
         check_not_none(key, "value can't be None")
@@ -199,11 +214,16 @@ replicated_map_contains_value_codec.decode_response)
         return self._invoke_on_key(request, key_data, handler)
 
     def put_all(self, source):
-        """
-        Copies all of the mappings from the specified map to this map. No atomicity guarantees are
-        given. In the case of a failure, some of the key-value tuples may get written, while others are not.
+        """Copies all of the mappings from the specified map to this map. 
+        
+        No atomicity guarantees are given. In the case of a failure, 
+        some of the key-value tuples may get written, while others are not.
 
-        :param source: (dict), map which includes mappings to be stored in this map.
+        Args:
+            source (dict): Map which includes mappings to be stored in this map.
+
+        Returns:
+            hazelcast.future.Future[None]:
         """
         entries = []
         for key, value in six.iteritems(source):
@@ -215,15 +235,20 @@ replicated_map_contains_value_codec.decode_response)
         return self._invoke(request)
 
     def remove(self, key):
-        """
-        Removes the mapping for a key from this map if it is present. The map will not contain a mapping for the
-        specified key once the call returns.
+        """Removes the mapping for a key from this map if it is present. 
+        
+        The map will not contain a mapping for the specified key once the call returns.
+        
+        Warning: 
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form of the key, not the 
+            actual implementations of ``__hash__`` and ``__eq__`` defined in key's class.
 
-        **Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
-        of __hash__ and __eq__ defined in key's class.**
+        Args:
+            key: Key of the mapping to be deleted.
 
-        :param key: (object), key of the mapping to be deleted.
-        :return: (object), the previous value associated with key, or None if there was no mapping for key.
+        Returns:
+            hazelcast.future.Future[any]: The previous value associated with key, or ``None`` 
+                if there was no mapping for key.
         """
         check_not_none(key, "key can't be None")
 
@@ -235,32 +260,36 @@ replicated_map_contains_value_codec.decode_response)
         return self._invoke_on_key(request, key_data, handler)
 
     def remove_entry_listener(self, registration_id):
-        """
-        Removes the specified entry listener. Returns silently if there is no such listener added before.
+        """Removes the specified entry listener. 
+        
+        Returns silently if there is no such listener added before.
 
-        :param registration_id: (str), id of registered listener.
-        :return: (bool), ``true`` if registration is removed, ``false`` otherwise.
+        Args:
+            registration_id (str): Id of registered listener.
+
+        Returns:
+            bool: ``True`` if registration is removed, ``False`` otherwise.
         """
         return self._deregister_listener(registration_id)
 
     def size(self):
-        """
-        Returns the number of entries in this multimap.
-
-        :return: (int), number of entries in this multimap.
+        """Returns the number of entries in this multimap.
+        
+        Returns:
+            hazelcast.future.Future[int]: Number of entries in this multimap.
         """
         request = replicated_map_size_codec.encode_request(self.name)
         return self._invoke_on_partition(request, self._partition_id, replicated_map_size_codec.decode_response)
 
     def values(self):
-        """
-        Returns the list of values in the map.
-
-        **Warning:
-        The returned list is NOT backed by the map, so changes to the map are NOT reflected in the list, and
-        vice-versa.**
-
-        :return: (Sequence), the list of values in the map.
+        """Returns the list of values in the map.
+        
+        Warning:
+            The returned list is NOT backed by the map, so changes to the map are NOT reflected in the list, and
+            vice-versa.
+        
+        Returns:
+            hazelcast.future.Future[list]: The list of values in the map.
         """
         def handler(message):
             return ImmutableLazyDataList(replicated_map_values_codec.decode_response(message), self._to_object)

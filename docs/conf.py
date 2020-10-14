@@ -32,7 +32,14 @@ import hazelcast
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
+    'sphinx.ext.napoleon',
 ]
+
+autodoc_default_options = {
+    'members': None,
+    'undoc-members': None,
+    'show-inheritance': None,
+}
 
 # Autosummary on
 autosummary_generate = True
@@ -91,7 +98,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 #default_role = None
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
-#add_function_parentheses = True
+add_function_parentheses = True
 
 # If true, the current module name will be prepended to all description
 # unit titles (such as .. function::).

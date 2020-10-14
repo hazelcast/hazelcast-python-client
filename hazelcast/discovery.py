@@ -12,8 +12,7 @@ except ImportError:
 
 
 class HazelcastCloudAddressProvider(object):
-    """
-    Provides initial addresses for client to find and connect to a node
+    """Provides initial addresses for client to find and connect to a node
     and resolves private IP addresses of Hazelcast Cloud service.
     """
     logger = logging.getLogger("HazelcastClient.HazelcastCloudAddressProvider")
@@ -24,10 +23,11 @@ class HazelcastCloudAddressProvider(object):
         self._logger_extras = logger_extras
 
     def load_addresses(self):
-        """
-        Loads member addresses from Hazelcast Cloud endpoint.
-
-        :return: (Tuple), The possible member addresses as primary addresses to connect to.
+        """Loads member addresses from Hazelcast Cloud endpoint.
+        
+        Returns:
+            tuple[list[hazelcast.core.Address], list[hazelcast.core.Address]]: The possible member addresses
+                as primary addresses to connect to.
         """
         try:
             nodes = self.cloud_discovery.discover_nodes()
@@ -39,11 +39,13 @@ class HazelcastCloudAddressProvider(object):
         return [], []
 
     def translate(self, address):
-        """
-        Translates the given address to another address specific to network or service.
+        """Translates the given address to another address specific to network or service.
 
-        :param address: (:class:`~hazelcast.core.Address`), private address to be translated
-        :return: (:class:`~hazelcast.core.Address`), new address if given address is known, otherwise returns None
+        Args:
+            address (hazelcast.core.Address): Private address to be translated
+
+        Returns:
+            hazelcast.core.Address: New address if given address is known, otherwise returns None
         """
         if address is None:
             return None
@@ -57,9 +59,7 @@ class HazelcastCloudAddressProvider(object):
         return self._private_to_public.get(address, None)
 
     def refresh(self):
-        """
-        Refreshes the internal lookup table if necessary.
-        """
+        """Refreshes the internal lookup table if necessary."""
         try:
             self._private_to_public = self.cloud_discovery.discover_nodes()
         except Exception as e:
@@ -68,8 +68,7 @@ class HazelcastCloudAddressProvider(object):
 
 
 class HazelcastCloudDiscovery(object):
-    """
-    Discovery service that discover nodes via Hazelcast.cloud
+    """Discovery service that discover nodes via Hazelcast.cloud
     https://coordinator.hazelcast.cloud/cluster/discovery?token=<TOKEN>
     """
     _CLOUD_URL_BASE = "coordinator.hazelcast.cloud"
@@ -84,10 +83,11 @@ class HazelcastCloudDiscovery(object):
         self._ctx = ssl.create_default_context()
 
     def discover_nodes(self):
-        """
-        Discovers nodes from Hazelcast.cloud.
-
-        :return: (dict), Dictionary that maps private addresses to public addresses.
+        """Discovers nodes from Hazelcast.cloud.
+        
+        Returns:
+            dict[hazelcast.core.Address, hazelcast.core.Address]: Dictionary that maps private
+                addresses to public addresses.
         """
         try:
             https_connection = http_client.HTTPSConnection(host=self._CLOUD_URL_BASE,

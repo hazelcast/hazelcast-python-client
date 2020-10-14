@@ -2,6 +2,7 @@ import logging
 
 from hazelcast.errors import ClientOfflineError
 from hazelcast.hash import hash_to_index
+from hazelcast.serialization.data import Data
 
 
 class _PartitionTable(object):
@@ -21,31 +22,33 @@ class PartitionService(object):
     Allows to retrieve information about the partition count, the partition owner or the partitionId of a key.
     """
 
-    def __init__(self, internal_partition_service):
+    def __init__(self, internal_partition_service, serialization_service):
         self._service = internal_partition_service
+        self._serialization_service = serialization_service
 
     def get_partition_owner(self, partition_id):
         """
         Returns the owner of the partition if it's set, ``None`` otherwise.
 
-        :param partition_id: The partition id.
-        :type partition_id: int
+        Args:
+            partition_id (int): The partition id.
 
-        :return: Owner of partition
-        :rtype: :class:`uuid.UUID`
+        Returns:
+            uuid.UUID: Owner of the partition
         """
         return self._service.get_partition_owner(partition_id)
 
-    def get_partition_id(self, key_data):
+    def get_partition_id(self, key):
         """
         Returns the partition id for a key data.
 
-        :param key_data: The key data.
-        :type key_data: :class:`~hazelcast.serialization.data.Data`
+        Args:
+            key: The given key.
 
-        :return: The partition id.
-        :rtype: int
+        Returns:
+            int: The partition id.
         """
+        key_data = self._serialization_service.to_data(key)
         return self._service.get_partition_id(key_data)
 
     def get_partition_count(self):
@@ -54,8 +57,8 @@ class PartitionService(object):
 
         If partition table is not fetched yet, this method returns ``0``.
 
-        :return: The partition count
-        :rtype: int
+        Returns:
+            int: The partition count
         """
         return self._service.partition_count
 
@@ -70,9 +73,6 @@ class _InternalPartitionService(object):
         self._partition_table = _PartitionTable(None, -1, dict())
 
     def handle_partitions_view_event(self, connection, partitions, version):
-        """Handles the incoming partition view event and updates the partition table
-        if it is not empty, coming from a new connection or not stale.
-        """
         should_log = self.logger.isEnabledFor(logging.DEBUG)
         if should_log:
             self.logger.debug("Handling new partition table with version: %s" % version,
@@ -102,11 +102,6 @@ class _InternalPartitionService(object):
         return hash_to_index(key.get_partition_hash(), count)
 
     def check_and_set_partition_count(self, partition_count):
-        """
-        :param partition_count: (int)
-        :return: (bool), True if partition count can be set for the first time,
-            or it is equal to one that is already available, returns False otherwise
-        """
         if self.partition_count == 0:
             self.partition_count = partition_count
             return True

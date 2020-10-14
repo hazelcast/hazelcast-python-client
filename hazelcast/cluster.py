@@ -17,24 +17,22 @@ class _MemberListSnapshot(object):
 
 
 class ClientInfo(object):
-    """
-    Local information of the client.
+    """Local information of the client.
+
+    Attributes:
+        uuid (uuid.UUID): Unique id of this client instance.
+        address (hazelcast.core.Address): Local address that is used to communicate with cluster.
+        name (str): Name of the client.
+        labels (set[str]): Read-only set of all labels of this client.
     """
 
     __slots__ = ("uuid", "address", "name", "labels")
 
     def __init__(self, client_uuid, address, name, labels):
         self.uuid = client_uuid
-        """Unique id of this client instance."""
-
         self.address = address
-        """Local address that is used to communicate with cluster."""
-
         self.name = name
-        """Name of the client."""
-
         self.labels = labels
-        """Read-only set of all labels of this client."""
 
     def __repr__(self):
         return "ClientInfo(uuid=%s, address=%s, name=%s, labels=%s)" % (self.uuid, self.address, self.name, self.labels)
@@ -63,15 +61,13 @@ class ClusterService(object):
         There is no check for duplicate registrations, so if you register the listener
         twice, it will get events twice.
 
-        :param member_added: Function to be called when a member is added to the cluster.
-        :type member_added: function
-        :param member_removed: Function to be called when a member is removed from the cluster.
-        :type member_removed: function
-        :param fire_for_existing: Whether or not fire member_added for existing members.
-        :type fire_for_existing: bool
+        Args:
+            member_added (function): Function to be called when a member is added to the cluster.
+            member_removed (function): Function to be called when a member is removed from the cluster.
+            fire_for_existing (bool): Whether or not fire member_added for existing members.
 
-        :return: Registration id of the listener which will be used for removing this listener.
-        :rtype: str
+        Returns:
+            str: Registration id of the listener which will be used for removing this listener.
         """
         return self._service.add_listener(member_added, member_removed, fire_for_existing)
 
@@ -79,11 +75,11 @@ class ClusterService(object):
         """
         Removes the specified membership listener.
 
-        :param registration_id: Registration id of the listener to be removed.
-        :type registration_id: str
+        Args:
+            registration_id (str): Registration id of the listener to be removed.
 
-        :return: ``True`` if the registration is removed, ``False`` otherwise.
-        :rtype: bool
+        Returns:
+            bool: ``True`` if the registration is removed, ``False`` otherwise.
         """
         return self._service.remove_listener(registration_id)
 
@@ -94,12 +90,12 @@ class ClusterService(object):
         Every member in the cluster returns the members in the same order.
         To obtain the oldest member in the cluster, you can retrieve the first item in the list.
 
-        :param member_selector: Function to filter members to return.
-            If not provided, the returned list will contain all the available cluster members.
-        :type member_selector: function
+        Args:
+            member_selector (function): Function to filter members to return.
+                If not provided, the returned list will contain all the available cluster members.
 
-        :return: Current members in the cluster
-        :rtype: list[:class:`~hazelcast.core.MemberInfo`]
+        Returns:
+            list[hazelcast.core.MemberInfo]: Current members in the cluster
         """
         return self._service.get_members(member_selector)
 
@@ -140,18 +136,16 @@ class _InternalClusterService(object):
 
     def size(self):
         """
-        Returns the size of the cluster.
-
-        :return: (int), size of the cluster.
+        Returns:
+            int: Size of the cluster.
         """
         snapshot = self._member_list_snapshot
         return len(snapshot.members)
 
     def get_local_client(self):
         """
-        Returns the info representing the local client.
-
-        :return: (:class: `~hazelcast.cluster.ClientInfo`), client info
+        Returns:
+            hazelcast.cluster.ClientInfo: The client info.
         """
         connection_manager = self._connection_manager
         connection = connection_manager.get_random_connection()
@@ -170,12 +164,6 @@ class _InternalClusterService(object):
         return registration_id
 
     def remove_listener(self, registration_id):
-        """
-        Removes the specified membership listener.
-
-        :param registration_id: (str), registration id of the listener to be deleted.
-        :return: (bool), if the registration is removed, ``false`` otherwise.
-        """
         try:
             self._listeners.pop(registration_id)
             return True
@@ -183,11 +171,12 @@ class _InternalClusterService(object):
             return False
 
     def wait_initial_member_list_fetched(self):
-        """
-        Blocks until the initial member list is fetched from the cluster.
+        """Blocks until the initial member list is fetched from the cluster.
+
         If it is not received within the timeout, an error is raised.
 
-        :raises IllegalStateError: If the member list could not be fetched
+        Raises:
+            IllegalStateError: If the member list could not be fetched
         """
         fetched = self._initial_list_fetched.wait(_INITIAL_MEMBERS_TIMEOUT_SECONDS)
         if not fetched:
@@ -272,26 +261,29 @@ class _InternalClusterService(object):
 
 
 class VectorClock(object):
-    """
-    Vector clock consisting of distinct replica logical clocks.
-
-    See https://en.wikipedia.org/wiki/Vector_clock
+    """Vector clock consisting of distinct replica logical clocks.
+    
     The vector clock may be read from different thread but concurrent
     updates must be synchronized externally. There is no guarantee for
     concurrent updates.
+
+    See Also:
+        https://en.wikipedia.org/wiki/Vector_clock
     """
 
     def __init__(self):
         self._replica_timestamps = {}
 
     def is_after(self, other):
-        """
-        Returns true if this vector clock is causally strictly after the
+        """Returns ``True`` if this vector clock is causally strictly after the
         provided vector clock. This means that it the provided clock is neither
         equal to, greater than or concurrent to this vector clock.
 
-        :param other: (:class:`~hazelcast.cluster.VectorClock`), Vector clock to be compared
-        :return: (bool), True if this vector clock is strictly after the other vector clock, False otherwise
+        Args:
+            other (hazelcast.cluster.VectorClock): Vector clock to be compared
+
+        Returns:
+            bool: ``True`` if this vector clock is strictly after the other vector clock, ``False`` otherwise.
         """
         any_timestamp_greater = False
         for replica_id, other_timestamp in other.entry_set():
@@ -306,29 +298,28 @@ class VectorClock(object):
         return any_timestamp_greater or other.size() < self.size()
 
     def set_replica_timestamp(self, replica_id, timestamp):
-        """
-        Sets the logical timestamp for the given replica ID.
+        """Sets the logical timestamp for the given replica ID.
 
-        :param replica_id: (str), Replica ID.
-        :param timestamp: (int), Timestamp for the given replica ID.
+        Args:
+            replica_id (str): Replica ID.
+            timestamp (int): Timestamp for the given replica ID.
         """
         self._replica_timestamps[replica_id] = timestamp
 
     def entry_set(self):
-        """
-        Returns the entry set of the replica timestamps in a format
-        of list of tuples. Each tuple contains the replica ID and the
-        timestamp associated with it.
+        """Returns the entry set of the replica timestamps in a format of list of tuples.
 
-        :return: (list), List of tuples.
+        Each tuple contains the replica ID and the timestamp associated with it.
+        
+        Returns:
+            list: List of tuples.
         """
         return list(self._replica_timestamps.items())
 
     def size(self):
-        """
-        Returns the number of timestamps that are in the
-        replica timestamps dictionary.
-
-        :return: (int), Number of timestamps in the replica timestamps.
+        """Returns the number of timestamps that are in the replica timestamps dictionary.
+        
+        Returns:
+            int: Number of timestamps in the replica timestamps.
         """
         return len(self._replica_timestamps)

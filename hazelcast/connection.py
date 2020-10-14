@@ -73,9 +73,7 @@ class _AuthenticationStatus(object):
 
 
 class ConnectionManager(object):
-    """
-    ConnectionManager is responsible for managing :mod:`Connection` objects.
-    """
+    """ConnectionManager is responsible for managing ``Connection`` objects."""
     logger = logging.getLogger("HazelcastClient.ConnectionManager")
 
     def __init__(self, client, reactor, address_provider, lifecycle_service,
@@ -112,12 +110,13 @@ class ConnectionManager(object):
         self._load_balancer = None
 
     def add_listener(self, on_connection_opened=None, on_connection_closed=None):
-        """
-        Registers a ConnectionListener. If the same listener is registered multiple times, it will be notified multiple
-        times.
+        """Registers a ConnectionListener.
 
-        :param on_connection_opened: (Function), function to be called when a connection is opened.
-        :param on_connection_closed: (Function), function to be called when a connection is removed.
+        If the same listener is registered multiple times, it will be notified multiple times.
+
+        Args:
+            on_connection_opened (function): Function to be called when a connection is opened. (Default value = None)
+            on_connection_closed (function): Function to be called when a connection is removed. (Default value = None)
         """
         self._connection_listeners.append((on_connection_opened, on_connection_closed))
 
@@ -505,9 +504,7 @@ class _HeartbeatManager(object):
         self._heartbeat_interval = config.heartbeat_interval
 
     def start(self):
-        """
-        Starts sending periodic HeartBeat operations.
-        """
+        """Starts sending periodic HeartBeat operations."""
 
         def _heartbeat():
             if not self._connection_manager.live:
@@ -521,9 +518,7 @@ class _HeartbeatManager(object):
         self._heartbeat_timer = self._reactor.add_timer(self._heartbeat_interval, _heartbeat)
 
     def shutdown(self):
-        """
-        Stops HeartBeat operations.
-        """
+        """Stops HeartBeat operations."""
         if self._heartbeat_timer:
             self._heartbeat_timer.cancel()
 
@@ -622,9 +617,7 @@ class _Reader(object):
 
 
 class Connection(object):
-    """
-    Connection object which stores connection related information and operations.
-    """
+    """Connection object which stores connection related information and operations."""
 
     def __init__(self, connection_manager, connection_id, message_callback, logger_extras=None):
         self.remote_address = None
@@ -646,11 +639,13 @@ class Connection(object):
         self._reader = _Reader(self._builder)
 
     def send_message(self, message):
-        """
-        Sends a message to this connection.
+        """Sends a message to this connection.
 
-        :param message: (Message), message to be sent to this connection.
-        :return: (bool),
+        Args:
+            message (hazelcast.protocol.client_message.OutboundMessage): Message to be sent to this connection.
+
+        Returns:
+            bool: ``True`` if the message is written to the socket, ``False`` otherwise.
         """
         if not self.live:
             return False
@@ -659,11 +654,11 @@ class Connection(object):
         return True
 
     def close(self, reason, cause):
-        """
-        Closes the connection.
+        """Closes the connection.
 
-        :param reason: (str), The reason this connection is going to be closed. Is allowed to be None.
-        :param cause: (Exception), The exception responsible for closing this connection. Is allowed to be None.
+        Args:
+            reason (str): The reason this connection is going to be closed. Is allowed to be None.
+            cause (Exception): The exception responsible for closing this connection. Is allowed to be None.
         """
         if not self.live:
             return
@@ -707,8 +702,8 @@ class Connection(object):
 
 
 class DefaultAddressProvider(object):
-    """
-    Provides initial addresses for client to find and connect to a node.
+    """Provides initial addresses for client to find and connect to a node.
+
     It also provides a no-op translator.
     """
 
@@ -716,9 +711,7 @@ class DefaultAddressProvider(object):
         self._addresses = addresses
 
     def load_addresses(self):
-        """
-        :return: (Tuple), The possible primary and secondary member addresses to connect to.
-        """
+        """Returns the possible primary and secondary member addresses to connect to."""
         configured_addresses = self._addresses
 
         if not configured_addresses:
@@ -734,8 +727,8 @@ class DefaultAddressProvider(object):
         return primaries, secondaries
 
     def translate(self, address):
-        """
-        No-op address translator. It is there to provide the same API
-        with other address providers.
+        """No-op address translator.
+
+        It is there to provide the same API with other address providers.
         """
         return address

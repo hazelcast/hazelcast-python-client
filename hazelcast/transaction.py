@@ -41,9 +41,7 @@ RETRY_COUNT = 20
 
 
 class TransactionManager(object):
-    """
-    Manages the execution of client transactions and provides Transaction objects.
-    """
+    """Manages the execution of client transactions and provides Transaction objects."""
     logger = logging.getLogger("HazelcastClient.TransactionManager")
 
     def __init__(self, context, logger_extras):
@@ -63,22 +61,24 @@ class TransactionManager(object):
                 raise IllegalStateError("No active connection is found")
 
     def new_transaction(self, timeout, durability, transaction_type):
-        """
-        Creates a Transaction object with given timeout, durability and transaction type.
+        """Creates a Transaction object with given timeout, durability and transaction type.
 
-        :param timeout: (long), the timeout in seconds determines the maximum lifespan of a transaction.
-        :param durability: (int), the durability is the number of machines that can take over if a member fails during a
-            transaction commit or rollback
-        :param transaction_type: (Transaction Type), the transaction type which can be :const:`~hazelcast.transaction.TWO_PHASE` or :const:`~hazelcast.transaction.ONE_PHASE`
-        :return: (:class:`~hazelcast.transaction.Transaction`), new created Transaction.
+        Args:
+            timeout (int): The timeout in seconds determines the maximum lifespan of a transaction.
+            durability (int): The durability is the number of machines that can take over if a member fails during a
+                transaction commit or rollback
+            transaction_type (int): the transaction type which can be ``hazelcast.transaction.TWO_PHASE``
+                or ``hazelcast.transaction.ONE_PHASE``
+
+        Returns:
+          hazelcast.transaction.Transaction: New created Transaction.
         """
         connection = self._connect()
         return Transaction(self._context, connection, timeout, durability, transaction_type)
 
 
 class Transaction(object):
-    """
-    Provides transactional operations: beginning/committing transactions, but also retrieving
+    """Provides transactional operations: beginning/committing transactions, but also retrieving
     transactional data-structures like the TransactionalMap.
     """
     state = _STATE_NOT_STARTED
@@ -96,9 +96,7 @@ class Transaction(object):
         self._objects = {}
 
     def begin(self):
-        """
-        Begins this transaction.
-        """
+        """Begins this transaction."""
         if hasattr(self._locals, 'transaction_exists') and self._locals.transaction_exists:
             raise TransactionError("Nested transactions are not allowed.")
         if self.state != _STATE_NOT_STARTED:
@@ -122,9 +120,7 @@ class Transaction(object):
             raise
 
     def commit(self):
-        """
-        Commits this transaction.
-        """
+        """Commits this transaction."""
         self._check_thread()
         if self.state != _STATE_ACTIVE:
             raise TransactionError("Transaction is not active.")
@@ -143,9 +139,7 @@ class Transaction(object):
             self._locals.transaction_exists = False
 
     def rollback(self):
-        """
-        Rollback of this current transaction.
-        """
+        """Rollback of this current transaction."""
         self._check_thread()
         if self.state not in (_STATE_ACTIVE, _STATE_PARTIAL_COMMIT):
             raise TransactionError("Transaction is not active.")
@@ -161,47 +155,62 @@ class Transaction(object):
             self._locals.transaction_exists = False
 
     def get_list(self, name):
-        """
-        Returns the transactional list instance with the specified name.
+        """Returns the transactional list instance with the specified name.
 
-        :param name: (str), the specified name.
-        :return: (:class:`~hazelcast.proxy.transactional_list.TransactionalList`), the instance of Transactional List with the specified name.
+        Args:
+            name (str): The specified name.
+
+        Returns:
+            hazelcast.proxy.transactional_list.TransactionalList`: The instance of Transactional List
+                with the specified name.
         """
         return self._get_or_create_object(name, TransactionalList)
 
     def get_map(self, name):
-        """
-        Returns the transactional map instance with the specified name.
+        """Returns the transactional map instance with the specified name.
 
-        :param name: (str), the specified name.
-        :return: (:class:`~hazelcast.proxy.transactional_map.TransactionalMap`), the instance of Transactional Map with the specified name.
+        Args:
+            name (str): The specified name.
+
+        Returns:
+            hazelcast.proxy.transactional_map.TransactionalMap: The instance of Transactional Map
+                with the specified name.
         """
         return self._get_or_create_object(name, TransactionalMap)
 
     def get_multi_map(self, name):
-        """
-        Returns the transactional multimap instance with the specified name.
+        """Returns the transactional multimap instance with the specified name.
 
-        :param name: (str), the specified name.
-        :return: (:class:`~hazelcast.proxy.transactional_multi_map.TransactionalMultiMap`), the instance of Transactional MultiMap with the specified name.
+        Args:
+            name (str): The specified name.
+
+        Returns:
+            hazelcast.proxy.transactional_multi_map.TransactionalMultiMap: The instance of Transactional MultiMap
+                with the specified name.
         """
         return self._get_or_create_object(name, TransactionalMultiMap)
 
     def get_queue(self, name):
-        """
-        Returns the transactional queue instance with the specified name.
+        """Returns the transactional queue instance with the specified name.
 
-        :param name: (str), the specified name.
-        :return: (:class:`~hazelcast.proxy.transactional_queue.TransactionalQueue`), the instance of Transactional Queue with the specified name.
+        Args:
+            name (str): The specified name.
+
+        Returns:
+            hazelcast.proxy.transactional_queue.TransactionalQueue: The instance of Transactional Queue
+                with the specified name.
         """
         return self._get_or_create_object(name, TransactionalQueue)
 
     def get_set(self, name):
-        """
-        Returns the transactional set instance with the specified name.
+        """Returns the transactional set instance with the specified name.
 
-        :param name: (str), the specified name.
-        :return: (:class:`~hazelcast.proxy.transactional_set.TransactionalSet`), the instance of Transactional Set with the specified name.
+        Args:
+            name (str): The specified name.
+
+        Returns:
+            hazelcast.proxy.transactional_set.TransactionalSet: The instance of Transactional Set
+                with the specified name.
         """
         return self._get_or_create_object(name, TransactionalSet)
 

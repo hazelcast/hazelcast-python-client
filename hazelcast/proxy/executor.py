@@ -8,17 +8,17 @@ from hazelcast.util import check_not_none
 
 
 class Executor(Proxy):
-    """
-    An object that executes submitted executable tasks.
-    """
-    # TODO: cancellation
-    def execute_on_key_owner(self, key, task):
-        """
-        Executes a task on the owner of the specified key.
+    """An object that executes submitted executable tasks."""
 
-        :param key: (object), the specified key.
-        :param task: (Task), a task executed on the owner of the specified key.
-        :return: (:class:`~hazelcast.future.Future`), future representing pending completion of the task.
+    def execute_on_key_owner(self, key, task):
+        """Executes a task on the owner of the specified key.
+
+        Args:
+          key: The specified key.
+          task: A task executed on the owner of the specified key.
+
+        Returns:
+          hazelcast.future.Future: future representing pending completion of the task.
         """
         check_not_none(key, "key can't be None")
         check_not_none(task, "task can't be None")
@@ -35,12 +35,14 @@ class Executor(Proxy):
         return self._invoke_on_partition(request, partition_id, handler)
 
     def execute_on_member(self, member, task):
-        """
-        Executes a task on the specified member.
+        """Executes a task on the specified member.
 
-        :param member: (Member), the specified member.
-        :param task: (Task), the task executed on the specified member.
-        :return: (:class:`~hazelcast.future.Future`), Future representing pending completion of the task.
+        Args:
+          member (hazelcast.core.MemberInfo): The specified member.
+          task: The task executed on the specified member.
+
+        Returns:
+          hazelcast.future.Future: Future representing pending completion of the task.
         """
         check_not_none(task, "task can't be None")
         task_data = self._to_data(task)
@@ -48,12 +50,15 @@ class Executor(Proxy):
         return self._execute_on_member(uuid, task_data, member.uuid)
 
     def execute_on_members(self, members, task):
-        """
-        Executes a task on each of the specified members.
+        """Executes a task on each of the specified members.
 
-        :param members: (Collection), the specified members.
-        :param task: (Task), the task executed on the specified members.
-        :return: (Map), :class:`~hazelcast.future.Future` tuples representing pending completion of the task on each member.
+        Args:
+          members (list[hazelcast.core.MemberInfo]): The specified members.
+          task: The task executed on the specified members.
+
+        Returns:
+          list[hazelcast.future.Future]: Futures representing pending completion of the task on each member.
+
         """
         task_data = self._to_data(task)
         futures = []
@@ -64,27 +69,31 @@ class Executor(Proxy):
         return future.combine_futures(*futures)
 
     def execute_on_all_members(self, task):
-        """
-        Executes a task on all of the known cluster members.
+        """Executes a task on all of the known cluster members.
 
-        :param task: (Task), the task executed on the all of the members.
-        :return: (Map), :class:`~hazelcast.future.Future` tuples representing pending completion of the task on each member.
+        Args:
+          task: The task executed on the all of the members.
+
+        Returns:
+          list[hazelcast.future.Future]: Futures representing pending completion of the task on each member.
         """
         return self.execute_on_members(self._context.cluster_service.get_members(), task)
 
     def is_shutdown(self):
-        """
-        Determines whether this executor has been shut down or not.
+        """Determines whether this executor has been shutdown or not.
 
-        :return: (bool), ``true`` if this executor has been shut down.
+        Returns:
+            hazelcast.future.Future[bool]: ``True`` if the executor has been shutdown, ``False`` otherwise.
         """
         request = executor_service_is_shutdown_codec.encode_request(self.name)
         return self._invoke(request, executor_service_is_shutdown_codec.decode_response)
 
     def shutdown(self):
-        """
-        Initiates a shutdown process which works orderly. Tasks that were submitted before shutdown are executed but new
-        task will not be accepted.
+        """Initiates a shutdown process which works orderly. Tasks that were submitted
+        before shutdown are executed but new task will not be accepted.
+
+        Returns:
+            hazelcast.future.Future[None]:
         """
         request = executor_service_shutdown_codec.encode_request(self.name)
         return self._invoke(request)

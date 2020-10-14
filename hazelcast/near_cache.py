@@ -8,32 +8,14 @@ from sys import getsizeof
 
 
 def _lru_key_func(x):
-    """
-    Least Recently Used key function.
-
-    :param x: (:class:`~hazelcast.near_cache.DataRecord`)
-    :return: (float), last access time of x.
-    """
     return x.last_access_time
 
 
 def _lfu_key_func(x):
-    """
-    Least Frequently Used key function.
-
-    :param x: (:class:`~hazelcast.near_cache.DataRecord`)
-    :return: (int), access hit count of x.
-    """
     return x.access_hit
 
 
 def _random_key_func(_):
-    """
-    Random key function.
-
-    :param _: (:class:`~hazelcast.near_cache.DataRecord`)
-    :return: (int), 0.
-    """
     return 0
 
 
@@ -46,9 +28,7 @@ _eviction_key_func = {
 
 
 class DataRecord(object):
-    """
-    An expirable and evictable data object which represents a cache entry.
-    """
+    """An expirable and evictable data object which represents a cache entry."""
     def __init__(self, key, value, create_time=None, ttl_seconds=None):
         self.key = key
         self.value = value
@@ -58,11 +38,13 @@ class DataRecord(object):
         self.access_hit = 0
 
     def is_expired(self, max_idle_seconds):
-        """
-        Determines whether this record is expired or not.
+        """Determines whether this record is expired or not.
 
-        :param max_idle_seconds: (long), the maximum idle time of record, maximum time after the last access time.
-        :return: (bool), ``true`` is this record is not expired.
+        Args:
+            max_idle_seconds (int): The maximum idle time of record, maximum time after the last access time.
+
+        Returns:
+            bool: ``True`` is this record is not expired, ``False`` otherwise.
         """
 
         now = current_time()
@@ -75,9 +57,7 @@ class DataRecord(object):
 
 
 class NearCache(dict):
-    """
-    NearCache is a local cache used by :class:`~hazelcast.proxy.map.MapFeatNearCache`.
-    """
+    """NearCache is a local cache used by :class:`~hazelcast.proxy.map.MapFeatNearCache`."""
 
     def __init__(self, name, serialization_service, in_memory_format, time_to_live, max_idle, invalidate_on_change,
                  eviction_policy, eviction_max_size, eviction_sampling_count=None, eviction_sampling_pool_size=None):
@@ -116,9 +96,10 @@ class NearCache(dict):
         self._creation_time_in_seconds = current_time()
 
     def get_statistics(self):
-        """
-        Returns the statistics of the NearCache.
-        :return: (Dict), Dictionary that stores statistics related to this near cache.
+        """Returns the statistics of the NearCache.
+
+        Returns:
+            dict: Dictionary that stores statistics related to this near cache.
         """
         stats = {
             "creation_time": self._creation_time_in_seconds,

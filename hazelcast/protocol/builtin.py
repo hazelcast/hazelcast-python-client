@@ -44,10 +44,6 @@ class CodecUtil(object):
 
     @staticmethod
     def next_frame_is_null_frame(msg):
-        """Returns whether the next frame is NULL_FRAME or not.
-        If it is, this method consumes the iterator
-        by calling msg.next_frame once to skip the NULL_FRAME.
-        """
         is_null = msg.peek_next_frame().is_null_frame()
         if is_null:
             msg.next_frame()

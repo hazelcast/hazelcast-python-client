@@ -22,37 +22,35 @@ from hazelcast import six
 
 
 class Map(Proxy):
-    """
-    Hazelcast Map client proxy to access the map on the cluster.
-
+    """Hazelcast Map client proxy to access the map on the cluster.
+    
     Concurrent, distributed, observable and queryable map.
+    This map can work both async(non-blocking) or sync(blocking).
+    Blocking calls return the value of the call and block the execution until return value is calculated.
+    However, async calls return ``hazelcast.future.Future`` and do not block execution.
+    Result of the ``hazelcast.future.Future`` can be used whenever ready.
+    A ``hazelcast.future.Future``'s result can be obtained with blocking the execution by
+    calling ``future.result()``.
+    
+    Example:
+        >>> my_map = client.get_map("my_map").blocking()  # sync map, all operations are blocking
+        >>> print("map.put", my_map.put("key", "value"))
+        >>> print("map.contains_key", my_map.contains_key("key"))
+        >>> print("map.get", my_map.get("key"))
+        >>> print("map.size", my_map.size())
 
-    This map can work both async(non-blocking) or sync(blocking). Blocking calls return the value of the call and block
-    the execution until return value is calculated. However, async calls return :class:`~hazelcast.future.Future` and do not block execution.
-    Result of the :class:`~hazelcast.future.Future` can be used whenever ready. A :class:`~hazelcast.future.Future`'s result can be obtained with blocking the execution by
-    calling :func:`Future.result() <hazelcast.future.Future.result>`.
-
-        Example of sync(blocking) usage:
-            >>> #client is initialized Hazelcast Client.
-            >>> my_map = client.get_map("map").blocking()# returns sync map, all map functions are blocking
-            >>> print("map.put", my_map.put("key", "value"))
-            >>> print("map.contains_key", my_map.contains_key("key"))
-            >>> print("map.get", my_map.get("key"))
-            >>> print("map.size", my_map.size())
-
-        Example of async(non-blocking) usage:
-            >>> #client is initialized Hazelcast Client.
-            >>> my_map = client.get_map("map")
-            >>> def put_callback(f):
-            >>>     print("map.put", f.result())
-            >>> my_map.put("key", "async_val").add_done_callback(put_callback)
-            >>>
-            >>> print("map.size", my_map.size().result())
-            >>>
-            >>> def contains_key_callback(f):
-            >>>     print("map.contains_key", f.result())
-            >>> my_map.contains_key("key").add_done_callback(contains_key_callback)
-
+    Example:
+        >>> my_map = client.get_map("map")  # async map, all operations are non-blocking
+        >>> def put_callback(f):
+        >>>     print("map.put", f.result())
+        >>> my_map.put("key", "async_val").add_done_callback(put_callback)
+        >>>
+        >>> print("map.size", my_map.size().result())
+        >>>
+        >>> def contains_key_callback(f):
+        >>>     print("map.contains_key", f.result())
+        >>> my_map.contains_key("key").add_done_callback(contains_key_callback)
+    
     This class does not allow ``None`` to be used as a key or value.
     """
     def __init__(self, service_name, name, context):
@@ -62,25 +60,26 @@ class Map(Proxy):
     def add_entry_listener(self, include_value=False, key=None, predicate=None, added_func=None, removed_func=None,
                            updated_func=None, evicted_func=None, evict_all_func=None, clear_all_func=None,
                            merged_func=None, expired_func=None, loaded_func=None):
-        """
-        Adds a continuous entry listener for this map. Listener will get notified for map events filtered with given
-        parameters.
+        """Adds a continuous entry listener for this map.
 
-        :param include_value: (bool), whether received event should include the value or not (optional).
-        :param key: (object), key for filtering the events (optional).
-        :param predicate: (Predicate), predicate for filtering the events (optional).
-        :param added_func: Function to be called when an entry is added to map (optional).
-        :param removed_func: Function to be called when an entry is removed from map (optional).
-        :param updated_func: Function to be called when an entry is updated (optional).
-        :param evicted_func: Function to be called when an entry is evicted from map (optional).
-        :param evict_all_func: Function to be called when entries are evicted from map (optional).
-        :param clear_all_func: Function to be called when entries are cleared from map (optional).
-        :param merged_func: Function to be called when WAN replicated entry is merged_func (optional).
-        :param expired_func: Function to be called when an entry's live time is expired (optional).
-        :param loaded_func: Function to be called when an entry is loaded from a map loader (optional).
-        :return: (str), a registration id which is used as a key to remove the listener.
+        Listener will get notified for map events filtered with given parameters.
 
-        .. seealso:: :class:`~hazelcast.serialization.predicate.Predicate` for more info about predicates.
+        Args:
+            include_value (bool): Whether received event should include the value or not.
+            key: Key for filtering the events.
+            predicate (hazelcast.serialization.predicate.Predicate): Predicate for filtering the events.
+            added_func (function): Function to be called when an entry is added to map.
+            removed_func (function): Function to be called when an entry is removed from map.
+            updated_func (function): Function to be called when an entry is updated.
+            evicted_func (function): Function to be called when an entry is evicted from map.
+            evict_all_func (function): Function to be called when entries are evicted from map.
+            clear_all_func (function): Function to be called when entries are cleared from map.
+            merged_func (function): Function to be called when WAN replicated entry is merged_func.
+            expired_func (function): Function to be called when an entry's live time is expired.
+            loaded_func (function): Function to be called when an entry is loaded from a map loader.
+
+        Returns:
+            str: A registration id which is used as a key to remove the listener.
         """
         flags = get_entry_listener_flags(ADDED=added_func, REMOVED=removed_func, UPDATED=updated_func,
                                          EVICTED=evicted_func, EXPIRED=expired_func, EVICT_ALL=evict_all_func,
@@ -131,9 +130,8 @@ class Map(Proxy):
                                        lambda m: codec.handle(m, handle_event_entry))
 
     def add_index(self, attributes=None, index_type=IndexType.SORTED, name=None, bitmap_index_options=None):
-        """
-        Adds an index to this map for the specified entries so that queries can run faster.
-
+        """Adds an index to this map for the specified entries so that queries can run faster.
+        
         Example:
             Let's say your map values are Employee objects.
                 >>> class Employee(IdentifiedDataSerializable):
@@ -143,27 +141,31 @@ class Map(Proxy):
                 >>>     #other fields
                 >>>
                 >>>     #methods
-
+        
             If you query your values mostly based on age and active fields, you should consider indexing these.
-                >>> employees = self.client.get_map("employees")
+                >>> employees = client.get_map("employees")
                 >>> employees.add_index(attributes=["age"]) # Sorted index for range queries
                 >>> employees.add_index(attributes=["active"], index_type=IndexType.HASH)) # Hash index for equality predicates
 
         Index attribute should either have a getter method or be public.
         You should also make sure to add the indexes before adding
         entries to this map.
-
+        
         Indexing time is executed in parallel on each partition by operation threads. The Map
         is not blocked during this operation.
         The time taken in proportional to the size of the Map and the number Members.
-
+        
         Until the index finishes being created, any searches for the attribute will use a full Map scan,
         thus avoiding using a partially built index and returning incorrect results.
 
-        :param attributes: (list), list of indexed attributes.
-        :param index_type: (:class:`~hazelcast.config.IndexType`), type of the index
-        :param name: (str), name of the index
-        :param bitmap_index_options: (dict), bitmap index options.
+        Args:
+            attributes (list[str]): List of indexed attributes.
+            index_type (int): Type of the index.
+            name (str): Name of the index.
+            bitmap_index_options (dict): Bitmap index options.
+
+        Returns:
+            hazelcast.future.Future[None]:
         """
         d = {
             "name": name,
@@ -177,11 +179,15 @@ class Map(Proxy):
         return self._invoke(request)
 
     def add_interceptor(self, interceptor):
-        """
-        Adds an interceptor for this map. Added interceptor will intercept operations and execute user defined methods.
+        """Adds an interceptor for this map.
 
-        :param interceptor: (object), interceptor for the map which includes user defined methods.
-        :return: (str),id of registered interceptor.
+        Added interceptor will intercept operations and execute user defined methods.
+
+        Args:
+            interceptor: Interceptor for the map which includes user defined methods.
+
+        Returns:
+            hazelcast.future.Future[str]: Id of registered interceptor.
         """
         interceptor_data = self._to_data(interceptor)
 
@@ -189,34 +195,43 @@ class Map(Proxy):
         return self._invoke(request, map_add_interceptor_codec.decode_response)
 
     def clear(self):
-        """
-        Clears the map.
+        """Clears the map.
+        
+        The ``MAP_CLEARED`` event is fired for any registered listeners.
 
-        The MAP_CLEARED event is fired for any registered listeners.
+        Returns:
+            hazelcast.future.Future[None]:
         """
         request = map_clear_codec.encode_request(self.name)
         return self._invoke(request)
 
     def contains_key(self, key):
-        """
-        Determines whether this map contains an entry with the key.
+        """Determines whether this map contains an entry with the key.
+        
+        Warning: 
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form of the key, not the 
+            actual implementations of ``__hash__`` and ``__eq__`` defined in key's class.
 
-        **Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
-        of __hash__ and __eq__ defined in key's class.**
+        Args:
+            key: The specified key.
 
-        :param key: (object), the specified key.
-        :return: (bool), ``true`` if this map contains an entry for the specified key.
+        Returns:
+            hazelcast.future.Future[bool]: ``True`` if this map contains an entry for the specified key,
+                ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
         return self._contains_key_internal(key_data)
 
     def contains_value(self, value):
-        """
-        Determines whether this map contains one or more keys for the specified value.
+        """Determines whether this map contains one or more keys for the specified value.
 
-        :param value: (object), the specified value.
-        :return: (bool), ``true`` if this map contains an entry for the specified value.
+        Args:
+            value: The specified value.
+
+        Returns:
+            hazelcast.future.Future[bool]: ``True`` if this map contains an entry for the specified value,
+                ``False`` otherwise.
         """
         check_not_none(value, "value can't be None")
         value_data = self._to_data(value)
@@ -225,37 +240,41 @@ class Map(Proxy):
         return self._invoke(request, map_contains_value_codec.decode_response)
 
     def delete(self, key):
-        """
-        Removes the mapping for a key from this map if it is present (optional operation).
-
+        """Removes the mapping for a key from this map if it is present (optional operation).
+        
         Unlike remove(object), this operation does not return the removed value, which avoids the serialization cost of
         the returned value. If the removed value will not be used, a delete operation is preferred over a remove
         operation for better performance.
-
+        
         The map will not contain a mapping for the specified key once the call returns.
+        
+        Warning:
+            This method breaks the contract of EntryListener. 
+            When an entry is removed by delete(), it fires an ``EntryEvent`` with a ``None`` oldValue. 
+            Also, a listener with predicates will have ``None`` values, so only the keys can be queried
+            via predicates.
 
-        **Warning:
-        This method breaks the contract of EntryListener. When an entry is removed by delete(), it fires an EntryEvent
-        with a** ``None`` **oldValue. Also, a listener with predicates will have** ``None`` **values, so only the keys can be queried
-        via predicates.**
+        Args:
+            key: Key of the mapping to be deleted.
 
-        :param key: (object), key of the mapping to be deleted.
+        Returns:
+            hazelcast.future.Future[None]:
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
         return self._delete_internal(key_data)
 
     def entry_set(self, predicate=None):
-        """
-        Returns a list clone of the mappings contained in this map.
+        """Returns a list clone of the mappings contained in this map.
+        
+        Warning:
+            The list is NOT backed by the map, so changes to the map are NOT reflected in the list, and vice-versa.
 
-        **Warning:
-        The list is NOT backed by the map, so changes to the map are NOT reflected in the list, and vice-versa.**
+        Args:
+            predicate (hazelcast.serialization.predicate.Predicate): Predicate for the map to filter entries.
 
-        :param predicate: (Predicate), predicate for the map to filter entries (optional).
-        :return: (Sequence), the list of key-value tuples in the map.
-
-        .. seealso:: :class:`~hazelcast.serialization.predicate.Predicate` for more info about predicates.
+        Returns:
+            hazelcast.future.Future[list]: The list of key-value tuples in the map.
         """
         if predicate:
             def handler(message):
@@ -272,41 +291,47 @@ class Map(Proxy):
         return self._invoke(request, handler)
 
     def evict(self, key):
-        """
-        Evicts the specified key from this map.
+        """Evicts the specified key from this map.
+        
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form of the key, not the
+            actual implementations of ``__hash__`` and ``__eq__`` defined in key's class.
 
-        **Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
-        of __hash__ and __eq__ defined in key's class.**
+        Args:
+            key: Key to evict.
 
-        :param key: (object), key to evict.
-        :return: (bool), ``true`` if the key is evicted, ``false`` otherwise.
+        Returns:
+            hazelcast.future.Future[bool]: ``True`` if the key is evicted, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
         return self._evict_internal(key_data)
 
     def evict_all(self):
-        """
-        Evicts all keys from this map except the locked ones.
+        """Evicts all keys from this map except the locked ones.
+        
+        The ``EVICT_ALL`` event is fired for any registered listeners.
 
-        The EVICT_ALL event is fired for any registered listeners.
+        Returns:
+            hazelcast.future.Future[None]:
         """
         request = map_evict_all_codec.encode_request(self.name)
         return self._invoke(request)
 
     def execute_on_entries(self, entry_processor, predicate=None):
-        """
-        Applies the user defined EntryProcessor to all the entries in the map or entries in the map which satisfies
+        """Applies the user defined EntryProcessor to all the entries in the map or entries in the map which satisfies
         the predicate if provided. Returns the results mapped by each key in the map.
 
-        :param entry_processor: (object), A stateful serializable object which represents the EntryProcessor defined on
-            server side.
-            This object must have a serializable EntryProcessor counter part registered on server side with the actual
-            ``org.hazelcast.map.EntryProcessor`` implementation.
-        :param predicate: (Predicate), predicate for filtering the entries (optional).
-        :return: (Sequence), list of map entries which includes the keys and the results of the entry process.
+        Args:
+            entry_processor: A stateful serializable object which represents the EntryProcessor defined on
+                server side.
+                This object must have a serializable EntryProcessor counter part registered on server side with the
+                actual ``com.hazelcast.map.EntryProcessor`` implementation.
+            predicate (hazelcast.serialization.predicate.Predicate): Predicate for filtering the entries.
 
-        .. seealso:: :class:`~hazelcast.serialization.predicate.Predicate` for more info about predicates.
+        Returns:
+            hazelcast.future.Future[list]: List of map entries which includes the keys and the
+                results of the entry process.
         """
         if predicate:
             def handler(message):
@@ -325,32 +350,37 @@ class Map(Proxy):
         return self._invoke(request, handler)
 
     def execute_on_key(self, key, entry_processor):
-        """
-        Applies the user defined EntryProcessor to the entry mapped by the key. Returns the object which is the result
-        of EntryProcessor's process method.
+        """Applies the user defined EntryProcessor to the entry mapped by the key.
+        Returns the object which is the result of EntryProcessor's process method.
 
-        :param key: (object), specified key for the entry to be processed.
-        :param entry_processor: (object), A stateful serializable object which represents the EntryProcessor defined on
-            server side.
-            This object must have a serializable EntryProcessor counter part registered on server side with the actual
-            ``org.hazelcast.map.EntryProcessor`` implementation.
-        :return: (object), result of entry process.
+        Args:
+            key: Specified key for the entry to be processed.
+            entry_processor: A stateful serializable object which represents the EntryProcessor defined on
+                server side.
+                This object must have a serializable EntryProcessor counter part registered on server side with the
+                actual ``com.hazelcast.map.EntryProcessor`` implementation.
+
+        Returns:
+            hazelcast.future.Future[any]: Result of entry process.
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
         return self._execute_on_key_internal(key_data, entry_processor)
 
     def execute_on_keys(self, keys, entry_processor):
-        """
-        Applies the user defined EntryProcessor to the entries mapped by the collection of keys. Returns the results
+        """Applies the user defined EntryProcessor to the entries mapped by the collection of keys. Returns the results
         mapped by each key in the collection.
 
-        :param keys: (Collection), collection of the keys for the entries to be processed.
-        :param entry_processor: (object), A stateful serializable object which represents the EntryProcessor defined on
-            server side.
-            This object must have a serializable EntryProcessor counter part registered on server side with the actual
-            ``org.hazelcast.map.EntryProcessor`` implementation.
-        :return: (Sequence), list of map entries which includes the keys and the results of the entry process.
+        Args:
+            keys (list): Collection of the keys for the entries to be processed.
+            entry_processor: A stateful serializable object which represents the EntryProcessor defined on
+                server side.
+                This object must have a serializable EntryProcessor counter part registered on server side with the
+                actual ``com.hazelcast.map.EntryProcessor`` implementation.
+
+        Returns:
+            hazelcast.future.Future[list]: List of map entries which includes the keys 
+                and the results of the entry process.
         """
         key_list = []
         for key in keys:
@@ -368,22 +398,28 @@ class Map(Proxy):
         return self._invoke(request, handler)
 
     def flush(self):
+        """Flushes all the local dirty entries.
+        
+        Returns:
+            hazelcast.future.Future[None]:
         """
-        Flushes all the local dirty entries.
-        """
-
         request = map_flush_codec.encode_request(self.name)
         return self._invoke(request)
 
     def force_unlock(self, key):
-        """
-        Releases the lock for the specified key regardless of the lock owner. It always successfully unlocks the key,
-        never blocks, and returns immediately.
+        """Releases the lock for the specified key regardless of the lock owner. 
+        
+        It always successfully unlocks the key, never blocks, and returns immediately.
+        
+        Warning: 
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form of the key, not the actual 
+            implementations of ``__hash__`` and ``__eq__`` defined in key's class.
 
-        **Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
-        of __hash__ and __eq__ defined in key's class.**
+        Args:
+            key: The key to lock.
 
-        :param key: (object), the key to lock.
+        Returns:
+            hazelcast.future.Future[None]:
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
@@ -393,39 +429,46 @@ class Map(Proxy):
         return self._invoke_on_key(request, key_data)
 
     def get(self, key):
-        """
-        Returns the value for the specified key, or ``None`` if this map does not contain this key.
+        """Returns the value for the specified key, or ``None`` if this map does not contain this key.
+        
+        Warning:
+            This method returns a clone of original value, modifying the returned value does not change the
+            actual value in the map. One should put modified value back to make changes visible to all nodes.
+            
+                >>> value = my_map.get(key)
+                >>> value.update_some_property()
+                >>> my_map.put(key,value)
+        
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form of the key, not the actual
+            implementations of ``__hash__`` and ``__eq__`` defined in key's class.
 
-        **Warning:
-        This method returns a clone of original value, modifying the returned value does not change the actual value in
-        the map. One should put modified value back to make changes visible to all nodes.**
-            >>> value = map.get(key)
-            >>> value.update_some_property()
-            >>> map.put(key,value)
+        Args:
+            key: The specified key.
 
-        **Warning 2: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
-        of __hash__ and __eq__ defined in key's class.**
-
-        :param key: (object), the specified key.
-        :return: (object), the value for the specified key.
+        Returns:
+            hazelcast.future.Future[any]: The value for the specified key.
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
         return self._get_internal(key_data)
 
     def get_all(self, keys):
-        """
-        Returns the entries for the given keys.
+        """Returns the entries for the given keys.
+        
+        Warning:
+            The returned map is NOT backed by the original map, so changes to the original map are NOT reflected in the
+            returned map, and vice-versa.
+        
+        Warning: 
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form of the key, not the actual 
+            implementations of ``__hash__`` and ``__eq__`` defined in key's class.
 
-        **Warning:
-        The returned map is NOT backed by the original map, so changes to the original map are NOT reflected in the
-        returned map, and vice-versa.**
+        Args:
+            keys (list): Keys to get.
 
-        **Warning 2: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
-        of __hash__ and __eq__ defined in key's class.**
-
-        :param keys: (Collection), keys to get.
-        :return: (dict), dictionary of map entries.
+        Returns:
+            hazelcast.future.Future[list[tuple]]: List of map entries.
         """
         check_not_none(keys, "keys can't be None")
         if not keys:
@@ -446,20 +489,21 @@ class Map(Proxy):
         return self._get_all_internal(partition_to_keys)
 
     def get_entry_view(self, key):
-        """
-        Returns the EntryView for the specified key.
+        """Returns the EntryView for the specified key.
+        
+        Warning:
+            This method returns a clone of original mapping, modifying the returned value does not change the 
+            actual value in the map. One should put modified value back to make changes visible to all nodes.
+        
+        Warning: 
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form of the key, not the 
+            actual implementations of ``__hash__`` and ``__eq__`` defined in key's class.
 
-        **Warning:
-        This method returns a clone of original mapping, modifying the returned value does not change the actual value
-        in the map. One should put modified value back to make changes visible to all nodes.**
+        Args:
+            key: The key of the entry.
 
-        **Warning 2: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
-        of __hash__ and __eq__ defined in key's class.**
-
-        :param key: (object), the key of the entry.
-        :return: (EntryView), EntryView of the specified key.
-
-        .. seealso:: :class:`~hazelcast.core.EntryView` for more info about EntryView.
+        Returns:
+            hazelcast.future.Future[hazelcast.core.SimpleEntryView]: EntryView of the specified key.
         """
         check_not_none(key, "key can't be None")
 
@@ -478,23 +522,26 @@ class Map(Proxy):
         return self._invoke_on_key(request, key_data, handler)
 
     def is_empty(self):
-        """
-        Returns ``true`` if this map contains no key-value mappings.
-
-        :return: (bool), ``true`` if this map contains no key-value mappings.
+        """Returns whether this map contains no key-value mappings or not.
+        
+        Returns:
+            hazelcast.future.Future[bool]: ``True`` if this map contains no key-value mappings, ``False`` otherwise.
         """
         request = map_is_empty_codec.encode_request(self.name)
         return self._invoke(request, map_is_empty_codec.decode_response)
 
     def is_locked(self, key):
-        """
-        Checks the lock for the specified key. If the lock is acquired, it returns ``true``. Otherwise, it returns ``false``.
+        """Checks the lock for the specified key. 
+        
+        Warning: 
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form of the key, not the 
+            actual implementations of ``__hash__`` and ``__eq__`` defined in key's class.
 
-        **Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
-        of __hash__ and __eq__ defined in key's class.**
+        Args:
+            key: The key that is checked for lock
 
-        :param key: (object), the key that is checked for lock
-        :return: (bool), ``true`` if lock is acquired, ``false`` otherwise.
+        Returns:
+            hazelcast.future.Future[bool]: ``True`` if lock is acquired, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
@@ -503,17 +550,17 @@ class Map(Proxy):
         return self._invoke_on_key(request, key_data, map_is_locked_codec.decode_response)
 
     def key_set(self, predicate=None):
-        """
-        Returns a List clone of the keys contained in this map or the keys of the entries filtered with the predicate if
-        provided.
+        """Returns a List clone of the keys contained in this map or 
+        the keys of the entries filtered with the predicate if provided.
+        
+        Warning:
+            The list is NOT backed by the map, so changes to the map are NOT reflected in the list, and vice-versa.
 
-        **Warning:
-        The list is NOT backed by the map, so changes to the map are NOT reflected in the list, and vice-versa.**
+        Args:
+            predicate (hazelcast.serialization.predicate.Predicate) Predicate to filter the entries.
 
-        :param predicate: (Predicate), predicate to filter the entries (optional).
-        :return: (Sequence), a list of the clone of the keys.
-
-        .. seealso:: :class:`~hazelcast.serialization.predicate.Predicate` for more info about predicates.
+        Returns:
+            hazelcast.future.Future[list]: A list of the clone of the keys.
         """
         if predicate:
             def handler(message):
@@ -530,12 +577,15 @@ class Map(Proxy):
         return self._invoke(request, handler)
 
     def load_all(self, keys=None, replace_existing_values=True):
-        """
-        Loads all keys from the store at server side or loads the given keys if provided.
+        """Loads all keys from the store at server side or loads the given keys if provided.
 
-        :param keys: (Collection), keys of the entry values to load (optional).
-        :param replace_existing_values: (bool), whether the existing values will be replaced or not with those loaded
-        from the server side MapLoader (optional).
+        Args:
+            keys (list): Keys of the entry values to load.
+            replace_existing_values (bool): Whether the existing values will be replaced or not 
+                with those loaded from the server side MapLoader.
+
+        Returns:
+            hazelcast.future.Future[None]:
         """
         if keys:
             key_data_list = list(map(self._to_data, keys))
@@ -545,27 +595,31 @@ class Map(Proxy):
             return self._invoke(request)
 
     def lock(self, key, ttl=-1):
-        """
-        Acquires the lock for the specified key infinitely or for the specified lease time if provided.
-
+        """Acquires the lock for the specified key infinitely or for the specified lease time if provided.
+        
         If the lock is not available, the current thread becomes disabled for thread scheduling purposes and lies
         dormant until the lock has been acquired.
-
+        
         You get a lock whether the value is present in the map or not. Other threads (possibly on other systems) would
         block on their invoke of lock() until the non-existent key is unlocked. If the lock holder introduces the key to
         the map, the put() operation is not blocked. If a thread not holding a lock on the non-existent key tries to
         introduce the key while a lock exists on the non-existent key, the put() operation blocks until it is unlocked.
-
+        
         Scope of the lock is this map only. Acquired lock is only for the key in this map.
-
+        
         Locks are re-entrant; so, if the key is locked N times, it should be unlocked N times before another thread can
         acquire it.
+        
+        Warning: 
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form of the key, not the 
+            actual implementations of ``__hash__`` and ``__eq__`` defined in key's class.
 
-        **Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
-        of __hash__ and __eq__ defined in key's class.**
+        Args:
+            key: The key to lock.
+            ttl (int): Time in seconds to wait before releasing the lock.
 
-        :param key: (object), the key to lock.
-        :param ttl: (int), time in seconds to wait before releasing the lock (optional).
+        Returns:
+            hazelcast.future.Future[None]:
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
@@ -578,23 +632,28 @@ class Map(Proxy):
         return invocation.future
 
     def put(self, key, value, ttl=-1):
-        """
-        Associates the specified value with the specified key in this map. If the map previously contained a mapping for
-        the key, the old value is replaced by the specified value. If ttl is provided, entry will expire and get evicted
-        after the ttl.
+        """Associates the specified value with the specified key in this map. 
+        
+        If the map previously contained a mapping for the key, the old value is replaced by the specified value. 
+        If ttl is provided, entry will expire and get evicted after the ttl.
+        
+        Warning:
+            This method returns a clone of the previous value, not the original (identically equal) value previously put
+            into the map.
+        
+        Warning: 
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form of the key, not the 
+            actual implementations of ``__hash__`` and ``__eq__`` defined in key's class.
 
-        **Warning:
-        This method returns a clone of the previous value, not the original (identically equal) value previously put
-        into the map.**
+        Args:
+            key: The specified key.
+            value: The value to associate with the key.
+            ttl (int): Maximum time in seconds for this entry to stay, if not provided, 
+                the value configured on server side configuration will be used.
 
-        **Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
-        of __hash__ and __eq__ defined in key's class.**
-
-        :param key: (object), the specified key.
-        :param value: (object), the value to associate with the key.
-        :param ttl: (int), maximum time in seconds for this entry to stay, if not provided, the value configured on
-            server side configuration will be used(optional).
-        :return: (object), previous value associated with key or ``None`` if there was no mapping for key.
+        Returns:
+            hazelcast.future.Future[any]: Previous value associated with key 
+                or ``None`` if there was no mapping for key.
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
@@ -603,11 +662,16 @@ class Map(Proxy):
         return self._put_internal(key_data, value_data, ttl)
 
     def put_all(self, map):
-        """
-        Copies all of the mappings from the specified map to this map. No atomicity guarantees are
-        given. In the case of a failure, some of the key-value tuples may get written, while others are not.
+        """Copies all of the mappings from the specified map to this map. 
+        
+        No atomicity guarantees are given. In the case of a failure, some of the key-value tuples may get written, 
+        while others are not.
 
-        :param map: (dict), map which includes mappings to be stored in this map.
+        Args:
+            map (dict): Map which includes mappings to be stored in this map.
+
+        Returns:
+            hazelcast.future.Future[None]:
         """
         check_not_none(map, "map can't be None")
         if not map:
@@ -635,29 +699,33 @@ class Map(Proxy):
         return combine_futures(*futures)
 
     def put_if_absent(self, key, value, ttl=-1):
-        """
-        Associates the specified key with the given value if it is not already associated. If ttl is provided, entry
-        will expire and get evicted after the ttl.
-
-        This is equivalent to:
-            >>> if not map.contains_key(key):
-            >>>     return map.put(key,value)
+        """Associates the specified key with the given value if it is not already associated. 
+        
+        If ttl is provided, entry will expire and get evicted after the ttl.
+        
+        This is equivalent to below, except that the action is performed atomically:
+        
+            >>> if not my_map.contains_key(key):
+            >>>     return my_map.put(key,value)
             >>> else:
-            >>>     return map.get(key)
-        except that the action is performed atomically.
+            >>>     return my_map.get(key)
+        
+        Warning:
+            This method returns a clone of the previous value, not the original (identically equal) value previously put
+            into the map.
+        
+        Warning: 
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form of the key, not the 
+            actual implementations of ``__hash__`` and ``__eq__`` defined in key's class.
 
-        **Warning:
-        This method returns a clone of the previous value, not the original (identically equal) value previously put
-        into the map.**
+        Args:
+            key: Key of the entry.
+            value: Value of the entry.
+            ttl (int): Maximum time in seconds for this entry to stay in the map, 
+                if not provided, the value configured on server side configuration will be used.
 
-        **Warning 2: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
-        of __hash__ and __eq__ defined in key's class.**
-
-        :param key: (object), key of the entry.
-        :param value: (object), value of the entry.
-        :param ttl:  (int), maximum time in seconds for this entry to stay in the map, if not provided, the value
-            configured on server side configuration will be used (optional).
-        :return: (object), old value of the entry.
+        Returns:
+          hazelcast.future.Future[any]: Old value of the entry.
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
@@ -667,16 +735,20 @@ class Map(Proxy):
         return self._put_if_absent_internal(key_data, value_data, ttl)
 
     def put_transient(self, key, value, ttl=-1):
-        """
-        Same as put(TKey, TValue, Ttl), but MapStore defined at the server side will not be called.
+        """Same as ``put``, but MapStore defined at the server side will not be called.
+        
+        Warning: 
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form of the key, not the 
+            actual implementations of ``__hash__`` and ``__eq__`` defined in key's class.
 
-        **Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
-        of __hash__ and __eq__ defined in key's class.**
+        Args:
+            key: Key of the entry.
+            value: Value of the entry.
+            ttl (int): Maximum time in seconds for this entry to stay in the map, if not provided, 
+                the value configured on server side configuration will be used.
 
-        :param key: (object), key of the entry.
-        :param value: (object), value of the entry.
-        :param ttl: (int), maximum time in seconds for this entry to stay in the map, if not provided, the value
-            configured on server side configuration will be used (optional).
+        Returns:
+            hazelcast.future.Future[None]:
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
@@ -686,38 +758,46 @@ class Map(Proxy):
         return self._put_transient_internal(key_data, value_data, ttl)
 
     def remove(self, key):
-        """
-        Removes the mapping for a key from this map if it is present. The map will not contain a mapping for the
-        specified key once the call returns.
+        """Removes the mapping for a key from this map if it is present. 
+        
+        The map will not contain a mapping for the specified key once the call returns.
+        
+        Warning: 
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form of the key, not the 
+            actual implementations of ``__hash__`` and ``__eq__`` defined in key's class.
 
-        **Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
-        of __hash__ and __eq__ defined in key's class.**
+        Args:
+            key: Key of the mapping to be deleted.
 
-        :param key: (object), key of the mapping to be deleted.
-        :return: (object), the previous value associated with key, or ``None`` if there was no mapping for key.
+        Returns:
+            hazelcast.future.Future[any]: The previous value associated with key, 
+                or ``None`` if there was no mapping for key.
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
         return self._remove_internal(key_data)
 
     def remove_if_same(self, key, value):
-        """
-        Removes the entry for a key only if it is currently mapped to a given value.
-
-        This is equivalent to:
-            >>> if map.contains_key(key) and map.get(key).equals(value):
-            >>>     map.remove(key)
-            >>>     return true
+        """Removes the entry for a key only if it is currently mapped to a given value.
+        
+        This is equivalent to below, except that the action is performed atomically:
+        
+            >>> if my_map.contains_key(key) and my_map.get(key) == value:
+            >>>     my_map.remove(key)
+            >>>     return True
             >>> else:
-            >>>     return false
-        except that the action is performed atomically.
+            >>>     return False
+        
+        Warning: 
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form of the key, not the 
+            actual implementations of ``__hash__`` and ``__eq__`` defined in key's class.
 
-        **Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
-        of __hash__ and __eq__ defined in key's class.**
+        Args:
+            key: The specified key.
+            value: Remove the key if it has this value.
 
-        :param key: (object), the specified key.
-        :param value: (object), remove the key if it has this value.
-        :return: (bool), ``true`` if the value was removed.
+        Returns:
+          hazelcast.future.Future[bool]: ``True`` if the value was removed, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
@@ -727,35 +807,43 @@ class Map(Proxy):
         return self._remove_if_same_internal_(key_data, value_data)
 
     def remove_entry_listener(self, registration_id):
-        """
-        Removes the specified entry listener. Returns silently if there is no such listener added before.
+        """Removes the specified entry listener. 
+        
+        Returns silently if there is no such listener added before.
 
-        :param registration_id: (str), id of registered listener.
-        :return: (bool), ``true`` if registration is removed, ``false`` otherwise.
+        Args:
+            registration_id (str): Id of registered listener.
+
+        Returns:
+            bool: ``True`` if registration is removed, ``False`` otherwise.
         """
         return self._deregister_listener(registration_id)
 
     def replace(self, key, value):
-        """
-        Replaces the entry for a key only if it is currently mapped to some value.
-
-        This is equivalent to:
-            >>> if map.contains_key(key):
-            >>>     return map.put(key,value)
+        """Replaces the entry for a key only if it is currently mapped to some value.
+        
+        This is equivalent to below, except that the action is performed atomically: 
+            
+            >>> if my_map.contains_key(key):
+            >>>     return my_map.put(key,value)
             >>> else:
             >>>     return None
-        except that the action is performed atomically.
+        
+        Warning: 
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form of the key, not the 
+            actual implementations of ``__hash__`` and ``__eq__`` defined in key's class.
+        
+        Warning 2
+            This method returns a clone of the previous value, not the original (identically equal) value previously put
+            into the map.
 
-        **Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
-        of __hash__ and __eq__ defined in key's class.**
+        Args:
+            key: The specified key.
+            value: The value to replace the previous value.
 
-        **Warning 2:
-        This method returns a clone of the previous value, not the original (identically equal) value previously put
-        into the map.**
-
-        :param key: (object), the specified key.
-        :param value: (object), the value to replace the previous value.
-        :return: (object), previous value associated with key, or ``None`` if there was no mapping for key.
+        Returns:
+            hazelcast.future.Future[any]: Previous value associated with key, 
+                or ``None`` if there was no mapping for key.        
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
@@ -766,24 +854,27 @@ class Map(Proxy):
         return self._replace_internal(key_data, value_data)
 
     def replace_if_same(self, key, old_value, new_value):
-        """
-        Replaces the entry for a key only if it is currently mapped to a given value.
-
-        This is equivalent to:
-            >>> if map.contains_key(key) and map.get(key).equals(old_value):
-            >>>     map.put(key, new_value)
-            >>>     return true
+        """Replaces the entry for a key only if it is currently mapped to a given value.
+        
+        This is equivalent to below, except that the action is performed atomically:
+            
+            >>> if my_map.contains_key(key) and my_map.get(key) == old_value:
+            >>>     my_map.put(key, new_value)
+            >>>     return True
             >>> else:
-            >>>     return false
-        except that the action is performed atomically.
+            >>>     return False
+        
+        Warning: 
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form of the key, not the 
+            actual implementations of ``__hash__`` and ``__eq__`` defined in key's class.
 
-        **Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
-        of __hash__ and __eq__ defined in key's class.**
+        Args:
+            key: The specified key.
+            old_value: Replace the key value if it is the old value.
+            new_value: The new value to replace the old value.
 
-        :param key: (object), the specified key.
-        :param old_value: (object), replace the key value if it is the old value.
-        :param new_value: (object), the new value to replace the old value.
-        :return: (bool), ``true`` if the value was replaced.
+        Returns:
+            hazelcast.future.Future[bool]: ``True`` if the value was replaced, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
         check_not_none(old_value, "old_value can't be None")
@@ -796,17 +887,23 @@ class Map(Proxy):
         return self._replace_if_same_internal(key_data, old_value_data, new_value_data)
 
     def set(self, key, value, ttl=-1):
-        """
-        Puts an entry into this map. Similar to the put operation except that set doesn't return the old value, which is
-        more efficient. If ttl is provided, entry will expire and get evicted after the ttl.
+        """Puts an entry into this map.
 
-        **Warning: This method uses __hash__ and __eq__ methods of binary form of the key, not the actual implementations
-        of __hash__ and __eq__ defined in key's class.**
+        Similar to the put operation except that set doesn't return the old value, which is more efficient.
+        If ttl is provided, entry will expire and get evicted after the ttl.
+        
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form of the key, not the
+            actual implementations of ``__hash__`` and ``__eq__`` defined in key's class.
 
-        :param key: (object), key of the entry.
-        :param value: (object), value of the entry.
-        :param ttl: (int), maximum time in seconds for this entry to stay in the map, 0 means infinite. If ttl is not
-            provided, the value configured on server side configuration will be used (optional).
+        Args:
+            key: Key of the entry.
+            value: Value of the entry.
+            ttl (int): Maximum time in seconds for this entry to stay in the map, 0 means infinite.
+            If ttl is not provided, the value configured on server side configuration will be used.
+
+        Returns:
+            hazelcast.future.Future[None]:
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
@@ -815,13 +912,19 @@ class Map(Proxy):
         return self._set_internal(key_data, value_data, ttl)
 
     def set_ttl(self, key, ttl):
-        """
-        Updates the TTL (time to live) value of the entry specified by the given key with a new TTL value. New TTL
-        value is valid starting from the time this operation is invoked, not since the time the entry was created.
-        If the entry does not exist or is already expired, this call has no effect.
-        :param key: (object), the key of the map entry.
-        :param ttl: (int), maximum time for this entry to stay in the map (0 means infinite,
-            negative means map config default)
+        """Updates the TTL (time to live) value of the entry specified by the given key with a new TTL value. 
+        
+        New TTL value is valid starting from the time this operation is invoked, 
+        not since the time the entry was created. If the entry does not exist or is already expired, 
+        this call has no effect.
+
+        Args:
+            key: The key of the map entry.
+            ttl (int): Maximum time for this entry to stay in the map (0 means infinite, 
+                negative means map config default)
+
+        Returns:
+            hazelcast.future.Future[None]:
         """
         check_not_none(key, "key can't be None")
         check_not_none(ttl, "ttl can't be None")
@@ -829,30 +932,33 @@ class Map(Proxy):
         return self._set_ttl_internal(key_data, ttl)
 
     def size(self):
-        """
-        Returns the number of entries in this map.
-
-        :return: (int), number of entries in this map.
+        """Returns the number of entries in this map.
+        
+        Returns:
+            hazelcast.future.Future[int]: Number of entries in this map.
         """
         request = map_size_codec.encode_request(self.name)
         return self._invoke(request, map_size_codec.decode_response)
 
     def try_lock(self, key, ttl=-1, timeout=0):
-        """
-        Tries to acquire the lock for the specified key. When the lock is not available,
-
-            * If timeout is not provided, the current thread doesn't wait and returns ``false`` immediately.
-            * If a timeout is provided, the current thread becomes disabled for thread scheduling purposes and lies
-              dormant until one of the followings happens:
-                * the lock is acquired by the current thread, or
-                * the specified waiting time elapses.
-
+        """Tries to acquire the lock for the specified key. 
+        
+        When the lock is not available:
+            - If timeout is not provided, the current thread doesn't wait and returns ``false`` immediately.
+            - If a timeout is provided, the current thread becomes disabled for thread scheduling purposes and lies
+                dormant until one of the followings happens:
+                - the lock is acquired by the current thread, or
+                - the specified waiting time elapses.
+        
         If ttl is provided, lock will be released after this time elapses.
 
-        :param key: (object), key to lock in this map.
-        :param ttl: (int), time in seconds to wait before releasing the lock (optional).
-        :param timeout: (int), maximum time in seconds to wait for the lock (optional).
-        :return: (bool), ``true`` if the lock was acquired and otherwise, ``false``.
+        Args:
+            key: Key to lock in this map.
+            ttl (int): Time in seconds to wait before releasing the lock.
+            timeout (int): Maximum time in seconds to wait for the lock.
+
+        Returns:
+            hazelcast.future.Future[bool]: ``True`` if the lock was acquired, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
 
@@ -867,14 +973,17 @@ class Map(Proxy):
         return invocation.future
 
     def try_put(self, key, value, timeout=0):
-        """
-        Tries to put the given key and value into this map and returns immediately if timeout is not provided. If
-        timeout is provided, operation waits until it is completed or timeout is reached.
+        """Tries to put the given key and value into this map and returns immediately if timeout is not provided.
 
-        :param key: (object), key of the entry.
-        :param value: (object), value of the entry.
-        :param timeout: (int), operation timeout in seconds (optional).
-        :return: (bool), ``true`` if the put is successful, ``false`` otherwise.
+        If timeout is provided, operation waits until it is completed or timeout is reached.
+
+        Args:
+            key: Key of the entry.
+            value: Value of the entry.
+            timeout (int): Operation timeout in seconds.
+
+        Returns:
+            hazelcast.future.Future[bool] ``True`` if the put is successful, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
@@ -885,13 +994,16 @@ class Map(Proxy):
         return self._try_put_internal(key_data, value_data, timeout)
 
     def try_remove(self, key, timeout=0):
-        """
-        Tries to remove the given key from this map and returns immediately if timeout is not provided. If
-        timeout is provided, operation waits until it is completed or timeout is reached.
+        """Tries to remove the given key from this map and returns immediately if timeout is not provided. 
+        
+        If timeout is provided, operation waits until it is completed or timeout is reached.
 
-        :param key: (object), key of the entry to be deleted.
-        :param timeout: (int), operation timeout in seconds (optional).
-        :return: (bool), ``true`` if the remove is successful, ``false`` otherwise.
+        Args:
+            key: Key of the entry to be deleted.
+            timeout (int): Operation timeout in seconds.
+
+        Returns:
+          hazelcast.future.Future[bool]: ``True`` if the remove is successful, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
 
@@ -899,11 +1011,16 @@ class Map(Proxy):
         return self._try_remove_internal(key_data, timeout)
 
     def unlock(self, key):
-        """
-        Releases the lock for the specified key. It never blocks and returns immediately. If the current thread is the
-        holder of this lock, then the hold count is decremented. If the hold count is zero, then the lock is released.
+        """Releases the lock for the specified key. 
+        
+        It never blocks and returns immediately. If the current thread is the holder of this lock, 
+        then the hold count is decremented. If the hold count is zero, then the lock is released.
 
-        :param key: (object), the key to lock.
+        Args:
+            key: The key to lock.
+
+        Returns:
+            hazelcast.future.Future[None]:
         """
         check_not_none(key, "key can't be None")
 
@@ -913,18 +1030,18 @@ class Map(Proxy):
         return self._invoke_on_key(request, key_data)
 
     def values(self, predicate=None):
-        """
-        Returns a list clone of the values contained in this map or values of the entries which are filtered with
+        """Returns a list clone of the values contained in this map or values of the entries which are filtered with
         the predicate if provided.
+        
+        Warning:
+            The list is NOT backed by the map, so changes to the map are NOT reflected in the list, and
+            vice-versa.
 
-        **Warning:
-        The list is NOT backed by the map, so changes to the map are NOT reflected in the list, and
-        vice-versa.**
+        Args:
+            predicate (hazelcast.serialization.predicate.Predicate): Predicate to filter the entries.
 
-        :param predicate: (Predicate), predicate to filter the entries (optional).
-        :return: (Sequence), a list of clone of the values contained in this map.
-
-        .. seealso:: :class:`~hazelcast.serialization.predicate.Predicate` for more info about predicates.
+        Returns:
+            hazelcast.future.Future[list]: A list of clone of the values contained in this map.
         """
         if predicate:
             def handler(message):
@@ -1048,9 +1165,8 @@ class Map(Proxy):
 
 
 class MapFeatNearCache(Map):
-    """
-    Map proxy implementation featuring Near Cache
-    """
+    """Map proxy implementation featuring Near Cache"""
+
     def __init__(self, service_name, name, context):
         super(MapFeatNearCache, self).__init__(service_name, name, context)
         self._invalidation_listener_id = None

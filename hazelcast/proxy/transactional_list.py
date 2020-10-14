@@ -9,11 +9,13 @@ class TransactionalList(TransactionalProxy):
     Transactional implementation of :class:`~hazelcast.proxy.list.List`.
     """
     def add(self, item):
-        """
-        Transactional implementation of :func:`List.add(item) <hazelcast.proxy.list.List.add>`
+        """Transactional implementation of :func:`List.add(item) <hazelcast.proxy.list.List.add>`
 
-        :param item: (object), the new item to be added.
-        :return: (bool), ``true`` if the item is added successfully, ``false`` otherwise.
+        Args:
+            item: The new item to be added.
+
+        Returns:
+            hazelcast.future.Future[bool]: ``True`` if the item is added successfully, ``False`` otherwise.
         """
         check_not_none(item, "item can't be none")
         item_data = self._to_data(item)
@@ -21,11 +23,13 @@ class TransactionalList(TransactionalProxy):
         return self._invoke(request, transactional_list_add_codec.decode_response)
 
     def remove(self, item):
-        """
-        Transactional implementation of :func:`List.remove(item) <hazelcast.proxy.list.List.remove>`
+        """Transactional implementation of :func:`List.remove(item) <hazelcast.proxy.list.List.remove>`
 
-        :param item: (object), the specified item to be removed.
-        :return: (bool), ``true`` if the item is removed successfully, ``false`` otherwise.
+        Args:
+            item: The specified item to be removed.
+
+        Returns:
+            hazelcast.future.Future[bool]: ``True`` if the item is removed successfully, ``False`` otherwise.
         """
         check_not_none(item, "item can't be none")
         item_data = self._to_data(item)
@@ -33,10 +37,10 @@ class TransactionalList(TransactionalProxy):
         return self._invoke(request, transactional_list_remove_codec.decode_response)
 
     def size(self):
-        """
-        Transactional implementation of :func:`List.size() <hazelcast.proxy.list.List.size>`
-
-        :return: (int), the size of the list.
+        """Transactional implementation of :func:`List.size() <hazelcast.proxy.list.List.size>`
+        
+        Returns:
+            hazelcast.future.Future[int]: The size of the list.
         """
         request = transactional_list_size_codec.encode_request(self.name, self.transaction.id, thread_id())
         return self._invoke(request, transactional_list_size_codec.decode_response)

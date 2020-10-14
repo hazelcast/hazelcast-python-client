@@ -1,7 +1,7 @@
 Future
 ======
 
-.. automodule:: hazelcast.future
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. py:currentmodule:: hazelcast.future
+
+.. autoclass:: Future
+.. autofunction:: combine_futures

@@ -3,22 +3,41 @@ import json
 
 from hazelcast import six
 from hazelcast import util
-from hazelcast.util import with_reversed_items
 
 
 class MemberInfo(object):
-    __slots__ = ("address", "uuid", "attributes", "lite_member", "version")
-
     """
     Represents a member in the cluster with its address, uuid, lite member status, attributes and version.
     """
 
+    __slots__ = ("address", "uuid", "attributes", "lite_member", "version")
+
     def __init__(self, address, uuid, attributes, lite_member, version, *_):
         self.address = address
+        """
+        hazelcast.core.Address: Address of the member.
+        """
+
         self.uuid = uuid
+        """
+        uuid.UUID: UUID of the member.
+        """
+
         self.attributes = attributes
+        """
+        dict[str, str]: Configured attributes of the member.
+        """
+
         self.lite_member = lite_member
+        """
+        bool: ``True`` if the member is a lite member, ``False`` otherwise.
+        Lite members do not own any partition.
+        """
+
         self.version = version
+        """
+        hazelcast.core.MemberVersion: Hazelcast codebase version of the member.
+        """
 
     def __str__(self):
         return "Member [%s]:%s - %s" % (self.address.host, self.address.port, self.uuid)
@@ -38,13 +57,18 @@ class MemberInfo(object):
 
 
 class Address(object):
-    """
-    Represents an address of a member in the cluster.
-    """
+    """Represents an address of a member in the cluster."""
 
     def __init__(self, host, port):
         self.host = host
+        """
+        str: Host of the address.
+        """
+
         self.port = port
+        """
+        int: Port of the address.
+        """
 
     def __repr__(self):
         return "Address(host=%s, port=%d)" % (self.host, self.port)
@@ -100,10 +124,6 @@ class AddressHelper(object):
 
 
 class DistributedObjectInfo(object):
-    """
-    Represents name of the Distributed Object and the name of service which it belongs to.
-    """
-
     def __init__(self, service_name, name):
         self.service_name = service_name
         self.name = name
@@ -120,11 +140,8 @@ class DistributedObjectInfo(object):
         return False
 
 
-@with_reversed_items
 class DistributedObjectEventType(object):
-    """
-    Type of the distributed object event.
-    """
+    """Type of the distributed object event."""
 
     CREATED = "CREATED"
     """
@@ -138,15 +155,28 @@ class DistributedObjectEventType(object):
 
 
 class DistributedObjectEvent(object):
-    """
-    Distributed Object Event
-    """
+    """Distributed Object Event"""
 
     def __init__(self, name, service_name, event_type, source):
         self.name = name
+        """
+        str: Name of the distributed object.
+        """
+
         self.service_name = service_name
-        self.event_type = DistributedObjectEventType.reverse.get(event_type, event_type)
+        """
+        str: Service name of the distributed object.
+        """
+
+        self.event_type = event_type
+        """
+        str: Event type. Either ``CREATED`` or ``DESTROYED``.
+        """
+
         self.source = source
+        """
+        uuid.UUID: UUID of the member that fired the event.
+        """
 
     def __repr__(self):
         return "DistributedObjectEvent(name=%s, service_name=%s, event_type=%s, source=%s)" \
@@ -154,9 +184,7 @@ class DistributedObjectEvent(object):
 
 
 class SimpleEntryView(object):
-    """
-    EntryView represents a readonly view of a map entry.
-    """
+    """EntryView represents a readonly view of a map entry."""
     def __init__(self, key, value, cost, creation_time, expiration_time, hits, last_access_time,
                  last_stored_time, last_update_time, version, ttl, max_idle):
         self.key = key
@@ -171,52 +199,52 @@ class SimpleEntryView(object):
 
         self.cost = cost
         """
-        The cost in bytes of the entry.
+        int: The cost in bytes of the entry.
         """
 
         self.creation_time = creation_time
         """
-        The creation time of the entry.
+        int: The creation time of the entry.
         """
 
         self.expiration_time = expiration_time
         """
-        The expiration time of the entry.
+        int: The expiration time of the entry.
         """
 
         self.hits = hits
         """
-        Number of hits of the entry.
+        int: Number of hits of the entry.
         """
 
         self.last_access_time = last_access_time
         """
-        The last access time for the entry.
+        int: The last access time for the entry.
         """
 
         self.last_stored_time = last_stored_time
         """
-        The last store time for the value.
+        int: The last store time for the value.
         """
 
         self.last_update_time = last_update_time
         """
-        The last time the value was updated.
+        int: The last time the value was updated.
         """
 
         self.version = version
         """
-        The version of the entry.
+        int: The version of the entry.
         """
 
         self.ttl = ttl
         """
-        The last set time to live milliseconds.
+        int: The last set time to live milliseconds.
         """
 
         self.max_idle = max_idle
         """
-        The last set max idle time in milliseconds.
+        int: The last set max idle time in milliseconds.
         """
 
     def __repr__(self):
@@ -228,52 +256,28 @@ class SimpleEntryView(object):
                   self.ttl, self.max_idle)
 
 
-class MemberSelector(object):
-    """
-    Subclasses of this class select members
-    that are capable of executing a special kind of task.
-    The select(Member) method is called for every available
-    member in the cluster and it is up to the implementation to decide
-    if the member is going to be used or not.
-    """
-
-    def select(self, member):
-        """
-        Decides if the given member will be part of an operation or not.
-
-        :param member: (:class:`~hazelcast.core.Member`), the member instance to decide upon.
-        :return: (bool), True if the member should take part in the operation, False otherwise.
-        """
-        raise NotImplementedError()
-
-
-class DataMemberSelector(MemberSelector):
-    def select(self, member):
-        return not member.is_lite_member
-
-
 class HazelcastJsonValue(object):
-    """
-    HazelcastJsonValue is a wrapper for JSON formatted strings. It is preferred
-    to store HazelcastJsonValue instead of Strings for JSON formatted strings.
+    """HazelcastJsonValue is a wrapper for JSON formatted strings.
+
+    It is preferred to store HazelcastJsonValue instead of Strings for JSON formatted strings.
     Users can run predicates and use indexes on the attributes of the underlying
     JSON strings.
-
+    
     HazelcastJsonValue is queried using Hazelcast's querying language.
     See `Distributed Query section <https://github.com/hazelcast/hazelcast-python-client#77-distributed-query>`_.
-
+    
     In terms of querying, numbers in JSON strings are treated as either
     Long or Double in the Java side. str, bool and None
     are treated as String, boolean and null respectively.
-
+    
     HazelcastJsonValue keeps given string as it is. Strings are not
     checked for being valid. Ill-formatted JSON strings may cause false
     positive or false negative results in queries.
-
+    
     HazelcastJsonValue can also be constructed from JSON serializable objects.
     In that case, objects are converted to JSON strings and stored as such.
     If an error occurs during the conversion, it is raised directly.
-
+    
     None values are not allowed.
     """
 
@@ -285,19 +289,19 @@ class HazelcastJsonValue(object):
             self._json_string = json.dumps(value)
 
     def to_string(self):
-        """
-        Returns unaltered string that was used to create this object.
-
-        :return: (str), original string
+        """Returns unaltered string that was used to create this object.
+        
+        Returns:
+            str: The original string.
         """
         return self._json_string
 
     def loads(self):
-        """
-        Deserializes the string that was used to create this object
+        """Deserializes the string that was used to create this object
         and returns as Python object.
-
-        :return: (object), Python object represented by the original string
+        
+        Returns:
+            any: The Python object represented by the original string.
         """
         return json.loads(self._json_string)
 
@@ -309,6 +313,10 @@ class HazelcastJsonValue(object):
 
 
 class MemberVersion(object):
+    """
+    Determines the Hazelcast codebase version in terms of major.minor.patch version.
+    """
+
     __slots__ = ("major", "minor", "patch")
 
     def __init__(self, major, minor, patch):
