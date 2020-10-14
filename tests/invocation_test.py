@@ -4,11 +4,10 @@ import unittest
 from mock import MagicMock
 
 import hazelcast
-from hazelcast import HazelcastClient
 from hazelcast.config import _Config
 from hazelcast.errors import HazelcastTimeoutError, IndeterminateOperationStateError
 from hazelcast.invocation import Invocation, InvocationService
-from hazelcast.protocol.client_message import OutboundMessage, InboundMessage
+from hazelcast.protocol.client_message import OutboundMessage
 from hazelcast.serialization import LE_INT
 from tests.base import HazelcastTestCase
 
@@ -54,7 +53,7 @@ class InvocationTest(unittest.TestCase):
 
     def test_notify_with_no_expected_backups(self):
         _, service = self._start_service()
-        response = MagicMock(InboundMessage)()
+        response = MagicMock()
         response.get_number_of_backup_acks = MagicMock(return_value=0)
         invocation = MagicMock(backup_acks_received=0)
         service._notify(invocation, response)
@@ -133,9 +132,7 @@ class InvocationTest(unittest.TestCase):
         self.assertIsInstance(invocation.set_exception.call_args[0][0], IndeterminateOperationStateError)
 
     def _start_service(self, config=_Config()):
-        client_cls = MagicMock(HazelcastClient, config=config)
-        c = client_cls()
-        c.config = config
+        c = MagicMock(config=config)
         invocation_service = InvocationService(c, c._reactor, None)
         self.service = invocation_service
         invocation_service.init(c._internal_partition_service, c._connection_manager, c._listener_service)
