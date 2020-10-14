@@ -298,7 +298,7 @@ class HazelcastClient(object):
         self._invocation_service = InvocationService(self, self._reactor, self._logger_extras)
         self._address_provider = self._create_address_provider()
         self._internal_partition_service = _InternalPartitionService(self, self._logger_extras)
-        self.partition_service = PartitionService(self._internal_partition_service)
+        self.partition_service = PartitionService(self._internal_partition_service, self._serialization_service)
         self._internal_cluster_service = _InternalClusterService(self, self._logger_extras)
         self.cluster_service = ClusterService(self._internal_cluster_service)
         self._connection_manager = ConnectionManager(self, self._reactor, self._address_provider,

@@ -2,6 +2,7 @@ import logging
 
 from hazelcast.errors import ClientOfflineError
 from hazelcast.hash import hash_to_index
+from hazelcast.serialization.data import Data
 
 
 class _PartitionTable(object):
@@ -21,8 +22,9 @@ class PartitionService(object):
     Allows to retrieve information about the partition count, the partition owner or the partitionId of a key.
     """
 
-    def __init__(self, internal_partition_service):
+    def __init__(self, internal_partition_service, serialization_service):
         self._service = internal_partition_service
+        self._serialization_service = serialization_service
 
     def get_partition_owner(self, partition_id):
         """
@@ -36,16 +38,17 @@ class PartitionService(object):
         """
         return self._service.get_partition_owner(partition_id)
 
-    def get_partition_id(self, key_data):
+    def get_partition_id(self, key):
         """
         Returns the partition id for a key data.
 
         Args:
-            key_data (hazelcast.serialization.data.Data): The key data.
+            key: The given key.
 
         Returns:
             int: The partition id.
         """
+        key_data = self._serialization_service.to_data(key)
         return self._service.get_partition_id(key_data)
 
     def get_partition_count(self):
