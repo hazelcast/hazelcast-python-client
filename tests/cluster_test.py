@@ -1,8 +1,11 @@
+import os
+import tempfile
 import unittest
 
 from hazelcast import HazelcastClient, six
 from hazelcast.util import RandomLB, RoundRobinLB
 from tests.base import HazelcastTestCase
+from tests.util import set_attr, random_string, event_collector
 
 
 class ClusterTest(HazelcastTestCase):
@@ -206,3 +209,62 @@ class LoadBalancersWithRealClusterTest(HazelcastTestCase):
             self.assertEqual(self.addresses[i % len(self.addresses)], lb.next().address)
 
         client.shutdown()
+
+
+@set_attr(enterprise=True)
+class HotRestartEventTest(HazelcastTestCase):
+    @classmethod
+    def setUpClass(cls):
+        tmp_dir = tempfile.gettempdir()
+        cls.tmp_dir = os.path.join(tmp_dir, "hr-test-" + random_string())
+
+    def setUp(self):
+        self.rc = self.create_rc()
+        self.cluster = self.create_cluster_keep_cluster_name(self.rc, self._get_config(5701))
+        self.client = None
+
+    def tearDown(self):
+        if self.client:
+            self.client.shutdown()
+
+        self.rc.terminateCluster(self.cluster.id)
+        self.rc.exit()
+
+    def test_when_member_started_with_another_port_and_the_same_uuid(self):
+        member = self.cluster.start_member()
+        self.client = HazelcastClient(cluster_name=self.cluster.id)
+
+        added_listener = event_collector()
+        removed_listener = event_collector()
+
+        self.client.cluster_service.add_listener(member_added=added_listener, member_removed=removed_listener)
+
+        self.rc.shutdownCluster(self.cluster.id)
+        # now stop cluster, restart it with the same name and then start member with port 5702
+        self.cluster = self.create_cluster_keep_cluster_name(self.rc, self._get_config(5702))
+        self.cluster.start_member()
+
+        def assertion():
+            self.assertEqual(1, len(added_listener.events))
+            self.assertEqual(1, len(removed_listener.events))
+
+        self.assertTrueEventually(assertion)
+
+        members = self.client.cluster_service.get_members()
+        self.assertEqual(1, len(members))
+        self.assertEqual(member.uuid, str(members[0].uuid))
+
+    def _get_config(self, port):
+        return """
+        <hazelcast xmlns="http://www.hazelcast.com/schema/config"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://www.hazelcast.com/schema/config
+            http://www.hazelcast.com/schema/config/hazelcast-config-4.0.xsd">
+            <cluster-name>hot-restart-test</cluster-name>
+            <network>
+               <port>%s</port>
+            </network>
+            <hot-restart-persistence enabled="true">
+                <base-dir>%s</base-dir>
+            </hot-restart-persistence>
+        </hazelcast>""" % (port, self.tmp_dir)
