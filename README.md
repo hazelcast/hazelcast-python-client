@@ -31,6 +31,7 @@
   * [5.4. Setting Connection Timeout](#54-setting-connection-timeout)
   * [5.5. Enabling Client TLS/SSL](#55-enabling-client-tlsssl)
   * [5.6. Enabling Hazelcast Cloud Discovery](#56-enabling-hazelcast-cloud-discovery)
+  * [5.7. Configuring Backup Acknowledgment](#57-configuring-backup-acknowledgment)
 * [6. Client Connection Strategy](#6-client-connection-strategy)
   * [6.1. Configuring Client Connection Retry](#61-configuring-client-connection-retry)
 * [7. Using Python Client with Hazelcast IMDG](#7-using-python-client-with-hazelcast-imdg)
@@ -1055,6 +1056,33 @@ client = hazelcast.HazelcastClient(
 
 If you have enabled encryption for your cluster, you should also enable TLS/SSL configuration for the client to secure communication between your 
 client and cluster members as described in the [TLS/SSL for Hazelcast Python Client section](#812-tlsssl-for-hazelcast-python-clients).
+
+## 5.7. Configuring Backup Acknowledgment
+
+When an operation with sync backup is sent by a client to the Hazelcast member(s), the 
+acknowledgment of the operation's backup is sent to the client by the backup replica member(s). 
+This improves the performance of the client operations.
+
+To disable backup acknowledgement, you should use the `backup_ack_to_client_enabled` configuration option.
+
+```python
+client = hazelcast.HazelcastClient(
+    backup_ack_to_client_enabled=False,
+)
+```
+
+Its default value is `True`. This option has no effect for unisocket clients.
+
+You can also fine-tune this feature using the config options as described below:
+
+- `operation_backup_timeout`: Default value is `5` seconds. If an operation has
+backups, this property specifies how long the invocation waits for acks from the backup replicas. 
+If acks are not received from some of the backups, there will not be any rollback on the other successful replicas.
+
+- `fail_on_indeterminate_operation_state`: Default value is `False`. 
+When it is `True`, if an operation has sync backups and acks are not received from backup replicas in time, or the 
+member which owns primary replica of the target partition leaves the cluster, then the invocation fails. 
+However, even if the invocation fails, there will not be any rollback on other successful replicas.
 
 # 6. Client Connection Strategy
 

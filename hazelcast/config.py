@@ -458,7 +458,8 @@ class _Config(object):
                  "_labels", "_heartbeat_interval", "_heartbeat_timeout",
                  "_invocation_timeout", "_invocation_retry_pause", "_statistics_enabled",
                  "_statistics_period", "_shuffle_member_list", "_logging_config",
-                 "_logging_level")
+                 "_logging_level", "_backup_ack_to_client_enabled", "_operation_backup_timeout",
+                 "_fail_on_indeterminate_operation_state")
 
     def __init__(self):
         self._cluster_members = []
@@ -507,6 +508,9 @@ class _Config(object):
         self._shuffle_member_list = True
         self._logging_config = None
         self._logging_level = logging.INFO
+        self._backup_ack_to_client_enabled = True
+        self._operation_backup_timeout = 5.0
+        self._fail_on_indeterminate_operation_state = False
 
     @property
     def cluster_members(self):
@@ -1130,6 +1134,42 @@ class _Config(object):
             self._logging_level = value
         else:
             raise TypeError("logging_level must be a valid value")
+
+    @property
+    def backup_ack_to_client_enabled(self):
+        return self._backup_ack_to_client_enabled
+
+    @backup_ack_to_client_enabled.setter
+    def backup_ack_to_client_enabled(self, value):
+        if isinstance(value, bool):
+            self._backup_ack_to_client_enabled = value
+        else:
+            raise TypeError("backup_ack_to_client_enabled must be a boolean")
+
+    @property
+    def operation_backup_timeout(self):
+        return self._operation_backup_timeout
+
+    @operation_backup_timeout.setter
+    def operation_backup_timeout(self, value):
+        if isinstance(value, number_types):
+            if value > 0:
+                self._operation_backup_timeout = value
+            else:
+                raise ValueError("operation_backup_timeout must be positive")
+        else:
+            raise TypeError("operation_backup_timeout must be a number")
+
+    @property
+    def fail_on_indeterminate_operation_state(self):
+        return self._fail_on_indeterminate_operation_state
+
+    @fail_on_indeterminate_operation_state.setter
+    def fail_on_indeterminate_operation_state(self, value):
+        if isinstance(value, bool):
+            self._fail_on_indeterminate_operation_state = value
+        else:
+            raise TypeError("fail_on_indeterminate_operation_state must be a boolean")
 
     @classmethod
     def from_dict(cls, d):

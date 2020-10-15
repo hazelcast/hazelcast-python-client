@@ -384,6 +384,16 @@ class CombineFutureTest(unittest.TestCase):
 
         self.assertEqual(e, combined.exception())
 
+    def test_combine_futures_with_empty_list(self):
+        combined = combine_futures()
+        combined2 = combine_futures(*[])
+
+        self.assertTrue(combined.done())
+        self.assertTrue(combined2.done())
+
+        self.assertEqual([], combined.result())
+        self.assertEqual([], combined2.result())
+
 
 class MakeBlockingTest(unittest.TestCase):
     class Calculator(object):
