@@ -76,6 +76,7 @@
       * [7.7.1.2. Querying by Combining Predicates with AND, OR, NOT](#7712-querying-by-combining-predicates-with-and-or-not)
       * [7.7.1.3. Querying with SQL](#7713-querying-with-sql)
       * [7.7.1.4. Querying with JSON Strings](#7714-querying-with-json-strings)
+      * [7.7.1.5. Filtering with Paging Predicates](#7715-filtering-with-paging-predicates)
   * [7.8. Performance](#78-performance)
     * [7.8.1. Near Cache](#781-near-cache)
       * [7.8.1.1. Configuring Near Cache](#7811-configuring-near-cache)
@@ -2421,6 +2422,60 @@ You can configure this using `metadata-policy` element for the map configuration
     ...
 </hazelcast>
 ```
+
+#### 7.7.1.5 Filtering with Paging Predicates
+
+Hazelcast Python client provides paging for defined predicates. With its `PagingPredicate`, you can get a collection of keys, values, or entries page by page by filtering them with predicates and giving the size of the pages. 
+Also, you can sort the entries by specifying comparators. In this case, the comparator should be either `Portable` or `IdentifiedDataSerializable` 
+and the serialization factory implementations should be registered on the member side. Please note that,
+paging is done on the cluster members. Hence, client only sends a marker comparator to indicate members
+which comparator to use. The comparision logic must be defined on the member side by implementing the 
+`java.util.Comparator<Map.Entry>` interface.
+
+Paging predicates require the objects to be deserialized on the member side from which the collection is retrieved. 
+Therefore, you need to register the serialization factories you use on all the members on which the paging predicates are used.
+See the [Adding User Library to CLASSPATH](#1212-adding-user-library-to-classpath) section for more details.
+
+In the example code below:
+
+- The `is_greater_than_or_equal_to` predicate gets values from the `students` map. 
+This predicate has a filter to retrieve the objects with an `age` greater than or equal to `18`.
+
+- Then a `PagingPredicate` is constructed in which the page size is `5`, so that there are five objects in each page. 
+The first time the values are called creates the first page.
+
+- It gets subsequent pages with the `next_page()` method of `PagingPredicate` and querying the map again with the updated `PagingPredicate`.
+
+```python
+from hazelcast.serialization.predicate import paging, is_greater_than_or_equal_to
+
+...
+
+m = client.get_map("students").blocking()
+predicate = paging(is_greater_than_or_equal_to("age", 18), 5)
+
+# Retrieve the first page
+values = m.values(predicate)
+
+...
+
+# Set up next page
+predicate.next_page()
+
+# Retrieve next page
+values = m.values(predicate)
+```
+
+If a comparator is not specified for `PagingPredicate`, but you want to get a collection of keys or values page by page, 
+this collection must be an instance of `Comparable` (i.e., it must implement `java.lang.Comparable` on the member side). 
+Otherwise, paging fails with an exception from the server. Luckily, a lot of types implement the `Comparable`
+interface by [default](https://docs.oracle.com/javase/8/docs/api/java/lang/Comparable.html), including the primitive types,
+so, you may use values of types `int`, `float`, `str` etc. in paging without specifying a comparator on the Python client.
+
+You can also access a specific page more easily by setting the `predicate.page` attribute before making the remote call.
+This way, if you make a query for the hundredth page, for example, it gets all `100` pages at once instead of reaching the hundredth page one by one using the `next_page()` method. 
+
+`PagingPredicate`, also known as Order & Limit, is not supported in Transactional Context.
 
 ## 7.8. Performance
 

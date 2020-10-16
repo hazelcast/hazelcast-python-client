@@ -3,6 +3,7 @@ import itertools
 from hazelcast.config import IndexUtil, IndexType, IndexConfig
 from hazelcast.future import combine_futures, ImmediateFuture
 from hazelcast.invocation import Invocation
+from hazelcast.protocol import PagingPredicateHolder
 from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_entry_listener_to_key_codec, \
     map_add_entry_listener_with_predicate_codec, map_add_entry_listener_to_key_with_predicate_codec, \
     map_clear_codec, map_contains_key_codec, map_contains_value_codec, map_delete_codec, \
@@ -15,9 +16,11 @@ from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_entry
     map_try_put_codec, map_try_remove_codec, map_unlock_codec, map_values_codec, map_values_with_predicate_codec, \
     map_add_interceptor_codec, map_execute_on_all_keys_codec, map_execute_on_key_codec, map_execute_on_keys_codec, \
     map_execute_with_predicate_codec, map_add_near_cache_invalidation_listener_codec, map_add_index_codec, \
-    map_set_ttl_codec
+    map_set_ttl_codec, map_entries_with_paging_predicate_codec, map_key_set_with_paging_predicate_codec, \
+    map_values_with_paging_predicate_codec
 from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType, get_entry_listener_flags, MAX_SIZE
-from hazelcast.util import check_not_none, thread_id, to_millis, ImmutableLazyDataList
+from hazelcast.serialization.predicate import PagingPredicate
+from hazelcast.util import check_not_none, thread_id, to_millis, ImmutableLazyDataList, IterationType
 from hazelcast import six
 
 
@@ -277,16 +280,32 @@ class Map(Proxy):
             hazelcast.future.Future[list]: The list of key-value tuples in the map.
         """
         if predicate:
-            def handler(message):
-                return ImmutableLazyDataList(map_entries_with_predicate_codec.decode_response(message), self._to_object)
+            if isinstance(predicate, PagingPredicate):
+                codec = map_entries_with_paging_predicate_codec
 
-            predicate_data = self._to_data(predicate)
-            request = map_entries_with_predicate_codec.encode_request(self.name, predicate_data)
+                def handler(message):
+                    response = codec.decode_response(message)
+                    predicate.anchor_list = response["anchor_data_list"].as_anchor_list(self._to_object)
+                    return ImmutableLazyDataList(response["response"], self._to_object)
+
+                predicate.iteration_type = IterationType.ENTRY
+                holder = PagingPredicateHolder.of(predicate, self._to_data)
+                request = codec.encode_request(self.name, holder)
+            else:
+                codec = map_entries_with_predicate_codec
+
+                def handler(message):
+                    return ImmutableLazyDataList(codec.decode_response(message), self._to_object)
+
+                predicate_data = self._to_data(predicate)
+                request = codec.encode_request(self.name, predicate_data)
         else:
-            def handler(message):
-                return ImmutableLazyDataList(map_entry_set_codec.decode_response(message), self._to_object)
+            codec = map_entry_set_codec
 
-            request = map_entry_set_codec.encode_request(self.name)
+            def handler(message):
+                return ImmutableLazyDataList(codec.decode_response(message), self._to_object)
+
+            request = codec.encode_request(self.name)
 
         return self._invoke(request, handler)
 
@@ -563,16 +582,32 @@ class Map(Proxy):
             hazelcast.future.Future[list]: A list of the clone of the keys.
         """
         if predicate:
-            def handler(message):
-                return ImmutableLazyDataList(map_key_set_with_predicate_codec.decode_response(message), self._to_object)
+            if isinstance(predicate, PagingPredicate):
+                codec = map_key_set_with_paging_predicate_codec
 
-            predicate_data = self._to_data(predicate)
-            request = map_key_set_with_predicate_codec.encode_request(self.name, predicate_data)
+                def handler(message):
+                    response = codec.decode_response(message)
+                    predicate.anchor_list = response["anchor_data_list"].as_anchor_list(self._to_object)
+                    return ImmutableLazyDataList(response["response"], self._to_object)
+
+                predicate.iteration_type = IterationType.KEY
+                holder = PagingPredicateHolder.of(predicate, self._to_data)
+                request = codec.encode_request(self.name, holder)
+            else:
+                codec = map_key_set_with_predicate_codec
+
+                def handler(message):
+                    return ImmutableLazyDataList(codec.decode_response(message), self._to_object)
+
+                predicate_data = self._to_data(predicate)
+                request = codec.encode_request(self.name, predicate_data)
         else:
-            def handler(message):
-                return ImmutableLazyDataList(map_key_set_codec.decode_response(message), self._to_object)
+            codec = map_key_set_codec
 
-            request = map_key_set_codec.encode_request(self.name)
+            def handler(message):
+                return ImmutableLazyDataList(codec.decode_response(message), self._to_object)
+
+            request = codec.encode_request(self.name)
 
         return self._invoke(request, handler)
 
@@ -1045,16 +1080,32 @@ class Map(Proxy):
             hazelcast.future.Future[list]: A list of clone of the values contained in this map.
         """
         if predicate:
-            def handler(message):
-                return ImmutableLazyDataList(map_values_with_predicate_codec.decode_response(message), self._to_object)
+            if isinstance(predicate, PagingPredicate):
+                codec = map_values_with_paging_predicate_codec
 
-            predicate_data = self._to_data(predicate)
-            request = map_values_with_predicate_codec.encode_request(self.name, predicate_data)
+                def handler(message):
+                    response = codec.decode_response(message)
+                    predicate.anchor_list = response["anchor_data_list"].as_anchor_list(self._to_object)
+                    return ImmutableLazyDataList(response["response"], self._to_object)
+
+                predicate.iteration_type = IterationType.VALUE
+                holder = PagingPredicateHolder.of(predicate, self._to_data)
+                request = codec.encode_request(self.name, holder)
+            else:
+                codec = map_values_with_predicate_codec
+
+                def handler(message):
+                    return ImmutableLazyDataList(codec.decode_response(message), self._to_object)
+
+                predicate_data = self._to_data(predicate)
+                request = codec.encode_request(self.name, predicate_data)
         else:
-            def handler(message):
-                return ImmutableLazyDataList(map_values_codec.decode_response(message), self._to_object)
+            codec = map_values_codec
 
-            request = map_values_codec.encode_request(self.name)
+            def handler(message):
+                return ImmutableLazyDataList(codec.decode_response(message), self._to_object)
+
+            request = codec.encode_request(self.name)
 
         return self._invoke(request, handler)
 

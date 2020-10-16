@@ -2,6 +2,7 @@
 import json
 
 from hazelcast import six
+from hazelcast.six.moves import range
 from hazelcast import util
 
 CLIENT_TYPE = "PYH"

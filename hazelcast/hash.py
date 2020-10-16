@@ -1,6 +1,7 @@
 import math
 from hazelcast.six.moves import range
 
+
 def _fmix(h):
     h ^= h >> 16
     h = (h * 0x85ebca6b) & 0xFFFFFFFF
