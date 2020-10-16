@@ -8,6 +8,7 @@ Hazelcast Python Client
     hazelcast.cluster
     hazelcast.config
     hazelcast.core
+    hazelcast.cp
     hazelcast.errors
     hazelcast.future
     hazelcast.lifecycle

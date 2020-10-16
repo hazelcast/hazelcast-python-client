@@ -140,7 +140,7 @@ class AtomicLong(BaseCPProxy):
         Notes:
             ``function`` must be an instance of ``IdentifiedDataSerializable`` or
             ``Portable`` that has a counterpart that implements the
-            `com.hazelcast.core.IFunction` interface registered on the server-side with
+            ``com.hazelcast.core.IFunction`` interface registered on the server-side with
             the actual implementation of the function to be applied.
 
         Args:
@@ -161,7 +161,7 @@ class AtomicLong(BaseCPProxy):
         Notes:
             ``function`` must be an instance of ``IdentifiedDataSerializable`` or
             ``Portable`` that has a counterpart that implements the
-            `com.hazelcast.core.IFunction` interface registered on the server-side with
+            ``com.hazelcast.core.IFunction`` interface registered on the server-side with
             the actual implementation of the function to be applied.
 
         Args:
@@ -182,7 +182,7 @@ class AtomicLong(BaseCPProxy):
         Notes:
             ``function`` must be an instance of ``IdentifiedDataSerializable`` or
             ``Portable`` that has a counterpart that implements the
-            `com.hazelcast.core.IFunction` interface registered on the server-side with
+            ``com.hazelcast.core.IFunction`` interface registered on the server-side with
             the actual implementation of the function to be applied.
 
         Args:
@@ -203,7 +203,7 @@ class AtomicLong(BaseCPProxy):
         Notes:
             ``function`` must be an instance of ``IdentifiedDataSerializable`` or
             ``Portable`` that has a counterpart that implements the
-            `com.hazelcast.core.IFunction` interface registered on the server-side with
+            ``com.hazelcast.core.IFunction`` interface registered on the server-side with
             the actual implementation of the function to be applied.
 
         Args:
