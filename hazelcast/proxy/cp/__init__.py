@@ -20,12 +20,9 @@ class BaseCPProxy(object):
         self._to_object = serialization_service.to_object
 
     def destroy(self):
-        """Destroys this proxy.
-
-        Returns:
-            bool: ``True`` if this proxy is destroyed successfully, ``False`` otherwise.
-        """
-        request = cp_group_destroy_cp_object_codec.encode_request(self._group_id, self._service_name, self._object_name)
+        """Destroys this proxy."""
+        codec = cp_group_destroy_cp_object_codec
+        request = codec.encode_request(self._group_id, self._service_name, self._object_name)
         return self._invoke(request)
 
     def blocking(self):

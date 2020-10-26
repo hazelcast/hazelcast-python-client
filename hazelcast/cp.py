@@ -57,7 +57,7 @@ class CPSubsystem(object):
 _DEFAULT_GROUP_NAME = "default"
 
 
-def _with_default_group_name(name):
+def _without_default_group_name(name):
     name = name.strip()
     idx = name.find("@")
     if idx == -1:
@@ -90,7 +90,7 @@ class CPProxyManager(object):
         self._context = context
 
     def get_or_create(self, service_name, proxy_name):
-        proxy_name = _with_default_group_name(proxy_name)
+        proxy_name = _without_default_group_name(proxy_name)
         object_name = _get_object_name_for_proxy(proxy_name)
 
         group_id = self._get_group_id(proxy_name)
