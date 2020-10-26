@@ -191,8 +191,9 @@ class Queue(PartitionSpecificProxy):
         without violating capacity restrictions. 
         
         If there is no space currently available:
-            - If a timeout is provided, it waits until this timeout elapses and returns the result.
-            - If a timeout is not provided, returns ``False`` immediately.
+
+        - If a timeout is provided, it waits until this timeout elapses and returns the result.
+        - If a timeout is not provided, returns ``False`` immediately.
 
         Args:
             item: The item to be added.
@@ -222,8 +223,9 @@ class Queue(PartitionSpecificProxy):
         """Retrieves and removes the head of this queue.
         
         If this queue is empty:
-            - If a timeout is provided, it waits until this timeout elapses and returns the result.
-            - If a timeout is not provided, returns ``None``.
+
+        - If a timeout is provided, it waits until this timeout elapses and returns the result.
+        - If a timeout is not provided, returns ``None``.
 
         Args:
             timeout (int): Maximum time in seconds to wait for addition.

@@ -56,7 +56,8 @@
     * [7.4.11. Using Flake ID Generator](#7411-using-flake-id-generator)
         * [7.4.11.1. Configuring Flake ID Generator](#74111-configuring-flake-id-generator)
     * [7.4.12. CP Subsystem](#7412-cp-subsystem)
-        * [7.4.12.1. Using Atomic Long](#74121-using-atomic-long)
+        * [7.4.12.1. Using AtomicLong](#74121-using-atomiclong)
+        * [7.4.12.2. Using AtomicReference](#74122-using-atomicreference)
   * [7.5. Distributed Events](#75-distributed-events)
     * [7.5.1. Cluster Events](#751-cluster-events)
       * [7.5.1.1. Listening for Member Events](#7511-listening-for-member-events)
@@ -1579,7 +1580,7 @@ Hence, callers should cache returned proxy objects. Second, if you call `Distrib
 that data structure is terminated on the underlying CP group and cannot be reinitialized until the CP group is force-destroyed. 
 For this reason, please make sure that you are completely done with a CP data structure before destroying its proxy.
 
-#### 7.4.12.1. Using Atomic Long
+#### 7.4.12.1. Using AtomicLong
 
 Hazelcast `AtomicLong` is the distributed implementation of atomic 64-bit integer counter. 
 It offers various atomic operations such as `get`, `set`, `get_and_set`, `compare_and_set` and `increment_and_get`. 
@@ -1607,6 +1608,42 @@ print ('CAS operation result:', result)
 
 AtomicLong implementation does not offer exactly-once / effectively-once execution semantics. It goes with at-least-once execution semantics by default and can cause an API call to be committed multiple times in case of CP member failures. 
 It can be tuned to offer at-most-once execution semantics. Please see [`fail-on-indeterminate-operation-state`](https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#cp-subsystem-configuration) server-side setting.
+
+#### 7.4.12.2. Using AtomicReference
+
+Hazelcast `AtomicReference` is the distributed implementation of a linearizable object reference. 
+It provides a set of atomic operations allowing to modify the value behind the reference. 
+This data structure is a part of CP Subsystem.
+
+A basic AtomicReference usage example is shown below.
+
+```python
+# Get a AtomicReference called "my-ref"
+my_ref = client.cp_subsystem.get_atomic_reference("my-ref").blocking()
+# Set the value atomically
+my_ref.set(42)
+# Read the value
+value = my_ref.get()
+print("Value:", value)
+# Prints:
+# Value: 42
+
+# Try to replace the value with "value"
+# with a compare-and-set atomic operation
+result = my_ref.compare_and_set(42, "value")
+print("CAS result:", result)
+# Prints:
+# CAS result: True
+```
+
+The following are some considerations you need to know when you use AtomicReference:
+
+* AtomicReference works based on the byte-content and not on the object-reference. If you use the `compare_and_set()` method, do not change to the original value because its serialized content will then be different.
+* All methods returning an object return a private copy. You can modify the private copy, but the rest of the world is shielded from your changes. If you want these changes to be visible to the rest of the world, you need to write the change back to the AtomicReference; but be careful about introducing a data-race.
+* The in-memory format of an AtomicReference is `binary`. The receiving side does not need to have the class definition available unless it needs to be deserialized on the other side., e.g., because a method like `alter()` is executed. This deserialization is done for every call that needs to have the object instead of the binary content, so be careful with expensive object graphs that need to be deserialized.
+* If you have an object with many fields or an object graph and you only need to calculate some information or need a subset of fields, you can use the `apply()` method. With the `apply()` method, the whole object does not need to be sent over the line; only the information that is relevant is sent.
+
+AtomicReference does not offer exactly-once / effectively-once execution semantics. It goes with at-least-once execution semantics by default and can cause an API call to be committed multiple times in case of CP member failures. It can be tuned to offer at-most-once execution semantics. Please see [`fail-on-indeterminate-operation-state`](https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#cp-subsystem-configuration) server-side setting.
 
 
 ## 7.5. Distributed Events

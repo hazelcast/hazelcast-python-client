@@ -1,18 +1,23 @@
+import unittest
+
+from mock import MagicMock
+
 from hazelcast.errors import DistributedObjectDestroyedError
+from hazelcast.proxy.cp.atomic_long import AtomicLong
 from hazelcast.serialization.api import IdentifiedDataSerializable
 from tests.proxy.cp import CPTestCase
 from tests.util import set_attr
 
 
 class Multiplication(IdentifiedDataSerializable):
-    def __init__(self, multiplier=None):
+    def __init__(self, multiplier):
         self.multiplier = multiplier
 
     def write_data(self, object_data_output):
         object_data_output.write_long(self.multiplier)
 
     def read_data(self, object_data_input):
-        self.multiplier = object_data_input.read_long()
+        pass
 
     def get_factory_id(self):
         return 66
@@ -133,3 +138,43 @@ class AtomicLongTest(CPTestCase):
         self.atomic_long.set(42)
         self.assertEqual(84, self.atomic_long.apply(Multiplication(2)))
         self.assertEqual(42, self.atomic_long.get())
+
+
+class AtomicLongInvalidInputTest(unittest.TestCase):
+    def setUp(self):
+        self.atomic_long = AtomicLong(MagicMock(), None, None, None, None)
+
+    def test_add_and_get(self):
+        self._check_error("add_and_get", "1")
+
+    def test_compare_and_set(self):
+        invalid_inputs = [("a", 1), (1, "b"), ("c", "d")]
+        for e, u in invalid_inputs:
+            self._check_error("compare_and_set", e, u)
+
+    def test_get_and_add(self):
+        self._check_error("get_and_add", None)
+
+    def test_get_and_set(self):
+        self._check_error("get_and_set", 1.1)
+
+    def test_set(self):
+        self._check_error("set", "a")
+
+    def test_alter(self):
+        self._check_error("alter", None)
+
+    def test_alter_and_get(self):
+        self._check_error("alter_and_get", None)
+
+    def test_get_and_alter(self):
+        self._check_error("get_and_alter", None)
+
+    def test_apply(self):
+        self._check_error("apply", None)
+
+    def _check_error(self, method_name, *args):
+        fn = getattr(self.atomic_long, method_name)
+        self.assertTrue(callable(fn))
+        with self.assertRaises(AssertionError):
+            fn(*args)
