@@ -4,6 +4,7 @@ Hazelcast Proxies
 .. toctree::
 
    hazelcast.proxy.base
+   hazelcast.proxy.cp
    hazelcast.proxy.executor
    hazelcast.proxy.flake_id_generator
    hazelcast.proxy.list
