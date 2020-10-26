@@ -2,7 +2,7 @@ from hazelcast.protocol.codec import atomic_long_add_and_get_codec, atomic_long_
     atomic_long_get_codec, atomic_long_get_and_add_codec, atomic_long_get_and_set_codec, atomic_long_alter_codec, \
     atomic_long_apply_codec
 from hazelcast.proxy.cp import BaseCPProxy
-from hazelcast.util import check_not_none
+from hazelcast.util import check_not_none, check_is_int
 
 
 class AtomicLong(BaseCPProxy):
@@ -32,6 +32,7 @@ class AtomicLong(BaseCPProxy):
             hazelcast.future.Future[int]: The updated value, the given value added
                 to the current value
         """
+        check_is_int(delta)
         codec = atomic_long_add_and_get_codec
         request = codec.encode_request(self._group_id, self._object_name, delta)
         return self._invoke(request, codec.decode_response)
@@ -48,6 +49,8 @@ class AtomicLong(BaseCPProxy):
             hazelcast.future.Future[bool]: ``True`` if successful; or ``False`` if
                 the actual value was not equal to the expected value.
         """
+        check_is_int(expect)
+        check_is_int(update)
         codec = atomic_long_compare_and_set_codec
         request = codec.encode_request(self._group_id, self._object_name, expect, update)
         return self._invoke(request, codec.decode_response)
@@ -88,6 +91,7 @@ class AtomicLong(BaseCPProxy):
         Returns:
             hazelcast.future.Future[int]: The old value before the add.
         """
+        check_is_int(delta)
         codec = atomic_long_get_and_add_codec
         request = codec.encode_request(self._group_id, self._object_name, delta)
         return self._invoke(request, codec.decode_response)
@@ -101,6 +105,7 @@ class AtomicLong(BaseCPProxy):
         Returns:
             hazelcast.future.Future[int]: The old value.
         """
+        check_is_int(new_value)
         codec = atomic_long_get_and_set_codec
         request = codec.encode_request(self._group_id, self._object_name, new_value)
         return self._invoke(request, codec.decode_response)
@@ -131,6 +136,7 @@ class AtomicLong(BaseCPProxy):
         Returns:
             hazelcast.future.Future[None]:
         """
+        check_is_int(new_value)
         codec = atomic_long_get_and_set_codec
         request = codec.encode_request(self._group_id, self._object_name, new_value)
         return self._invoke(request)
@@ -177,6 +183,7 @@ class AtomicLong(BaseCPProxy):
         Returns:
             hazelcast.future.Future[int]: The new value.
         """
+        check_not_none(function, "Function cannot be None")
         function_data = self._to_data(function)
         codec = atomic_long_alter_codec
         # 1 means return the new value.

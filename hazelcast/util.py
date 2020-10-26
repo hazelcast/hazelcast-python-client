@@ -34,6 +34,11 @@ def check_not_empty(collection, message):
         raise AssertionError(message)
 
 
+def check_is_int(val):
+    if not isinstance(val, six.integer_types):
+        raise AssertionError("Int value expected")
+
+
 def current_time():
     return time.time()
 
