@@ -34,6 +34,11 @@ def check_not_empty(collection, message):
         raise AssertionError(message)
 
 
+def check_is_number(val):
+    if not isinstance(val, number_types):
+        raise AssertionError("Number value expected")
+
+
 def check_is_int(val):
     if not isinstance(val, six.integer_types):
         raise AssertionError("Int value expected")

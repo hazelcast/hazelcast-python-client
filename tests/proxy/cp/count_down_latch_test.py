@@ -1,8 +1,12 @@
 import time
+import unittest
 from threading import Thread
+
+from mock import MagicMock
 
 from hazelcast.errors import DistributedObjectDestroyedError, OperationTimeoutError
 from hazelcast.future import ImmediateExceptionFuture
+from hazelcast.proxy.cp.count_down_latch import CountDownLatch
 from hazelcast.util import AtomicInteger
 from tests.proxy.cp import CPTestCase
 from tests.util import random_string
@@ -123,18 +127,6 @@ class CountDownLatchTest(CPTestCase):
         latch.try_set_count(10)
         self.assertEqual(10, latch.get_count())
 
-    def test_try_set_count_with_negative_count(self):
-        latch = self._get_latch()
-
-        with self.assertRaises(AssertionError):
-            latch.try_set_count(-1)
-
-    def test_try_set_count_with_zero(self):
-        latch = self._get_latch()
-
-        with self.assertRaises(AssertionError):
-            latch.try_set_count(0)
-
     def test_try_set_count(self):
         latch = self._get_latch()
         self.assertTrue(latch.try_set_count(3))
@@ -151,3 +143,26 @@ class CountDownLatchTest(CPTestCase):
         if initial_count is not None:
             self.assertTrue(latch.try_set_count(initial_count))
         return latch
+
+
+class CountDownLatchInvalidInputTest(unittest.TestCase):
+    def setUp(self):
+        self.latch = CountDownLatch(MagicMock(), None, None, None, None)
+
+    def test_await_latch(self):
+        self._check_error("await_latch", "a")
+
+    def test_try_set_count(self):
+        self._check_error("try_set_count", 1.1)
+
+    def test_try_set_count_on_negative_input(self):
+        self._check_error("try_set_count", -1)
+
+    def test_try_set_count_on_zero(self):
+        self._check_error("try_set_count", 0)
+
+    def _check_error(self, method_name, *args):
+        fn = getattr(self.latch, method_name)
+        self.assertTrue(callable(fn))
+        with self.assertRaises(AssertionError):
+            fn(*args)

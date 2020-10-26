@@ -4,7 +4,7 @@ from hazelcast.errors import OperationTimeoutError
 from hazelcast.protocol.codec import count_down_latch_await_codec, count_down_latch_get_round_codec, \
     count_down_latch_count_down_codec, count_down_latch_get_count_codec, count_down_latch_try_set_count_codec
 from hazelcast.proxy.cp import BaseCPProxy
-from hazelcast.util import to_millis, check_true
+from hazelcast.util import to_millis, check_true, check_is_number, check_is_int
 
 
 class CountDownLatch(BaseCPProxy):
@@ -60,6 +60,7 @@ class CountDownLatch(BaseCPProxy):
         Raises:
             IllegalStateError: If the Hazelcast instance was shut down while waiting.
         """
+        check_is_number(timeout)
         timeout = max(0, timeout)
         invocation_uuid = uuid.uuid4()
         codec = count_down_latch_await_codec
@@ -112,6 +113,7 @@ class CountDownLatch(BaseCPProxy):
             hazelcast.future.Future[bool]: ``True`` if the new count was set,
                 ``False`` if the current count is not zero.
         """
+        check_is_int(count)
         check_true(count > 0, "Count must be positive")
         codec = count_down_latch_try_set_count_codec
         request = codec.encode_request(self._group_id, self._object_name, count)
