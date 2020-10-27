@@ -8,7 +8,7 @@ from hazelcast.core import HazelcastJsonValue
 from hazelcast.config import IntType, _Config
 from hazelcast.errors import HazelcastSerializationError
 from hazelcast.serialization import BE_INT, MAX_BYTE, MAX_SHORT, MAX_INT, MAX_LONG
-from hazelcast.serialization.predicate import *
+from hazelcast.predicate import *
 from hazelcast.serialization.service import SerializationServiceV1
 from tests.base import SingleMemberTestCase
 from tests.hzrc.ttypes import Lang
@@ -86,20 +86,20 @@ class SerializersTest(unittest.TestCase):
     def test_predicates(self):
         self.validate_predicate(sql("test"))
         self.validate_predicate(and_(true(), true()))
-        self.validate_predicate(is_between("this", 0, 1))
-        self.validate_predicate(is_equal_to("this", 10))
-        self.validate_predicate(is_greater_than("this", 10))
-        self.validate_predicate(is_greater_than_or_equal_to("this", 10))
-        self.validate_predicate(is_less_than("this", 10))
-        self.validate_predicate(is_less_than_or_equal_to("this", 10))
-        self.validate_predicate(is_like("this", "*"))
-        self.validate_predicate(is_ilike("this", "*"))
-        self.validate_predicate(is_in("this", 10, 11, 12))
-        self.validate_predicate(is_instance_of("java.lang.Serializable"))
-        self.validate_predicate(is_not_equal_to("this", 10))
+        self.validate_predicate(between("this", 0, 1))
+        self.validate_predicate(equal("this", 10))
+        self.validate_predicate(greater_than("this", 10))
+        self.validate_predicate(greater_equal("this", 10))
+        self.validate_predicate(less_than("this", 10))
+        self.validate_predicate(less_equal("this", 10))
+        self.validate_predicate(like("this", "*"))
+        self.validate_predicate(ilike("this", "*"))
+        self.validate_predicate(in_("this", 10, 11, 12))
+        self.validate_predicate(instance_of("java.lang.Serializable"))
+        self.validate_predicate(not_equal("this", 10))
         self.validate_predicate(not_(true()))
         self.validate_predicate(or_(true(), true()))
-        self.validate_predicate(matches_regex("this", "/abc/"))
+        self.validate_predicate(regex("this", "/abc/"))
         self.validate_predicate(true())
         self.validate_predicate(false())
 

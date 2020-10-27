@@ -1,7 +1,7 @@
 import time
 
 from hazelcast.proxy.base import EntryEventType
-from hazelcast.serialization.predicate import SqlPredicate
+from hazelcast.predicate import sql
 from tests.base import SingleMemberTestCase
 from tests.util import random_string, event_collector
 from hazelcast import six
@@ -86,7 +86,7 @@ class ReplicatedMapTest(SingleMemberTestCase):
 
     def test_add_entry_listener_with_predicate(self):
         collector = event_collector()
-        self.replicated_map.add_entry_listener(predicate=SqlPredicate("this == value1"), added_func=collector)
+        self.replicated_map.add_entry_listener(predicate=sql("this == value1"), added_func=collector)
         self.replicated_map.put('key2', 'value2')
         self.replicated_map.put('key1', 'value1')
 
@@ -99,7 +99,7 @@ class ReplicatedMapTest(SingleMemberTestCase):
 
     def test_add_entry_listener_with_key_and_predicate(self):
         collector = event_collector()
-        self.replicated_map.add_entry_listener(key='key1', predicate=SqlPredicate("this == value3"), added_func=collector)
+        self.replicated_map.add_entry_listener(key='key1', predicate=sql("this == value3"), added_func=collector)
         self.replicated_map.put('key2', 'value2')
         self.replicated_map.put('key1', 'value1')
         self.replicated_map.remove('key1')

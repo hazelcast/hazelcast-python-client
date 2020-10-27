@@ -1,6 +1,6 @@
 import hazelcast
 
-from hazelcast.serialization.predicate import is_between
+from hazelcast.predicate import between
 
 client = hazelcast.HazelcastClient()
 
@@ -8,7 +8,7 @@ predicate_map = client.get_map("predicate-map").blocking()
 for i in range(10):
     predicate_map.put("key" + str(i), i)
 
-predicate = is_between("this", 3, 5)
+predicate = between("this", 3, 5)
 
 entry_set = predicate_map.entry_set(predicate)
 

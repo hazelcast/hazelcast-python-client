@@ -280,7 +280,7 @@ class TransactionalMap(TransactionalProxy):
         """Transactional implementation of :func:`Map.key_set(predicate) <hazelcast.proxy.map.Map.key_set>`
 
         Args:
-            predicate (hazelcast.serialization.predicate.Predicate): Predicate to filter the entries.
+            predicate (hazelcast.predicate.Predicate): Predicate to filter the entries.
 
         Returns:
             hazelcast.future.Future[list]: A list of the clone of the keys.
@@ -305,7 +305,7 @@ class TransactionalMap(TransactionalProxy):
         """Transactional implementation of :func:`Map.values(predicate) <hazelcast.proxy.map.Map.values>`
 
         Args:
-            predicate (hazelcast.serialization.predicate.Predicate): Predicate to filter the entries.
+            predicate (hazelcast.predicate.Predicate): Predicate to filter the entries.
 
         Returns:
             hazelcast.future.Future[list]: A list of clone of the values contained in this map.

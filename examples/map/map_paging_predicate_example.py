@@ -1,6 +1,6 @@
 import hazelcast
 from hazelcast.serialization.api import IdentifiedDataSerializable
-from hazelcast.serialization.predicate import paging, true
+from hazelcast.predicate import paging, true
 
 client = hazelcast.HazelcastClient()
 

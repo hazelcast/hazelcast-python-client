@@ -1,7 +1,7 @@
 import json
 
 from hazelcast.core import HazelcastJsonValue
-from hazelcast.serialization.predicate import is_greater_than, is_equal_to
+from hazelcast.predicate import greater_than, equal
 from tests.base import SingleMemberTestCase
 from unittest import TestCase
 
@@ -77,7 +77,7 @@ class HazelcastJsonValueWithMapTest(SingleMemberTestCase):
         self.map.put(json_value, 1)
         self.map.put(json_value2, 2)
 
-        results = self.map.key_set(is_greater_than("__key.a", 2))
+        results = self.map.key_set(greater_than("__key.a", 2))
 
         self.assertEqual(1, len(results))
         self.assertEqual(json_value2.to_string(), results[0].to_string())
@@ -89,7 +89,7 @@ class HazelcastJsonValueWithMapTest(SingleMemberTestCase):
         self.map.put(json_value, 1)
         self.map.put(json_value2, 2)
 
-        results = self.map.key_set(is_equal_to("__key.b.c", "d"))
+        results = self.map.key_set(equal("__key.b.c", "d"))
 
         self.assertEqual(1, len(results))
         self.assertEqual(json_value.to_string(), results[0].to_string())
@@ -101,7 +101,7 @@ class HazelcastJsonValueWithMapTest(SingleMemberTestCase):
         self.map.put(1, json_value)
         self.map.put(2, json_value2)
 
-        results = self.map.values(is_greater_than("a", 2))
+        results = self.map.values(greater_than("a", 2))
 
         self.assertEqual(1, len(results))
         self.assertEqual(json_value2.to_string(), results[0].to_string())
@@ -113,7 +113,7 @@ class HazelcastJsonValueWithMapTest(SingleMemberTestCase):
         self.map.put(1, json_value)
         self.map.put(2, json_value2)
 
-        results = self.map.values(is_equal_to("b.c", "d"))
+        results = self.map.values(equal("b.c", "d"))
 
         self.assertEqual(1, len(results))
         self.assertEqual(json_value.to_string(), results[0].to_string())

@@ -34,7 +34,7 @@ class ReplicatedMap(Proxy):
 
         Args:
             key: Key for filtering the events.
-            predicate (hazelcast.serialization.predicate.Predicate): Predicate for filtering the events.
+            predicate (hazelcast.predicate.Predicate): Predicate for filtering the events.
             added_func (function): Function to be called when an entry is added to map.
             removed_func (function): Function to be called when an entry is removed from map.
             updated_func (function): Function to be called when an entry is updated.

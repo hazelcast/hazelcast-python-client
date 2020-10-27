@@ -1,7 +1,7 @@
 import hazelcast
 
 from hazelcast.core import HazelcastJsonValue
-from hazelcast.serialization.predicate import and_, is_greater_than, sql
+from hazelcast.predicate import and_, greater_than, sql
 
 client = hazelcast.HazelcastClient()
 employees_map = client.get_map("employees").blocking()
@@ -18,7 +18,7 @@ employees_map.put(1, HazelcastJsonValue(andy))
 employees_map.put(2, HazelcastJsonValue(bob))
 
 # Employees whose name starts with 'A' and age is greater than 30
-predicate = and_(sql("name like A%"), is_greater_than("age", 30))
+predicate = and_(sql("name like A%"), greater_than("age", 30))
 
 values = employees_map.values(predicate)
 

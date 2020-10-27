@@ -1,9 +1,9 @@
 import os
 from unittest import TestCase
 
-from hazelcast.serialization.predicate import is_equal_to, and_, is_between, is_less_than, \
-    is_less_than_or_equal_to, is_greater_than, is_greater_than_or_equal_to, or_, is_not_equal_to, not_, is_like, \
-    is_ilike, matches_regex, sql, true, false, is_in, is_instance_of, paging
+from hazelcast.predicate import equal, and_, between, less_than, \
+    less_equal, greater_than, greater_equal, or_, not_equal, not_, like, \
+    ilike, regex, sql, true, false, in_, instance_of, paging
 from hazelcast.serialization.api import Portable, IdentifiedDataSerializable
 from hazelcast.util import IterationType
 from tests.base import SingleMemberTestCase, HazelcastTestCase
@@ -19,54 +19,54 @@ class PredicateStrTest(TestCase):
         self.assertEqual(str(predicate), "SqlPredicate(sql='this == 'value-1'')")
 
     def test_and(self):
-        predicate = and_(is_equal_to("this", "value-1"), is_equal_to("this", "value-2"))
+        predicate = and_(equal("this", "value-1"), equal("this", "value-2"))
         self.assertEqual(str(predicate), "AndPredicate(EqualPredicate(attribute='this', value=value-1),"
                                          " EqualPredicate(attribute='this', value=value-2))")
 
     def test_between(self):
-        predicate = is_between("this", 1, 20)
+        predicate = between("this", 1, 20)
         self.assertEqual(str(predicate), "BetweenPredicate(attribute='this', from=1, to=20)")
 
     def test_equal_str(self):
-        predicate = is_equal_to("this", "value-1")
+        predicate = equal("this", "value-1")
         self.assertEqual(str(predicate), "EqualPredicate(attribute='this', value=value-1)")
 
     def test_greater_less(self):
-        predicate = is_less_than_or_equal_to("this", 10)
+        predicate = less_equal("this", 10)
         self.assertEqual(str(predicate),
                          "GreaterLessPredicate(attribute='this', value=10, is_equal=True, is_less=True)")
 
     def test_like(self):
-        predicate = is_like("this", "a%")
+        predicate = like("this", "a%")
         self.assertEqual(str(predicate), "LikePredicate(attribute='this', expression='a%')")
 
     def test_ilike(self):
-        predicate = is_ilike("this", "a%")
+        predicate = ilike("this", "a%")
         self.assertEqual(str(predicate), "ILikePredicate(attribute='this', expression='a%')")
 
     def test_in(self):
-        predicate = is_in("this", 1, 5, 7)
+        predicate = in_("this", 1, 5, 7)
         self.assertEqual(str(predicate), "InPredicate(attribute='this', 1,5,7)")
 
     def test_instance_of(self):
-        predicate = is_instance_of("java.lang.Boolean")
+        predicate = instance_of("java.lang.Boolean")
         self.assertEqual(str(predicate), "InstanceOfPredicate(class_name='java.lang.Boolean')")
 
     def test_not_equal(self):
-        predicate = is_not_equal_to("this", "value-1")
+        predicate = not_equal("this", "value-1")
         self.assertEqual(str(predicate), "NotEqualPredicate(attribute='this', value=value-1)")
 
     def test_not(self):
-        predicate = not_(is_equal_to("this", "value-1"))
+        predicate = not_(equal("this", "value-1"))
         self.assertEqual(str(predicate), "NotPredicate(predicate=EqualPredicate(attribute='this', value=value-1))")
 
     def test_or(self):
-        predicate = or_(is_equal_to("this", "value-1"), is_equal_to("this", "value-2"))
+        predicate = or_(equal("this", "value-1"), equal("this", "value-2"))
         self.assertEqual(str(predicate), "OrPredicate(EqualPredicate(attribute='this', value=value-1),"
                                          " EqualPredicate(attribute='this', value=value-2))")
 
     def test_regex(self):
-        predicate = matches_regex("this", "c[ar].*")
+        predicate = regex("this", "c[ar].*")
         self.assertEqual(str(predicate), "RegexPredicate(attribute='this', pattern='c[ar].*')")
 
     def test_true(self):
@@ -117,60 +117,60 @@ class PredicateTest(SingleMemberTestCase):
 
     def test_and(self):
         self._fill_map()
-        predicate = and_(is_equal_to("this", "value-1"), is_equal_to("this", "value-2"))
+        predicate = and_(equal("this", "value-1"), equal("this", "value-2"))
         six.assertCountEqual(self, self.map.key_set(predicate), [])
 
     def test_or(self):
         self._fill_map()
-        predicate = or_(is_equal_to("this", "value-1"), is_equal_to("this", "value-2"))
+        predicate = or_(equal("this", "value-1"), equal("this", "value-2"))
         six.assertCountEqual(self, self.map.key_set(predicate), ["key-1", "key-2"])
 
     def test_not(self):
         self._fill_map(count=3)
-        predicate = not_(is_equal_to("this", "value-1"))
+        predicate = not_(equal("this", "value-1"))
         six.assertCountEqual(self, self.map.key_set(predicate), ["key-0", "key-2"])
 
     def test_between(self):
         self._fill_map_numeric()
 
-        predicate = is_between("this", 1, 20)
+        predicate = between("this", 1, 20)
         six.assertCountEqual(self, self.map.key_set(predicate), list(range(1, 21)))
 
     def test_equal(self):
         self._fill_map()
-        predicate = is_equal_to("this", "value-1")
+        predicate = equal("this", "value-1")
         six.assertCountEqual(self, self.map.key_set(predicate), ["key-1"])
 
     def test_not_equal(self):
         self._fill_map(count=3)
-        predicate = is_not_equal_to("this", "value-1")
+        predicate = not_equal("this", "value-1")
 
         six.assertCountEqual(self, self.map.key_set(predicate), ["key-0", "key-2"])
 
     def test_in(self):
         self._fill_map_numeric(count=10)
-        predicate = is_in("this", 1, 5, 7)
+        predicate = in_("this", 1, 5, 7)
 
         six.assertCountEqual(self, self.map.key_set(predicate), [1, 5, 7])
 
     def test_less_than(self):
         self._fill_map_numeric()
-        predicate = is_less_than("this", 10)
+        predicate = less_than("this", 10)
         six.assertCountEqual(self, self.map.key_set(predicate), list(range(0, 10)))
 
     def test_less_than_or_equal(self):
         self._fill_map_numeric()
-        predicate = is_less_than_or_equal_to("this", 10)
+        predicate = less_equal("this", 10)
         six.assertCountEqual(self, self.map.key_set(predicate), list(range(0, 11)))
 
     def test_greater_than(self):
         self._fill_map_numeric()
-        predicate = is_greater_than("this", 10)
+        predicate = greater_than("this", 10)
         six.assertCountEqual(self, self.map.key_set(predicate), list(range(11, 100)))
 
     def test_greater_than_or_equal(self):
         self._fill_map_numeric()
-        predicate = is_greater_than_or_equal_to("this", 10)
+        predicate = greater_equal("this", 10)
         six.assertCountEqual(self, self.map.key_set(predicate), list(range(10, 100)))
 
     def test_like(self):
@@ -179,7 +179,7 @@ class PredicateTest(SingleMemberTestCase):
         self.map.put("key-3", "aa_value")
         self.map.put("key-4", "AA_value")
 
-        predicate = is_like("this", "a%")
+        predicate = like("this", "a%")
 
         six.assertCountEqual(self, self.map.key_set(predicate), ["key-1", "key-3"])
 
@@ -188,7 +188,7 @@ class PredicateTest(SingleMemberTestCase):
         self.map.put("key-2", "b_value")
         self.map.put("key-3", "AA_value")
 
-        predicate = is_ilike("this", "a%")
+        predicate = ilike("this", "a%")
 
         six.assertCountEqual(self, self.map.key_set(predicate), ["key-1", "key-3"])
 
@@ -197,7 +197,7 @@ class PredicateTest(SingleMemberTestCase):
         self.map.put("key-2", "cry")
         self.map.put("key-3", "giraffe")
 
-        predicate = matches_regex("this", "c[ar].*")
+        predicate = regex("this", "c[ar].*")
 
         six.assertCountEqual(self, self.map.key_set(predicate), ["key-1", "key-2"])
 
@@ -206,7 +206,7 @@ class PredicateTest(SingleMemberTestCase):
         self.map.put("key-2", 5)
         self.map.put("key-3", "str")
 
-        predicate = is_instance_of("java.lang.Boolean")
+        predicate = instance_of("java.lang.Boolean")
 
         six.assertCountEqual(self, self.map.key_set(predicate), ["key-1"])
 
@@ -222,7 +222,7 @@ class PredicateTest(SingleMemberTestCase):
 
     def test_paging(self):
         self._fill_map_numeric()
-        predicate = paging(is_less_than("this", 4), 2)
+        predicate = paging(less_than("this", 4), 2)
         six.assertCountEqual(self, [0, 1], self.map.key_set(predicate))
         predicate.next_page()
         six.assertCountEqual(self, [2, 3], self.map.key_set(predicate))
@@ -339,7 +339,7 @@ class NestedPredicatePortableTest(SingleMemberTestCase):
         self.map.add_index(attributes=["limb.name"])
 
     def test_single_attribute_query_portable_predicates(self):
-        predicate = is_equal_to("limb.name", "hand")
+        predicate = equal("limb.name", "hand")
         values = self.map.values(predicate)
 
         self.assertEqual(1, len(values))
@@ -399,58 +399,63 @@ class PagingPredicateTest(HazelcastTestCase):
 
     def test_entry_set_with_paging_predicate(self):
         self.fill_map(3)
-        entry_set = self.map.entry_set(paging(is_greater_than_or_equal_to('this', 2), 1))
+        entry_set = self.map.entry_set(paging(greater_equal('this', 2), 1))
         self.assertEqual(len(entry_set), 1)
         self.assertEqual(entry_set[0], ('key-2', 2))
 
     def test_key_set_with_paging_predicate(self):
         self.fill_map(3)
-        key_set = self.map.key_set(paging(is_greater_than_or_equal_to('this', 2), 1))
+        key_set = self.map.key_set(paging(greater_equal('this', 2), 1))
         self.assertEqual(len(key_set), 1)
         self.assertEqual(key_set[0], 'key-2')
 
     def test_values_with_paging_predicate(self):
         self.fill_map(3)
-        values = self.map.values(paging(is_greater_than_or_equal_to('this', 2), 1))
+        values = self.map.values(paging(greater_equal('this', 2), 1))
         self.assertEqual(len(values), 1)
         self.assertEqual(values[0], 2)
 
+    def test_with_none_inner_predicate(self):
+        self.fill_map(3)
+        predicate = paging(None, 10)
+        self.assertEqual(self.map.values(predicate), [0, 1, 2])
+
     def test_first_page(self):
         self.fill_map()
-        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate = paging(greater_equal('this', 40), 2)
         self.assertEqual(self.map.values(predicate), [40, 41])
 
     def test_next_page(self):
         self.fill_map()
-        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate = paging(greater_equal('this', 40), 2)
         predicate.next_page()
         self.assertEqual(self.map.values(predicate), [42, 43])
 
     def test_set_page(self):
         self.fill_map()
-        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate = paging(greater_equal('this', 40), 2)
         predicate.page = 4
         self.assertEqual(self.map.values(predicate), [48, 49])
 
     def test_get_page(self):
-        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate = paging(greater_equal('this', 40), 2)
         predicate.page = 4
         self.assertEqual(predicate.page, 4)
 
     def test_page_size(self):
-        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate = paging(greater_equal('this', 40), 2)
         self.assertEqual(predicate.page_size, 2)
 
     def test_previous_page(self):
         self.fill_map()
-        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate = paging(greater_equal('this', 40), 2)
         predicate.page = 4
         predicate.previous_page()
         self.assertEqual(self.map.values(predicate), [46, 47])
 
     def test_get_4th_then_previous_page(self):
         self.fill_map()
-        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate = paging(greater_equal('this', 40), 2)
         predicate.page = 4
         self.map.values(predicate)
         predicate.previous_page()
@@ -458,7 +463,7 @@ class PagingPredicateTest(HazelcastTestCase):
 
     def test_get_3rd_then_next_page(self):
         self.fill_map()
-        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate = paging(greater_equal('this', 40), 2)
         predicate.page = 3
         self.map.values(predicate)
         predicate.next_page()
@@ -467,21 +472,21 @@ class PagingPredicateTest(HazelcastTestCase):
     def test_set_nonexistent_page(self):
         # Trying to get page 10, which is out of range, should return empty list.
         self.fill_map()
-        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate = paging(greater_equal('this', 40), 2)
         predicate.page = 10
         self.assertEqual(self.map.values(predicate), [])
 
     def test_nonexistent_previous_page(self):
         # Trying to get previous page while already at first page should return first page.
         self.fill_map()
-        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate = paging(greater_equal('this', 40), 2)
         predicate.previous_page()
         self.assertEqual(self.map.values(predicate), [40, 41])
 
     def test_nonexistent_next_page(self):
         # Trying to get next page while already at last page should return empty list.
         self.fill_map()
-        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate = paging(greater_equal('this', 40), 2)
         predicate.page = 4
         predicate.next_page()
         self.assertEqual(self.map.values(predicate), [])
@@ -489,13 +494,13 @@ class PagingPredicateTest(HazelcastTestCase):
     def test_get_half_full_last_page(self):
         # Page size set to 2, but last page only has 1 element.
         self.fill_map()
-        predicate = paging(is_greater_than_or_equal_to('this', 41), 2)
+        predicate = paging(greater_equal('this', 41), 2)
         predicate.page = 4
         self.assertEqual(self.map.values(predicate), [49])
 
     def test_reset(self):
         self.fill_map()
-        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate = paging(greater_equal('this', 40), 2)
         self.assertEqual(self.map.values(predicate), [40, 41])
         predicate.next_page()
         self.assertEqual(self.map.values(predicate), [42, 43])
@@ -504,7 +509,7 @@ class PagingPredicateTest(HazelcastTestCase):
 
     def test_empty_map(self):
         # Empty map should return empty list.
-        predicate = paging(is_greater_than_or_equal_to('this', 30), 2)
+        predicate = paging(greater_equal('this', 30), 2)
         self.assertEqual(self.map.values(predicate), [])
 
     def test_equal_values_paging(self):
@@ -513,7 +518,7 @@ class PagingPredicateTest(HazelcastTestCase):
         m = {"key-%d" % i: i - 50 for i in range(50, 100)}
         self.map.put_all(m)
 
-        predicate = paging(is_less_than_or_equal_to('this', 8), 5)
+        predicate = paging(less_equal('this', 8), 5)
 
         self.assertEqual(self.map.values(predicate), [0, 0, 1, 1, 2])
         predicate.next_page()
@@ -525,7 +530,7 @@ class PagingPredicateTest(HazelcastTestCase):
 
     def test_entry_set_with_custom_comparator(self):
         m = self.fill_map()
-        predicate = paging(is_less_than("this", 10), 5, CustomComparator(1, IterationType.KEY))
+        predicate = paging(less_than("this", 10), 5, CustomComparator(1, IterationType.KEY))
 
         def entries(start, end):
             return list(
@@ -545,7 +550,7 @@ class PagingPredicateTest(HazelcastTestCase):
 
     def test_key_set_with_custom_comparator(self):
         m = self.fill_map()
-        predicate = paging(is_less_than("this", 10), 5, CustomComparator(1, IterationType.KEY))
+        predicate = paging(less_than("this", 10), 5, CustomComparator(1, IterationType.KEY))
 
         keys = list(sorted(m.keys(), key=lambda k: m[k]))
 
@@ -557,7 +562,7 @@ class PagingPredicateTest(HazelcastTestCase):
 
     def test_values_with_custom_comparator(self):
         m = self.fill_map()
-        predicate = paging(is_less_than("this", 10), 5, CustomComparator(1, IterationType.KEY))
+        predicate = paging(less_than("this", 10), 5, CustomComparator(1, IterationType.KEY))
 
         values = list(sorted(m.values()))
 

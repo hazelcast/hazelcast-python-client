@@ -2,7 +2,7 @@ import time
 import hazelcast
 
 from hazelcast.serialization.api import Portable
-from hazelcast.serialization.predicate import sql
+from hazelcast.predicate import sql
 
 
 class Employee(Portable):

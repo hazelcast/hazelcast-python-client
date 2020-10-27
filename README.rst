@@ -1078,7 +1078,7 @@ less than 6 is shown below:
 .. code:: python
 
     # Get the objects whose age is less than 6
-    result = json_map.values(is_less_than_or_equal_to("age", 6))
+    result = json_map.values(less_equal("age", 6))
     print("Retrieved %s values whose age is less than 6." % len(result))
     print("Entry is", result[0].to_string())
 
@@ -2695,34 +2695,34 @@ since only filtered data is sent to the requester.
 
 **Predicate Module Operators**
 
-The ``Predicate`` module offered by the Python client includes many
+The ``predicate`` module offered by the Python client includes many
 operators for your query requirements. Some of them are explained below.
 
-- ``is_equal_to``: Checks if the result of an expression is equal to a
+- ``equal``: Checks if the result of an expression is equal to a
   given value.
-- ``is_not_equal_to``: Checks if the result of an expression is not
+- ``not_equal``: Checks if the result of an expression is not
   equal to a given value.
-- ``is_instance_of``: Checks if the result of an expression has a
+- ``instance_of``: Checks if the result of an expression has a
   certain type.
-- ``is_like``: Checks if the result of an expression matches some
+- ``like``: Checks if the result of an expression matches some
   string pattern. ``%`` (percentage sign) is the placeholder for many
   characters, ``_`` (underscore) is placeholder for only one character.
-- ``is_ilike``: Checks if the result of an expression matches some
+- ``ilike``: Checks if the result of an expression matches some
   string pattern in a case-insensitive manner.
-- ``is_greater_than``: Checks if the result of an expression is greater
+- ``greater_than``: Checks if the result of an expression is greater
   than a certain value.
-- ``is_greater_than_or_equal_to``: Checks if the result of an
+- ``greater_equal``: Checks if the result of an
   expression is greater than or equal to a certain value.
-- ``is_less_than``: Checks if the result of an expression is less than
+- ``less_than``: Checks if the result of an expression is less than
   a certain value.
-- ``is_less_than_or_equal_to``: Checks if the result of an expression
+- ``less_equal``: Checks if the result of an expression
   is less than or equal to a certain value.
-- ``is_between``: Checks if the result of an expression is between two
+- ``between``: Checks if the result of an expression is between two
   values (this is inclusive).
-- ``is_in``: Checks if the result of an expression is an element of a
+- ``in_``: Checks if the result of an expression is an element of a
   certain list.
-- ``is_not``: Checks if the result of an expression is false.
-- ``matches_regex``: Checks if the result of an expression matches some
+- ``not_``: Checks if the result of an expression is false.
+- ``regex``: Checks if the result of an expression matches some
   regular expression.
 - ``true``: Creates an always true predicate that will pass all items.
 - ``false``: Creates an always false predicate that will filter out all
@@ -2793,11 +2793,11 @@ operators, as shown in the below example.
 
 .. code:: python
 
-    from hazelcast.serialization.predicate import and_, is_equal_to, is_less_than
+    from hazelcast.predicate import and_, equal, less_than
 
     employee_map = client.get_map("employee")
 
-    predicate = and_(is_equal_to('active', True), is_less_than('age', 30))
+    predicate = and_(equal('active', True), less_than('age', 30))
 
     employees = employee_map.values(predicate).result()
 
@@ -2818,7 +2818,7 @@ following example:
 
 .. code:: python
 
-    from hazelcast.serialization.predicate import sql
+    from hazelcast.predicate import sql
 
     employee_map = client.get_map("employee")
 
@@ -2882,7 +2882,7 @@ the entry keys. See the following example:
 
 .. code:: python
 
-    from hazelcast.serialization.predicate import sql
+    from hazelcast.predicate import sql
 
     person_map = client.get_map("persons").blocking()
 
@@ -2904,7 +2904,7 @@ the entry values. See the following example:
 
 .. code:: python
 
-    from hazelcast.serialization.predicate import is_greater_than_or_equal_to
+    from hazelcast.predicate import greater_equal
 
     person_map = client.get_map("persons").blocking()
 
@@ -2912,7 +2912,7 @@ the entry values. See the following example:
     person_map.put("Mary", 23)
     person_map.put("Judy", 30)
 
-    predicate = is_greater_than_or_equal_to("this", 27)
+    predicate = greater_equal("this", 27)
 
     persons = person_map.values(predicate)
 
@@ -2946,7 +2946,7 @@ Hazelcast query methods explained in this section.
     # From JSON serializable object
     id_person_map.put(3, HazelcastJsonValue(person3))
 
-    people_under_21 = id_person_map.values(is_less_than("age", 21))
+    people_under_21 = id_person_map.values(less_than("age", 21))
 
 When running the queries, Hazelcast treats values extracted from the
 JSON documents as Java types so they can be compared with the query
@@ -2982,7 +2982,7 @@ objects using the ``Predicate``\ s.
     # }
     # The following query finds all the departments that have a person named "Peter" working in them.
 
-    department_with_peter = departments.values(is_equal_to("people[any].name", "Peter"))
+    department_with_peter = departments.values(equal("people[any].name", "Peter"))
 
 ``HazelcastJsonValue`` is a lightweight wrapper around your JSON
 strings. It is used merely as a way to indicate that the contained
@@ -3044,7 +3044,7 @@ details.
 
 In the example code below:
 
-- The ``is_greater_than_or_equal_to`` predicate gets values from the
+- The ``greater_equal`` predicate gets values from the
   ``students`` map. This predicate has a filter to retrieve the objects
   with an ``age`` greater than or equal to ``18``.
 
@@ -3058,12 +3058,12 @@ In the example code below:
 
 .. code:: python
 
-    from hazelcast.serialization.predicate import paging, is_greater_than_or_equal_to
+    from hazelcast.predicate import paging, greater_equal
 
     ...
 
     m = client.get_map("students").blocking()
-    predicate = paging(is_greater_than_or_equal_to("age", 18), 5)
+    predicate = paging(greater_equal("age", 18), 5)
 
     # Retrieve the first page
     values = m.values(predicate)
