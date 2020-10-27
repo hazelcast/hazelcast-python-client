@@ -3,8 +3,8 @@ import time
 import functools
 
 from hazelcast.errors import create_error_from_message, HazelcastInstanceNotActiveError, is_retryable_error, \
-    HazelcastTimeoutError, TargetDisconnectedError, HazelcastClientNotActiveError, TargetNotMemberError, \
-    EXCEPTION_MESSAGE_TYPE, IndeterminateOperationStateError
+    TargetDisconnectedError, HazelcastClientNotActiveError, TargetNotMemberError, \
+    EXCEPTION_MESSAGE_TYPE, IndeterminateOperationStateError, OperationTimeoutError
 from hazelcast.future import Future
 from hazelcast.protocol.codec import client_local_backup_listener_codec
 from hazelcast.util import AtomicInteger
@@ -231,7 +231,7 @@ class InvocationService(object):
         if invocation.timeout < time.time():
             self.logger.debug("Error will not be retried because invocation timed out: %s", error,
                               extra=self._logger_extras)
-            error = HazelcastTimeoutError("Request timed out because an error occurred "
+            error = OperationTimeoutError("Request timed out because an error occurred "
                                           "after invocation timeout: %s" % error)
             self._complete_with_error(invocation, error)
             return

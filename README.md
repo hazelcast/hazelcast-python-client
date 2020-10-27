@@ -57,7 +57,8 @@
         * [7.4.11.1. Configuring Flake ID Generator](#74111-configuring-flake-id-generator)
     * [7.4.12. CP Subsystem](#7412-cp-subsystem)
         * [7.4.12.1. Using AtomicLong](#74121-using-atomiclong)
-        * [7.4.12.2. Using AtomicReference](#74122-using-atomicreference)
+        * [7.4.12.2. Using CountDownLatch](#74122-using-countdownlatch)
+        * [7.4.12.3. Using AtomicReference](#74123-using-atomicreference)
   * [7.5. Distributed Events](#75-distributed-events)
     * [7.5.1. Cluster Events](#751-cluster-events)
       * [7.5.1.1. Listening for Member Events](#7511-listening-for-member-events)
@@ -1609,7 +1610,43 @@ print ('CAS operation result:', result)
 AtomicLong implementation does not offer exactly-once / effectively-once execution semantics. It goes with at-least-once execution semantics by default and can cause an API call to be committed multiple times in case of CP member failures. 
 It can be tuned to offer at-most-once execution semantics. Please see [`fail-on-indeterminate-operation-state`](https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#cp-subsystem-configuration) server-side setting.
 
-#### 7.4.12.2. Using AtomicReference
+#### 7.4.12.2. Using CountDownLatch
+
+Hazelcast `CountDownLatch` is the distributed implementation of a linearizable and distributed countdown latch. 
+This data structure is a cluster-wide synchronization aid that allows one or more callers to wait until a set of operations being performed in other callers completes. 
+This data structure is a part of CP Subsystem.
+
+A basic CountDownLatch usage example is shown below.
+
+```python
+# Get a CountDownLatch called "my-latch"
+latch = client.cp_subsystem.get_count_down_latch("my-latch").blocking()
+# Try to initialize the latch
+# (does nothing if the count is not zero)
+initialized = latch.try_set_count(1)
+print("Initialized:", initialized)
+# Check count
+count = latch.get_count()
+print("Count:", count)
+# Prints:
+# Count: 1
+
+# Bring the count down to zero after 10ms
+def run():
+    time.sleep(0.01)
+    latch.count_down()
+
+t = Thread(target=run)
+t.start()
+
+# Wait up to 1 second for the count to become zero up
+count_is_zero = latch.await(1)
+print("Count is zero:", count_is_zero)
+```
+
+> **NOTE: CountDownLatch count can be reset with `try_set_count()` after a countdown has finished, but not during an active count.**
+
+#### 7.4.12.3. Using AtomicReference
 
 Hazelcast `AtomicReference` is the distributed implementation of a linearizable object reference. 
 It provides a set of atomic operations allowing to modify the value behind the reference. 

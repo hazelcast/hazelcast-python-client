@@ -34,6 +34,11 @@ def check_not_empty(collection, message):
         raise AssertionError(message)
 
 
+def check_is_number(val):
+    if not isinstance(val, number_types):
+        raise AssertionError("Number value expected")
+
+
 def check_is_int(val):
     if not isinstance(val, six.integer_types):
         raise AssertionError("Int value expected")
@@ -80,13 +85,21 @@ class AtomicInteger(object):
         """Returns the current value and increment it.
         
         Returns:
-            int: current value of AtomicInteger.
+            int: Current value of AtomicInteger.
         """
         with self._mux:
             res = self._counter
             self._counter += 1
             return res
 
+    def get(self):
+        """Returns the current value.
+
+        Returns:
+            int: The current value.
+        """
+        with self._mux:
+            return self._counter
 
 class ImmutableLazyDataList(Sequence):
     def __init__(self, list_data, to_object):
