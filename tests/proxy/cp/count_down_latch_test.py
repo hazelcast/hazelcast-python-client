@@ -17,7 +17,7 @@ inf = 2 ** 31 - 1
 class CountDownLatchTest(CPTestCase):
     def test_latch_in_another_group(self):
         latch = self._get_latch()
-        another_latch = self._get_latch()
+        another_latch = self.client.cp_subsystem.get_count_down_latch(latch._proxy_name + "@another").blocking()
 
         another_latch.try_set_count(42)
         self.assertEqual(42, another_latch.get_count())
@@ -139,7 +139,7 @@ class CountDownLatchTest(CPTestCase):
         self.assertEqual(1, latch.get_count())
 
     def _get_latch(self, initial_count=None):
-        latch = self.client.cp_subsystem.get_count_down_latch("latch@" + random_string()).blocking()
+        latch = self.client.cp_subsystem.get_count_down_latch("latch-" + random_string()).blocking()
         if initial_count is not None:
             self.assertTrue(latch.try_set_count(initial_count))
         return latch
