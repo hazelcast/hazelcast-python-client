@@ -138,6 +138,13 @@ class CountDownLatchTest(CPTestCase):
         self.assertFalse(latch.try_set_count(20))
         self.assertEqual(1, latch.get_count())
 
+    def test_try_set_count_when_count_goes_to_zero(self):
+        latch = self._get_latch(1)
+        latch.count_down()
+        self.assertEqual(0, latch.get_count())
+        self.assertTrue(latch.try_set_count(3))
+        self.assertEqual(3, latch.get_count())
+
     def _get_latch(self, initial_count=None):
         latch = self.client.cp_subsystem.get_count_down_latch("latch-" + random_string()).blocking()
         if initial_count is not None:
