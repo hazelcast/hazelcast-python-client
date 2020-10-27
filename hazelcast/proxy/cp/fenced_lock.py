@@ -23,14 +23,14 @@ class FencedLock(SessionAwareCPProxy):
     FencedLock works on top of CP sessions. Please refer to CP Session
     IMDG documentation section for more information.
 
-    By default, {@link FencedLock} is reentrant. Once a caller acquires
+    By default, FencedLock is reentrant. Once a caller acquires
     the lock, it can acquire the lock reentrantly as many times as it wants
     in a linearizable manner. You can configure the reentrancy behaviour
     on the member side. For instance, reentrancy can be disabled and
     FencedLock can work as a non-reentrant mutex. One can also set
     a custom reentrancy limit. When the reentrancy limit is reached,
     FencedLock does not block a lock call. Instead, it fails with
-    ``LockAcquireLimitReachedException`` or a specified return value.
+    ``LockAcquireLimitReachedError`` or a specified return value.
     Please check the locking methods to see details about the behaviour.
     """
 
@@ -44,7 +44,7 @@ class FencedLock(SessionAwareCPProxy):
         """Acquires the lock.
 
         When the caller already holds the lock and the current ``lock()`` call is
-        reentrant, the call can fail with ``LockAcquireLimitReachedException``
+        reentrant, the call can fail with ``LockAcquireLimitReachedError``
         if the lock acquire limit is already reached.
 
         If the lock is not available then the current thread becomes disabled
@@ -57,7 +57,7 @@ class FencedLock(SessionAwareCPProxy):
         Raises:
             LockOwnershipLostError: If the underlying CP session was
                 closed before the client releases the lock
-            LockAcquireLimitReachedException: If the lock call is reentrant
+            LockAcquireLimitReachedError: If the lock call is reentrant
                 and the configured lock acquire limit is already reached.
         """
         def handler(f):
@@ -71,7 +71,7 @@ class FencedLock(SessionAwareCPProxy):
         thread for this lock acquire.
 
         If the lock is acquired reentrantly, the same fencing token is returned,
-        or the ``lock()`` call can fail with ``LockAcquireLimitReachedException``
+        or the ``lock()`` call can fail with ``LockAcquireLimitReachedError``
         if the lock acquire limit is already reached.
 
         If the lock is not available then the current thread becomes disabled
@@ -117,7 +117,7 @@ class FencedLock(SessionAwareCPProxy):
         Raises:
             LockOwnershipLostError: If the underlying CP session was
                 closed before the client releases the lock
-            LockAcquireLimitReachedException: If the lock call is reentrant
+            LockAcquireLimitReachedError: If the lock call is reentrant
                 and the configured lock acquire limit is already reached.
         """
         current_thread_id = thread_id()
