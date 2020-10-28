@@ -14,7 +14,7 @@ try:
     print("Locked after lock:", locked)
 
     locked = lock.try_lock()
-    print("Locked reentratly:", locked)
+    print("Locked reentrantly:", locked)
 
     # more guarded code
 finally:

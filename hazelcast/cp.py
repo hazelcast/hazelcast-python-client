@@ -258,7 +258,7 @@ class ProxySessionManager(object):
         return _NO_SESSION_ID
 
     def acquire_session(self, group_id, count):
-        return self._get_or_crate_session(group_id).continue_with(lambda state: state.result().acquire(count))
+        return self._get_or_create_session(group_id).continue_with(lambda state: state.result().acquire(count))
 
     def release_session(self, group_id, session_id, count):
         session = self._sessions.get(group_id, None)
@@ -319,7 +319,7 @@ class ProxySessionManager(object):
         self._context.invocation_service.invoke(invocation)
         return invocation.future
 
-    def _get_or_crate_session(self, group_id):
+    def _get_or_create_session(self, group_id):
         with self._lock:
             if self._shutdown:
                 error = HazelcastClientNotActiveError("Session manager is already shut down!")
