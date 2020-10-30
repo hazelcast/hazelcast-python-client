@@ -1623,8 +1623,8 @@ A basic Lock usage example is shown below.
 ```python
 # Get a FencedLock called "my-lock"
 lock = client.cp_subsystem.get_lock("my-lock").blocking()
-# Acquire the lock
-lock.lock()
+# Acquire the lock and get the fencing token
+fence = lock.lock()
 try:
     # Your guarded code goes here
     pass
@@ -1662,9 +1662,6 @@ After that, once Client-1 comes back alive, its write request will be rejected b
 ![CP Fenced Lock diagram](https://docs.hazelcast.org/docs/latest/manual/html-single/images/FencedLock.png)
 
 You can read more about the fencing token idea in Martin Kleppmann's "How to do distributed locking" blog post and Google's Chubby paper.
-
-To get fencing token, one may use ``lock.lock_and_get_fence()`` or ``lock.try_lock_and_get_fence()`` utility methods, or ``lock.get_fence()`` method
-while holding the lock.
 
 #### 7.4.12.3. Using CountDownLatch
 

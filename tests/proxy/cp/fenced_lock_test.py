@@ -26,7 +26,7 @@ class FencedLockTest(CPTestCase):
 
     def test_lock_in_another_group(self):
         another_lock = self.client.cp_subsystem.get_lock(self.lock._proxy_name + "@another").blocking()
-        another_lock.lock()
+        self.assert_valid_fence(another_lock.lock())
         try:
             self.assertTrue(another_lock.is_locked())
             self.assertFalse(self.lock.is_locked())
@@ -36,7 +36,7 @@ class FencedLockTest(CPTestCase):
     def test_lock_after_client_shutdown(self):
         another_client = HazelcastClient(cluster_name=self.cluster.id)
         another_lock = another_client.cp_subsystem.get_lock(self.lock._proxy_name).blocking()
-        another_lock.lock()
+        self.assert_valid_fence(another_lock.lock())
         self.assertTrue(another_lock.is_locked())
         self.assertTrue(self.lock.is_locked())
         another_client.shutdown()
@@ -52,28 +52,35 @@ class FencedLockTest(CPTestCase):
         self.lock.destroy()
 
         with self.assertRaises(DistributedObjectDestroyedError):
-            self.lock.lock_and_get_fence()
+            self.lock.lock()
 
         lock2 = self.client.cp_subsystem.get_lock(self.lock._proxy_name).blocking()
 
         with self.assertRaises(DistributedObjectDestroyedError):
-            lock2.lock_and_get_fence()
+            lock2.lock()
 
     def test_lock_when_not_locked(self):
-        self.assertIsNone(self.lock.lock())
-        self.assertTrue(self.lock.is_locked())
-        self.assertTrue(self.lock.is_locked_by_current_thread())
-        self.assertEqual(1, self.lock.get_lock_count())
+        self.assert_valid_fence(self.lock.lock())
+        self.assert_lock(True, True, 1)
         self.assert_session_acquire_count(1)
 
     def test_lock_when_locked_by_self(self):
-        self.lock.lock()
-        self.lock.lock()
+        fence = self.lock.lock()
+        self.assert_valid_fence(fence)
+        fence2 = self.lock.lock()
+        self.assertEqual(fence, fence2)
         self.assert_lock(True, True, 2)
         self.assert_session_acquire_count(2)
+        self.lock.unlock()
+        self.lock.unlock()
+        self.assert_session_acquire_count(0)
+        fence3 = self.lock.lock()
+        self.assert_valid_fence(fence3)
+        self.assertGreater(fence3, fence)
+        self.assert_session_acquire_count(1)
 
     def test_lock_when_locked_by_another_thread(self):
-        t = self.start_new_thread(lambda: self.lock.lock())
+        t = self.start_new_thread(lambda: self.assert_valid_fence(self.lock.lock()))
         t.join()
         self.assert_lock(True, False, 1)
         future = self.lock._wrapped.lock()
@@ -85,60 +92,45 @@ class FencedLockTest(CPTestCase):
         with self.assertRaises(DistributedObjectDestroyedError):
             future.result()
 
-    def test_lock_and_get_fence_when_not_locked(self):
-        self.assert_valid_fence(self.lock.lock_and_get_fence())
+    def test_try_lock_when_free(self):
+        self.assert_valid_fence(self.lock.try_lock())
         self.assert_lock(True, True, 1)
         self.assert_session_acquire_count(1)
 
-    def test_lock_and_get_fence_when_locked_by_self(self):
-        fence = self.lock.lock_and_get_fence()
+    def test_try_lock_when_free_with_timeout(self):
+        self.assert_valid_fence(self.lock.try_lock(1))
+        self.assert_lock(True, True, 1)
+        self.assert_session_acquire_count(1)
+
+    def test_try_lock_when_locked_by_self(self):
+        fence = self.lock.lock()
         self.assert_valid_fence(fence)
-        fence2 = self.lock.lock_and_get_fence()
+        fence2 = self.lock.try_lock()
         self.assertEqual(fence, fence2)
         self.assert_lock(True, True, 2)
         self.assert_session_acquire_count(2)
         self.lock.unlock()
         self.lock.unlock()
         self.assert_session_acquire_count(0)
-        fence3 = self.lock.lock_and_get_fence()
+        fence3 = self.lock.try_lock()
         self.assert_valid_fence(fence3)
         self.assertGreater(fence3, fence)
         self.assert_session_acquire_count(1)
 
-    def test_lock_and_get_fence_when_locked_by_another_thread(self):
-        t = self.start_new_thread(lambda: self.assert_valid_fence(self.lock.lock_and_get_fence()))
-        t.join()
-        self.assert_lock(True, False, 1)
-        future = self.lock._wrapped.lock_and_get_fence()
-        time.sleep(2)
-        self.assertFalse(future.done())  # lock request made in the main thread should not complete
-        self.assert_session_acquire_count(2)
-        self.lock.destroy()
-
-        with self.assertRaises(DistributedObjectDestroyedError):
-            future.result()
-
-    def test_try_lock_when_free(self):
-        self.assertTrue(self.lock.try_lock())
-        self.assert_lock(True, True, 1)
-        self.assert_session_acquire_count(1)
-
-    def test_try_lock_when_free_with_timeout(self):
-        self.assertTrue(self.lock.try_lock(1))
-        self.assert_lock(True, True, 1)
-        self.assert_session_acquire_count(1)
-
-    def test_try_lock_when_locked_by_self(self):
-        self.lock.lock()
-        self.assertTrue(self.lock.try_lock())
-        self.assert_lock(True, True, 2)
-        self.assert_session_acquire_count(2)
-
     def test_try_lock_when_locked_by_self_with_timeout(self):
-        self.lock.lock()
-        self.assertTrue(self.lock.try_lock(2))
+        fence = self.lock.lock()
+        self.assert_valid_fence(fence)
+        fence2 = self.lock.try_lock(2)
+        self.assertEqual(fence, fence2)
         self.assert_lock(True, True, 2)
         self.assert_session_acquire_count(2)
+        self.lock.unlock()
+        self.lock.unlock()
+        self.assert_session_acquire_count(0)
+        fence3 = self.lock.try_lock(2)
+        self.assert_valid_fence(fence3)
+        self.assertGreater(fence3, fence)
+        self.assert_session_acquire_count(1)
 
     def test_try_lock_when_locked_by_another_thread(self):
         t = self.start_new_thread(lambda: self.lock.try_lock())
@@ -148,63 +140,9 @@ class FencedLockTest(CPTestCase):
         self.assert_session_acquire_count(1)
 
     def test_try_lock_when_locked_by_another_thread_with_timeout(self):
-        t = self.start_new_thread(lambda: self.lock.try_lock())
+        t = self.start_new_thread(lambda: self.assert_valid_fence(self.lock.try_lock()))
         t.join()
-        self.assertFalse(self.lock.try_lock(1))
-        self.assert_lock(True, False, 1)
-        self.assert_session_acquire_count(1)
-
-    def test_try_lock_and_get_fence_when_free(self):
-        self.assert_valid_fence(self.lock.try_lock_and_get_fence())
-        self.assert_lock(True, True, 1)
-        self.assert_session_acquire_count(1)
-
-    def test_try_lock_and_get_fence_when_free_with_timeout(self):
-        self.assert_valid_fence(self.lock.try_lock(1))
-        self.assert_lock(True, True, 1)
-        self.assert_session_acquire_count(1)
-
-    def test_try_lock_and_get_fence_when_locked_by_self(self):
-        fence = self.lock.try_lock_and_get_fence()
-        self.assert_valid_fence(fence)
-        fence2 = self.lock.try_lock_and_get_fence()
-        self.assertEqual(fence, fence2)
-        self.assert_lock(True, True, 2)
-        self.assert_session_acquire_count(2)
-        self.lock.unlock()
-        self.lock.unlock()
-        self.assert_session_acquire_count(0)
-        fence3 = self.lock.try_lock_and_get_fence()
-        self.assert_valid_fence(fence3)
-        self.assertGreater(fence3, fence)
-        self.assert_session_acquire_count(1)
-
-    def test_try_lock_and_get_fence_when_locked_by_self_with_timeout(self):
-        fence = self.lock.try_lock_and_get_fence(1)
-        self.assert_valid_fence(fence)
-        fence2 = self.lock.try_lock_and_get_fence(2)
-        self.assertEqual(fence, fence2)
-        self.assert_lock(True, True, 2)
-        self.assert_session_acquire_count(2)
-        self.lock.unlock()
-        self.lock.unlock()
-        self.assert_session_acquire_count(0)
-        fence3 = self.lock.try_lock_and_get_fence()
-        self.assert_valid_fence(fence3)
-        self.assertGreater(fence3, fence)
-        self.assert_session_acquire_count(1)
-
-    def test_try_lock_and_get_fence_when_locked_by_another_thread(self):
-        t = self.start_new_thread(lambda: self.assert_valid_fence(self.lock.try_lock_and_get_fence()))
-        t.join()
-        self.assert_not_valid_fence(self.lock.try_lock_and_get_fence())
-        self.assert_lock(True, False, 1)
-        self.assert_session_acquire_count(1)
-
-    def test_try_lock_and_get_fence_when_locked_by_another_thread_with_timeout(self):
-        t = self.start_new_thread(lambda: self.assert_valid_fence(self.lock.try_lock_and_get_fence(1)))
-        t.join()
-        self.assert_not_valid_fence(self.lock.try_lock_and_get_fence(1))
+        self.assert_not_valid_fence(self.lock.try_lock(1))
         self.assert_lock(True, False, 1)
         self.assert_session_acquire_count(1)
 
@@ -241,41 +179,6 @@ class FencedLockTest(CPTestCase):
             self.lock.unlock()
 
         self.assert_lock(True, False, 1)
-        self.assert_session_acquire_count(1)
-
-    def test_get_fence_when_free(self):
-        with self.assertRaises(IllegalMonitorStateError):
-            self.lock.get_fence()
-
-        self.assert_session_acquire_count(0)
-
-    def test_get_fence_when_locked_by_self(self):
-        self.lock.lock()
-        fence = self.lock.get_fence()
-        self.assert_valid_fence(fence)
-        self.lock.lock()
-        fence2 = self.lock.get_fence()
-        self.assertEqual(fence, fence2)
-        self.lock.unlock()
-        self.lock.unlock()
-        self.lock.lock()
-        fence3 = self.lock.get_fence()
-        self.assert_valid_fence(fence3)
-        self.assertGreater(fence3, fence)
-        self.lock.unlock()
-
-        with self.assertRaises(IllegalMonitorStateError):
-            self.lock.get_fence()
-
-        self.assert_session_acquire_count(0)
-
-    def test_get_fence_when_locked_by_another_thread(self):
-        t = self.start_new_thread(lambda: self.lock.lock())
-        t.join()
-
-        with self.assertRaises(IllegalMonitorStateError):
-            self.lock.get_fence()
-
         self.assert_session_acquire_count(1)
 
     def test_is_locked_when_free(self):
@@ -356,7 +259,7 @@ class FencedLockMockTest(unittest.TestCase):
         # Everything succeeds
         self.prepare_acquire_session(1)
         self.mock_request_lock(2)
-        self.proxy.lock()
+        self.assertEqual(2, self.proxy.lock())
         self.assert_call_counts(1, 0, 0)
         self.assert_lock_session_id(1)
 
@@ -397,7 +300,7 @@ class FencedLockMockTest(unittest.TestCase):
         # Session expired error comes from the server on lock request, retries and gets valid fence
         self.prepare_acquire_session(1)
         self.mock_request_lock(2, SessionExpiredError())
-        self.proxy.lock()
+        self.assertEqual(2, self.proxy.lock())
         self.assert_call_counts(2, 0, 1)
         self.assert_lock_session_id(1)
 
@@ -436,95 +339,11 @@ class FencedLockMockTest(unittest.TestCase):
         self.assert_call_counts(1, 1, 0)
         self.assert_no_lock_session_id()
 
-    def test_lock_and_get_fence(self):
-        # Everything succeeds
-        self.prepare_acquire_session(1)
-        self.mock_request_lock(2)
-        self.assertEqual(2, self.proxy.lock_and_get_fence())
-        self.assert_call_counts(1, 0, 0)
-        self.assert_lock_session_id(1)
-
-    def test_lock_and_get_fence_when_acquire_session_fails(self):
-        # First call to acquire session fails, should not retry
-        self.prepare_acquire_session(-1, HazelcastRuntimeError("server_error"))
-
-        with self.assertRaises(HazelcastRuntimeError):
-            self.proxy.lock_and_get_fence()
-
-        self.assert_call_counts(1, 0, 0)
-        self.assert_no_lock_session_id()
-
-    def test_lock_and_get_fence_when_server_closes_old_session(self):
-        # Same thread issues a new lock call while holding a lock.
-        # Server closes session related to the first lock, should not retry
-        self.prepare_acquire_session(2)
-        self.prepare_lock_session_ids(1)
-
-        with self.assertRaises(LockOwnershipLostError):
-            self.proxy.lock_and_get_fence()
-
-        self.assert_call_counts(1, 1, 0)
-        self.assert_no_lock_session_id()
-
-    def test_lock_and_get_fence_when_lock_acquire_limit_reached(self):
-        # Lock acquire limit is reached, server returns invalid fence, should not retry
-        self.prepare_acquire_session(1)
-        self.mock_request_lock(FencedLock.INVALID_FENCE)
-
-        with self.assertRaises(LockAcquireLimitReachedError):
-            self.proxy.lock_and_get_fence()
-
-        self.assert_call_counts(1, 1, 0)
-        self.assert_no_lock_session_id()
-
-    def test_lock_and_get_fence_on_session_expired_error(self):
-        # Session expired error comes from the server on lock request, retries and gets valid fence
-        self.prepare_acquire_session(1)
-        self.mock_request_lock(2, SessionExpiredError())
-        self.assertEqual(2, self.proxy.lock_and_get_fence())
-        self.assert_call_counts(2, 0, 1)
-        self.assert_lock_session_id(1)
-
-    def test_lock_and_get_fence_on_session_expired_error_on_reentrant_lock_request(self):
-        # Session expired error comes from the server on second lock request,
-        # while holding a lock, should not retry
-        self.prepare_acquire_session(1)
-        self.prepare_lock_session_ids(1)
-        self.mock_request_lock(3, SessionExpiredError())
-
-        with self.assertRaises(LockOwnershipLostError):
-            self.proxy.lock_and_get_fence()
-
-        self.assert_call_counts(1, 0, 1)
-        self.assert_no_lock_session_id()
-
-    def test_lock_and_get_fence_on_wait_key_cancelled_error(self):
-        # Wait key cancelled error comes from the server, should not retry
-        self.prepare_acquire_session(1)
-        self.mock_request_lock(2, WaitKeyCancelledError())
-
-        with self.assertRaises(IllegalMonitorStateError):
-            self.proxy.lock_and_get_fence()
-
-        self.assert_call_counts(1, 1, 0)
-        self.assert_no_lock_session_id()
-
-    def test_lock_and_get_fence_on_unspecified_error(self):
-        # Server sends another error, should not retry
-        self.prepare_acquire_session(1)
-        self.mock_request_lock(-1, HazelcastRuntimeError("expected"))
-
-        with self.assertRaises(HazelcastRuntimeError):
-            self.proxy.lock_and_get_fence()
-
-        self.assert_call_counts(1, 1, 0)
-        self.assert_no_lock_session_id()
-
     def test_try_lock(self):
         # Everything succeeds
         self.prepare_acquire_session(1)
         self.mock_request_try_lock(2)
-        self.assertTrue(self.proxy.try_lock())
+        self.assertEqual(2, self.proxy.try_lock())
         self.assert_call_counts(1, 0, 0)
         self.assert_lock_session_id(1)
 
@@ -554,7 +373,7 @@ class FencedLockMockTest(unittest.TestCase):
         # Lock acquire limit is reached, server returns invalid fence
         self.prepare_acquire_session(1)
         self.mock_request_try_lock(FencedLock.INVALID_FENCE)
-        self.assertFalse(self.proxy.try_lock())
+        self.assertEqual(FencedLock.INVALID_FENCE, self.proxy.try_lock())
         self.assert_call_counts(1, 1, 0)
         self.assert_no_lock_session_id()
 
@@ -563,7 +382,7 @@ class FencedLockMockTest(unittest.TestCase):
         # client determines the timeout and returns invalid fence
         self.prepare_acquire_session(1)
         self.mock_request_try_lock(2, SessionExpiredError())
-        self.assertFalse(self.proxy.try_lock())
+        self.assertEqual(FencedLock.INVALID_FENCE, self.proxy.try_lock())
         self.assert_call_counts(1, 0, 1)
         self.assert_no_lock_session_id()
 
@@ -572,7 +391,7 @@ class FencedLockMockTest(unittest.TestCase):
         # client retries due to not reaching timeout and succeeds
         self.prepare_acquire_session(1)
         self.mock_request_try_lock(2, SessionExpiredError())
-        self.assertTrue(self.proxy.try_lock(100))
+        self.assertEqual(2, self.proxy.try_lock(100))
         self.assert_call_counts(2, 0, 1)
         self.assert_lock_session_id(1)
 
@@ -593,7 +412,7 @@ class FencedLockMockTest(unittest.TestCase):
         # Wait key cancelled error comes from the server, invalid fence is returned
         self.prepare_acquire_session(1)
         self.mock_request_try_lock(2, WaitKeyCancelledError())
-        self.assertFalse(self.proxy.try_lock())
+        self.assertEqual(FencedLock.INVALID_FENCE, self.proxy.try_lock())
         self.assert_call_counts(1, 1, 0)
         self.assert_no_lock_session_id()
 
@@ -604,94 +423,6 @@ class FencedLockMockTest(unittest.TestCase):
 
         with self.assertRaises(HazelcastRuntimeError):
             self.proxy.try_lock()
-
-        self.assert_call_counts(1, 1, 0)
-        self.assert_no_lock_session_id()
-
-    def test_try_lock_and_get_fence(self):
-        # Everything succeeds
-        self.prepare_acquire_session(1)
-        self.mock_request_try_lock(2)
-        self.assertEqual(2, self.proxy.try_lock_and_get_fence())
-        self.assert_call_counts(1, 0, 0)
-        self.assert_lock_session_id(1)
-
-    def test_try_lock_and_get_fence_when_acquire_session_fails(self):
-        # First call to acquire session fails, should not retry
-        self.prepare_acquire_session(-1, HazelcastRuntimeError("server_error"))
-
-        with self.assertRaises(HazelcastRuntimeError):
-            self.proxy.try_lock_and_get_fence()
-
-        self.assert_call_counts(1, 0, 0)
-        self.assert_no_lock_session_id()
-
-    def test_try_lock_and_get_fence_when_server_closes_old_session(self):
-        # Same thread issues a new lock call while holding a lock.
-        # Server closes session related to the first lock, should not retry
-        self.prepare_acquire_session(2)
-        self.prepare_lock_session_ids(1)
-
-        with self.assertRaises(LockOwnershipLostError):
-            self.proxy.try_lock_and_get_fence()
-
-        self.assert_call_counts(1, 1, 0)
-        self.assert_no_lock_session_id()
-
-    def test_try_lock_and_get_fence_when_lock_acquire_limit_reached(self):
-        # Lock acquire limit is reached, server returns invalid fence
-        self.prepare_acquire_session(1)
-        self.mock_request_try_lock(FencedLock.INVALID_FENCE)
-        self.assertEqual(FencedLock.INVALID_FENCE, self.proxy.try_lock_and_get_fence())
-        self.assert_call_counts(1, 1, 0)
-        self.assert_no_lock_session_id()
-
-    def test_try_lock_and_get_fence_on_session_expired_error(self):
-        # Session expired error comes from the server on lock request,
-        # client determines the timeout and returns invalid fence
-        self.prepare_acquire_session(1)
-        self.mock_request_try_lock(2, SessionExpiredError())
-        self.assertEqual(FencedLock.INVALID_FENCE, self.proxy.try_lock_and_get_fence())
-        self.assert_call_counts(1, 0, 1)
-        self.assert_no_lock_session_id()
-
-    def test_try_lock_and_get_fence_on_session_expired_error_when_not_timed_out(self):
-        # Session expired error comes from the server on lock request,
-        # client retries due to not reaching timeout and succeeds
-        self.prepare_acquire_session(1)
-        self.mock_request_try_lock(2, SessionExpiredError())
-        self.assertEqual(2, self.proxy.try_lock_and_get_fence(100))
-        self.assert_call_counts(2, 0, 1)
-        self.assert_lock_session_id(1)
-
-    def test_try_lock_and_get_fence_on_session_expired_error_on_reentrant_lock_request(self):
-        # Session expired error comes from the server on second lock request,
-        # while holding a lock, should not retry
-        self.prepare_acquire_session(1)
-        self.prepare_lock_session_ids(1)
-        self.mock_request_try_lock(3, SessionExpiredError())
-
-        with self.assertRaises(LockOwnershipLostError):
-            self.proxy.try_lock_and_get_fence()
-
-        self.assert_call_counts(1, 0, 1)
-        self.assert_no_lock_session_id()
-
-    def test_try_lock_and_get_fence_on_wait_key_cancelled_error(self):
-        # Wait key cancelled error comes from the server, invalid fence is returned
-        self.prepare_acquire_session(1)
-        self.mock_request_try_lock(2, WaitKeyCancelledError())
-        self.assertEqual(FencedLock.INVALID_FENCE, self.proxy.try_lock_and_get_fence())
-        self.assert_call_counts(1, 1, 0)
-        self.assert_no_lock_session_id()
-
-    def test_try_lock_and_get_fence_on_unspecified_error(self):
-        # Server sends another error, should not retry
-        self.prepare_acquire_session(1)
-        self.mock_request_try_lock(-1, HazelcastRuntimeError("expected"))
-
-        with self.assertRaises(HazelcastRuntimeError):
-            self.proxy.try_lock_and_get_fence()
 
         self.assert_call_counts(1, 1, 0)
         self.assert_no_lock_session_id()
@@ -766,75 +497,6 @@ class FencedLockMockTest(unittest.TestCase):
 
         with self.assertRaises(HazelcastRuntimeError):
             self.proxy.unlock()
-
-        self.assert_call_counts(0, 0, 0)
-        self.assert_no_lock_session_id()
-
-    def test_get_fence(self):
-        # Everything succeeds
-        self.prepare_get_session(2)
-        state = self.prepare_state(3, 1, 2, thread_id())
-        self.mock_request_get_lock_ownership_state(state)
-        self.assertEqual(3, self.proxy.get_fence())
-        self.assert_call_counts(0, 0, 0)
-        self.assert_lock_session_id(2)
-        
-    def test_get_fence_when_server_closes_old_session(self):
-        # Session id is different than what we store in the
-        # dict. The old session must be closed while we were
-        # holding the lock.
-        self.prepare_get_session(2)
-        self.prepare_lock_session_ids(1)
-
-        with self.assertRaises(LockOwnershipLostError):
-            self.proxy.get_fence()
-
-        self.assert_call_counts(0, 0, 0)
-        self.assert_no_lock_session_id()
-
-    def test_get_fence_when_there_is_no_session(self):
-        # No active session for the current thread.
-        self.prepare_get_session(-1)
-
-        with self.assertRaises(IllegalMonitorStateError):
-            self.proxy.get_fence()
-
-        self.assert_call_counts(0, 0, 0)
-        self.assert_no_lock_session_id()
-
-    def test_get_fence_when_server_returns_a_different_thread_id_for_lock_holder(self):
-        # Client thinks that it holds the lock, but server
-        # says it's not.
-        self.prepare_get_session(1)
-        self.prepare_lock_session_ids(1)
-        state = self.prepare_state(3, 1, 2, thread_id() - 1)
-        self.mock_request_get_lock_ownership_state(state)
-
-        with self.assertRaises(LockOwnershipLostError):
-            self.proxy.get_fence()
-
-        self.assert_call_counts(0, 0, 0)
-        self.assert_no_lock_session_id()
-
-    def test_get_fence_when_not_holding_the_lock(self):
-        # Client is not holding the lock.
-        self.prepare_get_session(1)
-        state = self.prepare_state(3, 1, 2, thread_id() - 1)
-        self.mock_request_get_lock_ownership_state(state)
-
-        with self.assertRaises(IllegalMonitorStateError):
-            self.proxy.get_fence()
-
-        self.assert_call_counts(0, 0, 0)
-        self.assert_no_lock_session_id()
-
-    def test_get_fence_on_unspecified_error(self):
-        # Server sends an unspecified error
-        self.prepare_get_session(1)
-        self.mock_request_get_lock_ownership_state(None, HazelcastRuntimeError())
-
-        with self.assertRaises(HazelcastRuntimeError):
-            self.proxy.get_fence()
 
         self.assert_call_counts(0, 0, 0)
         self.assert_no_lock_session_id()

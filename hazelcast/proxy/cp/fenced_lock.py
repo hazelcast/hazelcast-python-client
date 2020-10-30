@@ -41,32 +41,6 @@ class FencedLock(SessionAwareCPProxy):
         self._lock_session_ids = dict()  # thread-id to session id that has acquired the lock
 
     def lock(self):
-        """Acquires the lock.
-
-        When the caller already holds the lock and the current ``lock()`` call is
-        reentrant, the call can fail with ``LockAcquireLimitReachedError``
-        if the lock acquire limit is already reached.
-
-        If the lock is not available then the current thread becomes disabled
-        for thread scheduling purposes and lies dormant until the lock has been
-        acquired.
-
-        Returns:
-            hazelcast.future.Future[None]:
-
-        Raises:
-            LockOwnershipLostError: If the underlying CP session was
-                closed before the client releases the lock
-            LockAcquireLimitReachedError: If the lock call is reentrant
-                and the configured lock acquire limit is already reached.
-        """
-        def handler(f):
-            f.result()
-            return None
-
-        return self.lock_and_get_fence().continue_with(handler)
-
-    def lock_and_get_fence(self):
         """Acquires the lock and returns the fencing token assigned to the current
         thread for this lock acquire.
 
@@ -78,12 +52,6 @@ class FencedLock(SessionAwareCPProxy):
         for thread scheduling purposes and lies dormant until the lock has been
         acquired.
 
-        This is a convenience method for the following pattern ::
-
-            lock = client.cp_subsystem.get_lock("lock").blocking()
-            lock.lock()
-            fence = lock.get_fence()
-
         Fencing tokens are monotonic numbers that are incremented each time
         the lock switches from the free state to the acquired state. They are
         simply used for ordering lock holders. A lock holder can pass
@@ -94,12 +62,12 @@ class FencedLock(SessionAwareCPProxy):
         Consider the following scenario where the lock is free initially ::
 
             lock = client.cp_subsystem.get_lock("lock").blocking()
-            fence1 = lock.lock_and_get_fence()  # (1)
-            fence2 = lock.lock_and_get_fence()  # (2)
+            fence1 = lock.lock()  # (1)
+            fence2 = lock.lock()  # (2)
             assert fence1 == fence2
             lock.unlock()
             lock.unlock()
-            fence3 = lock.lock_and_get_fence()  # (3)
+            fence3 = lock.lock()  # (3)
             assert fence3 > fence1
 
         In this scenario, the lock is acquired by a thread in the cluster. Then,
@@ -126,53 +94,6 @@ class FencedLock(SessionAwareCPProxy):
 
     def try_lock(self, timeout=0):
         """Acquires the lock if it is free within the given waiting time,
-        or already held by the current thread.
-
-        If the lock is available, this method returns immediately with the value
-        ``True``. When the call is reentrant, it immediately returns
-        ``True`` if the lock acquire limit is not exceeded. Otherwise,
-        it returns ``False`` on the reentrant lock attempt if the acquire
-        limit is exceeded.
-
-        If the lock is not available then the current thread becomes disabled
-        for thread scheduling purposes and lies dormant until the lock is
-        acquired by the current thread or the specified waiting time elapses.
-
-        If the lock is acquired, then the value ``True`` is returned.
-
-        If the specified waiting time elapses, then the value ``False``
-        is returned. If the time is less than or equal to zero, the method does
-        not wait at all. By default, timeout is set to zero.
-
-        A typical usage idiom for this method would be ::
-
-            lock = client.cp_subsystem.get_lock("lock").blocking()
-            if lock.try_lock():
-                try:
-                    # manipulate the protected state
-                finally:
-                    lock.unlock()
-            else:
-                # perform another action
-
-        This usage ensures that the lock is unlocked if it was acquired,
-        and doesn't try to unlock if the lock was not acquired.
-
-        Args:
-            timeout (int): The maximum time to wait for the lock in seconds.
-
-        Returns:
-            hazelcast.future.Future[bool]: ``True`` if the lock was acquired and ``False``
-                if the waiting time elapsed before the lock was acquired.
-
-        Raises:
-            LockOwnershipLostError: If the underlying CP session was
-                closed before the client releases the lock
-        """
-        return self.try_lock_and_get_fence(timeout).continue_with(lambda f: f.result() != self.INVALID_FENCE)
-
-    def try_lock_and_get_fence(self, timeout=0):
-        """Acquires the lock if it is free within the given waiting time,
         or already held by the current thread at the time of invocation and,
         the acquire limit is not exceeded, and returns the fencing token
         assigned to the current thread for this lock acquire.
@@ -189,16 +110,23 @@ class FencedLock(SessionAwareCPProxy):
         is returned. If the time is less than or equal to zero, the method does
         not wait at all. By default, timeout is set to zero.
 
-        This is a convenience method for the following pattern ::
+        A typical usage idiom for this method would be ::
 
             lock = client.cp_subsystem.get_lock("lock").blocking()
-            if lock.try_lock():
-                fence = lock.get_fence()
+            fence = lock.try_lock()
+            if fence != lock.INVALID_FENCE:
+                try:
+                    # manipulate the protected state
+                finally:
+                    lock.unlock()
             else:
-                fence = lock.INVALID_FENCE
+                # perform another action
+
+        This usage ensures that the lock is unlocked if it was acquired,
+        and doesn't try to unlock if the lock was not acquired.
 
         See Also:
-            :func:`lock_and_get_fence` function for more information about fences.
+            :func:`lock` function for more information about fences.
 
         Args:
             timeout (int): The maximum time to wait for the lock in seconds.
@@ -259,50 +187,6 @@ class FencedLock(SessionAwareCPProxy):
                 raise e
 
         return self._request_unlock(session_id, current_thread_id, uuid.uuid4()).continue_with(check_response)
-
-    def get_fence(self):
-        """Returns the fencing token if the lock is held by the current thread.
-
-        Fencing tokens are monotonic numbers that are incremented each time
-        the lock switches from the free state to the acquired state. They are
-        simply used for ordering lock holders. A lock holder can pass
-        its fencing to the shared resource to fence off previous lock holders.
-        When this resource receives an operation, it can validate the fencing
-        token in the operation.
-
-        Returns:
-            hazelcast.future.Future[int]: The fencing token if the lock is held
-                by the current thread
-
-        Raises:
-            LockOwnershipLostError: If the underlying CP session was
-                closed before the client releases the lock
-            IllegalMonitorStateError: If the lock is not held by
-                the current thread
-        """
-        current_thread_id = thread_id()
-        session_id = self._get_session_id()
-
-        # the order of the following checks is important
-        try:
-            self._verify_locked_session_id_if_present(current_thread_id, session_id, False)
-        except LockOwnershipLostError as e:
-            return ImmediateExceptionFuture(e)
-
-        if session_id == _NO_SESSION_ID:
-            self._lock_session_ids.pop(current_thread_id, None)
-            return ImmediateExceptionFuture(self._new_illegal_monitor_state_error())
-
-        def check_response(f):
-            state = _LockOwnershipState(f.result())
-            if state.is_locked_by(session_id, current_thread_id):
-                self._lock_session_ids[current_thread_id] = session_id
-                return state.fence
-
-            self._verify_no_locked_session_id_present(current_thread_id)
-            raise self._new_illegal_monitor_state_error()
-
-        return self._request_get_lock_ownership_state().continue_with(check_response)
 
     def is_locked(self):
         """Returns whether this lock is locked or not.
