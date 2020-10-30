@@ -178,8 +178,8 @@ class SessionManagerTest(unittest.TestCase):
         self.mock_request_new_session()
         self.manager._request_heartbeat = MagicMock(return_value=ImmediateExceptionFuture(SessionExpiredError()))
 
-        m = MagicMock(side_effect=self.manager._invalidate_session)
-        self.manager._invalidate_session = m
+        m = MagicMock(side_effect=self.manager.invalidate_session)
+        self.manager.invalidate_session = m
 
         self.manager.acquire_session(self.raft_group_id, 1).result()
         time.sleep(2)

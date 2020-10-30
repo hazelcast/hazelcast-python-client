@@ -1,5 +1,5 @@
 import time
-from threading import RLock
+from threading import RLock, Lock
 
 from hazelcast import six
 from hazelcast.errors import SessionExpiredError, CPGroupDestroyedError, HazelcastClientNotActiveError
@@ -162,6 +162,7 @@ class CPProxyManager(object):
     def __init__(self, context):
         self._context = context
         self._lock_proxies = dict()  # proxy_name to FencedLock
+        self._mux = Lock()  # Guards the _lock_proxies
 
     def get_or_create(self, service_name, proxy_name):
         proxy_name = _without_default_group_name(proxy_name)
@@ -178,7 +179,7 @@ class CPProxyManager(object):
             return self._create_fenced_lock(group_id, proxy_name, object_name)
 
     def _create_fenced_lock(self, group_id, proxy_name, object_name):
-        while True:
+        with self._mux:
             proxy = self._lock_proxies.get(proxy_name, None)
             if proxy:
                 if proxy.get_group_id() != group_id:
@@ -187,11 +188,8 @@ class CPProxyManager(object):
                     return proxy
 
             proxy = FencedLock(self._context, group_id, LOCK_SERVICE, proxy_name, object_name)
-            existing = self._lock_proxies.setdefault(proxy_name, proxy)
-            if existing.get_group_id() == proxy.get_group_id():
-                return existing
-
-            group_id = self._get_group_id(proxy_name)
+            self._lock_proxies[proxy_name] = proxy
+            return proxy
 
     def _get_group_id(self, proxy_name):
         codec = cp_group_create_cp_group_codec
@@ -266,6 +264,7 @@ class ProxySessionManager(object):
             session.release(count)
 
     def invalidate_session(self, group_id, session_id):
+        # called from the reactor thread only
         session = self._sessions.get(group_id, None)
         if session and session.id == session_id:
             self._sessions.pop(group_id, None)
@@ -378,7 +377,7 @@ class ProxySessionManager(object):
 
                         error = heartbeat_future.exception()
                         if isinstance(error, (SessionExpiredError, CPGroupDestroyedError)):
-                            self._invalidate_session(session.group_id, session.id)
+                            self.invalidate_session(session.group_id, session.id)
 
                     f = self._request_heartbeat(session.group_id, session.id)
                     f.add_done_callback(cb)
@@ -395,8 +394,3 @@ class ProxySessionManager(object):
         invocation = Invocation(request)
         self._context.invocation_service.invoke(invocation)
         return invocation.future
-
-    def _invalidate_session(self, group_id, session_id):
-        session = self._sessions.get(group_id, None)
-        if session and session.id == session_id:
-            self._sessions.pop(group_id, None)
