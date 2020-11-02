@@ -59,7 +59,7 @@ class ListenerService(object):
                 futures.append(future)
 
             try:
-                combine_futures(*futures).result()
+                combine_futures(futures).result()
             except:
                 self.deregister_listener(registration_id)
                 raise HazelcastError("Listener cannot be added")

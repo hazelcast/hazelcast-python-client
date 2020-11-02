@@ -101,6 +101,15 @@ class AtomicInteger(object):
         with self._mux:
             return self._counter
 
+    def add(self, count):
+        """Adds the given value to the current value.
+        Args:
+            count (int): The value to add.
+        """
+        with self._mux:
+            self._counter += count
+
+
 class ImmutableLazyDataList(Sequence):
     def __init__(self, list_data, to_object):
         super(ImmutableLazyDataList, self).__init__()

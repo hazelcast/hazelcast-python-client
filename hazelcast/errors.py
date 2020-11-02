@@ -353,7 +353,7 @@ class ConsistencyLostError(HazelcastError):
     pass
 
 
-class HazelcastClientNotActiveError(ValueError):
+class HazelcastClientNotActiveError(HazelcastError):
     def __init__(self, message="Client is not active"):
         super(HazelcastClientNotActiveError, self).__init__(message)
 
@@ -396,6 +396,43 @@ class NoClassDefFoundError(HazelcastError):
 
 
 class UndefinedErrorCodeError(HazelcastError):
+    pass
+
+
+class SessionExpiredError(HazelcastError):
+    pass
+
+
+class WaitKeyCancelledError(HazelcastError):
+    pass
+
+
+class LockAcquireLimitReachedError(HazelcastError):
+    pass
+
+
+class LockOwnershipLostError(HazelcastError):
+    pass
+
+
+class CPGroupDestroyedError(HazelcastError):
+    pass
+
+
+@retryable
+class CannotReplicateError(HazelcastError):
+    pass
+
+
+class LeaderDemotedError(HazelcastError):
+    pass
+
+
+class StaleAppendRequestError(HazelcastError):
+    pass
+
+
+class NotLeaderError(HazelcastError):
     pass
 
 
@@ -582,6 +619,15 @@ _ERROR_CODE_TO_ERROR = {
     _TARGET_NOT_REPLICA_EXCEPTION: TargetNotReplicaError,
     _MUTATION_DISALLOWED_EXCEPTION: MutationDisallowedError,
     _CONSISTENCY_LOST_EXCEPTION: ConsistencyLostError,
+    _SESSION_EXPIRED_EXCEPTION: SessionExpiredError,
+    _WAIT_KEY_CANCELLED_EXCEPTION: WaitKeyCancelledError,
+    _LOCK_ACQUIRE_LIMIT_REACHED_EXCEPTION: LockAcquireLimitReachedError,
+    _LOCK_OWNERSHIP_LOST_EXCEPTION: LockOwnershipLostError,
+    _CP_GROUP_DESTROYED_EXCEPTION: CPGroupDestroyedError,
+    _CANNOT_REPLICATE_EXCEPTION: CannotReplicateError,
+    _LEADER_DEMOTED_EXCEPTION: LeaderDemotedError,
+    _STALE_APPEND_REQUEST_EXCEPTION: StaleAppendRequestError,
+    _NOT_LEADER_EXCEPTION: NotLeaderError,
     _VERSION_MISMATCH_EXCEPTION: VersionMismatchError,
     _NO_SUCH_METHOD_ERROR: NoSuchMethodError,
     _NO_SUCH_METHOD_EXCEPTION: NoSuchMethodException,

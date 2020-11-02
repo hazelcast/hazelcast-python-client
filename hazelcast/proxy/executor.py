@@ -66,7 +66,7 @@ class Executor(Proxy):
         for member in members:
             f = self._execute_on_member(uuid, task_data, member.uuid)
             futures.append(f)
-        return future.combine_futures(*futures)
+        return future.combine_futures(futures)
 
     def execute_on_all_members(self, task):
         """Executes a task on all of the known cluster members.

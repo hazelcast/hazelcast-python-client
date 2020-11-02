@@ -7,7 +7,7 @@ from hazelcast.cluster import ClusterService, _InternalClusterService
 from hazelcast.config import _Config
 from hazelcast.connection import ConnectionManager, DefaultAddressProvider
 from hazelcast.core import DistributedObjectInfo, DistributedObjectEvent
-from hazelcast.cp import CPSubsystem
+from hazelcast.cp import CPSubsystem, ProxySessionManager
 from hazelcast.invocation import InvocationService, Invocation
 from hazelcast.listener import ListenerService, ClusterViewListenerService
 from hazelcast.lifecycle import LifecycleService, LifecycleState, _InternalLifecycleService
@@ -331,6 +331,7 @@ class HazelcastClient(object):
                                                  self._logger_extras)
         self._proxy_manager = ProxyManager(self._context)
         self.cp_subsystem = CPSubsystem(self._context)
+        self._proxy_session_manager = ProxySessionManager(self._context)
         self._transaction_manager = TransactionManager(self._context, self._logger_extras)
         self._lock_reference_id_generator = AtomicInteger(1)
         self._statistics = Statistics(self, self._reactor, self._connection_manager,
@@ -348,7 +349,8 @@ class HazelcastClient(object):
         self._context.init_context(self.config, self._invocation_service, self._internal_partition_service,
                                    self._internal_cluster_service, self._connection_manager,
                                    self._serialization_service, self._listener_service, self._proxy_manager,
-                                   self._near_cache_manager, self._lock_reference_id_generator, self._logger_extras)
+                                   self._near_cache_manager, self._lock_reference_id_generator, self._logger_extras,
+                                   self.name, self._proxy_session_manager, self._reactor)
 
     def _start(self):
         self._reactor.start()
@@ -597,6 +599,7 @@ class HazelcastClient(object):
             if self._internal_lifecycle_service.running:
                 self._internal_lifecycle_service.fire_lifecycle_event(LifecycleState.SHUTTING_DOWN)
                 self._internal_lifecycle_service.shutdown()
+                self._proxy_session_manager.shutdown().result()
                 self._near_cache_manager.destroy_near_caches()
                 self._connection_manager.shutdown()
                 self._invocation_service.shutdown()
@@ -666,11 +669,15 @@ class _ClientContext(object):
         self.near_cache_manager = None
         self.lock_reference_id_generator = None
         self.logger_extras = None
+        self.name = None
+        self.proxy_session_manager = None
+        self.reactor = None
 
     def init_context(self, config, invocation_service, partition_service,
                      cluster_service, connection_manager, serialization_service,
                      listener_service, proxy_manager, near_cache_manager,
-                     lock_reference_id_generator, logger_extras):
+                     lock_reference_id_generator, logger_extras, name,
+                     proxy_session_manager, reactor):
         self.config = config
         self.invocation_service = invocation_service
         self.partition_service = partition_service
@@ -682,3 +689,6 @@ class _ClientContext(object):
         self.near_cache_manager = near_cache_manager
         self.lock_reference_id_generator = lock_reference_id_generator
         self.logger_extras = logger_extras
+        self.name = name
+        self.proxy_session_manager = proxy_session_manager
+        self.reactor = reactor
