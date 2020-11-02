@@ -32,6 +32,22 @@ class FencedLock(SessionAwareCPProxy):
     FencedLock does not block a lock call. Instead, it fails with
     ``LockAcquireLimitReachedError`` or a specified return value.
     Please check the locking methods to see details about the behaviour.
+
+    It is advised to use this proxy in a blocking mode. Although it is
+    possible, non-blocking usage requires an extra care. FencedLock
+    uses the id of the thread that makes the request to distinguish lock
+    owners. When used in a non-blocking mode, added callbacks or
+    continuations are not generally executed in the thread that makes the
+    request. That causes the code below to fail most of the time since the
+    lock is acquired on the main thread but, unlock request is done in another
+    thread. ::
+
+        lock = client.cp_subsystem.get_lock("lock")
+
+        def cb(_):
+            lock.unlock()
+
+        lock.lock().add_done_callback(cb)
     """
 
     INVALID_FENCE = 0
