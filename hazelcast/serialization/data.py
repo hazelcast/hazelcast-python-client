@@ -92,7 +92,7 @@ class Data(object):
         Returns:
             int: The murmur hash of the internal data.
         """
-        return murmur_hash3_x86_32(self._buffer, DATA_OFFSET, self.data_size())
+        return murmur_hash3_x86_32(self._buffer)
 
     def __hash__(self):
         return self.hash_code()
