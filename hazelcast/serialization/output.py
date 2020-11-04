@@ -121,9 +121,7 @@ class _ObjectDataOutput(ObjectDataOutput):
     def to_byte_array(self):
         if self._buffer is None or self._pos == 0:
             return bytearray()
-        new_buffer = bytearray(self._pos)
-        new_buffer[:] = self._buffer[:self._pos]
-        return new_buffer
+        return self._buffer[:self._pos]
 
     def is_big_endian(self):
         return self._is_big_endian
