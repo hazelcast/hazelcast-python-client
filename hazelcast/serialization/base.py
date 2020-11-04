@@ -11,7 +11,7 @@ from hazelcast.serialization.serializer import *
 from hazelcast import six
 
 
-def empty_partitioning_strategy(key):
+def empty_partitioning_strategy(_):
     return None
 
 
@@ -85,6 +85,7 @@ class BaseSerializationService(object):
         """
         if not isinstance(data, Data):
             return data
+
         if is_null_data(data):
             return None
 
@@ -226,6 +227,7 @@ class SerializerRegistry(object):
     def lookup_default_serializer(self, obj_type, obj):
         if isinstance(obj, IdentifiedDataSerializable):
             return self._data_serializer
+
         if isinstance(obj, Portable):
             return self._portable_serializer
 
@@ -235,12 +237,12 @@ class SerializerRegistry(object):
         type_id = None
         # LOCATE NUMERIC TYPES
         if obj_type in six.integer_types:
-            if self.int_type == IntType.BYTE:
+            if self.int_type == IntType.INT:
+                type_id = CONSTANT_TYPE_INTEGER
+            elif self.int_type == IntType.BYTE:
                 type_id = CONSTANT_TYPE_BYTE
             elif self.int_type == IntType.SHORT:
                 type_id = CONSTANT_TYPE_SHORT
-            elif self.int_type == IntType.INT:
-                type_id = CONSTANT_TYPE_INTEGER
             elif self.int_type == IntType.LONG:
                 type_id = CONSTANT_TYPE_LONG
             elif self.int_type == IntType.BIG_INT:
