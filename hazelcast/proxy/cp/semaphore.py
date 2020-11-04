@@ -219,17 +219,13 @@ class Semaphore(BaseCPProxy):
         In other words, a client cannot release a permit without acquiring
         it first.
 
-        Otherwise, which means the default implementation, there is no such
-        requirement for clients. A client can freely release a permit without
-        acquiring it first. In this case, correct usage of a semaphore is established
-        by programming convention in the application.
-
         Otherwise, which means the underlying implementation is JDK compatible
-        (configured via ``jdk-compatible`` server-side setting), there is no requirement
-        that a client that releases a permit must have acquired that permit by
-        calling one of the ``acquire()`` methods. A client can freely release a
-        permit without acquiring it first. In this case, correct usage of a
-        semaphore is established by programming convention in the application.
+        (configured via ``jdk-compatible`` server-side setting), there is no
+        requirement that a client that releases a permit must have acquired
+        that permit by calling one of the ``acquire()`` methods. A client can
+        freely release a permit without acquiring it first. In this case,
+        correct usage of a semaphore is established by programming convention
+        in the application.
 
         Args:
             permits (int): Optional number of permits to release; defaults to ``1``
