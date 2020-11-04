@@ -426,11 +426,11 @@ class SessionAwareSemaphoreMockTest(unittest.TestCase):
         self.mock_request_acquire(False, HazelcastRuntimeError())
 
         with self.assertRaises(HazelcastRuntimeError):
-            self.semaphore.acquire()
+            self.semaphore.acquire(15)
 
         self.assert_call_counts(1, 1, 0)
-        self.assert_acquire_count(1)
-        self.assert_release_count(123, 1)
+        self.assert_acquire_count(15)
+        self.assert_release_count(123, 15)
 
     def test_drain(self):
         # Everything works

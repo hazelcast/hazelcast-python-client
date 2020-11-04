@@ -22,7 +22,7 @@ _NO_SESSION_ID = -1
 class Semaphore(BaseCPProxy):
     """A linearizable, distributed semaphore.
 
-    Semaphores are often used to restrict the number of threads than can access
+    Semaphores are often used to restrict the number of callers that can access
     some physical or logical resource.
 
     Semaphore is a cluster-wide counting semaphore. Conceptually, it maintains
@@ -32,7 +32,7 @@ class Semaphore(BaseCPProxy):
     objects are used; the semaphore just keeps a count of the number available
     and acts accordingly.
 
-    Hazelcast's distributed semaphore implementation guarantees that threads
+    Hazelcast's distributed semaphore implementation guarantees that callers
     invoking any of the ``acquire()`` methods are selected to
     obtain permits in the order of their invocations (first-in-first-out; FIFO).
     Note that FIFO ordering implies the order which the primary replica of an
@@ -42,8 +42,8 @@ class Semaphore(BaseCPProxy):
 
     This class also provides convenient ways to work with multiple permits at once.
     Beware of the increased risk of indefinite postponement when using the
-    multiple-permit acquire. If permits are released one by one, a thread waiting
-    for one permit will acquire it before a thread waiting for multiple permits
+    multiple-permit acquire. If permits are released one by one, a caller waiting
+    for one permit will acquire it before a caller waiting for multiple permits
     regardless of the call order.
 
     Correct usage of a semaphore is established by programming convention
@@ -66,7 +66,7 @@ class Semaphore(BaseCPProxy):
       only the permits it has acquired earlier. It means, you can acquire a permit
       from one thread and release it from another thread using the same Hazelcast client,
       but not different instances of Hazelcast client. You can use the session-aware
-      CP Semaphore implemenation by disabling JDK compatibility via ``jdk-compatible``
+      CP Semaphore implementation by disabling JDK compatibility via ``jdk-compatible``
       server-side setting. Although the session-aware implementation has a minor
       difference to the JDK Semaphore, we think it is a better fit for distributed
       environments because of its safe auto-cleanup mechanism for acquired permits.
@@ -122,12 +122,11 @@ class Semaphore(BaseCPProxy):
         and returns immediately, reducing the number of available permits
         by the given amount.
 
-        If insufficient permits are available then the current thread becomes
-        disabled for thread scheduling purposes and lies dormant until
-        one of the following things happens:
+        If insufficient permits are available then the result of the returned
+        future is not set until one of the following things happens:
 
-        - Some other thread invokes one of the ``release``
-          methods for this semaphore, the current thread is next to be assigned
+        - Some other caller invokes one of the ``release``
+          methods for this semaphore, the current caller is next to be assigned
           permits and the number of available permits satisfies this request,
         - This Semaphore instance is destroyed
 
@@ -188,7 +187,7 @@ class Semaphore(BaseCPProxy):
     def increase_permits(self, increase):
         """Increases the number of available permits by the indicated amount.
 
-        If there are some threads waiting for permits to become available, they
+        If there are some callers waiting for permits to become available, they
         will be notified. Moreover, if the caller has acquired some permits,
         they are not released with this call.
 
@@ -211,13 +210,13 @@ class Semaphore(BaseCPProxy):
         """Releases the given number of permits and increases the number of
         available permits by that amount.
 
-        If some threads in the cluster are blocked for acquiring permits,
+        If some callers in the cluster are blocked for acquiring permits,
         they will be notified.
 
         If the underlying Semaphore implementation is non-JDK-compatible
         (configured via ``jdk-compatible`` server-side setting), then a
-        thread can only release a permit which it has acquired before.
-        In other words, a thread cannot release a permit without acquiring
+        client can only release a permit which it has acquired before.
+        In other words, a client cannot release a permit without acquiring
         it first.
 
         Otherwise, which means the default implementation, there is no such
@@ -227,8 +226,8 @@ class Semaphore(BaseCPProxy):
 
         Otherwise, which means the underlying implementation is JDK compatible
         (configured via ``jdk-compatible`` server-side setting), there is no requirement
-        that a thread that releases a permit must have acquired that permit by
-        calling one of the ``acquire()`` methods. A thread can freely release a
+        that a client that releases a permit must have acquired that permit by
+        calling one of the ``acquire()`` methods. A client can freely release a
         permit without acquiring it first. In this case, correct usage of a
         semaphore is established by programming convention in the application.
 
@@ -253,11 +252,10 @@ class Semaphore(BaseCPProxy):
         If permits are acquired, the number of available permits in the Semaphore
         instance is also reduced by the given amount.
 
-        If no sufficient permits are available, then the current thread becomes
-        disabled for thread scheduling purposes and lies dormant until one of
-        following things happens:
+        If no sufficient permits are available, then the result of the returned
+        future is not set until one of the following things happens:
 
-        - Permits are released by other threads, the current thread is next to
+        - Permits are released by other callers, the current caller is next to
           be assigned permits and the number of available permits satisfies this
           request
         - The specified waiting time elapses
@@ -340,7 +338,7 @@ class SessionAwareSemaphore(Semaphore, SessionAwareCPProxy):
                                               "from the same thread." % self._object_name)
                     raise error
                 except Exception as e:
-                    self._release_session(session_id)
+                    self._release_session(session_id, permits)
                     raise e
 
             return self._request_acquire(session_id, current_thread_id, invocation_uuid, permits, -1).continue_with(
@@ -463,20 +461,20 @@ class SessionlessSemaphore(Semaphore):
             f.result()
             return None
 
-        return self._get_tread_id().continue_with(self._do_try_acquire, permits, -1).continue_with(handler)
+        return self._get_thread_id().continue_with(self._do_try_acquire, permits, -1).continue_with(handler)
 
     def drain_permits(self):
-        return self._get_tread_id().continue_with(self._do_drain_permits)
+        return self._get_thread_id().continue_with(self._do_drain_permits)
 
     def release(self, permits=1):
         check_true(permits > 0, "Permits must be positive")
         invocation_uuid = uuid.uuid4()
-        return self._get_tread_id().continue_with(self._request_release, invocation_uuid, permits)
+        return self._get_thread_id().continue_with(self._request_release, invocation_uuid, permits)
 
     def try_acquire(self, permits=1, timeout=0):
         check_true(permits > 0, "Permits must be positive")
         timeout = max(0, timeout)
-        return self._get_tread_id().continue_with(self._do_try_acquire, permits, timeout)
+        return self._get_thread_id().continue_with(self._do_try_acquire, permits, timeout)
 
     def _do_try_acquire(self, global_thread_id, permits, timeout):
         global_thread_id = global_thread_id.result()
@@ -494,7 +492,7 @@ class SessionlessSemaphore(Semaphore):
 
     def _do_change_permits(self, permits):
         invocation_uuid = uuid.uuid4()
-        return self._get_tread_id().continue_with(self._request_change, invocation_uuid, permits)
+        return self._get_thread_id().continue_with(self._request_change, invocation_uuid, permits)
 
     def _request_acquire(self, global_thread_id, invocation_uuid, permits, timeout):
         codec = semaphore_acquire_codec
@@ -528,5 +526,5 @@ class SessionlessSemaphore(Semaphore):
                                       "call from the same thread." % self._object_name)
             raise error
 
-    def _get_tread_id(self):
+    def _get_thread_id(self):
         return self._session_manager.get_or_create_unique_thread_id(self._group_id)
