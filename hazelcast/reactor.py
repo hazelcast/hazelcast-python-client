@@ -1,6 +1,7 @@
 import asyncore
 import errno
 import logging
+import os
 import select
 import socket
 import sys
@@ -23,17 +24,128 @@ try:
 except ImportError:
     ssl = None
 
+try:
+    import fcntl
+except ImportError:
+    fcntl = None
+
 _logger = logging.getLogger(__name__)
 
 
-class AsyncoreReactor(object):
-    _thread = None
-    _is_live = False
+def _set_nonblocking(fd):
+    if not fcntl:
+        return
 
-    def __init__(self):
+    flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+    fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+
+
+class _FileWrapper(object):
+    def __init__(self, fd):
+        self._fd = fd
+
+    def fileno(self):
+        return self._fd
+
+    def close(self):
+        os.close(self._fd)
+
+    def getsockopt(self, level, optname, buflen=None):
+        if level == socket.SOL_SOCKET and optname == socket.SO_ERROR and not buflen:
+            return 0
+        raise NotImplementedError("Only asyncore specific behaviour is implemented.")
+
+
+class _AbstractWaker(asyncore.dispatcher):
+    def __init__(self, map):
+        asyncore.dispatcher.__init__(self, map=map)
+        self.awake = False
+
+    def writable(self):
+        return False
+
+    def wake(self):
+        raise NotImplementedError("wake")
+
+
+class _PipedWaker(_AbstractWaker):
+    def __init__(self, map):
+        _AbstractWaker.__init__(self, map)
+        self._read_fd, self._write_fd = os.pipe()
+        self.set_socket(_FileWrapper(self._read_fd))
+        _set_nonblocking(self._read_fd)
+        _set_nonblocking(self._write_fd)
+
+    def wake(self):
+        if not self.awake:
+            self.awake = True
+            try:
+                os.write(self._write_fd, b"x")
+            except (IOError, ValueError):
+                pass
+
+    def handle_read(self):
+        try:
+            while len(os.read(self._read_fd, 4096)) == 4096:
+                pass
+        except IOError:
+            pass
+        self.awake = False
+
+    def close(self):
+        _AbstractWaker.close(self)
+        os.close(self._write_fd)
+
+
+class _SocketedWaker(_AbstractWaker):
+    def __init__(self, map):
+        _AbstractWaker.__init__(self, map)
+        self._writer = socket.socket()
+        self._writer.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+
+        a = socket.socket()
+        a.bind(("127.0.0.1", 0))
+        a.listen(1)
+        addr = a.getsockname()
+
+        try:
+            self._writer.connect(addr)
+            self._reader, _ = a.accept()
+        finally:
+            a.close()
+
+        self.set_socket(self._reader)
+        self._writer.settimeout(0)
+        self._reader.settimeout(0)
+
+    def wake(self):
+        if not self.awake:
+            self.awake = True
+            try:
+                self._writer.send(b"x")
+            except (IOError, socket.error, ValueError):
+                pass
+
+    def handle_read(self):
+        try:
+            while len(self._reader.recv(4096)) == 4096:
+                pass
+        except (IOError, socket.error):
+            pass
+        self.awake = False
+
+    def close(self):
+        _AbstractWaker.close(self)
+        self._writer.close()
+
+
+class _AbstractLoop(object):
+    def __init__(self, map):
+        self._map = map
         self._timers = []  # Accessed only from the reactor thread
         self._new_timers = deque()  # Popped only from the reactor thread
-        self._map = {}
+        self._is_live = False
+        self._thread = None
 
     def start(self):
         self._is_live = True
@@ -46,9 +158,9 @@ class AsyncoreReactor(object):
         Future._threading_locals.is_reactor_thread = True
         while self._is_live:
             try:
-                asyncore.loop(count=1, timeout=0.01, map=self._map)
+                self.run_loop()
                 self._check_timers()
-            except select.error as err:
+            except select.error:
                 # TODO: parse error type to catch only error "9"
                 _logger.warning("Connection closed by server")
                 pass
@@ -58,6 +170,11 @@ class AsyncoreReactor(object):
                 return
         _logger.debug("Reactor Thread exited")
         self._cleanup_all_timers()
+
+    def add_timer(self, delay, callback):
+        timer = Timer(delay + time.time(), callback)
+        self._new_timers.append((timer.end, timer))
+        return timer
 
     def _check_timers(self):
         timers = self._timers
@@ -83,13 +200,90 @@ class AsyncoreReactor(object):
                     # timers in the heap.
                     return
 
-    def add_timer_absolute(self, timeout, callback):
-        timer = Timer(timeout, callback)
-        self._new_timers.append((timer.end, timer))
-        return timer
+    def _cleanup_all_timers(self):
+        timers = self._timers
+        new_timers = self._new_timers
 
-    def add_timer(self, delay, callback):
-        return self.add_timer_absolute(delay + time.time(), callback)
+        while timers:
+            _, timer = timers.pop()
+            timer.timer_ended_cb()
+
+        # Although it is not the case with the current code base,
+        # the timers ended above may add new timers. So, the order
+        # is important.
+        while new_timers:
+            _, timer = new_timers.popleft()
+            timer.timer_ended_cb()
+
+    def check_loop(self):
+        raise NotImplementedError("check_loop")
+
+    def run_loop(self):
+        raise NotImplementedError("run_loop")
+
+    def wake_loop(self):
+        raise NotImplementedError("wake_loop")
+
+    def shutdown(self):
+        raise NotImplementedError("shutdown")
+
+
+class _WakeableLoop(_AbstractLoop):
+    _waker_class = _PipedWaker if os.name != 'nt' else _SocketedWaker
+
+    def __init__(self, map):
+        _AbstractLoop.__init__(self, map)
+        self.waker = _WakeableLoop._waker_class(map)
+
+    def check_loop(self):
+        assert not self.waker.awake
+        self.wake_loop()
+        assert self.waker.awake
+        self.run_loop()
+        assert not self.waker.awake
+
+    def run_loop(self):
+        asyncore.loop(timeout=0.1, use_poll=True, map=self._map, count=1)
+
+    def wake_loop(self):
+        self.waker.wake()
+
+    def shutdown(self):
+        if not self._is_live:
+            return
+
+        self._is_live = False
+
+        if self._thread is not threading.current_thread():
+            self._thread.join()
+
+        for connection in list(self._map.values()):
+            if connection is self.waker:
+                continue
+
+            try:
+                connection.close(None, HazelcastError("Client is shutting down"))
+            except OSError as connection:
+                if connection.args[0] == socket.EBADF:
+                    pass
+                else:
+                    raise
+
+        self.waker.close()
+        self._map.clear()
+
+
+class _BusyWaitLoop(_AbstractLoop):
+    def check_loop(self):
+        pass
+
+    def run_loop(self):
+        if not self._map:
+            time.sleep(0.005)
+        asyncore.loop(timeout=0.01, use_poll=True, map=self._map, count=1)
+
+    def wake_loop(self):
+        pass
 
     def shutdown(self):
         if not self._is_live:
@@ -108,26 +302,37 @@ class AsyncoreReactor(object):
                     pass
                 else:
                     raise
+
         self._map.clear()
 
+
+class AsyncoreReactor(object):
+    def __init__(self):
+        self.map = {}
+        loop = None
+        try:
+            loop = _WakeableLoop(self.map)
+            loop.check_loop()
+        except:
+            if loop:
+                loop.shutdown()
+                loop = _BusyWaitLoop(self.map)
+        self._loop = loop
+
+    def start(self):
+        self._loop.start()
+
+    def add_timer(self, delay, callback):
+        return self._loop.add_timer(delay, callback)
+
+    def wake_loop(self):
+        self._loop.wake_loop()
+
+    def shutdown(self):
+        self._loop.shutdown()
+
     def connection_factory(self, connection_manager, connection_id, address, network_config, message_callback):
-        return AsyncoreConnection(self._map, connection_manager, connection_id,
-                                  address, network_config, message_callback)
-
-    def _cleanup_all_timers(self):
-        timers = self._timers
-        new_timers = self._new_timers
-
-        while timers:
-            _, timer = timers.pop()
-            timer.timer_ended_cb()
-
-        # Although it is not the case with the current code base,
-        # the timers ended above may add new timers. So, the order
-        # is important.
-        while new_timers:
-            _, timer = new_timers.popleft()
-            timer.timer_ended_cb()
+        return AsyncoreConnection(self, connection_manager, connection_id, address, network_config, message_callback)
 
 
 _BUFFER_SIZE = 128000
@@ -137,13 +342,13 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
     sent_protocol_bytes = False
     read_buffer_size = _BUFFER_SIZE
 
-    def __init__(self, dispatcher_map, connection_manager, connection_id, address,
+    def __init__(self, reactor, connection_manager, connection_id, address,
                  config, message_callback):
-        asyncore.dispatcher.__init__(self, map=dispatcher_map)
+        asyncore.dispatcher.__init__(self, map=reactor.map)
         Connection.__init__(self, connection_manager, connection_id, message_callback)
-        self.connected_address = address
 
-        self._write_lock = threading.Lock()
+        self._reactor = reactor
+        self.connected_address = address
         self._write_queue = deque()
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -228,11 +433,12 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
             reader.process()
 
     def handle_write(self):
-        with self._write_lock:
+        while True:
             try:
                 data = self._write_queue.popleft()
             except IndexError:
                 return
+
             sent = self.send(data)
             self.last_write_time = time.time()
             self.sent_protocol_bytes = True
@@ -256,18 +462,8 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         return self.live and self.sent_protocol_bytes
 
     def _write(self, buf):
-        # if write queue is empty, send the data right away, otherwise add to queue
-        if len(self._write_queue) == 0 and self._write_lock.acquire(False):
-            try:
-                sent = self.send(buf)
-                self.last_write_time = time.time()
-                if sent < len(buf):
-                    _logger.info("Adding to queue")
-                    self._write_queue.appendleft(buf[sent:])
-            finally:
-                self._write_lock.release()
-        else:
-            self._write_queue.append(buf)
+        self._write_queue.append(buf)
+        self._reactor.wake_loop()
 
     def writable(self):
         return len(self._write_queue) > 0
