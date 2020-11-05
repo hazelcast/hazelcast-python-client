@@ -183,8 +183,7 @@ class _InternalClusterService(object):
             raise IllegalStateError("Could not get initial member list from cluster!")
 
     def clear_member_list_version(self):
-        if _logger.isEnabledFor(logging.DEBUG):
-            _logger.debug("Resetting the member list version")
+        _logger.debug("Resetting the member list version")
 
         current = self._member_list_snapshot
         if current is not _EMPTY_SNAPSHOT:
@@ -193,8 +192,8 @@ class _InternalClusterService(object):
     def handle_members_view_event(self, version, member_infos):
         snapshot = self._create_snapshot(version, member_infos)
         if _logger.isEnabledFor(logging.DEBUG):
-            _logger.debug("Handling new snapshot with membership version: %s, member string: %s"
-                          % (version, self._members_string(snapshot)))
+            _logger.debug("Handling new snapshot with membership version: %s, member string: %s",
+                          version, self._members_string(snapshot))
 
         current = self._member_list_snapshot
         if version >= current.version:

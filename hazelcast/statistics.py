@@ -50,7 +50,7 @@ class Statistics(object):
 
         self._statistics_timer = self._reactor.add_timer(self._period, _statistics_task)
 
-        _logger.info("Client statistics enabled with the period of %s seconds." % self._period)
+        _logger.info("Client statistics enabled with the period of %s seconds.", self._period)
 
     def shutdown(self):
         if self._statistics_timer:
@@ -181,11 +181,11 @@ class Statistics(object):
                 stat = func(self, psutil_stats, probe_name, *args)
             except AttributeError as ae:
                 _logger.debug("Unable to register psutil method used for the probe %s. "
-                              "Cause: %s" % (probe_name, ae))
+                              "Cause: %s", probe_name, ae)
                 self._failed_gauges.add(probe_name)
                 return
             except Exception as ex:
-                _logger.warning("Failed to access the probe %s. Cause: %s" % (probe_name, ex))
+                _logger.warning("Failed to access the probe %s. Cause: %s", probe_name, ex)
                 stat = self._DEFAULT_PROBE_VALUE
 
             psutil_stats[probe_name] = stat

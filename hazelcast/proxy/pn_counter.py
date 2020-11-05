@@ -228,7 +228,7 @@ class PNCounter(Proxy):
             delegated_future.set_result(result["value"])
         except Exception as ex:
             _logger.exception("Exception occurred while invoking operation on target %s, "
-                              "choosing different target" % target)
+                              "choosing different target", target)
             if excluded_addresses == PNCounter._EMPTY_ADDRESS_LIST:
                 excluded_addresses = []
 

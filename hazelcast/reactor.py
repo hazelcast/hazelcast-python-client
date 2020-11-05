@@ -55,7 +55,7 @@ class AsyncoreReactor(object):
                 _logger.exception("Error in Reactor Thread")
                 # TODO: shutdown client
                 return
-        _logger.debug("Reactor Thread exited. %s" % self._timers.qsize())
+        _logger.debug("Reactor Thread exited. %s", self._timers.qsize())
         self._cleanup_all_timers()
 
     def _check_timers(self):
@@ -240,7 +240,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
                 _logger.exception("Received error")
                 self.close(None, IOError(error))
         else:
-            _logger.exception("Received unexpected error: %s" % error)
+            _logger.exception("Received unexpected error: %s", error)
 
     def readable(self):
         return self.live and self.sent_protocol_bytes

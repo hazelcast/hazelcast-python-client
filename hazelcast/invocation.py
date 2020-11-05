@@ -129,7 +129,7 @@ class InvocationService(object):
     def _invoke_on_target(self, invocation, owner_uuid):
         connection = self._connection_manager.get_connection(owner_uuid)
         if not connection:
-            _logger.debug("Client is not connected to target: %s" % owner_uuid)
+            _logger.debug("Client is not connected to target: %s", owner_uuid)
             return False
         return self._send(invocation, connection)
 
@@ -217,7 +217,7 @@ class InvocationService(object):
         return True
 
     def _notify_error(self, invocation, error):
-        _logger.debug("Got exception for request %s, error: %s" % (invocation.request, error))
+        _logger.debug("Got exception for request %s, error: %s", invocation.request, error)
 
         if not self._client.lifecycle_service.is_running():
             self._complete_with_error(invocation, HazelcastClientNotActiveError())
@@ -268,7 +268,7 @@ class InvocationService(object):
     def _backup_event_handler(self, correlation_id):
         invocation = self._pending.get(correlation_id, None)
         if not invocation:
-            _logger.debug("Invocation not found for backup event, invocation id %s" % correlation_id)
+            _logger.debug("Invocation not found for backup event, invocation id %s", correlation_id)
             return
         self._notify_backup_complete(invocation)
 

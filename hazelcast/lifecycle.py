@@ -123,7 +123,7 @@ class _InternalLifecycleService(object):
         Args:
             new_state (str): The new state of the instance.
         """
-        _logger.info("HazelcastClient %s is %s" % (__version__, new_state))
+        _logger.info("HazelcastClient %s is %s", __version__, new_state)
         for on_state_change in six.itervalues(self._listeners):
             if on_state_change:
                 try:

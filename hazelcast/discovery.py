@@ -34,7 +34,7 @@ class HazelcastCloudAddressProvider(object):
             # Every private address is primary
             return list(nodes.keys()), []
         except Exception as e:
-            _logger.warning("Failed to load addresses from Hazelcast Cloud: %s" % e)
+            _logger.warning("Failed to load addresses from Hazelcast Cloud: %s", e)
         return [], []
 
     def translate(self, address):
@@ -62,7 +62,7 @@ class HazelcastCloudAddressProvider(object):
         try:
             self._private_to_public = self.cloud_discovery.discover_nodes()
         except Exception as e:
-            _logger.warning("Failed to load addresses from Hazelcast.cloud: %s" % e)
+            _logger.warning("Failed to load addresses from Hazelcast.cloud: %s", e)
 
 
 class HazelcastCloudDiscovery(object):
