@@ -13,6 +13,7 @@ from hazelcast.proxy.transactional_set import TransactionalSet
 from hazelcast.util import thread_id
 from hazelcast.six.moves import range
 
+_logger = logging.getLogger(__name__)
 
 _STATE_ACTIVE = "active"
 _STATE_NOT_STARTED = "not_started"
@@ -42,11 +43,9 @@ RETRY_COUNT = 20
 
 class TransactionManager(object):
     """Manages the execution of client transactions and provides Transaction objects."""
-    logger = logging.getLogger("HazelcastClient.TransactionManager")
 
-    def __init__(self, context, logger_extras):
+    def __init__(self, context):
         self._context = context
-        self._logger_extras = logger_extras
 
     def _connect(self):
         connection_manager = self._context.connection_manager
@@ -55,8 +54,8 @@ class TransactionManager(object):
             if connection:
                 return connection
 
-            self.logger.debug("Could not get a connection for the transaction. Attempt %d of %d", count,
-                              RETRY_COUNT, exc_info=True, extra=self._logger_extras)
+            _logger.debug("Could not get a connection for the transaction. Attempt %d of %d", count,
+                          RETRY_COUNT, exc_info=True)
             if count + 1 == RETRY_COUNT:
                 raise IllegalStateError("No active connection is found")
 

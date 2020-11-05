@@ -1,5 +1,5 @@
 from tests.base import SingleMemberTestCase
-from tests.util import random_string, configure_logging
+from tests.util import random_string
 
 
 class TransactionalSetTest(SingleMemberTestCase):
@@ -9,7 +9,6 @@ class TransactionalSetTest(SingleMemberTestCase):
         return config
 
     def setUp(self):
-        configure_logging()
         self.set = self.client.get_set(random_string()).blocking()
 
     def test_add(self):

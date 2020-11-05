@@ -1,9 +1,10 @@
 import time
 
-from tests.base import HazelcastTestCase
-from hazelcast.statistics import Statistics
+from hazelcast import __version__
 from hazelcast.client import HazelcastClient
-from hazelcast.version import CLIENT_VERSION, CLIENT_TYPE
+from hazelcast.core import CLIENT_TYPE
+from hazelcast.statistics import Statistics
+from tests.base import HazelcastTestCase
 from tests.hzrc.ttypes import Lang
 from tests.util import random_string
 
@@ -81,7 +82,7 @@ class StatisticsTest(HazelcastTestCase):
         self.assertEqual(1, result.count("lastStatisticsCollectionTime="))
         self.assertEqual(1, result.count("enterprise=false"))
         self.assertEqual(1, result.count("clientType=" + CLIENT_TYPE))
-        self.assertEqual(1, result.count("clientVersion=" + CLIENT_VERSION))
+        self.assertEqual(1, result.count("clientVersion=" + __version__))
         self.assertEqual(1, result.count("clusterConnectionTimestamp="))
         self.assertEqual(1, result.count("clientAddress=" + local_address))
         self.assertEqual(1, result.count("nc." + map_name + ".creationTime"))
@@ -98,7 +99,7 @@ class StatisticsTest(HazelcastTestCase):
         # in different platforms. So, first try to get these statistics and then check the
         # response content
 
-        s = Statistics(client, None, None, None, None, None)
+        s = Statistics(client, None, None, None, None)
         psutil_stats = s._get_os_and_runtime_stats()
         for stat_name in psutil_stats:
             self.assertEqual(1, result.count(stat_name))

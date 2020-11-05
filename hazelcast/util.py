@@ -1,11 +1,9 @@
 import random
 import threading
 import time
-import logging
 from collections import Sequence, Iterable
 
 from hazelcast import six
-from hazelcast.version import GIT_COMMIT_ID, GIT_COMMIT_DATE, CLIENT_VERSION
 
 DEFAULT_ADDRESS = "127.0.0.1"
 DEFAULT_PORT = 5701
@@ -189,65 +187,6 @@ def calculate_version(version_str):
         return calculated_version
     except ValueError:
         return UNKNOWN_VERSION
-
-# Logging utilities
-
-
-DEFAULT_LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "filters": {
-        "version_message_filter": {
-            "()": "hazelcast.util.VersionMessageFilter"
-        }
-    },
-    "formatters": {
-        "hazelcast_formatter": {
-            "()": "hazelcast.util.HazelcastFormatter",
-            "format": "%(asctime)s %(name)s\n%(levelname)s: %(version_message)s %(message)s",
-            "datefmt": "%b %d, %Y %I:%M:%S %p"
-        }
-    },
-    "handlers": {
-        "console_handler": {
-            "class": "logging.StreamHandler",
-            "stream": "ext://sys.stderr",
-            "filters": ["version_message_filter"],
-            "formatter": "hazelcast_formatter"
-        }
-    },
-    "loggers": {
-        "HazelcastClient": {
-            "handlers": ["console_handler"]
-        }
-    }
-}
-
-
-class VersionMessageFilter(logging.Filter):
-    def filter(self, record):
-        record.version_message = "[" + CLIENT_VERSION + "]"
-        return True
-
-
-class HazelcastFormatter(logging.Formatter):
-    def format(self, record):
-        client_name = getattr(record, "client_name", None)
-        cluster_name = getattr(record, "cluster_name", None)
-        if client_name and cluster_name:
-            record.msg = "[" + cluster_name + "] [" + client_name + "] " + record.msg
-        return super(HazelcastFormatter, self).format(record)
-
-
-def create_git_info():
-    if GIT_COMMIT_DATE:
-        if GIT_COMMIT_ID:
-            return "(" + GIT_COMMIT_DATE + " - " + GIT_COMMIT_ID + ") "
-        return "(" + GIT_COMMIT_DATE + ") "
-
-    if GIT_COMMIT_ID:
-        return "(" + GIT_COMMIT_ID + ") "
-    return ""
 
 
 def to_list(*args, **kwargs):

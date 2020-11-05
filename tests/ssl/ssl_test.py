@@ -4,7 +4,7 @@ from tests.base import HazelcastTestCase
 from hazelcast.client import HazelcastClient
 from hazelcast.errors import HazelcastError
 from hazelcast.config import SSLProtocol
-from tests.util import get_ssl_config, configure_logging, fill_map, get_abs_path, set_attr
+from tests.util import get_ssl_config, fill_map, get_abs_path, set_attr
 
 
 @set_attr(enterprise=True)
@@ -13,10 +13,6 @@ class SSLTest(HazelcastTestCase):
     rc = None
     hazelcast_ssl_xml = get_abs_path(current_directory, "hazelcast-ssl.xml")
     default_ca_xml = get_abs_path(current_directory, "hazelcast-default-ca.xml")
-
-    @classmethod
-    def setUpClass(cls):
-        configure_logging()
 
     def setUp(self):
         self.rc = self.create_rc()

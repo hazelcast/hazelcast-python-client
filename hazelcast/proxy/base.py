@@ -1,5 +1,3 @@
-import logging
-
 from hazelcast.future import make_blocking
 from hazelcast.invocation import Invocation
 from hazelcast.partition import string_partition_strategy
@@ -28,7 +26,6 @@ class Proxy(object):
         listener_service = context.listener_service
         self._register_listener = listener_service.register_listener
         self._deregister_listener = listener_service.deregister_listener
-        self.logger = logging.getLogger("HazelcastClient.%s(%s)" % (type(self).__name__, name))
         self._is_smart = context.config.smart_routing
 
     def destroy(self):

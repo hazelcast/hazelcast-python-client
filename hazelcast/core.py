@@ -1,8 +1,11 @@
-"""Hazelcast Core objects"""
+"""Hazelcast Core objects and constants."""
 import json
 
 from hazelcast import six
 from hazelcast import util
+
+CLIENT_TYPE = "PYH"
+SERIALIZATION_VERSION = 1
 
 
 class MemberInfo(object):

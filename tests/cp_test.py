@@ -223,7 +223,7 @@ class SessionManagerTest(unittest.TestCase):
         self.manager._thread_ids[(self.raft_group_id, thread_id())] = global_t_id
 
     def mock_reactor(self):
-        r = AsyncoreReactor({})
+        r = AsyncoreReactor()
         r.start()
         m = MagicMock()
         m.add_timer = MagicMock(side_effect=lambda d, c: r.add_timer(d, c))

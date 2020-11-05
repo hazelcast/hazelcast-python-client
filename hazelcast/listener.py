@@ -9,6 +9,8 @@ from hazelcast.invocation import Invocation
 from hazelcast.protocol.codec import client_add_cluster_view_listener_codec
 from hazelcast.util import check_not_none
 
+_logger = logging.getLogger(__name__)
+
 
 class _ListenerRegistration(object):
     __slots__ = ("registration_request", "decode_register_response", "encode_deregister_request",
@@ -31,13 +33,10 @@ class _EventRegistration(object):
 
 
 class ListenerService(object):
-    logger = logging.getLogger("HazelcastClient.ListenerService")
-
-    def __init__(self, client, connection_manager, invocation_service, logger_extras):
+    def __init__(self, client, connection_manager, invocation_service):
         self._client = client
         self._connection_manager = connection_manager
         self._invocation_service = invocation_service
-        self._logger_extras = logger_extras
         self._is_smart = client.config.smart_routing
         self._active_registrations = {}  # Dict of user_registration_id, ListenerRegistration
         self._registration_lock = threading.RLock()
@@ -88,8 +87,8 @@ class ListenerService(object):
                 except:
                     if connection.live:
                         successful = False
-                        self.logger.warning("Deregistration for listener with ID %s has failed to address %s ",
-                                            user_registration_id, "address", exc_info=True, extra=self._logger_extras)
+                        _logger.warning("Deregistration for listener with ID %s has failed to address %s ",
+                                        user_registration_id, "address", exc_info=True)
             if successful:
                 self._active_registrations.pop(user_registration_id)
 
@@ -100,7 +99,7 @@ class ListenerService(object):
         if handler:
             handler(message)
         else:
-            self.logger.warning("Got event message with unknown correlation id: %s", message, extra=self._logger_extras)
+            _logger.warning("Got event message with unknown correlation id: %s", message)
 
     def add_event_handler(self, correlation_id, event_handler):
         self._event_handlers[correlation_id] = event_handler
@@ -128,8 +127,8 @@ class ListenerService(object):
                 registration_map[connection] = registration
             except Exception as e:
                 if connection.live:
-                    self.logger.exception("Listener %s can not be added to a new connection: %s",
-                                          user_registration_id, connection, extra=self._logger_extras)
+                    _logger.exception("Listener %s can not be added to a new connection: %s",
+                                      user_registration_id, connection)
                 raise e
 
         return invocation.future.continue_with(callback)
@@ -203,5 +202,3 @@ class ClusterViewListenerService(object):
                                                           handle_partitions_view_event)
 
         return inner
-
-

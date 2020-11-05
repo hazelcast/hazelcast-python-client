@@ -4,7 +4,6 @@ import random
 
 from tests.base import SingleMemberTestCase, HazelcastTestCase
 from tests.hzrc.ttypes import Lang
-from tests.util import configure_logging
 from hazelcast.client import HazelcastClient
 from hazelcast.proxy.flake_id_generator import _IdBatch, _Block, _AutoBatcher
 from hazelcast.future import ImmediateFuture
@@ -195,10 +194,6 @@ class FlakeIdGeneratorDataStructuresTest(HazelcastTestCase):
 
 
 class FlakeIdGeneratorIdOutOfRangeTest(HazelcastTestCase):
-    @classmethod
-    def setUpClass(cls):
-        configure_logging()
-
     def setUp(self):
         self.rc = self.create_rc()
         self.cluster = self.create_cluster(self.rc, None)

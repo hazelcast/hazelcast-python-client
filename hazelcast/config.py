@@ -1,8 +1,3 @@
-"""
-Hazelcast Client Configuration module contains configuration classes and various constants required to create a ClientConfig.
-
-"""
-import logging
 import re
 
 from hazelcast import six
@@ -457,9 +452,8 @@ class _Config(object):
                  "_membership_listeners", "_lifecycle_listeners", "_flake_id_generators",
                  "_labels", "_heartbeat_interval", "_heartbeat_timeout",
                  "_invocation_timeout", "_invocation_retry_pause", "_statistics_enabled",
-                 "_statistics_period", "_shuffle_member_list", "_logging_config",
-                 "_logging_level", "_backup_ack_to_client_enabled", "_operation_backup_timeout",
-                 "_fail_on_indeterminate_operation_state")
+                 "_statistics_period", "_shuffle_member_list", "_backup_ack_to_client_enabled",
+                 "_operation_backup_timeout", "_fail_on_indeterminate_operation_state")
 
     def __init__(self):
         self._cluster_members = []
@@ -506,8 +500,6 @@ class _Config(object):
         self._statistics_enabled = False
         self._statistics_period = 3.0
         self._shuffle_member_list = True
-        self._logging_config = None
-        self._logging_level = logging.INFO
         self._backup_ack_to_client_enabled = True
         self._operation_backup_timeout = 5.0
         self._fail_on_indeterminate_operation_state = False
@@ -1111,29 +1103,6 @@ class _Config(object):
             self._shuffle_member_list = value
         else:
             raise TypeError("shuffle_member_list must be a boolean")
-
-    @property
-    def logging_config(self):
-        return self._logging_config
-
-    @logging_config.setter
-    def logging_config(self, value):
-        if isinstance(value, dict):
-            self._logging_config = value
-        else:
-            raise TypeError("logging_config must be a dict")
-
-    @property
-    def logging_level(self):
-        return self._logging_level
-
-    @logging_level.setter
-    def logging_level(self, value):
-        if value in {logging.NOTSET, logging.DEBUG, logging.INFO, logging.WARNING,
-                     logging.ERROR, logging.CRITICAL}:
-            self._logging_level = value
-        else:
-            raise TypeError("logging_level must be a valid value")
 
     @property
     def backup_ack_to_client_enabled(self):

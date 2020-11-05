@@ -133,7 +133,7 @@ class InvocationTest(unittest.TestCase):
 
     def _start_service(self, config=_Config()):
         c = MagicMock(config=config)
-        invocation_service = InvocationService(c, c._reactor, None)
+        invocation_service = InvocationService(c, c._reactor)
         self.service = invocation_service
         invocation_service.init(c._internal_partition_service, c._connection_manager, c._listener_service)
         invocation_service.start()
