@@ -2613,7 +2613,7 @@ Members [1] {
 2020-10-16 13:31:35,634 - hazelcast.lifecycle - INFO - HazelcastClient 4.0.0 is SHUTDOWN
 ```
 
-A handy alternative to above example would be configuring the root logger using the ``logging.basicConfig()`` utility method. Beware that,
+A handy alternative to the above example would be configuring the root logger using the ``logging.basicConfig()`` utility method. Beware that,
 every logger is the child of the root logger in Python. Hence, configuring the root logger may have application level impact. Nonetheless,
 it is useful for the testing or development purposes.
 

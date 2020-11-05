@@ -214,7 +214,7 @@ class _InternalClusterService(object):
                     try:
                         handler(removed_member)
                     except:
-                        _logger.exception("Exception in membership lister")
+                        _logger.exception("Exception in membership listener")
 
         for added_member in additions:
             for handler, _ in six.itervalues(self._listeners):
@@ -222,7 +222,7 @@ class _InternalClusterService(object):
                     try:
                         handler(added_member)
                     except:
-                        _logger.exception("Exception in membership lister")
+                        _logger.exception("Exception in membership listener")
 
     def _detect_membership_events(self, old, new):
         new_members = []
