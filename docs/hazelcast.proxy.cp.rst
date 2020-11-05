@@ -6,3 +6,4 @@ CP Proxies
     hazelcast.proxy.cp.atomic_reference
     hazelcast.proxy.cp.count_down_latch
     hazelcast.proxy.cp.fenced_lock
+    hazelcast.proxy.cp.semaphore

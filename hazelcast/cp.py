@@ -6,11 +6,13 @@ from hazelcast.errors import SessionExpiredError, CPGroupDestroyedError, Hazelca
 from hazelcast.future import ImmediateExceptionFuture, ImmediateFuture, combine_futures
 from hazelcast.invocation import Invocation
 from hazelcast.protocol.codec import cp_group_create_cp_group_codec, cp_session_heartbeat_session_codec, \
-    cp_session_create_session_codec, cp_session_close_session_codec, cp_session_generate_thread_id_codec
+    cp_session_create_session_codec, cp_session_close_session_codec, cp_session_generate_thread_id_codec, \
+    semaphore_get_semaphore_type_codec
 from hazelcast.proxy.cp.atomic_long import AtomicLong
 from hazelcast.proxy.cp.atomic_reference import AtomicReference
 from hazelcast.proxy.cp.count_down_latch import CountDownLatch
 from hazelcast.proxy.cp.fenced_lock import FencedLock
+from hazelcast.proxy.cp.semaphore import SessionAwareSemaphore, SessionlessSemaphore
 from hazelcast.util import check_true, AtomicInteger, thread_id
 
 
@@ -108,7 +110,7 @@ class CPSubsystem(object):
 
         The instance is created on CP Subsystem.
 
-        If no group name is given within the `name` argument, then the
+        If no group name is given within the ``name`` argument, then the
         FencedLock instance will be created on the DEFAULT CP group.
         If a group name is given, like ``.get_lock("myLock@group1")``,
         the given group will be initialized first, if not initialized
@@ -122,6 +124,25 @@ class CPSubsystem(object):
                 for the given name.
         """
         return self._proxy_manager.get_or_create(LOCK_SERVICE, name)
+
+    def get_semaphore(self, name):
+        """Returns the distributed Semaphore instance instance with given name.
+
+        The instance is created on CP Subsystem.
+
+        If no group name is given within the ``name`` argument, then the
+        Semaphore instance will be created on the DEFAULT CP group.
+        If a group name is given, like ``.get_semaphore("mySemaphore@group1")``,
+        the given group will be initialized first, if not initialized
+        already, and then the instance will be created on this group.
+
+        Args:
+            name (str): Name of the Semaphore
+
+        Returns:
+            hazelcast.proxy.cp.semaphore.Semaphore: The Semaphore proxy for the given name.
+        """
+        return self._proxy_manager.get_or_create(SEMAPHORE_SERVICE, name)
 
 
 _DEFAULT_GROUP_NAME = "default"
@@ -156,6 +177,7 @@ ATOMIC_LONG_SERVICE = "hz:raft:atomicLongService"
 ATOMIC_REFERENCE_SERVICE = "hz:raft:atomicRefService"
 COUNT_DOWN_LATCH_SERVICE = "hz:raft:countDownLatchService"
 LOCK_SERVICE = "hz:raft:lockService"
+SEMAPHORE_SERVICE = "hz:raft:semaphoreService"
 
 
 class CPProxyManager(object):
@@ -177,6 +199,10 @@ class CPProxyManager(object):
             return CountDownLatch(self._context, group_id, service_name, proxy_name, object_name)
         elif service_name == LOCK_SERVICE:
             return self._create_fenced_lock(group_id, proxy_name, object_name)
+        elif service_name == SEMAPHORE_SERVICE:
+            return self._create_semaphore(group_id, proxy_name, object_name)
+        else:
+            raise ValueError("Unknown service name: %s" % service_name)
 
     def _create_fenced_lock(self, group_id, proxy_name, object_name):
         with self._mux:
@@ -190,6 +216,18 @@ class CPProxyManager(object):
             proxy = FencedLock(self._context, group_id, LOCK_SERVICE, proxy_name, object_name)
             self._lock_proxies[proxy_name] = proxy
             return proxy
+
+    def _create_semaphore(self, group_id, proxy_name, object_name):
+        codec = semaphore_get_semaphore_type_codec
+        request = codec.encode_request(proxy_name)
+        invocation = Invocation(request, response_handler=codec.decode_response)
+        invocation_service = self._context.invocation_service
+        invocation_service.invoke(invocation)
+        jdk_compatible = invocation.future.result()
+        if jdk_compatible:
+            return SessionlessSemaphore(self._context, group_id, SEMAPHORE_SERVICE, proxy_name, object_name)
+        else:
+            return SessionAwareSemaphore(self._context, group_id, SEMAPHORE_SERVICE, proxy_name, object_name)
 
     def _get_group_id(self, proxy_name):
         codec = cp_group_create_cp_group_codec

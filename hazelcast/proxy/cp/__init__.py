@@ -47,13 +47,6 @@ class SessionAwareCPProxy(BaseCPProxy):
         """
         return self._group_id
 
-    def _get_or_create_unique_thread_id(self):
-        """
-        Returns:
-            hazelcast.future.Future[int]: Cluster-wide unique thread id.
-        """
-        return self._session_manager.get_or_create_unique_thread_id(self._group_id)
-
     def _get_session_id(self):
         """
         Returns:
