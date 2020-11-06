@@ -277,7 +277,7 @@ class PagingPredicate(Predicate):
 
     def reset(self):
         self.iteration_type = ITERATION_TYPE.ENTRY
-        self.anchor_list.clear()
+        del self.anchor_list[:]
         self.page = 0
 
     def get_nearest_anchor_entry(self):
@@ -337,6 +337,7 @@ is_instance_of = InstanceOfPredicate
 is_not = NotPredicate
 false = FalsePredicate
 true = TruePredicate
+paging = PagingPredicate
 
 
 def is_greater_than(attribute, x):
@@ -353,8 +354,4 @@ def is_less_than(attribute, x):
 
 def is_less_than_or_equal_to(attribute, x):
     return GreaterLessPredicate(attribute, x, True, True)
-
-
-def paging_predicate(predicate, page_size):
-    return PagingPredicate(predicate, page_size)
 

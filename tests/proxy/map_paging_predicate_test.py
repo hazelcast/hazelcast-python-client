@@ -3,11 +3,10 @@ import unittest
 
 from tests.base import HazelcastTestCase
 from tests.util import configure_logging, get_abs_path, random_string
-from hazelcast.serialization.predicate import PagingPredicate, is_greater_than_or_equal_to, is_less_than_or_equal_to, \
-    is_ilike
+from hazelcast.serialization.predicate import paging, is_greater_than_or_equal_to, is_less_than_or_equal_to, \
+    is_ilike, true
 from hazelcast.serialization.api import IdentifiedDataSerializable
 from hazelcast import HazelcastClient
-from hazelcast.six import assertCountEqual
 from hazelcast.util import ITERATION_TYPE
 from hazelcast.core import Comparator
 
@@ -39,24 +38,42 @@ class MapPagingPredicateTest(HazelcastTestCase):
         cls.client.shutdown()
         cls.rc.exit()
 
+    def test_with_inner_paging_predicate(self):
+        predicate = paging(true(), 1)
+
+        with self.assertRaises(TypeError):
+            paging(predicate, 1)
+
+    def test_with_non_positive_page_size(self):
+        with self.assertRaises(ValueError):
+            paging(true(), 0)
+
+        with self.assertRaises(ValueError):
+            paging(true(), -1)
+
+    def test_previous_page_when_index_is_zero(self):
+        predicate = paging(true(), 2)
+        self.assertEqual(0, predicate.previous_page())
+        self.assertEqual(0, predicate.previous_page())
+
     """
     Tests for proxy: comparator None
     """
     def test_entry_set_with_paging_predicate(self):
         self._fill_map_simple()
-        entry_set = self.map.entry_set(PagingPredicate(is_greater_than_or_equal_to('this', 3), 1))
+        entry_set = self.map.entry_set(paging(is_greater_than_or_equal_to('this', 3), 1))
         self.assertEqual(len(entry_set), 1)
-        assertCountEqual(self, entry_set[0], ['key-3', 3])
+        self.assertEqual(entry_set[0], ('key-3', 3))
 
     def test_key_set_with_paging_predicate(self):
         self._fill_map_simple()
-        key_set = self.map.key_set(PagingPredicate(is_greater_than_or_equal_to('this', 3), 1))
+        key_set = self.map.key_set(paging(is_greater_than_or_equal_to('this', 3), 1))
         self.assertEqual(len(key_set), 1)
         self.assertEqual(key_set[0], 'key-3')
 
     def test_values_with_paging_predicate(self):
         self._fill_map_simple()
-        values = self.map.values(PagingPredicate(is_greater_than_or_equal_to('this', 3), 1))
+        values = self.map.values(paging(is_greater_than_or_equal_to('this', 3), 1))
         self.assertEqual(len(values), 1)
         self.assertEqual(values[0], 3)
 
@@ -65,86 +82,95 @@ class MapPagingPredicateTest(HazelcastTestCase):
     """
     def test_first_page(self):
         self._fill_map_numeric()
-        paging = PagingPredicate(is_greater_than_or_equal_to('this', 40), 2)
-        assertCountEqual(self, self.map.values(paging), [40, 41])
+        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        self.assertEqual(self.map.values(predicate), [40, 41])
 
     def test_next_page(self):
         self._fill_map_numeric()
-        paging = PagingPredicate(is_greater_than_or_equal_to('this', 40), 2)
-        paging.next_page()
-        assertCountEqual(self, self.map.values(paging), [42, 43])
+        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate.next_page()
+        self.assertEqual(self.map.values(predicate), [42, 43])
 
     def test_set_page(self):
         self._fill_map_numeric()
-        paging = PagingPredicate(is_greater_than_or_equal_to('this', 40), 2)
-        paging.page = 4
-        assertCountEqual(self, self.map.values(paging), [48, 49])
+        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate.page = 4
+        self.assertEqual(self.map.values(predicate), [48, 49])
 
     def test_get_page(self):
-        paging = PagingPredicate(is_greater_than_or_equal_to('this', 40), 2)
-        paging.page = 4
-        self.assertEqual(paging.page, 4)
+        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate.page = 4
+        self.assertEqual(predicate.page, 4)
 
     def test_page_size(self):
-        paging = PagingPredicate(is_greater_than_or_equal_to('this', 40), 2)
-        self.assertEqual(paging.page_size, 2)
+        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        self.assertEqual(predicate.page_size, 2)
 
     def test_previous_page(self):
         self._fill_map_numeric()
-        paging = PagingPredicate(is_greater_than_or_equal_to('this', 40), 2)
-        paging.page = 4
-        paging.previous_page()
-        assertCountEqual(self, self.map.values(paging), [46, 47])
+        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate.page = 4
+        predicate.previous_page()
+        self.assertEqual(self.map.values(predicate), [46, 47])
 
     def test_get_4th_then_previous_page(self):
         self._fill_map_numeric()
-        paging = PagingPredicate(is_greater_than_or_equal_to('this', 40), 2)
-        paging.page = 4
-        self.map.values(paging)
-        paging.previous_page()
-        assertCountEqual(self, self.map.values(paging), [46, 47])
+        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate.page = 4
+        self.map.values(predicate)
+        predicate.previous_page()
+        self.assertEqual(self.map.values(predicate), [46, 47])
 
     def test_get_3rd_then_next_page(self):
         self._fill_map_numeric()
-        paging = PagingPredicate(is_greater_than_or_equal_to('this', 40), 2)
-        paging.page = 3
-        self.map.values(paging)
-        paging.next_page()
-        assertCountEqual(self, self.map.values(paging), [48, 49])
+        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate.page = 3
+        self.map.values(predicate)
+        predicate.next_page()
+        self.assertEqual(self.map.values(predicate), [48, 49])
 
     def test_set_nonexistent_page(self):
         # Trying to get page 10, which is out of range, should return empty list.
         self._fill_map_numeric()
-        paging = PagingPredicate(is_greater_than_or_equal_to('this', 40), 2)
-        paging.page = 10
-        assertCountEqual(self, self.map.values(paging), [])
+        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate.page = 10
+        self.assertEqual(self.map.values(predicate), [])
 
     def test_nonexistent_previous_page(self):
         # Trying to get previous page while already at first page should return first page.
         self._fill_map_numeric()
-        paging = PagingPredicate(is_greater_than_or_equal_to('this', 40), 2)
-        paging.previous_page()
-        assertCountEqual(self, self.map.values(paging), [40, 41])
+        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate.previous_page()
+        self.assertEqual(self.map.values(predicate), [40, 41])
 
     def test_nonexistent_next_page(self):
         # Trying to get next page while already at last page should return empty list.
         self._fill_map_numeric()
-        paging = PagingPredicate(is_greater_than_or_equal_to('this', 40), 2)
-        paging.page = 4
-        paging.next_page()
-        assertCountEqual(self, self.map.values(paging), [])
+        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate.page = 4
+        predicate.next_page()
+        self.assertEqual(self.map.values(predicate), [])
 
     def test_get_half_full_last_page(self):
         # Page size set to 2, but last page only has 1 element.
         self._fill_map_numeric()
-        paging = PagingPredicate(is_greater_than_or_equal_to('this', 41), 2)
-        paging.page = 4
-        assertCountEqual(self, self.map.values(paging), [49])
+        predicate = paging(is_greater_than_or_equal_to('this', 41), 2)
+        predicate.page = 4
+        self.assertEqual(self.map.values(predicate), [49])
+
+    def test_reset(self):
+        self._fill_map_numeric()
+        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        self.assertEqual(self.map.values(predicate), [40, 41])
+        predicate.next_page()
+        self.assertEqual(self.map.values(predicate), [42, 43])
+        predicate.reset()
+        self.assertEqual(self.map.values(predicate), [40, 41])
 
     def test_empty_map(self):
         # Empty map should return empty list.
-        paging = PagingPredicate(is_greater_than_or_equal_to('this', 30), 2)
-        assertCountEqual(self, self.map.values(paging), [])
+        predicate = paging(is_greater_than_or_equal_to('this', 30), 2)
+        self.assertEqual(self.map.values(predicate), [])
 
     @unittest.skip('Paging predicate with duplicate values will be supported in Hazelcast 4.0')
     def test_equal_values_paging(self):
@@ -154,15 +180,15 @@ class MapPagingPredicateTest(HazelcastTestCase):
         for i in range(50, 100):
             self.map.put(i, i - 50)
 
-        paging = PagingPredicate(is_less_than_or_equal_to('this', 8), 5)
+        predicate = paging(is_less_than_or_equal_to('this', 8), 5)
 
-        assertCountEqual(self, self.map.values(paging), [0, 0, 1, 1, 2])
-        paging.next_page()
-        assertCountEqual(self, self.map.values(paging), [2, 3, 3, 4, 4])
-        paging.next_page()
-        assertCountEqual(self, self.map.values(paging), [5, 5, 6, 6, 7])
-        paging.next_page()
-        assertCountEqual(self, self.map.values(paging), [7, 8, 8])
+        self.assertEqual(self.map.values(predicate), [0, 0, 1, 1, 2])
+        predicate.next_page()
+        self.assertEqual(self.map.values(predicate), [2, 3, 3, 4, 4])
+        predicate.next_page()
+        self.assertEqual(self.map.values(predicate), [5, 5, 6, 6, 7])
+        predicate.next_page()
+        self.assertEqual(self.map.values(predicate), [7, 8, 8])
 
     """
     Test for paging predicate with custom comparator
@@ -170,40 +196,40 @@ class MapPagingPredicateTest(HazelcastTestCase):
     def test_key_set_paging_with_custom_comparator(self):
         self._fill_map_custom_comp()
         custom_cmp = CustomComparator(type=1, iteration_type=ITERATION_TYPE.KEY)
-        paging = PagingPredicate(is_ilike('__key', 'key-%'), 6, custom_cmp)
+        predicate = paging(is_ilike('__key', 'key-%'), 6, custom_cmp)
 
-        key_set_page_1 = self.map.key_set(paging)
-        paging.next_page()
-        key_set_page_2 = self.map.key_set(paging)
-        paging.next_page()
-        key_set_page_3 = self.map.key_set(paging)
+        key_set_page_1 = self.map.key_set(predicate)
+        predicate.next_page()
+        key_set_page_2 = self.map.key_set(predicate)
+        predicate.next_page()
+        key_set_page_3 = self.map.key_set(predicate)
 
-        assertCountEqual(self, key_set_page_1, ['key-9', 'key-8', 'key-7', 'key-6', 'key-5', 'key-4'])
-        assertCountEqual(self, key_set_page_2, ['key-3', 'key-2', 'key-1', 'key-0'])
-        assertCountEqual(self, key_set_page_3, [])
+        self.assertEqual(key_set_page_1, ['key-9', 'key-8', 'key-7', 'key-6', 'key-5', 'key-4'])
+        self.assertEqual(key_set_page_2, ['key-3', 'key-2', 'key-1', 'key-0'])
+        self.assertEqual(key_set_page_3, [])
 
     def test_values_paging_with_custom_comparator(self):
         self._fill_map_custom_comp_2()
         custom_cmp = CustomComparator(type=2, iteration_type=ITERATION_TYPE.VALUE)
-        paging = PagingPredicate(None, 6, custom_cmp)
+        predicate = paging(None, 6, custom_cmp)
 
-        values_page_1 = self.map.values(paging)
-        paging.next_page()
-        values_page_2 = self.map.values(paging)
-        paging.next_page()
-        values_page_3 = self.map.values(paging)
+        values_page_1 = self.map.values(predicate)
+        predicate.next_page()
+        values_page_2 = self.map.values(predicate)
+        predicate.next_page()
+        values_page_3 = self.map.values(predicate)
 
-        assertCountEqual(self, values_page_1, ['A', 'BB', 'CCC', 'DDDD', 'EEEEE', 'FFFFFF'])
-        assertCountEqual(self, values_page_2, ['GGGGGGG', 'HHHHHHHH', 'IIIIIIIII', 'JJJJJJJJJJ'])
-        assertCountEqual(self, values_page_3, [])
+        self.assertEqual(values_page_1, ['A', 'BB', 'CCC', 'DDDD', 'EEEEE', 'FFFFFF'])
+        self.assertEqual(values_page_2, ['GGGGGGG', 'HHHHHHHH', 'IIIIIIIII', 'JJJJJJJJJJ'])
+        self.assertEqual(values_page_3, [])
 
     def test_entry_set_paging_with_custom_comparator(self):
         self._fill_map_custom_comp_2()
         custom_cmp = CustomComparator(type=2, iteration_type=ITERATION_TYPE.ENTRY)
-        paging = PagingPredicate(None, 2, custom_cmp)
-        page1 = self.map.entry_set(paging)
+        predicate = paging(None, 2, custom_cmp)
+        page1 = self.map.entry_set(predicate)
 
-        assertCountEqual(self, page1, [('key-65', 'A'), ('key-66', 'BB')])
+        self.assertEqual(page1, [('key-65', 'A'), ('key-66', 'BB')])
 
     def _fill_map_simple(self):
         self.map.put_all({
