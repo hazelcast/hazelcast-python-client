@@ -42,6 +42,10 @@ class HazelcastTestCase(unittest.TestCase):
     def create_cluster(cls, rc, config=None):
         return _Cluster(rc, rc.createCluster(None, config))
 
+    @classmethod
+    def create_cluster_keep_cluster_name(cls, rc, config=None):
+        return _Cluster(rc, rc.createClusterKeepClusterName(None, config))
+
     def create_client(self, config=None):
         client = hazelcast.HazelcastClient(**config)
         self.clients.append(client)
