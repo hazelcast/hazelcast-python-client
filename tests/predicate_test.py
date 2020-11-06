@@ -1,13 +1,15 @@
-from unittest import TestCase, skip
+import os
+from unittest import TestCase
 
 from hazelcast.serialization.predicate import is_equal_to, and_, is_between, is_less_than, \
     is_less_than_or_equal_to, is_greater_than, is_greater_than_or_equal_to, or_, is_not_equal_to, not_, is_like, \
-    is_ilike, matches_regex, sql, true, false, is_in, is_instance_of
-from hazelcast.serialization.api import Portable
-from tests.base import SingleMemberTestCase
+    is_ilike, matches_regex, sql, true, false, is_in, is_instance_of, paging
+from hazelcast.serialization.api import Portable, IdentifiedDataSerializable
+from hazelcast.util import IterationType
+from tests.base import SingleMemberTestCase, HazelcastTestCase
 from tests.serialization.portable_test import InnerPortable, FACTORY_ID
-from tests.util import random_string
-from hazelcast import six
+from tests.util import random_string, get_abs_path
+from hazelcast import six, HazelcastClient
 from hazelcast.six.moves import range
 
 
@@ -75,6 +77,10 @@ class PredicateStrTest(TestCase):
         predicate = false()
         self.assertEqual(str(predicate), "FalsePredicate()")
 
+    def test_paging(self):
+        predicate = paging(true(), 5)
+        self.assertEqual(str(predicate), "PagingPredicate(predicate=TruePredicate(), page_size=5, comparator=None)")
+
 
 class PredicateTest(SingleMemberTestCase):
     @classmethod
@@ -94,8 +100,8 @@ class PredicateTest(SingleMemberTestCase):
         return m
 
     def _fill_map_numeric(self, count=100):
-        for n in range(0, count):
-            self.map.put(n, n)
+        m = {n: n for n in range(count)}
+        self.map.put_all(m)
 
     def test_key_set(self):
         self._fill_map()
@@ -195,7 +201,6 @@ class PredicateTest(SingleMemberTestCase):
 
         six.assertCountEqual(self, self.map.key_set(predicate), ["key-1", "key-2"])
 
-    @skip(reason="Default ClassLoader is null in SerializationService")
     def test_instance_of(self):
         self.map.put("key-1", True)
         self.map.put("key-2", 5)
@@ -214,6 +219,15 @@ class PredicateTest(SingleMemberTestCase):
         self._fill_map()
         predicate = false()
         six.assertCountEqual(self, self.map.key_set(predicate), [])
+
+    def test_paging(self):
+        self._fill_map_numeric()
+        predicate = paging(is_less_than("this", 4), 2)
+        six.assertCountEqual(self, [0, 1], self.map.key_set(predicate))
+        predicate.next_page()
+        six.assertCountEqual(self, [2, 3], self.map.key_set(predicate))
+        predicate.next_page()
+        six.assertCountEqual(self, [], self.map.key_set(predicate))
 
 
 class PredicatePortableTest(SingleMemberTestCase):
@@ -251,7 +265,6 @@ class PredicatePortableTest(SingleMemberTestCase):
 
 
 class NestedPredicatePortableTest(SingleMemberTestCase):
-
     class Body(Portable):
         def __init__(self, name=None, limb=None):
             self.name = name
@@ -338,3 +351,252 @@ class NestedPredicatePortableTest(SingleMemberTestCase):
 
         self.assertEqual(1, len(values))
         self.assertEqual("body2", values[0].name)
+
+
+class PagingPredicateTest(HazelcastTestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.rc = cls.create_rc()
+        cls.cluster = cls.create_cluster(cls.rc, cls.configure_cluster())
+        cls.cluster.start_member()
+        cls.cluster.start_member()
+        cls.client = HazelcastClient(cluster_name=cls.cluster.id)
+        cls.map = cls.client.get_map(random_string()).blocking()
+
+    def setUp(self):
+        self.map.clear()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.map.destroy()
+        cls.client.shutdown()
+        cls.rc.shutdownCluster(cls.cluster.id)
+        cls.rc.exit()
+
+    @staticmethod
+    def configure_cluster():
+        current_directory = os.path.dirname(__file__)
+        with open(get_abs_path(os.path.join(current_directory, "proxy"), "hazelcast.xml"), "r") as f:
+            return f.read()
+
+    def test_with_inner_paging_predicate(self):
+        predicate = paging(true(), 1)
+
+        with self.assertRaises(TypeError):
+            paging(predicate, 1)
+
+    def test_with_non_positive_page_size(self):
+        with self.assertRaises(ValueError):
+            paging(true(), 0)
+
+        with self.assertRaises(ValueError):
+            paging(true(), -1)
+
+    def test_previous_page_when_index_is_zero(self):
+        predicate = paging(true(), 2)
+        self.assertEqual(0, predicate.previous_page())
+        self.assertEqual(0, predicate.previous_page())
+
+    def test_entry_set_with_paging_predicate(self):
+        self.fill_map(3)
+        entry_set = self.map.entry_set(paging(is_greater_than_or_equal_to('this', 2), 1))
+        self.assertEqual(len(entry_set), 1)
+        self.assertEqual(entry_set[0], ('key-2', 2))
+
+    def test_key_set_with_paging_predicate(self):
+        self.fill_map(3)
+        key_set = self.map.key_set(paging(is_greater_than_or_equal_to('this', 2), 1))
+        self.assertEqual(len(key_set), 1)
+        self.assertEqual(key_set[0], 'key-2')
+
+    def test_values_with_paging_predicate(self):
+        self.fill_map(3)
+        values = self.map.values(paging(is_greater_than_or_equal_to('this', 2), 1))
+        self.assertEqual(len(values), 1)
+        self.assertEqual(values[0], 2)
+
+    def test_first_page(self):
+        self.fill_map()
+        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        self.assertEqual(self.map.values(predicate), [40, 41])
+
+    def test_next_page(self):
+        self.fill_map()
+        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate.next_page()
+        self.assertEqual(self.map.values(predicate), [42, 43])
+
+    def test_set_page(self):
+        self.fill_map()
+        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate.page = 4
+        self.assertEqual(self.map.values(predicate), [48, 49])
+
+    def test_get_page(self):
+        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate.page = 4
+        self.assertEqual(predicate.page, 4)
+
+    def test_page_size(self):
+        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        self.assertEqual(predicate.page_size, 2)
+
+    def test_previous_page(self):
+        self.fill_map()
+        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate.page = 4
+        predicate.previous_page()
+        self.assertEqual(self.map.values(predicate), [46, 47])
+
+    def test_get_4th_then_previous_page(self):
+        self.fill_map()
+        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate.page = 4
+        self.map.values(predicate)
+        predicate.previous_page()
+        self.assertEqual(self.map.values(predicate), [46, 47])
+
+    def test_get_3rd_then_next_page(self):
+        self.fill_map()
+        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate.page = 3
+        self.map.values(predicate)
+        predicate.next_page()
+        self.assertEqual(self.map.values(predicate), [48, 49])
+
+    def test_set_nonexistent_page(self):
+        # Trying to get page 10, which is out of range, should return empty list.
+        self.fill_map()
+        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate.page = 10
+        self.assertEqual(self.map.values(predicate), [])
+
+    def test_nonexistent_previous_page(self):
+        # Trying to get previous page while already at first page should return first page.
+        self.fill_map()
+        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate.previous_page()
+        self.assertEqual(self.map.values(predicate), [40, 41])
+
+    def test_nonexistent_next_page(self):
+        # Trying to get next page while already at last page should return empty list.
+        self.fill_map()
+        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        predicate.page = 4
+        predicate.next_page()
+        self.assertEqual(self.map.values(predicate), [])
+
+    def test_get_half_full_last_page(self):
+        # Page size set to 2, but last page only has 1 element.
+        self.fill_map()
+        predicate = paging(is_greater_than_or_equal_to('this', 41), 2)
+        predicate.page = 4
+        self.assertEqual(self.map.values(predicate), [49])
+
+    def test_reset(self):
+        self.fill_map()
+        predicate = paging(is_greater_than_or_equal_to('this', 40), 2)
+        self.assertEqual(self.map.values(predicate), [40, 41])
+        predicate.next_page()
+        self.assertEqual(self.map.values(predicate), [42, 43])
+        predicate.reset()
+        self.assertEqual(self.map.values(predicate), [40, 41])
+
+    def test_empty_map(self):
+        # Empty map should return empty list.
+        predicate = paging(is_greater_than_or_equal_to('this', 30), 2)
+        self.assertEqual(self.map.values(predicate), [])
+
+    def test_equal_values_paging(self):
+        self.fill_map()
+        # keys[50 - 99], values[0 - 49]:
+        m = {"key-%d" % i: i - 50 for i in range(50, 100)}
+        self.map.put_all(m)
+
+        predicate = paging(is_less_than_or_equal_to('this', 8), 5)
+
+        self.assertEqual(self.map.values(predicate), [0, 0, 1, 1, 2])
+        predicate.next_page()
+        self.assertEqual(self.map.values(predicate), [2, 3, 3, 4, 4])
+        predicate.next_page()
+        self.assertEqual(self.map.values(predicate), [5, 5, 6, 6, 7])
+        predicate.next_page()
+        self.assertEqual(self.map.values(predicate), [7, 8, 8])
+
+    def test_entry_set_with_custom_comparator(self):
+        m = self.fill_map()
+        predicate = paging(is_less_than("this", 10), 5, CustomComparator(1, IterationType.KEY))
+
+        def entries(start, end):
+            return list(
+                sorted(
+                    map(lambda k: (k, m[k]),
+                        filter(lambda k: start <= m[k] < end, m)
+                        ),
+                    key=lambda e: e[1],
+                    reverse=True)
+            )
+
+        self.assertEqual(entries(5, 10), self.map.entry_set(predicate))
+        predicate.next_page()
+        self.assertEqual(entries(0, 5), self.map.entry_set(predicate))
+        predicate.next_page()
+        self.assertEqual([], self.map.entry_set(predicate))
+
+    def test_key_set_with_custom_comparator(self):
+        m = self.fill_map()
+        predicate = paging(is_less_than("this", 10), 5, CustomComparator(1, IterationType.KEY))
+
+        keys = list(sorted(m.keys(), key=lambda k: m[k]))
+
+        self.assertEqual(keys[9:4:-1], self.map.key_set(predicate))
+        predicate.next_page()
+        self.assertEqual(keys[4::-1], self.map.key_set(predicate))
+        predicate.next_page()
+        self.assertEqual([], self.map.key_set(predicate))
+
+    def test_values_with_custom_comparator(self):
+        m = self.fill_map()
+        predicate = paging(is_less_than("this", 10), 5, CustomComparator(1, IterationType.KEY))
+
+        values = list(sorted(m.values()))
+
+        self.assertEqual(values[9:4:-1], self.map.values(predicate))
+        predicate.next_page()
+        self.assertEqual(values[4::-1], self.map.values(predicate))
+        predicate.next_page()
+        self.assertEqual([], self.map.values(predicate))
+
+    def fill_map(self, count=50):
+        m = {"key-%d" % x: x for x in range(count)}
+        self.map.put_all(m)
+        return m
+
+
+class CustomComparator(IdentifiedDataSerializable):
+    """
+    For type:
+
+    - 0 -> lexicographical order
+    - 1 -> reverse lexicographical
+    - 2 -> length increasing order
+
+    Iteration type is same as the ``hazelcast.util.IterationType``
+    """
+
+    def __init__(self, order, iteration_type):
+        self.order = order
+        self.iteration_type = iteration_type
+
+    def write_data(self, object_data_output):
+        object_data_output.write_int(self.order)
+        object_data_output.write_int(self.iteration_type)
+
+    def read_data(self, object_data_input):
+        pass
+
+    def get_factory_id(self):
+        return 66
+
+    def get_class_id(self):
+        return 2

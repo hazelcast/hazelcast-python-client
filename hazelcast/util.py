@@ -281,3 +281,18 @@ class RandomLB(_AbstractLoadBalancer):
             return None
         idx = random.randrange(0, len(members))
         return members[idx]
+
+
+class IterationType:
+    """To differentiate users selection on result collection on map-wide
+    operations like ``entry_set``, ``key_set``, ``values`` etc.
+    """
+
+    KEY = 0
+    """Iterate over keys"""
+
+    VALUE = 1
+    """Iterate over values"""
+
+    ENTRY = 2
+    """Iterate over entries"""

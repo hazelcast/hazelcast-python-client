@@ -1,6 +1,7 @@
 import uuid
 
 from hazelcast import six
+from hazelcast.six.moves import range
 from hazelcast.protocol.client_message import NULL_FRAME_BUF, BEGIN_FRAME_BUF, END_FRAME_BUF, \
     SIZE_OF_FRAME_LENGTH_AND_FLAGS, _IS_FINAL_FLAG, NULL_FINAL_FRAME_BUF, END_FINAL_FRAME_BUF
 from hazelcast.serialization import LONG_SIZE_IN_BYTES, UUID_SIZE_IN_BYTES, LE_INT, LE_LONG, BOOLEAN_SIZE_IN_BYTES, \
