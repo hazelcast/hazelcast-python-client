@@ -2442,9 +2442,9 @@ In the example code below:
 This predicate has a filter to retrieve the objects with an `age` greater than or equal to `18`.
 
 - Then a `PagingPredicate` is constructed in which the page size is `5`, so that there are five objects in each page. 
-The first time the values are called creates the first page.
+The first time the ``values()`` method is called, the first page is fetched.
 
-- It gets subsequent pages with the `next_page()` method of `PagingPredicate` and querying the map again with the updated `PagingPredicate`.
+- Finally, the subsequent page is fetched by calling `next_page()` method of `PagingPredicate` and querying the map again with the updated `PagingPredicate`.
 
 ```python
 from hazelcast.serialization.predicate import paging, is_greater_than_or_equal_to
@@ -2467,7 +2467,7 @@ values = m.values(predicate)
 ```
 
 If a comparator is not specified for `PagingPredicate`, but you want to get a collection of keys or values page by page, 
-this collection must be an instance of `Comparable` (i.e., it must implement `java.lang.Comparable` on the member side). 
+keys or values of the collection must implement the `java.lang.Comparable` interface on the member side. 
 Otherwise, paging fails with an exception from the server. Luckily, a lot of types implement the `Comparable`
 interface by [default](https://docs.oracle.com/javase/8/docs/api/java/lang/Comparable.html), including the primitive types,
 so, you may use values of types `int`, `float`, `str` etc. in paging without specifying a comparator on the Python client.
@@ -2475,7 +2475,7 @@ so, you may use values of types `int`, `float`, `str` etc. in paging without spe
 You can also access a specific page more easily by setting the `predicate.page` attribute before making the remote call.
 This way, if you make a query for the hundredth page, for example, it gets all `100` pages at once instead of reaching the hundredth page one by one using the `next_page()` method. 
 
-`PagingPredicate`, also known as Order & Limit, is not supported in Transactional Context.
+> **NOTE: `PagingPredicate`, also known as Order & Limit, is not supported in Transactional Context.**
 
 ## 7.8. Performance
 

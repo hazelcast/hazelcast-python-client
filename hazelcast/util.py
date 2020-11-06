@@ -285,7 +285,7 @@ class RandomLB(_AbstractLoadBalancer):
 
 class IterationType:
     """To differentiate users selection on result collection on map-wide
-    operations like values, keySet, query etc.
+    operations like ``entry_set``, ``key_set``, ``values`` etc.
     """
 
     KEY = 0
