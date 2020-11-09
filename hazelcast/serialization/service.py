@@ -94,10 +94,10 @@ class SerializationServiceV1(BaseSerializationService):
         for cd in class_definitions:
             self.register_class_definition(cd, factories, check_error)
 
-    def register_class_definition(self, cd, factories, check_error):
-        field_names = cd.get_field_names()
+    def register_class_definition(self, class_definition, factories, check_error):
+        field_names = class_definition.get_field_names()
         for field_name in field_names:
-            fd = cd.get_field(field_name)
+            fd = class_definition.get_field(field_name)
             if fd.field_type == FieldType.PORTABLE or fd.field_type == FieldType.PORTABLE_ARRAY:
                 factory_id = fd.factory_id
                 class_id = fd.class_id
@@ -114,4 +114,4 @@ class SerializationServiceV1(BaseSerializationService):
                         "Could not find registered ClassDefinition for factory-id: %s, class-id: %s"
                         % (factory_id, class_id))
 
-        self._portable_context.register_class_definition(cd)
+        self._portable_context.register_class_definition(class_definition)
