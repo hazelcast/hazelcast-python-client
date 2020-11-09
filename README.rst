@@ -149,8 +149,8 @@ The following is an example configuration when you are adding an
                   IdentifiedFactoryClassName
               </data-serializable-factory>
           </data-serializable-factories>
-      </serialization>
-      ...
+       </serialization>
+       ...
    </hazelcast>
 
 If you want to add a ``Portable`` class, you should use
@@ -406,7 +406,7 @@ Congratulations. You just started a Hazelcast Python client.
 
 **Using a Map**
 
-Let’s manipulate a distributed map(similar to Python’s builtin ``dict``)
+Let’s manipulate a distributed map (similar to Python’s builtin ``dict``)
 on a cluster using the client.
 
 .. code:: python
@@ -500,7 +500,7 @@ be executed asynchronously without blocking the execution order of your
 program.
 
 You may get the value returned by the method calls using the
-``result()`` method of the ``Future`` class. ``result`` will block the
+``result()`` method of the ``Future`` class. This will block the
 execution of your program and will wait until the future finishes
 running. Then, it will return the value returned by the call which are
 key-value pairs in our ``entry_set()`` method call.
@@ -1868,7 +1868,7 @@ A PN Counter usage example is shown below.
 
 Hazelcast ``FlakeIdGenerator`` is used to generate cluster-wide unique
 identifiers. Generated identifiers are long primitive values and are
-k-ordered (roughly ordered). IDs are in the range from 0 to ``2^63-1``
+k-ordered (roughly ordered). IDs are in the range from ``0`` to ``2^63-1``
 (maximum signed long value). For details, see the `FlakeIdGenerator
 section <https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#flakeidgenerator>`__
 in the Hazelcast IMDG Reference Manual.
@@ -2231,7 +2231,7 @@ AtomicReference:
    be careful about introducing a data-race.
 -  The in-memory format of an AtomicReference is ``binary``. The
    receiving side does not need to have the class definition available
-   unless it needs to be deserialized on the other side., e.g., because
+   unless it needs to be deserialized on the other side, e.g., because
    a method like ``alter()`` is executed. This deserialization is done
    for every call that needs to have the object instead of the binary
    content, so be careful with expensive object graphs that need to be
@@ -2567,42 +2567,46 @@ client given above:
 
 .. code:: java
 
-   import com.hazelcast.map.AbstractEntryProcessor;
+   import com.hazelcast.map.EntryProcessor;
    import com.hazelcast.nio.ObjectDataInput;
    import com.hazelcast.nio.ObjectDataOutput;
    import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
+
    import java.io.IOException;
    import java.util.Map;
 
-   public class IdentifiedEntryProcessor extends AbstractEntryProcessor<String, String> implements IdentifiedDataSerializable {
-        static final int CLASS_ID = 1;
-        private String value;
-        
+
+   public class IdentifiedEntryProcessor
+           implements EntryProcessor<String, String, String>, IdentifiedDataSerializable {
+
+       static final int CLASS_ID = 1;
+       private String value;
+
        public IdentifiedEntryProcessor() {
        }
-       
-        @Override
+
+       @Override
        public int getFactoryId() {
            return IdentifiedFactory.FACTORY_ID;
        }
-       
-        @Override
-       public int getId() {
+
+       @Override
+       public int getClassId() {
            return CLASS_ID;
        }
-       
-        @Override
+
+       @Override
        public void writeData(ObjectDataOutput out) throws IOException {
            out.writeUTF(value);
        }
-       
-        @Override
+
+       @Override
        public void readData(ObjectDataInput in) throws IOException {
            value = in.readUTF();
        }
-       
-        @Override
-       public Object process(Map.Entry<String, String> entry) {
+
+       @Override
+       public String process(Map.Entry<String, String> entry) {
            entry.setValue(value);
            return value;
        }
@@ -2618,7 +2622,7 @@ You can implement the above processor’s factory as follows:
    public class IdentifiedFactory implements DataSerializableFactory {
        public static final int FACTORY_ID = 5;
        
-        @Override
+       @Override
        public IdentifiedDataSerializable create(int typeId) {
            if (typeId == IdentifiedEntryProcessor.CLASS_ID) {
                return new IdentifiedEntryProcessor();
@@ -3798,9 +3802,9 @@ You can use the following channels for your questions and
 development/usage issues:
 
 -  This repository by opening an issue.
--  Our Google Groups directory:
-   https://groups.google.com/forum/#!forum/hazelcast
--  Stack Overflow: https://stackoverflow.com/questions/tagged/hazelcast
+-  `Slack <https://slack.hazelcast.com>`__
+-  `Google Groups <https://groups.google.com/forum/#!forum/hazelcast>`__
+-  `Stack Overflow <https://stackoverflow.com/questions/tagged/hazelcast>`__
 
 11. Contributing
 ================
