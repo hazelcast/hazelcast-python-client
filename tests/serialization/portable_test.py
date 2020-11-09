@@ -231,6 +231,51 @@ def create_portable():
 the_factory = {SerializationV1Portable.CLASS_ID: SerializationV1Portable, InnerPortable.CLASS_ID: InnerPortable}
 
 
+class MyPortable1(Portable):
+    def __init__(self, str_field=None):
+        self.str_field = str_field
+
+    def write_portable(self, writer):
+        writer.write_utf("str_field", self.str_field)
+
+    def read_portable(self, reader):
+        self.str_field = reader.read_utf("str_field")
+
+    def get_factory_id(self):
+        return 1
+
+    def get_class_id(self):
+        return 1
+
+    def __eq__(self, other):
+        return isinstance(other, MyPortable1) and self.str_field == other.str_field
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
+class MyPortable2(Portable):
+    def __init__(self, int_field=0):
+        self.int_field = int_field
+
+    def write_portable(self, writer):
+        writer.write_int("int_field", self.int_field)
+
+    def read_portable(self, reader):
+        self.int_field = reader.read_int("int_field")
+
+    def get_factory_id(self):
+        return 2
+
+    def get_class_id(self):
+        return 1
+
+    def __eq__(self, other):
+        return isinstance(other, MyPortable2) and self.int_field == other.int_field
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 class PortableSerializationTestCase(unittest.TestCase):
     def test_encode_decode(self):
         config = _Config()
@@ -370,3 +415,61 @@ class PortableSerializationTestCase(unittest.TestCase):
         data = ss1.to_data(p)
 
         self.assertEqual(p, ss2.to_object(data))
+
+    def test_nested_null_portable_serialization(self):
+        config = _Config()
+
+        config.portable_factories = {
+            1: {
+                1: Parent,
+                2: Child
+            }
+        }
+
+        child_class_def = ClassDefinitionBuilder(FACTORY_ID, 2).add_utf_field("name").build()
+        parent_class_def = ClassDefinitionBuilder(FACTORY_ID, 1).add_portable_field("child", child_class_def).build()
+
+        config.class_definitions = [child_class_def, parent_class_def]
+
+        ss = SerializationServiceV1(config)
+
+        p = Parent(None)
+        data = ss.to_data(p)
+
+        self.assertEqual(p, ss.to_object(data))
+
+    def test_duplicate_class_definition(self):
+        config = _Config()
+
+        class_def1 = ClassDefinitionBuilder(1, 1).add_utf_field("str_field").build()
+        class_def2 = ClassDefinitionBuilder(1, 1).add_int_field("int_field").build()
+
+        config.class_definitions = [class_def1, class_def2]
+
+        with self.assertRaises(HazelcastSerializationError):
+            SerializationServiceV1(config)
+
+    def test_classes_with_same_class_id_in_different_factories(self):
+        config = _Config()
+        config.portable_factories = {
+            1: {
+                1: MyPortable1
+            },
+            2: {
+                1: MyPortable2
+            }
+        }
+
+        class_def1 = ClassDefinitionBuilder(1, 1).add_utf_field("str_field").build()
+        class_def2 = ClassDefinitionBuilder(2, 1).add_int_field("int_field").build()
+
+        config.class_definitions = [class_def1, class_def2]
+        ss = SerializationServiceV1(config)
+
+        portable1 = MyPortable1("test")
+        data1 = ss.to_data(portable1)
+        self.assertEqual(portable1, ss.to_object(data1))
+
+        portable2 = MyPortable2(1)
+        data2 = ss.to_data(portable2)
+        self.assertEqual(portable2, ss.to_object(data2))
