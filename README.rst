@@ -17,10 +17,10 @@ Resources
 
 See the following for more information on Python and Hazelcast IMDG:
 
--  Hazelcast IMDG `website <https://hazelcast.org/>`__
--  Hazelcast IMDG `Reference
-   Manual <https://hazelcast.org/documentation/#imdg>`__
--  About `Python <https://www.python.org/about/>`__
+- Hazelcast IMDG `website <https://hazelcast.org/>`__
+- Hazelcast IMDG `Reference
+  Manual <https://hazelcast.org/documentation/#imdg>`__
+- About `Python <https://www.python.org/about/>`__
 
 Release Notes
 -------------
@@ -40,11 +40,11 @@ application that uses a distributed map in Python client.
 1.1. Requirements
 -----------------
 
--  Windows, Linux/UNIX or Mac OS X
--  Python 2.7 or Python 3.4 or newer
--  Java 8 or newer
--  Hazelcast IMDG 4.0 or newer
--  Latest Hazelcast Python client
+- Windows, Linux/UNIX or Mac OS X
+- Python 2.7 or Python 3.4 or newer
+- Java 8 or newer
+- Hazelcast IMDG 4.0 or newer
+- Latest Hazelcast Python client
 
 1.2. Working with Hazelcast IMDG Clusters
 -----------------------------------------
@@ -74,11 +74,11 @@ Hazelcast IMDG cluster.
 
 There are following options to start a Hazelcast IMDG cluster easily:
 
--  You can run standalone members by downloading and running JAR files
-   from the website.
--  You can embed members to your Java projects.
--  You can use our `Docker
-   images <https://hub.docker.com/r/hazelcast/hazelcast/>`__.
+- You can run standalone members by downloading and running JAR files
+  from the website.
+- You can embed members to your Java projects.
+- You can use our `Docker
+  images <https://hub.docker.com/r/hazelcast/hazelcast/>`__.
 
 We are going to download JARs from the website and run a standalone
 member for this guide.
@@ -104,17 +104,17 @@ You should see a log similar to the following, which means that your
 
 ::
 
-   Sep 03, 2020 2:21:57 PM com.hazelcast.core.LifecycleService
-   INFO: [192.168.1.10]:5701 [dev] [4.1-SNAPSHOT] [192.168.1.10]:5701 is STARTING
-   Sep 03, 2020 2:21:58 PM com.hazelcast.internal.cluster.ClusterService
-   INFO: [192.168.1.10]:5701 [dev] [4.1-SNAPSHOT] 
+    Sep 03, 2020 2:21:57 PM com.hazelcast.core.LifecycleService
+    INFO: [192.168.1.10]:5701 [dev] [4.1-SNAPSHOT] [192.168.1.10]:5701 is STARTING
+    Sep 03, 2020 2:21:58 PM com.hazelcast.internal.cluster.ClusterService
+    INFO: [192.168.1.10]:5701 [dev] [4.1-SNAPSHOT]
 
-   Members {size:1, ver:1} [
-       Member [192.168.1.10]:5701 - 7362c66f-ef9f-4a6a-a003-f8b33dfd292a this
-   ]
+    Members {size:1, ver:1} [
+        Member [192.168.1.10]:5701 - 7362c66f-ef9f-4a6a-a003-f8b33dfd292a this
+    ]
 
-   Sep 03, 2020 2:21:58 PM com.hazelcast.core.LifecycleService
-   INFO: [192.168.1.10]:5701 [dev] [4.1-SNAPSHOT] [192.168.1.10]:5701 is STARTED
+    Sep 03, 2020 2:21:58 PM com.hazelcast.core.LifecycleService
+    INFO: [192.168.1.10]:5701 [dev] [4.1-SNAPSHOT] [192.168.1.10]:5701 is STARTED
 
 1.2.1.2. Adding User Library to CLASSPATH
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -141,17 +141,17 @@ The following is an example configuration when you are adding an
 
 .. code:: xml
 
-   <hazelcast>
-       ...
-       <serialization>
-          <data-serializable-factories>
-              <data-serializable-factory factory-id=<identified-factory-id>>
-                  IdentifiedFactoryClassName
-              </data-serializable-factory>
-          </data-serializable-factories>
-       </serialization>
-       ...
-   </hazelcast>
+    <hazelcast>
+        ...
+        <serialization>
+           <data-serializable-factories>
+               <data-serializable-factory factory-id=<identified-factory-id>>
+                   IdentifiedFactoryClassName
+               </data-serializable-factory>
+           </data-serializable-factories>
+        </serialization>
+        ...
+    </hazelcast>
 
 If you want to add a ``Portable`` class, you should use
 ``<portable-factories>`` instead of ``<data-serializable-factories>`` in
@@ -170,14 +170,14 @@ Run the following command:
 
 ::
 
-   pip install hazelcast-python-client
+    pip install hazelcast-python-client
 
 Alternatively, it can be installed from the source using the following
 command:
 
 ::
 
-   python setup.py install
+    python setup.py install
 
 1.4. Basic Configuration
 ------------------------
@@ -218,9 +218,9 @@ configuration here.
 
 You can use the following options to configure Hazelcast IMDG:
 
--  Using the ``hazelcast.xml`` configuration file.
--  Programmatically configuring the member before starting it from the
-   Java code.
+- Using the ``hazelcast.xml`` configuration file.
+- Programmatically configuring the member before starting it from the
+  Java code.
 
 Since we use standalone servers, we will use the ``hazelcast.xml`` file
 to configure our cluster members.
@@ -232,61 +232,61 @@ configuration from. A sample ``hazelcast.xml`` is shown below.
 
 .. code:: xml
 
-   <hazelcast>
-       <cluster-name>dev</cluster-name>
-       <network>
-           <port auto-increment="true" port-count="100">5701</port>
-           <join>
-               <multicast enabled="true">
-                   <multicast-group>224.2.2.3</multicast-group>
-                   <multicast-port>54327</multicast-port>
-               </multicast>
-               <tcp-ip enabled="false">
-                   <interface>127.0.0.1</interface>
-                   <member-list>
-                       <member>127.0.0.1</member>
-                   </member-list>
-               </tcp-ip>
-           </join>
-           <ssl enabled="false"/>
-       </network>
-       <partition-group enabled="false"/>
-       <map name="default">
-           <backup-count>1</backup-count>
-       </map>
-   </hazelcast>
+    <hazelcast>
+        <cluster-name>dev</cluster-name>
+        <network>
+            <port auto-increment="true" port-count="100">5701</port>
+            <join>
+                <multicast enabled="true">
+                    <multicast-group>224.2.2.3</multicast-group>
+                    <multicast-port>54327</multicast-port>
+                </multicast>
+                <tcp-ip enabled="false">
+                    <interface>127.0.0.1</interface>
+                    <member-list>
+                        <member>127.0.0.1</member>
+                    </member-list>
+                </tcp-ip>
+            </join>
+            <ssl enabled="false"/>
+        </network>
+        <partition-group enabled="false"/>
+        <map name="default">
+            <backup-count>1</backup-count>
+        </map>
+    </hazelcast>
 
 We will go over some important configuration elements in the rest of
 this section.
 
--  ``<cluster-name>``: Specifies which cluster this member belongs to. A
-   member connects only to the other members that are in the same
-   cluster as itself. You may give your clusters different names so that
-   they can live in the same network without disturbing each other. Note
-   that the cluster name should be the same across all members and
-   clients that belong to the same cluster.
--  ``<network>``
+- ``<cluster-name>``: Specifies which cluster this member belongs to. A
+  member connects only to the other members that are in the same
+  cluster as itself. You may give your clusters different names so that
+  they can live in the same network without disturbing each other. Note
+  that the cluster name should be the same across all members and
+  clients that belong to the same cluster.
+- ``<network>``
 
-   -  ``<port>``: Specifies the port number to be used by the member
-      when it starts. Its default value is 5701. You can specify another
-      port number, and if you set ``auto-increment`` to ``true``, then
-      Hazelcast will try the subsequent ports until it finds an
-      available port or the ``port-count`` is reached.
-   -  ``<join>``: Specifies the strategies to be used by the member to
-      find other cluster members. Choose which strategy you want to use
-      by setting its ``enabled`` attribute to ``true`` and the others to
-      ``false``.
+  - ``<port>``: Specifies the port number to be used by the member
+    when it starts. Its default value is 5701. You can specify another
+    port number, and if you set ``auto-increment`` to ``true``, then
+    Hazelcast will try the subsequent ports until it finds an
+    available port or the ``port-count`` is reached.
+  - ``<join>``: Specifies the strategies to be used by the member to
+    find other cluster members. Choose which strategy you want to use
+    by setting its ``enabled`` attribute to ``true`` and the others to
+    ``false``.
 
-      -  ``<multicast>``: Members find each other by sending multicast
-         requests to the specified address and port. It is very useful
-         if IP addresses of the members are not static.
-      -  ``<tcp>``: This strategy uses a pre-configured list of known
-         members to find an already existing cluster. It is enough for a
-         member to find only one cluster member to connect to the
-         cluster. The rest of the member list is automatically retrieved
-         from that member. We recommend putting multiple known member
-         addresses there to avoid disconnectivity should one of the
-         members in the list is unavailable at the time of connection.
+    - ``<multicast>``: Members find each other by sending multicast
+      requests to the specified address and port. It is very useful
+      if IP addresses of the members are not static.
+    - ``<tcp>``: This strategy uses a pre-configured list of known
+      members to find an already existing cluster. It is enough for a
+      member to find only one cluster member to connect to the
+      cluster. The rest of the member list is automatically retrieved
+      from that member. We recommend putting multiple known member
+      addresses there to avoid disconnectivity should one of the
+      members in the list is unavailable at the time of connection.
 
 These configuration elements are enough for most connection scenarios.
 Now we will move onto the configuration of the Python client.
@@ -309,23 +309,23 @@ and/or additional features of Hazelcast Python client configuration.
 
 .. code:: python
 
-   import hazelcast
+    import hazelcast
 
-   client = hazelcast.HazelcastClient(
-       cluster_members=[
-           "some-ip-address:port"
-       ], 
-       cluster_name="name-of-your-cluster",
-   )
+    client = hazelcast.HazelcastClient(
+        cluster_members=[
+            "some-ip-address:port"
+        ],
+        cluster_name="name-of-your-cluster",
+    )
 
 It’s also possible to omit the keyword arguments in order to use the
 default settings.
 
 .. code:: python
 
-   import hazelcast
+    import hazelcast
 
-   client = hazelcast.HazelcastClient()
+    client = hazelcast.HazelcastClient()
 
 If you run the Hazelcast IMDG members in a different server than the
 client, you most probably have configured the members’ ports and cluster
@@ -340,11 +340,11 @@ server side, to which you want the client to connect.
 
 .. code:: python
 
-   import hazelcast
+    import hazelcast
 
-   client = hazelcast.HazelcastClient(
-       cluster_name="name-of-your-cluster",
-   )
+    client = hazelcast.HazelcastClient(
+        cluster_name="name-of-your-cluster",
+    )
 
 1.4.2.2. Network Settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -354,11 +354,11 @@ your cluster so the client can find it.
 
 .. code:: python
 
-   import hazelcast
+    import hazelcast
 
-   client = hazelcast.HazelcastClient(
-       cluster_members=["some-ip-address:port"]
-   )
+    client = hazelcast.HazelcastClient(
+        cluster_members=["some-ip-address:port"]
+    )
 
 1.5. Basic Usage
 ----------------
@@ -369,38 +369,38 @@ in the Python client.
 
 .. code:: python
 
-   import logging
-   import hazelcast
+    import logging
+    import hazelcast
 
-   # Enable logging to see the logs
-   logging.basicConfig(level=logging.INFO)
+    # Enable logging to see the logs
+    logging.basicConfig(level=logging.INFO)
 
-   # Connect to Hazelcast cluster
-   client = hazelcast.HazelcastClient()
+    # Connect to Hazelcast cluster
+    client = hazelcast.HazelcastClient()
 
-   client.shutdown()
+    client.shutdown()
 
 This should print logs about the cluster members such as address, port
 and UUID to the ``stderr``.
 
 ::
 
-   INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is STARTING
-   INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is STARTED
-   INFO:hazelcast.connection:Trying to connect to Address(host=127.0.0.1, port=5701)
-   INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is CONNECTED
-   INFO:hazelcast.connection:Authenticated with server Address(host=172.17.0.2, port=5701):7682c357-3bec-4841-b330-6f9ae0c08253, server version: 4.0, local address: Address(host=127.0.0.1, port=56718)
-   INFO:hazelcast.cluster:
+    INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is STARTING
+    INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is STARTED
+    INFO:hazelcast.connection:Trying to connect to Address(host=127.0.0.1, port=5701)
+    INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is CONNECTED
+    INFO:hazelcast.connection:Authenticated with server Address(host=172.17.0.2, port=5701):7682c357-3bec-4841-b330-6f9ae0c08253, server version: 4.0, local address: Address(host=127.0.0.1, port=56718)
+    INFO:hazelcast.cluster:
 
-   Members [1] {
-       Member [172.17.0.2]:5701 - 7682c357-3bec-4841-b330-6f9ae0c08253
-   }
+    Members [1] {
+        Member [172.17.0.2]:5701 - 7682c357-3bec-4841-b330-6f9ae0c08253
+    }
 
-   INFO:hazelcast.client:Client started
-   INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is SHUTTING_DOWN
-   INFO:hazelcast.connection:Removed connection to Address(host=127.0.0.1, port=5701):7682c357-3bec-4841-b330-6f9ae0c08253, connection: Connection(id=0, live=False, remote_address=Address(host=172.17.0.2, port=5701))
-   INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is DISCONNECTED
-   INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is SHUTDOWN
+    INFO:hazelcast.client:Client started
+    INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is SHUTTING_DOWN
+    INFO:hazelcast.connection:Removed connection to Address(host=127.0.0.1, port=5701):7682c357-3bec-4841-b330-6f9ae0c08253, connection: Connection(id=0, live=False, remote_address=Address(host=172.17.0.2, port=5701))
+    INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is DISCONNECTED
+    INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is SHUTDOWN
 
 Congratulations. You just started a Hazelcast Python client.
 
@@ -411,30 +411,30 @@ on a cluster using the client.
 
 .. code:: python
 
-   import hazelcast
+    import hazelcast
 
-   client = hazelcast.HazelcastClient()
+    client = hazelcast.HazelcastClient()
 
-   personnel_map = client.get_map("personnel-map")
-   personnel_map.put("Alice", "IT")
-   personnel_map.put("Bob", "IT")
-   personnel_map.put("Clark", "IT")
+    personnel_map = client.get_map("personnel-map")
+    personnel_map.put("Alice", "IT")
+    personnel_map.put("Bob", "IT")
+    personnel_map.put("Clark", "IT")
 
-   print("Added IT personnel. Printing all known personnel")
+    print("Added IT personnel. Printing all known personnel")
 
-   for person, department in personnel_map.entry_set().result():
-       print("%s is in %s department" % (person, department))
-       
-   client.shutdown()
+    for person, department in personnel_map.entry_set().result():
+        print("%s is in %s department" % (person, department))
+
+    client.shutdown()
 
 **Output**
 
 ::
 
-   Added IT personnel. Printing all known personnel
-   Alice is in IT department
-   Clark is in IT department
-   Bob is in IT department
+    Added IT personnel. Printing all known personnel
+    Alice is in IT department
+    Clark is in IT department
+    Bob is in IT department
 
 You see this example puts all the IT personnel into a cluster-wide
 ``personnel-map`` and then prints all the known personnel.
@@ -443,40 +443,40 @@ Now, run the following code.
 
 .. code:: python
 
-   import hazelcast
+    import hazelcast
 
-   client = hazelcast.HazelcastClient()
+    client = hazelcast.HazelcastClient()
 
-   personnel_map = client.get_map("personnel-map")
-   personnel_map.put("Denise", "Sales")
-   personnel_map.put("Erwing", "Sales")
-   personnel_map.put("Faith", "Sales")
+    personnel_map = client.get_map("personnel-map")
+    personnel_map.put("Denise", "Sales")
+    personnel_map.put("Erwing", "Sales")
+    personnel_map.put("Faith", "Sales")
 
-   print("Added Sales personnel. Printing all known personnel")
+    print("Added Sales personnel. Printing all known personnel")
 
-   for person, department in personnel_map.entry_set().result():
-       print("%s is in %s department" % (person, department))
+    for person, department in personnel_map.entry_set().result():
+        print("%s is in %s department" % (person, department))
 
-   client.shutdown()
+    client.shutdown()
 
 **Output**
 
 ::
 
-   Added Sales personnel. Printing all known personnel
-   Denise is in Sales department
-   Erwing is in Sales department
-   Faith is in Sales department
-   Alice is in IT department
-   Clark is in IT department
-   Bob is in IT department
+    Added Sales personnel. Printing all known personnel
+    Denise is in Sales department
+    Erwing is in Sales department
+    Faith is in Sales department
+    Alice is in IT department
+    Clark is in IT department
+    Bob is in IT department
 
 ..
 
-   NOTE: For the sake of brevity we are going to omit boilerplate
-   parts, like ``import``\s, in the later code snippets. Refer to
-   the `Code Samples section <#16-code-samples>`__ to see samples
-   with the complete code.
+    NOTE: For the sake of brevity we are going to omit boilerplate
+    parts, like ``import``\s, in the later code snippets. Refer to
+    the `Code Samples section <#16-code-samples>`__ to see samples
+    with the complete code.
 
 
 You will see this time we add only the sales employees but we get the
@@ -515,13 +515,13 @@ below..
 
 .. code:: python
 
-   def entry_set_cb(future):
-       for person, department in future.result():
-           print("%s is in %s department" % (person, department))
+    def entry_set_cb(future):
+        for person, department in future.result():
+            print("%s is in %s department" % (person, department))
 
 
-   personnel_map.entry_set().add_done_callback(entry_set_cb)
-   time.sleep(1)  # wait for Future to complete
+    personnel_map.entry_set().add_done_callback(entry_set_cb)
+    time.sleep(1)  # wait for Future to complete
 
 Asynchronous operations are far more efficient in single threaded Python
 interpreter but you may want all of your method calls over distributed
@@ -536,7 +536,7 @@ blocking, you need to call ``blocking()`` method over it.
 
 .. code:: python
 
-   personnel_map = client.get_map("personnel-map").blocking()
+    personnel_map = client.get_map("personnel-map").blocking()
 
 Now, all the methods over the ``personnel_map``, such as ``put()`` and
 ``entry_set()``, will be blocking. So, you don’t need to call
@@ -544,8 +544,8 @@ Now, all the methods over the ``personnel_map``, such as ``put()`` and
 
 .. code:: python
 
-   for person, department in personnel_map.entry_set():
-       print("%s is in %s department" % (person, department))
+    for person, department in personnel_map.entry_set():
+        print("%s is in %s department" % (person, department))
 
 1.6. Code Samples
 -----------------
@@ -563,50 +563,50 @@ page <http://hazelcast.github.io/hazelcast-python-client/>`__.
 Hazelcast Python client supports the following data structures and
 features:
 
--  Map
--  Queue
--  Set
--  List
--  MultiMap
--  Replicated Map
--  Ringbuffer
--  Topic
--  CRDT PN Counter
--  Flake Id Generator
--  Distributed Executor Service
--  Event Listeners
--  Sub-Listener Interfaces for Map Listener
--  Entry Processor
--  Transactional Map
--  Transactional MultiMap
--  Transactional Queue
--  Transactional List
--  Transactional Set
--  Query (Predicates)
--  Entry Processor
--  Built-in Predicates
--  Listener with Predicate
--  Near Cache Support
--  Programmatic Configuration
--  SSL Support (requires Enterprise server)
--  Mutual Authentication (requires Enterprise server)
--  Authorization
--  Management Center Integration / Awareness
--  Client Near Cache Stats
--  Client Runtime Stats
--  Client Operating Systems Stats
--  Hazelcast Cloud Discovery
--  Smart Client
--  Unisocket Client
--  Lifecycle Service
--  Hazelcast Cloud Discovery
--  IdentifiedDataSerializable Serialization
--  Portable Serialization
--  Custom Serialization
--  JSON Serialization
--  Global Serialization
--  Connection Strategy
--  Connection Retry
+- Map
+- Queue
+- Set
+- List
+- MultiMap
+- Replicated Map
+- Ringbuffer
+- Topic
+- CRDT PN Counter
+- Flake Id Generator
+- Distributed Executor Service
+- Event Listeners
+- Sub-Listener Interfaces for Map Listener
+- Entry Processor
+- Transactional Map
+- Transactional MultiMap
+- Transactional Queue
+- Transactional List
+- Transactional Set
+- Query (Predicates)
+- Entry Processor
+- Built-in Predicates
+- Listener with Predicate
+- Near Cache Support
+- Programmatic Configuration
+- SSL Support (requires Enterprise server)
+- Mutual Authentication (requires Enterprise server)
+- Authorization
+- Management Center Integration / Awareness
+- Client Near Cache Stats
+- Client Runtime Stats
+- Client Operating Systems Stats
+- Hazelcast Cloud Discovery
+- Smart Client
+- Unisocket Client
+- Lifecycle Service
+- Hazelcast Cloud Discovery
+- IdentifiedDataSerializable Serialization
+- Portable Serialization
+- Custom Serialization
+- JSON Serialization
+- Global Serialization
+- Connection Strategy
+- Connection Retry
 
 3. Configuration Overview
 =========================
@@ -617,9 +617,9 @@ shown below.
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       cluster_members=["127.0.0.1:5701"]
-   )
+    client = hazelcast.HazelcastClient(
+        cluster_members=["127.0.0.1:5701"]
+    )
 
 See the docstring of ``HazelcastClient`` or the API documentation at
 `Hazelcast Python Client API
@@ -657,9 +657,9 @@ bytearray byte[]
 
 ..
 
-   NOTE: A ``int`` or ``long`` type is serialized as ``Integer`` by
-   default. You can configure this behavior using the
-   ``default_int_type`` argument.
+    NOTE: A ``int`` or ``long`` type is serialized as ``Integer`` by
+    default. You can configure this behavior using the
+    ``default_int_type`` argument.
 
 Arrays of the above types can be serialized as ``boolean[]``,
 ``byte[]``, ``short[]``, ``int[]``, ``float[]``, ``double[]``,
@@ -711,38 +711,38 @@ The following is an example of a class that extends
 
 .. code:: python
 
-   from hazelcast.serialization.api import IdentifiedDataSerializable
+    from hazelcast.serialization.api import IdentifiedDataSerializable
 
-   class Address(IdentifiedDataSerializable):
-       def __init__(self, street=None, zip_code=None, city=None, state=None):
-           self.street = street
-           self.zip_code = zip_code
-           self.city = city
-           self.state = state
-           
-       def get_class_id(self):
-           return 1
-       
-       def get_factory_id(self):
-           return 1
-       
-       def write_data(self, output):
-           output.write_utf(self.street)
-           output.write_int(self.zip_code)
-           output.write_utf(self.city)
-           output.write_utf(self.state)
-           
-       def read_data(self, input):
-           self.street = input.read_utf()
-           self.zip_code = input.read_int()
-           self.city = input.read_utf()
-           self.state = input.read_utf()
+    class Address(IdentifiedDataSerializable):
+        def __init__(self, street=None, zip_code=None, city=None, state=None):
+            self.street = street
+            self.zip_code = zip_code
+            self.city = city
+            self.state = state
+
+        def get_class_id(self):
+            return 1
+
+        def get_factory_id(self):
+            return 1
+
+        def write_data(self, output):
+            output.write_utf(self.street)
+            output.write_int(self.zip_code)
+            output.write_utf(self.city)
+            output.write_utf(self.state)
+
+        def read_data(self, input):
+            self.street = input.read_utf()
+            self.zip_code = input.read_int()
+            self.city = input.read_utf()
+            self.state = input.read_utf()
 
 ..
 
-   NOTE: Refer to ``ObjectDataInput``/``ObjectDataOutput`` classes in
-   the ``hazelcast.serialization.api`` package to understand methods
-   available on the ``input``/``output`` objects.
+    NOTE: Refer to ``ObjectDataInput``/``ObjectDataOutput`` classes in
+    the ``hazelcast.serialization.api`` package to understand methods
+    available on the ``input``/``output`` objects.
 
 The IdentifiedDataSerializable uses ``get_class_id()`` and
 ``get_factory_id()`` methods to reconstitute the object. To complete the
@@ -758,28 +758,28 @@ follows:
 
 .. code:: python
 
-   factory = {
-       1: Address
-   }
+    factory = {
+        1: Address
+    }
 
 Note that the keys of the dictionary should be the same as the class IDs
 of their corresponding ``IdentifiedDataSerializable`` class types.
 
-   NOTE: For IdentifiedDataSerializable to work in Python client, the
-   class that inherits it should have default valued parameters in its
-   ``__init__`` method so that an instance of that class can be created
-   without passing any arguments to it.
+    NOTE: For IdentifiedDataSerializable to work in Python client, the
+    class that inherits it should have default valued parameters in its
+    ``__init__`` method so that an instance of that class can be created
+    without passing any arguments to it.
 
 The last step is to register the ``IdentifiedDataSerializable`` factory
 to the client.
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       data_serializable_factories={
-           1: factory
-       }
-   )
+    client = hazelcast.HazelcastClient(
+        data_serializable_factories={
+            1: factory
+        }
+    )
 
 Note that the ID that is passed as the key of the factory is same as the
 factory ID that the ``Address`` class returns.
@@ -791,10 +791,10 @@ As an alternative to the existing serialization methods, Hazelcast
 offers portable serialization. To use it, you need to extend the
 ``Portable`` class. Portable serialization has the following advantages:
 
--  Supporting multiversion of the same object type.
--  Fetching individual fields without having to rely on the reflection.
--  Querying and indexing support without deserialization and/or
-   reflection.
+- Supporting multiversion of the same object type.
+- Fetching individual fields without having to rely on the reflection.
+- Querying and indexing support without deserialization and/or
+  reflection.
 
 In order to support these features, a serialized ``Portable`` object
 contains meta information like the version and concrete location of the
@@ -816,36 +816,36 @@ following:
 
 .. code:: python
 
-   from hazelcast.serialization.api import Portable
+    from hazelcast.serialization.api import Portable
 
-   class Foo(Portable):    
-       def __init__(self, foo=None):
-           self.foo = foo
-           
-       def get_class_id(self):
-           return 1
-           
-       def get_factory_id(self):
-           return 1
-           
-       def write_portable(self, writer):
-           writer.write_utf("foo", self.foo)
-       
-       def read_portable(self, reader):
-           self.foo = reader.read_utf("foo")
+    class Foo(Portable):
+        def __init__(self, foo=None):
+            self.foo = foo
 
-..
+        def get_class_id(self):
+            return 1
 
-   NOTE: Refer to ``PortableReader``/``PortableWriter`` classes in the
-   ``hazelcast.serialization.api`` package to understand methods
-   available on the ``reader``/``writer`` objects.
+        def get_factory_id(self):
+            return 1
+
+        def write_portable(self, writer):
+            writer.write_utf("foo", self.foo)
+
+        def read_portable(self, reader):
+            self.foo = reader.read_utf("foo")
 
 ..
 
-   NOTE: For Portable to work in Python client, the class that
-   inherits it should have default valued parameters in its ``__init__``
-   method so that an instance of that class can be created without
-   passing any arguments to it.
+    NOTE: Refer to ``PortableReader``/``PortableWriter`` classes in the
+    ``hazelcast.serialization.api`` package to understand methods
+    available on the ``reader``/``writer`` objects.
+
+..
+
+    NOTE: For Portable to work in Python client, the class that
+    inherits it should have default valued parameters in its ``__init__``
+    method so that an instance of that class can be created without
+    passing any arguments to it.
 
 Similar to ``IdentifiedDataSerializable``, a ``Portable`` class must
 provide the ``get_class_id()`` and ``get_factory_id()`` methods. The
@@ -856,9 +856,9 @@ A sample ``Portable`` factory could be created as follows:
 
 .. code:: python
 
-   factory = {
-       1: Foo
-   }
+    factory = {
+        1: Foo
+    }
 
 Note that the keys of the dictionary should be the same as the class IDs
 of their corresponding ``Portable`` class types.
@@ -867,11 +867,11 @@ The last step is to register the ``Portable`` factory to the client.
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       portable_factories={
-           1: factory
-       }
-   )
+    client = hazelcast.HazelcastClient(
+        portable_factories={
+            1: factory
+        }
+    )
 
 Note that the ID that is passed as the key of the factory is same as the
 factory ID that ``Foo`` class returns.
@@ -893,9 +893,9 @@ shown below.
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       portable_version=1
-   )
+    client = hazelcast.HazelcastClient(
+        portable_version=1
+    )
 
 If you update the class by changing the type of one of the fields or by
 adding a new field, it is a good idea to upgrade the version of the
@@ -905,54 +905,54 @@ adding the ``get_class_version()`` method to your class’s implementation
 of ``Portable``, and returning class version different than the default
 global version.
 
-   NOTE: If you do not use the ``get_class_version()`` method in your
-   ``Portable`` implementation, it will have the global version, by
-   default.
+    NOTE: If you do not use the ``get_class_version()`` method in your
+    ``Portable`` implementation, it will have the global version, by
+    default.
 
 Here is an example implementation of creating a version 2 for the above
 Foo class:
 
 .. code:: python
 
-   from hazelcast.serialization.api import Portable
+    from hazelcast.serialization.api import Portable
 
-   class Foo(Portable):
-       def __init__(self, foo=None, foo2=None):
-           self.foo = foo  
-           self.foo2 = foo2
-           
-       def get_class_id(self):
-           return 1
-           
-       def get_factory_id(self):
-           return 1
-           
-       def get_class_version(self):
-           return 2
-           
-       def write_portable(self, writer):
-           writer.write_utf("foo", self.foo)
-           writer.write_utf("foo2", self.foo2)
-           
-       def read_portable(self, reader):
-           self.foo = reader.read_utf("foo")
-           self.foo2 = reader.read_utf("foo2")
+    class Foo(Portable):
+        def __init__(self, foo=None, foo2=None):
+            self.foo = foo
+            self.foo2 = foo2
+
+        def get_class_id(self):
+            return 1
+
+        def get_factory_id(self):
+            return 1
+
+        def get_class_version(self):
+            return 2
+
+        def write_portable(self, writer):
+            writer.write_utf("foo", self.foo)
+            writer.write_utf("foo2", self.foo2)
+
+        def read_portable(self, reader):
+            self.foo = reader.read_utf("foo")
+            self.foo2 = reader.read_utf("foo2")
 
 You should consider the following when you perform versioning:
 
--  It is important to change the version whenever an update is performed
-   in the serialized fields of a class, for example by incrementing the
-   version.
--  If a client performs a Portable deserialization on a field and then
-   that Portable is updated by removing that field on the cluster side,
-   this may lead to problems such as an AttributeError being raised when
-   an older version of the client tries to access the removed field.
--  Portable serialization does not use reflection and hence, fields in
-   the class and in the serialized content are not automatically mapped.
-   Field renaming is a simpler process. Also, since the class ID is
-   stored, renaming the Portable does not lead to problems.
--  Types of fields need to be updated carefully. Hazelcast performs
-   basic type upgradings, such as ``int`` to ``float``.
+- It is important to change the version whenever an update is performed
+  in the serialized fields of a class, for example by incrementing the
+  version.
+- If a client performs a Portable deserialization on a field and then
+  that Portable is updated by removing that field on the cluster side,
+  this may lead to problems such as an AttributeError being raised when
+  an older version of the client tries to access the removed field.
+- Portable serialization does not use reflection and hence, fields in
+  the class and in the serialized content are not automatically mapped.
+  Field renaming is a simpler process. Also, since the class ID is
+  stored, renaming the Portable does not lead to problems.
+- Types of fields need to be updated carefully. Hazelcast performs
+  basic type upgradings, such as ``int`` to ``float``.
 
 Example Portable Versioning Scenarios:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -989,9 +989,9 @@ external serializer for only one class.
 
 .. code:: python
 
-   class Musician:
-       def __init__(self, name):
-           self.name = name
+    class Musician:
+        def __init__(self, name):
+            self.name = name
 
 Let’s say your custom ``MusicianSerializer`` will serialize
 ``Musician``. This time, your custom serializer must extend the
@@ -999,21 +999,21 @@ Let’s say your custom ``MusicianSerializer`` will serialize
 
 .. code:: python
 
-   from hazelcast.serialization.api import StreamSerializer
+    from hazelcast.serialization.api import StreamSerializer
 
-   class MusicianSerializer(StreamSerializer):
-       def get_type_id(self):
-           return 10
-       
-       def destroy(self):
-           pass
-       
-       def write(self, output, obj):
-           output.write_utf(obj.name)
-       
-       def read(self, input):
-           name = input.read_utf()
-           return Musician(name)
+    class MusicianSerializer(StreamSerializer):
+        def get_type_id(self):
+            return 10
+
+        def destroy(self):
+            pass
+
+        def write(self, output, obj):
+            output.write_utf(obj.name)
+
+        def read(self, input):
+            name = input.read_utf()
+            return Musician(name)
 
 Note that the serializer ``id`` must be unique as Hazelcast will use it
 to lookup the ``MusicianSerializer`` while it deserializes the object.
@@ -1022,11 +1022,11 @@ the client.
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       custom_serializers={
-           Musician: MusicianSerializer
-       }
-   )
+    client = hazelcast.HazelcastClient(
+        custom_serializers={
+            Musician: MusicianSerializer
+        }
+    )
 
 From now on, Hazelcast will use ``MusicianSerializer`` to serialize
 ``Musician`` objects.
@@ -1065,11 +1065,11 @@ put to the map:
 
 .. code:: python
 
-   # From JSON string
-   json_map.put("item1", HazelcastJsonValue("{\"age\": 4}"))
+    # From JSON string
+    json_map.put("item1", HazelcastJsonValue("{\"age\": 4}"))
 
-   # # From JSON serializable object
-   json_map.put("item2", HazelcastJsonValue({"age": 20}))
+    # # From JSON serializable object
+    json_map.put("item2", HazelcastJsonValue({"age": 20}))
 
 You can query JSON objects in the cluster using the ``Predicate``\ s of
 your choice. An example JSON query for querying the values whose age is
@@ -1077,10 +1077,10 @@ less than 6 is shown below:
 
 .. code:: python
 
-   # Get the objects whose age is less than 6
-   result = json_map.values(is_less_than_or_equal_to("age", 6))
-   print("Retrieved %s values whose age is less than 6." % len(result))
-   print("Entry is", result[0].to_string())
+    # Get the objects whose age is less than 6
+    result = json_map.values(is_less_than_or_equal_to("age", 6))
+    print("Retrieved %s values whose age is less than 6." % len(result))
+    print("Entry is", result[0].to_string())
 
 4.5. Global Serialization
 -------------------------
@@ -1097,40 +1097,40 @@ instead of ``cPickle/pickle`` serialization.
 
 **Use Cases:**
 
--  Third party serialization frameworks can be integrated using the
-   global serializer.
+- Third party serialization frameworks can be integrated using the
+  global serializer.
 
--  For your custom objects, you can implement a single serializer to
-   handle all of them.
+- For your custom objects, you can implement a single serializer to
+  handle all of them.
 
 A sample global serializer that integrates with a third party serializer
 is shown below.
 
 .. code:: python
 
-   import some_third_party_serializer
-   from hazelcast.serialization.api import StreamSerializer
+    import some_third_party_serializer
+    from hazelcast.serialization.api import StreamSerializer
 
-   class GlobalSerializer(StreamSerializer):
-       def get_type_id(self):
-           return 20
-       
-       def destroy(self):
-           pass
-       
-       def write(self, output, obj):
-           output.write_utf(some_third_party_serializer.serialize(obj))
-       
-       def read(self, input):
-           return some_third_party_serializer.deserialize(input.read_utf())
+    class GlobalSerializer(StreamSerializer):
+        def get_type_id(self):
+            return 20
+
+        def destroy(self):
+            pass
+
+        def write(self, output, obj):
+            output.write_utf(some_third_party_serializer.serialize(obj))
+
+        def read(self, input):
+            return some_third_party_serializer.deserialize(input.read_utf())
 
 You should register the global serializer to the client.
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       global_serializer=GlobalSerializer
-   )
+    client = hazelcast.HazelcastClient(
+        global_serializer=GlobalSerializer
+    )
 
 5. Setting Up Client Network
 ============================
@@ -1142,15 +1142,15 @@ Here is an example of configuring the network for Python client.
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       cluster_members=[
-           "10.1.1.21",
-           "10.1.1.22:5703"
-       ],
-       smart_routing=True,
-       redo_operation=False,
-       connection_timeout=6.0
-   )
+    client = hazelcast.HazelcastClient(
+        cluster_members=[
+            "10.1.1.21",
+            "10.1.1.22:5703"
+        ],
+        smart_routing=True,
+        redo_operation=False,
+        connection_timeout=6.0
+    )
 
 5.1. Providing Member Addresses
 -------------------------------
@@ -1163,12 +1163,12 @@ recommended that you give the addresses for all the members.
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       cluster_members=[
-           "10.1.1.21",
-           "10.1.1.22:5703"
-       ]
-   )
+    client = hazelcast.HazelcastClient(
+        cluster_members=[
+            "10.1.1.21",
+            "10.1.1.22:5703"
+        ]
+    )
 
 If the port part is omitted, then ``5701``, ``5702`` and ``5703`` will
 be tried in a random order.
@@ -1187,9 +1187,9 @@ smart and unisocket modes.
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       smart_routing=True,
-   )
+    client = hazelcast.HazelcastClient(
+        smart_routing=True,
+    )
 
 Its default value is ``True`` (smart client mode).
 
@@ -1204,9 +1204,9 @@ for the other operations, you can set the ``redo_operation`` to
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       redo_operation=False
-   )
+    client = hazelcast.HazelcastClient(
+        redo_operation=False
+    )
 
 Its default value is ``False`` (disabled).
 
@@ -1218,9 +1218,9 @@ accept the client connection requests.
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       connection_timeout=6.0
-   )
+    client = hazelcast.HazelcastClient(
+        connection_timeout=6.0
+    )
 
 Its default value is ``5.0`` seconds.
 
@@ -1251,10 +1251,10 @@ discovery by setting your ``cloud_discovery_token`` as shown below.
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       cluster_name="name-of-your-cluster",
-       cloud_discovery_token="discovery-token"
-   )
+    client = hazelcast.HazelcastClient(
+        cluster_name="name-of-your-cluster",
+        cloud_discovery_token="discovery-token"
+    )
 
 If you have enabled encryption for your cluster, you should also enable
 TLS/SSL configuration for the client to secure communication between
@@ -1275,9 +1275,9 @@ To disable backup acknowledgement, you should use the
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       backup_ack_to_client_enabled=False,
-   )
+    client = hazelcast.HazelcastClient(
+        backup_ack_to_client_enabled=False,
+    )
 
 Its default value is ``True``. This option has no effect for unisocket
 clients.
@@ -1285,18 +1285,18 @@ clients.
 You can also fine-tune this feature using the config options as
 described below:
 
--  ``operation_backup_timeout``: Default value is ``5`` seconds. If an
-   operation has backups, this property specifies how long the
-   invocation waits for acks from the backup replicas. If acks are not
-   received from some of the backups, there will not be any rollback on
-   the other successful replicas.
+- ``operation_backup_timeout``: Default value is ``5`` seconds. If an
+  operation has backups, this property specifies how long the
+  invocation waits for acks from the backup replicas. If acks are not
+  received from some of the backups, there will not be any rollback on
+  the other successful replicas.
 
--  ``fail_on_indeterminate_operation_state``: Default value is
-   ``False``. When it is ``True``, if an operation has sync backups and
-   acks are not received from backup replicas in time, or the member
-   which owns primary replica of the target partition leaves the
-   cluster, then the invocation fails. However, even if the invocation
-   fails, there will not be any rollback on other successful replicas.
+- ``fail_on_indeterminate_operation_state``: Default value is
+  ``False``. When it is ``True``, if an operation has sync backups and
+  acks are not received from backup replicas in time, or the member
+  which owns primary replica of the target partition leaves the
+  cluster, then the invocation fails. However, even if the invocation
+  fails, there will not be any rollback on other successful replicas.
 
 6. Client Connection Strategy
 =============================
@@ -1319,13 +1319,13 @@ You can also configure how the client reconnects to the cluster after a
 disconnection. This is configured using the configuration element
 ``reconnect_mode``; it has three options:
 
--  ``OFF``: Client rejects to reconnect to the cluster and triggers the
-   shutdown process.
--  ``ON``: Client opens a connection to the cluster in a blocking manner
-   by not resolving any of the waiting invocations.
--  ``ASYNC``: Client opens a connection to the cluster in a non-blocking
-   manner by resolving all the waiting invocations with
-   ``ClientOfflineError``.
+- ``OFF``: Client rejects to reconnect to the cluster and triggers the
+  shutdown process.
+- ``ON``: Client opens a connection to the cluster in a blocking manner
+  by not resolving any of the waiting invocations.
+- ``ASYNC``: Client opens a connection to the cluster in a non-blocking
+  manner by resolving all the waiting invocations with
+  ``ClientOfflineError``.
 
 Its default value is ``ON``.
 
@@ -1334,12 +1334,12 @@ starting and reconnecting modes.
 
 .. code:: python
 
-   from hazelcast.config import ReconnectMode
+    from hazelcast.config import ReconnectMode
 
-   client = hazelcast.HazelcastClient(
-       async_start=False,
-       reconnect_mode=ReconnectMode.ON
-   )
+    client = hazelcast.HazelcastClient(
+        async_start=False,
+        reconnect_mode=ReconnectMode.ON
+    )
 
 6.1. Configuring Client Connection Retry
 ----------------------------------------
@@ -1351,43 +1351,43 @@ below.
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       retry_initial_backoff=1,
-       retry_max_backoff=15,
-       retry_multiplier=1.5,
-       retry_jitter=0.2,
-       cluster_connect_timeout=20
-   )
+    client = hazelcast.HazelcastClient(
+        retry_initial_backoff=1,
+        retry_max_backoff=15,
+        retry_multiplier=1.5,
+        retry_jitter=0.2,
+        cluster_connect_timeout=20
+    )
 
 The following are configuration element descriptions:
 
--  ``retry_initial_backoff``: Specifies how long to wait (backoff), in
-   seconds, after the first failure before retrying. Its default value
-   is ``1``. It must be non-negative.
--  ``retry_max_backoff``: Specifies the upper limit for the backoff in
-   seconds. Its default value is ``30``. It must be non-negative.
--  ``retry_multiplier``: Factor to multiply the backoff after a failed
-   retry. Its default value is ``1``. It must be greater than or equal
-   to ``1``.
--  ``retry_jitter``: Specifies by how much to randomize backoffs. Its
-   default value is ``0``. It must be in range ``0`` to ``1``.
--  ``cluster_connect_timeout``: Timeout value in seconds for the client
-   to give up to connect to the current cluster. Its default value is
-   ``20``.
+- ``retry_initial_backoff``: Specifies how long to wait (backoff), in
+  seconds, after the first failure before retrying. Its default value
+  is ``1``. It must be non-negative.
+- ``retry_max_backoff``: Specifies the upper limit for the backoff in
+  seconds. Its default value is ``30``. It must be non-negative.
+- ``retry_multiplier``: Factor to multiply the backoff after a failed
+  retry. Its default value is ``1``. It must be greater than or equal
+  to ``1``.
+- ``retry_jitter``: Specifies by how much to randomize backoffs. Its
+  default value is ``0``. It must be in range ``0`` to ``1``.
+- ``cluster_connect_timeout``: Timeout value in seconds for the client
+  to give up to connect to the current cluster. Its default value is
+  ``20``.
 
 A pseudo-code is as follows:
 
 .. code:: text
 
-   begin_time = get_current_time()
-   current_backoff = INITIAL_BACKOFF
-   while (try_connect(connection_timeout)) != SUCCESS) {
-       if (get_current_time() - begin_time >= CLUSTER_CONNECT_TIMEOUT) {
-           // Give up to connecting to the current cluster and switch to another if exists.
-       }
-       sleep(current_backoff + uniform_random(-JITTER * current_backoff, JITTER * current_backoff))
-       current_backoff = min(current_backoff * MULTIPLIER, MAX_BACKOFF)
-   }
+    begin_time = get_current_time()
+    current_backoff = INITIAL_BACKOFF
+    while (try_connect(connection_timeout)) != SUCCESS) {
+        if (get_current_time() - begin_time >= CLUSTER_CONNECT_TIMEOUT) {
+            // Give up to connecting to the current cluster and switch to another if exists.
+        }
+        sleep(current_backoff + uniform_random(-JITTER * current_backoff, JITTER * current_backoff))
+        current_backoff = min(current_backoff * MULTIPLIER, MAX_BACKOFF)
+    }
 
 Note that, ``try_connect`` above tries to connect to any member that the
 client knows, and for each connection we have a connection timeout; see
@@ -1419,12 +1419,12 @@ The following is an example on how to configure and initialize the
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       cluster_name="dev",
-       cluster_members=[
-           "198.51.100.2"
-       ]
-   )
+    client = hazelcast.HazelcastClient(
+        cluster_name="dev",
+        cluster_members=[
+            "198.51.100.2"
+        ]
+    )
 
 This client object is your gateway to access all the Hazelcast
 distributed objects.
@@ -1433,13 +1433,13 @@ Let’s create a map and populate it with some data, as shown below.
 
 .. code:: python
 
-   # Get a Map called 'my-distributed-map'
-   customer_map = client.get_map("customers").blocking()
+    # Get a Map called 'my-distributed-map'
+    customer_map = client.get_map("customers").blocking()
 
-   # Write and read some data
-   customer_map.put("1", "John Stiles")
-   customer_map.put("2", "Richard Miles")
-   customer_map.put("3", "Judy Doe")
+    # Write and read some data
+    customer_map.put("1", "John Stiles")
+    customer_map.put("2", "Richard Miles")
+    customer_map.put("3", "Judy Doe")
 
 As the final step, if you are done with your client, you can shut it
 down as shown below. This will release all the used resources and close
@@ -1447,7 +1447,7 @@ connections to the cluster.
 
 .. code:: python
 
-   client.shutdown()
+    client.shutdown()
 
 7.2. Python Client Operation Modes
 ----------------------------------
@@ -1517,9 +1517,9 @@ course, if it is a read-only operation or you enabled the
 important when there is a failure resulted by either of the following
 causes:
 
--  Member throws an exception.
--  Connection between the client and member is closed.
--  Client’s heartbeat requests are timed out.
+- Member throws an exception.
+- Connection between the client and member is closed.
+- Client’s heartbeat requests are timed out.
 
 When a connection problem occurs, an operation is retried if it is
 certain that it has not run on the member yet or if it is idempotent
@@ -1563,16 +1563,16 @@ A Map usage example is shown below.
 
 .. code:: python
 
-   # Get a Map called 'my-distributed-map'
-   my_map = client.get_map("my-distributed-map").blocking()
+    # Get a Map called 'my-distributed-map'
+    my_map = client.get_map("my-distributed-map").blocking()
 
-   # Run Put and Get operations
-   my_map.put("key", "value")
-   my_map.get("key")
+    # Run Put and Get operations
+    my_map.put("key", "value")
+    my_map.get("key")
 
-   # Run concurrent Map operations (optimistic updates)
-   my_map.put_if_absent("somekey", "somevalue") 
-   my_map.replace_if_same("key", "value", "newvalue")
+    # Run concurrent Map operations (optimistic updates)
+    my_map.put_if_absent("somekey", "somevalue")
+    my_map.replace_if_same("key", "value", "newvalue")
 
 7.4.2. Using MultiMap
 ~~~~~~~~~~~~~~~~~~~~~
@@ -1586,21 +1586,21 @@ A MultiMap usage example is shown below.
 
 .. code:: python
 
-   # Get a MultiMap called 'my-distributed-multimap'
-   multi_map = client.get_multi_map("my-distributed-multimap").blocking()
+    # Get a MultiMap called 'my-distributed-multimap'
+    multi_map = client.get_multi_map("my-distributed-multimap").blocking()
 
-   # Put values in the map against the same key
-   multi_map.put("my-key", "value1")
-   multi_map.put("my-key", "value2")
-   multi_map.put("my-key", "value3")
+    # Put values in the map against the same key
+    multi_map.put("my-key", "value1")
+    multi_map.put("my-key", "value2")
+    multi_map.put("my-key", "value3")
 
-   # Read and print out all the values for associated with key called 'my-key'
-   # Outputs '['value2', 'value1', 'value3']'
-   values = multi_map.get("my-key") 
-   print(values) 
+    # Read and print out all the values for associated with key called 'my-key'
+    # Outputs '['value2', 'value1', 'value3']'
+    values = multi_map.get("my-key")
+    print(values)
 
-   # Remove specific key/value pair
-   multi_map.remove("my-key", "value2") 
+    # Remove specific key/value pair
+    multi_map.remove("my-key", "value2")
 
 7.4.3. Using Replicated Map
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1616,20 +1616,20 @@ A Replicated Map usage example is shown below.
 
 .. code:: python
 
-   # Get a ReplicatedMap called 'my-replicated-map'
-   replicated_map = client.get_replicated_map("my-replicated-map").blocking()
+    # Get a ReplicatedMap called 'my-replicated-map'
+    replicated_map = client.get_replicated_map("my-replicated-map").blocking()
 
-   # Put and get a value from the Replicated Map
-   # (key/value is replicated to all members)
-   replaced_value = replicated_map.put("key", "value") 
+    # Put and get a value from the Replicated Map
+    # (key/value is replicated to all members)
+    replaced_value = replicated_map.put("key", "value")
 
-   # Will be None as its first update
-   print("replaced value = {}".format(replaced_value)) # Outputs 'replaced value = None'
+    # Will be None as its first update
+    print("replaced value = {}".format(replaced_value)) # Outputs 'replaced value = None'
 
-   # The value is retrieved from a random member in the cluster
-   value = replicated_map.get("key")
+    # The value is retrieved from a random member in the cluster
+    value = replicated_map.get("key")
 
-   print("value for key = {}".format(value)) # Outputs 'value for key = value'
+    print("value for key = {}".format(value)) # Outputs 'value for key = value'
 
 7.4.4. Using Queue
 ~~~~~~~~~~~~~~~~~~
@@ -1643,23 +1643,23 @@ A Queue usage example is shown below.
 
 .. code:: python
 
-   # Get a Queue called 'my-distributed-queue'
-   queue = client.get_queue("my-distributed-queue").blocking()
+    # Get a Queue called 'my-distributed-queue'
+    queue = client.get_queue("my-distributed-queue").blocking()
 
-   # Offer a string into the Queue
-   queue.offer("item")
+    # Offer a string into the Queue
+    queue.offer("item")
 
-   # Poll the Queue and return the string
-   item = queue.poll()
+    # Poll the Queue and return the string
+    item = queue.poll()
 
-   # Timed-restricted operations
-   queue.offer("another-item", 0.5)  # waits up to 0.5 seconds
-   another_item = queue.poll(5)  # waits up to 5 seconds
+    # Timed-restricted operations
+    queue.offer("another-item", 0.5)  # waits up to 0.5 seconds
+    another_item = queue.poll(5)  # waits up to 5 seconds
 
-   # Indefinitely blocking Operations
-   queue.put("yet-another-item")
+    # Indefinitely blocking Operations
+    queue.put("yet-another-item")
 
-   print(queue.take()) # Outputs 'yet-another-item'
+    print(queue.take()) # Outputs 'yet-another-item'
 
 7.4.5. Using Set
 ~~~~~~~~~~~~~~~~
@@ -1673,20 +1673,20 @@ A Set usage example is shown below.
 
 .. code:: python
 
-   # Get a Set called 'my-distributed-set'
-   my_set = client.get_set("my-distributed-set").blocking()
+    # Get a Set called 'my-distributed-set'
+    my_set = client.get_set("my-distributed-set").blocking()
 
-   # Add items to the Set with duplicates
-   my_set.add("item1")
-   my_set.add("item1")
-   my_set.add("item2")
-   my_set.add("item2")
-   my_set.add("item2")
-   my_set.add("item3")
+    # Add items to the Set with duplicates
+    my_set.add("item1")
+    my_set.add("item1")
+    my_set.add("item2")
+    my_set.add("item2")
+    my_set.add("item2")
+    my_set.add("item3")
 
-   # Get the items. Note that there are no duplicates.
-   for item in my_set.get_all():
-       print(item)
+    # Get the items. Note that there are no duplicates.
+    for item in my_set.get_all():
+        print(item)
 
 7.4.6. Using List
 ~~~~~~~~~~~~~~~~~
@@ -1700,21 +1700,21 @@ A List usage example is shown below.
 
 .. code:: python
 
-   # Get a List called 'my-distributed-list'
-   my_list = client.get_list("my-distributed-list").blocking()
+    # Get a List called 'my-distributed-list'
+    my_list = client.get_list("my-distributed-list").blocking()
 
-   # Add element to the list
-   my_list.add("item1")
-   my_list.add("item2")
+    # Add element to the list
+    my_list.add("item1")
+    my_list.add("item2")
 
-   # Remove the first element
-   print("Removed:", my_list.remove_at(0))  # Outputs 'Removed: item1'
+    # Remove the first element
+    print("Removed:", my_list.remove_at(0))  # Outputs 'Removed: item1'
 
-   # There is only one element left
-   print("Current size is", my_list.size())  # Outputs 'Current size is 1'
+    # There is only one element left
+    print("Current size is", my_list.size())  # Outputs 'Current size is 1'
 
-   # Clear the list
-   my_list.clear()
+    # Clear the list
+    my_list.clear()
 
 7.4.7. Using Ringbuffer
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -1734,20 +1734,20 @@ A Ringbuffer usage example is shown below.
 
 .. code:: python
 
-   # Get a RingBuffer called "my-ringbuffer"
-   ringbuffer = client.get_ringbuffer("my-ringbuffer").blocking()
+    # Get a RingBuffer called "my-ringbuffer"
+    ringbuffer = client.get_ringbuffer("my-ringbuffer").blocking()
 
-   # Add two items into ring buffer
-   ringbuffer.add(100)
-   ringbuffer.add(200)
+    # Add two items into ring buffer
+    ringbuffer.add(100)
+    ringbuffer.add(200)
 
-   # We start from the oldest item.
-   # If you want to start from the next item, call ringbuffer.tail_sequence()+1
-   sequence = ringbuffer.head_sequence()
-   print(ringbuffer.read_one(sequence))  # Outputs '100'
+    # We start from the oldest item.
+    # If you want to start from the next item, call ringbuffer.tail_sequence()+1
+    sequence = ringbuffer.head_sequence()
+    print(ringbuffer.read_one(sequence))  # Outputs '100'
 
-   sequence += 1
-   print(ringbuffer.read_one(sequence))  # Outputs '200'
+    sequence += 1
+    print(ringbuffer.read_one(sequence))  # Outputs '200'
 
 7.4.8. Using Topic
 ~~~~~~~~~~~~~~~~~~
@@ -1761,18 +1761,18 @@ A Topic usage example is shown below.
 
 .. code:: python
 
-   # Function to be called when a message is published
-   def print_on_message(topic_message):
-       print("Got message:", topic_message.message)
+    # Function to be called when a message is published
+    def print_on_message(topic_message):
+        print("Got message:", topic_message.message)
 
-   # Get a Topic called "my-distributed-topic"
-   topic = client.get_topic("my-distributed-topic")
+    # Get a Topic called "my-distributed-topic"
+    topic = client.get_topic("my-distributed-topic")
 
-   # Add a Listener to the Topic
-   topic.add_listener(print_on_message)
+    # Add a Listener to the Topic
+    topic.add_listener(print_on_message)
 
-   # Publish a message to the Topic
-   topic.publish("Hello to distributed world") # Outputs 'Got message: Hello to distributed world'
+    # Publish a message to the Topic
+    topic.publish("Hello to distributed world") # Outputs 'Got message: Hello to distributed world'
 
 7.4.9. Using Transactions
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1793,30 +1793,30 @@ in the Hazelcast IMDG Reference Manual.
 
 .. code:: python
 
-   # Create a Transaction object and begin the transaction
-   transaction = client.new_transaction(timeout=10)
-   transaction.begin()
+    # Create a Transaction object and begin the transaction
+    transaction = client.new_transaction(timeout=10)
+    transaction.begin()
 
-   # Get transactional distributed data structures
-   txn_map = transaction.get_map("transactional-map")
-   txn_queue = transaction.get_queue("transactional-queue")
-   txt_set = transaction.get_set("transactional-set")
-   try:
-       obj = txn_queue.poll()
+    # Get transactional distributed data structures
+    txn_map = transaction.get_map("transactional-map")
+    txn_queue = transaction.get_queue("transactional-queue")
+    txt_set = transaction.get_set("transactional-set")
+    try:
+        obj = txn_queue.poll()
 
-       # Process obj
+        # Process obj
 
-       txn_map.put("1", "value1")
-       txt_set.add("value")
+        txn_map.put("1", "value1")
+        txt_set.add("value")
 
-       # Do other things
-       
-       # Commit the above changes done in the cluster.
-       transaction.commit()  
-   except Exception as ex:
-       # In the case of a transactional failure, rollback the transaction 
-       transaction.rollback()
-       print("Transaction failed! {}".format(ex.args))
+        # Do other things
+
+        # Commit the above changes done in the cluster.
+        transaction.commit()
+    except Exception as ex:
+        # In the case of a transactional failure, rollback the transaction
+        transaction.rollback()
+        print("Transaction failed! {}".format(ex.args))
 
 In a transaction, operations will not be executed immediately. Their
 changes will be local to the ``Transaction`` object until committed.
@@ -1847,21 +1847,21 @@ A PN Counter usage example is shown below.
 
 .. code:: python
 
-   # Get a PN Counter called 'pn-counter'
-   pn_counter = client.get_pn_counter("pn-counter").blocking()
+    # Get a PN Counter called 'pn-counter'
+    pn_counter = client.get_pn_counter("pn-counter").blocking()
 
-   # Counter is initialized with 0
-   print(pn_counter.get()) # 0
+    # Counter is initialized with 0
+    print(pn_counter.get()) # 0
 
-   # xx_and_get() variants does the operation
-   # and returns the final value
-   print(pn_counter.add_and_get(5))  # 5
-   print(pn_counter.decrement_and_get())  # 4
+    # xx_and_get() variants does the operation
+    # and returns the final value
+    print(pn_counter.add_and_get(5))  # 5
+    print(pn_counter.decrement_and_get())  # 4
 
-   # get_and_xx() variants returns the current
-   # value and then does the operation
-   print(pn_counter.get_and_increment())  # 4
-   print(pn_counter.get())  # 5
+    # get_and_xx() variants returns the current
+    # value and then does the operation
+    print(pn_counter.get_and_increment())  # 4
+    print(pn_counter.get())  # 5
 
 7.4.11. Using Flake ID Generator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1875,11 +1875,11 @@ in the Hazelcast IMDG Reference Manual.
 
 .. code:: python
 
-   # Get a Flake ID Generator called 'flake-id-generator'
-   generator = client.get_flake_id_generator("flake-id-generator").blocking()
+    # Get a Flake ID Generator called 'flake-id-generator'
+    generator = client.get_flake_id_generator("flake-id-generator").blocking()
 
-   # Generate a some unique identifier
-   print("ID:", generator.new_id())
+    # Generate a some unique identifier
+    print("ID:", generator.new_id())
 
 7.4.11.1 Configuring Flake ID Generator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1889,30 +1889,30 @@ argument:
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       flake_id_generators={
-           "flake-id-generator": {
-               "prefetch_count": 123,
-               "prefetch_validity": 150
-           }
-       }
-   )
+    client = hazelcast.HazelcastClient(
+        flake_id_generators={
+            "flake-id-generator": {
+                "prefetch_count": 123,
+                "prefetch_validity": 150
+            }
+        }
+    )
 
 The following are the descriptions of configuration elements and
 attributes:
 
--  keys of the dictionary: Name of the Flake ID Generator.
--  ``prefetch_count``: Count of IDs which are pre-fetched on the
-   background when one call to ``generator.newId()`` is made. Its value
-   must be in the range ``1`` - ``100,000``. Its default value is
-   ``100``.
--  ``prefetch_validity``: Specifies for how long the pre-fetched IDs can
-   be used. After this time elapses, a new batch of IDs are fetched.
-   Time unit is seconds. Its default value is ``600`` seconds (``10``
-   minutes). The IDs contain a timestamp component, which ensures a
-   rough global ordering of them. If an ID is assigned to an object that
-   was created later, it will be out of order. If ordering is not
-   important, set this value to ``0``.
+- keys of the dictionary: Name of the Flake ID Generator.
+- ``prefetch_count``: Count of IDs which are pre-fetched on the
+  background when one call to ``generator.newId()`` is made. Its value
+  must be in the range ``1`` - ``100,000``. Its default value is
+  ``100``.
+- ``prefetch_validity``: Specifies for how long the pre-fetched IDs can
+  be used. After this time elapses, a new batch of IDs are fetched.
+  Time unit is seconds. Its default value is ``600`` seconds (``10``
+  minutes). The IDs contain a timestamp component, which ensures a
+  rough global ordering of them. If an ID is assigned to an object that
+  was created later, it will be out of order. If ordering is not
+  important, set this value to ``0``.
 
 7.4.12. CP Subsystem
 ~~~~~~~~~~~~~~~~~~~~
@@ -1957,21 +1957,21 @@ An Atomic Long usage example is shown below.
 
 .. code:: python
 
-   # Get an AtomicLong called "my-atomic-long"
-   atomic_long = client.cp_subsystem.get_atomic_long("my-atomic-long").blocking()
-   # Get current value
-   value = atomic_long.get()
-   print("Value:", value)
-   # Prints:
-   # Value: 0
+    # Get an AtomicLong called "my-atomic-long"
+    atomic_long = client.cp_subsystem.get_atomic_long("my-atomic-long").blocking()
+    # Get current value
+    value = atomic_long.get()
+    print("Value:", value)
+    # Prints:
+    # Value: 0
 
-   # Increment by 42
-   atomic_long.add_and_get(42)
-   # Set to 0 atomically if the current value is 42
-   result = atomic_long.compare_and_set(42, 0)
-   print ('CAS operation result:', result)
-   # Prints:
-   # CAS operation result: True
+    # Increment by 42
+    atomic_long.add_and_get(42)
+    # Set to 0 atomically if the current value is 42
+    result = atomic_long.compare_and_set(42, 0)
+    print ('CAS operation result:', result)
+    # Prints:
+    # CAS operation result: True
 
 AtomicLong implementation does not offer exactly-once / effectively-once
 execution semantics. It goes with at-least-once execution semantics by
@@ -1995,16 +1995,16 @@ A basic Lock usage example is shown below.
 
 .. code:: python
 
-   # Get a FencedLock called "my-lock"
-   lock = client.cp_subsystem.get_lock("my-lock").blocking()
-   # Acquire the lock and get the fencing token
-   fence = lock.lock()
-   try:
-       # Your guarded code goes here
-       pass
-   finally:
-       # Make sure to release the lock
-       lock.unlock()
+    # Get a FencedLock called "my-lock"
+    lock = client.cp_subsystem.get_lock("my-lock").blocking()
+    # Acquire the lock and get the fencing token
+    fence = lock.lock()
+    try:
+        # Your guarded code goes here
+        pass
+    finally:
+        # Make sure to release the lock
+        lock.unlock()
 
 FencedLock works on top of CP sessions. It keeps a CP session open while
 the lock is acquired. Please refer to `CP
@@ -2083,20 +2083,20 @@ A basic Semaphore usage example is shown below.
 
 .. code:: python
 
-   # Get a Semaphore called "my-semaphore"
-   semaphore = client.cp_subsystem.get_semaphore("my-semaphore").blocking()
-   # Try to initialize the semaphore
-   # (does nothing if the semaphore is already initialized)
-   semaphore.init(3)
-   # Acquire 3 permits out of 3
-   semaphore.acquire(3)
-   # Release 2 permits
-   semaphore.release(2)
-   # Check available permits
-   available = semaphore.available_permits()
-   print("Available:", available)
-   # Prints:
-   # Available: 2
+    # Get a Semaphore called "my-semaphore"
+    semaphore = client.cp_subsystem.get_semaphore("my-semaphore").blocking()
+    # Try to initialize the semaphore
+    # (does nothing if the semaphore is already initialized)
+    semaphore.init(3)
+    # Acquire 3 permits out of 3
+    semaphore.acquire(3)
+    # Release 2 permits
+    semaphore.release(2)
+    # Check available permits
+    available = semaphore.available_permits()
+    print("Available:", available)
+    # Prints:
+    # Available: 2
 
 Beware of the increased risk of indefinite postponement when using the
 multiple-permit acquire. If permits are released one by one, a caller
@@ -2113,38 +2113,38 @@ before giving up.
 
 .. code:: python
 
-   # Try to acquire 2 permits
-   success = semaphore.try_acquire(2)
-   # Check for the result of the acquire request
-   if success:
-       try:
-           pass
-           # Your guarded code goes here
-       finally:
-           # Make sure to release the permits
-           semaphore.release(2)
+    # Try to acquire 2 permits
+    success = semaphore.try_acquire(2)
+    # Check for the result of the acquire request
+    if success:
+        try:
+            pass
+            # Your guarded code goes here
+        finally:
+            # Make sure to release the permits
+            semaphore.release(2)
 
 Semaphore data structure has two variations:
 
--  The default implementation is session-aware. In this one, when a
-   caller makes its very first ``acquire()`` call, it starts a new CP
-   session with the underlying CP group. Then, liveliness of the caller
-   is tracked via this CP session. When the caller fails, permits
-   acquired by this caller are automatically and safely released.
-   However, the session-aware version comes with a limitation, that is,
-   a Hazelcast client cannot release permits before acquiring them
-   first. In other words, a client can release only the permits it has
-   acquired earlier.
--  The second implementation is sessionless. This one does not perform
-   auto-cleanup of acquired permits on failures. Acquired permits are
-   not bound to callers and permits can be released without acquiring
-   first. However, you need to handle failed permit owners on your own.
-   If a Hazelcast server or a client fails while holding some permits,
-   they will not be automatically released. You can use the sessionless
-   CP Semaphore implementation by enabling JDK compatibility
-   ``jdk-compatible`` server-side setting. Refer to `Semaphore
-   configuration <https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#semaphore-configuration>`__
-   documentation for more details.
+- The default implementation is session-aware. In this one, when a
+  caller makes its very first ``acquire()`` call, it starts a new CP
+  session with the underlying CP group. Then, liveliness of the caller
+  is tracked via this CP session. When the caller fails, permits
+  acquired by this caller are automatically and safely released.
+  However, the session-aware version comes with a limitation, that is,
+  a Hazelcast client cannot release permits before acquiring them
+  first. In other words, a client can release only the permits it has
+  acquired earlier.
+- The second implementation is sessionless. This one does not perform
+  auto-cleanup of acquired permits on failures. Acquired permits are
+  not bound to callers and permits can be released without acquiring
+  first. However, you need to handle failed permit owners on your own.
+  If a Hazelcast server or a client fails while holding some permits,
+  they will not be automatically released. You can use the sessionless
+  CP Semaphore implementation by enabling JDK compatibility
+  ``jdk-compatible`` server-side setting. Refer to `Semaphore
+  configuration <https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#semaphore-configuration>`__
+  documentation for more details.
 
 7.4.12.4. Using CountDownLatch
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2159,34 +2159,34 @@ A basic CountDownLatch usage example is shown below.
 
 .. code:: python
 
-   # Get a CountDownLatch called "my-latch"
-   latch = client.cp_subsystem.get_count_down_latch("my-latch").blocking()
-   # Try to initialize the latch
-   # (does nothing if the count is not zero)
-   initialized = latch.try_set_count(1)
-   print("Initialized:", initialized)
-   # Check count
-   count = latch.get_count()
-   print("Count:", count)
-   # Prints:
-   # Count: 1
+    # Get a CountDownLatch called "my-latch"
+    latch = client.cp_subsystem.get_count_down_latch("my-latch").blocking()
+    # Try to initialize the latch
+    # (does nothing if the count is not zero)
+    initialized = latch.try_set_count(1)
+    print("Initialized:", initialized)
+    # Check count
+    count = latch.get_count()
+    print("Count:", count)
+    # Prints:
+    # Count: 1
 
-   # Bring the count down to zero after 10ms
-   def run():
-       time.sleep(0.01)
-       latch.count_down()
+    # Bring the count down to zero after 10ms
+    def run():
+        time.sleep(0.01)
+        latch.count_down()
 
-   t = Thread(target=run)
-   t.start()
+    t = Thread(target=run)
+    t.start()
 
-   # Wait up to 1 second for the count to become zero up
-   count_is_zero = latch.await(1)
-   print("Count is zero:", count_is_zero)
+    # Wait up to 1 second for the count to become zero up
+    count_is_zero = latch.await(1)
+    print("Count is zero:", count_is_zero)
 
 ..
 
-   NOTE: CountDownLatch count can be reset with ``try_set_count()``
-   after a countdown has finished, but not during an active count.
+    NOTE: CountDownLatch count can be reset with ``try_set_count()``
+    after a countdown has finished, but not during an active count.
 
 7.4.12.5. Using AtomicReference
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2200,47 +2200,47 @@ A basic AtomicReference usage example is shown below.
 
 .. code:: python
 
-   # Get a AtomicReference called "my-ref"
-   my_ref = client.cp_subsystem.get_atomic_reference("my-ref").blocking()
-   # Set the value atomically
-   my_ref.set(42)
-   # Read the value
-   value = my_ref.get()
-   print("Value:", value)
-   # Prints:
-   # Value: 42
+    # Get a AtomicReference called "my-ref"
+    my_ref = client.cp_subsystem.get_atomic_reference("my-ref").blocking()
+    # Set the value atomically
+    my_ref.set(42)
+    # Read the value
+    value = my_ref.get()
+    print("Value:", value)
+    # Prints:
+    # Value: 42
 
-   # Try to replace the value with "value"
-   # with a compare-and-set atomic operation
-   result = my_ref.compare_and_set(42, "value")
-   print("CAS result:", result)
-   # Prints:
-   # CAS result: True
+    # Try to replace the value with "value"
+    # with a compare-and-set atomic operation
+    result = my_ref.compare_and_set(42, "value")
+    print("CAS result:", result)
+    # Prints:
+    # CAS result: True
 
 The following are some considerations you need to know when you use
 AtomicReference:
 
--  AtomicReference works based on the byte-content and not on the
-   object-reference. If you use the ``compare_and_set()`` method, do not
-   change to the original value because its serialized content will then
-   be different.
--  All methods returning an object return a private copy. You can modify
-   the private copy, but the rest of the world is shielded from your
-   changes. If you want these changes to be visible to the rest of the
-   world, you need to write the change back to the AtomicReference; but
-   be careful about introducing a data-race.
--  The in-memory format of an AtomicReference is ``binary``. The
-   receiving side does not need to have the class definition available
-   unless it needs to be deserialized on the other side, e.g., because
-   a method like ``alter()`` is executed. This deserialization is done
-   for every call that needs to have the object instead of the binary
-   content, so be careful with expensive object graphs that need to be
-   deserialized.
--  If you have an object with many fields or an object graph and you
-   only need to calculate some information or need a subset of fields,
-   you can use the ``apply()`` method. With the ``apply()`` method, the
-   whole object does not need to be sent over the line; only the
-   information that is relevant is sent.
+- AtomicReference works based on the byte-content and not on the
+  object-reference. If you use the ``compare_and_set()`` method, do not
+  change to the original value because its serialized content will then
+  be different.
+- All methods returning an object return a private copy. You can modify
+  the private copy, but the rest of the world is shielded from your
+  changes. If you want these changes to be visible to the rest of the
+  world, you need to write the change back to the AtomicReference; but
+  be careful about introducing a data-race.
+- The in-memory format of an AtomicReference is ``binary``. The
+  receiving side does not need to have the class definition available
+  unless it needs to be deserialized on the other side, e.g., because
+  a method like ``alter()`` is executed. This deserialization is done
+  for every call that needs to have the object instead of the binary
+  content, so be careful with expensive object graphs that need to be
+  deserialized.
+- If you have an object with many fields or an object graph and you
+  only need to calculate some information or need a subset of fields,
+  you can use the ``apply()`` method. With the ``apply()`` method, the
+  whole object does not need to be sent over the line; only the
+  information that is relevant is sent.
 
 AtomicReference does not offer exactly-once / effectively-once execution
 semantics. It goes with at-least-once execution semantics by default and
@@ -2264,11 +2264,11 @@ You can add event listeners to a Hazelcast Python client. You can
 configure the following listeners to listen to the events on the client
 side:
 
--  Membership Listener: Notifies when a member joins to/leaves the
-   cluster.
+- Membership Listener: Notifies when a member joins to/leaves the
+  cluster.
 
--  Lifecycle Listener: Notifies when the client is starting, started,
-   connected, disconnected, shutting down and shutdown.
+- Lifecycle Listener: Notifies when the client is starting, started,
+  connected, disconnected, shutting down and shutdown.
 
 7.5.1.1. Listening for Member Events
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2276,8 +2276,8 @@ side:
 You can add the following types of member events to the
 ``ClusterService``.
 
--  ``member_added``: A new member is added to the cluster.
--  ``member_removed``: An existing member leaves the cluster.
+- ``member_added``: A new member is added to the cluster.
+- ``member_removed``: An existing member leaves the cluster.
 
 The ``ClusterService`` class exposes an ``add_listener()`` method that
 allows one or more functions to be attached to the member events emitted
@@ -2288,19 +2288,19 @@ The following is a membership listener registration by using the
 
 .. code:: python
 
-   def added_listener(member):
-       print("Member Added: The address is", member.address)
+    def added_listener(member):
+        print("Member Added: The address is", member.address)
 
 
-   def removed_listener(member):
-       print("Member Removed. The address is", member.address)
+    def removed_listener(member):
+        print("Member Removed. The address is", member.address)
 
 
-   client.cluster_service.add_listener(
-       member_added=added_listener, 
-       member_removed=removed_listener, 
-       fire_for_existing=True
-   )
+    client.cluster_service.add_listener(
+        member_added=added_listener,
+        member_removed=removed_listener,
+        fire_for_existing=True
+    )
 
 Also, you can set the ``fire_for_existing`` flag to ``True`` to receive
 the events for list of available members when the listener is
@@ -2311,11 +2311,11 @@ the ``membership_listeners`` argument.
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       membership_listeners=[
-           (added_listener, removed_listener)
-       ]
-   )
+    client = hazelcast.HazelcastClient(
+        membership_listeners=[
+            (added_listener, removed_listener)
+        ]
+    )
 
 7.5.1.2. Listening for Distributed Object Events
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2326,102 +2326,102 @@ will be called. The parameter passed into the listener function will be
 of the type ``DistributedObjectEvent``. A ``DistributedObjectEvent``
 contains the following fields:
 
--  ``name``: Name of the distributed object.
--  ``service_name``: Service name of the distributed object.
--  ``event_type``: Type of the invoked event. It is either ``CREATED``
-   or ``DESTROYED``.
+- ``name``: Name of the distributed object.
+- ``service_name``: Service name of the distributed object.
+- ``event_type``: Type of the invoked event. It is either ``CREATED``
+  or ``DESTROYED``.
 
 The following is example of adding a distributed object listener to a
 client.
 
 .. code:: python
 
-   def distributed_object_listener(event):
-       print("Distributed object event >>>", event.name, event.service_name, event.event_type)
+    def distributed_object_listener(event):
+        print("Distributed object event >>>", event.name, event.service_name, event.event_type)
 
 
-   client.add_distributed_object_listener(
-       listener_func=distributed_object_listener
-   )
+    client.add_distributed_object_listener(
+        listener_func=distributed_object_listener
+    )
 
-   map_name = "test_map"
+    map_name = "test_map"
 
-   # This call causes a CREATED event
-   test_map = client.get_map(map_name)
+    # This call causes a CREATED event
+    test_map = client.get_map(map_name)
 
-   # This causes no event because map was already created
-   test_map2 = client.get_map(map_name)
+    # This causes no event because map was already created
+    test_map2 = client.get_map(map_name)
 
-   # This causes a DESTROYED event
-   test_map.destroy()
+    # This causes a DESTROYED event
+    test_map.destroy()
 
 **Output**
 
 ::
 
-   Distributed object event >>> test_map hz:impl:mapService CREATED
-   Distributed object event >>> test_map hz:impl:mapService DESTROYED
+    Distributed object event >>> test_map hz:impl:mapService CREATED
+    Distributed object event >>> test_map hz:impl:mapService DESTROYED
 
 7.5.1.3. Listening for Lifecycle Events
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The lifecycle listener is notified for the following events:
 
--  ``STARTING``: The client is starting.
--  ``STARTED``: The client has started.
--  ``CONNECTED``: The client connected to a member.
--  ``SHUTTING_DOWN``: The client is shutting down.
--  ``DISCONNECTED``: The client disconnected from a member.
--  ``SHUTDOWN``: The client has shutdown.
+- ``STARTING``: The client is starting.
+- ``STARTED``: The client has started.
+- ``CONNECTED``: The client connected to a member.
+- ``SHUTTING_DOWN``: The client is shutting down.
+- ``DISCONNECTED``: The client disconnected from a member.
+- ``SHUTDOWN``: The client has shutdown.
 
 The following is an example of the lifecycle listener that is added to
 client during startup and its output.
 
 .. code:: python
 
-   def lifecycle_listener(state):
-       print("Lifecycle Event >>>", state)
+    def lifecycle_listener(state):
+        print("Lifecycle Event >>>", state)
 
 
-   client = hazelcast.HazelcastClient(
-       lifecycle_listeners=[
-           lifecycle_listener
-       ]
-   )
+    client = hazelcast.HazelcastClient(
+        lifecycle_listeners=[
+            lifecycle_listener
+        ]
+    )
 
 **Output:**
 
 ::
 
-   INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is STARTING
-   Lifecycle Event >>> STARTING
-   INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is STARTED
-   Lifecycle Event >>> STARTED
-   INFO:hazelcast.connection:Trying to connect to Address(host=127.0.0.1, port=5701)
-   INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is CONNECTED
-   Lifecycle Event >>> CONNECTED
-   INFO:hazelcast.connection:Authenticated with server Address(host=172.17.0.2, port=5701):7682c357-3bec-4841-b330-6f9ae0c08253, server version: 4.0, local address: Address(host=127.0.0.1, port=56732)
-   INFO:hazelcast.cluster:
+    INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is STARTING
+    Lifecycle Event >>> STARTING
+    INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is STARTED
+    Lifecycle Event >>> STARTED
+    INFO:hazelcast.connection:Trying to connect to Address(host=127.0.0.1, port=5701)
+    INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is CONNECTED
+    Lifecycle Event >>> CONNECTED
+    INFO:hazelcast.connection:Authenticated with server Address(host=172.17.0.2, port=5701):7682c357-3bec-4841-b330-6f9ae0c08253, server version: 4.0, local address: Address(host=127.0.0.1, port=56732)
+    INFO:hazelcast.cluster:
 
-   Members [1] {
-       Member [172.17.0.2]:5701 - 7682c357-3bec-4841-b330-6f9ae0c08253
-   }
+    Members [1] {
+        Member [172.17.0.2]:5701 - 7682c357-3bec-4841-b330-6f9ae0c08253
+    }
 
-   INFO:hazelcast.client:Client started
-   INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is SHUTTING_DOWN
-   Lifecycle Event >>> SHUTTING_DOWN
-   INFO:hazelcast.connection:Removed connection to Address(host=127.0.0.1, port=5701):7682c357-3bec-4841-b330-6f9ae0c08253, connection: Connection(id=0, live=False, remote_address=Address(host=172.17.0.2, port=5701))
-   INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is DISCONNECTED
-   Lifecycle Event >>> DISCONNECTED
-   INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is SHUTDOWN
-   Lifecycle Event >>> SHUTDOWN
+    INFO:hazelcast.client:Client started
+    INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is SHUTTING_DOWN
+    Lifecycle Event >>> SHUTTING_DOWN
+    INFO:hazelcast.connection:Removed connection to Address(host=127.0.0.1, port=5701):7682c357-3bec-4841-b330-6f9ae0c08253, connection: Connection(id=0, live=False, remote_address=Address(host=172.17.0.2, port=5701))
+    INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is DISCONNECTED
+    Lifecycle Event >>> DISCONNECTED
+    INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is SHUTDOWN
+    Lifecycle Event >>> SHUTDOWN
 
 You can also add lifecycle listeners after client initialization using
 the ``LifecycleService``.
 
 .. code:: python
 
-   client.lifecycle_service.add_listener(lifecycle_listener)
+    client.lifecycle_service.add_listener(lifecycle_listener)
 
 7.5.2. Distributed Data Structure Events
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2435,20 +2435,20 @@ You can listen to map-wide or entry-based events by attaching functions
 to the ``Map`` objects using the ``add_entry_listener()`` method. You
 can listen the following events.
 
--  ``added_func`` : Function to be called when an entry is added to map.
--  ``removed_func`` : Function to be called when an entry is removed
-   from map.
--  ``updated_func`` : Function to be called when an entry is updated.
--  ``evicted_func`` : Function to be called when an entry is evicted
-   from map.
--  ``evict_all_func`` : Function to be called when entries are evicted
-   from map.
--  ``clear_all_func`` : Function to be called when entries are cleared
-   from map.
--  ``merged_func`` : Function to be called when WAN replicated entry is
-   merged.
--  ``expired_func`` : Function to be called when an entry’s live time is
-   expired.
+- ``added_func`` : Function to be called when an entry is added to map.
+- ``removed_func`` : Function to be called when an entry is removed
+  from map.
+- ``updated_func`` : Function to be called when an entry is updated.
+- ``evicted_func`` : Function to be called when an entry is evicted
+  from map.
+- ``evict_all_func`` : Function to be called when entries are evicted
+  from map.
+- ``clear_all_func`` : Function to be called when entries are cleared
+  from map.
+- ``merged_func`` : Function to be called when WAN replicated entry is
+  merged.
+- ``expired_func`` : Function to be called when an entry’s live time is
+  expired.
 
 You can also filter the events using ``key`` or ``predicate``. There is
 also an option called ``include_value``. When this option is set to
@@ -2463,12 +2463,12 @@ See the following example.
 
 .. code:: python
 
-   def added(event):
-       print("Entry Added: %s-%s" % (event.key, event.value))
-       
+    def added(event):
+        print("Entry Added: %s-%s" % (event.key, event.value))
 
-   customer_map.add_entry_listener(include_value=True, added_func=added)
-   customer_map.put("4", "Jane Doe")
+
+    customer_map.add_entry_listener(include_value=True, added_func=added)
+    customer_map.put("4", "Jane Doe")
 
 A map-wide event is fired as a result of a map-wide operation. For
 example, ``map.clear()`` or ``map.evict_all()``. An ``EntryEvent``
@@ -2478,12 +2478,12 @@ See the following example.
 
 .. code:: python
 
-   def cleared(event):
-       print("Map Cleared:", event.number_of_affected_entries)
-       
+    def cleared(event):
+        print("Map Cleared:", event.number_of_affected_entries)
 
-   customer_map.add_entry_listener(include_value=True, clear_all_func=cleared)
-   customer_map.clear().result()
+
+    customer_map.add_entry_listener(include_value=True, clear_all_func=cleared)
+    customer_map.clear().result()
 
 7.6. Distributed Computing
 --------------------------
@@ -2510,9 +2510,9 @@ entry processors. An entry processor executes a read and updates upon
 the member where the data resides. This eliminates the costly network
 hops described above.
 
-   NOTE: Entry processor is meant to process a single entry per call.
-   Processing multiple entries and data structures in an entry processor
-   is not supported as it may result in deadlocks on the server side.
+    NOTE: Entry processor is meant to process a single entry per call.
+    Processing multiple entries and data structures in an entry processor
+    is not supported as it may result in deadlocks on the server side.
 
 Hazelcast sends the entry processor to each cluster member and these
 members apply it to the map entries. Therefore, if you add more members,
@@ -2523,10 +2523,10 @@ Processing Entries
 
 The ``Map`` class provides the following methods for entry processing:
 
--  ``execute_on_key`` processes an entry mapped by a key.
--  ``execute_on_keys`` processes entries mapped by a list of keys.
--  ``execute_on_entries`` can process all entries in a map with a
-   defined predicate. Predicate is optional.
+- ``execute_on_key`` processes an entry mapped by a key.
+- ``execute_on_keys`` processes entries mapped by a list of keys.
+- ``execute_on_entries`` can process all entries in a map with a
+  defined predicate. Predicate is optional.
 
 In the Python client, an ``EntryProcessor`` should be
 ``IdentifiedDataSerializable`` or ``Portable`` because the server should
@@ -2537,23 +2537,23 @@ The following is an example for ``EntryProcessor`` which is an
 
 .. code:: python
 
-   from hazelcast.serialization.api import IdentifiedDataSerializable
+    from hazelcast.serialization.api import IdentifiedDataSerializable
 
-   class IdentifiedEntryProcessor(IdentifiedDataSerializable):
-       def __init__(self, value=None):
-           self.value = value
-       
-       def read_data(self, object_data_input):
-           self.value = object_data_input.read_utf()
-       
-       def write_data(self, object_data_output):
-           object_data_output.write_utf(self.value)
-       
-       def get_factory_id(self):
-           return 5
-           
-       def get_class_id(self):
-           return 1
+    class IdentifiedEntryProcessor(IdentifiedDataSerializable):
+        def __init__(self, value=None):
+            self.value = value
+
+        def read_data(self, object_data_input):
+            self.value = object_data_input.read_utf()
+
+        def write_data(self, object_data_output):
+            object_data_output.write_utf(self.value)
+
+        def get_factory_id(self):
+            return 5
+
+        def get_class_id(self):
+            return 1
 
 Now, you need to make sure that the Hazelcast member recognizes the
 entry processor. For this, you need to implement the Java equivalent of
@@ -2567,84 +2567,84 @@ client given above:
 
 .. code:: java
 
-   import com.hazelcast.map.EntryProcessor;
-   import com.hazelcast.nio.ObjectDataInput;
-   import com.hazelcast.nio.ObjectDataOutput;
-   import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
+    import com.hazelcast.map.EntryProcessor;
+    import com.hazelcast.nio.ObjectDataInput;
+    import com.hazelcast.nio.ObjectDataOutput;
+    import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 
-   import java.io.IOException;
-   import java.util.Map;
+    import java.io.IOException;
+    import java.util.Map;
 
 
-   public class IdentifiedEntryProcessor
-           implements EntryProcessor<String, String, String>, IdentifiedDataSerializable {
+    public class IdentifiedEntryProcessor
+            implements EntryProcessor<String, String, String>, IdentifiedDataSerializable {
 
-       static final int CLASS_ID = 1;
-       private String value;
+        static final int CLASS_ID = 1;
+        private String value;
 
-       public IdentifiedEntryProcessor() {
-       }
+        public IdentifiedEntryProcessor() {
+        }
 
-       @Override
-       public int getFactoryId() {
-           return IdentifiedFactory.FACTORY_ID;
-       }
+        @Override
+        public int getFactoryId() {
+            return IdentifiedFactory.FACTORY_ID;
+        }
 
-       @Override
-       public int getClassId() {
-           return CLASS_ID;
-       }
+        @Override
+        public int getClassId() {
+            return CLASS_ID;
+        }
 
-       @Override
-       public void writeData(ObjectDataOutput out) throws IOException {
-           out.writeUTF(value);
-       }
+        @Override
+        public void writeData(ObjectDataOutput out) throws IOException {
+            out.writeUTF(value);
+        }
 
-       @Override
-       public void readData(ObjectDataInput in) throws IOException {
-           value = in.readUTF();
-       }
+        @Override
+        public void readData(ObjectDataInput in) throws IOException {
+            value = in.readUTF();
+        }
 
-       @Override
-       public String process(Map.Entry<String, String> entry) {
-           entry.setValue(value);
-           return value;
-       }
-   }
+        @Override
+        public String process(Map.Entry<String, String> entry) {
+            entry.setValue(value);
+            return value;
+        }
+    }
 
 You can implement the above processor’s factory as follows:
 
 .. code:: java
 
-   import com.hazelcast.nio.serialization.DataSerializableFactory;
-   import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
+    import com.hazelcast.nio.serialization.DataSerializableFactory;
+    import com.hazelcast.nio.serialization.IdentifiedDataSerializable;
 
-   public class IdentifiedFactory implements DataSerializableFactory {
-       public static final int FACTORY_ID = 5;
-       
-       @Override
-       public IdentifiedDataSerializable create(int typeId) {
-           if (typeId == IdentifiedEntryProcessor.CLASS_ID) {
-               return new IdentifiedEntryProcessor();
-           }
-           return null;
-       }
-   }
+    public class IdentifiedFactory implements DataSerializableFactory {
+        public static final int FACTORY_ID = 5;
+
+        @Override
+        public IdentifiedDataSerializable create(int typeId) {
+            if (typeId == IdentifiedEntryProcessor.CLASS_ID) {
+                return new IdentifiedEntryProcessor();
+            }
+            return null;
+        }
+    }
 
 Now you need to configure the ``hazelcast.xml`` to add your factory as
 shown below.
 
 .. code:: xml
 
-   <hazelcast>
-       <serialization>
-           <data-serializable-factories>
-               <data-serializable-factory factory-id="5">
-                   IdentifiedFactory
-               </data-serializable-factory>
-           </data-serializable-factories>
-       </serialization>
-   </hazelcast>
+    <hazelcast>
+        <serialization>
+            <data-serializable-factories>
+                <data-serializable-factory factory-id="5">
+                    IdentifiedFactory
+                </data-serializable-factory>
+            </data-serializable-factories>
+        </serialization>
+    </hazelcast>
 
 The code that runs on the entries is implemented in Java on the server
 side. The client side entry processor is used to specify which entry
@@ -2659,12 +2659,12 @@ the entry processor in the ``Map`` methods. See the following example.
 
 .. code:: python
 
-   distributed_map = client.get_map("my-distributed-map").blocking()
+    distributed_map = client.get_map("my-distributed-map").blocking()
 
-   distributed_map.put("key", "not-processed")
-   distributed_map.execute_on_key("key", IdentifiedEntryProcessor("processed"))
+    distributed_map.put("key", "not-processed")
+    distributed_map.execute_on_key("key", IdentifiedEntryProcessor("processed"))
 
-   print(distributed_map.get("key"))  # Outputs 'processed'
+    print(distributed_map.get("key"))  # Outputs 'processed'
 
 7.7. Distributed Query
 ----------------------
@@ -2698,41 +2698,41 @@ since only filtered data is sent to the requester.
 The ``Predicate`` module offered by the Python client includes many
 operators for your query requirements. Some of them are explained below.
 
--  ``is_equal_to``: Checks if the result of an expression is equal to a
-   given value.
--  ``is_not_equal_to``: Checks if the result of an expression is not
-   equal to a given value.
--  ``is_instance_of``: Checks if the result of an expression has a
-   certain type.
--  ``is_like``: Checks if the result of an expression matches some
-   string pattern. ``%`` (percentage sign) is the placeholder for many
-   characters, ``_`` (underscore) is placeholder for only one character.
--  ``is_ilike``: Checks if the result of an expression matches some
-   string pattern in a case-insensitive manner.
--  ``is_greater_than``: Checks if the result of an expression is greater
-   than a certain value.
--  ``is_greater_than_or_equal_to``: Checks if the result of an
-   expression is greater than or equal to a certain value.
--  ``is_less_than``: Checks if the result of an expression is less than
-   a certain value.
--  ``is_less_than_or_equal_to``: Checks if the result of an expression
-   is less than or equal to a certain value.
--  ``is_between``: Checks if the result of an expression is between two
-   values (this is inclusive).
--  ``is_in``: Checks if the result of an expression is an element of a
-   certain list.
--  ``is_not``: Checks if the result of an expression is false.
--  ``matches_regex``: Checks if the result of an expression matches some
-   regular expression.
--  ``true``: Creates an always true predicate that will pass all items.
--  ``false``: Creates an always false predicate that will filter out all
-   items.
+- ``is_equal_to``: Checks if the result of an expression is equal to a
+  given value.
+- ``is_not_equal_to``: Checks if the result of an expression is not
+  equal to a given value.
+- ``is_instance_of``: Checks if the result of an expression has a
+  certain type.
+- ``is_like``: Checks if the result of an expression matches some
+  string pattern. ``%`` (percentage sign) is the placeholder for many
+  characters, ``_`` (underscore) is placeholder for only one character.
+- ``is_ilike``: Checks if the result of an expression matches some
+  string pattern in a case-insensitive manner.
+- ``is_greater_than``: Checks if the result of an expression is greater
+  than a certain value.
+- ``is_greater_than_or_equal_to``: Checks if the result of an
+  expression is greater than or equal to a certain value.
+- ``is_less_than``: Checks if the result of an expression is less than
+  a certain value.
+- ``is_less_than_or_equal_to``: Checks if the result of an expression
+  is less than or equal to a certain value.
+- ``is_between``: Checks if the result of an expression is between two
+  values (this is inclusive).
+- ``is_in``: Checks if the result of an expression is an element of a
+  certain list.
+- ``is_not``: Checks if the result of an expression is false.
+- ``matches_regex``: Checks if the result of an expression matches some
+  regular expression.
+- ``true``: Creates an always true predicate that will pass all items.
+- ``false``: Creates an always false predicate that will filter out all
+  items.
 
 Hazelcast offers the following ways for distributed query purposes:
 
--  Combining Predicates with AND, OR, NOT
+- Combining Predicates with AND, OR, NOT
 
--  Distributed SQL Query
+- Distributed SQL Query
 
 7.7.1.1. Employee Map Query Example
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2742,32 +2742,32 @@ Assume that you have an ``employee`` map containing the instances of
 
 .. code:: python
 
-   from hazelcast.serialization.api import Portable
+    from hazelcast.serialization.api import Portable
 
-   class Employee(Portable):
-       def __init__(self, name=None, age=None, active=None, salary=None):
-           self.name = name
-           self.age = age
-           self.active = active
-           self.salary = salary
-       
-       def get_class_id(self):
-           return 100
-       
-       def get_factory_id(self):
-           return 1000
-       
-       def read_portable(self, reader):
-           self.name = reader.read_utf("name")
-           self.age = reader.read_int("age")
-           self.active = reader.read_boolean("active")
-           self.salary = reader.read_double("salary")
-       
-       def write_portable(self, writer):
-           writer.write_utf("name", self.name)
-           writer.write_int("age", self.age)
-           writer.write_boolean("active", self.active)
-           writer.write_double("salary", self.salary)
+    class Employee(Portable):
+        def __init__(self, name=None, age=None, active=None, salary=None):
+            self.name = name
+            self.age = age
+            self.active = active
+            self.salary = salary
+
+        def get_class_id(self):
+            return 100
+
+        def get_factory_id(self):
+            return 1000
+
+        def read_portable(self, reader):
+            self.name = reader.read_utf("name")
+            self.age = reader.read_int("age")
+            self.active = reader.read_boolean("active")
+            self.salary = reader.read_double("salary")
+
+        def write_portable(self, writer):
+            writer.write_utf("name", self.name)
+            writer.write_int("age", self.age)
+            writer.write_boolean("active", self.active)
+            writer.write_double("salary", self.salary)
 
 Note that ``Employee`` extends ``Portable``. As portable types are not
 deserialized on the server side for querying, you don’t need to
@@ -2782,8 +2782,8 @@ extracted ``hazelcast-<version>.zip`` (or ``tar``) before starting the
 server. See the `Adding User Library to CLASSPATH
 section <#1212-adding-user-library-to-classpath>`__.
 
-   NOTE: Querying with ``Portable`` class is faster as compared to
-   ``IdentifiedDataSerializable``.
+    NOTE: Querying with ``Portable`` class is faster as compared to
+    ``IdentifiedDataSerializable``.
 
 7.7.1.2. Querying by Combining Predicates with AND, OR, NOT
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2793,13 +2793,13 @@ operators, as shown in the below example.
 
 .. code:: python
 
-   from hazelcast.serialization.predicate import and_, is_equal_to, is_less_than
+    from hazelcast.serialization.predicate import and_, is_equal_to, is_less_than
 
-   employee_map = client.get_map("employee")
+    employee_map = client.get_map("employee")
 
-   predicate = and_(is_equal_to('active', True), is_less_than('age', 30))
+    predicate = and_(is_equal_to('active', True), is_less_than('age', 30))
 
-   employees = employee_map.values(predicate).result()
+    employees = employee_map.values(predicate).result()
 
 In the above example code, ``predicate`` verifies whether the entry is
 active and its ``age`` value is less than 30. This ``predicate`` is
@@ -2807,8 +2807,8 @@ applied to the ``employee`` map using the ``Map.values`` method. This
 method sends the predicate to all cluster members and merges the results
 coming from them.
 
-   NOTE: Predicates can also be applied to ``key_set`` and
-   ``entry_set`` of the Hazelcast IMDG’s distributed map.
+    NOTE: Predicates can also be applied to ``key_set`` and
+    ``entry_set`` of the Hazelcast IMDG’s distributed map.
 
 7.7.1.3. Querying with SQL
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2818,61 +2818,61 @@ following example:
 
 .. code:: python
 
-   from hazelcast.serialization.predicate import sql
+    from hazelcast.serialization.predicate import sql
 
-   employee_map = client.get_map("employee")
+    employee_map = client.get_map("employee")
 
-   employees = employee_map.values(sql("active AND age < 30")).result()
+    employees = employee_map.values(sql("active AND age < 30")).result()
 
 Supported SQL Syntax
 ''''''''''''''''''''
 
 **AND/OR:** ``<expression> AND <expression> AND <expression>…``
 
--  ``active AND age > 30``
--  ``active = false OR age = 45 OR name = 'Joe'``
--  ``active AND ( age > 20 OR salary < 60000 )``
+- ``active AND age > 30``
+- ``active = false OR age = 45 OR name = 'Joe'``
+- ``active AND ( age > 20 OR salary < 60000 )``
 
 **Equality:** ``=, !=, <, ⇐, >, >=``
 
--  ``<expression> = value``
--  ``age <= 30``
--  ``name = 'Joe'``
--  ``salary != 50000``
+- ``<expression> = value``
+- ``age <= 30``
+- ``name = 'Joe'``
+- ``salary != 50000``
 
 **BETWEEN:** ``<attribute> [NOT] BETWEEN <value1> AND <value2>``
 
--  ``age BETWEEN 20 AND 33 ( same as age >= 20 AND age ⇐ 33 )``
--  ``age NOT BETWEEN 30 AND 40 ( same as age < 30 OR age > 40 )``
+- ``age BETWEEN 20 AND 33 ( same as age >= 20 AND age ⇐ 33 )``
+- ``age NOT BETWEEN 30 AND 40 ( same as age < 30 OR age > 40 )``
 
 **IN:** ``<attribute> [NOT] IN (val1, val2,…)``
 
--  ``age IN ( 20, 30, 40 )``
--  ``age NOT IN ( 60, 70 )``
--  ``active AND ( salary >= 50000 OR ( age NOT BETWEEN 20 AND 30 ) )``
--  ``age IN ( 20, 30, 40 ) AND salary BETWEEN ( 50000, 80000 )``
+- ``age IN ( 20, 30, 40 )``
+- ``age NOT IN ( 60, 70 )``
+- ``active AND ( salary >= 50000 OR ( age NOT BETWEEN 20 AND 30 ) )``
+- ``age IN ( 20, 30, 40 ) AND salary BETWEEN ( 50000, 80000 )``
 
 **LIKE:** ``<attribute> [NOT] LIKE 'expression'``
 
 The ``%`` (percentage sign) is the placeholder for multiple characters,
 an ``_`` (underscore) is the placeholder for only one character.
 
--  ``name LIKE 'Jo%'`` (true for ‘Joe’, ‘Josh’, ‘Joseph’ etc.)
--  ``name LIKE 'Jo_'`` (true for ‘Joe’; false for ‘Josh’)
--  ``name NOT LIKE 'Jo_'`` (true for ‘Josh’; false for ‘Joe’)
--  ``name LIKE 'J_s%'`` (true for ‘Josh’, ‘Joseph’; false ‘John’, ‘Joe’)
+- ``name LIKE 'Jo%'`` (true for ‘Joe’, ‘Josh’, ‘Joseph’ etc.)
+- ``name LIKE 'Jo_'`` (true for ‘Joe’; false for ‘Josh’)
+- ``name NOT LIKE 'Jo_'`` (true for ‘Josh’; false for ‘Joe’)
+- ``name LIKE 'J_s%'`` (true for ‘Josh’, ‘Joseph’; false ‘John’, ‘Joe’)
 
 **ILIKE:** ``<attribute> [NOT] ILIKE 'expression'``
 
 ILIKE is similar to the LIKE predicate but in a case-insensitive manner.
 
--  ``name ILIKE 'Jo%'`` (true for ‘Joe’, ‘joe’, ‘jOe’,‘Josh’,‘joSH’,
-   etc.)
--  ``name ILIKE 'Jo_'`` (true for ‘Joe’ or ‘jOE’; false for ‘Josh’)
+- ``name ILIKE 'Jo%'`` (true for ‘Joe’, ‘joe’, ‘jOe’,‘Josh’,‘joSH’,
+  etc.)
+- ``name ILIKE 'Jo_'`` (true for ‘Joe’ or ‘jOE’; false for ‘Josh’)
 
 **REGEX:** ``<attribute> [NOT] REGEX 'expression'``
 
--  ``name REGEX 'abc-.*'`` (true for ‘abc-123’; false for ‘abx-123’)
+- ``name REGEX 'abc-.*'`` (true for ‘abc-123’; false for ‘abx-123’)
 
 Querying Examples with Predicates
 '''''''''''''''''''''''''''''''''
@@ -2882,19 +2882,19 @@ the entry keys. See the following example:
 
 .. code:: python
 
-   from hazelcast.serialization.predicate import sql
+    from hazelcast.serialization.predicate import sql
 
-   person_map = client.get_map("persons").blocking()
+    person_map = client.get_map("persons").blocking()
 
-   person_map.put("John", 28)
-   person_map.put("Mary", 23)
-   person_map.put("Judy", 30)
+    person_map.put("John", 28)
+    person_map.put("Mary", 23)
+    person_map.put("Judy", 30)
 
-   predicate = sql("__key like M%")
+    predicate = sql("__key like M%")
 
-   persons = person_map.values(predicate)
+    persons = person_map.values(predicate)
 
-   print(persons[0]) # Outputs '23'
+    print(persons[0]) # Outputs '23'
 
 In this example, the code creates a list with the values whose keys
 start with the letter “M”.
@@ -2904,19 +2904,19 @@ the entry values. See the following example:
 
 .. code:: python
 
-   from hazelcast.serialization.predicate import is_greater_than_or_equal_to
+    from hazelcast.serialization.predicate import is_greater_than_or_equal_to
 
-   person_map = client.get_map("persons").blocking()
+    person_map = client.get_map("persons").blocking()
 
-   person_map.put("John", 28)
-   person_map.put("Mary", 23)
-   person_map.put("Judy", 30)
+    person_map.put("John", 28)
+    person_map.put("Mary", 23)
+    person_map.put("Judy", 30)
 
-   predicate = is_greater_than_or_equal_to("this", 27)
+    predicate = is_greater_than_or_equal_to("this", 27)
 
-   persons = person_map.values(predicate)
+    persons = person_map.values(predicate)
 
-   print(persons[0], persons[1]) # Outputs '28 30'
+    print(persons[0], persons[1]) # Outputs '28 30'
 
 In this example, the code creates a list with the values greater than or
 equal to “27”.
@@ -2933,20 +2933,20 @@ Hazelcast query methods explained in this section.
 
 .. code:: python
 
-   person1 = "{ \"name\": \"John\", \"age\": 35 }"
-   person2 = "{ \"name\": \"Jane\", \"age\": 24 }"
-   person3 = {"name": "Trey", "age": 17}
+    person1 = "{ \"name\": \"John\", \"age\": 35 }"
+    person2 = "{ \"name\": \"Jane\", \"age\": 24 }"
+    person3 = {"name": "Trey", "age": 17}
 
-   id_person_map = client.get_map("json-values").blocking()
+    id_person_map = client.get_map("json-values").blocking()
 
-   # From JSON string
-   id_person_map.put(1, HazelcastJsonValue(person1))
-   id_person_map.put(2, HazelcastJsonValue(person2))
+    # From JSON string
+    id_person_map.put(1, HazelcastJsonValue(person1))
+    id_person_map.put(2, HazelcastJsonValue(person2))
 
-   # From JSON serializable object
-   id_person_map.put(3, HazelcastJsonValue(person3))
+    # From JSON serializable object
+    id_person_map.put(3, HazelcastJsonValue(person3))
 
-   people_under_21 = id_person_map.values(is_less_than("age", 21)) 
+    people_under_21 = id_person_map.values(is_less_than("age", 21))
 
 When running the queries, Hazelcast treats values extracted from the
 JSON documents as Java types so they can be compared with the query
@@ -2963,26 +2963,26 @@ objects using the ``Predicate``\ s.
 
 .. code:: python
 
-   # Sample JSON object
-   # {
-   #     "departmentId": 1,
-   #     "room": "alpha",
-   #     "people": [
-   #         {
-   #             "name": "Peter",
-   #             "age": 26,
-   #             "salary": 50000
-   #         },
-   #         {
-   #             "name": "Jonah",
-   #             "age": 50,
-   #             "salary": 140000
-   #         }
-   #     ]
-   # }
-   # The following query finds all the departments that have a person named "Peter" working in them.
+    # Sample JSON object
+    # {
+    #     "departmentId": 1,
+    #     "room": "alpha",
+    #     "people": [
+    #         {
+    #             "name": "Peter",
+    #             "age": 26,
+    #             "salary": 50000
+    #         },
+    #         {
+    #             "name": "Jonah",
+    #             "age": 50,
+    #             "salary": 140000
+    #         }
+    #     ]
+    # }
+    # The following query finds all the departments that have a person named "Peter" working in them.
 
-   department_with_peter = departments.values(is_equal_to("people[any].name", "Peter"))
+    department_with_peter = departments.values(is_equal_to("people[any].name", "Peter"))
 
 ``HazelcastJsonValue`` is a lightweight wrapper around your JSON
 strings. It is used merely as a way to indicate that the contained
@@ -3007,18 +3007,18 @@ configuration on the member side as follows:
 
 .. code:: xml
 
-   <hazelcast>
-       ...
-       <map name="map-a">
-           <!--
-           valid values for metadata-policy are:
-             - OFF
-             - CREATE_ON_UPDATE (default)
-           -->
-           <metadata-policy>OFF</metadata-policy>
-       </map>
-       ...
-   </hazelcast>
+    <hazelcast>
+        ...
+        <map name="map-a">
+            <!--
+            valid values for metadata-policy are:
+              - OFF
+              - CREATE_ON_UPDATE (default)
+            -->
+            <metadata-policy>OFF</metadata-policy>
+        </map>
+        ...
+    </hazelcast>
 
 7.7.1.5 Filtering with Paging Predicates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -3044,37 +3044,37 @@ details.
 
 In the example code below:
 
--  The ``is_greater_than_or_equal_to`` predicate gets values from the
-   ``students`` map. This predicate has a filter to retrieve the objects
-   with an ``age`` greater than or equal to ``18``.
+- The ``is_greater_than_or_equal_to`` predicate gets values from the
+  ``students`` map. This predicate has a filter to retrieve the objects
+  with an ``age`` greater than or equal to ``18``.
 
--  Then a ``PagingPredicate`` is constructed in which the page size is
-   ``5``, so that there are five objects in each page. The first time
-   the ``values()`` method is called, the first page is fetched.
+- Then a ``PagingPredicate`` is constructed in which the page size is
+  ``5``, so that there are five objects in each page. The first time
+  the ``values()`` method is called, the first page is fetched.
 
--  Finally, the subsequent page is fetched by calling the ``next_page()``
-   method of ``PagingPredicate`` and querying the map again with the
-   updated ``PagingPredicate``.
+- Finally, the subsequent page is fetched by calling the ``next_page()``
+  method of ``PagingPredicate`` and querying the map again with the
+  updated ``PagingPredicate``.
 
 .. code:: python
 
-   from hazelcast.serialization.predicate import paging, is_greater_than_or_equal_to
+    from hazelcast.serialization.predicate import paging, is_greater_than_or_equal_to
 
-   ...
+    ...
 
-   m = client.get_map("students").blocking()
-   predicate = paging(is_greater_than_or_equal_to("age", 18), 5)
+    m = client.get_map("students").blocking()
+    predicate = paging(is_greater_than_or_equal_to("age", 18), 5)
 
-   # Retrieve the first page
-   values = m.values(predicate)
+    # Retrieve the first page
+    values = m.values(predicate)
 
-   ...
+    ...
 
-   # Set up next page
-   predicate.next_page()
+    # Set up next page
+    predicate.next_page()
 
-   # Retrieve next page
-   values = m.values(predicate)
+    # Retrieve next page
+    values = m.values(predicate)
 
 If a comparator is not specified for ``PagingPredicate``, but you want
 to get a collection of keys or values page by page, keys or values must
@@ -3092,8 +3092,8 @@ you make a query for the hundredth page, for example, it gets all
 ``100`` pages at once instead of reaching the hundredth page one by one
 using the ``next_page()`` method.
 
-   NOTE: ``PagingPredicate``, also known as Order & Limit, is not supported in
-   Transactional Context.
+    NOTE: ``PagingPredicate``, also known as Order & Limit, is not supported in
+    Transactional Context.
 
 7.8. Performance
 ----------------
@@ -3112,12 +3112,12 @@ that reads are sped up and less network traffic is created.
 These benefits do not come for free, please consider the following
 trade-offs:
 
--  Clients with a Near Cache will have to hold the extra cached data,
-   which increases memory consumption.
--  If invalidation is enabled and entries are updated frequently, then
-   invalidations will be costly.
--  Near Cache breaks the strong consistency guarantees; you might be
-   reading stale data.
+- Clients with a Near Cache will have to hold the extra cached data,
+  which increases memory consumption.
+- If invalidation is enabled and entries are updated frequently, then
+  invalidations will be costly.
+- Near Cache breaks the strong consistency guarantees; you might be
+  reading stale data.
 
 Near Cache is highly recommended for maps that are mostly read.
 
@@ -3131,67 +3131,67 @@ configuration, its default value is used.
 
 .. code:: python
 
-   from hazelcast.config import InMemoryFormat, EvictionPolicy
+    from hazelcast.config import InMemoryFormat, EvictionPolicy
 
-   client = hazelcast.HazelcastClient(
-       near_caches={
-           "mostly-read-map": {
-               "invalidate_on_change": True,
-               "time_to_live": 60,
-               "max_idle": 30,
-               "in_memory_format": InMemoryFormat.OBJECT,
-               "eviction_policy": EvictionPolicy.LRU,
-               "eviction_max_size": 100,
-               "eviction_sampling_count": 8,
-               "eviction_sampling_pool_size": 16
-           }
-       }
-   )
+    client = hazelcast.HazelcastClient(
+        near_caches={
+            "mostly-read-map": {
+                "invalidate_on_change": True,
+                "time_to_live": 60,
+                "max_idle": 30,
+                "in_memory_format": InMemoryFormat.OBJECT,
+                "eviction_policy": EvictionPolicy.LRU,
+                "eviction_max_size": 100,
+                "eviction_sampling_count": 8,
+                "eviction_sampling_pool_size": 16
+            }
+        }
+    )
 
 Following are the descriptions of all configuration elements:
 
--  ``in_memory_format``: Specifies in which format data will be stored
-   in your Near Cache. Note that a map’s in-memory format can be
-   different from that of its Near Cache. Available values are as
-   follows:
+- ``in_memory_format``: Specifies in which format data will be stored
+  in your Near Cache. Note that a map’s in-memory format can be
+  different from that of its Near Cache. Available values are as
+  follows:
 
-   -  ``BINARY``: Data will be stored in serialized binary format
-      (default value).
-   -  ``OBJECT``: Data will be stored in deserialized format.
+  - ``BINARY``: Data will be stored in serialized binary format
+    (default value).
+  - ``OBJECT``: Data will be stored in deserialized format.
 
--  ``invalidate_on_change``: Specifies whether the cached entries are
-   evicted when the entries are updated or removed. Its default value is
-   ``True``.
--  ``time_to_live``: Maximum number of seconds for each entry to stay in
-   the Near Cache. Entries that are older than this period are
-   automatically evicted from the Near Cache. Regardless of the eviction
-   policy used, ``time_to_live_seconds`` still applies. Any non-negative
-   number can be assigned. Its default value is ``None``. ``None`` means
-   infinite.
--  ``max_idle``: Maximum number of seconds each entry can stay in the
-   Near Cache as untouched (not read). Entries that are not read more
-   than this period are removed from the Near Cache. Any non-negative
-   number can be assigned. Its default value is ``None``. ``None`` means
-   infinite.
--  ``eviction_policy``: Eviction policy configuration. Available values
-   are as follows:
+- ``invalidate_on_change``: Specifies whether the cached entries are
+  evicted when the entries are updated or removed. Its default value is
+  ``True``.
+- ``time_to_live``: Maximum number of seconds for each entry to stay in
+  the Near Cache. Entries that are older than this period are
+  automatically evicted from the Near Cache. Regardless of the eviction
+  policy used, ``time_to_live_seconds`` still applies. Any non-negative
+  number can be assigned. Its default value is ``None``. ``None`` means
+  infinite.
+- ``max_idle``: Maximum number of seconds each entry can stay in the
+  Near Cache as untouched (not read). Entries that are not read more
+  than this period are removed from the Near Cache. Any non-negative
+  number can be assigned. Its default value is ``None``. ``None`` means
+  infinite.
+- ``eviction_policy``: Eviction policy configuration. Available values
+  are as follows:
 
-   -  ``LRU``: Least Recently Used (default value).
-   -  ``LFU``: Least Frequently Used.
-   -  ``NONE``: No items are evicted and the ``eviction_max_size``
-      property is ignored. You still can combine it with
-      ``time_to_live`` and ``max_idle`` to evict items from the Near
-      Cache.
-   -  ``RANDOM``: A random item is evicted.
+  - ``LRU``: Least Recently Used (default value).
+  - ``LFU``: Least Frequently Used.
+  - ``NONE``: No items are evicted and the ``eviction_max_size``
+    property is ignored. You still can combine it with
+    ``time_to_live`` and ``max_idle`` to evict items from the Near
+    Cache.
+  - ``RANDOM``: A random item is evicted.
 
--  ``eviction_max_size``: Maximum number of entries kept in the memory
-   before eviction kicks in.
--  ``eviction_sampling_count``: Number of random entries that are
-   evaluated to see if some of them are already expired. If there are
-   expired entries, those are removed and there is no need for eviction.
--  ``eviction_sampling_pool_size``: Size of the pool for eviction
-   candidates. The pool is kept sorted according to eviction policy. The
-   entry with the highest score is evicted.
+- ``eviction_max_size``: Maximum number of entries kept in the memory
+  before eviction kicks in.
+- ``eviction_sampling_count``: Number of random entries that are
+  evaluated to see if some of them are already expired. If there are
+  expired entries, those are removed and there is no need for eviction.
+- ``eviction_sampling_pool_size``: Size of the pool for eviction
+  candidates. The pool is kept sorted according to eviction policy. The
+  entry with the highest score is evicted.
 
 7.8.1.2. Near Cache Example for Map
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -3206,16 +3206,16 @@ on the client side.
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       near_caches={
-           "mostly-read-map": {
-               "invalidate_on_change": True,
-               "in_memory_format": InMemoryFormat.OBJECT,
-               "eviction_policy": EvictionPolicy.LRU,
-               "eviction_max_size": 5000,
-           }
-       }
-   )
+    client = hazelcast.HazelcastClient(
+        near_caches={
+            "mostly-read-map": {
+                "invalidate_on_change": True,
+                "in_memory_format": InMemoryFormat.OBJECT,
+                "eviction_policy": EvictionPolicy.LRU,
+                "eviction_max_size": 5000,
+            }
+        }
+    )
 
 7.8.1.3. Near Cache Eviction
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -3235,8 +3235,8 @@ determines which, if any, entries must be evicted.
 
 Expiration means the eviction of expired records. A record is expired:
 
--  If it is not touched (accessed/read) for ``max_idle`` seconds
--  ``time_to_live`` seconds passed since it is put to Near Cache
+- If it is not touched (accessed/read) for ``max_idle`` seconds
+- ``time_to_live`` seconds passed since it is put to Near Cache
 
 The actual expiration is performed when a record is accessed: it is
 checked if the record is expired or not. If it is expired, it is evicted
@@ -3263,24 +3263,24 @@ As a prerequisite, you need to enable the client statistics before
 starting your clients. There are two arguments of ``HazelcastClient``
 related to client statistics:
 
--  ``statistics_enabled``: If set to ``True``, it enables collecting the
-   client statistics and sending them to the cluster. When it is
-   ``True`` you can monitor the clients that are connected to your
-   Hazelcast cluster, using Hazelcast Management Center. Its default
-   value is ``False``.
+- ``statistics_enabled``: If set to ``True``, it enables collecting the
+  client statistics and sending them to the cluster. When it is
+  ``True`` you can monitor the clients that are connected to your
+  Hazelcast cluster, using Hazelcast Management Center. Its default
+  value is ``False``.
 
--  ``statistics_period``: Period in seconds the client statistics are
-   collected and sent to the cluster. Its default value is ``3``.
+- ``statistics_period``: Period in seconds the client statistics are
+  collected and sent to the cluster. Its default value is ``3``.
 
 You can enable client statistics and set a non-default period in seconds
 as follows:
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       statistics_enabled=True,
-       statistics_period=4
-   )
+    client = hazelcast.HazelcastClient(
+        statistics_enabled=True,
+        statistics_period=4
+    )
 
 Hazelcast Python client can collect statistics related to the client and
 Near Caches without an extra dependency. However, to get the statistics
@@ -3300,13 +3300,13 @@ client as follows:
 
 ::
 
-   pip install hazelcast-python-client[stats]
+    pip install hazelcast-python-client[stats]
 
 **From source**
 
 ::
 
-   pip install -e .[stats]
+    pip install -e .[stats]
 
 After enabling the client statistics, you can monitor your clients using
 Hazelcast Management Center. Please refer to the `Monitoring Clients
@@ -3314,9 +3314,9 @@ section <https://docs.hazelcast.org/docs/management-center/latest/manual/html/in
 in the Hazelcast Management Center Reference Manual for more information
 on the client statistics.
 
-   NOTE: Statistics sent by Hazelcast Python client 4.0 are compatible
-   with Management Center 4.0. Management Center 4.2020.08 and newer
-   versions will be supported in version 4.1 of the client.
+    NOTE: Statistics sent by Hazelcast Python client 4.0 are compatible
+    with Management Center 4.0. Management Center 4.2020.08 and newer
+    versions will be supported in version 4.1 of the client.
 
 7.9.2 Logging Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3334,41 +3334,41 @@ and a ``StreamHandler`` with a custom format, and its output.
 
 .. code:: python
 
-   import logging
-   import hazelcast
+    import logging
+    import hazelcast
 
-   logger = logging.getLogger("hazelcast")
-   logger.setLevel(logging.INFO)
+    logger = logging.getLogger("hazelcast")
+    logger.setLevel(logging.INFO)
 
-   handler = logging.StreamHandler()
-   formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-   handler.setFormatter(formatter)
-   logger.addHandler(handler)
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
 
-   client = hazelcast.HazelcastClient()
+    client = hazelcast.HazelcastClient()
 
-   client.shutdown()
+    client.shutdown()
 
 **Output**
 
 ::
 
-   2020-10-16 13:31:35,605 - hazelcast.lifecycle - INFO - HazelcastClient 4.0.0 is STARTING
-   2020-10-16 13:31:35,605 - hazelcast.lifecycle - INFO - HazelcastClient 4.0.0 is STARTED
-   2020-10-16 13:31:35,605 - hazelcast.connection - INFO - Trying to connect to Address(host=127.0.0.1, port=5701)
-   2020-10-16 13:31:35,622 - hazelcast.lifecycle - INFO - HazelcastClient 4.0.0 is CONNECTED
-   2020-10-16 13:31:35,622 - hazelcast.connection - INFO - Authenticated with server Address(host=172.17.0.2, port=5701):7682c357-3bec-4841-b330-6f9ae0c08253, server version: 4.0, local address: Address(host=127.0.0.1, port=56752)
-   2020-10-16 13:31:35,623 - hazelcast.cluster - INFO - 
+    2020-10-16 13:31:35,605 - hazelcast.lifecycle - INFO - HazelcastClient 4.0.0 is STARTING
+    2020-10-16 13:31:35,605 - hazelcast.lifecycle - INFO - HazelcastClient 4.0.0 is STARTED
+    2020-10-16 13:31:35,605 - hazelcast.connection - INFO - Trying to connect to Address(host=127.0.0.1, port=5701)
+    2020-10-16 13:31:35,622 - hazelcast.lifecycle - INFO - HazelcastClient 4.0.0 is CONNECTED
+    2020-10-16 13:31:35,622 - hazelcast.connection - INFO - Authenticated with server Address(host=172.17.0.2, port=5701):7682c357-3bec-4841-b330-6f9ae0c08253, server version: 4.0, local address: Address(host=127.0.0.1, port=56752)
+    2020-10-16 13:31:35,623 - hazelcast.cluster - INFO -
 
-   Members [1] {
-       Member [172.17.0.2]:5701 - 7682c357-3bec-4841-b330-6f9ae0c08253
-   }
+    Members [1] {
+        Member [172.17.0.2]:5701 - 7682c357-3bec-4841-b330-6f9ae0c08253
+    }
 
-   2020-10-16 13:31:35,624 - hazelcast.client - INFO - Client started
-   2020-10-16 13:31:35,624 - hazelcast.lifecycle - INFO - HazelcastClient 4.0.0 is SHUTTING_DOWN
-   2020-10-16 13:31:35,624 - hazelcast.connection - INFO - Removed connection to Address(host=127.0.0.1, port=5701):7682c357-3bec-4841-b330-6f9ae0c08253, connection: Connection(id=0, live=False, remote_address=Address(host=172.17.0.2, port=5701))
-   2020-10-16 13:31:35,624 - hazelcast.lifecycle - INFO - HazelcastClient 4.0.0 is DISCONNECTED
-   2020-10-16 13:31:35,634 - hazelcast.lifecycle - INFO - HazelcastClient 4.0.0 is SHUTDOWN
+    2020-10-16 13:31:35,624 - hazelcast.client - INFO - Client started
+    2020-10-16 13:31:35,624 - hazelcast.lifecycle - INFO - HazelcastClient 4.0.0 is SHUTTING_DOWN
+    2020-10-16 13:31:35,624 - hazelcast.connection - INFO - Removed connection to Address(host=127.0.0.1, port=5701):7682c357-3bec-4841-b330-6f9ae0c08253, connection: Connection(id=0, live=False, remote_address=Address(host=172.17.0.2, port=5701))
+    2020-10-16 13:31:35,624 - hazelcast.lifecycle - INFO - HazelcastClient 4.0.0 is DISCONNECTED
+    2020-10-16 13:31:35,634 - hazelcast.lifecycle - INFO - HazelcastClient 4.0.0 is SHUTDOWN
 
 A handy alternative to above example would be configuring the root
 logger using the ``logging.basicConfig()`` utility method. Beware that,
@@ -3378,35 +3378,35 @@ Nonetheless, it is useful for the testing or development purposes.
 
 .. code:: python
 
-   import logging
-   import hazelcast
+    import logging
+    import hazelcast
 
-   logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.INFO)
 
-   client = hazelcast.HazelcastClient()
+    client = hazelcast.HazelcastClient()
 
-   client.shutdown()
+    client.shutdown()
 
 **Output**
 
 ::
 
-   INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is STARTING
-   INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is STARTED
-   INFO:hazelcast.connection:Trying to connect to Address(host=127.0.0.1, port=5701)
-   INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is CONNECTED
-   INFO:hazelcast.connection:Authenticated with server Address(host=172.17.0.2, port=5701):7682c357-3bec-4841-b330-6f9ae0c08253, server version: 4.0, local address: Address(host=127.0.0.1, port=56758)
-   INFO:hazelcast.cluster:
+    INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is STARTING
+    INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is STARTED
+    INFO:hazelcast.connection:Trying to connect to Address(host=127.0.0.1, port=5701)
+    INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is CONNECTED
+    INFO:hazelcast.connection:Authenticated with server Address(host=172.17.0.2, port=5701):7682c357-3bec-4841-b330-6f9ae0c08253, server version: 4.0, local address: Address(host=127.0.0.1, port=56758)
+    INFO:hazelcast.cluster:
 
-   Members [1] {
-       Member [172.17.0.2]:5701 - 7682c357-3bec-4841-b330-6f9ae0c08253
-   }
+    Members [1] {
+        Member [172.17.0.2]:5701 - 7682c357-3bec-4841-b330-6f9ae0c08253
+    }
 
-   INFO:hazelcast.client:Client started
-   INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is SHUTTING_DOWN
-   INFO:hazelcast.connection:Removed connection to Address(host=127.0.0.1, port=5701):7682c357-3bec-4841-b330-6f9ae0c08253, connection: Connection(id=0, live=False, remote_address=Address(host=172.17.0.2, port=5701))
-   INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is DISCONNECTED
-   INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is SHUTDOWN
+    INFO:hazelcast.client:Client started
+    INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is SHUTTING_DOWN
+    INFO:hazelcast.connection:Removed connection to Address(host=127.0.0.1, port=5701):7682c357-3bec-4841-b330-6f9ae0c08253, connection: Connection(id=0, live=False, remote_address=Address(host=172.17.0.2, port=5701))
+    INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is DISCONNECTED
+    INFO:hazelcast.lifecycle:HazelcastClient 4.0.0 is SHUTDOWN
 
 To learn more about the ``logging`` package and its capabilities, please
 see the `logging
@@ -3433,12 +3433,12 @@ the below example.
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       labels=[
-           "role admin",
-           "region foo"
-       ]
-   )
+    client = hazelcast.HazelcastClient(
+        labels=[
+            "role admin",
+            "region foo"
+        ]
+    )
 
 7.11. Defining Client Name
 --------------------------
@@ -3454,9 +3454,9 @@ element.
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       client_name="blue_client_0"
-   )
+    client = hazelcast.HazelcastClient(
+        client_name="blue_client_0"
+    )
 
 7.12. Configuring Load Balancer
 -------------------------------
@@ -3478,11 +3478,11 @@ The following are example configurations.
 
 .. code:: python
 
-   from hazelcast.util import RandomLB
+    from hazelcast.util import RandomLB
 
-   client = hazelcast.HazelcastClient(
-       load_balancer=RandomLB()
-   )
+    client = hazelcast.HazelcastClient(
+        load_balancer=RandomLB()
+    )
 
 You can also provide a custom load balancer implementation to use
 different load balancing policies. To do so, you should provide a class
@@ -3505,14 +3505,14 @@ One of the offers of Hazelcast is the TLS/SSL protocol which you can use
 to establish an encrypted communication across your cluster with key
 stores and trust stores.
 
--  A Java ``keyStore`` is a file that includes a private key and a
-   public certificate. The equivalent of a key store is the combination
-   of ``keyfile`` and ``certfile`` at the Python client side.
+- A Java ``keyStore`` is a file that includes a private key and a
+  public certificate. The equivalent of a key store is the combination
+  of ``keyfile`` and ``certfile`` at the Python client side.
 
--  A Java ``trustStore`` is a file that includes a list of certificates
-   trusted by your application which is named certificate authority. The
-   equivalent of a trust store is a ``cafile`` at the Python client
-   side.
+- A Java ``trustStore`` is a file that includes a list of certificates
+  trusted by your application which is named certificate authority. The
+  equivalent of a trust store is a ``cafile`` at the Python client
+  side.
 
 You should set ``keyStore`` and ``trustStore`` before starting the
 members. See the next section on how to set ``keyStore`` and
@@ -3535,17 +3535,17 @@ configuration and then go over the configuration options one by one:
 
 .. code:: python
 
-   from hazelcast.config import SSLProtocol
+    from hazelcast.config import SSLProtocol
 
-   client = hazelcast.HazelcastClient(
-       ssl_enabled=True,
-       ssl_cafile="/home/hazelcast/cafile.pem",
-       ssl_certfile="/home/hazelcast/certfile.pem",
-       ssl_keyfile="/home/hazelcast/keyfile.pem",
-       ssl_password="keyfile-password",
-       ssl_protocol=SSLProtocol.TLSv1_3,
-       ssl_ciphers="DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA"
-   )
+    client = hazelcast.HazelcastClient(
+        ssl_enabled=True,
+        ssl_cafile="/home/hazelcast/cafile.pem",
+        ssl_certfile="/home/hazelcast/certfile.pem",
+        ssl_keyfile="/home/hazelcast/keyfile.pem",
+        ssl_password="keyfile-password",
+        ssl_protocol=SSLProtocol.TLSv1_3,
+        ssl_ciphers="DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA"
+    )
 
 Enabling TLS/SSL
 ^^^^^^^^^^^^^^^^
@@ -3559,9 +3559,9 @@ The following is an example configuration:
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       ssl_enabled=True
-   )
+    client = hazelcast.HazelcastClient(
+        ssl_enabled=True
+    )
 
 Default value is ``False`` (disabled).
 
@@ -3578,9 +3578,9 @@ The following is an example configuration:
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       ssl_cafile="/home/hazelcast/cafile.pem"
-   )
+    client = hazelcast.HazelcastClient(
+        ssl_cafile="/home/hazelcast/cafile.pem"
+    )
 
 Setting Client Certificate
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -3598,9 +3598,9 @@ The following is an example configuration:
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       ssl_certfile="/home/hazelcast/certfile.pem"
-   )
+    client = hazelcast.HazelcastClient(
+        ssl_certfile="/home/hazelcast/certfile.pem"
+    )
 
 Setting Private Key
 ^^^^^^^^^^^^^^^^^^^
@@ -3615,20 +3615,20 @@ following format.
 
 ::
 
-   -----BEGIN RSA PRIVATE KEY-----
-   ... (private key in base64 encoding) ...
-   -----END RSA PRIVATE KEY-----
-   -----BEGIN CERTIFICATE-----
-   ... (certificate in base64 PEM encoding) ...
-   -----END CERTIFICATE-----
+    -----BEGIN RSA PRIVATE KEY-----
+    ... (private key in base64 encoding) ...
+    -----END RSA PRIVATE KEY-----
+    -----BEGIN CERTIFICATE-----
+    ... (certificate in base64 PEM encoding) ...
+    -----END CERTIFICATE-----
 
 The following is an example configuration:
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       ssl_keyfile="/home/hazelcast/keyfile.pem"
-   )
+    client = hazelcast.HazelcastClient(
+        ssl_keyfile="/home/hazelcast/keyfile.pem"
+    )
 
 Setting Password of the Private Key
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -3646,9 +3646,9 @@ The following is an example configuration:
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       ssl_password="keyfile-password"
-   )
+    client = hazelcast.HazelcastClient(
+        ssl_password="keyfile-password"
+    )
 
 Setting the Protocol
 ^^^^^^^^^^^^^^^^^^^^
@@ -3657,38 +3657,38 @@ Setting the Protocol
 the TLS/SSL communication. Hazelcast Python client offers the following
 protocols:
 
--  **SSLv2** : SSL 2.0 Protocol. *RFC 6176 prohibits the usage of SSL
-   2.0.*
--  **SSLv3** : SSL 3.0 Protocol. *RFC 7568 prohibits the usage of SSL
-   3.0.*
--  **TLSv1** : TLS 1.0 Protocol described in RFC 2246
--  **TLSv1_1** : TLS 1.1 Protocol described in RFC 4346
--  **TLSv1_2** : TLS 1.2 Protocol described in RFC 5246
--  **TLSv1_3** : TLS 1.3 Protocol described in RFC 8446
+- **SSLv2** : SSL 2.0 Protocol. *RFC 6176 prohibits the usage of SSL
+  2.0.*
+- **SSLv3** : SSL 3.0 Protocol. *RFC 7568 prohibits the usage of SSL
+  3.0.*
+- **TLSv1** : TLS 1.0 Protocol described in RFC 2246
+- **TLSv1_1** : TLS 1.1 Protocol described in RFC 4346
+- **TLSv1_2** : TLS 1.2 Protocol described in RFC 5246
+- **TLSv1_3** : TLS 1.3 Protocol described in RFC 8446
 
 ..
 
-   Note that TLSv1+ requires at least Python 2.7.9 or Python 3.4 built
-   with OpenSSL 1.0.1+, and TLSv1_3 requires at least Python 2.7.15 or
-   Python 3.7 built with OpenSSL 1.1.1+.
+    Note that TLSv1+ requires at least Python 2.7.9 or Python 3.4 built
+    with OpenSSL 1.0.1+, and TLSv1_3 requires at least Python 2.7.15 or
+    Python 3.7 built with OpenSSL 1.1.1+.
 
 These protocol versions can be selected using the ``ssl_protocol`` as
 follows:
 
 .. code:: python
 
-   from hazelcast.config import SSLProtocol
+    from hazelcast.config import SSLProtocol
 
-   client = hazelcast.HazelcastClient(
-       ssl_protocol=SSLProtocol.TLSv1_3
-   )
+    client = hazelcast.HazelcastClient(
+        ssl_protocol=SSLProtocol.TLSv1_3
+    )
 
 ..
 
-   Note that the Hazelcast Python client and the Hazelcast members
-   should have the same protocol version in order for TLS/SSL to work.
-   In case of the protocol mismatch, connection attempts will be
-   refused.
+    Note that the Hazelcast Python client and the Hazelcast members
+    should have the same protocol version in order for TLS/SSL to work.
+    In case of the protocol mismatch, connection attempts will be
+    refused.
 
 Default value is ``SSLProtocol.TLSv1_2``.
 
@@ -3711,9 +3711,9 @@ The following is an example configuration:
 
 .. code:: python
 
-   client = hazelcast.HazelcastClient(
-       ssl_ciphers="DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA"
-   )
+    client = hazelcast.HazelcastClient(
+        ssl_ciphers="DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA"
+    )
 
 8.1.3. Mutual Authentication
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3731,13 +3731,13 @@ property on the server side in the ``hazelcast.xml`` file:
 
 .. code:: xml
 
-   <network>
-       <ssl enabled="true">
-           <properties>
-               <property name="javax.net.ssl.mutualAuthentication">REQUIRED</property>
-           </properties>
-       </ssl>
-   </network>
+    <network>
+        <ssl enabled="true">
+            <properties>
+                <property name="javax.net.ssl.mutualAuthentication">REQUIRED</property>
+            </properties>
+        </ssl>
+    </network>
 
 You can see the details of setting mutual authentication on the server
 side in the `Mutual Authentication
@@ -3777,20 +3777,20 @@ guidelines described in
 In order to test Hazelcast Python client locally, you will need the
 following:
 
--  Java 8 or newer
--  Maven
+- Java 8 or newer
+- Maven
 
 Following commands starts the tests according to your operating system:
 
 .. code:: bash
 
-   bash run-tests.sh
+    bash run-tests.sh
 
 or
 
 ::
 
-   PS> .\run-tests.ps1
+    PS> .\run-tests.ps1
 
 Test script automatically downloads ``hazelcast-remote-controller`` and
 Hazelcast IMDG. The script uses Maven to download those.
@@ -3801,10 +3801,10 @@ Hazelcast IMDG. The script uses Maven to download those.
 You can use the following channels for your questions and
 development/usage issues:
 
--  This repository by opening an issue.
--  `Slack <https://slack.hazelcast.com>`__
--  `Google Groups <https://groups.google.com/forum/#!forum/hazelcast>`__
--  `Stack Overflow <https://stackoverflow.com/questions/tagged/hazelcast>`__
+- This repository by opening an issue.
+- `Slack <https://slack.hazelcast.com>`__
+- `Google Groups <https://groups.google.com/forum/#!forum/hazelcast>`__
+- `Stack Overflow <https://stackoverflow.com/questions/tagged/hazelcast>`__
 
 11. Contributing
 ================
