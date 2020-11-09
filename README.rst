@@ -657,7 +657,7 @@ bytearray byte[]
 
 ..
 
-   Note: A ``int`` or ``long`` type is serialized as ``Integer`` by
+   NOTE: A ``int`` or ``long`` type is serialized as ``Integer`` by
    default. You can configure this behavior using the
    ``default_int_type`` argument.
 
@@ -1997,8 +1997,8 @@ A basic Lock usage example is shown below.
 
    # Get a FencedLock called "my-lock"
    lock = client.cp_subsystem.get_lock("my-lock").blocking()
-   # Acquire the lock
-   lock.lock()
+   # Acquire the lock and get the fencing token
+   fence = lock.lock()
    try:
        # Your guarded code goes here
        pass
@@ -2063,10 +2063,6 @@ safely talk to it.
 
 You can read more about the fencing token idea in Martin Kleppmann’s
 “How to do distributed locking” blog post and Google’s Chubby paper.
-
-To get fencing token, one may use ``lock.lock_and_get_fence()`` or
-``lock.try_lock_and_get_fence()`` utility methods, or
-``lock.get_fence()`` method while holding the lock.
 
 7.4.12.3. Using Semaphore
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -3050,11 +3046,11 @@ In the example code below:
 
 -  Then a ``PagingPredicate`` is constructed in which the page size is
    ``5``, so that there are five objects in each page. The first time
-   the values are called creates the first page.
+   the ``values()`` method is called, the first page is fetched.
 
--  It gets subsequent pages with the ``next_page()`` method of
-   ``PagingPredicate`` and querying the map again with the updated
-   ``PagingPredicate``.
+-  Finally, the subsequent page is fetched by calling the ``next_page()``
+   method of ``PagingPredicate`` and querying the map again with the
+   updated ``PagingPredicate``.
 
 .. code:: python
 
@@ -3077,11 +3073,10 @@ In the example code below:
    values = m.values(predicate)
 
 If a comparator is not specified for ``PagingPredicate``, but you want
-to get a collection of keys or values page by page, this collection must
-be an instance of ``Comparable`` (i.e., it must implement
-``java.lang.Comparable`` on the member side). Otherwise, paging fails
-with an exception from the server. Luckily, a lot of types implement the
-``Comparable`` interface by
+to get a collection of keys or values page by page, keys or values must
+implement the ``java.lang.Comparable`` interface on the member side.
+Otherwise, paging fails with an exception from the server. Luckily, a lot
+of types implement the ``Comparable`` interface by
 `default <https://docs.oracle.com/javase/8/docs/api/java/lang/Comparable.html>`__,
 including the primitive types, so, you may use values of types ``int``,
 ``float``, ``str`` etc. in paging without specifying a comparator on the
@@ -3093,8 +3088,8 @@ you make a query for the hundredth page, for example, it gets all
 ``100`` pages at once instead of reaching the hundredth page one by one
 using the ``next_page()`` method.
 
-``PagingPredicate``, also known as Order & Limit, is not supported in
-Transactional Context.
+   NOTE: ``PagingPredicate``, also known as Order & Limit, is not supported in
+   Transactional Context.
 
 7.8. Performance
 ----------------
