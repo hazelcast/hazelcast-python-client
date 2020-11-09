@@ -18,14 +18,17 @@ def default_partition_strategy(key):
 
 class SerializationServiceV1(BaseSerializationService):
 
-    def __init__(self, serialization_config, properties=ClientProperties({}), version=1, global_partition_strategy=default_partition_strategy,
+    def __init__(self, serialization_config, properties=ClientProperties({}), version=1,
+                 global_partition_strategy=default_partition_strategy,
                  output_buffer_size=DEFAULT_OUT_BUFFER_SIZE):
         super(SerializationServiceV1, self).__init__(version, global_partition_strategy, output_buffer_size,
                                                      serialization_config.is_big_endian,
                                                      serialization_config.default_integer_type)
         self._portable_context = PortableContext(self, serialization_config.portable_version)
-        self.register_class_definitions(serialization_config.class_definitions, serialization_config.check_class_def_errors)
-        self._registry._portable_serializer = PortableSerializer(self._portable_context, serialization_config.portable_factories)
+        self.register_class_definitions(serialization_config.class_definitions,
+                                        serialization_config.check_class_def_errors)
+        self._registry._portable_serializer = PortableSerializer(self._portable_context,
+                                                                 serialization_config.portable_factories)
 
         # merge configured factories with built in ones
         factories = {}
@@ -80,24 +83,40 @@ class SerializationServiceV1(BaseSerializationService):
         self._registry.safe_register_serializer(self._registry._python_serializer)
 
     def register_class_definitions(self, class_definitions, check_error):
-        class_defs = dict()
+        factories = dict()
         for cd in class_definitions:
-            if cd in class_defs:
-                raise HazelcastSerializationError("Duplicate registration found for class-id:{}".format(cd.class_id))
-            class_defs[cd.class_id] = cd
-        for cd in class_definitions:
-            self.register_class_definition(cd, class_defs, check_error)
+            factory_id = cd.factory_id
+            class_defs = factories.get(factory_id, None)
+            if class_defs is None:
+                class_defs = dict()
+                factories[factory_id] = class_defs
 
-    def register_class_definition(self, cd, class_defs, check_error):
-        field_names = cd.get_field_names()
+            class_id = cd.class_id
+            if class_id in class_defs:
+                raise HazelcastSerializationError("Duplicate registration found for class-id: %s" % class_id)
+            class_defs[class_id] = cd
+
+        for cd in class_definitions:
+            self.register_class_definition(cd, factories, check_error)
+
+    def register_class_definition(self, class_definition, factories, check_error):
+        field_names = class_definition.get_field_names()
         for field_name in field_names:
-            fd = cd.get_field(field_name)
+            fd = class_definition.get_field(field_name)
             if fd.field_type == FieldType.PORTABLE or fd.field_type == FieldType.PORTABLE_ARRAY:
-                nested_cd = class_defs.get(fd.class_id, None)
-                if nested_cd is not None:
-                    self.register_class_definition(nested_cd, class_defs, check_error)
-                    self._portable_context.register_class_definition(nested_cd)
-                elif check_error:
+                factory_id = fd.factory_id
+                class_id = fd.class_id
+                class_defs = factories.get(factory_id, None)
+                if class_defs is not None:
+                    nested_cd = class_defs.get(class_id, None)
+                    if nested_cd is not None:
+                        self.register_class_definition(nested_cd, factories, check_error)
+                        self._portable_context.register_class_definition(nested_cd)
+                        continue
+
+                if check_error:
                     raise HazelcastSerializationError(
-                            "Could not find registered ClassDefinition for class-id:{}".format(fd.class_id))
-        self._portable_context.register_class_definition(cd)
+                        "Could not find registered ClassDefinition for factory-id: %s, class-id: %s"
+                        % (factory_id, class_id))
+
+        self._portable_context.register_class_definition(class_definition)

@@ -98,16 +98,16 @@ class ClassDefinition(object):
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and (self.factory_id, self.class_id, self.version, self.field_defs) == \
-                                                     (other.factory_id, other.class_id, other.version, other.field_defs)
+               (other.factory_id, other.class_id, other.version, other.field_defs)
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __repr__(self):
-        return "fid:{}, cid:{}, v:{}, fields:{}".format(self.factory_id, self.class_id, self.version, self.field_defs)
+        return "fid:%s, cid:%s, v:%s, fields:%s" % (self.factory_id, self.class_id, self.version, self.field_defs)
 
     def __hash__(self):
-        return id(self)//16
+        return hash((self.factory_id, self.class_id, self.version))
 
 
 class ClassDefinitionBuilder(object):
@@ -223,7 +223,8 @@ class ClassDefinitionBuilder(object):
 
     def _add_field_by_type(self, field_name, field_type, version, factory_id=0, class_id=0):
         self._check()
-        self._field_defs.append(FieldDefinition(self._index, field_name, field_type, version, factory_id, class_id))
+        fd = FieldDefinition(self._index, field_name, field_type, version, factory_id, class_id)
+        self._field_defs.append(fd)
         self._index += 1
 
     def _check(self):
