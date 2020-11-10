@@ -13,6 +13,7 @@ Hazelcast Python Client
     hazelcast.future
     hazelcast.lifecycle
     hazelcast.partition
+    hazelcast.predicate
     hazelcast.proxy
     hazelcast.serialization
     hazelcast.transaction

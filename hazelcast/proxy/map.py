@@ -19,7 +19,7 @@ from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_entry
     map_set_ttl_codec, map_entries_with_paging_predicate_codec, map_key_set_with_paging_predicate_codec, \
     map_values_with_paging_predicate_codec
 from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType, get_entry_listener_flags, MAX_SIZE
-from hazelcast.serialization.predicate import PagingPredicate
+from hazelcast.predicate import PagingPredicate
 from hazelcast.util import check_not_none, thread_id, to_millis, ImmutableLazyDataList, IterationType
 from hazelcast import six
 
@@ -70,7 +70,7 @@ class Map(Proxy):
         Args:
             include_value (bool): Whether received event should include the value or not.
             key: Key for filtering the events.
-            predicate (hazelcast.serialization.predicate.Predicate): Predicate for filtering the events.
+            predicate (hazelcast.predicate.Predicate): Predicate for filtering the events.
             added_func (function): Function to be called when an entry is added to map.
             removed_func (function): Function to be called when an entry is removed from map.
             updated_func (function): Function to be called when an entry is updated.
@@ -274,7 +274,7 @@ class Map(Proxy):
             The list is NOT backed by the map, so changes to the map are NOT reflected in the list, and vice-versa.
 
         Args:
-            predicate (hazelcast.serialization.predicate.Predicate): Predicate for the map to filter entries.
+            predicate (hazelcast.predicate.Predicate): Predicate for the map to filter entries.
 
         Returns:
             hazelcast.future.Future[list]: The list of key-value tuples in the map.
@@ -346,7 +346,7 @@ class Map(Proxy):
                 server side.
                 This object must have a serializable EntryProcessor counter part registered on server side with the
                 actual ``com.hazelcast.map.EntryProcessor`` implementation.
-            predicate (hazelcast.serialization.predicate.Predicate): Predicate for filtering the entries.
+            predicate (hazelcast.predicate.Predicate): Predicate for filtering the entries.
 
         Returns:
             hazelcast.future.Future[list]: List of map entries which includes the keys and the
@@ -576,7 +576,7 @@ class Map(Proxy):
             The list is NOT backed by the map, so changes to the map are NOT reflected in the list, and vice-versa.
 
         Args:
-            predicate (hazelcast.serialization.predicate.Predicate) Predicate to filter the entries.
+            predicate (hazelcast.predicate.Predicate) Predicate to filter the entries.
 
         Returns:
             hazelcast.future.Future[list]: A list of the clone of the keys.
@@ -983,6 +983,7 @@ class Map(Proxy):
         - If timeout is not provided, the current thread doesn't wait and returns ``false`` immediately.
         - If a timeout is provided, the current thread becomes disabled for thread scheduling purposes and lies
           dormant until one of the followings happens:
+
             - the lock is acquired by the current thread, or
             - the specified waiting time elapses.
         
@@ -1074,7 +1075,7 @@ class Map(Proxy):
             vice-versa.
 
         Args:
-            predicate (hazelcast.serialization.predicate.Predicate): Predicate to filter the entries.
+            predicate (hazelcast.predicate.Predicate): Predicate to filter the entries.
 
         Returns:
             hazelcast.future.Future[list]: A list of clone of the values contained in this map.

@@ -5,7 +5,7 @@ from hazelcast.config import IndexType
 from hazelcast.errors import HazelcastError
 from hazelcast.proxy.map import EntryEventType
 from hazelcast.serialization.api import IdentifiedDataSerializable
-from hazelcast.serialization.predicate import SqlPredicate
+from hazelcast.predicate import sql
 from tests.base import SingleMemberTestCase
 from tests.util import random_string, event_collector, fill_map
 from hazelcast import six
@@ -122,7 +122,7 @@ class MapTest(SingleMemberTestCase):
 
     def test_add_entry_listener_with_predicate(self):
         collector = event_collector()
-        self.map.add_entry_listener(predicate=SqlPredicate("this == value1"), include_value=True, added_func=collector)
+        self.map.add_entry_listener(predicate=sql("this == value1"), include_value=True, added_func=collector)
         self.map.put('key2', 'value2')
         self.map.put('key1', 'value1')
 
@@ -135,7 +135,7 @@ class MapTest(SingleMemberTestCase):
 
     def test_add_entry_listener_with_key_and_predicate(self):
         collector = event_collector()
-        self.map.add_entry_listener(key='key1', predicate=SqlPredicate("this == value3"),
+        self.map.add_entry_listener(key='key1', predicate=sql("this == value3"),
                                     include_value=True, added_func=collector)
         self.map.put('key2', 'value2')
         self.map.put('key1', 'value1')
@@ -199,7 +199,7 @@ class MapTest(SingleMemberTestCase):
     def test_entry_set_with_predicate(self):
         self._fill_map()
 
-        self.assertEqual(self.map.entry_set(SqlPredicate("this == 'value-1'")), [("key-1", "value-1")])
+        self.assertEqual(self.map.entry_set(sql("this == 'value-1'")), [("key-1", "value-1")])
 
     def test_evict(self):
         self._fill_map()
@@ -230,7 +230,7 @@ class MapTest(SingleMemberTestCase):
         expected_entry_set = [(key, "processed") if key < "key-5" else (key, m[key]) for key in m]
         expected_values = [(key, "processed") for key in m if key < "key-5"]
 
-        values = self.map.execute_on_entries(EntryProcessor("processed"), SqlPredicate("__key < 'key-5'"))
+        values = self.map.execute_on_entries(EntryProcessor("processed"), sql("__key < 'key-5'"))
 
         six.assertCountEqual(self, expected_entry_set, self.map.entry_set())
         six.assertCountEqual(self, expected_values, values)
@@ -329,7 +329,7 @@ class MapTest(SingleMemberTestCase):
     def test_key_set_with_predicate(self):
         self._fill_map()
 
-        self.assertEqual(self.map.key_set(SqlPredicate("this == 'value-1'")), ["key-1"])
+        self.assertEqual(self.map.key_set(sql("this == 'value-1'")), ["key-1"])
 
     def test_lock(self):
         self.map.put("key", "value")
@@ -507,7 +507,7 @@ class MapTest(SingleMemberTestCase):
     def test_values_with_predicate(self):
         self._fill_map()
 
-        self.assertEqual(self.map.values(SqlPredicate("this == 'value-1'")), ["value-1"])
+        self.assertEqual(self.map.values(sql("this == 'value-1'")), ["value-1"])
 
     def test_str(self):
         self.assertTrue(str(self.map).startswith("Map"))

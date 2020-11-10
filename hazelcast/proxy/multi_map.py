@@ -373,6 +373,7 @@ class MultiMap(Proxy):
         - If timeout is not provided, the current thread doesn't wait and returns ``false`` immediately.
         - If a timeout is provided, the current thread becomes disabled for thread scheduling purposes and lies
           dormant until one of the followings happens:
+
             - the lock is acquired by the current thread, or
             - the specified waiting time elapses.
         

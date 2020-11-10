@@ -1,7 +1,7 @@
 import hazelcast
 
 from hazelcast.serialization.api import Portable
-from hazelcast.serialization.predicate import sql, and_, is_between, is_equal_to
+from hazelcast.predicate import sql, and_, between, equal
 
 
 class User(Portable):
@@ -52,7 +52,7 @@ generate_users(users_map)
 # Create a Predicate from a String (a SQL like Where clause)
 sql_query = sql("active AND age BETWEEN 18 AND 21)")
 # Creating the same Predicate as above but with a builder
-criteria_query = and_(is_equal_to("active", True), is_between("age", 18, 21))
+criteria_query = and_(equal("active", True), between("age", 18, 21))
 # Get result collections using the two different Predicates
 result1 = users_map.values(sql_query)
 result2 = users_map.values(criteria_query)

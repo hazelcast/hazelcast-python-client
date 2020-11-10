@@ -1,4 +1,4 @@
-from hazelcast.serialization.predicate import SqlPredicate
+from hazelcast.predicate import sql
 from tests.base import SingleMemberTestCase
 from tests.util import random_string
 from hazelcast import six
@@ -189,7 +189,7 @@ class TransactionalMapTest(SingleMemberTestCase):
 
         with self.client.new_transaction() as tx:
             tx_map = tx.get_map(self.map.name)
-            six.assertCountEqual(self, tx_map.key_set(predicate=SqlPredicate("this == value-1")), ["key-1"])
+            six.assertCountEqual(self, tx_map.key_set(predicate=sql("this == value-1")), ["key-1"])
 
     def test_values(self):
         self.map.put("key-1", "value-1")
@@ -207,7 +207,7 @@ class TransactionalMapTest(SingleMemberTestCase):
 
         with self.client.new_transaction() as tx:
             tx_map = tx.get_map(self.map.name)
-            six.assertCountEqual(self, tx_map.values(predicate=SqlPredicate("this == value-1")), ["value-1"])
+            six.assertCountEqual(self, tx_map.values(predicate=sql("this == value-1")), ["value-1"])
 
     def test_str(self):
         with self.client.new_transaction() as tx:
