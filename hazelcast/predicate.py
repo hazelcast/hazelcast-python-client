@@ -51,9 +51,9 @@ class Predicate(object):
 
     Special care must be taken while comparing with ``None`` values *stored*
     inside items being filtered through the predicates created by the following
-    methods: :func:`greater_than`, :func:`greater_equal`, :func:`less_than`,
-    :func:`less_equal`, :func:`between`. They always evaluate to ``False`` and
-    therefore never pass such items.
+    methods: :func:`greater`, :func:`greater_or_equal`, :func:`less`,
+    :func:`less_or_equal`, :func:`between`. They always evaluate to ``False``
+    and therefore never pass such items.
 
     **Implicit Type Conversion**
 
@@ -657,7 +657,7 @@ def paging(predicate, page_size, comparator=None):
     return _PagingPredicate(predicate, page_size, comparator)
 
 
-def greater_than(attribute, value):
+def greater(attribute, value):
     """
     Creates a predicate that will pass items if the value stored under the
     given item ``attribute`` is greater than the given ``value``.
@@ -674,7 +674,7 @@ def greater_than(attribute, value):
     return _GreaterLessPredicate(attribute, value, False, False)
 
 
-def greater_equal(attribute, value):
+def greater_or_equal(attribute, value):
     """Creates a predicate that will pass items if the value stored under the
     given item ``attribute`` is greater than or equal to the given ``value``.
 
@@ -690,7 +690,7 @@ def greater_equal(attribute, value):
     return _GreaterLessPredicate(attribute, value, True, False)
 
 
-def less_than(attribute, value):
+def less(attribute, value):
     """Creates a predicate that will pass items if the value stored under the
     given item ``attribute`` is less than the given ``value``.
 
@@ -706,7 +706,7 @@ def less_than(attribute, value):
     return _GreaterLessPredicate(attribute, value, False, True)
 
 
-def less_equal(attribute, value):
+def less_or_equal(attribute, value):
     """Creates a predicate that will pass items if the value stored under the
     given item ``attribute`` is less than or equal to the given ``value``.
 
