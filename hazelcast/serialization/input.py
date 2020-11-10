@@ -1,6 +1,5 @@
 from hazelcast.serialization.api import *
 from hazelcast.serialization.bits import *
-from hazelcast.serialization.data import Data
 from hazelcast import six
 from hazelcast.six.moves import range
 

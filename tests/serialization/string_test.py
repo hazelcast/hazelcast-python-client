@@ -41,7 +41,7 @@ class StringSerializationTestCase(unittest.TestCase):
 
     def test_ascii_decode(self):
         data_byte = to_data_byte(TEST_DATA_ASCII)
-        data = Data(buff=data_byte)
+        data = Data(data_byte)
         actual_ascii = self.service.to_object(data)
         self.assertEqual(TEST_DATA_ASCII, actual_ascii)
 
@@ -54,7 +54,7 @@ class StringSerializationTestCase(unittest.TestCase):
 
     def test_utf8_decode(self):
         data_byte = to_data_byte(TEST_DATA_ALL)
-        data = Data(buff=data_byte)
+        data = Data(data_byte)
         actual_ascii = self.service.to_object(data)
         self.assertEqual(TEST_DATA_ALL, actual_ascii)
 
@@ -62,7 +62,3 @@ class StringSerializationTestCase(unittest.TestCase):
         none_str = self.service.to_data(None)
         decoded = self.service.to_object(none_str)
         self.assertIsNone(decoded)
-
-
-if __name__ == '__main__':
-    unittest.main()
