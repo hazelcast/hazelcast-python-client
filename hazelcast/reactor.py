@@ -78,8 +78,8 @@ class AsyncoreReactor(object):
                 if timer.check_timer(now):
                     heappop(timers)
                 else:
-                    # Timer in the root of the min heap is not expired
-                    # Therefore, there should not be any expired
+                    # Timer in the root of the min heap is not expired.
+                    # Therefore, there should be no expired
                     # timers in the heap.
                     return
 
