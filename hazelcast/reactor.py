@@ -445,6 +445,9 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
             if sent < len(data):
                 self._write_queue.appendleft(data[sent:])
 
+            if sent == 0:
+                return
+
     def handle_close(self):
         _logger.warning("Connection closed by server")
         self.close(None, IOError("Connection closed by server"))
