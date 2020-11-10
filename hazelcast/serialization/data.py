@@ -1,3 +1,4 @@
+from hazelcast import six
 from hazelcast.hash import murmur_hash3_x86_32
 from hazelcast.serialization import BE_INT
 from hazelcast.serialization.serialization_const import *
@@ -95,7 +96,16 @@ class Data(object):
         return murmur_hash3_x86_32(self._buffer)
 
     def __hash__(self):
-        return self.hash_code()
+        # Data objects are used in NearCache as keys.
+        # When this method is called on Data objects
+        # received from the members, buffer is type
+        # of bytes instead of bytearray. Since bytes
+        # is an alias of str in Python2, we cannot
+        # use murmur hash directly on it. The
+        # conversion is necessary only on Python2
+        if isinstance(self._buffer, bytearray) or six.PY3:
+            return murmur_hash3_x86_32(self._buffer)
+        return murmur_hash3_x86_32(bytearray(self._buffer))
 
     def __eq__(self, other):
         return isinstance(other, Data) and self.total_size() == other.total_size() \

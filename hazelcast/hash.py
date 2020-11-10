@@ -11,8 +11,8 @@ def murmur_hash3_x86_32(data):
     Returns:
         int: Calculated hash value.
     """
-    length = len(data) - 8  # Heap data overhead
-    nblocks = int(length / 4)
+    length = max(len(data) - 8, 0)  # Heap data overhead
+    nblocks = length // 4
 
     h1 = 0x01000193
 
@@ -37,7 +37,7 @@ def murmur_hash3_x86_32(data):
     k1 = 0
     tail_size = length & 3
 
-    # offsets below are shifted according to Heap data offset
+    # Offsets below are shifted according to heap data overhead
     if tail_size >= 3:
         k1 ^= data[tail_index + 10] << 16
     if tail_size >= 2:
