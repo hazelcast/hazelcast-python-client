@@ -119,8 +119,6 @@ class _ObjectDataOutput(ObjectDataOutput):
         self._service.write_object(self, val)
 
     def to_byte_array(self):
-        if self._buffer is None or self._pos == 0:
-            return bytearray()
         return self._buffer[:self._pos]
 
     def is_big_endian(self):
@@ -146,18 +144,14 @@ class _ObjectDataOutput(ObjectDataOutput):
 
     def _ensure_available(self, length):
         if self._available() < length:
-            if self._buffer is not None:
-                buffer_length = len(self._buffer)
-                new_length = max(buffer_length << 1, buffer_length + length)
-                new_buffer = bytearray(new_length)
-                new_buffer[:self._pos] = self._buffer[:self._pos]
-                self._buffer = new_buffer
-            else:
-                new_length = length * 2 if length > self._init_size // 2 else self._init_size
-                self._buffer = bytearray(new_length)
+            buffer_length = len(self._buffer)
+            new_length = max(buffer_length << 1, buffer_length + length)
+            new_buffer = bytearray(new_length)
+            new_buffer[:self._pos] = self._buffer[:self._pos]
+            self._buffer = new_buffer
 
     def _available(self):
-        return len(self._buffer) - self._pos if self._buffer is not None else 0
+        return len(self._buffer) - self._pos
 
     def __repr__(self):
         from binascii import hexlify

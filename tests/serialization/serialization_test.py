@@ -63,7 +63,7 @@ class SerializationTestCase(unittest.TestCase):
         self.assertEqual(obj, obj2)
 
     def test_null_data(self):
-        data = Data()
+        data = Data(bytearray(0))
         obj = self.service.to_object(data)
         self.assertIsNone(obj)
 
@@ -73,7 +73,7 @@ class SerializationTestCase(unittest.TestCase):
         self.assertIsNone(data)
 
     def test_serialize_data(self):
-        data = Data()
+        data = Data(bytearray(0))
         obj = self.service.to_data(data)
         self.assertTrue(isinstance(obj, Data))
 
