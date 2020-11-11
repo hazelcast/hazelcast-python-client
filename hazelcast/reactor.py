@@ -40,7 +40,7 @@ def _set_nonblocking(fd):
     fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
 
 
-class _FileWrapper(object):
+class _SocketAdapter(object):
     def __init__(self, fd):
         self._fd = fd
 
@@ -72,7 +72,7 @@ class _PipedWaker(_AbstractWaker):
     def __init__(self, map):
         _AbstractWaker.__init__(self, map)
         self._read_fd, self._write_fd = os.pipe()
-        self.set_socket(_FileWrapper(self._read_fd))
+        self.set_socket(_SocketAdapter(self._read_fd))
         _set_nonblocking(self._read_fd)
         _set_nonblocking(self._write_fd)
 
@@ -88,12 +88,12 @@ class _PipedWaker(_AbstractWaker):
         try:
             while len(os.read(self._read_fd, 4096)) == 4096:
                 pass
-        except IOError:
+        except (IOError, OSError):
             pass
         self.awake = False
 
     def close(self):
-        _AbstractWaker.close(self)
+        _AbstractWaker.close(self)   # Will close the reader
         os.close(self._write_fd)
 
 
@@ -135,7 +135,7 @@ class _SocketedWaker(_AbstractWaker):
         self.awake = False
 
     def close(self):
-        _AbstractWaker.close(self)
+        _AbstractWaker.close(self)  # Will close the reader
         self._writer.close()
 
 
@@ -233,7 +233,7 @@ class _WakeableLoop(_AbstractLoop):
 
     def __init__(self, map):
         _AbstractLoop.__init__(self, map)
-        self.waker = _WakeableLoop._waker_class(map)
+        self.waker = self._waker_class(map)
 
     def check_loop(self):
         assert not self.waker.awake
