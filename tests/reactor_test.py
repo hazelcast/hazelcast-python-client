@@ -230,7 +230,7 @@ class PipedWakerTest(HazelcastTestCase):
         waker.wake()
         waker.wake()
         self.assertTrue(waker.awake)
-        self.assertEqual(b"x", os.read(waker._read_fd, 1))  # only the first one should write
+        self.assertEqual(b"x", os.read(waker._read_fd, 2))  # only the first one should write
 
     def test_handle_read(self):
         waker = self.waker
@@ -238,6 +238,9 @@ class PipedWakerTest(HazelcastTestCase):
         self.assertTrue(waker.awake)
         waker.handle_read()
         self.assertFalse(waker.awake)
+
+        if os.name == "nt":
+            return  # pipes are not non-blocking on Windows, assertion below blocks forever on Windows
 
         with self.assertRaises((IOError, OSError)):  # BlockingIOError on Py3, OSError on Py2
             os.read(waker._read_fd, 1)  # handle_read should consume the pipe, there should be nothing
