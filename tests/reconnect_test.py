@@ -1,6 +1,5 @@
 import time
 from threading import Thread
-from time import sleep
 
 from hazelcast.errors import HazelcastError, TargetDisconnectedError
 from hazelcast.lifecycle import LifecycleState
@@ -76,7 +75,6 @@ class ReconnectTest(HazelcastTestCase):
         reg_id = map.add_entry_listener(added_func=collector)
         self.logger.info("Registered listener with id %s", reg_id)
         member.shutdown()
-        sleep(3)
         self.cluster.start_member()
 
         count = AtomicInteger()
