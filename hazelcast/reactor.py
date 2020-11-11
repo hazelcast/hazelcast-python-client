@@ -85,12 +85,12 @@ class _PipedWaker(_AbstractWaker):
                 pass
 
     def handle_read(self):
+        self.awake = False
         try:
             while len(os.read(self._read_fd, 4096)) == 4096:
                 pass
         except (IOError, OSError):
             pass
-        self.awake = False
 
     def close(self):
         _AbstractWaker.close(self)   # Will close the reader
@@ -127,12 +127,12 @@ class _SocketedWaker(_AbstractWaker):
                 pass
 
     def handle_read(self):
+        self.awake = False
         try:
             while len(self._reader.recv(4096)) == 4096:
                 pass
         except (IOError, socket.error):
             pass
-        self.awake = False
 
     def close(self):
         _AbstractWaker.close(self)  # Will close the reader
