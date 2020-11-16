@@ -156,16 +156,19 @@ class ConnectionManager(object):
             self._connect_all_members_timer.cancel()
 
         self._heartbeat_manager.shutdown()
-        for connection_future in six.itervalues(self._pending_connections):
-            connection_future.set_exception(HazelcastClientNotActiveError("Hazelcast client is shutting down"))
 
-        # Need to create copy of connection values to avoid modification errors on runtime
-        for connection in list(six.itervalues(self.active_connections)):
-            connection.close("Hazelcast client is shutting down", None)
+        with self._lock:
+            for connection_future in six.itervalues(self._pending_connections):
+                connection_future.set_exception(HazelcastClientNotActiveError("Hazelcast client is shutting down"))
 
-        self._connection_listeners = []
-        self.active_connections.clear()
-        self._pending_connections.clear()
+            # Need to create copy of connection values to avoid modification errors on runtime
+            for connection in list(six.itervalues(self.active_connections)):
+                connection.close("Hazelcast client is shutting down", None)
+
+            self.active_connections.clear()
+            self._pending_connections.clear()
+
+        del self._connection_listeners[:]
 
     def connect_to_all_cluster_members(self):
         if not self._smart_routing_enabled:
@@ -395,8 +398,8 @@ class ConnectionManager(object):
             raise err
         else:
             e = response.exception()
+            # This will set the exception for the pending connection future
             connection.close("Failed to authenticate connection", e)
-            self._pending_connections.pop(address, None)
             six.reraise(e.__class__, e, response.traceback())
 
     def _handle_successful_auth(self, response, connection, address):
