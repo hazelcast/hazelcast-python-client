@@ -273,7 +273,7 @@ class _WakeableLoop(_AbstractLoop):
         self._map.clear()
 
 
-class _BusyWaitLoop(_AbstractLoop):
+class _DormantLoop(_AbstractLoop):
     def check_loop(self):
         pass
 
@@ -314,9 +314,13 @@ class AsyncoreReactor(object):
             loop = _WakeableLoop(self.map)
             loop.check_loop()
         except:
+            _logger.exception("Failed to initialize the wakeable loop. "
+                              "Using the dormant loop instead. "
+                              "When used in the blocking mode, client"
+                              "may have sub-optimal performance.")
             if loop:
                 loop.shutdown()
-                loop = _BusyWaitLoop(self.map)
+            loop = _DormantLoop(self.map)
         self._loop = loop
 
     def start(self):

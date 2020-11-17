@@ -96,7 +96,7 @@ class ConnectionManager(object):
         self._async_start = config.async_start
         self._connect_to_cluster_thread_running = False
         self._pending_connections = dict()  # must be modified under the _lock
-        self._active_connections = dict()  # address to connection, must be modified under the _lock
+        self._addresses_to_connections = dict()  # address to connection, must be modified under the _lock
         self._shuffle_member_list = config.shuffle_member_list
         self._lock = threading.RLock()
         self._connection_id_generator = AtomicInteger()
@@ -119,7 +119,7 @@ class ConnectionManager(object):
         return self.active_connections.get(member_uuid, None)
 
     def get_connection_from_address(self, address):
-        return self._active_connections.get(address, None)
+        return self._addresses_to_connections.get(address, None)
 
     def get_random_connection(self):
         if self._smart_routing_enabled:
@@ -166,7 +166,7 @@ class ConnectionManager(object):
                 connection.close("Hazelcast client is shutting down", None)
 
             self.active_connections.clear()
-            self._active_connections.clear()
+            self._addresses_to_connections.clear()
             self._pending_connections.clear()
 
         del self._connection_listeners[:]
@@ -193,7 +193,7 @@ class ConnectionManager(object):
         with self._lock:
             pending = self._pending_connections.pop(connected_address, None)
             connection = self.active_connections.pop(remote_uuid, None)
-            self._active_connections.pop(remote_address, None)
+            self._addresses_to_connections.pop(remote_address, None)
 
             if pending:
                 pending.set_exception(cause)
@@ -427,7 +427,7 @@ class ConnectionManager(object):
 
         with self._lock:
             self.active_connections[remote_uuid] = connection
-            self._active_connections[remote_address] = connection
+            self._addresses_to_connections[remote_address] = connection
             self._pending_connections.pop(address, None)
 
         if is_initial_connection:

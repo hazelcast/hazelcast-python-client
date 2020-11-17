@@ -8,7 +8,7 @@ from mock import MagicMock
 from parameterized import parameterized
 
 from hazelcast import six
-from hazelcast.reactor import AsyncoreReactor, _WakeableLoop, _SocketedWaker, _PipedWaker, _BusyWaitLoop
+from hazelcast.reactor import AsyncoreReactor, _WakeableLoop, _SocketedWaker, _PipedWaker, _DormantLoop
 from hazelcast.util import AtomicInteger
 from tests.base import HazelcastTestCase
 
@@ -31,7 +31,7 @@ class ReactorTest(HazelcastTestCase):
 
 LOOP_CLASSES = [
     ("wakeable", _WakeableLoop,),
-    ("busy_wait", _BusyWaitLoop,),
+    ("busy_wait", _DormantLoop,),
 ]
 
 
@@ -48,7 +48,7 @@ class LoopTest(HazelcastTestCase):
 
     def test_wakeable_loop_waker_closes_last(self):
         dispatchers = OrderedDict()
-        loop = _WakeableLoop(dispatchers)  # Waker comes first in the dict,
+        loop = _WakeableLoop(dispatchers)  # Waker comes first in the dict
 
         mock_dispatcher = MagicMock(readable=lambda: False, writeable=lambda: False)
         dispatchers[loop.waker._fileno + 1] = mock_dispatcher
@@ -137,7 +137,7 @@ class LoopTest(HazelcastTestCase):
         self.assertTrueEventually(assertion)
 
     @parameterized.expand(LOOP_CLASSES)
-    def test_timer_that_shutdowns_loop(self, _, cls):
+    def test_timer_that_shuts_down_loop(self, _, cls):
         # It may be the case that, we want to shutdown the client(hence, the loop) in timers
         loop = cls({})
         loop.start()
