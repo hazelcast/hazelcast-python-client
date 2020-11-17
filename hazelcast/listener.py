@@ -53,7 +53,7 @@ class ListenerService(object):
             self._active_registrations[registration_id] = registration
 
             futures = []
-            for connection in six.itervalues(self._connection_manager.active_connections):
+            for connection in list(six.itervalues(self._connection_manager.active_connections)):
                 future = self._register_on_connection_async(registration_id, registration, connection)
                 futures.append(future)
 

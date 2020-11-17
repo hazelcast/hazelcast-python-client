@@ -75,7 +75,7 @@ class ConnectionManager(object):
                  partition_service, cluster_service, invocation_service,
                  near_cache_manager):
         self.live = False
-        self.active_connections = dict()
+        self.active_connections = dict()  # uuid to connection, must be modified under the _lock
         self.client_uuid = uuid.uuid4()
 
         self._client = client
@@ -95,7 +95,8 @@ class ConnectionManager(object):
         self._connect_all_members_timer = None
         self._async_start = config.async_start
         self._connect_to_cluster_thread_running = False
-        self._pending_connections = dict()
+        self._pending_connections = dict()  # must be modified under the _lock
+        self._active_connections = dict()  # address to connection, must be modified under the _lock
         self._shuffle_member_list = config.shuffle_member_list
         self._lock = threading.RLock()
         self._connection_id_generator = AtomicInteger()
@@ -118,10 +119,7 @@ class ConnectionManager(object):
         return self.active_connections.get(member_uuid, None)
 
     def get_connection_from_address(self, address):
-        for connection in six.itervalues(self.active_connections):
-            if address == connection.remote_address:
-                return connection
-        return None
+        return self._active_connections.get(address, None)
 
     def get_random_connection(self):
         if self._smart_routing_enabled:
@@ -131,7 +129,9 @@ class ConnectionManager(object):
                 if connection:
                     return connection
 
-        for connection in six.itervalues(self.active_connections):
+        # We should not get to this point under normal circumstances.
+        # Therefore, copying the list should be OK.
+        for connection in list(six.itervalues(self.active_connections)):
             return connection
 
         return None
@@ -166,6 +166,7 @@ class ConnectionManager(object):
                 connection.close("Hazelcast client is shutting down", None)
 
             self.active_connections.clear()
+            self._active_connections.clear()
             self._pending_connections.clear()
 
         del self._connection_listeners[:]
@@ -183,6 +184,7 @@ class ConnectionManager(object):
     def on_connection_close(self, closed_connection, cause):
         connected_address = closed_connection.connected_address
         remote_uuid = closed_connection.remote_uuid
+        remote_address = closed_connection.remote_address
 
         if not connected_address:
             _logger.debug("Destroying %s, but it has no remote address, hence nothing is "
@@ -191,6 +193,7 @@ class ConnectionManager(object):
         with self._lock:
             pending = self._pending_connections.pop(connected_address, None)
             connection = self.active_connections.pop(remote_uuid, None)
+            self._active_connections.pop(remote_address, None)
 
             if pending:
                 pending.set_exception(cause)
@@ -423,7 +426,8 @@ class ConnectionManager(object):
             self._on_cluster_restart()
 
         with self._lock:
-            self.active_connections[response["member_uuid"]] = connection
+            self.active_connections[remote_uuid] = connection
+            self._active_connections[remote_address] = connection
             self._pending_connections.pop(address, None)
 
         if is_initial_connection:
@@ -497,11 +501,12 @@ class _HeartbeatManager(object):
         """Starts sending periodic HeartBeat operations."""
 
         def _heartbeat():
-            if not self._connection_manager.live:
+            conn_manager = self._connection_manager
+            if not conn_manager.live:
                 return
 
             now = time.time()
-            for connection in list(self._connection_manager.active_connections.values()):
+            for connection in list(six.itervalues(conn_manager.active_connections)):
                 self._check_connection(now, connection)
             self._heartbeat_timer = self._reactor.add_timer(self._heartbeat_interval, _heartbeat)
 
