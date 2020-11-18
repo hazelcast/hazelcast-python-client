@@ -243,7 +243,7 @@ class _WakeableLoop(_AbstractLoop):
         assert not self.waker.awake
 
     def run_loop(self):
-        asyncore.loop(timeout=0.1, use_poll=True, map=self._map, count=1)
+        asyncore.loop(timeout=0.01, use_poll=True, map=self._map, count=1)
 
     def wake_loop(self):
         self.waker.wake()
@@ -273,14 +273,12 @@ class _WakeableLoop(_AbstractLoop):
         self._map.clear()
 
 
-class _DormantLoop(_AbstractLoop):
+class _BasicLoop(_AbstractLoop):
     def check_loop(self):
         pass
 
     def run_loop(self):
-        if not self._map:
-            time.sleep(0.005)
-        asyncore.loop(timeout=0.01, use_poll=True, map=self._map, count=1)
+        asyncore.loop(timeout=0.001, use_poll=True, map=self._map, count=1)
 
     def wake_loop(self):
         pass
@@ -315,12 +313,12 @@ class AsyncoreReactor(object):
             loop.check_loop()
         except:
             _logger.exception("Failed to initialize the wakeable loop. "
-                              "Using the dormant loop instead. "
+                              "Using the basic loop instead. "
                               "When used in the blocking mode, client"
                               "may have sub-optimal performance.")
             if loop:
                 loop.shutdown()
-            loop = _DormantLoop(self.map)
+            loop = _BasicLoop(self.map)
         self._loop = loop
 
     def start(self):

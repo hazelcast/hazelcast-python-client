@@ -8,7 +8,7 @@ from mock import MagicMock
 from parameterized import parameterized
 
 from hazelcast import six
-from hazelcast.reactor import AsyncoreReactor, _WakeableLoop, _SocketedWaker, _PipedWaker, _DormantLoop
+from hazelcast.reactor import AsyncoreReactor, _WakeableLoop, _SocketedWaker, _PipedWaker, _BasicLoop
 from hazelcast.util import AtomicInteger
 from tests.base import HazelcastTestCase
 
@@ -31,7 +31,7 @@ class ReactorTest(HazelcastTestCase):
 
 LOOP_CLASSES = [
     ("wakeable", _WakeableLoop,),
-    ("busy_wait", _DormantLoop,),
+    ("basic", _BasicLoop,),
 ]
 
 
