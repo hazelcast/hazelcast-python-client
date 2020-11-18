@@ -29,6 +29,12 @@ try:
 except ImportError:
     fcntl = None
 
+try:
+    from _thread import get_ident
+except ImportError:
+    # Python2
+    from thread import get_ident
+
 _logger = logging.getLogger(__name__)
 
 
@@ -146,12 +152,14 @@ class _AbstractLoop(object):
         self._new_timers = deque()  # Popped only from the reactor thread
         self._is_live = False
         self._thread = None
+        self._ident = -1
 
     def start(self):
         self._is_live = True
         self._thread = threading.Thread(target=self._loop, name="hazelcast-reactor")
         self._thread.daemon = True
         self._thread.start()
+        self._ident = self._thread.ident
 
     def _loop(self):
         _logger.debug("Starting Reactor Thread")
@@ -246,7 +254,7 @@ class _WakeableLoop(_AbstractLoop):
         asyncore.loop(timeout=0.01, use_poll=True, map=self._map, count=1)
 
     def wake_loop(self):
-        if self._thread is not threading.current_thread():
+        if self._ident != get_ident():
             self.waker.wake()
 
     def shutdown(self):
@@ -255,7 +263,7 @@ class _WakeableLoop(_AbstractLoop):
 
         self._is_live = False
 
-        if self._thread is not threading.current_thread():
+        if self._ident != get_ident():
             self._thread.join()
 
         for connection in list(self._map.values()):
@@ -290,7 +298,7 @@ class _BasicLoop(_AbstractLoop):
 
         self._is_live = False
 
-        if self._thread is not threading.current_thread():
+        if self._ident != get_ident():
             self._thread.join()
 
         for connection in list(self._map.values()):
