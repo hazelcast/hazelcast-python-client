@@ -246,7 +246,8 @@ class _WakeableLoop(_AbstractLoop):
         asyncore.loop(timeout=0.01, use_poll=True, map=self._map, count=1)
 
     def wake_loop(self):
-        self.waker.wake()
+        if self._thread is not threading.current_thread():
+            self.waker.wake()
 
     def shutdown(self):
         if not self._is_live:
