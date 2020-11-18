@@ -1,4 +1,4 @@
-$serverVersion = "4.1-SNAPSHOT"
+$serverVersion = "4.1"
 
 $hazelcastTestVersion=$serverVersion
 $hazelcastEnterpriseTestVersion=$serverVersion
