@@ -66,14 +66,7 @@ class LoopTest(HazelcastTestCase):
     @parameterized.expand(LOOP_CLASSES)
     def test_check_loop(self, _, cls):
         loop = cls({})
-        t_count = threading.active_count()
-        loop.start()
-        try:
-            loop.check_loop()
-            self.assertEqual(t_count + 1, threading.active_count())
-        finally:
-            loop.shutdown()
-        self.assertEqual(t_count, threading.active_count())
+        loop.check_loop()
 
     @parameterized.expand(LOOP_CLASSES)
     def test_add_timer(self, _, cls):
