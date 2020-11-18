@@ -66,6 +66,13 @@ class LoopTest(HazelcastTestCase):
     @parameterized.expand(LOOP_CLASSES)
     def test_check_loop(self, _, cls):
         loop = cls({})
+        # For the WakeableLoop, we are checking that
+        # the loop can be waken up, and once the reactor
+        # handles the written bytes, it is not awake
+        # anymore. Assertions are in the method
+        # implementation. For, the BasicLoop, this should
+        # be no-op, just checking it is not raising any
+        # error.
         loop.check_loop()
 
     @parameterized.expand(LOOP_CLASSES)
