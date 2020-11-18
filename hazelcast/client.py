@@ -274,11 +274,6 @@ class HazelcastClient(object):
             all clients to connect to the same node when this property is set to
             ``True``. When it is set to ``False``, the client tries to connect to
             the nodes in the given order. By default, set to ``True``.
-        logging_config (dict): The configuration to use as the logging config.
-            It must follow the configuration dictionary schema described in the
-            logging module of the standard library.
-        logging_level (int): Sets the logging level for the default logging
-            configuration. By default, set to ``logging.INFO``.
         backup_ack_to_client_enabled (bool): Enables client to get backup
             acknowledgements directly from the member that backups are applied,
             which reduces number of hops and increases performance for smart clients.
