@@ -206,8 +206,6 @@ class InvocationService(object):
         if invocation.event_handler:
             self._listener_service.add_event_handler(correlation_id, invocation.event_handler)
 
-        _logger.debug("Sending %s to %s", message, connection)
-
         if not connection.send_message(message):
             if invocation.event_handler:
                 self._listener_service.remove_event_handler(correlation_id)
