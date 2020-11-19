@@ -8,7 +8,7 @@ def distributed_object_listener(event):
 client = hazelcast.HazelcastClient()
 
 # Register the listener
-reg_id = client.add_distributed_object_listener(distributed_object_listener)
+reg_id = client.add_distributed_object_listener(distributed_object_listener).result()
 
 map_name = "test_map"
 
@@ -22,6 +22,6 @@ test_map2 = client.get_map(map_name)
 test_map.destroy()
 
 # De-register the listener
-client.remove_distributed_object_listener(reg_id)
+client.remove_distributed_object_listener(reg_id).result()
 
 client.shutdown()

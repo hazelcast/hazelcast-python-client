@@ -3,8 +3,8 @@ import threading
 from uuid import uuid4
 
 from hazelcast import six
-from hazelcast.errors import HazelcastError
-from hazelcast.future import combine_futures
+from hazelcast.errors import HazelcastError, HazelcastClientNotActiveError, TargetDisconnectedError
+from hazelcast.future import combine_futures, ImmediateFuture
 from hazelcast.invocation import Invocation
 from hazelcast.protocol.codec import client_add_cluster_view_listener_codec
 from hazelcast.util import check_not_none
@@ -54,52 +54,60 @@ class ListenerService(object):
 
             futures = []
             for connection in list(six.itervalues(self._connection_manager.active_connections)):
-                future = self._register_on_connection_async(registration_id, registration, connection)
+                future = self._register_on_connection(registration_id, registration, connection)
                 futures.append(future)
 
-            try:
-                combine_futures(futures).result()
-            except:
-                self.deregister_listener(registration_id)
-                raise HazelcastError("Listener cannot be added")
+            def handler(f):
+                try:
+                    f.result()
+                    return registration_id
+                except:
+                    self.deregister_listener(registration_id)
+                    raise HazelcastError("Listener cannot be added")
 
-            return registration_id
+            return combine_futures(futures).continue_with(handler)
 
     def deregister_listener(self, user_registration_id):
         check_not_none(user_registration_id, "None user_registration_id is not allowed!")
 
         with self._registration_lock:
-            listener_registration = self._active_registrations.get(user_registration_id)
+            listener_registration = self._active_registrations.pop(user_registration_id, None)
             if not listener_registration:
-                return False
+                return ImmediateFuture(False)
 
-            successful = True
-            # Need to copy items to avoid getting runtime modification errors
-            for connection, event_registration in list(six.iteritems(listener_registration.connection_registrations)):
-                try:
-                    server_registration_id = event_registration.server_registration_id
-                    deregister_request = listener_registration.encode_deregister_request(server_registration_id)
-                    invocation = Invocation(deregister_request, connection=connection)
-                    self._invocation_service.invoke(invocation)
-                    invocation.future.result()
-                    self.remove_event_handler(event_registration.correlation_id)
-                    listener_registration.connection_registrations.pop(connection)
-                except:
-                    if connection.live:
-                        successful = False
-                        _logger.warning("Deregistration for listener with ID %s has failed to address %s ",
-                                        user_registration_id, "address", exc_info=True)
-            if successful:
-                self._active_registrations.pop(user_registration_id)
+            for connection, event_registration in six.iteritems(listener_registration.connection_registrations):
+                # Remove local handler
+                self.remove_event_handler(event_registration.correlation_id)
+                # The rest is for deleting the remote registration
+                server_registration_id = event_registration.server_registration_id
+                deregister_request = listener_registration.encode_deregister_request(server_registration_id)
+                if deregister_request is None:
+                    # None means no remote registration (e.g. for backup acks)
+                    continue
 
-            return successful
+                invocation = Invocation(deregister_request, connection=connection, timeout=six.MAXSIZE, urgent=True)
+                self._invocation_service.invoke(invocation)
+
+                def handler(f):
+                    e = f.exception()
+                    if e:
+                        if isinstance(e, (HazelcastClientNotActiveError, IOError, TargetDisconnectedError)):
+                            return
+
+                        _logger.warning("Deregistration of listener with ID %s has failed for address %s",
+                                        user_registration_id, connection.remote_address)
+
+                invocation.future.add_done_callback(handler)
+
+            listener_registration.connection_registrations.clear()
+            return ImmediateFuture(True)
 
     def handle_client_message(self, message, correlation_id):
         handler = self._event_handlers.get(correlation_id, None)
         if handler:
             handler(message)
         else:
-            _logger.warning("Got event message with unknown correlation id: %s", message)
+            _logger.debug("Got event message with unknown correlation id: %s", message)
 
     def add_event_handler(self, correlation_id, event_handler):
         self._event_handlers[correlation_id] = event_handler
@@ -107,7 +115,7 @@ class ListenerService(object):
     def remove_event_handler(self, correlation_id):
         self._event_handlers.pop(correlation_id, None)
 
-    def _register_on_connection_async(self, user_registration_id, listener_registration, connection):
+    def _register_on_connection(self, user_registration_id, listener_registration, connection):
         registration_map = listener_registration.connection_registrations
 
         if connection in registration_map:
@@ -115,7 +123,7 @@ class ListenerService(object):
 
         registration_request = listener_registration.registration_request.copy()
         invocation = Invocation(registration_request, connection=connection,
-                                event_handler=listener_registration.handler, response_handler=lambda m: m)
+                                event_handler=listener_registration.handler, response_handler=lambda m: m, urgent=True)
         self._invocation_service.invoke(invocation)
 
         def callback(f):
@@ -136,7 +144,7 @@ class ListenerService(object):
     def _connection_added(self, connection):
         with self._registration_lock:
             for user_reg_id, listener_registration in six.iteritems(self._active_registrations):
-                self._register_on_connection_async(user_reg_id, listener_registration, connection)
+                self._register_on_connection(user_reg_id, listener_registration, connection)
 
     def _connection_removed(self, connection, _):
         with self._registration_lock:

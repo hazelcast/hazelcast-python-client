@@ -42,7 +42,7 @@ class ReplicatedMap(Proxy):
             clear_all_func (function): Function to be called when entries are cleared from map.
 
         Returns:
-            str: A registration id which is used as a key to remove the listener.
+            hazelcast.future.Future[str]: A registration id which is used as a key to remove the listener.
         """
         if key and predicate:
             codec = replicated_map_add_entry_listener_to_key_with_predicate_codec
@@ -268,7 +268,7 @@ class ReplicatedMap(Proxy):
             registration_id (str): Id of registered listener.
 
         Returns:
-            bool: ``True`` if registration is removed, ``False`` otherwise.
+            hazelcast.future.Future[bool]: ``True`` if registration is removed, ``False`` otherwise.
         """
         return self._deregister_listener(registration_id)
 

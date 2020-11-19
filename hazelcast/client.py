@@ -522,7 +522,7 @@ class HazelcastClient(object):
             listener_func (function): Function to be called when a distributed object is created or destroyed.
 
         Returns:
-            str: A registration id which is used as a key to remove the listener.
+            hazelcast.future.Future[str]: A registration id which is used as a key to remove the listener.
         """
         is_smart = self.config.smart_routing
         request = client_add_distributed_object_listener_codec.encode_request(is_smart)
@@ -552,7 +552,7 @@ class HazelcastClient(object):
             registration_id (str): The id of registered listener.
 
         Returns:
-            bool: ``True`` if registration is removed, ``False`` otherwise.
+            hazelcast.future.Future[bool]: ``True`` if registration is removed, ``False`` otherwise.
         """
         return self._listener_service.deregister_listener(registration_id)
 

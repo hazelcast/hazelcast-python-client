@@ -9,7 +9,7 @@ def on_message(event):
 
 client = hazelcast.HazelcastClient()
 
-topic = client.get_topic("topic")
+topic = client.get_topic("topic").blocking()
 topic.add_listener(on_message)
 
 for i in range(10):

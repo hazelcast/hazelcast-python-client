@@ -51,7 +51,7 @@ class DistributedObjectsTest(SingleMemberTestCase):
 
     def test_add_distributed_object_listener_object_created(self):
         collector = event_collector()
-        self.client.add_distributed_object_listener(listener_func=collector)
+        self.client.add_distributed_object_listener(listener_func=collector).result()
 
         self.client.get_map("test-map")
 
@@ -65,7 +65,7 @@ class DistributedObjectsTest(SingleMemberTestCase):
     def test_add_distributed_object_listener_object_destroyed(self):
         collector = event_collector()
         m = self.client.get_map("test-map")
-        self.client.add_distributed_object_listener(listener_func=collector)
+        self.client.add_distributed_object_listener(listener_func=collector).result()
 
         m.destroy()
 
@@ -78,7 +78,7 @@ class DistributedObjectsTest(SingleMemberTestCase):
 
     def test_add_distributed_object_listener_object_created_and_destroyed(self):
         collector = event_collector()
-        self.client.add_distributed_object_listener(listener_func=collector)
+        self.client.add_distributed_object_listener(listener_func=collector).result()
 
         m = self.client.get_map("test-map")
         m.destroy()
@@ -96,10 +96,10 @@ class DistributedObjectsTest(SingleMemberTestCase):
 
     def test_remove_distributed_object_listener(self):
         collector = event_collector()
-        reg_id = self.client.add_distributed_object_listener(listener_func=collector)
+        reg_id = self.client.add_distributed_object_listener(listener_func=collector).result()
         m = self.client.get_map("test-map")
 
-        response = self.client.remove_distributed_object_listener(reg_id)
+        response = self.client.remove_distributed_object_listener(reg_id).result()
         self.assertTrue(response)
         m.destroy()
 
@@ -111,4 +111,4 @@ class DistributedObjectsTest(SingleMemberTestCase):
         self.assertTrueEventually(assert_event)
 
     def test_remove_invalid_distributed_object_listener(self):
-        self.assertFalse(self.client.remove_distributed_object_listener("invalid-reg-id"))
+        self.assertFalse(self.client.remove_distributed_object_listener("invalid-reg-id").result())

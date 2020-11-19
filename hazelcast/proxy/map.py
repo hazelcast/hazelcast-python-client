@@ -82,7 +82,7 @@ class Map(Proxy):
             loaded_func (function): Function to be called when an entry is loaded from a map loader.
 
         Returns:
-            str: A registration id which is used as a key to remove the listener.
+            hazelcast.future.Future[str]: A registration id which is used as a key to remove the listener.
         """
         flags = get_entry_listener_flags(ADDED=added_func, REMOVED=removed_func, UPDATED=updated_func,
                                          EVICTED=evicted_func, EXPIRED=expired_func, EVICT_ALL=evict_all_func,
@@ -850,7 +850,7 @@ class Map(Proxy):
             registration_id (str): Id of registered listener.
 
         Returns:
-            bool: ``True`` if registration is removed, ``False`` otherwise.
+            hazelcast.future.Future[bool]: ``True`` if registration is removed, ``False`` otherwise.
         """
         return self._deregister_listener(registration_id)
 
@@ -1246,15 +1246,12 @@ class MapFeatNearCache(Map):
         super(MapFeatNearCache, self)._on_destroy()
 
     def _add_near_cache_invalidation_listener(self):
-        try:
-            codec = map_add_near_cache_invalidation_listener_codec
-            request = codec.encode_request(self.name, EntryEventType.INVALIDATION, self._is_smart)
-            self._invalidation_listener_id = self._register_listener(
-                request, lambda r: codec.decode_response(r),
-                lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name, reg_id),
-                lambda m: codec.handle(m, self._handle_invalidation, self._handle_batch_invalidation))
-        except:
-            pass
+        codec = map_add_near_cache_invalidation_listener_codec
+        request = codec.encode_request(self.name, EntryEventType.INVALIDATION, self._is_smart)
+        self._invalidation_listener_id = self._register_listener(
+            request, lambda r: codec.decode_response(r),
+            lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name, reg_id),
+            lambda m: codec.handle(m, self._handle_invalidation, self._handle_batch_invalidation)).result()
 
     def _remove_near_cache_invalidation_listener(self):
         if self._invalidation_listener_id:
