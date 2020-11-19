@@ -11,6 +11,15 @@ from hazelcast.serialization.serializer import *
 from hazelcast import six
 
 
+_int_type_to_type_id = {
+    IntType.BYTE: CONSTANT_TYPE_BYTE,
+    IntType.SHORT: CONSTANT_TYPE_SHORT,
+    IntType.INT: CONSTANT_TYPE_INTEGER,
+    IntType.LONG: CONSTANT_TYPE_LONG,
+    IntType.BIG_INT: JAVA_DEFAULT_TYPE_BIG_INTEGER,
+}
+
+
 def empty_partitioning_strategy(_):
     return None
 
@@ -164,6 +173,7 @@ class SerializerRegistry(object):
 
         self._registration_lock = RLock()
         self.int_type = int_type
+        self._int_type_id = _int_type_to_type_id.get(int_type, None)
 
     def serializer_by_type_id(self, type_id):
         """Find and return the serializer for the type-id
@@ -234,20 +244,11 @@ class SerializerRegistry(object):
         if isinstance(obj, six.string_types):
             return self.serializer_by_type_id(CONSTANT_TYPE_STRING)
 
-        type_id = None
         # LOCATE NUMERIC TYPES
         if obj_type in six.integer_types:
-            if self.int_type == IntType.INT:
-                type_id = CONSTANT_TYPE_INTEGER
-            elif self.int_type == IntType.BYTE:
-                type_id = CONSTANT_TYPE_BYTE
-            elif self.int_type == IntType.SHORT:
-                type_id = CONSTANT_TYPE_SHORT
-            elif self.int_type == IntType.LONG:
-                type_id = CONSTANT_TYPE_LONG
-            elif self.int_type == IntType.BIG_INT:
-                type_id = JAVA_DEFAULT_TYPE_BIG_INTEGER
-            elif self.int_type == IntType.VAR:
+            type_id = self._int_type_id
+            if type_id is None:
+                # VAR size
                 if MIN_BYTE <= obj <= MAX_BYTE:
                     type_id = CONSTANT_TYPE_BYTE
                 elif MIN_SHORT <= obj <= MAX_SHORT:
@@ -258,8 +259,8 @@ class SerializerRegistry(object):
                     type_id = CONSTANT_TYPE_LONG
                 else:
                     type_id = JAVA_DEFAULT_TYPE_BIG_INTEGER
-            if type_id:
-                return self.serializer_by_type_id(type_id)
+
+            return self.serializer_by_type_id(type_id)
 
         return self._constant_type_dict.get(obj_type, None)
 
