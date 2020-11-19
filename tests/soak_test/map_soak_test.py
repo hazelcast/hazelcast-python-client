@@ -190,10 +190,10 @@ def start():
         for key in thread_hang_counts:
             hang_count = thread_hang_counts[key]
             if hang_count != 0:
-                logging.info("Thread {} hanged {} times.".format(key, hang_count))
+                logging.info("Thread %s hanged %s times.", key, hang_count)
 
     thread_count_after = threading.active_count()
-    logging.info("Thread count before: {}, after: {}".format(thread_count_before, thread_count_after))
+    logging.info("Thread count before: %s, after: %s", thread_count_before, thread_count_after)
 
 
 if __name__ == "__main__":
