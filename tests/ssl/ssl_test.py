@@ -70,8 +70,7 @@ class SSLTest(HazelcastTestCase):
 
         client = HazelcastClient(**get_ssl_config(cluster.id, True,
                                                   get_abs_path(self.current_directory, "server1-cert.pem"),
-                                                  ciphers="DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA:DHE-RSA-DES-"
-                                                          "CBC3-SHA:DHE-RSA-DES-CBC3-SHA:DHE-DSS-DES-CBC3-SHA"))
+                                                  ciphers="ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-GCM-SHA384"))
         self.assertTrue(client.lifecycle_service.is_running())
         client.shutdown()
 
