@@ -32,8 +32,7 @@ class SSLTest(HazelcastTestCase):
         cluster.start_member()
 
         client = HazelcastClient(**get_ssl_config(cluster.id, True,
-                                                  get_abs_path(self.current_directory, "server1-cert.pem"),
-                                                  protocol=SSLProtocol.TLSv1))
+                                                  get_abs_path(self.current_directory, "server1-cert.pem")))
         self.assertTrue(client.lifecycle_service.is_running())
         client.shutdown()
 
@@ -42,8 +41,7 @@ class SSLTest(HazelcastTestCase):
         cluster = self.create_cluster(self.rc, self.configure_cluster(self.default_ca_xml))
         cluster.start_member()
 
-        client = HazelcastClient(**get_ssl_config(cluster.id, True,
-                                                  protocol=SSLProtocol.TLSv1))
+        client = HazelcastClient(**get_ssl_config(cluster.id, True))
         self.assertTrue(client.lifecycle_service.is_running())
         client.shutdown()
 
@@ -53,16 +51,14 @@ class SSLTest(HazelcastTestCase):
         cluster.start_member()
 
         with self.assertRaises(HazelcastError):
-            HazelcastClient(**get_ssl_config(cluster.id, True,
-                                             protocol=SSLProtocol.TLSv1))
+            HazelcastClient(**get_ssl_config(cluster.id, True))
 
     def test_ssl_enabled_map_size(self):
         cluster = self.create_cluster(self.rc, self.configure_cluster(self.hazelcast_ssl_xml))
         cluster.start_member()
 
         client = HazelcastClient(**get_ssl_config(cluster.id, True,
-                                                  get_abs_path(self.current_directory, "server1-cert.pem"),
-                                                  protocol=SSLProtocol.TLSv1))
+                                                  get_abs_path(self.current_directory, "server1-cert.pem")))
         test_map = client.get_map("test_map")
         fill_map(test_map, 10)
         self.assertEqual(test_map.size().result(), 10)
@@ -74,7 +70,6 @@ class SSLTest(HazelcastTestCase):
 
         client = HazelcastClient(**get_ssl_config(cluster.id, True,
                                                   get_abs_path(self.current_directory, "server1-cert.pem"),
-                                                  protocol=SSLProtocol.TLSv1,
                                                   ciphers="DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA:DHE-RSA-DES-"
                                                           "CBC3-SHA:DHE-RSA-DES-CBC3-SHA:DHE-DSS-DES-CBC3-SHA"))
         self.assertTrue(client.lifecycle_service.is_running())
@@ -87,7 +82,6 @@ class SSLTest(HazelcastTestCase):
         with self.assertRaises(HazelcastError):
             HazelcastClient(**get_ssl_config(cluster.id, True,
                                              get_abs_path(self.current_directory, "server1-cert.pem"),
-                                             protocol=SSLProtocol.TLSv1,
                                              ciphers="INVALID-CIPHER1:INVALID_CIPHER2"))
 
     def test_ssl_enabled_with_protocol_mismatch(self):

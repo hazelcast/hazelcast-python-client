@@ -16,7 +16,7 @@
                 <property name="trustManagerAlgorithm">SunX509</property>
                 <property name="javax.net.ssl.mutualAuthentication">REQUIRED</property>
                 <property name="keyManagerAlgorithm">SunX509</property>
-                <property name="protocol">TLSv1</property>
+                <property name="protocol">TLSv1.2</property>
             </properties>
         </ssl>
     </network>

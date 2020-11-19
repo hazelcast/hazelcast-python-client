@@ -11,7 +11,7 @@
                 <property name="keyStore">com/hazelcast/nio/ssl/letsencrypt.jks</property>
                 <property name="keyStorePassword">123456</property>
                 <property name="keyManagerAlgorithm">SunX509</property>
-                <property name="protocol">TLSv1</property>
+                <property name="protocol">TLSv1.2</property>
             </properties>
         </ssl>
     </network>
