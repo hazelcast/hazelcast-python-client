@@ -1766,7 +1766,7 @@ A Topic usage example is shown below.
         print("Got message:", topic_message.message)
 
     # Get a Topic called "my-distributed-topic"
-    topic = client.get_topic("my-distributed-topic")
+    topic = client.get_topic("my-distributed-topic").blocking()
 
     # Add a Listener to the Topic
     topic.add_listener(print_on_message)
@@ -2342,15 +2342,15 @@ client.
 
     client.add_distributed_object_listener(
         listener_func=distributed_object_listener
-    )
+    ).result()
 
     map_name = "test_map"
 
     # This call causes a CREATED event
-    test_map = client.get_map(map_name)
+    test_map = client.get_map(map_name).blocking()
 
     # This causes no event because map was already created
-    test_map2 = client.get_map(map_name)
+    test_map2 = client.get_map(map_name).blocking()
 
     # This causes a DESTROYED event
     test_map.destroy()
@@ -2483,7 +2483,7 @@ See the following example.
 
 
     customer_map.add_entry_listener(include_value=True, clear_all_func=cleared)
-    customer_map.clear().result()
+    customer_map.clear()
 
 7.6. Distributed Computing
 --------------------------

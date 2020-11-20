@@ -25,7 +25,7 @@ class Topic(PartitionSpecificProxy):
             on_message (function): Function to be called when a message is published.
 
         Returns:
-            str: A registration id which is used as a key to remove the listener.
+            hazelcast.future.Future[str]: A registration id which is used as a key to remove the listener.
         """
         codec = topic_add_message_listener_codec
         request = codec.encode_request(self.name, self._is_smart)
@@ -62,6 +62,6 @@ class Topic(PartitionSpecificProxy):
             registration_id (str): Registration id of the listener to be removed.
 
         Returns:
-            bool: ``True`` if the listener is removed, ``False`` otherwise.
+            hazelcast.future.Future[bool]: ``True`` if the listener is removed, ``False`` otherwise.
         """
         return self._deregister_listener(registration_id)

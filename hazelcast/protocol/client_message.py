@@ -187,6 +187,11 @@ class InboundMessage(object):
         self.start_frame = self.start_frame.next
         self._next_frame = self.start_frame
 
+    def __repr__(self):
+        message_type = self.get_message_type()
+        correlation_id = self.get_correlation_id()
+        return "InboundMessage(message_type=%s, correlation_id=%s)" % (message_type, correlation_id)
+
 
 NULL_FRAME_BUF = bytearray(SIZE_OF_FRAME_LENGTH_AND_FLAGS)
 LE_INT.pack_into(NULL_FRAME_BUF, 0, SIZE_OF_FRAME_LENGTH_AND_FLAGS)

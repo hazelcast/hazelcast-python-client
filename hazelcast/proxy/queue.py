@@ -79,7 +79,7 @@ class Queue(PartitionSpecificProxy):
             item_removed_func (function): Function to be called when an item is deleted from this set.
 
         Returns:
-            str: A registration id which is used as a key to remove the listener.
+            hazelcast.future.Future[str]: A registration id which is used as a key to remove the listener.
         """
         codec = queue_add_listener_codec
         request = codec.encode_request(self.name, include_value, self._is_smart)
@@ -306,7 +306,7 @@ class Queue(PartitionSpecificProxy):
             registration_id (str): Id of the listener to be deleted.
 
         Returns:
-            bool: ``True`` if the item listener is removed, ``False`` otherwise.
+            hazelcast.future.Future[bool]: ``True`` if the item listener is removed, ``False`` otherwise.
         """
         return self._deregister_listener(registration_id)
 

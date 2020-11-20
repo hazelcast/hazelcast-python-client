@@ -261,7 +261,7 @@ class InvocationService(object):
         self._listener_service.register_listener(request,
                                                  codec.decode_response,
                                                  lambda reg_id: None,
-                                                 lambda m: codec.handle(m, self._backup_event_handler))
+                                                 lambda m: codec.handle(m, self._backup_event_handler)).result()
 
     def _backup_event_handler(self, correlation_id):
         invocation = self._pending.get(correlation_id, None)
