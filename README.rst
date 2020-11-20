@@ -2347,10 +2347,10 @@ client.
     map_name = "test_map"
 
     # This call causes a CREATED event
-    test_map = client.get_map(map_name)
+    test_map = client.get_map(map_name).blocking()
 
     # This causes no event because map was already created
-    test_map2 = client.get_map(map_name)
+    test_map2 = client.get_map(map_name).blocking()
 
     # This causes a DESTROYED event
     test_map.destroy()
