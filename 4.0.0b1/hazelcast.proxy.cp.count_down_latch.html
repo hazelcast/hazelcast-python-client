@@ -1,0 +1,236 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CountDownLatch &#8212; Hazelcast Python Client 4.0.0b1 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="FencedLock" href="hazelcast.proxy.cp.fenced_lock.html" />
+    <link rel="prev" title="AtomicReference" href="hazelcast.proxy.cp.atomic_reference.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.cp.fenced_lock.html" title="FencedLock"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.cp.atomic_reference.html" title="AtomicReference"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 4.0.0b1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" >Hazelcast Proxies</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="hazelcast.proxy.cp.html" accesskey="U">CP Proxies</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">CountDownLatch</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.proxy.cp.count_down_latch">
+<span id="countdownlatch"></span><h1>CountDownLatch<a class="headerlink" href="#module-hazelcast.proxy.cp.count_down_latch" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="hazelcast.proxy.cp.count_down_latch.CountDownLatch">
+<em class="property">class </em><code class="sig-name descname">CountDownLatch</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span></em>, <em class="sig-param"><span class="n">group_id</span></em>, <em class="sig-param"><span class="n">service_name</span></em>, <em class="sig-param"><span class="n">proxy_name</span></em>, <em class="sig-param"><span class="n">object_name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.cp.count_down_latch.CountDownLatch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.proxy.cp.BaseCPProxy</span></code></p>
+<p>A distributed, concurrent countdown latch data structure.</p>
+<p>CountDownLatch is a cluster-wide synchronization aid
+that allows one or more callers to wait until a set of operations being
+performed in other callers completes.</p>
+<p>CountDownLatch count can be reset using <code class="docutils literal notranslate"><span class="pre">try_set_count()</span></code> method after
+a countdown has finished but not during an active count. This allows
+the same latch instance to be reused.</p>
+<p>There is no <code class="docutils literal notranslate"><span class="pre">await_latch()</span></code> method to do an unbound wait since this is undesirable
+in a distributed application: for example, a cluster can split or the master
+and replicas could all die. In most cases, it is best to configure
+an explicit timeout so you have the ability to deal with these situations.</p>
+<p>All of the API methods in the CountDownLatch offer the exactly-once
+execution semantics. For instance, even if a <code class="docutils literal notranslate"><span class="pre">count_down()</span></code> call is
+internally retried because of crashed Hazelcast member, the counter
+value is decremented only once.</p>
+<dl class="py method">
+<dt id="hazelcast.proxy.cp.count_down_latch.CountDownLatch.await_latch">
+<code class="sig-name descname">await_latch</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">timeout</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.cp.count_down_latch.CountDownLatch.await_latch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Causes the current thread to wait until the latch has counted down to
+zero, or an exception is thrown, or the specified waiting time elapses.</p>
+<p>If the current count is zero then this method returns <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+<p>If the current count is greater than zero, then the current
+thread becomes disabled for thread scheduling purposes and lies
+dormant until one of the following things happen:</p>
+<ul class="simple">
+<li><p>The count reaches zero due to invocations of the <code class="docutils literal notranslate"><span class="pre">count_down()</span></code> method</p></li>
+<li><p>This CountDownLatch instance is destroyed</p></li>
+<li><p>The countdown owner becomes disconnected</p></li>
+<li><p>The specified waiting time elapses</p></li>
+</ul>
+<p>If the count reaches zero, then the method returns with the
+value <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+<p>If the specified waiting time elapses then the value <code class="docutils literal notranslate"><span class="pre">False</span></code>
+is returned.  If the time is less than or equal to zero, the method
+will not wait at all.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>timeout</strong> (<em>int</em>) – The maximum time to wait in seconds</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">True</span></code> if the count reached zero,</dt><dd><p><code class="docutils literal notranslate"><span class="pre">False</span></code> if the waiting time elapsed before the count reached zero</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[bool]</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="hazelcast.errors.html#hazelcast.errors.IllegalStateError" title="hazelcast.errors.IllegalStateError"><strong>IllegalStateError</strong></a> – If the Hazelcast instance was shut down while waiting.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.proxy.cp.count_down_latch.CountDownLatch.count_down">
+<code class="sig-name descname">count_down</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.cp.count_down_latch.CountDownLatch.count_down" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decrements the count of the latch, releasing all waiting threads if
+the count reaches zero.</p>
+<p>If the current count is greater than zero, then it is decremented.
+If the new count is zero:</p>
+<ul class="simple">
+<li><p>All waiting threads are re-enabled for thread scheduling purposes</p></li>
+<li><p>Countdown owner is set to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+</ul>
+<p>If the current count equals zero, then nothing happens.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[None]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.proxy.cp.count_down_latch.CountDownLatch.get_count">
+<code class="sig-name descname">get_count</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.cp.count_down_latch.CountDownLatch.get_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the current count.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The current count.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.proxy.cp.count_down_latch.CountDownLatch.try_set_count">
+<code class="sig-name descname">try_set_count</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">count</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.cp.count_down_latch.CountDownLatch.try_set_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the count to the given value if the current count is zero.</p>
+<p>If count is not zero, then this method does nothing and returns
+<code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>count</strong> (<em>int</em>) – The number of times <code class="docutils literal notranslate"><span class="pre">count_down()</span></code> must be invoked
+before callers can pass through <code class="docutils literal notranslate"><span class="pre">await_latch()</span></code>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">True</span></code> if the new count was set,</dt><dd><p><code class="docutils literal notranslate"><span class="pre">False</span></code> if the current count is not zero.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[bool]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.cp.atomic_reference.html"
+                        title="previous chapter">AtomicReference</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.cp.fenced_lock.html"
+                        title="next chapter">FencedLock</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.proxy.cp.count_down_latch.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.cp.fenced_lock.html" title="FencedLock"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.cp.atomic_reference.html" title="AtomicReference"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 4.0.0b1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" >Hazelcast Proxies</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="hazelcast.proxy.cp.html" >CP Proxies</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">CountDownLatch</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Hazelcast Inc..
+    </div>
+  </body>
+</html>

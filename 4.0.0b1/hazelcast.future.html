@@ -1,0 +1,253 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Future &#8212; Hazelcast Python Client 4.0.0b1 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Lifecycle" href="hazelcast.lifecycle.html" />
+    <link rel="prev" title="Errors" href="hazelcast.errors.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.lifecycle.html" title="Lifecycle"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.errors.html" title="Errors"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 4.0.0b1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" accesskey="U">Hazelcast Python Client</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Future</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="future">
+<h1>Future<a class="headerlink" href="#future" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="hazelcast.future.Future">
+<em class="property">class </em><code class="sig-name descname">Future</code><a class="headerlink" href="#hazelcast.future.Future" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Future is used for representing an asynchronous computation result.</p>
+<dl class="py method">
+<dt id="hazelcast.future.Future.set_result">
+<code class="sig-name descname">set_result</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">result</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.future.Future.set_result" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the result of the Future.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>result</strong> – Result of the Future.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.future.Future.set_exception">
+<code class="sig-name descname">set_exception</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">exception</span></em>, <em class="sig-param"><span class="n">traceback</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.future.Future.set_exception" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the exception for this Future in case of errors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>exception</strong> (<em>Exception</em>) – Exception to be threw in case of error.</p></li>
+<li><p><strong>traceback</strong> (<em>function</em>) – Function to be called on traceback.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.future.Future.result">
+<code class="sig-name descname">result</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.future.Future.result" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the result of the Future, which makes the call synchronous if the result has not been computed yet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Result of the Future.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.future.Future.is_success">
+<code class="sig-name descname">is_success</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.future.Future.is_success" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether the result can be successfully computed or not.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.future.Future.done">
+<code class="sig-name descname">done</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.future.Future.done" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether the result is computed or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if the result is computed, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.future.Future.running">
+<code class="sig-name descname">running</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.future.Future.running" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether the asynchronous call, the computation is still running or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if the  result is being computed, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.future.Future.exception">
+<code class="sig-name descname">exception</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.future.Future.exception" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the exceptional result, if any.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Exception of this Future.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Exception</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.future.Future.traceback">
+<code class="sig-name descname">traceback</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.future.Future.traceback" title="Permalink to this definition">¶</a></dt>
+<dd><p>Traceback function for the Future.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.future.Future.add_done_callback">
+<code class="sig-name descname">add_done_callback</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">callback</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.future.Future.add_done_callback" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.future.Future.continue_with">
+<code class="sig-name descname">continue_with</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">continuation_func</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.future.Future.continue_with" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a continuation that executes when the Future is completed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>continuation_func</strong> (<em>function</em>) – A function which takes the Future as the only parameter.
+Return value of the function will be set as the result of the continuation future.
+If the return value of the function is another Future, it will be chained
+to the returned Future.</p></li>
+<li><p><strong>*args</strong> – Arguments to be passed into <code class="docutils literal notranslate"><span class="pre">continuation_function</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A new Future which will be completed when the continuation is done.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hazelcast.future.Future" title="hazelcast.future.Future">Future</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="hazelcast.future.combine_futures">
+<code class="sig-name descname">combine_futures</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">futures</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.future.combine_futures" title="Permalink to this definition">¶</a></dt>
+<dd><p>Combines set of Futures.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>futures</strong> (<em>list</em><em>[</em><a class="reference internal" href="#hazelcast.future.Future" title="hazelcast.future.Future"><em>Future</em></a><em>]</em>) – List of Futures to be combined.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Result of the combination.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hazelcast.future.Future" title="hazelcast.future.Future">Future</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.errors.html"
+                        title="previous chapter">Errors</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.lifecycle.html"
+                        title="next chapter">Lifecycle</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.future.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.lifecycle.html" title="Lifecycle"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.errors.html" title="Errors"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 4.0.0b1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Future</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Hazelcast Inc..
+    </div>
+  </body>
+</html>

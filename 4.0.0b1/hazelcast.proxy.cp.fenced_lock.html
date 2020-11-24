@@ -1,0 +1,359 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FencedLock &#8212; Hazelcast Python Client 4.0.0b1 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Semaphore" href="hazelcast.proxy.cp.semaphore.html" />
+    <link rel="prev" title="CountDownLatch" href="hazelcast.proxy.cp.count_down_latch.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.cp.semaphore.html" title="Semaphore"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.cp.count_down_latch.html" title="CountDownLatch"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 4.0.0b1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" >Hazelcast Proxies</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="hazelcast.proxy.cp.html" accesskey="U">CP Proxies</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">FencedLock</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.proxy.cp.fenced_lock">
+<span id="fencedlock"></span><h1>FencedLock<a class="headerlink" href="#module-hazelcast.proxy.cp.fenced_lock" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="hazelcast.proxy.cp.fenced_lock.FencedLock">
+<em class="property">class </em><code class="sig-name descname">FencedLock</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span></em>, <em class="sig-param"><span class="n">group_id</span></em>, <em class="sig-param"><span class="n">service_name</span></em>, <em class="sig-param"><span class="n">proxy_name</span></em>, <em class="sig-param"><span class="n">object_name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.cp.fenced_lock.FencedLock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.proxy.cp.SessionAwareCPProxy</span></code></p>
+<p>A linearizable, distributed lock.</p>
+<p>FencedLock is CP with respect to the CAP principle. It works on top
+of the Raft consensus algorithm. It offers linearizability during crash-stop
+failures and network partitions. If a network partition occurs, it remains
+available on at most one side of the partition.</p>
+<p>FencedLock works on top of CP sessions. Please refer to CP Session
+IMDG documentation section for more information.</p>
+<p>By default, FencedLock is reentrant. Once a caller acquires
+the lock, it can acquire the lock reentrantly as many times as it wants
+in a linearizable manner. You can configure the reentrancy behaviour
+on the member side. For instance, reentrancy can be disabled and
+FencedLock can work as a non-reentrant mutex. One can also set
+a custom reentrancy limit. When the reentrancy limit is reached,
+FencedLock does not block a lock call. Instead, it fails with
+<code class="docutils literal notranslate"><span class="pre">LockAcquireLimitReachedError</span></code> or a specified return value.
+Please check the locking methods to see details about the behaviour.</p>
+<p>It is advised to use this proxy in a blocking mode. Although it is
+possible, non-blocking usage requires an extra care. FencedLock
+uses the id of the thread that makes the request to distinguish lock
+owners. When used in a non-blocking mode, added callbacks or
+continuations are not generally executed in the thread that makes the
+request. That causes the code below to fail most of the time since the
+lock is acquired on the main thread but, unlock request is done in another
+thread.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lock</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">cp_subsystem</span><span class="o">.</span><span class="n">get_lock</span><span class="p">(</span><span class="s2">&quot;lock&quot;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">cb</span><span class="p">(</span><span class="n">_</span><span class="p">):</span>
+    <span class="n">lock</span><span class="o">.</span><span class="n">unlock</span><span class="p">()</span>
+
+<span class="n">lock</span><span class="o">.</span><span class="n">lock</span><span class="p">()</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="n">cb</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py attribute">
+<dt id="hazelcast.proxy.cp.fenced_lock.FencedLock.INVALID_FENCE">
+<code class="sig-name descname">INVALID_FENCE</code><em class="property"> = 0</em><a class="headerlink" href="#hazelcast.proxy.cp.fenced_lock.FencedLock.INVALID_FENCE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.proxy.cp.fenced_lock.FencedLock.lock">
+<code class="sig-name descname">lock</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.cp.fenced_lock.FencedLock.lock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Acquires the lock and returns the fencing token assigned to the current
+thread for this lock acquire.</p>
+<p>If the lock is acquired reentrantly, the same fencing token is returned,
+or the <code class="docutils literal notranslate"><span class="pre">lock()</span></code> call can fail with <code class="docutils literal notranslate"><span class="pre">LockAcquireLimitReachedError</span></code>
+if the lock acquire limit is already reached.</p>
+<p>If the lock is not available then the current thread becomes disabled
+for thread scheduling purposes and lies dormant until the lock has been
+acquired.</p>
+<p>Fencing tokens are monotonic numbers that are incremented each time
+the lock switches from the free state to the acquired state. They are
+simply used for ordering lock holders. A lock holder can pass
+its fencing to the shared resource to fence off previous lock holders.
+When this resource receives an operation, it can validate the fencing
+token in the operation.</p>
+<p>Consider the following scenario where the lock is free initially</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lock</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">cp_subsystem</span><span class="o">.</span><span class="n">get_lock</span><span class="p">(</span><span class="s2">&quot;lock&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">blocking</span><span class="p">()</span>
+<span class="n">fence1</span> <span class="o">=</span> <span class="n">lock</span><span class="o">.</span><span class="n">lock</span><span class="p">()</span>  <span class="c1"># (1)</span>
+<span class="n">fence2</span> <span class="o">=</span> <span class="n">lock</span><span class="o">.</span><span class="n">lock</span><span class="p">()</span>  <span class="c1"># (2)</span>
+<span class="k">assert</span> <span class="n">fence1</span> <span class="o">==</span> <span class="n">fence2</span>
+<span class="n">lock</span><span class="o">.</span><span class="n">unlock</span><span class="p">()</span>
+<span class="n">lock</span><span class="o">.</span><span class="n">unlock</span><span class="p">()</span>
+<span class="n">fence3</span> <span class="o">=</span> <span class="n">lock</span><span class="o">.</span><span class="n">lock</span><span class="p">()</span>  <span class="c1"># (3)</span>
+<span class="k">assert</span> <span class="n">fence3</span> <span class="o">&gt;</span> <span class="n">fence1</span>
+</pre></div>
+</div>
+<p>In this scenario, the lock is acquired by a thread in the cluster. Then,
+the same thread reentrantly acquires the lock again. The fencing token
+returned from the second acquire is equal to the one returned from the
+first acquire, because of reentrancy. After the second acquire, the lock
+is released 2 times, hence becomes free. There is a third lock acquire
+here, which returns a new fencing token. Because this last lock acquire
+is not reentrant, its fencing token is guaranteed to be larger than the
+previous tokens, independent of the thread that has acquired the lock.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The fencing token.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[int]</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="hazelcast.errors.html#hazelcast.errors.LockOwnershipLostError" title="hazelcast.errors.LockOwnershipLostError"><strong>LockOwnershipLostError</strong></a> – If the underlying CP session was
+    closed before the client releases the lock</p></li>
+<li><p><a class="reference internal" href="hazelcast.errors.html#hazelcast.errors.LockAcquireLimitReachedError" title="hazelcast.errors.LockAcquireLimitReachedError"><strong>LockAcquireLimitReachedError</strong></a> – If the lock call is reentrant
+    and the configured lock acquire limit is already reached.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.proxy.cp.fenced_lock.FencedLock.try_lock">
+<code class="sig-name descname">try_lock</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">timeout</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.cp.fenced_lock.FencedLock.try_lock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Acquires the lock if it is free within the given waiting time,
+or already held by the current thread at the time of invocation and,
+the acquire limit is not exceeded, and returns the fencing token
+assigned to the current thread for this lock acquire.</p>
+<p>If the lock is acquired reentrantly, the same fencing token is returned.
+If the lock acquire limit is exceeded, then this method immediately returns
+<a class="reference internal" href="#hazelcast.proxy.cp.fenced_lock.FencedLock.INVALID_FENCE" title="hazelcast.proxy.cp.fenced_lock.FencedLock.INVALID_FENCE"><code class="xref py py-const docutils literal notranslate"><span class="pre">INVALID_FENCE</span></code></a> that represents a failed lock attempt.</p>
+<p>If the lock is not available then the current thread becomes disabled
+for thread scheduling purposes and lies dormant until the lock is
+acquired by the current thread or the specified waiting time elapses.</p>
+<p>If the specified waiting time elapses, then <a class="reference internal" href="#hazelcast.proxy.cp.fenced_lock.FencedLock.INVALID_FENCE" title="hazelcast.proxy.cp.fenced_lock.FencedLock.INVALID_FENCE"><code class="xref py py-const docutils literal notranslate"><span class="pre">INVALID_FENCE</span></code></a>
+is returned. If the time is less than or equal to zero, the method does
+not wait at all. By default, timeout is set to zero.</p>
+<p>A typical usage idiom for this method would be</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lock</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">cp_subsystem</span><span class="o">.</span><span class="n">get_lock</span><span class="p">(</span><span class="s2">&quot;lock&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">blocking</span><span class="p">()</span>
+<span class="n">fence</span> <span class="o">=</span> <span class="n">lock</span><span class="o">.</span><span class="n">try_lock</span><span class="p">()</span>
+<span class="k">if</span> <span class="n">fence</span> <span class="o">!=</span> <span class="n">lock</span><span class="o">.</span><span class="n">INVALID_FENCE</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># manipulate the protected state</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">lock</span><span class="o">.</span><span class="n">unlock</span><span class="p">()</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="c1"># perform another action</span>
+</pre></div>
+</div>
+<p>This usage ensures that the lock is unlocked if it was acquired,
+and doesn’t try to unlock if the lock was not acquired.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#hazelcast.proxy.cp.fenced_lock.FencedLock.lock" title="hazelcast.proxy.cp.fenced_lock.FencedLock.lock"><code class="xref py py-func docutils literal notranslate"><span class="pre">lock()</span></code></a> function for more information about fences.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>timeout</strong> (<em>int</em>) – The maximum time to wait for the lock in seconds.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>The fencing token if the lock was acquired and</dt><dd><p><a class="reference internal" href="#hazelcast.proxy.cp.fenced_lock.FencedLock.INVALID_FENCE" title="hazelcast.proxy.cp.fenced_lock.FencedLock.INVALID_FENCE"><code class="xref py py-const docutils literal notranslate"><span class="pre">INVALID_FENCE</span></code></a> otherwise.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[int]</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="hazelcast.errors.html#hazelcast.errors.LockOwnershipLostError" title="hazelcast.errors.LockOwnershipLostError"><strong>LockOwnershipLostError</strong></a> – If the underlying CP session was
+    closed before the client releases the lock</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.proxy.cp.fenced_lock.FencedLock.unlock">
+<code class="sig-name descname">unlock</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.cp.fenced_lock.FencedLock.unlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Releases the lock if the lock is currently held by the current thread.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[None]</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="hazelcast.errors.html#hazelcast.errors.LockOwnershipLostError" title="hazelcast.errors.LockOwnershipLostError"><strong>LockOwnershipLostError</strong></a> – If the underlying CP session was
+    closed before the client releases the lock</p></li>
+<li><p><a class="reference internal" href="hazelcast.errors.html#hazelcast.errors.IllegalMonitorStateError" title="hazelcast.errors.IllegalMonitorStateError"><strong>IllegalMonitorStateError</strong></a> – If the lock is not held by
+    the current thread</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.proxy.cp.fenced_lock.FencedLock.is_locked">
+<code class="sig-name descname">is_locked</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.cp.fenced_lock.FencedLock.is_locked" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether this lock is locked or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">True</span></code> if this lock is locked by any thread</dt><dd><p>in the cluster, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[bool]</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.errors.html#hazelcast.errors.LockOwnershipLostError" title="hazelcast.errors.LockOwnershipLostError"><strong>LockOwnershipLostError</strong></a> – If the underlying CP session was
+    closed before the client releases the lock</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.proxy.cp.fenced_lock.FencedLock.is_locked_by_current_thread">
+<code class="sig-name descname">is_locked_by_current_thread</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.cp.fenced_lock.FencedLock.is_locked_by_current_thread" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether the lock is held by the current thread or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">True</span></code> if the lock is held by the current thread,</dt><dd><p><code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[bool]</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.errors.html#hazelcast.errors.LockOwnershipLostError" title="hazelcast.errors.LockOwnershipLostError"><strong>LockOwnershipLostError</strong></a> – If the underlying CP session was
+    closed before the client releases the lock</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.proxy.cp.fenced_lock.FencedLock.get_lock_count">
+<code class="sig-name descname">get_lock_count</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.cp.fenced_lock.FencedLock.get_lock_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the reentrant lock count if the lock is held by any thread
+in the cluster.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The reentrant lock count if the lock is held
+by any thread in the cluster</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[int]</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.errors.html#hazelcast.errors.LockOwnershipLostError" title="hazelcast.errors.LockOwnershipLostError"><strong>LockOwnershipLostError</strong></a> – If the underlying CP session was
+    closed before the client releases the lock</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.proxy.cp.fenced_lock.FencedLock.destroy">
+<code class="sig-name descname">destroy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.cp.fenced_lock.FencedLock.destroy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Destroys this proxy.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.cp.count_down_latch.html"
+                        title="previous chapter">CountDownLatch</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.cp.semaphore.html"
+                        title="next chapter">Semaphore</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.proxy.cp.fenced_lock.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.cp.semaphore.html" title="Semaphore"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.cp.count_down_latch.html" title="CountDownLatch"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 4.0.0b1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" >Hazelcast Proxies</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="hazelcast.proxy.cp.html" >CP Proxies</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">FencedLock</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Hazelcast Inc..
+    </div>
+  </body>
+</html>

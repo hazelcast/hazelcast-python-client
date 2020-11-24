@@ -1,0 +1,661 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hazelcast Client &#8212; Hazelcast Python Client 4.0.0b1 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Hazelcast Cluster" href="hazelcast.cluster.html" />
+    <link rel="prev" title="Hazelcast Python Client" href="hazelcast.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.cluster.html" title="Hazelcast Cluster"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.html" title="Hazelcast Python Client"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 4.0.0b1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" accesskey="U">Hazelcast Python Client</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Hazelcast Client</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.client">
+<span id="hazelcast-client"></span><h1>Hazelcast Client<a class="headerlink" href="#module-hazelcast.client" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="hazelcast.client.HazelcastClient">
+<em class="property">class </em><code class="sig-name descname">HazelcastClient</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Hazelcast client instance to access access and manipulate
+distributed data structures on the Hazelcast clusters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Keyword Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cluster_members</strong> (<a class="reference internal" href="hazelcast.proxy.list.html#module-hazelcast.proxy.list" title="hazelcast.proxy.list"><em>list</em></a><em>[</em><em>str</em><em>]</em>) – Candidate address list that client
+will use to establish initial connection.
+By default, set to <code class="docutils literal notranslate"><span class="pre">[&quot;127.0.0.1&quot;]</span></code>.</p></li>
+<li><p><strong>cluster_name</strong> (<em>str</em>) – Name of the cluster to connect to. The name is
+sent as part of the the client authentication message and may
+be verified on the member. By default, set to <code class="docutils literal notranslate"><span class="pre">dev</span></code>.</p></li>
+<li><p><strong>client_name</strong> (<em>str</em>) – Name of the client instance. By default,
+set to <code class="docutils literal notranslate"><span class="pre">hz.client_${CLIENT_ID}</span></code>, where <code class="docutils literal notranslate"><span class="pre">CLIENT_ID</span></code> starts
+from <code class="docutils literal notranslate"><span class="pre">0</span></code> and it is incremented by <code class="docutils literal notranslate"><span class="pre">1</span></code> for each new client.</p></li>
+<li><p><strong>connection_timeout</strong> (<em>float</em>) – Socket timeout value in seconds for
+client to connect member nodes. Setting this to <code class="docutils literal notranslate"><span class="pre">0</span></code> makes
+the connection blocking. By default, set to <code class="docutils literal notranslate"><span class="pre">5.0</span></code>.</p></li>
+<li><p><strong>socket_options</strong> (<a class="reference internal" href="hazelcast.proxy.list.html#module-hazelcast.proxy.list" title="hazelcast.proxy.list"><em>list</em></a><em>[</em><em>tuple</em><em>]</em>) – List of socket option tuples. The
+tuples must contain the parameters passed into the
+<code class="xref py py-func docutils literal notranslate"><span class="pre">socket.setsockopt()</span></code> in the same order.</p></li>
+<li><p><strong>redo_operation</strong> (<em>bool</em>) – When set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, the client will redo
+the operations that were executing on the server in case if the
+client lost connection. This can happen because of network problems,
+or simply because the member died. However it is not clear whether
+the operation was performed or not. For idempotent operations this is
+harmless, but for non idempotent ones retrying can cause to undesirable
+effects. Note that the redo can be processed on any member. By default,
+set to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><strong>smart_routing</strong> (<em>bool</em>) – Enables smart mode for the client instead of
+unisocket client. Smart clients send key based operations to owner of
+the keys. Unisocket clients send all operations to a single node. By
+default, set to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p><strong>ssl_enabled</strong> (<em>bool</em>) – If it is <code class="docutils literal notranslate"><span class="pre">True</span></code>, SSL is enabled. By default, set
+to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><strong>ssl_cafile</strong> (<em>str</em>) – Absolute path of concatenated CA certificates used to
+validate server’s certificates in PEM format. When SSL is enabled and
+cafile is not set, a set of default CA certificates from default
+locations will be used.</p></li>
+<li><p><strong>ssl_certfile</strong> (<em>str</em>) – Absolute path of the client certificate in PEM format.</p></li>
+<li><p><strong>ssl_keyfile</strong> (<em>str</em>) – Absolute path of the private key file for the client
+certificate in the PEM format. If this parameter is <code class="docutils literal notranslate"><span class="pre">None</span></code>, private
+key will be taken from the certfile.</p></li>
+<li><p><strong>ssl_password</strong> (<em>str|bytes|bytearray|function</em>) – Password for decrypting the
+keyfile if it is encrypted. The password may be a function to call to
+get the password. It will be called with no arguments, and it should
+return a string, bytes, or bytearray. If the return value is a string
+it will be encoded as UTF-8 before using it to decrypt the key.
+Alternatively a string, bytes, or bytearray value may be supplied
+directly as the password.</p></li>
+<li><p><strong>ssl_protocol</strong> (<em>int</em>) – Protocol version used in SSL communication.
+By default, set to <code class="docutils literal notranslate"><span class="pre">SSLProtocol.TLSv1_2</span></code>.</p></li>
+<li><p><strong>ssl_ciphers</strong> (<em>str</em>) – String in the OpenSSL cipher list format to set the
+available ciphers for sockets. More than one cipher can be set by
+separating them with a colon.</p></li>
+<li><p><strong>cloud_discovery_token</strong> (<em>str</em>) – Discovery token of the Hazelcast Cloud cluster.
+When this value is set, Hazelcast Cloud discovery is enabled.</p></li>
+<li><p><strong>async_start</strong> (<em>bool</em>) – Enables non-blocking start mode of <a class="reference internal" href="#hazelcast.client.HazelcastClient" title="hazelcast.client.HazelcastClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">HazelcastClient</span></code></a>.
+When set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, the client creation will not wait to connect to
+cluster. The client instance will throw exceptions until it connects to
+cluster and becomes ready. If set to <code class="docutils literal notranslate"><span class="pre">False</span></code>, <a class="reference internal" href="#hazelcast.client.HazelcastClient" title="hazelcast.client.HazelcastClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">HazelcastClient</span></code></a>
+will block until a cluster connection established and it is ready to use
+the client instance. By default, set to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><strong>reconnect_mode</strong> (<em>int</em>) – Defines how a client reconnects to cluster after a
+disconnect. By default, set to <code class="docutils literal notranslate"><span class="pre">ReconnectMode.ON</span></code>.</p></li>
+<li><p><strong>retry_initial_backoff</strong> (<em>float</em>) – Wait period in seconds after the first failure
+before retrying. Must be non-negative. By default, set to <code class="docutils literal notranslate"><span class="pre">1.0</span></code>.</p></li>
+<li><p><strong>retry_max_backoff</strong> (<em>float</em>) – Upper bound for the backoff interval in seconds.
+Must be non-negative. By default, set to <code class="docutils literal notranslate"><span class="pre">30.0</span></code>.</p></li>
+<li><p><strong>retry_jitter</strong> (<em>float</em>) – Defines how much to randomize backoffs. At each iteration
+the calculated back-off is randomized via following method in pseudo-code
+<code class="docutils literal notranslate"><span class="pre">Random(-jitter</span> <span class="pre">*</span> <span class="pre">current_backoff,</span> <span class="pre">jitter</span> <span class="pre">*</span> <span class="pre">current_backoff)</span></code>. Must be
+in range <code class="docutils literal notranslate"><span class="pre">[0.0,</span> <span class="pre">1.0]</span></code>. By default, set to <code class="docutils literal notranslate"><span class="pre">0.0</span></code> (no randomization).</p></li>
+<li><p><strong>retry_multiplier</strong> (<em>float</em>) – The factor with which to multiply backoff after a
+failed retry. Must be greater than or equal to <code class="docutils literal notranslate"><span class="pre">1</span></code>. By default,
+set to <code class="docutils literal notranslate"><span class="pre">1.0</span></code>.</p></li>
+<li><p><strong>cluster_connect_timeout</strong> (<em>float</em>) – Timeout value in seconds for the client to
+give up a connection attempt to the cluster. Must be non-negative.
+By default, set to <cite>20.0</cite>.</p></li>
+<li><p><strong>portable_version</strong> (<em>int</em>) – Default value for the portable version if the
+class does not have the <code class="xref py py-func docutils literal notranslate"><span class="pre">get_portable_version()</span></code> method. Portable
+versions are used to differentiate two versions of the
+<a class="reference internal" href="hazelcast.serialization.html#hazelcast.serialization.api.Portable" title="hazelcast.serialization.api.Portable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.serialization.api.Portable</span></code></a> classes that have added
+or removed fields, or fields with different types.</p></li>
+<li><p><strong>data_serializable_factories</strong> (<em>dict</em><em>[</em><em>int</em><em>, </em><em>dict</em><em>[</em><em>int</em><em>, </em><em>class</em><em>]</em><em>]</em>) – <p>Dictionary of
+factory id and corresponding
+<a class="reference internal" href="hazelcast.serialization.html#hazelcast.serialization.api.IdentifiedDataSerializable" title="hazelcast.serialization.api.IdentifiedDataSerializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.serialization.api.IdentifiedDataSerializable</span></code></a> factories.
+A factory is simply a dictionary with class id and callable class
+constructors.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">FACTORY_ID</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">CLASS_ID</span> <span class="o">=</span> <span class="mi">1</span>
+
+<span class="k">class</span> <span class="nc">SomeSerializable</span><span class="p">(</span><span class="n">IdentifiedDataSerializable</span><span class="p">):</span>
+    <span class="c1"># omitting the implementation</span>
+    <span class="k">pass</span>
+
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">HazelcastClient</span><span class="p">(</span><span class="n">data_serializable_factories</span><span class="o">=</span><span class="p">{</span>
+    <span class="n">FACTORY_ID</span><span class="p">:</span> <span class="p">{</span>
+        <span class="n">CLASS_ID</span><span class="p">:</span> <span class="n">SomeSerializable</span>
+    <span class="p">}</span>
+<span class="p">})</span>
+</pre></div>
+</div>
+</p></li>
+<li><p><strong>portable_factories</strong> (<em>dict</em><em>[</em><em>int</em><em>, </em><em>dict</em><em>[</em><em>int</em><em>, </em><em>class</em><em>]</em><em>]</em>) – <p>Dictionary of
+factory id and corresponding
+<a class="reference internal" href="hazelcast.serialization.html#hazelcast.serialization.api.Portable" title="hazelcast.serialization.api.Portable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.serialization.api.Portable</span></code></a> factories.
+A factory is simply a dictionary with class id and callable class
+constructors.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">FACTORY_ID</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">CLASS_ID</span> <span class="o">=</span> <span class="mi">2</span>
+
+<span class="k">class</span> <span class="nc">SomeSerializable</span><span class="p">(</span><span class="n">Portable</span><span class="p">):</span>
+    <span class="c1"># omitting the implementation</span>
+    <span class="k">pass</span>
+
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">HazelcastClient</span><span class="p">(</span><span class="n">portable_factories</span><span class="o">=</span><span class="p">{</span>
+    <span class="n">FACTORY_ID</span><span class="p">:</span> <span class="p">{</span>
+        <span class="n">CLASS_ID</span><span class="p">:</span> <span class="n">SomeSerializable</span>
+    <span class="p">}</span>
+<span class="p">})</span>
+</pre></div>
+</div>
+</p></li>
+<li><p><strong>class_definitions</strong> (<a class="reference internal" href="hazelcast.proxy.list.html#module-hazelcast.proxy.list" title="hazelcast.proxy.list"><em>list</em></a><em>[</em><em>hazelcast.serialization.portable.classdef.ClassDefinition</em><em>]</em>) – List of all portable class definitions.</p></li>
+<li><p><strong>check_class_definition_errors</strong> (<em>bool</em>) – When enabled, serialization system
+will check for class definitions error at start and throw an
+<code class="docutils literal notranslate"><span class="pre">HazelcastSerializationError</span></code> with error definition. By default,
+set to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p><strong>is_big_endian</strong> (<em>bool</em>) – Defines if big-endian is used as the byte order
+for the serialization. By default, set to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p><strong>default_int_type</strong> (<em>int</em>) – Defines how the <code class="docutils literal notranslate"><span class="pre">int</span></code>/<code class="docutils literal notranslate"><span class="pre">long</span></code> type is
+represented on the cluster side. By default, it is serialized
+as <code class="docutils literal notranslate"><span class="pre">IntType.INT</span></code> (<code class="docutils literal notranslate"><span class="pre">32</span></code> bits).</p></li>
+<li><p><strong>global_serializer</strong> (<a class="reference internal" href="hazelcast.serialization.html#hazelcast.serialization.api.StreamSerializer" title="hazelcast.serialization.api.StreamSerializer"><em>hazelcast.serialization.api.StreamSerializer</em></a>) – Defines the global serializer. This serializer
+is registered as a fallback serializer to handle all other objects
+if a serializer cannot be located for them.</p></li>
+<li><p><strong>custom_serializers</strong> (<em>dict</em><em>[</em><em>class</em><em>, </em><a class="reference internal" href="hazelcast.serialization.html#hazelcast.serialization.api.StreamSerializer" title="hazelcast.serialization.api.StreamSerializer"><em>hazelcast.serialization.api.StreamSerializer</em></a><em>]</em>) – <p>Dictionary of class and the corresponding custom serializers.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">SomeClass</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="c1"># omitting the implementation</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">SomeClassSerializer</span><span class="p">(</span><span class="n">StreamSerializer</span><span class="p">):</span>
+    <span class="c1"># omitting the implementation</span>
+    <span class="k">pass</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">HazelcastClient</span><span class="p">(</span><span class="n">custom_serializers</span><span class="o">=</span><span class="p">{</span>
+    <span class="n">SomeClass</span><span class="p">:</span> <span class="n">SomeClassSerializer</span>
+<span class="p">})</span>
+</pre></div>
+</div>
+</p></li>
+<li><p><strong>near_caches</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>dict</em><em>[</em><em>str</em><em>, </em><em>any</em><em>]</em><em>]</em>) – <p>Dictionary of near cache
+names and the corresponding near cache configurations as a dictionary.
+The near cache configurations contains the following options.
+When an option is missing from the configuration, it will be
+set to its default value.</p>
+<ul>
+<li><p><strong>invalidate_on_change</strong> (bool): Enables cluster-assisted invalidate
+on change behavior. When set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, entries are invalidated
+when they are changed in cluster. By default, set to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p><strong>in_memory_format</strong> (int): Specifies in which format data will be
+stored in the Near Cache. By default, set to <code class="docutils literal notranslate"><span class="pre">InMemoryFormat.BINARY</span></code>.</p></li>
+<li><p><strong>time_to_live</strong> (float): Maximum number of seconds that an entry can
+stay in cache. When not set, entries won’t be evicted due
+to expiration.</p></li>
+<li><p><strong>max_idle</strong> (float): Maximum number of seconds that an entry can stay
+in the Near Cache until it is accessed. When not set, entries won’t be
+evicted due to inactivity.</p></li>
+<li><p><strong>eviction_policy</strong> (int): Defines eviction policy configuration.
+By default, set to <code class="docutils literal notranslate"><span class="pre">EvictionPolicy.LRU</span></code>.</p></li>
+<li><p><strong>eviction_max_size</strong> (int): Defines maximum number of entries kept in
+the memory before eviction kicks in. By default, set to <code class="docutils literal notranslate"><span class="pre">10000</span></code>.</p></li>
+<li><p><strong>eviction_sampling_count</strong> (int): Number of random entries that are
+evaluated to see if some of them are already expired. By default,
+set to <code class="docutils literal notranslate"><span class="pre">8</span></code>.</p></li>
+<li><p><strong>eviction_sampling_pool_size</strong> (int): Size of the pool for eviction
+candidates. The pool is kept sorted according to the eviction policy.
+By default, set to <code class="docutils literal notranslate"><span class="pre">16</span></code>.</p></li>
+</ul>
+</p></li>
+<li><p><strong>load_balancer</strong> (<a class="reference internal" href="hazelcast.util.html#hazelcast.util.LoadBalancer" title="hazelcast.util.LoadBalancer"><em>hazelcast.util.LoadBalancer</em></a>) – Load balancer implementation
+for the client</p></li>
+<li><p><strong>membership_listeners</strong> (<a class="reference internal" href="hazelcast.proxy.list.html#module-hazelcast.proxy.list" title="hazelcast.proxy.list"><em>list</em></a><em>[</em><em>tuple</em><em>[</em><em>function</em><em>, </em><em>function</em><em>]</em><em>]</em>) – List of membership
+listener tuples. Tuples must be of size <code class="docutils literal notranslate"><span class="pre">2</span></code>. The first element will
+be the function to be called when a member is added, and the second
+element will be the function to be called when the member is removed
+with the <a class="reference internal" href="hazelcast.core.html#hazelcast.core.MemberInfo" title="hazelcast.core.MemberInfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.core.MemberInfo</span></code></a> as the only parameter.
+Any of the elements can be <code class="docutils literal notranslate"><span class="pre">None</span></code>, but not at the same time.</p></li>
+<li><p><strong>lifecycle_listeners</strong> (<a class="reference internal" href="hazelcast.proxy.list.html#module-hazelcast.proxy.list" title="hazelcast.proxy.list"><em>list</em></a><em>[</em><em>function</em><em>]</em>) – List of lifecycle listeners.
+Listeners will be called with the new lifecycle state as the only
+parameter when the client changes lifecycle states.</p></li>
+<li><p><strong>flake_id_generators</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>dict</em><em>[</em><em>str</em><em>, </em><em>any</em><em>]</em><em>]</em>) – <p>Dictionary of flake id
+generator names and the corresponding flake id generator configurations
+as a dictionary. The flake id generator configurations contains the
+following options. When an option is missing from the configuration, it
+will be set to its default value.</p>
+<ul>
+<li><p><strong>prefetch_count</strong> (int): Defines how many IDs are pre-fetched on the
+background when a new flake id is requested from the cluster. Should
+be in the range <code class="docutils literal notranslate"><span class="pre">1..100000</span></code>. By default, set to <code class="docutils literal notranslate"><span class="pre">100</span></code>.</p></li>
+<li><p><strong>prefetch_validity</strong> (float): Defines for how long the pre-fetched IDs
+can be used. If this time elapsed, a new batch of IDs will be fetched.
+Time unit is in seconds. By default, set to <code class="docutils literal notranslate"><span class="pre">600</span></code> (10 minutes).</p>
+<p>The IDs contain timestamp component, which ensures rough global ordering
+of IDs. If an ID is assigned to an object that was created much later,
+it will be much out of order. If you don’t care about ordering, set this
+value to <code class="docutils literal notranslate"><span class="pre">0</span></code> for unlimited ID validity.</p>
+</li>
+</ul>
+</p></li>
+<li><p><strong>labels</strong> (<a class="reference internal" href="hazelcast.proxy.list.html#module-hazelcast.proxy.list" title="hazelcast.proxy.list"><em>list</em></a><em>[</em><em>str</em><em>]</em>) – Labels for the client to be sent to the cluster.</p></li>
+<li><p><strong>heartbeat_interval</strong> (<em>float</em>) – Time interval between the heartbeats sent by the
+client to the member nodes in seconds. By default, set to <code class="docutils literal notranslate"><span class="pre">5.0</span></code>.</p></li>
+<li><p><strong>heartbeat_timeout</strong> (<em>float</em>) – If there is no message passing between the client
+and a member within the given time via this property in seconds, the
+connection will be closed. By default, set to <code class="docutils literal notranslate"><span class="pre">60.0</span></code>.</p></li>
+<li><p><strong>invocation_timeout</strong> (<em>float</em>) – <p>When an invocation gets an exception because</p>
+<ul>
+<li><p>Member throws an exception.</p></li>
+<li><p>Connection between the client and member is closed.</p></li>
+<li><p>Client’s heartbeat requests are timed out.</p></li>
+</ul>
+<p>Time passed since invocation started is compared with this property.
+If the time is already passed, then the exception is delegated to the user.
+If not, the invocation is retried. Note that, if invocation gets no exception
+and it is a long running one, then it will not get any exception, no matter
+how small this timeout is set. Time unit is in seconds. By default,
+set to <code class="docutils literal notranslate"><span class="pre">120.0</span></code>.</p>
+</p></li>
+<li><p><strong>invocation_retry_pause</strong> (<em>float</em>) – Pause time between each retry cycle of an
+invocation in seconds. By default, set to <code class="docutils literal notranslate"><span class="pre">1.0</span></code>.</p></li>
+<li><p><strong>statistics_enabled</strong> (<em>bool</em>) – When set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, client statistics collection
+is enabled. By default, set to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><strong>statistics_period</strong> (<em>float</em>) – The period in seconds the statistics run.</p></li>
+<li><p><strong>shuffle_member_list</strong> (<em>bool</em>) – Client shuffles the given member list to prevent
+all clients to connect to the same node when this property is set to
+<code class="docutils literal notranslate"><span class="pre">True</span></code>. When it is set to <code class="docutils literal notranslate"><span class="pre">False</span></code>, the client tries to connect to
+the nodes in the given order. By default, set to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p><strong>backup_ack_to_client_enabled</strong> (<em>bool</em>) – Enables client to get backup
+acknowledgements directly from the member that backups are applied,
+which reduces number of hops and increases performance for smart clients.
+This option has no effect for unisocket clients. By default, set
+to <code class="docutils literal notranslate"><span class="pre">True</span></code> (enabled).</p></li>
+<li><p><strong>operation_backup_timeout</strong> (<em>float</em>) – If an operation has backups, defines
+how long the invocation will wait for acks from the backup replicas
+in seconds. If acks are not received from some backups, there won’t
+be any rollback on other successful replicas. By default, set to <code class="docutils literal notranslate"><span class="pre">5.0</span></code>.</p></li>
+<li><p><strong>fail_on_indeterminate_operation_state</strong> (<em>bool</em>) – When enabled, if an operation
+has sync backups and acks are not received from backup replicas in time,
+or the member which owns primary replica of the target partition leaves
+the cluster, then the invocation fails with
+<a class="reference internal" href="hazelcast.errors.html#hazelcast.errors.IndeterminateOperationStateError" title="hazelcast.errors.IndeterminateOperationStateError"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.errors.IndeterminateOperationStateError</span></code></a>. However,
+even if the invocation fails, there will not be any rollback on other
+successful replicas. By default, set to <code class="docutils literal notranslate"><span class="pre">False</span></code> (do not fail).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="hazelcast.client.HazelcastClient.get_executor">
+<code class="sig-name descname">get_executor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_executor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates cluster-wide ExecutorService.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the Executor proxy.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Executor proxy for the given name.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.proxy.executor.html#hazelcast.proxy.executor.Executor" title="hazelcast.proxy.executor.Executor">hazelcast.proxy.executor.Executor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.client.HazelcastClient.get_flake_id_generator">
+<code class="sig-name descname">get_flake_id_generator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_flake_id_generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates or returns a cluster-wide FlakeIdGenerator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the FlakeIdGenerator proxy.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>FlakeIdGenerator proxy for the given name</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.proxy.flake_id_generator.html#hazelcast.proxy.flake_id_generator.FlakeIdGenerator" title="hazelcast.proxy.flake_id_generator.FlakeIdGenerator">hazelcast.proxy.flake_id_generator.FlakeIdGenerator</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.client.HazelcastClient.get_queue">
+<code class="sig-name descname">get_queue</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_queue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distributed queue instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the distributed queue.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Distributed queue instance with the specified name.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.proxy.queue.html#hazelcast.proxy.queue.Queue" title="hazelcast.proxy.queue.Queue">hazelcast.proxy.queue.Queue</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.client.HazelcastClient.get_list">
+<code class="sig-name descname">get_list</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distributed list instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the distributed list.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Distributed list instance with the specified name.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.proxy.list.html#hazelcast.proxy.list.List" title="hazelcast.proxy.list.List">hazelcast.proxy.list.List</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.client.HazelcastClient.get_map">
+<code class="sig-name descname">get_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distributed map instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the distributed map.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Distributed map instance with the specified name.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.proxy.map.html#hazelcast.proxy.map.Map" title="hazelcast.proxy.map.Map">hazelcast.proxy.map.Map</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.client.HazelcastClient.get_multi_map">
+<code class="sig-name descname">get_multi_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_multi_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distributed MultiMap instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the distributed MultiMap.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Distributed MultiMap instance with the specified name.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.proxy.multi_map.html#hazelcast.proxy.multi_map.MultiMap" title="hazelcast.proxy.multi_map.MultiMap">hazelcast.proxy.multi_map.MultiMap</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.client.HazelcastClient.get_pn_counter">
+<code class="sig-name descname">get_pn_counter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_pn_counter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the PN Counter instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the PN Counter.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The PN Counter.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.proxy.pn_counter.html#hazelcast.proxy.pn_counter.PNCounter" title="hazelcast.proxy.pn_counter.PNCounter">hazelcast.proxy.pn_counter.PNCounter</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.client.HazelcastClient.get_reliable_topic">
+<code class="sig-name descname">get_reliable_topic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_reliable_topic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the ReliableTopic instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the ReliableTopic.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The ReliableTopic.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>hazelcast.proxy.reliable_topic.ReliableTopic</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.client.HazelcastClient.get_replicated_map">
+<code class="sig-name descname">get_replicated_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_replicated_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distributed ReplicatedMap instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the distributed ReplicatedMap.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Distributed ReplicatedMap instance with the specified name.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.proxy.replicated_map.html#hazelcast.proxy.replicated_map.ReplicatedMap" title="hazelcast.proxy.replicated_map.ReplicatedMap">hazelcast.proxy.replicated_map.ReplicatedMap</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.client.HazelcastClient.get_ringbuffer">
+<code class="sig-name descname">get_ringbuffer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_ringbuffer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distributed Ringbuffer instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the distributed Ringbuffer.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Distributed RingBuffer instance with the specified name.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.proxy.ringbuffer.html#hazelcast.proxy.ringbuffer.Ringbuffer" title="hazelcast.proxy.ringbuffer.Ringbuffer">hazelcast.proxy.ringbuffer.Ringbuffer</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.client.HazelcastClient.get_set">
+<code class="sig-name descname">get_set</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distributed Set instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the distributed Set.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Distributed Set instance with the specified name.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.proxy.set.html#hazelcast.proxy.set.Set" title="hazelcast.proxy.set.Set">hazelcast.proxy.set.Set</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.client.HazelcastClient.get_topic">
+<code class="sig-name descname">get_topic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_topic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Topic instance with the specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the Topic.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The Topic.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.proxy.topic.html#hazelcast.proxy.topic.Topic" title="hazelcast.proxy.topic.Topic">hazelcast.proxy.topic.Topic</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.client.HazelcastClient.new_transaction">
+<code class="sig-name descname">new_transaction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">timeout</span><span class="o">=</span><span class="default_value">120</span></em>, <em class="sig-param"><span class="n">durability</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">type</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.new_transaction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new Transaction associated with the current thread using default or given options.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timeout</strong> (<em>int</em>) – The timeout in seconds determines the maximum lifespan of a transaction. So if a
+transaction is configured with a timeout of 2 minutes, then it will automatically rollback if it hasn’t
+committed yet.</p></li>
+<li><p><strong>durability</strong> (<em>int</em>) – The durability is the number of machines that can take over if a member fails during a
+transaction commit or rollback.</p></li>
+<li><p><strong>type</strong> (<em>int</em>) – The transaction type which can be <code class="docutils literal notranslate"><span class="pre">TWO_PHASE</span></code> or <code class="docutils literal notranslate"><span class="pre">ONE_PHASE</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>New Transaction associated with the current thread.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.transaction.html#hazelcast.transaction.Transaction" title="hazelcast.transaction.Transaction">hazelcast.transaction.Transaction</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.client.HazelcastClient.add_distributed_object_listener">
+<code class="sig-name descname">add_distributed_object_listener</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">listener_func</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.add_distributed_object_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a listener which will be notified when a new distributed object is created or destroyed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>listener_func</strong> (<em>function</em>) – Function to be called when a distributed object is created or destroyed.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A registration id which is used as a key to remove the listener.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.client.HazelcastClient.remove_distributed_object_listener">
+<code class="sig-name descname">remove_distributed_object_listener</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">registration_id</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.remove_distributed_object_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the specified distributed object listener.</p>
+<p>Returns silently if there is no such listener added before.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>registration_id</strong> (<em>str</em>) – The id of registered listener.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if registration is removed, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[bool]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.client.HazelcastClient.get_distributed_objects">
+<code class="sig-name descname">get_distributed_objects</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.get_distributed_objects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all distributed objects such as; queue, map, set, list, topic, lock, multimap.</p>
+<p>Also, as a side effect, it clears the local instances of the destroyed proxies.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>List of instances created by Hazelcast.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list[<a class="reference internal" href="hazelcast.proxy.base.html#hazelcast.proxy.base.Proxy" title="hazelcast.proxy.base.Proxy">hazelcast.proxy.base.Proxy</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.client.HazelcastClient.shutdown">
+<code class="sig-name descname">shutdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.client.HazelcastClient.shutdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shuts down this HazelcastClient.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.html"
+                        title="previous chapter">Hazelcast Python Client</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.cluster.html"
+                        title="next chapter">Hazelcast Cluster</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.client.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.cluster.html" title="Hazelcast Cluster"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.html" title="Hazelcast Python Client"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 4.0.0b1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Hazelcast Client</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Hazelcast Inc..
+    </div>
+  </body>
+</html>

@@ -1,0 +1,4 @@
+Predicate
+=========
+
+.. automodule:: hazelcast.predicate

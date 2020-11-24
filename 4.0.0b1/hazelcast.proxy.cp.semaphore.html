@@ -1,0 +1,402 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Semaphore &#8212; Hazelcast Python Client 4.0.0b1 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Executor" href="hazelcast.proxy.executor.html" />
+    <link rel="prev" title="FencedLock" href="hazelcast.proxy.cp.fenced_lock.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.executor.html" title="Executor"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.cp.fenced_lock.html" title="FencedLock"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 4.0.0b1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" >Hazelcast Proxies</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="hazelcast.proxy.cp.html" accesskey="U">CP Proxies</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Semaphore</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="semaphore">
+<h1>Semaphore<a class="headerlink" href="#semaphore" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="hazelcast.proxy.cp.semaphore.Semaphore">
+<em class="property">class </em><code class="sig-name descname">Semaphore</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span></em>, <em class="sig-param"><span class="n">group_id</span></em>, <em class="sig-param"><span class="n">service_name</span></em>, <em class="sig-param"><span class="n">proxy_name</span></em>, <em class="sig-param"><span class="n">object_name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.cp.semaphore.Semaphore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.proxy.cp.BaseCPProxy</span></code></p>
+<p>A linearizable, distributed semaphore.</p>
+<p>Semaphores are often used to restrict the number of callers that can access
+some physical or logical resource.</p>
+<p>Semaphore is a cluster-wide counting semaphore. Conceptually, it maintains
+a set of permits. Each <code class="docutils literal notranslate"><span class="pre">acquire()</span></code> blocks if necessary until a permit
+is available, and then takes it. Dually, each <code class="docutils literal notranslate"><span class="pre">release()</span></code> adds a
+permit, potentially releasing a blocking acquirer. However, no actual permit
+objects are used; the semaphore just keeps a count of the number available
+and acts accordingly.</p>
+<p>Hazelcast’s distributed semaphore implementation guarantees that callers
+invoking any of the <code class="docutils literal notranslate"><span class="pre">acquire()</span></code> methods are selected to
+obtain permits in the order of their invocations (first-in-first-out; FIFO).
+Note that FIFO ordering implies the order which the primary replica of an
+Semaphore receives these acquire requests. Therefore, it is
+possible for one member to invoke <code class="docutils literal notranslate"><span class="pre">acquire()</span></code> before another member,
+but its request hits the primary replica after the other member.</p>
+<p>This class also provides convenient ways to work with multiple permits at once.
+Beware of the increased risk of indefinite postponement when using the
+multiple-permit acquire. If permits are released one by one, a caller waiting
+for one permit will acquire it before a caller waiting for multiple permits
+regardless of the call order.</p>
+<p>Correct usage of a semaphore is established by programming convention
+in the application.</p>
+<p>It works on top of the Raft consensus algorithm. It offers linearizability during crash
+failures and network partitions. It is CP with respect to the CAP principle.
+If a network partition occurs, it remains available on at most one side of
+the partition.</p>
+<p>It has 2 variations:</p>
+<ul class="simple">
+<li><p>The default implementation accessed via <code class="docutils literal notranslate"><span class="pre">cp_subsystem</span></code> is session-aware. In this
+one, when a caller makes its very first <code class="docutils literal notranslate"><span class="pre">acquire()</span></code> call, it starts
+a new CP session with the underlying CP group. Then, liveliness of the
+caller is tracked via this CP session. When the caller fails, permits
+acquired by this caller are automatically and safely released. However,
+the session-aware version comes with a limitation, that is, a client cannot
+release permits before acquiring them first. In other words, a client can release
+only the permits it has acquired earlier. It means, you can acquire a permit
+from one thread and release it from another thread using the same Hazelcast client,
+but not different instances of Hazelcast client. You can use the session-aware
+CP Semaphore implementation by disabling JDK compatibility via <code class="docutils literal notranslate"><span class="pre">jdk-compatible</span></code>
+server-side setting. Although the session-aware implementation has a minor
+difference to the JDK Semaphore, we think it is a better fit for distributed
+environments because of its safe auto-cleanup mechanism for acquired permits.</p></li>
+<li><p>The second implementation offered by <code class="docutils literal notranslate"><span class="pre">cp_subsystem</span></code> is sessionless. This
+implementation does not perform auto-cleanup of acquired permits on failures.
+Acquired permits are not bound to threads and permits can be released without
+acquiring first. However, you need to handle failed permit owners on your own.
+If a Hazelcast server or a client fails while holding some permits, they will not be
+automatically released. You can use the sessionless CP Semaphore implementation
+by enabling JDK compatibility via <code class="docutils literal notranslate"><span class="pre">jdk-compatible</span></code> server-side setting.</p></li>
+</ul>
+<p>There is a subtle difference between the lock and semaphore abstractions.
+A lock can be assigned to at most one endpoint at a time, so we have a total
+order among its holders. However, permits of a semaphore can be assigned to
+multiple endpoints at a time, which implies that we may not have a total
+order among permit holders. In fact, permit holders are partially ordered.
+For this reason, the fencing token approach, which is explained in
+<a class="reference internal" href="hazelcast.proxy.cp.fenced_lock.html#hazelcast.proxy.cp.fenced_lock.FencedLock" title="hazelcast.proxy.cp.fenced_lock.FencedLock"><code class="xref py py-class docutils literal notranslate"><span class="pre">FencedLock</span></code></a>, does not work for the
+semaphore abstraction. Moreover, each permit is an independent entity.
+Multiple permit acquires and reentrant lock acquires of a single endpoint are
+not equivalent. The only case where a semaphore behaves like a lock is the
+binary case, where the semaphore has only 1 permit. In this case, the semaphore
+works like a non-reentrant lock.</p>
+<p>All of the API methods in the new CP Semaphore implementation offer
+the exactly-once execution semantics for the session-aware version.
+For instance, even if a <code class="docutils literal notranslate"><span class="pre">release()</span></code> call is internally retried
+because of a crashed Hazelcast member, the permit is released only once.
+However, this guarantee is not given for the sessionless, a.k.a,
+JDK-compatible CP Semaphore.</p>
+<dl class="py method">
+<dt id="hazelcast.proxy.cp.semaphore.Semaphore.init">
+<code class="sig-name descname">init</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">permits</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.cp.semaphore.Semaphore.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tries to initialize this Semaphore instance with the given permit count.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>permits</strong> (<em>int</em>) – The given permit count.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">True</span></code> if the initialization succeeds,</dt><dd><p><code class="docutils literal notranslate"><span class="pre">False</span></code> if already initialized.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[bool]</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>AssertionError</strong> – If the <code class="docutils literal notranslate"><span class="pre">permits</span></code> is negative.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.proxy.cp.semaphore.Semaphore.acquire">
+<code class="sig-name descname">acquire</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">permits</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.cp.semaphore.Semaphore.acquire" title="Permalink to this definition">¶</a></dt>
+<dd><p>Acquires the given number of permits if they are available,
+and returns immediately, reducing the number of available permits
+by the given amount.</p>
+<p>If insufficient permits are available then the result of the returned
+future is not set until one of the following things happens:</p>
+<ul class="simple">
+<li><p>Some other caller invokes one of the <code class="docutils literal notranslate"><span class="pre">release</span></code>
+methods for this semaphore, the current caller is next to be assigned
+permits and the number of available permits satisfies this request,</p></li>
+<li><p>This Semaphore instance is destroyed</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>permits</strong> (<em>int</em>) – Optional number of permits to acquire; defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>
+when not specified</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[None]</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>AssertionError</strong> – If the <code class="docutils literal notranslate"><span class="pre">permits</span></code> is not positive.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.proxy.cp.semaphore.Semaphore.available_permits">
+<code class="sig-name descname">available_permits</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.cp.semaphore.Semaphore.available_permits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the current number of permits currently available in this semaphore.</p>
+<p>This method is typically used for debugging and testing purposes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The number of permits available in this semaphore.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.proxy.cp.semaphore.Semaphore.drain_permits">
+<code class="sig-name descname">drain_permits</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.cp.semaphore.Semaphore.drain_permits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Acquires and returns all permits that are available at invocation time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The number of permits drained.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.proxy.cp.semaphore.Semaphore.reduce_permits">
+<code class="sig-name descname">reduce_permits</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reduction</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.cp.semaphore.Semaphore.reduce_permits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reduces the number of available permits by the indicated amount.</p>
+<p>This method differs from <code class="docutils literal notranslate"><span class="pre">acquire</span></code> as it does not block until permits
+become available. Similarly, if the caller has acquired some permits,
+they are not released with this call.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>reduction</strong> (<em>int</em>) – The number of permits to reduce.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[None]</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>AssertionError</strong> – If the <code class="docutils literal notranslate"><span class="pre">reduction</span></code> is negative.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.proxy.cp.semaphore.Semaphore.increase_permits">
+<code class="sig-name descname">increase_permits</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">increase</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.cp.semaphore.Semaphore.increase_permits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increases the number of available permits by the indicated amount.</p>
+<p>If there are some callers waiting for permits to become available, they
+will be notified. Moreover, if the caller has acquired some permits,
+they are not released with this call.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>increase</strong> (<em>int</em>) – The number of permits to increase.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[None]</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>AssertionError</strong> – If <code class="docutils literal notranslate"><span class="pre">increase</span></code> is negative.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.proxy.cp.semaphore.Semaphore.release">
+<code class="sig-name descname">release</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">permits</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.cp.semaphore.Semaphore.release" title="Permalink to this definition">¶</a></dt>
+<dd><p>Releases the given number of permits and increases the number of
+available permits by that amount.</p>
+<p>If some callers in the cluster are blocked for acquiring permits,
+they will be notified.</p>
+<p>If the underlying Semaphore implementation is non-JDK-compatible
+(configured via <code class="docutils literal notranslate"><span class="pre">jdk-compatible</span></code> server-side setting), then a
+client can only release a permit which it has acquired before.
+In other words, a client cannot release a permit without acquiring
+it first.</p>
+<p>Otherwise, which means the underlying implementation is JDK compatible
+(configured via <code class="docutils literal notranslate"><span class="pre">jdk-compatible</span></code> server-side setting), there is no
+requirement that a client that releases a permit must have acquired
+that permit by calling one of the <code class="docutils literal notranslate"><span class="pre">acquire()</span></code> methods. A client can
+freely release a permit without acquiring it first. In this case,
+correct usage of a semaphore is established by programming convention
+in the application.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>permits</strong> (<em>int</em>) – Optional number of permits to release; defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>
+when not specified.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[None]</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>AssertionError</strong> – If the <code class="docutils literal notranslate"><span class="pre">permits</span></code> is not positive.</p></li>
+<li><p><a class="reference internal" href="hazelcast.errors.html#hazelcast.errors.IllegalStateError" title="hazelcast.errors.IllegalStateError"><strong>IllegalStateError</strong></a> – if the Semaphore is non-JDK-compatible and the caller
+    does not have a permit</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.proxy.cp.semaphore.Semaphore.try_acquire">
+<code class="sig-name descname">try_acquire</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">permits</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">timeout</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.cp.semaphore.Semaphore.try_acquire" title="Permalink to this definition">¶</a></dt>
+<dd><p>Acquires the given number of permits and returns <code class="docutils literal notranslate"><span class="pre">True</span></code>, if they
+become available during the given waiting time.</p>
+<p>If permits are acquired, the number of available permits in the Semaphore
+instance is also reduced by the given amount.</p>
+<p>If no sufficient permits are available, then the result of the returned
+future is not set until one of the following things happens:</p>
+<ul class="simple">
+<li><p>Permits are released by other callers, the current caller is next to
+be assigned permits and the number of available permits satisfies this
+request</p></li>
+<li><p>The specified waiting time elapses</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>permits</strong> (<em>int</em>) – The number of permits to acquire; defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>
+when not specified.</p></li>
+<li><p><strong>timeout</strong> (<em>int</em>) – Optional timeout in seconds to wait for the permits;
+when it’s not specified the operation will return
+immediately after the acquire attempt</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">True</span></code> if all permits were acquired,</dt><dd><p><code class="docutils literal notranslate"><span class="pre">false</span></code> if the waiting time elapsed before all permits could be
+acquired</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[bool]</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>AssertionError</strong> – If the <code class="docutils literal notranslate"><span class="pre">permits</span></code> is not positive.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.cp.fenced_lock.html"
+                        title="previous chapter">FencedLock</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.executor.html"
+                        title="next chapter">Executor</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.proxy.cp.semaphore.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.executor.html" title="Executor"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.cp.fenced_lock.html" title="FencedLock"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 4.0.0b1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" >Hazelcast Proxies</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="hazelcast.proxy.cp.html" >CP Proxies</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Semaphore</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Hazelcast Inc..
+    </div>
+  </body>
+</html>
