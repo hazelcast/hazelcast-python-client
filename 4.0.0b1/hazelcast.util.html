@@ -1,0 +1,181 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Util &#8212; Hazelcast Python Client 4.0.0b1 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Transaction" href="hazelcast.transaction.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.transaction.html" title="Transaction"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 4.0.0b1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" accesskey="U">Hazelcast Python Client</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Util</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="util">
+<h1>Util<a class="headerlink" href="#util" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="hazelcast.util.LoadBalancer">
+<em class="property">class </em><code class="sig-name descname">LoadBalancer</code><a class="headerlink" href="#hazelcast.util.LoadBalancer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Load balancer allows you to send operations to one of a number of endpoints (Members).
+It is up to the implementation to use different load balancing policies.</p>
+<p>If the client is configured with smart routing,
+only the operations that are not key based will be routed to the endpoint</p>
+<dl class="py method">
+<dt id="hazelcast.util.LoadBalancer.init">
+<code class="sig-name descname">init</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cluster_service</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.util.LoadBalancer.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the load balancer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>cluster_service</strong> (<a class="reference internal" href="hazelcast.cluster.html#hazelcast.cluster.ClusterService" title="hazelcast.cluster.ClusterService"><em>hazelcast.cluster.ClusterService</em></a>) – The cluster service to select members from</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.util.LoadBalancer.next">
+<code class="sig-name descname">next</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.util.LoadBalancer.next" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the next member to route to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the next member or <code class="docutils literal notranslate"><span class="pre">None</span></code> if no member is available.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="hazelcast.core.html#hazelcast.core.MemberInfo" title="hazelcast.core.MemberInfo">hazelcast.core.MemberInfo</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="hazelcast.util.RoundRobinLB">
+<em class="property">class </em><code class="sig-name descname">RoundRobinLB</code><a class="headerlink" href="#hazelcast.util.RoundRobinLB" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.util._AbstractLoadBalancer</span></code></p>
+<p>A load balancer implementation that relies on using round robin
+to a next member to send a request to.</p>
+<p>Round robin is done based on best effort basis, the order of members for concurrent calls to
+the next() is not guaranteed.</p>
+<dl class="py method">
+<dt id="hazelcast.util.RoundRobinLB.next">
+<code class="sig-name descname">next</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.util.RoundRobinLB.next" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the next member to route to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the next member or <code class="docutils literal notranslate"><span class="pre">None</span></code> if no member is available.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="hazelcast.core.html#hazelcast.core.MemberInfo" title="hazelcast.core.MemberInfo">hazelcast.core.MemberInfo</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="hazelcast.util.RandomLB">
+<em class="property">class </em><code class="sig-name descname">RandomLB</code><a class="headerlink" href="#hazelcast.util.RandomLB" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.util._AbstractLoadBalancer</span></code></p>
+<p>A load balancer that selects a random member to route to.</p>
+<dl class="py method">
+<dt id="hazelcast.util.RandomLB.next">
+<code class="sig-name descname">next</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.util.RandomLB.next" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the next member to route to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the next member or <code class="docutils literal notranslate"><span class="pre">None</span></code> if no member is available.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="hazelcast.core.html#hazelcast.core.MemberInfo" title="hazelcast.core.MemberInfo">hazelcast.core.MemberInfo</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.transaction.html"
+                        title="previous chapter">Transaction</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.util.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.transaction.html" title="Transaction"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 4.0.0b1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Util</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Hazelcast Inc..
+    </div>
+  </body>
+</html>

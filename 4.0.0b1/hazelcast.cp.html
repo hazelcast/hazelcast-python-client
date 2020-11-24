@@ -1,0 +1,267 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CP Subsystem &#8212; Hazelcast Python Client 4.0.0b1 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Errors" href="hazelcast.errors.html" />
+    <link rel="prev" title="Core" href="hazelcast.core.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.errors.html" title="Errors"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.core.html" title="Core"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 4.0.0b1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" accesskey="U">Hazelcast Python Client</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">CP Subsystem</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="cp-subsystem">
+<h1>CP Subsystem<a class="headerlink" href="#cp-subsystem" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="hazelcast.cp.CPSubsystem">
+<em class="property">class </em><code class="sig-name descname">CPSubsystem</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.cp.CPSubsystem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>CP Subsystem is a component of Hazelcast that builds a strongly consistent
+layer for a set of distributed data structures.</p>
+<p>Its APIs can be used for implementing distributed coordination use cases,
+such as leader election, distributed locking, synchronization, and metadata
+management.</p>
+<p>Its data structures are CP with respect to the CAP principle, i.e., they
+always maintain linearizability and prefer consistency over availability
+during network partitions. Besides network partitions, CP Subsystem
+withstands server and client failures.</p>
+<p>Data structures in CP Subsystem run in CP groups. Each CP group elects
+its own Raft leader and runs the Raft consensus algorithm independently.</p>
+<p>The CP data structures differ from the other Hazelcast data structures
+in two aspects. First, an internal commit is performed on the METADATA CP
+group every time you fetch a proxy from this interface. Hence, callers
+should cache returned proxy objects. Second, if you call <code class="docutils literal notranslate"><span class="pre">destroy()</span></code>
+on a CP data structure proxy, that data structure is terminated on the
+underlying CP group and cannot be reinitialized until the CP group is
+force-destroyed. For this reason, please make sure that you are completely
+done with a CP data structure before destroying its proxy.</p>
+<dl class="py method">
+<dt id="hazelcast.cp.CPSubsystem.get_atomic_long">
+<code class="sig-name descname">get_atomic_long</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.cp.CPSubsystem.get_atomic_long" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distributed AtomicLong instance with given name.</p>
+<p>The instance is created on CP Subsystem.</p>
+<p>If no group name is given within the <code class="docutils literal notranslate"><span class="pre">name</span></code> argument, then the
+AtomicLong instance will be created on the default CP group.
+If a group name is given, like <code class="docutils literal notranslate"><span class="pre">.get_atomic_long(&quot;myLong&#64;group1&quot;)</span></code>,
+the given group will be initialized first, if not initialized
+already, and then the instance will be created on this group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the AtomicLong.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>The AtomicLong proxy</dt><dd><p>for the given name.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.proxy.cp.atomic_long.html#hazelcast.proxy.cp.atomic_long.AtomicLong" title="hazelcast.proxy.cp.atomic_long.AtomicLong">hazelcast.proxy.cp.atomic_long.AtomicLong</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.cp.CPSubsystem.get_atomic_reference">
+<code class="sig-name descname">get_atomic_reference</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.cp.CPSubsystem.get_atomic_reference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distributed AtomicReference instance with given name.</p>
+<p>The instance is created on CP Subsystem.</p>
+<p>If no group name is given within the <code class="docutils literal notranslate"><span class="pre">name</span></code> argument, then the
+AtomicLong instance will be created on the DEFAULT CP group.
+If a group name is given, like <code class="docutils literal notranslate"><span class="pre">.get_atomic_reference(&quot;myRef&#64;group1&quot;)</span></code>,
+the given group will be initialized first, if not initialized
+already, and then the instance will be created on this group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the AtomicReference.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>The AtomicReference</dt><dd><p>proxy for the given name.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.proxy.cp.atomic_reference.html#hazelcast.proxy.cp.atomic_reference.AtomicReference" title="hazelcast.proxy.cp.atomic_reference.AtomicReference">hazelcast.proxy.cp.atomic_reference.AtomicReference</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.cp.CPSubsystem.get_count_down_latch">
+<code class="sig-name descname">get_count_down_latch</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.cp.CPSubsystem.get_count_down_latch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distributed CountDownLatch instance with given name.</p>
+<p>The instance is created on CP Subsystem.</p>
+<p>If no group name is given within the <code class="docutils literal notranslate"><span class="pre">name</span></code> argument, then the
+CountDownLatch instance will be created on the DEFAULT CP group.
+If a group name is given, like <code class="docutils literal notranslate"><span class="pre">.get_count_down_latch(&quot;myLatch&#64;group1&quot;)</span></code>,
+the given group will be initialized first, if not initialized
+already, and then the instance will be created on this group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the CountDownLatch.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>The CountDownLatch</dt><dd><p>proxy for the given name.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.proxy.cp.count_down_latch.html#hazelcast.proxy.cp.count_down_latch.CountDownLatch" title="hazelcast.proxy.cp.count_down_latch.CountDownLatch">hazelcast.proxy.cp.count_down_latch.CountDownLatch</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.cp.CPSubsystem.get_lock">
+<code class="sig-name descname">get_lock</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.cp.CPSubsystem.get_lock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distributed FencedLock instance instance with given name.</p>
+<p>The instance is created on CP Subsystem.</p>
+<p>If no group name is given within the <code class="docutils literal notranslate"><span class="pre">name</span></code> argument, then the
+FencedLock instance will be created on the DEFAULT CP group.
+If a group name is given, like <code class="docutils literal notranslate"><span class="pre">.get_lock(&quot;myLock&#64;group1&quot;)</span></code>,
+the given group will be initialized first, if not initialized
+already, and then the instance will be created on this group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the FencedLock</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>The FencedLock proxy</dt><dd><p>for the given name.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.proxy.cp.fenced_lock.html#hazelcast.proxy.cp.fenced_lock.FencedLock" title="hazelcast.proxy.cp.fenced_lock.FencedLock">hazelcast.proxy.cp.fenced_lock.FencedLock</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.cp.CPSubsystem.get_semaphore">
+<code class="sig-name descname">get_semaphore</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.cp.CPSubsystem.get_semaphore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distributed Semaphore instance instance with given name.</p>
+<p>The instance is created on CP Subsystem.</p>
+<p>If no group name is given within the <code class="docutils literal notranslate"><span class="pre">name</span></code> argument, then the
+Semaphore instance will be created on the DEFAULT CP group.
+If a group name is given, like <code class="docutils literal notranslate"><span class="pre">.get_semaphore(&quot;mySemaphore&#64;group1&quot;)</span></code>,
+the given group will be initialized first, if not initialized
+already, and then the instance will be created on this group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the Semaphore</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The Semaphore proxy for the given name.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.proxy.cp.semaphore.html#hazelcast.proxy.cp.semaphore.Semaphore" title="hazelcast.proxy.cp.semaphore.Semaphore">hazelcast.proxy.cp.semaphore.Semaphore</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.core.html"
+                        title="previous chapter">Core</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.errors.html"
+                        title="next chapter">Errors</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.cp.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.errors.html" title="Errors"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.core.html" title="Core"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 4.0.0b1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">CP Subsystem</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Hazelcast Inc..
+    </div>
+  </body>
+</html>

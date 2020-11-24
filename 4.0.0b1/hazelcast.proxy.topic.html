@@ -1,0 +1,179 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Topic &#8212; Hazelcast Python Client 4.0.0b1 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="TransactionalList" href="hazelcast.proxy.transactional_list.html" />
+    <link rel="prev" title="Set" href="hazelcast.proxy.set.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.transactional_list.html" title="TransactionalList"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.set.html" title="Set"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 4.0.0b1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" accesskey="U">Hazelcast Proxies</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Topic</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.proxy.topic">
+<span id="topic"></span><h1>Topic<a class="headerlink" href="#module-hazelcast.proxy.topic" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="hazelcast.proxy.topic.Topic">
+<em class="property">class </em><code class="sig-name descname">Topic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">service_name</span></em>, <em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">context</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.topic.Topic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hazelcast.proxy.base.html#hazelcast.proxy.base.PartitionSpecificProxy" title="hazelcast.proxy.base.PartitionSpecificProxy"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.proxy.base.PartitionSpecificProxy</span></code></a></p>
+<p>Hazelcast provides distribution mechanism for publishing messages that are delivered to multiple subscribers,
+which is also known as a publish/subscribe (pub/sub) messaging model.</p>
+<p>Publish and subscriptions are cluster-wide. When a member subscribes for a topic,
+it is actually registering for messages published by any member in the cluster,
+including the new members joined after you added the listener.</p>
+<p>Messages are ordered, meaning that listeners(subscribers) will process the messages in the order they are actually
+published.</p>
+<dl class="py method">
+<dt id="hazelcast.proxy.topic.Topic.add_listener">
+<code class="sig-name descname">add_listener</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">on_message</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.topic.Topic.add_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subscribes to this topic.</p>
+<p>When someone publishes a message on this topic, <code class="docutils literal notranslate"><span class="pre">on_message</span></code> function is called if provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>on_message</strong> (<em>function</em>) – Function to be called when a message is published.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A registration id which is used as a key to remove the listener.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.proxy.topic.Topic.publish">
+<code class="sig-name descname">publish</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.topic.Topic.publish" title="Permalink to this definition">¶</a></dt>
+<dd><p>Publishes the message to all subscribers of this topic</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>message</strong> – The message to be published.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[None]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.proxy.topic.Topic.remove_listener">
+<code class="sig-name descname">remove_listener</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">registration_id</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.topic.Topic.remove_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stops receiving messages for the given message listener.</p>
+<p>If the given listener already removed, this method does nothing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>registration_id</strong> (<em>str</em>) – Registration id of the listener to be removed.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if the listener is removed, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[bool]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.set.html"
+                        title="previous chapter">Set</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.transactional_list.html"
+                        title="next chapter">TransactionalList</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.proxy.topic.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.transactional_list.html" title="TransactionalList"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.set.html" title="Set"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 4.0.0b1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" >Hazelcast Proxies</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Topic</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Hazelcast Inc..
+    </div>
+  </body>
+</html>

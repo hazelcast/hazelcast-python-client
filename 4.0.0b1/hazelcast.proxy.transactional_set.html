@@ -1,0 +1,168 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TransactionalSet &#8212; Hazelcast Python Client 4.0.0b1 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Serialization" href="hazelcast.serialization.html" />
+    <link rel="prev" title="TransactionalQueue" href="hazelcast.proxy.transactional_queue.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.serialization.html" title="Serialization"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.transactional_queue.html" title="TransactionalQueue"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 4.0.0b1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" accesskey="U">Hazelcast Proxies</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">TransactionalSet</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hazelcast.proxy.transactional_set">
+<span id="transactionalset"></span><h1>TransactionalSet<a class="headerlink" href="#module-hazelcast.proxy.transactional_set" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="hazelcast.proxy.transactional_set.TransactionalSet">
+<em class="property">class </em><code class="sig-name descname">TransactionalSet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">transaction</span></em>, <em class="sig-param"><span class="n">context</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_set.TransactionalSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="hazelcast.proxy.base.html#hazelcast.proxy.base.TransactionalProxy" title="hazelcast.proxy.base.TransactionalProxy"><code class="xref py py-class docutils literal notranslate"><span class="pre">hazelcast.proxy.base.TransactionalProxy</span></code></a></p>
+<p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.set.html#hazelcast.proxy.set.Set" title="hazelcast.proxy.set.Set"><code class="xref py py-class docutils literal notranslate"><span class="pre">Set</span></code></a>.</p>
+<dl class="py method">
+<dt id="hazelcast.proxy.transactional_set.TransactionalSet.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">item</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_set.TransactionalSet.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.set.html#hazelcast.proxy.set.Set.add" title="hazelcast.proxy.set.Set.add"><code class="xref py py-func docutils literal notranslate"><span class="pre">Set.add(item)</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>item</strong> – The new item to be added.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if item is added successfully, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[bool]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.proxy.transactional_set.TransactionalSet.remove">
+<code class="sig-name descname">remove</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">item</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_set.TransactionalSet.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.set.html#hazelcast.proxy.set.Set.remove" title="hazelcast.proxy.set.Set.remove"><code class="xref py py-func docutils literal notranslate"><span class="pre">Set.remove(item)</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>item</strong> – The specified item to be deleted.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if item is remove successfully, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[bool]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.proxy.transactional_set.TransactionalSet.size">
+<code class="sig-name descname">size</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.proxy.transactional_set.TransactionalSet.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transactional implementation of <a class="reference internal" href="hazelcast.proxy.set.html#hazelcast.proxy.set.Set.size" title="hazelcast.proxy.set.Set.size"><code class="xref py py-func docutils literal notranslate"><span class="pre">Set.size()</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Size of the set.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="hazelcast.future.html#hazelcast.future.Future" title="hazelcast.future.Future">hazelcast.future.Future</a>[int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.proxy.transactional_queue.html"
+                        title="previous chapter">TransactionalQueue</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.serialization.html"
+                        title="next chapter">Serialization</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.proxy.transactional_set.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.serialization.html" title="Serialization"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.proxy.transactional_queue.html" title="TransactionalQueue"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 4.0.0b1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="hazelcast.proxy.html" >Hazelcast Proxies</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">TransactionalSet</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Hazelcast Inc..
+    </div>
+  </body>
+</html>

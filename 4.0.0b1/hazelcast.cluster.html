@@ -1,0 +1,181 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hazelcast Cluster &#8212; Hazelcast Python Client 4.0.0b1 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Config" href="hazelcast.config.html" />
+    <link rel="prev" title="Hazelcast Client" href="hazelcast.client.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.config.html" title="Config"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.client.html" title="Hazelcast Client"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 4.0.0b1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" accesskey="U">Hazelcast Python Client</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Hazelcast Cluster</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="hazelcast-cluster">
+<h1>Hazelcast Cluster<a class="headerlink" href="#hazelcast-cluster" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="hazelcast.cluster.ClusterService">
+<em class="property">class </em><code class="sig-name descname">ClusterService</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">internal_cluster_service</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.cluster.ClusterService" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Cluster service for Hazelcast clients.</p>
+<p>It provides access to the members in the cluster
+and one can register for changes in the cluster members.</p>
+<dl class="py method">
+<dt id="hazelcast.cluster.ClusterService.add_listener">
+<code class="sig-name descname">add_listener</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">member_added</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">member_removed</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fire_for_existing</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.cluster.ClusterService.add_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a membership listener to listen for membership updates.</p>
+<p>It will be notified when a member is added to cluster or removed from cluster.
+There is no check for duplicate registrations, so if you register the listener
+twice, it will get events twice.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>member_added</strong> (<em>function</em>) – Function to be called when a member is added to the cluster.</p></li>
+<li><p><strong>member_removed</strong> (<em>function</em>) – Function to be called when a member is removed from the cluster.</p></li>
+<li><p><strong>fire_for_existing</strong> (<em>bool</em>) – Whether or not fire member_added for existing members.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Registration id of the listener which will be used for removing this listener.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.cluster.ClusterService.remove_listener">
+<code class="sig-name descname">remove_listener</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">registration_id</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.cluster.ClusterService.remove_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the specified membership listener.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>registration_id</strong> (<em>str</em>) – Registration id of the listener to be removed.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if the registration is removed, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hazelcast.cluster.ClusterService.get_members">
+<code class="sig-name descname">get_members</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">member_selector</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hazelcast.cluster.ClusterService.get_members" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lists the current members in the cluster.</p>
+<p>Every member in the cluster returns the members in the same order.
+To obtain the oldest member in the cluster, you can retrieve the first item in the list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>member_selector</strong> (<em>function</em>) – Function to filter members to return.
+If not provided, the returned list will contain all the available cluster members.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Current members in the cluster</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list[<a class="reference internal" href="hazelcast.core.html#hazelcast.core.MemberInfo" title="hazelcast.core.MemberInfo">hazelcast.core.MemberInfo</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hazelcast.client.html"
+                        title="previous chapter">Hazelcast Client</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hazelcast.config.html"
+                        title="next chapter">Config</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hazelcast.cluster.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.config.html" title="Config"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hazelcast.client.html" title="Hazelcast Client"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazelcast Python Client 4.0.0b1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="hazelcast.html" >Hazelcast Python Client</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Hazelcast Cluster</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Hazelcast Inc..
+    </div>
+  </body>
+</html>
