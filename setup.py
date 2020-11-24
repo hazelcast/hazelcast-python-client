@@ -29,7 +29,7 @@ setup(
         author_email='hazelcast@googlegroups.com',
 
         classifiers=[
-            'Development Status :: 5 - Production/Stable',
+            'Development Status :: 4 - Beta',
             'Intended Audience :: Developers',
             'License :: OSI Approved :: Apache Software License',
             'Natural Language :: English',
