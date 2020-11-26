@@ -30,10 +30,14 @@ class BackupAcksTest(HazelcastTestCase):
             cluster_name=self.cluster.id,
             fail_on_indeterminate_operation_state=True,
         )
-        m = self.client.get_map("test")
+        m = self.client.get_map("test").blocking()
+
+        # TODO: Remove the next line once
+        # https://github.com/hazelcast/hazelcast/issues/9398 is fixed
+        m.get(1)
 
         # it's enough for this operation to succeed
-        m.set(1, 2).result()
+        m.set(1, 2)
 
     def test_lost_backups_on_smart_mode_with_fail_on_indeterminate_operation_state(self):
         self.client = HazelcastClient(
