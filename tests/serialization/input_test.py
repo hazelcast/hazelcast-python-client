@@ -51,6 +51,21 @@ class InputTestCase(unittest.TestCase):
         self.assertEqual(0, initial_pos)
         self.assertEqual(six.unichr(0x00e7), char)
 
+    def test_skip_bytes(self):
+        inp = _ObjectDataInput(bytearray(10))
+        self.assertEqual(0, inp.position())
+        self.assertEqual(4, inp.skip_bytes(4))
+        self.assertEqual(4, inp.position())
 
-if __name__ == '__main__':
-    unittest.main()
+    def test_skip_bytes_when_count_greater_than_remaining(self):
+        inp = _ObjectDataInput(bytearray(10))
+        inp.set_position(8)
+        self.assertEqual(2, inp.skip_bytes(4))
+        self.assertEqual(10, inp.position())
+
+    def test_skip_bytes_when_count_is_not_positive(self):
+        inp = _ObjectDataInput(bytearray(10))
+        self.assertEqual(0, inp.skip_bytes(0))
+        self.assertEqual(0, inp.position())
+        self.assertEqual(0, inp.skip_bytes(-1))
+        self.assertEqual(0, inp.position())
