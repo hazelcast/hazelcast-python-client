@@ -618,7 +618,7 @@ REFERENCE_OBJECTS = {
         "イロハニホヘト チリヌルヲ ワカヨタレソ ツネナラム",
         "The quick brown fox jumps over the lazy dog"
     ])),
-    "Date": datetime.datetime(1990, 2, 1, 2, 0, 0, 0),
+    "Date": datetime.datetime.fromtimestamp(633830400),
     "BigInteger": 1314432323232411,
     "Class": _to_unicode("java.math.BigDecimal"),
 }
