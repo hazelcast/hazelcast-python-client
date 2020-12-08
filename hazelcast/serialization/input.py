@@ -142,6 +142,11 @@ class _ObjectDataInput(ObjectDataInput):
     def size(self):
         return self._size
 
+    def get_byte_order(self):
+        if self._is_big_endian:
+            return "BIG_ENDIAN"
+        return "LITTLE_ENDIAN"
+
     # HELPERS
     def _check_available(self, position, size):
         _position = self._pos if position is None else position

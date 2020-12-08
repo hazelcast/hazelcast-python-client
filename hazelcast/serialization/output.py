@@ -85,6 +85,18 @@ class _ObjectDataOutput(ObjectDataOutput):
             self.write_int(len(encoded_data))
             self.write_from(encoded_data)
 
+    def write_bytes(self, val):
+        n = len(val)
+        self._ensure_available(n)
+        for b in val:
+            self.write_byte(ord(b))
+
+    def write_chars(self, val):
+        n = len(val)
+        self._ensure_available(n * CHAR_SIZE_IN_BYTES)
+        for c in val:
+            self.write_char(c)
+
     def write_byte_array(self, val):
         _len = len(val) if val is not None else NULL_ARRAY_LENGTH
         self.write_int(_len)
@@ -120,6 +132,11 @@ class _ObjectDataOutput(ObjectDataOutput):
 
     def to_byte_array(self):
         return self._buffer[:self._pos]
+
+    def get_byte_order(self):
+        if self._is_big_endian:
+            return "BIG_ENDIAN"
+        return "LITTLE_ENDIAN"
 
     def is_big_endian(self):
         return self._is_big_endian
@@ -201,9 +218,6 @@ class EmptyObjectDataOutput(ObjectDataOutput):
         pass
 
     def write_double(self, val):
-        pass
-
-    def write_data(self, val):
         pass
 
     def write_chars(self, val):

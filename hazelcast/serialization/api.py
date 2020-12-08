@@ -197,7 +197,11 @@ class ObjectDataOutput(object):
         raise NotImplementedError()
 
     def get_byte_order(self):
-        """Returns the order of bytes, as BIG_ENDIAN or LITTLE_ENDIAN."""
+        """Returns the order of bytes, as BIG_ENDIAN or LITTLE_ENDIAN.
+
+        Returns:
+            str:
+        """
         raise NotImplementedError()
 
 
@@ -267,6 +271,14 @@ class ObjectDataInput(object):
         
         Returns:
             int: The unsigned short value read.
+        """
+        raise NotImplementedError()
+
+    def read_char(self):
+        """Reads 2 bytes from the input stream and returns a str value.
+
+        Returns:
+            str: The char value read.
         """
         raise NotImplementedError()
 
@@ -391,7 +403,11 @@ class ObjectDataInput(object):
         raise NotImplementedError()
 
     def get_byte_order(self):
-        """Returns the order of bytes, as BIG_ENDIAN or LITTLE_ENDIAN."""
+        """Returns the order of bytes, as BIG_ENDIAN or LITTLE_ENDIAN.
+
+        Returns:
+            str:
+        """
         raise NotImplementedError()
 
     def position(self):
