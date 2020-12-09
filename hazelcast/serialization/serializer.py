@@ -133,9 +133,9 @@ class StringSerializer(BaseSerializer):
 
 class UuidSerializer(BaseSerializer):
     def read(self, inp):
-        buf = bytearray(16)
-        inp.read_into(buf)
-        return uuid.UUID(bytes=bytes(buf))
+        msb = inp.read_long()
+        lsb = inp.read_long()
+        return uuid.UUID(int=(((msb << UUID_MSB_SHIFT) & UUID_MSB_MASK) | (lsb & UUID_LSB_MASK)))
 
     def write(self, out, obj):
         i = obj.int
