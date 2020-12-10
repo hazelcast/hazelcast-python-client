@@ -87,7 +87,7 @@ class TransactionalMap(TransactionalProxy):
         request = transactional_map_is_empty_codec.encode_request(self.name, self.transaction.id, thread_id())
         return self._invoke(request, transactional_map_is_empty_codec.decode_response)
 
-    def put(self, key, value, ttl=-1):
+    def put(self, key, value, ttl=None):
         """Transactional implementation of :func:`Map.put(key, value, ttl) <hazelcast.proxy.map.Map.put>`
         
         The object to be put will be accessible only in the current transaction context till the transaction is

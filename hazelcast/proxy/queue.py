@@ -1,3 +1,4 @@
+from hazelcast.errors import IllegalStateError
 from hazelcast.protocol.codec import \
     queue_add_all_codec, \
     queue_add_listener_codec, \
@@ -22,14 +23,6 @@ from hazelcast.proxy.base import PartitionSpecificProxy, ItemEvent, ItemEventTyp
 from hazelcast.util import check_not_none, to_millis, ImmutableLazyDataList
 
 
-class Empty(Exception):
-    pass
-
-
-class Full(Exception):
-    pass
-
-
 class Queue(PartitionSpecificProxy):
     """Concurrent, blocking, distributed, observable queue. 
     
@@ -48,7 +41,7 @@ class Queue(PartitionSpecificProxy):
         def result_fnc(f):
             if f.result():
                 return True
-            raise Full("Queue is full!")
+            raise IllegalStateError("Queue is full!")
 
         return self.offer(item).continue_with(result_fnc)
 
@@ -192,8 +185,8 @@ class Queue(PartitionSpecificProxy):
         
         If there is no space currently available:
 
-        - If a timeout is provided, it waits until this timeout elapses and returns the result.
-        - If a timeout is not provided, returns ``False`` immediately.
+        - If the timeout is provided, it waits until this timeout elapses and returns the result.
+        - If the timeout is not provided, returns ``False`` immediately.
 
         Args:
             item: The item to be added.
@@ -224,8 +217,8 @@ class Queue(PartitionSpecificProxy):
         
         If this queue is empty:
 
-        - If a timeout is provided, it waits until this timeout elapses and returns the result.
-        - If a timeout is not provided, returns ``None``.
+        - If the timeout is provided, it waits until this timeout elapses and returns the result.
+        - If the timeout is not provided, returns ``None``.
 
         Args:
             timeout (int): Maximum time in seconds to wait for addition.

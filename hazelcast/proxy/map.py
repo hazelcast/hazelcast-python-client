@@ -17,7 +17,8 @@ from hazelcast.protocol.codec import map_add_entry_listener_codec, map_add_entry
     map_add_interceptor_codec, map_execute_on_all_keys_codec, map_execute_on_key_codec, map_execute_on_keys_codec, \
     map_execute_with_predicate_codec, map_add_near_cache_invalidation_listener_codec, map_add_index_codec, \
     map_set_ttl_codec, map_entries_with_paging_predicate_codec, map_key_set_with_paging_predicate_codec, \
-    map_values_with_paging_predicate_codec
+    map_values_with_paging_predicate_codec, map_put_with_max_idle_codec, map_put_if_absent_with_max_idle_codec, \
+    map_put_transient_with_max_idle_codec, map_set_with_max_idle_codec
 from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType, get_entry_listener_flags, MAX_SIZE
 from hazelcast.predicate import PagingPredicate
 from hazelcast.util import check_not_none, thread_id, to_millis, ImmutableLazyDataList, IterationType
@@ -56,6 +57,7 @@ class Map(Proxy):
     
     This class does not allow ``None`` to be used as a key or value.
     """
+
     def __init__(self, service_name, name, context):
         super(Map, self).__init__(service_name, name, context)
         self._reference_id_generator = context.lock_reference_id_generator
@@ -629,7 +631,7 @@ class Map(Proxy):
             request = map_load_all_codec.encode_request(self.name, replace_existing_values)
             return self._invoke(request)
 
-    def lock(self, key, ttl=-1):
+    def lock(self, key, lease_time=None):
         """Acquires the lock for the specified key infinitely or for the specified lease time if provided.
         
         If the lock is not available, the current thread becomes disabled for thread scheduling purposes and lies
@@ -651,7 +653,7 @@ class Map(Proxy):
 
         Args:
             key: The key to lock.
-            ttl (int): Time in seconds to wait before releasing the lock.
+            lease_time (int): Time in seconds to wait before releasing the lock.
 
         Returns:
             hazelcast.future.Future[None]:
@@ -659,14 +661,14 @@ class Map(Proxy):
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
 
-        request = map_lock_codec.encode_request(self.name, key_data, thread_id(), to_millis(ttl),
+        request = map_lock_codec.encode_request(self.name, key_data, thread_id(), to_millis(lease_time),
                                                 self._reference_id_generator.get_and_increment())
         partition_id = self._context.partition_service.get_partition_id(key_data)
         invocation = Invocation(request, partition_id=partition_id, timeout=MAX_SIZE)
         self._invocation_service.invoke(invocation)
         return invocation.future
 
-    def put(self, key, value, ttl=-1):
+    def put(self, key, value, ttl=None, max_idle=None):
         """Associates the specified value with the specified key in this map. 
         
         If the map previously contained a mapping for the key, the old value is replaced by the specified value. 
@@ -683,8 +685,14 @@ class Map(Proxy):
         Args:
             key: The specified key.
             value: The value to associate with the key.
-            ttl (int): Maximum time in seconds for this entry to stay, if not provided, 
-                the value configured on server side configuration will be used.
+            ttl (int): Maximum time in seconds for this entry to stay in the map.
+                If not provided, the value configured on the server side
+                configuration will be used. Setting this to ``0`` means infinite
+                time-to-live.
+            max_idle (int): Maximum time in seconds for this entry to stay idle
+                in the map. If not provided, the value configured on the server
+                side configuration will be used. Setting this to ``0`` means
+                infinite max idle time.
 
         Returns:
             hazelcast.future.Future[any]: Previous value associated with key 
@@ -694,7 +702,7 @@ class Map(Proxy):
         check_not_none(value, "value can't be None")
         key_data = self._to_data(key)
         value_data = self._to_data(value)
-        return self._put_internal(key_data, value_data, ttl)
+        return self._put_internal(key_data, value_data, ttl, max_idle)
 
     def put_all(self, map):
         """Copies all of the mappings from the specified map to this map. 
@@ -733,7 +741,7 @@ class Map(Proxy):
 
         return combine_futures(futures)
 
-    def put_if_absent(self, key, value, ttl=-1):
+    def put_if_absent(self, key, value, ttl=None, max_idle=None):
         """Associates the specified key with the given value if it is not already associated. 
         
         If ttl is provided, entry will expire and get evicted after the ttl.
@@ -756,8 +764,14 @@ class Map(Proxy):
         Args:
             key: Key of the entry.
             value: Value of the entry.
-            ttl (int): Maximum time in seconds for this entry to stay in the map, 
-                if not provided, the value configured on server side configuration will be used.
+            ttl (int): Maximum time in seconds for this entry to stay in the map.
+                If not provided, the value configured on the server side
+                configuration will be used. Setting this to ``0`` means infinite
+                time-to-live.
+            max_idle (int): Maximum time in seconds for this entry to stay idle
+                in the map. If not provided, the value configured on the server
+                side configuration will be used. Setting this to ``0`` means
+                infinite max idle time.
 
         Returns:
           hazelcast.future.Future[any]: Old value of the entry.
@@ -767,9 +781,9 @@ class Map(Proxy):
 
         key_data = self._to_data(key)
         value_data = self._to_data(value)
-        return self._put_if_absent_internal(key_data, value_data, ttl)
+        return self._put_if_absent_internal(key_data, value_data, ttl, max_idle)
 
-    def put_transient(self, key, value, ttl=-1):
+    def put_transient(self, key, value, ttl=None, max_idle=None):
         """Same as ``put``, but MapStore defined at the server side will not be called.
         
         Warning: 
@@ -779,8 +793,14 @@ class Map(Proxy):
         Args:
             key: Key of the entry.
             value: Value of the entry.
-            ttl (int): Maximum time in seconds for this entry to stay in the map, if not provided, 
-                the value configured on server side configuration will be used.
+            ttl (int): Maximum time in seconds for this entry to stay in the map.
+                If not provided, the value configured on the server side
+                configuration will be used. Setting this to ``0`` means infinite
+                time-to-live.
+            max_idle (int): Maximum time in seconds for this entry to stay idle
+                in the map. If not provided, the value configured on the server
+                side configuration will be used. Setting this to ``0`` means
+                infinite max idle time.
 
         Returns:
             hazelcast.future.Future[None]:
@@ -790,7 +810,7 @@ class Map(Proxy):
 
         key_data = self._to_data(key)
         value_data = self._to_data(value)
-        return self._put_transient_internal(key_data, value_data, ttl)
+        return self._put_transient_internal(key_data, value_data, ttl, max_idle)
 
     def remove(self, key):
         """Removes the mapping for a key from this map if it is present. 
@@ -921,7 +941,7 @@ class Map(Proxy):
 
         return self._replace_if_same_internal(key_data, old_value_data, new_value_data)
 
-    def set(self, key, value, ttl=-1):
+    def set(self, key, value, ttl=None, max_idle=None):
         """Puts an entry into this map.
 
         Similar to the put operation except that set doesn't return the old value, which is more efficient.
@@ -934,8 +954,14 @@ class Map(Proxy):
         Args:
             key: Key of the entry.
             value: Value of the entry.
-            ttl (int): Maximum time in seconds for this entry to stay in the map, 0 means infinite.
-            If ttl is not provided, the value configured on server side configuration will be used.
+            ttl (int): Maximum time in seconds for this entry to stay in the map.
+                If not provided, the value configured on the server side
+                configuration will be used. Setting this to ``0`` means infinite
+                time-to-live.
+            max_idle (int): Maximum time in seconds for this entry to stay idle
+                in the map. If not provided, the value configured on the server
+                side configuration will be used. Setting this to ``0`` means
+                infinite max idle time.
 
         Returns:
             hazelcast.future.Future[None]:
@@ -944,7 +970,7 @@ class Map(Proxy):
         check_not_none(value, "value can't be None")
         key_data = self._to_data(key)
         value_data = self._to_data(value)
-        return self._set_internal(key_data, value_data, ttl)
+        return self._set_internal(key_data, value_data, ttl, max_idle)
 
     def set_ttl(self, key, ttl):
         """Updates the TTL (time to live) value of the entry specified by the given key with a new TTL value. 
@@ -955,8 +981,8 @@ class Map(Proxy):
 
         Args:
             key: The key of the map entry.
-            ttl (int): Maximum time for this entry to stay in the map (0 means infinite, 
-                negative means map config default)
+            ttl (int): Maximum time in seconds for this entry to stay in the map.
+                Setting this to ``0`` means infinite time-to-live.
 
         Returns:
             hazelcast.future.Future[None]:
@@ -975,23 +1001,23 @@ class Map(Proxy):
         request = map_size_codec.encode_request(self.name)
         return self._invoke(request, map_size_codec.decode_response)
 
-    def try_lock(self, key, ttl=-1, timeout=0):
+    def try_lock(self, key, lease_time=None, timeout=0):
         """Tries to acquire the lock for the specified key. 
         
         When the lock is not available:
 
-        - If timeout is not provided, the current thread doesn't wait and returns ``false`` immediately.
-        - If a timeout is provided, the current thread becomes disabled for thread scheduling purposes and lies
+        - If the timeout is not provided, the current thread doesn't wait and returns ``False`` immediately.
+        - If the timeout is provided, the current thread becomes disabled for thread scheduling purposes and lies
           dormant until one of the followings happens:
 
-            - the lock is acquired by the current thread, or
-            - the specified waiting time elapses.
+            - The lock is acquired by the current thread, or
+            - The specified waiting time elapses.
         
-        If ttl is provided, lock will be released after this time elapses.
+        If the lease time is provided, lock will be released after this time elapses.
 
         Args:
             key: Key to lock in this map.
-            ttl (int): Time in seconds to wait before releasing the lock.
+            lease_time (int): Time in seconds to wait before releasing the lock.
             timeout (int): Maximum time in seconds to wait for the lock.
 
         Returns:
@@ -1001,7 +1027,7 @@ class Map(Proxy):
 
         key_data = self._to_data(key)
         request = map_try_lock_codec.encode_request(self.name, key_data, thread_id(),
-                                                    to_millis(ttl), to_millis(timeout),
+                                                    to_millis(lease_time), to_millis(timeout),
                                                     self._reference_id_generator.get_and_increment())
         partition_id = self._context.partition_service.get_partition_id(key_data)
         invocation = Invocation(request, partition_id=partition_id, timeout=MAX_SIZE,
@@ -1017,7 +1043,7 @@ class Map(Proxy):
         Args:
             key: Key of the entry.
             value: Value of the entry.
-            timeout (int): Operation timeout in seconds.
+            timeout (int): Maximum time in seconds to wait.
 
         Returns:
             hazelcast.future.Future[bool] ``True`` if the put is successful, ``False`` otherwise.
@@ -1037,7 +1063,7 @@ class Map(Proxy):
 
         Args:
             key: Key of the entry to be deleted.
-            timeout (int): Operation timeout in seconds.
+            timeout (int): Maximum time in seconds to wait.
 
         Returns:
           hazelcast.future.Future[bool]: ``True`` if the remove is successful, ``False`` otherwise.
@@ -1154,15 +1180,23 @@ class Map(Proxy):
         request = map_delete_codec.encode_request(self.name, key_data, thread_id())
         return self._invoke_on_key(request, key_data)
 
-    def _put_internal(self, key_data, value_data, ttl):
+    def _put_internal(self, key_data, value_data, ttl, max_idle):
         def handler(message):
             return self._to_object(map_put_codec.decode_response(message))
 
-        request = map_put_codec.encode_request(self.name, key_data, value_data, thread_id(), to_millis(ttl))
+        if max_idle is not None:
+            request = map_put_with_max_idle_codec.encode_request(self.name, key_data, value_data, thread_id(),
+                                                                 to_millis(ttl), to_millis(max_idle))
+        else:
+            request = map_put_codec.encode_request(self.name, key_data, value_data, thread_id(), to_millis(ttl))
         return self._invoke_on_key(request, key_data, handler)
 
-    def _set_internal(self, key_data, value_data, ttl):
-        request = map_set_codec.encode_request(self.name, key_data, value_data, thread_id(), to_millis(ttl))
+    def _set_internal(self, key_data, value_data, ttl, max_idle):
+        if max_idle is not None:
+            request = map_set_with_max_idle_codec.encode_request(self.name, key_data, value_data, thread_id(),
+                                                                 to_millis(ttl), to_millis(max_idle))
+        else:
+            request = map_set_codec.encode_request(self.name, key_data, value_data, thread_id(), to_millis(ttl))
         return self._invoke_on_key(request, key_data)
 
     def _set_ttl_internal(self, key_data, ttl):
@@ -1177,15 +1211,25 @@ class Map(Proxy):
         request = map_try_put_codec.encode_request(self.name, key_data, value_data, thread_id(), to_millis(timeout))
         return self._invoke_on_key(request, key_data, map_try_put_codec.decode_response)
 
-    def _put_transient_internal(self, key_data, value_data, ttl):
-        request = map_put_transient_codec.encode_request(self.name, key_data, value_data, thread_id(), to_millis(ttl))
+    def _put_transient_internal(self, key_data, value_data, ttl, max_idle):
+        if max_idle is not None:
+            request = map_put_transient_with_max_idle_codec.encode_request(self.name, key_data, value_data, thread_id(),
+                                                                           to_millis(ttl), to_millis(max_idle))
+        else:
+            request = map_put_transient_codec.encode_request(self.name, key_data, value_data, thread_id(),
+                                                             to_millis(ttl))
         return self._invoke_on_key(request, key_data)
 
-    def _put_if_absent_internal(self, key_data, value_data, ttl):
+    def _put_if_absent_internal(self, key_data, value_data, ttl, max_idle):
         def handler(message):
             return self._to_object(map_put_if_absent_codec.decode_response(message))
 
-        request = map_put_if_absent_codec.encode_request(self.name, key_data, value_data, thread_id(), to_millis(ttl))
+        if max_idle is not None:
+            request = map_put_if_absent_with_max_idle_codec.encode_request(self.name, key_data, value_data, thread_id(),
+                                                                           to_millis(ttl), to_millis(max_idle))
+        else:
+            request = map_put_if_absent_codec.encode_request(self.name, key_data, value_data, thread_id(),
+                                                             to_millis(ttl))
         return self._invoke_on_key(request, key_data, handler)
 
     def _replace_if_same_internal(self, key_data, old_value_data, new_value_data):
@@ -1320,9 +1364,9 @@ class MapFeatNearCache(Map):
         self._invalidate_cache(key_data)
         return super(MapFeatNearCache, self)._try_put_internal(key_data, value_data, timeout)
 
-    def _set_internal(self, key_data, value_data, ttl):
+    def _set_internal(self, key_data, value_data, ttl, max_idle):
         self._invalidate_cache(key_data)
-        return super(MapFeatNearCache, self)._set_internal(key_data, value_data, ttl)
+        return super(MapFeatNearCache, self)._set_internal(key_data, value_data, ttl, max_idle)
 
     def _set_ttl_internal(self, key_data, ttl):
         self._invalidate_cache(key_data)
@@ -1344,17 +1388,17 @@ class MapFeatNearCache(Map):
         self._invalidate_cache(key_data)
         return super(MapFeatNearCache, self)._remove_if_same_internal_(key_data, value_data)
 
-    def _put_transient_internal(self, key_data, value_data, ttl):
+    def _put_transient_internal(self, key_data, value_data, ttl, max_idle):
         self._invalidate_cache(key_data)
-        return super(MapFeatNearCache, self)._put_transient_internal(key_data, value_data, ttl)
+        return super(MapFeatNearCache, self)._put_transient_internal(key_data, value_data, ttl, max_idle)
 
-    def _put_internal(self, key_data, value_data, ttl):
+    def _put_internal(self, key_data, value_data, ttl, max_idle):
         self._invalidate_cache(key_data)
-        return super(MapFeatNearCache, self)._put_internal(key_data, value_data, ttl)
+        return super(MapFeatNearCache, self)._put_internal(key_data, value_data, ttl, max_idle)
 
-    def _put_if_absent_internal(self, key_data, value_data, ttl):
+    def _put_if_absent_internal(self, key_data, value_data, ttl, max_idle):
         self._invalidate_cache(key_data)
-        return super(MapFeatNearCache, self)._put_if_absent_internal(key_data, value_data, ttl)
+        return super(MapFeatNearCache, self)._put_if_absent_internal(key_data, value_data, ttl, max_idle)
 
     def _load_all_internal(self, key_data_list, replace_existing_values):
         self._invalidate_cache_batch(key_data_list)
