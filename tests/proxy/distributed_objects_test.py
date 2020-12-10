@@ -1,3 +1,5 @@
+import time
+
 import hazelcast
 from hazelcast.core import DistributedObjectEventType
 
@@ -99,16 +101,21 @@ class DistributedObjectsTest(SingleMemberTestCase):
         reg_id = self.client.add_distributed_object_listener(listener_func=collector).result()
         m = self.client.get_map("test-map")
 
-        response = self.client.remove_distributed_object_listener(reg_id).result()
-        self.assertTrue(response)
-        m.destroy()
-
-        # only map creation should be notified
         def assert_event():
             self.assertEqual(1, len(collector.events))
             event = collector.events[0]
             self.assertDistributedObjectEvent(event, "test-map", MAP_SERVICE, DistributedObjectEventType.CREATED)
+
         self.assertTrueEventually(assert_event)
+
+        response = self.client.remove_distributed_object_listener(reg_id).result()
+        self.assertTrue(response)
+        m.destroy()
+
+        time.sleep(1)
+
+        # We should only receive the map created event
+        assert_event()
 
     def test_remove_invalid_distributed_object_listener(self):
         self.assertFalse(self.client.remove_distributed_object_listener("invalid-reg-id").result())
