@@ -211,7 +211,7 @@ class MultiMap(Proxy):
         request = multi_map_key_set_codec.encode_request(self.name)
         return self._invoke(request, handler)
 
-    def lock(self, key, lease_time=-1):
+    def lock(self, key, lease_time=None):
         """Acquires the lock for the specified key infinitely or for the specified lease time if provided.
         
         If the lock is not available, the current thread becomes disabled for thread scheduling purposes and lies
@@ -365,19 +365,19 @@ class MultiMap(Proxy):
         request = multi_map_values_codec.encode_request(self.name)
         return self._invoke(request, handler)
 
-    def try_lock(self, key, lease_time=-1, timeout=-1):
+    def try_lock(self, key, lease_time=None, timeout=0):
         """Tries to acquire the lock for the specified key. 
         
         When the lock is not available:
 
-        - If timeout is not provided, the current thread doesn't wait and returns ``false`` immediately.
-        - If a timeout is provided, the current thread becomes disabled for thread scheduling purposes and lies
+        - If the timeout is not provided, the current thread doesn't wait and returns ``False`` immediately.
+        - If the timeout is provided, the current thread becomes disabled for thread scheduling purposes and lies
           dormant until one of the followings happens:
 
-            - the lock is acquired by the current thread, or
-            - the specified waiting time elapses.
+            - The lock is acquired by the current thread, or
+            - The specified waiting time elapses.
         
-        If lease_time is provided, lock will be released after this time elapses.
+        If the lease time is provided, lock will be released after this time elapses.
 
         Args:
             key: Key to lock in this map.

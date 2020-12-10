@@ -591,3 +591,105 @@ class MapStoreTest(SingleMemberTestCase):
             self.assertEntryEvent(event, key='key', value='value', event_type=EntryEventType.LOADED)
 
         self.assertTrueEventually(assert_event, 10)
+
+
+class MapTTLTest(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        config["cluster_name"] = cls.cluster.id
+        return config
+
+    def setUp(self):
+        self.map = self.client.get_map(random_string()).blocking()
+
+    def tearDown(self):
+        self.map.destroy()
+
+    def test_put_default_ttl(self):
+        self.map.put("key", "value")
+        time.sleep(1.0)
+        self.assertTrue(self.map.contains_key("key"))
+
+    def test_put(self):
+        self.map.put("key", "value", 0.1)
+        self.assertTrueEventually(lambda: self.assertFalse(self.map.contains_key("key")))
+
+    def test_put_transient_default_ttl(self):
+        self.map.put_transient("key", "value")
+        time.sleep(1.0)
+        self.assertTrue(self.map.contains_key("key"))
+
+    def test_put_transient(self):
+        self.map.put_transient("key", "value", 0.1)
+        self.assertTrueEventually(lambda: self.assertFalse(self.map.contains_key("key")))
+
+    def test_put_if_absent_ttl(self):
+        self.map.put_if_absent("key", "value")
+        time.sleep(1.0)
+        self.assertTrue(self.map.contains_key("key"))
+
+    def test_put_if_absent(self):
+        self.map.put_if_absent("key", "value", 0.1)
+        self.assertTrueEventually(lambda: self.assertFalse(self.map.contains_key("key")))
+
+    def test_set_default_ttl(self):
+        self.map.set("key", "value")
+        time.sleep(1.0)
+        self.assertTrue(self.map.contains_key("key"))
+
+    def test_set(self):
+        self.map.set("key", "value", 0.1)
+        self.assertTrueEventually(lambda: self.assertFalse(self.map.contains_key("key")))
+
+
+class MapMaxIdleTest(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        config["cluster_name"] = cls.cluster.id
+        return config
+
+    def setUp(self):
+        self.map = self.client.get_map(random_string()).blocking()
+
+    def tearDown(self):
+        self.map.destroy()
+
+    def test_put_default_max_idle(self):
+        self.map.put("key", "value")
+        time.sleep(1.0)
+        self.assertTrue(self.map.contains_key("key"))
+
+    def test_put(self):
+        self.map.put("key", "value", max_idle=0.1)
+        time.sleep(1.0)
+        self.assertFalse(self.map.contains_key("key"))
+
+    def test_put_transient_default_max_idle(self):
+        self.map.put_transient("key", "value")
+        time.sleep(1.0)
+        self.assertTrue(self.map.contains_key("key"))
+
+    def test_put_transient(self):
+        self.map.put_transient("key", "value", max_idle=0.1)
+        time.sleep(1.0)
+        self.assertFalse(self.map.contains_key("key"))
+
+    def test_put_if_absent_max_idle(self):
+        self.map.put_if_absent("key", "value")
+        time.sleep(1.0)
+        self.assertTrue(self.map.contains_key("key"))
+
+    def test_put_if_absent(self):
+        self.map.put_if_absent("key", "value", max_idle=0.1)
+        time.sleep(1.0)
+        self.assertFalse(self.map.contains_key("key"))
+
+    def test_set_default_ttl(self):
+        self.map.set("key", "value")
+        time.sleep(1.0)
+        self.assertTrue(self.map.contains_key("key"))
+
+    def test_set(self):
+        self.map.set("key", "value", max_idle=0.1)
+        time.sleep(1.0)
+        self.assertFalse(self.map.contains_key("key"))

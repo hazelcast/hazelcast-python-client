@@ -1,7 +1,7 @@
 import os
 
+from hazelcast.errors import IllegalStateError
 from hazelcast.proxy.base import ItemEventType
-from hazelcast.proxy.queue import Full
 from tests.base import SingleMemberTestCase
 from tests.util import random_string, event_collector
 from hazelcast import six
@@ -97,7 +97,7 @@ class QueueTest(SingleMemberTestCase):
     def test_add_full(self):
         _all = ["1", "2", "3", "4", "5", "6"]
         self.queue.add_all(_all)
-        with self.assertRaises(Full):
+        with self.assertRaises(IllegalStateError):
             self.queue.add("cannot add this one")
 
     def test_add_null_element(self):

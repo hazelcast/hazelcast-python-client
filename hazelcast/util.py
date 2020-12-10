@@ -55,6 +55,8 @@ def thread_id():
 
 
 def to_millis(seconds):
+    if seconds is None:
+        return -1
     return int(seconds * MILLISECONDS_IN_SECONDS)
 
 
