@@ -8,7 +8,9 @@ from mock import MagicMock
 from parameterized import parameterized
 
 from hazelcast import six
-from hazelcast.reactor import AsyncoreReactor, _WakeableLoop, _SocketedWaker, _PipedWaker, _BasicLoop
+from hazelcast.config import _Config
+from hazelcast.reactor import AsyncoreReactor, _WakeableLoop, _SocketedWaker, _PipedWaker, _BasicLoop, \
+    AsyncoreConnection
 from hazelcast.util import AtomicInteger
 from tests.base import HazelcastTestCase
 
@@ -259,3 +261,45 @@ class PipedWakerTest(HazelcastTestCase):
 
         with self.assertRaises(OSError):
             os.read(r_fd, 1)
+
+
+class AsyncoreConnectionTest(HazelcastTestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.rc = cls.create_rc()
+        cls.cluster = cls.create_cluster(cls.rc)
+        cls.member = cls.cluster.start_member()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.rc.terminateCluster(cls.cluster.id)
+        cls.rc.exit()
+
+    def test_socket_options(self):
+        config = _Config()
+        config.socket_options = [
+            (socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        ]
+        conn = AsyncoreConnection(MagicMock(map=dict()), None, None, self.member.address, config, None)
+
+        try:
+            # By default this is set to 0
+            self.assertEqual(1, conn.socket.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR))
+        finally:
+            conn._inner_close()
+
+    def test_receive_buffer_size(self):
+        # When the SO_RCVBUF option is set, we should try
+        # to use that value while trying to read something.
+        config = _Config()
+        size = 64 * 1024
+        config.socket_options = [
+            (socket.SOL_SOCKET, socket.SO_RCVBUF, size)
+        ]
+        conn = AsyncoreConnection(MagicMock(map=dict()), None, None, self.member.address, config, None)
+
+        try:
+            # By default this is set to 128000
+            self.assertEqual(size, conn.receive_buffer_size)
+        finally:
+            conn._inner_close()
