@@ -351,7 +351,7 @@ _BUFFER_SIZE = 128000
 
 class AsyncoreConnection(Connection, asyncore.dispatcher):
     sent_protocol_bytes = False
-    read_buffer_size = _BUFFER_SIZE
+    receive_buffer_size = _BUFFER_SIZE
 
     def __init__(self, reactor, connection_manager, connection_id, address,
                  config, message_callback):
@@ -375,11 +375,11 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, _BUFFER_SIZE)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, _BUFFER_SIZE)
 
-        for socket_option in config.socket_options:
-            if socket_option.option is socket.SO_RCVBUF:
-                self.read_buffer_size = socket_option.value
+        for level, option_name, value in config.socket_options:
+            if option_name is socket.SO_RCVBUF:
+                self.receive_buffer_size = value
 
-            self.socket.setsockopt(socket_option.level, socket_option.option, socket_option.value)
+            self.socket.setsockopt(level, option_name, value)
 
         self.connect((address.host, address.port))
 
@@ -433,11 +433,12 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
     def handle_read(self):
         reader = self._reader
+        receive_buffer_size = self.receive_buffer_size
         while True:
-            data = self.recv(self.read_buffer_size)
+            data = self.recv(receive_buffer_size)
             reader.read(data)
             self.last_read_time = time.time()
-            if len(data) < self.read_buffer_size:
+            if len(data) < receive_buffer_size:
                 break
 
         if reader.length:
