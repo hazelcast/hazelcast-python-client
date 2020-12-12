@@ -1246,7 +1246,7 @@ See the `Mutual Authentication section <#813-mutual-authentication>`__.
 
 Hazelcast Python client can discover and connect to Hazelcast clusters
 running on `Hazelcast Cloud <https://cloud.hazelcast.com/>`__. For this,
-provide authentication information as ``cluster_name``, enable cloud
+provide authentication information as ``cluster_name`` and enable cloud
 discovery by setting your ``cloud_discovery_token`` as shown below.
 
 .. code:: python
