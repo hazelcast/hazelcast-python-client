@@ -303,3 +303,19 @@ class AsyncoreConnectionTest(HazelcastTestCase):
             self.assertEqual(size, conn.receive_buffer_size)
         finally:
             conn._inner_close()
+
+    def test_send_buffer_size(self):
+        # When the SO_SNDBUF option is set, we should try
+        # to use that value while trying to write something.
+        config = _Config()
+        size = 64 * 1024
+        config.socket_options = [
+            (socket.SOL_SOCKET, socket.SO_SNDBUF, size)
+        ]
+        conn = AsyncoreConnection(MagicMock(map=dict()), None, None, self.member.address, config, None)
+
+        try:
+            # By default this is set to 128000
+            self.assertEqual(size, conn.send_buffer_size)
+        finally:
+            conn._inner_close()
