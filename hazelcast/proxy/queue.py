@@ -124,7 +124,7 @@ class Queue(PartitionSpecificProxy):
 
         Returns:
             hazelcast.future.Future[bool]: ``True`` if all of the items in the specified collection exist
-                in this queue, ``False`` otherwise.
+            in this queue, ``False`` otherwise.
         """
         check_not_none(items, "Items can't be None")
         data_items = []
@@ -225,7 +225,7 @@ class Queue(PartitionSpecificProxy):
 
         Returns:
             hazelcast.future.Future[any]: The head of this queue, or ``None`` if this queue is empty 
-                or specified timeout elapses before an item is added to the queue.
+            or specified timeout elapses before an item is added to the queue.
         """
         def handler(message):
             return self._to_object(queue_poll_codec.decode_response(message))

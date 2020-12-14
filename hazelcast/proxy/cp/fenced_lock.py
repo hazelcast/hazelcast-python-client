@@ -149,7 +149,7 @@ class FencedLock(SessionAwareCPProxy):
 
         Returns:
             hazelcast.future.Future[int]: The fencing token if the lock was acquired and
-                :const:`INVALID_FENCE` otherwise.
+            :const:`INVALID_FENCE` otherwise.
 
         Raises:
             LockOwnershipLostError: If the underlying CP session was
@@ -209,7 +209,7 @@ class FencedLock(SessionAwareCPProxy):
 
         Returns:
             hazelcast.future.Future[bool]: ``True`` if this lock is locked by any thread
-                in the cluster, ``False`` otherwise.
+            in the cluster, ``False`` otherwise.
 
         Raises:
             LockOwnershipLostError: If the underlying CP session was
@@ -239,7 +239,7 @@ class FencedLock(SessionAwareCPProxy):
 
         Returns:
             hazelcast.future.Future[bool]: ``True`` if the lock is held by the current thread,
-                ``False`` otherwise.
+            ``False`` otherwise.
 
         Raises:
             LockOwnershipLostError: If the underlying CP session was

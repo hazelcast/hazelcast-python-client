@@ -102,7 +102,7 @@ class ReplicatedMap(Proxy):
 
         Returns:
             hazelcast.future.Future[bool]: ``True`` if this map contains an entry for the specified key, 
-                ``False`` otherwise.
+            ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
@@ -117,7 +117,7 @@ class ReplicatedMap(Proxy):
 
         Returns:
             hazelcast.future.Future[bool]: ``True`` if this map contains an entry for the specified value,
-                ``False`` otherwise.
+            ``False`` otherwise.
         """
         check_not_none(value, "value can't be None")
         value_data = self._to_data(value)
@@ -200,7 +200,7 @@ class ReplicatedMap(Proxy):
 
         Returns:
             hazelcast.future.Future[any]: Previous value associated with key or ``None`` 
-                if there was no mapping for key.
+            if there was no mapping for key.
         """
         check_not_none(key, "key can't be None")
         check_not_none(key, "value can't be None")
@@ -248,7 +248,7 @@ class ReplicatedMap(Proxy):
 
         Returns:
             hazelcast.future.Future[any]: The previous value associated with key, or ``None`` 
-                if there was no mapping for key.
+            if there was no mapping for key.
         """
         check_not_none(key, "key can't be None")
 

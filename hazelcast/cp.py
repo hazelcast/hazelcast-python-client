@@ -61,7 +61,7 @@ class CPSubsystem(object):
 
         Returns:
             hazelcast.proxy.cp.atomic_long.AtomicLong: The AtomicLong proxy
-                for the given name.
+            for the given name.
         """
         return self._proxy_manager.get_or_create(ATOMIC_LONG_SERVICE, name)
 
@@ -81,7 +81,7 @@ class CPSubsystem(object):
 
         Returns:
             hazelcast.proxy.cp.atomic_reference.AtomicReference: The AtomicReference
-                proxy for the given name.
+            proxy for the given name.
         """
         return self._proxy_manager.get_or_create(ATOMIC_REFERENCE_SERVICE, name)
 
@@ -101,7 +101,7 @@ class CPSubsystem(object):
 
         Returns:
             hazelcast.proxy.cp.count_down_latch.CountDownLatch: The CountDownLatch
-                proxy for the given name.
+            proxy for the given name.
         """
         return self._proxy_manager.get_or_create(COUNT_DOWN_LATCH_SERVICE, name)
 
@@ -121,7 +121,7 @@ class CPSubsystem(object):
 
         Returns:
             hazelcast.proxy.cp.fenced_lock.FencedLock: The FencedLock proxy
-                for the given name.
+            for the given name.
         """
         return self._proxy_manager.get_or_create(LOCK_SERVICE, name)
 

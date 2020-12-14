@@ -16,7 +16,7 @@ class TransactionalMultiMap(TransactionalProxy):
             value: The value to be stored.
 
         Returns:
-          hazelcast.future.Future[bool]: ``True`` if the size of the multimap is increased, 
+            hazelcast.future.Future[bool]: ``True`` if the size of the multimap is increased,
             ``False`` if the multimap already contains the key-value tuple.
         """
         check_not_none(key, "key can't be none")

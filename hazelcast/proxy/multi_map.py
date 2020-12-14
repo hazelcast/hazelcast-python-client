@@ -65,7 +65,7 @@ class MultiMap(Proxy):
 
         Returns:
             hazelcast.future.Future[bool]: ``True`` if this multimap contains an entry for the specified key,
-                ``False`` otherwise.
+            ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
@@ -81,7 +81,7 @@ class MultiMap(Proxy):
 
         Returns:
             hazelcast.future.Future[bool]: ``True`` if this multimap contains an entry for the specified value,
-                ``False`` otherwise.
+            ``False`` otherwise.
         """
         check_not_none(value, "value can't be None")
         value_data = self._to_data(value)
@@ -137,7 +137,7 @@ class MultiMap(Proxy):
             This method uses ``__hash__`` and ``__eq__`` of the binary form of the key, not the 
             actual implementations of ``__hash__`` and ``__eq__`` defined in the key's class.
         
-        Warning-2:
+        Warning:
             The list is NOT backed by the multimap, so changes to the map are list reflected in the collection, and
             vice-versa.
 
@@ -252,7 +252,7 @@ class MultiMap(Proxy):
 
         Returns:
             hazelcast.future.Future[bool]: ``True`` if the size of the multimap changed after the remove operation,
-                ``False`` otherwise.
+            ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
         check_not_none(key, "value can't be None")
@@ -300,7 +300,7 @@ class MultiMap(Proxy):
 
         Returns:
             hazelcast.future.Future[bool]: ``True`` if size of the multimap is increased,
-                ``False`` if the multimap already contains the key-value tuple.
+            ``False`` if the multimap already contains the key-value tuple.
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")

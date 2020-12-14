@@ -168,7 +168,7 @@ class List(PartitionSpecificProxy):
 
         Returns:
             hazelcast.future.Future[bool]: ``True`` if all of the items in specified collection
-                exist in this list, ``False`` otherwise.
+            exist in this list, ``False`` otherwise.
         """
         check_not_none(items, "Items can't be None")
         data_items = []
@@ -228,7 +228,7 @@ class List(PartitionSpecificProxy):
 
         Returns:
              hazelcast.future.Future[int]: The first index of specified items's occurrences,
-                -1 if item is not present in this list.
+             ``-1`` if item is not present in this list.
         """
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)
@@ -256,7 +256,7 @@ class List(PartitionSpecificProxy):
 
         Returns:
             hazelcast.future.Future[int]: The last index of specified items's occurrences,
-                -1 if item is not present in this list.
+            ``-1`` if item is not present in this list.
         """
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)
@@ -289,7 +289,7 @@ class List(PartitionSpecificProxy):
 
         Returns:
             hazelcast.future.Future[bool]: ``True`` if the specified element is present in this list,
-                ``False`` otherwise.
+            ``False`` otherwise.
         """
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)

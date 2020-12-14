@@ -30,7 +30,7 @@ class AtomicLong(BaseCPProxy):
 
         Returns:
             hazelcast.future.Future[int]: The updated value, the given value added
-                to the current value
+            to the current value
         """
         check_is_int(delta)
         codec = atomic_long_add_and_get_codec
@@ -47,7 +47,7 @@ class AtomicLong(BaseCPProxy):
 
         Returns:
             hazelcast.future.Future[bool]: ``True`` if successful; or ``False`` if
-                the actual value was not equal to the expected value.
+            the actual value was not equal to the expected value.
         """
         check_is_int(expect)
         check_is_int(update)
@@ -60,7 +60,7 @@ class AtomicLong(BaseCPProxy):
 
         Returns:
             hazelcast.future.Future[int]: The updated value, the current value
-                decremented by one.
+            decremented by one.
         """
         return self.add_and_get(-1)
 
@@ -115,7 +115,7 @@ class AtomicLong(BaseCPProxy):
 
         Returns:
             hazelcast.future.Future[int]: The updated value, the current value
-                incremented by one.
+            incremented by one.
         """
         return self.add_and_get(1)
 
