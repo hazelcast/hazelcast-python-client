@@ -1259,7 +1259,7 @@ discovery by setting your ``cloud_discovery_token`` as shown below.
 If you have enabled encryption for your cluster, you should also enable
 TLS/SSL configuration for the client to secure communication between
 your client and cluster members as described in the `TLS/SSL for
-Hazelcast Python Client
+Hazelcast Python client
 section <#812-tlsssl-for-hazelcast-python-clients>`__.
 
 5.7. Configuring Backup Acknowledgment
