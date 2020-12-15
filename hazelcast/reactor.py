@@ -1,5 +1,6 @@
 import asyncore
 import errno
+import io
 import logging
 import os
 import select
@@ -352,6 +353,7 @@ _BUFFER_SIZE = 128000
 class AsyncoreConnection(Connection, asyncore.dispatcher):
     sent_protocol_bytes = False
     receive_buffer_size = _BUFFER_SIZE
+    send_buffer_size = _BUFFER_SIZE
 
     def __init__(self, reactor, connection_manager, connection_id, address,
                  config, message_callback):
@@ -361,6 +363,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         self._reactor = reactor
         self.connected_address = address
         self._write_queue = deque()
+        self._write_buf = io.BytesIO()
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
 
         timeout = config.connection_timeout
@@ -378,6 +381,8 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         for level, option_name, value in config.socket_options:
             if option_name is socket.SO_RCVBUF:
                 self.receive_buffer_size = value
+            elif option_name is socket.SO_SNDBUF:
+                self.send_buffer_size = value
 
             self.socket.setsockopt(level, option_name, value)
 
@@ -445,20 +450,38 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
             reader.process()
 
     def handle_write(self):
-        while True:
-            try:
-                data = self._write_queue.popleft()
-            except IndexError:
-                return
+        write_queue = self._write_queue
+        send_buffer_size = self.send_buffer_size
+        write_batch = []
+        total_length = 0
 
-            sent = self.send(data)
-            self.last_write_time = time.time()
-            self.sent_protocol_bytes = True
-            if sent < len(data):
-                self._write_queue.appendleft(data[sent:])
+        while write_queue:
+            message_bytes = write_queue.popleft()
+            write_batch.append(message_bytes)
+            total_length += len(message_bytes)
 
-            if sent == 0:
-                return
+            if total_length >= send_buffer_size:
+                break
+
+        # We enter this only if len(write_queue) > 0.
+        # So, len(write_batch) cannot be 0.
+        if len(write_batch) == 1:
+            bytes_ = write_batch[0]
+        else:
+            buf = self._write_buf
+            buf.seek(0)
+            for message_bytes in write_batch:
+                buf.write(message_bytes)
+
+            bytes_ = buf.getvalue()
+            buf.truncate(0)
+
+        sent = self.send(bytes_)
+        self.last_write_time = time.time()
+        self.sent_protocol_bytes = True
+
+        if sent < len(bytes_):
+            write_queue.appendleft(bytes_[sent:])
 
     def handle_close(self):
         _logger.warning("Connection closed by server")
@@ -485,6 +508,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
     def _inner_close(self):
         asyncore.dispatcher.close(self)
+        self._write_buf.close()
 
     def __repr__(self):
         return "Connection(id=%s, live=%s, remote_address=%s)" % (self._id, self.live, self.remote_address)
