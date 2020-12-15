@@ -34,7 +34,7 @@ class HazelcastClient(object):
     distributed data structures on the Hazelcast clusters.
 
     Keyword Args:
-        cluster_members (list[str]): Candidate address list that client
+        cluster_members (`list[str]`): Candidate address list that client
             will use to establish initial connection.
             By default, set to ``["127.0.0.1"]``.
         cluster_name (str): Name of the cluster to connect to. The name is
@@ -46,7 +46,7 @@ class HazelcastClient(object):
         connection_timeout (float): Socket timeout value in seconds for
             client to connect member nodes. Setting this to ``0`` makes
             the connection blocking. By default, set to ``5.0``.
-        socket_options (list[tuple]): List of socket option tuples. The
+        socket_options (`list[tuple]`): List of socket option tuples. The
             tuples must contain the parameters passed into the
             :func:`socket.setsockopt` in the same order.
         redo_operation (bool): When set to ``True``, the client will redo
@@ -156,7 +156,7 @@ class HazelcastClient(object):
                     }
                 })
 
-        class_definitions (list[hazelcast.serialization.portable.classdef.ClassDefinition]):
+        class_definitions (`list[hazelcast.serialization.portable.classdef.ClassDefinition]`):
             List of all portable class definitions.
         check_class_definition_errors (bool): When enabled, serialization system
             will check for class definitions error at start and throw an
@@ -219,13 +219,13 @@ class HazelcastClient(object):
 
         load_balancer (hazelcast.util.LoadBalancer): Load balancer implementation
             for the client
-        membership_listeners (list[tuple[function, function]]): List of membership
+        membership_listeners (`list[tuple[function, function]]`): List of membership
             listener tuples. Tuples must be of size ``2``. The first element will
             be the function to be called when a member is added, and the second
             element will be the function to be called when the member is removed
             with the :class:`hazelcast.core.MemberInfo` as the only parameter.
             Any of the elements can be ``None``, but not at the same time.
-        lifecycle_listeners (list[function]): List of lifecycle listeners.
+        lifecycle_listeners (`list[function]`): List of lifecycle listeners.
             Listeners will be called with the new lifecycle state as the only
             parameter when the client changes lifecycle states.
         flake_id_generators (dict[str, dict[str, any]]): Dictionary of flake id
@@ -246,7 +246,7 @@ class HazelcastClient(object):
               it will be much out of order. If you don't care about ordering, set this
               value to ``0`` for unlimited ID validity.
 
-        labels (list[str]): Labels for the client to be sent to the cluster.
+        labels (`list[str]`): Labels for the client to be sent to the cluster.
         heartbeat_interval (float): Time interval between the heartbeats sent by the
             client to the member nodes in seconds. By default, set to ``5.0``.
         heartbeat_timeout (float): If there is no message passing between the client

@@ -19,7 +19,7 @@ class TransactionalMap(TransactionalProxy):
 
         Returns:
             hazelcast.future.Future[bool]: ``True`` if this map contains an entry for the specified key, 
-                ``False`` otherwise.
+            ``False`` otherwise.
         """
         check_not_none(key, "key can't be none")
         key_data = self._to_data(key)
@@ -100,7 +100,7 @@ class TransactionalMap(TransactionalProxy):
 
         Returns:
             hazelcast.future.Future[any]: Previous value associated with key or ``None`` 
-                if there was no mapping for key.
+            if there was no mapping for key.
         """
         check_not_none(key, "key can't be none")
         check_not_none(value, "value can't be none")
@@ -125,7 +125,7 @@ class TransactionalMap(TransactionalProxy):
             value: Value of the entry.
 
         Returns:
-          hazelcast.future.Future[any]: Old value of the entry.
+            hazelcast.future.Future[any]: Old value of the entry.
         """
         check_not_none(key, "key can't be none")
         check_not_none(value, "value can't be none")
@@ -173,7 +173,7 @@ class TransactionalMap(TransactionalProxy):
 
         Returns:
             hazelcast.future.Future[any]: Previous value associated with key, or ``None`` 
-                if there was no mapping for key.
+            if there was no mapping for key.
         """
         check_not_none(key, "key can't be none")
         check_not_none(value, "value can't be none")
@@ -224,7 +224,7 @@ class TransactionalMap(TransactionalProxy):
 
         Returns:
             hazelcast.future.Future[any]: The previous value associated with key, or ``None`` 
-                if there was no mapping for key.
+            if there was no mapping for key.
         """
         check_not_none(key, "key can't be none")
 

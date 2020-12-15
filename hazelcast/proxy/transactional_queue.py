@@ -43,7 +43,7 @@ class TransactionalQueue(TransactionalProxy):
 
         Returns:
             hazelcast.future.Future[any]: The head of this queue, or ``None`` if this queue is empty 
-                or specified timeout elapses before an item is added to the queue.
+            or specified timeout elapses before an item is added to the queue.
         """
         def handler(message):
             return self._to_object(transactional_queue_poll_codec.decode_response(message))
@@ -60,7 +60,7 @@ class TransactionalQueue(TransactionalProxy):
 
         Returns:
             hazelcast.future.Future[any]: The head of this queue, or ``None`` if this queue is empty 
-                or specified timeout elapses before an item is added to the queue.
+            or specified timeout elapses before an item is added to the queue.
         """
         def handler(message):
             return self._to_object(transactional_queue_peek_codec.decode_response(message))

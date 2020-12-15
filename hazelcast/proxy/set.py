@@ -114,7 +114,7 @@ class Set(PartitionSpecificProxy):
 
         Returns:
             hazelcast.future.Future[bool]: ``True`` if all of the items in the specified collection exist in this set, 
-                ``False`` otherwise.
+            ``False`` otherwise.
         """
         check_not_none(items, "Value can't be None")
         data_items = []

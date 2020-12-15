@@ -94,7 +94,7 @@ class SSLProtocol(object):
 
     SSLv2 = 0
     """
-    SSL 2.O Protocol. RFC 6176 prohibits SSL 2.0. Please use TLSv1+.
+    SSL 2.0 Protocol. RFC 6176 prohibits SSL 2.0. Please use TLSv1+.
     """
 
     SSLv3 = 1

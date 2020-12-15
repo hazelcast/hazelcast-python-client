@@ -56,7 +56,7 @@ class CountDownLatch(BaseCPProxy):
 
         Returns:
             hazelcast.future.Future[bool]: ``True`` if the count reached zero,
-                ``False`` if the waiting time elapsed before the count reached zero
+            ``False`` if the waiting time elapsed before the count reached zero
         Raises:
             IllegalStateError: If the Hazelcast instance was shut down while waiting.
         """
@@ -111,7 +111,7 @@ class CountDownLatch(BaseCPProxy):
 
         Returns:
             hazelcast.future.Future[bool]: ``True`` if the new count was set,
-                ``False`` if the current count is not zero.
+            ``False`` if the current count is not zero.
         """
         check_is_int(count)
         check_true(count > 0, "Count must be positive")

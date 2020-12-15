@@ -107,8 +107,8 @@ class AtomicReference(BaseCPProxy):
         """Checks if the stored reference is ``None``.
 
         Returns:
-            hazelcast.future.Future[bool]: ``True` if the stored reference is ``None``,
-                ``False`` otherwise.
+            hazelcast.future.Future[bool]: ``True`` if the stored reference is ``None``,
+            ``False`` otherwise.
         """
         return self.contains(None)
 
@@ -127,7 +127,7 @@ class AtomicReference(BaseCPProxy):
             value: The value to check (is allowed to be ``None``).
 
         Returns:
-            hazelcast.future.Future[bool]: ``True`` if the value is found, ``false`` otherwise.
+            hazelcast.future.Future[bool]: ``True`` if the value is found, ``False`` otherwise.
         """
         value_data = self._to_data(value)
         codec = atomic_ref_contains_codec

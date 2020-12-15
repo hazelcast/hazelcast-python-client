@@ -139,6 +139,7 @@ class Map(Proxy):
         
         Example:
             Let's say your map values are Employee objects.
+
                 >>> class Employee(IdentifiedDataSerializable):
                 >>>     active = false
                 >>>     age = None
@@ -148,6 +149,7 @@ class Map(Proxy):
                 >>>     #methods
         
             If you query your values mostly based on age and active fields, you should consider indexing these.
+
                 >>> employees = client.get_map("employees")
                 >>> employees.add_index(attributes=["age"]) # Sorted index for range queries
                 >>> employees.add_index(attributes=["active"], index_type=IndexType.HASH)) # Hash index for equality predicates
@@ -222,7 +224,7 @@ class Map(Proxy):
 
         Returns:
             hazelcast.future.Future[bool]: ``True`` if this map contains an entry for the specified key,
-                ``False`` otherwise.
+            ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
@@ -236,7 +238,7 @@ class Map(Proxy):
 
         Returns:
             hazelcast.future.Future[bool]: ``True`` if this map contains an entry for the specified value,
-                ``False`` otherwise.
+            ``False`` otherwise.
         """
         check_not_none(value, "value can't be None")
         value_data = self._to_data(value)
@@ -352,7 +354,7 @@ class Map(Proxy):
 
         Returns:
             hazelcast.future.Future[list]: List of map entries which includes the keys and the
-                results of the entry process.
+            results of the entry process.
         """
         if predicate:
             def handler(message):
@@ -401,7 +403,7 @@ class Map(Proxy):
 
         Returns:
             hazelcast.future.Future[list]: List of map entries which includes the keys 
-                and the results of the entry process.
+            and the results of the entry process.
         """
         key_list = []
         for key in keys:
@@ -696,7 +698,7 @@ class Map(Proxy):
 
         Returns:
             hazelcast.future.Future[any]: Previous value associated with key 
-                or ``None`` if there was no mapping for key.
+            or ``None`` if there was no mapping for key.
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
@@ -774,7 +776,7 @@ class Map(Proxy):
                 infinite max idle time.
 
         Returns:
-          hazelcast.future.Future[any]: Old value of the entry.
+            hazelcast.future.Future[any]: Old value of the entry.
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
@@ -826,7 +828,7 @@ class Map(Proxy):
 
         Returns:
             hazelcast.future.Future[any]: The previous value associated with key, 
-                or ``None`` if there was no mapping for key.
+            or ``None`` if there was no mapping for key.
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
@@ -852,7 +854,7 @@ class Map(Proxy):
             value: Remove the key if it has this value.
 
         Returns:
-          hazelcast.future.Future[bool]: ``True`` if the value was removed, ``False`` otherwise.
+            hazelcast.future.Future[bool]: ``True`` if the value was removed, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
@@ -888,7 +890,7 @@ class Map(Proxy):
             This method uses ``__hash__`` and ``__eq__`` methods of binary form of the key, not the 
             actual implementations of ``__hash__`` and ``__eq__`` defined in key's class.
         
-        Warning 2
+        Warning:
             This method returns a clone of the previous value, not the original (identically equal) value previously put
             into the map.
 
@@ -898,7 +900,7 @@ class Map(Proxy):
 
         Returns:
             hazelcast.future.Future[any]: Previous value associated with key, 
-                or ``None`` if there was no mapping for key.        
+            or ``None`` if there was no mapping for key.
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
@@ -1066,7 +1068,7 @@ class Map(Proxy):
             timeout (int): Maximum time in seconds to wait.
 
         Returns:
-          hazelcast.future.Future[bool]: ``True`` if the remove is successful, ``False`` otherwise.
+            hazelcast.future.Future[bool]: ``True`` if the remove is successful, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
 

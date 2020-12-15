@@ -107,7 +107,7 @@ class Semaphore(BaseCPProxy):
 
         Returns:
             hazelcast.future.Future[bool]: ``True`` if the initialization succeeds,
-                ``False`` if already initialized.
+            ``False`` if already initialized.
 
         Raises:
             AssertionError: If the ``permits`` is negative.
@@ -265,8 +265,8 @@ class Semaphore(BaseCPProxy):
 
         Returns:
             hazelcast.future.Future[bool]: ``True`` if all permits were acquired,
-                ``false`` if the waiting time elapsed before all permits could be
-                acquired
+            ``False`` if the waiting time elapsed before all permits could be
+            acquired
 
         Raises:
             AssertionError: If the ``permits`` is not positive.

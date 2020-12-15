@@ -54,7 +54,7 @@ class LifecycleService(object):
         Checks whether or not the instance is running.
 
         Returns:
-            bool: ``True``, if the client is active and running, ``False`` otherwise.
+            bool: ``True`` if the client is active and running, ``False`` otherwise.
         """
         return self._service.running
 
