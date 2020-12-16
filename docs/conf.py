@@ -19,7 +19,6 @@ import os
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('..'))
-import hazelcast
 
 # -- General configuration ------------------------------------------------
 
@@ -33,6 +32,8 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.autosectionlabel',
 ]
 
 autodoc_default_options = {
@@ -43,6 +44,9 @@ autodoc_default_options = {
 
 # Autosummary on
 autosummary_generate = True
+
+# Make sure the target is unique
+autosectionlabel_prefix_document = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -68,9 +72,9 @@ author = u'Hazelcast Inc. Developers'
 # built documents.
 #
 # The short X.Y version.
-version = hazelcast.__version__
+version = '4.0.0'
 # The full version, including alpha/beta/rc tags.
-release = hazelcast.__version__
+release = '4.0.0b1'
 
 autodoc_member_order = 'bysource'
 autoclass_content = 'both'
@@ -124,8 +128,7 @@ todo_include_todos = False
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'classic'
-# html_theme = 'alabaster'
+html_theme = 'default'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -301,3 +304,13 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 # texinfo_no_detailmenu = False
+
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
+
+if not on_rtd:
+    # If we are building locally, import the RTD theme
+    # and use it
+
+    import sphinx_rtd_theme
+    extensions.append('sphinx_rtd_theme')
+    html_theme = 'sphinx_rtd_theme'
