@@ -2,7 +2,6 @@ import os
 
 from tests.base import HazelcastTestCase
 from hazelcast.client import HazelcastClient
-from hazelcast.config import PROTOCOL
 from hazelcast.exception import HazelcastError
 from tests.util import get_ssl_config, configure_logging, get_abs_path, set_attr
 
@@ -31,8 +30,7 @@ class MutualAuthenticationTest(HazelcastTestCase):
         client = HazelcastClient(get_ssl_config(True,
                                                 get_abs_path(self.current_directory, "server1-cert.pem"),
                                                 get_abs_path(self.current_directory, "client1-cert.pem"),
-                                                get_abs_path(self.current_directory, "client1-key.pem"),
-                                                protocol=PROTOCOL.TLSv1))
+                                                get_abs_path(self.current_directory, "client1-key.pem")))
         self.assertTrue(client.lifecycle.is_live)
         client.shutdown()
 
@@ -44,8 +42,7 @@ class MutualAuthenticationTest(HazelcastTestCase):
             client = HazelcastClient(get_ssl_config(True,
                                                     get_abs_path(self.current_directory, "server2-cert.pem"),
                                                     get_abs_path(self.current_directory, "client1-cert.pem"),
-                                                    get_abs_path(self.current_directory, "client1-key.pem"),
-                                                    protocol=PROTOCOL.TLSv1))
+                                                    get_abs_path(self.current_directory, "client1-key.pem")))
 
     def test_ma_required_client_not_authenticated(self):
         cluster = self.create_cluster(self.rc, self.configure_cluster(True))
@@ -55,8 +52,7 @@ class MutualAuthenticationTest(HazelcastTestCase):
             client = HazelcastClient(get_ssl_config(True,
                                                     get_abs_path(self.current_directory, "server1-cert.pem"),
                                                     get_abs_path(self.current_directory, "client2-cert.pem"),
-                                                    get_abs_path(self.current_directory, "client2-key.pem"),
-                                                    protocol=PROTOCOL.TLSv1))
+                                                    get_abs_path(self.current_directory, "client2-key.pem")))
 
     def test_ma_required_client_and_server_not_authenticated(self):
         cluster = self.create_cluster(self.rc, self.configure_cluster(True))
@@ -66,8 +62,7 @@ class MutualAuthenticationTest(HazelcastTestCase):
             client = HazelcastClient(get_ssl_config(True,
                                                     get_abs_path(self.current_directory, "server2-cert.pem"),
                                                     get_abs_path(self.current_directory, "client2-cert.pem"),
-                                                    get_abs_path(self.current_directory, "client2-key.pem"),
-                                                    protocol=PROTOCOL.TLSv1))
+                                                    get_abs_path(self.current_directory, "client2-key.pem")))
 
     def test_ma_optional_client_and_server_authenticated(self):
         cluster = self.create_cluster(self.rc, self.configure_cluster(False))
@@ -75,8 +70,7 @@ class MutualAuthenticationTest(HazelcastTestCase):
         client = HazelcastClient(get_ssl_config(True,
                                                 get_abs_path(self.current_directory, "server1-cert.pem"),
                                                 get_abs_path(self.current_directory, "client1-cert.pem"),
-                                                get_abs_path(self.current_directory, "client1-key.pem"),
-                                                protocol=PROTOCOL.TLSv1))
+                                                get_abs_path(self.current_directory, "client1-key.pem")))
         self.assertTrue(client.lifecycle.is_live)
         client.shutdown()
 
@@ -88,8 +82,7 @@ class MutualAuthenticationTest(HazelcastTestCase):
             client = HazelcastClient(get_ssl_config(True,
                                                     get_abs_path(self.current_directory, "server2-cert.pem"),
                                                     get_abs_path(self.current_directory, "client1-cert.pem"),
-                                                    get_abs_path(self.current_directory, "client1-key.pem"),
-                                                    protocol=PROTOCOL.TLSv1))
+                                                    get_abs_path(self.current_directory, "client1-key.pem")))
 
     def test_ma_optional_client_not_authenticated(self):
         cluster = self.create_cluster(self.rc, self.configure_cluster(False))
@@ -99,8 +92,7 @@ class MutualAuthenticationTest(HazelcastTestCase):
             client = HazelcastClient(get_ssl_config(True,
                                                     get_abs_path(self.current_directory, "server1-cert.pem"),
                                                     get_abs_path(self.current_directory, "client2-cert.pem"),
-                                                    get_abs_path(self.current_directory, "client2-key.pem"),
-                                                    protocol=PROTOCOL.TLSv1))
+                                                    get_abs_path(self.current_directory, "client2-key.pem")))
 
     def test_ma_optional_client_and_server_not_authenticated(self):
         cluster = self.create_cluster(self.rc, self.configure_cluster(False))
@@ -110,22 +102,19 @@ class MutualAuthenticationTest(HazelcastTestCase):
             client = HazelcastClient(get_ssl_config(True,
                                                     get_abs_path(self.current_directory, "server2-cert.pem"),
                                                     get_abs_path(self.current_directory, "client2-cert.pem"),
-                                                    get_abs_path(self.current_directory, "client2-key.pem"),
-                                                    protocol=PROTOCOL.TLSv1))
+                                                    get_abs_path(self.current_directory, "client2-key.pem")))
 
     def test_ma_required_with_no_cert_file(self):
         cluster = self.create_cluster(self.rc, self.configure_cluster(True))
         member = cluster.start_member()
 
         with self.assertRaises(HazelcastError):
-            client = HazelcastClient(get_ssl_config(True, get_abs_path(self.current_directory, "server1-cert.pem"),
-                                                    protocol=PROTOCOL.TLSv1))
+            client = HazelcastClient(get_ssl_config(True, get_abs_path(self.current_directory, "server1-cert.pem")))
 
     def test_ma_optional_with_no_cert_file(self):
         cluster = self.create_cluster(self.rc, self.configure_cluster(False))
         member = cluster.start_member()
-        client = HazelcastClient(get_ssl_config(True, get_abs_path(self.current_directory, "server1-cert.pem"),
-                                                protocol=PROTOCOL.TLSv1))
+        client = HazelcastClient(get_ssl_config(True, get_abs_path(self.current_directory, "server1-cert.pem")))
         self.assertTrue(client.lifecycle.is_live)
         client.shutdown()
 
