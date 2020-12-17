@@ -155,7 +155,7 @@ Features
 -  Ability to listen client lifecycle, cluster state and distributed
    data structure events
 -  and `many
-   more <https://hazelcast.org/imdg/clients-languages/python/#client-features>`__.
+   more <https://hazelcast.org/imdg/clients-languages/python/#client-features>`__
 
 Getting Help
 ------------
@@ -181,21 +181,21 @@ Issue Reports
 ~~~~~~~~~~~~~
 
 For issue reports, please share the following information with us to
-quickly resolve the problems.
+quickly resolve the problems:
 
 -  Hazelcast IMDG and the client version that you use
 -  General information about the environment and the architecture you
    use like Python version, cluster size, number of clients, Java
    version, JVM parameters, operating system etc.
--  Logs and stack traces, if any.
--  Detailed description of the steps to reproduce the issue.
+-  Logs and stack traces, if any
+-  Detailed description of the steps to reproduce the issue
 
 Pull Requests
 ~~~~~~~~~~~~~
 
 Contributions are submitted, reviewed and accepted using the pull
-requests on GitHub. For an enhancement or larger feature, create a
-GitHub issue first to discuss.
+requests on GitHub. For an enhancement or larger feature, please
+create a GitHub issue first to discuss.
 
 Development
 ^^^^^^^^^^^
