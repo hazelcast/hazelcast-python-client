@@ -88,14 +88,8 @@ Usage
     # get request is received. Note that, the set request above was
     # blocking since it calls ".result()" on the returned Future, whereas
     # the get request below is non-blocking.
-
-
-    def callback(future):
-        # Outputs "value"
-        print(future.result())
-
-
-    distributed_map.get("key").add_done_callback(callback)
+    get_future = distributed_map.get("key")
+    get_future.add_done_callback(lambda future: print(future.result()))
 
     # Do other operations. The operations below won't wait for
     # the get request above to complete.
