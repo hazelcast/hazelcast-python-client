@@ -237,7 +237,7 @@ class InvocationService(object):
 
     def _should_retry(self, invocation, error):
         if invocation.connection and isinstance(error, (IOError, TargetDisconnectedError)):
-            return True
+            return False
 
         if invocation.uuid and isinstance(error, TargetNotMemberError):
             return False

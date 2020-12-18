@@ -69,7 +69,7 @@ class ReconnectTest(HazelcastTestCase):
             "cluster_connect_timeout": 5.0,
         })
 
-        map = client.get_map("map")
+        map = client.get_map("map").blocking()
 
         collector = event_collector()
         reg_id = map.add_entry_listener(added_func=collector)
@@ -83,7 +83,7 @@ class ReconnectTest(HazelcastTestCase):
             if client.lifecycle_service.is_running():
                 while True:
                     try:
-                        map.put("key-%d" % count.get_and_increment(), "value").result()
+                        map.put("key-%d" % count.get_and_increment(), "value")
                         break
                     except TargetDisconnectedError:
                         pass
