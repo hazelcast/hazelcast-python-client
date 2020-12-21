@@ -255,7 +255,12 @@ class ConnectionManager(object):
                         break
 
                     if not self.get_connection(member.uuid):
-                        self._get_or_connect(address).add_done_callback(lambda f: connecting_addresses.discard(address))
+                        # Bind the address to the value
+                        # in this loop iteration
+                        def cb(_, address=address):
+                            connecting_addresses.discard(address)
+
+                        self._get_or_connect(address).add_done_callback(cb)
 
             self._connect_all_members_timer = self._reactor.add_timer(1, run)
 
