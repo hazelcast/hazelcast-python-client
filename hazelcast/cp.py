@@ -409,7 +409,7 @@ class ProxySessionManager(object):
             for session in list(self._sessions.values()):
                 if session.is_in_use():
 
-                    def cb(heartbeat_future):
+                    def cb(heartbeat_future, session=session):
                         if heartbeat_future.is_success():
                             return
 
