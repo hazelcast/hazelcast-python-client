@@ -88,7 +88,7 @@ class ListenerService(object):
                 invocation = Invocation(deregister_request, connection=connection, timeout=six.MAXSIZE, urgent=True)
                 self._invocation_service.invoke(invocation)
 
-                def handler(f):
+                def handler(f, connection=connection):
                     e = f.exception()
                     if e:
                         if isinstance(e, (HazelcastClientNotActiveError, IOError, TargetDisconnectedError)):
