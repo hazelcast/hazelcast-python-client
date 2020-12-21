@@ -209,6 +209,31 @@ def get_attr_name(cls, value):
     return None
 
 
+def _get_enum_value(cls, key):
+    if isinstance(key, six.string_types):
+        return getattr(cls, key, None)
+    return None
+
+
+def try_to_set_enum_value(obj, value, enum_class, field_name):
+    if get_attr_name(enum_class, value):
+        # If the value given by the user corresponds
+        # to value of the one of the enum members,
+        # it is okay to set it directly
+        setattr(obj, field_name, value)
+    else:
+        # We couldn't find a enum member name for the
+        # given value. Try to match the given config
+        # option with enum member names and get value
+        # associated with it.
+        enum_value = _get_enum_value(enum_class, value)
+        if enum_value is not None:
+            setattr(obj, field_name, enum_value)
+        else:
+            raise TypeError("%s must be equal to one of the values or "
+                            "names of the members of the %s" % (field_name[1:], enum_class.__name__))
+
+
 number_types = (six.integer_types, float)
 none_type = type(None)
 

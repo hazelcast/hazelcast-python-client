@@ -78,8 +78,9 @@ class HazelcastClient(object):
             it will be encoded as UTF-8 before using it to decrypt the key.
             Alternatively a string, bytes, or bytearray value may be supplied
             directly as the password.
-        ssl_protocol (int): Protocol version used in SSL communication.
-            By default, set to ``SSLProtocol.TLSv1_2``.
+        ssl_protocol (int|str): Protocol version used in SSL communication.
+            By default, set to ``TLSv1_2``. See the
+            :class:`hazelcast.config.SSLProtocol` for possible values.
         ssl_ciphers (str): String in the OpenSSL cipher list format to set the
             available ciphers for sockets. More than one cipher can be set by
             separating them with a colon.
@@ -91,8 +92,9 @@ class HazelcastClient(object):
             cluster and becomes ready. If set to ``False``, :class:`HazelcastClient`
             will block until a cluster connection established and it is ready to use
             the client instance. By default, set to ``False``.
-        reconnect_mode (int): Defines how a client reconnects to cluster after a
-            disconnect. By default, set to ``ReconnectMode.ON``.
+        reconnect_mode (int|str): Defines how a client reconnects to cluster after a
+            disconnect. By default, set to ``ON``. See the
+            :class:`hazelcast.config.ReconnectMode` for possible values.
         retry_initial_backoff (float): Wait period in seconds after the first failure
             before retrying. Must be non-negative. By default, set to ``1.0``.
         retry_max_backoff (float): Upper bound for the backoff interval in seconds.
@@ -164,9 +166,10 @@ class HazelcastClient(object):
             set to ``True``.
         is_big_endian (bool): Defines if big-endian is used as the byte order
             for the serialization. By default, set to ``True``.
-        default_int_type (int): Defines how the ``int``/``long`` type is
+        default_int_type (int|str): Defines how the ``int``/``long`` type is
             represented on the cluster side. By default, it is serialized
-            as ``IntType.INT`` (``32`` bits).
+            as ``INT`` (``32`` bits). See the
+            :class:`hazelcast.config.IntType` for possible values.
         global_serializer (hazelcast.serialization.api.StreamSerializer):
             Defines the global serializer. This serializer
             is registered as a fallback serializer to handle all other objects
@@ -198,16 +201,18 @@ class HazelcastClient(object):
             - **invalidate_on_change** (bool): Enables cluster-assisted invalidate
               on change behavior. When set to ``True``, entries are invalidated
               when they are changed in cluster. By default, set to ``True``.
-            - **in_memory_format** (int): Specifies in which format data will be
-              stored in the Near Cache. By default, set to ``InMemoryFormat.BINARY``.
+            - **in_memory_format** (int|str): Specifies in which format data will be
+              stored in the Near Cache. By default, set to ``BINARY``. See the
+              :class:`hazelcast.config.InMemoryFormat` for possible values.
             - **time_to_live** (float): Maximum number of seconds that an entry can
               stay in cache. When not set, entries won't be evicted due
               to expiration.
             - **max_idle** (float): Maximum number of seconds that an entry can stay
               in the Near Cache until it is accessed. When not set, entries won't be
               evicted due to inactivity.
-            - **eviction_policy** (int): Defines eviction policy configuration.
-              By default, set to ``EvictionPolicy.LRU``.
+            - **eviction_policy** (int|str): Defines eviction policy configuration.
+              By default, set to ``LRU``. See the
+              :class:`hazelcast.config.EvictionPolicy` for possible values.
             - **eviction_max_size** (int): Defines maximum number of entries kept in
               the memory before eviction kicks in. By default, set to ``10000``.
             - **eviction_sampling_count** (int): Number of random entries that are

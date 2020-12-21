@@ -4,7 +4,7 @@ from hazelcast import six
 from hazelcast.errors import InvalidConfigurationError
 from hazelcast.serialization.api import StreamSerializer, IdentifiedDataSerializable, Portable
 from hazelcast.serialization.portable.classdef import ClassDefinition
-from hazelcast.util import check_not_none, number_types, LoadBalancer, none_type, get_attr_name
+from hazelcast.util import check_not_none, number_types, LoadBalancer, none_type, try_to_set_enum_value
 
 
 class IntType(object):
@@ -216,21 +216,15 @@ class BitmapIndexOptions(object):
 
     @unique_key.setter
     def unique_key(self, value):
-        if get_attr_name(QueryConstants, value):
-            self._unique_key = value
-        else:
-            raise TypeError("unique_key must be of type QueryConstants")
-    
+        try_to_set_enum_value(self, value, QueryConstants, "_unique_key")
+
     @property
     def unique_key_transformation(self):
         return self._unique_key_transformation
     
     @unique_key_transformation.setter
     def unique_key_transformation(self, value):
-        if get_attr_name(UniqueKeyTransformation, value):
-            self._unique_key_transformation = value
-        else:
-            raise TypeError("unique_key_transformation must be of type UniqueKeyTransformation")
+        try_to_set_enum_value(self, value, UniqueKeyTransformation, "_unique_key_transformation")
 
     @classmethod
     def from_dict(cls, d):
@@ -288,10 +282,7 @@ class IndexConfig(object):
 
     @type.setter
     def type(self, value):
-        if get_attr_name(IndexType, value):
-            self._type = value
-        else:
-            raise TypeError("type must be of type IndexType")
+        try_to_set_enum_value(self, value, IndexType, "_type")
 
     @property
     def attributes(self):
@@ -300,6 +291,8 @@ class IndexConfig(object):
     @attributes.setter
     def attributes(self, value):
         if isinstance(value, list):
+            for attribute in value:
+                IndexUtil.validate_attribute(attribute)
             self._attributes = value
         else:
             raise TypeError("attributes must be a list")
@@ -655,10 +648,7 @@ class _Config(object):
 
     @ssl_protocol.setter
     def ssl_protocol(self, value):
-        if get_attr_name(SSLProtocol, value):
-            self._ssl_protocol = value
-        else:
-            raise TypeError("ssl_protocol must be of type SSLProtocol")
+        try_to_set_enum_value(self, value, SSLProtocol, "_ssl_protocol")
 
     @property
     def ssl_ciphers(self):
@@ -699,10 +689,7 @@ class _Config(object):
 
     @reconnect_mode.setter
     def reconnect_mode(self, value):
-        if get_attr_name(ReconnectMode, value):
-            self._reconnect_mode = value
-        else:
-            raise TypeError("reconnect_mode must be a type of ReconnectMode")
+        try_to_set_enum_value(self, value, ReconnectMode, "_reconnect_mode")
 
     @property
     def retry_initial_backoff(self):
@@ -877,10 +864,7 @@ class _Config(object):
 
     @default_int_type.setter
     def default_int_type(self, value):
-        if get_attr_name(IntType, value):
-            self._default_int_type = value
-        else:
-            raise TypeError("default_int_type must be of type IntType")
+        try_to_set_enum_value(self, value, IntType, "_default_int_type")
 
     @property
     def global_serializer(self):
@@ -1184,10 +1168,7 @@ class _NearCacheConfig(object):
 
     @in_memory_format.setter
     def in_memory_format(self, value):
-        if get_attr_name(InMemoryFormat, value):
-            self._in_memory_format = value
-        else:
-            raise TypeError("in_memory_format must be of the type InMemoryFormat")
+        try_to_set_enum_value(self, value, InMemoryFormat, "_in_memory_format")
 
     @property
     def time_to_live(self):
@@ -1221,10 +1202,7 @@ class _NearCacheConfig(object):
 
     @eviction_policy.setter
     def eviction_policy(self, value):
-        if get_attr_name(EvictionPolicy, value):
-            self._eviction_policy = value
-        else:
-            raise TypeError("eviction_policy must be of type EvictionPolicy")
+        try_to_set_enum_value(self, value, EvictionPolicy, "_eviction_policy")
 
     @property
     def eviction_max_size(self):
