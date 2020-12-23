@@ -367,7 +367,8 @@ class ConnectionManager(object):
                                              translated, self._client.config,
                                              self._invocation_service.handle_client_message)
                     except IOError:
-                        return ImmediateExceptionFuture(sys.exc_info()[1], sys.exc_info()[2])
+                        error = sys.exc_info()
+                        return ImmediateExceptionFuture(error[1], error[2])
 
                     future = self._authenticate(connection).continue_with(self._on_auth, connection, address)
                     self._pending_connections[address] = future

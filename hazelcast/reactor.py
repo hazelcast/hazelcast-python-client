@@ -5,6 +5,7 @@ import logging
 import os
 import select
 import socket
+import ssl
 import sys
 import threading
 import time
@@ -13,17 +14,11 @@ from collections import deque
 from functools import total_ordering
 from heapq import heappush, heappop
 
-from hazelcast import six
 from hazelcast.config import SSLProtocol
 from hazelcast.connection import Connection
 from hazelcast.core import Address
 from hazelcast.errors import HazelcastError
 from hazelcast.future import Future
-
-try:
-    import ssl
-except ImportError:
-    ssl = None
 
 try:
     import fcntl
@@ -37,6 +32,14 @@ except ImportError:
     from thread import get_ident
 
 _logger = logging.getLogger(__name__)
+
+# We should retry receiving/sending the message in case of these errors
+# EAGAIN or EWOULDBLOCK: The read/write would block
+# SSL_ERROR_WANT_READ/WRITE: The socket could not satisfy the
+#   needs of the SSL_read/write. During the negotiation process
+#   SSL_read/write may also wants to write/read data, hence may also
+#   raise SSL_ERROR_WANT_WRITE/READ.
+_RETRYABLE_ERROR_CODES = (errno.EAGAIN, errno.EWOULDBLOCK, ssl.SSL_ERROR_WANT_WRITE, ssl.SSL_ERROR_WANT_READ)
 
 
 def _set_nonblocking(fd):
@@ -364,87 +367,42 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         self.connected_address = address
         self._write_queue = deque()
         self._write_buf = io.BytesIO()
+
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        timeout = config.connection_timeout
-        if not timeout:
-            timeout = six.MAXSIZE
-
-        self.socket.settimeout(timeout)
-
-        # set tcp no delay
-        self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        # set socket buffer
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, _BUFFER_SIZE)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, _BUFFER_SIZE)
-
-        for level, option_name, value in config.socket_options:
-            if option_name is socket.SO_RCVBUF:
-                self.receive_buffer_size = value
-            elif option_name is socket.SO_SNDBUF:
-                self.send_buffer_size = value
-
-            self.socket.setsockopt(level, option_name, value)
+        self._set_socket_options(config)
+        if config.ssl_enabled:
+            self._wrap_as_ssl_socket(config)
 
         self.connect((address.host, address.port))
 
-        if ssl and config.ssl_enabled:
-            ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-
-            protocol = config.ssl_protocol
-
-            # Use only the configured protocol
-            try:
-                if protocol != SSLProtocol.SSLv2:
-                    ssl_context.options |= ssl.OP_NO_SSLv2
-                if protocol != SSLProtocol.SSLv3:
-                    ssl_context.options |= ssl.OP_NO_SSLv3
-                if protocol != SSLProtocol.TLSv1:
-                    ssl_context.options |= ssl.OP_NO_TLSv1
-                if protocol != SSLProtocol.TLSv1_1:
-                    ssl_context.options |= ssl.OP_NO_TLSv1_1
-                if protocol != SSLProtocol.TLSv1_2:
-                    ssl_context.options |= ssl.OP_NO_TLSv1_2
-                if protocol != SSLProtocol.TLSv1_3:
-                    ssl_context.options |= ssl.OP_NO_TLSv1_3
-            except AttributeError:
-                pass
-
-            ssl_context.verify_mode = ssl.CERT_REQUIRED
-
-            if config.ssl_cafile:
-                ssl_context.load_verify_locations(config.ssl_cafile)
-            else:
-                ssl_context.load_default_certs()
-
-            if config.ssl_certfile:
-                ssl_context.load_cert_chain(config.ssl_certfile, config.ssl_keyfile, config.ssl_password)
-
-            if config.ssl_ciphers:
-                ssl_context.set_ciphers(config.ssl_ciphers)
-
-            self.socket = ssl_context.wrap_socket(self.socket)
-
-        # the socket should be non-blocking from now on
-        self.socket.settimeout(0)
+        timeout = config.connection_timeout
+        if timeout > 0:
+            self._close_timer = reactor.add_timer(timeout, self._close_timer_cb)
 
         self.local_address = Address(*self.socket.getsockname())
-
         self._write_queue.append(b"CP2")
 
     def handle_connect(self):
+        if self._close_timer:
+            self._close_timer.cancel()
+
         self.start_time = time.time()
         _logger.debug("Connected to %s", self.connected_address)
 
     def handle_read(self):
         reader = self._reader
         receive_buffer_size = self.receive_buffer_size
-        while True:
-            data = self.recv(receive_buffer_size)
-            reader.read(data)
-            self.last_read_time = time.time()
-            if len(data) < receive_buffer_size:
-                break
+        try:
+            while True:
+                data = self.recv(receive_buffer_size)
+                reader.read(data)
+                self.last_read_time = time.time()
+                if len(data) < receive_buffer_size:
+                    break
+        except socket.error as err:
+            if err.args[0] not in _RETRYABLE_ERROR_CODES:
+                # Other error codes are fatal, should close the connection
+                self.close(None, err)
 
         if reader.length:
             reader.process()
@@ -476,25 +434,34 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
             bytes_ = buf.getvalue()
             buf.truncate(0)
 
-        sent = self.send(bytes_)
-        self.last_write_time = time.time()
-        self.sent_protocol_bytes = True
+        try:
+            sent = self.send(bytes_)
+        except socket.error as err:
+            if err.args[0] in _RETRYABLE_ERROR_CODES:
+                # Couldn't write the bytes but we should
+                # retry it.
+                self._write_queue.appendleft(bytes_)
+            else:
+                # Other error codes are fatal, should close the connection
+                self.close(None, err)
+        else:
+            # No exception is thrown during the send
+            self.last_write_time = time.time()
+            self.sent_protocol_bytes = True
 
-        if sent < len(bytes_):
-            write_queue.appendleft(bytes_[sent:])
+            if sent < len(bytes_):
+                write_queue.appendleft(bytes_[sent:])
 
     def handle_close(self):
         _logger.warning("Connection closed by server")
         self.close(None, IOError("Connection closed by server"))
 
     def handle_error(self):
+        # We handle retryable error codes inside the
+        # handle_read/write. Anything else should be fatal.
         error = sys.exc_info()[1]
-        if sys.exc_info()[0] is socket.error:
-            if error.errno != errno.EAGAIN and error.errno != errno.EDEADLK:
-                _logger.exception("Received error")
-                self.close(None, IOError(error))
-        else:
-            _logger.exception("Received unexpected error: %s", error)
+        _logger.exception("Received error")
+        self.close(None, error)
 
     def readable(self):
         return self.live and self.sent_protocol_bytes
@@ -507,8 +474,71 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         return len(self._write_queue) > 0
 
     def _inner_close(self):
+        if self._close_timer:
+            # It might be the case that connection
+            # is closed before the timer. If we are
+            # closing via the timer, this call has
+            # no effects.
+            self._close_timer.cancel()
+
         asyncore.dispatcher.close(self)
         self._write_buf.close()
+
+    def _close_timer_cb(self):
+        if not self.connected:
+            self.close(None, IOError("Connection timed out"))
+
+    def _set_socket_options(self, config):
+        # set tcp no delay
+        self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        # set socket buffer
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, _BUFFER_SIZE)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, _BUFFER_SIZE)
+
+        for level, option_name, value in config.socket_options:
+            if option_name is socket.SO_RCVBUF:
+                self.receive_buffer_size = value
+            elif option_name is socket.SO_SNDBUF:
+                self.send_buffer_size = value
+
+            self.socket.setsockopt(level, option_name, value)
+
+    def _wrap_as_ssl_socket(self, config):
+        ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+
+        protocol = config.ssl_protocol
+
+        # Use only the configured protocol
+        try:
+            if protocol != SSLProtocol.SSLv2:
+                ssl_context.options |= ssl.OP_NO_SSLv2
+            if protocol != SSLProtocol.SSLv3:
+                ssl_context.options |= ssl.OP_NO_SSLv3
+            if protocol != SSLProtocol.TLSv1:
+                ssl_context.options |= ssl.OP_NO_TLSv1
+            if protocol != SSLProtocol.TLSv1_1:
+                ssl_context.options |= ssl.OP_NO_TLSv1_1
+            if protocol != SSLProtocol.TLSv1_2:
+                ssl_context.options |= ssl.OP_NO_TLSv1_2
+            if protocol != SSLProtocol.TLSv1_3:
+                ssl_context.options |= ssl.OP_NO_TLSv1_3
+        except AttributeError:
+            pass
+
+        ssl_context.verify_mode = ssl.CERT_REQUIRED
+
+        if config.ssl_cafile:
+            ssl_context.load_verify_locations(config.ssl_cafile)
+        else:
+            ssl_context.load_default_certs()
+
+        if config.ssl_certfile:
+            ssl_context.load_cert_chain(config.ssl_certfile, config.ssl_keyfile, config.ssl_password)
+
+        if config.ssl_ciphers:
+            ssl_context.set_ciphers(config.ssl_ciphers)
+
+        self.socket = ssl_context.wrap_socket(self.socket)
 
     def __repr__(self):
         return "Connection(id=%s, live=%s, remote_address=%s)" % (self._id, self.live, self.remote_address)
