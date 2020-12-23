@@ -35,11 +35,19 @@ _logger = logging.getLogger(__name__)
 
 # We should retry receiving/sending the message in case of these errors
 # EAGAIN or EWOULDBLOCK: The read/write would block
+# EDEADLK: Was added before, retrying it just to make sure that
+#   client behaves the same on some edge cases.
 # SSL_ERROR_WANT_READ/WRITE: The socket could not satisfy the
 #   needs of the SSL_read/write. During the negotiation process
 #   SSL_read/write may also wants to write/read data, hence may also
 #   raise SSL_ERROR_WANT_WRITE/READ.
-_RETRYABLE_ERROR_CODES = (errno.EAGAIN, errno.EWOULDBLOCK, ssl.SSL_ERROR_WANT_WRITE, ssl.SSL_ERROR_WANT_READ)
+_RETRYABLE_ERROR_CODES = (
+    errno.EAGAIN,
+    errno.EWOULDBLOCK,
+    errno.EDEADLK,
+    ssl.SSL_ERROR_WANT_WRITE,
+    ssl.SSL_ERROR_WANT_READ
+)
 
 
 def _set_nonblocking(fd):
@@ -357,6 +365,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
     sent_protocol_bytes = False
     receive_buffer_size = _BUFFER_SIZE
     send_buffer_size = _BUFFER_SIZE
+    _close_timer = None
 
     def __init__(self, reactor, connection_manager, connection_id, address,
                  config, message_callback):

@@ -1,14 +1,10 @@
 import json
 import logging
+import ssl
 
 from hazelcast.errors import HazelcastCertificationError
 from hazelcast.core import AddressHelper
 from hazelcast.six.moves import http_client
-
-try:
-    import ssl
-except ImportError:
-    ssl = None
 
 _logger = logging.getLogger(__name__)
 
@@ -93,8 +89,8 @@ class HazelcastCloudDiscovery(object):
                                                            context=self._ctx)
             https_connection.request(method="GET", url=self._url, headers={"Accept-Charset": "UTF-8"})
             https_response = https_connection.getresponse()
-        except ssl.SSLError as ex:
-            raise HazelcastCertificationError(str(ex))
+        except ssl.SSLError as err:
+            raise HazelcastCertificationError(str(err))
         self._check_error(https_response)
         return self._parse_response(https_response)
 
