@@ -9,6 +9,7 @@ from parameterized import parameterized
 
 from hazelcast import six
 from hazelcast.config import _Config
+from hazelcast.core import Address
 from hazelcast.reactor import AsyncoreReactor, _WakeableLoop, _SocketedWaker, _PipedWaker, _BasicLoop, \
     AsyncoreConnection
 from hazelcast.util import AtomicInteger
@@ -319,3 +320,15 @@ class AsyncoreConnectionTest(HazelcastTestCase):
             self.assertEqual(size, conn.send_buffer_size)
         finally:
             conn._inner_close()
+
+    def test_constructor_with_unreachable_addresses(self):
+        addr = Address("192.168.0.1", 5701)
+        config = _Config()
+        start = time.time()
+        conn = AsyncoreConnection(MagicMock(map=dict()), MagicMock(), None, addr, config, None)
+        try:
+            # Server is unreachable, but this call should return
+            # before connection timeout
+            self.assertLess(time.time() - start, config.connection_timeout)
+        finally:
+            conn.close(None, None)
