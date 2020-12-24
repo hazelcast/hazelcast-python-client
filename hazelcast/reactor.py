@@ -378,6 +378,8 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         self._write_buf = io.BytesIO()
 
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        # set the socket timeout to 0 explicitly
+        self.socket.settimeout(0)
         self._set_socket_options(config)
         if config.ssl_enabled:
             self._wrap_as_ssl_socket(config)
