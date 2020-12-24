@@ -188,6 +188,7 @@ class ClusterViewListenerService(object):
         self._listener_added_connection = connection
         request = client_add_cluster_view_listener_codec.encode_request()
         invocation = Invocation(request, connection=connection, event_handler=self._handler(connection), urgent=True)
+        self._cluster_service.clear_member_list_version()
         self._invocation_service.invoke(invocation)
 
         def callback(f):
