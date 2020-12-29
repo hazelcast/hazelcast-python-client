@@ -445,7 +445,7 @@ class MapTest(SingleMemberTestCase):
         def evicted():
             self.assertFalse(self.map.contains_key("key"))
 
-        self.assertTrueEventually(evicted, 1)
+        self.assertTrueEventually(evicted, 5)
 
     def test_size(self):
         self._fill_map()
