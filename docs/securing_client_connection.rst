@@ -51,6 +51,8 @@ configuration and then go over the configuration options one by one:
         ssl_certfile="/home/hazelcast/certfile.pem",
         ssl_keyfile="/home/hazelcast/keyfile.pem",
         ssl_password="keyfile-password",
+        # You can also set this to "TLSv1_3"
+        # without importing anything.
         ssl_protocol=SSLProtocol.TLSv1_3,
         ssl_ciphers="DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA"
     )

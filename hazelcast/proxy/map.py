@@ -167,9 +167,21 @@ class Map(Proxy):
 
         Args:
             attributes (list[str]): List of indexed attributes.
-            index_type (int): Type of the index.
+            index_type (int|str): Type of the index. By default, set to ``SORTED``.
+                See the :class:`hazelcast.config.IndexType` for possible values.
             name (str): Name of the index.
             bitmap_index_options (dict): Bitmap index options.
+
+                - **unique_key:** (str): The unique key attribute is used as a
+                  source of values which uniquely identify each entry being
+                  inserted into an index. Defaults to ``KEY_ATTRIBUTE_NAME``.
+                  See the :class:`hazelcast.config.QueryConstants` for possible
+                  values.
+                - **unique_key_transformation** (int|str): The transformation is
+                  applied to every value extracted from the unique key attribue.
+                  Defaults to ``OBJECT``. See the
+                  :class:`hazelcast.config.UniqueKeyTransformation` for possible
+                  values.
 
         Returns:
             hazelcast.future.Future[None]:

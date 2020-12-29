@@ -38,6 +38,8 @@ starting and reconnecting modes.
 
     client = hazelcast.HazelcastClient(
         async_start=False,
+        # You can also set this to "ON"
+        # without importing anything.
         reconnect_mode=ReconnectMode.ON
     )
 
