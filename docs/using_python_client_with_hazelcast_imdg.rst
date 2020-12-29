@@ -1746,7 +1746,7 @@ configuration, its default value is used.
                 "time_to_live": 60,
                 "max_idle": 30,
                 # You can also set these to "OBJECT"
-                # or "LRU" without importing anything.
+                # and "LRU" without importing anything.
                 "in_memory_format": InMemoryFormat.OBJECT,
                 "eviction_policy": EvictionPolicy.LRU,
                 "eviction_max_size": 100,

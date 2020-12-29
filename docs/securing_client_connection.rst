@@ -190,8 +190,6 @@ follows:
     from hazelcast.config import SSLProtocol
 
     client = hazelcast.HazelcastClient(
-        # You can also set this to "TLSv1_3"
-        # without importing anything.
         ssl_protocol=SSLProtocol.TLSv1_3
     )
 
