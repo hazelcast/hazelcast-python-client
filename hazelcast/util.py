@@ -215,7 +215,7 @@ def _get_enum_value(cls, key):
     return None
 
 
-def try_to_set_enum_value(value, enum_class):
+def try_to_get_enum_value(value, enum_class):
     if get_attr_name(enum_class, value):
         # If the value given by the user corresponds
         # to value of the one of the enum members,

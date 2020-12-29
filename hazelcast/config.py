@@ -4,7 +4,7 @@ from hazelcast import six
 from hazelcast.errors import InvalidConfigurationError
 from hazelcast.serialization.api import StreamSerializer, IdentifiedDataSerializable, Portable
 from hazelcast.serialization.portable.classdef import ClassDefinition
-from hazelcast.util import check_not_none, number_types, LoadBalancer, none_type, try_to_set_enum_value
+from hazelcast.util import check_not_none, number_types, LoadBalancer, none_type, try_to_get_enum_value
 
 
 class IntType(object):
@@ -216,7 +216,7 @@ class BitmapIndexOptions(object):
 
     @unique_key.setter
     def unique_key(self, value):
-        self._unique_key = try_to_set_enum_value(value, QueryConstants)
+        self._unique_key = try_to_get_enum_value(value, QueryConstants)
 
     @property
     def unique_key_transformation(self):
@@ -224,7 +224,7 @@ class BitmapIndexOptions(object):
     
     @unique_key_transformation.setter
     def unique_key_transformation(self, value):
-        self._unique_key_transformation = try_to_set_enum_value(value, UniqueKeyTransformation)
+        self._unique_key_transformation = try_to_get_enum_value(value, UniqueKeyTransformation)
 
     @classmethod
     def from_dict(cls, d):
@@ -282,7 +282,7 @@ class IndexConfig(object):
 
     @type.setter
     def type(self, value):
-        self._type = try_to_set_enum_value(value, IndexType)
+        self._type = try_to_get_enum_value(value, IndexType)
 
     @property
     def attributes(self):
@@ -648,7 +648,7 @@ class _Config(object):
 
     @ssl_protocol.setter
     def ssl_protocol(self, value):
-        self._ssl_protocol = try_to_set_enum_value(value, SSLProtocol)
+        self._ssl_protocol = try_to_get_enum_value(value, SSLProtocol)
 
     @property
     def ssl_ciphers(self):
@@ -689,7 +689,7 @@ class _Config(object):
 
     @reconnect_mode.setter
     def reconnect_mode(self, value):
-        self._reconnect_mode = try_to_set_enum_value(value, ReconnectMode)
+        self._reconnect_mode = try_to_get_enum_value(value, ReconnectMode)
 
     @property
     def retry_initial_backoff(self):
@@ -864,7 +864,7 @@ class _Config(object):
 
     @default_int_type.setter
     def default_int_type(self, value):
-        self._default_int_type = try_to_set_enum_value(value, IntType)
+        self._default_int_type = try_to_get_enum_value(value, IntType)
 
     @property
     def global_serializer(self):
@@ -1168,7 +1168,7 @@ class _NearCacheConfig(object):
 
     @in_memory_format.setter
     def in_memory_format(self, value):
-        self._in_memory_format = try_to_set_enum_value(value, InMemoryFormat)
+        self._in_memory_format = try_to_get_enum_value(value, InMemoryFormat)
 
     @property
     def time_to_live(self):
@@ -1202,7 +1202,7 @@ class _NearCacheConfig(object):
 
     @eviction_policy.setter
     def eviction_policy(self, value):
-        self._eviction_policy = try_to_set_enum_value(value, EvictionPolicy)
+        self._eviction_policy = try_to_get_enum_value(value, EvictionPolicy)
 
     @property
     def eviction_max_size(self):
