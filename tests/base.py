@@ -1,7 +1,10 @@
 import logging
+import sys
 import time
 import unittest
 from threading import Thread
+
+from hazelcast import six
 from tests.hzrc.client import HzRemoteController
 import hazelcast
 from hazelcast.core import Address
@@ -58,13 +61,19 @@ class HazelcastTestCase(unittest.TestCase):
 
     def assertTrueEventually(self, assertion, timeout=30):
         timeout_time = time.time() + timeout
+        exc_info = None
         while time.time() < timeout_time:
             try:
                 assertion()
                 return
             except AssertionError:
+                exc_info = sys.exc_info()
                 time.sleep(0.1)
-        raise
+
+        if exc_info is None:
+            raise Exception("Could not enter the assertion loop!")
+
+        six.reraise(*exc_info)
 
     def assertSetEventually(self, event, timeout=5):
         is_set = event.wait(timeout)

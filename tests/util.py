@@ -86,3 +86,15 @@ def open_connection_to_address(client, uuid):
     m.put(key, 0)
     m.destroy()
 
+
+class LoggingContext(object):
+    def __init__(self, logger, level):
+        self.logger = logger
+        self.level = level
+        self.old_level = logger.level
+
+    def __enter__(self):
+        self.logger.setLevel(self.level)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.logger.setLevel(self.old_level)

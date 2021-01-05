@@ -530,23 +530,19 @@ class HazelcastClient(object):
             hazelcast.future.Future[str]: A registration id which is used as a key to remove the listener.
         """
         is_smart = self.config.smart_routing
-        request = client_add_distributed_object_listener_codec.encode_request(is_smart)
+        codec = client_add_distributed_object_listener_codec
+        request = codec.encode_request(is_smart)
 
         def handle_distributed_object_event(name, service_name, event_type, source):
             event = DistributedObjectEvent(name, service_name, event_type, source)
             listener_func(event)
 
         def event_handler(client_message):
-            return client_add_distributed_object_listener_codec.handle(client_message, handle_distributed_object_event)
+            return codec.handle(client_message, handle_distributed_object_event)
 
-        def decode_add_listener(response):
-            return client_add_distributed_object_listener_codec.decode_response(response)
-
-        def encode_remove_listener(registration_id):
-            return client_remove_distributed_object_listener_codec.encode_request(registration_id)
-
-        return self._listener_service.register_listener(request, decode_add_listener,
-                                                        encode_remove_listener, event_handler)
+        return self._listener_service.register_listener(request, codec.decode_response,
+                                                        client_remove_distributed_object_listener_codec.encode_request,
+                                                        event_handler)
 
     def remove_distributed_object_listener(self, registration_id):
         """Removes the specified distributed object listener.
