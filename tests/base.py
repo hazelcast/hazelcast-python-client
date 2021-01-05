@@ -58,13 +58,16 @@ class HazelcastTestCase(unittest.TestCase):
 
     def assertTrueEventually(self, assertion, timeout=30):
         timeout_time = time.time() + timeout
+        last_error = None
         while time.time() < timeout_time:
             try:
                 assertion()
                 return
-            except AssertionError:
+            except AssertionError as err:
+                last_error = err
                 time.sleep(0.1)
-        raise
+
+        raise last_error or Exception("Could not enter the assertion loop!")
 
     def assertSetEventually(self, event, timeout=5):
         is_set = event.wait(timeout)

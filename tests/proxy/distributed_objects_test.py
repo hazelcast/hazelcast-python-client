@@ -1,3 +1,4 @@
+import logging
 import time
 
 import hazelcast
@@ -5,7 +6,7 @@ from hazelcast.core import DistributedObjectEventType
 
 from hazelcast.proxy import MAP_SERVICE
 from tests.base import SingleMemberTestCase
-from tests.util import event_collector
+from tests.util import event_collector, LoggingContext
 from hazelcast import six
 
 
@@ -65,18 +66,19 @@ class DistributedObjectsTest(SingleMemberTestCase):
         self.assertTrueEventually(assert_event)
 
     def test_add_distributed_object_listener_object_destroyed(self):
-        collector = event_collector()
-        m = self.client.get_map("test-map")
-        self.client.add_distributed_object_listener(listener_func=collector).result()
+        with LoggingContext(logging.getLogger(), logging.DEBUG):
+            collector = event_collector()
+            m = self.client.get_map("test-map")
+            self.client.add_distributed_object_listener(listener_func=collector).result()
 
-        m.destroy()
+            m.destroy()
 
-        def assert_event():
-            self.assertEqual(1, len(collector.events))
-            event = collector.events[0]
-            self.assertDistributedObjectEvent(event, "test-map", MAP_SERVICE, DistributedObjectEventType.DESTROYED)
+            def assert_event():
+                self.assertEqual(1, len(collector.events))
+                event = collector.events[0]
+                self.assertDistributedObjectEvent(event, "test-map", MAP_SERVICE, DistributedObjectEventType.DESTROYED)
 
-        self.assertTrueEventually(assert_event)
+            self.assertTrueEventually(assert_event)
 
     def test_add_distributed_object_listener_object_created_and_destroyed(self):
         collector = event_collector()
