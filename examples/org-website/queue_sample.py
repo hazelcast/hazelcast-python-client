@@ -1,9 +1,9 @@
 import hazelcast
 
 # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
-hz = hazelcast.HazelcastClient()
+client = hazelcast.HazelcastClient()
 # Get a Blocking Queue called "my-distributed-queue"
-queue = hz.get_queue("my-distributed-queue").blocking()
+queue = client.get_queue("my-distributed-queue").blocking()
 # Offer a String into the Distributed Queue
 queue.offer("item")
 # Poll the Distributed Queue and return the String
@@ -15,4 +15,4 @@ another_item = queue.poll(5)
 queue.put("yetanotheritem")
 print(queue.take())
 # Shutdown this Hazelcast Client
-hz.shutdown()
+client.shutdown()

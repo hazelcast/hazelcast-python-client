@@ -198,9 +198,14 @@ Development
    <https://github.com/hazelcast/hazelcast-python-client.git>`__.
 2. Run ``python setup.py install`` to install the Python client.
 
-If you are planning to contribute, please make sure that it fits the
-guidelines described in
-`PEP8 <https://www.python.org/dev/peps/pep-0008/>`__.
+If you are planning to contribute:
+
+1. Run ``pip install -r requirements-dev.txt`` to install development
+   dependencies.
+2. Use `black <https://pypi.org/project/black/>`__ to reformat the code
+   by running the ``black .`` command.
+3. Make sure that tests are passing by following the steps described
+   in the next section.
 
 Testing
 ^^^^^^^

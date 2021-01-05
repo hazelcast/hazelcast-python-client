@@ -27,10 +27,8 @@ class Employee(IdentifiedDataSerializable):
 
 
 # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
-hz = hazelcast.HazelcastClient(data_serializable_factories={
-    Employee.FACTORY_ID: {
-        Employee.CLASS_ID: Employee
-    }
-})
+client = hazelcast.HazelcastClient(
+    data_serializable_factories={Employee.FACTORY_ID: {Employee.CLASS_ID: Employee}}
+)
 # Employee can be used here
-hz.shutdown()
+client.shutdown()

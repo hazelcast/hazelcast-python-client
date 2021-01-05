@@ -1,11 +1,7 @@
 import hazelcast
 
 # Connect
-client = hazelcast.HazelcastClient(
-    cluster_members=[
-        "127.0.0.1:5701"
-    ]
-)
+client = hazelcast.HazelcastClient(cluster_members=["127.0.0.1:5701"])
 
 # We can access maps on the server from the client. Let's access the greetings map that we created already
 greetings_map = client.get_map("greetings-map").blocking()

@@ -6,15 +6,17 @@ client = hazelcast.HazelcastClient()
 
 m1 = client.get_map("m1").blocking()
 
-m1.put_all({
-    "a": 1,
-    "b": 2,
-    "c": 3,
-    "d": 4,
-    "e": 5,
-    "f": 6,
-    "g": 7,
-})
+m1.put_all(
+    {
+        "a": 1,
+        "b": 2,
+        "c": 3,
+        "d": 4,
+        "e": 5,
+        "f": 6,
+        "g": 7,
+    }
+)
 
 size = m1.size()
 print("Added %s elements" % size)
@@ -39,6 +41,7 @@ for i in range(4):
 # server side and registered as a Portable or IdentifiedDataSerializable
 # before the server starts.
 
+
 class ReversedKeyComparator(IdentifiedDataSerializable):
     """
     This class is simply a marker implementation
@@ -47,6 +50,7 @@ class ReversedKeyComparator(IdentifiedDataSerializable):
     server side. A sample server side implementation
     is provided at the end of file.
     """
+
     def get_class_id(self):
         return 1
 

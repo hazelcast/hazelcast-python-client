@@ -106,7 +106,7 @@ else
     echo "Starting Remote Controller ... oss ..."
 fi
 
-pip install -r test-requirements.txt ${USER} --no-cache-dir
+pip install -r requirements-test.txt ${USER} --no-cache-dir
 
 java -Dhazelcast.enterprise.license.key="${HAZELCAST_ENTERPRISE_KEY}" -cp ${CLASSPATH} com.hazelcast.remotecontroller.Main --use-simple-server
 rcPid=$!

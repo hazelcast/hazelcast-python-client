@@ -39,6 +39,7 @@ class Employee(Portable):
     def __eq__(self, other):
         return type(self) == type(other) and self.name == other.name and self.age == other.age
 
+
 # If you update the class by changing the type of one of the fields or by adding a new field,
 # it is a good idea to upgrade the version of the class, rather than sticking to the global versioning
 # that is specified in the hazelcast.xml file.
@@ -79,8 +80,12 @@ class Employee2(Portable):
         return "Employee(name:%s, age:%s, manager:%s)" % (self.name, self.age, self.manager)
 
     def __eq__(self, other):
-        return isinstance(other, Employee2) and self.name == other.name and self.age == other.age \
-               and self.manager == other.manager
+        return (
+            isinstance(other, Employee2)
+            and self.name == other.name
+            and self.age == other.age
+            and self.manager == other.manager
+        )
 
 
 # However, having a version that changes across incompatible field types such as int and String will cause
@@ -120,28 +125,26 @@ class Employee3(Portable):
         return "Employee(name:%s, age:%s manager:%s)" % (self.name, self.age, self.manager)
 
     def __eq__(self, other):
-        return isinstance(other, Employee3) and self.name == other.name and self.age == other.age \
-               and self.manager == other.manager
+        return (
+            isinstance(other, Employee3)
+            and self.name == other.name
+            and self.age == other.age
+            and self.manager == other.manager
+        )
 
 
 # Let's now configure 3 clients with 3 different versions of Employee.
-client = hazelcast.HazelcastClient(portable_factories={
-    Employee.FACTORY_ID: {
-        Employee.CLASS_ID: Employee
-    }
-})
+client = hazelcast.HazelcastClient(
+    portable_factories={Employee.FACTORY_ID: {Employee.CLASS_ID: Employee}}
+)
 
-client2 = hazelcast.HazelcastClient(portable_factories={
-    Employee2.FACTORY_ID: {
-        Employee2.CLASS_ID: Employee2
-    }
-})
+client2 = hazelcast.HazelcastClient(
+    portable_factories={Employee2.FACTORY_ID: {Employee2.CLASS_ID: Employee2}}
+)
 
-client3 = hazelcast.HazelcastClient(portable_factories={
-    Employee3.FACTORY_ID: {
-        Employee3.CLASS_ID: Employee3
-    }
-})
+client3 = hazelcast.HazelcastClient(
+    portable_factories={Employee3.FACTORY_ID: {Employee3.CLASS_ID: Employee3}}
+)
 
 # Assume that a member joins a cluster with a newer version of a class.
 # If you modified the class by adding a new field, the new member's put operations include that
@@ -153,7 +156,7 @@ my_map.clear()
 my_map.put(0, Employee("Jack", 28))
 my_map2.put(1, Employee2("Jane", 29, "Josh"))
 
-print('Map Size: %s' % my_map.size())
+print("Map Size: %s" % my_map.size())
 
 # If this new member tries to get an object that was put from the older members, it
 # gets null for the newly added field.
@@ -167,7 +170,7 @@ for v in my_map2.values():
 my_map3 = client3.get_map("employee-map").blocking()
 my_map3.put(2, Employee3("Joe", "30", "Mary"))
 
-print('Map Size: %s' % my_map.size())
+print("Map Size: %s" % my_map.size())
 
 # As clients with incompatible versions of the class try to access each other, a HazelcastSerializationError
 # is raised (caused by a TypeError).

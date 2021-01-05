@@ -23,9 +23,7 @@ class CustomSerializer(StreamSerializer):
 
 
 # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
-hz = hazelcast.HazelcastClient(custom_serializers={
-    CustomSerializableType: CustomSerializer
-})
+client = hazelcast.HazelcastClient(custom_serializers={CustomSerializableType: CustomSerializer})
 
 # CustomSerializer will serialize/deserialize CustomSerializable objects
-hz.shutdown()
+client.shutdown()

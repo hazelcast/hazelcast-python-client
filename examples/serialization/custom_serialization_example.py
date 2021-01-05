@@ -36,9 +36,7 @@ class CustomSerializer(StreamSerializer):
         pass
 
 
-client = hazelcast.HazelcastClient(custom_serializers={
-    TimeOfDay: CustomSerializer
-})
+client = hazelcast.HazelcastClient(custom_serializers={TimeOfDay: CustomSerializer})
 
 my_map = client.get_map("map").blocking()
 time_of_day = TimeOfDay(13, 36, 59)

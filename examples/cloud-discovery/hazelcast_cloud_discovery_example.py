@@ -11,7 +11,7 @@ client = hazelcast.HazelcastClient(
     ssl_cafile="/path/to/ca.pem",
     ssl_certfile="/path/to/cert.pem",
     ssl_keyfile="/path/to/key.pem",
-    ssl_password="YOUR_KEY_STORE_PASSWORD"
+    ssl_password="YOUR_KEY_STORE_PASSWORD",
 )
 
 my_map = client.get_map("map-on-the-cloud").blocking()
