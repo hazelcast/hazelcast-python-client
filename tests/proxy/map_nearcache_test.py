@@ -69,14 +69,16 @@ class MapTest(SingleMemberTestCase):
     def test_invalidate_nonexist_key(self):
         self._fill_map_and_near_cache(10)
         initial_cache_size = len(self.map._near_cache)
-        script = """
-            map = instance_0.getMap("{}");
-            map.put("key-99","x");
-            map.put("key-NonExist","x");
-            map.remove("key-NonExist")""".format(
-            self.map.name
+        script = (
+            """
+        var map = instance_0.getMap("%s");
+        map.put("key-99","x");
+        map.put("key-NonExist","x");
+        map.remove("key-NonExist");"""
+            % self.map.name
         )
-        response = self.rc.executeOnController(self.cluster.id, script, Lang.PYTHON)
+
+        response = self.rc.executeOnController(self.cluster.id, script, Lang.JAVASCRIPT)
         self.assertTrue(response.success)
         self.assertEqual(initial_cache_size, 10)
 
