@@ -1,11 +1,6 @@
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.builtin import FixSizedTypesCodec
-from hazelcast.protocol.client_message import (
-    OutboundMessage,
-    REQUEST_HEADER_SIZE,
-    create_initial_buffer,
-    RESPONSE_HEADER_SIZE,
-)
+from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer, RESPONSE_HEADER_SIZE
 
 # hex: 0x080300
 _REQUEST_MESSAGE_TYPE = 525056

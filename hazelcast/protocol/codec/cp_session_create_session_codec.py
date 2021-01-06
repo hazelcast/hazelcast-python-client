@@ -1,11 +1,6 @@
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.builtin import FixSizedTypesCodec
-from hazelcast.protocol.client_message import (
-    OutboundMessage,
-    REQUEST_HEADER_SIZE,
-    create_initial_buffer,
-    RESPONSE_HEADER_SIZE,
-)
+from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer, RESPONSE_HEADER_SIZE
 from hazelcast.protocol.codec.custom.raft_group_id_codec import RaftGroupIdCodec
 from hazelcast.protocol.builtin import StringCodec
 
@@ -30,13 +25,7 @@ def encode_request(group_id, endpoint_name):
 def decode_response(msg):
     initial_frame = msg.next_frame()
     response = dict()
-    response["session_id"] = FixSizedTypesCodec.decode_long(
-        initial_frame.buf, _RESPONSE_SESSION_ID_OFFSET
-    )
-    response["ttl_millis"] = FixSizedTypesCodec.decode_long(
-        initial_frame.buf, _RESPONSE_TTL_MILLIS_OFFSET
-    )
-    response["heartbeat_millis"] = FixSizedTypesCodec.decode_long(
-        initial_frame.buf, _RESPONSE_HEARTBEAT_MILLIS_OFFSET
-    )
+    response["session_id"] = FixSizedTypesCodec.decode_long(initial_frame.buf, _RESPONSE_SESSION_ID_OFFSET)
+    response["ttl_millis"] = FixSizedTypesCodec.decode_long(initial_frame.buf, _RESPONSE_TTL_MILLIS_OFFSET)
+    response["heartbeat_millis"] = FixSizedTypesCodec.decode_long(initial_frame.buf, _RESPONSE_HEARTBEAT_MILLIS_OFFSET)
     return response

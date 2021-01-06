@@ -1,12 +1,6 @@
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.builtin import FixSizedTypesCodec
-from hazelcast.protocol.client_message import (
-    OutboundMessage,
-    REQUEST_HEADER_SIZE,
-    create_initial_buffer,
-    RESPONSE_HEADER_SIZE,
-    EVENT_HEADER_SIZE,
-)
+from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer, RESPONSE_HEADER_SIZE, EVENT_HEADER_SIZE
 from hazelcast.protocol.builtin import StringCodec
 from hazelcast.protocol.builtin import DataCodec
 
@@ -40,9 +34,7 @@ def handle(msg, handle_topic_event=None):
     message_type = msg.get_message_type()
     if message_type == _EVENT_TOPIC_MESSAGE_TYPE and handle_topic_event is not None:
         initial_frame = msg.next_frame()
-        publish_time = FixSizedTypesCodec.decode_long(
-            initial_frame.buf, _EVENT_TOPIC_PUBLISH_TIME_OFFSET
-        )
+        publish_time = FixSizedTypesCodec.decode_long(initial_frame.buf, _EVENT_TOPIC_PUBLISH_TIME_OFFSET)
         uuid = FixSizedTypesCodec.decode_uuid(initial_frame.buf, _EVENT_TOPIC_UUID_OFFSET)
         item = DataCodec.decode(msg)
         handle_topic_event(item, publish_time, uuid)

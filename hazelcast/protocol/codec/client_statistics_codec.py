@@ -1,10 +1,6 @@
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.builtin import FixSizedTypesCodec
-from hazelcast.protocol.client_message import (
-    OutboundMessage,
-    REQUEST_HEADER_SIZE,
-    create_initial_buffer,
-)
+from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer
 from hazelcast.protocol.builtin import StringCodec
 from hazelcast.protocol.builtin import ByteArrayCodec
 

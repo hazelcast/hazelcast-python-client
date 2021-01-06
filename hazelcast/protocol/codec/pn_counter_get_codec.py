@@ -1,11 +1,6 @@
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.builtin import FixSizedTypesCodec
-from hazelcast.protocol.client_message import (
-    OutboundMessage,
-    REQUEST_HEADER_SIZE,
-    create_initial_buffer,
-    RESPONSE_HEADER_SIZE,
-)
+from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer, RESPONSE_HEADER_SIZE
 from hazelcast.protocol.builtin import StringCodec
 from hazelcast.protocol.builtin import EntryListUUIDLongCodec
 
@@ -32,8 +27,6 @@ def decode_response(msg):
     initial_frame = msg.next_frame()
     response = dict()
     response["value"] = FixSizedTypesCodec.decode_long(initial_frame.buf, _RESPONSE_VALUE_OFFSET)
-    response["replica_count"] = FixSizedTypesCodec.decode_int(
-        initial_frame.buf, _RESPONSE_REPLICA_COUNT_OFFSET
-    )
+    response["replica_count"] = FixSizedTypesCodec.decode_int(initial_frame.buf, _RESPONSE_REPLICA_COUNT_OFFSET)
     response["replica_timestamps"] = EntryListUUIDLongCodec.decode(msg)
     return response

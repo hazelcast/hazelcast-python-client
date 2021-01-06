@@ -11,9 +11,7 @@ class AnchorDataListHolderCodec(object):
     def encode(buf, anchor_data_list_holder, is_final=False):
         buf.extend(BEGIN_FRAME_BUF)
         ListIntegerCodec.encode(buf, anchor_data_list_holder.anchor_page_list)
-        EntryListCodec.encode(
-            buf, anchor_data_list_holder.anchor_data_list, DataCodec.encode, DataCodec.encode
-        )
+        EntryListCodec.encode(buf, anchor_data_list_holder.anchor_data_list, DataCodec.encode, DataCodec.encode)
         if is_final:
             buf.extend(END_FINAL_FRAME_BUF)
         else:

@@ -1,11 +1,5 @@
 from hazelcast.protocol.builtin import FixSizedTypesCodec
-from hazelcast.protocol.client_message import (
-    OutboundMessage,
-    REQUEST_HEADER_SIZE,
-    create_initial_buffer,
-    RESPONSE_HEADER_SIZE,
-    EVENT_HEADER_SIZE,
-)
+from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer, RESPONSE_HEADER_SIZE, EVENT_HEADER_SIZE
 
 # hex: 0x000F00
 _REQUEST_MESSAGE_TYPE = 3840
@@ -33,8 +27,6 @@ def handle(msg, handle_backup_event=None):
     message_type = msg.get_message_type()
     if message_type == _EVENT_BACKUP_MESSAGE_TYPE and handle_backup_event is not None:
         initial_frame = msg.next_frame()
-        source_invocation_correlation_id = FixSizedTypesCodec.decode_long(
-            initial_frame.buf, _EVENT_BACKUP_SOURCE_INVOCATION_CORRELATION_ID_OFFSET
-        )
+        source_invocation_correlation_id = FixSizedTypesCodec.decode_long(initial_frame.buf, _EVENT_BACKUP_SOURCE_INVOCATION_CORRELATION_ID_OFFSET)
         handle_backup_event(source_invocation_correlation_id)
         return
