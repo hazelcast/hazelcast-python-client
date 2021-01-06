@@ -16,3 +16,6 @@ except ImportError:
 logging.getLogger(__name__).addHandler(NullHandler())
 
 from hazelcast.client import HazelcastClient
+
+
+# test
