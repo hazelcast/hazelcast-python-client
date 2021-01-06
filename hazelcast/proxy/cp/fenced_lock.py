@@ -1,11 +1,20 @@
 import time
 import uuid
 
-from hazelcast.errors import LockOwnershipLostError, LockAcquireLimitReachedError, SessionExpiredError, \
-    WaitKeyCancelledError, IllegalMonitorStateError
+from hazelcast.errors import (
+    LockOwnershipLostError,
+    LockAcquireLimitReachedError,
+    SessionExpiredError,
+    WaitKeyCancelledError,
+    IllegalMonitorStateError,
+)
 from hazelcast.future import ImmediateExceptionFuture
-from hazelcast.protocol.codec import fenced_lock_lock_codec, fenced_lock_try_lock_codec, fenced_lock_unlock_codec, \
-    fenced_lock_get_lock_ownership_codec
+from hazelcast.protocol.codec import (
+    fenced_lock_lock_codec,
+    fenced_lock_try_lock_codec,
+    fenced_lock_unlock_codec,
+    fenced_lock_get_lock_ownership_codec,
+)
 from hazelcast.proxy.cp import SessionAwareCPProxy
 from hazelcast.util import thread_id, to_millis
 
@@ -202,7 +211,9 @@ class FencedLock(SessionAwareCPProxy):
                 self._lock_session_ids.pop(current_thread_id, None)
                 raise e
 
-        return self._request_unlock(session_id, current_thread_id, uuid.uuid4()).continue_with(check_response)
+        return self._request_unlock(session_id, current_thread_id, uuid.uuid4()).continue_with(
+            check_response
+        )
 
     def is_locked(self):
         """Returns whether this lock is locked or not.
@@ -314,9 +325,11 @@ class FencedLock(SessionAwareCPProxy):
                     return self._do_lock(current_thread_id, invocation_uuid)
                 except WaitKeyCancelledError:
                     self._release_session(session_id)
-                    error = IllegalMonitorStateError("Lock(%s) not acquired because the lock call on the CP group "
-                                                     "is cancelled, possibly because of another indeterminate call "
-                                                     "from the same thread." % self._object_name)
+                    error = IllegalMonitorStateError(
+                        "Lock(%s) not acquired because the lock call on the CP group "
+                        "is cancelled, possibly because of another indeterminate call "
+                        "from the same thread." % self._object_name
+                    )
                     raise error
                 except Exception as e:
                     self._release_session(session_id)
@@ -327,11 +340,14 @@ class FencedLock(SessionAwareCPProxy):
                     return fence
 
                 self._release_session(session_id)
-                error = LockAcquireLimitReachedError("Lock(%s) reentrant lock limit is already reached!"
-                                                     % self._object_name)
+                error = LockAcquireLimitReachedError(
+                    "Lock(%s) reentrant lock limit is already reached!" % self._object_name
+                )
                 raise error
 
-            return self._request_lock(session_id, current_thread_id, invocation_uuid).continue_with(check_fence)
+            return self._request_lock(session_id, current_thread_id, invocation_uuid).continue_with(
+                check_fence
+            )
 
         return self._acquire_session().continue_with(do_lock_once)
 
@@ -367,8 +383,9 @@ class FencedLock(SessionAwareCPProxy):
 
                 return fence
 
-            return self._request_try_lock(session_id, current_thread_id, invocation_uuid, timeout).continue_with(
-                check_fence)
+            return self._request_try_lock(
+                session_id, current_thread_id, invocation_uuid, timeout
+            ).continue_with(check_fence)
 
         return self._acquire_session().continue_with(do_try_lock_once)
 
@@ -387,30 +404,42 @@ class FencedLock(SessionAwareCPProxy):
             raise self._new_lock_ownership_lost_error(lock_session_id)
 
     def _new_lock_ownership_lost_error(self, lock_session_id):
-        error = LockOwnershipLostError("Current thread is not the owner of the Lock(%s) because its "
-                                       "Session(%s) is closed by the server." % (self._proxy_name, lock_session_id))
+        error = LockOwnershipLostError(
+            "Current thread is not the owner of the Lock(%s) because its "
+            "Session(%s) is closed by the server." % (self._proxy_name, lock_session_id)
+        )
         return error
 
     def _new_illegal_monitor_state_error(self):
-        error = IllegalMonitorStateError("Current thread is not the owner of the Lock(%s)" % self._proxy_name)
+        error = IllegalMonitorStateError(
+            "Current thread is not the owner of the Lock(%s)" % self._proxy_name
+        )
         return error
 
     def _request_lock(self, session_id, current_thread_id, invocation_uuid):
         codec = fenced_lock_lock_codec
-        request = codec.encode_request(self._group_id, self._object_name, session_id, current_thread_id,
-                                       invocation_uuid)
+        request = codec.encode_request(
+            self._group_id, self._object_name, session_id, current_thread_id, invocation_uuid
+        )
         return self._invoke(request, codec.decode_response)
 
     def _request_try_lock(self, session_id, current_thread_id, invocation_uuid, timeout):
         codec = fenced_lock_try_lock_codec
-        request = codec.encode_request(self._group_id, self._object_name, session_id, current_thread_id,
-                                       invocation_uuid, to_millis(timeout))
+        request = codec.encode_request(
+            self._group_id,
+            self._object_name,
+            session_id,
+            current_thread_id,
+            invocation_uuid,
+            to_millis(timeout),
+        )
         return self._invoke(request, codec.decode_response)
 
     def _request_unlock(self, session_id, current_thread_id, invocation_uuid):
         codec = fenced_lock_unlock_codec
-        request = codec.encode_request(self._group_id, self._object_name, session_id, current_thread_id,
-                                       invocation_uuid)
+        request = codec.encode_request(
+            self._group_id, self._object_name, session_id, current_thread_id, invocation_uuid
+        )
         return self._invoke(request, codec.decode_response)
 
     def _request_get_lock_ownership_state(self):
@@ -430,4 +459,8 @@ class _LockOwnershipState(object):
         return self.fence != FencedLock.INVALID_FENCE
 
     def is_locked_by(self, session_id, current_thread_id):
-        return self.is_locked() and self.session_id == session_id and self.thread_id == current_thread_id
+        return (
+            self.is_locked()
+            and self.session_id == session_id
+            and self.thread_id == current_thread_id
+        )

@@ -1,6 +1,12 @@
-from hazelcast.protocol.codec import atomic_long_add_and_get_codec, atomic_long_compare_and_set_codec, \
-    atomic_long_get_codec, atomic_long_get_and_add_codec, atomic_long_get_and_set_codec, atomic_long_alter_codec, \
-    atomic_long_apply_codec
+from hazelcast.protocol.codec import (
+    atomic_long_add_and_get_codec,
+    atomic_long_compare_and_set_codec,
+    atomic_long_get_codec,
+    atomic_long_get_and_add_codec,
+    atomic_long_get_and_set_codec,
+    atomic_long_alter_codec,
+    atomic_long_apply_codec,
+)
 from hazelcast.proxy.cp import BaseCPProxy
 from hazelcast.util import check_not_none, check_is_int
 

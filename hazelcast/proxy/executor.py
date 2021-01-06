@@ -1,8 +1,11 @@
 from uuid import uuid4
 from hazelcast import future
-from hazelcast.protocol.codec import executor_service_shutdown_codec, \
-    executor_service_is_shutdown_codec, \
-    executor_service_submit_to_partition_codec, executor_service_submit_to_member_codec
+from hazelcast.protocol.codec import (
+    executor_service_shutdown_codec,
+    executor_service_is_shutdown_codec,
+    executor_service_submit_to_partition_codec,
+    executor_service_submit_to_member_codec,
+)
 from hazelcast.proxy.base import Proxy
 from hazelcast.util import check_not_none
 
@@ -24,14 +27,18 @@ class Executor(Proxy):
         check_not_none(task, "task can't be None")
 
         def handler(message):
-            return self._to_object(executor_service_submit_to_partition_codec.decode_response(message))
+            return self._to_object(
+                executor_service_submit_to_partition_codec.decode_response(message)
+            )
 
         key_data = self._to_data(key)
         task_data = self._to_data(task)
 
         partition_id = self._context.partition_service.get_partition_id(key_data)
         uuid = uuid4()
-        request = executor_service_submit_to_partition_codec.encode_request(self.name, uuid, task_data)
+        request = executor_service_submit_to_partition_codec.encode_request(
+            self.name, uuid, task_data
+        )
         return self._invoke_on_partition(request, partition_id, handler)
 
     def execute_on_member(self, member, task):
@@ -102,5 +109,7 @@ class Executor(Proxy):
         def handler(message):
             return self._to_object(executor_service_submit_to_member_codec.decode_response(message))
 
-        request = executor_service_submit_to_member_codec.encode_request(self.name, uuid, task_data, member_uuid)
+        request = executor_service_submit_to_member_codec.encode_request(
+            self.name, uuid, task_data, member_uuid
+        )
         return self._invoke_on_target(request, member_uuid, handler)

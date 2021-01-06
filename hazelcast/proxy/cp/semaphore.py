@@ -3,8 +3,14 @@ import uuid
 
 from hazelcast.errors import SessionExpiredError, WaitKeyCancelledError, IllegalStateError
 from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
-from hazelcast.protocol.codec import semaphore_init_codec, semaphore_acquire_codec, semaphore_available_permits_codec, \
-    semaphore_drain_codec, semaphore_change_codec, semaphore_release_codec
+from hazelcast.protocol.codec import (
+    semaphore_init_codec,
+    semaphore_acquire_codec,
+    semaphore_available_permits_codec,
+    semaphore_drain_codec,
+    semaphore_change_codec,
+    semaphore_release_codec,
+)
 from hazelcast.proxy.cp import SessionAwareCPProxy, BaseCPProxy
 from hazelcast.util import check_not_negative, check_true, thread_id, to_millis
 
@@ -307,8 +313,9 @@ class SessionAwareSemaphore(Semaphore, SessionAwareCPProxy):
             finally:
                 self._release_session(session_id, permits)
 
-        return self._request_release(session_id, current_thread_id, invocation_uuid, permits).continue_with(
-            check_response)
+        return self._request_release(
+            session_id, current_thread_id, invocation_uuid, permits
+        ).continue_with(check_response)
 
     def try_acquire(self, permits=1, timeout=0):
         check_true(permits > 0, "Permits must be positive")
@@ -329,16 +336,19 @@ class SessionAwareSemaphore(Semaphore, SessionAwareCPProxy):
                     return self._do_acquire(current_thread_id, invocation_uuid, permits)
                 except WaitKeyCancelledError:
                     self._release_session(session_id, permits)
-                    error = IllegalStateError("Semaphore(\"%s\") not acquired because the acquire call on the CP "
-                                              "group is cancelled, possibly because of another indeterminate call "
-                                              "from the same thread." % self._object_name)
+                    error = IllegalStateError(
+                        'Semaphore("%s") not acquired because the acquire call on the CP '
+                        "group is cancelled, possibly because of another indeterminate call "
+                        "from the same thread." % self._object_name
+                    )
                     raise error
                 except Exception as e:
                     self._release_session(session_id, permits)
                     raise e
 
-            return self._request_acquire(session_id, current_thread_id, invocation_uuid, permits, -1).continue_with(
-                check_response)
+            return self._request_acquire(
+                session_id, current_thread_id, invocation_uuid, permits, -1
+            ).continue_with(check_response)
 
         return self._acquire_session(permits).continue_with(do_acquire_once)
 
@@ -358,7 +368,9 @@ class SessionAwareSemaphore(Semaphore, SessionAwareCPProxy):
                     self._release_session(session_id, _DRAIN_SESSION_ACQ_COUNT)
                     raise e
 
-            return self._request_drain(session_id, current_thread_id, invocation_uuid).continue_with(check_count)
+            return self._request_drain(
+                session_id, current_thread_id, invocation_uuid
+            ).continue_with(check_count)
 
         return self._acquire_session(_DRAIN_SESSION_ACQ_COUNT).continue_with(do_drain_once)
 
@@ -378,8 +390,9 @@ class SessionAwareSemaphore(Semaphore, SessionAwareCPProxy):
                 finally:
                     self._release_session(session_id)
 
-            return self._request_change(session_id, current_thread_id, invocation_uuid, delta).continue_with(
-                check_response)
+            return self._request_change(
+                session_id, current_thread_id, invocation_uuid, delta
+            ).continue_with(check_response)
 
         return self._acquire_session().continue_with(do_change_permits_once)
 
@@ -400,7 +413,9 @@ class SessionAwareSemaphore(Semaphore, SessionAwareCPProxy):
                     remaining_timeout = timeout - (time.time() - start)
                     if remaining_timeout <= 0:
                         return False
-                    return self._do_try_acquire(current_thread_id, invocation_uuid, permits, remaining_timeout)
+                    return self._do_try_acquire(
+                        current_thread_id, invocation_uuid, permits, remaining_timeout
+                    )
                 except WaitKeyCancelledError:
                     self._release_session(session_id, permits)
                     return False
@@ -408,13 +423,16 @@ class SessionAwareSemaphore(Semaphore, SessionAwareCPProxy):
                     self._release_session(session_id, permits)
                     raise e
 
-            return self._request_acquire(session_id, current_thread_id, invocation_uuid, permits,
-                                         timeout).continue_with(check_response)
+            return self._request_acquire(
+                session_id, current_thread_id, invocation_uuid, permits, timeout
+            ).continue_with(check_response)
 
         return self._acquire_session(permits).continue_with(do_try_acquire_once)
 
     def _new_illegal_state_error(self, cause=None):
-        error = IllegalStateError("Semaphore[\"%s\"] has no valid session!" % self._object_name, cause)
+        error = IllegalStateError(
+            'Semaphore["%s"] has no valid session!' % self._object_name, cause
+        )
         return error
 
     def _request_acquire(self, session_id, current_thread_id, invocation_uuid, permits, timeout):
@@ -422,32 +440,49 @@ class SessionAwareSemaphore(Semaphore, SessionAwareCPProxy):
         if timeout > 0:
             timeout = to_millis(timeout)
 
-        request = codec.encode_request(self._group_id, self._object_name, session_id, current_thread_id,
-                                       invocation_uuid, permits, timeout)
+        request = codec.encode_request(
+            self._group_id,
+            self._object_name,
+            session_id,
+            current_thread_id,
+            invocation_uuid,
+            permits,
+            timeout,
+        )
         return self._invoke(request, codec.decode_response)
 
     def _request_drain(self, session_id, current_thread_id, invocation_uuid):
         codec = semaphore_drain_codec
-        request = codec.encode_request(self._group_id, self._object_name, session_id, current_thread_id,
-                                       invocation_uuid)
+        request = codec.encode_request(
+            self._group_id, self._object_name, session_id, current_thread_id, invocation_uuid
+        )
         return self._invoke(request, codec.decode_response)
 
     def _request_change(self, session_id, current_thread_id, invocation_uuid, delta):
         codec = semaphore_change_codec
-        request = codec.encode_request(self._group_id, self._object_name, session_id, current_thread_id,
-                                       invocation_uuid, delta)
+        request = codec.encode_request(
+            self._group_id, self._object_name, session_id, current_thread_id, invocation_uuid, delta
+        )
         return self._invoke(request)
 
     def _request_release(self, session_id, current_thread_id, invocation_uuid, permits):
         codec = semaphore_release_codec
-        request = codec.encode_request(self._group_id, self._object_name, session_id, current_thread_id,
-                                       invocation_uuid, permits)
+        request = codec.encode_request(
+            self._group_id,
+            self._object_name,
+            session_id,
+            current_thread_id,
+            invocation_uuid,
+            permits,
+        )
         return self._invoke(request)
 
 
 class SessionlessSemaphore(Semaphore):
     def __init__(self, context, group_id, service_name, proxy_name, object_name):
-        super(SessionlessSemaphore, self).__init__(context, group_id, service_name, proxy_name, object_name)
+        super(SessionlessSemaphore, self).__init__(
+            context, group_id, service_name, proxy_name, object_name
+        )
         self._session_manager = context.proxy_session_manager
 
     def acquire(self, permits=1):
@@ -457,7 +492,11 @@ class SessionlessSemaphore(Semaphore):
             f.result()
             return None
 
-        return self._get_thread_id().continue_with(self._do_try_acquire, permits, -1).continue_with(handler)
+        return (
+            self._get_thread_id()
+            .continue_with(self._do_try_acquire, permits, -1)
+            .continue_with(handler)
+        )
 
     def drain_permits(self):
         return self._get_thread_id().continue_with(self._do_drain_permits)
@@ -475,15 +514,17 @@ class SessionlessSemaphore(Semaphore):
     def _do_try_acquire(self, global_thread_id, permits, timeout):
         global_thread_id = global_thread_id.result()
         invocation_uuid = uuid.uuid4()
-        return self._request_acquire(global_thread_id, invocation_uuid, permits, timeout).continue_with(
-            self._check_acquire_response)
+        return self._request_acquire(
+            global_thread_id, invocation_uuid, permits, timeout
+        ).continue_with(self._check_acquire_response)
 
     def _do_drain_permits(self, global_thread_id):
         global_thread_id = global_thread_id.result()
         invocation_uuid = uuid.uuid4()
         codec = semaphore_drain_codec
-        request = codec.encode_request(self._group_id, self._object_name, _NO_SESSION_ID, global_thread_id,
-                                       invocation_uuid)
+        request = codec.encode_request(
+            self._group_id, self._object_name, _NO_SESSION_ID, global_thread_id, invocation_uuid
+        )
         return self._invoke(request, codec.decode_response)
 
     def _do_change_permits(self, permits):
@@ -495,31 +536,52 @@ class SessionlessSemaphore(Semaphore):
         if timeout > 0:
             timeout = to_millis(timeout)
 
-        request = codec.encode_request(self._group_id, self._object_name, _NO_SESSION_ID, global_thread_id,
-                                       invocation_uuid, permits, timeout)
+        request = codec.encode_request(
+            self._group_id,
+            self._object_name,
+            _NO_SESSION_ID,
+            global_thread_id,
+            invocation_uuid,
+            permits,
+            timeout,
+        )
         return self._invoke(request, codec.decode_response)
 
     def _request_change(self, global_thread_id, invocation_uuid, permits):
         global_thread_id = global_thread_id.result()
         codec = semaphore_change_codec
-        request = codec.encode_request(self._group_id, self._object_name, _NO_SESSION_ID, global_thread_id,
-                                       invocation_uuid, permits)
+        request = codec.encode_request(
+            self._group_id,
+            self._object_name,
+            _NO_SESSION_ID,
+            global_thread_id,
+            invocation_uuid,
+            permits,
+        )
         return self._invoke(request)
 
     def _request_release(self, global_thread_id, invocation_uuid, permits):
         global_thread_id = global_thread_id.result()
         codec = semaphore_release_codec
-        request = codec.encode_request(self._group_id, self._object_name, _NO_SESSION_ID, global_thread_id,
-                                       invocation_uuid, permits)
+        request = codec.encode_request(
+            self._group_id,
+            self._object_name,
+            _NO_SESSION_ID,
+            global_thread_id,
+            invocation_uuid,
+            permits,
+        )
         return self._invoke(request)
 
     def _check_acquire_response(self, response):
         try:
             return response.result()
         except WaitKeyCancelledError:
-            error = IllegalStateError("Semaphore(\"%s\") not acquired because the acquire call on the "
-                                      "CP group is cancelled, possibly because of another indeterminate "
-                                      "call from the same thread." % self._object_name)
+            error = IllegalStateError(
+                'Semaphore("%s") not acquired because the acquire call on the '
+                "CP group is cancelled, possibly because of another indeterminate "
+                "call from the same thread." % self._object_name
+            )
             raise error
 
     def _get_thread_id(self):

@@ -1,5 +1,10 @@
-from hazelcast.protocol.codec import atomic_ref_compare_and_set_codec, atomic_ref_get_codec, atomic_ref_set_codec, \
-    atomic_ref_contains_codec, atomic_ref_apply_codec
+from hazelcast.protocol.codec import (
+    atomic_ref_compare_and_set_codec,
+    atomic_ref_get_codec,
+    atomic_ref_set_codec,
+    atomic_ref_contains_codec,
+    atomic_ref_apply_codec,
+)
 from hazelcast.proxy.cp import BaseCPProxy
 from hazelcast.util import check_true, check_not_none
 

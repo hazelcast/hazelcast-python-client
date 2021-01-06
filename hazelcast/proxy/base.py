@@ -4,7 +4,7 @@ from hazelcast.partition import string_partition_strategy
 from hazelcast import six
 from hazelcast.util import get_attr_name
 
-MAX_SIZE = float('inf')
+MAX_SIZE = float("inf")
 
 
 def _no_op_response_handler(_):
@@ -55,12 +55,16 @@ class Proxy(object):
 
     def _invoke_on_key(self, request, key_data, response_handler=_no_op_response_handler):
         partition_id = self._partition_service.get_partition_id(key_data)
-        invocation = Invocation(request, partition_id=partition_id, response_handler=response_handler)
+        invocation = Invocation(
+            request, partition_id=partition_id, response_handler=response_handler
+        )
         self._invocation_service.invoke(invocation)
         return invocation.future
 
     def _invoke_on_partition(self, request, partition_id, response_handler=_no_op_response_handler):
-        invocation = Invocation(request, partition_id=partition_id, response_handler=response_handler)
+        invocation = Invocation(
+            request, partition_id=partition_id, response_handler=response_handler
+        )
         self._invocation_service.invoke(invocation)
         return invocation.future
 
@@ -78,7 +82,9 @@ class PartitionSpecificProxy(Proxy):
         self._partition_id = context.partition_service.get_partition_id(partition_key)
 
     def _invoke(self, request, response_handler=_no_op_response_handler):
-        invocation = Invocation(request, partition_id=self._partition_id, response_handler=response_handler)
+        invocation = Invocation(
+            request, partition_id=self._partition_id, response_handler=response_handler
+        )
         self._invocation_service.invoke(invocation)
         return invocation.future
 
@@ -95,7 +101,9 @@ class TransactionalProxy(object):
         self._to_data = serialization_service.to_data
 
     def _invoke(self, request, response_handler=_no_op_response_handler):
-        invocation = Invocation(request, connection=self.transaction.connection, response_handler=response_handler)
+        invocation = Invocation(
+            request, connection=self.transaction.connection, response_handler=response_handler
+        )
         self._invocation_service.invoke(invocation)
         return invocation.future
 
@@ -202,8 +210,17 @@ class EntryEvent(object):
         number_of_affected_entries (int): Number of affected entries by this event.
     """
 
-    def __init__(self, to_object, key, value, old_value, merging_value, event_type, uuid,
-                 number_of_affected_entries):
+    def __init__(
+        self,
+        to_object,
+        key,
+        value,
+        old_value,
+        merging_value,
+        event_type,
+        uuid,
+        number_of_affected_entries,
+    ):
         self._to_object = to_object
         self._key_data = key
         self._value_data = value
@@ -234,10 +251,19 @@ class EntryEvent(object):
         return self._to_object(self._merging_value_data)
 
     def __repr__(self):
-        return "EntryEvent(key=%s, value=%s, old_value=%s, merging_value=%s, event_type=%s, uuid=%s, " \
-               "number_of_affected_entries=%s)" % (self.key, self.value, self.old_value, self.merging_value,
-                                                   get_attr_name(EntryEventType, self.event_type), self.uuid,
-                                                   self.number_of_affected_entries)
+        return (
+            "EntryEvent(key=%s, value=%s, old_value=%s, merging_value=%s, event_type=%s, uuid=%s, "
+            "number_of_affected_entries=%s)"
+            % (
+                self.key,
+                self.value,
+                self.old_value,
+                self.merging_value,
+                get_attr_name(EntryEventType, self.event_type),
+                self.uuid,
+                self.number_of_affected_entries,
+            )
+        )
 
 
 class TopicMessage(object):

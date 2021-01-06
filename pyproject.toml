@@ -16,7 +16,6 @@ exclude = '''
 
       | benchmarks
       | hazelcast/protocol/codec
-      | hazelcast/proxy
       | hazelcast/serialization
       | tests
     )/

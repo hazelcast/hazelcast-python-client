@@ -5,8 +5,11 @@ import random
 from hazelcast.future import Future
 from hazelcast.proxy.base import Proxy
 from hazelcast.cluster import VectorClock
-from hazelcast.protocol.codec import pn_counter_add_codec, pn_counter_get_codec, \
-    pn_counter_get_configured_replica_count_codec
+from hazelcast.protocol.codec import (
+    pn_counter_add_codec,
+    pn_counter_get_codec,
+    pn_counter_get_configured_replica_count_codec,
+)
 from hazelcast.errors import NoDataMemberInClusterError
 from hazelcast.six.moves import range
 
@@ -15,7 +18,7 @@ _logger = logging.getLogger(__name__)
 
 class PNCounter(Proxy):
     """PN (Positive-Negative) CRDT counter.
-    
+
     The counter supports adding and subtracting values as well as
     retrieving the current counter value.
     Each replica of this counter can perform operations locally without
@@ -25,19 +28,19 @@ class PNCounter(Proxy):
     identical, and any conflicting updates are merged automatically.
     If no new updates are made to the shared state, all nodes that can
     communicate will eventually have the same data.
-    
+
     When invoking updates from the client, the invocation is remote.
     This may lead to indeterminate state - the update may be applied but the
     response has not been received. In this case, the caller will be notified
     with a TargetDisconnectedError.
-    
+
     The read and write methods provide monotonic read and RYW (read-your-write)
     guarantees. These guarantees are session guarantees which means that if
     no replica with the previously observed state is reachable, the session
     guarantees are lost and the method invocation will throw a
     ConsistencyLostError. This does not mean
     that an update is lost. All of the updates are part of some replica and
-    will be eventually reflected in the state of all other replicas. This 
+    will be eventually reflected in the state of all other replicas. This
     exception just means that you cannot observe your own writes because
     all replicas that contain your updates are currently unreachable.
     After you have received a ConsistencyLostError, you can either
@@ -134,7 +137,9 @@ class PNCounter(Proxy):
             ConsistencyLostError: if the session guarantees have been lost.
         """
 
-        return self._invoke_internal(pn_counter_add_codec, delta=-1 * delta, get_before_update=False)
+        return self._invoke_internal(
+            pn_counter_add_codec, delta=-1 * delta, get_before_update=False
+        )
 
     def get_and_decrement(self):
         """Decrements the counter value by one and returns the previous value.
@@ -200,35 +205,58 @@ class PNCounter(Proxy):
 
     def _invoke_internal(self, codec, **kwargs):
         delegated_future = Future()
-        self._set_result_or_error(delegated_future, PNCounter._EMPTY_ADDRESS_LIST, None, codec, **kwargs)
+        self._set_result_or_error(
+            delegated_future, PNCounter._EMPTY_ADDRESS_LIST, None, codec, **kwargs
+        )
         return delegated_future
 
-    def _set_result_or_error(self, delegated_future, excluded_addresses, last_error, codec, **kwargs):
+    def _set_result_or_error(
+        self, delegated_future, excluded_addresses, last_error, codec, **kwargs
+    ):
         target = self._get_crdt_operation_target(excluded_addresses)
         if not target:
             if last_error:
                 delegated_future.set_exception(last_error)
                 return
-            delegated_future.set_exception(NoDataMemberInClusterError("Cannot invoke operations on a CRDT because "
-                                                                      "the cluster does not contain any data members"))
+            delegated_future.set_exception(
+                NoDataMemberInClusterError(
+                    "Cannot invoke operations on a CRDT because "
+                    "the cluster does not contain any data members"
+                )
+            )
             return
-        request = codec.encode_request(name=self.name, replica_timestamps=self._observed_clock.entry_set(),
-                                       target_replica_uuid=target.uuid, **kwargs)
+        request = codec.encode_request(
+            name=self.name,
+            replica_timestamps=self._observed_clock.entry_set(),
+            target_replica_uuid=target.uuid,
+            **kwargs
+        )
 
         future = self._invoke_on_target(request, target.uuid, codec.decode_response)
 
-        checker_func = functools.partial(self._check_invocation_result, delegated_future=delegated_future,
-                                         excluded_addresses=excluded_addresses, target=target, codec=codec, **kwargs)
+        checker_func = functools.partial(
+            self._check_invocation_result,
+            delegated_future=delegated_future,
+            excluded_addresses=excluded_addresses,
+            target=target,
+            codec=codec,
+            **kwargs
+        )
         future.add_done_callback(checker_func)
 
-    def _check_invocation_result(self, future, delegated_future, excluded_addresses, target, codec, **kwargs):
+    def _check_invocation_result(
+        self, future, delegated_future, excluded_addresses, target, codec, **kwargs
+    ):
         try:
             result = future.result()
             self._update_observed_replica_timestamp(result["replica_timestamps"])
             delegated_future.set_result(result["value"])
         except Exception as ex:
-            _logger.exception("Exception occurred while invoking operation on target %s, "
-                              "choosing different target", target)
+            _logger.exception(
+                "Exception occurred while invoking operation on target %s, "
+                "choosing different target",
+                target,
+            )
             if excluded_addresses == PNCounter._EMPTY_ADDRESS_LIST:
                 excluded_addresses = []
 
@@ -236,8 +264,10 @@ class PNCounter(Proxy):
             self._set_result_or_error(delegated_future, excluded_addresses, ex, codec, **kwargs)
 
     def _get_crdt_operation_target(self, excluded_addresses):
-        if self._current_target_replica_address and \
-                self._current_target_replica_address not in excluded_addresses:
+        if (
+            self._current_target_replica_address
+            and self._current_target_replica_address not in excluded_addresses
+        ):
             return self._current_target_replica_address
 
         self._current_target_replica_address = self._choose_target_replica(excluded_addresses)
@@ -253,7 +283,9 @@ class PNCounter(Proxy):
         return replica_addresses[random_replica_index]
 
     def _get_replica_addresses(self, excluded_addresses):
-        data_members = self._context.cluster_service.get_members(lambda member: not member.lite_member)
+        data_members = self._context.cluster_service.get_members(
+            lambda member: not member.lite_member
+        )
         replica_count = self._get_max_configured_replica_count()
 
         current_count = min(replica_count, len(data_members))
@@ -271,7 +303,9 @@ class PNCounter(Proxy):
             return self._max_replica_count
 
         request = pn_counter_get_configured_replica_count_codec.encode_request(self.name)
-        count = self._invoke(request, pn_counter_get_configured_replica_count_codec.decode_response).result()
+        count = self._invoke(
+            request, pn_counter_get_configured_replica_count_codec.decode_response
+        ).result()
         self._max_replica_count = count
         return self._max_replica_count
 

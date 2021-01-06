@@ -1,17 +1,18 @@
-from hazelcast.protocol.codec import \
-    set_add_all_codec, \
-    set_add_codec, \
-    set_add_listener_codec, \
-    set_clear_codec, \
-    set_compare_and_remove_all_codec, \
-    set_compare_and_retain_all_codec, \
-    set_contains_all_codec, \
-    set_contains_codec, \
-    set_get_all_codec, \
-    set_is_empty_codec, \
-    set_remove_codec, \
-    set_remove_listener_codec, \
-    set_size_codec
+from hazelcast.protocol.codec import (
+    set_add_all_codec,
+    set_add_codec,
+    set_add_listener_codec,
+    set_clear_codec,
+    set_compare_and_remove_all_codec,
+    set_compare_and_retain_all_codec,
+    set_contains_all_codec,
+    set_contains_codec,
+    set_get_all_codec,
+    set_is_empty_codec,
+    set_remove_codec,
+    set_remove_listener_codec,
+    set_size_codec,
+)
 
 from hazelcast.proxy.base import PartitionSpecificProxy, ItemEvent, ItemEventType
 from hazelcast.util import check_not_none, ImmutableLazyDataList
@@ -19,7 +20,7 @@ from hazelcast.util import check_not_none, ImmutableLazyDataList
 
 class Set(PartitionSpecificProxy):
     """Concurrent, distributed implementation of Set"""
-    
+
     def add(self, item):
         """Adds the specified item if it is not exists in this set.
 
@@ -53,8 +54,8 @@ class Set(PartitionSpecificProxy):
         return self._invoke(request, set_add_all_codec.decode_response)
 
     def add_listener(self, include_value=False, item_added_func=None, item_removed_func=None):
-        """Adds an item listener for this container. 
-        
+        """Adds an item listener for this container.
+
         Listener will be notified for all container add/remove events.
 
         Args:
@@ -79,13 +80,16 @@ class Set(PartitionSpecificProxy):
                 if item_removed_func:
                     item_removed_func(item_event)
 
-        return self._register_listener(request, lambda r: set_add_listener_codec.decode_response(r),
-                                       lambda reg_id: set_remove_listener_codec.encode_request(self.name, reg_id),
-                                       lambda m: set_add_listener_codec.handle(m, handle_event_item))
+        return self._register_listener(
+            request,
+            lambda r: set_add_listener_codec.decode_response(r),
+            lambda reg_id: set_remove_listener_codec.encode_request(self.name, reg_id),
+            lambda m: set_add_listener_codec.handle(m, handle_event_item),
+        )
 
     def clear(self):
         """Clears the set. Set will be empty with this call.
-        
+
         Returns:
             hazelcast.future.Future[None]:
         """
@@ -113,7 +117,7 @@ class Set(PartitionSpecificProxy):
             items (list): The specified collection which includes the items to be searched.
 
         Returns:
-            hazelcast.future.Future[bool]: ``True`` if all of the items in the specified collection exist in this set, 
+            hazelcast.future.Future[bool]: ``True`` if all of the items in the specified collection exist in this set,
             ``False`` otherwise.
         """
         check_not_none(items, "Value can't be None")
@@ -127,19 +131,22 @@ class Set(PartitionSpecificProxy):
 
     def get_all(self):
         """Returns all of the items in the set.
-        
+
         Returns:
             hazelcast.future.Future[list]: List of the items in this set.
         """
+
         def handler(message):
-            return ImmutableLazyDataList(set_get_all_codec.decode_response(message), self._to_object)
+            return ImmutableLazyDataList(
+                set_get_all_codec.decode_response(message), self._to_object
+            )
 
         request = set_get_all_codec.encode_request(self.name)
         return self._invoke(request, handler)
 
     def is_empty(self):
         """Determines whether this set is empty or not.
-        
+
         Returns:
             hazelcast.future.Future[bool]: ``True`` if this set is empty, ``False`` otherwise.
         """
@@ -179,8 +186,8 @@ class Set(PartitionSpecificProxy):
         return self._invoke(request, set_compare_and_remove_all_codec.decode_response)
 
     def remove_listener(self, registration_id):
-        """Removes the specified item listener. 
-        
+        """Removes the specified item listener.
+
         Returns silently if the specified listener was not added before.
 
         Args:
@@ -192,8 +199,8 @@ class Set(PartitionSpecificProxy):
         return self._deregister_listener(registration_id)
 
     def retain_all(self, items):
-        """Removes the items which are not contained in the specified collection. 
-        
+        """Removes the items which are not contained in the specified collection.
+
         In other words, only the items that are contained in the specified collection will be retained.
 
         Args:
@@ -213,7 +220,7 @@ class Set(PartitionSpecificProxy):
 
     def size(self):
         """Returns the number of items in this set.
-        
+
         Returns:
             hazelcast.future.Future[int]: Number of items in this set.
         """
