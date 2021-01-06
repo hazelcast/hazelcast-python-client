@@ -32,7 +32,7 @@ class _ObjectDataInput(ObjectDataInput):
             raise IndexError()
         if self._pos + _len > self._size:
             _len = self._size - self._pos
-        buff[_off: _off + _len] = self._buffer[self._pos:self._pos + _len]
+        buff[_off : _off + _len] = self._buffer[self._pos : self._pos + _len]
         self._pos += _len
 
     def skip_bytes(self, count):
@@ -173,6 +173,7 @@ class _ObjectDataInput(ObjectDataInput):
 
     def __repr__(self):
         from binascii import hexlify
+
         buf = hexlify(self._buffer)
         pos_ = self._pos * 2
-        return buf[:pos_] + "[" + buf[pos_] + "]" + buf[pos_ + 1:]
+        return buf[:pos_] + "[" + buf[pos_] + "]" + buf[pos_ + 1 :]

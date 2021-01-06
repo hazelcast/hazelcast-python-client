@@ -44,7 +44,9 @@ def index_for_default_type(type_id):
 
 
 class BaseSerializationService(object):
-    def __init__(self, version, global_partition_strategy, output_buffer_size, is_big_endian, int_type):
+    def __init__(
+        self, version, global_partition_strategy, output_buffer_size, is_big_endian, int_type
+    ):
         self._registry = SerializerRegistry(int_type)
         self._version = version
         self._global_partition_strategy = global_partition_strategy
@@ -116,7 +118,9 @@ class BaseSerializationService(object):
 
     def write_object(self, out, obj):
         if isinstance(obj, Data):
-            raise HazelcastSerializationError("Cannot write a Data instance! Use write_data(out, data) instead.")
+            raise HazelcastSerializationError(
+                "Cannot write a Data instance! Use write_data(out, data) instead."
+            )
         try:
             serializer = self._registry.serializer_for(obj)
             out.write_int(serializer.get_type_id())
@@ -130,7 +134,9 @@ class BaseSerializationService(object):
             serializer = self._registry.serializer_by_type_id(type_id)
             if serializer is None:
                 if self._active:
-                    raise HazelcastSerializationError("Missing Serializer for type-id: %s" % type_id)
+                    raise HazelcastSerializationError(
+                        "Missing Serializer for type-id: %s" % type_id
+                    )
                 else:
                     raise HazelcastInstanceNotActiveError()
             return serializer.read(inp)
@@ -139,11 +145,17 @@ class BaseSerializationService(object):
 
     def _calculate_partitioning_hash(self, obj, partitioning_strategy):
         partitioning_hash = 0
-        _ps = partitioning_strategy if partitioning_strategy is not None else self._global_partition_strategy
+        _ps = (
+            partitioning_strategy
+            if partitioning_strategy is not None
+            else self._global_partition_strategy
+        )
         pk = _ps(obj)
         if pk is not None and pk is not obj:
             partitioning_key = self.to_data(pk, empty_partitioning_strategy)
-            partitioning_hash = 0 if partitioning_key is None else partitioning_key.get_partition_hash()
+            partitioning_hash = (
+                0 if partitioning_key is None else partitioning_key.get_partition_hash()
+            )
         return partitioning_hash
 
     def _create_data_output(self):
@@ -231,7 +243,9 @@ class SerializerRegistry(object):
             serializer = self.lookup_python_serializer(obj_type)
 
         if serializer is None:
-            raise HazelcastSerializationError("There is no suitable serializer for:" + str(obj_type))
+            raise HazelcastSerializationError(
+                "There is no suitable serializer for:" + str(obj_type)
+            )
         return serializer
 
     def lookup_default_serializer(self, obj_type, obj):
@@ -286,7 +300,9 @@ class SerializerRegistry(object):
 
     def register_constant_serializer(self, serializer, object_type=None):
         stream_serializer = serializer
-        self._constant_type_ids[index_for_default_type(stream_serializer.get_type_id())] = stream_serializer
+        self._constant_type_ids[
+            index_for_default_type(stream_serializer.get_type_id())
+        ] = stream_serializer
         if object_type is not None:
             self._constant_type_dict[object_type] = stream_serializer
 
@@ -297,15 +313,19 @@ class SerializerRegistry(object):
                     raise ValueError("[%s] serializer cannot be overridden!" % obj_type)
                 current = self._type_dict.get(obj_type, None)
                 if current is not None and current.__class__ != stream_serializer.__class__:
-                    raise ValueError("Serializer[%s] has been already registered for type: %s"
-                                     % (current.__class__, obj_type))
+                    raise ValueError(
+                        "Serializer[%s] has been already registered for type: %s"
+                        % (current.__class__, obj_type)
+                    )
                 else:
                     self._type_dict[obj_type] = stream_serializer
             serializer_type_id = stream_serializer.get_type_id()
             current = self._id_dic.get(serializer_type_id, None)
             if current is not None and current.__class__ != stream_serializer.__class__:
-                raise ValueError("Serializer[%s] has been already registered for type-id: %s"
-                                 % (current.__class__, serializer_type_id))
+                raise ValueError(
+                    "Serializer[%s] has been already registered for type-id: %s"
+                    % (current.__class__, serializer_type_id)
+                )
             else:
                 self._id_dic[serializer_type_id] = stream_serializer
             return current is None

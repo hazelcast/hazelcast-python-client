@@ -285,7 +285,7 @@ class BigIntegerSerializer(BaseSerializer):
         end_index = -1 if (type(obj) == long and six.PY2) else None
         hex_str = hex(the_big_int)[2:end_index]
         if len(hex_str) % 2 == 1:
-            prefix = '0'  # "f" if obj < 0 else "0"
+            prefix = "0"  # "f" if obj < 0 else "0"
             hex_str = prefix + hex_str
         num_array = bytearray(binascii.unhexlify(bytearray(hex_str, encoding="utf-8")))
         if obj < 0:
@@ -364,18 +364,23 @@ class IdentifiedDataSerializer(BaseSerializer):
     def read(self, inp):
         is_identified = inp.read_boolean()
         if not is_identified:
-            raise HazelcastSerializationError("Native clients only support IdentifiedDataSerializable!")
+            raise HazelcastSerializationError(
+                "Native clients only support IdentifiedDataSerializable!"
+            )
         factory_id = inp.read_int()
         class_id = inp.read_int()
 
         factory = self._factories.get(factory_id, None)
         if factory is None:
             raise HazelcastSerializationError(
-                "No DataSerializerFactory registered for namespace: %s" % factory_id)
+                "No DataSerializerFactory registered for namespace: %s" % factory_id
+            )
         identified = factory.get(class_id, None)
         if identified is None:
             raise HazelcastSerializationError(
-                "%s is not be able to create an instance for id: %s on factoryId: %s" % (factory, class_id, factory_id))
+                "%s is not be able to create an instance for id: %s on factoryId: %s"
+                % (factory, class_id, factory_id)
+            )
         instance = identified()
         instance.read_data(inp)
         return instance

@@ -21,7 +21,7 @@ class Data(object):
 
     def to_bytes(self):
         """Returns byte array representation of internal binary format.
-        
+
         Returns:
             bytearray: The byte array representation of internal binary format.
         """
@@ -29,7 +29,7 @@ class Data(object):
 
     def get_type(self):
         """Returns serialization type of binary form.
-        
+
         Returns:
             int: Serialization type of binary form.
         """
@@ -39,7 +39,7 @@ class Data(object):
 
     def total_size(self):
         """Returns the total size of Data in bytes.
-        
+
         Returns:
             int: Total size of Data in bytes.
         """
@@ -47,7 +47,7 @@ class Data(object):
 
     def data_size(self):
         """Returns size of internal binary data in bytes.
-        
+
         Returns:
             int: Size of internal binary data in bytes.
         """
@@ -60,7 +60,7 @@ class Data(object):
 
         - PartitioningStrategy during serialization.
         - If partition hash is not set then hash_code() is used.
-        
+
         Returns:
             int: Partition hash.
         """
@@ -71,7 +71,7 @@ class Data(object):
 
     def is_portable(self):
         """Determines whether this Data is created from a ``Portable`` object or not.
-        
+
         Returns:
             bool: ``True`` if source object is Portable, ``False`` otherwise.
         """
@@ -79,7 +79,7 @@ class Data(object):
 
     def hash_code(self):
         """Returns the murmur hash of the internal data.
-        
+
         Returns:
             int: The murmur hash of the internal data.
         """
@@ -98,8 +98,11 @@ class Data(object):
         return murmur_hash3_x86_32(bytearray(self._buffer))
 
     def __eq__(self, other):
-        return isinstance(other, Data) and self.total_size() == other.total_size() \
-               and self._buffer == other.to_bytes()
+        return (
+            isinstance(other, Data)
+            and self.total_size() == other.total_size()
+            and self._buffer == other.to_bytes()
+        )
 
     def __len__(self):
         return self.total_size()
