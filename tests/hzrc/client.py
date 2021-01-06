@@ -22,7 +22,7 @@ class HzRemoteController(RemoteController.Iface):
             # Connect!
             transport.open()
         except Thrift.TException:
-            self.logger.exception('Something went wrong while connecting to remote controller.')
+            self.logger.exception("Something went wrong while connecting to remote controller.")
 
     def ping(self):
         return self.remote_controller.ping()
