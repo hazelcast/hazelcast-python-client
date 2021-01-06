@@ -15,9 +15,7 @@ class DistributedObjectsTest(SingleMemberTestCase):
     def setUpClass(cls):
         cls.rc = cls.create_rc()
         cls.cluster = cls.create_cluster(cls.rc, cls.configure_cluster())
-        cls.config = {
-            "cluster_name": cls.cluster.id
-        }
+        cls.config = {"cluster_name": cls.cluster.id}
 
     @classmethod
     def tearDownClass(cls):
@@ -61,7 +59,9 @@ class DistributedObjectsTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(1, len(collector.events))
             event = collector.events[0]
-            self.assertDistributedObjectEvent(event, "test-map", MAP_SERVICE, DistributedObjectEventType.CREATED)
+            self.assertDistributedObjectEvent(
+                event, "test-map", MAP_SERVICE, DistributedObjectEventType.CREATED
+            )
 
         self.assertTrueEventually(assert_event)
 
@@ -76,7 +76,9 @@ class DistributedObjectsTest(SingleMemberTestCase):
             def assert_event():
                 self.assertEqual(1, len(collector.events))
                 event = collector.events[0]
-                self.assertDistributedObjectEvent(event, "test-map", MAP_SERVICE, DistributedObjectEventType.DESTROYED)
+                self.assertDistributedObjectEvent(
+                    event, "test-map", MAP_SERVICE, DistributedObjectEventType.DESTROYED
+                )
 
             self.assertTrueEventually(assert_event)
 
@@ -91,10 +93,12 @@ class DistributedObjectsTest(SingleMemberTestCase):
             self.assertEqual(2, len(collector.events))
             created_event = collector.events[0]
             destroyed_event = collector.events[1]
-            self.assertDistributedObjectEvent(created_event, "test-map", MAP_SERVICE,
-                                              DistributedObjectEventType.CREATED)
-            self.assertDistributedObjectEvent(destroyed_event, "test-map", MAP_SERVICE,
-                                              DistributedObjectEventType.DESTROYED)
+            self.assertDistributedObjectEvent(
+                created_event, "test-map", MAP_SERVICE, DistributedObjectEventType.CREATED
+            )
+            self.assertDistributedObjectEvent(
+                destroyed_event, "test-map", MAP_SERVICE, DistributedObjectEventType.DESTROYED
+            )
 
         self.assertTrueEventually(assert_event)
 
@@ -106,7 +110,9 @@ class DistributedObjectsTest(SingleMemberTestCase):
         def assert_event():
             self.assertEqual(1, len(collector.events))
             event = collector.events[0]
-            self.assertDistributedObjectEvent(event, "test-map", MAP_SERVICE, DistributedObjectEventType.CREATED)
+            self.assertDistributedObjectEvent(
+                event, "test-map", MAP_SERVICE, DistributedObjectEventType.CREATED
+            )
 
         self.assertTrueEventually(assert_event)
 

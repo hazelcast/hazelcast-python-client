@@ -5,9 +5,15 @@ from mock import MagicMock
 
 from hazelcast import HazelcastClient
 from hazelcast.cp import LOCK_SERVICE
-from hazelcast.errors import DistributedObjectDestroyedError, IllegalMonitorStateError, \
-    LockOwnershipLostError, LockAcquireLimitReachedError, SessionExpiredError, WaitKeyCancelledError, \
-    HazelcastRuntimeError
+from hazelcast.errors import (
+    DistributedObjectDestroyedError,
+    IllegalMonitorStateError,
+    LockOwnershipLostError,
+    LockAcquireLimitReachedError,
+    SessionExpiredError,
+    WaitKeyCancelledError,
+    HazelcastRuntimeError,
+)
 from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
 from hazelcast.protocol import RaftGroupId
 from hazelcast.proxy.cp.fenced_lock import FencedLock
@@ -25,7 +31,9 @@ class FencedLockTest(CPTestCase):
         self.lock.destroy()
 
     def test_lock_in_another_group(self):
-        another_lock = self.client.cp_subsystem.get_lock(self.lock._proxy_name + "@another").blocking()
+        another_lock = self.client.cp_subsystem.get_lock(
+            self.lock._proxy_name + "@another"
+        ).blocking()
         self.assert_valid_fence(another_lock.lock())
         try:
             self.assertTrue(another_lock.is_locked())
@@ -249,11 +257,16 @@ class FencedLockMockTest(unittest.TestCase):
         self.acquire_session = MagicMock()
         self.release_session = MagicMock()
         self.invalidate_session = MagicMock()
-        self.session_manager = MagicMock(acquire_session=self.acquire_session, release_session=self.release_session,
-                                         invalidate_session=self.invalidate_session)
+        self.session_manager = MagicMock(
+            acquire_session=self.acquire_session,
+            release_session=self.release_session,
+            invalidate_session=self.invalidate_session,
+        )
         context = MagicMock(proxy_session_manager=self.session_manager)
         group_id = RaftGroupId("test", 0, 42)
-        self.proxy = FencedLock(context, group_id, LOCK_SERVICE, "mylock@mygroup", "mylock").blocking()
+        self.proxy = FencedLock(
+            context, group_id, LOCK_SERVICE, "mylock@mygroup", "mylock"
+        ).blocking()
 
     def test_lock(self):
         # Everything succeeds
@@ -606,7 +619,9 @@ class FencedLockMockTest(unittest.TestCase):
         self.assert_call_counts(0, 0, 0)
         self.assert_no_lock_session_id()
 
-    def test_is_locked_by_current_thread_when_server_returns_a_different_thread_id_for_lock_holder(self):
+    def test_is_locked_by_current_thread_when_server_returns_a_different_thread_id_for_lock_holder(
+        self,
+    ):
         # Client thinks that it holds the lock, but server
         # says it's not.
         self.prepare_get_session(1)

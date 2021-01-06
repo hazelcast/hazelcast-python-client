@@ -7,8 +7,13 @@ from parameterized import parameterized
 
 from hazelcast import HazelcastClient
 from hazelcast.cp import SEMAPHORE_SERVICE
-from hazelcast.errors import DistributedObjectDestroyedError, IllegalStateError, HazelcastRuntimeError, \
-    SessionExpiredError, WaitKeyCancelledError
+from hazelcast.errors import (
+    DistributedObjectDestroyedError,
+    IllegalStateError,
+    HazelcastRuntimeError,
+    SessionExpiredError,
+    WaitKeyCancelledError,
+)
 from hazelcast.future import ImmediateExceptionFuture, ImmediateFuture
 from hazelcast.protocol import RaftGroupId
 from hazelcast.proxy.cp.semaphore import SessionlessSemaphore, SessionAwareSemaphore
@@ -33,7 +38,9 @@ class SemaphoreTest(CPTestCase):
     @parameterized.expand(SEMAPHORE_TYPES)
     def test_semaphore_in_another_group(self, semaphore_type):
         semaphore = self.get_semaphore(semaphore_type, 1)
-        another_semaphore = self.client.cp_subsystem.get_semaphore(semaphore._proxy_name + "@another").blocking()
+        another_semaphore = self.client.cp_subsystem.get_semaphore(
+            semaphore._proxy_name + "@another"
+        ).blocking()
 
         self.assertEqual(1, semaphore.available_permits())
         self.assertEqual(0, another_semaphore.available_permits())
@@ -59,7 +66,9 @@ class SemaphoreTest(CPTestCase):
     def test_session_aware_semaphore_after_client_shutdown(self):
         semaphore = self.get_semaphore("sessionaware", 1)
         another_client = HazelcastClient(cluster_name=self.cluster.id)
-        another_semaphore = another_client.cp_subsystem.get_semaphore(semaphore._proxy_name).blocking()
+        another_semaphore = another_client.cp_subsystem.get_semaphore(
+            semaphore._proxy_name
+        ).blocking()
         another_semaphore.acquire(1)
         self.assertEqual(0, another_semaphore.available_permits())
         self.assertEqual(0, semaphore.available_permits())
@@ -229,7 +238,9 @@ class SemaphoreTest(CPTestCase):
     def test_release_when_acquired_by_another_client_sessionless(self):
         semaphore = self.get_semaphore("sessionless")
         another_client = HazelcastClient(cluster_name=self.cluster.id)
-        another_semaphore = another_client.cp_subsystem.get_semaphore(semaphore._proxy_name).blocking()
+        another_semaphore = another_client.cp_subsystem.get_semaphore(
+            semaphore._proxy_name
+        ).blocking()
         self.assertTrue(another_semaphore.init(1))
         another_semaphore.acquire()
 
@@ -279,7 +290,9 @@ class SemaphoreTest(CPTestCase):
         self.assertEqual(1, semaphore.available_permits())
 
     def get_semaphore(self, semaphore_type, initialize_with=None):
-        semaphore = self.client.cp_subsystem.get_semaphore(semaphore_type + random_string()).blocking()
+        semaphore = self.client.cp_subsystem.get_semaphore(
+            semaphore_type + random_string()
+        ).blocking()
         if initialize_with is not None:
             semaphore.init(initialize_with)
         self.semaphore = semaphore
@@ -359,9 +372,13 @@ class SemaphoreIllegalArgumentTest(unittest.TestCase):
         proxy_name = "semaphore@mygroup"
         object_name = "semaphore"
         if semaphore_type == "sessionless":
-            return SessionlessSemaphore(context, self.group_id, SEMAPHORE_SERVICE, proxy_name, object_name)
+            return SessionlessSemaphore(
+                context, self.group_id, SEMAPHORE_SERVICE, proxy_name, object_name
+            )
         elif semaphore_type == "sessionaware":
-            return SessionAwareSemaphore(context, self.group_id, SEMAPHORE_SERVICE, proxy_name, object_name)
+            return SessionAwareSemaphore(
+                context, self.group_id, SEMAPHORE_SERVICE, proxy_name, object_name
+            )
         else:
             self.fail("Unknown semaphore type")
 
@@ -374,12 +391,16 @@ class SessionAwareSemaphoreMockTest(unittest.TestCase):
         self.acquire_session = MagicMock()
         self.release_session = MagicMock()
         self.invalidate_session = MagicMock()
-        self.session_manager = MagicMock(acquire_session=self.acquire_session, release_session=self.release_session,
-                                         invalidate_session=self.invalidate_session)
+        self.session_manager = MagicMock(
+            acquire_session=self.acquire_session,
+            release_session=self.release_session,
+            invalidate_session=self.invalidate_session,
+        )
         context = MagicMock(proxy_session_manager=self.session_manager)
         self.group_id = RaftGroupId("test", 0, 42)
-        self.semaphore = SessionAwareSemaphore(context, self.group_id, SEMAPHORE_SERVICE, "semaphore@mygroup",
-                                               "semaphore").blocking()
+        self.semaphore = SessionAwareSemaphore(
+            context, self.group_id, SEMAPHORE_SERVICE, "semaphore@mygroup", "semaphore"
+        ).blocking()
 
     def test_acquire(self):
         # Everything works
@@ -705,8 +726,13 @@ class SessionlessSemaphoreProxy(unittest.TestCase):
     def setUp(self):
         self.session_manager = MagicMock()
         self.context = MagicMock(proxy_session_manager=self.session_manager)
-        self.semaphore = SessionlessSemaphore(self.context, RaftGroupId("name", 0, 42), SEMAPHORE_SERVICE,
-                                              "semaphore@mygroup", "semaphore").blocking()
+        self.semaphore = SessionlessSemaphore(
+            self.context,
+            RaftGroupId("name", 0, 42),
+            SEMAPHORE_SERVICE,
+            "semaphore@mygroup",
+            "semaphore",
+        ).blocking()
 
     def test_acquire(self):
         # Everything works

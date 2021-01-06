@@ -23,105 +23,126 @@ class ReplicatedMapTest(SingleMemberTestCase):
     def test_add_entry_listener_item_added(self):
         collector = event_collector()
         self.replicated_map.add_entry_listener(added_func=collector)
-        self.replicated_map.put('key', 'value')
+        self.replicated_map.put("key", "value")
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key', event_type=EntryEventType.ADDED, value='value')
+            self.assertEntryEvent(event, key="key", event_type=EntryEventType.ADDED, value="value")
 
         self.assertTrueEventually(assert_event, 5)
 
     def test_add_entry_listener_item_removed(self):
         collector = event_collector()
         self.replicated_map.add_entry_listener(removed_func=collector)
-        self.replicated_map.put('key', 'value')
-        self.replicated_map.remove('key')
+        self.replicated_map.put("key", "value")
+        self.replicated_map.remove("key")
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key', event_type=EntryEventType.REMOVED, old_value='value')
+            self.assertEntryEvent(
+                event, key="key", event_type=EntryEventType.REMOVED, old_value="value"
+            )
 
         self.assertTrueEventually(assert_event, 5)
 
     def test_add_entry_listener_item_updated(self):
         collector = event_collector()
         self.replicated_map.add_entry_listener(updated_func=collector)
-        self.replicated_map.put('key', 'value')
-        self.replicated_map.put('key', 'new_value')
+        self.replicated_map.put("key", "value")
+        self.replicated_map.put("key", "new_value")
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key', event_type=EntryEventType.UPDATED, old_value='value',
-                                  value='new_value')
+            self.assertEntryEvent(
+                event,
+                key="key",
+                event_type=EntryEventType.UPDATED,
+                old_value="value",
+                value="new_value",
+            )
 
         self.assertTrueEventually(assert_event, 5)
 
     def test_add_entry_listener_item_evicted(self):
         collector = event_collector()
         self.replicated_map.add_entry_listener(evicted_func=collector)
-        self.replicated_map.put('key', 'value', ttl=1)
+        self.replicated_map.put("key", "value", ttl=1)
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key', event_type=EntryEventType.EVICTED, old_value='value')
+            self.assertEntryEvent(
+                event, key="key", event_type=EntryEventType.EVICTED, old_value="value"
+            )
 
         self.assertTrueEventually(assert_event, 10)
 
     def test_add_entry_listener_with_key(self):
         collector = event_collector()
-        id = self.replicated_map.add_entry_listener(key='key1', added_func=collector)
-        self.replicated_map.put('key2', 'value2')
-        self.replicated_map.put('key1', 'value1')
+        id = self.replicated_map.add_entry_listener(key="key1", added_func=collector)
+        self.replicated_map.put("key2", "value2")
+        self.replicated_map.put("key1", "value1")
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key1', event_type=EntryEventType.ADDED, value='value1')
+            self.assertEntryEvent(
+                event, key="key1", event_type=EntryEventType.ADDED, value="value1"
+            )
 
         self.assertTrueEventually(assert_event, 5)
 
     def test_add_entry_listener_with_predicate(self):
         collector = event_collector()
-        self.replicated_map.add_entry_listener(predicate=sql("this == value1"), added_func=collector)
-        self.replicated_map.put('key2', 'value2')
-        self.replicated_map.put('key1', 'value1')
+        self.replicated_map.add_entry_listener(
+            predicate=sql("this == value1"), added_func=collector
+        )
+        self.replicated_map.put("key2", "value2")
+        self.replicated_map.put("key1", "value1")
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key1', event_type=EntryEventType.ADDED, value='value1')
+            self.assertEntryEvent(
+                event, key="key1", event_type=EntryEventType.ADDED, value="value1"
+            )
 
         self.assertTrueEventually(assert_event, 5)
 
     def test_add_entry_listener_with_key_and_predicate(self):
         collector = event_collector()
-        self.replicated_map.add_entry_listener(key='key1', predicate=sql("this == value3"), added_func=collector)
-        self.replicated_map.put('key2', 'value2')
-        self.replicated_map.put('key1', 'value1')
-        self.replicated_map.remove('key1')
-        self.replicated_map.put('key1', 'value3')
+        self.replicated_map.add_entry_listener(
+            key="key1", predicate=sql("this == value3"), added_func=collector
+        )
+        self.replicated_map.put("key2", "value2")
+        self.replicated_map.put("key1", "value1")
+        self.replicated_map.remove("key1")
+        self.replicated_map.put("key1", "value3")
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key1', event_type=EntryEventType.ADDED, value='value3')
+            self.assertEntryEvent(
+                event, key="key1", event_type=EntryEventType.ADDED, value="value3"
+            )
 
         self.assertTrueEventually(assert_event, 5)
 
     def test_add_entry_listener_clear_all(self):
         collector = event_collector()
         self.replicated_map.add_entry_listener(clear_all_func=collector)
-        self.replicated_map.put('key', 'value')
+        self.replicated_map.put("key", "value")
         self.replicated_map.clear()
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, event_type=EntryEventType.CLEAR_ALL, number_of_affected_entries=1)
+            self.assertEntryEvent(
+                event, event_type=EntryEventType.CLEAR_ALL, number_of_affected_entries=1
+            )
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -152,7 +173,8 @@ class ReplicatedMapTest(SingleMemberTestCase):
         map = self._fill_map()
 
         self.assertTrueEventually(
-            lambda: six.assertCountEqual(self, six.iteritems(map), self.replicated_map.entry_set()))
+            lambda: six.assertCountEqual(self, six.iteritems(map), self.replicated_map.entry_set())
+        )
 
     def test_is_empty(self):
         self.replicated_map.put("key", " value")
@@ -165,7 +187,9 @@ class ReplicatedMapTest(SingleMemberTestCase):
     def test_key_set(self):
         map = self._fill_map()
 
-        self.assertTrueEventually(lambda: six.assertCountEqual(self, list(map.keys()), self.replicated_map.key_set()))
+        self.assertTrueEventually(
+            lambda: six.assertCountEqual(self, list(map.keys()), self.replicated_map.key_set())
+        )
 
     def test_put_get(self):
         self.assertIsNone(self.replicated_map.put("key", "value"))
@@ -178,7 +202,9 @@ class ReplicatedMapTest(SingleMemberTestCase):
 
         self.replicated_map.put_all(map)
 
-        self.assertTrueEventually(lambda: six.assertCountEqual(self, six.iteritems(map), self.replicated_map.entry_set()))
+        self.assertTrueEventually(
+            lambda: six.assertCountEqual(self, six.iteritems(map), self.replicated_map.entry_set())
+        )
 
     def test_remove(self):
         self.replicated_map.put("key", "value")
@@ -189,10 +215,10 @@ class ReplicatedMapTest(SingleMemberTestCase):
         collector = event_collector()
         id = self.replicated_map.add_entry_listener(added_func=collector)
 
-        self.replicated_map.put('key', 'value')
+        self.replicated_map.put("key", "value")
         self.assertTrueEventually(lambda: self.assertEqual(len(collector.events), 1))
         self.replicated_map.remove_entry_listener(id)
-        self.replicated_map.put('key2', 'value')
+        self.replicated_map.put("key2", "value")
 
         time.sleep(1)
         self.assertEqual(len(collector.events), 1)
@@ -204,7 +230,11 @@ class ReplicatedMapTest(SingleMemberTestCase):
     def test_values(self):
         map = self._fill_map()
 
-        self.assertTrueEventually(lambda: six.assertCountEqual(self, list(map.values()), list(self.replicated_map.values())))
+        self.assertTrueEventually(
+            lambda: six.assertCountEqual(
+                self, list(map.values()), list(self.replicated_map.values())
+            )
+        )
 
     def test_str(self):
         self.assertTrue(str(self.replicated_map).startswith("ReplicatedMap"))

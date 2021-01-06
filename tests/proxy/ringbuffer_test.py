@@ -22,7 +22,9 @@ class RingBufferTest(SingleMemberTestCase):
             return f.read()
 
     def setUp(self):
-        self.ringbuffer = self.client.get_ringbuffer("ClientRingbufferTestWithTTL-" + random_string()).blocking()
+        self.ringbuffer = self.client.get_ringbuffer(
+            "ClientRingbufferTestWithTTL-" + random_string()
+        ).blocking()
 
     def tearDown(self):
         self.ringbuffer.destroy()
@@ -46,7 +48,9 @@ class RingBufferTest(SingleMemberTestCase):
         self.assertEqual(CAPACITY - 1, self.ringbuffer.add_all(list(range(0, CAPACITY))))
 
     def test_add_all_when_full(self):
-        self.assertEqual(-1, self.ringbuffer.add_all(list(range(0, CAPACITY * 2)), OVERFLOW_POLICY_FAIL))
+        self.assertEqual(
+            -1, self.ringbuffer.add_all(list(range(0, CAPACITY * 2)), OVERFLOW_POLICY_FAIL)
+        )
 
     def test_add_all_when_empty_list(self):
         with self.assertRaises(AssertionError):
@@ -98,11 +102,11 @@ class RingBufferTest(SingleMemberTestCase):
 
     def test_read_many_when_min_count_greater_than_capacity(self):
         with self.assertRaises(AssertionError):
-            self.ringbuffer.read_many(0, CAPACITY+1, CAPACITY+1)
+            self.ringbuffer.read_many(0, CAPACITY + 1, CAPACITY + 1)
 
     def test_read_many_when_max_count_greater_than_batch_size(self):
         with self.assertRaises(AssertionError):
-            self.ringbuffer.read_many(0, 0, MAX_BATCH_SIZE+1)
+            self.ringbuffer.read_many(0, 0, MAX_BATCH_SIZE + 1)
 
     def _fill_ringbuffer(self, n=CAPACITY):
         for x in range(0, n):

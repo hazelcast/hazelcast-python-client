@@ -19,9 +19,7 @@ class MapTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
         config["cluster_name"] = cls.cluster.id
-        config["near_caches"] = {
-            random_string(): {}
-        }
+        config["near_caches"] = {random_string(): {}}
         return config
 
     def setUp(self):
@@ -71,8 +69,13 @@ class MapTest(SingleMemberTestCase):
     def test_invalidate_nonexist_key(self):
         self._fill_map_and_near_cache(10)
         initial_cache_size = len(self.map._near_cache)
-        script = """map = instance_0.getMap("{}");map.put("key-99","x");map.put("key-NonExist","x");map.remove("key-NonExist")"""\
-            .format(self.map.name)
+        script = """
+            map = instance_0.getMap("{}");
+            map.put("key-99","x");
+            map.put("key-NonExist","x");
+            map.remove("key-NonExist")""".format(
+            self.map.name
+        )
         response = self.rc.executeOnController(self.cluster.id, script, Lang.PYTHON)
         self.assertTrue(response.success)
         self.assertEqual(initial_cache_size, 10)

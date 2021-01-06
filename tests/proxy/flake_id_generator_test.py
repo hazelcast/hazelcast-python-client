@@ -234,9 +234,11 @@ class FlakeIdGeneratorIdOutOfRangeTest(HazelcastTestCase):
         client.shutdown()
 
     def _assign_out_of_range_node_id(self, cluster_id, instance_id):
-        script = "def assign_out_of_range_node_id():\n" \
-            "\tinstance_{}.getCluster().getLocalMember().setMemberListJoinVersion(100000)\n" \
-            "\treturn instance_{}.getCluster().getLocalMember().getMemberListJoinVersion()\n" \
+        script = (
+            "def assign_out_of_range_node_id():\n"
+            "\tinstance_{}.getCluster().getLocalMember().setMemberListJoinVersion(100000)\n"
+            "\treturn instance_{}.getCluster().getLocalMember().getMemberListJoinVersion()\n"
             "result = str(assign_out_of_range_node_id())\n".format(instance_id, instance_id)
+        )
 
         return self.rc.executeOnController(cluster_id, script, Lang.PYTHON)

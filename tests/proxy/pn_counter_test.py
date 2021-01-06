@@ -97,7 +97,9 @@ class PNCounterConsistencyTest(HazelcastTestCase):
 
     def _configure_cluster(self):
         current_directory = os.path.dirname(__file__)
-        with open(get_abs_path(current_directory, "hazelcast_crdtreplication_delayed.xml"), "r") as f:
+        with open(
+            get_abs_path(current_directory, "hazelcast_crdtreplication_delayed.xml"), "r"
+        ) as f:
             return f.read()
 
 

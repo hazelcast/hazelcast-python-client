@@ -25,51 +25,57 @@ class MultiMapTest(SingleMemberTestCase):
     def test_add_entry_listener_item_added(self):
         collector = event_collector()
         self.multi_map.add_entry_listener(include_value=True, added_func=collector)
-        self.multi_map.put('key', 'value')
+        self.multi_map.put("key", "value")
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key', event_type=EntryEventType.ADDED, value='value')
+            self.assertEntryEvent(event, key="key", event_type=EntryEventType.ADDED, value="value")
 
         self.assertTrueEventually(assert_event, 5)
 
     def test_add_entry_listener_item_removed(self):
         collector = event_collector()
         self.multi_map.add_entry_listener(include_value=True, removed_func=collector)
-        self.multi_map.put('key', 'value')
-        self.multi_map.remove('key', 'value')
+        self.multi_map.put("key", "value")
+        self.multi_map.remove("key", "value")
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key', event_type=EntryEventType.REMOVED, old_value='value')
+            self.assertEntryEvent(
+                event, key="key", event_type=EntryEventType.REMOVED, old_value="value"
+            )
 
         self.assertTrueEventually(assert_event, 5)
 
     def test_add_entry_listener_clear_all(self):
         collector = event_collector()
         self.multi_map.add_entry_listener(include_value=True, clear_all_func=collector)
-        self.multi_map.put('key', 'value')
+        self.multi_map.put("key", "value")
         self.multi_map.clear()
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, event_type=EntryEventType.CLEAR_ALL, number_of_affected_entries=1)
+            self.assertEntryEvent(
+                event, event_type=EntryEventType.CLEAR_ALL, number_of_affected_entries=1
+            )
 
         self.assertTrueEventually(assert_event, 5)
 
     def test_add_entry_listener_with_key(self):
         collector = event_collector()
-        id = self.multi_map.add_entry_listener(key='key1', include_value=True, added_func=collector)
-        self.multi_map.put('key2', 'value2')
-        self.multi_map.put('key1', 'value1')
+        id = self.multi_map.add_entry_listener(key="key1", include_value=True, added_func=collector)
+        self.multi_map.put("key2", "value2")
+        self.multi_map.put("key1", "value1")
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key1', event_type=EntryEventType.ADDED, value='value1')
+            self.assertEntryEvent(
+                event, key="key1", event_type=EntryEventType.ADDED, value="value1"
+            )
 
         self.assertTrueEventually(assert_event, 5)
 
@@ -169,10 +175,10 @@ class MultiMapTest(SingleMemberTestCase):
         collector = event_collector()
         id = self.multi_map.add_entry_listener(added_func=collector)
 
-        self.multi_map.put('key', 'value')
+        self.multi_map.put("key", "value")
         self.assertTrueEventually(lambda: self.assertEqual(len(collector.events), 1))
         self.multi_map.remove_entry_listener(id)
-        self.multi_map.put('key2', 'value')
+        self.multi_map.put("key2", "value")
 
         time.sleep(1)
         self.assertEqual(len(collector.events), 1)
@@ -214,7 +220,10 @@ class MultiMapTest(SingleMemberTestCase):
         self.assertTrue(str(self.multi_map).startswith("MultiMap"))
 
     def _fill_map(self, key_count=5, value_count=5):
-        map = {"key-%d" % x: ["value-%d-%d" % (x, y) for y in range(0, value_count)] for x in range(0, key_count)}
+        map = {
+            "key-%d" % x: ["value-%d-%d" % (x, y) for y in range(0, value_count)]
+            for x in range(0, key_count)
+        }
         for k, l in six.iteritems(map):
             for v in l:
                 self.multi_map.put(k, v)
