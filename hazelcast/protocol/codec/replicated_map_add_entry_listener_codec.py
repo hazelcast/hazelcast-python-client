@@ -1,6 +1,12 @@
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.builtin import FixSizedTypesCodec
-from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer, RESPONSE_HEADER_SIZE, EVENT_HEADER_SIZE
+from hazelcast.protocol.client_message import (
+    OutboundMessage,
+    REQUEST_HEADER_SIZE,
+    create_initial_buffer,
+    RESPONSE_HEADER_SIZE,
+    EVENT_HEADER_SIZE,
+)
 from hazelcast.protocol.builtin import StringCodec
 from hazelcast.protocol.builtin import DataCodec
 from hazelcast.protocol.builtin import CodecUtil
@@ -36,12 +42,18 @@ def handle(msg, handle_entry_event=None):
     message_type = msg.get_message_type()
     if message_type == _EVENT_ENTRY_MESSAGE_TYPE and handle_entry_event is not None:
         initial_frame = msg.next_frame()
-        event_type = FixSizedTypesCodec.decode_int(initial_frame.buf, _EVENT_ENTRY_EVENT_TYPE_OFFSET)
+        event_type = FixSizedTypesCodec.decode_int(
+            initial_frame.buf, _EVENT_ENTRY_EVENT_TYPE_OFFSET
+        )
         uuid = FixSizedTypesCodec.decode_uuid(initial_frame.buf, _EVENT_ENTRY_UUID_OFFSET)
-        number_of_affected_entries = FixSizedTypesCodec.decode_int(initial_frame.buf, _EVENT_ENTRY_NUMBER_OF_AFFECTED_ENTRIES_OFFSET)
+        number_of_affected_entries = FixSizedTypesCodec.decode_int(
+            initial_frame.buf, _EVENT_ENTRY_NUMBER_OF_AFFECTED_ENTRIES_OFFSET
+        )
         key = CodecUtil.decode_nullable(msg, DataCodec.decode)
         value = CodecUtil.decode_nullable(msg, DataCodec.decode)
         old_value = CodecUtil.decode_nullable(msg, DataCodec.decode)
         merging_value = CodecUtil.decode_nullable(msg, DataCodec.decode)
-        handle_entry_event(key, value, old_value, merging_value, event_type, uuid, number_of_affected_entries)
+        handle_entry_event(
+            key, value, old_value, merging_value, event_type, uuid, number_of_affected_entries
+        )
         return

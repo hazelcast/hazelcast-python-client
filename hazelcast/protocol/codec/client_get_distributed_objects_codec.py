@@ -1,4 +1,8 @@
-from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer
+from hazelcast.protocol.client_message import (
+    OutboundMessage,
+    REQUEST_HEADER_SIZE,
+    create_initial_buffer,
+)
 from hazelcast.protocol.builtin import ListMultiFrameCodec
 from hazelcast.protocol.codec.custom.distributed_object_info_codec import DistributedObjectInfoCodec
 

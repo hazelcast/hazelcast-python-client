@@ -2,10 +2,28 @@ import uuid
 
 from hazelcast import six
 from hazelcast.six.moves import range
-from hazelcast.protocol.client_message import NULL_FRAME_BUF, BEGIN_FRAME_BUF, END_FRAME_BUF, \
-    SIZE_OF_FRAME_LENGTH_AND_FLAGS, _IS_FINAL_FLAG, NULL_FINAL_FRAME_BUF, END_FINAL_FRAME_BUF
-from hazelcast.serialization import LONG_SIZE_IN_BYTES, UUID_SIZE_IN_BYTES, LE_INT, LE_LONG, BOOLEAN_SIZE_IN_BYTES, \
-    INT_SIZE_IN_BYTES, LE_ULONG, LE_UINT16, LE_INT8, UUID_MSB_SHIFT, UUID_LSB_MASK
+from hazelcast.protocol.client_message import (
+    NULL_FRAME_BUF,
+    BEGIN_FRAME_BUF,
+    END_FRAME_BUF,
+    SIZE_OF_FRAME_LENGTH_AND_FLAGS,
+    _IS_FINAL_FLAG,
+    NULL_FINAL_FRAME_BUF,
+    END_FINAL_FRAME_BUF,
+)
+from hazelcast.serialization import (
+    LONG_SIZE_IN_BYTES,
+    UUID_SIZE_IN_BYTES,
+    LE_INT,
+    LE_LONG,
+    BOOLEAN_SIZE_IN_BYTES,
+    INT_SIZE_IN_BYTES,
+    LE_ULONG,
+    LE_UINT16,
+    LE_INT8,
+    UUID_MSB_SHIFT,
+    UUID_LSB_MASK,
+)
 from hazelcast.serialization.data import Data
 
 
@@ -145,7 +163,6 @@ _UUID_LONG_ENTRY_SIZE_IN_BYTES = UUID_SIZE_IN_BYTES + LONG_SIZE_IN_BYTES
 
 
 class EntryListUUIDLongCodec(object):
-
     @staticmethod
     def encode(buf, entries, is_final=False):
         n = len(entries)
@@ -251,7 +268,10 @@ class FixSizedTypesCodec(object):
 
         msb_offset = offset + BOOLEAN_SIZE_IN_BYTES
         lsb_offset = msb_offset + LONG_SIZE_IN_BYTES
-        b = buf[lsb_offset - 1:msb_offset - 1:-1] + buf[lsb_offset + LONG_SIZE_IN_BYTES - 1:lsb_offset - 1:-1]
+        b = (
+            buf[lsb_offset - 1 : msb_offset - 1 : -1]
+            + buf[lsb_offset + LONG_SIZE_IN_BYTES - 1 : lsb_offset - 1 : -1]
+        )
         return uuid.UUID(bytes=bytes(b))
 
 
@@ -265,7 +285,9 @@ class ListIntegerCodec(object):
         if is_final:
             LE_UINT16.pack_into(b, INT_SIZE_IN_BYTES, _IS_FINAL_FLAG)
         for i in range(n):
-            FixSizedTypesCodec.encode_int(b, SIZE_OF_FRAME_LENGTH_AND_FLAGS + i * INT_SIZE_IN_BYTES, arr[i])
+            FixSizedTypesCodec.encode_int(
+                b, SIZE_OF_FRAME_LENGTH_AND_FLAGS + i * INT_SIZE_IN_BYTES, arr[i]
+            )
         buf.extend(b)
 
     @staticmethod
@@ -288,7 +310,9 @@ class ListLongCodec(object):
         if is_final:
             LE_UINT16.pack_into(b, INT_SIZE_IN_BYTES, _IS_FINAL_FLAG)
         for i in range(n):
-            FixSizedTypesCodec.encode_long(b, SIZE_OF_FRAME_LENGTH_AND_FLAGS + i * LONG_SIZE_IN_BYTES, arr[i])
+            FixSizedTypesCodec.encode_long(
+                b, SIZE_OF_FRAME_LENGTH_AND_FLAGS + i * LONG_SIZE_IN_BYTES, arr[i]
+            )
         buf.extend(b)
 
     @staticmethod
@@ -376,7 +400,9 @@ class ListUUIDCodec(object):
         if is_final:
             LE_UINT16.pack_into(b, INT_SIZE_IN_BYTES, _IS_FINAL_FLAG)
         for i in range(n):
-            FixSizedTypesCodec.encode_uuid(b, SIZE_OF_FRAME_LENGTH_AND_FLAGS + i * UUID_SIZE_IN_BYTES, arr[i])
+            FixSizedTypesCodec.encode_uuid(
+                b, SIZE_OF_FRAME_LENGTH_AND_FLAGS + i * UUID_SIZE_IN_BYTES, arr[i]
+            )
         buf.extend(b)
 
     @staticmethod
@@ -399,7 +425,9 @@ class LongArrayCodec(object):
         if is_final:
             LE_UINT16.pack_into(b, INT_SIZE_IN_BYTES, _IS_FINAL_FLAG)
         for i in range(n):
-            FixSizedTypesCodec.encode_long(b, SIZE_OF_FRAME_LENGTH_AND_FLAGS + i * LONG_SIZE_IN_BYTES, arr[i])
+            FixSizedTypesCodec.encode_long(
+                b, SIZE_OF_FRAME_LENGTH_AND_FLAGS + i * LONG_SIZE_IN_BYTES, arr[i]
+            )
         buf.extend(b)
 
     @staticmethod

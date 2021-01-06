@@ -1,6 +1,11 @@
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.builtin import FixSizedTypesCodec
-from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer, RESPONSE_HEADER_SIZE
+from hazelcast.protocol.client_message import (
+    OutboundMessage,
+    REQUEST_HEADER_SIZE,
+    create_initial_buffer,
+    RESPONSE_HEADER_SIZE,
+)
 from hazelcast.protocol.builtin import StringCodec
 
 # hex: 0x1C0100
@@ -26,6 +31,10 @@ def decode_response(msg):
     initial_frame = msg.next_frame()
     response = dict()
     response["base"] = FixSizedTypesCodec.decode_long(initial_frame.buf, _RESPONSE_BASE_OFFSET)
-    response["increment"] = FixSizedTypesCodec.decode_long(initial_frame.buf, _RESPONSE_INCREMENT_OFFSET)
-    response["batch_size"] = FixSizedTypesCodec.decode_int(initial_frame.buf, _RESPONSE_BATCH_SIZE_OFFSET)
+    response["increment"] = FixSizedTypesCodec.decode_long(
+        initial_frame.buf, _RESPONSE_INCREMENT_OFFSET
+    )
+    response["batch_size"] = FixSizedTypesCodec.decode_int(
+        initial_frame.buf, _RESPONSE_BATCH_SIZE_OFFSET
+    )
     return response

@@ -1,6 +1,11 @@
 from hazelcast.protocol.builtin import FixSizedTypesCodec, CodecUtil
 from hazelcast.serialization.bits import *
-from hazelcast.protocol.client_message import END_FRAME_BUF, END_FINAL_FRAME_BUF, SIZE_OF_FRAME_LENGTH_AND_FLAGS, create_initial_buffer_custom
+from hazelcast.protocol.client_message import (
+    END_FRAME_BUF,
+    END_FINAL_FRAME_BUF,
+    SIZE_OF_FRAME_LENGTH_AND_FLAGS,
+    create_initial_buffer_custom,
+)
 from hazelcast.core import MemberVersion
 
 _MAJOR_ENCODE_OFFSET = 2 * SIZE_OF_FRAME_LENGTH_AND_FLAGS
@@ -16,9 +21,15 @@ class MemberVersionCodec(object):
     @staticmethod
     def encode(buf, member_version, is_final=False):
         initial_frame_buf = create_initial_buffer_custom(_INITIAL_FRAME_SIZE)
-        FixSizedTypesCodec.encode_byte(initial_frame_buf, _MAJOR_ENCODE_OFFSET, member_version.major)
-        FixSizedTypesCodec.encode_byte(initial_frame_buf, _MINOR_ENCODE_OFFSET, member_version.minor)
-        FixSizedTypesCodec.encode_byte(initial_frame_buf, _PATCH_ENCODE_OFFSET, member_version.patch)
+        FixSizedTypesCodec.encode_byte(
+            initial_frame_buf, _MAJOR_ENCODE_OFFSET, member_version.major
+        )
+        FixSizedTypesCodec.encode_byte(
+            initial_frame_buf, _MINOR_ENCODE_OFFSET, member_version.minor
+        )
+        FixSizedTypesCodec.encode_byte(
+            initial_frame_buf, _PATCH_ENCODE_OFFSET, member_version.patch
+        )
         buf.extend(initial_frame_buf)
         if is_final:
             buf.extend(END_FINAL_FRAME_BUF)

@@ -1,6 +1,11 @@
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.builtin import FixSizedTypesCodec
-from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer, RESPONSE_HEADER_SIZE
+from hazelcast.protocol.client_message import (
+    OutboundMessage,
+    REQUEST_HEADER_SIZE,
+    create_initial_buffer,
+    RESPONSE_HEADER_SIZE,
+)
 from hazelcast.protocol.builtin import StringCodec
 from hazelcast.protocol.builtin import DataCodec
 from hazelcast.protocol.builtin import CodecUtil
@@ -33,8 +38,12 @@ def encode_request(name, start_sequence, min_count, max_count, filter):
 def decode_response(msg):
     initial_frame = msg.next_frame()
     response = dict()
-    response["read_count"] = FixSizedTypesCodec.decode_int(initial_frame.buf, _RESPONSE_READ_COUNT_OFFSET)
-    response["next_seq"] = FixSizedTypesCodec.decode_long(initial_frame.buf, _RESPONSE_NEXT_SEQ_OFFSET)
+    response["read_count"] = FixSizedTypesCodec.decode_int(
+        initial_frame.buf, _RESPONSE_READ_COUNT_OFFSET
+    )
+    response["next_seq"] = FixSizedTypesCodec.decode_long(
+        initial_frame.buf, _RESPONSE_NEXT_SEQ_OFFSET
+    )
     response["items"] = ListMultiFrameCodec.decode(msg, DataCodec.decode)
     response["item_seqs"] = CodecUtil.decode_nullable(msg, LongArrayCodec.decode)
     return response

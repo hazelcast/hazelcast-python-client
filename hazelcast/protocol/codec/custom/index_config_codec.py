@@ -1,6 +1,11 @@
 from hazelcast.protocol.builtin import FixSizedTypesCodec, CodecUtil
 from hazelcast.serialization.bits import *
-from hazelcast.protocol.client_message import END_FRAME_BUF, END_FINAL_FRAME_BUF, SIZE_OF_FRAME_LENGTH_AND_FLAGS, create_initial_buffer_custom
+from hazelcast.protocol.client_message import (
+    END_FRAME_BUF,
+    END_FINAL_FRAME_BUF,
+    SIZE_OF_FRAME_LENGTH_AND_FLAGS,
+    create_initial_buffer_custom,
+)
 from hazelcast.config import IndexConfig
 from hazelcast.protocol.builtin import StringCodec
 from hazelcast.protocol.builtin import ListMultiFrameCodec
@@ -19,7 +24,9 @@ class IndexConfigCodec(object):
         buf.extend(initial_frame_buf)
         CodecUtil.encode_nullable(buf, index_config.name, StringCodec.encode)
         ListMultiFrameCodec.encode(buf, index_config.attributes, StringCodec.encode)
-        CodecUtil.encode_nullable(buf, index_config.bitmap_index_options, BitmapIndexOptionsCodec.encode)
+        CodecUtil.encode_nullable(
+            buf, index_config.bitmap_index_options, BitmapIndexOptionsCodec.encode
+        )
         if is_final:
             buf.extend(END_FINAL_FRAME_BUF)
         else:

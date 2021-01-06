@@ -1,6 +1,11 @@
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.builtin import FixSizedTypesCodec
-from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer, RESPONSE_HEADER_SIZE
+from hazelcast.protocol.client_message import (
+    OutboundMessage,
+    REQUEST_HEADER_SIZE,
+    create_initial_buffer,
+    RESPONSE_HEADER_SIZE,
+)
 from hazelcast.protocol.builtin import StringCodec
 
 # hex: 0x014100
@@ -22,6 +27,10 @@ def encode_request(name):
 def decode_response(msg):
     initial_frame = msg.next_frame()
     response = dict()
-    response["oldest_sequence"] = FixSizedTypesCodec.decode_long(initial_frame.buf, _RESPONSE_OLDEST_SEQUENCE_OFFSET)
-    response["newest_sequence"] = FixSizedTypesCodec.decode_long(initial_frame.buf, _RESPONSE_NEWEST_SEQUENCE_OFFSET)
+    response["oldest_sequence"] = FixSizedTypesCodec.decode_long(
+        initial_frame.buf, _RESPONSE_OLDEST_SEQUENCE_OFFSET
+    )
+    response["newest_sequence"] = FixSizedTypesCodec.decode_long(
+        initial_frame.buf, _RESPONSE_NEWEST_SEQUENCE_OFFSET
+    )
     return response
