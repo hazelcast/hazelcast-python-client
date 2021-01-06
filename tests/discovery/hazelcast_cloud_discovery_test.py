@@ -29,28 +29,35 @@ PRIVATE_LINK_RESPONSE = """[
 
 HOST = "localhost"
 
-ADDRESSES = {Address("10.47.0.8", 32298): Address("54.213.63.142", 32298),
-             Address("10.47.0.9", 32298): Address("54.245.77.185", 32298),
-             Address("10.47.0.10", 32298): Address("54.186.232.37", 32298)}
+ADDRESSES = {
+    Address("10.47.0.8", 32298): Address("54.213.63.142", 32298),
+    Address("10.47.0.9", 32298): Address("54.245.77.185", 32298),
+    Address("10.47.0.10", 32298): Address("54.186.232.37", 32298),
+}
 
-PRIVATE_LINK_ADDRESSES = {Address("100.96.5.1", 5701): Address("10.113.44.139", 31115),
-                          Address("100.96.4.2", 5701): Address("10.113.44.130", 31115)}
+PRIVATE_LINK_ADDRESSES = {
+    Address("100.96.5.1", 5701): Address("10.113.44.139", 31115),
+    Address("100.96.4.2", 5701): Address("10.113.44.130", 31115),
+}
 
 
 class CloudHTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_GET(self):
         idx = self.path.find("=")
         if idx > 0:
-            if self.path[:idx + 1] == CLOUD_URL:
+            if self.path[: idx + 1] == CLOUD_URL:
                 # Found a cluster with the given token
-                token = self.path[idx + 1:]
+                token = self.path[idx + 1 :]
                 if token == TOKEN:
                     self._set_response(200, RESPONSE)
                 elif token == PRIVATE_LINK_TOKEN:
                     self._set_response(200, PRIVATE_LINK_RESPONSE)
                 # Can not find a cluster with the given token
                 else:
-                    self._set_response(404, '{"message":"Cluster with token: ' + self.path[idx + 1:] + ' not found."}')
+                    self._set_response(
+                        404,
+                        '{"message":"Cluster with token: ' + self.path[idx + 1 :] + ' not found."}',
+                    )
         else:
             # Wrong URL
             self._set_response(404, "default backend - 404")
@@ -67,9 +74,12 @@ class Server(object):
 
     def __init__(self):
         self.server = BaseHTTPServer.HTTPServer((HOST, 0), CloudHTTPHandler)
-        self.server.socket = ssl.wrap_socket(self.server.socket, get_abs_path(self.cur_dir, "key.pem"),
-                                             get_abs_path(self.cur_dir, "cert.pem"),
-                                             server_side=True)
+        self.server.socket = ssl.wrap_socket(
+            self.server.socket,
+            get_abs_path(self.cur_dir, "key.pem"),
+            get_abs_path(self.cur_dir, "cert.pem"),
+            server_side=True,
+        )
         self.port = self.server.socket.getsockname()[1]
 
     def start_server(self):
