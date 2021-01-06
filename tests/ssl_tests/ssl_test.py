@@ -31,8 +31,11 @@ class SSLTest(HazelcastTestCase):
         cluster = self.create_cluster(self.rc, self.configure_cluster(self.hazelcast_ssl_xml))
         cluster.start_member()
 
-        client = HazelcastClient(**get_ssl_config(cluster.id, True,
-                                                  get_abs_path(self.current_directory, "server1-cert.pem")))
+        client = HazelcastClient(
+            **get_ssl_config(
+                cluster.id, True, get_abs_path(self.current_directory, "server1-cert.pem")
+            )
+        )
         self.assertTrue(client.lifecycle_service.is_running())
         client.shutdown()
 
@@ -57,8 +60,11 @@ class SSLTest(HazelcastTestCase):
         cluster = self.create_cluster(self.rc, self.configure_cluster(self.hazelcast_ssl_xml))
         cluster.start_member()
 
-        client = HazelcastClient(**get_ssl_config(cluster.id, True,
-                                                  get_abs_path(self.current_directory, "server1-cert.pem")))
+        client = HazelcastClient(
+            **get_ssl_config(
+                cluster.id, True, get_abs_path(self.current_directory, "server1-cert.pem")
+            )
+        )
         test_map = client.get_map("test_map")
         fill_map(test_map, 10)
         self.assertEqual(test_map.size().result(), 10)
@@ -68,9 +74,14 @@ class SSLTest(HazelcastTestCase):
         cluster = self.create_cluster(self.rc, self.configure_cluster(self.hazelcast_ssl_xml))
         cluster.start_member()
 
-        client = HazelcastClient(**get_ssl_config(cluster.id, True,
-                                                  get_abs_path(self.current_directory, "server1-cert.pem"),
-                                                  ciphers="ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-GCM-SHA384"))
+        client = HazelcastClient(
+            **get_ssl_config(
+                cluster.id,
+                True,
+                get_abs_path(self.current_directory, "server1-cert.pem"),
+                ciphers="ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-GCM-SHA384",
+            )
+        )
         self.assertTrue(client.lifecycle_service.is_running())
         client.shutdown()
 
@@ -79,9 +90,14 @@ class SSLTest(HazelcastTestCase):
         cluster.start_member()
 
         with self.assertRaises(HazelcastError):
-            HazelcastClient(**get_ssl_config(cluster.id, True,
-                                             get_abs_path(self.current_directory, "server1-cert.pem"),
-                                             ciphers="INVALID-CIPHER1:INVALID_CIPHER2"))
+            HazelcastClient(
+                **get_ssl_config(
+                    cluster.id,
+                    True,
+                    get_abs_path(self.current_directory, "server1-cert.pem"),
+                    ciphers="INVALID-CIPHER1:INVALID_CIPHER2",
+                )
+            )
 
     def test_ssl_enabled_with_protocol_mismatch(self):
         cluster = self.create_cluster(self.rc, self.configure_cluster(self.hazelcast_ssl_xml))
@@ -89,9 +105,14 @@ class SSLTest(HazelcastTestCase):
 
         # Member configured with TLSv1
         with self.assertRaises(HazelcastError):
-            HazelcastClient(**get_ssl_config(cluster.id, True,
-                                             get_abs_path(self.current_directory, "server1-cert.pem"),
-                                             protocol=SSLProtocol.SSLv3))
+            HazelcastClient(
+                **get_ssl_config(
+                    cluster.id,
+                    True,
+                    get_abs_path(self.current_directory, "server1-cert.pem"),
+                    protocol=SSLProtocol.SSLv3,
+                )
+            )
 
     def configure_cluster(self, filename):
         with open(filename, "r") as f:
