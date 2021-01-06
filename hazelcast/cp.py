@@ -2,12 +2,21 @@ import time
 from threading import RLock, Lock
 
 from hazelcast import six
-from hazelcast.errors import SessionExpiredError, CPGroupDestroyedError, HazelcastClientNotActiveError
+from hazelcast.errors import (
+    SessionExpiredError,
+    CPGroupDestroyedError,
+    HazelcastClientNotActiveError,
+)
 from hazelcast.future import ImmediateExceptionFuture, ImmediateFuture, combine_futures
 from hazelcast.invocation import Invocation
-from hazelcast.protocol.codec import cp_group_create_cp_group_codec, cp_session_heartbeat_session_codec, \
-    cp_session_create_session_codec, cp_session_close_session_codec, cp_session_generate_thread_id_codec, \
-    semaphore_get_semaphore_type_codec
+from hazelcast.protocol.codec import (
+    cp_group_create_cp_group_codec,
+    cp_session_heartbeat_session_codec,
+    cp_session_create_session_codec,
+    cp_session_close_session_codec,
+    cp_session_generate_thread_id_codec,
+    semaphore_get_semaphore_type_codec,
+)
 from hazelcast.proxy.cp.atomic_long import AtomicLong
 from hazelcast.proxy.cp.atomic_reference import AtomicReference
 from hazelcast.proxy.cp.count_down_latch import CountDownLatch
@@ -155,7 +164,7 @@ def _without_default_group_name(name):
         return name
 
     check_true(name.find("@", idx + 1) == -1, "Custom group name must be specified at most once")
-    group_name = name[idx + 1:].strip()
+    group_name = name[idx + 1 :].strip()
     if group_name == _DEFAULT_GROUP_NAME:
         return name[:idx]
     return name
@@ -166,7 +175,7 @@ def _get_object_name_for_proxy(name):
     if idx == -1:
         return name
 
-    group_name = name[idx + 1:].strip()
+    group_name = name[idx + 1 :].strip()
     check_true(len(group_name) > 0, "Custom CP group name cannot be empty string")
     object_name = name[:idx].strip()
     check_true(len(object_name) > 0, "Object name cannot be empty string")
@@ -225,9 +234,13 @@ class CPProxyManager(object):
         invocation_service.invoke(invocation)
         jdk_compatible = invocation.future.result()
         if jdk_compatible:
-            return SessionlessSemaphore(self._context, group_id, SEMAPHORE_SERVICE, proxy_name, object_name)
+            return SessionlessSemaphore(
+                self._context, group_id, SEMAPHORE_SERVICE, proxy_name, object_name
+            )
         else:
-            return SessionAwareSemaphore(self._context, group_id, SEMAPHORE_SERVICE, proxy_name, object_name)
+            return SessionAwareSemaphore(
+                self._context, group_id, SEMAPHORE_SERVICE, proxy_name, object_name
+            )
 
     def _get_group_id(self, proxy_name):
         codec = cp_group_create_cp_group_codec
@@ -294,7 +307,9 @@ class ProxySessionManager(object):
         return _NO_SESSION_ID
 
     def acquire_session(self, group_id, count):
-        return self._get_or_create_session(group_id).continue_with(lambda state: state.result().acquire(count))
+        return self._get_or_create_session(group_id).continue_with(
+            lambda state: state.result().acquire(count)
+        )
 
     def release_session(self, group_id, session_id, count):
         session = self._sessions.get(group_id, None)
@@ -319,7 +334,8 @@ class ProxySessionManager(object):
                 return ImmediateFuture(global_thread_id)
 
             return self._request_generate_thread_id(group_id).continue_with(
-                lambda t_id: self._thread_ids.setdefault(key, t_id.result()))
+                lambda t_id: self._thread_ids.setdefault(key, t_id.result())
+            )
 
     def shutdown(self):
         with self._lock:

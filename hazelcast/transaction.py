@@ -4,7 +4,11 @@ import time
 from hazelcast.errors import TransactionError, IllegalStateError
 from hazelcast.future import make_blocking
 from hazelcast.invocation import Invocation
-from hazelcast.protocol.codec import transaction_create_codec, transaction_commit_codec, transaction_rollback_codec
+from hazelcast.protocol.codec import (
+    transaction_create_codec,
+    transaction_commit_codec,
+    transaction_rollback_codec,
+)
 from hazelcast.proxy.transactional_list import TransactionalList
 from hazelcast.proxy.transactional_map import TransactionalMap
 from hazelcast.proxy.transactional_multi_map import TransactionalMultiMap
@@ -54,8 +58,12 @@ class TransactionManager(object):
             if connection:
                 return connection
 
-            _logger.debug("Could not get a connection for the transaction. Attempt %d of %d", count,
-                          RETRY_COUNT, exc_info=True)
+            _logger.debug(
+                "Could not get a connection for the transaction. Attempt %d of %d",
+                count,
+                RETRY_COUNT,
+                exc_info=True,
+            )
             if count + 1 == RETRY_COUNT:
                 raise IllegalStateError("No active connection is found")
 
@@ -80,6 +88,7 @@ class Transaction(object):
     """Provides transactional operations: beginning/committing transactions, but also retrieving
     transactional data-structures like the TransactionalMap.
     """
+
     state = _STATE_NOT_STARTED
     id = None
     start_time = None
@@ -96,7 +105,7 @@ class Transaction(object):
 
     def begin(self):
         """Begins this transaction."""
-        if hasattr(self._locals, 'transaction_exists') and self._locals.transaction_exists:
+        if hasattr(self._locals, "transaction_exists") and self._locals.transaction_exists:
             raise TransactionError("Nested transactions are not allowed.")
         if self.state != _STATE_NOT_STARTED:
             raise TransactionError("Transaction has already been started.")
@@ -104,11 +113,15 @@ class Transaction(object):
         self.start_time = time.time()
         self.thread_id = thread_id()
         try:
-            request = transaction_create_codec.encode_request(timeout=int(self.timeout * 1000),
-                                                              durability=self.durability,
-                                                              transaction_type=self.transaction_type,
-                                                              thread_id=self.thread_id)
-            invocation = Invocation(request, connection=self.connection, response_handler=lambda m: m)
+            request = transaction_create_codec.encode_request(
+                timeout=int(self.timeout * 1000),
+                durability=self.durability,
+                transaction_type=self.transaction_type,
+                thread_id=self.thread_id,
+            )
+            invocation = Invocation(
+                request, connection=self.connection, response_handler=lambda m: m
+            )
             invocation_service = self._context.invocation_service
             invocation_service.invoke(invocation)
             response = invocation.future.result()

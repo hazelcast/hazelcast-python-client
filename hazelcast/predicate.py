@@ -63,17 +63,19 @@ class Predicate(object):
     the stored attribute value. If no conversion matching the type exists,
     ``IllegalArgumentError`` is thrown.
     """
+
     pass
 
 
 class PagingPredicate(Predicate):
     """This class is a special Predicate which helps to get a page-by-page
-     result of a query.
+    result of a query.
 
-     It can be constructed with a page-size, an inner predicate for filtering,
-     and a comparator for sorting. This class is not thread-safe and stateless.
-     To be able to reuse for another query, one should call :func:`reset`.
+    It can be constructed with a page-size, an inner predicate for filtering,
+    and a comparator for sorting. This class is not thread-safe and stateless.
+    To be able to reuse for another query, one should call :func:`reset`.
     """
+
     def reset(self):
         """Resets the predicate for reuse."""
         raise NotImplementedError("reset")
@@ -182,7 +184,11 @@ class _BetweenPredicate(_AbstractPredicate):
         output.write_object(self.from_)
 
     def __repr__(self):
-        return "BetweenPredicate(attribute='%s', from=%s, to=%s)" % (self.attribute, self.from_, self.to)
+        return "BetweenPredicate(attribute='%s', from=%s, to=%s)" % (
+            self.attribute,
+            self.from_,
+            self.to,
+        )
 
 
 class _EqualPredicate(_AbstractPredicate):
@@ -217,7 +223,11 @@ class _GreaterLessPredicate(_AbstractPredicate):
 
     def __repr__(self):
         return "GreaterLessPredicate(attribute='%s', value=%s, is_equal=%s, is_less=%s)" % (
-            self.attribute, self.value, self.is_equal, self.is_less)
+            self.attribute,
+            self.value,
+            self.is_equal,
+            self.is_less,
+        )
 
 
 class _LikePredicate(_AbstractPredicate):
@@ -256,7 +266,10 @@ class _InPredicate(_AbstractPredicate):
             output.write_object(value)
 
     def __repr__(self):
-        return "InPredicate(attribute='%s', %s)" % (self.attribute, ",".join([str(x) for x in self.values]))
+        return "InPredicate(attribute='%s', %s)" % (
+            self.attribute,
+            ",".join([str(x) for x in self.values]),
+        )
 
 
 class _InstanceOfPredicate(_AbstractPredicate):
@@ -342,7 +355,7 @@ class _PagingPredicate(_AbstractPredicate, PagingPredicate):
             raise TypeError("Nested paging predicate not supported.")
 
         if page_size <= 0:
-            raise ValueError('page_size should be greater than 0.')
+            raise ValueError("page_size should be greater than 0.")
 
         self._internal_predicate = predicate
         self._page_size = page_size
@@ -352,8 +365,11 @@ class _PagingPredicate(_AbstractPredicate, PagingPredicate):
         self.anchor_list = []  # List of pairs: (nearest page, (anchor key, anchor value))
 
     def __repr__(self):
-        return "PagingPredicate(predicate=%s, page_size=%s, comparator=%s)" % (self._internal_predicate,
-                                                                               self.page_size, self.comparator)
+        return "PagingPredicate(predicate=%s, page_size=%s, comparator=%s)" % (
+            self._internal_predicate,
+            self.page_size,
+            self.comparator,
+        )
 
     def write_data(self, output):
         output.write_object(self._internal_predicate)

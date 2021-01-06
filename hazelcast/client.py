@@ -11,12 +11,26 @@ from hazelcast.invocation import InvocationService, Invocation
 from hazelcast.listener import ListenerService, ClusterViewListenerService
 from hazelcast.lifecycle import LifecycleService, LifecycleState, _InternalLifecycleService
 from hazelcast.partition import PartitionService, _InternalPartitionService
-from hazelcast.protocol.codec import client_get_distributed_objects_codec, \
-    client_add_distributed_object_listener_codec, client_remove_distributed_object_listener_codec
-from hazelcast.proxy import ProxyManager, MAP_SERVICE, QUEUE_SERVICE, LIST_SERVICE, SET_SERVICE, MULTI_MAP_SERVICE, \
-    REPLICATED_MAP_SERVICE, RINGBUFFER_SERVICE, \
-    TOPIC_SERVICE, RELIABLE_TOPIC_SERVICE, \
-    EXECUTOR_SERVICE, PN_COUNTER_SERVICE, FLAKE_ID_GENERATOR_SERVICE
+from hazelcast.protocol.codec import (
+    client_get_distributed_objects_codec,
+    client_add_distributed_object_listener_codec,
+    client_remove_distributed_object_listener_codec,
+)
+from hazelcast.proxy import (
+    ProxyManager,
+    MAP_SERVICE,
+    QUEUE_SERVICE,
+    LIST_SERVICE,
+    SET_SERVICE,
+    MULTI_MAP_SERVICE,
+    REPLICATED_MAP_SERVICE,
+    RINGBUFFER_SERVICE,
+    TOPIC_SERVICE,
+    RELIABLE_TOPIC_SERVICE,
+    EXECUTOR_SERVICE,
+    PN_COUNTER_SERVICE,
+    FLAKE_ID_GENERATOR_SERVICE,
+)
 from hazelcast.near_cache import NearCacheManager
 from hazelcast.reactor import AsyncoreReactor
 from hazelcast.serialization import SerializationServiceV1
@@ -313,45 +327,71 @@ class HazelcastClient(object):
         self._invocation_service = InvocationService(self, self._reactor)
         self._address_provider = self._create_address_provider()
         self._internal_partition_service = _InternalPartitionService(self)
-        self.partition_service = PartitionService(self._internal_partition_service, self._serialization_service)
+        self.partition_service = PartitionService(
+            self._internal_partition_service, self._serialization_service
+        )
         self._internal_cluster_service = _InternalClusterService(self)
         self.cluster_service = ClusterService(self._internal_cluster_service)
-        self._connection_manager = ConnectionManager(self, self._reactor, self._address_provider,
-                                                     self._internal_lifecycle_service,
-                                                     self._internal_partition_service,
-                                                     self._internal_cluster_service,
-                                                     self._invocation_service,
-                                                     self._near_cache_manager)
+        self._connection_manager = ConnectionManager(
+            self,
+            self._reactor,
+            self._address_provider,
+            self._internal_lifecycle_service,
+            self._internal_partition_service,
+            self._internal_cluster_service,
+            self._invocation_service,
+            self._near_cache_manager,
+        )
         self._load_balancer = self._init_load_balancer(config)
-        self._listener_service = ListenerService(self, self._connection_manager,
-                                                 self._invocation_service)
+        self._listener_service = ListenerService(
+            self, self._connection_manager, self._invocation_service
+        )
         self._proxy_manager = ProxyManager(self._context)
         self.cp_subsystem = CPSubsystem(self._context)
         self._proxy_session_manager = ProxySessionManager(self._context)
         self._transaction_manager = TransactionManager(self._context)
         self._lock_reference_id_generator = AtomicInteger(1)
-        self._statistics = Statistics(self, self._reactor, self._connection_manager,
-                                      self._invocation_service, self._near_cache_manager)
-        self._cluster_view_listener = ClusterViewListenerService(self, self._connection_manager,
-                                                                 self._internal_partition_service,
-                                                                 self._internal_cluster_service,
-                                                                 self._invocation_service)
+        self._statistics = Statistics(
+            self,
+            self._reactor,
+            self._connection_manager,
+            self._invocation_service,
+            self._near_cache_manager,
+        )
+        self._cluster_view_listener = ClusterViewListenerService(
+            self,
+            self._connection_manager,
+            self._internal_partition_service,
+            self._internal_cluster_service,
+            self._invocation_service,
+        )
         self._shutdown_lock = threading.RLock()
         self._init_context()
         self._start()
 
     def _init_context(self):
-        self._context.init_context(self.config, self._invocation_service, self._internal_partition_service,
-                                   self._internal_cluster_service, self._connection_manager,
-                                   self._serialization_service, self._listener_service, self._proxy_manager,
-                                   self._near_cache_manager, self._lock_reference_id_generator,
-                                   self.name, self._proxy_session_manager, self._reactor)
+        self._context.init_context(
+            self.config,
+            self._invocation_service,
+            self._internal_partition_service,
+            self._internal_cluster_service,
+            self._connection_manager,
+            self._serialization_service,
+            self._listener_service,
+            self._proxy_manager,
+            self._near_cache_manager,
+            self._lock_reference_id_generator,
+            self.name,
+            self._proxy_session_manager,
+            self._reactor,
+        )
 
     def _start(self):
         self._reactor.start()
         try:
-            self._invocation_service.init(self._internal_partition_service, self._connection_manager,
-                                          self._listener_service)
+            self._invocation_service.init(
+                self._internal_partition_service, self._connection_manager, self._listener_service
+            )
             self._internal_lifecycle_service.start()
             membership_listeners = self.config.membership_listeners
             self._internal_cluster_service.start(self._connection_manager, membership_listeners)
@@ -540,9 +580,12 @@ class HazelcastClient(object):
         def event_handler(client_message):
             return codec.handle(client_message, handle_distributed_object_event)
 
-        return self._listener_service.register_listener(request, codec.decode_response,
-                                                        client_remove_distributed_object_listener_codec.encode_request,
-                                                        event_handler)
+        return self._listener_service.register_listener(
+            request,
+            codec.decode_response,
+            client_remove_distributed_object_listener_codec.encode_request,
+            event_handler,
+        )
 
     def remove_distributed_object_listener(self, registration_id):
         """Removes the specified distributed object listener.
@@ -573,14 +616,20 @@ class HazelcastClient(object):
         distributed_objects = self._proxy_manager.get_distributed_objects()
         local_distributed_object_infos = set()
         for dist_obj in distributed_objects:
-            local_distributed_object_infos.add(DistributedObjectInfo(dist_obj.service_name, dist_obj.name))
+            local_distributed_object_infos.add(
+                DistributedObjectInfo(dist_obj.service_name, dist_obj.name)
+            )
 
         for dist_obj_info in response:
             local_distributed_object_infos.discard(dist_obj_info)
-            self._proxy_manager.get_or_create(dist_obj_info.service_name, dist_obj_info.name, create_on_remote=False)
+            self._proxy_manager.get_or_create(
+                dist_obj_info.service_name, dist_obj_info.name, create_on_remote=False
+            )
 
         for dist_obj_info in local_distributed_object_infos:
-            self._proxy_manager.destroy_proxy(dist_obj_info.service_name, dist_obj_info.name, destroy_on_remote=False)
+            self._proxy_manager.destroy_proxy(
+                dist_obj_info.service_name, dist_obj_info.name, destroy_on_remote=False
+            )
 
         return self._proxy_manager.get_distributed_objects()
 
@@ -605,9 +654,11 @@ class HazelcastClient(object):
         cloud_discovery_token = config.cloud_discovery_token
         cloud_enabled = cloud_discovery_token is not None
         if address_list_provided and cloud_enabled:
-            raise IllegalStateError("Only one discovery method can be enabled at a time. "
-                                    "Cluster members given explicitly: %s, Hazelcast Cloud enabled: %s"
-                                    % (address_list_provided, cloud_enabled))
+            raise IllegalStateError(
+                "Only one discovery method can be enabled at a time. "
+                "Cluster members given explicitly: %s, Hazelcast Cloud enabled: %s"
+                % (address_list_provided, cloud_enabled)
+            )
 
         if cloud_enabled:
             connection_timeout = self._get_connection_timeout(config)
@@ -654,10 +705,22 @@ class _ClientContext(object):
         self.proxy_session_manager = None
         self.reactor = None
 
-    def init_context(self, config, invocation_service, partition_service,
-                     cluster_service, connection_manager, serialization_service,
-                     listener_service, proxy_manager, near_cache_manager,
-                     lock_reference_id_generator, name, proxy_session_manager, reactor):
+    def init_context(
+        self,
+        config,
+        invocation_service,
+        partition_service,
+        cluster_service,
+        connection_manager,
+        serialization_service,
+        listener_service,
+        proxy_manager,
+        near_cache_manager,
+        lock_reference_id_generator,
+        name,
+        proxy_session_manager,
+        reactor,
+    ):
         self.config = config
         self.invocation_service = invocation_service
         self.partition_service = partition_service

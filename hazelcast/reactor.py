@@ -47,7 +47,7 @@ _RETRYABLE_ERROR_CODES = (
     errno.EWOULDBLOCK,
     errno.EDEADLK,
     ssl.SSL_ERROR_WANT_WRITE,
-    ssl.SSL_ERROR_WANT_READ
+    ssl.SSL_ERROR_WANT_READ,
 )
 
 
@@ -112,7 +112,7 @@ class _PipedWaker(_AbstractWaker):
             pass
 
     def close(self):
-        _AbstractWaker.close(self)   # Will close the reader
+        _AbstractWaker.close(self)  # Will close the reader
         os.close(self._write_fd)
 
 
@@ -250,7 +250,7 @@ class _AbstractLoop(object):
 
 
 class _WakeableLoop(_AbstractLoop):
-    _waker_class = _PipedWaker if os.name != 'nt' else _SocketedWaker
+    _waker_class = _PipedWaker if os.name != "nt" else _SocketedWaker
 
     def __init__(self, map):
         _AbstractLoop.__init__(self, map)
@@ -334,10 +334,12 @@ class AsyncoreReactor(object):
             loop = _WakeableLoop(self.map)
             loop.check_loop()
         except:
-            _logger.exception("Failed to initialize the wakeable loop. "
-                              "Using the basic loop instead. "
-                              "When used in the blocking mode, client"
-                              "may have sub-optimal performance.")
+            _logger.exception(
+                "Failed to initialize the wakeable loop. "
+                "Using the basic loop instead. "
+                "When used in the blocking mode, client"
+                "may have sub-optimal performance."
+            )
             if loop:
                 loop.shutdown()
             loop = _BasicLoop(self.map)
@@ -355,8 +357,12 @@ class AsyncoreReactor(object):
     def shutdown(self):
         self._loop.shutdown()
 
-    def connection_factory(self, connection_manager, connection_id, address, network_config, message_callback):
-        return AsyncoreConnection(self, connection_manager, connection_id, address, network_config, message_callback)
+    def connection_factory(
+        self, connection_manager, connection_id, address, network_config, message_callback
+    ):
+        return AsyncoreConnection(
+            self, connection_manager, connection_id, address, network_config, message_callback
+        )
 
 
 _BUFFER_SIZE = 128000
@@ -368,8 +374,9 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
     send_buffer_size = _BUFFER_SIZE
     _close_timer = None
 
-    def __init__(self, reactor, connection_manager, connection_id, address,
-                 config, message_callback):
+    def __init__(
+        self, reactor, connection_manager, connection_id, address, config, message_callback
+    ):
         asyncore.dispatcher.__init__(self, map=reactor.map)
         Connection.__init__(self, connection_manager, connection_id, message_callback)
 
@@ -545,7 +552,9 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
             ssl_context.load_default_certs()
 
         if config.ssl_certfile:
-            ssl_context.load_cert_chain(config.ssl_certfile, config.ssl_keyfile, config.ssl_password)
+            ssl_context.load_cert_chain(
+                config.ssl_certfile, config.ssl_keyfile, config.ssl_password
+            )
 
         if config.ssl_ciphers:
             ssl_context.set_ciphers(config.ssl_ciphers)
@@ -553,7 +562,11 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         self.socket = ssl_context.wrap_socket(self.socket)
 
     def __repr__(self):
-        return "Connection(id=%s, live=%s, remote_address=%s)" % (self._id, self.live, self.remote_address)
+        return "Connection(id=%s, live=%s, remote_address=%s)" % (
+            self._id,
+            self.live,
+            self.remote_address,
+        )
 
     def __str__(self):
         return self.__repr__()

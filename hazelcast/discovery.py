@@ -20,7 +20,7 @@ class HazelcastCloudAddressProvider(object):
 
     def load_addresses(self):
         """Loads member addresses from Hazelcast Cloud endpoint.
-        
+
         Returns:
             tuple[list[hazelcast.core.Address], list[hazelcast.core.Address]]: The possible member addresses
                 as primary addresses to connect to.
@@ -65,6 +65,7 @@ class HazelcastCloudDiscovery(object):
     """Discovery service that discover nodes via Hazelcast.cloud
     https://coordinator.hazelcast.cloud/cluster/discovery?token=<TOKEN>
     """
+
     _CLOUD_URL_BASE = "coordinator.hazelcast.cloud"
     _CLOUD_URL_PATH = "/cluster/discovery?token="
     _PRIVATE_ADDRESS_PROPERTY = "private-address"
@@ -78,16 +79,18 @@ class HazelcastCloudDiscovery(object):
 
     def discover_nodes(self):
         """Discovers nodes from Hazelcast.cloud.
-        
+
         Returns:
             dict[hazelcast.core.Address, hazelcast.core.Address]: Dictionary that maps private
                 addresses to public addresses.
         """
         try:
-            https_connection = http_client.HTTPSConnection(host=self._CLOUD_URL_BASE,
-                                                           timeout=self._connection_timeout,
-                                                           context=self._ctx)
-            https_connection.request(method="GET", url=self._url, headers={"Accept-Charset": "UTF-8"})
+            https_connection = http_client.HTTPSConnection(
+                host=self._CLOUD_URL_BASE, timeout=self._connection_timeout, context=self._ctx
+            )
+            https_connection.request(
+                method="GET", url=self._url, headers={"Accept-Charset": "UTF-8"}
+            )
             https_response = https_connection.getresponse()
         except ssl.SSLError as err:
             raise HazelcastCertificationError(str(err))

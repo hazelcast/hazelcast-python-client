@@ -37,7 +37,12 @@ class ClientInfo(object):
         self.labels = labels
 
     def __repr__(self):
-        return "ClientInfo(uuid=%s, address=%s, name=%s, labels=%s)" % (self.uuid, self.address, self.name, self.labels)
+        return "ClientInfo(uuid=%s, address=%s, name=%s, labels=%s)" % (
+            self.uuid,
+            self.address,
+            self.name,
+            self.labels,
+        )
 
 
 _EMPTY_SNAPSHOT = _MemberListSnapshot(-1, OrderedDict())
@@ -103,7 +108,6 @@ class ClusterService(object):
 
 
 class _InternalClusterService(object):
-
     def __init__(self, client):
         self._client = client
         self._connection_manager = None
@@ -150,7 +154,9 @@ class _InternalClusterService(object):
         connection_manager = self._connection_manager
         connection = connection_manager.get_random_connection()
         local_address = None if not connection else connection.local_address
-        return ClientInfo(connection_manager.client_uuid, local_address, self._client.name, self._labels)
+        return ClientInfo(
+            connection_manager.client_uuid, local_address, self._client.name, self._labels
+        )
 
     def add_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
         registration_id = str(uuid.uuid4())
@@ -192,8 +198,11 @@ class _InternalClusterService(object):
     def handle_members_view_event(self, version, member_infos):
         snapshot = self._create_snapshot(version, member_infos)
         if _logger.isEnabledFor(logging.DEBUG):
-            _logger.debug("Handling new snapshot with membership version: %s, member string: %s",
-                          version, self._members_string(snapshot))
+            _logger.debug(
+                "Handling new snapshot with membership version: %s, member string: %s",
+                version,
+                self._members_string(snapshot),
+            )
 
         current = self._member_list_snapshot
         if version >= current.version:
@@ -235,9 +244,14 @@ class _InternalClusterService(object):
         for dead_member in dead_members:
             connection = self._connection_manager.get_connection(dead_member.uuid)
             if connection:
-                connection.close(None, TargetDisconnectedError("The client has closed the connection to this member, "
-                                                               "after receiving a member left event from the cluster. "
-                                                               "%s" % connection))
+                connection.close(
+                    None,
+                    TargetDisconnectedError(
+                        "The client has closed the connection to this member, "
+                        "after receiving a member left event from the cluster. "
+                        "%s" % connection
+                    ),
+                )
 
         if (len(new_members) + len(dead_members)) > 0:
             if len(new.members) > 0:
@@ -261,7 +275,7 @@ class _InternalClusterService(object):
 
 class VectorClock(object):
     """Vector clock consisting of distinct replica logical clocks.
-    
+
     The vector clock may be read from different thread but concurrent
     updates must be synchronized externally. There is no guarantee for
     concurrent updates.
@@ -309,7 +323,7 @@ class VectorClock(object):
         """Returns the entry set of the replica timestamps in a format of list of tuples.
 
         Each tuple contains the replica ID and the timestamp associated with it.
-        
+
         Returns:
             list: List of tuples.
         """
@@ -317,7 +331,7 @@ class VectorClock(object):
 
     def size(self):
         """Returns the number of timestamps that are in the replica timestamps dictionary.
-        
+
         Returns:
             int: Number of timestamps in the replica timestamps.
         """
