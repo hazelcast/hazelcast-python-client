@@ -40,13 +40,9 @@ def generate_users(users):
 
 
 # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
-hz = hazelcast.HazelcastClient(portable_factories={
-    User.FACTORY_ID: {
-        User.CLASS_ID: User
-    }
-})
+client = hazelcast.HazelcastClient(portable_factories={User.FACTORY_ID: {User.CLASS_ID: User}})
 # Get a Distributed Map called "users"
-users_map = hz.get_map("users").blocking()
+users_map = client.get_map("users").blocking()
 # Add some users to the Distributed Map
 generate_users(users_map)
 # Create a Predicate from a String (a SQL like Where clause)
@@ -60,4 +56,4 @@ result2 = users_map.values(criteria_query)
 print(result1)
 print(result2)
 # Shutdown this Hazelcast Client
-hz.shutdown()
+client.shutdown()

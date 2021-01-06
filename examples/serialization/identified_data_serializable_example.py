@@ -32,11 +32,9 @@ class Student(IdentifiedDataSerializable):
         return "Student(id=%s, name=%s, gpa=%s)" % (self.id, self.name, self.gpa)
 
 
-client = hazelcast.HazelcastClient(data_serializable_factories={
-    Student.FACTORY_ID: {
-        Student.CLASS_ID: Student
-    }
-})
+client = hazelcast.HazelcastClient(
+    data_serializable_factories={Student.FACTORY_ID: {Student.CLASS_ID: Student}}
+)
 
 my_map = client.get_map("map")
 

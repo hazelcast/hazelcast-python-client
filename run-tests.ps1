@@ -59,7 +59,7 @@ if(Test-Path env:HAZELCAST_ENTERPRISE_KEY){
 	$classpath += "hazelcast-${hazelcastVersion}.jar"
 }
 
-pip install -r test-requirements.txt --user
+pip install -r requirements-test.txt --user
 
 Write-Host Starting Hazelcast ...
 $remoteControllerApp = Start-Process -FilePath java -ArgumentList ( "-Dhazelcast.enterprise.license.key=$env:HAZELCAST_ENTERPRISE_KEY","-cp", "$classpath", "com.hazelcast.remotecontroller.Main", "--use-simple-server") -RedirectStandardOutput "rc_stdout.log" -RedirectStandardError "rc_stderr.log" -PassThru

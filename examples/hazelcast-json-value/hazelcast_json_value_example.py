@@ -6,8 +6,8 @@ from hazelcast.predicate import and_, greater, sql
 client = hazelcast.HazelcastClient()
 employees_map = client.get_map("employees").blocking()
 
-alice = "{\"name\": \"Alice\", \"age\": 35}"
-andy = "{\"name\": \"Andy\", \"age\": 22}"
+alice = '{"name": "Alice", "age": 35}'
+andy = '{"name": "Andy", "age": 22}'
 bob = {"name": "Bob", "age": 37}
 
 # HazelcastJsonValue can be constructed from JSON strings

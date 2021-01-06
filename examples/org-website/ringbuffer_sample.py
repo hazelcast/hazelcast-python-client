@@ -1,8 +1,8 @@
 import hazelcast
 
 # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
-hz = hazelcast.HazelcastClient()
-rb = hz.get_ringbuffer("rb").blocking()
+client = hazelcast.HazelcastClient()
+rb = client.get_ringbuffer("rb").blocking()
 # add two items into ring buffer
 rb.add(100)
 rb.add(200)
@@ -13,4 +13,4 @@ print(rb.read_one(sequence))
 sequence += 1
 print(rb.read_one(sequence))
 # Shutdown this Hazelcast Client
-hz.shutdown()
+client.shutdown()

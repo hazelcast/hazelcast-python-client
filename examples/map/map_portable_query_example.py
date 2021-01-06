@@ -34,11 +34,9 @@ class Employee(Portable):
         return isinstance(other, Employee) and self.name == other.name and self.age == other.age
 
 
-client = hazelcast.HazelcastClient(portable_factories={
-    Employee.FACTORY_ID: {
-        Employee.CLASS_ID: Employee
-    }
-})
+client = hazelcast.HazelcastClient(
+    portable_factories={Employee.FACTORY_ID: {Employee.CLASS_ID: Employee}}
+)
 
 my_map = client.get_map("employee-map")
 

@@ -39,9 +39,7 @@ class GlobalSerializer(StreamSerializer):
 
 client = hazelcast.HazelcastClient(global_serializer=GlobalSerializer)
 
-group = ColorGroup(id=1,
-                   name="Reds",
-                   colors=["Crimson", "Red", "Ruby", "Maroon"])
+group = ColorGroup(id=1, name="Reds", colors=["Crimson", "Red", "Ruby", "Maroon"])
 
 my_map = client.get_map("map").blocking()
 

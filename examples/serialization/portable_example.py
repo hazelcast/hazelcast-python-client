@@ -32,11 +32,9 @@ class Engineer(Portable):
         return "Engineer(name=%s, age=%s, languages=%s)" % (self.name, self.age, self.languages)
 
 
-client = hazelcast.HazelcastClient(portable_factories={
-    Engineer.FACTORY_ID: {
-        Engineer.CLASS_ID: Engineer
-    }
-})
+client = hazelcast.HazelcastClient(
+    portable_factories={Engineer.FACTORY_ID: {Engineer.CLASS_ID: Engineer}}
+)
 
 my_map = client.get_map("map")
 

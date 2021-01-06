@@ -30,10 +30,8 @@ class Customer(Portable):
 
 
 # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
-hz = hazelcast.HazelcastClient(portable_factories={
-    Customer.FACTORY_ID: {
-        Customer.CLASS_ID: Customer
-    }
-})
+client = hazelcast.HazelcastClient(
+    portable_factories={Customer.FACTORY_ID: {Customer.CLASS_ID: Customer}}
+)
 # Customer can be used here
-hz.shutdown()
+client.shutdown()

@@ -1,9 +1,9 @@
 import hazelcast
 
 # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
-hz = hazelcast.HazelcastClient()
+client = hazelcast.HazelcastClient()
 # Get the Distributed MultiMap from Cluster.
-multi_map = hz.get_multi_map("my-distributed-multimap").blocking()
+multi_map = client.get_multi_map("my-distributed-multimap").blocking()
 # Put values in the map against the same key
 multi_map.put("my-key", "value1")
 multi_map.put("my-key", "value2")
@@ -14,4 +14,4 @@ print(values)
 # remove specific key/value pair
 multi_map.remove("my-key", "value2")
 # Shutdown this Hazelcast Client
-hz.shutdown()
+client.shutdown()
