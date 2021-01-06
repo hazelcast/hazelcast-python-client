@@ -37,7 +37,7 @@ class SerializationTestCase(unittest.TestCase):
         self.assertEqual(obj, obj2)
 
     def test_service_large_float_array(self):
-        obj = 4000*[2.1]
+        obj = 4000 * [2.1]
         data = self.service.to_data(obj)
 
         obj2 = self.service.to_object(data)

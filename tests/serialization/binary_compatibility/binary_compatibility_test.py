@@ -39,20 +39,30 @@ class BinaryCompatibilityTest(unittest.TestCase):
 
         cls.data_map = data_map
 
-    @parameterized.expand(map(lambda x: ("%s_is_big_endian=%s" % (x[0], x[1]), x[0], x[1]),
-                              itertools.product(REFERENCE_OBJECTS.keys(), IS_BIG_ENDIAN)))
+    @parameterized.expand(
+        map(
+            lambda x: ("%s_is_big_endian=%s" % (x[0], x[1]), x[0], x[1]),
+            itertools.product(REFERENCE_OBJECTS.keys(), IS_BIG_ENDIAN),
+        )
+    )
     def test_serialize(self, _, name, is_big_endian):
         if skip_on_serialize(name):
             return
 
-        ss = self._create_serialization_service(is_big_endian, OBJECT_KEY_TO_INT_TYPE.get(name, IntType.INT))
+        ss = self._create_serialization_service(
+            is_big_endian, OBJECT_KEY_TO_INT_TYPE.get(name, IntType.INT)
+        )
         object_key = self._create_object_key(name, is_big_endian)
         from_binary = self.data_map[object_key]
         serialized = ss.to_data(REFERENCE_OBJECTS[name])
         self.assertEqual(from_binary, serialized)
 
-    @parameterized.expand(map(lambda x: ("%s_is_big_endian=%s" % (x[0], x[1]), x[0], x[1]),
-                              itertools.product(REFERENCE_OBJECTS.keys(), IS_BIG_ENDIAN)))
+    @parameterized.expand(
+        map(
+            lambda x: ("%s_is_big_endian=%s" % (x[0], x[1]), x[0], x[1]),
+            itertools.product(REFERENCE_OBJECTS.keys(), IS_BIG_ENDIAN),
+        )
+    )
     def test_deserialize(self, _, name, is_big_endian):
         if skip_on_deserialize(name):
             return
@@ -63,13 +73,19 @@ class BinaryCompatibilityTest(unittest.TestCase):
         deserialized = ss.to_object(from_binary)
         self.assertTrue(is_equal(REFERENCE_OBJECTS[name], deserialized))
 
-    @parameterized.expand(map(lambda x: ("%s_is_big_endian=%s" % (x[0], x[1]), x[0], x[1]),
-                              itertools.product(REFERENCE_OBJECTS.keys(), IS_BIG_ENDIAN)))
+    @parameterized.expand(
+        map(
+            lambda x: ("%s_is_big_endian=%s" % (x[0], x[1]), x[0], x[1]),
+            itertools.product(REFERENCE_OBJECTS.keys(), IS_BIG_ENDIAN),
+        )
+    )
     def test_serialize_deserialize(self, _, name, is_big_endian):
         if skip_on_deserialize(name) or skip_on_serialize(name):
             return
 
-        ss = self._create_serialization_service(is_big_endian, OBJECT_KEY_TO_INT_TYPE.get(name, IntType.INT))
+        ss = self._create_serialization_service(
+            is_big_endian, OBJECT_KEY_TO_INT_TYPE.get(name, IntType.INT)
+        )
         obj = REFERENCE_OBJECTS[name]
         data = ss.to_data(obj)
         deserialized = ss.to_object(data)
@@ -90,7 +106,7 @@ class BinaryCompatibilityTest(unittest.TestCase):
         config = _Config()
         config.custom_serializers = {
             CustomStreamSerializable: CustomStreamSerializer,
-            CustomByteArraySerializable: CustomByteArraySerializer
+            CustomByteArraySerializable: CustomByteArraySerializer,
         }
         config.is_big_endian = is_big_endian
         cdb = ClassDefinitionBuilder(PORTABLE_FACTORY_ID, INNER_PORTABLE_CLASS_ID)
@@ -101,7 +117,7 @@ class BinaryCompatibilityTest(unittest.TestCase):
         config.portable_factories = {
             PORTABLE_FACTORY_ID: {
                 PORTABLE_CLASS_ID: APortable,
-                INNER_PORTABLE_CLASS_ID: AnInnerPortable
+                INNER_PORTABLE_CLASS_ID: AnInnerPortable,
             }
         }
         config.data_serializable_factories = {
@@ -137,7 +153,9 @@ class CustomByteArraySerializer(StreamSerializer):
 
     def read(self, inp):
         buf = inp.read_byte_array()
-        return CustomByteArraySerializable(BE_INT.unpack_from(buf, 0)[0], BE_FLOAT.unpack_from(buf, 4)[0])
+        return CustomByteArraySerializable(
+            BE_INT.unpack_from(buf, 0)[0], BE_FLOAT.unpack_from(buf, 4)[0]
+        )
 
     def get_type_id(self):
         return CUSTOM_BYTE_ARRAY_SERIALIZABLE_ID

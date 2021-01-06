@@ -52,10 +52,7 @@ class CustomSerializer(StreamSerializer):
             raise ValueError("Can only serialize CustomClass")
 
     def read(self, inp):
-        return CustomClass(inp.read_utf(),  # uid
-                           inp.read_utf(),  # name
-                           inp.read_utf(),  # text
-                           "CUSTOM")  # Source
+        return CustomClass(inp.read_utf(), inp.read_utf(), inp.read_utf(), "CUSTOM")
 
     def get_type_id(self):
         return 10001
@@ -101,9 +98,7 @@ class CustomSerializationTestCase(unittest.TestCase):
 
     def test_custom_serializer(self):
         config = _Config()
-        config.custom_serializers = {
-            CustomClass: CustomSerializer
-        }
+        config.custom_serializers = {CustomClass: CustomSerializer}
 
         service = SerializationServiceV1(config)
         obj = CustomClass("uid", "some name", "description text")
@@ -115,9 +110,7 @@ class CustomSerializationTestCase(unittest.TestCase):
 
     def test_global_custom_serializer(self):
         config = _Config()
-        config.custom_serializers = {
-            CustomClass: CustomSerializer
-        }
+        config.custom_serializers = {CustomClass: CustomSerializer}
         config.global_serializer = TestGlobalSerializer
 
         service = SerializationServiceV1(config)
@@ -130,9 +123,7 @@ class CustomSerializationTestCase(unittest.TestCase):
 
     def test_double_register_custom_serializer(self):
         config = _Config()
-        config.custom_serializers = {
-            CustomClass: CustomSerializer
-        }
+        config.custom_serializers = {CustomClass: CustomSerializer}
         service = SerializationServiceV1(config)
 
         with self.assertRaises(ValueError):
