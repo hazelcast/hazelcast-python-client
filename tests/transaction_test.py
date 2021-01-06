@@ -80,8 +80,13 @@ class TransactionTest(SingleMemberTestCase):
 
     def test_operations_from_another_thread(self):
         transaction = self.client.new_transaction()
-        ops = [transaction.get_map, transaction.get_list, transaction.get_multi_map, transaction.get_queue,
-               transaction.get_set]
+        ops = [
+            transaction.get_map,
+            transaction.get_list,
+            transaction.get_multi_map,
+            transaction.get_queue,
+            transaction.get_set,
+        ]
 
         t = Thread(target=transaction.begin)
         t.start()
@@ -92,8 +97,13 @@ class TransactionTest(SingleMemberTestCase):
 
     def test_operations_before_transaction_started(self):
         transaction = self.client.new_transaction()
-        ops = [transaction.get_map, transaction.get_list, transaction.get_multi_map, transaction.get_queue,
-               transaction.get_set]
+        ops = [
+            transaction.get_map,
+            transaction.get_list,
+            transaction.get_multi_map,
+            transaction.get_queue,
+            transaction.get_set,
+        ]
 
         for op in ops:
             with self.assertRaises(TransactionError):

@@ -1,7 +1,18 @@
 import unittest
 
-from hazelcast.config import _Config, SSLProtocol, ReconnectMode, IntType, InMemoryFormat, EvictionPolicy, \
-    IndexConfig, IndexType, UniqueKeyTransformation, QueryConstants, BitmapIndexOptions
+from hazelcast.config import (
+    _Config,
+    SSLProtocol,
+    ReconnectMode,
+    IntType,
+    InMemoryFormat,
+    EvictionPolicy,
+    IndexConfig,
+    IndexType,
+    UniqueKeyTransformation,
+    QueryConstants,
+    BitmapIndexOptions,
+)
 from hazelcast.errors import InvalidConfigurationError
 from hazelcast.serialization.api import IdentifiedDataSerializable, Portable, StreamSerializer
 from hazelcast.serialization.portable.classdef import ClassDefinition
@@ -336,9 +347,7 @@ class ConfigTest(unittest.TestCase):
             with self.assertRaises(TypeError):
                 config.data_serializable_factories = invalid_config
 
-        factories = {1: {
-            2: IdentifiedDataSerializable
-        }}
+        factories = {1: {2: IdentifiedDataSerializable}}
 
         config.data_serializable_factories = factories
         self.assertEqual(factories, config.data_serializable_factories)
@@ -360,9 +369,7 @@ class ConfigTest(unittest.TestCase):
             with self.assertRaises(TypeError):
                 config.portable_factories = invalid_config
 
-        factories = {1: {
-            2: Portable
-        }}
+        factories = {1: {2: Portable}}
 
         config.portable_factories = factories
         self.assertEqual(factories, config.portable_factories)
@@ -445,9 +452,7 @@ class ConfigTest(unittest.TestCase):
             with self.assertRaises(TypeError):
                 config.custom_serializers = invalid_config
 
-        serializers = {
-            int: StreamSerializer
-        }
+        serializers = {int: StreamSerializer}
         config.custom_serializers = serializers
         self.assertEqual(serializers, config.custom_serializers)
 
@@ -507,16 +512,18 @@ class ConfigTest(unittest.TestCase):
 
     def test_near_caches(self):
         config = self.config
-        config.near_caches = {"a": {
-            "invalidate_on_change": False,
-            "in_memory_format": "OBJECT",
-            "time_to_live": 100,
-            "max_idle": 200,
-            "eviction_policy": "RANDOM",
-            "eviction_max_size": 1000,
-            "eviction_sampling_count": 20,
-            "eviction_sampling_pool_size": 15,
-        }}
+        config.near_caches = {
+            "a": {
+                "invalidate_on_change": False,
+                "in_memory_format": "OBJECT",
+                "time_to_live": 100,
+                "max_idle": 200,
+                "eviction_policy": "RANDOM",
+                "eviction_max_size": 1000,
+                "eviction_sampling_count": 20,
+                "eviction_sampling_pool_size": 15,
+            }
+        }
         nc_config = config.near_caches["a"]
         self.assertFalse(nc_config.invalidate_on_change)
         self.assertEqual(InMemoryFormat.OBJECT, nc_config.in_memory_format)
@@ -619,10 +626,12 @@ class ConfigTest(unittest.TestCase):
 
     def test_flake_id_generators(self):
         config = self.config
-        config.flake_id_generators = {"a": {
-            "prefetch_count": 20,
-            "prefetch_validity": 30,
-        }}
+        config.flake_id_generators = {
+            "a": {
+                "prefetch_count": 20,
+                "prefetch_validity": 30,
+            }
+        }
         fig_config = config.flake_id_generators["a"]
         self.assertEqual(20, fig_config.prefetch_count)
         self.assertEqual(30, fig_config.prefetch_validity)
@@ -767,13 +776,13 @@ class IndexConfigTest(unittest.TestCase):
         self.assertEqual(IndexType.SORTED, config.type)
         self.assertEqual([], config.attributes)
         self.assertEqual(QueryConstants.KEY_ATTRIBUTE_NAME, config.bitmap_index_options.unique_key)
-        self.assertEqual(UniqueKeyTransformation.OBJECT, config.bitmap_index_options.unique_key_transformation)
+        self.assertEqual(
+            UniqueKeyTransformation.OBJECT, config.bitmap_index_options.unique_key_transformation
+        )
 
     def test_from_dict(self):
         with self.assertRaises(InvalidConfigurationError):
-            IndexConfig.from_dict({
-                "unknown_key": 1
-            })
+            IndexConfig.from_dict({"unknown_key": 1})
 
     def test_from_dict_defaults(self):
         config = IndexConfig.from_dict({})
@@ -781,17 +790,23 @@ class IndexConfigTest(unittest.TestCase):
         self.assertEqual(IndexType.SORTED, config.type)
         self.assertEqual([], config.attributes)
         self.assertEqual(QueryConstants.KEY_ATTRIBUTE_NAME, config.bitmap_index_options.unique_key)
-        self.assertEqual(UniqueKeyTransformation.OBJECT, config.bitmap_index_options.unique_key_transformation)
+        self.assertEqual(
+            UniqueKeyTransformation.OBJECT, config.bitmap_index_options.unique_key_transformation
+        )
 
     def test_from_dict_with_changes(self):
-        config = IndexConfig.from_dict({
-            "name": "test",
-        })
+        config = IndexConfig.from_dict(
+            {
+                "name": "test",
+            }
+        )
         self.assertEqual("test", config.name)
         self.assertEqual(IndexType.SORTED, config.type)
         self.assertEqual([], config.attributes)
         self.assertEqual(QueryConstants.KEY_ATTRIBUTE_NAME, config.bitmap_index_options.unique_key)
-        self.assertEqual(UniqueKeyTransformation.OBJECT, config.bitmap_index_options.unique_key_transformation)
+        self.assertEqual(
+            UniqueKeyTransformation.OBJECT, config.bitmap_index_options.unique_key_transformation
+        )
 
     def test_add_attributes(self):
         config = IndexConfig()
@@ -800,7 +815,7 @@ class IndexConfigTest(unittest.TestCase):
             (None, AssertionError),
             ("   ", ValueError),
             ("x.", ValueError),
-            ("  x.x.", ValueError)
+            ("  x.x.", ValueError),
         ]
 
         for attr, error in invalid_attributes:
@@ -817,7 +832,7 @@ class IndexConfigTest(unittest.TestCase):
         attributes = ["attr", "attr.nested"]
         bio = {
             "unique_key": QueryConstants.THIS_ATTRIBUTE_NAME,
-            "unique_key_transformation": UniqueKeyTransformation.RAW
+            "unique_key_transformation": UniqueKeyTransformation.RAW,
         }
         config = IndexConfig(name, idx_type, attributes, bio)
 
@@ -825,16 +840,18 @@ class IndexConfigTest(unittest.TestCase):
         self.assertEqual(idx_type, config.type)
         self.assertEqual(attributes, attributes)
         self.assertEqual(bio["unique_key"], config.bitmap_index_options.unique_key)
-        self.assertEqual(bio["unique_key_transformation"], config.bitmap_index_options.unique_key_transformation)
+        self.assertEqual(
+            bio["unique_key_transformation"], config.bitmap_index_options.unique_key_transformation
+        )
 
     def test_bitmap_index_options(self):
         config = IndexConfig()
 
-        config.bitmap_index_options = {
-            "unique_key": QueryConstants.THIS_ATTRIBUTE_NAME
-        }
+        config.bitmap_index_options = {"unique_key": QueryConstants.THIS_ATTRIBUTE_NAME}
         self.assertEqual(QueryConstants.THIS_ATTRIBUTE_NAME, config.bitmap_index_options.unique_key)
-        self.assertEqual(UniqueKeyTransformation.OBJECT, config.bitmap_index_options.unique_key_transformation)
+        self.assertEqual(
+            UniqueKeyTransformation.OBJECT, config.bitmap_index_options.unique_key_transformation
+        )
 
         invalid_options = [
             ({"unique_key": None}, TypeError),
@@ -889,9 +906,7 @@ class BitmapIndexOptionsTest(unittest.TestCase):
 
     def test_from_dict(self):
         with self.assertRaises(InvalidConfigurationError):
-            BitmapIndexOptions.from_dict({
-                "unknown_key": 1
-            })
+            BitmapIndexOptions.from_dict({"unknown_key": 1})
 
     def test_from_dict_defaults(self):
         options = BitmapIndexOptions.from_dict({})
@@ -899,9 +914,11 @@ class BitmapIndexOptionsTest(unittest.TestCase):
         self.assertEqual(UniqueKeyTransformation.OBJECT, options.unique_key_transformation)
 
     def test_from_dict_with_changes(self):
-        options = BitmapIndexOptions.from_dict({
-            "unique_key": QueryConstants.THIS_ATTRIBUTE_NAME,
-        })
+        options = BitmapIndexOptions.from_dict(
+            {
+                "unique_key": QueryConstants.THIS_ATTRIBUTE_NAME,
+            }
+        )
         self.assertEqual(QueryConstants.THIS_ATTRIBUTE_NAME, options.unique_key)
         self.assertEqual(UniqueKeyTransformation.OBJECT, options.unique_key_transformation)
 

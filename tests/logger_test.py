@@ -63,4 +63,3 @@ class LoggerTest(unittest.TestCase):
         finally:
             logger.setLevel(original_level)
             logger.removeHandler(handler)
-

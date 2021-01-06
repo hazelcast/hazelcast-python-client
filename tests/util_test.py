@@ -1,5 +1,10 @@
-from hazelcast.config import IndexConfig, IndexUtil, IndexType, QueryConstants, \
-    UniqueKeyTransformation
+from hazelcast.config import (
+    IndexConfig,
+    IndexUtil,
+    IndexType,
+    QueryConstants,
+    UniqueKeyTransformation,
+)
 from hazelcast.util import calculate_version
 from unittest import TestCase
 
@@ -80,9 +85,12 @@ class IndexUtilTest(TestCase):
     def test_with_bitmap_indexes(self):
         bio = {
             "unique_key": QueryConstants.THIS_ATTRIBUTE_NAME,
-            "unique_key_transformation": UniqueKeyTransformation.RAW
+            "unique_key_transformation": UniqueKeyTransformation.RAW,
         }
         config = IndexConfig(type=IndexType.BITMAP, attributes=["attr"], bitmap_index_options=bio)
         normalized = IndexUtil.validate_and_normalize("map", config)
         self.assertEqual(bio["unique_key"], normalized.bitmap_index_options.unique_key)
-        self.assertEqual(bio["unique_key_transformation"], normalized.bitmap_index_options.unique_key_transformation)
+        self.assertEqual(
+            bio["unique_key_transformation"],
+            normalized.bitmap_index_options.unique_key_transformation,
+        )

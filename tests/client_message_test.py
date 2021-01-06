@@ -6,9 +6,21 @@ from hazelcast import six
 from hazelcast.connection import _Reader
 from hazelcast.errors import _ErrorsCodec
 from hazelcast.protocol import ErrorHolder
-from hazelcast.protocol.builtin import CodecUtil, FixSizedTypesCodec, ByteArrayCodec, DataCodec, EntryListCodec, \
-    StringCodec, EntryListUUIDListIntegerCodec, EntryListUUIDLongCodec, ListMultiFrameCodec, ListIntegerCodec, \
-    ListLongCodec, ListUUIDCodec, MapCodec
+from hazelcast.protocol.builtin import (
+    CodecUtil,
+    FixSizedTypesCodec,
+    ByteArrayCodec,
+    DataCodec,
+    EntryListCodec,
+    StringCodec,
+    EntryListUUIDListIntegerCodec,
+    EntryListUUIDLongCodec,
+    ListMultiFrameCodec,
+    ListIntegerCodec,
+    ListLongCodec,
+    ListUUIDCodec,
+    MapCodec,
+)
 from hazelcast.protocol.client_message import *
 from hazelcast.protocol.codec import client_authentication_codec
 from hazelcast.protocol.codec.custom.error_holder_codec import ErrorHolderCodec
@@ -144,9 +156,15 @@ class EncodeDecodeTest(unittest.TestCase):
         EntryListCodec.encode_nullable(self.buf, None, StringCodec.encode, StringCodec.encode, True)
         message = self.write_and_decode()
         message.next_frame()  # initial frame
-        self.assertEqual(entries, EntryListCodec.decode(message, StringCodec.decode, StringCodec.decode))
-        self.assertEqual(entries, EntryListCodec.decode_nullable(message, StringCodec.decode, StringCodec.decode))
-        self.assertIsNone(EntryListCodec.decode_nullable(message, StringCodec.decode, StringCodec.decode))
+        self.assertEqual(
+            entries, EntryListCodec.decode(message, StringCodec.decode, StringCodec.decode)
+        )
+        self.assertEqual(
+            entries, EntryListCodec.decode_nullable(message, StringCodec.decode, StringCodec.decode)
+        )
+        self.assertIsNone(
+            EntryListCodec.decode_nullable(message, StringCodec.decode, StringCodec.decode)
+        )
 
     def test_uuid_integer_list_entry_list(self):
         self.mark_initial_frame_as_non_final()
@@ -200,8 +218,12 @@ class EncodeDecodeTest(unittest.TestCase):
         self.assertEqual(l, ListMultiFrameCodec.decode(message, StringCodec.decode))
         self.assertEqual(l, ListMultiFrameCodec.decode_nullable(message, StringCodec.decode))
         self.assertIsNone(ListMultiFrameCodec.decode_nullable(message, StringCodec.decode))
-        self.assertEqual(l, ListMultiFrameCodec.decode_contains_nullable(message, StringCodec.decode))
-        self.assertEqual([None], ListMultiFrameCodec.decode_contains_nullable(message, StringCodec.decode))
+        self.assertEqual(
+            l, ListMultiFrameCodec.decode_contains_nullable(message, StringCodec.decode)
+        )
+        self.assertEqual(
+            [None], ListMultiFrameCodec.decode_contains_nullable(message, StringCodec.decode)
+        )
 
     def test_uuid_list(self):
         self.mark_initial_frame_as_non_final()
@@ -223,7 +245,9 @@ class EncodeDecodeTest(unittest.TestCase):
         message = self.write_and_decode()
         message.next_frame()  # initial frame
         self.assertEqual(m, MapCodec.decode(message, StringCodec.decode, StringCodec.decode))
-        self.assertEqual(m, MapCodec.decode_nullable(message, StringCodec.decode, StringCodec.decode))
+        self.assertEqual(
+            m, MapCodec.decode_nullable(message, StringCodec.decode, StringCodec.decode)
+        )
         self.assertIsNone(MapCodec.decode_nullable(message, StringCodec.decode, StringCodec.decode))
 
     def test_string(self):
@@ -262,8 +286,9 @@ class ClientMessageBuilderTest(unittest.TestCase):
         self.builder = ClientMessageBuilder(lambda m: self.counter.increment())
 
     def test_unfragmented_message(self):
-        request = client_authentication_codec.encode_request("dev", "user", "pass", uuid.uuid4(),
-                                                             "PYH", 1, "4.0", "python", [])
+        request = client_authentication_codec.encode_request(
+            "dev", "user", "pass", uuid.uuid4(), "PYH", 1, "4.0", "python", []
+        )
         self.reader.read(request.buf)
         message = self.reader._read_message()
         self.builder.on_message(message)

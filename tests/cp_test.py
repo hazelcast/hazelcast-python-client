@@ -66,7 +66,9 @@ class SessionManagerTest(unittest.TestCase):
 
     def test_acquire_session_with_unknown_group_id(self):
         m = self.mock_request_new_session()
-        self.assertEqual(self.session_id, self.manager.acquire_session(self.raft_group_id, 3).result())
+        self.assertEqual(
+            self.session_id, self.manager.acquire_session(self.raft_group_id, 3).result()
+        )
         self.assertEqual(3, self.get_acquire_count())
         m.assert_called_once_with(self.raft_group_id)
 
@@ -75,7 +77,9 @@ class SessionManagerTest(unittest.TestCase):
         state = MagicMock(is_valid=lambda: False)
         self.set_session(state)
 
-        self.assertEqual(self.session_id, self.manager.acquire_session(self.raft_group_id, 1).result())
+        self.assertEqual(
+            self.session_id, self.manager.acquire_session(self.raft_group_id, 1).result()
+        )
         m.assert_called_once_with(self.raft_group_id)
         self.assertEqual(1, self.get_acquire_count())
 
@@ -83,7 +87,9 @@ class SessionManagerTest(unittest.TestCase):
         m = self.mock_request_new_session()
         self.set_session(self.prepare_state())
 
-        self.assertEqual(self.session_id, self.manager.acquire_session(self.raft_group_id, 10).result())
+        self.assertEqual(
+            self.session_id, self.manager.acquire_session(self.raft_group_id, 10).result()
+        )
         m.assert_not_called()
         self.assertEqual(10, self.get_acquire_count())
 
@@ -119,14 +125,18 @@ class SessionManagerTest(unittest.TestCase):
 
     def test_create_thread_id(self):
         m = self.mock_request_generate_thread_id(5)
-        self.assertEqual(5, self.manager.get_or_create_unique_thread_id(self.raft_group_id).result())
+        self.assertEqual(
+            5, self.manager.get_or_create_unique_thread_id(self.raft_group_id).result()
+        )
         m.assert_called_once_with(self.raft_group_id)
         self.assertEqual(5, self.manager._thread_ids.get((self.raft_group_id, thread_id())))
 
     def test_create_thread_id_with_known_group_id(self):
         m = self.mock_request_generate_thread_id(12)
         self.set_thread_id(13)
-        self.assertEqual(13, self.manager.get_or_create_unique_thread_id(self.raft_group_id).result())
+        self.assertEqual(
+            13, self.manager.get_or_create_unique_thread_id(self.raft_group_id).result()
+        )
         m.assert_not_called()
         self.assertEqual(13, self.manager._thread_ids.get((self.raft_group_id, thread_id())))
 
@@ -153,7 +163,8 @@ class SessionManagerTest(unittest.TestCase):
         time.sleep(2)
         self.manager.shutdown()
         reactor.shutdown()
-        self.assertGreater(self.context.reactor.add_timer.call_count, 1)  # assert that the heartbeat task is executed
+        # assert that the heartbeat task is executed
+        self.assertGreater(self.context.reactor.add_timer.call_count, 1)
         r.assert_called()
         r.assert_called_with(self.raft_group_id, self.session_id)
         self.assertEqual(1, len(self.manager._sessions))
@@ -165,18 +176,22 @@ class SessionManagerTest(unittest.TestCase):
         r = MagicMock(return_value=ImmediateFuture(None))
         self.manager._request_heartbeat = r
         self.manager.acquire_session(self.raft_group_id, 1).add_done_callback(
-            lambda _: self.manager.release_session(self.raft_group_id, self.session_id, 1))
+            lambda _: self.manager.release_session(self.raft_group_id, self.session_id, 1)
+        )
         time.sleep(2)
         self.manager.shutdown()
         reactor.shutdown()
-        self.assertGreater(self.context.reactor.add_timer.call_count, 1)  # assert that the heartbeat task is executed
+        # assert that the heartbeat task is executed
+        self.assertGreater(self.context.reactor.add_timer.call_count, 1)
         r.assert_not_called()
         self.assertEqual(1, len(self.manager._sessions))
 
     def test_heartbeat_on_failure(self):
         reactor = self.mock_reactor()
         self.mock_request_new_session()
-        self.manager._request_heartbeat = MagicMock(return_value=ImmediateExceptionFuture(SessionExpiredError()))
+        self.manager._request_heartbeat = MagicMock(
+            return_value=ImmediateExceptionFuture(SessionExpiredError())
+        )
 
         m = MagicMock(side_effect=self.manager.invalidate_session)
         self.manager.invalidate_session = m
@@ -185,7 +200,8 @@ class SessionManagerTest(unittest.TestCase):
         time.sleep(2)
         self.manager.shutdown()
         reactor.shutdown()
-        self.assertGreater(self.context.reactor.add_timer.call_count, 1)  # assert that the heartbeat task is executed
+        # assert that the heartbeat task is executed
+        self.assertGreater(self.context.reactor.add_timer.call_count, 1)
         m.assert_called_once_with(self.raft_group_id, self.session_id)
         self.assertEqual(0, len(self.manager._sessions))
 
@@ -197,7 +213,9 @@ class SessionManagerTest(unittest.TestCase):
         self.manager._request_generate_thread_id = m
         return m
 
-    def mock_request_new_session(self, ):
+    def mock_request_new_session(
+        self,
+    ):
         def mock(*_, **__):
             d = {
                 "session_id": self.session_id,

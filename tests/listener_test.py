@@ -1,5 +1,10 @@
 from tests.base import HazelcastTestCase
-from tests.util import random_string, event_collector, generate_key_owned_by_instance, wait_for_partition_table
+from tests.util import (
+    random_string,
+    event_collector,
+    generate_key_owned_by_instance,
+    wait_for_partition_table,
+)
 
 
 class ListenerTest(HazelcastTestCase):
@@ -24,13 +29,14 @@ class ListenerTest(HazelcastTestCase):
         wait_for_partition_table(client)
         key_m1 = generate_key_owned_by_instance(client, self.m1.uuid)
         map = client.get_map(random_string()).blocking()
-        map.put(key_m1, 'value1')
+        map.put(key_m1, "value1")
         map.add_entry_listener(updated_func=self.collector)
         self.m1.shutdown()
-        map.put(key_m1, 'value2')
+        map.put(key_m1, "value2")
 
         def assert_event():
             self.assertEqual(1, len(self.collector.events))
+
         self.assertTrueEventually(assert_event)
 
     def test_non_smart_listener_remove_member(self):
@@ -42,10 +48,11 @@ class ListenerTest(HazelcastTestCase):
         wait_for_partition_table(client)
 
         generated_key = generate_key_owned_by_instance(client, self.m1.uuid)
-        map.put(generated_key, 'value')
+        map.put(generated_key, "value")
 
         def assert_event():
             self.assertEqual(1, len(self.collector.events))
+
         self.assertTrueEventually(assert_event)
 
     # -------------------------- test_add_member ----------------------- #
@@ -57,10 +64,11 @@ class ListenerTest(HazelcastTestCase):
         m3 = self.cluster.start_member()
         wait_for_partition_table(client)
         key_m3 = generate_key_owned_by_instance(client, m3.uuid)
-        map.put(key_m3, 'value')
+        map.put(key_m3, "value")
 
         def assert_event():
             self.assertEqual(1, len(self.collector.events))
+
         self.assertTrueEventually(assert_event)
 
     def test_non_smart_listener_add_member(self):
@@ -71,8 +79,9 @@ class ListenerTest(HazelcastTestCase):
         m3 = self.cluster.start_member()
         wait_for_partition_table(client)
         key_m3 = generate_key_owned_by_instance(client, m3.uuid)
-        map.put(key_m3, 'value')
+        map.put(key_m3, "value")
 
         def assert_event():
             self.assertEqual(1, len(self.collector.events))
+
         self.assertTrueEventually(assert_event)

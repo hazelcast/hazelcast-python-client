@@ -10,8 +10,14 @@ from parameterized import parameterized
 from hazelcast import six
 from hazelcast.config import _Config
 from hazelcast.core import Address
-from hazelcast.reactor import AsyncoreReactor, _WakeableLoop, _SocketedWaker, _PipedWaker, _BasicLoop, \
-    AsyncoreConnection
+from hazelcast.reactor import (
+    AsyncoreReactor,
+    _WakeableLoop,
+    _SocketedWaker,
+    _PipedWaker,
+    _BasicLoop,
+    AsyncoreConnection,
+)
 from hazelcast.util import AtomicInteger
 from tests.base import HazelcastTestCase
 
@@ -33,8 +39,14 @@ class ReactorTest(HazelcastTestCase):
 
 
 LOOP_CLASSES = [
-    ("wakeable", _WakeableLoop,),
-    ("basic", _BasicLoop,),
+    (
+        "wakeable",
+        _WakeableLoop,
+    ),
+    (
+        "basic",
+        _BasicLoop,
+    ),
 ]
 
 
@@ -106,7 +118,7 @@ class LoopTest(HazelcastTestCase):
 
         loop = cls({})
         loop.start()
-        loop.add_timer(float('inf'), callback)  # never expired, must be cleaned up
+        loop.add_timer(float("inf"), callback)  # never expired, must be cleaned up
         time.sleep(1)
         try:
             self.assertEqual(0, call_count.get())
@@ -130,7 +142,7 @@ class LoopTest(HazelcastTestCase):
                 loop.add_timer(0, callback)
             call_count.add(1)
 
-        loop.add_timer(float('inf'), callback)
+        loop.add_timer(float("inf"), callback)
 
         loop.shutdown()
 
@@ -187,8 +199,10 @@ class SocketedWakerTest(HazelcastTestCase):
         waker.handle_read()
         self.assertFalse(waker.awake)
 
-        with self.assertRaises((IOError, socket.error)):  # BlockingIOError on Py3, socket.error on Py2
-            waker._reader.recv(1)  # handle_read should consume the socket, there should be nothing
+        # BlockingIOError on Py3, socket.error on Py2
+        with self.assertRaises((IOError, socket.error)):
+            # handle_read should consume the socket, there should be nothing
+            waker._reader.recv(1)
 
     def test_close(self):
         waker = self.waker
@@ -243,10 +257,13 @@ class PipedWakerTest(HazelcastTestCase):
         self.assertFalse(waker.awake)
 
         if os.name == "nt":
-            return  # pipes are not non-blocking on Windows, assertion below blocks forever on Windows
+            # pipes are not non-blocking on Windows, assertion below blocks forever on Windows
+            return
 
-        with self.assertRaises((IOError, OSError)):  # BlockingIOError on Py3, OSError on Py2
-            os.read(waker._read_fd, 1)  # handle_read should consume the pipe, there should be nothing
+        # BlockingIOError on Py3, OSError on Py2
+        with self.assertRaises((IOError, OSError)):
+            # handle_read should consume the pipe, there should be nothing
+            os.read(waker._read_fd, 1)
 
     def test_close(self):
         waker = self.waker
@@ -278,10 +295,10 @@ class AsyncoreConnectionTest(HazelcastTestCase):
 
     def test_socket_options(self):
         config = _Config()
-        config.socket_options = [
-            (socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        ]
-        conn = AsyncoreConnection(MagicMock(map=dict()), None, None, self.member.address, config, None)
+        config.socket_options = [(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)]
+        conn = AsyncoreConnection(
+            MagicMock(map=dict()), None, None, self.member.address, config, None
+        )
 
         try:
             # By default this is set to 0
@@ -294,10 +311,10 @@ class AsyncoreConnectionTest(HazelcastTestCase):
         # to use that value while trying to read something.
         config = _Config()
         size = 64 * 1024
-        config.socket_options = [
-            (socket.SOL_SOCKET, socket.SO_RCVBUF, size)
-        ]
-        conn = AsyncoreConnection(MagicMock(map=dict()), None, None, self.member.address, config, None)
+        config.socket_options = [(socket.SOL_SOCKET, socket.SO_RCVBUF, size)]
+        conn = AsyncoreConnection(
+            MagicMock(map=dict()), None, None, self.member.address, config, None
+        )
 
         try:
             # By default this is set to 128000
@@ -310,10 +327,10 @@ class AsyncoreConnectionTest(HazelcastTestCase):
         # to use that value while trying to write something.
         config = _Config()
         size = 64 * 1024
-        config.socket_options = [
-            (socket.SOL_SOCKET, socket.SO_SNDBUF, size)
-        ]
-        conn = AsyncoreConnection(MagicMock(map=dict()), None, None, self.member.address, config, None)
+        config.socket_options = [(socket.SOL_SOCKET, socket.SO_SNDBUF, size)]
+        conn = AsyncoreConnection(
+            MagicMock(map=dict()), None, None, self.member.address, config, None
+        )
 
         try:
             # By default this is set to 128000

@@ -15,6 +15,5 @@ exclude = '''
 
   | benchmarks
   | hazelcast/protocol/codec
-  | tests
 )/
 '''

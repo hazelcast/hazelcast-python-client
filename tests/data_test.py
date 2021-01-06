@@ -24,4 +24,4 @@ class DataTestCase(unittest.TestCase):
         self.assertEqual(0x12345678, self._data.get_partition_hash())
 
     def test_data_len(self):
-        self.assertEqual(10, len(Data("1"* 10)))
+        self.assertEqual(10, len(Data("1" * 10)))

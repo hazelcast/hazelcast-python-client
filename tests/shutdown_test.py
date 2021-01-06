@@ -18,10 +18,12 @@ class ShutdownTest(HazelcastTestCase):
 
     def test_shutdown_not_hang_on_member_closed(self):
         member = self.cluster.start_member()
-        client = self.create_client({
-            "cluster_name": self.cluster.id,
-            "cluster_connect_timeout": 5.0,
-        })
+        client = self.create_client(
+            {
+                "cluster_name": self.cluster.id,
+                "cluster_connect_timeout": 5.0,
+            }
+        )
         my_map = client.get_map("test")
         my_map.put("key", "value").result()
         member.shutdown()
@@ -31,9 +33,11 @@ class ShutdownTest(HazelcastTestCase):
 
     def test_invocations_finalised_when_client_shutdowns(self):
         self.cluster.start_member()
-        client = self.create_client({
-            "cluster_name": self.cluster.id,
-        })
+        client = self.create_client(
+            {
+                "cluster_name": self.cluster.id,
+            }
+        )
         m = client.get_map("test")
         m.put("key", "value").result()
 

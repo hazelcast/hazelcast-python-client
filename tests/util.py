@@ -27,13 +27,16 @@ def fill_map(map, size=10, key_prefix="key", value_prefix="val"):
     return entries
 
 
-def get_ssl_config(cluster_name, enable_ssl=False,
-                   cafile=None,
-                   certfile=None,
-                   keyfile=None,
-                   password=None,
-                   protocol=SSLProtocol.TLSv1_2,
-                   ciphers=None):
+def get_ssl_config(
+    cluster_name,
+    enable_ssl=False,
+    cafile=None,
+    certfile=None,
+    keyfile=None,
+    password=None,
+    protocol=SSLProtocol.TLSv1_2,
+    ciphers=None,
+):
     config = {
         "cluster_name": cluster_name,
         "ssl_enabled": enable_ssl,
