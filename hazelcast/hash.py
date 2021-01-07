@@ -16,8 +16,8 @@ def murmur_hash3_x86_32(data):
 
     h1 = 0x01000193
 
-    c1 = 0xcc9e2d51
-    c2 = 0x1b873593
+    c1 = 0xCC9E2D51
+    c2 = 0x1B873593
 
     # body
     for block_start in range(0, nblocks * 4, 4):
@@ -30,7 +30,7 @@ def murmur_hash3_x86_32(data):
 
         h1 ^= k1
         h1 = (h1 << 13 | h1 >> 19) & 0xFFFFFFFF  # inlined _ROTL32
-        h1 = (h1 * 5 + 0xe6546b64) & 0xFFFFFFFF
+        h1 = (h1 * 5 + 0xE6546B64) & 0xFFFFFFFF
 
     # tail
     tail_index = nblocks * 4
@@ -53,9 +53,9 @@ def murmur_hash3_x86_32(data):
 
     h1 ^= length
     h1 ^= h1 >> 16
-    h1 = (h1 * 0x85ebca6b) & 0xFFFFFFFF
+    h1 = (h1 * 0x85EBCA6B) & 0xFFFFFFFF
     h1 ^= h1 >> 13
-    h1 = (h1 * 0xc2b2ae35) & 0xFFFFFFFF
+    h1 = (h1 * 0xC2B2AE35) & 0xFFFFFFFF
     h1 ^= h1 >> 16
     return -(h1 & 0x80000000) | (h1 & 0x7FFFFFFF)
 

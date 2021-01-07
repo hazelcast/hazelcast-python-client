@@ -10,13 +10,24 @@ from collections import OrderedDict
 
 from hazelcast.config import ReconnectMode
 from hazelcast.core import AddressHelper, CLIENT_TYPE, SERIALIZATION_VERSION
-from hazelcast.errors import AuthenticationError, TargetDisconnectedError, HazelcastClientNotActiveError, \
-    InvalidConfigurationError, ClientNotAllowedInClusterError, IllegalStateError, ClientOfflineError
+from hazelcast.errors import (
+    AuthenticationError,
+    TargetDisconnectedError,
+    HazelcastClientNotActiveError,
+    InvalidConfigurationError,
+    ClientNotAllowedInClusterError,
+    IllegalStateError,
+    ClientOfflineError,
+)
 from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
 from hazelcast.invocation import Invocation
 from hazelcast.lifecycle import LifecycleState
-from hazelcast.protocol.client_message import SIZE_OF_FRAME_LENGTH_AND_FLAGS, Frame, InboundMessage, \
-    ClientMessageBuilder
+from hazelcast.protocol.client_message import (
+    SIZE_OF_FRAME_LENGTH_AND_FLAGS,
+    Frame,
+    InboundMessage,
+    ClientMessageBuilder,
+)
 from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
 from hazelcast.util import AtomicInteger, calculate_version, UNKNOWN_VERSION
 from hazelcast import six, __version__
@@ -25,8 +36,7 @@ _logger = logging.getLogger(__name__)
 
 
 class _WaitStrategy(object):
-    def __init__(self, initial_backoff, max_backoff, multiplier,
-                 cluster_connect_timeout, jitter):
+    def __init__(self, initial_backoff, max_backoff, multiplier, cluster_connect_timeout, jitter):
         self._initial_backoff = initial_backoff
         self._max_backoff = max_backoff
         self._multiplier = multiplier
@@ -46,16 +56,27 @@ class _WaitStrategy(object):
         now = time.time()
         time_passed = now - self._cluster_connect_attempt_begin
         if time_passed > self._cluster_connect_timeout:
-            _logger.warning("Unable to get live cluster connection, cluster connect timeout (%d) is reached. "
-                            "Attempt %d.", self._cluster_connect_timeout, self._attempt)
+            _logger.warning(
+                "Unable to get live cluster connection, cluster connect timeout (%d) is reached. "
+                "Attempt %d.",
+                self._cluster_connect_timeout,
+                self._attempt,
+            )
             return False
 
         # random between (-jitter * current_backoff, jitter * current_backoff)
-        sleep_time = self._current_backoff + self._current_backoff * self._jitter * (2 * random.random() - 1)
+        sleep_time = self._current_backoff + self._current_backoff * self._jitter * (
+            2 * random.random() - 1
+        )
         sleep_time = min(sleep_time, self._cluster_connect_timeout - time_passed)
-        _logger.warning("Unable to get live cluster connection, retry in %ds, attempt: %d, "
-                        "cluster connect timeout: %ds, max backoff: %ds",
-                        sleep_time, self._attempt, self._cluster_connect_timeout, self._max_backoff)
+        _logger.warning(
+            "Unable to get live cluster connection, retry in %ds, attempt: %d, "
+            "cluster connect timeout: %ds, max backoff: %ds",
+            sleep_time,
+            self._attempt,
+            self._cluster_connect_timeout,
+            self._max_backoff,
+        )
         time.sleep(sleep_time)
         self._current_backoff = min(self._current_backoff * self._multiplier, self._max_backoff)
         return True
@@ -71,9 +92,17 @@ class _AuthenticationStatus(object):
 class ConnectionManager(object):
     """ConnectionManager is responsible for managing ``Connection`` objects."""
 
-    def __init__(self, client, reactor, address_provider, lifecycle_service,
-                 partition_service, cluster_service, invocation_service,
-                 near_cache_manager):
+    def __init__(
+        self,
+        client,
+        reactor,
+        address_provider,
+        lifecycle_service,
+        partition_service,
+        cluster_service,
+        invocation_service,
+        near_cache_manager,
+    ):
         self.live = False
         self.active_connections = dict()  # uuid to connection, must be modified under the _lock
         self.client_uuid = uuid.uuid4()
@@ -96,7 +125,7 @@ class ConnectionManager(object):
         self._async_start = config.async_start
         self._connect_to_cluster_thread_running = False
         self._pending_connections = dict()  # must be modified under the _lock
-        self._addresses_to_connections = dict()  # address to connection, must be modified under the _lock
+        self._addresses_to_connections = dict()  # must be modified under the _lock
         self._shuffle_member_list = config.shuffle_member_list
         self._lock = threading.RLock()
         self._connection_id_generator = AtomicInteger()
@@ -159,7 +188,9 @@ class ConnectionManager(object):
 
         with self._lock:
             for connection_future in six.itervalues(self._pending_connections):
-                connection_future.set_exception(HazelcastClientNotActiveError("Hazelcast client is shutting down"))
+                connection_future.set_exception(
+                    HazelcastClientNotActiveError("Hazelcast client is shutting down")
+                )
 
             # Need to create copy of connection values to avoid modification errors on runtime
             for connection in list(six.itervalues(self.active_connections)):
@@ -187,8 +218,11 @@ class ConnectionManager(object):
         remote_address = closed_connection.remote_address
 
         if not connected_address:
-            _logger.debug("Destroying %s, but it has no remote address, hence nothing is "
-                          "removed from the connection dictionary", closed_connection)
+            _logger.debug(
+                "Destroying %s, but it has no remote address, hence nothing is "
+                "removed from the connection dictionary",
+                closed_connection,
+            )
 
         with self._lock:
             pending = self._pending_connections.pop(connected_address, None)
@@ -199,8 +233,12 @@ class ConnectionManager(object):
                 pending.set_exception(cause)
 
             if connection:
-                _logger.info("Removed connection to %s:%s, connection: %s",
-                             connected_address, remote_uuid, connection)
+                _logger.info(
+                    "Removed connection to %s:%s, connection: %s",
+                    connected_address,
+                    remote_uuid,
+                    connection,
+                )
                 if not self.active_connections:
                     self._lifecycle_service.fire_lifecycle_event(LifecycleState.DISCONNECTED)
                     self._trigger_cluster_reconnection()
@@ -214,8 +252,11 @@ class ConnectionManager(object):
                         _logger.exception("Exception in connection listener")
         else:
             if remote_uuid:
-                _logger.debug("Destroying %s, but there is no mapping for %s in the connection dictionary",
-                              closed_connection, remote_uuid)
+                _logger.debug(
+                    "Destroying %s, but there is no mapping for %s in the connection dictionary",
+                    closed_connection,
+                    remote_uuid,
+                )
 
     def check_invocation_allowed(self):
         if self.active_connections:
@@ -236,8 +277,13 @@ class ConnectionManager(object):
             self._start_connect_to_cluster_thread()
 
     def _init_wait_strategy(self, config):
-        return _WaitStrategy(config.retry_initial_backoff, config.retry_max_backoff, config.retry_multiplier,
-                             config.cluster_connect_timeout, config.retry_jitter)
+        return _WaitStrategy(
+            config.retry_initial_backoff,
+            config.retry_max_backoff,
+            config.retry_multiplier,
+            config.cluster_connect_timeout,
+            config.retry_jitter,
+        )
 
     def _start_connect_all_members_timer(self):
         connecting_addresses = set()
@@ -249,7 +295,10 @@ class ConnectionManager(object):
             for member in self._cluster_service.get_members():
                 address = member.address
 
-                if not self.get_connection_from_address(address) and address not in connecting_addresses:
+                if (
+                    not self.get_connection_from_address(address)
+                    and address not in connecting_addresses
+                ):
                     connecting_addresses.add(address)
                     if not self._lifecycle_service.running:
                         break
@@ -291,7 +340,7 @@ class ConnectionManager(object):
                 _logger.exception("Could not connect to any cluster, shutting down the client")
                 self._shutdown_client()
 
-        t = threading.Thread(target=run, name='hazelcast_async_connection')
+        t = threading.Thread(target=run, name="hazelcast_async_connection")
         t.daemon = True
         t.start()
 
@@ -323,8 +372,12 @@ class ConnectionManager(object):
             _logger.exception("Stopped trying on cluster %s", cluster_name)
 
         cluster_name = self._client.config.cluster_name
-        _logger.info("Unable to connect to any address from the cluster with name: %s. "
-                     "The following addresses were tried: %s", cluster_name, tried_addresses)
+        _logger.info(
+            "Unable to connect to any address from the cluster with name: %s. "
+            "The following addresses were tried: %s",
+            cluster_name,
+            tried_addresses,
+        )
         if self._lifecycle_service.running:
             msg = "Unable to connect to any cluster"
         else:
@@ -359,18 +412,26 @@ class ConnectionManager(object):
                     try:
                         translated = self._address_provider.translate(address)
                         if not translated:
-                            return ImmediateExceptionFuture(
-                                ValueError("Address translator could not translate address %s" % address))
+                            error = ValueError(
+                                "Address translator could not translate address %s" % address
+                            )
+                            return ImmediateExceptionFuture(error)
 
                         factory = self._reactor.connection_factory
-                        connection = factory(self, self._connection_id_generator.get_and_increment(),
-                                             translated, self._client.config,
-                                             self._invocation_service.handle_client_message)
+                        connection = factory(
+                            self,
+                            self._connection_id_generator.get_and_increment(),
+                            translated,
+                            self._client.config,
+                            self._invocation_service.handle_client_message,
+                        )
                     except IOError:
                         error = sys.exc_info()
                         return ImmediateExceptionFuture(error[1], error[2])
 
-                    future = self._authenticate(connection).continue_with(self._on_auth, connection, address)
+                    future = self._authenticate(connection).continue_with(
+                        self._on_auth, connection, address
+                    )
                     self._pending_connections[address] = future
                     return future
 
@@ -378,11 +439,21 @@ class ConnectionManager(object):
         client = self._client
         cluster_name = client.config.cluster_name
         client_name = client.name
-        request = client_authentication_codec.encode_request(cluster_name, None, None, self.client_uuid,
-                                                             CLIENT_TYPE, SERIALIZATION_VERSION, __version__,
-                                                             client_name, self._labels)
+        request = client_authentication_codec.encode_request(
+            cluster_name,
+            None,
+            None,
+            self.client_uuid,
+            CLIENT_TYPE,
+            SERIALIZATION_VERSION,
+            __version__,
+            client_name,
+            self._labels,
+        )
 
-        invocation = Invocation(request, connection=connection, urgent=True, response_handler=lambda m: m)
+        invocation = Invocation(
+            request, connection=connection, urgent=True, response_handler=lambda m: m
+        )
         self._invocation_service.invoke(invocation)
         return invocation.future
 
@@ -394,14 +465,18 @@ class ConnectionManager(object):
                 return self._handle_successful_auth(response, connection, address)
 
             if status == _AuthenticationStatus.CREDENTIALS_FAILED:
-                err = AuthenticationError("Authentication failed. The configured cluster name on "
-                                          "the client does not match the one configured in the cluster.")
+                err = AuthenticationError(
+                    "Authentication failed. The configured cluster name on "
+                    "the client does not match the one configured in the cluster."
+                )
             elif status == _AuthenticationStatus.NOT_ALLOWED_IN_CLUSTER:
                 err = ClientNotAllowedInClusterError("Client is not allowed in the cluster")
             elif status == _AuthenticationStatus.SERIALIZATION_VERSION_MISMATCH:
                 err = IllegalStateError("Server serialization version does not match to client")
             else:
-                err = AuthenticationError("Authentication status code not supported. status: %s" % status)
+                err = AuthenticationError(
+                    "Authentication status code not supported. status: %s" % status
+                )
 
             connection.close("Failed to authenticate connection", err)
             raise err
@@ -425,10 +500,17 @@ class ConnectionManager(object):
         new_cluster_id = response["cluster_id"]
 
         is_initial_connection = not self.active_connections
-        changed_cluster = is_initial_connection and self._cluster_id is not None and self._cluster_id != new_cluster_id
+        changed_cluster = (
+            is_initial_connection
+            and self._cluster_id is not None
+            and self._cluster_id != new_cluster_id
+        )
         if changed_cluster:
-            _logger.warning("Switching from current cluster: %s to new cluster: %s",
-                            self._cluster_id, new_cluster_id)
+            _logger.warning(
+                "Switching from current cluster: %s to new cluster: %s",
+                self._cluster_id,
+                new_cluster_id,
+            )
             self._on_cluster_restart()
 
         with self._lock:
@@ -440,8 +522,13 @@ class ConnectionManager(object):
             self._cluster_id = new_cluster_id
             self._lifecycle_service.fire_lifecycle_event(LifecycleState.CONNECTED)
 
-        _logger.info("Authenticated with server %s:%s, server version: %s, local address: %s",
-                     remote_address, remote_uuid, server_version_str, connection.local_address)
+        _logger.info(
+            "Authenticated with server %s:%s, server version: %s, local address: %s",
+            remote_address,
+            remote_uuid,
+            server_version_str,
+            connection.local_address,
+        )
 
         for on_connection_opened, _ in self._connection_listeners:
             if on_connection_opened:
@@ -461,17 +548,21 @@ class ConnectionManager(object):
 
     def _check_partition_count(self, partition_count):
         if not self._partition_service.check_and_set_partition_count(partition_count):
-            raise ClientNotAllowedInClusterError("Client can not work with this cluster because it has a "
-                                                 "different partition count. Expected partition count: %d, "
-                                                 "Member partition count: %d"
-                                                 % (self._partition_service.partition_count, partition_count))
+            raise ClientNotAllowedInClusterError(
+                "Client can not work with this cluster because it has a "
+                "different partition count. Expected partition count: %d, "
+                "Member partition count: %d"
+                % (self._partition_service.partition_count, partition_count)
+            )
 
     def _check_client_active(self):
         if not self._lifecycle_service.running:
             raise HazelcastClientNotActiveError()
 
     def _get_possible_addresses(self):
-        member_addresses = list(map(lambda m: (m.address, None), self._cluster_service.get_members()))
+        member_addresses = list(
+            map(lambda m: (m.address, None), self._cluster_service.get_members())
+        )
 
         if self._shuffle_member_list:
             random.shuffle(member_addresses)
@@ -529,8 +620,10 @@ class _HeartbeatManager(object):
 
         if (now - connection.last_read_time) > self._heartbeat_timeout:
             _logger.warning("Heartbeat failed over the connection: %s", connection)
-            connection.close("Heartbeat timed out",
-                             TargetDisconnectedError("Heartbeat timed out to connection %s" % connection))
+            connection.close(
+                "Heartbeat timed out",
+                TargetDisconnectedError("Heartbeat timed out to connection %s" % connection),
+            )
             return
 
         if (now - connection.last_write_time) > self._heartbeat_interval:
@@ -539,7 +632,7 @@ class _HeartbeatManager(object):
             self._invocation_service.invoke(invocation)
 
 
-_frame_header = struct.Struct('<iH')
+_frame_header = struct.Struct("<iH")
 
 
 class _Reader(object):

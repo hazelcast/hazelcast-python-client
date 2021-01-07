@@ -4,7 +4,13 @@ from hazelcast import six
 from hazelcast.errors import InvalidConfigurationError
 from hazelcast.serialization.api import StreamSerializer, IdentifiedDataSerializable, Portable
 from hazelcast.serialization.portable.classdef import ClassDefinition
-from hazelcast.util import check_not_none, number_types, LoadBalancer, none_type, try_to_get_enum_value
+from hazelcast.util import (
+    check_not_none,
+    number_types,
+    LoadBalancer,
+    none_type,
+    try_to_get_enum_value,
+)
 
 
 class IntType(object):
@@ -221,7 +227,7 @@ class BitmapIndexOptions(object):
     @property
     def unique_key_transformation(self):
         return self._unique_key_transformation
-    
+
     @unique_key_transformation.setter
     def unique_key_transformation(self, value):
         self._unique_key_transformation = try_to_get_enum_value(value, UniqueKeyTransformation)
@@ -233,12 +239,16 @@ class BitmapIndexOptions(object):
             try:
                 options.__setattr__(k, v)
             except AttributeError:
-                raise InvalidConfigurationError("Unrecognized config option for the bitmap index options: %s" % k)
+                raise InvalidConfigurationError(
+                    "Unrecognized config option for the bitmap index options: %s" % k
+                )
         return options
 
     def __repr__(self):
-        return "BitmapIndexOptions(unique_key=%s, unique_key_transformation=%s)" \
-               % (self.unique_key, self.unique_key_transformation)
+        return "BitmapIndexOptions(unique_key=%s, unique_key_transformation=%s)" % (
+            self.unique_key,
+            self.unique_key_transformation,
+        )
 
 
 class IndexConfig(object):
@@ -319,12 +329,18 @@ class IndexConfig(object):
                 try:
                     config.__setattr__(k, v)
                 except AttributeError:
-                    raise InvalidConfigurationError("Unrecognized config option for the index config: %s" % k)
+                    raise InvalidConfigurationError(
+                        "Unrecognized config option for the index config: %s" % k
+                    )
         return config
 
     def __repr__(self):
-        return "IndexConfig(name=%s, type=%s, attributes=%s, bitmap_index_options=%s)" \
-               % (self.name, self.type, self.attributes, self.bitmap_index_options)
+        return "IndexConfig(name=%s, type=%s, attributes=%s, bitmap_index_options=%s)" % (
+            self.name,
+            self.type,
+            self.attributes,
+            self.bitmap_index_options,
+        )
 
 
 class IndexUtil(object):
@@ -353,7 +369,9 @@ class IndexUtil(object):
 
         if len(original_attributes) > IndexUtil._MAX_ATTRIBUTES:
             raise ValueError(
-                "Index cannot have more than %s attributes %s" % (IndexUtil._MAX_ATTRIBUTES, index_config))
+                "Index cannot have more than %s attributes %s"
+                % (IndexUtil._MAX_ATTRIBUTES, index_config)
+            )
 
         if index_config.type == IndexType.BITMAP and len(original_attributes) > 1:
             raise ValueError("Composite bitmap indexes are not supported: %s" % index_config)
@@ -372,12 +390,16 @@ class IndexUtil(object):
             else:
                 duplicate_original_attribute = original_attributes[idx]
                 if duplicate_original_attribute == original_attribute:
-                    raise ValueError("Duplicate attribute name [attribute_name=%s, index_config=%s]"
-                                     % (original_attribute, index_config))
+                    raise ValueError(
+                        "Duplicate attribute name [attribute_name=%s, index_config=%s]"
+                        % (original_attribute, index_config)
+                    )
                 else:
-                    raise ValueError("Duplicate attribute names [attribute_name1=%s, attribute_name2=%s, "
-                                     "index_config=%s]"
-                                     % (duplicate_original_attribute, original_attribute, index_config))
+                    raise ValueError(
+                        "Duplicate attribute names [attribute_name1=%s, attribute_name2=%s, "
+                        "index_config=%s]"
+                        % (duplicate_original_attribute, original_attribute, index_config)
+                    )
 
             normalized_attributes.append(normalized_attribute)
 
@@ -385,15 +407,18 @@ class IndexUtil(object):
         if name and not name.strip():
             name = None
 
-        normalized_config = IndexUtil.build_normalized_config(map_name, index_config.type, name,
-                                                              normalized_attributes)
+        normalized_config = IndexUtil.build_normalized_config(
+            map_name, index_config.type, name, normalized_attributes
+        )
         if index_config.type == IndexType.BITMAP:
             unique_key = index_config.bitmap_index_options.unique_key
             unique_key_transformation = index_config.bitmap_index_options.unique_key_transformation
             IndexUtil.validate_attribute(unique_key)
             unique_key = IndexUtil.canonicalize_attribute(unique_key)
             normalized_config.bitmap_index_options.unique_key = unique_key
-            normalized_config.bitmap_index_options.unique_key_transformation = unique_key_transformation
+            normalized_config.bitmap_index_options.unique_key_transformation = (
+                unique_key_transformation
+            )
 
         return normalized_config
 
@@ -406,7 +431,11 @@ class IndexUtil(object):
         new_config = IndexConfig()
         new_config.type = index_type
 
-        name = map_name + "_" + IndexUtil._index_type_to_name(index_type) if index_name is None else None
+        name = (
+            map_name + "_" + IndexUtil._index_type_to_name(index_type)
+            if index_name is None
+            else None
+        )
         for normalized_attribute in normalized_attributes:
             new_config.add_attribute(normalized_attribute)
             if name:
@@ -431,22 +460,55 @@ class IndexUtil(object):
 
 
 class _Config(object):
-    __slots__ = ("_cluster_members", "_cluster_name", "_client_name",
-                 "_connection_timeout", "_socket_options", "_redo_operation",
-                 "_smart_routing", "_ssl_enabled", "_ssl_cafile",
-                 "_ssl_certfile", "_ssl_keyfile", "_ssl_password",
-                 "_ssl_protocol", "_ssl_ciphers", "_cloud_discovery_token",
-                 "_async_start", "_reconnect_mode", "_retry_initial_backoff",
-                 "_retry_max_backoff", "_retry_jitter", "_retry_multiplier",
-                 "_cluster_connect_timeout", "_portable_version", "_data_serializable_factories",
-                 "_portable_factories", "_class_definitions", "_check_class_definition_errors",
-                 "_is_big_endian", "_default_int_type", "_global_serializer",
-                 "_custom_serializers", "_near_caches", "_load_balancer",
-                 "_membership_listeners", "_lifecycle_listeners", "_flake_id_generators",
-                 "_labels", "_heartbeat_interval", "_heartbeat_timeout",
-                 "_invocation_timeout", "_invocation_retry_pause", "_statistics_enabled",
-                 "_statistics_period", "_shuffle_member_list", "_backup_ack_to_client_enabled",
-                 "_operation_backup_timeout", "_fail_on_indeterminate_operation_state")
+    __slots__ = (
+        "_cluster_members",
+        "_cluster_name",
+        "_client_name",
+        "_connection_timeout",
+        "_socket_options",
+        "_redo_operation",
+        "_smart_routing",
+        "_ssl_enabled",
+        "_ssl_cafile",
+        "_ssl_certfile",
+        "_ssl_keyfile",
+        "_ssl_password",
+        "_ssl_protocol",
+        "_ssl_ciphers",
+        "_cloud_discovery_token",
+        "_async_start",
+        "_reconnect_mode",
+        "_retry_initial_backoff",
+        "_retry_max_backoff",
+        "_retry_jitter",
+        "_retry_multiplier",
+        "_cluster_connect_timeout",
+        "_portable_version",
+        "_data_serializable_factories",
+        "_portable_factories",
+        "_class_definitions",
+        "_check_class_definition_errors",
+        "_is_big_endian",
+        "_default_int_type",
+        "_global_serializer",
+        "_custom_serializers",
+        "_near_caches",
+        "_load_balancer",
+        "_membership_listeners",
+        "_lifecycle_listeners",
+        "_flake_id_generators",
+        "_labels",
+        "_heartbeat_interval",
+        "_heartbeat_timeout",
+        "_invocation_timeout",
+        "_invocation_retry_pause",
+        "_statistics_enabled",
+        "_statistics_period",
+        "_shuffle_member_list",
+        "_backup_ack_to_client_enabled",
+        "_operation_backup_timeout",
+        "_fail_on_indeterminate_operation_state",
+    )
 
     def __init__(self):
         self._cluster_members = []
@@ -785,11 +847,17 @@ class _Config(object):
 
                 for class_id, clazz in six.iteritems(factory):
                     if not isinstance(class_id, six.integer_types):
-                        raise TypeError("Keys of factories of data_serializable_factories must be integers")
+                        raise TypeError(
+                            "Keys of factories of data_serializable_factories must be integers"
+                        )
 
-                    if not (isinstance(clazz, type) and issubclass(clazz, IdentifiedDataSerializable)):
-                        raise TypeError("Values of factories of data_serializable_factories must be "
-                                        "subclasses of IdentifiedDataSerializable")
+                    if not (
+                        isinstance(clazz, type) and issubclass(clazz, IdentifiedDataSerializable)
+                    ):
+                        raise TypeError(
+                            "Values of factories of data_serializable_factories must be "
+                            "subclasses of IdentifiedDataSerializable"
+                        )
 
             self._data_serializable_factories = value
         else:
@@ -814,8 +882,10 @@ class _Config(object):
                         raise TypeError("Keys of factories of portable_factories must be integers")
 
                     if not (isinstance(clazz, type) and issubclass(clazz, Portable)):
-                        raise TypeError("Values of factories of portable_factories must be "
-                                        "subclasses of Portable")
+                        raise TypeError(
+                            "Values of factories of portable_factories must be "
+                            "subclasses of Portable"
+                        )
 
             self._portable_factories = value
         else:
@@ -830,7 +900,9 @@ class _Config(object):
         if isinstance(value, list):
             for cd in value:
                 if not isinstance(cd, ClassDefinition):
-                    raise TypeError("class_definitions must contain objects of type ClassDefinition")
+                    raise TypeError(
+                        "class_definitions must contain objects of type ClassDefinition"
+                    )
 
             self._class_definitions = value
         else:
@@ -889,7 +961,9 @@ class _Config(object):
                     raise TypeError("Keys of custom_serializers must be types")
 
                 if not (isinstance(serializer, type) and issubclass(serializer, StreamSerializer)):
-                    raise TypeError("Values of custom_serializers must be subclasses of StreamSerializer")
+                    raise TypeError(
+                        "Values of custom_serializers must be subclasses of StreamSerializer"
+                    )
 
             self._custom_serializers = value
         else:
@@ -939,10 +1013,14 @@ class _Config(object):
                     try:
                         added, removed = item
                     except TypeError:
-                        raise TypeError("membership_listeners must contain tuples of length 2 as items")
+                        raise TypeError(
+                            "membership_listeners must contain tuples of length 2 as items"
+                        )
 
                     if not (callable(added) or callable(removed)):
-                        raise TypeError("At least one of the listeners in the tuple most be callable")
+                        raise TypeError(
+                            "At least one of the listeners in the tuple most be callable"
+                        )
 
                 self._membership_listeners = value
             except ValueError:
@@ -1137,9 +1215,16 @@ class _Config(object):
 
 
 class _NearCacheConfig(object):
-    __slots__ = ("_invalidate_on_change", "_in_memory_format", "_time_to_live", "_max_idle",
-                 "_eviction_policy", "_eviction_max_size", "_eviction_sampling_count",
-                 "_eviction_sampling_pool_size")
+    __slots__ = (
+        "_invalidate_on_change",
+        "_in_memory_format",
+        "_time_to_live",
+        "_max_idle",
+        "_eviction_policy",
+        "_eviction_max_size",
+        "_eviction_sampling_count",
+        "_eviction_sampling_pool_size",
+    )
 
     def __init__(self):
         self._invalidate_on_change = True
@@ -1250,7 +1335,9 @@ class _NearCacheConfig(object):
             try:
                 config.__setattr__(k, v)
             except AttributeError:
-                raise InvalidConfigurationError("Unrecognized config option for the near cache: %s" % k)
+                raise InvalidConfigurationError(
+                    "Unrecognized config option for the near cache: %s" % k
+                )
         return config
 
 
@@ -1294,6 +1381,7 @@ class _FlakeIdGeneratorConfig(object):
             try:
                 config.__setattr__(k, v)
             except AttributeError:
-                raise InvalidConfigurationError("Unrecognized config option for the flake id generator: %s" % k)
+                raise InvalidConfigurationError(
+                    "Unrecognized config option for the flake id generator: %s" % k
+                )
         return config
-

@@ -105,20 +105,31 @@ class _InternalPartitionService(object):
 
     def _should_be_applied(self, connection, partitions, version, current):
         if not partitions:
-            _logger.debug("Partition view will not be applied since response is empty. "
-                          "Sending connection: %s, version: %s, current table: %s",
-                          connection, version, current)
+            _logger.debug(
+                "Partition view will not be applied since response is empty. "
+                "Sending connection: %s, version: %s, current table: %s",
+                connection,
+                version,
+                current,
+            )
             return False
 
         if connection != current.connection:
-            _logger.debug("Partition view event coming from a new connection. Old: %s, new: %s",
-                          current.connection, connection)
+            _logger.debug(
+                "Partition view event coming from a new connection. Old: %s, new: %s",
+                current.connection,
+                connection,
+            )
             return True
 
         if version <= current.version:
-            _logger.debug("Partition view will not be applied since response state version is older. "
-                          "Sending connection: %s, version: %s, current table: %s",
-                          connection, version, current)
+            _logger.debug(
+                "Partition view will not be applied since response state version is older. "
+                "Sending connection: %s, version: %s, current table: %s",
+                connection,
+                version,
+                current,
+            )
             return False
 
         return True
@@ -136,7 +147,7 @@ def string_partition_strategy(key):
     if key is None:
         return None
     try:
-        index_of = key.index('@')
-        return key[index_of + 1:]
+        index_of = key.index("@")
+        return key[index_of + 1 :]
     except ValueError:
         return key

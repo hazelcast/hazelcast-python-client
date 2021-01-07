@@ -47,14 +47,23 @@ class MemberInfo(object):
         return "Member [%s]:%s - %s" % (self.address.host, self.address.port, self.uuid)
 
     def __repr__(self):
-        return "Member(address=%s, uuid=%s, attributes=%s, lite_member=%s, version=%s)" \
-               % (self.address, self.uuid, self.attributes, self.lite_member, self.version)
+        return "Member(address=%s, uuid=%s, attributes=%s, lite_member=%s, version=%s)" % (
+            self.address,
+            self.uuid,
+            self.attributes,
+            self.lite_member,
+            self.version,
+        )
 
     def __hash__(self):
         return hash((self.address, self.uuid))
 
     def __eq__(self, other):
-        return isinstance(other, MemberInfo) and self.address == other.address and self.uuid == other.uuid
+        return (
+            isinstance(other, MemberInfo)
+            and self.address == other.address
+            and self.uuid == other.uuid
+        )
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -114,14 +123,14 @@ class AddressHelper(object):
         if -1 < colon_idx < last_colon_idx:
             # IPv6
             if bracket_start_idx == 0 and bracket_end_idx > bracket_start_idx:
-                host = address[bracket_start_idx + 1: bracket_end_idx]
+                host = address[bracket_start_idx + 1 : bracket_end_idx]
                 if last_colon_idx == (bracket_end_idx + 1):
-                    port = int(address[last_colon_idx + 1:])
+                    port = int(address[last_colon_idx + 1 :])
             else:
                 host = address
         elif colon_idx > 0 and colon_idx == last_colon_idx:
             host = address[:colon_idx]
-            port = int(address[colon_idx + 1:])
+            port = int(address[colon_idx + 1 :])
         else:
             host = address
         return Address(host, port)
@@ -183,14 +192,32 @@ class DistributedObjectEvent(object):
         """
 
     def __repr__(self):
-        return "DistributedObjectEvent(name=%s, service_name=%s, event_type=%s, source=%s)" \
-               % (self.name, self.service_name, self.event_type, self.source)
+        return "DistributedObjectEvent(name=%s, service_name=%s, event_type=%s, source=%s)" % (
+            self.name,
+            self.service_name,
+            self.event_type,
+            self.source,
+        )
 
 
 class SimpleEntryView(object):
     """EntryView represents a readonly view of a map entry."""
-    def __init__(self, key, value, cost, creation_time, expiration_time, hits, last_access_time,
-                 last_stored_time, last_update_time, version, ttl, max_idle):
+
+    def __init__(
+        self,
+        key,
+        value,
+        cost,
+        creation_time,
+        expiration_time,
+        hits,
+        last_access_time,
+        last_stored_time,
+        last_update_time,
+        version,
+        ttl,
+        max_idle,
+    ):
         self.key = key
         """
         The key of the entry.
@@ -252,12 +279,25 @@ class SimpleEntryView(object):
         """
 
     def __repr__(self):
-        return "SimpleEntryView(key=%s, value=%s, cost=%s, creation_time=%s, " \
-               "expiration_time=%s, hits=%s, last_access_time=%s, last_stored_time=%s, " \
-               "last_update_time=%s, version=%s, ttl=%s, max_idle=%s" \
-               % (self.key, self.value, self.cost, self.creation_time, self.expiration_time, self.hits,
-                  self.last_access_time, self.last_stored_time, self.last_update_time, self.version,
-                  self.ttl, self.max_idle)
+        return (
+            "SimpleEntryView(key=%s, value=%s, cost=%s, creation_time=%s, "
+            "expiration_time=%s, hits=%s, last_access_time=%s, last_stored_time=%s, "
+            "last_update_time=%s, version=%s, ttl=%s, max_idle=%s"
+            % (
+                self.key,
+                self.value,
+                self.cost,
+                self.creation_time,
+                self.expiration_time,
+                self.hits,
+                self.last_access_time,
+                self.last_stored_time,
+                self.last_update_time,
+                self.version,
+                self.ttl,
+                self.max_idle,
+            )
+        )
 
 
 class HazelcastJsonValue(object):
@@ -266,22 +306,22 @@ class HazelcastJsonValue(object):
     It is preferred to store HazelcastJsonValue instead of Strings for JSON formatted strings.
     Users can run predicates and use indexes on the attributes of the underlying
     JSON strings.
-    
+
     HazelcastJsonValue is queried using Hazelcast's querying language.
     See `Distributed Query section <https://github.com/hazelcast/hazelcast-python-client#77-distributed-query>`_.
-    
+
     In terms of querying, numbers in JSON strings are treated as either
     Long or Double in the Java side. str, bool and None
     are treated as String, boolean and null respectively.
-    
+
     HazelcastJsonValue keeps given string as it is. Strings are not
     checked for being valid. Ill-formatted JSON strings may cause false
     positive or false negative results in queries.
-    
+
     HazelcastJsonValue can also be constructed from JSON serializable objects.
     In that case, objects are converted to JSON strings and stored as such.
     If an error occurs during the conversion, it is raised directly.
-    
+
     None values are not allowed.
     """
 
@@ -294,7 +334,7 @@ class HazelcastJsonValue(object):
 
     def to_string(self):
         """Returns unaltered string that was used to create this object.
-        
+
         Returns:
             str: The original string.
         """
@@ -303,7 +343,7 @@ class HazelcastJsonValue(object):
     def loads(self):
         """Deserializes the string that was used to create this object
         and returns as Python object.
-        
+
         Returns:
             any: The Python object represented by the original string.
         """

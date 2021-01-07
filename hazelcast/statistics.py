@@ -83,13 +83,19 @@ class Statistics(object):
         psutil_stats = {}
         if PSUTIL_ENABLED:
 
-            if self._can_collect_stat("os.totalPhysicalMemorySize") \
-                    or self._can_collect_stat("os.freePhysicalMemorySize"):
-                self._collect_physical_memory_info(psutil_stats, "os.totalPhysicalMemorySize",
-                                                   "os.freePhysicalMemorySize")
+            if self._can_collect_stat("os.totalPhysicalMemorySize") or self._can_collect_stat(
+                "os.freePhysicalMemorySize"
+            ):
+                self._collect_physical_memory_info(
+                    psutil_stats, "os.totalPhysicalMemorySize", "os.freePhysicalMemorySize"
+                )
 
-            if self._can_collect_stat("os.totalSwapSpaceSize") or self._can_collect_stat("os.freeSwapSpaceSize"):
-                self._collect_swap_memory_info(psutil_stats, "os.totalSwapSpaceSize", "os.freeSwapSpaceSize")
+            if self._can_collect_stat("os.totalSwapSpaceSize") or self._can_collect_stat(
+                "os.freeSwapSpaceSize"
+            ):
+                self._collect_swap_memory_info(
+                    psutil_stats, "os.totalSwapSpaceSize", "os.freeSwapSpaceSize"
+                )
 
             if self._can_collect_stat("os.systemLoadAverage"):
                 self._collect_load_average(psutil_stats, "os.systemLoadAverage")
@@ -102,16 +108,22 @@ class Statistics(object):
                 # With oneshot, process related information could be gathered
                 # faster due to caching.
 
-                if self._can_collect_stat("os.committedVirtualMemorySize") \
-                        or self._can_collect_stat("runtime.usedMemory"):
-                    self._collect_process_memory_info(psutil_stats, "os.committedVirtualMemorySize",
-                                                      "runtime.usedMemory", process)
+                if self._can_collect_stat(
+                    "os.committedVirtualMemorySize"
+                ) or self._can_collect_stat("runtime.usedMemory"):
+                    self._collect_process_memory_info(
+                        psutil_stats, "os.committedVirtualMemorySize", "runtime.usedMemory", process
+                    )
 
                 if self._can_collect_stat("os.openFileDescriptorCount"):
-                    self._collect_file_descriptor_count(psutil_stats, "os.openFileDescriptorCount", process)
+                    self._collect_file_descriptor_count(
+                        psutil_stats, "os.openFileDescriptorCount", process
+                    )
 
                 if self._can_collect_stat("os.maxFileDescriptorCount"):
-                    self._collect_max_file_descriptor_count(psutil_stats, "os.maxFileDescriptorCount", process)
+                    self._collect_max_file_descriptor_count(
+                        psutil_stats, "os.maxFileDescriptorCount", process
+                    )
 
                 if self._can_collect_stat("os.processCpuTime"):
                     self._collect_process_cpu_time(psutil_stats, "os.processCpuTime", process)
@@ -140,15 +152,21 @@ class Statistics(object):
             prefix = "".join(near_cache_name_with_prefix)
 
             near_cache_stats = near_cache.get_statistics()
-            self._add_stat(stats, "creationTime", to_millis(near_cache_stats["creation_time"]), prefix)
+            self._add_stat(
+                stats, "creationTime", to_millis(near_cache_stats["creation_time"]), prefix
+            )
             self._add_stat(stats, "evictions", near_cache_stats["evictions"], prefix)
             self._add_stat(stats, "hits", near_cache_stats["hits"], prefix)
             self._add_stat(stats, "misses", near_cache_stats["misses"], prefix)
             self._add_stat(stats, "ownedEntryCount", near_cache_stats["owned_entry_count"], prefix)
             self._add_stat(stats, "expirations", near_cache_stats["expirations"], prefix)
             self._add_stat(stats, "invalidations", near_cache_stats["invalidations"], prefix)
-            self._add_stat(stats, "invalidationRequests", near_cache_stats["invalidation_requests"], prefix)
-            self._add_stat(stats, "ownedEntryMemoryCost", near_cache_stats["owned_entry_memory_cost"], prefix)
+            self._add_stat(
+                stats, "invalidationRequests", near_cache_stats["invalidation_requests"], prefix
+            )
+            self._add_stat(
+                stats, "ownedEntryMemoryCost", near_cache_stats["owned_entry_memory_cost"], prefix
+            )
 
     def _add_stat(self, stats, name, value, key_prefix=None):
         if len(stats) != 0:
@@ -168,7 +186,9 @@ class Statistics(object):
         return [Statistics._NEAR_CACHE_CATEGORY_PREFIX, self._escape_special_characters(name)]
 
     def _escape_special_characters(self, name):
-        escaped_name = name.replace("\\", "\\\\").replace(",", "\\,").replace(".", "\\.").replace("=", "\\=")
+        escaped_name = (
+            name.replace("\\", "\\\\").replace(",", "\\,").replace(".", "\\.").replace("=", "\\=")
+        )
         return escaped_name[1:] if name[0] == "/" else escaped_name
 
     def _can_collect_stat(self, name):
@@ -180,8 +200,11 @@ class Statistics(object):
             try:
                 stat = func(self, psutil_stats, probe_name, *args)
             except AttributeError as ae:
-                _logger.debug("Unable to register psutil method used for the probe %s. "
-                              "Cause: %s", probe_name, ae)
+                _logger.debug(
+                    "Unable to register psutil method used for the probe %s. " "Cause: %s",
+                    probe_name,
+                    ae,
+                )
                 self._failed_gauges.add(probe_name)
                 return
             except Exception as ex:

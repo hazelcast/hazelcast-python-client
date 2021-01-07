@@ -11,6 +11,7 @@ NONE_RESULT = object()
 
 class Future(object):
     """Future is used for representing an asynchronous computation result."""
+
     _result = None
     _exception = None
     _traceback = None
@@ -49,7 +50,7 @@ class Future(object):
 
     def result(self):
         """Returns the result of the Future, which makes the call synchronous if the result has not been computed yet.
-        
+
         Returns:
             Result of the Future.
         """
@@ -63,10 +64,11 @@ class Future(object):
             return self._result
 
     def _reactor_check(self):
-        if not self.done() and hasattr(self._threading_locals, 'is_reactor_thread'):
+        if not self.done() and hasattr(self._threading_locals, "is_reactor_thread"):
             raise RuntimeError(
-                    "Synchronous result for incomplete operation must not be called from Reactor thread. "
-                    "Use add_done_callback instead.")
+                "Synchronous result for incomplete operation must not be called from Reactor thread. "
+                "Use add_done_callback instead."
+            )
 
     def is_success(self):
         """Determines whether the result can be successfully computed or not."""
@@ -74,7 +76,7 @@ class Future(object):
 
     def done(self):
         """Determines whether the result is computed or not.
-        
+
         Returns:
             bool: ``True`` if the result is computed, ``False`` otherwise.
         """
@@ -82,7 +84,7 @@ class Future(object):
 
     def running(self):
         """Determines whether the asynchronous call, the computation is still running or not.
-        
+
         Returns:
             bool: ``True`` if the  result is being computed, ``False`` otherwise.
         """

@@ -2,9 +2,17 @@ import logging
 import time
 import functools
 
-from hazelcast.errors import create_error_from_message, HazelcastInstanceNotActiveError, is_retryable_error, \
-    TargetDisconnectedError, HazelcastClientNotActiveError, TargetNotMemberError, \
-    EXCEPTION_MESSAGE_TYPE, IndeterminateOperationStateError, OperationTimeoutError
+from hazelcast.errors import (
+    create_error_from_message,
+    HazelcastInstanceNotActiveError,
+    is_retryable_error,
+    TargetDisconnectedError,
+    HazelcastClientNotActiveError,
+    TargetNotMemberError,
+    EXCEPTION_MESSAGE_TYPE,
+    IndeterminateOperationStateError,
+    OperationTimeoutError,
+)
 from hazelcast.future import Future
 from hazelcast.protocol.codec import client_local_backup_listener_codec
 from hazelcast.util import AtomicInteger
@@ -18,12 +26,34 @@ def _no_op_response_handler(_):
 
 
 class Invocation(object):
-    __slots__ = ("request", "timeout", "partition_id", "uuid", "connection", "event_handler",
-                 "future", "sent_connection", "urgent", "response_handler", "backup_acks_received",
-                 "backup_acks_expected", "pending_response", "pending_response_received_time")
+    __slots__ = (
+        "request",
+        "timeout",
+        "partition_id",
+        "uuid",
+        "connection",
+        "event_handler",
+        "future",
+        "sent_connection",
+        "urgent",
+        "response_handler",
+        "backup_acks_received",
+        "backup_acks_expected",
+        "pending_response",
+        "pending_response_received_time",
+    )
 
-    def __init__(self, request, partition_id=-1, uuid=None, connection=None,
-                 event_handler=None, urgent=False, timeout=None, response_handler=_no_op_response_handler):
+    def __init__(
+        self,
+        request,
+        partition_id=-1,
+        uuid=None,
+        connection=None,
+        event_handler=None,
+        urgent=False,
+        timeout=None,
+        response_handler=_no_op_response_handler,
+    ):
         self.request = request
         self.partition_id = partition_id
         self.uuid = uuid
@@ -159,7 +189,9 @@ class InvocationService(object):
             if connection:
                 invoked = self._send(invocation, connection)
                 if not invoked:
-                    self._notify_error(invocation, IOError("Could not invoke on connection %s" % connection))
+                    self._notify_error(
+                        invocation, IOError("Could not invoke on connection %s" % connection)
+                    )
                 return
 
             if invocation.partition_id != -1:
@@ -186,7 +218,9 @@ class InvocationService(object):
             if connection:
                 invoked = self._send(invocation, connection)
                 if not invoked:
-                    self._notify_error(invocation, IOError("Could not invoke on connection %s" % connection))
+                    self._notify_error(
+                        invocation, IOError("Could not invoke on connection %s" % connection)
+                    )
                 return
 
             if not self._invoke_on_random_connection(invocation):
@@ -229,8 +263,10 @@ class InvocationService(object):
 
         if invocation.timeout < time.time():
             _logger.debug("Error will not be retried because invocation timed out: %s", error)
-            error = OperationTimeoutError("Request timed out because an error occurred "
-                                          "after invocation timeout: %s" % error)
+            error = OperationTimeoutError(
+                "Request timed out because an error occurred "
+                "after invocation timeout: %s" % error
+            )
             self._complete_with_error(invocation, error)
             return
 
@@ -244,7 +280,9 @@ class InvocationService(object):
         if invocation.uuid and isinstance(error, TargetNotMemberError):
             return False
 
-        if isinstance(error, (IOError, HazelcastInstanceNotActiveError)) or is_retryable_error(error):
+        if isinstance(error, (IOError, HazelcastInstanceNotActiveError)) or is_retryable_error(
+            error
+        ):
             return True
 
         if isinstance(error, TargetDisconnectedError):
@@ -260,10 +298,12 @@ class InvocationService(object):
     def _register_backup_listener(self):
         codec = client_local_backup_listener_codec
         request = codec.encode_request()
-        self._listener_service.register_listener(request,
-                                                 codec.decode_response,
-                                                 lambda reg_id: None,
-                                                 lambda m: codec.handle(m, self._backup_event_handler)).result()
+        self._listener_service.register_listener(
+            request,
+            codec.decode_response,
+            lambda reg_id: None,
+            lambda m: codec.handle(m, self._backup_event_handler),
+        ).result()
 
     def _backup_event_handler(self, correlation_id):
         invocation = self._pending.get(correlation_id, None)
@@ -332,7 +372,9 @@ class InvocationService(object):
             return
 
         if self._fail_on_indeterminate_state:
-            error = IndeterminateOperationStateError("Invocation failed because the backup acks are missed")
+            error = IndeterminateOperationStateError(
+                "Invocation failed because the backup acks are missed"
+            )
             self._complete_with_error(invocation, error)
             return
 

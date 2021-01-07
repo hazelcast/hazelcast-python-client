@@ -1,23 +1,20 @@
 [tool.black]
 line-length = 100
 exclude = '''
-(
-    /(
-        \.eggs
-      | \.git
-      | \.hg
-      | \.mypy_cache
-      | \.tox
-      | \.venv
-      | _build
-      | buck-out
-      | build
-      | dist
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
 
-      | benchmarks
-      | hazelcast/protocol/codec
-      | tests
-    )/
-  | /hazelcast/(?!(__init__))\w+\.py
-)
+  | benchmarks
+  | hazelcast/protocol/codec
+  | tests
+)/
 '''

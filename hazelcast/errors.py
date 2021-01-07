@@ -10,6 +10,7 @@ def retryable(cls):
 
 class HazelcastError(Exception):
     """General HazelcastError class."""
+
     def __init__(self, message=None, cause=None):
         super(HazelcastError, self).__init__(message, cause)
 
@@ -660,9 +661,16 @@ def _create_error(error_holders, idx):
     error_class = _ERROR_CODE_TO_ERROR.get(error_holder.error_code, None)
 
     stack_trace = "\n".join(
-        ["\tat %s.%s(%s:%s)" % (x.class_name, x.method_name, x.file_name, x.line_number) for x in
-         error_holder.stack_trace_elements])
-    message = "Exception from server: %s: %s\n %s" % (error_holder.class_name, error_holder.message, stack_trace)
+        [
+            "\tat %s.%s(%s:%s)" % (x.class_name, x.method_name, x.file_name, x.line_number)
+            for x in error_holder.stack_trace_elements
+        ]
+    )
+    message = "Exception from server: %s: %s\n %s" % (
+        error_holder.class_name,
+        error_holder.message,
+        stack_trace,
+    )
     if error_class:
         return error_class(message, _create_error(error_holders, idx + 1))
     else:
@@ -670,4 +678,4 @@ def _create_error(error_holders, idx):
 
 
 def is_retryable_error(error):
-    return hasattr(error, 'retryable')
+    return hasattr(error, "retryable")

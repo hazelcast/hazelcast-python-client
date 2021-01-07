@@ -83,7 +83,7 @@ class AtomicInteger(object):
 
     def get_and_increment(self):
         """Returns the current value and increment it.
-        
+
         Returns:
             int: Current value of AtomicInteger.
         """
@@ -152,6 +152,7 @@ class ImmutableLazyDataList(Sequence):
 
 # Serialization Utilities
 
+
 def get_portable_version(portable, default_version):
     try:
         version = portable.get_class_version()
@@ -180,7 +181,9 @@ def calculate_version(version_str):
         major_coeff = int(tokens[0])
         minor_coeff = int(tokens[1])
 
-        calculated_version = major_coeff * MAJOR_VERSION_MULTIPLIER + minor_coeff * MINOR_VERSION_MULTIPLIER
+        calculated_version = (
+            major_coeff * MAJOR_VERSION_MULTIPLIER + minor_coeff * MINOR_VERSION_MULTIPLIER
+        )
 
         if len(tokens) > 2:
             patch_coeff = int(tokens[2])
@@ -230,8 +233,10 @@ def try_to_get_enum_value(value, enum_class):
         if enum_value is not None:
             return enum_value
         else:
-            raise TypeError("%s must be equal to one of the values or "
-                            "names of the members of the %s" % (value, enum_class.__name__))
+            raise TypeError(
+                "%s must be equal to one of the values or "
+                "names of the members of the %s" % (value, enum_class.__name__)
+            )
 
 
 number_types = (six.integer_types, float)
@@ -241,10 +246,11 @@ none_type = type(None)
 class LoadBalancer(object):
     """Load balancer allows you to send operations to one of a number of endpoints (Members).
     It is up to the implementation to use different load balancing policies.
-    
+
     If the client is configured with smart routing,
     only the operations that are not key based will be routed to the endpoint
     """
+
     def init(self, cluster_service):
         """Initializes the load balancer.
 
@@ -263,7 +269,6 @@ class LoadBalancer(object):
 
 
 class _AbstractLoadBalancer(LoadBalancer):
-
     def __init__(self):
         self._cluster_service = None
         self._members = []
@@ -279,7 +284,7 @@ class _AbstractLoadBalancer(LoadBalancer):
 class RoundRobinLB(_AbstractLoadBalancer):
     """A load balancer implementation that relies on using round robin
     to a next member to send a request to.
-    
+
     Round robin is done based on best effort basis, the order of members for concurrent calls to
     the next() is not guaranteed.
     """
