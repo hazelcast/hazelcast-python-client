@@ -27,7 +27,7 @@ class HazelcastJsonValueTest(TestCase):
     def test_hazelcast_json_value_construction_with_non_json_serializable_object(self):
         class A(object):
             def __init__(self):
-                self.b = 'c'
+                self.b = "c"
 
         with self.assertRaises(TypeError):
             HazelcastJsonValue(A())

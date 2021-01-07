@@ -17,10 +17,30 @@ FACTORY_ID = 1
 class SerializationV1Portable(Portable):
     CLASS_ID = 8
 
-    def __init__(self, a_byte=0, a_boolean=False, a_character=chr(0), a_short=0, a_integer=0, a_long=0, a_float=0.0,
-                 a_double=0.0, bytes_=None, booleans=None, chars=None, shorts=None, ints=None, longs=None,
-                 floats=None, doubles=None, string=None, strings=None, inner_portable=None, inner_portable_array=None,
-                 identified_serializable=None):
+    def __init__(
+        self,
+        a_byte=0,
+        a_boolean=False,
+        a_character=chr(0),
+        a_short=0,
+        a_integer=0,
+        a_long=0,
+        a_float=0.0,
+        a_double=0.0,
+        bytes_=None,
+        booleans=None,
+        chars=None,
+        shorts=None,
+        ints=None,
+        longs=None,
+        floats=None,
+        doubles=None,
+        string=None,
+        strings=None,
+        inner_portable=None,
+        inner_portable_array=None,
+        identified_serializable=None,
+    ):
         self.a_byte = a_byte
         self.a_boolean = a_boolean
         self.a_character = a_character
@@ -142,9 +162,29 @@ class SerializationV1Portable(Portable):
         inner_portable = self.inner_portable == other.inner_portable
         inner_portable_array = self.inner_portable_array == other.inner_portable_array
         identified_serializable = self.identified_serializable == other.identified_serializable
-        return byte and boolean and char and short and integer and long_ and float_ and double and \
-               bytes_ and booleans and chars and shorts and integers and longs and floats and doubles and \
-               string and strings and inner_portable and inner_portable_array and identified_serializable
+        return (
+            byte
+            and boolean
+            and char
+            and short
+            and integer
+            and long_
+            and float_
+            and double
+            and bytes_
+            and booleans
+            and chars
+            and shorts
+            and integers
+            and longs
+            and floats
+            and doubles
+            and string
+            and strings
+            and inner_portable
+            and inner_portable_array
+            and identified_serializable
+        )
 
 
 class InnerPortable(Portable):
@@ -172,7 +212,7 @@ class InnerPortable(Portable):
         return self.param_str == other.param_str and self.param_int == other.param_int
 
     def __hash__(self):
-        return id(self)//16
+        return id(self) // 16
 
 
 class Parent(Portable):
@@ -219,16 +259,35 @@ def create_portable():
     identified = create_identified()
     inner_portable = InnerPortable("Inner Text", 666)
     long_var = long("1341431221l") if six.PY2 else 1341431221
-    return SerializationV1Portable(99, True, 'c', 11, 1234134, long_var, 1.0, 2.0, bytearray([1, 2, 3]),
-                                   [True, False, True], ['a', 'b', 'c'],
-                                   [1, 2, 3], [4, 2, 3], [11, 2, 3], [1.0, 2.0, 3.0],
-                                   [11.0, 22.0, 33.0], "the string text",
-                                   ["item1", "item2", "item3"], inner_portable,
-                                   [InnerPortable("Portable array item 0", 0), InnerPortable("Portable array item 1", 1)],
-                                   identified)
+    return SerializationV1Portable(
+        99,
+        True,
+        "c",
+        11,
+        1234134,
+        long_var,
+        1.0,
+        2.0,
+        bytearray([1, 2, 3]),
+        [True, False, True],
+        ["a", "b", "c"],
+        [1, 2, 3],
+        [4, 2, 3],
+        [11, 2, 3],
+        [1.0, 2.0, 3.0],
+        [11.0, 22.0, 33.0],
+        "the string text",
+        ["item1", "item2", "item3"],
+        inner_portable,
+        [InnerPortable("Portable array item 0", 0), InnerPortable("Portable array item 1", 1)],
+        identified,
+    )
 
 
-the_factory = {SerializationV1Portable.CLASS_ID: SerializationV1Portable, InnerPortable.CLASS_ID: InnerPortable}
+the_factory = {
+    SerializationV1Portable.CLASS_ID: SerializationV1Portable,
+    InnerPortable.CLASS_ID: InnerPortable,
+}
 
 
 class MyPortable1(Portable):
@@ -276,12 +335,11 @@ class MyPortable2(Portable):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+
 class PortableSerializationTestCase(unittest.TestCase):
     def test_encode_decode(self):
         config = _Config()
-        config.portable_factories = {
-            FACTORY_ID: the_factory
-        }
+        config.portable_factories = {FACTORY_ID: the_factory}
         service = SerializationServiceV1(config)
         obj = create_portable()
         self.assertTrue(obj.inner_portable)
@@ -293,9 +351,7 @@ class PortableSerializationTestCase(unittest.TestCase):
 
     def test_encode_decode_2(self):
         config = _Config()
-        config.portable_factories = {
-            FACTORY_ID: the_factory
-        }
+        config.portable_factories = {FACTORY_ID: the_factory}
         service = SerializationServiceV1(config)
         service2 = SerializationServiceV1(config)
         obj = create_portable()
@@ -307,23 +363,21 @@ class PortableSerializationTestCase(unittest.TestCase):
 
     def test_portable_context(self):
         config = _Config()
-        config.portable_factories = {
-            FACTORY_ID: the_factory
-        }
+        config.portable_factories = {FACTORY_ID: the_factory}
         service = SerializationServiceV1(config)
         obj = create_portable()
         self.assertTrue(obj.inner_portable)
 
         service.to_data(obj)
 
-        class_definition = service._portable_context.lookup_class_definition(FACTORY_ID, InnerPortable.CLASS_ID, 0)
+        class_definition = service._portable_context.lookup_class_definition(
+            FACTORY_ID, InnerPortable.CLASS_ID, 0
+        )
         self.assertTrue(class_definition is not None)
 
     def test_portable_null_fields(self):
         config = _Config()
-        config.portable_factories = {
-            FACTORY_ID: the_factory
-        }
+        config.portable_factories = {FACTORY_ID: the_factory}
         service = SerializationServiceV1(config)
         service.to_data(create_portable())
 
@@ -333,7 +387,7 @@ class PortableSerializationTestCase(unittest.TestCase):
         data = service.to_data(obj)
         obj2 = service2.to_object(data)
         self.assertTrue(obj == obj2)
-    
+
     def test_portable_class_def(self):
         builder_inner = ClassDefinitionBuilder(FACTORY_ID, InnerPortable.CLASS_ID)
         builder_inner.add_utf_field("param_str")
@@ -365,9 +419,7 @@ class PortableSerializationTestCase(unittest.TestCase):
         class_def = builder.build()
 
         config = _Config()
-        config.portable_factories = {
-            FACTORY_ID: the_factory
-        }
+        config.portable_factories = {FACTORY_ID: the_factory}
         config.class_definitions = [
             class_def,
             class_def_inner,
@@ -383,9 +435,7 @@ class PortableSerializationTestCase(unittest.TestCase):
 
     def test_portable_read_without_factory(self):
         config = _Config()
-        config.portable_factories = {
-            FACTORY_ID: the_factory
-        }
+        config.portable_factories = {FACTORY_ID: the_factory}
         service = SerializationServiceV1(config)
         service2 = SerializationServiceV1(_Config())
         obj = create_portable()
@@ -419,15 +469,14 @@ class PortableSerializationTestCase(unittest.TestCase):
     def test_nested_null_portable_serialization(self):
         config = _Config()
 
-        config.portable_factories = {
-            1: {
-                1: Parent,
-                2: Child
-            }
-        }
+        config.portable_factories = {1: {1: Parent, 2: Child}}
 
         child_class_def = ClassDefinitionBuilder(FACTORY_ID, 2).add_utf_field("name").build()
-        parent_class_def = ClassDefinitionBuilder(FACTORY_ID, 1).add_portable_field("child", child_class_def).build()
+        parent_class_def = (
+            ClassDefinitionBuilder(FACTORY_ID, 1)
+            .add_portable_field("child", child_class_def)
+            .build()
+        )
 
         config.class_definitions = [child_class_def, parent_class_def]
 
@@ -451,14 +500,7 @@ class PortableSerializationTestCase(unittest.TestCase):
 
     def test_classes_with_same_class_id_in_different_factories(self):
         config = _Config()
-        config.portable_factories = {
-            1: {
-                1: MyPortable1
-            },
-            2: {
-                1: MyPortable2
-            }
-        }
+        config.portable_factories = {1: {1: MyPortable1}, 2: {1: MyPortable2}}
 
         class_def1 = ClassDefinitionBuilder(1, 1).add_utf_field("str_field").build()
         class_def2 = ClassDefinitionBuilder(2, 1).add_int_field("int_field").build()

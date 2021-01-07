@@ -32,9 +32,7 @@ class ClusterTest(HazelcastTestCase):
             events.append(m)
 
         config = self.create_config()
-        config["membership_listeners"] = [
-            (member_added, None)
-        ]
+        config["membership_listeners"] = [(member_added, None)]
 
         member = self.cluster.start_member()
 
@@ -109,9 +107,7 @@ class ClusterTest(HazelcastTestCase):
             raise RuntimeError("error")
 
         config = self.create_config()
-        config["membership_listeners"] = [
-            (listener, listener)
-        ]
+        config["membership_listeners"] = [(listener, listener)]
         self.cluster.start_member()
         self.create_client(config)
 
@@ -127,7 +123,9 @@ class ClusterTest(HazelcastTestCase):
         config = self.create_config()
         client = self.create_client(config)
 
-        self.assertEqual(0, len(client.cluster_service.get_members(lambda m: member.address != m.address)))
+        self.assertEqual(
+            0, len(client.cluster_service.get_members(lambda m: member.address != m.address))
+        )
 
 
 class _MockClusterService(object):
@@ -237,7 +235,9 @@ class HotRestartEventTest(HazelcastTestCase):
         added_listener = event_collector()
         removed_listener = event_collector()
 
-        self.client.cluster_service.add_listener(member_added=added_listener, member_removed=removed_listener)
+        self.client.cluster_service.add_listener(
+            member_added=added_listener, member_removed=removed_listener
+        )
 
         self.rc.shutdownCluster(self.cluster.id)
         # now stop cluster, restart it with the same name and then start member with port 5702
@@ -267,4 +267,7 @@ class HotRestartEventTest(HazelcastTestCase):
             <hot-restart-persistence enabled="true">
                 <base-dir>%s</base-dir>
             </hot-restart-persistence>
-        </hazelcast>""" % (port, self.tmp_dir)
+        </hazelcast>""" % (
+            port,
+            self.tmp_dir,
+        )

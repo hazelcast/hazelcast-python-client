@@ -17,7 +17,9 @@ inf = 2 ** 31 - 1
 class CountDownLatchTest(CPTestCase):
     def test_latch_in_another_group(self):
         latch = self._get_latch()
-        another_latch = self.client.cp_subsystem.get_count_down_latch(latch._proxy_name + "@another").blocking()
+        another_latch = self.client.cp_subsystem.get_count_down_latch(
+            latch._proxy_name + "@another"
+        ).blocking()
 
         another_latch.try_set_count(42)
         self.assertEqual(42, another_latch.get_count())
@@ -116,7 +118,8 @@ class CountDownLatchTest(CPTestCase):
         latch._wrapped._request_count_down = mock
 
         latch.count_down()
-        self.assertEqual(3, called_count.get())  # Will resolve on it's third call. First 2 throws timeout error
+        # Will resolve on it's third call. First 2 throws timeout error
+        self.assertEqual(3, called_count.get())
         self.assertEqual(0, latch.get_count())
 
     def test_get_count(self):

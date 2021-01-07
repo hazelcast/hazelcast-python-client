@@ -11,14 +11,18 @@ class ClientTest(HazelcastTestCase):
         rc = self.create_rc()
         client_heartbeat_seconds = 8
 
-        cluster_config = """<hazelcast xmlns="http://www.hazelcast.com/schema/config"
+        cluster_config = (
+            """
+        <hazelcast xmlns="http://www.hazelcast.com/schema/config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:schemaLocation="http://www.hazelcast.com/schema/config
            http://www.hazelcast.com/schema/config/hazelcast-config-4.0.xsd">
             <properties>
                 <property name="hazelcast.client.max.no.heartbeat.seconds">%s</property>
             </properties>
-        </hazelcast>""" % client_heartbeat_seconds
+        </hazelcast>"""
+            % client_heartbeat_seconds
+        )
         cluster = self.create_cluster(rc, cluster_config)
         cluster.start_member()
 
@@ -45,7 +49,7 @@ class ClientTest(HazelcastTestCase):
 
         def message_listener(_):
             pass
-        
+
         topic.add_listener(message_listener)
 
         topic2 = client2.get_topic(key)
@@ -77,29 +81,32 @@ class ClientLabelsTest(HazelcastTestCase):
         self.shutdown_all_clients()
 
     def test_default_config(self):
-        client = self.create_client({
-            "cluster_name": self.cluster.id
-        })
+        client = self.create_client({"cluster_name": self.cluster.id})
         self.assertIsNone(self.get_labels_from_member(client._connection_manager.client_uuid))
 
     def test_provided_labels_are_received(self):
-        client = self.create_client({
-            "cluster_name": self.cluster.id,
-            "labels": [
-                "test-label",
-            ]
-        })
-        self.assertEqual(b"test-label", self.get_labels_from_member(client._connection_manager.client_uuid))
+        client = self.create_client(
+            {
+                "cluster_name": self.cluster.id,
+                "labels": [
+                    "test-label",
+                ],
+            }
+        )
+        self.assertEqual(
+            b"test-label", self.get_labels_from_member(client._connection_manager.client_uuid)
+        )
 
     def get_labels_from_member(self, client_uuid):
-        script = """var clients = instance_0.getClientService().getConnectedClients().toArray();
+        script = """
+        var clients = instance_0.getClientService().getConnectedClients().toArray();
         for (i=0; i < clients.length; i++) {
             var client = clients[i];
             if ("%s".equals(client.getUuid().toString())) {
                 result = client.getLabels().iterator().next();
                 break;
             }
-        }
-        """ % str(client_uuid)
+        }""" % str(
+            client_uuid
+        )
         return self.rc.executeOnController(self.cluster.id, script, Lang.JAVASCRIPT).result
-

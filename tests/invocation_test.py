@@ -95,7 +95,9 @@ class InvocationTest(unittest.TestCase):
     def test_notify_backup_complete_when_all_acks_are_received(self):
         _, service = self._start_service()
         message = "x"
-        invocation = MagicMock(backup_acks_received=1, backup_acks_expected=2, pending_response=message)
+        invocation = MagicMock(
+            backup_acks_received=1, backup_acks_expected=2, pending_response=message
+        )
         service._notify_backup_complete(invocation)
         invocation.set_response.assert_called_once_with(message)
         self.assertEqual(2, invocation.backup_acks_received)
@@ -108,34 +110,52 @@ class InvocationTest(unittest.TestCase):
 
     def test_backup_handler_when_all_acks_are_not_received_and_not_reached_timeout(self):
         _, service = self._start_service()
-        invocation = MagicMock(backup_acks_received=1, backup_acks_expected=2, pending_response="x",
-                               pending_response_received_time=40)
+        invocation = MagicMock(
+            backup_acks_received=1,
+            backup_acks_expected=2,
+            pending_response="x",
+            pending_response_received_time=40,
+        )
         service._detect_and_handle_backup_timeout(invocation, 1)  # expiration_time = 40 + 5 > 1
         invocation.set_response.assert_not_called()
 
     def test_backup_handler_when_all_acks_are_not_received_and_reached_timeout(self):
         _, service = self._start_service()
         message = "x"
-        invocation = MagicMock(backup_acks_received=1, backup_acks_expected=2, pending_response=message,
-                               pending_response_received_time=40)
+        invocation = MagicMock(
+            backup_acks_received=1,
+            backup_acks_expected=2,
+            pending_response=message,
+            pending_response_received_time=40,
+        )
         service._detect_and_handle_backup_timeout(invocation, 46)  # expiration_time = 40 + 5 < 46
         invocation.set_response.assert_called_once_with(message)
 
-    def test_backup_handler_when_all_acks_are_not_received_and_reached_timeout_with_fail_on_indeterminate_state(self):
+    def test_backup_handler_when_all_acks_are_not_received_and_reached_timeout_with_fail_on_indeterminate_state(
+        self,
+    ):
         _, service = self._start_service()
         service._fail_on_indeterminate_state = True
-        invocation = MagicMock(backup_acks_received=1, backup_acks_expected=2, pending_response="x",
-                               pending_response_received_time=40)
+        invocation = MagicMock(
+            backup_acks_received=1,
+            backup_acks_expected=2,
+            pending_response="x",
+            pending_response_received_time=40,
+        )
         service._detect_and_handle_backup_timeout(invocation, 46)  # expiration_time = 40 + 5 < 46
         invocation.set_response.assert_not_called()
         invocation.set_exception.assert_called_once()
-        self.assertIsInstance(invocation.set_exception.call_args[0][0], IndeterminateOperationStateError)
+        self.assertIsInstance(
+            invocation.set_exception.call_args[0][0], IndeterminateOperationStateError
+        )
 
     def _start_service(self, config=_Config()):
         c = MagicMock(config=config)
         invocation_service = InvocationService(c, c._reactor)
         self.service = invocation_service
-        invocation_service.init(c._internal_partition_service, c._connection_manager, c._listener_service)
+        invocation_service.init(
+            c._internal_partition_service, c._connection_manager, c._listener_service
+        )
         invocation_service.start()
         return c, invocation_service
 

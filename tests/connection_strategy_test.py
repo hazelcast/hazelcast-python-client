@@ -54,12 +54,15 @@ class ConnectionStrategyTest(HazelcastTestCase):
 
             on_state_change.events = events
             return on_state_change
+
         event_collector = collector()
 
-        self.client = HazelcastClient(cluster_name=self.cluster.id,
-                                      cluster_members=["localhost:5701"],
-                                      async_start=True,
-                                      lifecycle_listeners=[event_collector])
+        self.client = HazelcastClient(
+            cluster_name=self.cluster.id,
+            cluster_members=["localhost:5701"],
+            async_start=True,
+            lifecycle_listeners=[event_collector],
+        )
 
         self.assertTrueEventually(lambda: self.assertEqual(1, len(event_collector.events)))
         self.client.get_map(random_string())
@@ -77,13 +80,16 @@ class ConnectionStrategyTest(HazelcastTestCase):
 
             on_state_change.events = events
             return on_state_change
+
         event_collector = collector()
 
-        self.client = HazelcastClient(cluster_members=["localhost:5701"],
-                                      cluster_name=self.cluster.id,
-                                      reconnect_mode=ReconnectMode.OFF,
-                                      cluster_connect_timeout=six.MAXSIZE,
-                                      lifecycle_listeners=[event_collector])
+        self.client = HazelcastClient(
+            cluster_members=["localhost:5701"],
+            cluster_name=self.cluster.id,
+            reconnect_mode=ReconnectMode.OFF,
+            cluster_connect_timeout=six.MAXSIZE,
+            lifecycle_listeners=[event_collector],
+        )
         m = self.client.get_map(random_string()).blocking()
         # no exception at this point
         m.put(1, 1)
@@ -106,13 +112,16 @@ class ConnectionStrategyTest(HazelcastTestCase):
 
             on_state_change.events = events
             return on_state_change
+
         disconnected_collector = collector(LifecycleState.DISCONNECTED)
 
-        self.client = HazelcastClient(cluster_members=["localhost:5701"],
-                                      cluster_name=self.cluster.id,
-                                      reconnect_mode=ReconnectMode.ASYNC,
-                                      cluster_connect_timeout=six.MAXSIZE,
-                                      lifecycle_listeners=[disconnected_collector])
+        self.client = HazelcastClient(
+            cluster_members=["localhost:5701"],
+            cluster_name=self.cluster.id,
+            reconnect_mode=ReconnectMode.ASYNC,
+            cluster_connect_timeout=six.MAXSIZE,
+            lifecycle_listeners=[disconnected_collector],
+        )
         m = self.client.get_map(random_string()).blocking()
         # no exception at this point
         m.put(1, 1)
@@ -135,4 +144,3 @@ class ConnectionStrategyTest(HazelcastTestCase):
 
         with self.assertRaises(ClientOfflineError):
             self.client.get_list(random_string())
-

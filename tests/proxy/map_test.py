@@ -44,9 +44,7 @@ class MapTest(SingleMemberTestCase):
     def configure_client(cls, config):
         config["cluster_name"] = cls.cluster.id
         config["data_serializable_factories"] = {
-            EntryProcessor.FACTORY_ID: {
-                EntryProcessor.CLASS_ID: EntryProcessor
-            }
+            EntryProcessor.FACTORY_ID: {EntryProcessor.CLASS_ID: EntryProcessor}
         }
         return config
 
@@ -59,102 +57,124 @@ class MapTest(SingleMemberTestCase):
     def test_add_entry_listener_item_added(self):
         collector = event_collector()
         self.map.add_entry_listener(include_value=True, added_func=collector)
-        self.map.put('key', 'value')
+        self.map.put("key", "value")
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key', event_type=EntryEventType.ADDED, value='value')
+            self.assertEntryEvent(event, key="key", event_type=EntryEventType.ADDED, value="value")
 
         self.assertTrueEventually(assert_event, 5)
 
     def test_add_entry_listener_item_removed(self):
         collector = event_collector()
         self.map.add_entry_listener(include_value=True, removed_func=collector)
-        self.map.put('key', 'value')
-        self.map.remove('key')
+        self.map.put("key", "value")
+        self.map.remove("key")
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key', event_type=EntryEventType.REMOVED, old_value='value')
+            self.assertEntryEvent(
+                event, key="key", event_type=EntryEventType.REMOVED, old_value="value"
+            )
 
         self.assertTrueEventually(assert_event, 5)
 
     def test_add_entry_listener_item_updated(self):
         collector = event_collector()
         self.map.add_entry_listener(include_value=True, updated_func=collector)
-        self.map.put('key', 'value')
-        self.map.put('key', 'new_value')
+        self.map.put("key", "value")
+        self.map.put("key", "new_value")
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key', event_type=EntryEventType.UPDATED, old_value='value',
-                                  value='new_value')
+            self.assertEntryEvent(
+                event,
+                key="key",
+                event_type=EntryEventType.UPDATED,
+                old_value="value",
+                value="new_value",
+            )
 
         self.assertTrueEventually(assert_event, 5)
 
     def test_add_entry_listener_item_expired(self):
         collector = event_collector()
         self.map.add_entry_listener(include_value=True, expired_func=collector)
-        self.map.put('key', 'value', ttl=0.1)
+        self.map.put("key", "value", ttl=0.1)
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key', event_type=EntryEventType.EXPIRED, old_value='value')
+            self.assertEntryEvent(
+                event, key="key", event_type=EntryEventType.EXPIRED, old_value="value"
+            )
 
         self.assertTrueEventually(assert_event, 10)
 
     def test_add_entry_listener_with_key(self):
         collector = event_collector()
-        self.map.add_entry_listener(key='key1', include_value=True, added_func=collector)
-        self.map.put('key2', 'value2')
-        self.map.put('key1', 'value1')
+        self.map.add_entry_listener(key="key1", include_value=True, added_func=collector)
+        self.map.put("key2", "value2")
+        self.map.put("key1", "value1")
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key1', event_type=EntryEventType.ADDED, value='value1')
+            self.assertEntryEvent(
+                event, key="key1", event_type=EntryEventType.ADDED, value="value1"
+            )
 
         self.assertTrueEventually(assert_event, 5)
 
     def test_add_entry_listener_with_predicate(self):
         collector = event_collector()
-        self.map.add_entry_listener(predicate=sql("this == value1"), include_value=True, added_func=collector)
-        self.map.put('key2', 'value2')
-        self.map.put('key1', 'value1')
+        self.map.add_entry_listener(
+            predicate=sql("this == value1"), include_value=True, added_func=collector
+        )
+        self.map.put("key2", "value2")
+        self.map.put("key1", "value1")
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key1', event_type=EntryEventType.ADDED, value='value1')
+            self.assertEntryEvent(
+                event, key="key1", event_type=EntryEventType.ADDED, value="value1"
+            )
 
         self.assertTrueEventually(assert_event, 5)
 
     def test_add_entry_listener_with_key_and_predicate(self):
         collector = event_collector()
-        self.map.add_entry_listener(key='key1', predicate=sql("this == value3"),
-                                    include_value=True, added_func=collector)
-        self.map.put('key2', 'value2')
-        self.map.put('key1', 'value1')
-        self.map.remove('key1')
-        self.map.put('key1', 'value3')
+        self.map.add_entry_listener(
+            key="key1", predicate=sql("this == value3"), include_value=True, added_func=collector
+        )
+        self.map.put("key2", "value2")
+        self.map.put("key1", "value1")
+        self.map.remove("key1")
+        self.map.put("key1", "value3")
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key1', event_type=EntryEventType.ADDED, value='value3')
+            self.assertEntryEvent(
+                event, key="key1", event_type=EntryEventType.ADDED, value="value3"
+            )
 
         self.assertTrueEventually(assert_event, 5)
 
     def test_add_index(self):
         self.map.add_index(attributes=["this"])
         self.map.add_index(attributes=["this"], index_type=IndexType.HASH)
-        self.map.add_index(attributes=["this"], index_type=IndexType.BITMAP, bitmap_index_options={
-            "unique_key": "this",
-        })
+        self.map.add_index(
+            attributes=["this"],
+            index_type=IndexType.BITMAP,
+            bitmap_index_options={
+                "unique_key": "this",
+            },
+        )
 
     def test_add_index_duplicate_fields(self):
         with self.assertRaises(ValueError):
@@ -369,7 +389,7 @@ class MapTest(SingleMemberTestCase):
         self.assertEqual(self.map.get("key"), "value")
 
     def test_put_get2(self):
-        val = "x"*5000
+        val = "x" * 5000
 
         self.assertIsNone(self.map.put("key-x", val))
         self.assertEqual(self.map.get("key-x"), val)
@@ -408,10 +428,10 @@ class MapTest(SingleMemberTestCase):
         collector = event_collector()
         reg_id = self.map.add_entry_listener(added_func=collector)
 
-        self.map.put('key', 'value')
+        self.map.put("key", "value")
         self.assertTrueEventually(lambda: self.assertEqual(len(collector.events), 1))
         self.map.remove_entry_listener(reg_id)
-        self.map.put('key2', 'value')
+        self.map.put("key2", "value")
 
         time.sleep(1)
         self.assertEqual(len(collector.events), 1)
@@ -546,32 +566,32 @@ class MapStoreTest(SingleMemberTestCase):
 
     def test_load_all_with_key_set_loads_given_keys(self):
         self.map.evict_all()
-        self.map.load_all(['key0', 'key1'])
-        entry_set = self.map.get_all(['key0', 'key1'])
-        six.assertCountEqual(self, entry_set, {'key0': 'val0', 'key1': 'val1'})
+        self.map.load_all(["key0", "key1"])
+        entry_set = self.map.get_all(["key0", "key1"])
+        six.assertCountEqual(self, entry_set, {"key0": "val0", "key1": "val1"})
 
     def test_load_all_overrides_entries_in_memory_by_default(self):
         self.map.evict_all()
-        self.map.put_transient('key0', 'new0')
-        self.map.put_transient('key1', 'new1')
-        self.map.load_all(['key0', 'key1'])
-        entry_set = self.map.get_all(['key0', 'key1'])
-        six.assertCountEqual(self, entry_set, {'key0': 'val0', 'key1': 'val1'})
+        self.map.put_transient("key0", "new0")
+        self.map.put_transient("key1", "new1")
+        self.map.load_all(["key0", "key1"])
+        entry_set = self.map.get_all(["key0", "key1"])
+        six.assertCountEqual(self, entry_set, {"key0": "val0", "key1": "val1"})
 
     def test_load_all_with_replace_existing_false_does_not_override(self):
         self.map.evict_all()
-        self.map.put_transient('key0', 'new0')
-        self.map.put_transient('key1', 'new1')
-        self.map.load_all(['key0', 'key1'], replace_existing_values=False)
-        entry_set = self.map.get_all(['key0', 'key1'])
-        six.assertCountEqual(self, entry_set, {'key0': 'new0', 'key1': 'new1'})
+        self.map.put_transient("key0", "new0")
+        self.map.put_transient("key1", "new1")
+        self.map.load_all(["key0", "key1"], replace_existing_values=False)
+        entry_set = self.map.get_all(["key0", "key1"])
+        six.assertCountEqual(self, entry_set, {"key0": "new0", "key1": "new1"})
 
     def test_evict(self):
-        self.map.evict('key0')
+        self.map.evict("key0")
         self.assertEqual(self.map.size(), 9)
 
     def test_evict_non_existing_key(self):
-        self.map.evict('non_existing_key')
+        self.map.evict("non_existing_key")
         self.assertEqual(self.map.size(), 10)
 
     def test_evict_all(self):
@@ -581,14 +601,14 @@ class MapStoreTest(SingleMemberTestCase):
     def test_add_entry_listener_item_loaded(self):
         collector = event_collector()
         self.map.add_entry_listener(include_value=True, loaded_func=collector)
-        self.map.put('key', 'value', ttl=0.1)
+        self.map.put("key", "value", ttl=0.1)
         time.sleep(2)
-        self.map.get('key')
+        self.map.get("key")
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEntryEvent(event, key='key', value='value', event_type=EntryEventType.LOADED)
+            self.assertEntryEvent(event, key="key", value="value", event_type=EntryEventType.LOADED)
 
         self.assertTrueEventually(assert_event, 10)
 

@@ -21,14 +21,16 @@ class ReconnectTest(HazelcastTestCase):
 
     def test_start_client_with_no_member(self):
         with self.assertRaises(HazelcastError):
-            self.create_client({
-                "cluster_members": [
-                    "127.0.0.1:5701",
-                    "127.0.0.1:5702",
-                    "127.0.0.1:5703",
-                ],
-                "cluster_connect_timeout": 2,
-            })
+            self.create_client(
+                {
+                    "cluster_members": [
+                        "127.0.0.1:5701",
+                        "127.0.0.1:5702",
+                        "127.0.0.1:5703",
+                    ],
+                    "cluster_connect_timeout": 2,
+                }
+            )
 
     def test_start_client_before_member(self):
         def run():
@@ -37,18 +39,22 @@ class ReconnectTest(HazelcastTestCase):
 
         t = Thread(target=run)
         t.start()
-        self.create_client({
-            "cluster_name": self.cluster.id,
-            "cluster_connect_timeout": 5.0,
-        })
+        self.create_client(
+            {
+                "cluster_name": self.cluster.id,
+                "cluster_connect_timeout": 5.0,
+            }
+        )
         t.join()
 
     def test_restart_member(self):
         member = self.cluster.start_member()
-        client = self.create_client({
-            "cluster_name": self.cluster.id,
-            "cluster_connect_timeout": 5.0,
-        })
+        client = self.create_client(
+            {
+                "cluster_name": self.cluster.id,
+                "cluster_connect_timeout": 5.0,
+            }
+        )
 
         state = [None]
 
@@ -64,10 +70,12 @@ class ReconnectTest(HazelcastTestCase):
 
     def test_listener_re_register(self):
         member = self.cluster.start_member()
-        client = self.create_client({
-            "cluster_name": self.cluster.id,
-            "cluster_connect_timeout": 5.0,
-        })
+        client = self.create_client(
+            {
+                "cluster_name": self.cluster.id,
+                "cluster_connect_timeout": 5.0,
+            }
+        )
 
         map = client.get_map("map").blocking()
 
@@ -95,10 +103,12 @@ class ReconnectTest(HazelcastTestCase):
 
     def test_member_list_after_reconnect(self):
         old_member = self.cluster.start_member()
-        client = self.create_client({
-            "cluster_name": self.cluster.id,
-            "cluster_connect_timeout": 5.0,
-        })
+        client = self.create_client(
+            {
+                "cluster_name": self.cluster.id,
+                "cluster_connect_timeout": 5.0,
+            }
+        )
         old_member.shutdown()
 
         new_member = self.cluster.start_member()
@@ -112,14 +122,16 @@ class ReconnectTest(HazelcastTestCase):
 
     def test_reconnect_toNewNode_ViaLastMemberList(self):
         old_member = self.cluster.start_member()
-        client = self.create_client({
-            "cluster_name": self.cluster.id,
-            "cluster_members": [
-                "127.0.0.1:5701",
-            ],
-            "smart_routing": False,
-            "cluster_connect_timeout": 10.0,
-        })
+        client = self.create_client(
+            {
+                "cluster_name": self.cluster.id,
+                "cluster_members": [
+                    "127.0.0.1:5701",
+                ],
+                "smart_routing": False,
+                "cluster_connect_timeout": 10.0,
+            }
+        )
         new_member = self.cluster.start_member()
         old_member.shutdown()
 

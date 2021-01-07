@@ -39,7 +39,7 @@ class HazelcastTestCase(unittest.TestCase):
 
     @staticmethod
     def create_rc():
-        return HzRemoteController('127.0.0.1', 9701)
+        return HzRemoteController("127.0.0.1", 9701)
 
     @classmethod
     def create_cluster(cls, rc, config=None):
@@ -79,8 +79,16 @@ class HazelcastTestCase(unittest.TestCase):
         is_set = event.wait(timeout)
         self.assertTrue(is_set, "Event was not set within %d seconds" % timeout)
 
-    def assertEntryEvent(self, event, event_type, key=None, value=None, old_value=None, merging_value=None,
-                         number_of_affected_entries=1):
+    def assertEntryEvent(
+        self,
+        event,
+        event_type,
+        key=None,
+        value=None,
+        old_value=None,
+        merging_value=None,
+        number_of_affected_entries=1,
+    ):
 
         self.assertEqual(event.key, key)
         self.assertEqual(event.event_type, event_type)
@@ -107,6 +115,7 @@ class SingleMemberTestCase(HazelcastTestCase):
     """
     Test cases where a single member - client combination is needed
     """
+
     rc = None
     client = None
 

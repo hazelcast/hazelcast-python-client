@@ -66,7 +66,7 @@ class SerializersTest(unittest.TestCase):
         self.validate(None)
 
     def test_hazelcast_json_value(self):
-        self.validate(HazelcastJsonValue("{\"abc\": \"abc\", \"five\": 5}"))
+        self.validate(HazelcastJsonValue('{"abc": "abc", "five": 5}'))
 
     def test_uuid(self):
         self.validate(uuid.uuid4())
@@ -131,9 +131,10 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.map.clear()
 
     def get_from_server(self):
-        script = """var StringArray = Java.type("java.lang.String[]");
+        script = (
+            """
         function foo() {
-            var map = instance_0.getMap(\"""" + self.map.name + """\");
+            var map = instance_0.getMap("%s");
             var res = map.get("key");
             if (res.getClass().isArray()) {
                 return Java.from(res);
@@ -142,12 +143,18 @@ class SerializersLiveTest(SingleMemberTestCase):
             }
         }
         result = ""+foo();"""
+            % self.map.name
+        )
         response = self.rc.executeOnController(self.cluster.id, script, Lang.JAVASCRIPT)
         return response.result.decode("utf-8")
 
     def set_on_server(self, obj):
-        script = """var map = instance_0.getMap(\"""" + self.map.name + """\");
-        map.set("key", """ + obj + """);"""
+        script = """
+        var map = instance_0.getMap("%s");
+        map.set("key", %s);""" % (
+            self.map.name,
+            obj,
+        )
         response = self.rc.executeOnController(self.cluster.id, script, Lang.JAVASCRIPT)
         return response.success
 
@@ -339,7 +346,7 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(-12332.0, self.map.get("key"))
 
     def test_string_from_server(self):
-        self.assertTrue(self.set_on_server(six.u("\"1⚐中💦2😭‍🙆😔5\"")))
+        self.assertTrue(self.set_on_server(six.u('"1⚐中💦2😭‍🙆😔5"')))
         self.assertEqual(six.u("1⚐中💦2😭‍🙆😔5"), self.map.get("key"))
 
     def test_uuid_from_server(self):
@@ -347,15 +354,17 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(uuid.UUID(int=1), self.map.get("key"))
 
     def test_hjv_from_server(self):
-        self.assertTrue(self.set_on_server("new com.hazelcast.core.HazelcastJsonValue(\"{\\\"a\\\": 3}\")"))
+        self.assertTrue(
+            self.set_on_server('new com.hazelcast.core.HazelcastJsonValue("{\\"a\\": 3}")')
+        )
         self.assertEqual(HazelcastJsonValue({"a": 3}), self.map.get("key"))
 
     def test_bool_array_from_server(self):
-        self.assertTrue(self.set_on_server("Java.to([true, false], \"boolean[]\")"))
+        self.assertTrue(self.set_on_server('Java.to([true, false], "boolean[]")'))
         self.assertEqual([True, False], self.map.get("key"))
 
     def test_byte_array_from_server(self):
-        self.assertTrue(self.set_on_server("Java.to([3, 123], \"byte[]\")"))
+        self.assertTrue(self.set_on_server('Java.to([3, 123], "byte[]")'))
         self.assertEqual(bytearray([3, 123]), self.map.get("key"))
 
     def test_char_array_from_server(self):
@@ -363,27 +372,31 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(["x", "y"], self.map.get("key"))
 
     def test_short_array_from_server(self):
-        self.assertTrue(self.set_on_server("Java.to([1323, -1232], \"short[]\")"))
+        self.assertTrue(self.set_on_server('Java.to([1323, -1232], "short[]")'))
         self.assertEqual([1323, -1232], self.map.get("key"))
 
     def test_int_array_from_server(self):
-        self.assertTrue(self.set_on_server("Java.to([2147483647, -2147483648], \"int[]\")"))
+        self.assertTrue(self.set_on_server('Java.to([2147483647, -2147483648], "int[]")'))
         self.assertEqual([2147483647, -2147483648], self.map.get("key"))
 
     def test_long_array_from_server(self):
-        self.assertTrue(self.set_on_server("Java.to([1152921504606846976, -1152921504606846976], \"long[]\")"))
+        self.assertTrue(
+            self.set_on_server('Java.to([1152921504606846976, -1152921504606846976], "long[]")')
+        )
         self.assertEqual([1152921504606846976, -1152921504606846976], self.map.get("key"))
 
     def test_float_array_from_server(self):
-        self.assertTrue(self.set_on_server("Java.to([3123.0, -123.0], \"float[]\")"))
+        self.assertTrue(self.set_on_server('Java.to([3123.0, -123.0], "float[]")'))
         self.assertEqual([3123.0, -123.0], self.map.get("key"))
 
     def test_double_array_from_server(self):
-        self.assertTrue(self.set_on_server("Java.to([3123.0, -123.0], \"double[]\")"))
+        self.assertTrue(self.set_on_server('Java.to([3123.0, -123.0], "double[]")'))
         self.assertEqual([3123.0, -123.0], self.map.get("key"))
 
     def test_string_array_from_server(self):
-        self.assertTrue(self.set_on_server(six.u("Java.to([\"hey\", \"1⚐中💦2😭‍🙆😔5\"], \"java.lang.String[]\")")))
+        self.assertTrue(
+            self.set_on_server(six.u('Java.to(["hey", "1⚐中💦2😭‍🙆😔5"], "java.lang.String[]")'))
+        )
         self.assertEqual(["hey", six.u("1⚐中💦2😭‍🙆😔5")], self.map.get("key"))
 
     def test_date_from_server(self):
@@ -392,18 +405,24 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(datetime.datetime(2000, 12, 15, 23, 59, 49), self.map.get("key"))
 
     def test_big_integer_from_server(self):
-        self.assertTrue(self.set_on_server("new java.math.BigInteger(\"12\", 10)"))
+        self.assertTrue(self.set_on_server('new java.math.BigInteger("12", 10)'))
         self.assertEqual(12, self.map.get("key"))
 
-        self.assertTrue(self.set_on_server("new java.math.BigInteger(\"-13\", 10)"))
+        self.assertTrue(self.set_on_server('new java.math.BigInteger("-13", 10)'))
         self.assertEqual(-13, self.map.get("key"))
 
         self.assertTrue(
-            self.set_on_server("new java.math.BigInteger(\"1234567890123456789012345678901234567890\", 10)"))
+            self.set_on_server(
+                'new java.math.BigInteger("1234567890123456789012345678901234567890", 10)'
+            )
+        )
         self.assertEqual(1234567890123456789012345678901234567890, self.map.get("key"))
 
         self.assertTrue(
-            self.set_on_server("new java.math.BigInteger(\"-1234567890123456789012345678901234567890\", 10)"))
+            self.set_on_server(
+                'new java.math.BigInteger("-1234567890123456789012345678901234567890", 10)'
+            )
+        )
         self.assertEqual(-1234567890123456789012345678901234567890, self.map.get("key"))
 
     def test_java_class_from_server(self):
@@ -411,23 +430,31 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual("java.lang.String", self.map.get("key"))
 
     def test_array_list_from_server(self):
-        script = """var list = new java.util.ArrayList();
+        script = (
+            """
+        var list = new java.util.ArrayList();
         list.add(1);
         list.add(2);
         list.add(3);
-        var map = instance_0.getMap(\"""" + self.map.name + """\");
+        var map = instance_0.getMap("%s");
         map.set("key", list);"""
+            % self.map.name
+        )
         response = self.rc.executeOnController(self.cluster.id, script, Lang.JAVASCRIPT)
         self.assertTrue(response.success)
         self.assertEqual([1, 2, 3], self.map.get("key"))
 
     def test_linked_list_from_server(self):
-        script = """var list = new java.util.LinkedList();
+        script = (
+            """
+        var list = new java.util.LinkedList();
         list.add("a");
         list.add("b");
         list.add("c");
-        var map = instance_0.getMap(\"""" + self.map.name + """\");
+        var map = instance_0.getMap("%s");
         map.set("key", list);"""
+            % self.map.name
+        )
         response = self.rc.executeOnController(self.cluster.id, script, Lang.JAVASCRIPT)
         self.assertTrue(response.success)
         self.assertEqual(["a", "b", "c"], self.map.get("key"))

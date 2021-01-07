@@ -26,7 +26,7 @@ class QueueTest(SingleMemberTestCase):
     def test_add_entry_listener_item_added(self):
         collector = event_collector()
         self.queue.add_listener(include_value=False, item_added_func=collector)
-        self.queue.add('item-value')
+        self.queue.add("item-value")
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
@@ -39,12 +39,12 @@ class QueueTest(SingleMemberTestCase):
     def test_add_entry_listener_item_added_include_value(self):
         collector = event_collector()
         self.queue.add_listener(include_value=True, item_added_func=collector)
-        self.queue.add('item-value')
+        self.queue.add("item-value")
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEqual(event.item, 'item-value')
+            self.assertEqual(event.item, "item-value")
             self.assertEqual(event.event_type, ItemEventType.ADDED)
 
         self.assertTrueEventually(assert_event, 5)
@@ -52,8 +52,8 @@ class QueueTest(SingleMemberTestCase):
     def test_add_entry_listener_item_removed(self):
         collector = event_collector()
         self.queue.add_listener(include_value=False, item_removed_func=collector)
-        self.queue.add('item-value')
-        self.queue.remove('item-value')
+        self.queue.add("item-value")
+        self.queue.remove("item-value")
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
@@ -66,13 +66,13 @@ class QueueTest(SingleMemberTestCase):
     def test_add_entry_listener_item_removed_include_value(self):
         collector = event_collector()
         self.queue.add_listener(include_value=True, item_removed_func=collector)
-        self.queue.add('item-value')
-        self.queue.remove('item-value')
+        self.queue.add("item-value")
+        self.queue.remove("item-value")
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
-            self.assertEqual(event.item, 'item-value')
+            self.assertEqual(event.item, "item-value")
             self.assertEqual(event.event_type, ItemEventType.REMOVED)
 
         self.assertTrueEventually(assert_event, 5)
@@ -81,7 +81,7 @@ class QueueTest(SingleMemberTestCase):
         collector = event_collector()
         reg_id = self.queue.add_listener(include_value=False, item_added_func=collector)
         self.queue.remove_listener(reg_id)
-        self.queue.add('item-value')
+        self.queue.add("item-value")
 
         def assert_event():
             self.assertEqual(len(collector.events), 0)

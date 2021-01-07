@@ -1,8 +1,15 @@
 import unittest
 from types import FunctionType
 
-from hazelcast.serialization.api import ObjectDataOutput, ObjectDataInput, Portable, PortableReader, PortableWriter, \
-    StreamSerializer, IdentifiedDataSerializable
+from hazelcast.serialization.api import (
+    ObjectDataOutput,
+    ObjectDataInput,
+    Portable,
+    PortableReader,
+    PortableWriter,
+    StreamSerializer,
+    IdentifiedDataSerializable,
+)
 from hazelcast import six
 from hazelcast.six.moves import range
 

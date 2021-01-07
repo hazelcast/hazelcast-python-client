@@ -44,9 +44,11 @@ class StatisticsTest(HazelcastTestCase):
         client.shutdown()
 
     def test_statistics_period(self):
-        client = HazelcastClient(cluster_name=self.cluster.id,
-                                 statistics_enabled=True,
-                                 statistics_period=self.STATS_PERIOD)
+        client = HazelcastClient(
+            cluster_name=self.cluster.id,
+            statistics_enabled=True,
+            statistics_period=self.STATS_PERIOD,
+        )
         client_uuid = client._connection_manager.client_uuid
 
         time.sleep(2 * self.STATS_PERIOD)
@@ -60,12 +62,14 @@ class StatisticsTest(HazelcastTestCase):
 
     def test_statistics_content(self):
         map_name = random_string()
-        client = HazelcastClient(cluster_name=self.cluster.id,
-                                 statistics_enabled=True,
-                                 statistics_period=self.STATS_PERIOD,
-                                 near_caches={
-                                     map_name: {},
-                                 })
+        client = HazelcastClient(
+            cluster_name=self.cluster.id,
+            statistics_enabled=True,
+            statistics_period=self.STATS_PERIOD,
+            near_caches={
+                map_name: {},
+            },
+        )
         client_uuid = client._connection_manager.client_uuid
 
         client.get_map(map_name).blocking()
@@ -108,12 +112,14 @@ class StatisticsTest(HazelcastTestCase):
 
     def test_special_characters(self):
         map_name = random_string() + ",t=es\\t"
-        client = HazelcastClient(cluster_name=self.cluster.id,
-                                 statistics_enabled=True,
-                                 statistics_period=self.STATS_PERIOD,
-                                 near_caches={
-                                     map_name: {},
-                                 })
+        client = HazelcastClient(
+            cluster_name=self.cluster.id,
+            statistics_enabled=True,
+            statistics_period=self.STATS_PERIOD,
+            near_caches={
+                map_name: {},
+            },
+        )
         client_uuid = client._connection_manager.client_uuid
 
         client.get_map(map_name).blocking()
@@ -129,12 +135,14 @@ class StatisticsTest(HazelcastTestCase):
 
     def test_near_cache_stats(self):
         map_name = random_string()
-        client = HazelcastClient(cluster_name=self.cluster.id,
-                                 statistics_enabled=True,
-                                 statistics_period=self.STATS_PERIOD,
-                                 near_caches={
-                                     map_name: {},
-                                 })
+        client = HazelcastClient(
+            cluster_name=self.cluster.id,
+            statistics_enabled=True,
+            statistics_period=self.STATS_PERIOD,
+            near_caches={
+                map_name: {},
+            },
+        )
         client_uuid = client._connection_manager.client_uuid
 
         test_map = client.get_map(map_name).blocking()
@@ -172,18 +180,25 @@ class StatisticsTest(HazelcastTestCase):
         client.shutdown()
 
     def _get_client_stats_from_server(self, client_uuid):
-        script = "stats = instance_0.getOriginal().node.getClientEngine().getClientStatistics()\n" \
-                 "keys = stats.keySet().toArray()\n" \
-                 "for(i=0; i < keys.length; i++) {\n" \
-                 "  if (keys[i].toString().equals(\"%s\")) {\n" \
-                 "    result = stats.get(keys[i]).clientAttributes()\n" \
-                 "    break\n" \
-                 "  }\n}\n" % client_uuid
+        script = (
+            """
+        stats = instance_0.getOriginal().node.getClientEngine().getClientStatistics();
+        keys = stats.keySet().toArray();
+        for(i=0; i < keys.length; i++) {
+            if (keys[i].toString().equals("%s")) {
+                result = stats.get(keys[i]).clientAttributes();
+                break;
+            }
+        }"""
+            % client_uuid
+        )
 
         return self.rc.executeOnController(self.cluster.id, script, Lang.JAVASCRIPT)
 
     def _unescape_special_chars(self, value):
-        return value.replace("\\,", ",").replace("\\=", "=").replace("\\.", ".").replace("\\\\", "\\")
+        return (
+            value.replace("\\,", ",").replace("\\=", "=").replace("\\.", ".").replace("\\\\", "\\")
+        )
 
     def _verify_response_not_empty(self, response):
         if not response.success or response.result is None:

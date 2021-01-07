@@ -79,7 +79,9 @@ class AnInnerPortable(Portable):
         return INNER_PORTABLE_CLASS_ID
 
     def __eq__(self, other):
-        return isinstance(other, AnInnerPortable) and self.i == other.i and is_equal(self.f, other.f)
+        return (
+            isinstance(other, AnInnerPortable) and self.i == other.i and is_equal(self.f, other.f)
+        )
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -91,7 +93,11 @@ class CustomStreamSerializable(object):
         self.f = f
 
     def __eq__(self, other):
-        return isinstance(other, CustomStreamSerializable) and self.i == other.i and is_equal(self.f, other.f)
+        return (
+            isinstance(other, CustomStreamSerializable)
+            and self.i == other.i
+            and is_equal(self.f, other.f)
+        )
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -103,7 +109,11 @@ class CustomByteArraySerializable(object):
         self.f = f
 
     def __eq__(self, other):
-        return isinstance(other, CustomByteArraySerializable) and self.i == other.i and is_equal(self.f, other.f)
+        return (
+            isinstance(other, CustomByteArraySerializable)
+            and self.i == other.i
+            and is_equal(self.f, other.f)
+        )
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -120,10 +130,32 @@ def _read_data_from_inp(inp):
 
 
 class AnIdentifiedDataSerializable(IdentifiedDataSerializable):
-    def __init__(self, boolean=None, b=None, c=None, d=None, s=None, f=None, i=None, l=None, string=None,
-                 booleans=None, bytes_=None, chars=None, doubles=None, shorts=None, floats=None,
-                 ints=None, longs=None, strings=None, portable=None, identified=None,
-                 custom_serializable=None, custom_byte_array_serializable=None, data=None):
+    def __init__(
+        self,
+        boolean=None,
+        b=None,
+        c=None,
+        d=None,
+        s=None,
+        f=None,
+        i=None,
+        l=None,
+        string=None,
+        booleans=None,
+        bytes_=None,
+        chars=None,
+        doubles=None,
+        shorts=None,
+        floats=None,
+        ints=None,
+        longs=None,
+        strings=None,
+        portable=None,
+        identified=None,
+        custom_serializable=None,
+        custom_byte_array_serializable=None,
+        data=None,
+    ):
         self.boolean = boolean
         self.b = b
         self.c = c
@@ -276,54 +308,78 @@ class AnIdentifiedDataSerializable(IdentifiedDataSerializable):
         return DATA_SERIALIZABLE_CLASS_ID
 
     def __eq__(self, other):
-        return isinstance(other, AnIdentifiedDataSerializable) \
-               and self.boolean == other.boolean \
-               and self.b == other.b \
-               and self.c == other.c \
-               and self.d == other.d \
-               and self.s == other.s \
-               and is_equal(self.f, other.f) \
-               and self.i == other.i \
-               and self.l == other.l \
-               and self.bytes_size == other.bytes_size \
-               and self.unsigned_byte == other.unsigned_byte \
-               and self.unsigned_short == other.unsigned_short \
-               and self.string == other.string \
-               and self.booleans == other.booleans \
-               and self.bytes_ == other.bytes_ \
-               and self.chars == other.chars \
-               and self.doubles == other.doubles \
-               and self.shorts == other.shorts \
-               and is_equal(self.floats, other.floats) \
-               and self.ints == other.ints \
-               and self.longs == other.longs \
-               and self.strings == other.strings \
-               and self.booleans_none == other.booleans_none \
-               and self.bytes_none == other.bytes_none \
-               and self.chars_none == other.chars_none \
-               and self.doubles_none == other.doubles_none \
-               and self.shorts_none == other.shorts_none \
-               and self.floats_none == other.floats_none \
-               and self.ints_none == other.ints_none \
-               and self.longs_none == other.longs_none \
-               and self.strings_none == other.strings_none \
-               and self.bytes_fully == other.bytes_fully \
-               and self.bytes_offset == other.bytes_offset \
-               and self.str_chars == other.str_chars \
-               and self.str_bytes == other.str_bytes \
-               and self.portable == other.portable \
-               and self.identified == other.identified \
-               and self.custom_serializable == other.custom_serializable \
-               and self.custom_byte_array_serializable == other.custom_byte_array_serializable \
-               and self.data == other.data
+        return (
+            isinstance(other, AnIdentifiedDataSerializable)
+            and self.boolean == other.boolean
+            and self.b == other.b
+            and self.c == other.c
+            and self.d == other.d
+            and self.s == other.s
+            and is_equal(self.f, other.f)
+            and self.i == other.i
+            and self.l == other.l
+            and self.bytes_size == other.bytes_size
+            and self.unsigned_byte == other.unsigned_byte
+            and self.unsigned_short == other.unsigned_short
+            and self.string == other.string
+            and self.booleans == other.booleans
+            and self.bytes_ == other.bytes_
+            and self.chars == other.chars
+            and self.doubles == other.doubles
+            and self.shorts == other.shorts
+            and is_equal(self.floats, other.floats)
+            and self.ints == other.ints
+            and self.longs == other.longs
+            and self.strings == other.strings
+            and self.booleans_none == other.booleans_none
+            and self.bytes_none == other.bytes_none
+            and self.chars_none == other.chars_none
+            and self.doubles_none == other.doubles_none
+            and self.shorts_none == other.shorts_none
+            and self.floats_none == other.floats_none
+            and self.ints_none == other.ints_none
+            and self.longs_none == other.longs_none
+            and self.strings_none == other.strings_none
+            and self.bytes_fully == other.bytes_fully
+            and self.bytes_offset == other.bytes_offset
+            and self.str_chars == other.str_chars
+            and self.str_bytes == other.str_bytes
+            and self.portable == other.portable
+            and self.identified == other.identified
+            and self.custom_serializable == other.custom_serializable
+            and self.custom_byte_array_serializable == other.custom_byte_array_serializable
+            and self.data == other.data
+        )
 
 
 class APortable(Portable):
-    def __init__(self, boolean=None, b=None, c=None, d=None, s=None, f=None, i=None, l=None, string=None,
-                 p=None,
-                 booleans=None, bytes_=None, chars=None, doubles=None, shorts=None, floats=None,
-                 ints=None, longs=None, strings=None, portables=None, identified=None,
-                 custom_serializable=None, custom_byte_array_serializable=None, data=None):
+    def __init__(
+        self,
+        boolean=None,
+        b=None,
+        c=None,
+        d=None,
+        s=None,
+        f=None,
+        i=None,
+        l=None,
+        string=None,
+        p=None,
+        booleans=None,
+        bytes_=None,
+        chars=None,
+        doubles=None,
+        shorts=None,
+        floats=None,
+        ints=None,
+        longs=None,
+        strings=None,
+        portables=None,
+        identified=None,
+        custom_serializable=None,
+        custom_byte_array_serializable=None,
+        data=None,
+    ):
         self.boolean = boolean
         self.b = b
         self.c = c
@@ -548,47 +604,49 @@ class APortable(Portable):
         return PORTABLE_CLASS_ID
 
     def __eq__(self, other):
-        return isinstance(other, APortable) \
-               and self.boolean == other.boolean \
-               and self.b == other.b \
-               and self.c == other.c \
-               and self.d == other.d \
-               and self.s == other.s \
-               and is_equal(self.f, other.f) \
-               and self.i == other.i \
-               and self.l == other.l \
-               and self.bytes_size == other.bytes_size \
-               and self.unsigned_byte == other.unsigned_byte \
-               and self.unsigned_short == other.unsigned_short \
-               and self.string == other.string \
-               and self.p == other.p \
-               and self.booleans == other.booleans \
-               and self.bytes_ == other.bytes_ \
-               and self.chars == other.chars \
-               and self.doubles == other.doubles \
-               and self.shorts == other.shorts \
-               and is_equal(self.floats, other.floats) \
-               and self.ints == other.ints \
-               and self.longs == other.longs \
-               and self.strings == other.strings \
-               and self.portables == other.portables \
-               and self.booleans_none == other.booleans_none \
-               and self.bytes_none == other.bytes_none \
-               and self.chars_none == other.chars_none \
-               and self.doubles_none == other.doubles_none \
-               and self.shorts_none == other.shorts_none \
-               and self.floats_none == other.floats_none \
-               and self.ints_none == other.ints_none \
-               and self.longs_none == other.longs_none \
-               and self.strings_none == other.strings_none \
-               and self.bytes_fully == other.bytes_fully \
-               and self.bytes_offset == other.bytes_offset \
-               and self.str_chars == other.str_chars \
-               and self.str_bytes == other.str_bytes \
-               and self.identified == other.identified \
-               and self.custom_serializable == other.custom_serializable \
-               and self.custom_byte_array_serializable == other.custom_byte_array_serializable \
-               and self.data == other.data
+        return (
+            isinstance(other, APortable)
+            and self.boolean == other.boolean
+            and self.b == other.b
+            and self.c == other.c
+            and self.d == other.d
+            and self.s == other.s
+            and is_equal(self.f, other.f)
+            and self.i == other.i
+            and self.l == other.l
+            and self.bytes_size == other.bytes_size
+            and self.unsigned_byte == other.unsigned_byte
+            and self.unsigned_short == other.unsigned_short
+            and self.string == other.string
+            and self.p == other.p
+            and self.booleans == other.booleans
+            and self.bytes_ == other.bytes_
+            and self.chars == other.chars
+            and self.doubles == other.doubles
+            and self.shorts == other.shorts
+            and is_equal(self.floats, other.floats)
+            and self.ints == other.ints
+            and self.longs == other.longs
+            and self.strings == other.strings
+            and self.portables == other.portables
+            and self.booleans_none == other.booleans_none
+            and self.bytes_none == other.bytes_none
+            and self.chars_none == other.chars_none
+            and self.doubles_none == other.doubles_none
+            and self.shorts_none == other.shorts_none
+            and self.floats_none == other.floats_none
+            and self.ints_none == other.ints_none
+            and self.longs_none == other.longs_none
+            and self.strings_none == other.strings_none
+            and self.bytes_fully == other.bytes_fully
+            and self.bytes_offset == other.bytes_offset
+            and self.str_chars == other.str_chars
+            and self.str_bytes == other.str_bytes
+            and self.identified == other.identified
+            and self.custom_serializable == other.custom_serializable
+            and self.custom_byte_array_serializable == other.custom_byte_array_serializable
+            and self.data == other.data
+        )
 
 
 _sql_string = _to_unicode("this > 5 AND this < 100")
@@ -613,11 +671,16 @@ REFERENCE_OBJECTS = {
     "float[]": [900.5678, 1.0, 2.1, 3.4],
     "int[]": [56789, 2, 3],
     "long[]": [-50992225, 1231232141, 2, 3],
-    "String[]": list(map(_to_unicode, [
-        "Pijamalı hasta, yağız şoföre çabucak güvendi.",
-        "イロハニホヘト チリヌルヲ ワカヨタレソ ツネナラム",
-        "The quick brown fox jumps over the lazy dog"
-    ])),
+    "String[]": list(
+        map(
+            _to_unicode,
+            [
+                "Pijamalı hasta, yağız şoföre çabucak güvendi.",
+                "イロハニホヘト チリヌルヲ ワカヨタレソ ツネナラム",
+                "The quick brown fox jumps over the lazy dog",
+            ],
+        )
+    ),
     "Date": datetime.datetime.fromtimestamp(633830400),
     "BigInteger": 1314432323232411,
     "Class": _to_unicode("java.math.BigDecimal"),
@@ -627,76 +690,126 @@ _data = Data(bytearray([49, 49, 49, 51, 49, 51, 49, 50, 51, 49, 51, 49, 51, 49, 
 
 _inner_portable = AnInnerPortable(REFERENCE_OBJECTS["Integer"], REFERENCE_OBJECTS["Float"])
 
-_custom_serializable = CustomStreamSerializable(REFERENCE_OBJECTS["Integer"], REFERENCE_OBJECTS["Float"])
+_custom_serializable = CustomStreamSerializable(
+    REFERENCE_OBJECTS["Integer"], REFERENCE_OBJECTS["Float"]
+)
 
-_custom_byte_array_serializable = CustomByteArraySerializable(REFERENCE_OBJECTS["Integer"], REFERENCE_OBJECTS["Float"])
+_custom_byte_array_serializable = CustomByteArraySerializable(
+    REFERENCE_OBJECTS["Integer"], REFERENCE_OBJECTS["Float"]
+)
 
-_identified = AnIdentifiedDataSerializable(REFERENCE_OBJECTS["Boolean"], REFERENCE_OBJECTS["Byte"],
-                                           REFERENCE_OBJECTS["Character"], REFERENCE_OBJECTS["Double"],
-                                           REFERENCE_OBJECTS["Short"], REFERENCE_OBJECTS["Float"],
-                                           REFERENCE_OBJECTS["Integer"], REFERENCE_OBJECTS["Long"],
-                                           _sql_string, REFERENCE_OBJECTS["boolean[]"],
-                                           REFERENCE_OBJECTS["byte[]"], REFERENCE_OBJECTS["char[]"],
-                                           REFERENCE_OBJECTS["double[]"], REFERENCE_OBJECTS["short[]"],
-                                           REFERENCE_OBJECTS["float[]"], REFERENCE_OBJECTS["int[]"],
-                                           REFERENCE_OBJECTS["long[]"], REFERENCE_OBJECTS["String[]"],
-                                           _inner_portable, None,
-                                           _custom_serializable, _custom_byte_array_serializable, _data)
+_identified = AnIdentifiedDataSerializable(
+    REFERENCE_OBJECTS["Boolean"],
+    REFERENCE_OBJECTS["Byte"],
+    REFERENCE_OBJECTS["Character"],
+    REFERENCE_OBJECTS["Double"],
+    REFERENCE_OBJECTS["Short"],
+    REFERENCE_OBJECTS["Float"],
+    REFERENCE_OBJECTS["Integer"],
+    REFERENCE_OBJECTS["Long"],
+    _sql_string,
+    REFERENCE_OBJECTS["boolean[]"],
+    REFERENCE_OBJECTS["byte[]"],
+    REFERENCE_OBJECTS["char[]"],
+    REFERENCE_OBJECTS["double[]"],
+    REFERENCE_OBJECTS["short[]"],
+    REFERENCE_OBJECTS["float[]"],
+    REFERENCE_OBJECTS["int[]"],
+    REFERENCE_OBJECTS["long[]"],
+    REFERENCE_OBJECTS["String[]"],
+    _inner_portable,
+    None,
+    _custom_serializable,
+    _custom_byte_array_serializable,
+    _data,
+)
 
 _portables = [_inner_portable, _inner_portable, _inner_portable]
 
-_portable = APortable(REFERENCE_OBJECTS["Boolean"], REFERENCE_OBJECTS["Byte"],
-                      REFERENCE_OBJECTS["Character"], REFERENCE_OBJECTS["Double"],
-                      REFERENCE_OBJECTS["Short"], REFERENCE_OBJECTS["Float"],
-                      REFERENCE_OBJECTS["Integer"], REFERENCE_OBJECTS["Long"],
-                      _sql_string, _inner_portable,
-                      REFERENCE_OBJECTS["boolean[]"], REFERENCE_OBJECTS["byte[]"],
-                      REFERENCE_OBJECTS["char[]"], REFERENCE_OBJECTS["double[]"],
-                      REFERENCE_OBJECTS["short[]"], REFERENCE_OBJECTS["float[]"],
-                      REFERENCE_OBJECTS["int[]"], REFERENCE_OBJECTS["long[]"],
-                      REFERENCE_OBJECTS["String[]"], _portables,
-                      _identified, _custom_serializable,
-                      _custom_byte_array_serializable, _data)
+_portable = APortable(
+    REFERENCE_OBJECTS["Boolean"],
+    REFERENCE_OBJECTS["Byte"],
+    REFERENCE_OBJECTS["Character"],
+    REFERENCE_OBJECTS["Double"],
+    REFERENCE_OBJECTS["Short"],
+    REFERENCE_OBJECTS["Float"],
+    REFERENCE_OBJECTS["Integer"],
+    REFERENCE_OBJECTS["Long"],
+    _sql_string,
+    _inner_portable,
+    REFERENCE_OBJECTS["boolean[]"],
+    REFERENCE_OBJECTS["byte[]"],
+    REFERENCE_OBJECTS["char[]"],
+    REFERENCE_OBJECTS["double[]"],
+    REFERENCE_OBJECTS["short[]"],
+    REFERENCE_OBJECTS["float[]"],
+    REFERENCE_OBJECTS["int[]"],
+    REFERENCE_OBJECTS["long[]"],
+    REFERENCE_OBJECTS["String[]"],
+    _portables,
+    _identified,
+    _custom_serializable,
+    _custom_byte_array_serializable,
+    _data,
+)
 
-_non_null_list = [REFERENCE_OBJECTS["Boolean"],
-                  REFERENCE_OBJECTS["Double"],
-                  REFERENCE_OBJECTS["Integer"], _sql_string,
-                  _inner_portable, REFERENCE_OBJECTS["byte[]"],
-                  _custom_serializable, _custom_byte_array_serializable,
-                  _identified, _portable, REFERENCE_OBJECTS["Date"]]
+_non_null_list = [
+    REFERENCE_OBJECTS["Boolean"],
+    REFERENCE_OBJECTS["Double"],
+    REFERENCE_OBJECTS["Integer"],
+    _sql_string,
+    _inner_portable,
+    REFERENCE_OBJECTS["byte[]"],
+    _custom_serializable,
+    _custom_byte_array_serializable,
+    _identified,
+    _portable,
+    REFERENCE_OBJECTS["Date"],
+]
 
-REFERENCE_OBJECTS.update({
-    "AnInnerPortable": _inner_portable,
-    "CustomStreamSerializable": _custom_serializable,
-    "CustomByteArraySerializable": _custom_byte_array_serializable,
-    "AnIdentifiedDataSerializable": _identified,
-    "APortable": _portable,
-    "ArrayList": [None, _non_null_list],
-    "LinkedList": [None, _non_null_list],
-    "TruePredicate": predicate.true(),
-    "FalsePredicate": predicate.false(),
-    "SqlPredicate": predicate.sql(_sql_string),
-    "EqualPredicate": predicate.equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
-    "NotEqualPredicate": predicate.not_equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
-    "GreaterLessPredicate": predicate.greater(_sql_string, REFERENCE_OBJECTS["Integer"]),
-    "BetweenPredicate": predicate.between(_sql_string, REFERENCE_OBJECTS["Integer"], REFERENCE_OBJECTS["Integer"]),
-    "LikePredicate": predicate.like(_sql_string, _sql_string),
-    "ILikePredicate": predicate.ilike(_sql_string, _sql_string),
-    "InPredicate": predicate.in_(_sql_string, REFERENCE_OBJECTS["Integer"], REFERENCE_OBJECTS["Integer"]),
-    "RegexPredicate": predicate.regex(_sql_string, _sql_string),
-    "AndPredicate": predicate.and_(predicate.sql(_sql_string),
-                                   predicate.equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
-                                   predicate.not_equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
-                                   predicate.greater(_sql_string, REFERENCE_OBJECTS["Integer"]),
-                                   predicate.greater_or_equal(_sql_string, REFERENCE_OBJECTS["Integer"])),
-    "OrPredicate": predicate.or_(predicate.sql(_sql_string),
-                                 predicate.equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
-                                 predicate.not_equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
-                                 predicate.greater(_sql_string, REFERENCE_OBJECTS["Integer"]),
-                                 predicate.greater_or_equal(_sql_string, REFERENCE_OBJECTS["Integer"])),
-    "InstanceOfPredicate": predicate.instance_of(
-        "com.hazelcast.nio.serialization.compatibility.CustomStreamSerializable")
-})
+REFERENCE_OBJECTS.update(
+    {
+        "AnInnerPortable": _inner_portable,
+        "CustomStreamSerializable": _custom_serializable,
+        "CustomByteArraySerializable": _custom_byte_array_serializable,
+        "AnIdentifiedDataSerializable": _identified,
+        "APortable": _portable,
+        "ArrayList": [None, _non_null_list],
+        "LinkedList": [None, _non_null_list],
+        "TruePredicate": predicate.true(),
+        "FalsePredicate": predicate.false(),
+        "SqlPredicate": predicate.sql(_sql_string),
+        "EqualPredicate": predicate.equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
+        "NotEqualPredicate": predicate.not_equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
+        "GreaterLessPredicate": predicate.greater(_sql_string, REFERENCE_OBJECTS["Integer"]),
+        "BetweenPredicate": predicate.between(
+            _sql_string, REFERENCE_OBJECTS["Integer"], REFERENCE_OBJECTS["Integer"]
+        ),
+        "LikePredicate": predicate.like(_sql_string, _sql_string),
+        "ILikePredicate": predicate.ilike(_sql_string, _sql_string),
+        "InPredicate": predicate.in_(
+            _sql_string, REFERENCE_OBJECTS["Integer"], REFERENCE_OBJECTS["Integer"]
+        ),
+        "RegexPredicate": predicate.regex(_sql_string, _sql_string),
+        "AndPredicate": predicate.and_(
+            predicate.sql(_sql_string),
+            predicate.equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
+            predicate.not_equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
+            predicate.greater(_sql_string, REFERENCE_OBJECTS["Integer"]),
+            predicate.greater_or_equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
+        ),
+        "OrPredicate": predicate.or_(
+            predicate.sql(_sql_string),
+            predicate.equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
+            predicate.not_equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
+            predicate.greater(_sql_string, REFERENCE_OBJECTS["Integer"]),
+            predicate.greater_or_equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
+        ),
+        "InstanceOfPredicate": predicate.instance_of(
+            "com.hazelcast.nio.serialization.compatibility.CustomStreamSerializable"
+        ),
+    }
+)
 
 _SKIP_ON_SERIALIZE = {
     "Character",

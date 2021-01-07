@@ -64,8 +64,12 @@ def start():
     thread_count_before = threading.active_count()
     parser = argparse.ArgumentParser()
     parser.add_argument("--hour", default=48.0, type=float, help="Duration of the test in hours")
-    parser.add_argument("--addresses", default="127.0.0.1", type=str,
-                        help="List of cluster member addresses separated by -")
+    parser.add_argument(
+        "--addresses",
+        default="127.0.0.1",
+        type=str,
+        help="List of cluster member addresses separated by -",
+    )
     parser.add_argument("--log", default="default_log_file", type=str, help="Name of the log file")
 
     args = parser.parse_args()
@@ -74,11 +78,13 @@ def start():
     addresses = args.addresses
     log_file = args.log
 
-    logging.basicConfig(filename=log_file,
-                        filemode="w",
-                        format="%(asctime)s %(message)s",
-                        datefmt="%H:%M:%S",
-                        level=logging.INFO)
+    logging.basicConfig(
+        filename=log_file,
+        filemode="w",
+        format="%(asctime)s %(message)s",
+        datefmt="%H:%M:%S",
+        level=logging.INFO,
+    )
 
     try:
         client = HazelcastClient(
@@ -87,7 +93,7 @@ def start():
                 SimpleEntryProcessor.FACTORY_ID: {
                     SimpleEntryProcessor.CLASS_ID: SimpleEntryProcessor
                 }
-            }
+            },
         )
     except Exception:
         logging.exception("Client failed to start")
@@ -95,7 +101,9 @@ def start():
 
     processor = SimpleEntryProcessor("test")
     test_map = client.get_map("test-map").blocking()
-    test_map.add_entry_listener(False, added_func=listener, removed_func=listener, updated_func=listener)
+    test_map.add_entry_listener(
+        False, added_func=listener, removed_func=listener, updated_func=listener
+    )
 
     logging.info("Soak test operations are starting!")
     logging.info("* " * 20 + "\n")

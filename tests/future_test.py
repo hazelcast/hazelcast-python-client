@@ -3,7 +3,13 @@ import traceback
 import unittest
 from threading import Thread, Event
 
-from hazelcast.future import Future, ImmediateFuture, combine_futures, make_blocking, ImmediateExceptionFuture
+from hazelcast.future import (
+    Future,
+    ImmediateFuture,
+    combine_futures,
+    make_blocking,
+    ImmediateExceptionFuture,
+)
 from hazelcast import six
 from hazelcast.six.moves import range
 

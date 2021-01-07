@@ -16,9 +16,9 @@ class HeartbeatTest(HazelcastTestCase):
     def setUp(self):
         self.cluster = self.create_cluster(self.rc)
         self.member = self.rc.startMember(self.cluster.id)
-        self.client = HazelcastClient(cluster_name=self.cluster.id,
-                                      heartbeat_interval=0.5,
-                                      heartbeat_timeout=2)
+        self.client = HazelcastClient(
+            cluster_name=self.cluster.id, heartbeat_interval=0.5, heartbeat_timeout=2
+        )
 
     def tearDown(self):
         self.client.shutdown()
@@ -42,7 +42,9 @@ class HeartbeatTest(HazelcastTestCase):
         connection_added_collector = connection_collector()
         connection_removed_collector = connection_collector()
 
-        self.client._connection_manager.add_listener(connection_added_collector, connection_removed_collector)
+        self.client._connection_manager.add_listener(
+            connection_added_collector, connection_removed_collector
+        )
 
         self.simulate_heartbeat_lost(self.client, addr, 2)
 
@@ -51,8 +53,12 @@ class HeartbeatTest(HazelcastTestCase):
             self.assertEqual(1, len(connection_removed_collector.connections))
             stopped_connection = connection_added_collector.connections[0]
             restored_connection = connection_removed_collector.connections[0]
-            self.assertEqual(stopped_connection.connected_address, Address(member2.host, member2.port))
-            self.assertEqual(restored_connection.connected_address, Address(member2.host, member2.port))
+            self.assertEqual(
+                stopped_connection.connected_address, Address(member2.host, member2.port)
+            )
+            self.assertEqual(
+                restored_connection.connected_address, Address(member2.host, member2.port)
+            )
 
         self.assertTrueEventually(assert_heartbeat_stopped_and_restored)
 

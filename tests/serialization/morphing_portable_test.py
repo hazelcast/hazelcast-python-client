@@ -2,7 +2,12 @@ import unittest
 
 from hazelcast.config import _Config
 from hazelcast.serialization import SerializationServiceV1
-from tests.serialization.portable_test import create_portable, SerializationV1Portable, InnerPortable, FACTORY_ID
+from tests.serialization.portable_test import (
+    create_portable,
+    SerializationV1Portable,
+    InnerPortable,
+    FACTORY_ID,
+)
 from hazelcast import six
 
 if not six.PY2:
@@ -12,31 +17,51 @@ if not six.PY2:
 class MorphingPortable(SerializationV1Portable):
     @classmethod
     def clone(cls, base):
-        return MorphingPortable(base.a_byte, base.a_boolean, base.a_character, base.a_short, base.a_integer,
-                                base.a_long, base.a_float, base.a_double,
-                                base.bytes, base.booleans, base.chars, base.shorts, base.ints, base.longs,
-                                base.floats, base.doubles, base.a_string, base.strings,
-                                base.inner_portable, base.inner_portable_array, base.identified_serializable)
+        return MorphingPortable(
+            base.a_byte,
+            base.a_boolean,
+            base.a_character,
+            base.a_short,
+            base.a_integer,
+            base.a_long,
+            base.a_float,
+            base.a_double,
+            base.bytes,
+            base.booleans,
+            base.chars,
+            base.shorts,
+            base.ints,
+            base.longs,
+            base.floats,
+            base.doubles,
+            base.a_string,
+            base.strings,
+            base.inner_portable,
+            base.inner_portable_array,
+            base.identified_serializable,
+        )
 
     def get_class_version(self):
         return 2
 
 
-the_factory_1 = {SerializationV1Portable.CLASS_ID: SerializationV1Portable, InnerPortable.CLASS_ID: InnerPortable}
-the_factory_2 = {SerializationV1Portable.CLASS_ID: MorphingPortable, InnerPortable.CLASS_ID: InnerPortable}
+the_factory_1 = {
+    SerializationV1Portable.CLASS_ID: SerializationV1Portable,
+    InnerPortable.CLASS_ID: InnerPortable,
+}
+the_factory_2 = {
+    SerializationV1Portable.CLASS_ID: MorphingPortable,
+    InnerPortable.CLASS_ID: InnerPortable,
+}
 
 
 class MorphingPortableTestCase(unittest.TestCase):
     def setUp(self):
         config1 = _Config()
-        config1.portable_factories = {
-            FACTORY_ID: the_factory_1
-        }
+        config1.portable_factories = {FACTORY_ID: the_factory_1}
 
         config2 = _Config()
-        config2.portable_factories = {
-            FACTORY_ID: the_factory_2
-        }
+        config2.portable_factories = {FACTORY_ID: the_factory_2}
 
         self.service1 = SerializationServiceV1(config1)
         self.service2 = SerializationServiceV1(config2)
@@ -59,7 +84,7 @@ class MorphingPortableTestCase(unittest.TestCase):
         a_integer = self.reader.read_long("5")
         a_long = self.reader.read_long("6")
         self.assertEqual(99, a_byte)
-        self.assertEqual('c', a_character)
+        self.assertEqual("c", a_character)
         self.assertEqual(11, a_short)
         self.assertEqual(1234134, a_integer)
         if six.PY2:
@@ -74,7 +99,7 @@ class MorphingPortableTestCase(unittest.TestCase):
         a_short = self.reader.read_int("4")
         a_integer = self.reader.read_int("5")
         self.assertEqual(99, a_byte)
-        self.assertEqual('c', a_character)
+        self.assertEqual("c", a_character)
         self.assertEqual(11, a_short)
         self.assertEqual(1234134, a_integer)
         self.assertEqual(0, self.reader.read_int("NO SUCH FIELD"))
@@ -93,7 +118,7 @@ class MorphingPortableTestCase(unittest.TestCase):
         a_integer = self.reader.read_float("5")
         a_float = self.reader.read_float("7")
         self.assertEqual(99, a_byte)
-        self.assertEqual('c', a_character)
+        self.assertEqual("c", a_character)
         self.assertEqual(11, a_short)
         self.assertEqual(1234134, a_integer)
         self.assertEqual(1.0, a_float)
@@ -108,7 +133,7 @@ class MorphingPortableTestCase(unittest.TestCase):
         a_float = self.reader.read_double("7")
         a_double = self.reader.read_double("8")
         self.assertEqual(99, a_byte)
-        self.assertEqual('c', a_character)
+        self.assertEqual("c", a_character)
         self.assertEqual(11, a_short)
         self.assertEqual(1234134, a_integer)
         if six.PY2:
@@ -131,7 +156,7 @@ class MorphingPortableTestCase(unittest.TestCase):
 
     def test_read_char(self):
         a_character = self.reader.read_char("3")
-        self.assertEqual('c', a_character)
+        self.assertEqual("c", a_character)
         self.assertEqual(0, self.reader.read_char("NO SUCH FIELD"))
 
     def test_encode_decode_with_parent_default_reader(self):
@@ -143,13 +168,27 @@ class MorphingPortableTestCase(unittest.TestCase):
         self.assertTrue(obj == obj2)
 
     def test_incompatible_types(self):
-        functions = [self.reader.read_byte, self.reader.read_boolean, self.reader.read_char, self.reader.read_short,
-                     self.reader.read_int, self.reader.read_long, self.reader.read_float, self.reader.read_double,
-                     self.reader.read_utf_array, self.reader.read_short_array, self.reader.read_int_array,
-                     self.reader.read_long_array,
-                     self.reader.read_float_array, self.reader.read_double_array, self.reader.read_char_array,
-                     self.reader.read_byte_array, self.reader.read_boolean_array, self.reader.read_portable,
-                     self.reader.read_portable_array]
+        functions = [
+            self.reader.read_byte,
+            self.reader.read_boolean,
+            self.reader.read_char,
+            self.reader.read_short,
+            self.reader.read_int,
+            self.reader.read_long,
+            self.reader.read_float,
+            self.reader.read_double,
+            self.reader.read_utf_array,
+            self.reader.read_short_array,
+            self.reader.read_int_array,
+            self.reader.read_long_array,
+            self.reader.read_float_array,
+            self.reader.read_double_array,
+            self.reader.read_char_array,
+            self.reader.read_byte_array,
+            self.reader.read_boolean_array,
+            self.reader.read_portable,
+            self.reader.read_portable_array,
+        ]
         for read_fnc in functions:
             with self.assertRaises(TypeError):
                 read_fnc("9")
@@ -157,10 +196,20 @@ class MorphingPortableTestCase(unittest.TestCase):
             self.reader.read_utf("1")
 
     def test_missing_fields(self):
-        functions = [self.reader.read_utf, self.reader.read_utf_array, self.reader.read_short_array, self.reader.read_int_array,
-                     self.reader.read_long_array, self.reader.read_float_array, self.reader.read_double_array,
-                     self.reader.read_char_array, self.reader.read_byte_array, self.reader.read_boolean_array,
-                     self.reader.read_portable, self.reader.read_portable_array]
+        functions = [
+            self.reader.read_utf,
+            self.reader.read_utf_array,
+            self.reader.read_short_array,
+            self.reader.read_int_array,
+            self.reader.read_long_array,
+            self.reader.read_float_array,
+            self.reader.read_double_array,
+            self.reader.read_char_array,
+            self.reader.read_byte_array,
+            self.reader.read_boolean_array,
+            self.reader.read_portable,
+            self.reader.read_portable_array,
+        ]
         for read_fnc in functions:
             self.assertIsNone(read_fnc("NO SUCH FIELD"))
 
@@ -172,8 +221,28 @@ class MorphingPortableTestCase(unittest.TestCase):
         self.assertFalse(self.reader.has_field("NO SUCH FIELD"))
 
     def test_reader_get_field_names(self):
-        expected_names = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "a1", "a2", "a3", "a4", "a5", "a6", "a7", "a8", "a9", "p",
-                          "ap"}
+        expected_names = {
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "a1",
+            "a2",
+            "a3",
+            "a4",
+            "a5",
+            "a6",
+            "a7",
+            "a8",
+            "a9",
+            "p",
+            "ap",
+        }
         field_names = set(self.reader.get_field_names())
         self.assertSetEqual(expected_names, field_names)
 
@@ -182,4 +251,3 @@ class MorphingPortableTestCase(unittest.TestCase):
 
     def test_reader_get_field_class_id(self):
         self.assertEqual(0, self.reader.get_field_class_id("1"))
-

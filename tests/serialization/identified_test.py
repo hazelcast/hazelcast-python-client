@@ -10,9 +10,27 @@ FACTORY_ID = 1
 class SerializationV1Identified(IdentifiedDataSerializable):
     CLASS_ID = 1
 
-    def __init__(self, a_byte=None, a_boolean=None, a_character=None, a_short=None, a_integer=None, a_long=None, a_float=None,
-                 a_double=None, bytes_=None, booleans=None, chars=None, shorts=None, ints=None, longs=None,
-                 floats=None, doubles=None, a_string=None, strings=None):
+    def __init__(
+        self,
+        a_byte=None,
+        a_boolean=None,
+        a_character=None,
+        a_short=None,
+        a_integer=None,
+        a_long=None,
+        a_float=None,
+        a_double=None,
+        bytes_=None,
+        booleans=None,
+        chars=None,
+        shorts=None,
+        ints=None,
+        longs=None,
+        floats=None,
+        doubles=None,
+        a_string=None,
+        strings=None,
+    ):
         self.a_byte = a_byte
         self.a_boolean = a_boolean
         self.a_character = a_character
@@ -99,27 +117,58 @@ class SerializationV1Identified(IdentifiedDataSerializable):
         doubles = self.doubles == other.doubles
         string = self.a_string == other.a_string
         strings = self.strings == other.strings
-        return byte and boolean and char and short and integer and long and float and double and \
-               bytes_ and booleans and chars and shorts and integers and longs and floats and doubles and string and strings
+        return (
+            byte
+            and boolean
+            and char
+            and short
+            and integer
+            and long
+            and float
+            and double
+            and bytes_
+            and booleans
+            and chars
+            and shorts
+            and integers
+            and longs
+            and floats
+            and doubles
+            and string
+            and strings
+        )
 
 
 def create_identified():
-    return SerializationV1Identified(99, True, 'c', 11, 1234134, 1341431221, 1.0, 2.0, bytearray([1, 2, 3]),
-                                     [True, False, True], ['a', 'b', 'c'], [1, 2, 3], [4, 2, 3], [11, 2, 3],
-                                     [1.0, 2.0, 3.0], [11.0, 22.0, 33.0], "the string text",
-                                     ["item1", "item2", "item3"])
+    return SerializationV1Identified(
+        99,
+        True,
+        "c",
+        11,
+        1234134,
+        1341431221,
+        1.0,
+        2.0,
+        bytearray([1, 2, 3]),
+        [True, False, True],
+        ["a", "b", "c"],
+        [1, 2, 3],
+        [4, 2, 3],
+        [11, 2, 3],
+        [1.0, 2.0, 3.0],
+        [11.0, 22.0, 33.0],
+        "the string text",
+        ["item1", "item2", "item3"],
+    )
 
 
 the_factory = {SerializationV1Identified.CLASS_ID: SerializationV1Identified}
 
 
 class IdentifiedSerializationTestCase(unittest.TestCase):
-
     def test_encode_decode(self):
         config = _Config()
-        config.data_serializable_factories = {
-            FACTORY_ID: the_factory
-        }
+        config.data_serializable_factories = {FACTORY_ID: the_factory}
         service = SerializationServiceV1(config)
         obj = create_identified()
         data = service.to_data(obj)

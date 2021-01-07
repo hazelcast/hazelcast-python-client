@@ -18,7 +18,9 @@ class AddressHelperTest(unittest.TestCase):
         self._validate_without_port(self.v4_address, self.v4_address)
 
     def test_v6_address_with_port(self):
-        self._validate_with_port("[" + self.v6_address + "]:" + str(self.port), self.v6_address, self.port)
+        self._validate_with_port(
+            "[" + self.v6_address + "]:" + str(self.port), self.v6_address, self.port
+        )
 
     def test_v6_address_without_port(self):
         self._validate_without_port(self.v6_address, self.v6_address)

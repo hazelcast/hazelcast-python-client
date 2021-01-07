@@ -7,6 +7,7 @@ from tests.util import random_string
 
 class _AppendTask(IdentifiedDataSerializable):
     """Client side version of com.hazelcast.client.test.executor.tasks.AppendCallable"""
+
     def __init__(self, message):
         self.message = message
 
@@ -56,7 +57,7 @@ class ExecutorTest(SingleMemberTestCase):
         member = self.client.cluster_service.get_members()[0]
         result = self.executor.execute_on_member(member, self.task)
         self.assertEqual(self.message + _APPENDAGE, result)
-        
+
     def test_execute_on_members(self):
         members = self.client.cluster_service.get_members()
         result = self.executor.execute_on_members(members, self.task)
