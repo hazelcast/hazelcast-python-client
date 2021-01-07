@@ -15,11 +15,11 @@ exclude = '''
       | dist
 
       | benchmarks
-      | hazelcast/protocol
+      | hazelcast/protocol/codec
       | hazelcast/proxy
       | hazelcast/serialization
       | tests
     )/
-  | /hazelcast/(?!(__init__)\.py).+
+  | /hazelcast/(?!(__init__))\w+\.py
 )
 '''

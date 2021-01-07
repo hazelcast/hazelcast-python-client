@@ -11,9 +11,13 @@ class ErrorHolder(object):
         self.stack_trace_elements = stack_trace_elements
 
     def __eq__(self, other):
-        return isinstance(other, ErrorHolder) and self.error_code == other.error_code \
-               and self.class_name == other.class_name and self.message == other.message \
-               and self.stack_trace_elements == other.stack_trace_elements
+        return (
+            isinstance(other, ErrorHolder)
+            and self.error_code == other.error_code
+            and self.class_name == other.class_name
+            and self.message == other.message
+            and self.stack_trace_elements == other.stack_trace_elements
+        )
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -29,9 +33,13 @@ class StackTraceElement(object):
         self.line_number = line_number
 
     def __eq__(self, other):
-        return isinstance(other, StackTraceElement) and self.class_name == other.class_name \
-               and self.method_name == other.method_name and self.file_name == other.file_name \
-               and self.line_number == other.line_number
+        return (
+            isinstance(other, StackTraceElement)
+            and self.class_name == other.class_name
+            and self.method_name == other.method_name
+            and self.file_name == other.file_name
+            and self.line_number == other.line_number
+        )
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -53,10 +61,12 @@ class RaftGroupId(object):
         self.id = group_id
 
     def __eq__(self, other):
-        return isinstance(other, RaftGroupId) \
-               and self.name == other.name \
-               and self.seed == other.seed \
-               and self.id == other.id
+        return (
+            isinstance(other, RaftGroupId)
+            and self.name == other.name
+            and self.seed == other.seed
+            and self.id == other.id
+        )
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -90,11 +100,25 @@ class AnchorDataListHolder(object):
 
 class PagingPredicateHolder(object):
     __slots__ = (
-        "anchor_data_list_holder", "predicate_data", "comparator_data", "page_size", "page", "iteration_type_id",
-        "partition_key_data")
+        "anchor_data_list_holder",
+        "predicate_data",
+        "comparator_data",
+        "page_size",
+        "page",
+        "iteration_type_id",
+        "partition_key_data",
+    )
 
-    def __init__(self, anchor_data_list_holder, predicate_data, comparator_data, page_size, page, iteration_type_id,
-                 partition_key_data):
+    def __init__(
+        self,
+        anchor_data_list_holder,
+        predicate_data,
+        comparator_data,
+        page_size,
+        page,
+        iteration_type_id,
+        partition_key_data,
+    ):
         self.anchor_data_list_holder = anchor_data_list_holder
         self.predicate_data = predicate_data
         self.comparator_data = comparator_data
@@ -120,5 +144,12 @@ class PagingPredicateHolder(object):
         comparator_data = to_data(predicate.comparator)
         iteration_type = predicate.iteration_type
 
-        return PagingPredicateHolder(anchor_data_list_holder, predicate_data, comparator_data, predicate.page_size,
-                                     predicate.page, iteration_type, None)
+        return PagingPredicateHolder(
+            anchor_data_list_holder,
+            predicate_data,
+            comparator_data,
+            predicate.page_size,
+            predicate.page,
+            iteration_type,
+            None,
+        )

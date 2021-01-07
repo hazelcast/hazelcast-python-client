@@ -92,8 +92,11 @@ class OutboundMessage(object):
     def __repr__(self):
         message_type = LE_INT.unpack_from(self.buf, _OUTBOUND_MESSAGE_MESSAGE_TYPE_OFFSET)[0]
         correlation_id = self.get_correlation_id()
-        return "OutboundMessage(message_type=%s, correlation_id=%s, retryable=%s)" \
-               % (message_type, correlation_id, self.retryable)
+        return "OutboundMessage(message_type=%s, correlation_id=%s, retryable=%s)" % (
+            message_type,
+            correlation_id,
+            self.retryable,
+        )
 
 
 class Frame(object):
@@ -213,7 +216,9 @@ LE_UINT16.pack_into(END_FRAME_BUF, INT_SIZE_IN_BYTES, _END_DATA_STRUCTURE_FLAG)
 # Has END_DATA_STRUCTURE and IS_FINAL flags
 END_FINAL_FRAME_BUF = bytearray(SIZE_OF_FRAME_LENGTH_AND_FLAGS)
 LE_INT.pack_into(END_FINAL_FRAME_BUF, 0, SIZE_OF_FRAME_LENGTH_AND_FLAGS)
-LE_UINT16.pack_into(END_FINAL_FRAME_BUF, INT_SIZE_IN_BYTES, _END_DATA_STRUCTURE_FLAG | _IS_FINAL_FLAG)
+LE_UINT16.pack_into(
+    END_FINAL_FRAME_BUF, INT_SIZE_IN_BYTES, _END_DATA_STRUCTURE_FLAG | _IS_FINAL_FLAG
+)
 
 
 class ClientMessageBuilder(object):
