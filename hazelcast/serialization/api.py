@@ -236,7 +236,7 @@ class ObjectDataInput(object):
 
     def read_boolean(self):
         """Reads 1 byte from input stream and convert it to a bool value.
-        
+
         Returns:
             bool: The bool value read.
         """
@@ -252,7 +252,7 @@ class ObjectDataInput(object):
 
     def read_unsigned_byte(self):
         """Reads 1 byte from input stream, zero-extends it and returns.
-        
+
         Returns:
             int: The unsigned byte value read.
         """
@@ -260,7 +260,7 @@ class ObjectDataInput(object):
 
     def read_short(self):
         """Reads 2 bytes from input stream and returns a short value.
-        
+
         Returns:
             int: The short value read.
         """
@@ -268,7 +268,7 @@ class ObjectDataInput(object):
 
     def read_unsigned_short(self):
         """Reads 2 bytes from input stream and returns an int value.
-        
+
         Returns:
             int: The unsigned short value read.
         """
@@ -284,7 +284,7 @@ class ObjectDataInput(object):
 
     def read_int(self):
         """Reads 4 bytes from input stream and returns an int value.
-        
+
         Returns:
             int: The int value read.
         """
@@ -292,7 +292,7 @@ class ObjectDataInput(object):
 
     def read_long(self):
         """Reads 8 bytes from input stream and returns a long value.
-        
+
         Returns:
             int: The int value read.
         """
@@ -300,7 +300,7 @@ class ObjectDataInput(object):
 
     def read_float(self):
         """Reads 4 bytes from input stream and returns a float value.
-        
+
         Returns:
             float: The float value read.
         """
@@ -308,7 +308,7 @@ class ObjectDataInput(object):
 
     def read_double(self):
         """Reads 8 bytes from input stream and returns a double value.
-        
+
         Returns:
             float: The double value read.
         """
@@ -316,7 +316,7 @@ class ObjectDataInput(object):
 
     def read_utf(self):
         """Reads a UTF-8 string from input stream and returns it.
-        
+
         Returns:
             str: The UTF-8 string read.
         """
@@ -324,7 +324,7 @@ class ObjectDataInput(object):
 
     def read_byte_array(self):
         """Reads a byte array from input stream and returns it.
-        
+
         Returns:
             bytearray: The byte array read.
         """
@@ -332,7 +332,7 @@ class ObjectDataInput(object):
 
     def read_boolean_array(self):
         """Reads a bool array from input stream and returns it.
-        
+
         Returns:
             list[bool]: The bool array read.
         """
@@ -340,7 +340,7 @@ class ObjectDataInput(object):
 
     def read_char_array(self):
         """Reads a char array from input stream and returns it.
-        
+
         Returns:
             list[str]: The char array read.
         """
@@ -348,7 +348,7 @@ class ObjectDataInput(object):
 
     def read_int_array(self):
         """Reads a int array from input stream and returns it.
-        
+
         Returns:
             list[int]: The int array read.
         """
@@ -356,7 +356,7 @@ class ObjectDataInput(object):
 
     def read_long_array(self):
         """Reads a long array from input stream and returns it.
-        
+
         Returns:
             list[int]: The long array read.
         """
@@ -364,7 +364,7 @@ class ObjectDataInput(object):
 
     def read_double_array(self):
         """Reads a double array from input stream and returns it.
-        
+
         Returns:
             list[float]: The double array read.
         """
@@ -372,7 +372,7 @@ class ObjectDataInput(object):
 
     def read_float_array(self):
         """Reads a float array from input stream and returns it.
-        
+
         Returns:
             list[float]: The float array read.
         """
@@ -380,7 +380,7 @@ class ObjectDataInput(object):
 
     def read_short_array(self):
         """Reads a short array from input stream and returns it.
-        
+
         Returns:
             list[int]: The short array read.
         """
@@ -388,7 +388,7 @@ class ObjectDataInput(object):
 
     def read_utf_array(self):
         """Reads a UTF-8 string array from input stream and returns it.
-        
+
         Returns:
             list[str]: The UTF-8 string array read.
         """
@@ -396,7 +396,7 @@ class ObjectDataInput(object):
 
     def read_object(self):
         """Reads a object from input stream and returns it.
-        
+
         Returns:
             The object read.
         """
@@ -412,7 +412,7 @@ class ObjectDataInput(object):
 
     def position(self):
         """Returns current position in buffer.
-        
+
         Returns:
             int: Current position in buffer.
         """
@@ -420,7 +420,7 @@ class ObjectDataInput(object):
 
     def size(self):
         """Returns size of buffer.
-        
+
         Returns:
             int: size of buffer.
         """
@@ -440,7 +440,9 @@ class IdentifiedDataSerializable(object):
         Args:
             object_data_output (hazelcast.serialization.api.ObjectDataOutput): The output.
         """
-        raise NotImplementedError("read_data must be implemented to serialize this IdentifiedDataSerializable")
+        raise NotImplementedError(
+            "read_data must be implemented to serialize this IdentifiedDataSerializable"
+        )
 
     def read_data(self, object_data_input):
         """Reads fields from the input stream.
@@ -448,23 +450,29 @@ class IdentifiedDataSerializable(object):
         Args:
             object_data_input (hazelcast.serialization.api.ObjectDataInput): The input.
         """
-        raise NotImplementedError("read_data must be implemented to deserialize this IdentifiedDataSerializable")
+        raise NotImplementedError(
+            "read_data must be implemented to deserialize this IdentifiedDataSerializable"
+        )
 
     def get_factory_id(self):
         """Returns DataSerializableFactory factory id for this class.
-        
+
         Returns:
             int: The factory id.
         """
-        raise NotImplementedError("This method must return the factory ID for this IdentifiedDataSerializable")
+        raise NotImplementedError(
+            "This method must return the factory ID for this IdentifiedDataSerializable"
+        )
 
     def get_class_id(self):
         """Returns type identifier for this class. Id should be unique per DataSerializableFactory.
-        
+
         Returns:
             int: The type id.
         """
-        raise NotImplementedError("This method must return the class ID for this IdentifiedDataSerializable")
+        raise NotImplementedError(
+            "This method must return the class ID for this IdentifiedDataSerializable"
+        )
 
 
 class Portable(object):
@@ -496,7 +504,7 @@ class Portable(object):
 
     def get_factory_id(self):
         """Returns PortableFactory id for this portable class
-        
+
         Returns:
             int: The factory id.
         """
@@ -504,7 +512,7 @@ class Portable(object):
 
     def get_class_id(self):
         """Returns class identifier for this portable class. Class id should be unique per PortableFactory.
-        
+
         Returns:
             int: The class id.
         """
@@ -557,7 +565,7 @@ class PortableReader(object):
 
     def get_version(self):
         """Returns the global version of portable classes.
-        
+
         Returns:
             int: Global version of portable classes.
         """
@@ -576,7 +584,7 @@ class PortableReader(object):
 
     def get_field_names(self):
         """Returns the set of field names on this portable class.
-        
+
         Returns:
             set: Set of field names on this portable class.
         """
@@ -827,7 +835,7 @@ class PortableReader(object):
     def get_raw_data_input(self):
         """After reading portable fields, one can read remaining fields in old fashioned way
         consecutively from the end of stream. After get_raw_data_input() called, no data can be read.
-        
+
         Returns:
             hazelcast.serialization.api.ObjectDataInput: The input.
         """
@@ -1032,9 +1040,8 @@ class PortableWriter(object):
     def get_raw_data_output(self):
         """After writing portable fields, one can write remaining fields in old fashioned way
         consecutively at the end of stream. After get_raw_data_output() called, no data can be written.
-        
+
         Returns:
             hazelcast.serialization.api.ObjectDataOutput: The output.
         """
         raise NotImplementedError()
-

@@ -35,20 +35,27 @@ class FieldDefinition(object):
         self.class_id = class_id
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) \
-               and (self.index, self.field_name, self.field_type, self.version, self.factory_id, self.class_id) == \
-               (other.index, other.field_name, other.field_type, other.version, other.factory_id, other.class_id)
+        return (
+            isinstance(other, FieldDefinition)
+            and self.index == other.index
+            and self.field_name == other.field_name
+            and self.version == other.version
+            and self.factory_id == other.factory_id
+            and self.class_id == other.class_id
+        )
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __repr__(self):
-        return "FieldDefinition(ix=%s, name=%s, type=%s, version=%s, fid=%s, cid=%s)" % (self.index,
-                                                                                         self.field_name,
-                                                                                         self.field_type,
-                                                                                         self.version,
-                                                                                         self.factory_id,
-                                                                                         self.class_id)
+        return "FieldDefinition(ix=%s, name=%s, type=%s, version=%s, fid=%s, cid=%s)" % (
+            self.index,
+            self.field_name,
+            self.field_type,
+            self.version,
+            self.factory_id,
+            self.class_id,
+        )
 
 
 class ClassDefinition(object):
@@ -99,14 +106,24 @@ class ClassDefinition(object):
             self.version = version
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and (self.factory_id, self.class_id, self.version, self.field_defs) == \
-               (other.factory_id, other.class_id, other.version, other.field_defs)
+        return (
+            isinstance(other, ClassDefinition)
+            and self.factory_id == other.factory_id
+            and self.class_id == other.class_id
+            and self.version == other.version
+            and self.field_defs == other.field_defs
+        )
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __repr__(self):
-        return "fid:%s, cid:%s, v:%s, fields:%s" % (self.factory_id, self.class_id, self.version, self.field_defs)
+        return "fid:%s, cid:%s, v:%s, fields:%s" % (
+            self.factory_id,
+            self.class_id,
+            self.version,
+            self.field_defs,
+        )
 
     def __hash__(self):
         return hash((self.factory_id, self.class_id, self.version))
@@ -125,8 +142,13 @@ class ClassDefinitionBuilder(object):
     def add_portable_field(self, field_name, class_def):
         if class_def.class_id is None or class_def.class_id == 0:
             raise ValueError("Portable class id cannot be zero!")
-        self._add_field_by_type(field_name, FieldType.PORTABLE, class_def.version,
-                                class_def.factory_id, class_def.class_id)
+        self._add_field_by_type(
+            field_name,
+            FieldType.PORTABLE,
+            class_def.version,
+            class_def.factory_id,
+            class_def.class_id,
+        )
         return self
 
     def add_byte_field(self, field_name):
@@ -168,8 +190,13 @@ class ClassDefinitionBuilder(object):
     def add_portable_array_field(self, field_name, class_def):
         if class_def.class_id is None or class_def.class_id == 0:
             raise ValueError("Portable class id cannot be zero!")
-        self._add_field_by_type(field_name, FieldType.PORTABLE_ARRAY, class_def.version,
-                                class_def.factory_id, class_def.class_id)
+        self._add_field_by_type(
+            field_name,
+            FieldType.PORTABLE_ARRAY,
+            class_def.version,
+            class_def.factory_id,
+            class_def.class_id,
+        )
         return self
 
     def add_byte_array_field(self, field_name):
@@ -231,4 +258,6 @@ class ClassDefinitionBuilder(object):
 
     def _check(self):
         if self._done:
-            raise HazelcastSerializationError("ClassDefinition is already built for %s" % self.class_id)
+            raise HazelcastSerializationError(
+                "ClassDefinition is already built for %s" % self.class_id
+            )

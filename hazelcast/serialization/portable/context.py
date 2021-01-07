@@ -3,7 +3,12 @@ import threading
 from hazelcast import util
 from hazelcast.errors import HazelcastSerializationError
 from hazelcast.serialization import bits
-from hazelcast.serialization.portable.classdef import ClassDefinition, ClassDefinitionBuilder, FieldType, FieldDefinition
+from hazelcast.serialization.portable.classdef import (
+    ClassDefinition,
+    ClassDefinitionBuilder,
+    FieldType,
+    FieldDefinition,
+)
 from hazelcast.serialization.portable.writer import ClassDefinitionWriter
 from hazelcast.six.moves import range
 
@@ -56,7 +61,9 @@ class PortableContext(object):
                 # TODO: what there's a null inner Portable field
                 if register:
                     field_version = data_in.read_int()
-                    self.read_class_definition(data_in, field_factory_id, field_class_id, field_version)
+                    self.read_class_definition(
+                        data_in, field_factory_id, field_class_id, field_version
+                    )
             elif field_type == FieldType.PORTABLE_ARRAY:
                 k = data_in.read_int()
                 field_factory_id = data_in.read_int()
@@ -67,11 +74,21 @@ class PortableContext(object):
                     p = data_in.read_int()
                     data_in.set_position(p)
                     field_version = data_in.read_int()
-                    self.read_class_definition(data_in, field_factory_id, field_class_id, field_version)
+                    self.read_class_definition(
+                        data_in, field_factory_id, field_class_id, field_version
+                    )
                 else:
                     register = False
-            builder.add_field_def(FieldDefinition(i, field_name.decode('ascii'), field_type, field_version,
-                                                  field_factory_id, field_class_id))
+            builder.add_field_def(
+                FieldDefinition(
+                    i,
+                    field_name.decode("ascii"),
+                    field_type,
+                    field_version,
+                    field_factory_id,
+                    field_class_id,
+                )
+            )
         class_def = builder.build()
         if register:
             class_def = self.register_class_definition(class_def)
@@ -126,7 +143,9 @@ class ClassDefinitionContext(object):
             if class_def is None:
                 return None
             if class_def.factory_id != self._factory_id:
-                raise HazelcastSerializationError("Invalid factory-id! %s -> %s" % (self._factory_id, class_def))
+                raise HazelcastSerializationError(
+                    "Invalid factory-id! %s -> %s" % (self._factory_id, class_def)
+                )
             if isinstance(class_def, ClassDefinition):
                 class_def.set_version_if_not_set(self._portable_version)
             combined_key = (class_def.class_id, class_def.version)
@@ -136,8 +155,10 @@ class ClassDefinitionContext(object):
             current_class_def = self._versioned_definitions[combined_key]
             if isinstance(current_class_def, ClassDefinition):
                 if current_class_def != class_def:
-                    raise HazelcastSerializationError("Incompatible class-definitions with same class-id: %s vs %s"
-                                                      % (class_def, current_class_def))
+                    raise HazelcastSerializationError(
+                        "Incompatible class-definitions with same class-id: %s vs %s"
+                        % (class_def, current_class_def)
+                    )
                 return current_class_def
             self._versioned_definitions[combined_key] = class_def
             return class_def

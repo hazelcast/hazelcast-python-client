@@ -16,7 +16,6 @@ exclude = '''
 
       | benchmarks
       | hazelcast/protocol/codec
-      | hazelcast/serialization
       | tests
     )/
   | /hazelcast/(?!(__init__))\w+\.py

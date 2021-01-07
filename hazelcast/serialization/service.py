@@ -17,16 +17,27 @@ def default_partition_strategy(key):
 
 
 class SerializationServiceV1(BaseSerializationService):
-
-    def __init__(self, config, version=1,
-                 global_partition_strategy=default_partition_strategy,
-                 output_buffer_size=DEFAULT_OUT_BUFFER_SIZE):
-        super(SerializationServiceV1, self).__init__(version, global_partition_strategy, output_buffer_size,
-                                                     config.is_big_endian,
-                                                     config.default_int_type)
+    def __init__(
+        self,
+        config,
+        version=1,
+        global_partition_strategy=default_partition_strategy,
+        output_buffer_size=DEFAULT_OUT_BUFFER_SIZE,
+    ):
+        super(SerializationServiceV1, self).__init__(
+            version,
+            global_partition_strategy,
+            output_buffer_size,
+            config.is_big_endian,
+            config.default_int_type,
+        )
         self._portable_context = PortableContext(self, config.portable_version)
-        self.register_class_definitions(config.class_definitions, config.check_class_definition_errors)
-        self._registry._portable_serializer = PortableSerializer(self._portable_context, config.portable_factories)
+        self.register_class_definitions(
+            config.class_definitions, config.check_class_definition_errors
+        )
+        self._registry._portable_serializer = PortableSerializer(
+            self._portable_context, config.portable_factories
+        )
 
         # merge configured factories with built in ones
         factories = {}
@@ -73,7 +84,9 @@ class SerializationServiceV1(BaseSerializationService):
         self._registry.register_constant_serializer(JavaClassSerializer())
         self._registry.register_constant_serializer(ArrayListSerializer(), list)
         self._registry.register_constant_serializer(LinkedListSerializer())
-        self._registry.register_constant_serializer(HazelcastJsonValueSerializer(), HazelcastJsonValue)
+        self._registry.register_constant_serializer(
+            HazelcastJsonValueSerializer(), HazelcastJsonValue
+        )
 
         self._registry.safe_register_serializer(self._registry._python_serializer)
 
@@ -88,7 +101,9 @@ class SerializationServiceV1(BaseSerializationService):
 
             class_id = cd.class_id
             if class_id in class_defs:
-                raise HazelcastSerializationError("Duplicate registration found for class-id: %s" % class_id)
+                raise HazelcastSerializationError(
+                    "Duplicate registration found for class-id: %s" % class_id
+                )
             class_defs[class_id] = cd
 
         for cd in class_definitions:
@@ -112,6 +127,7 @@ class SerializationServiceV1(BaseSerializationService):
                 if check_error:
                     raise HazelcastSerializationError(
                         "Could not find registered ClassDefinition for factory-id: %s, class-id: %s"
-                        % (factory_id, class_id))
+                        % (factory_id, class_id)
+                    )
 
         self._portable_context.register_class_definition(class_definition)

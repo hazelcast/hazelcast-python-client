@@ -45,7 +45,9 @@ class PortableSerializer(StreamSerializer):
     def find_portable_version(self, factory_id, class_id, portable):
         current_version = self._portable_context.get_class_version(factory_id, class_id)
         if current_version < 0:
-            current_version = util.get_portable_version(portable, self._portable_context.portable_version)
+            current_version = util.get_portable_version(
+                portable, self._portable_context.portable_version
+            )
         if current_version > 0:
             self._portable_context.set_class_version(factory_id, class_id, current_version)
         return current_version
@@ -54,11 +56,15 @@ class PortableSerializer(StreamSerializer):
         try:
             portable_factory = self._portable_factories[factory_id]
         except KeyError:
-            raise HazelcastSerializationError("Could not find portable_factory for factory-id: %s" % factory_id)
+            raise HazelcastSerializationError(
+                "Could not find portable_factory for factory-id: %s" % factory_id
+            )
 
         portable = portable_factory[class_id]
         if portable is None:
-            raise HazelcastSerializationError("Could not create Portable for class-id: %s" % class_id)
+            raise HazelcastSerializationError(
+                "Could not create Portable for class-id: %s" % class_id
+            )
         return portable()
 
     def create_reader(self, inp, factory_id, class_id, version, portable_version):
@@ -69,7 +75,9 @@ class PortableSerializer(StreamSerializer):
         cd = self._portable_context.lookup_class_definition(factory_id, class_id, effective_version)
         if cd is None:
             begin = inp.position()
-            cd = self._portable_context.read_class_definition(inp, factory_id, class_id, effective_version)
+            cd = self._portable_context.read_class_definition(
+                inp, factory_id, class_id, effective_version
+            )
             inp.set_position(begin)
 
         if portable_version == effective_version:

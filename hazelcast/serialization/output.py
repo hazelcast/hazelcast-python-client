@@ -31,7 +31,7 @@ class _ObjectDataOutput(ObjectDataOutput):
         elif length == 0:
             return
         self._ensure_available(_len)
-        self._buffer[self._pos: self._pos + _len] = buff
+        self._buffer[self._pos : self._pos + _len] = buff
         self._pos += _len
 
     def write_boolean(self, boolean):
@@ -131,7 +131,7 @@ class _ObjectDataOutput(ObjectDataOutput):
         self._service.write_object(self, val)
 
     def to_byte_array(self):
-        return self._buffer[:self._pos]
+        return self._buffer[: self._pos]
 
     def get_byte_order(self):
         if self._is_big_endian:
@@ -164,7 +164,7 @@ class _ObjectDataOutput(ObjectDataOutput):
             buffer_length = len(self._buffer)
             new_length = max(buffer_length << 1, buffer_length + length)
             new_buffer = bytearray(new_length)
-            new_buffer[:self._pos] = self._buffer[:self._pos]
+            new_buffer[: self._pos] = self._buffer[: self._pos]
             self._buffer = new_buffer
 
     def _available(self):
@@ -172,9 +172,10 @@ class _ObjectDataOutput(ObjectDataOutput):
 
     def __repr__(self):
         from binascii import hexlify
+
         buf = hexlify(self._buffer)
         pos_ = self._pos * 2
-        return buf[:pos_] + "[" + buf[pos_] + "]" + buf[pos_ + 1:]
+        return buf[:pos_] + "[" + buf[pos_] + "]" + buf[pos_ + 1 :]
 
 
 class EmptyObjectDataOutput(ObjectDataOutput):
