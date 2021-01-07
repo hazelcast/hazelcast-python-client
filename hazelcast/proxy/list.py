@@ -1,33 +1,35 @@
-from hazelcast.protocol.codec import list_add_all_codec, \
-    list_add_all_with_index_codec, \
-    list_add_codec, \
-    list_add_listener_codec, \
-    list_add_with_index_codec, \
-    list_clear_codec, \
-    list_compare_and_remove_all_codec, \
-    list_compare_and_retain_all_codec, \
-    list_contains_all_codec, \
-    list_contains_codec, \
-    list_get_all_codec, \
-    list_get_codec, \
-    list_index_of_codec, \
-    list_is_empty_codec, \
-    list_iterator_codec, \
-    list_last_index_of_codec, \
-    list_list_iterator_codec, \
-    list_remove_codec, \
-    list_remove_listener_codec, \
-    list_remove_with_index_codec, \
-    list_set_codec, \
-    list_size_codec, \
-    list_sub_codec
+from hazelcast.protocol.codec import (
+    list_add_all_codec,
+    list_add_all_with_index_codec,
+    list_add_codec,
+    list_add_listener_codec,
+    list_add_with_index_codec,
+    list_clear_codec,
+    list_compare_and_remove_all_codec,
+    list_compare_and_retain_all_codec,
+    list_contains_all_codec,
+    list_contains_codec,
+    list_get_all_codec,
+    list_get_codec,
+    list_index_of_codec,
+    list_is_empty_codec,
+    list_iterator_codec,
+    list_last_index_of_codec,
+    list_list_iterator_codec,
+    list_remove_codec,
+    list_remove_listener_codec,
+    list_remove_with_index_codec,
+    list_set_codec,
+    list_size_codec,
+    list_sub_codec,
+)
 from hazelcast.proxy.base import PartitionSpecificProxy, ItemEvent, ItemEventType
 from hazelcast.util import check_not_none, ImmutableLazyDataList
 
 
 class List(PartitionSpecificProxy):
     """Concurrent, distributed implementation of List.
-    
+
     The Hazelcast List is not a partitioned data-structure. So all the content of the List is stored in a single
     machine (and in the backup). So the List will not scale by adding more members in the cluster.
     """
@@ -130,15 +132,18 @@ class List(PartitionSpecificProxy):
                 if item_removed_func:
                     item_removed_func(item_event)
 
-        return self._register_listener(request, lambda r: list_add_listener_codec.decode_response(r),
-                                       lambda reg_id: list_remove_listener_codec.encode_request(self.name, reg_id),
-                                       lambda m: list_add_listener_codec.handle(m, handle_event_item))
+        return self._register_listener(
+            request,
+            lambda r: list_add_listener_codec.decode_response(r),
+            lambda reg_id: list_remove_listener_codec.encode_request(self.name, reg_id),
+            lambda m: list_add_listener_codec.handle(m, handle_event_item),
+        )
 
     def clear(self):
-        """Clears the list. 
-        
+        """Clears the list.
+
         List will be empty with this call.
-        
+
         Returns:
             hazelcast.future.Future[None]:
         """
@@ -188,6 +193,7 @@ class List(PartitionSpecificProxy):
         Returns:
             hazelcast.future.Future[any]: the item in the specified position in this list.
         """
+
         def handler(message):
             return self._to_object(list_get_codec.decode_response(message))
 
@@ -200,8 +206,11 @@ class List(PartitionSpecificProxy):
         Returns:
             hazelcast.future.Future[list]: All of the items in this list.
         """
+
         def handler(message):
-            return ImmutableLazyDataList(list_get_all_codec.decode_response(message), self._to_object)
+            return ImmutableLazyDataList(
+                list_get_all_codec.decode_response(message), self._to_object
+            )
 
         request = list_get_all_codec.encode_request(self.name)
         return self._invoke(request, handler)
@@ -212,15 +221,18 @@ class List(PartitionSpecificProxy):
         Returns:
             hazelcast.future.Future[list]: All of the items in this list.
         """
+
         def handler(message):
-            return ImmutableLazyDataList(list_iterator_codec.decode_response(message), self._to_object)
+            return ImmutableLazyDataList(
+                list_iterator_codec.decode_response(message), self._to_object
+            )
 
         request = list_iterator_codec.encode_request(self.name)
         return self._invoke(request, handler)
 
     def index_of(self, item):
-        """Returns the first index of specified items's occurrences in this list. 
-        
+        """Returns the first index of specified items's occurrences in this list.
+
         If specified item is not present in this list, returns -1.
 
         Args:
@@ -265,8 +277,8 @@ class List(PartitionSpecificProxy):
         return self._invoke(request, list_last_index_of_codec.decode_response)
 
     def list_iterator(self, index=0):
-        """Returns a list iterator of the elements in this list. 
-        
+        """Returns a list iterator of the elements in this list.
+
         If an index is provided, iterator starts from this index.
 
         Args:
@@ -275,8 +287,11 @@ class List(PartitionSpecificProxy):
         Returns:
             hazelcast.future.Future[list]: List of the elements in this list.
         """
+
         def handler(message):
-            return ImmutableLazyDataList(list_list_iterator_codec.decode_response(message), self._to_object)
+            return ImmutableLazyDataList(
+                list_list_iterator_codec.decode_response(message), self._to_object
+            )
 
         request = list_list_iterator_codec.encode_request(self.name, index)
         return self._invoke(request, handler)
@@ -299,7 +314,7 @@ class List(PartitionSpecificProxy):
 
     def remove_at(self, index):
         """Removes the item at the specified position in this list.
-        
+
         Element in this position and following elements are shifted to the left, if any.
 
         Args:
@@ -308,6 +323,7 @@ class List(PartitionSpecificProxy):
         Returns:
             hazelcast.future.Future[any]: The item previously at the specified index.
         """
+
         def handler(message):
             return self._to_object(list_remove_with_index_codec.decode_response(message))
 
@@ -333,8 +349,8 @@ class List(PartitionSpecificProxy):
         return self._invoke(request, list_compare_and_remove_all_codec.decode_response)
 
     def remove_listener(self, registration_id):
-        """Removes the specified item listener. 
-        
+        """Removes the specified item listener.
+
         Returns silently if the specified listener was not added before.
 
         Args:
@@ -346,8 +362,8 @@ class List(PartitionSpecificProxy):
         return self._deregister_listener(registration_id)
 
     def retain_all(self, items):
-        """Retains only the items that are contained in the specified collection. 
-        
+        """Retains only the items that are contained in the specified collection.
+
         It means, items which are not present in the specified collection are removed from this list.
 
         Args:
@@ -367,7 +383,7 @@ class List(PartitionSpecificProxy):
 
     def size(self):
         """Returns the number of elements in this list.
-        
+
         Returns:
             hazelcast.future.Future[int]: Number of elements in this list.
         """
@@ -382,7 +398,7 @@ class List(PartitionSpecificProxy):
             item: Item to be stored.
 
         Returns:
-            hazelcast.future.Future[any]: the previous item in the specified index. 
+            hazelcast.future.Future[any]: the previous item in the specified index.
         """
         check_not_none(item, "Value can't be None")
         element_data = self._to_data(item)
@@ -395,7 +411,7 @@ class List(PartitionSpecificProxy):
 
     def sub_list(self, from_index, to_index):
         """Returns a sublist from this list, from from_index(inclusive) to to_index(exclusive).
-        
+
         The returned list is backed by this list, so non-structural changes in the returned list are reflected in this
         list, and vice-versa.
 
@@ -406,6 +422,7 @@ class List(PartitionSpecificProxy):
         Returns:
             hazelcast.future.Future[list]: A view of the specified range within this list.
         """
+
         def handler(message):
             return ImmutableLazyDataList(list_sub_codec.decode_response(message), self._to_object)
 

@@ -39,7 +39,7 @@ _proxy_init = {
     SET_SERVICE: Set,
     TOPIC_SERVICE: Topic,
     PN_COUNTER_SERVICE: PNCounter,
-    FLAKE_ID_GENERATOR_SERVICE: FlakeIdGenerator
+    FLAKE_ID_GENERATOR_SERVICE: FlakeIdGenerator,
 }
 
 

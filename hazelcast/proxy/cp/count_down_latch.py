@@ -1,8 +1,13 @@
 import uuid
 
 from hazelcast.errors import OperationTimeoutError
-from hazelcast.protocol.codec import count_down_latch_await_codec, count_down_latch_get_round_codec, \
-    count_down_latch_count_down_codec, count_down_latch_get_count_codec, count_down_latch_try_set_count_codec
+from hazelcast.protocol.codec import (
+    count_down_latch_await_codec,
+    count_down_latch_get_round_codec,
+    count_down_latch_count_down_codec,
+    count_down_latch_get_count_codec,
+    count_down_latch_try_set_count_codec,
+)
 from hazelcast.proxy.cp import BaseCPProxy
 from hazelcast.util import to_millis, check_true, check_is_number, check_is_int
 
@@ -64,7 +69,9 @@ class CountDownLatch(BaseCPProxy):
         timeout = max(0, timeout)
         invocation_uuid = uuid.uuid4()
         codec = count_down_latch_await_codec
-        request = codec.encode_request(self._group_id, self._object_name, invocation_uuid, to_millis(timeout))
+        request = codec.encode_request(
+            self._group_id, self._object_name, invocation_uuid, to_millis(timeout)
+        )
         return self._invoke(request, codec.decode_response)
 
     def count_down(self):
@@ -136,5 +143,7 @@ class CountDownLatch(BaseCPProxy):
 
     def _request_count_down(self, expected_round, invocation_uuid):
         codec = count_down_latch_count_down_codec
-        request = codec.encode_request(self._group_id, self._object_name, invocation_uuid, expected_round)
+        request = codec.encode_request(
+            self._group_id, self._object_name, invocation_uuid, expected_round
+        )
         return self._invoke(request)

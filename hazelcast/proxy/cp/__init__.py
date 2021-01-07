@@ -37,7 +37,9 @@ class BaseCPProxy(object):
 
 class SessionAwareCPProxy(BaseCPProxy):
     def __init__(self, context, group_id, service_name, proxy_name, object_name):
-        super(SessionAwareCPProxy, self).__init__(context, group_id, service_name, proxy_name, object_name)
+        super(SessionAwareCPProxy, self).__init__(
+            context, group_id, service_name, proxy_name, object_name
+        )
         self._session_manager = context.proxy_session_manager
 
     def get_group_id(self):
