@@ -532,7 +532,7 @@ class _Config(object):
         self._retry_max_backoff = 30.0
         self._retry_jitter = 0.0
         self._retry_multiplier = 1.0
-        self._cluster_connect_timeout = 20.0
+        self._cluster_connect_timeout = 120.0
         self._portable_version = 0
         self._data_serializable_factories = {}
         self._portable_factories = {}

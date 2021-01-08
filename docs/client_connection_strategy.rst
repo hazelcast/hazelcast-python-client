@@ -58,7 +58,7 @@ below.
         retry_max_backoff=15,
         retry_multiplier=1.5,
         retry_jitter=0.2,
-        cluster_connect_timeout=20
+        cluster_connect_timeout=120
     )
 
 The following are configuration element descriptions:
@@ -75,7 +75,7 @@ The following are configuration element descriptions:
   default value is ``0``. It must be in range ``0`` to ``1``.
 - ``cluster_connect_timeout``: Timeout value in seconds for the client
   to give up to connect to the current cluster. Its default value is
-  ``20``.
+  ``120``.
 
 A pseudo-code is as follows:
 
