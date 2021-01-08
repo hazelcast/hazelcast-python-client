@@ -261,15 +261,15 @@ class NearCache(dict):
 
 
 class NearCacheManager(object):
-    def __init__(self, client, serialization_service):
-        self._client = client
+    def __init__(self, config, serialization_service):
+        self._config = config
         self._serialization_service = serialization_service
         self._caches = {}
 
     def get_or_create_near_cache(self, name):
         near_cache = self._caches.get(name, None)
         if not near_cache:
-            near_cache_config = self._client.config.near_caches.get(name, None)
+            near_cache_config = self._config.near_caches.get(name, None)
             if not near_cache_config:
                 raise ValueError("Cannot find a near cache configuration with the name '%s'" % name)
 

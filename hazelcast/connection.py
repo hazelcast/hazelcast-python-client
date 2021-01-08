@@ -95,6 +95,7 @@ class ConnectionManager(object):
     def __init__(
         self,
         client,
+        config,
         reactor,
         address_provider,
         lifecycle_service,
@@ -108,6 +109,7 @@ class ConnectionManager(object):
         self.client_uuid = uuid.uuid4()
 
         self._client = client
+        self._config = config
         self._reactor = reactor
         self._address_provider = address_provider
         self._lifecycle_service = lifecycle_service
@@ -115,11 +117,12 @@ class ConnectionManager(object):
         self._cluster_service = cluster_service
         self._invocation_service = invocation_service
         self._near_cache_manager = near_cache_manager
-        config = self._client.config
         self._smart_routing_enabled = config.smart_routing
         self._wait_strategy = self._init_wait_strategy(config)
         self._reconnect_mode = config.reconnect_mode
-        self._heartbeat_manager = _HeartbeatManager(self, self._client, reactor, invocation_service)
+        self._heartbeat_manager = _HeartbeatManager(
+            self, self._client, config, reactor, invocation_service
+        )
         self._connection_listeners = []
         self._connect_all_members_timer = None
         self._async_start = config.async_start
@@ -368,10 +371,10 @@ class ConnectionManager(object):
                 if not self._wait_strategy.sleep():
                     break
         except (ClientNotAllowedInClusterError, InvalidConfigurationError):
-            cluster_name = self._client.config.cluster_name
+            cluster_name = self._config.cluster_name
             _logger.exception("Stopped trying on cluster %s", cluster_name)
 
-        cluster_name = self._client.config.cluster_name
+        cluster_name = self._config.cluster_name
         _logger.info(
             "Unable to connect to any address from the cluster with name: %s. "
             "The following addresses were tried: %s",
@@ -422,7 +425,7 @@ class ConnectionManager(object):
                             self,
                             self._connection_id_generator.get_and_increment(),
                             translated,
-                            self._client.config,
+                            self._config,
                             self._invocation_service.handle_client_message,
                         )
                     except IOError:
@@ -437,7 +440,7 @@ class ConnectionManager(object):
 
     def _authenticate(self, connection):
         client = self._client
-        cluster_name = client.config.cluster_name
+        cluster_name = self._config.cluster_name
         client_name = client.name
         request = client_authentication_codec.encode_request(
             cluster_name,
@@ -585,12 +588,11 @@ class ConnectionManager(object):
 class _HeartbeatManager(object):
     _heartbeat_timer = None
 
-    def __init__(self, connection_manager, client, reactor, invocation_service):
+    def __init__(self, connection_manager, client, config, reactor, invocation_service):
         self._connection_manager = connection_manager
         self._client = client
         self._reactor = reactor
         self._invocation_service = invocation_service
-        config = client.config
         self._heartbeat_timeout = config.heartbeat_timeout
         self._heartbeat_interval = config.heartbeat_interval
 

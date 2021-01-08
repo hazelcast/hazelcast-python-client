@@ -103,7 +103,7 @@ class StatisticsTest(HazelcastTestCase):
         # in different platforms. So, first try to get these statistics and then check the
         # response content
 
-        s = Statistics(client, None, None, None, None)
+        s = Statistics(client, client._config, None, None, None, None)
         psutil_stats = s._get_os_and_runtime_stats()
         for stat_name in psutil_stats:
             self.assertEqual(1, result.count(stat_name))
