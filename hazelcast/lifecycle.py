@@ -84,12 +84,11 @@ class LifecycleService(object):
 
 
 class _InternalLifecycleService(object):
-    def __init__(self, client):
-        self._client = client
+    def __init__(self, config):
         self.running = False
         self._listeners = {}
 
-        lifecycle_listeners = client.config.lifecycle_listeners
+        lifecycle_listeners = config.lifecycle_listeners
         if lifecycle_listeners:
             for listener in lifecycle_listeners:
                 self.add_listener(listener)

@@ -40,11 +40,11 @@ class _EventRegistration(object):
 
 
 class ListenerService(object):
-    def __init__(self, client, connection_manager, invocation_service):
+    def __init__(self, client, config, connection_manager, invocation_service):
         self._client = client
         self._connection_manager = connection_manager
         self._invocation_service = invocation_service
-        self._is_smart = client.config.smart_routing
+        self._is_smart = config.smart_routing
         self._active_registrations = {}  # Dict of user_registration_id, ListenerRegistration
         self._registration_lock = threading.RLock()
         self._event_handlers = {}

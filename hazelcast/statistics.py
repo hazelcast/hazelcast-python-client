@@ -25,13 +25,14 @@ class Statistics(object):
 
     _DEFAULT_PROBE_VALUE = 0
 
-    def __init__(self, client, reactor, connection_manager, invocation_service, near_cache_manager):
+    def __init__(
+        self, client, config, reactor, connection_manager, invocation_service, near_cache_manager
+    ):
         self._client = client
         self._reactor = reactor
         self._connection_manager = connection_manager
         self._invocation_service = invocation_service
         self._near_cache_manager = near_cache_manager
-        config = client.config
         self._enabled = config.statistics_enabled
         self._period = config.statistics_period
         self._statistics_timer = None

@@ -315,25 +315,26 @@ class HazelcastClient(object):
 
     def __init__(self, **kwargs):
         config = _Config.from_dict(kwargs)
-        self.config = config
+        self._config = config
         self._context = _ClientContext()
         client_id = HazelcastClient._CLIENT_ID.get_and_increment()
         self.name = self._create_client_name(client_id)
         self._reactor = AsyncoreReactor()
         self._serialization_service = SerializationServiceV1(config)
-        self._near_cache_manager = NearCacheManager(self, self._serialization_service)
-        self._internal_lifecycle_service = _InternalLifecycleService(self)
+        self._near_cache_manager = NearCacheManager(config, self._serialization_service)
+        self._internal_lifecycle_service = _InternalLifecycleService(config)
         self.lifecycle_service = LifecycleService(self._internal_lifecycle_service)
-        self._invocation_service = InvocationService(self, self._reactor)
+        self._invocation_service = InvocationService(self, config, self._reactor)
         self._address_provider = self._create_address_provider()
         self._internal_partition_service = _InternalPartitionService(self)
         self.partition_service = PartitionService(
             self._internal_partition_service, self._serialization_service
         )
-        self._internal_cluster_service = _InternalClusterService(self)
+        self._internal_cluster_service = _InternalClusterService(self, config)
         self.cluster_service = ClusterService(self._internal_cluster_service)
         self._connection_manager = ConnectionManager(
             self,
+            config,
             self._reactor,
             self._address_provider,
             self._internal_lifecycle_service,
@@ -344,7 +345,7 @@ class HazelcastClient(object):
         )
         self._load_balancer = self._init_load_balancer(config)
         self._listener_service = ListenerService(
-            self, self._connection_manager, self._invocation_service
+            self, config, self._connection_manager, self._invocation_service
         )
         self._proxy_manager = ProxyManager(self._context)
         self.cp_subsystem = CPSubsystem(self._context)
@@ -353,6 +354,7 @@ class HazelcastClient(object):
         self._lock_reference_id_generator = AtomicInteger(1)
         self._statistics = Statistics(
             self,
+            config,
             self._reactor,
             self._connection_manager,
             self._invocation_service,
@@ -371,7 +373,7 @@ class HazelcastClient(object):
 
     def _init_context(self):
         self._context.init_context(
-            self.config,
+            self._config,
             self._invocation_service,
             self._internal_partition_service,
             self._internal_cluster_service,
@@ -393,11 +395,11 @@ class HazelcastClient(object):
                 self._internal_partition_service, self._connection_manager, self._listener_service
             )
             self._internal_lifecycle_service.start()
-            membership_listeners = self.config.membership_listeners
+            membership_listeners = self._config.membership_listeners
             self._internal_cluster_service.start(self._connection_manager, membership_listeners)
             self._cluster_view_listener.start()
             self._connection_manager.start(self._load_balancer)
-            if not self.config.async_start:
+            if not self._config.async_start:
                 self._internal_cluster_service.wait_initial_member_list_fetched()
                 self._connection_manager.connect_to_all_cluster_members()
 
@@ -569,7 +571,7 @@ class HazelcastClient(object):
         Returns:
             hazelcast.future.Future[str]: A registration id which is used as a key to remove the listener.
         """
-        is_smart = self.config.smart_routing
+        is_smart = self._config.smart_routing
         codec = client_add_distributed_object_listener_codec
         request = codec.encode_request(is_smart)
 
@@ -648,7 +650,7 @@ class HazelcastClient(object):
                 self._internal_lifecycle_service.fire_lifecycle_event(LifecycleState.SHUTDOWN)
 
     def _create_address_provider(self):
-        config = self.config
+        config = self._config
         cluster_members = config.cluster_members
         address_list_provided = len(cluster_members) > 0
         cloud_discovery_token = config.cloud_discovery_token
@@ -667,7 +669,7 @@ class HazelcastClient(object):
         return DefaultAddressProvider(cluster_members)
 
     def _create_client_name(self, client_id):
-        client_name = self.config.client_name
+        client_name = self._config.client_name
         if client_name:
             return client_name
         return "hz.client_%s" % client_id

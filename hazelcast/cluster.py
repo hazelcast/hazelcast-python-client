@@ -108,10 +108,9 @@ class ClusterService(object):
 
 
 class _InternalClusterService(object):
-    def __init__(self, client):
+    def __init__(self, client, config):
         self._client = client
         self._connection_manager = None
-        config = client.config
         self._labels = frozenset(config.labels)
         self._listeners = {}
         self._member_list_snapshot = _EMPTY_SNAPSHOT

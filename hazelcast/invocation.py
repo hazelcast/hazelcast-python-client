@@ -84,8 +84,7 @@ class Invocation(object):
 class InvocationService(object):
     _CLEAN_RESOURCES_PERIOD = 0.1
 
-    def __init__(self, client, reactor):
-        config = client.config
+    def __init__(self, client, config, reactor):
         smart_routing = config.smart_routing
         if smart_routing:
             self._do_invoke = self._invoke_smart

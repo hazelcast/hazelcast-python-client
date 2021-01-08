@@ -23,7 +23,7 @@ class MapTest(SingleMemberTestCase):
         return config
 
     def setUp(self):
-        name = list(self.client.config.near_caches.keys())[0]
+        name = list(self.client._config.near_caches.keys())[0]
         self.map = self.client.get_map(name).blocking()
 
     def tearDown(self):
