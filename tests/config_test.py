@@ -306,7 +306,7 @@ class ConfigTest(unittest.TestCase):
 
     def test_cluster_connect_timeout(self):
         config = self.config
-        self.assertEqual(20, config.cluster_connect_timeout)
+        self.assertEqual(120, config.cluster_connect_timeout)
 
         with self.assertRaises(ValueError):
             config.cluster_connect_timeout = -1

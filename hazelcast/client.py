@@ -122,7 +122,7 @@ class HazelcastClient(object):
             set to ``1.0``.
         cluster_connect_timeout (float): Timeout value in seconds for the client to
             give up a connection attempt to the cluster. Must be non-negative.
-            By default, set to `20.0`.
+            By default, set to `120.0`.
         portable_version (int): Default value for the portable version if the
             class does not have the :func:`get_portable_version` method. Portable
             versions are used to differentiate two versions of the
