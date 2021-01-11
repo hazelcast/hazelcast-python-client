@@ -28,6 +28,9 @@ Future-based asynchronous API suitable for wide ranges of use cases.
 Overview
 --------
 
+Usage
+~~~~~
+
 .. code:: python
 
     import hazelcast
@@ -57,6 +60,58 @@ Overview
 
     # Shutdown the client.
     client.shutdown()
+
+
+If you are using Hazelcast IMDG and the Python client on the same
+machine, the default configuration should work out-of-the-box. However,
+you may need to configure the client to connect to cluster nodes that
+are running on different machines or to customize client properties.
+
+Configuration
+~~~~~~~~~~~~~
+
+.. code:: python
+
+    import hazelcast
+
+    client = hazelcast.HazelcastClient(
+        cluster_name="cluster-name",
+        cluster_members=[
+            "10.90.0.2:5701",
+            "10.90.0.3:5701",
+        ],
+        lifecycle_listeners=[
+            lambda state: print("Lifecycle event >>>", state),
+        ]
+    )
+
+    print("Connected to cluster")
+    client.shutdown()
+
+
+See the API documentation of :class:`hazelcast.client.HazelcastClient`
+to learn more about supported configuration options.
+
+Features
+--------
+
+-  Distributed, partitioned and queryable in-memory key-value store
+   implementation, called **Map**
+-  Eventually consistent cache implementation to store a subset of the
+   Map data locally in the memory of the client, called **Near Cache**
+-  Additional data structures and simple messaging constructs such as
+   **Set**, **MultiMap**, **Queue**, **Topic**
+-  Cluster-wide unique ID generator, called **FlakeIdGenerator**
+-  Distributed, CRDT based counter, called **PNCounter**
+-  Distributed concurrency primitives from CP Subsystem such as
+   **FencedLock**, **Semaphore**, **AtomicLong**
+-  Integration with `Hazelcast Cloud <https://cloud.hazelcast.com/>`__
+-  Support for serverless and traditional web service architectures with
+   **Unisocket** and **Smart** operation modes
+-  Ability to listen to client lifecycle, cluster state, and distributed
+   data structure events
+-  and `many
+   more <https://hazelcast.org/imdg/clients-languages/python/#client-features>`__
 
 
 .. toctree::
