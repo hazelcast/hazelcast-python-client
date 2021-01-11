@@ -203,7 +203,7 @@ If you are planning to contribute:
 1. Run ``pip install -r requirements-dev.txt`` to install development
    dependencies.
 2. Use `black <https://pypi.org/project/black/>`__ to reformat the code
-   by running the ``black .`` command.
+   by running the ``black --config black.toml .`` command.
 3. Make sure that tests are passing by following the steps described
    in the next section.
 
