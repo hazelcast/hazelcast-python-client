@@ -108,7 +108,7 @@ Features
 -  Integration with `Hazelcast Cloud <https://cloud.hazelcast.com/>`__
 -  Support for serverless and traditional web service architectures with
    **Unisocket** and **Smart** operation modes
--  Ability to listen client lifecycle, cluster state and distributed
+-  Ability to listen to client lifecycle, cluster state, and distributed
    data structure events
 -  and `many
    more <https://hazelcast.org/imdg/clients-languages/python/#client-features>`__
