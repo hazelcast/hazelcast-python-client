@@ -27,7 +27,7 @@ setup(
     author="Hazelcast Inc. Developers",
     author_email="hazelcast@googlegroups.com",
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: Apache Software License",
         "Natural Language :: English",
