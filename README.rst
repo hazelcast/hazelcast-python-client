@@ -157,9 +157,10 @@ Getting Help
 You can use the following channels for your questions and
 development/usage issues:
 
--  `GitHub
-   repository <https://github.com/hazelcast/hazelcast-python-client/issues/new>`__
+-  `New GitHub
+   issue <https://github.com/hazelcast/hazelcast-python-client/issues/new>`__
 -  `Documentation <https://hazelcast.readthedocs.io>`__
+-  `Code Samples <https://github.com/hazelcast/hazelcast-python-client/tree/master/examples>`__
 -  `Slack <https://slack.hazelcast.com>`__
 -  `Google Groups <https://groups.google.com/g/hazelcast>`__
 -  `Stack
