@@ -2606,16 +2606,10 @@ In order to test Hazelcast Python client locally, you will need the following:
 * Java 6 or newer
 * Maven
 
-Following commands starts the tests according to your operating system:
+Following commands starts the tests:
 
 ```bash
-sh run-tests.sh
-```
-
-or 
-
-```
-PS> .\run-tests.ps1
+python run_tests.py
 ```
 
 Test script automatically downloads `hazelcast-remote-controller` and Hazelcast IMDG. The script uses Maven to download those.
