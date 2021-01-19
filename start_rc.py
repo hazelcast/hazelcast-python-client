@@ -37,7 +37,7 @@ def download_if_necessary(repo, artifact_id, version, is_test_artifact=False):
         print("Not downloading %s, because it already exists." % dest_file_name)
         return dest_file_name
 
-    print("Downloading", dest_file_name)
+    print("Downloading " + dest_file_name)
 
     artifact = "com.hazelcast:" + artifact_id + ":" + version
     if is_test_artifact:
@@ -53,7 +53,7 @@ def download_if_necessary(repo, artifact_id, version, is_test_artifact=False):
     ]
     return_code = subprocess.call(args, shell=IS_ON_WINDOWS)
     if return_code != 0:
-        print("Failed to download", dest_file_name)
+        print("Failed to download " + dest_file_name)
         sys.exit(1)
 
     return dest_file_name
