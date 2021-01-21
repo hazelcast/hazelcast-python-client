@@ -210,7 +210,7 @@ If you are planning to contribute:
 Testing
 ^^^^^^^
 
-In order to test Hazelcast Node.js client locally, you will need the
+In order to test Hazelcast Python client locally, you will need the
 following:
 
 -  Java 8 or newer
