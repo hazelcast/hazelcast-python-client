@@ -392,7 +392,14 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         if config.ssl_enabled:
             self._wrap_as_ssl_socket(config)
 
-        self.connect((address.host, address.port))
+        try:
+            self.connect((address.host, address.port))
+        except socket.error as e:
+            # If the connection attempt failed
+            # immediately, remove the connection from
+            # the dispatchers map and clean resources.
+            self._inner_close()
+            raise e
 
         timeout = config.connection_timeout
         if timeout > 0:
