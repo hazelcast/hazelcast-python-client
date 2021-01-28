@@ -14,7 +14,7 @@ class AppendString(IdentifiedDataSerializable):
         self.suffix = suffix
 
     def write_data(self, object_data_output):
-        object_data_output.write_utf(self.suffix)
+        object_data_output.write_string(self.suffix)
 
     def read_data(self, object_data_input):
         pass

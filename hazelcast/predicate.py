@@ -149,7 +149,7 @@ class _SqlPredicate(_AbstractPredicate):
         self.sql = expression
 
     def write_data(self, output):
-        output.write_utf(self.sql)
+        output.write_string(self.sql)
 
     def __repr__(self):
         return "SqlPredicate(sql='%s')" % self.sql
@@ -179,7 +179,7 @@ class _BetweenPredicate(_AbstractPredicate):
         self.to = to
 
     def write_data(self, output):
-        output.write_utf(self.attribute)
+        output.write_string(self.attribute)
         output.write_object(self.to)
         output.write_object(self.from_)
 
@@ -199,7 +199,7 @@ class _EqualPredicate(_AbstractPredicate):
         self.value = value
 
     def write_data(self, output):
-        output.write_utf(self.attribute)
+        output.write_string(self.attribute)
         output.write_object(self.value)
 
     def __repr__(self):
@@ -216,7 +216,7 @@ class _GreaterLessPredicate(_AbstractPredicate):
         self.is_less = is_less
 
     def write_data(self, output):
-        output.write_utf(self.attribute)
+        output.write_string(self.attribute)
         output.write_object(self.value)
         output.write_boolean(self.is_equal)
         output.write_boolean(self.is_less)
@@ -238,8 +238,8 @@ class _LikePredicate(_AbstractPredicate):
         self.expression = pattern
 
     def write_data(self, output):
-        output.write_utf(self.attribute)
-        output.write_utf(self.expression)
+        output.write_string(self.attribute)
+        output.write_string(self.expression)
 
     def __repr__(self):
         return "LikePredicate(attribute='%s', expression='%s')" % (self.attribute, self.expression)
@@ -260,7 +260,7 @@ class _InPredicate(_AbstractPredicate):
         self.values = values
 
     def write_data(self, output):
-        output.write_utf(self.attribute)
+        output.write_string(self.attribute)
         output.write_int(len(self.values))
         for value in self.values:
             output.write_object(value)
@@ -279,7 +279,7 @@ class _InstanceOfPredicate(_AbstractPredicate):
         self.class_name = class_name
 
     def write_data(self, output):
-        output.write_utf(self.class_name)
+        output.write_string(self.class_name)
 
     def __repr__(self):
         return "InstanceOfPredicate(class_name='%s')" % self.class_name
@@ -320,8 +320,8 @@ class _RegexPredicate(_AbstractPredicate):
         self.pattern = pattern
 
     def write_data(self, output):
-        output.write_utf(self.attribute)
-        output.write_utf(self.pattern)
+        output.write_string(self.attribute)
+        output.write_string(self.pattern)
 
     def __repr__(self):
         return "RegexPredicate(attribute='%s', pattern='%s')" % (self.attribute, self.pattern)
@@ -376,7 +376,7 @@ class _PagingPredicate(_AbstractPredicate, PagingPredicate):
         output.write_object(self.comparator)
         output.write_int(self.page)
         output.write_int(self._page_size)
-        output.write_utf(get_attr_name(IterationType, self.iteration_type))
+        output.write_string(get_attr_name(IterationType, self.iteration_type))
         output.write_int(len(self.anchor_list))
         for nearest_page, (anchor_key, anchor_value) in self.anchor_list:
             output.write_int(nearest_page)

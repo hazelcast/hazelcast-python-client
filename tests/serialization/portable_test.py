@@ -73,7 +73,7 @@ class SerializationV1Portable(Portable):
         out.write_long("6", self.a_long)
         out.write_float("7", self.a_float)
         out.write_double("8", self.a_double)
-        out.write_utf("9", self.a_string)
+        out.write_string("9", self.a_string)
 
         out.write_byte_array("a1", self.bytes)
         out.write_boolean_array("a2", self.booleans)
@@ -83,7 +83,7 @@ class SerializationV1Portable(Portable):
         out.write_long_array("a6", self.longs)
         out.write_float_array("a7", self.floats)
         out.write_double_array("a8", self.doubles)
-        out.write_utf_array("a9", self.strings)
+        out.write_string_array("a9", self.strings)
 
         if self.inner_portable is None:
             out.write_null_portable("p", FACTORY_ID, InnerPortable.CLASS_ID)
@@ -108,7 +108,7 @@ class SerializationV1Portable(Portable):
         self.a_long = inp.read_long("6")
         self.a_float = inp.read_float("7")
         self.a_double = inp.read_double("8")
-        self.a_string = inp.read_utf("9")
+        self.a_string = inp.read_string("9")
 
         self.bytes = inp.read_byte_array("a1")
         self.booleans = inp.read_boolean_array("a2")
@@ -118,7 +118,7 @@ class SerializationV1Portable(Portable):
         self.longs = inp.read_long_array("a6")
         self.floats = inp.read_float_array("a7")
         self.doubles = inp.read_double_array("a8")
-        self.strings = inp.read_utf_array("a9")
+        self.strings = inp.read_string_array("a9")
 
         self.inner_portable = inp.read_portable("p")
 
@@ -195,11 +195,11 @@ class InnerPortable(Portable):
         self.param_int = param_int
 
     def write_portable(self, writer):
-        writer.write_utf("param_str", self.param_str)
+        writer.write_string("param_str", self.param_str)
         writer.write_int("param_int", self.param_int)
 
     def read_portable(self, reader):
-        self.param_str = reader.read_utf("param_str")
+        self.param_str = reader.read_string("param_str")
         self.param_int = reader.read_int("param_int")
 
     def get_factory_id(self):
@@ -246,10 +246,10 @@ class Child(Portable):
         return 2
 
     def write_portable(self, writer):
-        writer.write_utf("name", self.name)
+        writer.write_string("name", self.name)
 
     def read_portable(self, reader):
-        self.name = reader.read_utf("name")
+        self.name = reader.read_string("name")
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.name == other.name
@@ -295,10 +295,10 @@ class MyPortable1(Portable):
         self.str_field = str_field
 
     def write_portable(self, writer):
-        writer.write_utf("str_field", self.str_field)
+        writer.write_string("str_field", self.str_field)
 
     def read_portable(self, reader):
-        self.str_field = reader.read_utf("str_field")
+        self.str_field = reader.read_string("str_field")
 
     def get_factory_id(self):
         return 1
@@ -390,7 +390,7 @@ class PortableSerializationTestCase(unittest.TestCase):
 
     def test_portable_class_def(self):
         builder_inner = ClassDefinitionBuilder(FACTORY_ID, InnerPortable.CLASS_ID)
-        builder_inner.add_utf_field("param_str")
+        builder_inner.add_string_field("param_str")
         builder_inner.add_int_field("param_int")
         class_def_inner = builder_inner.build()
 
@@ -404,7 +404,7 @@ class PortableSerializationTestCase(unittest.TestCase):
         builder.add_long_field("6")
         builder.add_float_field("7")
         builder.add_double_field("8")
-        builder.add_utf_field("9")
+        builder.add_string_field("9")
         builder.add_byte_array_field("a1")
         builder.add_boolean_array_field("a2")
         builder.add_char_array_field("a3")
@@ -413,7 +413,7 @@ class PortableSerializationTestCase(unittest.TestCase):
         builder.add_long_array_field("a6")
         builder.add_float_array_field("a7")
         builder.add_double_array_field("a8")
-        builder.add_utf_array_field("a9")
+        builder.add_string_array_field("a9")
         builder.add_portable_field("p", class_def_inner)
         builder.add_portable_array_field("ap", class_def_inner)
         class_def = builder.build()
@@ -471,7 +471,7 @@ class PortableSerializationTestCase(unittest.TestCase):
 
         config.portable_factories = {1: {1: Parent, 2: Child}}
 
-        child_class_def = ClassDefinitionBuilder(FACTORY_ID, 2).add_utf_field("name").build()
+        child_class_def = ClassDefinitionBuilder(FACTORY_ID, 2).add_string_field("name").build()
         parent_class_def = (
             ClassDefinitionBuilder(FACTORY_ID, 1)
             .add_portable_field("child", child_class_def)
@@ -490,7 +490,7 @@ class PortableSerializationTestCase(unittest.TestCase):
     def test_duplicate_class_definition(self):
         config = _Config()
 
-        class_def1 = ClassDefinitionBuilder(1, 1).add_utf_field("str_field").build()
+        class_def1 = ClassDefinitionBuilder(1, 1).add_string_field("str_field").build()
         class_def2 = ClassDefinitionBuilder(1, 1).add_int_field("int_field").build()
 
         config.class_definitions = [class_def1, class_def2]
@@ -502,7 +502,7 @@ class PortableSerializationTestCase(unittest.TestCase):
         config = _Config()
         config.portable_factories = {1: {1: MyPortable1}, 2: {1: MyPortable2}}
 
-        class_def1 = ClassDefinitionBuilder(1, 1).add_utf_field("str_field").build()
+        class_def1 = ClassDefinitionBuilder(1, 1).add_string_field("str_field").build()
         class_def2 = ClassDefinitionBuilder(2, 1).add_int_field("int_field").build()
 
         config.class_definitions = [class_def1, class_def2]

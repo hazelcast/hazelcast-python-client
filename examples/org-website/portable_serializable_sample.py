@@ -12,15 +12,15 @@ class Customer(Portable):
         self.name = name
         self.last_order = last_order
 
-    def read_portable(self, object_data_input):
-        self.id = object_data_input.read_int("id")
-        self.name = object_data_input.read_utf("name")
-        self.last_order = object_data_input.read_long("last_order")
+    def read_portable(self, reader):
+        self.id = reader.read_int("id")
+        self.name = reader.read_string("name")
+        self.last_order = reader.read_long("last_order")
 
-    def write_portable(self, object_data_output):
-        object_data_output.write_int("id", self.id)
-        object_data_output.write_utf("name", self.name)
-        object_data_output.write_long("last_order", self.last_order)
+    def write_portable(self, writer):
+        writer.write_int("id", self.id)
+        writer.write_string("name", self.name)
+        writer.write_long("last_order", self.last_order)
 
     def get_factory_id(self):
         return self.FACTORY_ID

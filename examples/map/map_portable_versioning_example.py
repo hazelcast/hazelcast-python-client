@@ -20,11 +20,11 @@ class Employee(Portable):
         self.age = age
 
     def write_portable(self, writer):
-        writer.write_utf("name", self.name)
+        writer.write_string("name", self.name)
         writer.write_int("age", self.age)
 
     def read_portable(self, reader):
-        self.name = reader.read_utf("name")
+        self.name = reader.read_string("name")
         self.age = reader.read_int("age")
 
     def get_factory_id(self):
@@ -57,14 +57,14 @@ class Employee2(Portable):
         self.manager = manager
 
     def write_portable(self, writer):
-        writer.write_utf("name", self.name)
+        writer.write_string("name", self.name)
         writer.write_int("age", self.age)
-        writer.write_utf("manager", self.manager)
+        writer.write_string("manager", self.manager)
 
     def read_portable(self, reader):
-        self.name = reader.read_utf("name")
+        self.name = reader.read_string("name")
         self.age = reader.read_int("age")
-        self.manager = reader.read_utf("manager")
+        self.manager = reader.read_string("manager")
 
     def get_factory_id(self):
         return self.FACTORY_ID
@@ -103,14 +103,14 @@ class Employee3(Portable):
         self.manager = manager
 
     def write_portable(self, writer):
-        writer.write_utf("name", self.name)
-        writer.write_utf("age", self.age)
-        writer.write_utf("manager", self.manager)
+        writer.write_string("name", self.name)
+        writer.write_string("age", self.age)
+        writer.write_string("manager", self.manager)
 
     def read_portable(self, reader):
-        self.name = reader.read_utf("name")
-        self.age = reader.read_utf("age")
-        self.manager = reader.read_utf("manager")
+        self.name = reader.read_string("name")
+        self.age = reader.read_string("age")
+        self.manager = reader.read_string("manager")
 
     def get_factory_id(self):
         return self.FACTORY_ID

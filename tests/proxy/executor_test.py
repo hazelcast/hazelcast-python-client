@@ -12,10 +12,10 @@ class _AppendTask(IdentifiedDataSerializable):
         self.message = message
 
     def write_data(self, object_data_output):
-        object_data_output.write_utf(self.message)
+        object_data_output.write_string(self.message)
 
     def read_data(self, object_data_input):
-        self.message = object_data_input.read_utf()
+        self.message = object_data_input.read_string()
 
     def get_factory_id(self):
         return 66

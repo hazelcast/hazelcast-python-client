@@ -11,8 +11,8 @@ class TestGlobalSerializer(StreamSerializer):
         super(TestGlobalSerializer, self).__init__()
 
     def read(self, inp):
-        utf = inp.read_utf()
-        obj = cPickle.loads(utf.encode())
+        string = inp.read_string()
+        obj = cPickle.loads(string.encode())
         try:
             obj.source = "GLOBAL"
         except AttributeError:
@@ -20,7 +20,7 @@ class TestGlobalSerializer(StreamSerializer):
         return obj
 
     def write(self, out, obj):
-        out.write_utf(cPickle.dumps(obj, 0).decode("utf-8"))
+        out.write_string(cPickle.dumps(obj, 0).decode("utf-8"))
 
     def get_type_id(self):
         return 10000
@@ -45,14 +45,14 @@ class CustomClass(object):
 class CustomSerializer(StreamSerializer):
     def write(self, out, obj):
         if isinstance(obj, CustomClass):
-            out.write_utf(obj.uid)
-            out.write_utf(obj.name)
-            out.write_utf(obj.text)
+            out.write_string(obj.uid)
+            out.write_string(obj.name)
+            out.write_string(obj.text)
         else:
             raise ValueError("Can only serialize CustomClass")
 
     def read(self, inp):
-        return CustomClass(inp.read_utf(), inp.read_utf(), inp.read_utf(), "CUSTOM")
+        return CustomClass(inp.read_string(), inp.read_string(), inp.read_string(), "CUSTOM")
 
     def get_type_id(self):
         return 10001
@@ -64,16 +64,16 @@ class CustomSerializer(StreamSerializer):
 class TheOtherCustomSerializer(StreamSerializer):
     def write(self, out, obj):
         if isinstance(obj, CustomClass):
-            out.write_utf(obj.text)
-            out.write_utf(obj.name)
-            out.write_utf(obj.uid)
+            out.write_string(obj.text)
+            out.write_string(obj.name)
+            out.write_string(obj.uid)
         else:
             raise ValueError("Can only serialize CustomClass")
 
     def read(self, inp):
-        text_ = inp.read_utf()
-        name_ = inp.read_utf()
-        uid = inp.read_utf()
+        text_ = inp.read_string()
+        name_ = inp.read_string()
+        uid = inp.read_string()
         return CustomClass(uid, name_, text_, "CUSTOM")
 
     def get_type_id(self):

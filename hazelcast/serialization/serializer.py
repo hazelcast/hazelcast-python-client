@@ -122,10 +122,10 @@ class DoubleSerializer(BaseSerializer):
 
 class StringSerializer(BaseSerializer):
     def read(self, inp):
-        return inp.read_utf()
+        return inp.read_string()
 
     def write(self, out, obj):
-        out.write_utf(obj)
+        out.write_string(obj)
 
     def get_type_id(self):
         return CONSTANT_TYPE_STRING
@@ -150,10 +150,10 @@ class UuidSerializer(BaseSerializer):
 
 class HazelcastJsonValueSerializer(BaseSerializer):
     def read(self, inp):
-        return HazelcastJsonValue(inp.read_utf())
+        return HazelcastJsonValue(inp.read_string())
 
     def write(self, out, obj):
-        out.write_utf(obj.to_string())
+        out.write_string(obj.to_string())
 
     def get_type_id(self):
         return JAVASCRIPT_JSON_SERIALIZATION_TYPE
@@ -243,7 +243,7 @@ class DoubleArraySerializer(BaseSerializer):
 
 class StringArraySerializer(BaseSerializer):
     def read(self, inp):
-        return inp.read_utf_array()
+        return inp.read_string_array()
 
     # "write(self, out, obj)" is never called so not implemented here
 
@@ -301,7 +301,7 @@ class BigIntegerSerializer(BaseSerializer):
 
 class JavaClassSerializer(BaseSerializer):
     def read(self, inp):
-        return inp.read_utf()
+        return inp.read_string()
 
     # "write(self, out, obj)" is never called so not implemented here
 
@@ -341,11 +341,11 @@ class LinkedListSerializer(BaseSerializer):
 
 class PythonObjectSerializer(BaseSerializer):
     def read(self, inp):
-        str = inp.read_utf().encode()
+        str = inp.read_string().encode()
         return cPickle.loads(str)
 
     def write(self, out, obj):
-        out.write_utf(cPickle.dumps(obj, 0).decode("utf-8"))
+        out.write_string(cPickle.dumps(obj, 0).decode("utf-8"))
 
     def get_type_id(self):
         return PYTHON_TYPE_PICKLE

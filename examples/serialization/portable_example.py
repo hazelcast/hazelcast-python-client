@@ -13,14 +13,14 @@ class Engineer(Portable):
         self.languages = languages
 
     def read_portable(self, reader):
-        self.name = reader.read_utf("name")
+        self.name = reader.read_string("name")
         self.age = reader.read_int("age")
-        self.languages = reader.read_utf_array("languages")
+        self.languages = reader.read_string_array("languages")
 
     def write_portable(self, writer):
-        writer.write_utf("name", self.name)
+        writer.write_string("name", self.name)
         writer.write_int("age", self.age)
-        writer.write_utf_array("languages", self.languages)
+        writer.write_string_array("languages", self.languages)
 
     def get_factory_id(self):
         return self.FACTORY_ID

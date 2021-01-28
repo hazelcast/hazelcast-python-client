@@ -14,11 +14,11 @@ class Employee(Portable):
         self.age = age
 
     def write_portable(self, writer):
-        writer.write_utf("name", self.name)
+        writer.write_string("name", self.name)
         writer.write_int("age", self.age)
 
     def read_portable(self, reader):
-        self.name = reader.read_utf("name")
+        self.name = reader.read_string("name")
         self.age = reader.read_int("age")
 
     def get_factory_id(self):

@@ -311,11 +311,11 @@ class NestedPredicatePortableTest(SingleMemberTestCase):
             return 15
 
         def write_portable(self, writer):
-            writer.write_utf("name", self.name)
+            writer.write_string("name", self.name)
             writer.write_portable("limb", self.limb)
 
         def read_portable(self, reader):
-            self.name = reader.read_utf("name")
+            self.name = reader.read_string("name")
             self.limb = reader.read_portable("limb")
 
         def __eq__(self, other):
@@ -338,10 +338,10 @@ class NestedPredicatePortableTest(SingleMemberTestCase):
             return 2
 
         def write_portable(self, writer):
-            writer.write_utf("name", self.name)
+            writer.write_string("name", self.name)
 
         def read_portable(self, reader):
-            self.name = reader.read_utf("name")
+            self.name = reader.read_string("name")
 
         def __eq__(self, other):
             return isinstance(other, self.__class__) and self.name == other.name

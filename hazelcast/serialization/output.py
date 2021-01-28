@@ -77,7 +77,7 @@ class _ObjectDataOutput(ObjectDataOutput):
         self._FMT_DOUBLE.pack_into(self._buffer, self._pos, val)
         self._pos += DOUBLE_SIZE_IN_BYTES
 
-    def write_utf(self, val):
+    def write_string(self, val):
         if val is None:
             self.write_int(NULL_ARRAY_LENGTH)
         else:
@@ -124,8 +124,8 @@ class _ObjectDataOutput(ObjectDataOutput):
     def write_short_array(self, val):
         self._write_array_fnc(val, self.write_short)
 
-    def write_utf_array(self, val):
-        self._write_array_fnc(val, self.write_utf)
+    def write_string_array(self, val):
+        self._write_array_fnc(val, self.write_string)
 
     def write_object(self, val):
         self._service.write_object(self, val)
@@ -148,8 +148,14 @@ class _ObjectDataOutput(ObjectDataOutput):
         self._pos = position
 
     def write_zero_bytes(self, count):
-        for i in range(0, count):
+        for _ in range(0, count):
             self._write(0)
+
+    def write_utf(self, val):
+        self.write_string(val)
+
+    def write_utf_array(self, val):
+        self.write_string_array(val)
 
     # HELPERS
     def _write_array_fnc(self, val, item_write_fnc):
@@ -179,10 +185,10 @@ class _ObjectDataOutput(ObjectDataOutput):
 
 
 class EmptyObjectDataOutput(ObjectDataOutput):
-    def write_utf_array(self, val):
+    def write_string_array(self, val):
         pass
 
-    def write_utf(self, val):
+    def write_string(self, val):
         pass
 
     def write_short_array(self, val):
@@ -249,4 +255,10 @@ class EmptyObjectDataOutput(ObjectDataOutput):
         raise NotImplementedError("to_byte_array not implemented")
 
     def get_byte_order(self):
+        pass
+
+    def write_utf(self, val):
+        pass
+
+    def write_utf_array(self, val):
         pass

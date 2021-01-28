@@ -71,12 +71,12 @@ class DefaultPortableReader(PortableReader):
         pos = self._read_position(field_name, FieldType.DOUBLE)
         return self._in.read_double(pos)
 
-    def read_utf(self, field_name):
+    def read_string(self, field_name):
         cur_pos = self._in.position()
         try:
-            pos = self._read_position(field_name, FieldType.UTF)
+            pos = self._read_position(field_name, FieldType.STRING)
             self._in.set_position(pos)
-            return self._in.read_utf()
+            return self._in.read_string()
         finally:
             self._in.set_position(cur_pos)
 
@@ -177,12 +177,12 @@ class DefaultPortableReader(PortableReader):
         finally:
             self._in.set_position(current_pos)
 
-    def read_utf_array(self, field_name):
+    def read_string_array(self, field_name):
         current_pos = self._in.position()
         try:
-            pos = self._read_position(field_name, FieldType.UTF_ARRAY)
+            pos = self._read_position(field_name, FieldType.STRING_ARRAY)
             self._in.set_position(pos)
-            return self._in.read_utf_array()
+            return self._in.read_string_array()
         finally:
             self._in.set_position(current_pos)
 
@@ -218,6 +218,12 @@ class DefaultPortableReader(PortableReader):
             return portables
         finally:
             self._in.set_position(current_pos)
+
+    def read_utf(self, field_name):
+        return self.read_string(field_name)
+
+    def read_utf_array(self, field_name):
+        return self.read_string_array(field_name)
 
     def get_raw_data_input(self):
         if not self._raw:
@@ -394,19 +400,19 @@ class MorphingPortableReader(DefaultPortableReader):
         self.validate_type_compatibility(fd, FieldType.CHAR)
         return super(MorphingPortableReader, self).read_char(field_name)
 
-    def read_utf(self, field_name):
+    def read_string(self, field_name):
         fd = self._class_def.get_field(field_name)
         if fd is None:
             return None
-        self.validate_type_compatibility(fd, FieldType.UTF)
-        return super(MorphingPortableReader, self).read_utf(field_name)
+        self.validate_type_compatibility(fd, FieldType.STRING)
+        return super(MorphingPortableReader, self).read_string(field_name)
 
-    def read_utf_array(self, field_name):
+    def read_string_array(self, field_name):
         fd = self._class_def.get_field(field_name)
         if fd is None:
             return None
-        self.validate_type_compatibility(fd, FieldType.UTF_ARRAY)
-        return super(MorphingPortableReader, self).read_utf_array(field_name)
+        self.validate_type_compatibility(fd, FieldType.STRING_ARRAY)
+        return super(MorphingPortableReader, self).read_string_array(field_name)
 
     def read_short_array(self, field_name):
         fd = self._class_def.get_field(field_name)
@@ -477,6 +483,12 @@ class MorphingPortableReader(DefaultPortableReader):
             return None
         self.validate_type_compatibility(fd, FieldType.PORTABLE_ARRAY)
         return super(MorphingPortableReader, self).read_portable_array(field_name)
+
+    def read_utf(self, field_name):
+        return self.read_string(field_name)
+
+    def read_utf_array(self, field_name):
+        return self.read_string_array(field_name)
 
     def validate_type_compatibility(self, field_def, expected_type):
         if field_def.field_type != expected_type:
