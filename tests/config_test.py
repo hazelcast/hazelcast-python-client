@@ -293,7 +293,7 @@ class ConfigTest(unittest.TestCase):
 
     def test_retry_multiplier(self):
         config = self.config
-        self.assertEqual(1, config.retry_multiplier)
+        self.assertEqual(1.05, config.retry_multiplier)
 
         with self.assertRaises(ValueError):
             config.retry_multiplier = 0.5
@@ -306,10 +306,13 @@ class ConfigTest(unittest.TestCase):
 
     def test_cluster_connect_timeout(self):
         config = self.config
-        self.assertEqual(120, config.cluster_connect_timeout)
+        self.assertEqual(-1, config.cluster_connect_timeout)
+
+        config.cluster_connect_timeout = -1
+        self.assertEqual(-1, config.cluster_connect_timeout)
 
         with self.assertRaises(ValueError):
-            config.cluster_connect_timeout = -1
+            config.cluster_connect_timeout = -2
 
         with self.assertRaises(TypeError):
             config.cluster_connect_timeout = ""

@@ -531,8 +531,8 @@ class _Config(object):
         self._retry_initial_backoff = 1.0
         self._retry_max_backoff = 30.0
         self._retry_jitter = 0.0
-        self._retry_multiplier = 1.0
-        self._cluster_connect_timeout = 120.0
+        self._retry_multiplier = 1.05
+        self._cluster_connect_timeout = -1
         self._portable_version = 0
         self._data_serializable_factories = {}
         self._portable_factories = {}
@@ -812,8 +812,8 @@ class _Config(object):
     @cluster_connect_timeout.setter
     def cluster_connect_timeout(self, value):
         if isinstance(value, number_types):
-            if value < 0:
-                raise ValueError("cluster_connect_timeout must be non-negative")
+            if value < 0 and value != -1:
+                raise ValueError("cluster_connect_timeout must be non-negative or equal to -1")
             self._cluster_connect_timeout = value
         else:
             raise TypeError("cluster_connect_timeout must be a number")

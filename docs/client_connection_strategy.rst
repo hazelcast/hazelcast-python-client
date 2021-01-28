@@ -46,10 +46,10 @@ starting and reconnecting modes.
 Configuring Client Connection Retry
 -----------------------------------
 
-When the client is disconnected from the cluster, it searches for new
-connections to reconnect. You can configure the frequency of the
-reconnection attempts and client shutdown behavior using the argumentes
-below.
+When the client is disconnected from the cluster or trying to connect
+to a one for the first time, it searches for new connections. You can
+configure the frequency of the connection attempts and the client
+shutdown behavior using the arguments below.
 
 .. code:: python
 
@@ -69,13 +69,14 @@ The following are configuration element descriptions:
 - ``retry_max_backoff``: Specifies the upper limit for the backoff in
   seconds. Its default value is ``30``. It must be non-negative.
 - ``retry_multiplier``: Factor to multiply the backoff after a failed
-  retry. Its default value is ``1``. It must be greater than or equal
+  retry. Its default value is ``1.05``. It must be greater than or equal
   to ``1``.
 - ``retry_jitter``: Specifies by how much to randomize backoffs. Its
   default value is ``0``. It must be in range ``0`` to ``1``.
 - ``cluster_connect_timeout``: Timeout value in seconds for the client
   to give up to connect to the current cluster. Its default value is
-  ``120``.
+  ``-1``. For the default value, client will not stop trying to connect
+  to the target cluster. (infinite timeout)
 
 A pseudo-code is as follows:
 
@@ -86,6 +87,7 @@ A pseudo-code is as follows:
     while (try_connect(connection_timeout)) != SUCCESS) {
         if (get_current_time() - begin_time >= CLUSTER_CONNECT_TIMEOUT) {
             // Give up to connecting to the current cluster and switch to another if exists.
+            // For the default values, CLUSTER_CONNECT_TIMEOUT is infinite.
         }
         sleep(current_backoff + uniform_random(-JITTER * current_backoff, JITTER * current_backoff))
         current_backoff = min(current_backoff * MULTIPLIER, MAX_BACKOFF)

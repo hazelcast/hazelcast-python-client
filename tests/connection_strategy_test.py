@@ -87,7 +87,6 @@ class ConnectionStrategyTest(HazelcastTestCase):
             cluster_members=["localhost:5701"],
             cluster_name=self.cluster.id,
             reconnect_mode=ReconnectMode.OFF,
-            cluster_connect_timeout=six.MAXSIZE,
             lifecycle_listeners=[event_collector],
         )
         m = self.client.get_map(random_string()).blocking()
@@ -119,7 +118,6 @@ class ConnectionStrategyTest(HazelcastTestCase):
             cluster_members=["localhost:5701"],
             cluster_name=self.cluster.id,
             reconnect_mode=ReconnectMode.ASYNC,
-            cluster_connect_timeout=six.MAXSIZE,
             lifecycle_listeners=[disconnected_collector],
         )
         m = self.client.get_map(random_string()).blocking()
