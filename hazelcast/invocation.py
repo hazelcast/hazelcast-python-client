@@ -350,6 +350,7 @@ class InvocationService(object):
                 if not connection.live:
                     error = TargetDisconnectedError(connection.close_reason)
                     self._notify_error(invocation, error)
+                    continue
 
                 if self._backup_ack_to_client_enabled:
                     self._detect_and_handle_backup_timeout(invocation, now)
