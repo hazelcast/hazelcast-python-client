@@ -349,3 +349,15 @@ class AsyncoreConnectionTest(HazelcastTestCase):
             self.assertLess(time.time() - start, config.connection_timeout)
         finally:
             conn.close(None, None)
+
+    def test_resources_cleaned_up_after_immediate_failure(self):
+        addr = Address("invalid-address", 5701)
+        config = _Config()
+        mock_reactor = MagicMock(map={})
+        try:
+            AsyncoreConnection(mock_reactor, MagicMock(), None, addr, config, None)
+            self.fail("Connection attempt to an invalid address should fail immediately")
+        except socket.error:
+            # Constructor of the connection should remove itself from the
+            # dispatchers map of the reactor.
+            self.assertEqual(0, len(mock_reactor.map))
