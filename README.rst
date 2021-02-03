@@ -211,23 +211,17 @@ If you are planning to contribute:
 Testing
 ^^^^^^^
 
-In order to test Hazelcast Node.js client locally, you will need the
+In order to test Hazelcast Python client locally, you will need the
 following:
 
 -  Java 8 or newer
 -  Maven
 
-Following commands starts the tests according to your operating system:
+Following commands starts the tests:
 
 .. code:: bash
 
-    bash run-tests.sh
-
-or
-
-.. code:: powershell
-
-    .\run-tests.ps1
+    python run_tests.py
 
 Test script automatically downloads ``hazelcast-remote-controller`` and
 Hazelcast IMDG. The script uses Maven to download those.
