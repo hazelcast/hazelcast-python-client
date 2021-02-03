@@ -123,7 +123,7 @@ class HazelcastClient(object):
             failed retry. Must be greater than or equal to ``1``. By default,
             set to ``1.05``.
         cluster_connect_timeout (float): Timeout value in seconds for the client to
-            give up a connection attempt to the cluster. Must be non-negative or
+            give up connecting to the cluster. Must be non-negative or
             equal to `-1`. By default, set to `-1`. `-1` means that the client
             will not stop trying to the target cluster. (infinite timeout)
         portable_version (int): Default value for the portable version if the

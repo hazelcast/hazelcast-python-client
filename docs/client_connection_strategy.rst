@@ -74,7 +74,7 @@ The following are configuration element descriptions:
 - ``retry_jitter``: Specifies by how much to randomize backoffs. Its
   default value is ``0``. It must be in range ``0`` to ``1``.
 - ``cluster_connect_timeout``: Timeout value in seconds for the client
-  to give up to connect to the current cluster. Its default value is
+  to give up connecting to the cluster. Its default value is
   ``-1``. For the default value, client will not stop trying to connect
   to the target cluster. (infinite timeout)
 
