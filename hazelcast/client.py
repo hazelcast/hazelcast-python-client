@@ -7,9 +7,12 @@ from hazelcast.config import _Config
 from hazelcast.connection import ConnectionManager, DefaultAddressProvider
 from hazelcast.core import DistributedObjectInfo, DistributedObjectEvent
 from hazelcast.cp import CPSubsystem, ProxySessionManager
+from hazelcast.discovery import HazelcastCloudAddressProvider
+from hazelcast.errors import IllegalStateError
 from hazelcast.invocation import InvocationService, Invocation
-from hazelcast.listener import ListenerService, ClusterViewListenerService
 from hazelcast.lifecycle import LifecycleService, LifecycleState, _InternalLifecycleService
+from hazelcast.listener import ListenerService, ClusterViewListenerService
+from hazelcast.near_cache import NearCacheManager
 from hazelcast.partition import PartitionService, _InternalPartitionService
 from hazelcast.protocol.codec import (
     client_get_distributed_objects_codec,
@@ -31,14 +34,13 @@ from hazelcast.proxy import (
     PN_COUNTER_SERVICE,
     FLAKE_ID_GENERATOR_SERVICE,
 )
-from hazelcast.near_cache import NearCacheManager
 from hazelcast.reactor import AsyncoreReactor
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.statistics import Statistics
 from hazelcast.transaction import TWO_PHASE, TransactionManager
 from hazelcast.util import AtomicInteger, RoundRobinLB
-from hazelcast.discovery import HazelcastCloudAddressProvider
-from hazelcast.errors import IllegalStateError
+
+__all__ = ("HazelcastClient",)
 
 _logger = logging.getLogger(__name__)
 
@@ -613,15 +615,13 @@ class HazelcastClient(object):
         request = client_get_distributed_objects_codec.encode_request()
         invocation = Invocation(request, response_handler=lambda m: m)
         self._invocation_service.invoke(invocation)
+
+        local_distributed_object_infos = {
+            DistributedObjectInfo(dist_obj.service_name, dist_obj.name)
+            for dist_obj in self._proxy_manager.get_distributed_objects()
+        }
+
         response = client_get_distributed_objects_codec.decode_response(invocation.future.result())
-
-        distributed_objects = self._proxy_manager.get_distributed_objects()
-        local_distributed_object_infos = set()
-        for dist_obj in distributed_objects:
-            local_distributed_object_infos.add(
-                DistributedObjectInfo(dist_obj.service_name, dist_obj.name)
-            )
-
         for dist_obj_info in response:
             local_distributed_object_infos.discard(dist_obj_info)
             self._proxy_manager.get_or_create(
@@ -708,20 +708,20 @@ class _ClientContext(object):
         self.reactor = None
 
     def init_context(
-        self,
-        config,
-        invocation_service,
-        partition_service,
-        cluster_service,
-        connection_manager,
-        serialization_service,
-        listener_service,
-        proxy_manager,
-        near_cache_manager,
-        lock_reference_id_generator,
-        name,
-        proxy_session_manager,
-        reactor,
+            self,
+            config,
+            invocation_service,
+            partition_service,
+            cluster_service,
+            connection_manager,
+            serialization_service,
+            listener_service,
+            proxy_manager,
+            near_cache_manager,
+            lock_reference_id_generator,
+            name,
+            proxy_session_manager,
+            reactor,
     ):
         self.config = config
         self.invocation_service = invocation_service
