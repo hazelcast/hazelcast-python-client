@@ -708,20 +708,20 @@ class _ClientContext(object):
         self.reactor = None
 
     def init_context(
-            self,
-            config,
-            invocation_service,
-            partition_service,
-            cluster_service,
-            connection_manager,
-            serialization_service,
-            listener_service,
-            proxy_manager,
-            near_cache_manager,
-            lock_reference_id_generator,
-            name,
-            proxy_session_manager,
-            reactor,
+        self,
+        config,
+        invocation_service,
+        partition_service,
+        cluster_service,
+        connection_manager,
+        serialization_service,
+        listener_service,
+        proxy_manager,
+        near_cache_manager,
+        lock_reference_id_generator,
+        name,
+        proxy_session_manager,
+        reactor,
     ):
         self.config = config
         self.invocation_service = invocation_service
