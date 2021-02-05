@@ -1,13 +1,14 @@
+import io
 import logging
 import random
 import struct
 import sys
 import threading
 import time
-import io
 import uuid
 from collections import OrderedDict
 
+from hazelcast import six, __version__
 from hazelcast.config import ReconnectMode
 from hazelcast.core import AddressHelper, CLIENT_TYPE, SERIALIZATION_VERSION
 from hazelcast.errors import (
@@ -30,7 +31,6 @@ from hazelcast.protocol.client_message import (
 )
 from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
 from hazelcast.util import AtomicInteger, calculate_version, UNKNOWN_VERSION
-from hazelcast import six, __version__
 
 _logger = logging.getLogger(__name__)
 
@@ -53,8 +53,7 @@ class _WaitStrategy(object):
 
     def sleep(self):
         self._attempt += 1
-        now = time.time()
-        time_passed = now - self._cluster_connect_attempt_begin
+        time_passed = time.time() - self._cluster_connect_attempt_begin
         if time_passed > self._cluster_connect_timeout:
             _logger.warning(
                 "Unable to get live cluster connection, cluster connect timeout (%d) is reached. "
@@ -105,7 +104,7 @@ class ConnectionManager(object):
         near_cache_manager,
     ):
         self.live = False
-        self.active_connections = dict()  # uuid to connection, must be modified under the _lock
+        self.active_connections = {}  # uuid to connection, must be modified under the _lock
         self.client_uuid = uuid.uuid4()
 
         self._client = client
@@ -127,8 +126,8 @@ class ConnectionManager(object):
         self._connect_all_members_timer = None
         self._async_start = config.async_start
         self._connect_to_cluster_thread_running = False
-        self._pending_connections = dict()  # must be modified under the _lock
-        self._addresses_to_connections = dict()  # must be modified under the _lock
+        self._pending_connections = {}  # must be modified under the _lock
+        self._addresses_to_connections = {}  # must be modified under the _lock
         self._shuffle_member_list = config.shuffle_member_list
         self._lock = threading.RLock()
         self._connection_id_generator = AtomicInteger()

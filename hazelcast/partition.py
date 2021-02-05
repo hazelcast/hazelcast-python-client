@@ -2,7 +2,6 @@ import logging
 
 from hazelcast.errors import ClientOfflineError
 from hazelcast.hash import hash_to_index
-from hazelcast.serialization.data import Data
 
 _logger = logging.getLogger(__name__)
 
@@ -23,6 +22,8 @@ class PartitionService(object):
     """
     Allows to retrieve information about the partition count, the partition owner or the partitionId of a key.
     """
+
+    __slots__ = ("_service", "_serialization_service")
 
     def __init__(self, internal_partition_service, serialization_service):
         self._service = internal_partition_service
@@ -66,10 +67,12 @@ class PartitionService(object):
 
 
 class _InternalPartitionService(object):
+    __slots__ = ("partition_count", "_client", "_partition_table")
+
     def __init__(self, client):
         self.partition_count = 0
         self._client = client
-        self._partition_table = _PartitionTable(None, -1, dict())
+        self._partition_table = _PartitionTable(None, -1, {})
 
     def handle_partitions_view_event(self, connection, partitions, version):
         _logger.debug("Handling new partition table with version: %s", version)
@@ -83,19 +86,16 @@ class _InternalPartitionService(object):
         self._partition_table = new_table
 
     def get_partition_owner(self, partition_id):
-        table = self._partition_table
-        return table.partitions.get(partition_id, None)
+        return self._partition_table.partitions.get(partition_id, None)
 
     def get_partition_id(self, key):
-        count = self.partition_count
-        if count == 0:
+        if self.partition_count == 0:
             # Partition count can not be zero for the SYNC mode.
             # On the SYNC mode, we are waiting for the first connection to be established.
             # We are initializing the partition count with the value coming from the server with authentication.
             # This error is used only for ASYNC mode client.
             raise ClientOfflineError()
-
-        return hash_to_index(key.get_partition_hash(), count)
+        return hash_to_index(key.get_partition_hash(), self.partition_count)
 
     def check_and_set_partition_count(self, partition_count):
         if self.partition_count == 0:
@@ -103,7 +103,8 @@ class _InternalPartitionService(object):
             return True
         return self.partition_count == partition_count
 
-    def _should_be_applied(self, connection, partitions, version, current):
+    @classmethod
+    def _should_be_applied(cls, connection, partitions, version, current):
         if not partitions:
             _logger.debug(
                 "Partition view will not be applied since response is empty. "
@@ -134,9 +135,9 @@ class _InternalPartitionService(object):
 
         return True
 
-    @staticmethod
-    def _prepare_partitions(partitions):
-        new_partitions = dict()
+    @classmethod
+    def _prepare_partitions(cls, partitions):
+        new_partitions = {}
         for uuid, partition_list in partitions:
             for partition in partition_list:
                 new_partitions[partition] = uuid
