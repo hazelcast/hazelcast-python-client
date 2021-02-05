@@ -1,4 +1,5 @@
 import re
+import inspect
 
 from hazelcast import six
 from hazelcast.errors import InvalidConfigurationError
@@ -1385,3 +1386,14 @@ class _FlakeIdGeneratorConfig(object):
                     "Unrecognized config option for the flake id generator: %s" % k
                 )
         return config
+
+
+def config_dict(**kwargs) -> six.types.Dict[str, six.types.Any]:
+    """Create a valid dictionary of HazelcastClient configuration options."""
+    kwarg_keys = set(kwargs.keys())
+    valid_config_keys = {t[0] for t in inspect.getmembers(_Config, lambda o: isinstance(o, property))
+    if not kwarg_keys.subset(valid_config_keys):
+        raise TypeError("Invalid keyword arguments :{}".format(','.join(kwarg_keys.difference(valid_config_keys))))
+    # TODO: update with settings from declaritive methods
+    return kwargs
+
