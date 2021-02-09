@@ -1,14 +1,15 @@
 import logging
 import threading
+from typing import Optional
 
 from hazelcast import six
 from hazelcast.cluster import ClusterService, _InternalClusterService
-from hazelcast.config import _Config
+from hazelcast.config import _Config, Config
 from hazelcast.connection import ConnectionManager, DefaultAddressProvider
 from hazelcast.core import DistributedObjectInfo, DistributedObjectEvent
 from hazelcast.cp import CPSubsystem, ProxySessionManager
 from hazelcast.discovery import HazelcastCloudAddressProvider
-from hazelcast.errors import IllegalStateError
+from hazelcast.errors import IllegalStateError, IllegalArgumentError
 from hazelcast.invocation import InvocationService, Invocation
 from hazelcast.lifecycle import LifecycleService, LifecycleState, _InternalLifecycleService
 from hazelcast.listener import ListenerService, ClusterViewListenerService
@@ -50,6 +51,13 @@ class HazelcastClient(object):
     distributed data structures on the Hazelcast clusters.
 
     Keyword Args:
+        config (`hazelcast.config.Config`): Optional configuration object
+            Do not pass both a configuration object and a configuration keyword argument.
+            (*Experimental*)
+        auto_connect (`bool`): Control auto connection to the cluster.
+            Set `false` to disable auto connection.
+            Default: `true`.
+            (*Experimental*)
         cluster_members (`list[str]`): Candidate address list that client
             will use to establish initial connection.
             By default, set to ``["127.0.0.1"]``.
@@ -315,11 +323,14 @@ class HazelcastClient(object):
 
     _CLIENT_ID = AtomicInteger()
 
-    def __init__(self, **kwargs):
-        config = _Config.from_dict(kwargs)
+    def __init__(self, config=None, auto_connect=True, **kwargs):
+        # type: (Optional[Config], bool, **object) -> None
+        if config and kwargs:
+            raise IllegalArgumentError("config and keyword arguments are mutually exclusive.")
+        config = config or _Config.from_dict(kwargs)
         self._config = config
         self._context = _ClientContext()
-        client_id = HazelcastClient._CLIENT_ID.get_and_increment()
+        client_id = self._CLIENT_ID.get_and_increment()
         self.name = self._create_client_name(client_id)
         self._reactor = AsyncoreReactor()
         self._serialization_service = SerializationServiceV1(config)
@@ -370,6 +381,14 @@ class HazelcastClient(object):
             self._invocation_service,
         )
         self._shutdown_lock = threading.RLock()
+        self._connected = False
+        if auto_connect:
+            self.connect()
+
+    def connect(self):
+        if self._connected:
+            return
+        self._connected = True
         self._init_context()
         self._start()
 

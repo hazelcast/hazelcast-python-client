@@ -2,6 +2,7 @@ import random
 import threading
 import time
 from collections import Sequence, Iterable
+from typing import Callable
 
 from hazelcast import six
 
@@ -72,6 +73,58 @@ def validate_type(_type):
 def validate_serializer(serializer, _type):
     if not issubclass(serializer, _type):
         raise ValueError("Serializer should be an instance of %s" % _type.__name__)
+
+
+def ensure_value(value, check=None, failure_msg=""):
+    # type: (object, Callable, str) -> object
+    if check is not None and not check(value):
+        raise ValueError(failure_msg or "invalid value")
+    return value
+
+
+def ensure_type(value, value_type, value_name="item", value_failure_msg=""):
+    # type: (object, type, str, str) -> object
+    if not isinstance(value, value_type):
+        raise TypeError(value_failure_msg or "%s must be %s" % (value_name, value_type))
+    return value
+
+
+def ensure_list(value, item_type, value_name="value", value_failure_msg="", item_failure_msg=""):
+    # type: (list, type, str, str, str) -> list
+    if not isinstance(value, list):
+        raise TypeError(value_failure_msg or "%s must be a list" % value_name)
+    if not all(isinstance(item, item_type) for item in value):
+        raise TypeError(item_failure_msg or "%s items must be %s" % (value_name, item_type))
+    return value
+
+
+def ensure_dict(
+    value,
+    item_key_type,
+    item_value_type,
+    value_name="value",
+    item_key_type_name="",
+    item_value_type_name="",
+    value_failure_msg="",
+    item_key_failure_msg="",
+    item_value_failure_msg="",
+):
+    # type: (dict, type, type, str, str, str, str, str, str) -> dict
+    if not isinstance(value, dict):
+        raise TypeError(value_failure_msg or "%s must be a dict" % value_name)
+    for k, v in value.items():
+        if not isinstance(k, item_key_type):
+            item_key_type_name = item_key_type_name or item_key_type.__name__
+            raise TypeError(
+                item_key_failure_msg or "Keys of %s must be %s" % (value_name, item_key_type_name)
+            )
+        if not isinstance(v, item_value_type):
+            item_value_type_name = item_value_type_name or item_value_type.__name__
+            raise TypeError(
+                item_value_failure_msg
+                or "Values of %s must be %s" % (value_name, item_value_type_name)
+            )
+    return value
 
 
 class AtomicInteger(object):

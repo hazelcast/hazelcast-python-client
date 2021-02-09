@@ -1,6 +1,8 @@
-from setuptools import setup, find_packages
 from codecs import open
 from os import path
+
+from setuptools import setup, find_packages
+
 from hazelcast import __version__
 
 here = path.abspath(path.dirname(__file__))
@@ -49,7 +51,7 @@ setup(
         exclude=["benchmarks", "examples", "examples.*", "docs", "docs.*", "tests", "tests.*"]
     ),
     package_dir={"hazelcast": "hazelcast"},
-    install_requires=[],
+    install_requires=["typing"],
     extras_require=extras,
     tests_require=["thrift", "nose", "coverage", "psutil", "mock", "parameterized"],
 )

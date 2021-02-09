@@ -1,4 +1,6 @@
+import functools
 import re
+from typing import List, Tuple, Dict, Callable
 
 from hazelcast import six
 from hazelcast.errors import InvalidConfigurationError
@@ -10,7 +12,125 @@ from hazelcast.util import (
     LoadBalancer,
     none_type,
     try_to_get_enum_value,
+    ensure_list,
+    ensure_type,
+    ensure_dict,
+    ensure_value,
 )
+
+__all__ = ("Config",)
+
+
+def ensured_list(item_type, item_type_name="", value_failure_msg="", item_failure_msg=""):
+    # type: (type, str, str, str) -> Callable
+    def deco(f):
+        @functools.wraps(f)
+        def wrapper(self, value):
+            value_msg = value_failure_msg or "%s must be a list" % f.__name__
+            item_msg = item_failure_msg or "%s must be a list of %ss" % (
+                f.__name__,
+                item_type_name or item_type.__name__,
+            )
+            return f(
+                self,
+                ensure_list(
+                    value,
+                    item_type,
+                    value_failure_msg=value_msg,
+                    item_failure_msg=item_msg,
+                ),
+            )
+
+        return wrapper
+
+    return deco
+
+
+def ensured_dict(item_key_type, item_value_type, item_key_type_name="", item_value_type_name=""):
+    # type: (type, type, str, str) -> Callable
+    def deco(f):
+        @functools.wraps(f)
+        def wrapper(self, value):
+            value_msg = "%s must be a dict" % f.__name__
+            item_key_msg = "Keys of %s must be %ss" % (
+                f.__name__,
+                item_key_type_name or item_key_type.__name__,
+            )
+            item_value_msg = "Values of %s must be %ss" % (
+                f.__name__,
+                item_value_type_name or item_value_type.__name__,
+            )
+            return f(
+                self,
+                ensure_dict(
+                    value,
+                    item_key_type,
+                    item_value_type,
+                    value_failure_msg=value_msg,
+                    item_key_failure_msg=item_key_msg,
+                    item_value_failure_msg=item_value_msg,
+                ),
+            )
+
+        return wrapper
+
+    return deco
+
+
+def ensured_value(check=None, partial_msg="valid"):
+    def deco(f):
+        @functools.wraps(f)
+        def wrapper(self, value):
+            msg = "%s must be %s" % (f.__name__, partial_msg)
+            return f(self, ensure_value(value, check=check, failure_msg=msg))
+
+        return wrapper
+
+    return deco
+
+
+def ensured_type(value_type, type_name=""):
+    # type: (type, str) -> Callable
+    def deco(f):
+        @functools.wraps(f)
+        def wrapper(self, value):
+            msg = "%s must be a %s" % (
+                f.__name__,
+                type_name or value_type.__name__,
+            )
+            return f(self, ensure_type(value, value_type=value_type, value_failure_msg=msg))
+
+        return wrapper
+
+    return deco
+
+
+def ensured_string(f):
+    return ensured_type(six.string_types, type_name="string")(f)
+
+
+def ensured_number(f):
+    return ensured_type(number_types, type_name="number")(f)
+
+
+def ensured_positive_number(f):
+    return ensured_value(check=lambda x: x > 0, partial_msg="positive")(
+        ensured_type(number_types, type_name="number")(f)
+    )
+
+
+def ensured_nonnegative_number(f):
+    return ensured_value(check=lambda x: x >= 0, partial_msg="non-negative")(
+        ensured_type(number_types, type_name="number")(f)
+    )
+
+
+def ensured_bool(f):
+    return ensured_type(bool, type_name="boolean")(f)
+
+
+def ensured_int(f):
+    return ensured_type(bool, type_name="boolean")(f)
 
 
 class IntType(object):
@@ -561,66 +681,61 @@ class _Config(object):
 
     @property
     def cluster_members(self):
+        # type: () -> List[str]
         return self._cluster_members
 
     @cluster_members.setter
+    @ensured_list(six.string_types, item_type_name="string")
     def cluster_members(self, value):
-        if isinstance(value, list):
-            for address in value:
-                if not isinstance(address, six.string_types):
-                    raise TypeError("cluster_members must be list of strings")
-
-            self._cluster_members = value
-        else:
-            raise TypeError("cluster_members must be a list")
+        # type: (List[str]) -> None
+        self._cluster_members = value
 
     @property
     def cluster_name(self):
+        # type: () -> str
         return self._cluster_name
 
     @cluster_name.setter
+    @ensured_string
     def cluster_name(self, value):
-        if isinstance(value, six.string_types):
-            self._cluster_name = value
-        else:
-            raise TypeError("cluster_name must be a string")
+        # type: (str) -> None
+        self._cluster_name = value
 
     @property
     def client_name(self):
+        # type: () -> str
         return self._client_name
 
     @client_name.setter
+    @ensured_string
     def client_name(self, value):
-        if isinstance(value, six.string_types):
-            self._client_name = value
-        else:
-            raise TypeError("client_name must be a string")
+        # type: (str) -> None
+        self._client_name = value
 
     @property
     def connection_timeout(self):
+        # type: () -> float
         return self._connection_timeout
 
     @connection_timeout.setter
+    @ensured_nonnegative_number
     def connection_timeout(self, value):
-        if isinstance(value, number_types):
-            if value < 0:
-                raise ValueError("connection_timeout must be non-negative")
-            self._connection_timeout = value
-        else:
-            raise TypeError("connection_timeout must be a number")
+        # type: (float) -> None
+        self._connection_timeout = value
 
     @property
     def socket_options(self):
+        # type: () -> list
         return self._socket_options
 
     @socket_options.setter
     def socket_options(self, value):
+        # type: (List[Tuple[object, object, object]]) -> None
         if isinstance(value, list):
             try:
                 for _, _, _ in value:
                     # Must be a tuple of length 3
                     pass
-
                 self._socket_options = value
             except ValueError:
                 raise TypeError("socket_options must contain tuples of length 3 as items")
@@ -629,214 +744,210 @@ class _Config(object):
 
     @property
     def redo_operation(self):
+        # type: () -> bool
         return self._redo_operation
 
     @redo_operation.setter
+    @ensured_bool
     def redo_operation(self, value):
-        if isinstance(value, bool):
-            self._redo_operation = value
-        else:
-            raise TypeError("redo_operation must be a boolean")
+        # type: (bool) -> None
+        self._redo_operation = value
 
     @property
     def smart_routing(self):
+        # type: () -> bool
         return self._smart_routing
 
     @smart_routing.setter
+    @ensured_bool
     def smart_routing(self, value):
-        if isinstance(value, bool):
-            self._smart_routing = value
-        else:
-            raise TypeError("smart_routing must be a boolean")
+        # type: (bool) -> None
+        self._smart_routing = value
 
     @property
     def ssl_enabled(self):
+        # type: () -> bool
         return self._ssl_enabled
 
     @ssl_enabled.setter
+    @ensured_bool
     def ssl_enabled(self, value):
-        if isinstance(value, bool):
-            self._ssl_enabled = value
-        else:
-            raise TypeError("ssl_enabled must be a boolean")
+        # type: (bool) -> None
+        self._ssl_enabled = value
 
     @property
     def ssl_cafile(self):
+        # type: () -> str
         return self._ssl_cafile
 
     @ssl_cafile.setter
+    @ensured_string
     def ssl_cafile(self, value):
-        if isinstance(value, six.string_types):
-            self._ssl_cafile = value
-        else:
-            raise TypeError("ssl_cafile must be a string")
+        # type: (str) -> None
+        self._ssl_cafile = value
 
     @property
     def ssl_certfile(self):
+        # type: () -> str
         return self._ssl_certfile
 
     @ssl_certfile.setter
+    @ensured_string
     def ssl_certfile(self, value):
-        if isinstance(value, six.string_types):
-            self._ssl_certfile = value
-        else:
-            raise TypeError("ssl_certfile must be a string")
+        # type: (str) -> None
+        self._ssl_certfile = value
 
     @property
     def ssl_keyfile(self):
+        # type: () -> str
         return self._ssl_keyfile
 
     @ssl_keyfile.setter
+    @ensured_string
     def ssl_keyfile(self, value):
-        if isinstance(value, six.string_types):
-            self._ssl_keyfile = value
-        else:
-            raise TypeError("ssl_keyfile must be a string")
+        # type: (str) -> None
+        self._ssl_keyfile = value
 
     @property
     def ssl_password(self):
         return self._ssl_password
 
     @ssl_password.setter
+    @ensured_type(
+        (six.string_types, six.binary_type, bytearray, Callable),
+        type_name="string, bytes, bytearray or callable",
+    )
     def ssl_password(self, value):
-        if isinstance(value, (six.string_types, six.binary_type, bytearray)) or callable(value):
-            self._ssl_password = value
-        else:
-            raise TypeError("ssl_password must be string, bytes, bytearray or callable")
+        self._ssl_password = value
 
     @property
     def ssl_protocol(self):
+        # type: () -> int
         return self._ssl_protocol
 
     @ssl_protocol.setter
     def ssl_protocol(self, value):
+        # type: (int) -> None
         self._ssl_protocol = try_to_get_enum_value(value, SSLProtocol)
 
     @property
     def ssl_ciphers(self):
+        # type: () -> str
         return self._ssl_ciphers
 
     @ssl_ciphers.setter
+    @ensured_string
     def ssl_ciphers(self, value):
-        if isinstance(value, six.string_types):
-            self._ssl_ciphers = value
-        else:
-            raise TypeError("ssl_ciphers must be a string")
+        # type: (str) -> None
+        self._ssl_ciphers = value
 
     @property
     def cloud_discovery_token(self):
+        # type: () -> str
         return self._cloud_discovery_token
 
     @cloud_discovery_token.setter
+    @ensured_string
     def cloud_discovery_token(self, value):
-        if isinstance(value, six.string_types):
-            self._cloud_discovery_token = value
-        else:
-            raise TypeError("cloud_discovery_token must be a string")
+        # type: (str) -> None
+        self._cloud_discovery_token = value
 
     @property
     def async_start(self):
+        # type: () -> bool
         return self._async_start
 
     @async_start.setter
+    @ensured_bool
     def async_start(self, value):
-        if isinstance(value, bool):
-            self._async_start = value
-        else:
-            raise TypeError("async_start must be a boolean")
+        # type: (bool) -> None
+        self._async_start = value
 
     @property
     def reconnect_mode(self):
+        # type: () -> int
         return self._reconnect_mode
 
     @reconnect_mode.setter
     def reconnect_mode(self, value):
+        # type: (bool) -> None
         self._reconnect_mode = try_to_get_enum_value(value, ReconnectMode)
 
     @property
     def retry_initial_backoff(self):
+        # type: () -> float
         return self._retry_initial_backoff
 
     @retry_initial_backoff.setter
+    @ensured_nonnegative_number
     def retry_initial_backoff(self, value):
-        if isinstance(value, number_types):
-            if value < 0:
-                raise ValueError("retry_initial_backoff must be non-negative")
-            self._retry_initial_backoff = value
-        else:
-            raise TypeError("retry_initial_backoff must be a number")
+        # type: (float) -> None
+        self._retry_initial_backoff = value
 
     @property
     def retry_max_backoff(self):
+        # type: () -> float
         return self._retry_max_backoff
 
     @retry_max_backoff.setter
+    @ensured_nonnegative_number
     def retry_max_backoff(self, value):
-        if isinstance(value, number_types):
-            if value < 0:
-                raise ValueError("retry_max_backoff must be non-negative")
-            self._retry_max_backoff = value
-        else:
-            raise TypeError("retry_max_backoff must be a number")
+        # type: (float) -> None
+        self._retry_max_backoff = value
 
     @property
     def retry_jitter(self):
+        # type: () -> float
         return self._retry_jitter
 
     @retry_jitter.setter
+    @ensured_number
+    @ensured_value(check=lambda x: 0.0 <= x <= 1.0, partial_msg="in range [0.0, 1.0]")
     def retry_jitter(self, value):
-        if isinstance(value, number_types):
-            if value < 0 or value > 1:
-                raise ValueError("retry_jitter must be in range [0.0, 1.0]")
-            self._retry_jitter = value
-        else:
-            raise TypeError("retry_jitter must be a number")
+        # type: (float) -> None
+        self._retry_jitter = value
 
     @property
     def retry_multiplier(self):
+        # type: () -> float
         return self._retry_multiplier
 
     @retry_multiplier.setter
+    @ensured_value(check=lambda x: x >= 1.0, partial_msg="greater than or equal to 1.0")
     def retry_multiplier(self, value):
-        if isinstance(value, number_types):
-            if value < 1:
-                raise ValueError("retry_multiplier must be greater than or equal to 1.0")
-            self._retry_multiplier = value
-        else:
-            raise TypeError("retry_multiplier must be a number")
+        # type: (float) -> None
+        self._retry_multiplier = value
 
     @property
     def cluster_connect_timeout(self):
+        # type: () -> float
         return self._cluster_connect_timeout
 
     @cluster_connect_timeout.setter
+    @ensured_nonnegative_number
     def cluster_connect_timeout(self, value):
-        if isinstance(value, number_types):
-            if value < 0:
-                raise ValueError("cluster_connect_timeout must be non-negative")
-            self._cluster_connect_timeout = value
-        else:
-            raise TypeError("cluster_connect_timeout must be a number")
+        # type: (float) -> None
+        self._cluster_connect_timeout = value
 
     @property
     def portable_version(self):
+        # type: () -> int
         return self._portable_version
 
     @portable_version.setter
+    @ensured_nonnegative_number
     def portable_version(self, value):
-        if isinstance(value, number_types):
-            if value < 0:
-                raise ValueError("portable_version must be non-negative")
-            self._portable_version = value
-        else:
-            raise TypeError("portable_version must be a number")
+        # type: (int) -> None
+        self._portable_version = value
 
     @property
     def data_serializable_factories(self):
+        # type: () -> Dict[int, Dict[int, IdentifiedDataSerializable]]
         return self._data_serializable_factories
 
     @data_serializable_factories.setter
     def data_serializable_factories(self, value):
+        # type: (Dict[int, Dict[int, IdentifiedDataSerializable]]) -> None
         if isinstance(value, dict):
             for factory_id, factory in six.iteritems(value):
                 if not isinstance(factory_id, six.integer_types):
@@ -865,10 +976,12 @@ class _Config(object):
 
     @property
     def portable_factories(self):
+        # type: () -> Dict[int, Dict[int, Portable]]
         return self._portable_factories
 
     @portable_factories.setter
     def portable_factories(self, value):
+        # type: (Dict[int, Dict[int, Portable]]) -> None
         if isinstance(value, dict):
             for factory_id, factory in six.iteritems(value):
                 if not isinstance(factory_id, six.integer_types):
@@ -893,84 +1006,72 @@ class _Config(object):
 
     @property
     def class_definitions(self):
+        # type: () -> List[ClassDefinition]
         return self._class_definitions
 
     @class_definitions.setter
+    @ensured_list(ClassDefinition)
     def class_definitions(self, value):
-        if isinstance(value, list):
-            for cd in value:
-                if not isinstance(cd, ClassDefinition):
-                    raise TypeError(
-                        "class_definitions must contain objects of type ClassDefinition"
-                    )
-
-            self._class_definitions = value
-        else:
-            raise TypeError("class_definitions must be a list")
+        # type: (List[ClassDefinition]) -> None
+        self._class_definitions = value
 
     @property
     def check_class_definition_errors(self):
+        # type: () -> bool
         return self._check_class_definition_errors
 
     @check_class_definition_errors.setter
+    @ensured_bool
     def check_class_definition_errors(self, value):
-        if isinstance(value, bool):
-            self._check_class_definition_errors = value
-        else:
-            raise TypeError("check_class_definition_errors must be a boolean")
+        # type: (bool) -> None
+        self._check_class_definition_errors = value
 
     @property
     def is_big_endian(self):
+        # type: () -> bool
         return self._is_big_endian
 
     @is_big_endian.setter
+    @ensured_bool
     def is_big_endian(self, value):
-        if isinstance(value, bool):
-            self._is_big_endian = value
-        else:
-            raise TypeError("is_big_endian must be a boolean")
+        # type: (bool) -> None
+        self._is_big_endian = value
 
     @property
     def default_int_type(self):
+        # type: () -> int
         return self._default_int_type
 
     @default_int_type.setter
     def default_int_type(self, value):
+        # type: (int) -> None
         self._default_int_type = try_to_get_enum_value(value, IntType)
 
     @property
     def global_serializer(self):
+        # type: () -> StreamSerializer
         return self._global_serializer
 
     @global_serializer.setter
+    @ensured_type(StreamSerializer)
     def global_serializer(self, value):
-        if isinstance(value, type) and issubclass(value, StreamSerializer):
-            self._global_serializer = value
-        else:
-            raise TypeError("global_serializer must be a StreamSerializer")
+        # type: (StreamSerializer) -> None
+        self._global_serializer = value
 
     @property
     def custom_serializers(self):
+        # type: () -> Dict[type, StreamSerializer]
         return self._custom_serializers
 
     @custom_serializers.setter
+    @ensured_dict(type, StreamSerializer)
     def custom_serializers(self, value):
-        if isinstance(value, dict):
-            for _type, serializer in six.iteritems(value):
-                if not isinstance(_type, type):
-                    raise TypeError("Keys of custom_serializers must be types")
-
-                if not (isinstance(serializer, type) and issubclass(serializer, StreamSerializer)):
-                    raise TypeError(
-                        "Values of custom_serializers must be subclasses of StreamSerializer"
-                    )
-
-            self._custom_serializers = value
-        else:
-            raise TypeError("custom_serializers must be a dict")
+        # type: (Dict[type, StreamSerializer]) -> None
+        self._custom_serializers = value
 
     @property
     def near_caches(self):
+        # type: () -> Dict[six.string_types, _NearCacheConfig]
         return self._near_caches
 
     @near_caches.setter
@@ -992,21 +1093,23 @@ class _Config(object):
 
     @property
     def load_balancer(self):
+        # type: () -> LoadBalancer
         return self._load_balancer
 
     @load_balancer.setter
+    @ensured_type(LoadBalancer)
     def load_balancer(self, value):
-        if isinstance(value, LoadBalancer):
-            self._load_balancer = value
-        else:
-            raise TypeError("load_balancer must be a LoadBalancer")
+        # type: (LoadBalancer) -> None
+        self._load_balancer = value
 
     @property
     def membership_listeners(self):
+        # type: () -> List[Tuple[Callable, Callable]]
         return self._membership_listeners
 
     @membership_listeners.setter
     def membership_listeners(self, value):
+        # type: (List[Tuple[Callable, Callable]]) -> None
         if isinstance(value, list):
             try:
                 for item in value:
@@ -1030,25 +1133,23 @@ class _Config(object):
 
     @property
     def lifecycle_listeners(self):
+        # type: () -> List[Callable]
         return self._lifecycle_listeners
 
     @lifecycle_listeners.setter
+    @ensured_list(Callable, item_type_name="callable item")
     def lifecycle_listeners(self, value):
-        if isinstance(value, list):
-            for listener in value:
-                if not callable(listener):
-                    raise TypeError("lifecycle_listeners must contain callable items")
-
-            self._lifecycle_listeners = value
-        else:
-            raise TypeError("lifecycle_listeners must be a list")
+        # type: (List[Callable]) -> None
+        self._lifecycle_listeners = value
 
     @property
     def flake_id_generators(self):
+        # type: () -> Dict[str, dict]
         return self._flake_id_generators
 
     @flake_id_generators.setter
     def flake_id_generators(self, value):
+        # type: (Dict[str, dict]) -> None
         if isinstance(value, dict):
             configs = dict()
             for name, config in six.iteritems(value):
@@ -1066,144 +1167,127 @@ class _Config(object):
 
     @property
     def labels(self):
+        # type: () -> List[str]
         return self._labels
 
     @labels.setter
+    @ensured_list(six.string_types)
     def labels(self, value):
-        if isinstance(value, list):
-            for label in value:
-                if not isinstance(label, six.string_types):
-                    raise TypeError("labels must be list of strings")
-
-            self._labels = value
-        else:
-            raise TypeError("labels must be a list")
+        # type: (List[str]) -> None
+        self._labels = value
 
     @property
     def heartbeat_interval(self):
+        # type: () -> float
         return self._heartbeat_interval
 
     @heartbeat_interval.setter
+    @ensured_positive_number
     def heartbeat_interval(self, value):
-        if isinstance(value, number_types):
-            if value <= 0:
-                raise ValueError("heartbeat_interval must be positive")
-            self._heartbeat_interval = value
-        else:
-            raise TypeError("heartbeat_interval must be a number")
+        self._heartbeat_interval = value
 
     @property
     def heartbeat_timeout(self):
+        # type: () -> float
         return self._heartbeat_timeout
 
     @heartbeat_timeout.setter
+    @ensured_positive_number
     def heartbeat_timeout(self, value):
-        if isinstance(value, number_types):
-            if value <= 0:
-                raise ValueError("heartbeat_timeout must be positive")
-            self._heartbeat_timeout = value
-        else:
-            raise TypeError("heartbeat_timeout must be a number")
+        # type: (float) -> None
+        self._heartbeat_timeout = value
 
     @property
     def invocation_timeout(self):
+        # type: () -> float
         return self._invocation_timeout
 
     @invocation_timeout.setter
+    @ensured_positive_number
     def invocation_timeout(self, value):
-        if isinstance(value, number_types):
-            if value <= 0:
-                raise ValueError("invocation_timeout must be positive")
-            self._invocation_timeout = value
-        else:
-            raise TypeError("invocation_timeout must be a number")
+        # type: (float) -> None
+        self._invocation_timeout = value
 
     @property
     def invocation_retry_pause(self):
+        # type: () -> float
         return self._invocation_retry_pause
 
     @invocation_retry_pause.setter
+    @ensured_positive_number
     def invocation_retry_pause(self, value):
-        if isinstance(value, number_types):
-            if value <= 0:
-                raise ValueError("invocation_retry_pause must be positive")
-            self._invocation_retry_pause = value
-        else:
-            raise TypeError("invocation_retry_pause must be a number")
+        # type: (float) -> None
+        self._invocation_retry_pause = value
 
     @property
     def statistics_enabled(self):
+        # type: () -> bool
         return self._statistics_enabled
 
     @statistics_enabled.setter
+    @ensured_bool
     def statistics_enabled(self, value):
-        if isinstance(value, bool):
-            self._statistics_enabled = value
-        else:
-            raise TypeError("statistics_enabled must be a boolean")
+        # type: (bool) -> None
+        self._statistics_enabled = value
 
     @property
     def statistics_period(self):
+        # type: () -> float
         return self._statistics_period
 
     @statistics_period.setter
+    @ensured_positive_number
     def statistics_period(self, value):
-        if isinstance(value, number_types):
-            if value <= 0:
-                raise ValueError("statistics_period must be positive")
-            self._statistics_period = value
-        else:
-            raise TypeError("statistics_period must be a number")
+        # type: (float) -> None
+        self._statistics_period = value
 
     @property
     def shuffle_member_list(self):
+        # type: () -> bool
         return self._shuffle_member_list
 
     @shuffle_member_list.setter
+    @ensured_bool
     def shuffle_member_list(self, value):
-        if isinstance(value, bool):
-            self._shuffle_member_list = value
-        else:
-            raise TypeError("shuffle_member_list must be a boolean")
+        # type: (bool) -> None
+        self._shuffle_member_list = value
 
     @property
     def backup_ack_to_client_enabled(self):
+        # type: () -> bool
         return self._backup_ack_to_client_enabled
 
     @backup_ack_to_client_enabled.setter
+    @ensured_bool
     def backup_ack_to_client_enabled(self, value):
-        if isinstance(value, bool):
-            self._backup_ack_to_client_enabled = value
-        else:
-            raise TypeError("backup_ack_to_client_enabled must be a boolean")
+        # type: (bool) -> None
+        self._backup_ack_to_client_enabled = value
 
     @property
     def operation_backup_timeout(self):
+        # type: () -> float
         return self._operation_backup_timeout
 
     @operation_backup_timeout.setter
+    @ensured_positive_number
     def operation_backup_timeout(self, value):
-        if isinstance(value, number_types):
-            if value > 0:
-                self._operation_backup_timeout = value
-            else:
-                raise ValueError("operation_backup_timeout must be positive")
-        else:
-            raise TypeError("operation_backup_timeout must be a number")
+        # type: (float) -> None
+        self._operation_backup_timeout = value
 
     @property
     def fail_on_indeterminate_operation_state(self):
+        # type: () -> bool
         return self._fail_on_indeterminate_operation_state
 
     @fail_on_indeterminate_operation_state.setter
+    @ensured_bool
     def fail_on_indeterminate_operation_state(self, value):
-        if isinstance(value, bool):
-            self._fail_on_indeterminate_operation_state = value
-        else:
-            raise TypeError("fail_on_indeterminate_operation_state must be a boolean")
+        # type: (bool) -> None
+        self._fail_on_indeterminate_operation_state = value
 
     @classmethod
     def from_dict(cls, d):
+        # type: (dict) -> _Config
         config = cls()
         for k, v in six.iteritems(d):
             if v is not None:
@@ -1212,6 +1296,10 @@ class _Config(object):
                 except AttributeError:
                     raise InvalidConfigurationError("Unrecognized config option: %s" % k)
         return config
+
+
+# Experimental
+Config = _Config
 
 
 class _NearCacheConfig(object):
