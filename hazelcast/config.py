@@ -1,6 +1,6 @@
 import functools
 import re
-from typing import List, Tuple, Dict, Callable
+from typing import List, Tuple, Dict, Callable, Iterable
 
 from hazelcast import six
 from hazelcast.errors import InvalidConfigurationError
@@ -21,6 +21,16 @@ from hazelcast.util import (
 __all__ = ("Config",)
 
 
+def get_type_name(obj_type):
+    # (type) -> str
+    name = getattr(obj_type, "__name__", None)
+    if name is not None:
+        return name
+    if isinstance(obj_type, Iterable):
+        return " or ".join(get_type_name(t) for t in obj_type)
+    return str(obj_type)
+
+
 def ensured_list(item_type, item_type_name="", value_failure_msg="", item_failure_msg=""):
     # type: (type, str, str, str) -> Callable
     def deco(f):
@@ -29,7 +39,7 @@ def ensured_list(item_type, item_type_name="", value_failure_msg="", item_failur
             value_msg = value_failure_msg or "%s must be a list" % f.__name__
             item_msg = item_failure_msg or "%s must be a list of %ss" % (
                 f.__name__,
-                item_type_name or item_type.__name__,
+                item_type_name or get_type_name(item_type),
             )
             return f(
                 self,
@@ -54,11 +64,11 @@ def ensured_dict(item_key_type, item_value_type, item_key_type_name="", item_val
             value_msg = "%s must be a dict" % f.__name__
             item_key_msg = "Keys of %s must be %ss" % (
                 f.__name__,
-                item_key_type_name or item_key_type.__name__,
+                item_key_type_name or get_type_name(item_key_type),
             )
             item_value_msg = "Values of %s must be %ss" % (
                 f.__name__,
-                item_value_type_name or item_value_type.__name__,
+                item_value_type_name or get_type_name(item_value_type),
             )
             return f(
                 self,
@@ -96,7 +106,7 @@ def ensured_type(value_type, type_name=""):
         def wrapper(self, value):
             msg = "%s must be a %s" % (
                 f.__name__,
-                type_name or value_type.__name__,
+                type_name or get_type_name(value_type),
             )
             return f(self, ensure_type(value, value_type=value_type, value_failure_msg=msg))
 
@@ -1053,21 +1063,34 @@ class _Config(object):
         return self._global_serializer
 
     @global_serializer.setter
-    @ensured_type(StreamSerializer)
     def global_serializer(self, value):
-        # type: (StreamSerializer) -> None
-        self._global_serializer = value
+        # type: (type) -> None
+        if isinstance(value, type) and issubclass(value, StreamSerializer):
+            self._global_serializer = value
+        else:
+            raise TypeError("global_serializer must be a StreamSerializer")
 
     @property
     def custom_serializers(self):
-        # type: () -> Dict[type, StreamSerializer]
+        # type: () -> Dict[type, type]
         return self._custom_serializers
 
     @custom_serializers.setter
-    @ensured_dict(type, StreamSerializer)
     def custom_serializers(self, value):
-        # type: (Dict[type, StreamSerializer]) -> None
-        self._custom_serializers = value
+        # type: (Dict[type, type]) -> None
+        if isinstance(value, dict):
+            for _type, serializer in six.iteritems(value):
+                if not isinstance(_type, type):
+                    raise TypeError("Keys of custom_serializers must be types")
+
+                if not (isinstance(serializer, type) and issubclass(serializer, StreamSerializer)):
+                    raise TypeError(
+                        "Values of custom_serializers must be subclasses of StreamSerializer"
+                    )
+
+            self._custom_serializers = value
+        else:
+            raise TypeError("custom_serializers must be a dict")
 
     @property
     def near_caches(self):
