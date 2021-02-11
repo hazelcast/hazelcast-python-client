@@ -459,6 +459,22 @@ class IndexUtil(object):
             raise ValueError("Unsupported index type %s" % index_type)
 
 
+_DEFAULT_CLUSTER_NAME = "dev"
+_DEFAULT_CONNECTION_TIMEOUT = 5.0
+_DEFAULT_RETRY_INITIAL_BACKOFF = 1.0
+_DEFAULT_RETRY_MAX_BACKOFF = 30.0
+_DEFAULT_RETRY_JITTER = 0.0
+_DEFAULT_RETRY_MULTIPLIER = 1.05
+_DEFAULT_CLUSTER_CONNECT_TIMEOUT = -1
+_DEFAULT_PORTABLE_VERSION = 0
+_DEFAULT_HEARTBEAT_INTERVAL = 5.0
+_DEFAULT_HEARTBEAT_TIMEOUT = 60.0
+_DEFAULT_INVOCATION_TIMEOUT = 120.0
+_DEFAULT_INVOCATION_RETRY_PAUSE = 1.0
+_DEFAULT_STATISTICS_PERIOD = 3.0
+_DEFAULT_OPERATION_BACKUP_TIMEOUT = 5.0
+
+
 class _Config(object):
     __slots__ = (
         "_cluster_members",
@@ -512,9 +528,9 @@ class _Config(object):
 
     def __init__(self):
         self._cluster_members = []
-        self._cluster_name = "dev"
+        self._cluster_name = _DEFAULT_CLUSTER_NAME
         self._client_name = None
-        self._connection_timeout = 5.0
+        self._connection_timeout = _DEFAULT_CONNECTION_TIMEOUT
         self._socket_options = []
         self._redo_operation = False
         self._smart_routing = True
@@ -528,12 +544,12 @@ class _Config(object):
         self._cloud_discovery_token = None
         self._async_start = False
         self._reconnect_mode = ReconnectMode.ON
-        self._retry_initial_backoff = 1.0
-        self._retry_max_backoff = 30.0
-        self._retry_jitter = 0.0
-        self._retry_multiplier = 1.05
-        self._cluster_connect_timeout = -1
-        self._portable_version = 0
+        self._retry_initial_backoff = _DEFAULT_RETRY_INITIAL_BACKOFF
+        self._retry_max_backoff = _DEFAULT_RETRY_MAX_BACKOFF
+        self._retry_jitter = _DEFAULT_RETRY_JITTER
+        self._retry_multiplier = _DEFAULT_RETRY_MULTIPLIER
+        self._cluster_connect_timeout = _DEFAULT_CLUSTER_CONNECT_TIMEOUT
+        self._portable_version = _DEFAULT_PORTABLE_VERSION
         self._data_serializable_factories = {}
         self._portable_factories = {}
         self._class_definitions = []
@@ -548,15 +564,15 @@ class _Config(object):
         self._lifecycle_listeners = []
         self._flake_id_generators = {}
         self._labels = []
-        self._heartbeat_interval = 5.0
-        self._heartbeat_timeout = 60.0
-        self._invocation_timeout = 120.0
-        self._invocation_retry_pause = 1.0
+        self._heartbeat_interval = _DEFAULT_HEARTBEAT_INTERVAL
+        self._heartbeat_timeout = _DEFAULT_HEARTBEAT_TIMEOUT
+        self._invocation_timeout = _DEFAULT_INVOCATION_TIMEOUT
+        self._invocation_retry_pause = _DEFAULT_INVOCATION_RETRY_PAUSE
         self._statistics_enabled = False
-        self._statistics_period = 3.0
+        self._statistics_period = _DEFAULT_STATISTICS_PERIOD
         self._shuffle_member_list = True
         self._backup_ack_to_client_enabled = True
-        self._operation_backup_timeout = 5.0
+        self._operation_backup_timeout = _DEFAULT_OPERATION_BACKUP_TIMEOUT
         self._fail_on_indeterminate_operation_state = False
 
     @property
@@ -812,8 +828,11 @@ class _Config(object):
     @cluster_connect_timeout.setter
     def cluster_connect_timeout(self, value):
         if isinstance(value, number_types):
-            if value < 0 and value != -1:
-                raise ValueError("cluster_connect_timeout must be non-negative or equal to -1")
+            if value < 0 and value != _DEFAULT_CLUSTER_CONNECT_TIMEOUT:
+                raise ValueError(
+                    "cluster_connect_timeout must be non-negative or equal to %s"
+                    % _DEFAULT_CLUSTER_CONNECT_TIMEOUT
+                )
             self._cluster_connect_timeout = value
         else:
             raise TypeError("cluster_connect_timeout must be a number")

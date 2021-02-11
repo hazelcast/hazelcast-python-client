@@ -46,10 +46,9 @@ starting and reconnecting modes.
 Configuring Client Connection Retry
 -----------------------------------
 
-When the client is disconnected from the cluster or trying to connect
-to a one for the first time, it searches for new connections. You can
-configure the frequency of the connection attempts and the client
-shutdown behavior using the arguments below.
+The client searches for new connections when it is trying to connect
+to the cluster. Both the frequency of connection attempts and the
+client shutdown behavior can be configured using the arguments below.
 
 .. code:: python
 
@@ -75,8 +74,7 @@ The following are configuration element descriptions:
   default value is ``0``. It must be in range ``0`` to ``1``.
 - ``cluster_connect_timeout``: Timeout value in seconds for the client
   to give up connecting to the cluster. Its default value is
-  ``-1``. For the default value, client will not stop trying to connect
-  to the target cluster. (infinite timeout)
+  ``-1``. The client will continuously try to connect by default.
 
 A pseudo-code is as follows:
 
@@ -87,7 +85,7 @@ A pseudo-code is as follows:
     while (try_connect(connection_timeout)) != SUCCESS) {
         if (get_current_time() - begin_time >= CLUSTER_CONNECT_TIMEOUT) {
             // Give up to connecting to the current cluster and switch to another if exists.
-            // For the default values, CLUSTER_CONNECT_TIMEOUT is infinite.
+            // CLUSTER_CONNECT_TIMEOUT is infinite by default.
         }
         sleep(current_backoff + uniform_random(-JITTER * current_backoff, JITTER * current_backoff))
         current_backoff = min(current_backoff * MULTIPLIER, MAX_BACKOFF)

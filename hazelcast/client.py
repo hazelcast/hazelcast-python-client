@@ -1,7 +1,7 @@
 import logging
+import sys
 import threading
 
-from hazelcast import six
 from hazelcast.cluster import ClusterService, _InternalClusterService
 from hazelcast.config import _Config
 from hazelcast.connection import ConnectionManager, DefaultAddressProvider
@@ -678,7 +678,7 @@ class HazelcastClient(object):
     @staticmethod
     def _get_connection_timeout(config):
         timeout = config.connection_timeout
-        return six.MAXSIZE if timeout == 0 else timeout
+        return sys.maxsize if timeout == 0 else timeout
 
     @staticmethod
     def _init_load_balancer(config):

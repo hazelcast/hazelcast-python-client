@@ -284,7 +284,7 @@ class ConnectionManager(object):
             # If the no timeout is specified by the
             # user, or set to -1 explicitly, set
             # the timeout to infinite.
-            cluster_connect_timeout = six.MAXSIZE
+            cluster_connect_timeout = sys.maxsize
 
         return _WaitStrategy(
             config.retry_initial_backoff,
