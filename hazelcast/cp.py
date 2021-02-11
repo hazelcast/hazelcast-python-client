@@ -1,7 +1,7 @@
+import sys
 import time
 from threading import RLock, Lock
 
-from hazelcast import six
 from hazelcast.errors import (
     SessionExpiredError,
     CPGroupDestroyedError,
@@ -277,7 +277,7 @@ class _SessionState(object):
     def _is_expired(self, timestamp):
         expiration_time = self.creation_time + self.ttl
         if expiration_time < 0:
-            expiration_time = six.MAXSIZE
+            expiration_time = sys.maxsize
         return timestamp > expiration_time
 
     def __eq__(self, other):

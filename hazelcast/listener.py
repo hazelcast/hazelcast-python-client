@@ -1,4 +1,5 @@
 import logging
+import sys
 import threading
 from uuid import uuid4
 
@@ -100,7 +101,7 @@ class ListenerService(object):
                     continue
 
                 invocation = Invocation(
-                    deregister_request, connection=connection, timeout=six.MAXSIZE, urgent=True
+                    deregister_request, connection=connection, timeout=sys.maxsize, urgent=True
                 )
                 self._invocation_service.invoke(invocation)
 
