@@ -23,12 +23,12 @@ class GlobalSerializer(StreamSerializer):
         super(GlobalSerializer, self).__init__()
 
     def read(self, inp):
-        utf = inp.read_utf()
-        obj = cPickle.loads(utf.encode())
+        string = inp.read_string()
+        obj = cPickle.loads(string.encode())
         return obj
 
     def write(self, out, obj):
-        out.write_utf(cPickle.dumps(obj, 0).decode("utf-8"))
+        out.write_string(cPickle.dumps(obj, 0).decode("utf-8"))
 
     def get_type_id(self):
         return self.GLOBAL_SERIALIZER_ID

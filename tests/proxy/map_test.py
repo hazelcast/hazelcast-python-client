@@ -20,10 +20,10 @@ class EntryProcessor(IdentifiedDataSerializable):
         self.value = value
 
     def write_data(self, object_data_output):
-        object_data_output.write_utf(self.value)
+        object_data_output.write_string(self.value)
 
     def read_data(self, object_data_input):
-        self.value = object_data_input.read()
+        self.value = object_data_input.read_string()
 
     def get_factory_id(self):
         return self.FACTORY_ID

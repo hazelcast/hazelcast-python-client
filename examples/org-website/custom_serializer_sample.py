@@ -10,10 +10,10 @@ class CustomSerializableType(object):
 
 class CustomSerializer(StreamSerializer):
     def write(self, out, obj):
-        out.write_utf(obj.value)
+        out.write_string(obj.value)
 
     def read(self, inp):
-        return CustomSerializableType(inp.read_utf())
+        return CustomSerializableType(inp.read_string())
 
     def get_type_id(self):
         return 10

@@ -47,7 +47,7 @@ class SimpleEntryProcessor(IdentifiedDataSerializable):
         pass
 
     def write_data(self, object_data_output):
-        object_data_output.write_utf(self.value)
+        object_data_output.write_string(self.value)
 
     def get_class_id(self):
         return self.CLASS_ID

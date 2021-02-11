@@ -177,7 +177,7 @@ class MorphingPortableTestCase(unittest.TestCase):
             self.reader.read_long,
             self.reader.read_float,
             self.reader.read_double,
-            self.reader.read_utf_array,
+            self.reader.read_string_array,
             self.reader.read_short_array,
             self.reader.read_int_array,
             self.reader.read_long_array,
@@ -193,12 +193,12 @@ class MorphingPortableTestCase(unittest.TestCase):
             with self.assertRaises(TypeError):
                 read_fnc("9")
         with self.assertRaises(TypeError):
-            self.reader.read_utf("1")
+            self.reader.read_string("1")
 
     def test_missing_fields(self):
         functions = [
-            self.reader.read_utf,
-            self.reader.read_utf_array,
+            self.reader.read_string,
+            self.reader.read_string_array,
             self.reader.read_short_array,
             self.reader.read_int_array,
             self.reader.read_long_array,

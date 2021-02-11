@@ -1150,10 +1150,10 @@ The following is an example for ``EntryProcessor`` which is an
             self.value = value
 
         def read_data(self, object_data_input):
-            self.value = object_data_input.read_utf()
+            self.value = object_data_input.read_string()
 
         def write_data(self, object_data_output):
-            object_data_output.write_utf(self.value)
+            object_data_output.write_string(self.value)
 
         def get_factory_id(self):
             return 5
@@ -1364,13 +1364,13 @@ Assume that you have an ``employee`` map containing the instances of
             return 1000
 
         def read_portable(self, reader):
-            self.name = reader.read_utf("name")
+            self.name = reader.read_string("name")
             self.age = reader.read_int("age")
             self.active = reader.read_boolean("active")
             self.salary = reader.read_double("salary")
 
         def write_portable(self, writer):
-            writer.write_utf("name", self.name)
+            writer.write_string("name", self.name)
             writer.write_int("age", self.age)
             writer.write_boolean("active", self.active)
             writer.write_double("salary", self.salary)

@@ -13,11 +13,11 @@ class Employee(IdentifiedDataSerializable):
 
     def read_data(self, object_data_input):
         self.id = object_data_input.read_int()
-        self.name = object_data_input.read_utf()
+        self.name = object_data_input.read_string()
 
     def write_data(self, object_data_output):
         object_data_output.write_int(self.id)
-        object_data_output.write_utf(self.name)
+        object_data_output.write_string(self.name)
 
     def get_factory_id(self):
         return self.FACTORY_ID

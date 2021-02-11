@@ -98,16 +98,16 @@ The following is an example of a class that extends
             return 1
 
         def write_data(self, output):
-            output.write_utf(self.street)
+            output.write_string(self.street)
             output.write_int(self.zip_code)
-            output.write_utf(self.city)
-            output.write_utf(self.state)
+            output.write_string(self.city)
+            output.write_string(self.state)
 
         def read_data(self, input):
-            self.street = input.read_utf()
+            self.street = input.read_string()
             self.zip_code = input.read_int()
-            self.city = input.read_utf()
-            self.state = input.read_utf()
+            self.city = input.read_string()
+            self.state = input.read_string()
 
 
 .. Note:: Refer to ``ObjectDataInput``/``ObjectDataOutput`` classes in
@@ -199,10 +199,10 @@ following:
             return 1
 
         def write_portable(self, writer):
-            writer.write_utf("foo", self.foo)
+            writer.write_string("foo", self.foo)
 
         def read_portable(self, reader):
-            self.foo = reader.read_utf("foo")
+            self.foo = reader.read_string("foo")
 
 
 .. Note:: Refer to ``PortableReader``/``PortableWriter`` classes in the
@@ -299,12 +299,12 @@ Foo class:
             return 2
 
         def write_portable(self, writer):
-            writer.write_utf("foo", self.foo)
-            writer.write_utf("foo2", self.foo2)
+            writer.write_string("foo", self.foo)
+            writer.write_string("foo2", self.foo2)
 
         def read_portable(self, reader):
-            self.foo = reader.read_utf("foo")
-            self.foo2 = reader.read_utf("foo2")
+            self.foo = reader.read_string("foo")
+            self.foo2 = reader.read_string("foo2")
 
 You should consider the following when you perform versioning:
 
@@ -377,10 +377,10 @@ Let’s say your custom ``MusicianSerializer`` will serialize
             pass
 
         def write(self, output, obj):
-            output.write_utf(obj.name)
+            output.write_string(obj.name)
 
         def read(self, input):
-            name = input.read_utf()
+            name = input.read_string()
             return Musician(name)
 
 Note that the serializer ``id`` must be unique as Hazelcast will use it
@@ -487,10 +487,10 @@ is shown below.
             pass
 
         def write(self, output, obj):
-            output.write_utf(some_third_party_serializer.serialize(obj))
+            output.write_string(some_third_party_serializer.serialize(obj))
 
         def read(self, input):
-            return some_third_party_serializer.deserialize(input.read_utf())
+            return some_third_party_serializer.deserialize(input.read_string())
 
 You should register the global serializer to the client.
 

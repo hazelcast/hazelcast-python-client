@@ -68,8 +68,8 @@ class SerializationV1Identified(IdentifiedDataSerializable):
         out.write_long_array(self.longs)
         out.write_float_array(self.floats)
         out.write_double_array(self.doubles)
-        out.write_utf(self.a_string)
-        out.write_utf_array(self.strings)
+        out.write_string(self.a_string)
+        out.write_string_array(self.strings)
 
     def read_data(self, inp):
         self.a_byte = inp.read_byte()
@@ -89,8 +89,8 @@ class SerializationV1Identified(IdentifiedDataSerializable):
         self.longs = inp.read_long_array()
         self.floats = inp.read_float_array()
         self.doubles = inp.read_double_array()
-        self.a_string = inp.read_utf()
-        self.strings = inp.read_utf_array()
+        self.a_string = inp.read_string()
+        self.strings = inp.read_string_array()
 
     def get_factory_id(self):
         return FACTORY_ID

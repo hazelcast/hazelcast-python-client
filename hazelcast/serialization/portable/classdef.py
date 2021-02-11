@@ -12,7 +12,8 @@ class FieldType(object):
     LONG = 6
     FLOAT = 7
     DOUBLE = 8
-    UTF = 9
+    UTF = 9  # Defined for backwards compatibility.
+    STRING = 9
     PORTABLE_ARRAY = 10
     BYTE_ARRAY = 11
     BOOLEAN_ARRAY = 12
@@ -22,7 +23,8 @@ class FieldType(object):
     LONG_ARRAY = 16
     FLOAT_ARRAY = 17
     DOUBLE_ARRAY = 18
-    UTF_ARRAY = 19
+    UTF_ARRAY = 19  # Defined for backwards compatibility.
+    STRING_ARRAY = 19
 
 
 class FieldDefinition(object):
@@ -183,9 +185,17 @@ class ClassDefinitionBuilder(object):
         self._add_field_by_type(field_name, FieldType.DOUBLE, self.version)
         return self
 
-    def add_utf_field(self, field_name):
-        self._add_field_by_type(field_name, FieldType.UTF, self.version)
+    def add_string_field(self, field_name):
+        self._add_field_by_type(field_name, FieldType.STRING, self.version)
         return self
+
+    def add_utf_field(self, field_name):
+        """
+        .. deprecated:: 4.1
+            This method is deprecated and will be removed in the
+            next major version. Use :func:`add_string_field` instead.
+        """
+        return self.add_string_field(field_name)
 
     def add_portable_array_field(self, field_name, class_def):
         if class_def.class_id is None or class_def.class_id == 0:
@@ -231,9 +241,17 @@ class ClassDefinitionBuilder(object):
         self._add_field_by_type(field_name, FieldType.DOUBLE_ARRAY, self.version)
         return self
 
-    def add_utf_array_field(self, field_name):
-        self._add_field_by_type(field_name, FieldType.UTF_ARRAY, self.version)
+    def add_string_array_field(self, field_name):
+        self._add_field_by_type(field_name, FieldType.STRING_ARRAY, self.version)
         return self
+
+    def add_utf_array_field(self, field_name):
+        """
+        .. deprecated:: 4.1
+            This method is deprecated and will be removed in the
+            next major version. Use :func:`add_string_array_field` instead.
+        """
+        return self.add_string_array_field(field_name)
 
     def add_field_def(self, field_def):
         self._check()

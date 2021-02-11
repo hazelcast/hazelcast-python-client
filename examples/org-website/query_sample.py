@@ -14,12 +14,12 @@ class User(Portable):
         self.active = active
 
     def write_portable(self, writer):
-        writer.write_utf("username", self.username)
+        writer.write_string("username", self.username)
         writer.write_int("age", self.age)
         writer.write_boolean("active", self.active)
 
     def read_portable(self, reader):
-        self.username = reader.read_utf("username")
+        self.username = reader.read_string("username")
         self.age = reader.read_int("age")
         self.active = reader.read_boolean("active")
 

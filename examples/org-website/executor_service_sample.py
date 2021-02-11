@@ -11,10 +11,10 @@ class MessagePrinter(Portable):
         self.message = message
 
     def write_portable(self, writer):
-        writer.write_utf("message", self.message)
+        writer.write_string("message", self.message)
 
     def read_portable(self, reader):
-        self.message = reader.read_utf("message")
+        self.message = reader.read_string("message")
 
     def get_factory_id(self):
         return self.FACTORY_ID

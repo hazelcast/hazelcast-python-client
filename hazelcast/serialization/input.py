@@ -84,7 +84,7 @@ class _ObjectDataInput(ObjectDataInput):
         self._check_available(self._pos, DOUBLE_SIZE_IN_BYTES)
         return self._read_from_buff(self._FMT_DOUBLE, DOUBLE_SIZE_IN_BYTES, position)
 
-    def read_utf(self):
+    def read_string(self):
         length = self.read_int()
         if length == NULL_ARRAY_LENGTH:
             return None
@@ -124,8 +124,8 @@ class _ObjectDataInput(ObjectDataInput):
     def read_short_array(self):
         return self._read_array_fnc(self.read_short)
 
-    def read_utf_array(self):
-        return self._read_array_fnc(self.read_utf)
+    def read_string_array(self):
+        return self._read_array_fnc(self.read_string)
 
     def read_object(self):
         return self._service.read_object(self)
@@ -146,6 +146,12 @@ class _ObjectDataInput(ObjectDataInput):
         if self._is_big_endian:
             return "BIG_ENDIAN"
         return "LITTLE_ENDIAN"
+
+    def read_utf(self):
+        return self.read_string()
+
+    def read_utf_array(self):
+        return self.read_string_array()
 
     # HELPERS
     def _check_available(self, position, size):

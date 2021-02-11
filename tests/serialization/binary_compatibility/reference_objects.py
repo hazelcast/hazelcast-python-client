@@ -209,7 +209,7 @@ class AnIdentifiedDataSerializable(IdentifiedDataSerializable):
         out.write_float(self.f)
         out.write_int(self.i)
         out.write_long(self.l)
-        out.write_utf(self.string)
+        out.write_string(self.string)
 
         out.write_boolean_array(self.booleans)
         out.write_byte_array(self.bytes_)
@@ -219,7 +219,7 @@ class AnIdentifiedDataSerializable(IdentifiedDataSerializable):
         out.write_float_array(self.floats)
         out.write_int_array(self.ints)
         out.write_long_array(self.longs)
-        out.write_utf_array(self.strings)
+        out.write_string_array(self.strings)
 
         out.write_boolean_array(self.booleans_none)
         out.write_byte_array(self.bytes_none)
@@ -229,7 +229,7 @@ class AnIdentifiedDataSerializable(IdentifiedDataSerializable):
         out.write_float_array(self.floats_none)
         out.write_int_array(self.ints_none)
         out.write_long_array(self.longs_none)
-        out.write_utf_array(self.strings_none)
+        out.write_string_array(self.strings_none)
 
         self.bytes_size = len(self.bytes_)
         out.write_byte(self.bytes_size)
@@ -258,7 +258,7 @@ class AnIdentifiedDataSerializable(IdentifiedDataSerializable):
         self.f = inp.read_float()
         self.i = inp.read_int()
         self.l = inp.read_long()
-        self.string = inp.read_utf()
+        self.string = inp.read_string()
 
         self.booleans = inp.read_boolean_array()
         self.bytes_ = inp.read_byte_array()
@@ -268,7 +268,7 @@ class AnIdentifiedDataSerializable(IdentifiedDataSerializable):
         self.floats = inp.read_float_array()
         self.ints = inp.read_int_array()
         self.longs = inp.read_long_array()
-        self.strings = inp.read_utf_array()
+        self.strings = inp.read_string_array()
 
         self.booleans_none = inp.read_boolean_array()
         self.bytes_none = inp.read_byte_array()
@@ -278,7 +278,7 @@ class AnIdentifiedDataSerializable(IdentifiedDataSerializable):
         self.floats_none = inp.read_float_array()
         self.ints_none = inp.read_int_array()
         self.longs_none = inp.read_long_array()
-        self.strings_none = inp.read_utf_array()
+        self.strings_none = inp.read_string_array()
 
         self.bytes_size = inp.read_byte()
         self.bytes_fully = bytearray(self.bytes_size)
@@ -434,7 +434,7 @@ class APortable(Portable):
         writer.write_float("f", self.f)
         writer.write_int("i", self.i)
         writer.write_long("l", self.l)
-        writer.write_utf("str", self.string)
+        writer.write_string("str", self.string)
         if self.p:
             writer.write_portable("p", self.p)
         else:
@@ -448,7 +448,7 @@ class APortable(Portable):
         writer.write_float_array("fs", self.floats)
         writer.write_int_array("is", self.ints)
         writer.write_long_array("ls", self.longs)
-        writer.write_utf_array("strs", self.strings)
+        writer.write_string_array("strs", self.strings)
         writer.write_portable_array("ps", self.portables)
 
         writer.write_boolean_array("booleansNull", self.booleans_none)
@@ -459,7 +459,7 @@ class APortable(Portable):
         writer.write_float_array("fsNull", self.floats_none)
         writer.write_int_array("isNull", self.ints_none)
         writer.write_long_array("lsNull", self.longs_none)
-        writer.write_utf_array("strsNull", self.strings_none)
+        writer.write_string_array("strsNull", self.strings_none)
 
         out = writer.get_raw_data_output()
 
@@ -471,7 +471,7 @@ class APortable(Portable):
         out.write_float(self.f)
         out.write_int(self.i)
         out.write_long(self.l)
-        out.write_utf(self.string)
+        out.write_string(self.string)
 
         out.write_boolean_array(self.booleans)
         out.write_byte_array(self.bytes_)
@@ -481,7 +481,7 @@ class APortable(Portable):
         out.write_float_array(self.floats)
         out.write_int_array(self.ints)
         out.write_long_array(self.longs)
-        out.write_utf_array(self.strings)
+        out.write_string_array(self.strings)
 
         out.write_boolean_array(self.booleans_none)
         out.write_byte_array(self.bytes_none)
@@ -491,7 +491,7 @@ class APortable(Portable):
         out.write_float_array(self.floats_none)
         out.write_int_array(self.ints_none)
         out.write_long_array(self.longs_none)
-        out.write_utf_array(self.strings_none)
+        out.write_string_array(self.strings_none)
 
         self.bytes_size = len(self.bytes_)
         out.write_byte(self.bytes_size)
@@ -520,7 +520,7 @@ class APortable(Portable):
         self.f = reader.read_float("f")
         self.i = reader.read_int("i")
         self.l = reader.read_long("l")
-        self.string = reader.read_utf("str")
+        self.string = reader.read_string("str")
         self.p = reader.read_portable("p")
 
         self.booleans = reader.read_boolean_array("booleans")
@@ -531,7 +531,7 @@ class APortable(Portable):
         self.floats = reader.read_float_array("fs")
         self.ints = reader.read_int_array("is")
         self.longs = reader.read_long_array("ls")
-        self.strings = reader.read_utf_array("strs")
+        self.strings = reader.read_string_array("strs")
         self.portables = reader.read_portable_array("ps")
 
         self.booleans_none = reader.read_boolean_array("booleansNull")
@@ -542,7 +542,7 @@ class APortable(Portable):
         self.floats_none = reader.read_float_array("fsNull")
         self.ints_none = reader.read_int_array("isNull")
         self.longs_none = reader.read_long_array("lsNull")
-        self.strings_none = reader.read_utf_array("strsNull")
+        self.strings_none = reader.read_string_array("strsNull")
 
         inp = reader.get_raw_data_input()
 
@@ -554,7 +554,7 @@ class APortable(Portable):
         self.f = inp.read_float()
         self.i = inp.read_int()
         self.l = inp.read_long()
-        self.string = inp.read_utf()
+        self.string = inp.read_string()
 
         self.booleans = inp.read_boolean_array()
         self.bytes_ = inp.read_byte_array()
@@ -564,7 +564,7 @@ class APortable(Portable):
         self.floats = inp.read_float_array()
         self.ints = inp.read_int_array()
         self.longs = inp.read_long_array()
-        self.strings = inp.read_utf_array()
+        self.strings = inp.read_string_array()
 
         self.booleans_none = inp.read_boolean_array()
         self.bytes_none = inp.read_byte_array()
@@ -574,7 +574,7 @@ class APortable(Portable):
         self.floats_none = inp.read_float_array()
         self.ints_none = inp.read_int_array()
         self.longs_none = inp.read_long_array()
-        self.strings_none = inp.read_utf_array()
+        self.strings_none = inp.read_string_array()
 
         self.bytes_size = inp.read_byte()
         self.bytes_fully = bytearray(self.bytes_size)

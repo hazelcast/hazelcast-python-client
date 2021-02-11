@@ -57,9 +57,9 @@ class DefaultPortableWriter(PortableWriter):
         self._set_position(field_name, FieldType.DOUBLE)
         self._out.write_double(value)
 
-    def write_utf(self, field_name, value):
-        self._set_position(field_name, FieldType.UTF)
-        self._out.write_utf(value)
+    def write_string(self, field_name, value):
+        self._set_position(field_name, FieldType.STRING)
+        self._out.write_string(value)
 
     def write_byte_array(self, field_name, values):
         self._set_position(field_name, FieldType.BYTE_ARRAY)
@@ -93,9 +93,9 @@ class DefaultPortableWriter(PortableWriter):
         self._set_position(field_name, FieldType.DOUBLE_ARRAY)
         self._out.write_double_array(values)
 
-    def write_utf_array(self, field_name, values):
-        self._set_position(field_name, FieldType.UTF_ARRAY)
-        self._out.write_utf_array(values)
+    def write_string_array(self, field_name, values):
+        self._set_position(field_name, FieldType.STRING_ARRAY)
+        self._out.write_string_array(values)
 
     def write_portable(self, field_name, portable):
         fd = self._set_position(field_name, FieldType.PORTABLE)
@@ -139,6 +139,12 @@ class DefaultPortableWriter(PortableWriter):
             self._out.write_int(_pos_val, self._offset + _index * INT_SIZE_IN_BYTES)
         self._raw = True
         return self._out
+
+    def write_utf(self, field_name, value):
+        self.write_string(field_name, value)
+
+    def write_utf_array(self, field_name, values):
+        self.write_string_array(field_name, values)
 
     # internal
     def _set_position(self, field_name, field_type):
@@ -222,8 +228,8 @@ class ClassDefinitionWriter(PortableWriter):
     def write_double(self, field_name, value):
         self._builder.add_double_field(field_name)
 
-    def write_utf(self, field_name, value):
-        self._builder.add_utf_field(field_name)
+    def write_string(self, field_name, value):
+        self._builder.add_string_field(field_name)
 
     def write_byte_array(self, field_name, values):
         self._builder.add_byte_array_field(field_name)
@@ -249,8 +255,8 @@ class ClassDefinitionWriter(PortableWriter):
     def write_double_array(self, field_name, values):
         self._builder.add_double_array_field(field_name)
 
-    def write_utf_array(self, field_name, values):
-        self._builder.add_utf_array_field(field_name)
+    def write_string_array(self, field_name, values):
+        self._builder.add_string_array_field(field_name)
 
     def write_portable(self, field_name, portable):
         if portable is None:
@@ -294,6 +300,12 @@ class ClassDefinitionWriter(PortableWriter):
 
     def get_raw_data_output(self):
         return EmptyObjectDataOutput()
+
+    def write_utf(self, field_name, value):
+        self.write_string(field_name, value)
+
+    def write_utf_array(self, field_name, values):
+        self.write_string_array(field_name, values)
 
     def _create_nested_class_def(self, portable, nested_builder):
         _writer = ClassDefinitionWriter(self.portable_context, class_def_builder=nested_builder)

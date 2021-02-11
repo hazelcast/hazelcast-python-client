@@ -100,8 +100,20 @@ class ObjectDataOutput(object):
         """
         raise NotImplementedError()
 
+    def write_string(self, val):
+        """Writes UTF-8 string to this output stream.
+
+        Args:
+            val (str): The UTF-8 string to be written.
+        """
+        raise NotImplementedError()
+
     def write_utf(self, val):
         """Writes UTF-8 string to this output stream.
+
+        .. deprecated:: 4.1
+            This method is deprecated and will be removed in the
+            next major version. Use :func:`write_string` instead.
 
         Args:
             val (str): The UTF-8 string to be written.
@@ -172,8 +184,20 @@ class ObjectDataOutput(object):
         """
         raise NotImplementedError()
 
+    def write_string_array(self, val):
+        """Writes a UTF-8 String array to this output stream.
+
+        Args:
+            val (list[str]): The UTF-8 String array to be written.
+        """
+        raise NotImplementedError()
+
     def write_utf_array(self, val):
         """Writes a UTF-8 String array to this output stream.
+
+        .. deprecated:: 4.1
+            This method is deprecated and will be removed in the
+            next major version. Use :func:`write_string_array` instead.
 
         Args:
             val (list[str]): The UTF-8 String array to be written.
@@ -314,8 +338,20 @@ class ObjectDataInput(object):
         """
         raise NotImplementedError()
 
+    def read_string(self):
+        """Reads a UTF-8 string from input stream and returns it.
+
+        Returns:
+            str: The UTF-8 string read.
+        """
+        raise NotImplementedError()
+
     def read_utf(self):
         """Reads a UTF-8 string from input stream and returns it.
+
+        .. deprecated:: 4.1
+            This method is deprecated and will be removed in the
+            next major version. Use :func:`read_string` instead.
 
         Returns:
             str: The UTF-8 string read.
@@ -386,8 +422,20 @@ class ObjectDataInput(object):
         """
         raise NotImplementedError()
 
+    def read_string_array(self):
+        """Reads a UTF-8 string array from input stream and returns it.
+
+        Returns:
+            list[str]: The UTF-8 string array read.
+        """
+        raise NotImplementedError()
+
     def read_utf_array(self):
         """Reads a UTF-8 string array from input stream and returns it.
+
+        .. deprecated:: 4.1
+            This method is deprecated and will be removed in the
+            next major version. Use :func:`read_string_array` instead.
 
         Returns:
             list[str]: The UTF-8 string array read.
@@ -634,8 +682,23 @@ class PortableReader(object):
         """
         raise NotImplementedError()
 
+    def read_string(self, field_name):
+        """Reads a UTF-8 String.
+
+        Args:
+            field_name (str): Name of the field.
+
+        Returns:
+            str: The UTF-8 String read.
+        """
+        raise NotImplementedError()
+
     def read_utf(self, field_name):
         """Reads a UTF-8 String.
+
+        .. deprecated:: 4.1
+            This method is deprecated and will be removed in the
+            next major version. Use :func:`read_string` instead.
 
         Args:
             field_name (str): Name of the field.
@@ -810,8 +873,23 @@ class PortableReader(object):
         """
         raise NotImplementedError()
 
+    def read_string_array(self, field_name):
+        """Reads a UTF-8 String array.
+
+        Args:
+            field_name (str): Name of the field.
+
+        Returns:
+            str: The UTF-8 String array read.
+        """
+        raise NotImplementedError()
+
     def read_utf_array(self, field_name):
         """Reads a UTF-8 String array.
+
+        .. deprecated:: 4.1
+            This method is deprecated and will be removed in the
+            next major version. Use :func:`read_string_array` instead.
 
         Args:
             field_name (str): Name of the field.
@@ -865,8 +943,21 @@ class PortableWriter(object):
         """
         raise NotImplementedError()
 
+    def write_string(self, field_name, value):
+        """Writes an UTF string.
+
+        Args:
+            field_name (str): Name of the field.
+            value (str): UTF string value to be written.
+        """
+        raise NotImplementedError()
+
     def write_utf(self, field_name, value):
         """Writes an UTF string.
+
+        .. deprecated:: 4.1
+            This method is deprecated and will be removed in the
+            next major version. Use :func:`write_string` instead.
 
         Args:
             field_name (str): Name of the field.
@@ -1019,8 +1110,21 @@ class PortableWriter(object):
         """
         raise NotImplementedError()
 
+    def write_string_array(self, field_name, values):
+        """Writes a UTF-8 String array.
+
+        Args:
+            field_name (str): Name of the field.
+            values: (str): UTF-8 String array to be written.
+        """
+        raise NotImplementedError()
+
     def write_utf_array(self, field_name, values):
         """Writes a UTF-8 String array.
+
+        .. deprecated:: 4.1
+            This method is deprecated and will be removed in the
+            next major version. Use :func:`write_string_array` instead.
 
         Args:
             field_name (str): Name of the field.
