@@ -62,7 +62,6 @@ class Invocation(object):
         self.urgent = urgent
         self.timeout = timeout
         self.future = Future()
-        self.timeout = None
         self.sent_connection = None
         self.response_handler = response_handler
         self.backup_acks_received = 0
