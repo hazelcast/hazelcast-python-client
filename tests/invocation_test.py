@@ -149,6 +149,10 @@ class InvocationTest(unittest.TestCase):
             invocation.set_exception.call_args[0][0], IndeterminateOperationStateError
         )
 
+    def test_constructor_with_timeout(self):
+        invocation = Invocation(None, timeout=42)
+        self.assertEqual(42, invocation.timeout)
+
     def _start_service(self, config=_Config()):
         c = MagicMock()
         invocation_service = InvocationService(c, config, c._reactor)
