@@ -1,13 +1,13 @@
 import os
 import time
-import sys
 
 from uuid import uuid4
 from hazelcast.config import SSLProtocol
+from hazelcast.six import PY3
 
 
 def get_current_timestamp():
-    if sys.version_info >= (3, 3):
+    if PY3:
         return time.monotonic()
     else:
         return time.time()
