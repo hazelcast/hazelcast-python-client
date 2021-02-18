@@ -9,10 +9,11 @@ from hazelcast.six import PY3
 def get_current_timestamp():
     """
     Get current timestamp.
-    time.monotonic() is more resilient since it uses cpu clock rather than system clock changes
-    python 3.3 and up supports time.monotonic(). Before python 3.5 and on gnu/hurd monotonic() is
-    not available. Since we support support python3.4 and up regarding python3, there is a check
-    for the monotonic() availability.
+    time.monotonic() is more consistent since it uses cpu clock rather than system clock.
+
+    python versions 3.3 and up supports time.monotonic(). Before python version 3.5 and on gnu/hurd
+    monotonic() is not available. Since we support support python3.4 and up, there is a check
+    for the monotonic attribute availability, just for gnu/hurd.
 
     Returns:
         If time.time() used, this function returns is number of seconds since 1970,
