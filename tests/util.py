@@ -3,27 +3,12 @@ import time
 
 from uuid import uuid4
 from hazelcast.config import SSLProtocol
-from hazelcast.six import PY3
 
-
-def get_current_timestamp():
-    """
-    Get current timestamp.
-    time.monotonic() is more consistent since it uses cpu clock rather than system clock.
-
-    python versions 3.3 and up supports time.monotonic(). Before python version 3.5 and on gnu/hurd
-    monotonic() is not available. Since we support support python3.4 and up, there is a check
-    for the monotonic attribute availability, just for gnu/hurd.
-
-    Returns:
-        If time.time() used, this function returns is number of seconds since 1970,
-        if time.monotonic() is used, it still returns fractional seconds but its value alone
-        is not meaningful, but it can still can be used take time difference for profiling.
-    """
-    if PY3 and hasattr(time, "monotonic"):
-        return time.monotonic()
-    else:
-        return time.time()
+# time.monotonic() is more consistent since it uses cpu clock rather than system clock. Use it if available.
+if hasattr(time, "monotonic"):
+    get_current_timestamp = time.monotonic
+else:
+    get_current_timestamp = time.time
 
 
 def random_string():
