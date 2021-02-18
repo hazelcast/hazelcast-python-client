@@ -7,7 +7,7 @@ from hazelcast.config import SSLProtocol
 
 
 def get_current_timestamp():
-    if sys.version_info >= (3, 5):
+    if sys.version_info >= (3, 3):
         return time.monotonic()
     else:
         return time.time()
