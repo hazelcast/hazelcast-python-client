@@ -111,8 +111,8 @@ def start():
     test_failed = [False]
 
     def run(stats):
-        end_time = time.time() + hour_limit * 60 * 60
-        while time.time() < end_time:
+        end_time = time.monotonic() + hour_limit * 60 * 60
+        while time.monotonic() < end_time:
             if test_failed[0]:
                 return  # Some other thread failed, no need to continue the test
 
@@ -148,8 +148,8 @@ def start():
         thread.start()
 
     def display_statistics():
-        end_time = time.time() + hour_limit * 60 * 60
-        while time.time() < end_time:
+        end_time = time.monotonic() + hour_limit * 60 * 60
+        while time.monotonic() < end_time:
             time.sleep(STATS_DISPLAY_SECONDS)
             if test_failed[0]:
                 # Some thread failed. No need to continue.

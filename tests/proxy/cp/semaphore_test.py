@@ -129,11 +129,11 @@ class SemaphoreTest(CPTestCase):
         t = threading.Thread(target=run)
         t.start()
         event.wait()
-        start = time.time()
+        start = time.monotonic()
         f = semaphore._wrapped.acquire()
         event2.set()
         f.result()
-        self.assertGreaterEqual(time.time() - start, 1)
+        self.assertGreaterEqual(time.monotonic() - start, 1)
         t.join()
 
     @parameterized.expand(SEMAPHORE_TYPES)
@@ -152,14 +152,14 @@ class SemaphoreTest(CPTestCase):
         t = threading.Thread(target=run)
         t.start()
         event.wait()
-        start = time.time()
+        start = time.monotonic()
         f = semaphore._wrapped.acquire()
         event2.set()
 
         with self.assertRaises(DistributedObjectDestroyedError):
             f.result()
 
-        self.assertGreaterEqual(time.time() - start, 1)
+        self.assertGreaterEqual(time.monotonic() - start, 1)
         t.join()
 
     @parameterized.expand(SEMAPHORE_TYPES)
@@ -284,9 +284,9 @@ class SemaphoreTest(CPTestCase):
     @parameterized.expand(SEMAPHORE_TYPES)
     def test_try_acquire_when_not_enough_permits_with_timeout(self, semaphore_type):
         semaphore = self.get_semaphore(semaphore_type, 1)
-        start = time.time()
+        start = time.monotonic()
         self.assertFalse(semaphore.try_acquire(2, 1))
-        self.assertGreaterEqual(time.time() - start, 1)
+        self.assertGreaterEqual(time.monotonic() - start, 1)
         self.assertEqual(1, semaphore.available_permits())
 
     def get_semaphore(self, semaphore_type, initialize_with=None):

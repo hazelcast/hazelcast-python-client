@@ -53,9 +53,9 @@ class ClientTest(HazelcastTestCase):
         topic.add_listener(message_listener)
 
         topic2 = client2.get_topic(key)
-        begin = time.time()
+        begin = time.monotonic()
 
-        while (time.time() - begin) < 2 * client_heartbeat_seconds:
+        while (time.monotonic() - begin) < 2 * client_heartbeat_seconds:
             topic2.publish("message")
             time.sleep(0.5)
 

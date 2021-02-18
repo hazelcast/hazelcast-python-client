@@ -205,9 +205,9 @@ class StatisticsTest(HazelcastTestCase):
             raise AssertionError
 
     def _wait_for_statistics_collection(self, client_uuid, timeout=30):
-        timeout_time = time.time() + timeout
+        timeout_time = time.monotonic() + timeout
         response = self._get_client_stats_from_server(client_uuid)
-        while time.time() < timeout_time:
+        while time.monotonic() < timeout_time:
             try:
                 self._verify_response_not_empty(response)
                 return response

@@ -60,9 +60,9 @@ class HazelcastTestCase(unittest.TestCase):
         self.clients = []
 
     def assertTrueEventually(self, assertion, timeout=30):
-        timeout_time = time.time() + timeout
+        timeout_time = time.monotonic() + timeout
         exc_info = None
-        while time.time() < timeout_time:
+        while time.monotonic() < timeout_time:
             try:
                 assertion()
                 return

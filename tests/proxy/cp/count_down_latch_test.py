@@ -49,9 +49,9 @@ class CountDownLatchTest(CPTestCase):
 
     def test_await_latch_with_timeout(self):
         latch = self._get_latch(1)
-        start = time.time()
+        start = time.monotonic()
         self.assertFalse(latch.await_latch(0.1))
-        time_passed = time.time() - start
+        time_passed = time.monotonic() - start
         self.assertTrue(time_passed > 0.1)
 
     def test_await_latch_multiple_waiters(self):

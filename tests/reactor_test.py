@@ -341,12 +341,12 @@ class AsyncoreConnectionTest(HazelcastTestCase):
     def test_constructor_with_unreachable_addresses(self):
         addr = Address("192.168.0.1", 5701)
         config = _Config()
-        start = time.time()
+        start = time.monotonic()
         conn = AsyncoreConnection(MagicMock(map=dict()), MagicMock(), None, addr, config, None)
         try:
             # Server is unreachable, but this call should return
             # before connection timeout
-            self.assertLess(time.time() - start, config.connection_timeout)
+            self.assertLess(time.monotonic() - start, config.connection_timeout)
         finally:
             conn.close(None, None)
 
