@@ -6,7 +6,7 @@ from hazelcast.core import CLIENT_TYPE
 from hazelcast.statistics import Statistics
 from tests.base import HazelcastTestCase
 from tests.hzrc.ttypes import Lang
-from tests.util import random_string
+from tests.util import random_string, get_current_timestamp
 
 
 class StatisticsTest(HazelcastTestCase):
@@ -205,9 +205,9 @@ class StatisticsTest(HazelcastTestCase):
             raise AssertionError
 
     def _wait_for_statistics_collection(self, client_uuid, timeout=30):
-        timeout_time = time.monotonic() + timeout
+        timeout_time = get_current_timestamp() + timeout
         response = self._get_client_stats_from_server(client_uuid)
-        while time.monotonic() < timeout_time:
+        while get_current_timestamp() < timeout_time:
             try:
                 self._verify_response_not_empty(response)
                 return response

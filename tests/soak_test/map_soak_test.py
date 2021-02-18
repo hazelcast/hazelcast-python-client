@@ -13,6 +13,7 @@ import random
 from hazelcast.client import HazelcastClient
 from hazelcast.serialization.api import IdentifiedDataSerializable
 from hazelcast.predicate import between
+from tests.util import get_current_timestamp
 
 THREAD_COUNT = 32
 ENTRY_COUNT = 10000
@@ -111,8 +112,8 @@ def start():
     test_failed = [False]
 
     def run(stats):
-        end_time = time.monotonic() + hour_limit * 60 * 60
-        while time.monotonic() < end_time:
+        end_time = get_current_timestamp() + hour_limit * 60 * 60
+        while get_current_timestamp() < end_time:
             if test_failed[0]:
                 return  # Some other thread failed, no need to continue the test
 
@@ -148,8 +149,8 @@ def start():
         thread.start()
 
     def display_statistics():
-        end_time = time.monotonic() + hour_limit * 60 * 60
-        while time.monotonic() < end_time:
+        end_time = get_current_timestamp() + hour_limit * 60 * 60
+        while get_current_timestamp() < end_time:
             time.sleep(STATS_DISPLAY_SECONDS)
             if test_failed[0]:
                 # Some thread failed. No need to continue.

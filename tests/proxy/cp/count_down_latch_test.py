@@ -9,7 +9,7 @@ from hazelcast.future import ImmediateExceptionFuture
 from hazelcast.proxy.cp.count_down_latch import CountDownLatch
 from hazelcast.util import AtomicInteger
 from tests.proxy.cp import CPTestCase
-from tests.util import random_string
+from tests.util import random_string, get_current_timestamp
 
 inf = 2 ** 31 - 1
 
@@ -49,9 +49,9 @@ class CountDownLatchTest(CPTestCase):
 
     def test_await_latch_with_timeout(self):
         latch = self._get_latch(1)
-        start = time.monotonic()
+        start = get_current_timestamp()
         self.assertFalse(latch.await_latch(0.1))
-        time_passed = time.monotonic() - start
+        time_passed = get_current_timestamp() - start
         self.assertTrue(time_passed > 0.1)
 
     def test_await_latch_multiple_waiters(self):

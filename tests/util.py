@@ -1,8 +1,16 @@
 import os
 import time
+import sys
 
 from uuid import uuid4
 from hazelcast.config import SSLProtocol
+
+
+def get_current_timestamp():
+    if sys.version_info >= (3, 5):
+        return time.monotonic()
+    else:
+        return time.time()
 
 
 def random_string():
