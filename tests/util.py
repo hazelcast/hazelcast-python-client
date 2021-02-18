@@ -7,7 +7,19 @@ from hazelcast.six import PY3
 
 
 def get_current_timestamp():
-    if PY3:
+    """
+    Get current timestamp.
+    time.monotonic() is more resilient since it uses cpu clock rather than system clock changes
+    python 3.3 and up supports time.monotonic(). Before python 3.5 and on gnu/hurd monotonic() is
+    not available. Since we support support python3.4 and up regarding python3, there is a check
+    for the monotonic() availability.
+
+    Returns:
+        If time.time() used, this function returns is number of seconds since 1970,
+        if time.monotonic() is used, it still returns fractional seconds but its value alone
+        is not meaningful, but it can still can be used take time difference for profiling.
+    """
+    if PY3 and hasattr(time, "monotonic"):
         return time.monotonic()
     else:
         return time.time()
@@ -36,14 +48,14 @@ def fill_map(map, size=10, key_prefix="key", value_prefix="val"):
 
 
 def get_ssl_config(
-    cluster_name,
-    enable_ssl=False,
-    cafile=None,
-    certfile=None,
-    keyfile=None,
-    password=None,
-    protocol=SSLProtocol.TLSv1_2,
-    ciphers=None,
+        cluster_name,
+        enable_ssl=False,
+        cafile=None,
+        certfile=None,
+        keyfile=None,
+        password=None,
+        protocol=SSLProtocol.TLSv1_2,
+        ciphers=None,
 ):
     config = {
         "cluster_name": cluster_name,
