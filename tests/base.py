@@ -6,6 +6,7 @@ from threading import Thread
 
 from hazelcast import six
 from tests.hzrc.client import HzRemoteController
+from tests.util import get_current_timestamp
 import hazelcast
 from hazelcast.core import Address
 
@@ -60,9 +61,9 @@ class HazelcastTestCase(unittest.TestCase):
         self.clients = []
 
     def assertTrueEventually(self, assertion, timeout=30):
-        timeout_time = time.time() + timeout
+        timeout_time = get_current_timestamp() + timeout
         exc_info = None
-        while time.time() < timeout_time:
+        while get_current_timestamp() < timeout_time:
             try:
                 assertion()
                 return

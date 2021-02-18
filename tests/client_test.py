@@ -4,6 +4,7 @@ from tests.base import HazelcastTestCase
 from hazelcast.client import HazelcastClient
 from hazelcast.lifecycle import LifecycleState
 from tests.hzrc.ttypes import Lang
+from tests.util import get_current_timestamp
 
 
 class ClientTest(HazelcastTestCase):
@@ -53,9 +54,9 @@ class ClientTest(HazelcastTestCase):
         topic.add_listener(message_listener)
 
         topic2 = client2.get_topic(key)
-        begin = time.time()
+        begin = get_current_timestamp()
 
-        while (time.time() - begin) < 2 * client_heartbeat_seconds:
+        while (get_current_timestamp() - begin) < 2 * client_heartbeat_seconds:
             topic2.publish("message")
             time.sleep(0.5)
 

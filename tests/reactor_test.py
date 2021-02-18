@@ -20,6 +20,7 @@ from hazelcast.reactor import (
 )
 from hazelcast.util import AtomicInteger
 from tests.base import HazelcastTestCase
+from tests.util import get_current_timestamp
 
 
 class ReactorTest(HazelcastTestCase):
@@ -341,12 +342,12 @@ class AsyncoreConnectionTest(HazelcastTestCase):
     def test_constructor_with_unreachable_addresses(self):
         addr = Address("192.168.0.1", 5701)
         config = _Config()
-        start = time.time()
+        start = get_current_timestamp()
         conn = AsyncoreConnection(MagicMock(map=dict()), MagicMock(), None, addr, config, None)
         try:
             # Server is unreachable, but this call should return
             # before connection timeout
-            self.assertLess(time.time() - start, config.connection_timeout)
+            self.assertLess(get_current_timestamp() - start, config.connection_timeout)
         finally:
             conn.close(None, None)
 

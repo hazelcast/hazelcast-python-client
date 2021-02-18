@@ -4,6 +4,12 @@ import time
 from uuid import uuid4
 from hazelcast.config import SSLProtocol
 
+# time.monotonic() is more consistent since it uses cpu clock rather than system clock. Use it if available.
+if hasattr(time, "monotonic"):
+    get_current_timestamp = time.monotonic
+else:
+    get_current_timestamp = time.time
+
 
 def random_string():
     return str(uuid4())
