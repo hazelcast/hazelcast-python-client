@@ -18,6 +18,7 @@ from hazelcast.proxy.base import PartitionSpecificProxy, ItemEvent, ItemEventTyp
 from hazelcast.util import check_not_none, ImmutableLazyDataList
 from typing import Any
 
+
 class Set(PartitionSpecificProxy):
     """Concurrent, distributed implementation of Set"""
 
