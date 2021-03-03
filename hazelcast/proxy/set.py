@@ -16,13 +16,13 @@ from hazelcast.protocol.codec import (
 
 from hazelcast.proxy.base import PartitionSpecificProxy, ItemEvent, ItemEventType
 from hazelcast.util import check_not_none, ImmutableLazyDataList
-
+from typing import Any
 
 class Set(PartitionSpecificProxy):
     """Concurrent, distributed implementation of Set"""
 
     def add(self, item):
-        # type: (Any) -> bool
+        # type: (Any) -> Future[bool]
         """Adds the specified item if it is not exists in this set.
 
         Args:
@@ -37,7 +37,7 @@ class Set(PartitionSpecificProxy):
         return self._invoke(request, set_add_codec.decode_response)
 
     def add_all(self, items):
-        # type: (list) -> bool
+        # type: (list) -> Future[bool]
         """Adds the elements in the specified collection if they're not exist in this set.
 
         Args:
@@ -56,7 +56,7 @@ class Set(PartitionSpecificProxy):
         return self._invoke(request, set_add_all_codec.decode_response)
 
     def add_listener(self, include_value=False, item_added_func=None, item_removed_func=None):
-        # type: (bool, function, function) -> bool
+        # type: (bool, function, function) -> Future[str]
         """Adds an item listener for this container.
 
         Listener will be notified for all container add/remove events.
@@ -91,7 +91,7 @@ class Set(PartitionSpecificProxy):
         )
 
     def clear(self):
-        # type: () -> bool
+        # type: () -> Future[None]
         """Clears the set. Set will be empty with this call.
 
         Returns:
@@ -101,7 +101,7 @@ class Set(PartitionSpecificProxy):
         return self._invoke(request)
 
     def contains(self, item):
-        # type: (Any) -> bool
+        # type: (Any) -> Future[bool]
         """Determines whether this set contains the specified item or not.
 
         Args:
@@ -116,7 +116,7 @@ class Set(PartitionSpecificProxy):
         return self._invoke(request, set_contains_codec.decode_response)
 
     def contains_all(self, items):
-        # type: (list) -> bool
+        # type: (list) -> Future[bool]
         """Determines whether this set contains all of the items in the specified collection or not.
 
         Args:
@@ -136,7 +136,7 @@ class Set(PartitionSpecificProxy):
         return self._invoke(request, set_contains_all_codec.decode_response)
 
     def get_all(self):
-        # type: () -> list
+        # type: () -> Future[list]
         """Returns all of the items in the set.
 
         Returns:
@@ -152,7 +152,7 @@ class Set(PartitionSpecificProxy):
         return self._invoke(request, handler)
 
     def is_empty(self):
-        # type: () -> bool
+        # type: () -> Future[bool]
         """Determines whether this set is empty or not.
 
         Returns:
@@ -162,7 +162,7 @@ class Set(PartitionSpecificProxy):
         return self._invoke(request, set_is_empty_codec.decode_response)
 
     def remove(self, item):
-        # type: (Any) -> bool
+        # type: (Any) -> Future[bool]
         """Removes the specified element from the set if it exists.
 
         Args:
@@ -177,7 +177,7 @@ class Set(PartitionSpecificProxy):
         return self._invoke(request, set_remove_codec.decode_response)
 
     def remove_all(self, items):
-        # type: (list) -> bool
+        # type: (list) -> Future[bool]
         """Removes all of the elements of the specified collection from this set.
 
         Args:
@@ -196,7 +196,7 @@ class Set(PartitionSpecificProxy):
         return self._invoke(request, set_compare_and_remove_all_codec.decode_response)
 
     def remove_listener(self, registration_id):
-        # type: (str) -> bool
+        # type: (str) -> Future[bool]
         """Removes the specified item listener.
 
         Returns silently if the specified listener was not added before.
@@ -210,7 +210,7 @@ class Set(PartitionSpecificProxy):
         return self._deregister_listener(registration_id)
 
     def retain_all(self, items):
-        # type: (list) -> bool
+        # type: (list) -> Future[bool]
         """Removes the items which are not contained in the specified collection.
 
         In other words, only the items that are contained in the specified collection will be retained.
@@ -231,7 +231,7 @@ class Set(PartitionSpecificProxy):
         return self._invoke(request, set_compare_and_retain_all_codec.decode_response)
 
     def size(self):
-        # type: () -> int
+        # type: () -> Future[int]
         """Returns the number of items in this set.
 
         Returns:
