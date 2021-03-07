@@ -1059,7 +1059,7 @@ class _Config(object):
 
     @property
     def global_serializer(self):
-        # type: () -> StreamSerializer
+        # type: () -> type
         return self._global_serializer
 
     @global_serializer.setter
