@@ -16,7 +16,13 @@ from hazelcast.protocol.codec import (
 
 from hazelcast.proxy.base import PartitionSpecificProxy, ItemEvent, ItemEventType
 from hazelcast.util import check_not_none, ImmutableLazyDataList
-from typing import Any
+
+try:
+    from typing import Any, List
+except ImportError:
+    pass
+from hazelcast.future import Future
+from tests.util import event_collector
 
 
 class Set(PartitionSpecificProxy):
@@ -38,7 +44,7 @@ class Set(PartitionSpecificProxy):
         return self._invoke(request, set_add_codec.decode_response)
 
     def add_all(self, items):
-        # type: (list) -> Future[bool]
+        # type: (List[Any]) -> Future[bool]
         """Adds the elements in the specified collection if they're not exist in this set.
 
         Args:
@@ -57,7 +63,7 @@ class Set(PartitionSpecificProxy):
         return self._invoke(request, set_add_all_codec.decode_response)
 
     def add_listener(self, include_value=False, item_added_func=None, item_removed_func=None):
-        # type: (bool, function, function) -> Future[str]
+        # type: (bool, event_collector(), event_collector()) -> Future[str]
         """Adds an item listener for this container.
 
         Listener will be notified for all container add/remove events.
@@ -117,7 +123,7 @@ class Set(PartitionSpecificProxy):
         return self._invoke(request, set_contains_codec.decode_response)
 
     def contains_all(self, items):
-        # type: (list) -> Future[bool]
+        # type: (List[Any]) -> Future[bool]
         """Determines whether this set contains all of the items in the specified collection or not.
 
         Args:
@@ -178,7 +184,7 @@ class Set(PartitionSpecificProxy):
         return self._invoke(request, set_remove_codec.decode_response)
 
     def remove_all(self, items):
-        # type: (list) -> Future[bool]
+        # type: (List[Any]) -> Future[bool]
         """Removes all of the elements of the specified collection from this set.
 
         Args:
@@ -211,7 +217,7 @@ class Set(PartitionSpecificProxy):
         return self._deregister_listener(registration_id)
 
     def retain_all(self, items):
-        # type: (list) -> Future[bool]
+        # type: (List[Any]) -> Future[bool]
         """Removes the items which are not contained in the specified collection.
 
         In other words, only the items that are contained in the specified collection will be retained.

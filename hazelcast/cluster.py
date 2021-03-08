@@ -6,6 +6,13 @@ from collections import OrderedDict
 from hazelcast import six
 from hazelcast.errors import TargetDisconnectedError, IllegalStateError
 from hazelcast.util import check_not_none
+from hazelcast.core import MemberInfo
+from hazelcast.core import Address
+
+try:
+    from typing import Any
+except ImportError:
+    pass
 
 _logger = logging.getLogger(__name__)
 
@@ -31,12 +38,14 @@ class ClientInfo(object):
     __slots__ = ("uuid", "address", "name", "labels")
 
     def __init__(self, client_uuid, address, name, labels):
+        # type: (uuid, Address, str, set[str]) -> None
         self.uuid = client_uuid
         self.address = address
         self.name = name
         self.labels = labels
 
     def __repr__(self):
+        # type: () -> str
         return "ClientInfo(uuid=%s, address=%s, name=%s, labels=%s)" % (
             self.uuid,
             self.address,
@@ -58,9 +67,11 @@ class ClusterService(object):
     """
 
     def __init__(self, internal_cluster_service):
+        # type: (Any) -> None
         self._service = internal_cluster_service
 
     def add_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
+        # type: (function, function, bool) -> str
         """
         Adds a membership listener to listen for membership updates.
 
@@ -79,6 +90,7 @@ class ClusterService(object):
         return self._service.add_listener(member_added, member_removed, fire_for_existing)
 
     def remove_listener(self, registration_id):
+        # type: (str) -> bool
         """
         Removes the specified membership listener.
 
@@ -91,6 +103,7 @@ class ClusterService(object):
         return self._service.remove_listener(registration_id)
 
     def get_members(self, member_selector=None):
+        # type: (function) -> list[MemberInfo]
         """
         Lists the current members in the cluster.
 
@@ -138,6 +151,7 @@ class _InternalClusterService(object):
         return members
 
     def size(self):
+        # type: () -> int
         """
         Returns:
             int: Size of the cluster.
@@ -146,6 +160,7 @@ class _InternalClusterService(object):
         return len(snapshot.members)
 
     def get_local_client(self):
+        # type: () -> ClientInfo
         """
         Returns:
             hazelcast.cluster.ClientInfo: The client info.
@@ -158,6 +173,7 @@ class _InternalClusterService(object):
         )
 
     def add_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
+        # type: (Any, Any, bool) -> str
         registration_id = str(uuid.uuid4())
         self._listeners[registration_id] = (member_added, member_removed)
 
@@ -169,6 +185,7 @@ class _InternalClusterService(object):
         return registration_id
 
     def remove_listener(self, registration_id):
+        # type: (str) -> bool
         try:
             self._listeners.pop(registration_id)
             return True
