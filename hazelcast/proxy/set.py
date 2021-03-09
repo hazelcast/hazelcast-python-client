@@ -18,11 +18,10 @@ from hazelcast.proxy.base import PartitionSpecificProxy, ItemEvent, ItemEventTyp
 from hazelcast.util import check_not_none, ImmutableLazyDataList
 
 try:
-    from typing import Any, List
+    from typing import Any, List, Callable
 except ImportError:
     pass
 from hazelcast.future import Future
-from tests.util import event_collector
 
 
 class Set(PartitionSpecificProxy):
@@ -63,7 +62,7 @@ class Set(PartitionSpecificProxy):
         return self._invoke(request, set_add_all_codec.decode_response)
 
     def add_listener(self, include_value=False, item_added_func=None, item_removed_func=None):
-        # type: (bool, event_collector(), event_collector()) -> Future[str]
+        # type: (bool, Callable[[],Callable[[Any],List[Any]]], Callable[[],Callable[[Any],List[Any]]]) -> Future[str]
         """Adds an item listener for this container.
 
         Listener will be notified for all container add/remove events.
@@ -143,7 +142,7 @@ class Set(PartitionSpecificProxy):
         return self._invoke(request, set_contains_all_codec.decode_response)
 
     def get_all(self):
-        # type: () -> Future[list]
+        # type: () -> Future[List[Any]]
         """Returns all of the items in the set.
 
         Returns:

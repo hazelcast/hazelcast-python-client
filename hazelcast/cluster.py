@@ -9,8 +9,9 @@ from hazelcast.util import check_not_none
 from hazelcast.core import MemberInfo
 from hazelcast.core import Address
 
+
 try:
-    from typing import Any
+    from typing import Any, List, Callable, Set
 except ImportError:
     pass
 
@@ -38,7 +39,7 @@ class ClientInfo(object):
     __slots__ = ("uuid", "address", "name", "labels")
 
     def __init__(self, client_uuid, address, name, labels):
-        # type: (uuid, Address, str, set[str]) -> None
+        # type: (uuid, Address, str, Set[str]) -> None
         self.uuid = client_uuid
         self.address = address
         self.name = name
@@ -71,7 +72,7 @@ class ClusterService(object):
         self._service = internal_cluster_service
 
     def add_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
-        # type: (function, function, bool) -> str
+        # type: (Callable[[],Callable[[Any],List[Any]]], Callable[[],Callable[[Any],List[Any]]], bool) -> str
         """
         Adds a membership listener to listen for membership updates.
 
@@ -103,7 +104,7 @@ class ClusterService(object):
         return self._service.remove_listener(registration_id)
 
     def get_members(self, member_selector=None):
-        # type: (function) -> list[MemberInfo]
+        # type: (Callable[..., None]) -> List[MemberInfo]
         """
         Lists the current members in the cluster.
 
@@ -173,7 +174,7 @@ class _InternalClusterService(object):
         )
 
     def add_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
-        # type: (Any, Any, bool) -> str
+        # type: (Callable[[],Callable[[Any],List[Any]]], Callable[[],Callable[[Any],List[Any]]], bool) -> str
         registration_id = str(uuid.uuid4())
         self._listeners[registration_id] = (member_added, member_removed)
 
