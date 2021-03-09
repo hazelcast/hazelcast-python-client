@@ -110,8 +110,7 @@ Features
    **Unisocket** and **Smart** operation modes
 -  Ability to listen to client lifecycle, cluster state, and distributed
    data structure events
--  and `many
-   more <https://hazelcast.org/imdg/clients-languages/python/#client-features>`__
+-  and :ref:`many more<features:features>`
 
 
 .. toctree::
