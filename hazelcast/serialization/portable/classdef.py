@@ -12,7 +12,7 @@ class FieldType(object):
     LONG = 6
     FLOAT = 7
     DOUBLE = 8
-    UTF = 9  # Defined for backwards compatibility.
+    UTF = 9  # Defined for backward compatibility.
     STRING = 9
     PORTABLE_ARRAY = 10
     BYTE_ARRAY = 11
@@ -23,7 +23,7 @@ class FieldType(object):
     LONG_ARRAY = 16
     FLOAT_ARRAY = 17
     DOUBLE_ARRAY = 18
-    UTF_ARRAY = 19  # Defined for backwards compatibility.
+    UTF_ARRAY = 19  # Defined for backward compatibility.
     STRING_ARRAY = 19
 
 
