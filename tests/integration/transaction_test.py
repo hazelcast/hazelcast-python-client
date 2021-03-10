@@ -1,8 +1,9 @@
 import time
 from threading import Thread
 
+import hazelcast
+import hazelcast.transaction
 from hazelcast.errors import TransactionError
-from hazelcast.transaction import TransactionState
 from tests.base import SingleMemberTestCase
 
 
@@ -16,19 +17,19 @@ class TransactionTest(SingleMemberTestCase):
         transaction = self.client.new_transaction()
         transaction.begin()
         self.assertIsNotNone(transaction.id)
-        self.assertEqual(transaction.state, TransactionState.ACTIVE)
+        self.assertEqual(transaction.state, hazelcast.transaction._STATE_ACTIVE)
 
         transaction.commit()
-        self.assertEqual(transaction.state, TransactionState.COMMITTED)
+        self.assertEqual(transaction.state, hazelcast.transaction._STATE_COMMITTED)
 
     def test_begin_and_rollback_transaction(self):
         transaction = self.client.new_transaction()
         transaction.begin()
         self.assertIsNotNone(transaction.id)
-        self.assertEqual(transaction.state, TransactionState.ACTIVE)
+        self.assertEqual(transaction.state, hazelcast.transaction._STATE_ACTIVE)
 
         transaction.rollback()
-        self.assertEqual(transaction.state, TransactionState.ROLLED_BACK)
+        self.assertEqual(transaction.state, hazelcast.transaction._STATE_ROLLED_BACK)
 
     def test_begin_transaction_twice(self):
         transaction = self.client.new_transaction()
@@ -127,13 +128,13 @@ class TransactionTest(SingleMemberTestCase):
 
     def test_context_manager(self):
         with self.client.new_transaction() as t:
-            self.assertEqual(t.state, TransactionState.ACTIVE)
+            self.assertEqual(t.state, hazelcast.transaction._STATE_ACTIVE)
 
-        self.assertEqual(t.state, TransactionState.COMMITTED)
+        self.assertEqual(t.state, hazelcast.transaction._STATE_COMMITTED)
 
     def test_context_manager_rollback(self):
         with self.assertRaises(RuntimeError):
             with self.client.new_transaction() as t:
                 raise RuntimeError("error")
 
-        self.assertEqual(t.state, TransactionState.ROLLED_BACK)
+        self.assertEqual(t.state, hazelcast.transaction._STATE_ROLLED_BACK)

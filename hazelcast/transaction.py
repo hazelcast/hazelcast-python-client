@@ -19,14 +19,11 @@ from hazelcast.six.moves import range
 
 _logger = logging.getLogger(__name__)
 
-
-class TransactionState(object):
-    ACTIVE = "active"
-    NOT_STARTED = "not_started"
-    COMMITTED = "committed"
-    ROLLED_BACK = "rolled_back"
-    PARTIAL_COMMIT = "rolling_back"
-
+_STATE_ACTIVE = "active"
+_STATE_NOT_STARTED = "not_started"
+_STATE_COMMITTED = "committed"
+_STATE_ROLLED_BACK = "rolled_back"
+_STATE_PARTIAL_COMMIT = "rolling_back"
 
 TWO_PHASE = 1
 """
@@ -92,7 +89,7 @@ class Transaction(object):
     transactional data-structures like the TransactionalMap.
     """
 
-    state = TransactionState.NOT_STARTED
+    state = _STATE_NOT_STARTED
     id = None
     start_time = None
     _locals = threading.local()
@@ -110,7 +107,7 @@ class Transaction(object):
         """Begins this transaction."""
         if hasattr(self._locals, "transaction_exists") and self._locals.transaction_exists:
             raise TransactionError("Nested transactions are not allowed.")
-        if self.state != TransactionState.NOT_STARTED:
+        if self.state != _STATE_NOT_STARTED:
             raise TransactionError("Transaction has already been started.")
         self._locals.transaction_exists = True
         self.start_time = time.time()
@@ -129,7 +126,7 @@ class Transaction(object):
             invocation_service.invoke(invocation)
             response = invocation.future.result()
             self.id = transaction_create_codec.decode_response(response)
-            self.state = TransactionState.ACTIVE
+            self.state = _STATE_ACTIVE
         except:
             self._locals.transaction_exists = False
             raise
@@ -137,7 +134,7 @@ class Transaction(object):
     def commit(self):
         """Commits this transaction."""
         self._check_thread()
-        if self.state != TransactionState.ACTIVE:
+        if self.state != _STATE_ACTIVE:
             raise TransactionError("Transaction is not active.")
         try:
             self._check_timeout()
@@ -146,9 +143,9 @@ class Transaction(object):
             invocation_service = self._context.invocation_service
             invocation_service.invoke(invocation)
             invocation.future.result()
-            self.state = TransactionState.COMMITTED
+            self.state = _STATE_COMMITTED
         except:
-            self.state = TransactionState.PARTIAL_COMMIT
+            self.state = _STATE_PARTIAL_COMMIT
             raise
         finally:
             self._locals.transaction_exists = False
@@ -156,16 +153,16 @@ class Transaction(object):
     def rollback(self):
         """Rollback of this current transaction."""
         self._check_thread()
-        if self.state not in (TransactionState.ACTIVE, TransactionState.PARTIAL_COMMIT):
+        if self.state not in (_STATE_ACTIVE, _STATE_PARTIAL_COMMIT):
             raise TransactionError("Transaction is not active.")
         try:
-            if self.state != TransactionState.PARTIAL_COMMIT:
+            if self.state != _STATE_PARTIAL_COMMIT:
                 request = transaction_rollback_codec.encode_request(self.id, self.thread_id)
                 invocation = Invocation(request, connection=self.connection)
                 invocation_service = self._context.invocation_service
                 invocation_service.invoke(invocation)
                 invocation.future.result()
-            self.state = TransactionState.ROLLED_BACK
+            self.state = _STATE_ROLLED_BACK
         finally:
             self._locals.transaction_exists = False
 
@@ -230,7 +227,7 @@ class Transaction(object):
         return self._get_or_create_object(name, TransactionalSet)
 
     def _get_or_create_object(self, name, proxy_type):
-        if self.state != TransactionState.ACTIVE:
+        if self.state != _STATE_ACTIVE:
             raise TransactionError("Transaction is not in active state.")
         self._check_thread()
         key = (proxy_type, name)
@@ -254,7 +251,7 @@ class Transaction(object):
         return self
 
     def __exit__(self, type, value, traceback):
-        if not type and not value and self.state == TransactionState.ACTIVE:
+        if not type and not value and self.state == _STATE_ACTIVE:
             self.commit()
-        elif self.state in (TransactionState.PARTIAL_COMMIT, TransactionState.ACTIVE):
+        elif self.state in (_STATE_PARTIAL_COMMIT, _STATE_ACTIVE):
             self.rollback()

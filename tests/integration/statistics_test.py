@@ -26,7 +26,7 @@ class StatisticsTest(HazelcastTestCase):
     def test_statistics_disabled_by_default(self):
         client = HazelcastClient(cluster_name=self.cluster.id)
         time.sleep(2 * self.DEFAULT_STATS_PERIOD)
-        client_uuid = client.get_local_client().uuid
+        client_uuid = client._connection_manager.client_uuid
 
         response = self._get_client_stats_from_server(client_uuid)
 
@@ -36,7 +36,7 @@ class StatisticsTest(HazelcastTestCase):
 
     def test_statistics_enabled(self):
         client = HazelcastClient(cluster_name=self.cluster.id, statistics_enabled=True)
-        client_uuid = client.get_local_client().uuid
+        client_uuid = client._connection_manager.client_uuid
 
         time.sleep(2 * self.DEFAULT_STATS_PERIOD)
         self._wait_for_statistics_collection(client_uuid)
@@ -49,7 +49,7 @@ class StatisticsTest(HazelcastTestCase):
             statistics_enabled=True,
             statistics_period=self.STATS_PERIOD,
         )
-        client_uuid = client.get_local_client().uuid
+        client_uuid = client._connection_manager.client_uuid
 
         time.sleep(2 * self.STATS_PERIOD)
         response1 = self._wait_for_statistics_collection(client_uuid)
@@ -70,8 +70,7 @@ class StatisticsTest(HazelcastTestCase):
                 map_name: {},
             },
         )
-        info = client.get_local_client()
-        client_uuid = info.uuid
+        client_uuid = client._connection_manager.client_uuid
 
         client.get_map(map_name).blocking()
 
@@ -79,6 +78,7 @@ class StatisticsTest(HazelcastTestCase):
         response = self._wait_for_statistics_collection(client_uuid)
 
         result = response.result.decode("utf-8")
+        info = client._internal_cluster_service.get_local_client()
         local_address = "%s:%s" % (info.address.host, info.address.port)
 
         # Check near cache and client statistics
@@ -120,7 +120,7 @@ class StatisticsTest(HazelcastTestCase):
                 map_name: {},
             },
         )
-        client_uuid = client.get_local_client().uuid
+        client_uuid = client._connection_manager.client_uuid
 
         client.get_map(map_name).blocking()
 
@@ -143,7 +143,7 @@ class StatisticsTest(HazelcastTestCase):
                 map_name: {},
             },
         )
-        client_uuid = client.get_local_client().uuid
+        client_uuid = client._connection_manager.client_uuid
 
         test_map = client.get_map(map_name).blocking()
 

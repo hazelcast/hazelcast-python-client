@@ -636,15 +636,6 @@ class HazelcastClient(object):
 
         return self._proxy_manager.get_distributed_objects()
 
-    def get_local_client(self):
-        """Returns the information about this client such as
-        UUID, local address, name and the labels.
-
-        Returns:
-            hazelcast.cluster.ClientInfo: The client info.
-        """
-        return self._internal_cluster_service.get_local_client()
-
     def shutdown(self):
         """Shuts down this HazelcastClient."""
         with self._shutdown_lock:
