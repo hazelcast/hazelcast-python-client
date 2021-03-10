@@ -33,7 +33,6 @@ class ClientTest(HazelcastTestCase):
             events = []
 
             def event_collector(e):
-                print(e)
                 if e == LifecycleState.DISCONNECTED:
                     events.append(e)
 
