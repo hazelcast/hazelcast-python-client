@@ -20,7 +20,7 @@ from hazelcast.errors import (
     IllegalStateError,
     ClientOfflineError,
 )
-from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
+from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture, Future
 from hazelcast.invocation import Invocation
 from hazelcast.lifecycle import LifecycleState
 from hazelcast.protocol.client_message import (
@@ -438,10 +438,23 @@ class ConnectionManager(object):
                         error = sys.exc_info()
                         return ImmediateExceptionFuture(error[1], error[2])
 
-                    future = self._authenticate(connection).continue_with(
-                        self._on_auth, connection, address
-                    )
+                    future = Future()
                     self._pending_connections[address] = future
+
+                    def cb(response):
+                        self._on_auth(response, connection, address, future)
+
+                    try:
+                        self._authenticate(connection).add_done_callback(cb)
+                    except:
+                        # We could not send authentication request
+                        # successfully, clean up the request from the
+                        # pending connections and set the
+                        # result of the future appropriately.
+                        error = sys.exc_info()
+                        self._pending_connections.pop(address, None)
+                        future.set_exception(error[1], error[2])
+
                     return future
 
     def _authenticate(self, connection):
@@ -466,12 +479,13 @@ class ConnectionManager(object):
         self._invocation_service.invoke(invocation)
         return invocation.future
 
-    def _on_auth(self, response, connection, address):
-        if response.is_success():
+    def _on_auth(self, response, connection, address, future):
+        try:
             response = client_authentication_codec.decode_response(response.result())
             status = response["status"]
             if status == _AuthenticationStatus.AUTHENTICATED:
-                return self._handle_successful_auth(response, connection, address)
+                future.set_result(self._handle_successful_auth(response, connection, address))
+                return
 
             if status == _AuthenticationStatus.CREDENTIALS_FAILED:
                 err = AuthenticationError(
@@ -487,13 +501,10 @@ class ConnectionManager(object):
                     "Authentication status code not supported. status: %s" % status
                 )
 
-            connection.close("Failed to authenticate connection", err)
-            raise err
-        else:
-            e = response.exception()
             # This will set the exception for the pending connection future
+            connection.close("Failed to authenticate connection", err)
+        except Exception as e:
             connection.close("Failed to authenticate connection", e)
-            six.reraise(e.__class__, e, response.traceback())
 
     def _handle_successful_auth(self, response, connection, address):
         self._check_partition_count(response["partition_count"])

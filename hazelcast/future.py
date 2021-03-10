@@ -38,7 +38,7 @@ class Future(object):
         """Sets the exception for this Future in case of errors.
 
         Args:
-            exception (Exception): Exception to be threw in case of error.
+            exception (BaseException): Exception to be threw in case of error.
             traceback (function): Function to be called on traceback.
         """
         if not isinstance(exception, BaseException):
