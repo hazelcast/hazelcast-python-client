@@ -155,6 +155,7 @@ class CPSubsystem(object):
 
 
 _DEFAULT_GROUP_NAME = "default"
+_METADATA_CP_GROUP_NAME = "metadata"
 
 
 def _without_default_group_name(name):
@@ -165,7 +166,11 @@ def _without_default_group_name(name):
 
     check_true(name.find("@", idx + 1) == -1, "Custom group name must be specified at most once")
     group_name = name[idx + 1 :].strip()
-    if group_name == _DEFAULT_GROUP_NAME:
+    check_true(
+        group_name.lower() != _METADATA_CP_GROUP_NAME,
+        "CP data structures cannot run on the METADATA CP group!",
+    )
+    if group_name.lower() == _DEFAULT_GROUP_NAME:
         return name[:idx]
     return name
 
