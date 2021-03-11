@@ -1,3 +1,5 @@
+import os
+
 from tests.hzrc.ttypes import Lang
 
 from tests.base import SingleMemberTestCase
@@ -9,15 +11,10 @@ from hazelcast import six
 class MapTest(SingleMemberTestCase):
     @classmethod
     def configure_cluster(cls):
-        return """
-        <hazelcast xmlns="http://www.hazelcast.com/schema/config"
-           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-           xsi:schemaLocation="http://www.hazelcast.com/schema/config
-           http://www.hazelcast.com/schema/config/hazelcast-config-4.0.xsd">
-            <properties>
-                <property name="hazelcast.map.invalidation.batch.enabled">false</property>
-            </properties>
-        </hazelcast>"""
+        path = os.path.abspath(__file__)
+        dir_path = os.path.dirname(path)
+        with open(os.path.join(dir_path, "hazelcast.xml")) as f:
+            return f.read()
 
     @classmethod
     def configure_client(cls, config):

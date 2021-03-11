@@ -1,6 +1,6 @@
 from hazelcast.errors import DistributedObjectDestroyedError
 from hazelcast.serialization.api import IdentifiedDataSerializable
-from tests.integration.backward_compatibility.proxy.cp import CPTestCase
+from tests.integration.proxy.cp import CPTestCase
 from tests.util import set_attr
 
 

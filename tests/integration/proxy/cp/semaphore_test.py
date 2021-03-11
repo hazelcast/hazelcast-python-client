@@ -8,7 +8,7 @@ from hazelcast.errors import (
     DistributedObjectDestroyedError,
     IllegalStateError,
 )
-from tests.integration.backward_compatibility.proxy.cp import CPTestCase
+from tests.integration.proxy.cp import CPTestCase
 from tests.util import random_string, get_current_timestamp
 
 SEMAPHORE_TYPES = [
