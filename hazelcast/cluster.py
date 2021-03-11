@@ -11,7 +11,7 @@ from hazelcast.core import Address
 
 
 try:
-    from typing import Any, List, Callable, Set
+    from typing import Any, List, Callable, Set, Tuple
 except ImportError:
     pass
 
@@ -22,6 +22,7 @@ class _MemberListSnapshot(object):
     __slots__ = ("version", "members")
 
     def __init__(self, version, members):
+        # type: (int, List[MemberInfo]) -> None
         self.version = version
         self.members = members
 
@@ -39,7 +40,7 @@ class ClientInfo(object):
     __slots__ = ("uuid", "address", "name", "labels")
 
     def __init__(self, client_uuid, address, name, labels):
-        # type: (uuid, Address, str, Set[str]) -> None
+        # type: (uuid.UUID, Address, str, Set[str]) -> None
         self.uuid = client_uuid
         self.address = address
         self.name = name
@@ -68,11 +69,11 @@ class ClusterService(object):
     """
 
     def __init__(self, internal_cluster_service):
-        # type: (Any) -> None
+        # type: (_InternalClusterService) -> None
         self._service = internal_cluster_service
 
     def add_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
-        # type: (Callable[[],Callable[[Any],List[Any]]], Callable[[],Callable[[Any],List[Any]]], bool) -> str
+        # type: (Callable[[MemberInfo], None], Callable[[MemberInfo], None], bool) -> str
         """
         Adds a membership listener to listen for membership updates.
 
@@ -104,7 +105,7 @@ class ClusterService(object):
         return self._service.remove_listener(registration_id)
 
     def get_members(self, member_selector=None):
-        # type: (Callable[..., None]) -> List[MemberInfo]
+        # type: (Callable[[MemberInfo], bool]) -> List[MemberInfo]
         """
         Lists the current members in the cluster.
 
@@ -136,11 +137,13 @@ class _InternalClusterService(object):
             self.add_listener(*listener)
 
     def get_member(self, member_uuid):
+        # type: (uuid.UUID) -> List[_MemberListSnapshot]
         check_not_none(uuid, "UUID must not be null")
         snapshot = self._member_list_snapshot
         return snapshot.members.get(member_uuid, None)
 
     def get_members(self, member_selector=None):
+        # type: (Callable[[MemberInfo], bool]) -> List[MemberInfo]
         snapshot = self._member_list_snapshot
         if not member_selector:
             return list(snapshot.members.values())
@@ -174,7 +177,7 @@ class _InternalClusterService(object):
         )
 
     def add_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
-        # type: (Callable[[],Callable[[Any],List[Any]]], Callable[[],Callable[[Any],List[Any]]], bool) -> str
+        # type: (Callable[[MemberInfo], bool], Callable[[MemberInfo], bool], bool) -> str
         registration_id = str(uuid.uuid4())
         self._listeners[registration_id] = (member_added, member_removed)
 
@@ -194,6 +197,7 @@ class _InternalClusterService(object):
             return False
 
     def wait_initial_member_list_fetched(self):
+        # type: () -> None
         """Blocks until the initial member list is fetched from the cluster.
 
         If it is not received within the timeout, an error is raised.
@@ -206,6 +210,7 @@ class _InternalClusterService(object):
             raise IllegalStateError("Could not get initial member list from cluster!")
 
     def clear_member_list_version(self):
+        # type: () -> None
         _logger.debug("Resetting the member list version")
 
         current = self._member_list_snapshot
@@ -213,6 +218,7 @@ class _InternalClusterService(object):
             self._member_list_snapshot = _MemberListSnapshot(0, current.members)
 
     def handle_members_view_event(self, version, member_infos):
+        # type: (int, MemberInfo) -> None
         snapshot = self._create_snapshot(version, member_infos)
         if _logger.isEnabledFor(logging.DEBUG):
             _logger.debug(
@@ -229,6 +235,7 @@ class _InternalClusterService(object):
             self._initial_list_fetched.set()
 
     def _apply_new_state_and_fire_events(self, current, snapshot):
+        # type: (List[MemberInfo], List[MemberInfo]) -> None
         self._member_list_snapshot = snapshot
         removals, additions = self._detect_membership_events(current, snapshot)
 
@@ -250,6 +257,7 @@ class _InternalClusterService(object):
                         _logger.exception("Exception in membership listener")
 
     def _detect_membership_events(self, old, new):
+        # type: (List[MemberInfo], List[MemberInfo]) -> Tuple[Set[MemberInfo], List[MemberInfo]]
         new_members = []
         dead_members = set(six.itervalues(old.members))
         for member in six.itervalues(new.members):
@@ -278,12 +286,14 @@ class _InternalClusterService(object):
 
     @staticmethod
     def _members_string(snapshot):
+        # type: (List[MemberInfo]) -> str
         members = snapshot.members
         n = len(members)
         return "\n\nMembers [%s] {\n\t%s\n}\n" % (n, "\n\t".join(map(str, six.itervalues(members))))
 
     @staticmethod
     def _create_snapshot(version, member_infos):
+        # type: (int, MemberInfo) -> _MemberListSnapshot
         new_members = OrderedDict()
         for member_info in member_infos:
             new_members[member_info.uuid] = member_info
@@ -302,9 +312,11 @@ class VectorClock(object):
     """
 
     def __init__(self):
+        # type: () -> None
         self._replica_timestamps = {}
 
     def is_after(self, other):
+        # type: (VectorClock) -> bool
         """Returns ``True`` if this vector clock is causally strictly after the
         provided vector clock. This means that it the provided clock is neither
         equal to, greater than or concurrent to this vector clock.
@@ -328,6 +340,7 @@ class VectorClock(object):
         return any_timestamp_greater or other.size() < self.size()
 
     def set_replica_timestamp(self, replica_id, timestamp):
+        # type: (str, int) -> None
         """Sets the logical timestamp for the given replica ID.
 
         Args:
@@ -337,6 +350,7 @@ class VectorClock(object):
         self._replica_timestamps[replica_id] = timestamp
 
     def entry_set(self):
+        # type: () -> List[Tuple[str,int]]
         """Returns the entry set of the replica timestamps in a format of list of tuples.
 
         Each tuple contains the replica ID and the timestamp associated with it.
@@ -347,6 +361,7 @@ class VectorClock(object):
         return list(self._replica_timestamps.items())
 
     def size(self):
+        # type: () -> int
         """Returns the number of timestamps that are in the replica timestamps dictionary.
 
         Returns:

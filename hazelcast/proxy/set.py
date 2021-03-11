@@ -22,6 +22,7 @@ try:
 except ImportError:
     pass
 from hazelcast.future import Future
+import uuid
 
 
 class Set(PartitionSpecificProxy):
@@ -62,7 +63,7 @@ class Set(PartitionSpecificProxy):
         return self._invoke(request, set_add_all_codec.decode_response)
 
     def add_listener(self, include_value=False, item_added_func=None, item_removed_func=None):
-        # type: (bool, Callable[[],Callable[[Any],List[Any]]], Callable[[],Callable[[Any],List[Any]]]) -> Future[str]
+        # type: (bool, Callable[[ItemEvent],None], Callable[[ItemEvent],None]) -> Future[str]
         """Adds an item listener for this container.
 
         Listener will be notified for all container add/remove events.
@@ -78,6 +79,7 @@ class Set(PartitionSpecificProxy):
         request = set_add_listener_codec.encode_request(self.name, include_value, self._is_smart)
 
         def handle_event_item(item, uuid, event_type):
+            # type: (Any, uuid.UUID, int) -> None
             item = item if include_value else None
             member = self._context.cluster_service.get_member(uuid)
 
