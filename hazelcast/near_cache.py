@@ -42,7 +42,7 @@ class DataRecord(object):
         """Determines whether this record is expired or not.
 
         Args:
-            max_idle_seconds (int): The maximum idle time of record, maximum time after the last access time.
+            max_idle_seconds (float): The maximum idle time of record, maximum time after the last access time.
 
         Returns:
             bool: ``True`` is this record is not expired, ``False`` otherwise.
