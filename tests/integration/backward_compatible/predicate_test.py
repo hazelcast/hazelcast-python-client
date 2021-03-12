@@ -24,7 +24,10 @@ from hazelcast.predicate import (
 from hazelcast.serialization.api import Portable, IdentifiedDataSerializable
 from hazelcast.util import IterationType
 from tests.base import SingleMemberTestCase, HazelcastTestCase
-from tests.integration.backward_compatible.util import write_string_to_writer, read_string_from_reader
+from tests.integration.backward_compatible.util import (
+    write_string_to_writer,
+    read_string_from_reader,
+)
 from tests.util import random_string, get_abs_path
 from hazelcast import six, HazelcastClient
 from hazelcast.six.moves import range

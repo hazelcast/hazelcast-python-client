@@ -7,7 +7,10 @@ from hazelcast.proxy.map import EntryEventType
 from hazelcast.serialization.api import IdentifiedDataSerializable
 from hazelcast.predicate import sql
 from tests.base import SingleMemberTestCase
-from tests.integration.backward_compatible.util import write_string_to_output, read_string_from_input
+from tests.integration.backward_compatible.util import (
+    write_string_to_output,
+    read_string_from_input,
+)
 from tests.util import random_string, event_collector, fill_map
 from hazelcast import six
 from hazelcast.six.moves import range

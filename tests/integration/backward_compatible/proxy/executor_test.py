@@ -2,7 +2,10 @@ import os
 
 from hazelcast.serialization.api import IdentifiedDataSerializable
 from tests.base import SingleMemberTestCase
-from tests.integration.backward_compatible.util import read_string_from_input, write_string_to_output
+from tests.integration.backward_compatible.util import (
+    read_string_from_input,
+    write_string_to_output,
+)
 from tests.util import random_string
 
 
