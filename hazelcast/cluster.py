@@ -8,6 +8,8 @@ from hazelcast.errors import TargetDisconnectedError, IllegalStateError
 from hazelcast.util import check_not_none
 from hazelcast.core import MemberInfo
 from hazelcast.core import Address
+from hazelcast.client import ConnectionManager, HazelcastClient
+from hazelcast.config import _Config
 
 
 try:
@@ -124,6 +126,7 @@ class ClusterService(object):
 
 class _InternalClusterService(object):
     def __init__(self, client, config):
+        # type: (HazelcastClient, _Config) -> None
         self._client = client
         self._connection_manager = None
         self._labels = frozenset(config.labels)
@@ -132,12 +135,13 @@ class _InternalClusterService(object):
         self._initial_list_fetched = threading.Event()
 
     def start(self, connection_manager, membership_listeners):
+        # type: (ConnectionManager, List[Tuple[Callable[[MemberInfo], None], Callable[[MemberInfo], None]]]) -> None
         self._connection_manager = connection_manager
         for listener in membership_listeners:
             self.add_listener(*listener)
 
     def get_member(self, member_uuid):
-        # type: (uuid.UUID) -> List[_MemberListSnapshot]
+        # type: (uuid.UUID) -> List[MemberInfo]
         check_not_none(uuid, "UUID must not be null")
         snapshot = self._member_list_snapshot
         return snapshot.members.get(member_uuid, None)
@@ -177,7 +181,7 @@ class _InternalClusterService(object):
         )
 
     def add_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
-        # type: (Callable[[MemberInfo], bool], Callable[[MemberInfo], bool], bool) -> str
+        # type: (Callable[[MemberInfo], None], Callable[[MemberInfo], None], bool) -> str
         registration_id = str(uuid.uuid4())
         self._listeners[registration_id] = (member_added, member_removed)
 
@@ -218,7 +222,7 @@ class _InternalClusterService(object):
             self._member_list_snapshot = _MemberListSnapshot(0, current.members)
 
     def handle_members_view_event(self, version, member_infos):
-        # type: (int, MemberInfo) -> None
+        # type: (int, List[MemberInfo]) -> None
         snapshot = self._create_snapshot(version, member_infos)
         if _logger.isEnabledFor(logging.DEBUG):
             _logger.debug(
@@ -235,7 +239,7 @@ class _InternalClusterService(object):
             self._initial_list_fetched.set()
 
     def _apply_new_state_and_fire_events(self, current, snapshot):
-        # type: (List[MemberInfo], List[MemberInfo]) -> None
+        # type: (List[_MemberListSnapshot], List[_MemberListSnapshot]) -> None
         self._member_list_snapshot = snapshot
         removals, additions = self._detect_membership_events(current, snapshot)
 
@@ -257,7 +261,7 @@ class _InternalClusterService(object):
                         _logger.exception("Exception in membership listener")
 
     def _detect_membership_events(self, old, new):
-        # type: (List[MemberInfo], List[MemberInfo]) -> Tuple[Set[MemberInfo], List[MemberInfo]]
+        # type: (_MemberListSnapshot, _MemberListSnapshot) -> Tuple[Set[MemberInfo], List[MemberInfo]]
         new_members = []
         dead_members = set(six.itervalues(old.members))
         for member in six.itervalues(new.members):
@@ -286,14 +290,14 @@ class _InternalClusterService(object):
 
     @staticmethod
     def _members_string(snapshot):
-        # type: (List[MemberInfo]) -> str
+        # type: (_MemberListSnapshot) -> str
         members = snapshot.members
         n = len(members)
         return "\n\nMembers [%s] {\n\t%s\n}\n" % (n, "\n\t".join(map(str, six.itervalues(members))))
 
     @staticmethod
     def _create_snapshot(version, member_infos):
-        # type: (int, MemberInfo) -> _MemberListSnapshot
+        # type: (int, List[MemberInfo]) -> _MemberListSnapshot
         new_members = OrderedDict()
         for member_info in member_infos:
             new_members[member_info.uuid] = member_info
