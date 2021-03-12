@@ -9,11 +9,12 @@ from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
 from hazelcast.protocol import RaftGroupId
 from hazelcast.reactor import AsyncoreReactor
 from hazelcast.util import thread_id
+from tests.base import HazelcastTestCase
 
 
 class SessionStateTest(unittest.TestCase):
     def setUp(self):
-        self.state = _SessionState(42, None, 0.5)
+        self.state = _SessionState(42, None, 0.05)
 
     def test_acquire(self):
         self.assertEqual(0, self.state.acquire_count.get())
@@ -32,13 +33,13 @@ class SessionStateTest(unittest.TestCase):
 
     def test_is_valid(self):
         self.assertTrue(self.state.is_valid())  # not timed out
-        time.sleep(1)
+        time.sleep(0.1)
         self.assertFalse(self.state.is_valid())  # timed out and there is no acquire
         self.state.acquire(5)
         self.assertTrue(self.state.is_valid())  # timed out but acquired
 
 
-class SessionManagerTest(unittest.TestCase):
+class SessionManagerTest(HazelcastTestCase):
     @classmethod
     def setUpClass(cls):
         cls.group_id = 42
@@ -160,14 +161,18 @@ class SessionManagerTest(unittest.TestCase):
         r = MagicMock(return_value=ImmediateFuture(None))
         self.manager._request_heartbeat = r
         self.manager.acquire_session(self.raft_group_id, 1).result()
-        time.sleep(2)
+
+        def assertion():
+            # assert that the heartbeat task is executed
+            self.assertGreater(self.context.reactor.add_timer.call_count, 1)
+            r.assert_called()
+            r.assert_called_with(self.raft_group_id, self.session_id)
+            self.assertEqual(1, len(self.manager._sessions))
+
+        self.assertTrueEventually(assertion)
+
         self.manager.shutdown()
         reactor.shutdown()
-        # assert that the heartbeat task is executed
-        self.assertGreater(self.context.reactor.add_timer.call_count, 1)
-        r.assert_called()
-        r.assert_called_with(self.raft_group_id, self.session_id)
-        self.assertEqual(1, len(self.manager._sessions))
 
     def test_heartbeat_when_session_is_released(self):
         reactor = self.mock_reactor()
@@ -178,13 +183,17 @@ class SessionManagerTest(unittest.TestCase):
         self.manager.acquire_session(self.raft_group_id, 1).add_done_callback(
             lambda _: self.manager.release_session(self.raft_group_id, self.session_id, 1)
         )
-        time.sleep(2)
+
+        def assertion():
+            # assert that the heartbeat task is executed
+            self.assertGreater(self.context.reactor.add_timer.call_count, 1)
+            r.assert_not_called()
+            self.assertEqual(1, len(self.manager._sessions))
+
+        self.assertTrueEventually(assertion)
+
         self.manager.shutdown()
         reactor.shutdown()
-        # assert that the heartbeat task is executed
-        self.assertGreater(self.context.reactor.add_timer.call_count, 1)
-        r.assert_not_called()
-        self.assertEqual(1, len(self.manager._sessions))
 
     def test_heartbeat_on_failure(self):
         reactor = self.mock_reactor()
@@ -197,13 +206,17 @@ class SessionManagerTest(unittest.TestCase):
         self.manager.invalidate_session = m
 
         self.manager.acquire_session(self.raft_group_id, 1).result()
-        time.sleep(2)
+
+        def assertion():
+            # assert that the heartbeat task is executed
+            self.assertGreater(self.context.reactor.add_timer.call_count, 1)
+            m.assert_called_once_with(self.raft_group_id, self.session_id)
+            self.assertEqual(0, len(self.manager._sessions))
+
+        self.assertTrueEventually(assertion)
+
         self.manager.shutdown()
         reactor.shutdown()
-        # assert that the heartbeat task is executed
-        self.assertGreater(self.context.reactor.add_timer.call_count, 1)
-        m.assert_called_once_with(self.raft_group_id, self.session_id)
-        self.assertEqual(0, len(self.manager._sessions))
 
     def mock_request_generate_thread_id(self, t_id):
         def mock(*_, **__):
@@ -219,8 +232,8 @@ class SessionManagerTest(unittest.TestCase):
         def mock(*_, **__):
             d = {
                 "session_id": self.session_id,
-                "ttl_millis": 1000,
-                "heartbeat_millis": 100,
+                "ttl_millis": 50,
+                "heartbeat_millis": 10,
             }
             return ImmediateFuture(d)
 

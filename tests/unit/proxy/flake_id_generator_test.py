@@ -8,7 +8,7 @@ from hazelcast.proxy.flake_id_generator import _IdBatch, _Block, _AutoBatcher
 FLAKE_ID_STEP = 1 << 16
 AUTO_BATCHER_BASE = 10
 NUM_THREADS = 4
-NUM_IDS_IN_THREADS = 100000
+NUM_IDS_IN_THREADS = 10000
 
 
 class FlakeIdGeneratorDataStructuresTest(unittest.TestCase):
@@ -53,9 +53,9 @@ class FlakeIdGeneratorDataStructuresTest(unittest.TestCase):
 
     def test_block_after_validity_period(self):
         id_batch = _IdBatch(-1, -2, 2)
-        block = _Block(id_batch, 0.1)
+        block = _Block(id_batch, 0.05)
 
-        time.sleep(0.5)
+        time.sleep(0.1)
 
         self.assertIsNone(block.next_id())
 

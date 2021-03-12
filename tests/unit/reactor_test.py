@@ -1,7 +1,6 @@
 import os
 import socket
 import threading
-import time
 import unittest
 from collections import OrderedDict
 
@@ -121,7 +120,6 @@ class LoopTest(HazelcastTestCase):
         loop = cls({})
         loop.start()
         loop.add_timer(float("inf"), callback)  # never expired, must be cleaned up
-        time.sleep(1)
         try:
             self.assertEqual(0, call_count.get())
         finally:
