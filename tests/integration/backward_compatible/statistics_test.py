@@ -6,7 +6,8 @@ from hazelcast.core import CLIENT_TYPE
 from hazelcast.statistics import Statistics
 from tests.base import HazelcastTestCase
 from tests.hzrc.ttypes import Lang
-from tests.util import random_string, get_current_timestamp
+from tests.integration.backward_compatible.util import get_current_timestamp
+from tests.util import random_string
 
 
 class StatisticsTest(HazelcastTestCase):
@@ -28,7 +29,7 @@ class StatisticsTest(HazelcastTestCase):
         time.sleep(2 * self.DEFAULT_STATS_PERIOD)
         client_uuid = client._connection_manager.client_uuid
 
-        response = self._get_client_stats_from_server(client_uuid)
+        response = self.get_client_stats_from_server(client_uuid)
 
         self.assertTrue(response.success)
         self.assertIsNone(response.result)
@@ -39,7 +40,7 @@ class StatisticsTest(HazelcastTestCase):
         client_uuid = client._connection_manager.client_uuid
 
         time.sleep(2 * self.DEFAULT_STATS_PERIOD)
-        self._wait_for_statistics_collection(client_uuid)
+        self.wait_for_statistics_collection(client_uuid)
 
         client.shutdown()
 
@@ -52,10 +53,10 @@ class StatisticsTest(HazelcastTestCase):
         client_uuid = client._connection_manager.client_uuid
 
         time.sleep(2 * self.STATS_PERIOD)
-        response1 = self._wait_for_statistics_collection(client_uuid)
+        response1 = self.wait_for_statistics_collection(client_uuid)
 
         time.sleep(2 * self.STATS_PERIOD)
-        response2 = self._wait_for_statistics_collection(client_uuid)
+        response2 = self.wait_for_statistics_collection(client_uuid)
 
         self.assertNotEqual(response1, response2)
         client.shutdown()
@@ -75,7 +76,7 @@ class StatisticsTest(HazelcastTestCase):
         client.get_map(map_name).blocking()
 
         time.sleep(2 * self.STATS_PERIOD)
-        response = self._wait_for_statistics_collection(client_uuid)
+        response = self.wait_for_statistics_collection(client_uuid)
 
         result = response.result.decode("utf-8")
         info = client._internal_cluster_service.get_local_client()
@@ -125,10 +126,10 @@ class StatisticsTest(HazelcastTestCase):
         client.get_map(map_name).blocking()
 
         time.sleep(2 * self.STATS_PERIOD)
-        response = self._wait_for_statistics_collection(client_uuid)
+        response = self.wait_for_statistics_collection(client_uuid)
 
         result = response.result.decode("utf-8")
-        unescaped_result = self._unescape_special_chars(result)
+        unescaped_result = self.unescape_special_chars(result)
         self.assertEqual(-1, result.find(map_name))
         self.assertNotEqual(-1, unescaped_result.find(map_name))
         client.shutdown()
@@ -148,7 +149,7 @@ class StatisticsTest(HazelcastTestCase):
         test_map = client.get_map(map_name).blocking()
 
         time.sleep(2 * self.STATS_PERIOD)
-        response = self._wait_for_statistics_collection(client_uuid)
+        response = self.wait_for_statistics_collection(client_uuid)
 
         result = response.result.decode("utf-8")
         self.assertEqual(1, result.count("nc." + map_name + ".evictions=0"))
@@ -166,7 +167,7 @@ class StatisticsTest(HazelcastTestCase):
         test_map.get(1)  # cache miss
 
         time.sleep(2 * self.STATS_PERIOD)
-        response = self._wait_for_statistics_collection(client_uuid)
+        response = self.wait_for_statistics_collection(client_uuid)
 
         result = response.result.decode("utf-8")
         self.assertEqual(1, result.count("nc." + map_name + ".evictions=0"))
@@ -179,7 +180,7 @@ class StatisticsTest(HazelcastTestCase):
 
         client.shutdown()
 
-    def _get_client_stats_from_server(self, client_uuid):
+    def get_client_stats_from_server(self, client_uuid):
         script = (
             """
         stats = instance_0.getOriginal().node.getClientEngine().getClientStatistics();
@@ -195,23 +196,23 @@ class StatisticsTest(HazelcastTestCase):
 
         return self.rc.executeOnController(self.cluster.id, script, Lang.JAVASCRIPT)
 
-    def _unescape_special_chars(self, value):
+    def unescape_special_chars(self, value):
         return (
             value.replace("\\,", ",").replace("\\=", "=").replace("\\.", ".").replace("\\\\", "\\")
         )
 
-    def _verify_response_not_empty(self, response):
+    def verify_response_not_empty(self, response):
         if not response.success or response.result is None:
             raise AssertionError
 
-    def _wait_for_statistics_collection(self, client_uuid, timeout=30):
+    def wait_for_statistics_collection(self, client_uuid, timeout=30):
         timeout_time = get_current_timestamp() + timeout
-        response = self._get_client_stats_from_server(client_uuid)
+        response = self.get_client_stats_from_server(client_uuid)
         while get_current_timestamp() < timeout_time:
             try:
-                self._verify_response_not_empty(response)
+                self.verify_response_not_empty(response)
                 return response
             except AssertionError:
                 time.sleep(0.1)
-                response = self._get_client_stats_from_server(client_uuid)
+                response = self.get_client_stats_from_server(client_uuid)
         raise AssertionError

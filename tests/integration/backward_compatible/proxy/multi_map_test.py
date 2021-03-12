@@ -80,33 +80,33 @@ class MultiMapTest(SingleMemberTestCase):
         self.assertTrueEventually(assert_event, 5)
 
     def test_clear(self):
-        self._fill_map()
+        self.fill_map()
 
         self.multi_map.clear()
 
         self.assertEqual(self.multi_map.size(), 0)
 
     def test_contains_key(self):
-        self._fill_map()
+        self.fill_map()
 
         self.assertTrue(self.multi_map.contains_key("key-1"))
         self.assertFalse(self.multi_map.contains_key("key-10"))
 
     def test_contains_value(self):
-        self._fill_map()
+        self.fill_map()
 
         self.assertTrue(self.multi_map.contains_value("value-1-1"))
         self.assertFalse(self.multi_map.contains_value("value-10-10"))
 
     def test_contains_entry(self):
-        self._fill_map()
+        self.fill_map()
 
         self.assertTrue(self.multi_map.contains_entry("key-1", "value-1-1"))
         self.assertFalse(self.multi_map.contains_entry("key-1", "value-1-10"))
         self.assertFalse(self.multi_map.contains_entry("key-10", "value-1-1"))
 
     def test_entry_set(self):
-        mm = self._fill_map()
+        mm = self.fill_map()
 
         entry_list = []
         for key, list in six.iteritems(mm):
@@ -133,7 +133,7 @@ class MultiMapTest(SingleMemberTestCase):
         self.assertFalse(self.multi_map.is_locked("key"))
 
     def test_key_set(self):
-        keys = list(self._fill_map().keys())
+        keys = list(self.fill_map().keys())
 
         six.assertCountEqual(self, self.multi_map.key_set(), keys)
 
@@ -184,7 +184,7 @@ class MultiMapTest(SingleMemberTestCase):
         self.assertEqual(len(collector.events), 1)
 
     def test_size(self):
-        self._fill_map(5)
+        self.fill_map(5)
 
         self.assertEqual(25, self.multi_map.size())
 
@@ -208,18 +208,18 @@ class MultiMapTest(SingleMemberTestCase):
             self.multi_map.unlock("key")
 
     def test_value_count(self):
-        self._fill_map(key_count=1, value_count=10)
+        self.fill_map(key_count=1, value_count=10)
 
         self.assertEqual(self.multi_map.value_count("key-0"), 10)
 
     def test_values(self):
-        values = list(self._fill_map().values())
+        values = list(self.fill_map().values())
         six.assertCountEqual(self, list(self.multi_map.values()), itertools.chain(*values))
 
     def test_str(self):
         self.assertTrue(str(self.multi_map).startswith("MultiMap"))
 
-    def _fill_map(self, key_count=5, value_count=5):
+    def fill_map(self, key_count=5, value_count=5):
         map = {
             "key-%d" % x: ["value-%d-%d" % (x, y) for y in range(0, value_count)]
             for x in range(0, key_count)

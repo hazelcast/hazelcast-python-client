@@ -4,7 +4,7 @@ from tests.base import HazelcastTestCase
 from hazelcast.client import HazelcastClient
 from hazelcast.lifecycle import LifecycleState
 from tests.hzrc.ttypes import Lang
-from tests.util import get_current_timestamp
+from tests.integration.backward_compatible.util import get_current_timestamp
 
 
 class ClientTest(HazelcastTestCase):

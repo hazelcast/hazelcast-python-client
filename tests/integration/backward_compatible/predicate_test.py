@@ -24,6 +24,7 @@ from hazelcast.predicate import (
 from hazelcast.serialization.api import Portable, IdentifiedDataSerializable
 from hazelcast.util import IterationType
 from tests.base import SingleMemberTestCase, HazelcastTestCase
+from tests.integration.backward_compatible.util import write_string_to_writer, read_string_from_reader
 from tests.util import random_string, get_abs_path
 from hazelcast import six, HazelcastClient
 from hazelcast.six.moves import range
@@ -41,82 +42,82 @@ class PredicateTest(SingleMemberTestCase):
     def tearDown(self):
         self.map.destroy()
 
-    def _fill_map(self, count=10):
+    def fill_map(self, count=10):
         m = {"key-%d" % x: "value-%d" % x for x in range(0, count)}
         self.map.put_all(m)
         return m
 
-    def _fill_map_numeric(self, count=100):
+    def fill_map_numeric(self, count=100):
         m = {n: n for n in range(count)}
         self.map.put_all(m)
 
     def test_key_set(self):
-        self._fill_map()
+        self.fill_map()
         key_set = self.map.key_set()
         list(key_set)
         key_set_list = list(key_set)
         assert key_set_list[0]
 
     def test_sql(self):
-        self._fill_map()
+        self.fill_map()
         predicate = sql("this == 'value-1'")
         six.assertCountEqual(self, self.map.key_set(predicate), ["key-1"])
 
     def test_and(self):
-        self._fill_map()
+        self.fill_map()
         predicate = and_(equal("this", "value-1"), equal("this", "value-2"))
         six.assertCountEqual(self, self.map.key_set(predicate), [])
 
     def test_or(self):
-        self._fill_map()
+        self.fill_map()
         predicate = or_(equal("this", "value-1"), equal("this", "value-2"))
         six.assertCountEqual(self, self.map.key_set(predicate), ["key-1", "key-2"])
 
     def test_not(self):
-        self._fill_map(count=3)
+        self.fill_map(count=3)
         predicate = not_(equal("this", "value-1"))
         six.assertCountEqual(self, self.map.key_set(predicate), ["key-0", "key-2"])
 
     def test_between(self):
-        self._fill_map_numeric()
+        self.fill_map_numeric()
 
         predicate = between("this", 1, 20)
         six.assertCountEqual(self, self.map.key_set(predicate), list(range(1, 21)))
 
     def test_equal(self):
-        self._fill_map()
+        self.fill_map()
         predicate = equal("this", "value-1")
         six.assertCountEqual(self, self.map.key_set(predicate), ["key-1"])
 
     def test_not_equal(self):
-        self._fill_map(count=3)
+        self.fill_map(count=3)
         predicate = not_equal("this", "value-1")
 
         six.assertCountEqual(self, self.map.key_set(predicate), ["key-0", "key-2"])
 
     def test_in(self):
-        self._fill_map_numeric(count=10)
+        self.fill_map_numeric(count=10)
         predicate = in_("this", 1, 5, 7)
 
         six.assertCountEqual(self, self.map.key_set(predicate), [1, 5, 7])
 
     def test_less_than(self):
-        self._fill_map_numeric()
+        self.fill_map_numeric()
         predicate = less("this", 10)
         six.assertCountEqual(self, self.map.key_set(predicate), list(range(0, 10)))
 
     def test_less_than_or_equal(self):
-        self._fill_map_numeric()
+        self.fill_map_numeric()
         predicate = less_or_equal("this", 10)
         six.assertCountEqual(self, self.map.key_set(predicate), list(range(0, 11)))
 
     def test_greater_than(self):
-        self._fill_map_numeric()
+        self.fill_map_numeric()
         predicate = greater("this", 10)
         six.assertCountEqual(self, self.map.key_set(predicate), list(range(11, 100)))
 
     def test_greater_than_or_equal(self):
-        self._fill_map_numeric()
+        self.fill_map_numeric()
         predicate = greater_or_equal("this", 10)
         six.assertCountEqual(self, self.map.key_set(predicate), list(range(10, 100)))
 
@@ -158,17 +159,17 @@ class PredicateTest(SingleMemberTestCase):
         six.assertCountEqual(self, self.map.key_set(predicate), ["key-1"])
 
     def test_true(self):
-        m = self._fill_map()
+        m = self.fill_map()
         predicate = true()
         six.assertCountEqual(self, self.map.key_set(predicate), list(m.keys()))
 
     def test_false(self):
-        self._fill_map()
+        self.fill_map()
         predicate = false()
         six.assertCountEqual(self, self.map.key_set(predicate), [])
 
     def test_paging(self):
-        self._fill_map_numeric()
+        self.fill_map_numeric()
         predicate = paging(less("this", 4), 2)
         six.assertCountEqual(self, [0, 1], self.map.key_set(predicate))
         predicate.next_page()
@@ -207,13 +208,13 @@ class PredicatePortableTest(SingleMemberTestCase):
     def tearDown(self):
         self.map.destroy()
 
-    def _fill_map(self, count=1000):
+    def fill_map(self, count=1000):
         m = {x: TestPortable(x) for x in range(0, count)}
         self.map.put_all(m)
         return m
 
     def test_predicate_portable_key(self):
-        _map = self._fill_map()
+        _map = self.fill_map()
         map_keys = list(_map.keys())
 
         predicate = sql("field >= 900")
@@ -240,11 +241,11 @@ class NestedPredicatePortableTest(SingleMemberTestCase):
             return 15
 
         def write_portable(self, writer):
-            writer.write_string("name", self.name)
+            write_string_to_writer(writer, "name", self.name)
             writer.write_portable("limb", self.limb)
 
         def read_portable(self, reader):
-            self.name = reader.read_string("name")
+            self.name = read_string_from_reader(reader, "name")
             self.limb = reader.read_portable("limb")
 
         def __eq__(self, other):
@@ -267,10 +268,10 @@ class NestedPredicatePortableTest(SingleMemberTestCase):
             return 2
 
         def write_portable(self, writer):
-            writer.write_string("name", self.name)
+            write_string_to_writer(writer, "name", self.name)
 
         def read_portable(self, reader):
-            self.name = reader.read_string("name")
+            self.name = read_string_from_reader(reader, "name")
 
         def __eq__(self, other):
             return isinstance(other, self.__class__) and self.name == other.name

@@ -108,7 +108,7 @@ class FlakeIdGeneratorIdOutOfRangeTest(HazelcastTestCase):
         self.rc.exit()
 
     def test_new_id_with_at_least_one_suitable_member(self):
-        response = self._assign_out_of_range_node_id(self.cluster.id, random.randint(0, 1))
+        response = self.assign_out_of_range_node_id(self.cluster.id, random.randint(0, 1))
         self.assertTrueEventually(lambda: response.success and response.result is not None)
 
         client = HazelcastClient(cluster_name=self.cluster.id, smart_routing=False)
@@ -122,10 +122,10 @@ class FlakeIdGeneratorIdOutOfRangeTest(HazelcastTestCase):
         client.shutdown()
 
     def test_new_id_fails_when_all_members_are_out_of_node_id_range(self):
-        response1 = self._assign_out_of_range_node_id(self.cluster.id, 0)
+        response1 = self.assign_out_of_range_node_id(self.cluster.id, 0)
         self.assertTrueEventually(lambda: response1.success and response1.result is not None)
 
-        response2 = self._assign_out_of_range_node_id(self.cluster.id, 1)
+        response2 = self.assign_out_of_range_node_id(self.cluster.id, 1)
         self.assertTrueEventually(lambda: response2.success and response2.result is not None)
 
         client = HazelcastClient(cluster_name=self.cluster.id)
@@ -137,7 +137,7 @@ class FlakeIdGeneratorIdOutOfRangeTest(HazelcastTestCase):
         generator.destroy()
         client.shutdown()
 
-    def _assign_out_of_range_node_id(self, cluster_id, instance_id):
+    def assign_out_of_range_node_id(self, cluster_id, instance_id):
         script = (
             "def assign_out_of_range_node_id():\n"
             "\tinstance_{}.getCluster().getLocalMember().setMemberListJoinVersion(100000)\n"

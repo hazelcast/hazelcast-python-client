@@ -1,6 +1,8 @@
 from hazelcast.errors import DistributedObjectDestroyedError, ClassCastError
 from hazelcast.serialization.api import IdentifiedDataSerializable
-from tests.integration.proxy.cp import CPTestCase
+
+from tests.integration.backward_compatible.util import write_string_to_output
+from tests.integration.backward_compatible.proxy.cp import CPTestCase
 from tests.util import set_attr
 
 
@@ -9,7 +11,7 @@ class AppendString(IdentifiedDataSerializable):
         self.suffix = suffix
 
     def write_data(self, object_data_output):
-        object_data_output.write_string(self.suffix)
+        write_string_to_output(object_data_output, self.suffix)
 
     def read_data(self, object_data_input):
         pass

@@ -2,20 +2,21 @@ import os
 
 from hazelcast.serialization.api import IdentifiedDataSerializable
 from tests.base import SingleMemberTestCase
+from tests.integration.backward_compatible.util import read_string_from_input, write_string_to_output
 from tests.util import random_string
 
 
-class _AppendTask(IdentifiedDataSerializable):
+class AppendTask(IdentifiedDataSerializable):
     """Client side version of com.hazelcast.client.test.executor.tasks.AppendCallable"""
 
     def __init__(self, message):
         self.message = message
 
     def write_data(self, object_data_output):
-        object_data_output.write_string(self.message)
+        write_string_to_output(object_data_output, self.message)
 
     def read_data(self, object_data_input):
-        self.message = object_data_input.read_string()
+        self.message = read_string_from_input(object_data_input)
 
     def get_factory_id(self):
         return 66
@@ -24,7 +25,7 @@ class _AppendTask(IdentifiedDataSerializable):
         return 5
 
 
-_APPENDAGE = ":CallableResult"  # defined on the server side
+APPENDAGE = ":CallableResult"  # defined on the server side
 
 
 class ExecutorTest(SingleMemberTestCase):
@@ -43,7 +44,7 @@ class ExecutorTest(SingleMemberTestCase):
     def setUp(self):
         self.executor = self.client.get_executor(random_string()).blocking()
         self.message = random_string()
-        self.task = _AppendTask(self.message)
+        self.task = AppendTask(self.message)
 
     def tearDown(self):
         self.executor.shutdown()
@@ -51,21 +52,21 @@ class ExecutorTest(SingleMemberTestCase):
 
     def test_execute_on_key_owner(self):
         result = self.executor.execute_on_key_owner("key", self.task)
-        self.assertEqual(self.message + _APPENDAGE, result)
+        self.assertEqual(self.message + APPENDAGE, result)
 
     def test_execute_on_member(self):
         member = self.client.cluster_service.get_members()[0]
         result = self.executor.execute_on_member(member, self.task)
-        self.assertEqual(self.message + _APPENDAGE, result)
+        self.assertEqual(self.message + APPENDAGE, result)
 
     def test_execute_on_members(self):
         members = self.client.cluster_service.get_members()
         result = self.executor.execute_on_members(members, self.task)
-        self.assertEqual([self.message + _APPENDAGE], result)
+        self.assertEqual([self.message + APPENDAGE], result)
 
     def test_execute_on_all_members(self):
         result = self.executor.execute_on_all_members(self.task)
-        self.assertEqual([self.message + _APPENDAGE], result)
+        self.assertEqual([self.message + APPENDAGE], result)
 
     def test_shutdown(self):
         self.executor.shutdown()

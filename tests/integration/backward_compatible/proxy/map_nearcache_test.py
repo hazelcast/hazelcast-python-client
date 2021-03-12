@@ -54,7 +54,7 @@ class MapTest(SingleMemberTestCase):
         self.assertEqual(0, len(self.map._near_cache))
 
     def test_invalidate_single_key(self):
-        self._fill_map_and_near_cache(10)
+        self.fill_map_and_near_cache(10)
         initial_cache_size = len(self.map._near_cache)
         script = """map = instance_0.getMap("{}");map.remove("key-5")""".format(self.map.name)
         response = self.rc.executeOnController(self.cluster.id, script, Lang.PYTHON)
@@ -67,7 +67,7 @@ class MapTest(SingleMemberTestCase):
         self.assertTrueEventually(assertion)
 
     def test_invalidate_nonexist_key(self):
-        self._fill_map_and_near_cache(10)
+        self.fill_map_and_near_cache(10)
         initial_cache_size = len(self.map._near_cache)
         script = (
             """
@@ -89,7 +89,7 @@ class MapTest(SingleMemberTestCase):
         self.assertTrueEventually(assertion)
 
     def test_invalidate_multiple_keys(self):
-        self._fill_map_and_near_cache(10)
+        self.fill_map_and_near_cache(10)
         initial_cache_size = len(self.map._near_cache)
         script = """map = instance_0.getMap("{}");map.clear()""".format(self.map.name)
         response = self.rc.executeOnController(self.cluster.id, script, Lang.PYTHON)
@@ -101,7 +101,7 @@ class MapTest(SingleMemberTestCase):
 
         self.assertTrueEventually(assertion)
 
-    def _fill_map_and_near_cache(self, count=10):
+    def fill_map_and_near_cache(self, count=10):
         fill_content = {"key-%d" % x: "value-%d" % x for x in range(0, count)}
         for k, v in six.iteritems(fill_content):
             self.map.put(k, v)
