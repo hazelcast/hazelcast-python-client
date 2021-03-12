@@ -7,6 +7,10 @@ from hazelcast.proxy.map import EntryEventType
 from hazelcast.serialization.api import IdentifiedDataSerializable
 from hazelcast.predicate import sql
 from tests.base import SingleMemberTestCase
+from tests.integration.backward_compatible.util import (
+    write_string_to_output,
+    read_string_from_input,
+)
 from tests.util import random_string, event_collector, fill_map
 from hazelcast import six
 from hazelcast.six.moves import range
@@ -20,10 +24,10 @@ class EntryProcessor(IdentifiedDataSerializable):
         self.value = value
 
     def write_data(self, object_data_output):
-        object_data_output.write_string(self.value)
+        write_string_to_output(object_data_output, self.value)
 
     def read_data(self, object_data_input):
-        self.value = object_data_input.read_string()
+        self.value = read_string_from_input(object_data_input)
 
     def get_factory_id(self):
         return self.FACTORY_ID
@@ -185,26 +189,26 @@ class MapTest(SingleMemberTestCase):
             self.map.add_index(attributes=["this.x."])
 
     def test_clear(self):
-        self._fill_map()
+        self.fill_map()
 
         self.map.clear()
 
         self.assertEqual(self.map.size(), 0)
 
     def test_contains_key(self):
-        self._fill_map()
+        self.fill_map()
 
         self.assertTrue(self.map.contains_key("key-1"))
         self.assertFalse(self.map.contains_key("key-10"))
 
     def test_contains_value(self):
-        self._fill_map()
+        self.fill_map()
 
         self.assertTrue(self.map.contains_value("value-1"))
         self.assertFalse(self.map.contains_value("value-10"))
 
     def test_delete(self):
-        self._fill_map()
+        self.fill_map()
 
         self.map.delete("key-1")
 
@@ -212,17 +216,17 @@ class MapTest(SingleMemberTestCase):
         self.assertFalse(self.map.contains_key("key-1"))
 
     def test_entry_set(self):
-        entries = self._fill_map()
+        entries = self.fill_map()
 
         six.assertCountEqual(self, self.map.entry_set(), list(six.iteritems(entries)))
 
     def test_entry_set_with_predicate(self):
-        self._fill_map()
+        self.fill_map()
 
         self.assertEqual(self.map.entry_set(sql("this == 'value-1'")), [("key-1", "value-1")])
 
     def test_evict(self):
-        self._fill_map()
+        self.fill_map()
 
         self.map.evict("key-1")
 
@@ -230,14 +234,14 @@ class MapTest(SingleMemberTestCase):
         self.assertFalse(self.map.contains_key("key-1"))
 
     def test_evict_all(self):
-        self._fill_map()
+        self.fill_map()
 
         self.map.evict_all()
 
         self.assertEqual(self.map.size(), 0)
 
     def test_execute_on_entries(self):
-        m = self._fill_map()
+        m = self.fill_map()
         expected_entry_set = [(key, "processed") for key in m]
 
         values = self.map.execute_on_entries(EntryProcessor("processed"))
@@ -246,7 +250,7 @@ class MapTest(SingleMemberTestCase):
         six.assertCountEqual(self, expected_entry_set, values)
 
     def test_execute_on_entries_with_predicate(self):
-        m = self._fill_map()
+        m = self.fill_map()
         expected_entry_set = [(key, "processed") if key < "key-5" else (key, m[key]) for key in m]
         expected_values = [(key, "processed") for key in m if key < "key-5"]
 
@@ -263,7 +267,7 @@ class MapTest(SingleMemberTestCase):
         self.assertEqual("processed", value)
 
     def test_execute_on_keys(self):
-        m = self._fill_map()
+        m = self.fill_map()
         expected_entry_set = [(key, "processed") for key in m]
 
         values = self.map.execute_on_keys(list(m.keys()), EntryProcessor("processed"))
@@ -272,7 +276,7 @@ class MapTest(SingleMemberTestCase):
         six.assertCountEqual(self, expected_entry_set, values)
 
     def test_execute_on_keys_with_empty_key_list(self):
-        m = self._fill_map()
+        m = self.fill_map()
         expected_entry_set = [(key, m[key]) for key in m]
 
         values = self.map.execute_on_keys([], EntryProcessor("processed"))
@@ -281,7 +285,7 @@ class MapTest(SingleMemberTestCase):
         six.assertCountEqual(self, expected_entry_set, self.map.entry_set())
 
     def test_flush(self):
-        self._fill_map()
+        self.fill_map()
 
         self.map.flush()
 
@@ -294,7 +298,7 @@ class MapTest(SingleMemberTestCase):
         self.assertTrueEventually(lambda: self.assertFalse(self.map.is_locked("key")))
 
     def test_get_all(self):
-        expected = self._fill_map(1000)
+        expected = self.fill_map(1000)
 
         actual = self.map.get_all(list(expected.keys()))
 
@@ -342,12 +346,12 @@ class MapTest(SingleMemberTestCase):
         self.assertFalse(self.map.is_locked("key"))
 
     def test_key_set(self):
-        keys = list(self._fill_map().keys())
+        keys = list(self.fill_map().keys())
 
         six.assertCountEqual(self, self.map.key_set(), keys)
 
     def test_key_set_with_predicate(self):
-        self._fill_map()
+        self.fill_map()
 
         self.assertEqual(self.map.key_set(sql("this == 'value-1'")), ["key-1"])
 
@@ -476,7 +480,7 @@ class MapTest(SingleMemberTestCase):
         self.assertTrueEventually(evicted, 5)
 
     def test_size(self):
-        self._fill_map()
+        self.fill_map()
 
         self.assertEqual(10, self.map.size())
 
@@ -520,19 +524,19 @@ class MapTest(SingleMemberTestCase):
             self.map.unlock("key")
 
     def test_values(self):
-        values = list(self._fill_map().values())
+        values = list(self.fill_map().values())
 
         six.assertCountEqual(self, list(self.map.values()), values)
 
     def test_values_with_predicate(self):
-        self._fill_map()
+        self.fill_map()
 
         self.assertEqual(self.map.values(sql("this == 'value-1'")), ["value-1"])
 
     def test_str(self):
         self.assertTrue(str(self.map).startswith("Map"))
 
-    def _fill_map(self, count=10):
+    def fill_map(self, count=10):
         m = {"key-%d" % x: "value-%d" % x for x in range(0, count)}
         self.map.put_all(m)
         return m

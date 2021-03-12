@@ -147,7 +147,7 @@ class ReplicatedMapTest(SingleMemberTestCase):
         self.assertTrueEventually(assert_event, 5)
 
     def test_clear(self):
-        self._fill_map()
+        self.fill_map()
 
         self.replicated_map.clear()
 
@@ -170,7 +170,7 @@ class ReplicatedMapTest(SingleMemberTestCase):
         self.assertFalse(self.replicated_map.contains_value("value"))
 
     def test_entry_set(self):
-        map = self._fill_map()
+        map = self.fill_map()
 
         self.assertTrueEventually(
             lambda: six.assertCountEqual(self, six.iteritems(map), self.replicated_map.entry_set())
@@ -185,7 +185,7 @@ class ReplicatedMapTest(SingleMemberTestCase):
         self.assertTrue(self.replicated_map.is_empty())
 
     def test_key_set(self):
-        map = self._fill_map()
+        map = self.fill_map()
 
         self.assertTrueEventually(
             lambda: six.assertCountEqual(self, list(map.keys()), self.replicated_map.key_set())
@@ -224,11 +224,11 @@ class ReplicatedMapTest(SingleMemberTestCase):
         self.assertEqual(len(collector.events), 1)
 
     def test_size(self):
-        map = self._fill_map()
+        map = self.fill_map()
         self.assertEqual(len(map), self.replicated_map.size())
 
     def test_values(self):
-        map = self._fill_map()
+        map = self.fill_map()
 
         self.assertTrueEventually(
             lambda: six.assertCountEqual(
@@ -239,7 +239,7 @@ class ReplicatedMapTest(SingleMemberTestCase):
     def test_str(self):
         self.assertTrue(str(self.replicated_map).startswith("ReplicatedMap"))
 
-    def _fill_map(self, count=10):
+    def fill_map(self, count=10):
         map = {"key-%d" % x: "value-%d" % x for x in range(0, count)}
         for k, v in six.iteritems(map):
             self.replicated_map.put(k, v)

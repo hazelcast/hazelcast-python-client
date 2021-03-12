@@ -177,7 +177,7 @@ class HotRestartEventTest(HazelcastTestCase):
 
     def setUp(self):
         self.rc = self.create_rc()
-        self.cluster = self.create_cluster_keep_cluster_name(self.rc, self._get_config(5701))
+        self.cluster = self.create_cluster_keep_cluster_name(self.rc, self.get_config(5701))
         self.client = None
 
     def tearDown(self):
@@ -200,7 +200,7 @@ class HotRestartEventTest(HazelcastTestCase):
 
         self.rc.shutdownCluster(self.cluster.id)
         # now stop cluster, restart it with the same name and then start member with port 5702
-        self.cluster = self.create_cluster_keep_cluster_name(self.rc, self._get_config(5702))
+        self.cluster = self.create_cluster_keep_cluster_name(self.rc, self.get_config(5702))
         self.cluster.start_member()
 
         def assertion():
@@ -213,7 +213,7 @@ class HotRestartEventTest(HazelcastTestCase):
         self.assertEqual(1, len(members))
         self.assertEqual(member.uuid, str(members[0].uuid))
 
-    def _get_config(self, port):
+    def get_config(self, port):
         return """
         <hazelcast xmlns="http://www.hazelcast.com/schema/config"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"

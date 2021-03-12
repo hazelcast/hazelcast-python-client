@@ -40,7 +40,7 @@ class RingBufferTest(SingleMemberTestCase):
         self.assertEqual(3, self.ringbuffer.size())
 
     def test_add_when_full(self):
-        self._fill_ringbuffer()
+        self.fill_ringbuffer()
 
         self.assertEqual(-1, self.ringbuffer.add(CAPACITY + 1, OVERFLOW_POLICY_FAIL))
 
@@ -61,17 +61,17 @@ class RingBufferTest(SingleMemberTestCase):
             self.ringbuffer.add_all(list(range(0, MAX_BATCH_SIZE + 1)))
 
     def test_head_sequence(self):
-        self._fill_ringbuffer(CAPACITY * 2)
+        self.fill_ringbuffer(CAPACITY * 2)
 
         self.assertEqual(CAPACITY, self.ringbuffer.head_sequence())
 
     def test_tail_sequence(self):
-        self._fill_ringbuffer(CAPACITY * 2)
+        self.fill_ringbuffer(CAPACITY * 2)
 
         self.assertEqual(CAPACITY * 2 - 1, self.ringbuffer.tail_sequence())
 
     def test_remaining_capacity(self):
-        self._fill_ringbuffer(CAPACITY // 2)
+        self.fill_ringbuffer(CAPACITY // 2)
 
         self.assertEqual(CAPACITY // 2, self.ringbuffer.remaining_capacity())
 
@@ -88,7 +88,7 @@ class RingBufferTest(SingleMemberTestCase):
             self.ringbuffer.read_one(-1)
 
     def test_read_many(self):
-        self._fill_ringbuffer(CAPACITY)
+        self.fill_ringbuffer(CAPACITY)
         items = self.ringbuffer.read_many(0, 0, CAPACITY)
         self.assertEqual(items, list(range(0, CAPACITY)))
 
@@ -108,7 +108,7 @@ class RingBufferTest(SingleMemberTestCase):
         with self.assertRaises(AssertionError):
             self.ringbuffer.read_many(0, 0, MAX_BATCH_SIZE + 1)
 
-    def _fill_ringbuffer(self, n=CAPACITY):
+    def fill_ringbuffer(self, n=CAPACITY):
         for x in range(0, n):
             self.ringbuffer.add(x)
 

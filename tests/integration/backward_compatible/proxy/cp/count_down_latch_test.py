@@ -3,15 +3,17 @@ from threading import Thread
 from hazelcast.errors import DistributedObjectDestroyedError, OperationTimeoutError
 from hazelcast.future import ImmediateExceptionFuture
 from hazelcast.util import AtomicInteger
-from tests.integration.proxy.cp import CPTestCase
-from tests.util import random_string, get_current_timestamp
+from tests.integration.backward_compatible.proxy.cp import CPTestCase
+from tests.integration.backward_compatible.util import get_current_timestamp
+from tests.util import random_string
+
 
 inf = 2 ** 31 - 1
 
 
 class CountDownLatchTest(CPTestCase):
     def test_latch_in_another_group(self):
-        latch = self._get_latch()
+        latch = self.get_latch()
         another_latch = self.client.cp_subsystem.get_count_down_latch(
             latch._proxy_name + "@another"
         ).blocking()
@@ -21,7 +23,7 @@ class CountDownLatchTest(CPTestCase):
         self.assertNotEqual(42, latch.get_count())
 
     def test_use_after_destroy(self):
-        latch = self._get_latch()
+        latch = self.get_latch()
         latch.destroy()
         # the next destroy call should be ignored
         latch.destroy()
@@ -35,22 +37,22 @@ class CountDownLatchTest(CPTestCase):
             latch2.get_count()
 
     def test_await_latch_negative_timeout(self):
-        latch = self._get_latch(1)
+        latch = self.get_latch(1)
         self.assertFalse(latch.await_latch(-1))
 
     def test_await_latch_zero_timeout(self):
-        latch = self._get_latch(1)
+        latch = self.get_latch(1)
         self.assertFalse(latch.await_latch(0))
 
     def test_await_latch_with_timeout(self):
-        latch = self._get_latch(1)
+        latch = self.get_latch(1)
         start = get_current_timestamp()
         self.assertFalse(latch.await_latch(0.1))
         time_passed = get_current_timestamp() - start
         self.assertTrue(time_passed > 0.1)
 
     def test_await_latch_multiple_waiters(self):
-        latch = self._get_latch(1)
+        latch = self.get_latch(1)
 
         completed = AtomicInteger()
 
@@ -76,7 +78,7 @@ class CountDownLatchTest(CPTestCase):
             threads[i].join()
 
     def test_await_latch_response_on_count_down(self):
-        latch = self._get_latch()
+        latch = self.get_latch()
         self.assertTrue(latch.await_latch(inf))
         self.assertTrue(latch.try_set_count(1))
 
@@ -93,14 +95,14 @@ class CountDownLatchTest(CPTestCase):
         self.assertTrueEventually(assertion)
 
     def test_count_down(self):
-        latch = self._get_latch(10)
+        latch = self.get_latch(10)
 
         for i in range(9, -1, -1):
             self.assertIsNone(latch.count_down())
             self.assertEqual(i, latch.get_count())
 
     def test_count_down_retry_on_timeout(self):
-        latch = self._get_latch(1)
+        latch = self.get_latch(1)
 
         original = latch._wrapped._request_count_down
         called_count = AtomicInteger()
@@ -118,7 +120,7 @@ class CountDownLatchTest(CPTestCase):
         self.assertEqual(0, latch.get_count())
 
     def test_get_count(self):
-        latch = self._get_latch(1)
+        latch = self.get_latch(1)
         self.assertEqual(1, latch.get_count())
         latch.count_down()
         self.assertEqual(0, latch.get_count())
@@ -126,24 +128,24 @@ class CountDownLatchTest(CPTestCase):
         self.assertEqual(10, latch.get_count())
 
     def test_try_set_count(self):
-        latch = self._get_latch()
+        latch = self.get_latch()
         self.assertTrue(latch.try_set_count(3))
         self.assertEqual(3, latch.get_count())
 
     def test_try_set_count_when_count_is_already_set(self):
-        latch = self._get_latch(1)
+        latch = self.get_latch(1)
         self.assertFalse(latch.try_set_count(10))
         self.assertFalse(latch.try_set_count(20))
         self.assertEqual(1, latch.get_count())
 
     def test_try_set_count_when_count_goes_to_zero(self):
-        latch = self._get_latch(1)
+        latch = self.get_latch(1)
         latch.count_down()
         self.assertEqual(0, latch.get_count())
         self.assertTrue(latch.try_set_count(3))
         self.assertEqual(3, latch.get_count())
 
-    def _get_latch(self, initial_count=None):
+    def get_latch(self, initial_count=None):
         latch = self.client.cp_subsystem.get_count_down_latch("latch-" + random_string()).blocking()
         if initial_count is not None:
             self.assertTrue(latch.try_set_count(initial_count))

@@ -26,28 +26,28 @@ class PNCounterBasicTest(SingleMemberTestCase):
         self.assertEqual(0, self.pn_counter.get())
 
     def test_get_and_add(self):
-        self._check_pn_counter_method(self.pn_counter.get_and_add(3), 0, 3)
+        self.check_pn_counter_method(self.pn_counter.get_and_add(3), 0, 3)
 
     def test_add_and_get(self):
-        self._check_pn_counter_method(self.pn_counter.add_and_get(4), 4, 4)
+        self.check_pn_counter_method(self.pn_counter.add_and_get(4), 4, 4)
 
     def test_get_and_subtract(self):
-        self._check_pn_counter_method(self.pn_counter.get_and_subtract(2), 0, -2)
+        self.check_pn_counter_method(self.pn_counter.get_and_subtract(2), 0, -2)
 
     def test_subtract_and_get(self):
-        self._check_pn_counter_method(self.pn_counter.subtract_and_get(5), -5, -5)
+        self.check_pn_counter_method(self.pn_counter.subtract_and_get(5), -5, -5)
 
     def test_get_and_decrement(self):
-        self._check_pn_counter_method(self.pn_counter.get_and_decrement(), 0, -1)
+        self.check_pn_counter_method(self.pn_counter.get_and_decrement(), 0, -1)
 
     def test_decrement_and_get(self):
-        self._check_pn_counter_method(self.pn_counter.decrement_and_get(), -1, -1)
+        self.check_pn_counter_method(self.pn_counter.decrement_and_get(), -1, -1)
 
     def test_get_and_increment(self):
-        self._check_pn_counter_method(self.pn_counter.get_and_increment(), 0, 1)
+        self.check_pn_counter_method(self.pn_counter.get_and_increment(), 0, 1)
 
     def test_increment_and_get(self):
-        self._check_pn_counter_method(self.pn_counter.increment_and_get(), 1, 1)
+        self.check_pn_counter_method(self.pn_counter.increment_and_get(), 1, 1)
 
     def test_reset(self):
         self.pn_counter.get_and_add(1)
@@ -56,7 +56,7 @@ class PNCounterBasicTest(SingleMemberTestCase):
 
         self.assertNotEqual(old_vector_clock, self.pn_counter._observed_clock)
 
-    def _check_pn_counter_method(self, return_value, expected_return_value, expected_get_value):
+    def check_pn_counter_method(self, return_value, expected_return_value, expected_get_value):
         get_value = self.pn_counter.get()
 
         self.assertEqual(expected_return_value, return_value)
@@ -66,7 +66,7 @@ class PNCounterBasicTest(SingleMemberTestCase):
 class PNCounterConsistencyTest(HazelcastTestCase):
     def setUp(self):
         self.rc = self.create_rc()
-        self.cluster = self.create_cluster(self.rc, self._configure_cluster())
+        self.cluster = self.create_cluster(self.rc, self.configure_cluster())
         self.cluster.start_member()
         self.cluster.start_member()
         self.client = HazelcastClient(cluster_name=self.cluster.id)
@@ -95,7 +95,8 @@ class PNCounterConsistencyTest(HazelcastTestCase):
         self.pn_counter.reset()
         self.pn_counter.add_and_get(5)
 
-    def _configure_cluster(self):
+    @staticmethod
+    def configure_cluster():
         current_directory = os.path.dirname(__file__)
         with open(
             get_abs_path(current_directory, "hazelcast_crdtreplication_delayed.xml"), "r"
@@ -122,32 +123,32 @@ class PNCounterLiteMemberTest(SingleMemberTestCase):
         self.pn_counter.destroy()
 
     def test_get_with_lite_member(self):
-        self._verify_error_raised(NoDataMemberInClusterError, self.pn_counter.get)
+        self.verify_error_raised(NoDataMemberInClusterError, self.pn_counter.get)
 
     def test_get_and_add_with_lite_member(self):
-        self._verify_error_raised(NoDataMemberInClusterError, self.pn_counter.get_and_add, 1)
+        self.verify_error_raised(NoDataMemberInClusterError, self.pn_counter.get_and_add, 1)
 
     def test_add_and_get_with_lite_member(self):
-        self._verify_error_raised(NoDataMemberInClusterError, self.pn_counter.add_and_get, 2)
+        self.verify_error_raised(NoDataMemberInClusterError, self.pn_counter.add_and_get, 2)
 
     def test_get_and_subtract_with_lite_member(self):
-        self._verify_error_raised(NoDataMemberInClusterError, self.pn_counter.get_and_subtract, 1)
+        self.verify_error_raised(NoDataMemberInClusterError, self.pn_counter.get_and_subtract, 1)
 
     def test_subtract_and_get_with_lite_member(self):
-        self._verify_error_raised(NoDataMemberInClusterError, self.pn_counter.subtract_and_get, 5)
+        self.verify_error_raised(NoDataMemberInClusterError, self.pn_counter.subtract_and_get, 5)
 
     def test_get_and_decrement_with_lite_member(self):
-        self._verify_error_raised(NoDataMemberInClusterError, self.pn_counter.get_and_decrement)
+        self.verify_error_raised(NoDataMemberInClusterError, self.pn_counter.get_and_decrement)
 
     def test_decrement_and_get_with_lite_member(self):
-        self._verify_error_raised(NoDataMemberInClusterError, self.pn_counter.decrement_and_get)
+        self.verify_error_raised(NoDataMemberInClusterError, self.pn_counter.decrement_and_get)
 
     def test_get_and_increment(self):
-        self._verify_error_raised(NoDataMemberInClusterError, self.pn_counter.get_and_increment)
+        self.verify_error_raised(NoDataMemberInClusterError, self.pn_counter.get_and_increment)
 
     def test_increment_and_get(self):
-        self._verify_error_raised(NoDataMemberInClusterError, self.pn_counter.increment_and_get)
+        self.verify_error_raised(NoDataMemberInClusterError, self.pn_counter.increment_and_get)
 
-    def _verify_error_raised(self, error, func, *args):
+    def verify_error_raised(self, error, func, *args):
         with self.assertRaises(error):
             func(*args)

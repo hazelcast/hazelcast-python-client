@@ -6,7 +6,7 @@ from hazelcast.errors import (
     IllegalMonitorStateError,
 )
 from hazelcast.proxy.cp.fenced_lock import FencedLock
-from tests.integration.proxy.cp import CPTestCase
+from tests.integration.backward_compatible.proxy.cp import CPTestCase
 from tests.util import random_string
 
 
