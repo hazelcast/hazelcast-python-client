@@ -8,15 +8,17 @@ from hazelcast.errors import TargetDisconnectedError, IllegalStateError
 from hazelcast.util import check_not_none
 from hazelcast.core import MemberInfo
 from hazelcast.core import Address
-from hazelcast.client import HazelcastClient
-from hazelcast.connection import ConnectionManager
-import hazelcast.config
 
+if False:
+    from hazelcast.client import HazelcastClient
+    from hazelcast.connection import ConnectionManager
+    from hazelcast.config import _Config
 
 try:
     from typing import Any, List, Callable, Set, Tuple
 except ImportError:
     pass
+
 
 _logger = logging.getLogger(__name__)
 
