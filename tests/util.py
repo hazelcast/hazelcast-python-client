@@ -3,6 +3,7 @@ import time
 
 from uuid import uuid4
 from hazelcast.config import SSLProtocol
+from hazelcast.util import calculate_version
 
 # time.monotonic() is more consistent since it uses cpu clock rather than system clock. Use it if available.
 if hasattr(time, "monotonic"):
@@ -86,6 +87,14 @@ def set_attr(*args, **kwargs):
         return ob
 
     return wrap_ob
+
+
+def mark_server_version_at_least(test, client, expected_version):
+    connection = client._connection_manager.get_random_connection()
+    server_version = connection.server_version
+    expected_version = calculate_version(expected_version)
+    if server_version < expected_version:
+        test.skipTest("Expected a newer server")
 
 
 def open_connection_to_address(client, uuid):

@@ -6,8 +6,7 @@ from hazelcast.core import CLIENT_TYPE
 from hazelcast.statistics import Statistics
 from tests.base import HazelcastTestCase
 from tests.hzrc.ttypes import Lang
-from tests.integration.backward_compatible.util import get_current_timestamp
-from tests.util import random_string
+from tests.util import get_current_timestamp, random_string
 
 
 class StatisticsTest(HazelcastTestCase):

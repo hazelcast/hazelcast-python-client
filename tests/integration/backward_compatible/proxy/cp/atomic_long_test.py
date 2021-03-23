@@ -1,7 +1,7 @@
 from hazelcast.errors import DistributedObjectDestroyedError
 from hazelcast.serialization.api import IdentifiedDataSerializable
 from tests.integration.backward_compatible.proxy.cp import CPTestCase
-from tests.util import set_attr
+from tests.util import mark_server_version_at_least
 
 
 class Multiplication(IdentifiedDataSerializable):
@@ -106,30 +106,30 @@ class AtomicLongTest(CPTestCase):
         self.assertIsNone(self.atomic_long.set(42))
         self.assertEqual(42, self.atomic_long.get())
 
-    @set_attr(min_server_version="4.1")
     def test_alter(self):
         # the class is defined in the 4.1 JAR
+        mark_server_version_at_least(self, self.client, "4.1")
         self.atomic_long.set(2)
         self.assertIsNone(self.atomic_long.alter(Multiplication(5)))
         self.assertEqual(10, self.atomic_long.get())
 
-    @set_attr(min_server_version="4.1")
     def test_alter_and_get(self):
         # the class is defined in the 4.1 JAR
+        mark_server_version_at_least(self, self.client, "4.1")
         self.atomic_long.set(-3)
         self.assertEqual(-9, self.atomic_long.alter_and_get(Multiplication(3)))
         self.assertEqual(-9, self.atomic_long.get())
 
-    @set_attr(min_server_version="4.1")
     def test_get_and_alter(self):
         # the class is defined in the 4.1 JAR
+        mark_server_version_at_least(self, self.client, "4.1")
         self.atomic_long.set(123)
         self.assertEqual(123, self.atomic_long.get_and_alter(Multiplication(-1)))
         self.assertEqual(-123, self.atomic_long.get())
 
-    @set_attr(min_server_version="4.1")
     def test_apply(self):
         # the class is defined in the 4.1 JAR
+        mark_server_version_at_least(self, self.client, "4.1")
         self.atomic_long.set(42)
         self.assertEqual(84, self.atomic_long.apply(Multiplication(2)))
         self.assertEqual(42, self.atomic_long.get())

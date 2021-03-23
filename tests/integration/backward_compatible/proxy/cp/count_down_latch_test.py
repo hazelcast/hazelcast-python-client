@@ -4,8 +4,7 @@ from hazelcast.errors import DistributedObjectDestroyedError, OperationTimeoutEr
 from hazelcast.future import ImmediateExceptionFuture
 from hazelcast.util import AtomicInteger
 from tests.integration.backward_compatible.proxy.cp import CPTestCase
-from tests.integration.backward_compatible.util import get_current_timestamp
-from tests.util import random_string
+from tests.util import get_current_timestamp, random_string
 
 
 inf = 2 ** 31 - 1

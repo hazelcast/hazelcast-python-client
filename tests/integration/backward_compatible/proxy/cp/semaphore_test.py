@@ -9,8 +9,7 @@ from hazelcast.errors import (
     IllegalStateError,
 )
 from tests.integration.backward_compatible.proxy.cp import CPTestCase
-from tests.integration.backward_compatible.util import get_current_timestamp
-from tests.util import random_string
+from tests.util import get_current_timestamp, random_string
 
 SEMAPHORE_TYPES = [
     "sessionless",

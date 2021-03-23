@@ -1,11 +1,3 @@
-import time
-
-try:
-    from tests.util import get_current_timestamp
-except ImportError:
-    get_current_timestamp = time.time
-
-
 def read_string_from_input(inp):
     if hasattr(inp, "read_string"):
         return inp.read_string()

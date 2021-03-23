@@ -3,7 +3,7 @@ from hazelcast.serialization.api import IdentifiedDataSerializable
 
 from tests.integration.backward_compatible.util import write_string_to_output
 from tests.integration.backward_compatible.proxy.cp import CPTestCase
-from tests.util import set_attr
+from tests.util import mark_server_version_at_least
 
 
 class AppendString(IdentifiedDataSerializable):
@@ -108,37 +108,37 @@ class AtomicReferenceTest(CPTestCase):
         self.assertFalse(self.ref.contains("42"))
         self.assertTrue(self.ref.contains(None))
 
-    @set_attr(min_server_version="4.1")
     def test_alter(self):
         # the class is defined in the 4.1 JAR
+        mark_server_version_at_least(self, self.client, "4.1")
         self.ref.set("hey")
         self.assertIsNone(self.ref.alter(AppendString("123")))
         self.assertEqual("hey123", self.ref.get())
 
-    @set_attr(min_server_version="4.1")
     def test_alter_with_incompatible_types(self):
         # the class is defined in the 4.1 JAR
+        mark_server_version_at_least(self, self.client, "4.1")
         self.ref.set(42)
         with self.assertRaises(ClassCastError):
             self.ref.alter(AppendString("."))
 
-    @set_attr(min_server_version="4.1")
     def test_alter_and_get(self):
         # the class is defined in the 4.1 JAR
+        mark_server_version_at_least(self, self.client, "4.1")
         self.ref.set("123")
         self.assertEqual("123...", self.ref.alter_and_get(AppendString("...")))
         self.assertEqual("123...", self.ref.get())
 
-    @set_attr(min_server_version="4.1")
     def test_get_and_alter(self):
         # the class is defined in the 4.1 JAR
+        mark_server_version_at_least(self, self.client, "4.1")
         self.ref.set("hell")
         self.assertEqual("hell", self.ref.get_and_alter(AppendString("o")))
         self.assertEqual("hello", self.ref.get())
 
-    @set_attr(min_server_version="4.1")
     def test_apply(self):
         # the class is defined in the 4.1 JAR
+        mark_server_version_at_least(self, self.client, "4.1")
         self.ref.set("hell")
         self.assertEqual("hello", self.ref.apply(AppendString("o")))
         self.assertEqual("hell", self.ref.get())
