@@ -1,7 +1,12 @@
 import random
 import threading
 import time
-from collections import Sequence, Iterable
+
+try:
+    from collections.abc import Sequence, Iterable
+except ImportError:
+    # Compatibility for Python2
+    from collections import Sequence, Iterable
 
 from hazelcast import six
 
