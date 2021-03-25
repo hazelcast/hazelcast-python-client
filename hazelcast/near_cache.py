@@ -84,6 +84,7 @@ class NearCache(dict):
         eviction_sampling_count=None,
         eviction_sampling_pool_size=None,
     ):
+        super(NearCache, self).__init__()
         self.name = name
         self.serialization_service = serialization_service
         self.in_memory_format = in_memory_format

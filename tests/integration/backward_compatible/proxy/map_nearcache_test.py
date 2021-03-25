@@ -1,11 +1,14 @@
 import os
 
+from hazelcast.config import ReconnectMode
+from hazelcast.errors import ClientOfflineError
+from hazelcast.lifecycle import LifecycleState
 from tests.hzrc.ttypes import Lang
 
-from tests.base import SingleMemberTestCase
+from tests.base import SingleMemberTestCase, HazelcastTestCase
 from tests.util import random_string
 from hazelcast.six.moves import range
-from hazelcast import six
+from hazelcast import six, HazelcastClient
 
 
 class MapTest(SingleMemberTestCase):
@@ -108,3 +111,71 @@ class MapTest(SingleMemberTestCase):
         for k, v in six.iteritems(fill_content):
             self.map.get(k)
         return fill_content
+
+
+ENTRY_COUNT = 100
+
+
+class NonStopNearCacheTest(HazelcastTestCase):
+    def setUp(self):
+        rc = self.create_rc()
+        cluster = self.create_cluster(rc, self.read_cluster_config())
+        cluster.start_member()
+
+        def event_collector():
+            events = []
+
+            def collector(e):
+                if e == LifecycleState.DISCONNECTED:
+                    events.append(e)
+
+            collector.events = events
+            return collector
+
+        collector = event_collector()
+
+        client = HazelcastClient(
+            cluster_name=cluster.id,
+            reconnect_mode=ReconnectMode.ASYNC,
+            near_caches={"map": {}},
+            lifecycle_listeners=[collector],
+        )
+
+        map = client.get_map("map").blocking()
+
+        for i in range(ENTRY_COUNT):
+            map.put(i, i)
+
+        # Populate the near cache
+        for i in range(ENTRY_COUNT):
+            map.get(i)
+
+        rc.terminateCluster(cluster.id)
+        rc.exit()
+
+        self.assertTrueEventually(lambda: self.assertEqual(1, len(collector.events)))
+
+        self.client = client
+        self.map = map
+
+    def tearDown(self):
+        self.client.shutdown()
+
+    def test_get_existing_key_from_cache_when_the_cluster_is_down(self):
+        for i in range(ENTRY_COUNT):
+            self.assertEqual(i, self.map.get(i))
+
+    def test_get_non_existing_key_from_cache_when_the_cluster_is_down(self):
+        with self.assertRaises(ClientOfflineError):
+            self.map.get(ENTRY_COUNT)
+
+    def test_put_to_map_when_the_cluster_is_down(self):
+        with self.assertRaises(ClientOfflineError):
+            self.map.put(ENTRY_COUNT, ENTRY_COUNT)
+
+    @staticmethod
+    def read_cluster_config():
+        path = os.path.abspath(__file__)
+        dir_path = os.path.dirname(path)
+        with open(os.path.join(dir_path, "hazelcast.xml")) as f:
+            return f.read()
