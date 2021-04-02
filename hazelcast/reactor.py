@@ -486,8 +486,8 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         # We handle retryable error codes inside the
         # handle_read/write. Anything else should be fatal.
         error = sys.exc_info()[1]
-        _logger.exception("Received error")
-        self.close(None, error)
+        _logger.debug("Received error", exc_info=True)
+        self.close(str(error), None)
 
     def readable(self):
         return self.live and self.sent_protocol_bytes

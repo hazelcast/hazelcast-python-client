@@ -64,5 +64,7 @@ class HeartbeatTest(HazelcastTestCase):
 
     @staticmethod
     def simulate_heartbeat_lost(client, address, timeout):
-        connection = client._connection_manager.get_connection_from_address(address)
-        connection.last_read_time -= timeout
+        for connection in client._connection_manager.active_connections.values():
+            if connection.remote_address == address:
+                connection.last_read_time -= timeout
+                break

@@ -115,6 +115,8 @@ class InvocationService(object):
 
     def start(self):
         self._start_clean_resources_timer()
+
+    def add_backup_listener(self):
         if self._backup_ack_to_client_enabled:
             self._register_backup_listener()
 

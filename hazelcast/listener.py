@@ -176,7 +176,7 @@ class ListenerService(object):
             for user_reg_id, listener_registration in six.iteritems(self._active_registrations):
                 self._register_on_connection(user_reg_id, listener_registration, connection)
 
-    def _connection_removed(self, connection, _):
+    def _connection_removed(self, connection):
         with self._registration_lock:
             for listener_registration in six.itervalues(self._active_registrations):
                 event_registration = listener_registration.connection_registrations.pop(
@@ -203,7 +203,7 @@ class ClusterViewListenerService(object):
     def _connection_added(self, connection):
         self._try_register(connection)
 
-    def _connection_removed(self, connection, _):
+    def _connection_removed(self, connection):
         self._try_register_to_random_connection(connection)
 
     def _try_register_to_random_connection(self, old_connection):
