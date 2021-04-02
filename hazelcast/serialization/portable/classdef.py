@@ -140,8 +140,25 @@ class ClassDefinitionBuilder(object):
         self._index = 0
         self._done = False
         self._field_defs = list()
+        self._field_names = set()
 
     def add_portable_field(self, field_name, class_def):
+        """Adds the field with the Portable type to the
+        class definition.
+
+        Args:
+            field_name (str): Name of the field to add.
+            class_def (ClassDefinition): Class definition
+                of the nested Portable.
+
+        Returns:
+            ClassDefinitionBuilder: Itself for chaining.
+
+        Raises:
+            HazelcastSerializationError: If this method is called
+                after :func:`build` or a field with the same
+                name is already registered.
+        """
         if class_def.class_id is None or class_def.class_id == 0:
             raise ValueError("Portable class id cannot be zero!")
         self._add_field_by_type(
@@ -154,43 +171,182 @@ class ClassDefinitionBuilder(object):
         return self
 
     def add_byte_field(self, field_name):
+        """Adds the field with the byte type to the
+        class definition.
+
+        Args:
+            field_name (str): Name of the field to add.
+
+        Returns:
+            ClassDefinitionBuilder: Itself for chaining.
+
+        Raises:
+            HazelcastSerializationError: If this method is called
+                after :func:`build` or a field with the same
+                name is already registered.
+        """
         self._add_field_by_type(field_name, FieldType.BYTE, self.version)
         return self
 
     def add_boolean_field(self, field_name):
+        """Adds the field with the boolean type to the
+        class definition.
+
+        Args:
+            field_name (str): Name of the field to add.
+
+        Returns:
+            ClassDefinitionBuilder: Itself for chaining.
+
+        Raises:
+            HazelcastSerializationError: If this method is called
+                after :func:`build` or a field with the same
+                name is already registered.
+        """
         self._add_field_by_type(field_name, FieldType.BOOLEAN, self.version)
         return self
 
     def add_char_field(self, field_name):
+        """Adds the field with the char type to the
+        class definition.
+
+        Args:
+            field_name (str): Name of the field to add.
+
+        Returns:
+            ClassDefinitionBuilder: Itself for chaining.
+
+        Raises:
+            HazelcastSerializationError: If this method is called
+                after :func:`build` or a field with the same
+                name is already registered.
+        """
         self._add_field_by_type(field_name, FieldType.CHAR, self.version)
         return self
 
     def add_short_field(self, field_name):
+        """Adds the field with the short type to the
+        class definition.
+
+        Args:
+            field_name (str): Name of the field to add.
+
+        Returns:
+            ClassDefinitionBuilder: Itself for chaining.
+
+        Raises:
+            HazelcastSerializationError: If this method is called
+                after :func:`build` or a field with the same
+                name is already registered.
+        """
         self._add_field_by_type(field_name, FieldType.SHORT, self.version)
         return self
 
     def add_int_field(self, field_name):
+        """Adds the field with the int type to the
+        class definition.
+
+        Args:
+            field_name (str): Name of the field to add.
+
+        Returns:
+            ClassDefinitionBuilder: Itself for chaining.
+
+        Raises:
+            HazelcastSerializationError: If this method is called
+                after :func:`build` or a field with the same
+                name is already registered.
+        """
         self._add_field_by_type(field_name, FieldType.INT, self.version)
         return self
 
     def add_long_field(self, field_name):
+        """Adds the field with the long type to the
+        class definition.
+
+        Args:
+            field_name (str): Name of the field to add.
+
+        Returns:
+            ClassDefinitionBuilder: Itself for chaining.
+
+        Raises:
+            HazelcastSerializationError: If this method is called
+                after :func:`build` or a field with the same
+                name is already registered.
+        """
         self._add_field_by_type(field_name, FieldType.LONG, self.version)
         return self
 
     def add_float_field(self, field_name):
+        """Adds the field with the float type to the
+        class definition.
+
+        Args:
+            field_name (str): Name of the field to add.
+
+        Returns:
+            ClassDefinitionBuilder: Itself for chaining.
+
+        Raises:
+            HazelcastSerializationError: If this method is called
+                after :func:`build` or a field with the same
+                name is already registered.
+        """
         self._add_field_by_type(field_name, FieldType.FLOAT, self.version)
         return self
 
     def add_double_field(self, field_name):
+        """Adds the field with the double type to the
+        class definition.
+
+        Args:
+            field_name (str): Name of the field to add.
+
+        Returns:
+            ClassDefinitionBuilder: Itself for chaining.
+
+        Raises:
+            HazelcastSerializationError: If this method is called
+                after :func:`build` or a field with the same
+                name is already registered.
+        """
         self._add_field_by_type(field_name, FieldType.DOUBLE, self.version)
         return self
 
     def add_string_field(self, field_name):
+        """Adds the field with the string type to the
+        class definition.
+
+        Args:
+            field_name (str): Name of the field to add.
+
+        Returns:
+            ClassDefinitionBuilder: Itself for chaining.
+
+        Raises:
+            HazelcastSerializationError: If this method is called
+                after :func:`build` or a field with the same
+                name is already registered.
+        """
         self._add_field_by_type(field_name, FieldType.STRING, self.version)
         return self
 
     def add_utf_field(self, field_name):
-        """
+        """Adds the field with the string type to the
+        class definition.
+
+        Args:
+            field_name (str): Name of the field to add.
+
+        Returns:
+            ClassDefinitionBuilder: Itself for chaining.
+
+        Raises:
+            HazelcastSerializationError: If this method is called
+                after :func:`build` or a field with the same
+                name is already registered.
+
         .. deprecated:: 4.1
             This method is deprecated and will be removed in the
             next major version. Use :func:`add_string_field` instead.
@@ -198,6 +354,22 @@ class ClassDefinitionBuilder(object):
         return self.add_string_field(field_name)
 
     def add_portable_array_field(self, field_name, class_def):
+        """Adds the field with the Portable array type to the
+        class definition.
+
+        Args:
+            field_name (str): Name of the field to add.
+            class_def (ClassDefinition): Class definition
+                of the nested Portable.
+
+        Returns:
+            ClassDefinitionBuilder: Itself for chaining.
+
+        Raises:
+            HazelcastSerializationError: If this method is called
+                after :func:`build` or a field with the same
+                name is already registered.
+        """
         if class_def.class_id is None or class_def.class_id == 0:
             raise ValueError("Portable class id cannot be zero!")
         self._add_field_by_type(
@@ -210,43 +382,182 @@ class ClassDefinitionBuilder(object):
         return self
 
     def add_byte_array_field(self, field_name):
+        """Adds the field with the byte array type to the
+        class definition.
+
+        Args:
+            field_name (str): Name of the field to add.
+
+        Returns:
+            ClassDefinitionBuilder: Itself for chaining.
+
+        Raises:
+            HazelcastSerializationError: If this method is called
+                after :func:`build` or a field with the same
+                name is already registered.
+        """
         self._add_field_by_type(field_name, FieldType.BYTE_ARRAY, self.version)
         return self
 
     def add_boolean_array_field(self, field_name):
+        """Adds the field with the boolean array type to the
+        class definition.
+
+        Args:
+            field_name (str): Name of the field to add.
+
+        Returns:
+            ClassDefinitionBuilder: Itself for chaining.
+
+        Raises:
+            HazelcastSerializationError: If this method is called
+                after :func:`build` or a field with the same
+                name is already registered.
+        """
         self._add_field_by_type(field_name, FieldType.BOOLEAN_ARRAY, self.version)
         return self
 
     def add_char_array_field(self, field_name):
+        """Adds the field with the char array type to the
+        class definition.
+
+        Args:
+            field_name (str): Name of the field to add.
+
+        Returns:
+            ClassDefinitionBuilder: Itself for chaining.
+
+        Raises:
+            HazelcastSerializationError: If this method is called
+                after :func:`build` or a field with the same
+                name is already registered.
+        """
         self._add_field_by_type(field_name, FieldType.CHAR_ARRAY, self.version)
         return self
 
     def add_short_array_field(self, field_name):
+        """Adds the field with the short array type to the
+        class definition.
+
+        Args:
+            field_name (str): Name of the field to add.
+
+        Returns:
+            ClassDefinitionBuilder: Itself for chaining.
+
+        Raises:
+            HazelcastSerializationError: If this method is called
+                after :func:`build` or a field with the same
+                name is already registered.
+        """
         self._add_field_by_type(field_name, FieldType.SHORT_ARRAY, self.version)
         return self
 
     def add_int_array_field(self, field_name):
+        """Adds the field with the int array type to the
+        class definition.
+
+        Args:
+            field_name (str): Name of the field to add.
+
+        Returns:
+            ClassDefinitionBuilder: Itself for chaining.
+
+        Raises:
+            HazelcastSerializationError: If this method is called
+                after :func:`build` or a field with the same
+                name is already registered.
+        """
         self._add_field_by_type(field_name, FieldType.INT_ARRAY, self.version)
         return self
 
     def add_long_array_field(self, field_name):
+        """Adds the field with the long array type to the
+        class definition.
+
+        Args:
+            field_name (str): Name of the field to add.
+
+        Returns:
+            ClassDefinitionBuilder: Itself for chaining.
+
+        Raises:
+            HazelcastSerializationError: If this method is called
+                after :func:`build` or a field with the same
+                name is already registered.
+        """
         self._add_field_by_type(field_name, FieldType.LONG_ARRAY, self.version)
         return self
 
     def add_float_array_field(self, field_name):
+        """Adds the field with the float array type to the
+        class definition.
+
+        Args:
+            field_name (str): Name of the field to add.
+
+        Returns:
+            ClassDefinitionBuilder: Itself for chaining.
+
+        Raises:
+            HazelcastSerializationError: If this method is called
+                after :func:`build` or a field with the same
+                name is already registered.
+        """
         self._add_field_by_type(field_name, FieldType.FLOAT_ARRAY, self.version)
         return self
 
     def add_double_array_field(self, field_name):
+        """Adds the field with the double array type to the
+        class definition.
+
+        Args:
+            field_name (str): Name of the field to add.
+
+        Returns:
+            ClassDefinitionBuilder: Itself for chaining.
+
+        Raises:
+            HazelcastSerializationError: If this method is called
+                after :func:`build` or a field with the same
+                name is already registered.
+        """
         self._add_field_by_type(field_name, FieldType.DOUBLE_ARRAY, self.version)
         return self
 
     def add_string_array_field(self, field_name):
+        """Adds the field with the string array type to the
+        class definition.
+
+        Args:
+            field_name (str): Name of the field to add.
+
+        Returns:
+            ClassDefinitionBuilder: Itself for chaining.
+
+        Raises:
+            HazelcastSerializationError: If this method is called
+                after :func:`build` or a field with the same
+                name is already registered.
+        """
         self._add_field_by_type(field_name, FieldType.STRING_ARRAY, self.version)
         return self
 
     def add_utf_array_field(self, field_name):
-        """
+        """Adds the field with the string array type to the
+        class definition.
+
+        Args:
+            field_name (str): Name of the field to add.
+
+        Returns:
+            ClassDefinitionBuilder: Itself for chaining.
+
+        Raises:
+            HazelcastSerializationError: If this method is called
+                after :func:`build` or a field with the same
+                name is already registered.
+
         .. deprecated:: 4.1
             This method is deprecated and will be removed in the
             next major version. Use :func:`add_string_array_field` instead.
@@ -254,14 +565,19 @@ class ClassDefinitionBuilder(object):
         return self.add_string_array_field(field_name)
 
     def add_field_def(self, field_def):
-        self._check()
         if self._index != field_def.index:
             raise ValueError("Invalid field index")
+        self._check(field_def.field_name)
         self._index += 1
         self._field_defs.append(field_def)
         return self
 
     def build(self):
+        """Builds and returns the class definition.
+
+        Returns:
+            ClassDefinition:
+        """
         self._done = True
         cd = ClassDefinition(self.factory_id, self.class_id, self.version)
         for field_def in self._field_defs:
@@ -269,12 +585,16 @@ class ClassDefinitionBuilder(object):
         return cd
 
     def _add_field_by_type(self, field_name, field_type, version, factory_id=0, class_id=0):
-        self._check()
+        self._check(field_name)
         fd = FieldDefinition(self._index, field_name, field_type, version, factory_id, class_id)
         self._field_defs.append(fd)
         self._index += 1
 
-    def _check(self):
+    def _check(self, field_name):
+        if field_name in self._field_names:
+            raise HazelcastSerializationError("Field with the name %s already exists" % field_name)
+        self._field_names.add(field_name)
+
         if self._done:
             raise HazelcastSerializationError(
                 "ClassDefinition is already built for %s" % self.class_id
