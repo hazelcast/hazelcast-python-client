@@ -132,6 +132,16 @@ class ClassDefinition(object):
 
 
 class ClassDefinitionBuilder(object):
+    """Builder class to construct :class:`ClassDefinition` of
+    :class:`hazelcast.serialization.api.Portable` objects.
+
+    One must make sure that the order of the fields added to this
+    builder is consistent across all the usages of the Portable
+    object such as the write order of the fields of the
+    :func:`Portable.write_portable <hazelcast.serialization.api.Portable.write_portable>`
+    method.
+    """
+
     def __init__(self, factory_id, class_id, version=0):
         self.factory_id = factory_id
         self.class_id = class_id
@@ -565,6 +575,12 @@ class ClassDefinitionBuilder(object):
         return self.add_string_array_field(field_name)
 
     def add_field_def(self, field_def):
+        """
+        Warnings:
+              This method is not intended for public usage.
+              It might be removed from the public API on the
+              next major version.
+        """
         if self._index != field_def.index:
             raise ValueError("Invalid field index")
         self._check(field_def.field_name)
