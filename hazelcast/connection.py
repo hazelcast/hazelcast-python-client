@@ -541,7 +541,9 @@ class ConnectionManager(object):
             self.active_connections[remote_uuid] = connection
             if is_initial_connection:
                 self._cluster_id = new_cluster_id
-                self._lifecycle_service.fire_lifecycle_event(LifecycleState.CONNECTED)
+
+        if is_initial_connection:
+            self._lifecycle_service.fire_lifecycle_event(LifecycleState.CONNECTED)
 
         _logger.info(
             "Authenticated with server %s:%s, server version: %s, local address: %s",
