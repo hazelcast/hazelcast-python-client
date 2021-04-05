@@ -294,7 +294,7 @@ class ConnectionManager(object):
         translated = self._address_provider.translate(address)
         if not translated:
             raise ValueError(
-                "Address provider \"%s\" could not translate address %s"
+                "Address provider %s could not translate address %s"
                 % (self._address_provider.__class__.__name__, address)
             )
 
