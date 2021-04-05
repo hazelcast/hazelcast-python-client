@@ -257,7 +257,7 @@ class ConnectionManager(object):
             raise IOError("No connection found to cluster")
 
     def _get_or_connect_to_address(self, address):
-        for connection in six.itervalues(self.active_connections):
+        for connection in list(six.itervalues(self.active_connections)):
             if connection.remote_address == address:
                 return ImmediateFuture(connection)
 
