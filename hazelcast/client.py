@@ -36,6 +36,7 @@ from hazelcast.proxy import (
 )
 from hazelcast.reactor import AsyncoreReactor
 from hazelcast.serialization import SerializationServiceV1
+from hazelcast.sql import _InternalSqlService, SqlService
 from hazelcast.statistics import Statistics
 from hazelcast.transaction import TWO_PHASE, TransactionManager
 from hazelcast.util import AtomicInteger, RoundRobinLB
@@ -388,6 +389,10 @@ class HazelcastClient(object):
         self._invocation_service.init(
             self._internal_partition_service, self._connection_manager, self._listener_service
         )
+        self._internal_sql_service = _InternalSqlService(
+            self._connection_manager, self._serialization_service, self._invocation_service
+        )
+        self.sql = SqlService(self._internal_sql_service)
         self._init_context()
         self._start()
 

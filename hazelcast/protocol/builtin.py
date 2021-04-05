@@ -1,4 +1,6 @@
 import uuid
+from datetime import date, time, datetime, timedelta
+from decimal import Decimal
 
 from hazelcast import six
 from hazelcast.six.moves import range
@@ -11,7 +13,7 @@ from hazelcast.protocol.client_message import (
     NULL_FINAL_FRAME_BUF,
     END_FINAL_FRAME_BUF,
 )
-from hazelcast.serialization import (
+from hazelcast.serialization.bits import (
     LONG_SIZE_IN_BYTES,
     UUID_SIZE_IN_BYTES,
     LE_INT,
@@ -23,8 +25,21 @@ from hazelcast.serialization import (
     LE_INT8,
     UUID_MSB_SHIFT,
     UUID_LSB_MASK,
+    BYTE_SIZE_IN_BYTES,
+    SHORT_SIZE_IN_BYTES,
+    LE_INT16,
+    FLOAT_SIZE_IN_BYTES,
+    LE_FLOAT,
+    LE_DOUBLE,
+    DOUBLE_SIZE_IN_BYTES,
 )
 from hazelcast.serialization.data import Data
+from hazelcast.util import int_from_bytes, timezone
+
+_LOCAL_DATE_SIZE_IN_BYTES = SHORT_SIZE_IN_BYTES + BYTE_SIZE_IN_BYTES * 2
+_LOCAL_TIME_SIZE_IN_BYTES = BYTE_SIZE_IN_BYTES * 3 + INT_SIZE_IN_BYTES
+_LOCAL_DATE_TIME_SIZE_IN_BYTES = _LOCAL_DATE_SIZE_IN_BYTES + _LOCAL_TIME_SIZE_IN_BYTES
+_OFFSET_DATE_TIME_SIZE_IN_BYTES = _LOCAL_DATE_TIME_SIZE_IN_BYTES + INT_SIZE_IN_BYTES
 
 
 class CodecUtil(object):
@@ -274,6 +289,49 @@ class FixSizedTypesCodec(object):
         )
         return uuid.UUID(bytes=bytes(b))
 
+    @staticmethod
+    def decode_short(buf, offset):
+        return LE_INT16.unpack_from(buf, offset)[0]
+
+    @staticmethod
+    def decode_float(buf, offset):
+        return LE_FLOAT.unpack_from(buf, offset)[0]
+
+    @staticmethod
+    def decode_double(buf, offset):
+        return LE_DOUBLE.unpack_from(buf, offset)[0]
+
+    @staticmethod
+    def decode_local_date(buf, offset):
+        year = FixSizedTypesCodec.decode_short(buf, offset)
+        month = FixSizedTypesCodec.decode_byte(buf, offset + SHORT_SIZE_IN_BYTES)
+        day = FixSizedTypesCodec.decode_byte(buf, offset + SHORT_SIZE_IN_BYTES + BYTE_SIZE_IN_BYTES)
+
+        return date(year, month, day)
+
+    @staticmethod
+    def decode_local_time(buf, offset):
+        hour = FixSizedTypesCodec.decode_byte(buf, offset)
+        minute = FixSizedTypesCodec.decode_byte(buf, offset + BYTE_SIZE_IN_BYTES)
+        second = FixSizedTypesCodec.decode_byte(buf, offset + BYTE_SIZE_IN_BYTES * 2)
+        nano = FixSizedTypesCodec.decode_int(buf, offset + BYTE_SIZE_IN_BYTES * 3)
+
+        return time(hour, minute, second, int(nano / 1000.0))
+
+    @staticmethod
+    def decode_local_date_time(buf, offset):
+        date_value = FixSizedTypesCodec.decode_local_date(buf, offset)
+        time_value = FixSizedTypesCodec.decode_local_time(buf, offset + _LOCAL_DATE_SIZE_IN_BYTES)
+
+        return datetime.combine(date_value, time_value)
+
+    @staticmethod
+    def decode_offset_date_time(buf, offset):
+        datetime_value = FixSizedTypesCodec.decode_local_date_time(buf, offset)
+        offset_seconds = FixSizedTypesCodec.decode_int(buf, offset + _LOCAL_DATE_TIME_SIZE_IN_BYTES)
+
+        return datetime_value.replace(tzinfo=timezone(timedelta(seconds=offset_seconds)))
+
 
 class ListIntegerCodec(object):
     @staticmethod
@@ -496,3 +554,206 @@ class StringCodec(object):
     @staticmethod
     def decode(msg):
         return msg.next_frame().buf.decode("utf-8")
+
+
+class ListCNFixedSizeCodec(object):
+    _TYPE_NULL_ONLY = 1
+    _TYPE_NOT_NULL_ONLY = 2
+    _TYPE_MIXED = 3
+
+    _ITEMS_PER_BITMASK = 8
+
+    _HEADER_SIZE = BYTE_SIZE_IN_BYTES + INT_SIZE_IN_BYTES
+
+    @staticmethod
+    def decode(msg, item_size, decoder):
+        frame = msg.next_frame()
+        type = FixSizedTypesCodec.decode_byte(frame.buf, 0)
+        count = FixSizedTypesCodec.decode_int(frame.buf, 1)
+
+        response = []
+        if type == ListCNFixedSizeCodec._TYPE_NULL_ONLY:
+            for _ in range(count):
+                response.append(None)
+        elif type == ListCNFixedSizeCodec._TYPE_NOT_NULL_ONLY:
+            for i in range(count):
+                response.append(
+                    decoder(frame.buf, ListCNFixedSizeCodec._HEADER_SIZE + i * item_size)
+                )
+        else:
+            position = ListCNFixedSizeCodec._HEADER_SIZE
+            read_count = 0
+
+            while read_count < count:
+                bitmask = FixSizedTypesCodec.decode_byte(frame.buf, position)
+                position += 1
+
+                i = 0
+                while i < ListCNFixedSizeCodec._ITEMS_PER_BITMASK and read_count < count:
+                    mask = 1 << i
+                    if (bitmask & mask) == mask:
+                        response.append(decoder(frame.buf, position))
+                        position += item_size
+                    else:
+                        response.append(None)
+                    read_count += 1
+
+                    i += 1
+
+        return response
+
+
+class ListCNBooleanCodec(object):
+    @staticmethod
+    def decode(msg):
+        return ListCNFixedSizeCodec.decode(
+            msg, BOOLEAN_SIZE_IN_BYTES, FixSizedTypesCodec.decode_boolean
+        )
+
+
+class ListCNByteCodec(object):
+    @staticmethod
+    def decode(msg):
+        return ListCNFixedSizeCodec.decode(msg, BYTE_SIZE_IN_BYTES, FixSizedTypesCodec.decode_byte)
+
+
+class ListCNShortCodec(object):
+    @staticmethod
+    def decode(msg):
+        return ListCNFixedSizeCodec.decode(
+            msg, SHORT_SIZE_IN_BYTES, FixSizedTypesCodec.decode_short
+        )
+
+
+class ListCNIntegerCodec(object):
+    @staticmethod
+    def decode(msg):
+        return ListCNFixedSizeCodec.decode(msg, INT_SIZE_IN_BYTES, FixSizedTypesCodec.decode_int)
+
+
+class ListCNLongCodec(object):
+    @staticmethod
+    def decode(msg):
+        return ListCNFixedSizeCodec.decode(msg, LONG_SIZE_IN_BYTES, FixSizedTypesCodec.decode_long)
+
+
+class ListCNFloatCodec(object):
+    @staticmethod
+    def decode(msg):
+        return ListCNFixedSizeCodec.decode(
+            msg, FLOAT_SIZE_IN_BYTES, FixSizedTypesCodec.decode_float
+        )
+
+
+class ListCNDoubleCodec(object):
+    @staticmethod
+    def decode(msg):
+        return ListCNFixedSizeCodec.decode(
+            msg, DOUBLE_SIZE_IN_BYTES, FixSizedTypesCodec.decode_double
+        )
+
+
+class ListCNLocalDateCodec(object):
+    @staticmethod
+    def decode(msg):
+        return ListCNFixedSizeCodec.decode(
+            msg, _LOCAL_DATE_SIZE_IN_BYTES, FixSizedTypesCodec.decode_local_date
+        )
+
+
+class ListCNLocalTimeCodec(object):
+    @staticmethod
+    def decode(msg):
+        return ListCNFixedSizeCodec.decode(
+            msg, _LOCAL_TIME_SIZE_IN_BYTES, FixSizedTypesCodec.decode_local_time
+        )
+
+
+class ListCNLocalDateTimeCodec(object):
+    @staticmethod
+    def decode(msg):
+        return ListCNFixedSizeCodec.decode(
+            msg, _LOCAL_DATE_TIME_SIZE_IN_BYTES, FixSizedTypesCodec.decode_local_date_time
+        )
+
+
+class ListCNOffsetDateTimeCodec(object):
+    @staticmethod
+    def decode(msg):
+        return ListCNFixedSizeCodec.decode(
+            msg, _OFFSET_DATE_TIME_SIZE_IN_BYTES, FixSizedTypesCodec.decode_offset_date_time
+        )
+
+
+class BigDecimalCodec(object):
+    @staticmethod
+    def decode(msg):
+        buf = msg.next_frame().buf
+        size = FixSizedTypesCodec.decode_int(buf, 0)
+        unscaled_value = int_from_bytes(buf[INT_SIZE_IN_BYTES : INT_SIZE_IN_BYTES + size])
+        scale = FixSizedTypesCodec.decode_int(buf, INT_SIZE_IN_BYTES + size)
+        sign = 0 if unscaled_value >= 0 else 1
+        return Decimal((sign, tuple(map(int, str(abs(unscaled_value)))), -1 * scale))
+
+
+class SqlPageCodec(object):
+    @staticmethod
+    def decode(msg):
+        from hazelcast.sql import SqlColumnType, _SqlPage
+
+        # begin frame
+        msg.next_frame()
+
+        # read the "last" flag
+        is_last = LE_INT8.unpack_from(msg.next_frame().buf, 0)[0] == 1
+
+        # read column types
+        column_type_ids = ListIntegerCodec.decode(msg)
+
+        # read columns
+        columns = []
+
+        for column_type_id in column_type_ids:
+            if column_type_id == SqlColumnType.VARCHAR:
+                columns.append(
+                    ListMultiFrameCodec.decode_contains_nullable(msg, StringCodec.decode)
+                )
+            elif column_type_id == SqlColumnType.BOOLEAN:
+                columns.append(ListCNBooleanCodec.decode(msg))
+            elif column_type_id == SqlColumnType.TINYINT:
+                columns.append(ListCNByteCodec.decode(msg))
+            elif column_type_id == SqlColumnType.SMALLINT:
+                columns.append(ListCNShortCodec.decode(msg))
+            elif column_type_id == SqlColumnType.INTEGER:
+                columns.append(ListCNIntegerCodec.decode(msg))
+            elif column_type_id == SqlColumnType.BIGINT:
+                columns.append(ListCNLongCodec.decode(msg))
+            elif column_type_id == SqlColumnType.REAL:
+                columns.append(ListCNFloatCodec.decode(msg))
+            elif column_type_id == SqlColumnType.DOUBLE:
+                columns.append(ListCNDoubleCodec.decode(msg))
+            elif column_type_id == SqlColumnType.DATE:
+                columns.append(ListCNLocalDateCodec.decode(msg))
+            elif column_type_id == SqlColumnType.TIME:
+                columns.append(ListCNLocalTimeCodec.decode(msg))
+            elif column_type_id == SqlColumnType.TIMESTAMP:
+                columns.append(ListCNLocalDateTimeCodec.decode(msg))
+            elif column_type_id == SqlColumnType.TIMESTAMP_WITH_TIME_ZONE:
+                columns.append(ListCNOffsetDateTimeCodec.decode(msg))
+            elif column_type_id == SqlColumnType.DECIMAL:
+                columns.append(
+                    ListMultiFrameCodec.decode_contains_nullable(msg, BigDecimalCodec.decode)
+                )
+            elif column_type_id == SqlColumnType.NULL:
+                frame = msg.next_frame()
+                size = FixSizedTypesCodec.decode_int(frame.buf, 0)
+                column = [None for _ in range(size)]
+                columns.append(column)
+            elif column_type_id == SqlColumnType.OBJECT:
+                columns.append(ListMultiFrameCodec.decode_contains_nullable(msg, DataCodec.decode))
+            else:
+                raise ValueError("Unknown type %s" % column_type_id)
+
+        CodecUtil.fast_forward_to_end_frame(msg)
+
+        return _SqlPage(column_type_ids, columns, is_last)

@@ -1,6 +1,5 @@
 import binascii
 import time
-import uuid
 from datetime import datetime
 
 from hazelcast import six
@@ -10,8 +9,7 @@ from hazelcast.serialization.api import StreamSerializer
 from hazelcast.serialization.base import HazelcastSerializationError
 from hazelcast.serialization.serialization_const import *
 from hazelcast.six.moves import range, cPickle
-
-from hazelcast.util import to_signed
+from hazelcast.util import UuidUtil
 
 if not six.PY2:
     long = int
@@ -135,12 +133,10 @@ class UuidSerializer(BaseSerializer):
     def read(self, inp):
         msb = inp.read_long()
         lsb = inp.read_long()
-        return uuid.UUID(int=(((msb << UUID_MSB_SHIFT) & UUID_MSB_MASK) | (lsb & UUID_LSB_MASK)))
+        return UuidUtil.from_bits(msb, lsb)
 
     def write(self, out, obj):
-        i = obj.int
-        msb = to_signed(i >> UUID_MSB_SHIFT, 64)
-        lsb = to_signed(i & UUID_LSB_MASK, 64)
+        msb, lsb = UuidUtil.to_bits(obj)
         out.write_long(msb)
         out.write_long(lsb)
 

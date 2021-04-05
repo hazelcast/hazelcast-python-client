@@ -146,17 +146,20 @@ class ConnectionManager(object):
     def get_connection(self, member_uuid):
         return self.active_connections.get(member_uuid, None)
 
-    def get_random_connection(self):
+    def get_random_connection(self, should_get_data_member=False):
         if self._smart_routing_enabled:
-            member = self._load_balancer.next()
-            if member:
-                connection = self.get_connection(member.uuid)
-                if connection:
-                    return connection
+            connection = self._get_connection_from_load_balancer(should_get_data_member)
+            if connection:
+                return connection
 
         # We should not get to this point under normal circumstances.
         # Therefore, copying the list should be OK.
-        for connection in list(six.itervalues(self.active_connections)):
+        for member_uuid, connection in list(six.iteritems(self.active_connections)):
+            if should_get_data_member:
+                member = self._cluster_service.get_member(member_uuid)
+                if not member or member.lite_member:
+                    continue
+
             return connection
 
         return None
@@ -255,6 +258,21 @@ class ConnectionManager(object):
             raise ClientOfflineError()
         else:
             raise IOError("No connection found to cluster")
+
+    def _get_connection_from_load_balancer(self, should_get_data_member):
+        load_balancer = self._load_balancer
+        if should_get_data_member:
+            if load_balancer.can_get_next_data_member():
+                member = load_balancer.next_data_member()
+            else:
+                member = None
+        else:
+            member = load_balancer.next()
+
+        if not member:
+            return None
+
+        return self.get_connection(member.uuid)
 
     def _get_or_connect_to_address(self, address):
         for connection in list(six.itervalues(self.active_connections)):

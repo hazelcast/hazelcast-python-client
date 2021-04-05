@@ -1,6 +1,10 @@
+import binascii
 import random
 import threading
 import time
+import uuid
+
+from hazelcast.serialization import UUID_MSB_SHIFT, UUID_LSB_MASK, UUID_MSB_MASK
 
 try:
     from collections.abc import Sequence, Iterable
@@ -272,18 +276,65 @@ class LoadBalancer(object):
         """
         raise NotImplementedError("next")
 
+    def next_data_member(self):
+        """Returns the next data member to route to.
+
+        Returns:
+            hazelcast.core.MemberInfo: The next data member or
+            ``None`` if no data member is available.
+        """
+        return None
+
+    def can_get_next_data_member(self):
+        """Returns whether this instance supports getting data members
+         through a call to :func:`next_data_member`.
+
+        Returns:
+            bool: ``True`` if this instance supports getting data members.
+        """
+        return False
+
+
+class _Members(object):
+    __slots__ = ("members", "data_members")
+
+    def __init__(self, members, data_members):
+        self.members = members
+        self.data_members = data_members
+
 
 class _AbstractLoadBalancer(LoadBalancer):
     def __init__(self):
         self._cluster_service = None
-        self._members = []
+        self._members = _Members([], [])
 
     def init(self, cluster_service):
         self._cluster_service = cluster_service
         cluster_service.add_listener(self._listener, self._listener, True)
 
+    def next(self):
+        members = self._members.members
+        return self._next(members)
+
+    def next_data_member(self):
+        members = self._members.data_members
+        return self._next(members)
+
+    def can_get_next_data_member(self):
+        return True
+
     def _listener(self, _):
-        self._members = self._cluster_service.get_members()
+        members = self._cluster_service.get_members()
+        data_members = []
+
+        for member in members:
+            if not member.lite_member:
+                data_members.append(member)
+
+        self._members = _Members(members, data_members)
+
+    def _next(self, members):
+        raise NotImplementedError("_next")
 
 
 class RoundRobinLB(_AbstractLoadBalancer):
@@ -298,8 +349,7 @@ class RoundRobinLB(_AbstractLoadBalancer):
         super(RoundRobinLB, self).__init__()
         self._idx = 0
 
-    def next(self):
-        members = self._members
+    def _next(self, members):
         if not members:
             return None
 
@@ -312,15 +362,14 @@ class RoundRobinLB(_AbstractLoadBalancer):
 class RandomLB(_AbstractLoadBalancer):
     """A load balancer that selects a random member to route to."""
 
-    def next(self):
-        members = self._members
+    def _next(self, members):
         if not members:
             return None
         idx = random.randrange(0, len(members))
         return members[idx]
 
 
-class IterationType:
+class IterationType(object):
     """To differentiate users selection on result collection on map-wide
     operations like ``entry_set``, ``key_set``, ``values`` etc.
     """
@@ -333,3 +382,79 @@ class IterationType:
 
     ENTRY = 2
     """Iterate over entries"""
+
+
+class UuidUtil(object):
+    @staticmethod
+    def to_bits(value):
+        i = value.int
+        most_significant_bits = to_signed(i >> UUID_MSB_SHIFT, 64)
+        least_significant_bits = to_signed(i & UUID_LSB_MASK, 64)
+        return most_significant_bits, least_significant_bits
+
+    @staticmethod
+    def from_bits(most_significant_bits, least_significant_bits):
+        return uuid.UUID(
+            int=(
+                ((most_significant_bits << UUID_MSB_SHIFT) & UUID_MSB_MASK)
+                | (least_significant_bits & UUID_LSB_MASK)
+            )
+        )
+
+
+if hasattr(int, "from_bytes"):
+
+    def int_from_bytes(buffer):
+        return int.from_bytes(buffer, "big", signed=True)
+
+
+else:
+    # Compatibility with Python 2
+    def int_from_bytes(buffer):
+        buffer = bytearray(buffer)
+        if buffer[0] & 0x80:
+            neg = bytearray()
+            for c in buffer:
+                neg.append(c ^ 0xFF)
+            return -1 * int(binascii.hexlify(neg), 16) - 1
+        return int(binascii.hexlify(buffer), 16)
+
+
+try:
+    from datetime import timezone
+except ImportError:
+    from datetime import tzinfo, timedelta
+
+    # There is no tzinfo implementation(timezone) in the
+    # Python 2. Here we provide the bare minimum
+    # to the user.
+    class FixedOffsetTimezone(tzinfo):
+        __slots__ = ("_offset",)
+
+        def __init__(self, offset):
+            self._offset = offset
+
+        def utcoffset(self, dt):
+            return self._offset
+
+        def tzname(self, dt):
+            return None
+
+        def dst(self, dt):
+            return timedelta(0)
+
+    timezone = FixedOffsetTimezone
+
+
+def try_to_get_error_message(error):
+    # If the error has a message attribute,
+    # return it. If not, almost all of the
+    # built-in errors (and Hazelcast Errors)
+    # set the exception message as the first
+    # parameter of args. If it is not there,
+    # then return None.
+    if hasattr(error, "message"):
+        return error.message
+    elif len(error.args) > 0:
+        return error.args[0]
+    return None

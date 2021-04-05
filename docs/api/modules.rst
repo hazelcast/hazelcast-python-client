@@ -14,6 +14,7 @@ API Documentation
     predicate
     proxy/modules
     serialization
+    sql
     transaction
     util
 

@@ -148,7 +148,9 @@ class LoadBalancersWithRealClusterTest(HazelcastTestCase):
         lb = client._load_balancer
         self.assertTrue(isinstance(lb, RandomLB))
 
-        six.assertCountEqual(self, self.addresses, list(map(lambda m: m.address, lb._members)))
+        six.assertCountEqual(
+            self, self.addresses, list(map(lambda m: m.address, lb._members.members))
+        )
         for _ in range(10):
             self.assertTrue(lb.next().address in self.addresses)
 
@@ -161,7 +163,9 @@ class LoadBalancersWithRealClusterTest(HazelcastTestCase):
         lb = client._load_balancer
         self.assertTrue(isinstance(lb, RoundRobinLB))
 
-        six.assertCountEqual(self, self.addresses, list(map(lambda m: m.address, lb._members)))
+        six.assertCountEqual(
+            self, self.addresses, list(map(lambda m: m.address, lb._members.members))
+        )
         for i in range(10):
             self.assertEqual(self.addresses[i % len(self.addresses)], lb.next().address)
 
