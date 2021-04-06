@@ -515,3 +515,11 @@ class PortableSerializationTestCase(unittest.TestCase):
         portable2 = MyPortable2(1)
         data2 = ss.to_data(portable2)
         self.assertEqual(portable2, ss.to_object(data2))
+
+    def test_class_definition_with_duplicate_fields(self):
+        with self.assertRaises(HazelcastSerializationError):
+            ClassDefinitionBuilder(1, 1).add_string_field("name").add_string_field("name")
+
+    def test_class_definition_with_duplicate_field_names_with_different_types(self):
+        with self.assertRaises(HazelcastSerializationError):
+            ClassDefinitionBuilder(1, 1).add_string_field("name").add_int_field("name")
