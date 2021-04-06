@@ -371,6 +371,9 @@ class HazelcastClient(object):
             self._invocation_service,
         )
         self._shutdown_lock = threading.RLock()
+        self._invocation_service.init(
+            self._internal_partition_service, self._connection_manager, self._listener_service
+        )
         self._init_context()
         self._start()
 
@@ -394,20 +397,19 @@ class HazelcastClient(object):
     def _start(self):
         self._reactor.start()
         try:
-            self._invocation_service.init(
-                self._internal_partition_service, self._connection_manager, self._listener_service
-            )
             self._internal_lifecycle_service.start()
+            self._invocation_service.start()
             membership_listeners = self._config.membership_listeners
             self._internal_cluster_service.start(self._connection_manager, membership_listeners)
             self._cluster_view_listener.start()
             self._connection_manager.start(self._load_balancer)
-            if not self._config.async_start:
+            sync_start = not self._config.async_start
+            if sync_start:
                 self._internal_cluster_service.wait_initial_member_list_fetched()
-                self._connection_manager.connect_to_all_cluster_members()
+            self._connection_manager.connect_to_all_cluster_members(sync_start)
 
             self._listener_service.start()
-            self._invocation_service.start()
+            self._invocation_service.add_backup_listener()
             self._load_balancer.init(self.cluster_service)
             self._statistics.start()
         except:

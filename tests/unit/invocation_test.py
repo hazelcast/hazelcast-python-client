@@ -156,4 +156,5 @@ class InvocationTest(unittest.TestCase):
             c._internal_partition_service, c._connection_manager, c._listener_service
         )
         invocation_service.start()
+        invocation_service.add_backup_listener()
         return c, invocation_service
