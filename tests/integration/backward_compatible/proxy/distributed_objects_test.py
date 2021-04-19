@@ -36,18 +36,24 @@ class DistributedObjectsTest(SingleMemberTestCase):
         s = self.client.get_set("set")
         q = self.client.get_queue("queue")
 
-        six.assertCountEqual(self, [m, s, q], self.client.get_distributed_objects())
+        self.assertTrueEventually(
+            lambda: six.assertCountEqual(self, [m, s, q], self.client.get_distributed_objects())
+        )
 
     def test_get_distributed_objects_clears_destroyed_proxies(self):
         m = self.client.get_map("map")
 
-        six.assertCountEqual(self, [m], self.client.get_distributed_objects())
+        self.assertTrueEventually(
+            lambda: six.assertCountEqual(self, [m], self.client.get_distributed_objects())
+        )
 
         other_client = hazelcast.HazelcastClient(**self.config)
         other_clients_map = other_client.get_map("map")
         other_clients_map.destroy()
 
-        six.assertCountEqual(self, [], self.client.get_distributed_objects())
+        self.assertTrueEventually(
+            lambda: six.assertCountEqual(self, [], self.client.get_distributed_objects())
+        )
         other_client.shutdown()
 
     def test_add_distributed_object_listener_object_created(self):
