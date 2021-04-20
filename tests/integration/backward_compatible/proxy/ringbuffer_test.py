@@ -1,8 +1,11 @@
 import os
+import time
+import unittest
 
 from hazelcast.proxy.ringbuffer import OVERFLOW_POLICY_FAIL, MAX_BATCH_SIZE
+from hazelcast.serialization.api import IdentifiedDataSerializable
 from tests.base import SingleMemberTestCase
-from tests.util import random_string
+from tests.util import random_string, is_client_version_older_than, get_current_timestamp
 from hazelcast.six.moves import range
 
 CAPACITY = 10
@@ -114,3 +117,142 @@ class RingBufferTest(SingleMemberTestCase):
 
     def test_str(self):
         self.assertTrue(str(self.ringbuffer).startswith("Ringbuffer"))
+
+
+@unittest.skipIf(is_client_version_older_than("4.1"), "Tests the features added in 4.1 version of the client")
+class RingbufferReadManyTest(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        config["cluster_name"] = cls.cluster.id
+        return config
+
+    @classmethod
+    def configure_cluster(cls):
+        path = os.path.abspath(__file__)
+        dir_path = os.path.dirname(path)
+        with open(os.path.join(dir_path, "hazelcast.xml")) as f:
+            return f.read()
+
+    def setUp(self):
+        self.ringbuffer = self.client.get_ringbuffer(
+            "ClientRingbufferTestWithTTL-" + random_string()
+        ).blocking()
+
+    def tearDown(self):
+        self.ringbuffer.destroy()
+
+    def test_when_start_sequence_is_no_longer_available_gets_clamped(self):
+        self.fill_ringbuffer()
+
+        result_set = self.ringbuffer.read_many(0, 1, CAPACITY)
+        self.assertEqual(CAPACITY, result_set.read_count)
+        self.assertEqual(CAPACITY, result_set.size)
+        self.assertEqual(CAPACITY, result_set.next_sequence_to_read_from)
+
+        for i in range(CAPACITY):
+            self.assertEqual(i, result_set[i])
+            self.assertEqual(i, result_set.get_sequence(i))
+
+    def test_when_start_sequence_is_equal_to_tail_sequence(self):
+        self.fill_ringbuffer()
+
+        result_set = self.ringbuffer.read_many(CAPACITY - 1, 1, CAPACITY)
+        self.assertEqual(1, result_set.read_count)
+        self.assertEqual(1, result_set.size)
+        self.assertEqual(CAPACITY, result_set.next_sequence_to_read_from)
+        self.assertEqual(CAPACITY - 1, result_set[0])
+        self.assertEqual(CAPACITY - 1, result_set.get_sequence(0))
+
+    def test_when_start_sequence_is_beyond_tail_sequence_then_blocks(self):
+        self.fill_ringbuffer()
+
+        begin_time = get_current_timestamp()
+        result_set_future = self.ringbuffer._wrapped.read_many(CAPACITY + 1, 1, CAPACITY)
+        time.sleep(0.5)
+        self.assertFalse(result_set_future.done())
+        time_passed = get_current_timestamp() - begin_time
+        self.assertTrue(time_passed >= 0.5)
+
+    def test_when_min_count_items_are_not_available_then_blocks(self):
+        self.fill_ringbuffer()
+
+        begin_time = get_current_timestamp()
+        result_set_future = self.ringbuffer._wrapped.read_many(CAPACITY, 2, 3)
+        time.sleep(0.5)
+        self.assertFalse(result_set_future.done())
+        time_passed = get_current_timestamp() - begin_time
+        self.assertTrue(time_passed >= 0.5)
+
+    def test_max_count(self):
+        # If more results are available than needed, the surplus results
+        # should not be read.
+        self.fill_ringbuffer()
+
+        max_count = CAPACITY // 2
+        result_set = self.ringbuffer.read_many(0, 0, max_count)
+        self.assertEqual(max_count, result_set.read_count)
+        self.assertEqual(max_count, result_set.size)
+        self.assertEqual(max_count, result_set.next_sequence_to_read_from)
+
+        for i in range(max_count):
+            self.assertEqual(i, result_set[i])
+            self.assertEqual(i, result_set.get_sequence(i))
+
+    def test_filter(self):
+        def item_factory(i):
+            if i % 2 == 0:
+                return "good%s" % i
+            return "bad%s" % i
+
+        self.fill_ringbuffer(item_factory)
+
+        expected_size = CAPACITY // 2
+
+        result_set = self.ringbuffer.read_many(0, 0, CAPACITY, PrefixFilter("good"))
+        self.assertEqual(CAPACITY, result_set.read_count)
+        self.assertEqual(expected_size, result_set.size)
+        self.assertEqual(CAPACITY, result_set.next_sequence_to_read_from)
+
+        for i in range(expected_size):
+            self.assertEqual(item_factory(i * 2), result_set[i])
+            self.assertEqual(i * 2, result_set.get_sequence(i))
+
+    def test_filter_with_max_count(self):
+        def item_factory(i):
+            if i % 2 == 0:
+                return "good%s" % i
+            return "bad%s" % i
+
+        self.fill_ringbuffer(item_factory)
+
+        expected_size = 3
+
+        result_set = self.ringbuffer.read_many(0, 0, expected_size, PrefixFilter("good"))
+        self.assertEqual(expected_size * 2 - 1, result_set.read_count)
+        self.assertEqual(expected_size, result_set.size)
+        self.assertEqual(expected_size * 2 - 1, result_set.next_sequence_to_read_from)
+
+        for i in range(expected_size):
+            self.assertEqual(item_factory(i * 2), result_set[i])
+            self.assertEqual(i * 2, result_set.get_sequence(i))
+
+    def fill_ringbuffer(self, item_factory=lambda i: i):
+        for i in range(0, CAPACITY):
+            self.ringbuffer.add(item_factory(i))
+
+
+class PrefixFilter(IdentifiedDataSerializable):
+    def __init__(self, prefix):
+        self.prefix = prefix
+
+    def write_data(self, object_data_output):
+        object_data_output.write_string(self.prefix)
+
+    def read_data(self, object_data_input):
+        self.prefix = object_data_input.read_string()
+
+    def get_factory_id(self):
+        return 666
+
+    def get_class_id(self):
+        return 14
