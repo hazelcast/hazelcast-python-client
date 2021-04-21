@@ -119,7 +119,9 @@ class RingBufferTest(SingleMemberTestCase):
         self.assertTrue(str(self.ringbuffer).startswith("Ringbuffer"))
 
 
-@unittest.skipIf(is_client_version_older_than("4.1"), "Tests the features added in 4.1 version of the client")
+@unittest.skipIf(
+    is_client_version_older_than("4.1"), "Tests the features added in 4.1 version of the client"
+)
 class RingbufferReadManyTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
