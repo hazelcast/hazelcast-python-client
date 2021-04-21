@@ -165,8 +165,16 @@ class ReconnectWithDifferentInterfacesTest(HazelcastTestCase):
 
     def setUp(self):
         self.rc = self.create_rc()
+        self.client = None
 
     def tearDown(self):
+        if self.client:
+            # If the test is failed, and we couldn't shutdown
+            # the client, try to shutdown here to make sure that
+            # we are not going to affect other tests. If the client
+            # is already shutdown, then this is basically no-op.
+            self.client.shutdown()
+
         self.rc.exit()
 
     def test_connection_count_after_reconnect_with_member_hostname_client_ip(self):
@@ -214,6 +222,8 @@ class ReconnectWithDifferentInterfacesTest(HazelcastTestCase):
             lifecycle_listeners=[listener],
         )
 
+        self.client = client
+
         self.assertTrueEventually(
             lambda: self.assertEqual(1, len(client._connection_manager.active_connections))
         )
@@ -244,6 +254,8 @@ class ReconnectWithDifferentInterfacesTest(HazelcastTestCase):
             cluster_connect_timeout=sys.maxsize,
         )
 
+        self.client = client
+
         test_map = client.get_map("test").blocking()
 
         event_count = AtomicInteger()
@@ -268,3 +280,6 @@ class ReconnectWithDifferentInterfacesTest(HazelcastTestCase):
             self.assertNotEqual(0, event_count.get())
 
         self.assertTrueEventually(assertion)
+
+        client.shutdown()
+        self.rc.terminateCluster(cluster.id)
