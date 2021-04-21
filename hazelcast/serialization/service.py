@@ -1,6 +1,7 @@
 import uuid
 
 from hazelcast.serialization.base import BaseSerializationService
+from hazelcast.serialization.objects import ReliableTopicMessage
 from hazelcast.serialization.portable.classdef import FieldType
 from hazelcast.serialization.portable.context import PortableContext
 from hazelcast.serialization.portable.serializer import PortableSerializer
@@ -40,7 +41,7 @@ class SerializationServiceV1(BaseSerializationService):
         )
 
         # merge configured factories with built in ones
-        factories = {}
+        factories = self._get_builtin_identified_factories()
         factories.update(config.data_serializable_factories)
         self._registry._data_serializer = IdentifiedDataSerializer(factories)
         self._register_constant_serializers()
@@ -53,6 +54,11 @@ class SerializationServiceV1(BaseSerializationService):
         global_serializer = config.global_serializer
         if global_serializer:
             self._registry._global_serializer = global_serializer()
+
+    def _get_builtin_identified_factories(self):
+        return {
+            ReliableTopicMessage.FACTORY_ID: {ReliableTopicMessage.CLASS_ID: ReliableTopicMessage}
+        }
 
     def _register_constant_serializers(self):
         self._registry.register_constant_serializer(self._registry._null_serializer, type(None))

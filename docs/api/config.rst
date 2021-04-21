@@ -11,3 +11,4 @@ Config
 .. autoclass:: UniqueKeyTransformation
 .. autoclass:: IndexType
 .. autoclass:: ReconnectMode
+.. autoclass:: TopicOverloadPolicy
