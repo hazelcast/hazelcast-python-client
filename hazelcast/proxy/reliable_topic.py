@@ -108,7 +108,7 @@ class ReliableMessageListener(object):
         raise NotImplementedError("retrieve_initial_sequence")
 
     def store_sequence(self, sequence):
-        """ "
+        """
         Informs the ReliableMessageListener that it should store the sequence.
         This method is called before the message is processed. Can be used to
         make a durable subscription.
