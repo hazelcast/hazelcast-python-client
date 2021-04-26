@@ -238,13 +238,17 @@ class _MessageRunner(object):
                     message = result[i]
                     self._listener.store_sequence(result.get_sequence(i))
 
+                    member = None
+                    if message.publisher_address:
+                        member = MemberInfo(
+                            message.publisher_address, None, None, False, _UNKNOWN_MEMBER_VERSION
+                        )
+
                     topic_message = TopicMessage(
                         self._topic_name,
                         message.payload,
                         message.publish_time,
-                        MemberInfo(
-                            message.publisher_address, None, None, False, _UNKNOWN_MEMBER_VERSION
-                        ),
+                        member,
                         self._to_object,
                     )
                     self._listener.on_message(topic_message)
