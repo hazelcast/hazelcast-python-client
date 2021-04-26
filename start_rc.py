@@ -3,7 +3,7 @@ import subprocess
 import sys
 from os.path import isfile
 
-SERVER_VERSION = "4.1"
+SERVER_VERSION = "4.1.4-SNAPSHOT"
 RC_VERSION = "0.8-SNAPSHOT"
 
 RELEASE_REPO = "http://repo1.maven.apache.org/maven2"
