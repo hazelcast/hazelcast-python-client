@@ -144,16 +144,16 @@ class RingbufferReadManyTest(SingleMemberTestCase):
         self.ringbuffer.destroy()
 
     def test_when_start_sequence_is_no_longer_available_gets_clamped(self):
-        self.fill_ringbuffer()
+        self.fill_ringbuffer(item_count=CAPACITY + 1)
 
         result_set = self.ringbuffer.read_many(0, 1, CAPACITY)
         self.assertEqual(CAPACITY, result_set.read_count)
         self.assertEqual(CAPACITY, result_set.size)
-        self.assertEqual(CAPACITY, result_set.next_sequence_to_read_from)
+        self.assertEqual(CAPACITY + 1, result_set.next_sequence_to_read_from)
 
-        for i in range(CAPACITY):
-            self.assertEqual(i, result_set[i])
-            self.assertEqual(i, result_set.get_sequence(i))
+        for i in range(1, CAPACITY + 1):
+            self.assertEqual(i, result_set[i - 1])
+            self.assertEqual(i, result_set.get_sequence(i - 1))
 
     def test_when_start_sequence_is_equal_to_tail_sequence(self):
         self.fill_ringbuffer()
@@ -168,22 +168,50 @@ class RingbufferReadManyTest(SingleMemberTestCase):
     def test_when_start_sequence_is_beyond_tail_sequence_then_blocks(self):
         self.fill_ringbuffer()
 
-        begin_time = get_current_timestamp()
         result_set_future = self.ringbuffer._wrapped.read_many(CAPACITY + 1, 1, CAPACITY)
         time.sleep(0.5)
         self.assertFalse(result_set_future.done())
-        time_passed = get_current_timestamp() - begin_time
-        self.assertTrue(time_passed >= 0.5)
 
     def test_when_min_count_items_are_not_available_then_blocks(self):
         self.fill_ringbuffer()
 
-        begin_time = get_current_timestamp()
-        result_set_future = self.ringbuffer._wrapped.read_many(CAPACITY, 2, 3)
+        result_set_future = self.ringbuffer._wrapped.read_many(CAPACITY - 1, 2, 3)
         time.sleep(0.5)
         self.assertFalse(result_set_future.done())
-        time_passed = get_current_timestamp() - begin_time
-        self.assertTrue(time_passed >= 0.5)
+
+    def test_when_some_waiting_needed(self):
+        self.fill_ringbuffer()
+
+        result_set_future = self.ringbuffer._wrapped.read_many(CAPACITY - 1, 2, 3)
+        time.sleep(0.5)
+        self.assertFalse(result_set_future.done())
+
+        self.ringbuffer.add(CAPACITY)
+
+        self.assertTrueEventually(lambda: self.assertTrue(result_set_future.done()))
+
+        result_set = result_set_future.result()
+        self.assertEqual(2, result_set.read_count)
+        self.assertEqual(2, result_set.size)
+        self.assertEqual(CAPACITY + 1, result_set.next_sequence_to_read_from)
+        self.assertEqual(CAPACITY - 1, result_set[0])
+        self.assertEqual(CAPACITY - 1, result_set.get_sequence(0))
+        self.assertEqual(CAPACITY, result_set[1])
+        self.assertEqual(CAPACITY, result_set.get_sequence(1))
+
+    def test_min_zero_when_item_available(self):
+        self.fill_ringbuffer()
+
+        result_set = self.ringbuffer.read_many(0, 0, 1)
+
+        self.assertEqual(1, result_set.read_count)
+        self.assertEqual(1, result_set.size)
+
+    def test_min_zero_when_no_item_available(self):
+        result_set = self.ringbuffer.read_many(0, 0, 1)
+
+        self.assertEqual(0, result_set.read_count)
+        self.assertEqual(0, result_set.size)
 
     def test_max_count(self):
         # If more results are available than needed, the surplus results
@@ -238,8 +266,8 @@ class RingbufferReadManyTest(SingleMemberTestCase):
             self.assertEqual(item_factory(i * 2), result_set[i])
             self.assertEqual(i * 2, result_set.get_sequence(i))
 
-    def fill_ringbuffer(self, item_factory=lambda i: i):
-        for i in range(0, CAPACITY):
+    def fill_ringbuffer(self, item_factory=lambda i: i, item_count=CAPACITY):
+        for i in range(0, item_count):
             self.ringbuffer.add(item_factory(i))
 
 

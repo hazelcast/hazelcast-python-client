@@ -49,8 +49,8 @@ The maximum number of items to be added to RingBuffer or read from RingBuffer at
 
 
 class Ringbuffer(PartitionSpecificProxy):
-    """A Ringbuffer is a data-structure where the content is stored in a
-    ring like structure.
+    """A Ringbuffer is an append-only data-structure where the content is
+    stored in a ring like structure.
 
     A ringbuffer has a capacity so it won't grow beyond that capacity and
     endanger the stability of the system. If that capacity is exceeded, than
@@ -149,8 +149,8 @@ class Ringbuffer(PartitionSpecificProxy):
         """Adds the specified item to the tail of the Ringbuffer.
 
         If there is no space in the Ringbuffer, the action is determined by
-        overflow policy as ``OVERFLOW_POLICY_OVERWRITE`` or
-        ``OVERFLOW_POLICY_FAIL``.
+        ``overflow_policy`` as :const:`OVERFLOW_POLICY_OVERWRITE` or
+        :const:`OVERFLOW_POLICY_FAIL`.
 
         Args:
             item: The specified item to be added.
@@ -174,8 +174,8 @@ class Ringbuffer(PartitionSpecificProxy):
         The items are added in the order of the Iterator of the collection.
 
         If there is no space in the Ringbuffer, the action is determined by
-        overflow policy as ``OVERFLOW_POLICY_OVERWRITE`` or
-        ``OVERFLOW_POLICY_FAIL``.
+        ``overflow_policy`` as :const:`OVERFLOW_POLICY_OVERWRITE` or
+        :const:`OVERFLOW_POLICY_FAIL`.
 
         Args:
             items (list): The specified collection which contains the items
@@ -240,9 +240,9 @@ class Ringbuffer(PartitionSpecificProxy):
 
         A filter can be provided to only select items that need to be read. If
         the filter is ``None``, all items are read. If the filter is not
-        ``None``,  only items where the filter function returns true are
+        ``None``, only items where the filter function returns true are
         returned. Using  filters is a good way to prevent getting items that
-        are of no value to  the receiver. This reduces the amount of IO and the
+        are of no value to the receiver. This reduces the amount of IO and the
         number of operations being executed, and can result in a significant
         performance improvement. Note that, filtering logic must be defined
         on the server-side.
@@ -296,8 +296,8 @@ class Ringbuffer(PartitionSpecificProxy):
             capacity = future.result()
 
             check_true(
-                min_count <= capacity,
-                "min count: %d should be smaller or equal to capacity: %d" % (min_count, capacity),
+                max_count <= capacity,
+                "max count: %d should be smaller or equal to capacity: %d" % (max_count, capacity),
             )
 
             return self._invoke(request, handler)
@@ -328,8 +328,8 @@ class ReadResult(ImmutableLazyDataList):
         :attr:`size`.
 
         But if a filter is applied, it could be that items are read, but are
-        filtered out. So if you are trying to make another read based on the
-        this then you should increment the sequence by :attr:`read_count` and
+        filtered out. So, if you are trying to make another read based on
+        this, then you should increment the sequence by :attr:`read_count` and
         not by :attr:`size`.
 
         Otherwise you will be re-reading the same filtered messages.
