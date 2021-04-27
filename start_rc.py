@@ -47,6 +47,7 @@ def download_if_necessary(repo, artifact_id, version, is_test_artifact=False):
         "mvn",
         "-q",
         "dependency:get",
+        "-Dtransitive=false",
         "-DrepoUrl=" + repo,
         "-Dartifact=" + artifact,
         "-Ddest=" + dest_file_name,
