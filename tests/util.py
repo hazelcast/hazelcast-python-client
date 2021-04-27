@@ -2,6 +2,7 @@ import os
 import time
 
 from uuid import uuid4
+from hazelcast import __version__
 from hazelcast.config import SSLProtocol
 from hazelcast.util import calculate_version
 
@@ -95,6 +96,12 @@ def mark_server_version_at_least(test, client, expected_version):
     expected_version = calculate_version(expected_version)
     if server_version < expected_version:
         test.skipTest("Expected a newer server")
+
+
+def is_client_version_older_than(expected_version):
+    version = calculate_version(__version__)
+    expected_version = calculate_version(expected_version)
+    return version < expected_version
 
 
 def open_connection_to_address(client, uuid):
