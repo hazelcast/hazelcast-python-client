@@ -12,6 +12,7 @@ from hazelcast.config import (
     UniqueKeyTransformation,
     QueryConstants,
     BitmapIndexOptions,
+    TopicOverloadPolicy,
 )
 from hazelcast.errors import InvalidConfigurationError
 from hazelcast.serialization.api import IdentifiedDataSerializable, Portable, StreamSerializer
@@ -638,6 +639,57 @@ class ConfigTest(unittest.TestCase):
         fig_config = config.flake_id_generators["a"]
         self.assertEqual(20, fig_config.prefetch_count)
         self.assertEqual(30, fig_config.prefetch_validity)
+
+    def test_reliable_topics_invalid_configs(self):
+        config = self.config
+        self.assertEqual({}, config.reliable_topics)
+
+        invalid_configs = [
+            ({123: "123"}, TypeError),
+            ({"123": 123}, TypeError),
+            (None, TypeError),
+            ({"x": {"overload_policy": None}}, TypeError),
+            ({"x": {"overload_policy": -1}}, TypeError),
+            ({"x": {"read_batch_size": None}}, TypeError),
+            ({"x": {"read_batch_size": -1}}, ValueError),
+            ({"x": {"read_batch_size": 0}}, ValueError),
+            ({"x": {"invalid_option": -10}}, InvalidConfigurationError),
+        ]
+
+        for c, e in invalid_configs:
+            with self.assertRaises(e):
+                config.reliable_topics = c
+
+    def test_reliable_topics_defaults(self):
+        config = self.config
+        config.reliable_topics = {"a": {}}
+        topic_config = config.reliable_topics["a"]
+        self.assertEqual(TopicOverloadPolicy.BLOCK, topic_config.overload_policy)
+        self.assertEqual(10, topic_config.read_batch_size)
+
+    def test_reliable_topics_with_a_few_changes(self):
+        config = self.config
+        config.reliable_topics = {
+            "a": {
+                "read_batch_size": 42,
+            }
+        }
+        topic_config = config.reliable_topics["a"]
+        self.assertEqual(TopicOverloadPolicy.BLOCK, topic_config.overload_policy)
+        self.assertEqual(42, topic_config.read_batch_size)
+
+    def test_reliable_topics(self):
+        config = self.config
+        config.reliable_topics = {
+            "a": {
+                "overload_policy": TopicOverloadPolicy.ERROR,
+                "read_batch_size": 42,
+            }
+        }
+
+        topic_config = config.reliable_topics["a"]
+        self.assertEqual(TopicOverloadPolicy.ERROR, topic_config.overload_policy)
+        self.assertEqual(42, topic_config.read_batch_size)
 
     def test_labels(self):
         config = self.config

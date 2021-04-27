@@ -266,26 +266,45 @@ class EntryEvent(object):
         )
 
 
-class TopicMessage(object):
-    """Topic message.
+_SENTINEL = object()
 
-    Attributes:
-        name (str): Name of the proxy that fired the event.
-        publish_time (int): UNIX time that the event is published as seconds.
-        member (hazelcast.core.MemberInfo): Member that fired the event.
-    """
+
+class TopicMessage(object):
+    """Topic message."""
+
+    __slots__ = ("_name", "_message_data", "_message", "_publish_time", "_member", "_to_object")
 
     def __init__(self, name, message_data, publish_time, member, to_object):
-        self.name = name
+        self._name = name
         self._message_data = message_data
-        self.publish_time = publish_time
-        self.member = member
+        self._message = _SENTINEL
+        self._publish_time = publish_time
+        self._member = member
         self._to_object = to_object
+
+    @property
+    def name(self):
+        """str: Name of the proxy that fired the event."""
+        return self._name
+
+    @property
+    def publish_time(self):
+        """int: UNIX time that the event is published as seconds."""
+        return self._publish_time
+
+    @property
+    def member(self):
+        """hazelcast.core.MemberInfo: Member that fired the event."""
+        return self._member
 
     @property
     def message(self):
         """The message sent to Topic."""
-        return self._to_object(self._message_data)
+        if self._message is not _SENTINEL:
+            return self._message
+
+        self._message = self._to_object(self._message_data)
+        return self._message
 
 
 def get_entry_listener_flags(**kwargs):

@@ -204,6 +204,52 @@ class ReconnectMode(object):
     """
 
 
+class TopicOverloadPolicy(object):
+    """A policy to deal with an overloaded topic; so topic where there is no
+    place to store new messages.
+
+    The reliable topic uses a :class:`hazelcast.proxy.ringbuffer.Ringbuffer` to
+    store the messages. A ringbuffer doesn't track where readers are, so
+    it has no concept of a slow consumers. This provides many advantages like
+    high performance reads, but it also gives the ability to the reader to
+    re-read the same message multiple times in case of an error.
+
+    A ringbuffer has a limited, fixed capacity. A fast producer may overwrite
+    old messages that are still being read by a slow consumer. To prevent
+    this, we may configure a time-to-live on the ringbuffer.
+
+    Once the time-to-live is configured, the :class:`TopicOverloadPolicy`
+    controls how the publisher is going to deal with the situation that a
+    ringbuffer is full and the oldest item in the ringbuffer is not old
+    enough to get overwritten.
+
+    Keep in mind that this retention period (time-to-live) can keep messages
+    from being overwritten, even though all readers might have already completed
+    reading.
+    """
+
+    DISCARD_OLDEST = 0
+    """Using this policy, a message that has not expired can be overwritten.
+    
+    No matter the retention period set, the overwrite will just overwrite
+    the item.
+    
+    This can be a problem for slow consumers because they were promised a
+    certain time window to process messages. But it will benefit producers
+    and fast consumers since they are able to continue. This policy sacrifices
+    the slow producer in favor of fast producers/consumers.
+    """
+
+    DISCARD_NEWEST = 1
+    """The message that was to be published is discarded."""
+
+    BLOCK = 2
+    """The caller will wait till there space in the ringbuffer."""
+
+    ERROR = 3
+    """The publish call immediately fails."""
+
+
 class BitmapIndexOptions(object):
     __slots__ = ("_unique_key", "_unique_key_transformation")
 
@@ -513,6 +559,7 @@ class _Config(object):
         "_membership_listeners",
         "_lifecycle_listeners",
         "_flake_id_generators",
+        "_reliable_topics",
         "_labels",
         "_heartbeat_interval",
         "_heartbeat_timeout",
@@ -563,6 +610,7 @@ class _Config(object):
         self._membership_listeners = []
         self._lifecycle_listeners = []
         self._flake_id_generators = {}
+        self._reliable_topics = {}
         self._labels = []
         self._heartbeat_interval = _DEFAULT_HEARTBEAT_INTERVAL
         self._heartbeat_timeout = _DEFAULT_HEARTBEAT_TIMEOUT
@@ -1084,6 +1132,27 @@ class _Config(object):
             raise TypeError("flake_id_generators must be a dict")
 
     @property
+    def reliable_topics(self):
+        return self._reliable_topics
+
+    @reliable_topics.setter
+    def reliable_topics(self, value):
+        if isinstance(value, dict):
+            configs = {}
+            for name, config in six.iteritems(value):
+                if not isinstance(name, six.string_types):
+                    raise TypeError("Keys of reliable_topics must be strings")
+
+                if not isinstance(config, dict):
+                    raise TypeError("Values of reliable_topics must be dict")
+
+                configs[name] = _ReliableTopicConfig.from_dict(config)
+
+            self._reliable_topics = configs
+        else:
+            raise TypeError("reliable_topics must be a dict")
+
+    @property
     def labels(self):
         return self._labels
 
@@ -1402,5 +1471,46 @@ class _FlakeIdGeneratorConfig(object):
             except AttributeError:
                 raise InvalidConfigurationError(
                     "Unrecognized config option for the flake id generator: %s" % k
+                )
+        return config
+
+
+class _ReliableTopicConfig(object):
+    __slots__ = ("_read_batch_size", "_overload_policy")
+
+    def __init__(self):
+        self._read_batch_size = 10
+        self._overload_policy = TopicOverloadPolicy.BLOCK
+
+    @property
+    def read_batch_size(self):
+        return self._read_batch_size
+
+    @read_batch_size.setter
+    def read_batch_size(self, value):
+        if isinstance(value, number_types):
+            if value <= 0:
+                raise ValueError("read_batch_size must be positive")
+            self._read_batch_size = value
+        else:
+            raise TypeError("read_batch_size must be a number")
+
+    @property
+    def overload_policy(self):
+        return self._overload_policy
+
+    @overload_policy.setter
+    def overload_policy(self, value):
+        self._overload_policy = try_to_get_enum_value(value, TopicOverloadPolicy)
+
+    @classmethod
+    def from_dict(cls, d):
+        config = cls()
+        for k, v in six.iteritems(d):
+            try:
+                config.__setattr__(k, v)
+            except AttributeError:
+                raise InvalidConfigurationError(
+                    "Unrecognized config option for the reliable topic: %s" % k
                 )
         return config

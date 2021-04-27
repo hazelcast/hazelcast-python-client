@@ -268,6 +268,20 @@ class HazelcastClient(object):
               it will be much out of order. If you don't care about ordering, set this
               value to ``0`` for unlimited ID validity.
 
+        reliable_topics (dict[str, dict[str, any]]): Dictionary of reliable
+            topic names and the corresponding reliable topic configurations as
+            a dictionary. The reliable topic configurations contains the
+            following options. When an option is missing from the
+            configuration, it will be set to its default value.
+
+            - **overload_policy** (int|str): Policy to handle an overloaded
+              topic. By default, set to ``BLOCK``. See the
+              :class:`hazelcast.config.TopicOverloadPolicy` for possible values.
+            - **read_batch_size** (int): Number of messages the reliable topic
+              will try to read in batch. It will get at least one, but if
+              there are more available, then it will try to get more to
+              increase throughput. By default, set to ``10``.
+
         labels (`list[str]`): Labels for the client to be sent to the cluster.
         heartbeat_interval (float): Time interval between the heartbeats sent by the
             client to the member nodes in seconds. By default, set to ``5.0``.
@@ -379,6 +393,7 @@ class HazelcastClient(object):
 
     def _init_context(self):
         self._context.init_context(
+            self,
             self._config,
             self._invocation_service,
             self._internal_partition_service,
@@ -696,6 +711,7 @@ class _ClientContext(object):
     """
 
     def __init__(self):
+        self.client = None
         self.config = None
         self.invocation_service = None
         self.partition_service = None
@@ -712,6 +728,7 @@ class _ClientContext(object):
 
     def init_context(
         self,
+        client,
         config,
         invocation_service,
         partition_service,
@@ -726,6 +743,7 @@ class _ClientContext(object):
         proxy_session_manager,
         reactor,
     ):
+        self.client = client
         self.config = config
         self.invocation_service = invocation_service
         self.partition_service = partition_service

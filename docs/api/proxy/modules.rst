@@ -12,6 +12,7 @@ Hazelcast Proxies
    multi_map
    queue
    pn_counter
+   reliable_topic
    replicated_map
    ringbuffer
    set
