@@ -431,6 +431,55 @@ class ReliableTopicTest(SingleMemberTestCase):
         self.assertTrueEventually(lambda: self.assertEqual(CAPACITY, len(collector.events)))
         self.assertEqual(list(range(CAPACITY)), self.get_ringbuffer_data(topic))
 
+    def test_durable_subscription(self):
+        topic = self.get_topic(random_string())
+
+        class DurableListener(ReliableMessageListener):
+            def __init__(self):
+                self.objects = []
+                self.sequences = []
+                self.sequence = -1
+
+            def on_message(self, message):
+                self.objects.append(message.message)
+
+            def retrieve_initial_sequence(self):
+                if self.sequence == -1:
+                    return self.sequence
+
+                # +1 to read the next item
+                return self.sequence + 1
+
+            def store_sequence(self, sequence):
+                self.sequences.append(sequence)
+                self.sequence = sequence
+
+            def is_loss_tolerant(self):
+                return False
+
+            def is_terminal(self, error):
+                return True
+
+        listener = DurableListener()
+
+        registration_id = topic.add_listener(listener)
+        topic.publish("item1")
+
+        self.assertTrueEventually(lambda: self.assertEqual(["item1"], listener.objects))
+
+        self.assertTrue(topic.remove_listener(registration_id))
+
+        topic.publish("item2")
+        topic.publish("item3")
+
+        topic.add_listener(listener)
+
+        def assertion():
+            self.assertEqual(["item1", "item2", "item3"], listener.objects)
+            self.assertEqual([0, 1, 2], listener.sequences)
+
+        self.assertTrueEventually(assertion)
+
     def get_ringbuffer_data(self, topic):
         ringbuffer = topic._ringbuffer
         return list(
