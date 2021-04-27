@@ -65,9 +65,9 @@ class SSLTest(HazelcastTestCase):
                 cluster.id, True, get_abs_path(self.current_directory, "server1-cert.pem")
             )
         )
-        test_map = client.get_map("test_map")
+        test_map = client.get_map("test_map").blocking()
         fill_map(test_map, 10)
-        self.assertEqual(test_map.size().result(), 10)
+        self.assertEqual(test_map.size(), 10)
         client.shutdown()
 
     def test_ssl_enabled_with_custom_ciphers(self):
