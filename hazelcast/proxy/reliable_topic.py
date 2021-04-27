@@ -83,10 +83,9 @@ class ReliableMessageListener(object):
         One should not block in this callback. If blocking is necessary,
         consider delegating that task to an executor or a thread pool.
 
-
         Args:
             message (hazelcast.proxy.base.TopicMessage): The message that
-            is received for the topic
+                is received for the topic
         """
         raise NotImplementedError("on_message")
 

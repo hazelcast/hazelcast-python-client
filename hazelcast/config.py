@@ -205,7 +205,7 @@ class ReconnectMode(object):
 
 
 class TopicOverloadPolicy(object):
-    """A policy to deal with an overloaded topic; so topic where there is no
+    """A policy to deal with an overloaded topic; a topic where there is no
     place to store new messages.
 
     The reliable topic uses a :class:`hazelcast.proxy.ringbuffer.Ringbuffer` to
