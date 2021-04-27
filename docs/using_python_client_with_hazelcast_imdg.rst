@@ -356,6 +356,55 @@ A Ringbuffer usage example is shown below.
     sequence += 1
     print(ringbuffer.read_one(sequence))  # Outputs '200'
 
+Using ReliableTopic
+~~~~~~~~~~~~~~~~~~~
+
+Hazelcast ReliableTopic is a distributed topic implementation backed up by the Ringbuffer
+data structure. For details, see the
+`Reliable Topic section <https://docs.hazelcast.com/imdg/latest/data-structures/reliable-topic.html>`__
+in the Hazelcast IMDG Reference Manual.
+
+A Reliable Topic usage example is shown below.
+
+.. code:: python
+
+    # Get a Topic called "my-distributed-topic"
+    topic = client.get_reliable_topic("my-distributed-topic").blocking()
+
+    # Add a Listener to the Topic
+    topic.add_listener(lambda message: print(message))
+
+    # Publish a message to the Topic
+    topic.publish("Hello to distributed world")
+
+Configuring Reliable Topic
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You may configure Reliable Topics using the ``reliable_topics``
+argument:
+
+.. code:: python
+
+    client = hazelcast.HazelcastClient(
+        reliable_topics={
+            "my-topic": {
+                "overload_policy": TopicOverloadPolicy.DISCARD_OLDEST,
+                "read_batch_size": 20,
+            }
+        }
+    )
+
+The following are the descriptions of configuration elements and
+attributes:
+
+- keys of the dictionary: Name of the Reliable Topic.
+- ``overload_policy``: Policy to handle an overloaded topic. By default,
+  set to ``BLOCK``.
+- ``read_batch_size``: Number of messages the reliable topic will try to
+  read in batch. It will get at least one, but if there are more
+  available, then it will try to get more to increase throughput.
+  By default, set to ``10``.
+
 Using Topic
 ~~~~~~~~~~~
 

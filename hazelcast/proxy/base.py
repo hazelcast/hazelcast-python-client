@@ -306,6 +306,14 @@ class TopicMessage(object):
         self._message = self._to_object(self._message_data)
         return self._message
 
+    def __repr__(self):
+        return "TopicMessage(message=%s, publish_time=%s, topic_name=%s, publishing_member=%s)" % (
+            self.message,
+            self.publish_time,
+            self.name,
+            self.member,
+        )
+
 
 def get_entry_listener_flags(**kwargs):
     flags = 0

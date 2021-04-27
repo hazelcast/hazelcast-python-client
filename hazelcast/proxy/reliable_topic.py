@@ -83,10 +83,9 @@ class ReliableMessageListener(object):
         One should not block in this callback. If blocking is necessary,
         consider delegating that task to an executor or a thread pool.
 
-
         Args:
             message (hazelcast.proxy.base.TopicMessage): The message that
-            is received for the topic
+                is received for the topic
         """
         raise NotImplementedError("on_message")
 
@@ -108,7 +107,7 @@ class ReliableMessageListener(object):
         raise NotImplementedError("retrieve_initial_sequence")
 
     def store_sequence(self, sequence):
-        """ "
+        """
         Informs the ReliableMessageListener that it should store the sequence.
         This method is called before the message is processed. Can be used to
         make a durable subscription.

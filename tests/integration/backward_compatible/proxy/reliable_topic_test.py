@@ -117,10 +117,10 @@ class ReliableTopicTest(SingleMemberTestCase):
             def is_terminal(self, error):
                 return False
 
+        topic.publish_all(range(10))
+
         registration_id = topic.add_listener(Listener())
         self.assertIsNotNone(registration_id)
-
-        topic.publish_all(range(10))
 
         self.assertTrueEventually(lambda: self.assertEqual(list(range(5, 10)), messages))
 

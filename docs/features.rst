@@ -11,6 +11,7 @@ features:
 - MultiMap
 - Replicated Map
 - Ringbuffer
+- ReliableTopic
 - Topic
 - CRDT PN Counter
 - Flake Id Generator

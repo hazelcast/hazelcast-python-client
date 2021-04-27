@@ -270,7 +270,7 @@ class HazelcastClient(object):
 
         reliable_topics (dict[str, dict[str, any]]): Dictionary of reliable
             topic names and the corresponding reliable topic configurations as
-            a dictionary. The reliable topic configurations contains the
+            a dictionary. The reliable topic configurations contain the
             following options. When an option is missing from the
             configuration, it will be set to its default value.
 
