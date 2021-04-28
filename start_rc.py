@@ -3,7 +3,7 @@ import subprocess
 import sys
 from os.path import isfile
 
-SERVER_VERSION = "3.12.11"
+SERVER_VERSION = "3.12.13-SNAPSHOT"
 RC_VERSION = "0.3-SNAPSHOT"
 
 RELEASE_REPO = "http://repo1.maven.apache.org/maven2"
@@ -47,6 +47,7 @@ def download_if_necessary(repo, artifact_id, version, is_test_artifact=False):
         "mvn",
         "-q",
         "dependency:get",
+        "-Dtransitive=false",
         "-DrepoUrl=" + repo,
         "-Dartifact=" + artifact,
         "-Ddest=" + dest_file_name,
