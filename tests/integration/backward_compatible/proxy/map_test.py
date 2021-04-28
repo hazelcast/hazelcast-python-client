@@ -11,7 +11,7 @@ from tests.integration.backward_compatible.util import (
     write_string_to_output,
     read_string_from_input,
 )
-from tests.util import random_string, event_collector, fill_map
+from tests.util import random_string, event_collector, fill_map, is_server_version_older_than
 from hazelcast import six
 from hazelcast.six.moves import range
 
@@ -319,7 +319,11 @@ class MapTest(SingleMemberTestCase):
         self.assertIsNotNone(entry_view.cost)
         self.assertIsNotNone(entry_view.creation_time)
         self.assertIsNotNone(entry_view.expiration_time)
-        self.assertEqual(entry_view.hits, 2)
+        if is_server_version_older_than(self.client, "4.2"):
+            self.assertEqual(entry_view.hits, 2)
+        else:
+            # 4.2+ servers do not collect per entry stats by default
+            self.assertIsNotNone(entry_view.hits)
         self.assertIsNotNone(entry_view.last_access_time)
         self.assertIsNotNone(entry_view.last_stored_time)
         self.assertIsNotNone(entry_view.last_update_time)

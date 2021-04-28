@@ -40,8 +40,11 @@ class SSLTest(HazelcastTestCase):
         client.shutdown()
 
     def test_ssl_enabled_trust_default_certificates(self):
-        # Member started with Let's Encrypt certificate
-        cluster = self.create_cluster(self.rc, self.configure_cluster(self.default_ca_xml))
+        cluster_config = self.configure_cluster(self.default_ca_xml)
+        keystore_path = get_abs_path(self.current_directory, "keystore.jks")
+        cluster_config = cluster_config % (keystore_path, keystore_path)
+
+        cluster = self.create_cluster(self.rc, cluster_config)
         cluster.start_member()
 
         client = HazelcastClient(**get_ssl_config(cluster.id, True))
