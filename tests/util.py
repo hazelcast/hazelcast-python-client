@@ -91,11 +91,15 @@ def set_attr(*args, **kwargs):
 
 
 def mark_server_version_at_least(test, client, expected_version):
+    if is_server_version_older_than(client, expected_version):
+        test.skipTest("Expected a newer server")
+
+
+def is_server_version_older_than(client, expected_version):
     connection = client._connection_manager.get_random_connection()
     server_version = connection.server_version
     expected_version = calculate_version(expected_version)
-    if server_version < expected_version:
-        test.skipTest("Expected a newer server")
+    return server_version < expected_version
 
 
 def is_client_version_older_than(expected_version):
