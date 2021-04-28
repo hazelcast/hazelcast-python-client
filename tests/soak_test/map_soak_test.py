@@ -13,7 +13,12 @@ import random
 from hazelcast.client import HazelcastClient
 from hazelcast.serialization.api import IdentifiedDataSerializable
 from hazelcast.predicate import between
-from tests.util import get_current_timestamp
+
+if hasattr(time, "monotonic"):
+    get_current_timestamp = time.monotonic
+else:
+    get_current_timestamp = time.time
+
 
 THREAD_COUNT = 32
 ENTRY_COUNT = 10000
