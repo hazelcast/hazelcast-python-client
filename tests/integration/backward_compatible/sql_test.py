@@ -4,6 +4,7 @@ import random
 import string
 
 from hazelcast import six
+from hazelcast.future import ImmediateFuture
 from hazelcast.serialization.api import Portable
 from hazelcast.sql import HazelcastSqlError, SqlStatement, SqlExpectedResultType, SqlColumnType
 from hazelcast.util import timezone
@@ -365,6 +366,25 @@ class SqlResultTest(SqlTestBase):
         with self.assertRaises(HazelcastSqlError):
             # Next fetch requests should fail
             next(iterator)
+
+    def test_with_statement(self):
+        self._populate_map()
+        with self.client.sql.execute("SELECT this FROM %s" % self.map_name) as result:
+            six.assertCountEqual(
+                self, [i for i in range(10)], [row.get_object_with_index(0) for row in result]
+            )
+
+    def test_with_statement_when_iteration_throws(self):
+        self._populate_map()
+        statement = SqlStatement("SELECT this FROM %s" % self.map_name)
+        statement.cursor_buffer_size = 1  # so that it doesn't close immediately
+
+        with self.assertRaises(RuntimeError):
+            with self.client.sql.execute_statement(statement) as result:
+                for _ in result:
+                    raise RuntimeError("expected")
+
+        self.assertIsInstance(result.close(), ImmediateFuture)
 
 
 class SqlColumnTypesReadTest(SqlTestBase):

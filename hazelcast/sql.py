@@ -837,6 +837,16 @@ class SqlResult(object):
     It might also be used to cancel query execution on the server side
     if it is still active.
 
+    When the blocking API is used, one might also use it with ``with``
+    statement to automatically close the query even if an exception
+    is thrown in the iteration. ::
+
+        with client.sql.execute("SELECT ...") as result:
+            for row in result:
+                # Process the row.
+                print(row)
+
+
     To get the update count, use the :func:`update_count`. ::
 
         update_count = client.sql.execute("SELECT ...").update_count().result()
@@ -880,8 +890,7 @@ class SqlResult(object):
         execute_future.add_done_callback(self._handle_execute_response)
 
     def iterator(self):
-        """
-        Returns the iterator over the result rows.
+        """Returns the iterator over the result rows.
 
         The iterator may be requested only once.
 
@@ -1219,6 +1228,16 @@ class SqlResult(object):
         with self._lock:
             self._closed = True
 
+    def __enter__(self):
+        # The execute request is already sent.
+        # There is nothing more to do.
+        return self
+
+    def __exit__(self, *_):
+        # Ignoring the possible exception details
+        # since we close the query regardless of that.
+        self.close().result()
+
 
 class _InternalSqlService(object):
     """Internal SQL service that offers more public API
@@ -1555,7 +1574,7 @@ class SqlStatement(object):
         """Creates a copy of this instance.
 
         Returns:
-            SqlStatement:
+            SqlStatement: The new copy.
         """
         copied = SqlStatement(self.sql)
         copied.parameters = list(self.parameters)
