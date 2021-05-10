@@ -49,7 +49,7 @@ class _WaitStrategy(object):
         if cluster_connect_timeout == _INF:
             self._cluster_connect_timeout_text = "INFINITE"
         else:
-            self._cluster_connect_timeout_text = "%ds" % self._cluster_connect_timeout
+            self._cluster_connect_timeout_text = "%.2fs" % self._cluster_connect_timeout
 
     def reset(self):
         self._attempt = 0
@@ -75,7 +75,7 @@ class _WaitStrategy(object):
         sleep_time = min(sleep_time, self._cluster_connect_timeout - time_passed)
         _logger.warning(
             "Unable to get live cluster connection, retry in %.2fs, attempt: %d, "
-            "cluster connect timeout: %s, max backoff: %ds",
+            "cluster connect timeout: %s, max backoff: %.2fs",
             sleep_time,
             self._attempt,
             self._cluster_connect_timeout_text,
