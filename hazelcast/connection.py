@@ -2,7 +2,6 @@ import io
 import logging
 import random
 import struct
-import sys
 import threading
 import time
 import uuid
@@ -33,6 +32,8 @@ from hazelcast.util import AtomicInteger, calculate_version, UNKNOWN_VERSION
 
 _logger = logging.getLogger(__name__)
 
+_INF = float("inf")
+
 
 class _WaitStrategy(object):
     def __init__(self, initial_backoff, max_backoff, multiplier, cluster_connect_timeout, jitter):
@@ -45,7 +46,7 @@ class _WaitStrategy(object):
         self._cluster_connect_attempt_begin = None
         self._current_backoff = None
 
-        if cluster_connect_timeout == sys.maxsize:
+        if cluster_connect_timeout == _INF:
             self._cluster_connect_timeout_text = "INFINITE"
         else:
             self._cluster_connect_timeout_text = "%ds" % self._cluster_connect_timeout
@@ -320,7 +321,7 @@ class ConnectionManager(object):
             # If the no timeout is specified by the
             # user, or set to -1 explicitly, set
             # the timeout to infinite.
-            cluster_connect_timeout = sys.maxsize
+            cluster_connect_timeout = _INF
 
         return _WaitStrategy(
             config.retry_initial_backoff,
