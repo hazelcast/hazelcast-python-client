@@ -9,7 +9,7 @@ from hazelcast.serialization.api import StreamSerializer
 from hazelcast.serialization.base import HazelcastSerializationError
 from hazelcast.serialization.serialization_const import *
 from hazelcast.six.moves import range, cPickle
-from hazelcast.util import UuidUtil
+from hazelcast.util import UUIDUtil
 
 if not six.PY2:
     long = int
@@ -133,10 +133,10 @@ class UuidSerializer(BaseSerializer):
     def read(self, inp):
         msb = inp.read_long()
         lsb = inp.read_long()
-        return UuidUtil.from_bits(msb, lsb)
+        return UUIDUtil.from_bits(msb, lsb)
 
     def write(self, out, obj):
-        msb, lsb = UuidUtil.to_bits(obj)
+        msb, lsb = UUIDUtil.to_bits(obj)
         out.write_long(msb)
         out.write_long(lsb)
 

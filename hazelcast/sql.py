@@ -6,7 +6,7 @@ from hazelcast.errors import HazelcastError
 from hazelcast.future import Future, ImmediateFuture
 from hazelcast.invocation import Invocation
 from hazelcast.util import (
-    UuidUtil,
+    UUIDUtil,
     check_not_none,
     to_millis,
     check_true,
@@ -207,8 +207,8 @@ class _SqlQueryId(object):
         """
         local_id = uuid.uuid4()
 
-        member_msb, member_lsb = UuidUtil.to_bits(member_uuid)
-        local_msb, local_lsb = UuidUtil.to_bits(local_id)
+        member_msb, member_lsb = UUIDUtil.to_bits(member_uuid)
+        local_msb, local_lsb = UUIDUtil.to_bits(local_id)
 
         return cls(member_msb, member_lsb, local_msb, local_lsb)
 
@@ -496,10 +496,8 @@ class SqlRowMetadata(object):
 
     def __repr__(self):
         return "[%s]" % ", ".join(
-            map(
-                lambda column: "%s %s" % (column.name, get_attr_name(SqlColumnType, column.type)),
-                self._columns,
-            )
+            "%s %s" % (column.name, get_attr_name(SqlColumnType, column.type))
+            for column in self._columns
         )
 
 
@@ -571,16 +569,14 @@ class SqlRow(object):
         return self._row_metadata
 
     def __repr__(self):
-        def mapping(column_index):
-            metadata = self._row_metadata.get_column(column_index)
-            value = self._row[column_index]
-            return "%s %s=%s" % (metadata.name, get_attr_name(SqlColumnType, metadata.type), value)
-
         return "[%s]" % ", ".join(
-            map(
-                mapping,
-                range(self._row_metadata.column_count),
+            "%s %s=%s"
+            % (
+                self._row_metadata.get_column(i).name,
+                get_attr_name(SqlColumnType, self._row_metadata.get_column(i).type),
+                self._row[i],
             )
+            for i in range(self._row_metadata.column_count)
         )
 
 
@@ -658,15 +654,13 @@ class _IteratorBase(object):
         Returns:
             list: The row pointed by the current position.
         """
-        values = []
-        for i in range(self.page.column_count):
-            value = self.page.get_column_value(i, self.position)
 
-            # The column might contain user objects so we have to deserialize it.
-            # This call is no-op if the value is not Data.
-            values.append(self.deserialize_fn(value))
-
-        return values
+        # The column might contain user objects so we have to deserialize it.
+        # Deserialization is no-op if the value is not Data.
+        return [
+            self.deserialize_fn(self.page.get_column_value(i, self.position))
+            for i in range(self.page.column_count)
+        ]
 
 
 class _FutureProducingIterator(_IteratorBase):
@@ -1126,7 +1120,7 @@ class SqlResult(object):
             if page.is_last:
                 # This is the last page, there is nothing
                 # more on the server.
-                self._mark_closed()
+                self._closed = True
 
             self._fetch_future = None
 
@@ -1212,7 +1206,7 @@ class SqlResult(object):
 
                 if row_page.is_last:
                     # This is the last page, close the result.
-                    self._mark_closed()
+                    self._closed = True
 
                 self._execute_response.set_result(response)
             else:
@@ -1221,19 +1215,14 @@ class SqlResult(object):
                 self._execute_response.set_result(response)
 
                 # There is nothing more we can get from the server.
-                self._mark_closed()
-
-    def _mark_closed(self):
-        """Marks the result as closed."""
-        with self._lock:
-            self._closed = True
+                self._closed = True
 
     def __enter__(self):
         # The execute request is already sent.
         # There is nothing more to do.
         return self
 
-    def __exit__(self, *_):
+    def __exit__(self, exc_type, exc_value, traceback):
         # Ignoring the possible exception details
         # since we close the query regardless of that.
         self.close().result()
@@ -1292,9 +1281,9 @@ class _InternalSqlService(object):
         query_id = _SqlQueryId.from_uuid(connection.remote_uuid)
 
         # Serialize the passed parameters.
-        serialized_params = []
-        for param in statement.parameters:
-            serialized_params.append(self._serialization_service.to_data(param))
+        serialized_params = [
+            self._serialization_service.to_data(param) for param in statement.parameters
+        ]
 
         request = sql_execute_codec.encode_request(
             statement.sql,
@@ -1368,8 +1357,8 @@ class _InternalSqlService(object):
             return HazelcastSqlError(
                 self.get_client_id(),
                 _SqlErrorCode.CONNECTION_PROBLEM,
-                "Cluster topology changed while a query was executed: Member cannot be reached: "
-                + connection.remote_address,
+                "Cluster topology changed while a query was executed: Member cannot be reached: %s"
+                % connection.remote_address,
                 error,
             )
 

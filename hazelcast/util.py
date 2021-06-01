@@ -384,7 +384,7 @@ class IterationType(object):
     """Iterate over entries"""
 
 
-class UuidUtil(object):
+class UUIDUtil(object):
     @staticmethod
     def to_bits(value):
         i = value.int

@@ -571,36 +571,33 @@ class ListCNFixedSizeCodec(object):
         type = FixSizedTypesCodec.decode_byte(frame.buf, 0)
         count = FixSizedTypesCodec.decode_int(frame.buf, 1)
 
-        response = []
         if type == ListCNFixedSizeCodec._TYPE_NULL_ONLY:
-            for _ in range(count):
-                response.append(None)
+            return [None] * count
         elif type == ListCNFixedSizeCodec._TYPE_NOT_NULL_ONLY:
-            for i in range(count):
-                response.append(
-                    decoder(frame.buf, ListCNFixedSizeCodec._HEADER_SIZE + i * item_size)
-                )
+            header_size = ListCNFixedSizeCodec._HEADER_SIZE
+            return [decoder(frame.buf, header_size + i * item_size) for i in range(count)]
         else:
+            response = []
             position = ListCNFixedSizeCodec._HEADER_SIZE
             read_count = 0
+            items_per_bitmask = ListCNFixedSizeCodec._ITEMS_PER_BITMASK
 
             while read_count < count:
                 bitmask = FixSizedTypesCodec.decode_byte(frame.buf, position)
                 position += 1
 
-                i = 0
-                while i < ListCNFixedSizeCodec._ITEMS_PER_BITMASK and read_count < count:
+                batch_size = min(items_per_bitmask, count - read_count)
+                for i in range(batch_size):
                     mask = 1 << i
                     if (bitmask & mask) == mask:
                         response.append(decoder(frame.buf, position))
                         position += item_size
                     else:
                         response.append(None)
-                    read_count += 1
 
-                    i += 1
+                read_count += batch_size
 
-        return response
+            return response
 
 
 class ListCNBooleanCodec(object):
@@ -693,7 +690,7 @@ class BigDecimalCodec(object):
         unscaled_value = int_from_bytes(buf[INT_SIZE_IN_BYTES : INT_SIZE_IN_BYTES + size])
         scale = FixSizedTypesCodec.decode_int(buf, INT_SIZE_IN_BYTES + size)
         sign = 0 if unscaled_value >= 0 else 1
-        return Decimal((sign, tuple(map(int, str(abs(unscaled_value)))), -1 * scale))
+        return Decimal((sign, tuple(int(digit) for digit in str(abs(unscaled_value))), -1 * scale))
 
 
 class SqlPageCodec(object):

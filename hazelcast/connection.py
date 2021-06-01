@@ -152,8 +152,10 @@ class ConnectionManager(object):
             if connection:
                 return connection
 
-        # We should not get to this point under normal circumstances.
-        # Therefore, copying the list should be OK.
+        # We should not get to this point under normal circumstances
+        # for the smart client. For uni-socket client, there would be
+        # a single connection in the dict. Therefore, copying the list
+        # should be acceptable.
         for member_uuid, connection in list(six.iteritems(self.active_connections)):
             if should_get_data_member:
                 member = self._cluster_service.get_member(member_uuid)
@@ -261,11 +263,10 @@ class ConnectionManager(object):
 
     def _get_connection_from_load_balancer(self, should_get_data_member):
         load_balancer = self._load_balancer
+        member = None
         if should_get_data_member:
             if load_balancer.can_get_next_data_member():
                 member = load_balancer.next_data_member()
-            else:
-                member = None
         else:
             member = load_balancer.next()
 
