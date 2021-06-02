@@ -47,10 +47,9 @@ for row in result:
     print(name)
 
 
-# One can also select all fields
-
-# Use with statement to close the resources on the server-side if something
-# goes bad while iterating over rows.
+# One can select all fields with *.
+# Also, with statement can be used to close the resources on the
+# server-side if something goes bad while iterating over rows.
 
 with client.sql.execute("SELECT * FROM customers") as result:
     for row in result:
@@ -71,7 +70,6 @@ with client.sql.execute("SELECT * FROM customers") as result:
 
 
 # Construct a statement object to control the properties of the query
-
 # Special keywords __key and this can be used to refer to key and value.
 # Also, a placeholder parameters can be specified
 statement = SqlStatement("SELECT __key, age FROM customers WHERE name LIKE ?")
