@@ -24,6 +24,7 @@ features:
 - Transactional Queue
 - Transactional List
 - Transactional Set
+- SQL
 - Query (Predicates)
 - Entry Processor
 - Built-in Predicates
