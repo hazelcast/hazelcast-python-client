@@ -456,14 +456,14 @@ in the Hazelcast IMDG Reference Manual.
     # Get transactional distributed data structures
     txn_map = transaction.get_map("transactional-map")
     txn_queue = transaction.get_queue("transactional-queue")
-    txt_set = transaction.get_set("transactional-set")
+    txn_set = transaction.get_set("transactional-set")
     try:
         obj = txn_queue.poll()
 
         # Process obj
 
         txn_map.put("1", "value1")
-        txt_set.add("value")
+        txn_set.add("value")
 
         # Do other things
 
@@ -488,6 +488,31 @@ the level of a single partition. If you are in a transaction, you can
 read the data in your transaction and the data that is already
 committed. If you are not in a transaction, you can only read the
 committed data.
+
+One can also use context managers to simplify the usage of the
+transactional data structures. The example above can be simplified
+as below.
+
+.. code:: python
+
+    # Create a Transaction object and begin the transaction
+    with client.new_transaction(timeout=10) as transaction:
+        # Get transactional distributed data structures
+        txn_map = transaction.get_map("transactional-map")
+        txn_queue = transaction.get_queue("transactional-queue")
+        txn_set = transaction.get_set("transactional-set")
+
+        obj = txn_queue.poll()
+
+        # Process obj
+
+        txn_map.put("1", "value1")
+        txn_set.add("value")
+
+        # Do other things
+
+        # If everything goes well, the transaction will be
+        # committed, if not, it will be rolled back automatically.
 
 Using PN Counter
 ~~~~~~~~~~~~~~~~
