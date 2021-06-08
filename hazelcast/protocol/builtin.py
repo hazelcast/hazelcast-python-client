@@ -577,7 +577,7 @@ class ListCNFixedSizeCodec(object):
             header_size = ListCNFixedSizeCodec._HEADER_SIZE
             return [decoder(frame.buf, header_size + i * item_size) for i in range(count)]
         else:
-            response = []
+            response = [None] * count
             position = ListCNFixedSizeCodec._HEADER_SIZE
             read_count = 0
             items_per_bitmask = ListCNFixedSizeCodec._ITEMS_PER_BITMASK
@@ -590,12 +590,10 @@ class ListCNFixedSizeCodec(object):
                 for i in range(batch_size):
                     mask = 1 << i
                     if (bitmask & mask) == mask:
-                        response.append(decoder(frame.buf, position))
+                        response[read_count] = decoder(frame.buf, position)
                         position += item_size
-                    else:
-                        response.append(None)
 
-                read_count += batch_size
+                    read_count += 1
 
             return response
 
@@ -706,48 +704,49 @@ class SqlPageCodec(object):
 
         # read column types
         column_type_ids = ListIntegerCodec.decode(msg)
+        column_count = len(column_type_ids)
 
         # read columns
-        columns = []
+        columns = [None] * column_count
 
-        for column_type_id in column_type_ids:
+        for i in range(column_count):
+            column_type_id = column_type_ids[i]
+
             if column_type_id == SqlColumnType.VARCHAR:
-                columns.append(
-                    ListMultiFrameCodec.decode_contains_nullable(msg, StringCodec.decode)
-                )
+                columns[i] = ListMultiFrameCodec.decode_contains_nullable(msg, StringCodec.decode)
             elif column_type_id == SqlColumnType.BOOLEAN:
-                columns.append(ListCNBooleanCodec.decode(msg))
+                columns[i] = ListCNBooleanCodec.decode(msg)
             elif column_type_id == SqlColumnType.TINYINT:
-                columns.append(ListCNByteCodec.decode(msg))
+                columns[i] = ListCNByteCodec.decode(msg)
             elif column_type_id == SqlColumnType.SMALLINT:
-                columns.append(ListCNShortCodec.decode(msg))
+                columns[i] = ListCNShortCodec.decode(msg)
             elif column_type_id == SqlColumnType.INTEGER:
-                columns.append(ListCNIntegerCodec.decode(msg))
+                columns[i] = ListCNIntegerCodec.decode(msg)
             elif column_type_id == SqlColumnType.BIGINT:
-                columns.append(ListCNLongCodec.decode(msg))
+                columns[i] = ListCNLongCodec.decode(msg)
             elif column_type_id == SqlColumnType.REAL:
-                columns.append(ListCNFloatCodec.decode(msg))
+                columns[i] = ListCNFloatCodec.decode(msg)
             elif column_type_id == SqlColumnType.DOUBLE:
-                columns.append(ListCNDoubleCodec.decode(msg))
+                columns[i] = ListCNDoubleCodec.decode(msg)
             elif column_type_id == SqlColumnType.DATE:
-                columns.append(ListCNLocalDateCodec.decode(msg))
+                columns[i] = ListCNLocalDateCodec.decode(msg)
             elif column_type_id == SqlColumnType.TIME:
-                columns.append(ListCNLocalTimeCodec.decode(msg))
+                columns[i] = ListCNLocalTimeCodec.decode(msg)
             elif column_type_id == SqlColumnType.TIMESTAMP:
-                columns.append(ListCNLocalDateTimeCodec.decode(msg))
+                columns[i] = ListCNLocalDateTimeCodec.decode(msg)
             elif column_type_id == SqlColumnType.TIMESTAMP_WITH_TIME_ZONE:
-                columns.append(ListCNOffsetDateTimeCodec.decode(msg))
+                columns[i] = ListCNOffsetDateTimeCodec.decode(msg)
             elif column_type_id == SqlColumnType.DECIMAL:
-                columns.append(
-                    ListMultiFrameCodec.decode_contains_nullable(msg, BigDecimalCodec.decode)
+                columns[i] = ListMultiFrameCodec.decode_contains_nullable(
+                    msg, BigDecimalCodec.decode
                 )
             elif column_type_id == SqlColumnType.NULL:
                 frame = msg.next_frame()
                 size = FixSizedTypesCodec.decode_int(frame.buf, 0)
                 column = [None for _ in range(size)]
-                columns.append(column)
+                columns[i] = column
             elif column_type_id == SqlColumnType.OBJECT:
-                columns.append(ListMultiFrameCodec.decode_contains_nullable(msg, DataCodec.decode))
+                columns[i] = ListMultiFrameCodec.decode_contains_nullable(msg, DataCodec.decode)
             else:
                 raise ValueError("Unknown type %s" % column_type_id)
 

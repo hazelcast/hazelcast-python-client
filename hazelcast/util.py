@@ -325,11 +325,7 @@ class _AbstractLoadBalancer(LoadBalancer):
 
     def _listener(self, _):
         members = self._cluster_service.get_members()
-        data_members = []
-
-        for member in members:
-            if not member.lite_member:
-                data_members.append(member)
+        data_members = [member for member in members if not member.lite_member]
 
         self._members = _Members(members, data_members)
 
@@ -415,7 +411,7 @@ else:
         if buffer[0] & 0x80:
             neg = bytearray()
             for c in buffer:
-                neg.append(c ^ 0xFF)
+                neg.append(~c)
             return -1 * int(binascii.hexlify(neg), 16) - 1
         return int(binascii.hexlify(buffer), 16)
 

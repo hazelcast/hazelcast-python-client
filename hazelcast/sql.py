@@ -20,7 +20,7 @@ _logger = logging.getLogger(__name__)
 class SqlService(object):
     """A service to execute SQL statements.
 
-    The service allows you to query data stored in
+    The service allows you to query data stored in a
     :class:`Map <hazelcast.proxy.map.Map>`.
 
     Warnings:
@@ -50,13 +50,13 @@ class SqlService(object):
     - For non-Portable objects, public getters and fields are used to
       populate the column list. For getters, the first letter is converted
       to lower case. A getter takes precedence over a field in case of naming
-      conflict
+      conflict.
     - For :class:`Portable <hazelcast.serialization.api.Portable>` objects,
       field names used in the
       :func:`write_portable() <hazelcast.serialization.api.Portable.write_portable>`
-      method are used to populate the column list
+      method are used to populate the column list.
 
-    The whole key and value objects could be accessed through a special fields
+    The whole key and value objects could be accessed through special fields
     ``__key`` and ``this``, respectively. If key (value) object has fields,
     then the whole key (value) field is exposed as a normal field. Otherwise the
     field is hidden. Hidden fields can be accessed directly, but are not returned
@@ -86,11 +86,11 @@ class SqlService(object):
 
     This model will be resolved to the following table columns:
 
-    - ``person_id`` ``BIGINT``
-    - ``department_id`` ``BIGINT``
-    - ``name`` ``VARCHAR``
-    - ``__key`` ``OBJECT`` (hidden)
-    - ``this`` ``OBJECT`` (hidden)
+    - person_id ``BIGINT``
+    - department_id ``BIGINT``
+    - name ``VARCHAR``
+    - __key ``OBJECT`` (hidden)
+    - this ``OBJECT`` (hidden)
 
     **Consistency**
 
@@ -120,7 +120,7 @@ class SqlService(object):
 
 
     See the documentation of the :class:`SqlResult` for more information about
-    the different type of iteration methods.
+    different iteration methods.
 
     Notes:
 
@@ -214,7 +214,7 @@ class _SqlQueryId(object):
 
 
 class SqlColumnMetadata(object):
-    """Metadata for one of the columns of the returned rows."""
+    """Metadata of a column in an SQL row."""
 
     __slots__ = ("_name", "_type", "_nullable")
 
@@ -235,8 +235,8 @@ class SqlColumnMetadata(object):
 
     @property
     def nullable(self):
-        """bool: ``True`` if the rows in this column might be ``None``,
-        ``False`` otherwise.
+        """bool: ``True`` if this column values can be ``None``, ``False``
+        otherwise.
         """
         return self._nullable
 
@@ -287,7 +287,7 @@ class _SqlPage(object):
         """bool: Whether this is the last page or not."""
         return self._is_last
 
-    def get_column_value(self, column_index, row_index):
+    def get_value(self, column_index, row_index):
         """
         Args:
             column_index (int):
@@ -468,7 +468,7 @@ class SqlRowMetadata(object):
 
     @property
     def column_count(self):
-        """int: Number of column in the row."""
+        """int: Number of columns in the row."""
         return len(self._columns)
 
     def get_column(self, index):
@@ -502,7 +502,7 @@ class SqlRowMetadata(object):
 
 
 class SqlRow(object):
-    """One of the rows of the SQL query result."""
+    """One of the rows of an SQL query result."""
 
     __slots__ = ("_row_metadata", "_row")
 
@@ -511,13 +511,13 @@ class SqlRow(object):
         self._row = row
 
     def get_object(self, column_name):
-        """Gets the value of the column by column name.
+        """Gets the value in the column indicated by the column name.
 
         Column name should be one of those defined in :class:`SqlRowMetadata`,
         case-sensitive. You may also use :func:`SqlRowMetadata.find_column` to
         test for column existence.
 
-        The class of the returned value depends on the SQL type of the column.
+        The type of the returned value depends on the SQL type of the column.
         No implicit conversions are performed on the value.
 
         Args:
@@ -596,7 +596,7 @@ class _ExecuteResponse(object):
         """
 
         self.update_count = update_count
-        """int: Update count or -1 if row metadata or row page exist."""
+        """int: Update count or -1 if the result is a rowset."""
 
 
 class _IteratorBase(object):
@@ -658,7 +658,7 @@ class _IteratorBase(object):
         # The column might contain user objects so we have to deserialize it.
         # Deserialization is no-op if the value is not Data.
         return [
-            self.deserialize_fn(self.page.get_column_value(i, self.position))
+            self.deserialize_fn(self.page.get_value(i, self.position))
             for i in range(self.page.column_count)
         ]
 
@@ -695,7 +695,7 @@ class _FutureProducingIterator(_IteratorBase):
         if not has_next:
             # Iterator is exhausted, raise this to inform the user.
             # If the user continues to call next, we will continuously
-            # will raise this.
+            # raise this.
             raise StopIteration
 
         row = self._get_current_row()
@@ -826,12 +826,12 @@ class SqlResult(object):
 
     When in doubt, use the blocking API shown in the first code sample.
 
-    Also, one might call :func:`close` over the result object to
+    One can call :func:`close` method of a result object to
     release the resources associated with the result on the server side.
     It might also be used to cancel query execution on the server side
     if it is still active.
 
-    When the blocking API is used, one might also use it with ``with``
+    When the blocking API is used, one might also use ``with``
     statement to automatically close the query even if an exception
     is thrown in the iteration. ::
 
@@ -841,11 +841,13 @@ class SqlResult(object):
                 print(row)
 
 
-    To get the update count, use the :func:`update_count`. ::
+    To get the number of rows updated by the query, use the
+    :func:`update_count`. ::
 
         update_count = client.sql.execute("SELECT ...").update_count().result()
 
-    One does not have to call :func:`close` in this case.
+    One does not have to call :func:`close` in this case, because the result
+    will already be closed in the server-side.
     """
 
     def __init__(self, sql_service, connection, query_id, cursor_buffer_size, execute_future):
@@ -857,7 +859,7 @@ class SqlResult(object):
         that the execute request is made to."""
 
         self._query_id = query_id
-        """_SqlQueryId: Uniuqe id of the SQL query."""
+        """_SqlQueryId: Unique id of the SQL query."""
 
         self._cursor_buffer_size = cursor_buffer_size
         """int: Size of the cursor buffer measured in the number of rows."""
@@ -1154,7 +1156,8 @@ class SqlResult(object):
             # the server, invocation failed.
             self._on_execute_error(self._sql_service.re_raise(e, self._connection))
 
-    def _handle_response_error(self, error):
+    @staticmethod
+    def _handle_response_error(error):
         """If the error is not ``None``, return it as
         :class:`HazelcastSqlError` so that we can raise
         it to user.
@@ -1185,7 +1188,7 @@ class SqlResult(object):
             self._execute_response.set_exception(error)
 
     def _on_execute_response(self, row_metadata, row_page, update_count):
-        """Called when the first execute request is succeed.
+        """Called when the first execute request is succeeded.
 
         Args:
             row_metadata (SqlRowMetadata): The row metadata. Might be ``None``
@@ -1344,14 +1347,14 @@ class _InternalSqlService(object):
         so that it can be raised to the user.
 
         Args:
-            error (Exception): The error to re raise.
+            error (Exception): The error to reraise.
             connection (hazelcast.connection.Connection): Connection
                 that the query requests are routed to. If it is not
                 live, we will inform the user about the possible
                 cluster topology change.
 
         Returns:
-            HazelcastSqlError: The re raised error.
+            HazelcastSqlError: The reraised error.
         """
         if not connection.live:
             return HazelcastSqlError(
