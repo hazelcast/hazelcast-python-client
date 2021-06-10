@@ -252,26 +252,25 @@ class SqlInvalidInputTest(unittest.TestCase):
             statement = SqlStatement(valid)
             self.assertEqual(valid, statement.sql)
 
-        invalid_inputs = ["", "   ", None]
+        invalid_inputs = ["", "   ", None, 1]
 
         for invalid in invalid_inputs:
-            expected_error = AssertionError if invalid is None else ValueError
-            with self.assertRaises(expected_error):
+            with self.assertRaises((ValueError, AssertionError)):
                 SqlStatement(invalid)
 
     def test_statement_timeout(self):
-        valid_inputs = [-1, 0, 15]
+        valid_inputs = [-1, 0, 15, 1.5]
 
         for valid in valid_inputs:
             statement = SqlStatement("sql")
             statement.timeout = valid
             self.assertEqual(valid, statement.timeout)
 
-        invalid_inputs = [-10, -100]
+        invalid_inputs = [-10, -100, "hey", None]
 
         for invalid in invalid_inputs:
             statement = SqlStatement("sql")
-            with self.assertRaises(ValueError):
+            with self.assertRaises((ValueError, AssertionError)):
                 statement.timeout = invalid
 
     def test_statement_cursor_buffer_size(self):
@@ -282,11 +281,11 @@ class SqlInvalidInputTest(unittest.TestCase):
             statement.cursor_buffer_size = valid
             self.assertEqual(valid, statement.cursor_buffer_size)
 
-        invalid_inputs = [0, -10, -99999]
+        invalid_inputs = [0, -10, -99999, "hey", None, 1.0]
 
         for invalid in invalid_inputs:
             statement = SqlStatement("something")
-            with self.assertRaises(ValueError):
+            with self.assertRaises((ValueError, AssertionError)):
                 statement.cursor_buffer_size = invalid
 
     def test_statement_expected_result_type(self):
@@ -297,6 +296,9 @@ class SqlInvalidInputTest(unittest.TestCase):
             statement.expected_result_type = valid
             self.assertEqual(valid, statement.expected_result_type)
 
-        with self.assertRaises(AssertionError):
-            statement = SqlStatement("something")
-            statement.expected_result_type = None
+        invalid_inputs = [None, 123, "hey"]
+
+        for invalid in invalid_inputs:
+            with self.assertRaises(TypeError):
+                statement = SqlStatement("something")
+                statement.expected_result_type = invalid

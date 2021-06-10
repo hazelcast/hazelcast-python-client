@@ -1,5 +1,5 @@
-import datetime
 import decimal
+import math
 import random
 import string
 
@@ -7,9 +7,9 @@ from hazelcast import six
 from hazelcast.future import ImmediateFuture
 from hazelcast.serialization.api import Portable
 from hazelcast.sql import HazelcastSqlError, SqlStatement, SqlExpectedResultType, SqlColumnType
-from hazelcast.util import timezone
 from tests.base import SingleMemberTestCase
 from tests.hzrc.ttypes import Lang
+from mock import patch
 
 SERVER_CONFIG = """
 <hazelcast xmlns="http://www.hazelcast.com/schema/config"
@@ -151,9 +151,14 @@ class SqlServiceTest(SqlTestBase):
         statement.cursor_buffer_size = 3
         result = self.client.sql.execute_statement(statement)
 
-        six.assertCountEqual(
-            self, [i for i in range(entry_count)], [row.get_object("age") for row in result]
-        )
+        with patch.object(result, "_fetch_next_page", wraps=result._fetch_next_page) as patched:
+            six.assertCountEqual(
+                self, [i for i in range(entry_count)], [row.get_object("age") for row in result]
+            )
+            # -1 comes from the fact that, we don't fetch the first page
+            self.assertEqual(
+                math.ceil(float(entry_count) / statement.cursor_buffer_size) - 1, patched.call_count
+            )
 
     def test_execute_statement_with_copy(self):
         self._populate_map()
@@ -419,30 +424,44 @@ class SqlColumnTypesReadTest(SqlTestBase):
         self._validate_rows(SqlColumnType.BIGINT)
 
     def test_real(self):
-        self._populate_map_via_rc("new java.lang.Float(key)")
-        self._validate_rows(SqlColumnType.REAL, float)
+        self._populate_map_via_rc("new java.lang.Float(key * 1.0 / 8)")
+        self._validate_rows(SqlColumnType.REAL, lambda x: x * 1.0 / 8)
 
     def test_double(self):
-        self._populate_map_via_rc("new java.lang.Double(key)")
-        self._validate_rows(SqlColumnType.DOUBLE, float)
+        self._populate_map_via_rc("new java.lang.Double(key * 1.0 / 1.1)")
+        self._validate_rows(SqlColumnType.DOUBLE, lambda x: x * 1.0 / 1.1)
 
     def test_date(self):
         def value_factory(key):
-            return datetime.date(key + 2000, key + 1, key + 1)
+            return "%d-%02d-%02d" % (key + 2000, key + 1, key + 1)
 
         self._populate_map_via_rc("java.time.LocalDate.of(key + 2000, key + 1, key + 1)")
         self._validate_rows(SqlColumnType.DATE, value_factory)
 
     def test_time(self):
         def value_factory(key):
-            return datetime.time(key, key, key, key)
+            time = "%02d:%02d:%02d" % (key, key, key)
+            if key != 0:
+                time += ".%06d" % key
+            return time
 
         self._populate_map_via_rc("java.time.LocalTime.of(key, key, key, key * 1000)")
         self._validate_rows(SqlColumnType.TIME, value_factory)
 
     def test_timestamp(self):
         def value_factory(key):
-            return datetime.datetime(key + 2000, key + 1, key + 1, key, key, key, key)
+            timestamp = "%d-%02d-%02dT%02d:%02d:%02d" % (
+                key + 2000,
+                key + 1,
+                key + 1,
+                key,
+                key,
+                key,
+            )
+            if key != 0:
+                timestamp += ".%06d" % key
+
+            return timestamp
 
         self._populate_map_via_rc(
             "java.time.LocalDateTime.of(key + 2000, key + 1, key + 1, key, key, key, key * 1000)"
@@ -451,16 +470,18 @@ class SqlColumnTypesReadTest(SqlTestBase):
 
     def test_timestamp_with_time_zone(self):
         def value_factory(key):
-            return datetime.datetime(
+            timestamp = "%d-%02d-%02dT%02d:%02d:%02d" % (
                 key + 2000,
                 key + 1,
                 key + 1,
                 key,
                 key,
                 key,
-                key,
-                timezone(datetime.timedelta(hours=key)),
             )
+            if key != 0:
+                timestamp += ".%06d" % key
+
+            return timestamp + "+%02d:00" % key
 
         self._populate_map_via_rc(
             "java.time.OffsetDateTime.of(key + 2000, key + 1, key + 1, key, key, key, key * 1000, "
@@ -470,11 +491,9 @@ class SqlColumnTypesReadTest(SqlTestBase):
 
     def test_decimal(self):
         def value_factory(key):
-            return decimal.Decimal((0, tuple(map(int, str(abs(key)))), -1 * key))
+            return str(decimal.Decimal((0, (key,), -1 * key)))
 
-        self._populate_map_via_rc(
-            'new java.math.BigDecimal(new java.math.BigInteger("" + key), key)'
-        )
+        self._populate_map_via_rc("java.math.BigDecimal.valueOf(key, key)")
         self._validate_rows(SqlColumnType.DECIMAL, value_factory)
 
     def test_null(self):
@@ -493,7 +512,7 @@ class SqlColumnTypesReadTest(SqlTestBase):
     def test_null_only_column(self):
         self._populate_map()
         result = self.client.sql.execute(
-            "SELECT __key, CAST(NULL AS INTEGER) FROM %s" % self.map_name
+            "SELECT __key, CAST(NULL AS INTEGER) as this FROM %s" % self.map_name
         )
         self._validate_result(result, SqlColumnType.INTEGER, lambda _: None)
 
@@ -510,7 +529,7 @@ class SqlColumnTypesReadTest(SqlTestBase):
             self.assertEqual(2, row_metadata.column_count)
             column_metadata = row_metadata.get_column(1)
             self.assertEqual(expected_type, column_metadata.type)
-            self.assertEqual(expected_value, row.get_object_with_index(1))
+            self.assertEqual(expected_value, row.get_object("this"))
 
     def _populate_map_via_rc(self, new_object_literal):
         script = """

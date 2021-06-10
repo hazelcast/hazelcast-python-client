@@ -652,32 +652,48 @@ class ListCNLocalDateCodec(object):
     @staticmethod
     def decode(msg):
         return ListCNFixedSizeCodec.decode(
-            msg, _LOCAL_DATE_SIZE_IN_BYTES, FixSizedTypesCodec.decode_local_date
+            msg, _LOCAL_DATE_SIZE_IN_BYTES, ListCNLocalDateCodec._decode_item
         )
+
+    @staticmethod
+    def _decode_item(buf, offset):
+        return FixSizedTypesCodec.decode_local_date(buf, offset).isoformat()
 
 
 class ListCNLocalTimeCodec(object):
     @staticmethod
     def decode(msg):
         return ListCNFixedSizeCodec.decode(
-            msg, _LOCAL_TIME_SIZE_IN_BYTES, FixSizedTypesCodec.decode_local_time
+            msg, _LOCAL_TIME_SIZE_IN_BYTES, ListCNLocalTimeCodec._decode_item
         )
+
+    @staticmethod
+    def _decode_item(buf, offset):
+        return FixSizedTypesCodec.decode_local_time(buf, offset).isoformat()
 
 
 class ListCNLocalDateTimeCodec(object):
     @staticmethod
     def decode(msg):
         return ListCNFixedSizeCodec.decode(
-            msg, _LOCAL_DATE_TIME_SIZE_IN_BYTES, FixSizedTypesCodec.decode_local_date_time
+            msg, _LOCAL_DATE_TIME_SIZE_IN_BYTES, ListCNLocalDateTimeCodec._decode_item
         )
+
+    @staticmethod
+    def _decode_item(buf, offset):
+        return FixSizedTypesCodec.decode_local_date_time(buf, offset).isoformat()
 
 
 class ListCNOffsetDateTimeCodec(object):
     @staticmethod
     def decode(msg):
         return ListCNFixedSizeCodec.decode(
-            msg, _OFFSET_DATE_TIME_SIZE_IN_BYTES, FixSizedTypesCodec.decode_offset_date_time
+            msg, _OFFSET_DATE_TIME_SIZE_IN_BYTES, ListCNOffsetDateTimeCodec._decode_item
         )
+
+    @staticmethod
+    def _decode_item(buf, offset):
+        return FixSizedTypesCodec.decode_offset_date_time(buf, offset).isoformat()
 
 
 class BigDecimalCodec(object):
@@ -688,7 +704,9 @@ class BigDecimalCodec(object):
         unscaled_value = int_from_bytes(buf[INT_SIZE_IN_BYTES : INT_SIZE_IN_BYTES + size])
         scale = FixSizedTypesCodec.decode_int(buf, INT_SIZE_IN_BYTES + size)
         sign = 0 if unscaled_value >= 0 else 1
-        return Decimal((sign, tuple(int(digit) for digit in str(abs(unscaled_value))), -1 * scale))
+        return str(
+            Decimal((sign, tuple(int(digit) for digit in str(abs(unscaled_value))), -1 * scale))
+        )
 
 
 class SqlPageCodec(object):

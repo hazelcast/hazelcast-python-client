@@ -12,7 +12,11 @@ from hazelcast.util import (
     check_true,
     get_attr_name,
     try_to_get_error_message,
+    check_is_number,
+    check_is_int,
+    try_to_get_enum_value,
 )
+from hazelcast import six
 
 _logger = logging.getLogger(__name__)
 
@@ -57,8 +61,8 @@ class SqlService(object):
       method are used to populate the column list.
 
     The whole key and value objects could be accessed through special fields
-    ``__key`` and ``this``, respectively. If key (value) object has fields,
-    then the whole key (value) field is exposed as a normal field. Otherwise the
+    ``__key`` and ``this``, respectively. If key (or value) object has fields,
+    then the whole key (or value) field is exposed as a normal field. Otherwise the
     field is hidden. Hidden fields can be accessed directly, but are not returned
     by ``SELECT * FROM ...`` queries.
 
@@ -826,6 +830,8 @@ class SqlResult(object):
 
     When in doubt, use the blocking API shown in the first code sample.
 
+    Note that, iterators can be requested at most once per SqlResult.
+
     One can call :func:`close` method of a result object to
     release the resources associated with the result on the server side.
     It might also be used to cancel query execution on the server side
@@ -1440,7 +1446,7 @@ class SqlStatement(object):
 
     @sql.setter
     def sql(self, sql):
-        check_not_none(sql, "SQL cannot be None")
+        check_true(isinstance(sql, six.string_types) and sql is not None, "SQL must be a string")
 
         if not sql.strip():
             raise ValueError("SQL cannot be empty")
@@ -1465,6 +1471,10 @@ class SqlStatement(object):
 
     @schema.setter
     def schema(self, schema):
+        check_true(
+            isinstance(schema, six.string_types) or schema is None,
+            "Schema must be a string or None",
+        )
         self._schema = schema
 
     @property
@@ -1481,6 +1491,7 @@ class SqlStatement(object):
 
     @parameters.setter
     def parameters(self, parameters):
+        check_true(isinstance(parameters, list), "Parameters must be a list")
         if not parameters:
             self._parameters = []
         else:
@@ -1488,7 +1499,7 @@ class SqlStatement(object):
 
     @property
     def timeout(self):
-        """float: The execution timeout in seconds.
+        """float or int: The execution timeout in seconds.
 
         If the timeout is reached for a running statement, it will be
         cancelled forcefully.
@@ -1503,6 +1514,7 @@ class SqlStatement(object):
 
     @timeout.setter
     def timeout(self, timeout):
+        check_is_number(timeout, "Timeout must be an integer or float")
         if timeout < 0 and timeout != SqlStatement.TIMEOUT_NOT_SET:
             raise ValueError("Timeout must be non-negative or -1, not %s" % timeout)
 
@@ -1531,6 +1543,7 @@ class SqlStatement(object):
 
     @cursor_buffer_size.setter
     def cursor_buffer_size(self, cursor_buffer_size):
+        check_is_int(cursor_buffer_size, "Cursor buffer size must an integer")
         if cursor_buffer_size <= 0:
             raise ValueError("Cursor buffer size must be positive, not %s" % cursor_buffer_size)
         self._cursor_buffer_size = cursor_buffer_size
@@ -1542,7 +1555,8 @@ class SqlStatement(object):
 
     @expected_result_type.setter
     def expected_result_type(self, expected_result_type):
-        check_not_none(expected_result_type, "Expected result type cannot be None")
+        # Ignore the result, we call this method just to type check.
+        try_to_get_enum_value(expected_result_type, SqlExpectedResultType)
         self._expected_result_type = expected_result_type
 
     def add_parameter(self, parameter):
