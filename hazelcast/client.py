@@ -335,20 +335,20 @@ class HazelcastClient(object):
         self._config = config
         self._context = _ClientContext()
         client_id = HazelcastClient._CLIENT_ID.get_and_increment()
-        self.name = self._create_client_name(client_id)
+        self._name = self._create_client_name(client_id)
         self._reactor = AsyncoreReactor()
         self._serialization_service = SerializationServiceV1(config)
         self._near_cache_manager = NearCacheManager(config, self._serialization_service)
         self._internal_lifecycle_service = _InternalLifecycleService(config)
-        self.lifecycle_service = LifecycleService(self._internal_lifecycle_service)
+        self._lifecycle_service = LifecycleService(self._internal_lifecycle_service)
         self._invocation_service = InvocationService(self, config, self._reactor)
         self._address_provider = self._create_address_provider()
         self._internal_partition_service = _InternalPartitionService(self)
-        self.partition_service = PartitionService(
+        self._partition_service = PartitionService(
             self._internal_partition_service, self._serialization_service
         )
         self._internal_cluster_service = _InternalClusterService(self, config)
-        self.cluster_service = ClusterService(self._internal_cluster_service)
+        self._cluster_service = ClusterService(self._internal_cluster_service)
         self._connection_manager = ConnectionManager(
             self,
             config,
@@ -365,7 +365,7 @@ class HazelcastClient(object):
             self, config, self._connection_manager, self._invocation_service
         )
         self._proxy_manager = ProxyManager(self._context)
-        self.cp_subsystem = CPSubsystem(self._context)
+        self._cp_subsystem = CPSubsystem(self._context)
         self._proxy_session_manager = ProxySessionManager(self._context)
         self._transaction_manager = TransactionManager(self._context)
         self._lock_reference_id_generator = AtomicInteger(1)
@@ -404,7 +404,7 @@ class HazelcastClient(object):
             self._proxy_manager,
             self._near_cache_manager,
             self._lock_reference_id_generator,
-            self.name,
+            self._name,
             self._proxy_session_manager,
             self._reactor,
         )
@@ -425,7 +425,7 @@ class HazelcastClient(object):
 
             self._listener_service.start()
             self._invocation_service.add_backup_listener()
-            self._load_balancer.init(self.cluster_service)
+            self._load_balancer.init(self._cluster_service)
             self._statistics.start()
         except:
             self.shutdown()
@@ -666,6 +666,39 @@ class HazelcastClient(object):
                 self._statistics.shutdown()
                 self._reactor.shutdown()
                 self._internal_lifecycle_service.fire_lifecycle_event(LifecycleState.SHUTDOWN)
+
+    @property
+    def name(self):
+        """str: Name of the client."""
+        return self._name
+
+    @property
+    def lifecycle_service(self):
+        """LifecycleService: Lifecycle service allows you to check if the
+        client is running and add and remove lifecycle listeners.
+        """
+        return self._lifecycle_service
+
+    @property
+    def partition_service(self):
+        """PartitionService: Partition service allows you to get partition
+        count, introspect the partition owners, and partition ids of keys.
+        """
+        return self._partition_service
+
+    @property
+    def cluster_service(self):
+        """ClusterService: Cluster service allows you to get the list of
+        the cluster members and add and remove membership listeners.
+        """
+        return self._cluster_service
+
+    @property
+    def cp_subsystem(self):
+        """CPSubsystem: CP Subsystem offers set of in-memory linearizable
+        data structures.
+        """
+        return self._cp_subsystem
 
     def _create_address_provider(self):
         config = self._config

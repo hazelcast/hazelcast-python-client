@@ -20,7 +20,8 @@ class _PartitionTable(object):
 
 class PartitionService(object):
     """
-    Allows to retrieve information about the partition count, the partition owner or the partitionId of a key.
+    Allows to retrieve information about the partition count, the partition owner
+    or the partition id of a key.
     """
 
     __slots__ = ("_service", "_serialization_service")
