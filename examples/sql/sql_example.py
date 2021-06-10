@@ -2,7 +2,6 @@ from __future__ import print_function
 
 import hazelcast
 from hazelcast.serialization.api import Portable
-
 from hazelcast.sql import SqlStatement
 
 
@@ -46,7 +45,6 @@ for row in result:
     name = row.get_object("name")
     print(name)
 
-
 # One can select all fields with *.
 # Also, with statement can be used to close the resources on the
 # server-side if something goes bad while iterating over rows.
@@ -67,7 +65,6 @@ with client.sql.execute("SELECT * FROM customers") as result:
         is_active = row.get_object_with_index(is_active_index)
 
         print(name, age, is_active)
-
 
 # Construct a statement object to control the properties of the query
 # Special keywords __key and this can be used to refer to key and value.
