@@ -2,14 +2,23 @@ import decimal
 import math
 import random
 import string
+import unittest
 
 from hazelcast import six
 from hazelcast.future import ImmediateFuture
 from hazelcast.serialization.api import Portable
-from hazelcast.sql import HazelcastSqlError, SqlStatement, SqlExpectedResultType, SqlColumnType
 from tests.base import SingleMemberTestCase
 from tests.hzrc.ttypes import Lang
 from mock import patch
+
+from tests.util import is_client_version_older_than, mark_server_version_at_least
+
+try:
+    from hazelcast.sql import HazelcastSqlError, SqlStatement, SqlExpectedResultType, SqlColumnType
+except ImportError:
+    # For backward compatibility. If we cannot import those, we won't
+    # be even referencing them in tests.
+    pass
 
 SERVER_CONFIG = """
 <hazelcast xmlns="http://www.hazelcast.com/schema/config"
@@ -40,6 +49,7 @@ class SqlTestBase(SingleMemberTestCase):
     def setUp(self):
         self.map_name = random_string()
         self.map = self.client.get_map(self.map_name).blocking()
+        mark_server_version_at_least(self, self.client, "4.2")
 
     def tearDown(self):
         self.map.clear()
@@ -49,6 +59,9 @@ class SqlTestBase(SingleMemberTestCase):
         self.map.put_all(entries)
 
 
+@unittest.skipIf(
+    is_client_version_older_than("4.2"), "Tests the features added in 4.2 version of the client"
+)
 class SqlServiceTest(SqlTestBase):
     def test_execute(self):
         entry_count = 11
@@ -204,6 +217,9 @@ class SqlServiceTest(SqlTestBase):
     # specifying a schema yet.
 
 
+@unittest.skipIf(
+    is_client_version_older_than("4.2"), "Tests the features added in 4.2 version of the client"
+)
 class SqlResultTest(SqlTestBase):
     def test_blocking_iterator(self):
         self._populate_map()
@@ -340,7 +356,7 @@ class SqlResultTest(SqlTestBase):
 
     def test_get_row_metadata(self):
         self._populate_map(value_factory=str)
-        result = self.client.sql.execute("SELECT * FROM %s" % self.map_name)
+        result = self.client.sql.execute("SELECT __key, this FROM %s" % self.map_name)
         row_metadata = result.get_row_metadata().result()
         self.assertEqual(2, row_metadata.column_count)
         columns = row_metadata.columns
@@ -392,6 +408,9 @@ class SqlResultTest(SqlTestBase):
         self.assertIsInstance(result.close(), ImmediateFuture)
 
 
+@unittest.skipIf(
+    is_client_version_older_than("4.2"), "Tests the features added in 4.2 version of the client"
+)
 class SqlColumnTypesReadTest(SqlTestBase):
     def test_varchar(self):
         def value_factory(key):
@@ -517,7 +536,7 @@ class SqlColumnTypesReadTest(SqlTestBase):
         self._validate_result(result, SqlColumnType.INTEGER, lambda _: None)
 
     def _validate_rows(self, expected_type, value_factory=lambda key: key):
-        result = self.client.sql.execute("SELECT * FROM %s " % self.map_name)
+        result = self.client.sql.execute("SELECT __key, this FROM %s " % self.map_name)
         self._validate_result(result, expected_type, value_factory)
 
     def _validate_result(self, result, expected_type, factory):
@@ -556,6 +575,9 @@ LITE_MEMBER_CONFIG = """
 """
 
 
+@unittest.skipIf(
+    is_client_version_older_than("4.2"), "Tests the features added in 4.2 version of the client"
+)
 class SqlServiceLiteMemberClusterTest(SingleMemberTestCase):
     @classmethod
     def configure_cluster(cls):
@@ -565,6 +587,9 @@ class SqlServiceLiteMemberClusterTest(SingleMemberTestCase):
     def configure_client(cls, config):
         config["cluster_name"] = cls.cluster.id
         return config
+
+    def setUp(self):
+        mark_server_version_at_least(self, self.client, "4.2")
 
     def test_execute(self):
         with self.assertRaises(HazelcastSqlError) as cm:

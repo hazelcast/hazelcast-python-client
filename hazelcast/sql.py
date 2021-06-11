@@ -1124,13 +1124,17 @@ class SqlResult(object):
             page (_SqlPage): The next page.
         """
         with self._lock:
-            self._fetch_future.set_result(page)
+            future = self._fetch_future
+            self._fetch_future = None
+
             if page.is_last:
                 # This is the last page, there is nothing
                 # more on the server.
                 self._closed = True
 
-            self._fetch_future = None
+            # Resolving the future before resetting self._fetch_future
+            # might result in an infinite loop for non-blocking iterators
+            future.set_result(page)
 
     def _handle_execute_response(self, future):
         """Handles the result of the execute request, by either:
