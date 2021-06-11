@@ -102,6 +102,11 @@ def is_server_version_older_than(client, expected_version):
     return server_version < expected_version
 
 
+def mark_client_version_at_least(test, expected_version):
+    if is_client_version_older_than(expected_version):
+        test.skipTest("Expected a newer client")
+
+
 def is_client_version_older_than(expected_version):
     version = calculate_version(__version__)
     expected_version = calculate_version(expected_version)

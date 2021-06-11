@@ -4,7 +4,7 @@ import tempfile
 from hazelcast import HazelcastClient, six
 from hazelcast.util import RandomLB, RoundRobinLB
 from tests.base import HazelcastTestCase
-from tests.util import set_attr, random_string, event_collector
+from tests.util import set_attr, random_string, event_collector, mark_client_version_at_least
 
 
 class ClusterTest(HazelcastTestCase):
@@ -212,6 +212,35 @@ class HotRestartEventTest(HazelcastTestCase):
         members = self.client.cluster_service.get_members()
         self.assertEqual(1, len(members))
         self.assertEqual(member.uuid, str(members[0].uuid))
+
+    def test_when_member_started_with_the_same_address(self):
+        mark_client_version_at_least(self, "4.2")
+
+        old_member = self.cluster.start_member()
+        self.client = HazelcastClient(cluster_name=self.cluster.id)
+
+        members_added = []
+        members_removed = []
+
+        self.client.cluster_service.add_listener(
+            lambda m: members_added.append(m), lambda m: members_removed.append(m)
+        )
+
+        self.rc.shutdownMember(self.cluster.id, old_member.uuid)
+        new_member = self.cluster.start_member()
+
+        def assertion():
+            self.assertEqual(1, len(members_added))
+            self.assertEqual(new_member.uuid, str(members_added[0].uuid))
+
+            self.assertEqual(1, len(members_removed))
+            self.assertEqual(old_member.uuid, str(members_removed[0].uuid))
+
+        self.assertTrueEventually(assertion)
+
+        members = self.client.cluster_service.get_members()
+        self.assertEqual(1, len(members))
+        self.assertEqual(new_member.uuid, str(members[0].uuid))
 
     def get_config(self, port):
         return """

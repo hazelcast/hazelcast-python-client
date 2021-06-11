@@ -584,7 +584,7 @@ class ConnectionManager(object):
 
     def _on_cluster_restart(self):
         self._near_cache_manager.clear_near_caches()
-        self._cluster_service.clear_member_list_version()
+        self._cluster_service.clear_member_list()
 
     def _check_partition_count(self, partition_count):
         if not self._partition_service.check_and_set_partition_count(partition_count):
