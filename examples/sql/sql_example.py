@@ -27,6 +27,9 @@ class Customer(Portable):
     def get_class_id(self):
         return 1
 
+    def __repr__(self):
+        return "Customer(name=%s, age=%s, is_active=%s)" % (self.name, self.age, self.is_active)
+
 
 client = hazelcast.HazelcastClient(portable_factories={1: {1: Customer}})
 
@@ -85,8 +88,8 @@ with client.sql.execute_statement(statement) as result:
 
         print(key, age)
 
-# Parameters can also be specified for the basic query execution
-result = client.sql.execute("SELECT this FROM customers WHERE age > ?", 40)
+# Parameters can be passed directly in the basic execution syntax
+result = client.sql.execute("SELECT this FROM customers WHERE age > ? AND age < ?", 30, 40)
 
 for row in result:
     customer = row.get_object("this")
