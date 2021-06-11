@@ -7,7 +7,6 @@ from hazelcast.future import Future, ImmediateFuture
 from hazelcast.invocation import Invocation
 from hazelcast.util import (
     UUIDUtil,
-    check_not_none,
     to_millis,
     check_true,
     get_attr_name,
@@ -159,6 +158,7 @@ class SqlService(object):
 
         Raises:
             HazelcastSqlError: In case of execution error.
+            AssertionError: If the SQL parameter is not a string.
         """
         return self._service.execute(sql, *params)
 
@@ -482,8 +482,12 @@ class SqlRowMetadata(object):
 
         Returns:
             SqlColumnMetadata: Metadata for the given column index.
+
+        Raises:
+            IndexError: If the index is out of bounds.
+            AssertionError: If the index is not an integer.
         """
-        check_true(0 <= index < len(self._columns), "Column index is out of bounds: %s" % index)
+        check_is_int(index, "Index must an integer")
         return self._columns[index]
 
     def find_column(self, column_name):
@@ -494,8 +498,11 @@ class SqlRowMetadata(object):
         Returns:
             int: Column index or :const:`COLUMN_NOT_FOUND` if a column
             with the given name is not found.
+
+        Raises:
+            AssertionError: If the column name is not a string.
         """
-        check_not_none(column_name, "Column name cannot be None")
+        check_true(isinstance(column_name, six.string_types), "Column name must be a string")
         return self._name_to_index.get(column_name, SqlRowMetadata.COLUMN_NOT_FOUND)
 
     def __repr__(self):
@@ -530,6 +537,10 @@ class SqlRow(object):
         Returns:
             Value of the column.
 
+        Raises:
+            ValueError: If a column with the given name does not exist.
+            AssertionError: If the column name is not a string.
+
         See Also:
             :attr:`metadata`
 
@@ -556,15 +567,16 @@ class SqlRow(object):
         Returns:
             Value of the column.
 
+        Raises:
+            IndexError: If the column index is out of bounds.
+            AssertionError: If the column index is not an integer.
+
         See Also:
             :attr:`metadata`
 
             :attr:`SqlColumnMetadata.type`
         """
-        check_true(
-            0 <= column_index < self._row_metadata.column_count,
-            "Column index is out of bounds: %s" % column_index,
-        )
+        check_is_int(column_index, "Column index must be an integer")
         return self._row[column_index]
 
     @property
@@ -1290,36 +1302,39 @@ class _InternalSqlService(object):
                 None,
             )
 
-        # Create a new, unique query id.
-        query_id = _SqlQueryId.from_uuid(connection.remote_uuid)
+        try:
+            # Create a new, unique query id.
+            query_id = _SqlQueryId.from_uuid(connection.remote_uuid)
 
-        # Serialize the passed parameters.
-        serialized_params = [
-            self._serialization_service.to_data(param) for param in statement.parameters
-        ]
+            # Serialize the passed parameters.
+            serialized_params = [
+                self._serialization_service.to_data(param) for param in statement.parameters
+            ]
 
-        request = sql_execute_codec.encode_request(
-            statement.sql,
-            serialized_params,
-            # to_millis expects None to produce -1
-            to_millis(None if statement.timeout == -1 else statement.timeout),
-            statement.cursor_buffer_size,
-            statement.schema,
-            statement.expected_result_type,
-            query_id,
-        )
+            request = sql_execute_codec.encode_request(
+                statement.sql,
+                serialized_params,
+                # to_millis expects None to produce -1
+                to_millis(None if statement.timeout == -1 else statement.timeout),
+                statement.cursor_buffer_size,
+                statement.schema,
+                statement.expected_result_type,
+                query_id,
+            )
 
-        invocation = Invocation(
-            request, connection=connection, response_handler=sql_execute_codec.decode_response
-        )
+            invocation = Invocation(
+                request, connection=connection, response_handler=sql_execute_codec.decode_response
+            )
 
-        result = SqlResult(
-            self, connection, query_id, statement.cursor_buffer_size, invocation.future
-        )
+            result = SqlResult(
+                self, connection, query_id, statement.cursor_buffer_size, invocation.future
+            )
 
-        self._invocation_service.invoke(invocation)
+            self._invocation_service.invoke(invocation)
 
-        return result
+            return result
+        except Exception as e:
+            raise self.re_raise(e, connection)
 
     def deserialize_object(self, obj):
         return self._serialization_service.to_object(obj)
@@ -1450,7 +1465,7 @@ class SqlStatement(object):
 
     @sql.setter
     def sql(self, sql):
-        check_true(isinstance(sql, six.string_types) and sql is not None, "SQL must be a string")
+        check_true(isinstance(sql, six.string_types), "SQL must be a string")
 
         if not sql.strip():
             raise ValueError("SQL cannot be empty")

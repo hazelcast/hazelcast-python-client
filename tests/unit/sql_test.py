@@ -302,3 +302,41 @@ class SqlInvalidInputTest(unittest.TestCase):
             with self.assertRaises(TypeError):
                 statement = SqlStatement("something")
                 statement.expected_result_type = invalid
+
+    def test_row_metadata_get_column(self):
+        row_metadata = self._create_row_metadata()
+
+        valid_inputs = [0, 1, 2]
+
+        for valid in valid_inputs:
+            column_metadata = row_metadata.get_column(valid)
+            self.assertEqual(str(valid), column_metadata.name)
+
+        invalid_inputs = [4, 5, "6", None]
+        for invalid in invalid_inputs:
+            with self.assertRaises((IndexError, AssertionError)):
+                row_metadata.get_column(invalid)
+
+    def test_row_metadata_find_column(self):
+        row_metadata = self._create_row_metadata()
+
+        valid_inputs = ["0", "1", "2", "-1"]
+
+        for valid in valid_inputs:
+            index = row_metadata.find_column(valid)
+            self.assertEqual(int(valid), index)
+
+        invalid_inputs = [6, None]
+        for invalid in invalid_inputs:
+            with self.assertRaises((IndexError, AssertionError)):
+                row_metadata.get_column(invalid)
+
+    @staticmethod
+    def _create_row_metadata():
+        return SqlRowMetadata(
+            [
+                SqlColumnMetadata("0", SqlColumnType.VARCHAR, True, True),
+                SqlColumnMetadata("1", SqlColumnType.TINYINT, True, True),
+                SqlColumnMetadata("2", SqlColumnType.OBJECT, True, True),
+            ]
+        )
