@@ -20,6 +20,7 @@ from hazelcast.sql import (
     SqlStatement,
     SqlExpectedResultType,
 )
+from hazelcast.util import try_to_get_enum_value
 
 EXPECTED_ROWS = ["result", "result2"]
 EXPECTED_UPDATE_COUNT = 42
@@ -289,12 +290,19 @@ class SqlInvalidInputTest(unittest.TestCase):
                 statement.cursor_buffer_size = invalid
 
     def test_statement_expected_result_type(self):
-        valid_inputs = [SqlExpectedResultType.ROWS, SqlExpectedResultType.UPDATE_COUNT]
+        valid_inputs = [
+            SqlExpectedResultType.ROWS,
+            SqlExpectedResultType.UPDATE_COUNT,
+            "ROWS",
+            "ANY",
+        ]
 
         for valid in valid_inputs:
             statement = SqlStatement("something")
             statement.expected_result_type = valid
-            self.assertEqual(valid, statement.expected_result_type)
+            self.assertEqual(
+                try_to_get_enum_value(valid, SqlExpectedResultType), statement.expected_result_type
+            )
 
         invalid_inputs = [None, 123, "hey"]
 

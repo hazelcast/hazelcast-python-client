@@ -60,8 +60,8 @@ class SqlService(object):
       method are used to populate the column list.
 
     The whole key and value objects could be accessed through special fields
-    ``__key`` and ``this``, respectively. If key (or value) object has fields,
-    then the whole key (or value) field is exposed as a normal field. Otherwise the
+    ``__key`` and ``this``, respectively. If key (value) object has fields,
+    then the whole key (value) field is exposed as a normal field. Otherwise the
     field is hidden. Hidden fields can be accessed directly, but are not returned
     by ``SELECT * FROM ...`` queries.
 
@@ -159,6 +159,7 @@ class SqlService(object):
         Raises:
             HazelcastSqlError: In case of execution error.
             AssertionError: If the SQL parameter is not a string.
+            ValueError: If the SQL parameter is an empty string.
         """
         return self._service.execute(sql, *params)
 
@@ -908,6 +909,12 @@ class SqlResult(object):
 
         The iterator may be requested only once.
 
+        The returned Future results with:
+
+        - :class:`HazelcastSqlError`: In case of an SQL execution error.
+        - **ValueError**: If the result only contains an update count, or the
+          iterator is already requested.
+
         Returns:
             Future[Iterator[Future[SqlRow]]]: Iterator that produces Future
             of :class:`SqlRow` s. See the class documentation for the correct
@@ -916,9 +923,14 @@ class SqlResult(object):
         return self._get_iterator(False)
 
     def is_row_set(self):
-        """
+        """Returns whether this result has rows to iterate.
+
+        The returned Future results with:
+
+        - :class:`HazelcastSqlError`: In case of an SQL execution error.
+
         Returns:
-            Future[bool]: Whether this result has rows to iterate.
+            Future[bool]:
         """
 
         def continuation(future):
@@ -934,6 +946,10 @@ class SqlResult(object):
         result is a row set. In case the result doesn't contain rows but the
         update count isn't applicable or known, ``0`` is returned.
 
+        The returned Future results with:
+
+        - :class:`HazelcastSqlError`: In case of an SQL execution error.
+
         Returns:
             Future[int]:
         """
@@ -948,6 +964,11 @@ class SqlResult(object):
 
     def get_row_metadata(self):
         """Gets the row metadata.
+
+        The returned Future results with:
+
+        - :class:`HazelcastSqlError`: In case of an SQL execution error.
+        - **ValueError**: If the result only contains an update count.
 
         Returns:
             Future[SqlRowMetadata]:
@@ -971,6 +992,11 @@ class SqlResult(object):
         of this command will cancel the execution of the query on all members
         if the query is still active. Otherwise it is no-op. For a result
         with an update count it is always no-op.
+
+        The returned Future results with:
+
+        - :class:`HazelcastSqlError`: In case there is an error closing the
+          result.
 
         Returns:
             Future[None]:
@@ -1460,7 +1486,13 @@ class SqlStatement(object):
 
     @property
     def sql(self):
-        """str: The SQL string to be executed."""
+        """str: The SQL string to be executed.
+
+        The setter raises:
+
+        - **AssertionError**: If the SQL parameter is not a string.
+        - **ValueError**: If the SQL parameter is an empty string.
+        """
         return self._sql
 
     @sql.setter
@@ -1485,6 +1517,10 @@ class SqlStatement(object):
 
         The default value is ``None`` meaning only the default search path is
         used.
+
+        The setter raises:
+
+        - **AssertionError**: If the schema is not a string or ``None``.
         """
         return self._schema
 
@@ -1505,16 +1541,17 @@ class SqlStatement(object):
 
         When the setter is called, the content of the parameters list is copied.
         Subsequent changes to the original list don't change the statement parameters.
+
+        The setter raises:
+
+        - **AssertionError**: If the parameter is not a list.
         """
         return self._parameters
 
     @parameters.setter
     def parameters(self, parameters):
         check_true(isinstance(parameters, list), "Parameters must be a list")
-        if not parameters:
-            self._parameters = []
-        else:
-            self._parameters = list(parameters)
+        self._parameters = list(parameters)
 
     @property
     def timeout(self):
@@ -1528,6 +1565,12 @@ class SqlStatement(object):
         values are prohibited.
 
         Defaults to :const:`TIMEOUT_NOT_SET`.
+
+        The setter raises:
+
+        - **AssertionError**: If the timeout is not an integer or float.
+        - **ValueError**: If the timeout is negative and not equal to
+          :const:`TIMEOUT_NOT_SET`.
         """
         return self._timeout
 
@@ -1557,6 +1600,11 @@ class SqlStatement(object):
         large result sets at the cost of increased memory consumption.
 
         Defaults to :const:`DEFAULT_CURSOR_BUFFER_SIZE`.
+
+        The setter raises:
+
+        - **AssertionError**: If the cursor buffer size is not an integer.
+        - **ValueError**: If the cursor buffer size is not positive.
         """
         return self._cursor_buffer_size
 
@@ -1569,14 +1617,21 @@ class SqlStatement(object):
 
     @property
     def expected_result_type(self):
-        """SqlExpectedResultType: The expected result type."""
+        """SqlExpectedResultType: The expected result type.
+
+        The setter raises:
+
+        - **TypeError**: If the expected result type does not equal to one of
+          the values or names of the members of the
+          :class:`SqlExpectedResultType`.
+        """
         return self._expected_result_type
 
     @expected_result_type.setter
     def expected_result_type(self, expected_result_type):
-        # Ignore the result, we call this method just to type check.
-        try_to_get_enum_value(expected_result_type, SqlExpectedResultType)
-        self._expected_result_type = expected_result_type
+        self._expected_result_type = try_to_get_enum_value(
+            expected_result_type, SqlExpectedResultType
+        )
 
     def add_parameter(self, parameter):
         """Adds a single parameter to the end of the parameters list.
