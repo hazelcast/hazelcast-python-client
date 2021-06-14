@@ -1346,6 +1346,304 @@ the entry processor in the ``Map`` methods. See the following example.
 
     print(distributed_map.get("key"))  # Outputs 'processed'
 
+SQL
+---
+
+The SQL service provided by Hazelcast Python client allows you to query
+data stored in ``Map`` declaratively.
+
+.. warning::
+
+    The SQL feature is currently in beta. The compatibility between versions
+    is not guaranteed. API might change between versions without notice.
+    While in beta, the SQL feature is tested against the same major versions
+    of the client and the server.
+
+**Example: How to Query a Map using SQL**
+
+Consider that we have a map called ``emp`` that contains values of type
+``Employee``:
+
+.. code:: python
+
+    class Employee(Portable):
+        def __init__(self, name=None, age=None):
+            self.name = name
+            self.age = age
+
+        def write_portable(self, writer):
+            writer.write_string("name", self.name)
+            writer.write_int("age", self.age)
+
+        def read_portable(self, reader):
+            self.name = reader.read_string("name")
+            self.age = reader.read_int("age")
+
+        def get_factory_id(self):
+            return 1
+
+        def get_class_id(self):
+            return 1
+
+The following code prints names of the employees whose age is less than 30:
+
+.. code:: python
+
+    result = client.sql.execute("SELECT name FROM emp WHERE age < ?", 30)
+
+    for row in result:
+        name = row.get_object("name")
+        print(name)
+
+
+Querying Map
+~~~~~~~~~~~~
+
+The following subsections describe how you can access Hazelcast ``Map`` objects
+and perform queries on them.
+
+**Names**
+
+The SQL service exposes ``Map`` objects as tables in the predefined
+``partitioned`` schema using exact names. This schema is in the SQL service
+search path so that you can access the ``Map`` objects with or without the
+schema name.
+
+Schema and table names are case-sensitive; you can access the ``employee`` map,
+for example, as ``employee`` or ``partitioned.employee``, but not as
+``Employee``:
+
+.. code:: sql
+
+    SELECT * FROM employee
+    SELECT * FROM partitioned.employee
+
+**Fields**
+
+The SQL service resolves fields accessible from the SQL automatically. The
+service reads the first local entry pair of the ``Map`` to construct the list
+of fields. If the ``Map`` does not have local entries on the member where the
+query is started, then the list of fields cannot be resolved, and an exception
+is thrown.
+
+Field names are case-sensitive.
+
+**Key and Value Objects**
+
+A ``Map`` entry consists of a key and a value. These are accessible through
+the ``__key`` and ``this`` aliases. The following query returns the keys and
+values of all entries in a map:
+
+.. code:: sql
+
+    SELECT __key, this FROM employee
+
+**Key and Value Fields**
+
+You may also access the nested fields of a key or a value. The list of exposed
+fields depends on the serialization format, as described below:
+
+- For :ref:`Portable<serialization:Portable Serialization>` objects, the fields
+  that are written in the
+  :func:`write_portable<hazelcast.serialization.api.Portable.write_portable>`
+  method are exposed using their exact names.
+- For
+  :ref:`IdentifiedDataSerializable<serialization:IdentifiedDataSerializable Serialization>`
+  objects, the object is deserialized if needed and then analyzed using the
+  reflection mechanism (on the server-side). Only public fields and getters
+  are taken into account. See the `IMDG Reference Manual
+  <https://docs.hazelcast.com/imdg/latest/sql/querying-imap.html#key-and-value-fields>`__
+  for details.
+
+.. note::
+
+    You cannot query JSON fields in SQL. If you want to query JSON, see
+    :ref:`using_python_client_with_hazelcast_imdg:Querying with JSON Strings`
+    section.
+
+
+Consider the ``Employee`` class from the example above; the SQL service can
+access the following fields:
+
+==== =======
+Name Type
+==== =======
+name VARCHAR
+age  INTEGER
+==== =======
+
+Together with the key and value objects, you may query the following fields
+from the map:
+
+.. code:: sql
+
+    SELECT __key, this, name, age FROM employee
+
+If both the key and value have fields with the same name, then the field of
+the value is exposed.
+
+**"SELECT *" Queries**
+
+You may use the ``SELECT * FROM <table>`` syntax to get all the table fields.
+
+The ``__key`` and ``this`` fields are returned by the ``SELECT *`` queries if
+they do not have nested fields. For the ``employee`` map, the following query
+does not return the ``this`` field, because the value has nested fields
+``name`` and ``age``:
+
+.. code:: sql
+
+    -- Returns __key, name, age
+    SELECT * FROM employee
+
+**Indexes**
+
+The SQL service can use ``Map`` indexes to speed up the execution of certain
+queries. ``SORTED`` and ``HASH`` indexes are supported.
+
+Data Types
+~~~~~~~~~~
+
+The SQL service supports a set of SQL data types. Every data type is mapped to
+a Python type that represents the type’s value.
+
+======================== ===============
+Type Name                Python Type
+======================== ===============
+BOOLEAN                  bool
+VARCHAR                  str
+TINYINT                  int
+SMALLINT                 int
+INTEGER                  int
+BIGINT                   int
+DECIMAL                  str
+REAL                     float
+DOUBLE                   float
+DATE                     str
+TIME                     str
+TIMESTAMP                str
+TIMESTAMP_WITH_TIME_ZONE str
+OBJECT                   Any Python type
+======================== ===============
+
+Note that, the following types are returned as strings, with the following
+formats.
+
+- ``DATE`` with the ``YYYY-MM-DD`` format.
+- ``TIME`` with the ``HH:MM:SS[.ffffff]`` format.
+- ``TIMESTAMP`` with the ``YYYY-MM-DDTHH:MM:SS[.ffffff]`` format.
+- ``TIMESTAMP_WITH_TIME_ZONE`` with the ``YYYY-MM-DDTHH:MM:SS.ffffff+HH:MM[:SS]``
+- ``DECIMAL`` with the floating point number format.
+
+If you want to use these types in queries, you have to send them as strings
+and add explicit ``CAST`` to queries.
+
+``CAST`` operator has the following syntax:
+
+.. code:: sql
+
+    CAST(? AS TYPE)
+
+An example usage is shown below:
+
+.. code:: python
+
+    client.sql.execute("SELECT * FROM map WHERE date < CAST(? AS DATE)", "2021-06-02")
+
+SELECT
+~~~~~~
+
+**Synopsis**
+
+.. code:: sql
+
+    SELECT [ * | expression [ [ AS ] expression_alias ] [, ...] ]
+    FROM table_name [ [ AS ] table_alias ]
+    [WHERE condition]
+
+
+**Description**
+
+The ``SELECT`` command retrieves rows from a table. A row is a sequence of
+expressions defined after the ``SELECT`` keyword. Expressions may have
+optional aliases.
+
+``table_name`` refers to a single ``Map`` data structure. A table may have an
+optional alias.
+
+An optional ``WHERE`` clause defines a condition, that is any expression that
+evaluates to a result of type boolean. Any row that doesn’t satisfy the
+condition is eliminated from the result.
+
+**Sorting**
+
+You can use the standard SQL clauses ``ORDER BY``, ``LIMIT``, and ``OFFSET``
+to sort and limit the result set.
+
+
+.. warning::
+
+    Note that, you must add sorted indexes to the map object’s fields to be
+    sorted by. For example, for the ``SELECT * FROM persons ORDER BY name ASC``
+    query, there has to be a sorted index on the ``name`` field as shown below:
+
+    .. code:: python
+
+        persons = client.get_map("persons")
+        persons.add_index(attributes=["name"], index_type=IndexType.SORTED)
+
+See the below examples for sorting.
+
+The following statement gets the top five employees ordered by the
+``first_name`` field and skipping the first three ones:
+
+.. code:: sql
+
+    SELECT
+        employee_id, first_name, last_name
+    FROM
+        employees
+    ORDER BY first_name
+    LIMIT 5 OFFSET 3;
+
+
+The following statement gets the top five employees with the highest salaries.
+
+.. code:: sql
+
+    SELECT
+        employee_id, first_name, last_name, salary
+    FROM
+        employees
+    ORDER BY salary DESC
+    LIMIT 5;
+
+**Unsupported Features**
+
+The following features are **not supported** and are planned for future releases:
+
+- ``GROUP BY`` / ``HAVING``
+- ``JOIN``
+- set operators (``UNION``, ``INTERSECT``, ``MINUS``)
+- subqueries (``SELECT ... FROM table WHERE x = (SELECT …)``)
+
+Expressions
+~~~~~~~~~~~
+
+Hazelcast SQL supports logical predicates, `IS` predicates, comparison
+operators, mathematical functions and operators, string functions, and special
+functions.
+
+See `IMDG Reference Manual
+<https://docs.hazelcast.com/imdg/latest/sql/querying-imap.html#key-and-value-fields>`__
+for details.
+
+Lite Members
+~~~~~~~~~~~~
+
+You cannot start SQL queries on lite members. This limitation will be removed
+in future releases.
+
 Distributed Query
 -----------------
 
