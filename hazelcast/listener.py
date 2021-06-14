@@ -218,7 +218,6 @@ class ClusterViewListenerService(object):
         if self._listener_added_connection:
             return
 
-        self._cluster_service.clear_member_list_version()
         self._listener_added_connection = connection
         request = client_add_cluster_view_listener_codec.encode_request()
         invocation = Invocation(

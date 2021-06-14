@@ -194,13 +194,26 @@ class _InternalClusterService(object):
         if current is not _EMPTY_SNAPSHOT:
             self._member_list_snapshot = _MemberListSnapshot(0, current.members)
 
+    def clear_member_list(self):
+        _logger.debug("Resetting the member list")
+
+        current = self._member_list_snapshot
+        if current is not _EMPTY_SNAPSHOT:
+            previous_members = current.members
+            snapshot = _MemberListSnapshot(0, {})
+            self._member_list_snapshot = snapshot
+            dead_members, new_members = self._detect_membership_events(
+                previous_members, snapshot.members
+            )
+            self._fire_membership_events(dead_members, new_members)
+
     def handle_members_view_event(self, version, member_infos):
         snapshot = self._create_snapshot(version, member_infos)
         if _logger.isEnabledFor(logging.DEBUG):
             _logger.debug(
                 "Handling new snapshot with membership version: %s, member string: %s",
                 version,
-                self._members_string(snapshot),
+                self._members_string(snapshot.members),
             )
 
         current = self._member_list_snapshot
@@ -212,29 +225,33 @@ class _InternalClusterService(object):
 
     def _apply_new_state_and_fire_events(self, current, snapshot):
         self._member_list_snapshot = snapshot
-        removals, additions = self._detect_membership_events(current, snapshot)
+        dead_members, new_members = self._detect_membership_events(
+            current.members, snapshot.members
+        )
+        self._fire_membership_events(dead_members, new_members)
 
+    def _fire_membership_events(self, dead_members, new_members):
         # Removal events should be fired first
-        for removed_member in removals:
+        for dead_member in dead_members:
             for _, handler in six.itervalues(self._listeners):
                 if handler:
                     try:
-                        handler(removed_member)
+                        handler(dead_member)
                     except:
                         _logger.exception("Exception in membership listener")
 
-        for added_member in additions:
+        for new_member in new_members:
             for handler, _ in six.itervalues(self._listeners):
                 if handler:
                     try:
-                        handler(added_member)
+                        handler(new_member)
                     except:
                         _logger.exception("Exception in membership listener")
 
-    def _detect_membership_events(self, old, new):
+    def _detect_membership_events(self, previous_members, current_members):
         new_members = []
-        dead_members = set(six.itervalues(old.members))
-        for member in six.itervalues(new.members):
+        dead_members = set(six.itervalues(previous_members))
+        for member in six.itervalues(current_members):
             try:
                 dead_members.remove(member)
             except KeyError:
@@ -253,14 +270,13 @@ class _InternalClusterService(object):
                 )
 
         if (len(new_members) + len(dead_members)) > 0:
-            if len(new.members) > 0:
-                _logger.info(self._members_string(new))
+            if len(current_members) > 0:
+                _logger.info(self._members_string(current_members))
 
         return dead_members, new_members
 
     @staticmethod
-    def _members_string(snapshot):
-        members = snapshot.members
+    def _members_string(members):
         n = len(members)
         return "\n\nMembers [%s] {\n\t%s\n}\n" % (n, "\n\t".join(map(str, six.itervalues(members))))
 
