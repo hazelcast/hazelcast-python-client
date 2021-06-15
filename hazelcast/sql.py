@@ -338,7 +338,7 @@ class SqlColumnType(object):
 
     DECIMAL = 6
     """
-    Represented by ``decimal.Decimal``.
+    Represented by ``str``.
     """
 
     REAL = 7
@@ -353,22 +353,23 @@ class SqlColumnType(object):
 
     DATE = 9
     """
-    Represented by ``datetime.date``.
+    Represented by ``str`` with the ``YYYY-MM-DD`` format.
     """
 
     TIME = 10
     """
-    Represented by ``datetime.time``.
+    Represented by ``str`` with the ``HH:MM:SS[.ffffff]`` format.
     """
 
     TIMESTAMP = 11
     """
-    Represented by ``datetime.datetime``.
+    Represented by ``str`` with the ``YYYY-MM-DDTHH:MM:SS[.ffffff]`` format.
     """
 
     TIMESTAMP_WITH_TIME_ZONE = 12
     """
-    Represented by ``datetime.datetime`` with ``datetime.tzinfo``.
+    Represented by ``str`` with the ``YYYY-MM-DDTHH:MM:SS.ffffff+HH:MM[:SS]`` 
+    format.
     """
 
     OBJECT = 13
