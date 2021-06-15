@@ -368,8 +368,8 @@ class SqlColumnType(object):
 
     TIMESTAMP_WITH_TIME_ZONE = 12
     """
-    Represented by ``str`` with the ``YYYY-MM-DDTHH:MM:SS.ffffff+HH:MM[:SS]`` 
-    format.
+    Represented by ``str`` with the 
+    ``YYYY-MM-DDTHH:MM:SS[.ffffff](+|-)HH:MM[:SS]`` format.
     """
 
     OBJECT = 13
