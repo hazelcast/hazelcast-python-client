@@ -270,8 +270,13 @@ class InvocationService(object):
             self._complete_with_error(invocation, error)
             return
 
-        invoke_func = functools.partial(self._do_invoke, invocation)
+        invocation.sent_connection = None
+        invoke_func = functools.partial(self._retry_if_not_done, invocation)
         self._reactor.add_timer(self._invocation_retry_pause, invoke_func)
+
+    def _retry_if_not_done(self, invocation):
+        if not invocation.future.done():
+            self._do_invoke(invocation)
 
     def _should_retry(self, invocation, error):
         if invocation.connection and isinstance(error, (IOError, TargetDisconnectedError)):
