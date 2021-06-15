@@ -17,7 +17,8 @@
                 <multicast-port>54327</multicast-port>
             </multicast>
             <tcp-ip enabled="false">
-                <interface>127.0.0.1</interface>
+                <member>10.212.1.117</member>
+                <member>10.212.1.118</member>
             </tcp-ip>
         </join>
         <ssl enabled="false"/>
