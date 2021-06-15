@@ -49,7 +49,7 @@ images <https://hub.docker.com/r/hazelcast/hazelcast/>`__.
 
 .. code:: bash
 
-   docker run -p 5701:5701 hazelcast/hazelcast:4.1
+   docker run -p 5701:5701 hazelcast/hazelcast:4.2
 
 You can also use our ZIP or TAR
 `distributions <https://hazelcast.org/imdg/download/archives/#hazelcast-imdg>`__.
