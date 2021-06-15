@@ -1532,8 +1532,8 @@ formats.
 - ``DATE`` with the ``YYYY-MM-DD`` format.
 - ``TIME`` with the ``HH:MM:SS[.ffffff]`` format.
 - ``TIMESTAMP`` with the ``YYYY-MM-DDTHH:MM:SS[.ffffff]`` format.
-- ``TIMESTAMP_WITH_TIME_ZONE`` with the ``YYYY-MM-DDTHH:MM:SS.ffffff+HH:MM[:SS]``
-  format.
+- ``TIMESTAMP_WITH_TIME_ZONE`` with the
+  ``YYYY-MM-DDTHH:MM:SS[.ffffff](+|-)HH:MM[:SS]`` format.
 - ``DECIMAL`` with the floating point number format.
 
 If you want to use these types in queries, you have to send them as strings
