@@ -67,7 +67,12 @@ class LifecycleTest(HazelcastTestCase):
         )
         client.lifecycle_service.add_listener(collector)
         member.shutdown()
-        self.assertEqual(collector.events, [LifecycleState.DISCONNECTED])
+
+        def assertion():
+            self.assertEqual(collector.events, [LifecycleState.DISCONNECTED])
+
+        self.assertTrueEventually(assertion)
+
         client.shutdown()
 
     def test_remove_lifecycle_listener(self):
