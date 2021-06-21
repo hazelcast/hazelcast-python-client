@@ -1,9 +1,15 @@
 import os
 import unittest
 
-from hazelcast.config import TopicOverloadPolicy
-from hazelcast.errors import TopicOverloadError
-from hazelcast.proxy.reliable_topic import ReliableMessageListener
+try:
+    from hazelcast.config import TopicOverloadPolicy
+    from hazelcast.errors import TopicOverloadError
+    from hazelcast.proxy.reliable_topic import ReliableMessageListener
+except ImportError:
+    # For backward compatibility. If we cannot import those, we won't
+    # be even referencing them in tests.
+    pass
+
 from tests.base import SingleMemberTestCase
 from tests.util import (
     is_client_version_older_than,

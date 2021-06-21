@@ -126,13 +126,15 @@ class ConnectionStrategyTest(HazelcastTestCase):
 
         self.rc.shutdownMember(self.cluster.id, member.uuid)
         self.assertTrueEventually(lambda: self.assertEqual(1, len(disconnected_collector.events)))
+
         with self.assertRaises(ClientOfflineError):
             m.put(1, 1)
 
-        self.rc.startMember(self.cluster.id)
-
         connected_collector = collector(LifecycleState.CONNECTED)
         self.client.lifecycle_service.add_listener(connected_collector)
+
+        self.rc.startMember(self.cluster.id)
+
         self.assertTrueEventually(lambda: self.assertEqual(1, len(connected_collector.events)))
 
         m.put(1, 1)
