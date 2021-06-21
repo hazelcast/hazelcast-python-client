@@ -35,20 +35,24 @@ class ReliableTopicTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
         config["cluster_name"] = cls.cluster.id
-        config["reliable_topics"] = {
-            "discard": {
-                "overload_policy": TopicOverloadPolicy.DISCARD_NEWEST,
-            },
-            "overwrite": {
-                "overload_policy": TopicOverloadPolicy.DISCARD_OLDEST,
-            },
-            "block": {
-                "overload_policy": TopicOverloadPolicy.BLOCK,
-            },
-            "error": {
-                "overload_policy": TopicOverloadPolicy.ERROR,
-            },
-        }
+        if not is_client_version_older_than("4.1"):
+            # Add these config elements only to the 4.1+ clients
+            # since the older versions do not know anything
+            # about them.
+            config["reliable_topics"] = {
+                "discard": {
+                    "overload_policy": TopicOverloadPolicy.DISCARD_NEWEST,
+                },
+                "overwrite": {
+                    "overload_policy": TopicOverloadPolicy.DISCARD_OLDEST,
+                },
+                "block": {
+                    "overload_policy": TopicOverloadPolicy.BLOCK,
+                },
+                "error": {
+                    "overload_policy": TopicOverloadPolicy.ERROR,
+                },
+            }
         return config
 
     def setUp(self):
