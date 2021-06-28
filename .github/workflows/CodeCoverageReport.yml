@@ -4,8 +4,7 @@
     push:
       branches: [ coverage ]
     pull_request:
-      branches: [ coverage ]
-	  
+      branches: [ coverage ]	  
   jobs:
     build-branch:
       runs-on: ubuntu-latest
