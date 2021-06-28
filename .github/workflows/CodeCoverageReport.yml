@@ -1,0 +1,42 @@
+  name: Report coverage to Codecov
+  
+  on:
+    push:
+      branches: [ coverage ]
+    pull_request:
+      branches: [ coverage ]
+	  
+  jobs:
+    build-branch:
+      runs-on: ubuntu-latest
+
+      name: Test coverage report
+      steps:
+      
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install JDK
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '8'
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+        
+      - name: Install dependencies
+        run : |
+            pip install -r requirements-dev.txt
+            pip install -r requirements-test.txt
+
+      - name: Run tests
+        run : python run_tests.py
+        
+      - name: Publish to Codecov 
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_KEY }}
+          files: ./coverage.xml
