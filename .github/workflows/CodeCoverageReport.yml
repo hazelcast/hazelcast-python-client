@@ -37,5 +37,4 @@
       - name: Publish to Codecov 
         uses: codecov/codecov-action@v1
         with:
-          token: ${{ secrets.CODECOV_KEY }}
           files: ./coverage.xml
