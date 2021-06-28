@@ -28,7 +28,7 @@
         
       - name: Install dependencies
         run : |
-            pip install -r requirements-dev.txt
+            python -m pip install --upgrade pip
             pip install -r requirements-test.txt
 
       - name: Run tests
