@@ -988,15 +988,3 @@ class BitmapIndexOptionsTest(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             options.unique_key = None
-
-    def test_unique_key_transformation(self):
-        options = BitmapIndexOptions()
-
-        options.unique_key_transformation = UniqueKeyTransformation.RAW
-        self.assertEqual(options.unique_key_transformation, UniqueKeyTransformation.RAW)
-
-        options.unique_key_transformation = "LONG"
-        self.assertEqual(options.unique_key_transformation, UniqueKeyTransformation.LONG)
-
-        with self.assertRaises(TypeError):
-            options.unique_key_transformation = 132
