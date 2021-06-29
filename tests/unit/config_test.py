@@ -976,15 +976,3 @@ class BitmapIndexOptionsTest(unittest.TestCase):
         )
         self.assertEqual(QueryConstants.THIS_ATTRIBUTE_NAME, options.unique_key)
         self.assertEqual(UniqueKeyTransformation.OBJECT, options.unique_key_transformation)
-
-    def test_unique_key(self):
-        options = BitmapIndexOptions()
-
-        options.unique_key = QueryConstants.THIS_ATTRIBUTE_NAME
-        self.assertEqual(options.unique_key, QueryConstants.THIS_ATTRIBUTE_NAME)
-
-        options.unique_key = "KEY_ATTRIBUTE_NAME"
-        self.assertEqual(options.unique_key, QueryConstants.KEY_ATTRIBUTE_NAME)
-
-        with self.assertRaises(TypeError):
-            options.unique_key = None
