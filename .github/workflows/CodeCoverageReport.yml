@@ -1,0 +1,46 @@
+  name: Report coverage to Codecov
+  
+  on:
+    push:
+      branches: 
+        - master
+        - 4.*.z
+    pull_request:
+      branches: 
+        - master
+        - 4.*.z
+  jobs:
+    build-branch:
+      runs-on: ubuntu-latest
+
+      name: Test coverage report
+      steps:
+      
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install JDK
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '8'
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+        
+      - name: Install dependencies
+        run : |
+            python -m pip install --upgrade pip
+            pip install -r requirements-test.txt
+
+      - name: Run tests
+        env:
+          HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
+        run : python run_tests.py
+        
+      - name: Publish to Codecov 
+        uses: codecov/codecov-action@v1
+        with:
+          files: ./coverage.xml
