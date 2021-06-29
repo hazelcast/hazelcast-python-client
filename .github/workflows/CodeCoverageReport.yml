@@ -2,9 +2,13 @@
   
   on:
     push:
-      branches: [ coverage ]
+      branches: 
+        - master
+        - 4.*.z
     pull_request:
-      branches: [ coverage ]	  
+      branches: 
+        - master
+        - 4.*.z
   jobs:
     build-branch:
       runs-on: ubuntu-latest
