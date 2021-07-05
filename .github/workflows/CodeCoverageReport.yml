@@ -66,4 +66,4 @@
             -Dsonar.projectKey=hazelcast_hazelcast-python-client
             -Dsonar.python.coverage.reportPaths=./coverage.xml
             -Dsonar.pullrequest.base=SonarTestBranch
-            -Dsonar.pullrequest.key=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")     
+            -Dsonar.pullrequest.key=${{ github.event.number }}    
