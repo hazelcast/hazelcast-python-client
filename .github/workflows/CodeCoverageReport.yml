@@ -26,6 +26,8 @@
 
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          ref: SonarTest
         
       - name: Install dependencies
         run : |
@@ -61,5 +63,5 @@
             -Dsonar.organization=devopshazelcast-github
             -Dsonar.projectKey=hazelcast_hazelcast-python-client
             -Dsonar.python.coverage.reportPaths=./coverage.xml
-            -Dsonar.pullrequest.base=SonarTestBranch
+            -Dsonar.pullrequest.base=SonarTest
             -Dsonar.pullrequest.key=${{ github.event.number }}    
