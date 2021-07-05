@@ -45,8 +45,6 @@
         uses: sonarsource/sonarcloud-github-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          GITHUB_TOKEN : ${{ secrets.TOKEN_GITHUB }}
-          
         with:
           args: >
             -Dsonar.organization=devopshazelcast-github
@@ -58,8 +56,6 @@
         uses: sonarsource/sonarcloud-github-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          GITHUB_TOKEN : ${{ secrets.TOKEN_GITHUB }}
-          
         with:
           args: >
             -Dsonar.organization=devopshazelcast-github
