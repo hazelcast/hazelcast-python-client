@@ -44,7 +44,7 @@
         if: github.event_name == 'push'
         uses: sonarsource/sonarcloud-github-action@master
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: '8116e073ff512b3ef3119506be6935530b34f46f' 
         with:
           args: >
             -Dsonar.organization=devopshazelcast-github
@@ -55,7 +55,7 @@
         if: github.event_name == 'pull_request'
         uses: sonarsource/sonarcloud-github-action@master
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: '8116e073ff512b3ef3119506be6935530b34f46f'
         with:
           args: >
             -Dsonar.organization=devopshazelcast-github
