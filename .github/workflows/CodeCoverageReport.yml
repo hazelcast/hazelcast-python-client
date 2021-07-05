@@ -1,19 +1,11 @@
-  name: Report coverage to Codecov
+  name: Report coverage to SonarCloud
   
-  on:
-    push:
-      branches: 
-        - master
-        - 4.*.z
-    pull_request:
-      branches: 
-        - master
-        - 4.*.z
+  on: [pull_request]
   jobs:
     build-branch:
       runs-on: ubuntu-latest
 
-      name: Test coverage report
+      name: Test coverage report.
       steps:
       
       - name: Setup Python
@@ -26,21 +18,48 @@
         with:
           distribution: 'adopt'
           java-version: '8'
+      
+      - name: Set up maven
+        uses: stCarolas/setup-maven@v4
+        with:
+          maven-version: 3.8.1
 
       - name: Checkout code
         uses: actions/checkout@v2
         
       - name: Install dependencies
         run : |
-            python -m pip install --upgrade pip
+            pip install -r requirements-dev.txt
             pip install -r requirements-test.txt
-
+            
       - name: Run tests
         env:
           HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
         run : python run_tests.py
-        
-      - name: Publish to Codecov 
-        uses: codecov/codecov-action@v1
+      
+      - name: Fix for coverage.xml
+        run: coverage xml -i
+            
+      - name: Analyze with SonarCloud for Merge
+        if: github.event_name == 'push'
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          SONAR_TOKEN: '8116e073ff512b3ef3119506be6935530b34f46f' 
         with:
-          files: ./coverage.xml
+          args: >
+            -Dsonar.organization=devopshazelcast-github
+            -Dsonar.projectKey=hazelcast_hazelcast-python-client
+            -Dsonar.python.coverage.reportPaths=./coverage.xml
+            
+      - name: Analyze with SonarCloud for PR
+        if: github.event_name == 'pull_request'
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          SONAR_TOKEN: '8116e073ff512b3ef3119506be6935530b34f46f'
+        with:
+          args: >
+            -Dsonar.organization=devopshazelcast-github
+            -Dsonar.projectKey=hazelcast_hazelcast-python-client
+            -Dsonar.python.coverage.reportPaths=./coverage.xml
+            -Dsonar.pullrequest.base=SonarTestBranch
+            -Dsonar.pullrequest.key=${{ github.event.number }}    
