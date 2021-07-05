@@ -26,8 +26,6 @@
 
       - name: Checkout code
         uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.base.ref }}
         
       - name: Install dependencies
         run : |
