@@ -47,7 +47,7 @@ _logger = logging.getLogger(__name__)
 
 
 class HazelcastClient(object):
-    """Hazelcast client instance to access access and manipulate
+    """Hazelcast client instance to access and manipulate
     distributed data structures on the Hazelcast clusters.
 
     Keyword Args:
