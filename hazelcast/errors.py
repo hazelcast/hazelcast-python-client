@@ -82,7 +82,6 @@ class ExecutionError(HazelcastError):
     pass
 
 
-@retryable
 class HazelcastInstanceNotActiveError(HazelcastError):
     pass
 
