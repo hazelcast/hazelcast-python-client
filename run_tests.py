@@ -38,8 +38,8 @@ if __name__ == "__main__":
                     "--nologcapture",
                 ]
 
-                is_oss = "HAZELCAST_ENTERPRISE_KEY" not in os.environ
-                if is_oss:
+                enterprise_key = os.environ.get("HAZELCAST_ENTERPRISE_KEY", None)
+                if not enterprise_key:
                     args.extend(["-A", "not enterprise"])
 
                 return_code = nose.run_exit(argv=args)
