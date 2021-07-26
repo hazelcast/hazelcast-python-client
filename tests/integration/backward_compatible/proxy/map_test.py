@@ -11,7 +11,13 @@ from tests.integration.backward_compatible.util import (
     write_string_to_output,
     read_string_from_input,
 )
-from tests.util import random_string, event_collector, fill_map, is_server_version_older_than
+from tests.util import (
+    random_string,
+    event_collector,
+    fill_map,
+    is_server_version_older_than,
+    get_current_timestamp,
+)
 from hazelcast import six
 from hazelcast.six.moves import range
 
@@ -395,6 +401,13 @@ class MapTest(SingleMemberTestCase):
     def test_put_get(self):
         self.assertIsNone(self.map.put("key", "value"))
         self.assertEqual(self.map.get("key"), "value")
+
+    def test_put_get_large_payload(self):
+        payload = bytearray(os.urandom(16 * 1024 * 1024))
+        start = get_current_timestamp()
+        self.assertIsNone(self.map.put("key", payload))
+        self.assertEqual(self.map.get("key"), payload)
+        self.assertLessEqual(get_current_timestamp() - start, 5)
 
     def test_put_get2(self):
         val = "x" * 5000

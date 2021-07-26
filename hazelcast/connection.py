@@ -693,7 +693,8 @@ class _Reader(object):
         self._builder = builder
         self._bytes_read = 0
         self._bytes_written = 0
-        self._frame_size = 0
+        # Size of the frame excluding the header (SIZE_OF_FRAME_LENGTH_AND_FLAGS bytes)
+        self._frame_size = -1
         self._frame_flags = 0
         self._message = None
 
@@ -719,22 +720,21 @@ class _Reader(object):
                 return None
 
     def _read_frame(self):
-        n = self.length
-        if n < SIZE_OF_FRAME_LENGTH_AND_FLAGS:
-            # we don't have even the frame length and flags ready
-            return False
+        if self._frame_size == -1:
+            if self.length < SIZE_OF_FRAME_LENGTH_AND_FLAGS:
+                # we don't have even the frame length and flags ready
+                return False
 
-        if self._frame_size == 0:
             self._read_frame_size_and_flags()
 
-        if n < self._frame_size:
+        if self.length < self._frame_size:
             return False
 
         self._buf.seek(self._bytes_read)
-        size = self._frame_size - SIZE_OF_FRAME_LENGTH_AND_FLAGS
+        size = self._frame_size
         data = self._buf.read(size)
         self._bytes_read += size
-        self._frame_size = 0
+        self._frame_size = -1
         # No need to reset flags since it will be overwritten on the next read_frame_size_and_flags call
         frame = Frame(data, self._frame_flags)
         if not self._message:
@@ -747,6 +747,7 @@ class _Reader(object):
         self._buf.seek(self._bytes_read)
         header_data = self._buf.read(SIZE_OF_FRAME_LENGTH_AND_FLAGS)
         self._frame_size, self._frame_flags = _frame_header.unpack_from(header_data, 0)
+        self._frame_size -= SIZE_OF_FRAME_LENGTH_AND_FLAGS
         self._bytes_read += SIZE_OF_FRAME_LENGTH_AND_FLAGS
 
     def _reset(self):
