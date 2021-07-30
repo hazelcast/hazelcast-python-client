@@ -17,6 +17,7 @@ from tests.util import (
     fill_map,
     is_server_version_older_than,
     get_current_timestamp,
+    mark_client_version_at_least,
 )
 from hazelcast import six
 from hazelcast.six.moves import range
@@ -403,6 +404,10 @@ class MapTest(SingleMemberTestCase):
         self.assertEqual(self.map.get("key"), "value")
 
     def test_put_get_large_payload(self):
+        # The fix for reading large payloads is introduced in 4.2.1
+        # See https://github.com/hazelcast/hazelcast-python-client/pull/436
+        mark_client_version_at_least(self, "4.2.1")
+
         payload = bytearray(os.urandom(16 * 1024 * 1024))
         start = get_current_timestamp()
         self.assertIsNone(self.map.put("key", payload))
