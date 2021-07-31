@@ -47,6 +47,8 @@ from hazelcast.protocol.codec import (
     map_values_codec,
     map_values_with_predicate_codec,
     map_add_interceptor_codec,
+    map_aggregate_codec,
+    map_aggregate_with_predicate_codec,
     map_execute_on_all_keys_codec,
     map_execute_on_key_codec,
     map_execute_on_keys_codec,
@@ -70,8 +72,10 @@ from hazelcast.proxy.base import (
     MAX_SIZE,
 )
 from hazelcast.predicate import PagingPredicate
+from hazelcast.serialization.base import BaseSerializationService
 from hazelcast.util import (
     check_not_none,
+    check_not_paging_predicate,
     thread_id,
     to_millis,
     ImmutableLazyDataList,
@@ -308,6 +312,20 @@ class Map(Proxy):
 
         request = map_add_interceptor_codec.encode_request(self.name, interceptor_data)
         return self._invoke(request, map_add_interceptor_codec.decode_response)
+
+    def aggregate(self, aggregator, predicate=None):
+        check_not_none(aggregator, "aggregator can't be none");
+        aggregator_data = self._to_data(aggregator)
+
+        if predicate:
+            check_not_paging_predicate(predicate, 'Paging predicate is not supported.')
+            aggregator_data = BaseSerializationService.to_data(aggregator_data)
+
+            request = map_aggregate_with_predicate_codec.encode_request(self.name, aggregator_data)
+            return self._invoke(request, map_aggregate_with_predicate_codec.decode_response)
+        else:
+            request = map_aggregate_codec.encode_request(self.name, aggregator_data)
+            return self._invoke(request, map_aggregate_codec.decode_response)
 
     def clear(self):
         """Clears the map.

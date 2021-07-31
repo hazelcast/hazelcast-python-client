@@ -12,6 +12,8 @@ except ImportError:
     # Compatibility for Python2
     from collections import Sequence, Iterable
 
+from hazelcast.predicate import PagingPredicate
+
 from hazelcast import six
 
 DEFAULT_ADDRESS = "127.0.0.1"
@@ -25,6 +27,9 @@ def check_not_none(val, message):
     if val is None:
         raise AssertionError(message)
 
+def check_not_paging_predicate(val, message):
+    if isinstance(predicate, PagingPredicate):
+        raise AssertionError(message)
 
 def check_true(val, message):
     if not val:
