@@ -2295,10 +2295,6 @@ section <https://docs.hazelcast.org/docs/management-center/latest/manual/html/in
 in the Hazelcast Management Center Reference Manual for more information
 on the client statistics.
 
-.. Note:: Statistics sent by Hazelcast Python client 4.0 are compatible
-    with Management Center 4.0. Management Center 4.2020.08 and newer
-    versions will be supported in later versions of the client.
-
 Logging Configuration
 ~~~~~~~~~~~~~~~~~~~~~
 
