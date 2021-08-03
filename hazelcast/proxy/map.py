@@ -72,10 +72,8 @@ from hazelcast.proxy.base import (
     MAX_SIZE,
 )
 from hazelcast.predicate import PagingPredicate
-from hazelcast.serialization.base import BaseSerializationService
 from hazelcast.util import (
     check_not_none,
-    check_not_paging_predicate,
     thread_id,
     to_millis,
     ImmutableLazyDataList,
@@ -314,18 +312,34 @@ class Map(Proxy):
         return self._invoke(request, map_add_interceptor_codec.decode_response)
 
     def aggregate(self, aggregator, predicate=None):
-        check_not_none(aggregator, "aggregator can't be none");
+        """Runs the given aggregator.
+
+        Args:
+            aggregator: Chosen aggregator method e.g. double_avg()
+            predicate (hazelcast.predicate.Predicate): Predicate for the map to filter entries.
+
+        Returns:
+            hazelcast.future.Future[]:
+
+        """
+        check_not_none(aggregator, "aggregator can't be none")
         aggregator_data = self._to_data(aggregator)
-
         if predicate:
-            check_not_paging_predicate(predicate, 'Paging predicate is not supported.')
-            aggregator_data = BaseSerializationService.to_data(aggregator_data)
+            if isinstance(predicate, PagingPredicate):
+                raise AssertionError('Paging predicate is not supported.')
 
-            request = map_aggregate_with_predicate_codec.encode_request(self.name, aggregator_data)
-            return self._invoke(request, map_aggregate_with_predicate_codec.decode_response)
-        else:
-            request = map_aggregate_codec.encode_request(self.name, aggregator_data)
-            return self._invoke(request, map_aggregate_codec.decode_response)
+            def handler(message):
+                return self._to_object(map_aggregate_with_predicate_codec.decode_response(message))
+
+            predicate_data = self._to_data(predicate)
+            request = map_aggregate_with_predicate_codec.encode_request(self.name, aggregator_data, predicate_data)
+            return self._invoke(request, handler)
+
+        def handler(message):
+            return self._to_object(map_aggregate_codec.decode_response(message))
+
+        request = map_aggregate_codec.encode_request(self.name, aggregator_data)
+        return self._invoke(request, handler)
 
     def clear(self):
         """Clears the map.
