@@ -7,6 +7,7 @@ _AGGREGATORS_FACTORY_ID = -29
 # Marker class, no implementation. Document it.
 class Aggregator(object):
     """Add documentation."""
+
     pass
 
 
@@ -140,7 +141,6 @@ class _LongSumAggregator(_AbstractAggregator):
         return 13
 
 
-
 def count_(attribute_path=None):
     """Creates count aggregator.
 
@@ -212,14 +212,14 @@ def floating_point_sum(attribute_path=None):
         attribute_path: extracts values from this path if given
 
     Returns:
-        _DoubleSumAggregator: an aggregator that calculates the sum of the
+        _FloatingPointSumAggregator: an aggregator that calculates the sum of the
         input values
     """
     return _FloatingPointSumAggregator(attribute_path)
 
 
 def max_(attribute_path=None):
-    """Creates max aggregator
+    """Creates max aggregator.
 
     Args:
         attribute_path: extracts values from this path if given
@@ -232,65 +232,65 @@ def max_(attribute_path=None):
 
 
 def min_(attribute_path=None):
-    """Creates double sum aggregator
+    """Creates min aggregator.
 
     Args:
         attribute_path: extracts values from this path if given
 
     Returns:
-        _DoubleSumAggregator: an aggregator that calculates the min of the
+        _Min: an aggregator that calculates the min of the
         input values
     """
     return _MinAggregator(attribute_path)
 
 
 def int_avg(attribute_path=None):
-    """Creates double sum aggregator
+    """Creates int average aggregator.
 
     Args:
         attribute_path: extracts values from this path if given
 
     Returns:
-        _DoubleSumAggregator: an aggregator that calculates the average of the
+        _IntegerAverage: an aggregator that calculates the average of the
         input values
     """
     return _IntegerAverageAggregator(attribute_path)
 
 
 def int_sum(attribute_path=None):
-    """Creates double sum aggregator
+    """Creates int sum aggregator.
 
     Args:
         attribute_path: extracts values from this path if given
 
     Returns:
-        _DoubleSumAggregator: an aggregator that calculates the sum of the
+        _IntegerSumAggregator: an aggregator that calculates the sum of the
         input values
     """
     return _IntegerSumAggregator(attribute_path)
 
 
 def long_avg(attribute_path=None):
-    """Creates double sum aggregator
+    """Creates long average aggregator.
 
     Args:
         attribute_path: extracts values from this path if given
 
     Returns:
-        _DoubleSumAggregator: an aggregator that calculates the average of the
+        _LongAverageAggregator: an aggregator that calculates the average of the
         input values
     """
     return _LongAverageAggregator(attribute_path)
 
 
 def long_sum(attribute_path=None):
-    """Creates double sum aggregator
+    """Creates long sum aggregator.
 
     Args:
         attribute_path: extracts values from this path if given
 
     Returns:
-        _DoubleSumAggregator: an aggregator that calculates the sum of the
+        _LongSumAggregator: an aggregator that calculates the sum of the
         input values
     """
     return _LongSumAggregator(attribute_path)

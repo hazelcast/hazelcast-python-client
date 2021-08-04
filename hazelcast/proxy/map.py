@@ -319,20 +319,22 @@ class Map(Proxy):
             predicate (hazelcast.predicate.Predicate): Predicate for the map to filter entries.
 
         Returns:
-            hazelcast.future.Future[]:
+            hazelcast.future.Future: The result of the aggregation.
 
         """
         check_not_none(aggregator, "aggregator can't be none")
         aggregator_data = self._to_data(aggregator)
         if predicate:
             if isinstance(predicate, PagingPredicate):
-                raise AssertionError('Paging predicate is not supported.')
+                raise AssertionError("Paging predicate is not supported.")
 
             def handler(message):
                 return self._to_object(map_aggregate_with_predicate_codec.decode_response(message))
 
             predicate_data = self._to_data(predicate)
-            request = map_aggregate_with_predicate_codec.encode_request(self.name, aggregator_data, predicate_data)
+            request = map_aggregate_with_predicate_codec.encode_request(
+                self.name, aggregator_data, predicate_data
+            )
             return self._invoke(request, handler)
 
         def handler(message):

@@ -30,6 +30,7 @@ from hazelcast.six.moves import range
 import unittest
 from hazelcast.aggregator import *
 
+
 class EntryProcessor(IdentifiedDataSerializable):
     FACTORY_ID = 66
     CLASS_ID = 1
@@ -760,10 +761,7 @@ class MapAggregatorsIntTest(SingleMemberTestCase):
 
     def setUp(self):
         self.map = self.client.get_map(random_string()).blocking()
-        self.map.put_all({
-            "key-%d" % i: i
-            for i in range(50)
-        })
+        self.map.put_all({"key-%d" % i: i for i in range(50)})
 
     def tearDown(self):
         self.map.destroy()
@@ -804,6 +802,7 @@ class MapAggregatorsIntTest(SingleMemberTestCase):
         sum = self.map.aggregate(fixed_point_sum(), predicate=greater_or_equal("this", 47))
         self.assertEqual(144, sum)
 
+
 @unittest.skipIf(
     is_client_version_older_than("4.2.1"), "Tests the features added in 4.2.1 version of the client"
 )
@@ -816,10 +815,7 @@ class MapAggregatorsLongTest(SingleMemberTestCase):
 
     def setUp(self):
         self.map = self.client.get_map(random_string()).blocking()
-        self.map.put_all({
-            "key-%d" % i: i
-            for i in range(50)
-        })
+        self.map.put_all({"key-%d" % i: i for i in range(50)})
 
     def tearDown(self):
         self.map.destroy()
@@ -849,7 +845,6 @@ class MapAggregatorsLongTest(SingleMemberTestCase):
         self.assertEqual(144, sum)
 
 
-
 @unittest.skipIf(
     is_client_version_older_than("4.2.1"), "Tests the features added in 4.2.1 version of the client"
 )
@@ -861,10 +856,7 @@ class MapAggregatorsDoubleTest(SingleMemberTestCase):
 
     def setUp(self):
         self.map = self.client.get_map(random_string()).blocking()
-        self.map.put_all({
-            "key-%d" % i: float(i)
-            for i in range(50)
-        })
+        self.map.put_all({"key-%d" % i: float(i) for i in range(50)})
 
     def tearDown(self):
         self.map.destroy()
