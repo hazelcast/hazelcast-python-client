@@ -148,7 +148,7 @@ class _LongSumAggregator(_AbstractAggregator):
 def count(attribute_path=None):
     """Creates count aggregator.
 
-    Accepts null input values and null extracted values.
+    Accepts ``None`` input values and ``None`` extracted values.
 
     Args:
         attribute_path (str): extracts values from this path if given
@@ -163,13 +163,13 @@ def double_avg(attribute_path=None):
     """Creates double average aggregator.
 
     Does NOT accept null input values.
-    Accepts only double input values (primitive and boxed).
+    Accepts only ``float`` input values.
 
     Args:
         attribute_path (str): extracts values from this path if given
 
     Returns:
-        Aggregator[double]: an aggregator that calculates the average of
+        Aggregator[float]: an aggregator that calculates the average of
         the input values
     """
     return _DoubleAverageAggregator(attribute_path)
@@ -185,7 +185,7 @@ def double_sum(attribute_path=None):
         attribute_path (str): extracts values from this path if given
 
     Returns:
-        Aggregator[double]: an aggregator that calculates the sum of input the
+        Aggregator[float]: an aggregator that calculates the sum of input the
         values
     """
     return _DoubleSumAggregator(attribute_path)
@@ -202,7 +202,7 @@ def number_avg(attribute_path=None):
         attribute_path (str): extracts values from this path if given
 
     Returns:
-        Aggregator[number]: an aggregator that calculates the average of
+        Aggregator[float]: an aggregator that calculates the average of
         the input values
     """
     return _NumberAverageAggregator(attribute_path)
@@ -218,7 +218,7 @@ def fixed_point_sum(attribute_path=None):
         attribute_path (str): extracts values from this path if given
 
     Returns:
-        Aggregator[long]: an aggregator that calculates the sum of the
+        Aggregator[int]: an aggregator that calculates the sum of the
         input values
     """
     return _FixedPointSumAggregator(attribute_path)
@@ -234,7 +234,7 @@ def floating_point_sum(attribute_path=None):
         attribute_path (str): extracts values from this path if given
 
     Returns:
-        Aggregator[double]: an aggregator that calculates the sum of the
+        Aggregator[float]: an aggregator that calculates the sum of the
         input values
     """
     return _FloatingPointSumAggregator(attribute_path)
@@ -246,7 +246,7 @@ def max_(attribute_path=None):
     Accepts any input values.
 
     Args:
-        attribute_path: extracts values from this path if given
+        attribute_path (str): extracts values from this path if given
 
     Returns:
         Aggregator[any]: an aggregator that calculates the max of the input
@@ -261,7 +261,7 @@ def min_(attribute_path=None):
     Accepts any input values.
 
     Args:
-        attribute_path: extracts values from this path if given
+        attribute_path (str): extracts values from this path if given
 
     Returns:
         Aggregator[any]: an aggregator that calculates the min of the
@@ -280,7 +280,7 @@ def int_avg(attribute_path=None):
         attribute_path (str): extracts values from this path if given
 
     Returns:
-        Aggregator[long]: an aggregator that calculates the average of the
+        Aggregator[int]: an aggregator that calculates the average of the
         input values
     """
     return _IntegerAverageAggregator(attribute_path)
@@ -296,7 +296,7 @@ def int_sum(attribute_path=None):
         attribute_path (str): extracts values from this path if given
 
     Returns:
-        Aggregator[long]: an aggregator that calculates the sum of the
+        Aggregator[int]: an aggregator that calculates the sum of the
         input values
     """
     return _IntegerSumAggregator(attribute_path)
@@ -312,7 +312,7 @@ def long_avg(attribute_path=None):
         attribute_path (str): extracts values from this path if given
 
     Returns:
-        Aggregator[long]: an aggregator that calculates the average of the
+        Aggregator[int]: an aggregator that calculates the average of the
         input values
     """
     return _LongAverageAggregator(attribute_path)
@@ -328,7 +328,7 @@ def long_sum(attribute_path=None):
         attribute_path (str): extracts values from this path if given
 
     Returns:
-        Aggregator[long]: an aggregator that calculates the sum of the
+        Aggregator[int]: an aggregator that calculates the sum of the
         input values
     """
     return _LongSumAggregator(attribute_path)
