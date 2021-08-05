@@ -162,7 +162,7 @@ def count(attribute_path=None):
 def double_avg(attribute_path=None):
     """Creates double average aggregator.
 
-    Does NOT accept null input values.
+    Does NOT accept ``None`` input values.
     Accepts only ``float`` input values.
 
     Args:
@@ -178,8 +178,8 @@ def double_avg(attribute_path=None):
 def double_sum(attribute_path=None):
     """Creates double sum aggregator.
 
-    Does NOT accept null input values.
-    Accepts only double input values (primitive and boxed).
+    Does NOT accept ``None`` input values.
+    Accepts only ``float`` input values.
 
     Args:
         attribute_path (str): extracts values from this path if given
@@ -194,9 +194,8 @@ def double_sum(attribute_path=None):
 def number_avg(attribute_path=None):
     """Creates number average aggregator.
 
-    Does NOT accept null input values.
+    Does NOT accept ``None`` input values.
     Accepts generic number input values.
-    Aggregation result type is number.
 
     Args:
         attribute_path (str): extracts values from this path if given
@@ -211,7 +210,7 @@ def number_avg(attribute_path=None):
 def fixed_point_sum(attribute_path=None):
     """Creates fixed point sum aggregator.
 
-    Does NOT accept null input values.
+    Does NOT accept ``None`` input values.
     Accepts generic number input values.
 
     Args:
@@ -227,7 +226,7 @@ def fixed_point_sum(attribute_path=None):
 def floating_point_sum(attribute_path=None):
     """Creates floating point sum aggregator.
 
-    Does NOT accept null input values.
+    Does NOT accept ``None`` input values.
     Accepts generic number input values.
 
     Args:
@@ -273,7 +272,7 @@ def min_(attribute_path=None):
 def int_avg(attribute_path=None):
     """Creates int average aggregator.
 
-    Does NOT accept null input values.
+    Does NOT accept ``None`` input values.
     Accepts only long input values (primitive and boxed).
 
     Args:
@@ -289,7 +288,7 @@ def int_avg(attribute_path=None):
 def int_sum(attribute_path=None):
     """Creates int sum aggregator.
 
-    Does NOT accept null input values.
+    Does NOT accept ``None`` input values.
     Accepts only long input values (primitive and boxed).
 
     Args:
@@ -305,7 +304,7 @@ def int_sum(attribute_path=None):
 def long_avg(attribute_path=None):
     """Creates long average aggregator.
 
-    Does NOT accept null input values.
+    Does NOT accept ``None`` input values.
     Accepts only long input values (primitive and boxed).
 
     Args:
@@ -321,7 +320,7 @@ def long_avg(attribute_path=None):
 def long_sum(attribute_path=None):
     """Creates long sum aggregator.
 
-    Does NOT accept null input values.
+    Does NOT accept ``None`` input values.
     Accepts only long input values (primitive and boxed).
 
     Args:

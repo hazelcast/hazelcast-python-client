@@ -317,9 +317,9 @@ class Map(Proxy):
 
         Args:
             aggregator (hazelcast.aggregator.Aggregator): Aggregator to aggregate the
-            entries with.
+                entries with.
             predicate (hazelcast.predicate.Predicate): Predicate to filter the entries
-            with.
+                with.
 
         Returns:
             hazelcast.future.Future: The result of the aggregation.
