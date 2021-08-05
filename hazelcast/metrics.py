@@ -93,7 +93,7 @@ class ProbeUnit(object):
     ENUM = 6
     """0..n, ordinal of an enum."""
 
-    # New enum values should be should be converted to a tag to ensure backward
+    # New enum values should be converted to a tag to ensure backward
     # compatibility during compressing the metrics. see ProbeUnit#newUnit
     # handling in Java for that. We don't implement this functionality yet in
     # the Python client, as we don't use such enum members.
@@ -112,29 +112,29 @@ class ValueType(object):
 class MetricsCompressor(object):
     """Compresses metrics into a ``bytearray`` blob.
 
-     The compressor uses dictionary based delta compression and deflates
-     the resulting ``bytearray`` by using ``zlib.compress()``. This
-     compressor doesn't use the textual representation of the
-     :class:`MetricDescriptor` hence it is agnostic to the order of the
-     tags in that representation.
+    The compressor uses dictionary based delta compression and deflates
+    the resulting ``bytearray`` by using ``zlib.compress()``. This
+    compressor doesn't use the textual representation of the
+    :class:`MetricDescriptor` hence it is agnostic to the order of the
+    tags in that representation.
 
-     Adding metrics by calling :func:`add_long` or :func:`add_double`
-     builds a dictionary by mapping all words found in the passed
-     :class:`MetricDescriptor`s to ``int``s and these ``int``s will be
-     written to the resulting ``bytearray`` blob. Before these ``int``s
-     are written, the current :class:`MetricDescriptor` is compared to the
-     previous one and only the fields of the descriptor that are different
-     from the previous will be written to the metrics blob.
+    Adding metrics by calling :func:`add_long` or :func:`add_double`
+    builds a dictionary by mapping all words found in the passed
+    :class:`MetricDescriptor`s to ``int``s and these ``int``s will be
+    written to the resulting ``bytearray`` blob. Before these ``int``s
+    are written, the current :class:`MetricDescriptor` is compared to the
+    previous one and only the fields of the descriptor that are different
+    from the previous will be written to the metrics blob.
 
-     When the blob is retrieved from this compressor (when the metrics
-     collection cycle finishes) the dictionary is stored in the dictionary
-     blob. The compressor iterates over the words stored in the dictionary
-     in ascending order and writes them to the blob by skipping the first
-     N characters that are equal to the first N character of the previously
-     written word, hence using delta compression here too.
+    When the blob is retrieved from this compressor (when the metrics
+    collection cycle finishes) the dictionary is stored in the dictionary
+    blob. The compressor iterates over the words stored in the dictionary
+    in ascending order and writes them to the blob by skipping the first
+    N characters that are equal to the first N character of the previously
+    written word, hence using delta compression here too.
 
-     After both the metrics and the dictionary blob is constructed, they
-     are copied into a final blob in the following structure:
+    After both the metrics and the dictionary blob is constructed, they
+    are copied into a final blob in the following structure:
 
     +--------------------------------+--------------------+
     | Compressor version             |   2 bytes (short)  |
@@ -245,7 +245,7 @@ class MetricsCompressor(object):
         if descriptor.unit == last_descriptor.unit:
             mask |= _MASK_UNIT
 
-        # include excludedTargets and tags bytes for compatibility purposes
+        # include excludedTargets and tags bits for compatibility purposes
         mask |= _MASK_EXCLUDED_TARGETS
         mask |= _MASK_TAG_COUNT
 

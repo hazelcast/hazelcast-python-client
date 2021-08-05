@@ -1,4 +1,5 @@
 import logging
+import os
 
 from hazelcast.core import CLIENT_TYPE
 from hazelcast.invocation import Invocation
@@ -21,7 +22,6 @@ _ATTRIBUTE_SEPARATOR = ","
 _KEY_VALUE_SEPARATOR = "="
 _EMPTY_ATTRIBUTE_VALUE = ""
 
-_DEFAULT_PROBE_VALUE = 0
 _NEAR_CACHE_DESCRIPTOR_PREFIX = "nearcache"
 _NEAR_CACHE_DESCRIPTOR_DISCRIMINATOR = "name"
 
@@ -94,7 +94,7 @@ class Statistics(object):
         )
         self._register_system_gauge(
             "os.systemLoadAverage",
-            lambda: psutil.cpu_percent(),
+            lambda: os.getloadavg()[0],
             ValueType.DOUBLE,
         )
         self._register_system_gauge(
@@ -124,6 +124,7 @@ class Statistics(object):
         )
 
     def _register_system_gauge(self, gauge_name, gauge_fn, value_type=ValueType.LONG):
+        # Try a gauge function read, we will register it if it succeeds.
         try:
             gauge_fn()
             self._registered_system_gauges[gauge_name] = (gauge_fn, value_type)
@@ -133,6 +134,7 @@ class Statistics(object):
             )
 
     def _register_process_gauge(self, gauge_name, gauge_fn, value_type=ValueType.LONG):
+        # Try a gauge function read, we will register it if it succeeds.
         try:
             process = psutil.Process()
             gauge_fn(process)
