@@ -47,6 +47,8 @@ from hazelcast.protocol.codec import (
     map_values_codec,
     map_values_with_predicate_codec,
     map_add_interceptor_codec,
+    map_aggregate_codec,
+    map_aggregate_with_predicate_codec,
     map_execute_on_all_keys_codec,
     map_execute_on_key_codec,
     map_execute_on_keys_codec,
@@ -308,6 +310,40 @@ class Map(Proxy):
 
         request = map_add_interceptor_codec.encode_request(self.name, interceptor_data)
         return self._invoke(request, map_add_interceptor_codec.decode_response)
+
+    def aggregate(self, aggregator, predicate=None):
+        """Applies the aggregation logic on map entries and filter the result with the
+        predicate, if given.
+
+        Args:
+            aggregator (hazelcast.aggregator.Aggregator): Aggregator to aggregate the
+                entries with.
+            predicate (hazelcast.predicate.Predicate): Predicate to filter the entries
+                with.
+
+        Returns:
+            hazelcast.future.Future: The result of the aggregation.
+        """
+        check_not_none(aggregator, "aggregator can't be none")
+        aggregator_data = self._to_data(aggregator)
+        if predicate:
+            if isinstance(predicate, PagingPredicate):
+                raise AssertionError("Paging predicate is not supported.")
+
+            def handler(message):
+                return self._to_object(map_aggregate_with_predicate_codec.decode_response(message))
+
+            predicate_data = self._to_data(predicate)
+            request = map_aggregate_with_predicate_codec.encode_request(
+                self.name, aggregator_data, predicate_data
+            )
+            return self._invoke(request, handler)
+
+        def handler(message):
+            return self._to_object(map_aggregate_codec.decode_response(message))
+
+        request = map_aggregate_codec.encode_request(self.name, aggregator_data)
+        return self._invoke(request, handler)
 
     def clear(self):
         """Clears the map.
