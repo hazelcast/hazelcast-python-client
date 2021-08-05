@@ -28,7 +28,20 @@ from hazelcast import six
 from hazelcast.six.moves import range
 
 import unittest
-from hazelcast.aggregator import *
+from hazelcast.aggregator import (
+    count,
+    double_avg,
+    double_sum,
+    number_avg,
+    fixed_point_sum,
+    floating_point_sum,
+    max_,
+    min_,
+    int_avg,
+    int_sum,
+    long_avg,
+    long_sum,
+)
 
 
 class EntryProcessor(IdentifiedDataSerializable):
@@ -862,16 +875,16 @@ class MapAggregatorsDoubleTest(SingleMemberTestCase):
         self.map.destroy()
 
     def test_count(self):
-        count = self.map.aggregate(count_())
-        self.assertEqual(50, count)
+        count_ = self.map.aggregate(count())
+        self.assertEqual(50, count_)
 
     def test_count_with_attribute_path(self):
-        count = self.map.aggregate(count_("this"))
-        self.assertEqual(50, count)
+        count_ = self.map.aggregate(count("this"))
+        self.assertEqual(50, count_)
 
     def test_count_with_predicate(self):
-        count = self.map.aggregate(count_(), predicate=greater_or_equal("this", 1))
-        self.assertEqual(49, count)
+        count_ = self.map.aggregate(count(), predicate=greater_or_equal("this", 1))
+        self.assertEqual(49, count_)
 
     def test_double_average(self):
         average = self.map.aggregate(double_avg())

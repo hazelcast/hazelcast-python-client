@@ -1713,6 +1713,63 @@ Hazelcast offers the following ways for distributed query purposes:
 
 - Distributed SQL Query
 
+Fast-Aggregations
+~~~~~~~~~~~~~~~~~
+
+Fast-Aggregations feature provides some aggregate functions, such as ``sum``,
+``average``, ``max``, and ``min``, on top of Hazelcast ``Map`` entries. Their
+performance is high since they run in parallel for each partition and are 
+highly optimized for speed and low memory consumption.
+
+The ``aggregator`` module provides a wide variety of built-in aggregators. The
+full list is presented below:
+
+- ``count_``
+- ``double_avg``
+- ``double_sum``
+- ``floating_point_sum``
+- ``number_avg``
+- ``max_``
+- ``min_``
+- ``long_avg``
+- ``long_sum``
+- ``int_avg``
+- ``int_sum``
+- ``fixed_point_sum``
+
+These aggregators are used with the ``map.aggregate`` function, which takes an
+optional predicate argument.
+
+See the following example.
+
+.. code:: python
+
+    from hazelcast.aggregator import count, number_avg
+    from hazelcast.predicate import greater_or_equal
+
+    employees = client.get_map("employees").blocking()
+
+    employees.put("John Stiles", 23)
+    employees.put("Judy Doe", 29)
+    employees.put("Richard Miles", 38)
+
+    count_ = employees.aggregate(count())
+    # Prints:
+    # There are 3 employees
+    print("There are " + count_ + " employees")
+    
+    # Run count with predicate
+    count_ = employees.aggregate(count(), predicate=greater_or_equal("this", 25))
+    # Prints:
+    # There are 2 employees older than 24
+    print("There are " + count_ + " employees older than 24)
+
+    # Run average aggregate
+    average_age = employees.aggregate(number_avg())
+    # Prints:
+    # Average age is 30
+    print("Average age is " + average_age)
+
 Employee Map Query Example
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -2471,59 +2528,3 @@ that implements the ``LoadBalancer``\ s interface or extend the
 ``AbstractLoadBalancer`` class for that purpose and provide the load
 balancer object into the ``load_balancer`` config option.
 
-Fast-Aggregations
------------------
-
-Fast-Aggregations feature provides some aggregate functions, such as ``sum``,
-``average``, ``max``, and ``min``, on top of Hazelcast ``IMap`` entries. Their
-performance is high since they run in parallel for each partition and are 
-highly optimized for speed and low memory consumption.
-
-The ``Aggregator`` object provides a wide variety of built-in aggregators. The
-full list is presented below:
-
-- ``count_``
-- ``double_avg``
-- ``double_sum``
-- ``floating_point_sum``
-- ``number_avg``
-- ``max_``
-- ``min_``
-- ``long_avg``
-- ``long_sum``
-- ``int_avg``
-- ``int_sum``
-- ``fixed_point_sum``
-
-These aggregators are used with the ``map.aggregate`` function, which takes an
-optional predicate argument.
-
-See the following example.
-
-.. code:: python
-
-    from hazelcast.aggregator import *
-    from hazelcast.predicate import greater_or_equal
-
-    map = client.get_map("employees")
-
-    map.put("John Stiles", 23)
-    map.put("Judy Doe", 29)
-    map.put("Richard Miles", 38)
-
-    count = map.aggregate(count_())
-    # Prints:
-    # There are 3 employees
-    print("There are " + count + " employees")
-    
-    # Run count with predicate
-    count = map.aggregate(count_(), predicate=greater_or_equal("this", 25))
-    # Prints:
-    # There are 2 employees older than 24
-    print("There are " + count + " employees older than 24)
-
-    # Run average aggregate
-    average_age = map.aggregate(number_avg())
-    # Prints:
-    # Average age is 30
-    print("Average age is " + average_age)

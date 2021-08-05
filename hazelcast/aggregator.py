@@ -4,9 +4,14 @@ from hazelcast.serialization.api import IdentifiedDataSerializable
 _AGGREGATORS_FACTORY_ID = -29
 
 
-# Marker class, no implementation. Document it.
 class Aggregator(object):
-    """Add documentation."""
+    """Marker base class for all aggregators.
+
+    Aggregators allow computing a value of some function (e.g sum or max) over
+    the stored map entries. The computation is performed in a fully distributed
+    manner, so no data other than the computed value is transferred to the client,
+    making the computation fast.
+    """
 
     pass
 
@@ -28,7 +33,6 @@ class _AbstractAggregator(Aggregator, IdentifiedDataSerializable):
         raise NotImplementedError("get_class_id")
 
 
-# Look at other clients for class ids and write data implementations
 class _CountAggregator(_AbstractAggregator):
     def write_data(self, object_data_output):
         object_data_output.write_string(self._attribute_path)
@@ -141,14 +145,16 @@ class _LongSumAggregator(_AbstractAggregator):
         return 13
 
 
-def count_(attribute_path=None):
+def count(attribute_path=None):
     """Creates count aggregator.
 
+    Accepts null input values and null extracted values.
+
     Args:
-        attribute_path: extracts values from this path if given
+        attribute_path (str): extracts values from this path if given
 
     Returns:
-        _CountAggregator: an aggregator that counts the input values
+        Aggregator[int]: an aggregator that counts the input values
     """
     return _CountAggregator(attribute_path)
 
@@ -156,11 +162,14 @@ def count_(attribute_path=None):
 def double_avg(attribute_path=None):
     """Creates double average aggregator.
 
+    Does NOT accept null input values.
+    Accepts only double input values (primitive and boxed).
+
     Args:
-        attribute_path: extracts values from this path if given
+        attribute_path (str): extracts values from this path if given
 
     Returns:
-        _DoubleAverageAggregator: an aggregator that calculates the average of
+        Aggregator[double]: an aggregator that calculates the average of
         the input values
     """
     return _DoubleAverageAggregator(attribute_path)
@@ -169,11 +178,14 @@ def double_avg(attribute_path=None):
 def double_sum(attribute_path=None):
     """Creates double sum aggregator.
 
+    Does NOT accept null input values.
+    Accepts only double input values (primitive and boxed).
+
     Args:
-        attribute_path: extracts values from this path if given
+        attribute_path (str): extracts values from this path if given
 
     Returns:
-        _DoubleSumAggregator: an aggregator that calculates the sum of input the
+        Aggregator[double]: an aggregator that calculates the sum of input the
         values
     """
     return _DoubleSumAggregator(attribute_path)
@@ -182,11 +194,15 @@ def double_sum(attribute_path=None):
 def number_avg(attribute_path=None):
     """Creates number average aggregator.
 
+    Does NOT accept null input values.
+    Accepts generic number input values.
+    Aggregation result type is number.
+
     Args:
-        attribute_path: extracts values from this path if given
+        attribute_path (str): extracts values from this path if given
 
     Returns:
-        _NumberAverageAggregator: an aggregator that calculates the average of
+        Aggregator[number]: an aggregator that calculates the average of
         the input values
     """
     return _NumberAverageAggregator(attribute_path)
@@ -195,11 +211,14 @@ def number_avg(attribute_path=None):
 def fixed_point_sum(attribute_path=None):
     """Creates fixed point sum aggregator.
 
+    Does NOT accept null input values.
+    Accepts generic number input values.
+
     Args:
-        attribute_path: extracts values from this path if given
+        attribute_path (str): extracts values from this path if given
 
     Returns:
-        _FixedPointSumAggregator: an aggregator that calculates the sum of the
+        Aggregator[long]: an aggregator that calculates the sum of the
         input values
     """
     return _FixedPointSumAggregator(attribute_path)
@@ -208,11 +227,14 @@ def fixed_point_sum(attribute_path=None):
 def floating_point_sum(attribute_path=None):
     """Creates floating point sum aggregator.
 
+    Does NOT accept null input values.
+    Accepts generic number input values.
+
     Args:
-        attribute_path: extracts values from this path if given
+        attribute_path (str): extracts values from this path if given
 
     Returns:
-        _FloatingPointSumAggregator: an aggregator that calculates the sum of the
+        Aggregator[double]: an aggregator that calculates the sum of the
         input values
     """
     return _FloatingPointSumAggregator(attribute_path)
@@ -221,11 +243,13 @@ def floating_point_sum(attribute_path=None):
 def max_(attribute_path=None):
     """Creates max aggregator.
 
+    Accepts any input values.
+
     Args:
         attribute_path: extracts values from this path if given
 
     Returns:
-        _MaxAggregator: an aggregator that calculates the max of the input
+        Aggregator[any]: an aggregator that calculates the max of the input
         values
     """
     return _MaxAggregator(attribute_path)
@@ -234,11 +258,13 @@ def max_(attribute_path=None):
 def min_(attribute_path=None):
     """Creates min aggregator.
 
+    Accepts any input values.
+
     Args:
         attribute_path: extracts values from this path if given
 
     Returns:
-        _Min: an aggregator that calculates the min of the
+        Aggregator[any]: an aggregator that calculates the min of the
         input values
     """
     return _MinAggregator(attribute_path)
@@ -247,11 +273,14 @@ def min_(attribute_path=None):
 def int_avg(attribute_path=None):
     """Creates int average aggregator.
 
+    Does NOT accept null input values.
+    Accepts only long input values (primitive and boxed).
+
     Args:
-        attribute_path: extracts values from this path if given
+        attribute_path (str): extracts values from this path if given
 
     Returns:
-        _IntegerAverage: an aggregator that calculates the average of the
+        Aggregator[long]: an aggregator that calculates the average of the
         input values
     """
     return _IntegerAverageAggregator(attribute_path)
@@ -260,11 +289,14 @@ def int_avg(attribute_path=None):
 def int_sum(attribute_path=None):
     """Creates int sum aggregator.
 
+    Does NOT accept null input values.
+    Accepts only long input values (primitive and boxed).
+
     Args:
-        attribute_path: extracts values from this path if given
+        attribute_path (str): extracts values from this path if given
 
     Returns:
-        _IntegerSumAggregator: an aggregator that calculates the sum of the
+        Aggregator[long]: an aggregator that calculates the sum of the
         input values
     """
     return _IntegerSumAggregator(attribute_path)
@@ -273,11 +305,14 @@ def int_sum(attribute_path=None):
 def long_avg(attribute_path=None):
     """Creates long average aggregator.
 
+    Does NOT accept null input values.
+    Accepts only long input values (primitive and boxed).
+
     Args:
-        attribute_path: extracts values from this path if given
+        attribute_path (str): extracts values from this path if given
 
     Returns:
-        _LongAverageAggregator: an aggregator that calculates the average of the
+        Aggregator[long]: an aggregator that calculates the average of the
         input values
     """
     return _LongAverageAggregator(attribute_path)
@@ -286,11 +321,14 @@ def long_avg(attribute_path=None):
 def long_sum(attribute_path=None):
     """Creates long sum aggregator.
 
+    Does NOT accept null input values.
+    Accepts only long input values (primitive and boxed).
+
     Args:
-        attribute_path: extracts values from this path if given
+        attribute_path (str): extracts values from this path if given
 
     Returns:
-        _LongSumAggregator: an aggregator that calculates the sum of the
+        Aggregator[long]: an aggregator that calculates the sum of the
         input values
     """
     return _LongSumAggregator(attribute_path)

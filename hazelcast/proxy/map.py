@@ -312,15 +312,17 @@ class Map(Proxy):
         return self._invoke(request, map_add_interceptor_codec.decode_response)
 
     def aggregate(self, aggregator, predicate=None):
-        """Runs the given aggregator.
+        """Applies the aggregation logic on map entries and filter the result with the
+        predicate, if given.
 
         Args:
-            aggregator: Chosen aggregator method e.g. double_avg()
-            predicate (hazelcast.predicate.Predicate): Predicate for the map to filter entries.
+            aggregator (hazelcast.aggregator.Aggregator): Aggregator to aggregate the
+            entries with.
+            predicate (hazelcast.predicate.Predicate): Predicate to filter the entries
+            with.
 
         Returns:
             hazelcast.future.Future: The result of the aggregation.
-
         """
         check_not_none(aggregator, "aggregator can't be none")
         aggregator_data = self._to_data(aggregator)
