@@ -1,46 +1,48 @@
-import time
 import os
+import time
+import unittest
+
+from hazelcast import six
+
+try:
+    from hazelcast.aggregator import (
+        count,
+        double_avg,
+        double_sum,
+        fixed_point_sum,
+        floating_point_sum,
+        int_avg,
+        int_sum,
+        long_avg,
+        long_sum,
+        max_,
+        min_,
+        number_avg,
+    )
+except ImportError:
+    # If the import of those fail, we won't use
+    # them in the tests thanks to client version check.
+    pass
 
 from hazelcast.config import IndexType, IntType
 from hazelcast.errors import HazelcastError
+from hazelcast.predicate import greater_or_equal, less_or_equal, sql
 from hazelcast.proxy.map import EntryEventType
 from hazelcast.serialization.api import IdentifiedDataSerializable
-from hazelcast.predicate import (
-    sql,
-    greater_or_equal,
-    less_or_equal,
-)
+from hazelcast.six.moves import range
 from tests.base import SingleMemberTestCase
 from tests.integration.backward_compatible.util import (
-    write_string_to_output,
     read_string_from_input,
+    write_string_to_output,
 )
 from tests.util import (
-    random_string,
     event_collector,
     fill_map,
-    is_server_version_older_than,
-    is_client_version_older_than,
     get_current_timestamp,
+    is_client_version_older_than,
+    is_server_version_older_than,
     mark_client_version_at_least,
-)
-from hazelcast import six
-from hazelcast.six.moves import range
-
-import unittest
-from hazelcast.aggregator import (
-    count,
-    double_avg,
-    double_sum,
-    number_avg,
-    fixed_point_sum,
-    floating_point_sum,
-    max_,
-    min_,
-    int_avg,
-    int_sum,
-    long_avg,
-    long_sum,
+    random_string,
 )
 
 
