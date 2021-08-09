@@ -11,6 +11,7 @@ from hazelcast.util import (
     none_type,
     try_to_get_enum_value,
 )
+from hazelcast.security import TokenProvider
 
 
 class IntType(object):
@@ -571,6 +572,9 @@ class _Config(object):
         "_backup_ack_to_client_enabled",
         "_operation_backup_timeout",
         "_fail_on_indeterminate_operation_state",
+        "_creds_username",
+        "_creds_password",
+        "_token_provider",
     )
 
     def __init__(self):
@@ -622,6 +626,9 @@ class _Config(object):
         self._backup_ack_to_client_enabled = True
         self._operation_backup_timeout = _DEFAULT_OPERATION_BACKUP_TIMEOUT
         self._fail_on_indeterminate_operation_state = False
+        self._creds_username = None
+        self._creds_password = None
+        self._token_provider = None
 
     @property
     def cluster_members(self):
@@ -1289,6 +1296,36 @@ class _Config(object):
             self._fail_on_indeterminate_operation_state = value
         else:
             raise TypeError("fail_on_indeterminate_operation_state must be a boolean")
+
+    @property
+    def creds_username(self):
+        # type: (_Config) -> str
+        return self._creds_username
+
+    @creds_username.setter
+    def creds_username(self, username):
+        # type: (_Config, str) -> None
+        self._creds_username = username
+
+    @property
+    def creds_password(self):
+        # type: (_Config) -> str
+        return self._creds_password
+
+    @creds_password.setter
+    def creds_password(self, password):
+        # type: (_Config, str) -> None
+        self._creds_password = password
+
+    @property
+    def token_provider(self):
+        # type: (_Config) -> TokenProvider
+        return self._token_provider
+
+    @token_provider.setter
+    def token_provider(self, token_provider):
+        # type: (_Config, TokenProvider) -> None
+        self._token_provider = token_provider
 
     @classmethod
     def from_dict(cls, d):

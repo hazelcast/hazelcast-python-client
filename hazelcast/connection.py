@@ -27,7 +27,11 @@ from hazelcast.protocol.client_message import (
     InboundMessage,
     ClientMessageBuilder,
 )
-from hazelcast.protocol.codec import client_authentication_codec, client_ping_codec
+from hazelcast.protocol.codec import (
+    client_authentication_codec,
+    client_authentication_custom_codec,
+    client_ping_codec
+)
 from hazelcast.util import AtomicInteger, calculate_version, UNKNOWN_VERSION
 
 _logger = logging.getLogger(__name__)
@@ -486,18 +490,29 @@ class ConnectionManager(object):
         client = self._client
         cluster_name = self._config.cluster_name
         client_name = client.name
-        request = client_authentication_codec.encode_request(
-            cluster_name,
-            None,
-            None,
-            self.client_uuid,
-            CLIENT_TYPE,
-            SERIALIZATION_VERSION,
-            __version__,
-            client_name,
-            self._labels,
-        )
-
+        if self._config.token_provider:
+            request = client_authentication_custom_codec.encode_request(
+                cluster_name,
+                self._config.token_provider.token(),
+                self.client_uuid,
+                CLIENT_TYPE,
+                SERIALIZATION_VERSION,
+                __version__,
+                client_name,
+                self._labels,
+            )
+        else:
+            request = client_authentication_codec.encode_request(
+                cluster_name,
+                self._config.creds_username,
+                self._config.creds_password,
+                self.client_uuid,
+                CLIENT_TYPE,
+                SERIALIZATION_VERSION,
+                __version__,
+                client_name,
+                self._labels,
+            )
         invocation = Invocation(
             request, connection=connection, urgent=True, response_handler=lambda m: m
         )
