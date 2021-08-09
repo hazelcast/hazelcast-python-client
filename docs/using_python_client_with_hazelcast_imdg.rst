@@ -2086,17 +2086,20 @@ The ``aggregator`` module provides a wide variety of built-in aggregators. The
 full list is presented below:
 
 - ``count``
+- ``distinct``
 - ``double_avg``
 - ``double_sum``
+- ``fixed_point_sum``
 - ``floating_point_sum``
-- ``number_avg``
-- ``max_``
-- ``min_``
-- ``long_avg``
-- ``long_sum``
 - ``int_avg``
 - ``int_sum``
-- ``fixed_point_sum``
+- ``long_avg``
+- ``long_sum``
+- ``max_``
+- ``min_``
+- ``number_avg``
+- ``max_by``
+- ``max_by``
 
 These aggregators are used with the ``map.aggregate`` function, which takes an
 optional predicate argument.
@@ -2105,31 +2108,34 @@ See the following example.
 
 .. code:: python
 
+    import hazelcast
+
     from hazelcast.aggregator import count, number_avg
     from hazelcast.predicate import greater_or_equal
 
+    client = hazelcast.HazelcastClient()
     employees = client.get_map("employees").blocking()
 
     employees.put("John Stiles", 23)
     employees.put("Judy Doe", 29)
     employees.put("Richard Miles", 38)
 
-    count_ = employees.aggregate(count())
+    employee_count = employees.aggregate(count())
     # Prints:
     # There are 3 employees
-    print("There are " + count_ + " employees")
-    
+    print("There are %d employees" % employee_count)
+
     # Run count with predicate
-    count_ = employees.aggregate(count(), predicate=greater_or_equal("this", 25))
+    employee_count = employees.aggregate(count(), greater_or_equal("this", 25))
     # Prints:
     # There are 2 employees older than 24
-    print("There are " + count_ + " employees older than 24)
+    print("There are %d employees older than 24" % employee_count)
 
     # Run average aggregate
     average_age = employees.aggregate(number_avg())
     # Prints:
     # Average age is 30
-    print("Average age is " + average_age)
+    print("Average age is %f" % average_age)
 
 Performance
 -----------

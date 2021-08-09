@@ -42,6 +42,15 @@ class _CountAggregator(_AbstractAggregator):
         return 4
 
 
+class _DistinctValuesAggregator(_AbstractAggregator):
+    def write_data(self, object_data_output):
+        object_data_output.write_string(self._attribute_path)
+        object_data_output.write_int(0)
+
+    def get_class_id(self):
+        return 5
+
+
 class _DoubleAverageAggregator(_AbstractAggregator):
     def write_data(self, object_data_output):
         object_data_output.write_string(self._attribute_path)
@@ -61,16 +70,6 @@ class _DoubleSumAggregator(_AbstractAggregator):
         return 7
 
 
-class _NumberAverageAggregator(_AbstractAggregator):
-    def write_data(self, object_data_output):
-        object_data_output.write_string(self._attribute_path)
-        object_data_output.write_double(0)
-        object_data_output.write_long(0)
-
-    def get_class_id(self):
-        return 16
-
-
 class _FixedPointSumAggregator(_AbstractAggregator):
     def write_data(self, object_data_output):
         object_data_output.write_string(self._attribute_path)
@@ -87,24 +86,6 @@ class _FloatingPointSumAggregator(_AbstractAggregator):
 
     def get_class_id(self):
         return 9
-
-
-class _MaxAggregator(_AbstractAggregator):
-    def write_data(self, object_data_output):
-        object_data_output.write_string(self._attribute_path)
-        object_data_output.write_object(None)
-
-    def get_class_id(self):
-        return 14
-
-
-class _MinAggregator(_AbstractAggregator):
-    def write_data(self, object_data_output):
-        object_data_output.write_string(self._attribute_path)
-        object_data_output.write_object(None)
-
-    def get_class_id(self):
-        return 15
 
 
 class _IntegerAverageAggregator(_AbstractAggregator):
@@ -145,189 +126,335 @@ class _LongSumAggregator(_AbstractAggregator):
         return 13
 
 
+class _MaxAggregator(_AbstractAggregator):
+    def write_data(self, object_data_output):
+        object_data_output.write_string(self._attribute_path)
+        object_data_output.write_object(None)
+
+    def get_class_id(self):
+        return 14
+
+
+class _MinAggregator(_AbstractAggregator):
+    def write_data(self, object_data_output):
+        object_data_output.write_string(self._attribute_path)
+        object_data_output.write_object(None)
+
+    def get_class_id(self):
+        return 15
+
+
+class _NumberAverageAggregator(_AbstractAggregator):
+    def write_data(self, object_data_output):
+        object_data_output.write_string(self._attribute_path)
+        object_data_output.write_double(0)
+        object_data_output.write_long(0)
+
+    def get_class_id(self):
+        return 16
+
+
+class _MaxByAggregator(_AbstractAggregator):
+    def write_data(self, object_data_output):
+        object_data_output.write_string(self._attribute_path)
+        object_data_output.write_object(None)
+        object_data_output.write_object(None)
+
+    def get_class_id(self):
+        return 17
+
+
+class _MinByAggregator(_AbstractAggregator):
+    def write_data(self, object_data_output):
+        object_data_output.write_string(self._attribute_path)
+        object_data_output.write_object(None)
+        object_data_output.write_object(None)
+
+    def get_class_id(self):
+        return 18
+
+
 def count(attribute_path=None):
-    """Creates count aggregator.
+    """Creates an aggregator that counts the input values.
 
     Accepts ``None`` input values and ``None`` extracted values.
 
     Args:
-        attribute_path (str): extracts values from this path if given
+        attribute_path (str): Extracts values from this path, if given.
 
     Returns:
-        Aggregator[int]: an aggregator that counts the input values
+        Aggregator[int]: An aggregator that counts the input values.
     """
     return _CountAggregator(attribute_path)
 
 
-def double_avg(attribute_path=None):
-    """Creates double average aggregator.
+def distinct(attribute_path=None):
+    """Creates an aggregator that calculates the distinct set of input values.
 
-    Does NOT accept ``None`` input values.
-    Accepts only ``float`` input values.
+    Accepts ``None`` input values and ``None`` extracted values.
 
     Args:
-        attribute_path (str): extracts values from this path if given
+        attribute_path (str): Extracts values from this path, if given.
 
     Returns:
-        Aggregator[float]: an aggregator that calculates the average of
-        the input values
+        Aggregator[set]: An aggregator that calculates the distinct set of
+        input values.
+    """
+    return _DistinctValuesAggregator(attribute_path)
+
+
+def double_avg(attribute_path=None):
+    """Creates an aggregator that calculates the average of the input values.
+
+    Does NOT accept ``None`` input values or ``None`` extracted values.
+
+    Since the server-side implementation is in Java, values stored in the
+    Map must be of type ``double`` (primitive or boxed) in Java or of a type
+    that can be converted to that. That means, one should be able to use this
+    aggregator with ``float`` or ``int`` values sent from the Python client
+    unless they are out of range for ``double`` type in Java.
+
+    Args:
+        attribute_path (str): Extracts values from this path, if given.
+
+    Returns:
+        Aggregator[float]: An aggregator that calculates the average of
+        the input values.
     """
     return _DoubleAverageAggregator(attribute_path)
 
 
 def double_sum(attribute_path=None):
-    """Creates double sum aggregator.
+    """Creates an aggregator that calculates the sum of the input values.
 
-    Does NOT accept ``None`` input values.
-    Accepts only ``float`` input values.
+    Does NOT accept ``None`` input values or ``None`` extracted values.
+
+    Since the server-side implementation is in Java, values stored in the
+    Map must be of type ``double`` (primitive or boxed) in Java or of a type
+    that can be converted to that. That means, one should be able to use this
+    aggregator with ``float`` or ``int`` values sent from the Python client
+    unless they are out of range for ``double`` type in Java.
 
     Args:
-        attribute_path (str): extracts values from this path if given
+        attribute_path (str): Extracts values from this path, if given.
 
     Returns:
-        Aggregator[float]: an aggregator that calculates the sum of input the
-        values
+        Aggregator[float]: An aggregator that calculates the sum of input the
+        values.
     """
     return _DoubleSumAggregator(attribute_path)
 
 
-def number_avg(attribute_path=None):
-    """Creates number average aggregator.
-
-    Does NOT accept ``None`` input values.
-    Accepts generic number input values.
-
-    Args:
-        attribute_path (str): extracts values from this path if given
-
-    Returns:
-        Aggregator[float]: an aggregator that calculates the average of
-        the input values
-    """
-    return _NumberAverageAggregator(attribute_path)
-
-
 def fixed_point_sum(attribute_path=None):
-    """Creates fixed point sum aggregator.
+    """Creates an aggregator that calculates the sum of the input values.
 
-    Does NOT accept ``None`` input values.
-    Accepts generic number input values.
+    Does NOT accept ``None`` input values or ``None`` extracted values.
+
+    Accepts generic number input values. That means, one should be able to
+    use this aggregator with ``float`` or ``int`` value sent from the Python
+    client unless they are out of range for ``long`` type in Java.
 
     Args:
-        attribute_path (str): extracts values from this path if given
+        attribute_path (str): Extracts values from this path, if given.
 
     Returns:
-        Aggregator[int]: an aggregator that calculates the sum of the
-        input values
+        Aggregator[int]: An aggregator that calculates the sum of the
+        input values.
     """
     return _FixedPointSumAggregator(attribute_path)
 
 
 def floating_point_sum(attribute_path=None):
-    """Creates floating point sum aggregator.
+    """Creates an aggregator that calculates the sum of the input values.
 
-    Does NOT accept ``None`` input values.
-    Accepts generic number input values.
+    Does NOT accept ``None`` input values or ``None`` extracted values.
+
+    Accepts generic number input values. That means, one should be able to
+    use this aggregator with ``float`` or ``int`` value sent from the Python
+    client unless they are out of range for ``double`` type in Java.
 
     Args:
-        attribute_path (str): extracts values from this path if given
+        attribute_path (str): Extracts values from this path, if given.
 
     Returns:
-        Aggregator[float]: an aggregator that calculates the sum of the
-        input values
+        Aggregator[float]: An aggregator that calculates the sum of the
+        input values.
     """
     return _FloatingPointSumAggregator(attribute_path)
 
 
-def max_(attribute_path=None):
-    """Creates max aggregator.
-
-    Accepts any input values.
-
-    Args:
-        attribute_path (str): extracts values from this path if given
-
-    Returns:
-        Aggregator[any]: an aggregator that calculates the max of the input
-        values
-    """
-    return _MaxAggregator(attribute_path)
-
-
-def min_(attribute_path=None):
-    """Creates min aggregator.
-
-    Accepts any input values.
-
-    Args:
-        attribute_path (str): extracts values from this path if given
-
-    Returns:
-        Aggregator[any]: an aggregator that calculates the min of the
-        input values
-    """
-    return _MinAggregator(attribute_path)
-
-
 def int_avg(attribute_path=None):
-    """Creates int average aggregator.
+    """Creates an aggregator that calculates the average of the input values.
 
-    Does NOT accept ``None`` input values.
-    Accepts only long input values (primitive and boxed).
+    Does NOT accept ``None`` input values or ``None`` extracted values.
+
+    Since the server-side implementation is in Java, values stored in the
+    Map must be of type ``int`` (primitive or boxed) in Java or of a type
+    that can be converted to that. That means, one should be able to use this
+    aggregator with ``int`` values sent from the Python client unless they
+    are out of range for ``int`` type in Java.
 
     Args:
-        attribute_path (str): extracts values from this path if given
+        attribute_path (str): Extracts values from this path, if given.
 
     Returns:
-        Aggregator[int]: an aggregator that calculates the average of the
-        input values
+        Aggregator[int]: An aggregator that calculates the average of the
+        input values.
     """
     return _IntegerAverageAggregator(attribute_path)
 
 
 def int_sum(attribute_path=None):
-    """Creates int sum aggregator.
+    """Creates an aggregator that calculates the sum of the input values.
 
-    Does NOT accept ``None`` input values.
-    Accepts only long input values (primitive and boxed).
+    Does NOT accept ``None`` input values or ``None`` extracted values.
+
+    Since the server-side implementation is in Java, values stored in the
+    Map must be of type ``int`` (primitive or boxed) in Java or of a type
+    that can be converted to that. That means, one should be able to use this
+    aggregator with ``int`` values sent from the Python client unless they
+    are out of range for ``int`` type in Java.
 
     Args:
-        attribute_path (str): extracts values from this path if given
+        attribute_path (str): Extracts values from this path, if given.
 
     Returns:
-        Aggregator[int]: an aggregator that calculates the sum of the
-        input values
+        Aggregator[int]: An aggregator that calculates the sum of the
+        input values.
     """
     return _IntegerSumAggregator(attribute_path)
 
 
 def long_avg(attribute_path=None):
-    """Creates long average aggregator.
+    """Creates an aggregator that calculates the average of the input values.
 
-    Does NOT accept ``None`` input values.
-    Accepts only long input values (primitive and boxed).
+    Does NOT accept ``None`` input values or ``None`` extracted values.
+
+    Since the server-side implementation is in Java, values stored in the
+    Map must be of type ``long`` (primitive or boxed) in Java or of a type
+    that can be converted to that. That means, one should be able to use this
+    aggregator with ``int`` values sent from the Python client unless they
+    are out of range for ``long`` type in Java.
 
     Args:
-        attribute_path (str): extracts values from this path if given
+        attribute_path (str): Extracts values from this path, if given.
 
     Returns:
-        Aggregator[int]: an aggregator that calculates the average of the
-        input values
+        Aggregator[int]: An aggregator that calculates the average of the
+        input values.
     """
     return _LongAverageAggregator(attribute_path)
 
 
 def long_sum(attribute_path=None):
-    """Creates long sum aggregator.
+    """Creates an aggregator that calculates the sum of the input values.
 
-    Does NOT accept ``None`` input values.
-    Accepts only long input values (primitive and boxed).
+    Does NOT accept ``None`` input values or ``None`` extracted values.
+
+    Since the server-side implementation is in Java, values stored in the
+    Map must be of type ``long`` (primitive or boxed) in Java or of a type
+    that can be converted to that. That means, one should be able to use this
+    aggregator with ``int`` values sent from the Python client unless they
+    are out of range for ``long`` type in Java.
 
     Args:
-        attribute_path (str): extracts values from this path if given
+        attribute_path (str): Extracts values from this path, if given.
 
     Returns:
-        Aggregator[int]: an aggregator that calculates the sum of the
-        input values
+        Aggregator[int]: An aggregator that calculates the sum of the
+        input values.
     """
     return _LongSumAggregator(attribute_path)
+
+
+def max_(attribute_path=None):
+    """Creates an aggregator that calculates the max of the input values.
+
+    Accepts ``None`` input values and ``None`` extracted values.
+
+    Accepts any input value type that is comparable.
+
+    Args:
+        attribute_path (str): Extracts values from this path, if given.
+
+    Returns:
+        Aggregator[any]: An aggregator that calculates the max of the input
+        values.
+    """
+    return _MaxAggregator(attribute_path)
+
+
+def min_(attribute_path=None):
+    """Creates an aggregator that calculates the min of the input values.
+
+    Accepts ``None`` input values and ``None`` extracted values.
+
+    Accepts any input value type that is comparable.
+
+    Args:
+        attribute_path (str): Extracts values from this path, if given.
+
+    Returns:
+        Aggregator[any]: An aggregator that calculates the min of the
+        input values.
+    """
+    return _MinAggregator(attribute_path)
+
+
+def number_avg(attribute_path=None):
+    """Creates an aggregator that calculates the average of the input values.
+
+    Does NOT accept ``None`` input values or ``None`` extracted values.
+
+    Accepts generic number input values. That means, one should be able to
+    use this aggregator with ``float`` or ``int`` value sent from the Python
+    client unless they are out of range for ``double`` type in Java.
+
+    Args:
+        attribute_path (str): Extracts values from this path, if given.
+
+    Returns:
+        Aggregator[float]: An aggregator that calculates the average of
+        the input values.
+    """
+    return _NumberAverageAggregator(attribute_path)
+
+
+def max_by(attribute_path=None):
+    """Creates an aggregator that calculates the max of the input values
+    extracted from the given ``attribute_path`` and returns the input
+    item containing the maximum value. If multiple items contain the
+    maximum value, any of them is returned.
+
+    Accepts ``None`` input values and ``None`` extracted values.
+
+    Accepts any input value type that is comparable.
+
+    Args:
+        attribute_path (str): Path to extract values from.
+
+    Returns:
+        Aggregator[hazelcast.core.MapEntry]: An aggregator that calculates
+        the input value containing the maximum value extracted from the path.
+    """
+    return _MaxByAggregator(attribute_path)
+
+
+def min_by(attribute_path):
+    """Creates an aggregator that calculates the min of the input values
+    extracted from the given ``attribute_path`` and returns the input
+    item containing the minimum value. If multiple items contain the
+    minimum value, any of them is returned.
+
+    Accepts ``None`` input values and ``None`` extracted values.
+
+    Accepts any input value type that is comparable.
+
+    Args:
+        attribute_path (str): Path to extract values from.
+
+    Returns:
+        Aggregator[hazelcast.core.MapEntry]: An aggregator that calculates
+        the input value containing the minimum value extracted from the path.
+    """
+    return _MinByAggregator(attribute_path)

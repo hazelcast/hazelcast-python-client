@@ -3,6 +3,7 @@ API Documentation
 
 .. toctree::
 
+    aggregator
     cluster
     config
     core
