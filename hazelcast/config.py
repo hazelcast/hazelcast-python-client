@@ -11,7 +11,10 @@ from hazelcast.util import (
     none_type,
     try_to_get_enum_value,
 )
-from .security import TokenProvider
+try:
+    from .security import TokenProvider
+except ImportError:
+    pass
 
 
 class IntType(object):
