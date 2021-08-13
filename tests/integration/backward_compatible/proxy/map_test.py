@@ -1,25 +1,49 @@
-import time
 import os
+import time
+import unittest
 
-from hazelcast.config import IndexType
+from hazelcast import six
+
+try:
+    from hazelcast.aggregator import (
+        count,
+        double_avg,
+        double_sum,
+        fixed_point_sum,
+        floating_point_sum,
+        int_avg,
+        int_sum,
+        long_avg,
+        long_sum,
+        max_,
+        min_,
+        number_avg,
+    )
+except ImportError:
+    # If the import of those fail, we won't use
+    # them in the tests thanks to client version check.
+    pass
+
+from hazelcast.config import IndexType, IntType
 from hazelcast.errors import HazelcastError
+from hazelcast.predicate import greater_or_equal, less_or_equal, sql
 from hazelcast.proxy.map import EntryEventType
 from hazelcast.serialization.api import IdentifiedDataSerializable
-from hazelcast.predicate import sql
+from hazelcast.six.moves import range
 from tests.base import SingleMemberTestCase
 from tests.integration.backward_compatible.util import (
-    write_string_to_output,
     read_string_from_input,
+    write_string_to_output,
 )
 from tests.util import (
-    random_string,
     event_collector,
     fill_map,
-    is_server_version_older_than,
     get_current_timestamp,
+    is_client_version_older_than,
+    is_server_version_older_than,
+    mark_client_version_at_least,
+    random_string,
 )
-from hazelcast import six
-from hazelcast.six.moves import range
 
 
 class EntryProcessor(IdentifiedDataSerializable):
@@ -403,6 +427,10 @@ class MapTest(SingleMemberTestCase):
         self.assertEqual(self.map.get("key"), "value")
 
     def test_put_get_large_payload(self):
+        # The fix for reading large payloads is introduced in 4.2.1
+        # See https://github.com/hazelcast/hazelcast-python-client/pull/436
+        mark_client_version_at_least(self, "4.2.1")
+
         payload = bytearray(os.urandom(16 * 1024 * 1024))
         start = get_current_timestamp()
         self.assertIsNone(self.map.put("key", payload))
@@ -734,3 +762,200 @@ class MapMaxIdleTest(SingleMemberTestCase):
         self.map.set("key", "value", max_idle=0.1)
         time.sleep(1.0)
         self.assertFalse(self.map.contains_key("key"))
+
+
+@unittest.skipIf(
+    is_client_version_older_than("4.2.1"), "Tests the features added in 4.2.1 version of the client"
+)
+class MapAggregatorsIntTest(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        config["cluster_name"] = cls.cluster.id
+        config["default_int_type"] = IntType.INT
+        return config
+
+    def setUp(self):
+        self.map = self.client.get_map(random_string()).blocking()
+        self.map.put_all({"key-%d" % i: i for i in range(50)})
+
+    def tearDown(self):
+        self.map.destroy()
+
+    def test_int_average(self):
+        average = self.map.aggregate(int_avg())
+        self.assertEqual(24.5, average)
+
+    def test_int_average_with_attribute_path(self):
+        average = self.map.aggregate(int_avg("this"))
+        self.assertEqual(24.5, average)
+
+    def test_int_average_with_predicate(self):
+        average = self.map.aggregate(int_avg(), predicate=greater_or_equal("this", 47))
+        self.assertEqual(48, average)
+
+    def test_int_sum(self):
+        sum = self.map.aggregate(int_sum())
+        self.assertEqual(1225, sum)
+
+    def test_int_sum_with_attribute_path(self):
+        sum = self.map.aggregate(int_sum("this"))
+        self.assertEqual(1225, sum)
+
+    def test_int_sum_with_predicate(self):
+        sum = self.map.aggregate(int_sum(), predicate=greater_or_equal("this", 47))
+        self.assertEqual(144, sum)
+
+    def test_fixed_point_sum(self):
+        sum = self.map.aggregate(fixed_point_sum())
+        self.assertEqual(1225, sum)
+
+    def test_fixed_point_sum_with_attribute_path(self):
+        sum = self.map.aggregate(fixed_point_sum("this"))
+        self.assertEqual(1225, sum)
+
+    def test_fixed_point_sum_with_predicate(self):
+        sum = self.map.aggregate(fixed_point_sum(), predicate=greater_or_equal("this", 47))
+        self.assertEqual(144, sum)
+
+
+@unittest.skipIf(
+    is_client_version_older_than("4.2.1"), "Tests the features added in 4.2.1 version of the client"
+)
+class MapAggregatorsLongTest(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        config["cluster_name"] = cls.cluster.id
+        config["default_int_type"] = IntType.LONG
+        return config
+
+    def setUp(self):
+        self.map = self.client.get_map(random_string()).blocking()
+        self.map.put_all({"key-%d" % i: i for i in range(50)})
+
+    def tearDown(self):
+        self.map.destroy()
+
+    def test_long_average(self):
+        average = self.map.aggregate(long_avg())
+        self.assertEqual(24.5, average)
+
+    def test_long_average_with_attribute_path(self):
+        average = self.map.aggregate(long_avg("this"))
+        self.assertEqual(24.5, average)
+
+    def test_long_average_with_predicate(self):
+        average = self.map.aggregate(long_avg(), predicate=greater_or_equal("this", 47))
+        self.assertEqual(48, average)
+
+    def test_long_sum(self):
+        sum = self.map.aggregate(long_sum())
+        self.assertEqual(1225, sum)
+
+    def test_long_sum_with_attribute_path(self):
+        sum = self.map.aggregate(long_sum("this"))
+        self.assertEqual(1225, sum)
+
+    def test_long_sum_with_predicate(self):
+        sum = self.map.aggregate(long_sum(), predicate=greater_or_equal("this", 47))
+        self.assertEqual(144, sum)
+
+
+@unittest.skipIf(
+    is_client_version_older_than("4.2.1"), "Tests the features added in 4.2.1 version of the client"
+)
+class MapAggregatorsDoubleTest(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        config["cluster_name"] = cls.cluster.id
+        return config
+
+    def setUp(self):
+        self.map = self.client.get_map(random_string()).blocking()
+        self.map.put_all({"key-%d" % i: float(i) for i in range(50)})
+
+    def tearDown(self):
+        self.map.destroy()
+
+    def test_count(self):
+        count_ = self.map.aggregate(count())
+        self.assertEqual(50, count_)
+
+    def test_count_with_attribute_path(self):
+        count_ = self.map.aggregate(count("this"))
+        self.assertEqual(50, count_)
+
+    def test_count_with_predicate(self):
+        count_ = self.map.aggregate(count(), predicate=greater_or_equal("this", 1))
+        self.assertEqual(49, count_)
+
+    def test_double_average(self):
+        average = self.map.aggregate(double_avg())
+        self.assertEqual(24.5, average)
+
+    def test_double_average_with_attribute_path(self):
+        average = self.map.aggregate(double_avg("this"))
+        self.assertEqual(24.5, average)
+
+    def test_double_average_with_predicate(self):
+        average = self.map.aggregate(double_avg(), predicate=greater_or_equal("this", 47))
+        self.assertEqual(48, average)
+
+    def test_double_sum(self):
+        sum = self.map.aggregate(double_sum())
+        self.assertEqual(1225, sum)
+
+    def test_double_sum_with_attribute_path(self):
+        sum = self.map.aggregate(double_sum("this"))
+        self.assertEqual(1225, sum)
+
+    def test_double_sum_with_predicate(self):
+        sum = self.map.aggregate(double_sum(), predicate=greater_or_equal("this", 47))
+        self.assertEqual(144, sum)
+
+    def test_floating_point_sum(self):
+        sum = self.map.aggregate(floating_point_sum())
+        self.assertEqual(1225, sum)
+
+    def test_floating_point_sum_with_attribute_path(self):
+        sum = self.map.aggregate(floating_point_sum("this"))
+        self.assertEqual(1225, sum)
+
+    def test_floating_point_sum_with_predicate(self):
+        sum = self.map.aggregate(floating_point_sum(), predicate=greater_or_equal("this", 47))
+        self.assertEqual(144, sum)
+
+    def test_number_avg(self):
+        average = self.map.aggregate(number_avg())
+        self.assertEqual(24.5, average)
+
+    def test_number_avg_with_attribute_path(self):
+        average = self.map.aggregate(number_avg("this"))
+        self.assertEqual(24.5, average)
+
+    def test_number_avg_with_predicate(self):
+        average = self.map.aggregate(number_avg(), predicate=greater_or_equal("this", 47))
+        self.assertEqual(48, average)
+
+    def test_max(self):
+        average = self.map.aggregate(max_())
+        self.assertEqual(49, average)
+
+    def test_max_with_attribute_path(self):
+        average = self.map.aggregate(max_("this"))
+        self.assertEqual(49, average)
+
+    def test_max_with_predicate(self):
+        average = self.map.aggregate(max_(), predicate=less_or_equal("this", 3))
+        self.assertEqual(3, average)
+
+    def test_min(self):
+        average = self.map.aggregate(min_())
+        self.assertEqual(0, average)
+
+    def test_min_with_attribute_path(self):
+        average = self.map.aggregate(min_("this"))
+        self.assertEqual(0, average)
+
+    def test_min_with_predicate(self):
+        average = self.map.aggregate(min_(), predicate=greater_or_equal("this", 3))
+        self.assertEqual(3, average)
