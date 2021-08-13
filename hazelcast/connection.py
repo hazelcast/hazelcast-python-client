@@ -531,10 +531,7 @@ class ConnectionManager(object):
             return self._handle_successful_auth(response, connection)
 
         if status == _AuthenticationStatus.CREDENTIALS_FAILED:
-            err = AuthenticationError(
-                "Authentication failed. The configured cluster name on "
-                "the client does not match the one configured in the cluster."
-            )
+            err = AuthenticationError("Authentication failed. Check cluster name and credentials.")
         elif status == _AuthenticationStatus.NOT_ALLOWED_IN_CLUSTER:
             err = ClientNotAllowedInClusterError("Client is not allowed in the cluster")
         elif status == _AuthenticationStatus.SERIALIZATION_VERSION_MISMATCH:
