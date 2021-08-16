@@ -1,6 +1,8 @@
 import os
 import unittest
 
+from tests.hzrc.ttypes import Lang
+
 try:
     from hazelcast.config import TopicOverloadPolicy
     from hazelcast.errors import TopicOverloadError
@@ -16,6 +18,7 @@ from tests.util import (
     random_string,
     event_collector,
     get_current_timestamp,
+    mark_client_version_at_least,
 )
 
 CAPACITY = 10
@@ -489,6 +492,37 @@ class ReliableTopicTest(SingleMemberTestCase):
             self.assertEqual([0, 1, 2], listener.sequences)
 
         self.assertTrueEventually(assertion)
+
+    def test_client_receives_when_server_publish_messages(self):
+        mark_client_version_at_least(self, "4.2.1")
+
+        topic_name = random_string()
+        topic = self.get_topic(topic_name)
+
+        received_message_count = [0]
+
+        def listener(message):
+            self.assertIsNotNone(message.member)
+            received_message_count[0] += 1
+
+        topic.add_listener(listener)
+
+        message_count = 10
+
+        script = """
+        var topic = instance_0.getReliableTopic("%s");
+        for (var i = 0; i < %d; i++) {
+            topic.publish(i);
+        }
+        """ % (
+            topic_name,
+            message_count,
+        )
+
+        self.rc.executeOnController(self.cluster.id, script, Lang.JAVASCRIPT)
+        self.assertTrueEventually(
+            lambda: self.assertEqual(message_count, received_message_count[0])
+        )
 
     def get_ringbuffer_data(self, topic):
         ringbuffer = topic._ringbuffer
