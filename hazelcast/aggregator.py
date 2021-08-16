@@ -239,7 +239,7 @@ def double_sum(attribute_path=None):
         attribute_path (str): Extracts values from this path, if given.
 
     Returns:
-        Aggregator[float]: An aggregator that calculates the sum of input the
+        Aggregator[float]: An aggregator that calculates the sum of the input
         values.
     """
     return _DoubleSumAggregator(attribute_path)
@@ -372,7 +372,11 @@ def max_(attribute_path=None):
 
     Accepts ``None`` input values and ``None`` extracted values.
 
-    Accepts any input value type that is comparable.
+    Since the server-side implementation is in Java, values stored in the
+    Map must implement the ``Comparable`` interface in Java. That means, one
+    should be able to use this aggregator with most of the primitive values
+    sent from the Python client, as Java implements this interface for the
+    equivalents of types like ``int``, ``str``, and ``float``.
 
     Args:
         attribute_path (str): Extracts values from this path, if given.
@@ -389,7 +393,11 @@ def min_(attribute_path=None):
 
     Accepts ``None`` input values and ``None`` extracted values.
 
-    Accepts any input value type that is comparable.
+    Since the server-side implementation is in Java, values stored in the
+    Map must implement the ``Comparable`` interface in Java. That means, one
+    should be able to use this aggregator with most of the primitive values
+    sent from the Python client, as Java implements this interface for the
+    equivalents of types like ``int``, ``str``, and ``float``.
 
     Args:
         attribute_path (str): Extracts values from this path, if given.
@@ -428,7 +436,11 @@ def max_by(attribute_path=None):
 
     Accepts ``None`` input values and ``None`` extracted values.
 
-    Accepts any input value type that is comparable.
+    Since the server-side implementation is in Java, values stored in the
+    Map must implement the ``Comparable`` interface in Java. That means, one
+    should be able to use this aggregator with most of the primitive values
+    sent from the Python client, as Java implements this interface for the
+    equivalents of types like ``int``, ``str``, and ``float``.
 
     Args:
         attribute_path (str): Path to extract values from.
@@ -448,7 +460,11 @@ def min_by(attribute_path):
 
     Accepts ``None`` input values and ``None`` extracted values.
 
-    Accepts any input value type that is comparable.
+    Since the server-side implementation is in Java, values stored in the
+    Map must implement the ``Comparable`` interface in Java. That means, one
+    should be able to use this aggregator with most of the primitive values
+    sent from the Python client, as Java implements this interface for the
+    equivalents of types like ``int``, ``str``, and ``float``.
 
     Args:
         attribute_path (str): Path to extract values from.

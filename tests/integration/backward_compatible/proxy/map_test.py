@@ -821,14 +821,17 @@ class MapAggregatorsIntTest(SingleMemberTestCase):
         self.assertEqual(144, sum_)
 
     def test_distinct(self):
+        self._fill_with_duplicate_values()
         distinct_values = self.map.aggregate(distinct())
         self.assertEqual(set(range(50)), distinct_values)
 
     def test_distinct_with_attribute_path(self):
+        self._fill_with_duplicate_values()
         distinct_values = self.map.aggregate(distinct("this"))
         self.assertEqual(set(range(50)), distinct_values)
 
     def test_distinct_with_predicate(self):
+        self._fill_with_duplicate_values()
         distinct_values = self.map.aggregate(distinct(), greater_or_equal("this", 10))
         self.assertEqual(set(range(10, 50)), distinct_values)
 
@@ -851,6 +854,12 @@ class MapAggregatorsIntTest(SingleMemberTestCase):
         min_item = self.map.aggregate(min_by("this"), greater_or_equal("this", 10))
         self.assertEqual("key-10", min_item.key)
         self.assertEqual(10, min_item.value)
+
+    def _fill_with_duplicate_values(self):
+        # Map is initially filled with key-i: i mappings from [0, 50).
+        # Add more values with different keys but the same values to
+        # test the behaviour of the distinct aggregator.
+        self.map.put_all({"different-key-%d" % i: i for i in range(50)})
 
 
 @unittest.skipIf(
