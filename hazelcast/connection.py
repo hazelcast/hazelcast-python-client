@@ -30,7 +30,7 @@ from hazelcast.protocol.client_message import (
 from hazelcast.protocol.codec import (
     client_authentication_codec,
     client_authentication_custom_codec,
-    client_ping_codec
+    client_ping_codec,
 )
 from hazelcast.util import AtomicInteger, calculate_version, UNKNOWN_VERSION
 

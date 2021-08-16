@@ -1,4 +1,3 @@
-
 from six import string_types
 
 
@@ -34,5 +33,3 @@ class BasicTokenProvider(TokenProvider):
             bytes: token as a bytes object.
         """
         return self._token
-
-

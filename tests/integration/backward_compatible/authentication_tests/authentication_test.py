@@ -40,7 +40,9 @@ class AuthenticationTest(HazelcastTestCase):
         cluster = self.create_cluster(self.rc, self.configure_cluster(self.hazelcast_userpass_xml))
         cluster.start_member()
 
-        client = HazelcastClient(cluster_name=cluster.id, creds_username="member1", creds_password="s3crEt")
+        client = HazelcastClient(
+            cluster_name=cluster.id, creds_username="member1", creds_password="s3crEt"
+        )
         self.assertTrue(client.lifecycle_service.is_running())
         client.shutdown()
 

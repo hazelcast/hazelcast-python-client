@@ -4,7 +4,6 @@ from hazelcast.token_provider import BasicTokenProvider
 
 
 class BasicTokenProviderTestCase(unittest.TestCase):
-
     def test_empty(self):
         p = BasicTokenProvider()
         self.assertEquals(b"", p.token())
