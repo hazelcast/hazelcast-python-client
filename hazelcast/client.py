@@ -329,7 +329,7 @@ class HazelcastClient(object):
             successful replicas. By default, set to ``False`` (do not fail).
         creds_username (str): Username for credentials authentication (Enterprise feature).
         creds_password (str): Password for credentials authentication (Enterprise feature).
-        token_provider (TokenProvider): Token provider for custom authentication (Enterprise feature).
+        token_provider (hazelcast.token_provider.TokenProvider): Token provider for custom authentication (Enterprise feature).
             Note that token_provider setting has priority over credentials settings.
     """
 
