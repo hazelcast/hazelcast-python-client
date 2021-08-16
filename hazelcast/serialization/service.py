@@ -1,7 +1,11 @@
 import uuid
 
 from hazelcast.serialization.base import BaseSerializationService
-from hazelcast.serialization.objects import ReliableTopicMessage
+from hazelcast.serialization.objects import (
+    ReliableTopicMessage,
+    CanonicalizingHashSet,
+    IdentifiedMapEntry,
+)
 from hazelcast.serialization.portable.classdef import FieldType
 from hazelcast.serialization.portable.context import PortableContext
 from hazelcast.serialization.portable.serializer import PortableSerializer
@@ -57,7 +61,15 @@ class SerializationServiceV1(BaseSerializationService):
 
     def _get_builtin_identified_factories(self):
         return {
-            ReliableTopicMessage.FACTORY_ID: {ReliableTopicMessage.CLASS_ID: ReliableTopicMessage}
+            ReliableTopicMessage.FACTORY_ID: {
+                ReliableTopicMessage.CLASS_ID: ReliableTopicMessage,
+            },
+            CanonicalizingHashSet.FACTORY_ID: {
+                CanonicalizingHashSet.CLASS_ID: CanonicalizingHashSet,
+            },
+            IdentifiedMapEntry.FACTORY_ID: {
+                IdentifiedMapEntry.CLASS_ID: IdentifiedMapEntry,
+            },
         }
 
     def _register_constant_serializers(self):

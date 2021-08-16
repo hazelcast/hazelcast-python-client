@@ -1,0 +1,4 @@
+Aggregator
+==========
+
+.. automodule:: hazelcast.aggregator

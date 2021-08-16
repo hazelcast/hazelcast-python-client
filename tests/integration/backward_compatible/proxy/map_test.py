@@ -7,6 +7,7 @@ from hazelcast import six
 try:
     from hazelcast.aggregator import (
         count,
+        distinct,
         double_avg,
         double_sum,
         fixed_point_sum,
@@ -16,7 +17,9 @@ try:
         long_avg,
         long_sum,
         max_,
+        max_by,
         min_,
+        min_by,
         number_avg,
     )
 except ImportError:
@@ -790,32 +793,73 @@ class MapAggregatorsIntTest(SingleMemberTestCase):
         self.assertEqual(24.5, average)
 
     def test_int_average_with_predicate(self):
-        average = self.map.aggregate(int_avg(), predicate=greater_or_equal("this", 47))
+        average = self.map.aggregate(int_avg(), greater_or_equal("this", 47))
         self.assertEqual(48, average)
 
     def test_int_sum(self):
-        sum = self.map.aggregate(int_sum())
-        self.assertEqual(1225, sum)
+        sum_ = self.map.aggregate(int_sum())
+        self.assertEqual(1225, sum_)
 
     def test_int_sum_with_attribute_path(self):
-        sum = self.map.aggregate(int_sum("this"))
-        self.assertEqual(1225, sum)
+        sum_ = self.map.aggregate(int_sum("this"))
+        self.assertEqual(1225, sum_)
 
     def test_int_sum_with_predicate(self):
-        sum = self.map.aggregate(int_sum(), predicate=greater_or_equal("this", 47))
-        self.assertEqual(144, sum)
+        sum_ = self.map.aggregate(int_sum(), greater_or_equal("this", 47))
+        self.assertEqual(144, sum_)
 
     def test_fixed_point_sum(self):
-        sum = self.map.aggregate(fixed_point_sum())
-        self.assertEqual(1225, sum)
+        sum_ = self.map.aggregate(fixed_point_sum())
+        self.assertEqual(1225, sum_)
 
     def test_fixed_point_sum_with_attribute_path(self):
-        sum = self.map.aggregate(fixed_point_sum("this"))
-        self.assertEqual(1225, sum)
+        sum_ = self.map.aggregate(fixed_point_sum("this"))
+        self.assertEqual(1225, sum_)
 
     def test_fixed_point_sum_with_predicate(self):
-        sum = self.map.aggregate(fixed_point_sum(), predicate=greater_or_equal("this", 47))
-        self.assertEqual(144, sum)
+        sum_ = self.map.aggregate(fixed_point_sum(), greater_or_equal("this", 47))
+        self.assertEqual(144, sum_)
+
+    def test_distinct(self):
+        self._fill_with_duplicate_values()
+        distinct_values = self.map.aggregate(distinct())
+        self.assertEqual(set(range(50)), distinct_values)
+
+    def test_distinct_with_attribute_path(self):
+        self._fill_with_duplicate_values()
+        distinct_values = self.map.aggregate(distinct("this"))
+        self.assertEqual(set(range(50)), distinct_values)
+
+    def test_distinct_with_predicate(self):
+        self._fill_with_duplicate_values()
+        distinct_values = self.map.aggregate(distinct(), greater_or_equal("this", 10))
+        self.assertEqual(set(range(10, 50)), distinct_values)
+
+    def test_max_by(self):
+        max_item = self.map.aggregate(max_by("this"))
+        self.assertEqual("key-49", max_item.key)
+        self.assertEqual(49, max_item.value)
+
+    def test_max_by_with_predicate(self):
+        max_item = self.map.aggregate(max_by("this"), less_or_equal("this", 10))
+        self.assertEqual("key-10", max_item.key)
+        self.assertEqual(10, max_item.value)
+
+    def test_min_by(self):
+        min_item = self.map.aggregate(min_by("this"))
+        self.assertEqual("key-0", min_item.key)
+        self.assertEqual(0, min_item.value)
+
+    def test_min_by_with_predicate(self):
+        min_item = self.map.aggregate(min_by("this"), greater_or_equal("this", 10))
+        self.assertEqual("key-10", min_item.key)
+        self.assertEqual(10, min_item.value)
+
+    def _fill_with_duplicate_values(self):
+        # Map is initially filled with key-i: i mappings from [0, 50).
+        # Add more values with different keys but the same values to
+        # test the behaviour of the distinct aggregator.
+        self.map.put_all({"different-key-%d" % i: i for i in range(50)})
 
 
 @unittest.skipIf(
@@ -844,20 +888,20 @@ class MapAggregatorsLongTest(SingleMemberTestCase):
         self.assertEqual(24.5, average)
 
     def test_long_average_with_predicate(self):
-        average = self.map.aggregate(long_avg(), predicate=greater_or_equal("this", 47))
+        average = self.map.aggregate(long_avg(), greater_or_equal("this", 47))
         self.assertEqual(48, average)
 
     def test_long_sum(self):
-        sum = self.map.aggregate(long_sum())
-        self.assertEqual(1225, sum)
+        sum_ = self.map.aggregate(long_sum())
+        self.assertEqual(1225, sum_)
 
     def test_long_sum_with_attribute_path(self):
-        sum = self.map.aggregate(long_sum("this"))
-        self.assertEqual(1225, sum)
+        sum_ = self.map.aggregate(long_sum("this"))
+        self.assertEqual(1225, sum_)
 
     def test_long_sum_with_predicate(self):
-        sum = self.map.aggregate(long_sum(), predicate=greater_or_equal("this", 47))
-        self.assertEqual(144, sum)
+        sum_ = self.map.aggregate(long_sum(), greater_or_equal("this", 47))
+        self.assertEqual(144, sum_)
 
 
 @unittest.skipIf(
@@ -885,7 +929,7 @@ class MapAggregatorsDoubleTest(SingleMemberTestCase):
         self.assertEqual(50, count_)
 
     def test_count_with_predicate(self):
-        count_ = self.map.aggregate(count(), predicate=greater_or_equal("this", 1))
+        count_ = self.map.aggregate(count(), greater_or_equal("this", 1))
         self.assertEqual(49, count_)
 
     def test_double_average(self):
@@ -897,32 +941,32 @@ class MapAggregatorsDoubleTest(SingleMemberTestCase):
         self.assertEqual(24.5, average)
 
     def test_double_average_with_predicate(self):
-        average = self.map.aggregate(double_avg(), predicate=greater_or_equal("this", 47))
+        average = self.map.aggregate(double_avg(), greater_or_equal("this", 47))
         self.assertEqual(48, average)
 
     def test_double_sum(self):
-        sum = self.map.aggregate(double_sum())
-        self.assertEqual(1225, sum)
+        sum_ = self.map.aggregate(double_sum())
+        self.assertEqual(1225, sum_)
 
     def test_double_sum_with_attribute_path(self):
-        sum = self.map.aggregate(double_sum("this"))
-        self.assertEqual(1225, sum)
+        sum_ = self.map.aggregate(double_sum("this"))
+        self.assertEqual(1225, sum_)
 
     def test_double_sum_with_predicate(self):
-        sum = self.map.aggregate(double_sum(), predicate=greater_or_equal("this", 47))
-        self.assertEqual(144, sum)
+        sum_ = self.map.aggregate(double_sum(), greater_or_equal("this", 47))
+        self.assertEqual(144, sum_)
 
     def test_floating_point_sum(self):
-        sum = self.map.aggregate(floating_point_sum())
-        self.assertEqual(1225, sum)
+        sum_ = self.map.aggregate(floating_point_sum())
+        self.assertEqual(1225, sum_)
 
     def test_floating_point_sum_with_attribute_path(self):
-        sum = self.map.aggregate(floating_point_sum("this"))
-        self.assertEqual(1225, sum)
+        sum_ = self.map.aggregate(floating_point_sum("this"))
+        self.assertEqual(1225, sum_)
 
     def test_floating_point_sum_with_predicate(self):
-        sum = self.map.aggregate(floating_point_sum(), predicate=greater_or_equal("this", 47))
-        self.assertEqual(144, sum)
+        sum_ = self.map.aggregate(floating_point_sum(), greater_or_equal("this", 47))
+        self.assertEqual(144, sum_)
 
     def test_number_avg(self):
         average = self.map.aggregate(number_avg())
@@ -933,7 +977,7 @@ class MapAggregatorsDoubleTest(SingleMemberTestCase):
         self.assertEqual(24.5, average)
 
     def test_number_avg_with_predicate(self):
-        average = self.map.aggregate(number_avg(), predicate=greater_or_equal("this", 47))
+        average = self.map.aggregate(number_avg(), greater_or_equal("this", 47))
         self.assertEqual(48, average)
 
     def test_max(self):
@@ -945,7 +989,7 @@ class MapAggregatorsDoubleTest(SingleMemberTestCase):
         self.assertEqual(49, average)
 
     def test_max_with_predicate(self):
-        average = self.map.aggregate(max_(), predicate=less_or_equal("this", 3))
+        average = self.map.aggregate(max_(), less_or_equal("this", 3))
         self.assertEqual(3, average)
 
     def test_min(self):
@@ -957,5 +1001,5 @@ class MapAggregatorsDoubleTest(SingleMemberTestCase):
         self.assertEqual(0, average)
 
     def test_min_with_predicate(self):
-        average = self.map.aggregate(min_(), predicate=greater_or_equal("this", 3))
+        average = self.map.aggregate(min_(), greater_or_equal("this", 3))
         self.assertEqual(3, average)

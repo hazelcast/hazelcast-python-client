@@ -1,3 +1,4 @@
+from hazelcast.core import MapEntry
 from hazelcast.serialization.api import IdentifiedDataSerializable
 from hazelcast.serialization.data import Data
 from hazelcast.util import to_millis
@@ -52,3 +53,44 @@ def _read_data_from(inp):
 
 def _write_data_to(out, data):
     out.write_byte_array(data.to_bytes())
+
+
+# Values are canonicalized in the server-side. No need to
+# do the same here.
+class CanonicalizingHashSet(set, IdentifiedDataSerializable):
+
+    FACTORY_ID = -29
+    CLASS_ID = 19
+
+    def write_data(self, object_data_output):
+        pass
+
+    def read_data(self, object_data_input):
+        count = object_data_input.read_int()
+        for _ in range(count):
+            self.add(object_data_input.read_object())
+
+    def get_factory_id(self):
+        return self.FACTORY_ID
+
+    def get_class_id(self):
+        return self.CLASS_ID
+
+
+class IdentifiedMapEntry(MapEntry, IdentifiedDataSerializable):
+
+    FACTORY_ID = -4
+    CLASS_ID = 120
+
+    def write_data(self, object_data_output):
+        pass
+
+    def read_data(self, object_data_input):
+        self._key = object_data_input.read_object()
+        self._value = object_data_input.read_object()
+
+    def get_factory_id(self):
+        return self.FACTORY_ID
+
+    def get_class_id(self):
+        return self.CLASS_ID
