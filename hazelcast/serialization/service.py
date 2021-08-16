@@ -1,16 +1,17 @@
 import uuid
 
+from hazelcast import six
 from hazelcast.serialization.base import BaseSerializationService
 from hazelcast.serialization.objects import (
-    ReliableTopicMessage,
     CanonicalizingHashSet,
+    IdentifiedAddress,
     IdentifiedMapEntry,
+    ReliableTopicMessage,
 )
 from hazelcast.serialization.portable.classdef import FieldType
 from hazelcast.serialization.portable.context import PortableContext
 from hazelcast.serialization.portable.serializer import PortableSerializer
 from hazelcast.serialization.serializer import *
-from hazelcast import six
 
 DEFAULT_OUT_BUFFER_SIZE = 4 * 1024
 
@@ -69,6 +70,9 @@ class SerializationServiceV1(BaseSerializationService):
             },
             IdentifiedMapEntry.FACTORY_ID: {
                 IdentifiedMapEntry.CLASS_ID: IdentifiedMapEntry,
+            },
+            IdentifiedAddress.FACTORY_ID: {
+                IdentifiedAddress.CLASS_ID: IdentifiedAddress,
             },
         }
 
