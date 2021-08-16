@@ -1,4 +1,4 @@
-from six import string_types
+from hazelcast.six import string_types
 
 
 class TokenProvider(object):

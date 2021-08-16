@@ -280,7 +280,7 @@ In order to use it, enable it in member configuration:
                 </identity>
             </realm>
         </realms>
-    </security
+    </security>
 
 Then, on the client-side, set ``creds_username`` and ``creds_password`` in the configuration:
 
@@ -299,7 +299,7 @@ Token-Based Authentication
 ==========================
 
 Python client supports token-based authentication via token providers.
-A token provider is a class derived from :class:`hazelcast.token_provider.TokenProvider`.
+A token provider is a class derived from :class:`hazelcast.security.TokenProvider`.
 
 In order to use token based authentication, first define in the member configuration:
 
@@ -317,9 +317,9 @@ In order to use token based authentication, first define in the member configura
                 </identity>
             </realm>
         </realms>
-    </security
+    </security>
 
-Using :class:`hazelcast.token_provider.BasicTokenProvider` you can pass the given token the member:
+Using :class:`hazelcast.security.BasicTokenProvider` you can pass the given token the member:
 
 .. code:: python
     token_provider = BasicTokenProvider("MY-SECRET")

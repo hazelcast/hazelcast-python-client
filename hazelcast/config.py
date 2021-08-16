@@ -1,9 +1,11 @@
 import re
+import types
 
 from hazelcast import six
 from hazelcast.errors import InvalidConfigurationError
 from hazelcast.serialization.api import StreamSerializer, IdentifiedDataSerializable, Portable
 from hazelcast.serialization.portable.classdef import ClassDefinition
+from hazelcast.security import TokenProvider
 from hazelcast.util import (
     check_not_none,
     number_types,
@@ -11,11 +13,6 @@ from hazelcast.util import (
     none_type,
     try_to_get_enum_value,
 )
-
-try:
-    from .security import TokenProvider
-except ImportError:
-    pass
 
 
 class IntType(object):
@@ -1309,6 +1306,8 @@ class _Config(object):
     @creds_username.setter
     def creds_username(self, username):
         # type: (_Config, str) -> None
+        if not isinstance(username, six.string_types):
+            raise TypeError("creds_password must be a string")
         self._creds_username = username
 
     @property
@@ -1319,6 +1318,8 @@ class _Config(object):
     @creds_password.setter
     def creds_password(self, password):
         # type: (_Config, str) -> None
+        if not isinstance(password, six.string_types):
+            raise TypeError("creds_password must be a string")
         self._creds_password = password
 
     @property
@@ -1329,6 +1330,9 @@ class _Config(object):
     @token_provider.setter
     def token_provider(self, token_provider):
         # type: (_Config, TokenProvider) -> None
+        token_fun = getattr(token_provider, "token", None)
+        if token_fun is None or not isinstance(token_fun, types.MethodType):
+            raise TypeError("token_provider must be an object with a token method")
         self._token_provider = token_provider
 
     @classmethod

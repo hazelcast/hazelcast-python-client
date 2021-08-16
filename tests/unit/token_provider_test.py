@@ -1,6 +1,6 @@
 import unittest
 
-from hazelcast.token_provider import BasicTokenProvider
+from hazelcast.security.token_provider import BasicTokenProvider
 
 
 class BasicTokenProviderTestCase(unittest.TestCase):

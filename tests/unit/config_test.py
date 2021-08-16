@@ -15,6 +15,7 @@ from hazelcast.config import (
     TopicOverloadPolicy,
 )
 from hazelcast.errors import InvalidConfigurationError
+from hazelcast.security import BasicTokenProvider
 from hazelcast.serialization.api import IdentifiedDataSerializable, Portable, StreamSerializer
 from hazelcast.serialization.portable.classdef import ClassDefinition
 from hazelcast.util import RandomLB
@@ -822,6 +823,26 @@ class ConfigTest(unittest.TestCase):
 
         config.fail_on_indeterminate_operation_state = True
         self.assertTrue(config.fail_on_indeterminate_operation_state)
+
+    def test_auth_fromdict(self):
+        tp = BasicTokenProvider("tok")
+        cfg = _Config().from_dict({
+            "creds_username": "user",
+            "creds_password": "pass",
+            "token_provider": tp,
+        })
+        self.assertEqual("user", cfg.creds_username)
+        self.assertEqual("pass", cfg.creds_password)
+        self.assertEqual(tp, cfg.token_provider)
+
+    def test_auth_failure(self):
+        cfg = _Config()
+        with self.assertRaises(TypeError):
+            cfg.creds_username = 1
+        with self.assertRaises(TypeError):
+            cfg.creds_password = 2
+        with self.assertRaises(TypeError):
+            cfg.token_provider = object()
 
 
 class IndexConfigTest(unittest.TestCase):
