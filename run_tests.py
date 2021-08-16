@@ -36,6 +36,7 @@ if __name__ == "__main__":
                     "--cover-package=hazelcast",
                     "--cover-inclusive",
                     "--nologcapture",
+                    "tests",
                 ]
 
                 enterprise_key = os.environ.get("HAZELCAST_ENTERPRISE_KEY", None)
