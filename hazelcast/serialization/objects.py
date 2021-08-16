@@ -47,7 +47,7 @@ class ReliableTopicMessage(IdentifiedDataSerializable):
 # Inherits from the Address, as we cannot implement
 # IDS in the core module due to cyclic import problems.
 # This was needed to construct the ReliableTopic messages
-# sent from the server as they have an non-None address
+# sent from the server as they have a non-None address
 # field.
 class IdentifiedAddress(Address, IdentifiedDataSerializable):
 
