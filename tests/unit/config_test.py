@@ -826,11 +826,13 @@ class ConfigTest(unittest.TestCase):
 
     def test_auth_fromdict(self):
         tp = BasicTokenProvider("tok")
-        cfg = _Config().from_dict({
-            "creds_username": "user",
-            "creds_password": "pass",
-            "token_provider": tp,
-        })
+        cfg = _Config().from_dict(
+            {
+                "creds_username": "user",
+                "creds_password": "pass",
+                "token_provider": tp,
+            }
+        )
         self.assertEqual("user", cfg.creds_username)
         self.assertEqual("pass", cfg.creds_password)
         self.assertEqual(tp, cfg.token_provider)

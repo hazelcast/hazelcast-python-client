@@ -5,6 +5,7 @@ from hazelcast.errors import HazelcastError
 from tests.base import HazelcastTestCase
 from tests.util import get_abs_path, set_attr, is_client_version_older_than
 from hazelcast.client import HazelcastClient
+
 try:
     from hazelcast.security import BasicTokenProvider
 except ImportError:
