@@ -269,6 +269,7 @@ In order to use it, enable it in member configuration:
 .. code:: xml
 
     <security enabled="true">
+        <member-authentication realm="passwordRealm"/>
         <realms>
             <realm name="passwordRealm">
                  <identity>
@@ -302,6 +303,10 @@ In order to use token based authentication, first define in the member configura
 .. code:: xml
 
     <security enabled="true">
+        <client-permissions>
+            ...
+        </client-permissions>
+        <member-authentication realm="tokenRealm"/>
         <realms>
             <realm name="tokenRealm">
                  <identity>
