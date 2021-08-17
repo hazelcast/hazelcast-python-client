@@ -29,6 +29,7 @@ features:
 - Entry Processor
 - Built-in Predicates
 - Listener with Predicate
+- Fast Aggregations
 - Near Cache Support
 - Programmatic Configuration
 - SSL Support (requires Enterprise server)

@@ -367,3 +367,23 @@ class MemberVersion(object):
         self.major = major
         self.minor = minor
         self.patch = patch
+
+
+class MapEntry(object):
+    """
+    Represents the entry of a Map, with key and value fields.
+    """
+
+    __slots__ = ("_key", "_value")
+
+    def __init__(self, key=None, value=None):
+        self._key = key
+        self._value = value
+
+    @property
+    def key(self):
+        return self._key
+
+    @property
+    def value(self):
+        return self._value
