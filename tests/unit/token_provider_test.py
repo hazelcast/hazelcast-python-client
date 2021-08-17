@@ -17,4 +17,4 @@ class BasicTokenProviderTestCase(unittest.TestCase):
         self.assertEquals(b"Hazelcast", p.token())
 
     def test_invalid_type(self):
-        self.assertRaises(ValueError, lambda: BasicTokenProvider(123456))
+        self.assertRaises(TypeError, lambda: BasicTokenProvider(123456))
