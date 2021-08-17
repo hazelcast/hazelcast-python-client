@@ -303,9 +303,6 @@ In order to use token based authentication, first define in the member configura
 .. code:: xml
 
     <security enabled="true">
-        <client-permissions>
-            ...
-        </client-permissions>
         <member-authentication realm="tokenRealm"/>
         <realms>
             <realm name="tokenRealm">

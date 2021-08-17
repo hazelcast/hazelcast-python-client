@@ -22,7 +22,7 @@ from hazelcast.security import BasicTokenProvider
 #             </identity>
 #         </realm>
 #     </realms>
-# </security
+# </security>
 
 # Start a new Hazelcast client with the given token provider.
 token_provider = BasicTokenProvider("s3crEt")

@@ -23,7 +23,7 @@ class BasicTokenProvider(TokenProvider):
         elif isinstance(token, bytes):
             self._token = token
         else:
-            raise ValueError("token must be either a str or bytes object")
+            raise TypeError("token must be either a str or bytes object")
 
     def token(self):
         # type: (BasicTokenProvider) -> bytes

@@ -21,7 +21,7 @@ import hazelcast
 #             </identity>
 #         </realm>
 #     </realms>
-# </security
+# </security>
 
 # Start a new Hazelcast client with the given credentials.
 client = hazelcast.HazelcastClient(creds_username="member1", creds_password="s3crEt")
