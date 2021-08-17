@@ -326,5 +326,3 @@ Using :class:`hazelcast.security.BasicTokenProvider` you can pass the given toke
     client = hazelcast.HazelcastClient(
         token_provider=token_provider
     )
-
-
