@@ -2137,6 +2137,49 @@ See the following example.
     # Average age is 30
     print("Average age is %f" % average_age)
 
+Projections
+~~~~~~~~~~~~~~~~~
+
+Projections feature provides three projection functions; ``single_attribute``, 
+``multi_attribute`` and ``identity``, on top of Hazelcast ``Map`` entries. Their
+performance is high since they run in parallel for each partition and are 
+highly optimized for speed and low memory consumption.
+
+These aggregators are used with the ``map.aggregate`` function, which takes an
+optional predicate argument.
+
+See the following example.
+
+.. code:: python
+
+    import hazelcast
+
+    from hazelcast.projection import single_attribute, multi_attribute
+    from hazelcast.predicate import greater_or_equal
+
+    client = hazelcast.HazelcastClient()
+    employees = client.get_map("employees").blocking()
+
+    employees.put(1, HazelcastJsonValue('{"Age": 23, "Height": 180, "Weight": 60}'))
+
+    employee_age = employees.project(single_attribute("Age"))
+    # Prints:
+    # The employee age is 23
+    print("The employee age is " % employee_age)
+
+    # Run Single Attribute With Predicate
+    employee_age = employees.project(single_attribute("Age"), greater_or_equal("Age", 23))
+    # Prints:
+    # The employee age is 23
+    print("The employee age is " % employee_age)
+
+    # Run Multi Attribute Projection
+    employee_multi_attribute = employees.project(multi_attribute("Age", "Height"))
+    # Prints:
+    # The employee age is 23, height is 180
+    print("The employees age is " % employee_multi_attribute[0][0], "height is ", % employee_multi_attribute[0][1])
+
+
 Performance
 -----------
 

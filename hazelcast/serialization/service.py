@@ -91,6 +91,7 @@ class SerializationServiceV1(BaseSerializationService):
         self._registry.register_constant_serializer(UuidSerializer(), uuid.UUID)
         self._registry.register_constant_serializer(StringSerializer())
         # Arrays of primitives and String
+        self._registry.register_constant_serializer(ArraySerializer())
         self._registry.register_constant_serializer(ByteArraySerializer(), bytearray)
         self._registry.register_constant_serializer(BooleanArraySerializer())
         self._registry.register_constant_serializer(CharArraySerializer())
