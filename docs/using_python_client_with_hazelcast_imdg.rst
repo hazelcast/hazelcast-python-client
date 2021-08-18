@@ -2145,7 +2145,7 @@ Projections feature provides three projection functions; ``single_attribute``,
 performance is high since they run in parallel for each partition and are 
 highly optimized for speed and low memory consumption.
 
-These aggregators are used with the ``map.aggregate`` function, which takes an
+These projections are used with the ``map.project`` function, which takes an
 optional predicate argument.
 
 See the following example.
@@ -2154,6 +2154,7 @@ See the following example.
 
     import hazelcast
 
+    from hazelcast.core import HazelcastJsonValue
     from hazelcast.projection import single_attribute, multi_attribute
     from hazelcast.predicate import greater_or_equal
 
@@ -2165,19 +2166,19 @@ See the following example.
     employee_age = employees.project(single_attribute("Age"))
     # Prints:
     # The employee age is 23
-    print("The employee age is " % employee_age)
+    print("The employee age is %d" % employee_age)
 
     # Run Single Attribute With Predicate
     employee_age = employees.project(single_attribute("Age"), greater_or_equal("Age", 23))
     # Prints:
     # The employee age is 23
-    print("The employee age is " % employee_age)
+    print("The employee age is %d" % employee_age)
 
     # Run Multi Attribute Projection
     employee_multi_attribute = employees.project(multi_attribute("Age", "Height"))
     # Prints:
     # The employee age is 23, height is 180
-    print("The employees age is " % employee_multi_attribute[0][0], "height is ", % employee_multi_attribute[0][1])
+    print("The employees age is %d " % employee_multi_attribute[0][0], "height is %d", % employee_multi_attribute[0][1])
 
 
 Performance
