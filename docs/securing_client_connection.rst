@@ -3,8 +3,9 @@ Securing Client Connection
 
 This chapter describes the security features of Hazelcast Python client.
 These include using TLS/SSL for connections between members and between
-clients and members, and mutual authentication. These security features
-require **Hazelcast IMDG Enterprise** edition.
+clients and members, mutual authentication, username/password authentication
+and token authentication. These security features require
+**Hazelcast IMDG Enterprise** edition.
 
 TLS/SSL
 -------
@@ -258,3 +259,64 @@ On the client side, you have to provide ``ssl_cafile``, ``ssl_certfile``
 and ``ssl_keyfile`` on top of the other TLS/SSL configurations. See the
 :ref:`securing_client_connection:tls/ssl for hazelcast python clients`
 section for the details of these options.
+
+Username/Password Authentication
+================================
+
+You can protect your cluster using a username and password pair.
+In order to use it, enable it in member configuration:
+
+.. code:: xml
+
+    <security enabled="true">
+        <member-authentication realm="passwordRealm"/>
+        <realms>
+            <realm name="passwordRealm">
+                 <identity>
+                    <username-password username="MY-USERNAME" password="MY-PASSWORD" />
+                </identity>
+            </realm>
+        </realms>
+    </security>
+
+Then, on the client-side, set ``creds_username`` and ``creds_password`` in the configuration:
+
+.. code:: python
+
+    client = hazelcast.HazelcastClient(
+        creds_username="MY-USERNAME",
+        creds_password="MY-PASSWORD"
+    )
+
+Check out the documentation on `Password Credentials
+<https://docs.hazelcast.com/imdg/latest/security/security-realms.html#password-credentials>`__
+of the Hazelcast Documentation.
+
+Token-Based Authentication
+==========================
+
+Python client supports token-based authentication via token providers.
+A token provider is a class derived from :class:`hazelcast.security.TokenProvider`.
+
+In order to use token based authentication, first define in the member configuration:
+
+.. code:: xml
+
+    <security enabled="true">
+        <member-authentication realm="tokenRealm"/>
+        <realms>
+            <realm name="tokenRealm">
+                 <identity>
+                    <token>MY-SECRET</token>
+                </identity>
+            </realm>
+        </realms>
+    </security>
+
+Using :class:`hazelcast.security.BasicTokenProvider` you can pass the given token the member:
+
+.. code:: python
+    token_provider = BasicTokenProvider("MY-SECRET")
+    client = hazelcast.HazelcastClient(
+        token_provider=token_provider
+    )

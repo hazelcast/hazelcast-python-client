@@ -327,6 +327,10 @@ class HazelcastClient(object):
             :class:`hazelcast.errors.IndeterminateOperationStateError`. However,
             even if the invocation fails, there will not be any rollback on other
             successful replicas. By default, set to ``False`` (do not fail).
+        creds_username (str): Username for credentials authentication (Enterprise feature).
+        creds_password (str): Password for credentials authentication (Enterprise feature).
+        token_provider (hazelcast.token_provider.TokenProvider): Token provider for custom authentication (Enterprise feature).
+            Note that token_provider setting has priority over credentials settings.
     """
 
     _CLIENT_ID = AtomicInteger()
