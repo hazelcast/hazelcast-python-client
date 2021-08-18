@@ -14,6 +14,7 @@ API Documentation
     partition
     predicate
     proxy/modules
+    security
     serialization
     sql
     transaction

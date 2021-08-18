@@ -1,0 +1,4 @@
+Security
+========
+
+.. automodule:: hazelcast.security

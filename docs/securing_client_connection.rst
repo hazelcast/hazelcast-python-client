@@ -261,7 +261,7 @@ and ``ssl_keyfile`` on top of the other TLS/SSL configurations. See the
 section for the details of these options.
 
 Username/Password Authentication
-================================
+--------------------------------
 
 You can protect your cluster using a username and password pair.
 In order to use it, enable it in member configuration:
@@ -293,7 +293,7 @@ Check out the documentation on `Password Credentials
 of the Hazelcast Documentation.
 
 Token-Based Authentication
-==========================
+--------------------------
 
 Python client supports token-based authentication via token providers.
 A token provider is a class derived from :class:`hazelcast.security.TokenProvider`.
@@ -316,6 +316,7 @@ In order to use token based authentication, first define in the member configura
 Using :class:`hazelcast.security.BasicTokenProvider` you can pass the given token the member:
 
 .. code:: python
+
     token_provider = BasicTokenProvider("MY-SECRET")
     client = hazelcast.HazelcastClient(
         token_provider=token_provider
