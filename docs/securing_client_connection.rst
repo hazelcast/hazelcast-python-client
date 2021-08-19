@@ -3,9 +3,9 @@ Securing Client Connection
 
 This chapter describes the security features of Hazelcast Python client.
 These include using TLS/SSL for connections between members and between
-clients and members, mutual authentication, username/password authentication
-and token authentication. These security features require
-**Hazelcast IMDG Enterprise** edition.
+clients and members, mutual authentication, username/password authentication,
+token authentication and Kerberos authentication. These security features
+require **Hazelcast IMDG Enterprise** edition.
 
 TLS/SSL
 -------
@@ -321,3 +321,37 @@ Using :class:`hazelcast.security.BasicTokenProvider` you can pass the given toke
     client = hazelcast.HazelcastClient(
         token_provider=token_provider
     )
+
+Kerberos Authentication
+-----------------------
+
+Python client supports Kerberos authentication with an external package.
+The package provides the necessary token provider that handles the
+authentication against the KDC (key distribution center) with the given
+credentials, receives and caches the ticket, and finally retrieves the token.
+
+You can install the package from PyPI.
+
+.. code:: bash
+
+    pip install hzkerberos
+
+A sample code that makes use of the package is below.
+
+.. code:: python
+
+    import hazelcast
+    import hzkerberos
+
+    token_provider = hzkerberos.TokenProvider(
+        spn="hz/172.17.0.2@EXAMPLE.COM",
+        keytab="/etc/krb5.keytab",
+    )
+
+    client = hazelcast.HazelcastClient(
+        token_provider=token_provider
+    )
+
+For more information and possible client and server configurations, refer to
+the `documentation <https://pypi.org/project/hzkerberos/>`__ of the
+``hzkerberos`` package.
