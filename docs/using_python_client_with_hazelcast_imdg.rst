@@ -2137,6 +2137,62 @@ See the following example.
     # Average age is 30
     print("Average age is %f" % average_age)
 
+Projections
+~~~~~~~~~~~
+
+There are cases where instead of sending all the data returned by a query
+from the server, you want to transform (strip down) each result object in order
+to avoid redundant network traffic.
+
+For example, you select all employees based on some criteria, but you just
+want to return their name instead of the whole object. It is easily doable
+with the Projections.
+
+The ``projection`` module provides three projection functions:
+
+- ``single_attribute``: Extracts a single attribute from an object and returns
+  it.
+- ``multi_attribute``: Extracts multiple attributes from an object and returns
+  them as a ``list``.
+- ``identity``: Returns the object as it is.
+
+These projections are used with the ``map.project`` function, which takes an
+optional predicate argument.
+
+See the following example.
+
+.. code:: python
+
+    import hazelcast
+
+    from hazelcast.core import HazelcastJsonValue
+    from hazelcast.predicate import greater_or_equal
+    from hazelcast.projection import single_attribute, multi_attribute
+
+    client = hazelcast.HazelcastClient()
+    employees = client.get_map("employees").blocking()
+
+    employees.put(1, HazelcastJsonValue('{"Age": 23, "Height": 180, "Weight": 60}'))
+    employees.put(2, HazelcastJsonValue('{"Age": 21, "Height": 170, "Weight": 70}'))
+
+    employee_ages = employees.project(single_attribute("Age"))
+    # Prints:
+    # The ages of employees are [21, 23]
+    print("The ages of employees are %s" % employee_ages)
+
+    # Run Single Attribute With Predicate
+    employee_ages = employees.project(single_attribute("Age"), greater_or_equal("Age", 23))
+    # Prints:
+    # The employee age is 23
+    print("The employee age is: %s" % employee_ages[0])
+
+    # Run Multi Attribute Projection
+    employee_multi_attribute = employees.project(multi_attribute("Age", "Height"))
+    # Prints:
+    # Employee 1 age and height: [21, 170] Employee 2 age and height: [23, 180]
+    print("Employee 1 age and height: %s Employee 2 age and height: %s" % (employee_multi_attribute[0], employee_multi_attribute[1]))
+
+
 Performance
 -----------
 

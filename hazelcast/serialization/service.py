@@ -104,6 +104,7 @@ class SerializationServiceV1(BaseSerializationService):
         self._registry.register_constant_serializer(DateTimeSerializer(), datetime)
         self._registry.register_constant_serializer(BigIntegerSerializer())
         self._registry.register_constant_serializer(JavaClassSerializer())
+        self._registry.register_constant_serializer(ArraySerializer())
         self._registry.register_constant_serializer(ArrayListSerializer(), list)
         self._registry.register_constant_serializer(LinkedListSerializer())
         self._registry.register_constant_serializer(

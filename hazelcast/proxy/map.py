@@ -49,6 +49,8 @@ from hazelcast.protocol.codec import (
     map_add_interceptor_codec,
     map_aggregate_codec,
     map_aggregate_with_predicate_codec,
+    map_project_codec,
+    map_project_with_predicate_codec,
     map_execute_on_all_keys_codec,
     map_execute_on_key_codec,
     map_execute_on_keys_codec,
@@ -343,6 +345,44 @@ class Map(Proxy):
             return self._to_object(map_aggregate_codec.decode_response(message))
 
         request = map_aggregate_codec.encode_request(self.name, aggregator_data)
+        return self._invoke(request, handler)
+
+    def project(self, projection, predicate=None):
+        """Applies the projection logic on map entries and filter the result with the
+        predicate, if given.
+
+        Args:
+            projection (hazelcast.projection.Projection): Projection to project the
+                entries with.
+            predicate (hazelcast.predicate.Predicate): Predicate to filter the entries
+                with.
+
+        Returns:
+            hazelcast.future.Future: The result of the projection.
+        """
+        check_not_none(projection, "Projection can't be none")
+        projection_data = self._to_data(projection)
+        if predicate:
+            if isinstance(predicate, PagingPredicate):
+                raise AssertionError("Paging predicate is not supported.")
+
+            def handler(message):
+                return ImmutableLazyDataList(
+                    map_project_with_predicate_codec.decode_response(message), self._to_object
+                )
+
+            predicate_data = self._to_data(predicate)
+            request = map_project_with_predicate_codec.encode_request(
+                self.name, projection_data, predicate_data
+            )
+            return self._invoke(request, handler)
+
+        def handler(message):
+            return ImmutableLazyDataList(
+                map_project_codec.decode_response(message), self._to_object
+            )
+
+        request = map_project_codec.encode_request(self.name, projection_data)
         return self._invoke(request, handler)
 
     def clear(self):

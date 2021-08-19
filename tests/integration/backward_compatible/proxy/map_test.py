@@ -27,9 +27,21 @@ except ImportError:
     # them in the tests thanks to client version check.
     pass
 
+try:
+    from hazelcast.projection import (
+        single_attribute,
+        multi_attribute,
+        identity,
+    )
+except ImportError:
+    # If the import of those fail, we won't use
+    # them in the tests thanks to client version check.
+    pass
+
+from hazelcast.core import HazelcastJsonValue
 from hazelcast.config import IndexType, IntType
 from hazelcast.errors import HazelcastError
-from hazelcast.predicate import greater_or_equal, less_or_equal, sql
+from hazelcast.predicate import greater_or_equal, less_or_equal, sql, between
 from hazelcast.proxy.map import EntryEventType
 from hazelcast.serialization.api import IdentifiedDataSerializable
 from hazelcast.six.moves import range
@@ -1003,3 +1015,56 @@ class MapAggregatorsDoubleTest(SingleMemberTestCase):
     def test_min_with_predicate(self):
         average = self.map.aggregate(min_(), greater_or_equal("this", 3))
         self.assertEqual(3, average)
+
+
+@unittest.skipIf(
+    is_client_version_older_than("4.2.1"), "Tests the features added in 4.2.1 version of the client"
+)
+class MapProjectionsTest(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        config["cluster_name"] = cls.cluster.id
+        return config
+
+    def setUp(self):
+        self.map = self.client.get_map(random_string()).blocking()
+        self.map.put(1, HazelcastJsonValue('{"attr1": 1, "attr2": 2, "attr3": 3}'))
+        self.map.put(2, HazelcastJsonValue('{"attr1": 4, "attr2": 5, "attr3": 6}'))
+
+    def tearDown(self):
+        self.map.destroy()
+
+    def test_single_attribute(self):
+        attribute = self.map.project(single_attribute("attr1"))
+        six.assertCountEqual(self, [4, 1], attribute)
+
+    def test_single_attribute_with_predicate(self):
+        attribute = self.map.project(single_attribute("attr1"), greater_or_equal("attr1", 4))
+        self.assertEqual([4], attribute)
+
+    def test_multi_attribute(self):
+        attributes = self.map.project(multi_attribute("attr1", "attr2"))
+        six.assertCountEqual(self, [[4, 5], [1, 2]], attributes)
+
+    def test_multi_attribute_with_predicate(self):
+        attributes = self.map.project(
+            multi_attribute("attr1", "attr2"), greater_or_equal("attr2", 3)
+        )
+        self.assertEqual([[4, 5]], attributes)
+
+    def test_identity(self):
+        attributes = self.map.project(identity())
+        six.assertCountEqual(
+            self,
+            [
+                HazelcastJsonValue('{"attr1": 4, "attr2": 5, "attr3": 6}'),
+                HazelcastJsonValue('{"attr1": 1, "attr2": 2, "attr3": 3}'),
+            ],
+            [attribute.value for attribute in attributes],
+        )
+
+    def test_identity_with_predicate(self):
+        attributes = self.map.project(identity(), greater_or_equal("attr2", 3))
+        self.assertEqual(
+            HazelcastJsonValue('{"attr1": 4, "attr2": 5, "attr3": 6}'), attributes[0].value
+        )
