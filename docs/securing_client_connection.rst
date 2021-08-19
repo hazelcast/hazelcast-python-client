@@ -344,7 +344,7 @@ A sample code that makes use of the package is below.
     import hzkerberos
 
     token_provider = hzkerberos.TokenProvider(
-        spn="hz/172.17.0.2@EXAMPLE.COM",
+        principal="hz/172.17.0.2@EXAMPLE.COM",
         keytab="/etc/krb5.keytab",
     )
 
