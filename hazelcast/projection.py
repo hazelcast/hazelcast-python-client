@@ -80,7 +80,7 @@ def single_attribute(attribute_path):
         attribute_path (str): Path to extract the attribute from.
 
     Returns:
-        Projection[list]: A projection that extracts the value of the given
+        Projection[any]: A projection that extracts the value of the given
             attribute path.
     """
     return _SingleAttributeProjection(attribute_path)

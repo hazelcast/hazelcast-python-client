@@ -1036,7 +1036,7 @@ class MapProjectionsTest(SingleMemberTestCase):
 
     def test_single_attribute(self):
         attribute = self.map.project(single_attribute("attr1"))
-        self.assertEqual([4, 1], attribute)
+        six.assertCountEqual(self, [4, 1], attribute)
 
     def test_single_attribute_with_predicate(self):
         attribute = self.map.project(single_attribute("attr1"), greater_or_equal("attr1", 4))
