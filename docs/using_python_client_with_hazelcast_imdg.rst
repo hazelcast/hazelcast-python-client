@@ -2178,19 +2178,19 @@ See the following example.
     employee_ages = employees.project(single_attribute("Age"))
     # Prints:
     # The ages of employees are [21, 23]
-    print("The ages of employees are %s" % employee_age)
+    print("The ages of employees are, " % employee_ages)
 
     # Run Single Attribute With Predicate
     employee_ages = employees.project(single_attribute("Age"), greater_or_equal("Age", 23))
     # Prints:
     # The employee age is 23
-    print("The employee age is %d" % employee_age[0])
+    print("The employee age is: " % employee_ages[0])
 
     # Run Multi Attribute Projection
     employee_multi_attribute = employees.project(multi_attribute("Age", "Height"))
     # Prints:
     # Employee 1 age and height: [23, 180] Employee 2 age and height: [21, 170]
-    print("Employee 1 age and height: " % employee_multi_attribute[1], " Employee 2 age and height: " employee_multi_attribute[0])
+    print("Employee 1 age and height: ", employee_multi_attribute[1], " Employee 2 age and height: " employee_multi_attribute[0])
 
 
 Performance
