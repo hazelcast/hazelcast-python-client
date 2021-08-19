@@ -1029,26 +1029,42 @@ class MapProjectionsTest(SingleMemberTestCase):
     def setUp(self):
         self.map = self.client.get_map(random_string()).blocking()
         self.map.put(1, HazelcastJsonValue('{"attr1": 1, "attr2": 2, "attr3": 3}'))
+        self.map.put(2, HazelcastJsonValue('{"attr1": 4, "attr2": 5, "attr3": 6}'))
 
     def tearDown(self):
         self.map.destroy()
 
     def test_single_attribute(self):
         attribute = self.map.project(single_attribute("attr1"))
-        self.assertEqual([1], attribute)
+        self.assertEqual([4, 1], attribute)
 
     def test_single_attribute_with_predicate(self):
-        attribute = self.map.project(single_attribute("attr1"), greater_or_equal("attr1", 1))
-        self.assertEqual([1], attribute)
+        attribute = self.map.project(single_attribute("attr1"), greater_or_equal("attr1", 4))
+        self.assertEqual([4], attribute)
 
     def test_multi_attribute(self):
-        attribute = self.map.project(multi_attribute("attr1", "attr2"))
-        self.assertEqual([[1, 2]], attribute)
+        attributes = self.map.project(multi_attribute("attr1", "attr2"))
+        six.assertCountEqual(self, [[4, 5], [1, 2]], attributes)
 
     def test_multi_attribute_with_predicate(self):
-        attribute = self.map.project(multi_attribute("attr2"), greater_or_equal("attr2", 2))
-        self.assertEqual([[2]], attribute)
+        attributes = self.map.project(
+            multi_attribute("attr1", "attr2"), greater_or_equal("attr2", 3)
+        )
+        self.assertEqual([[4, 5]], attributes)
 
     def test_identity(self):
-        attribute = self.map.project(identity())
-        self.assertEqual(HazelcastJsonValue('{"attr1": 1, "attr2": 2, "attr3": 3}'), attribute[0].value)
+        attributes = self.map.project(identity())
+        six.assertCountEqual(
+            self,
+            [
+                HazelcastJsonValue('{"attr1": 4, "attr2": 5, "attr3": 6}'),
+                HazelcastJsonValue('{"attr1": 1, "attr2": 2, "attr3": 3}'),
+            ],
+            [attribute.value for attribute in attributes],
+        )
+
+    def test_identity_with_predicate(self):
+        attributes = self.map.project(identity(), greater_or_equal("attr2", 3))
+        self.assertEqual(
+            HazelcastJsonValue('{"attr1": 4, "attr2": 5, "attr3": 6}'), attributes[0].value
+        )

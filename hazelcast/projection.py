@@ -2,14 +2,14 @@ from hazelcast.serialization.api import IdentifiedDataSerializable
 
 _PROJECTIONS_FACTORY_ID = -30
 
+
 class Projection(object):
     """Marker base class for all projections.
 
-    Projections allow the client to transform each query result object in order
-    to avoid redundant network traffic. The computation is performed in a fully
-    distributed manner, so no data other than the computed value is transferred
-    to the client, making the computation fast.
+    Projections allow the client to transform (strip down) each query result
+    object in order to avoid redundant network traffic.
     """
+
     pass
 
 
@@ -27,8 +27,17 @@ class _AbstractProjection(Projection, IdentifiedDataSerializable):
         raise NotImplementedError("get_class_id")
 
 
+def _validate_attribute_path(attribute_path):
+    if not attribute_path:
+        raise ValueError("attribute_path must not be None or empty")
+
+    if "[any]" in attribute_path:
+        raise ValueError("attribute_path must not contain [any] operators")
+
+
 class _SingleAttributeProjection(_AbstractProjection):
     def __init__(self, attribute_path):
+        _validate_attribute_path(attribute_path)
         self._attribute_path = attribute_path
 
     def write_data(self, object_data_output):
@@ -40,6 +49,12 @@ class _SingleAttributeProjection(_AbstractProjection):
 
 class _MultiAttributeProjection(_AbstractProjection):
     def __init__(self, *attribute_paths):
+        if not attribute_paths:
+            raise ValueError("Specify at least one attribute path")
+
+        for attribute_path in attribute_paths:
+            _validate_attribute_path(attribute_path)
+
         self.attribute_paths = attribute_paths
 
     def write_data(self, object_data_output):
@@ -57,15 +72,15 @@ class _IdentityProjection(_AbstractProjection):
         return 2
 
 
-def single_attribute(attribute_path=None):
+def single_attribute(attribute_path):
     """Creates a projection that extracts the value of
-    an attribute path.
+    the given attribute path.
 
     Args:
-        attribute_path (str): Extracts values from this path, if given.
+        attribute_path (str): Path to extract the attribute from.
 
     Returns:
-        Projection[any]: A projection that extracts the value of the given
+        Projection[list]: A projection that extracts the value of the given
             attribute path.
     """
     return _SingleAttributeProjection(attribute_path)
@@ -76,20 +91,20 @@ def multi_attribute(*attribute_paths):
     one or more attribute paths.
 
     Args:
-        attribute_paths (str): Extracts values from these paths, if given.
+        *attribute_paths (str): Paths to extract the attributes from.
 
     Returns:
-        Projection[any]: A projection that extracts the values of the given
+        Projection[list]: A projection that extracts the values of the given
             attribute paths.
     """
     return _MultiAttributeProjection(*attribute_paths)
 
 
 def identity():
-    """Creates a projection that does no transformation
-    on the map.
+    """Creates a projection that does no transformation.
 
     Returns:
-        Projection[any]: A projection that does no transformation.
+        Projection[hazelcast.core.MapEntry]: A projection that does no
+            transformation.
     """
     return _IdentityProjection()

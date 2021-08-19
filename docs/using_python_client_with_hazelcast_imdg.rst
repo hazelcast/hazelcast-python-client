@@ -2138,12 +2138,23 @@ See the following example.
     print("Average age is %f" % average_age)
 
 Projections
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~
 
-Projections feature provides three projection functions; ``single_attribute``, 
-``multi_attribute`` and ``identity``, on top of Hazelcast ``Map`` entries. Their
-performance is high since they run in parallel for each partition and are 
-highly optimized for speed and low memory consumption.
+There are cases where instead of sending all the data returned by a query
+from the server, you want to transform (strip down) each result object in order
+to avoid redundant network traffic.
+
+For example, you select all employees based on some criteria, but you just
+want to return their name instead of the whole object. It is easily doable
+with the Projections.
+
+The ``projection`` module provides three projection functions:
+
+- ``single_attribute``: Extracts a single attribute from an object and returns
+  it.
+- ``multi_attribute``: Extracts multiple attributes from an object and returns
+  them as a ``list``.
+- ``identity``: Returns the object as it is.
 
 These projections are used with the ``map.project`` function, which takes an
 optional predicate argument.
@@ -2155,30 +2166,31 @@ See the following example.
     import hazelcast
 
     from hazelcast.core import HazelcastJsonValue
-    from hazelcast.projection import single_attribute, multi_attribute
     from hazelcast.predicate import greater_or_equal
+    from hazelcast.projection import single_attribute, multi_attribute
 
     client = hazelcast.HazelcastClient()
     employees = client.get_map("employees").blocking()
 
     employees.put(1, HazelcastJsonValue('{"Age": 23, "Height": 180, "Weight": 60}'))
+    employees.put(2, HazelcastJsonValue('{"Age": 21, "Height": 170, "Weight": 70}'))
 
-    employee_age = employees.project(single_attribute("Age"))
+    employee_ages = employees.project(single_attribute("Age"))
     # Prints:
-    # The employee age is 23
-    print("The employee age is %d" % employee_age)
+    # The ages of employees are [21, 23]
+    print("The ages of employees are %s" % employee_age)
 
     # Run Single Attribute With Predicate
-    employee_age = employees.project(single_attribute("Age"), greater_or_equal("Age", 23))
+    employee_ages = employees.project(single_attribute("Age"), greater_or_equal("Age", 23))
     # Prints:
     # The employee age is 23
-    print("The employee age is %d" % employee_age)
+    print("The employee age is %d" % employee_age[0])
 
     # Run Multi Attribute Projection
     employee_multi_attribute = employees.project(multi_attribute("Age", "Height"))
     # Prints:
-    # The employee age is 23, height is 180
-    print("The employees age is %d " % employee_multi_attribute[0][0], "height is %d", % employee_multi_attribute[0][1])
+    # Employee 1 age and height: [23, 180] Employee 2 age and height: [21, 170]
+    print("Employee 1 age and height: " % employee_multi_attribute[1], " Employee 2 age and height: " employee_multi_attribute[0])
 
 
 Performance

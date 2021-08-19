@@ -156,17 +156,6 @@ class HazelcastJsonValueSerializer(BaseSerializer):
 
 
 # ARRAY SERIALIZERS
-class ArraySerializer(BaseSerializer):
-    def read(self, inp):
-        size = inp.read_int()
-        return [inp.read_object() for _ in range(size)]
-
-    # "write(self, out, obj)" is never called so not implemented here
-
-    def get_type_id(self):
-        return JAVA_DEFAULT_TYPE_ARRAY
-
-        
 class BooleanArraySerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_boolean_array()
@@ -314,6 +303,17 @@ class JavaClassSerializer(BaseSerializer):
 
     def get_type_id(self):
         return JAVA_DEFAULT_TYPE_CLASS
+
+
+class ArraySerializer(BaseSerializer):
+    def read(self, inp):
+        size = inp.read_int()
+        return [inp.read_object() for _ in range(size)]
+
+    # "write(self, out, obj)" is never called so not implemented here
+
+    def get_type_id(self):
+        return JAVA_DEFAULT_TYPE_ARRAY
 
 
 class ArrayListSerializer(BaseSerializer):
