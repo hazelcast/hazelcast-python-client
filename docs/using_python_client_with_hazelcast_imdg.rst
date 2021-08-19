@@ -2178,7 +2178,7 @@ See the following example.
     employee_ages = employees.project(single_attribute("Age"))
     # Prints:
     # The ages of employees are [21, 23]
-    print("The ages of employees are, " % employee_ages)
+    print("The ages of employees are, ", employee_ages)
 
     # Run Single Attribute With Predicate
     employee_ages = employees.project(single_attribute("Age"), greater_or_equal("Age", 23))
