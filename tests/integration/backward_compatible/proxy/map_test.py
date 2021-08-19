@@ -41,7 +41,7 @@ except ImportError:
 from hazelcast.core import HazelcastJsonValue
 from hazelcast.config import IndexType, IntType
 from hazelcast.errors import HazelcastError
-from hazelcast.predicate import greater_or_equal, less_or_equal, sql, between
+from hazelcast.predicate import greater_or_equal, less_or_equal, sql, paging, true
 from hazelcast.proxy.map import EntryEventType
 from hazelcast.serialization.api import IdentifiedDataSerializable
 from hazelcast.six.moves import range
@@ -796,6 +796,14 @@ class MapAggregatorsIntTest(SingleMemberTestCase):
     def tearDown(self):
         self.map.destroy()
 
+    def test_aggregate_with_none_aggregator(self):
+        with self.assertRaises(AssertionError):
+            self.map.aggregate(None)
+
+    def test_aggregate_with_paging_predicate(self):
+        with self.assertRaises(AssertionError):
+            self.map.aggregate(int_avg("foo"), paging(true(), 10))
+
     def test_int_average(self):
         average = self.map.aggregate(int_avg())
         self.assertEqual(24.5, average)
@@ -1034,23 +1042,32 @@ class MapProjectionsTest(SingleMemberTestCase):
     def tearDown(self):
         self.map.destroy()
 
+    def test_project_with_none_projection(self):
+        with self.assertRaises(AssertionError):
+            self.map.project(None)
+
+    def test_project_with_paging_predicate(self):
+        with self.assertRaises(AssertionError):
+            self.map.project(single_attribute("foo"), paging(true(), 10))
+
     def test_single_attribute(self):
-        attribute = self.map.project(single_attribute("attr1"))
-        six.assertCountEqual(self, [4, 1], attribute)
+        attributes = self.map.project(single_attribute("attr1"))
+        six.assertCountEqual(self, [1, 4], attributes)
 
     def test_single_attribute_with_predicate(self):
-        attribute = self.map.project(single_attribute("attr1"), greater_or_equal("attr1", 4))
-        self.assertEqual([4], attribute)
+        attributes = self.map.project(single_attribute("attr1"), greater_or_equal("attr1", 4))
+        six.assertCountEqual(self, [4], attributes)
 
     def test_multi_attribute(self):
         attributes = self.map.project(multi_attribute("attr1", "attr2"))
-        six.assertCountEqual(self, [[4, 5], [1, 2]], attributes)
+        six.assertCountEqual(self, [[1, 2], [4, 5]], attributes)
 
     def test_multi_attribute_with_predicate(self):
         attributes = self.map.project(
-            multi_attribute("attr1", "attr2"), greater_or_equal("attr2", 3)
+            multi_attribute("attr1", "attr2"),
+            greater_or_equal("attr2", 3),
         )
-        self.assertEqual([[4, 5]], attributes)
+        six.assertCountEqual(self, [[4, 5]], attributes)
 
     def test_identity(self):
         attributes = self.map.project(identity())
@@ -1065,6 +1082,8 @@ class MapProjectionsTest(SingleMemberTestCase):
 
     def test_identity_with_predicate(self):
         attributes = self.map.project(identity(), greater_or_equal("attr2", 3))
-        self.assertEqual(
-            HazelcastJsonValue('{"attr1": 4, "attr2": 5, "attr3": 6}'), attributes[0].value
+        six.assertCountEqual(
+            self,
+            [HazelcastJsonValue('{"attr1": 4, "attr2": 5, "attr3": 6}')],
+            [attribute.value for attribute in attributes],
         )

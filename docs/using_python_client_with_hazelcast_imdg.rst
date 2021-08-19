@@ -2166,31 +2166,30 @@ See the following example.
     import hazelcast
 
     from hazelcast.core import HazelcastJsonValue
-    from hazelcast.predicate import greater_or_equal
+    from hazelcast.predicate import greater
     from hazelcast.projection import single_attribute, multi_attribute
 
     client = hazelcast.HazelcastClient()
     employees = client.get_map("employees").blocking()
 
-    employees.put(1, HazelcastJsonValue('{"Age": 23, "Height": 180, "Weight": 60}'))
-    employees.put(2, HazelcastJsonValue('{"Age": 21, "Height": 170, "Weight": 70}'))
+    employees.put(1, HazelcastJsonValue({"age": 25, "height": 180, "weight": 60}))
+    employees.put(2, HazelcastJsonValue({"age": 21, "height": 170, "weight": 70}))
+    employees.put(3, HazelcastJsonValue({"age": 40, "height": 175, "weight": 75}))
 
-    employee_ages = employees.project(single_attribute("Age"))
-    # Prints:
-    # The ages of employees are [21, 23]
-    print("The ages of employees are %s" % employee_ages)
+    ages = employees.project(single_attribute("age"))
 
-    # Run Single Attribute With Predicate
-    employee_ages = employees.project(single_attribute("Age"), greater_or_equal("Age", 23))
-    # Prints:
-    # The employee age is 23
-    print("The employee age is: %s" % employee_ages[0])
+    # Prints: "Ages of the employees are [21, 25, 40]"
+    print("Ages of the employees are %s" % ages)
 
-    # Run Multi Attribute Projection
-    employee_multi_attribute = employees.project(multi_attribute("Age", "Height"))
-    # Prints:
-    # Employee 1 age and height: [21, 170] Employee 2 age and height: [23, 180]
-    print("Employee 1 age and height: %s Employee 2 age and height: %s" % (employee_multi_attribute[0], employee_multi_attribute[1]))
+    filtered_ages = employees.project(single_attribute("age"), greater("age", 23))
+
+    # Prints: "Ages of the filtered employees are [25, 40]"
+    print("Ages of the filtered employees are %s" % filtered_ages)
+
+    attributes = employees.project(multi_attribute("age", "height"))
+
+    # Prints: "Ages and heights of the employees are [[21, 170], [25, 180], [40, 175]]"
+    print("Ages and heights of the employees are %s" % attributes)
 
 
 Performance

@@ -48,7 +48,7 @@ class _SingleAttributeProjection(_AbstractProjection):
 
 
 class _MultiAttributeProjection(_AbstractProjection):
-    def __init__(self, *attribute_paths):
+    def __init__(self, attribute_paths):
         if not attribute_paths:
             raise ValueError("Specify at least one attribute path")
 
@@ -81,7 +81,7 @@ def single_attribute(attribute_path):
 
     Returns:
         Projection[any]: A projection that extracts the value of the given
-            attribute path.
+        attribute path.
     """
     return _SingleAttributeProjection(attribute_path)
 
@@ -95,9 +95,9 @@ def multi_attribute(*attribute_paths):
 
     Returns:
         Projection[list]: A projection that extracts the values of the given
-            attribute paths.
+        attribute paths.
     """
-    return _MultiAttributeProjection(*attribute_paths)
+    return _MultiAttributeProjection(attribute_paths)
 
 
 def identity():
@@ -105,6 +105,6 @@ def identity():
 
     Returns:
         Projection[hazelcast.core.MapEntry]: A projection that does no
-            transformation.
+        transformation.
     """
     return _IdentityProjection()
