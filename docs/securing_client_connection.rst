@@ -334,7 +334,7 @@ You can install the package from PyPI.
 
 .. code:: bash
 
-    pip install hzkerberos
+    pip install hazelcast-kerberos
 
 A sample code that makes use of the package is below.
 
@@ -353,5 +353,5 @@ A sample code that makes use of the package is below.
     )
 
 For more information and possible client and server configurations, refer to
-the `documentation <https://pypi.org/project/hzkerberos/>`__ of the
-``hzkerberos`` package.
+the `documentation <https://pypi.org/project/hazelcast-kerberos/>`__ of the
+``hazelcast-kerberos`` package.
