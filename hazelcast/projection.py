@@ -28,6 +28,7 @@ class _AbstractProjection(Projection, IdentifiedDataSerializable):
 
 
 def _validate_attribute_path(attribute_path):
+    # type: (str) -> None
     if not attribute_path:
         raise ValueError("attribute_path must not be None or empty")
 
@@ -37,6 +38,7 @@ def _validate_attribute_path(attribute_path):
 
 class _SingleAttributeProjection(_AbstractProjection):
     def __init__(self, attribute_path):
+        # type: (str) -> None
         _validate_attribute_path(attribute_path)
         self._attribute_path = attribute_path
 
@@ -49,6 +51,7 @@ class _SingleAttributeProjection(_AbstractProjection):
 
 class _MultiAttributeProjection(_AbstractProjection):
     def __init__(self, attribute_paths):
+        # type: (list[str]) -> None
         if not attribute_paths:
             raise ValueError("Specify at least one attribute path")
 
@@ -73,6 +76,7 @@ class _IdentityProjection(_AbstractProjection):
 
 
 def single_attribute(attribute_path):
+    # type: (str) -> Projection
     """Creates a projection that extracts the value of
     the given attribute path.
 
@@ -87,6 +91,7 @@ def single_attribute(attribute_path):
 
 
 def multi_attribute(*attribute_paths):
+    # type: (str) -> Projection
     """Creates a projection that extracts the values of
     one or more attribute paths.
 
@@ -97,10 +102,11 @@ def multi_attribute(*attribute_paths):
         Projection[list]: A projection that extracts the values of the given
         attribute paths.
     """
-    return _MultiAttributeProjection(attribute_paths)
+    return _MultiAttributeProjection(list(attribute_paths))
 
 
 def identity():
+    # type: () -> Projection
     """Creates a projection that does no transformation.
 
     Returns:
