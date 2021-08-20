@@ -30,6 +30,7 @@ features:
 - Built-in Predicates
 - Listener with Predicate
 - Fast Aggregations
+- Projections
 - Near Cache Support
 - Programmatic Configuration
 - SSL Support (requires Enterprise server)
