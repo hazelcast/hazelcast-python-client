@@ -1,7 +1,6 @@
 import unittest
 
 from hazelcast.security import BasicTokenProvider
-from hazelcast.core import Address
 
 
 class BasicTokenProviderTestCase(unittest.TestCase):
