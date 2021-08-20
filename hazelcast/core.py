@@ -388,8 +388,10 @@ class MapEntry(object):
 
     @property
     def key(self):
+        """Key of the entry."""
         return self._key
 
     @property
     def value(self):
+        """Value of the entry."""
         return self._value

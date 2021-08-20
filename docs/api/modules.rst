@@ -13,6 +13,7 @@ API Documentation
     lifecycle
     partition
     predicate
+    projection
     proxy/modules
     security
     serialization
