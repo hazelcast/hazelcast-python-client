@@ -330,28 +330,6 @@ The package provides the necessary token provider that handles the
 authentication against the KDC (key distribution center) with the given
 credentials, receives and caches the ticket, and finally retrieves the token.
 
-You can install the package from PyPI.
-
-.. code:: bash
-
-    pip install hazelcast-kerberos
-
-A sample code that makes use of the package is below.
-
-.. code:: python
-
-    import hazelcast
-    import hzkerberos
-
-    token_provider = hzkerberos.TokenProvider(
-        principal="hz/172.17.0.2@EXAMPLE.COM",
-        keytab="/etc/krb5.keytab",
-    )
-
-    client = hazelcast.HazelcastClient(
-        token_provider=token_provider
-    )
-
 For more information and possible client and server configurations, refer to
-the `documentation <https://pypi.org/project/hazelcast-kerberos/>`__ of the
+the `documentation <https://github.com/hazelcast/hazelcast-python-client-kerberos>`__ of the
 ``hazelcast-kerberos`` package.

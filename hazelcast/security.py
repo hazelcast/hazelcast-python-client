@@ -1,12 +1,16 @@
 from hazelcast.six import string_types
+from hazelcast.core import Address
 
 
 class TokenProvider(object):
     """TokenProvider is a base class for token providers."""
 
-    def token(self):
-        # type: (TokenProvider) -> bytes
+    def token(self, address):
+        # type: (TokenProvider, Address) -> bytes
         """Returns a token to be used for token-based authentication.
+
+        Args:
+            address (hazelcast.core.Address): Connected address for the member.
 
         Returns:
             bytes: token as a bytes object.
@@ -25,11 +29,5 @@ class BasicTokenProvider(TokenProvider):
         else:
             raise TypeError("token must be either a str or bytes object")
 
-    def token(self):
-        # type: (BasicTokenProvider) -> bytes
-        """Returns a token to be used for token-based authentication.
-
-        Returns:
-            bytes: token as a bytes object.
-        """
+    def token(self, address):
         return self._token
