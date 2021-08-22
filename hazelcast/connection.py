@@ -491,9 +491,10 @@ class ConnectionManager(object):
         cluster_name = self._config.cluster_name
         client_name = client.name
         if self._config.token_provider:
+            token = self._config.token_provider.token(connection.connected_address)
             request = client_authentication_custom_codec.encode_request(
                 cluster_name,
-                self._config.token_provider.token(),
+                token,
                 self.client_uuid,
                 CLIENT_TYPE,
                 SERIALIZATION_VERSION,
