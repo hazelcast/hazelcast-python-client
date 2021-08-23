@@ -3,7 +3,7 @@ import subprocess
 import sys
 from os.path import isfile
 
-SERVER_VERSION = "4.2.1"
+SERVER_VERSION = "5.0-SNAPSHOT"
 RC_VERSION = "0.8-SNAPSHOT"
 
 RELEASE_REPO = "http://repo1.maven.apache.org/maven2"
@@ -65,14 +65,14 @@ def start_rc(stdout=None, stderr=None):
 
     rc = download_if_necessary(RC_REPO, "hazelcast-remote-controller", RC_VERSION)
     tests = download_if_necessary(REPO, "hazelcast", SERVER_VERSION, True)
+    sql = download_if_necessary(REPO, "hazelcast-sql", SERVER_VERSION)
 
-    artifacts.append(rc)
-    artifacts.append(tests)
+    artifacts.extend([rc, tests, sql])
 
     enterprise_key = os.environ.get("HAZELCAST_ENTERPRISE_KEY", None)
 
     if enterprise_key:
-        server = download_if_necessary(ENTERPRISE_REPO, "hazelcast-enterprise-all", SERVER_VERSION)
+        server = download_if_necessary(ENTERPRISE_REPO, "hazelcast-enterprise", SERVER_VERSION)
         ep_tests = download_if_necessary(
             ENTERPRISE_REPO, "hazelcast-enterprise", SERVER_VERSION, True
         )
@@ -80,7 +80,7 @@ def start_rc(stdout=None, stderr=None):
         artifacts.append(server)
         artifacts.append(ep_tests)
     else:
-        server = download_if_necessary(REPO, "hazelcast-all", SERVER_VERSION)
+        server = download_if_necessary(REPO, "hazelcast", SERVER_VERSION)
         artifacts.append(server)
 
     class_path = CLASS_PATH_SEPARATOR.join(artifacts)

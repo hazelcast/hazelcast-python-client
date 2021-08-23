@@ -118,6 +118,7 @@ class SingleMemberTestCase(HazelcastTestCase):
     """
 
     rc = None
+    cluster = None
     client = None
 
     @classmethod

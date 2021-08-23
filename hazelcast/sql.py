@@ -129,9 +129,7 @@ class SqlService(object):
 
         When an SQL statement is submitted to a member, it is parsed and
         optimized by the ``hazelcast-sql`` module. The ``hazelcast-sql`` must
-        be in the classpath, otherwise an exception will be thrown. If you're
-        using the ``hazelcast-all`` or ``hazelcast-enterprise-all`` packages, the
-        ``hazelcast-sql`` module is included in them by default. If not, i.e., you
+        be in the classpath, otherwise an exception will be thrown. If you
         are using ``hazelcast`` or ``hazelcast-enterprise``, then you need to have
         ``hazelcast-sql`` in the classpath. If you are using the Docker image,
         the SQL module is included by default.
@@ -338,7 +336,7 @@ class SqlColumnType(object):
 
     DECIMAL = 6
     """
-    Represented by ``str``.
+    Represented by ``decimal.Decimal``.
     """
 
     REAL = 7
@@ -353,23 +351,22 @@ class SqlColumnType(object):
 
     DATE = 9
     """
-    Represented by ``str`` with the ``YYYY-MM-DD`` format.
+    Represented by ``datetime.date``.
     """
 
     TIME = 10
     """
-    Represented by ``str`` with the ``HH:MM:SS[.ffffff]`` format.
+    Represented by ``datetime.time``.
     """
 
     TIMESTAMP = 11
     """
-    Represented by ``str`` with the ``YYYY-MM-DDTHH:MM:SS[.ffffff]`` format.
+    Represented by ``datetime.datetime`` with ``None`` ``tzinfo``.
     """
 
     TIMESTAMP_WITH_TIME_ZONE = 12
     """
-    Represented by ``str`` with the 
-    ``YYYY-MM-DDTHH:MM:SS[.ffffff](+|-)HH:MM[:SS]`` format.
+    Represented by ``datetime.datetime`` with ``non-None`` ``tzinfo``.
     """
 
     OBJECT = 13

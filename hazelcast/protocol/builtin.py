@@ -36,7 +36,7 @@ from hazelcast.serialization.bits import (
 from hazelcast.serialization.data import Data
 from hazelcast.util import int_from_bytes, timezone
 
-_LOCAL_DATE_SIZE_IN_BYTES = SHORT_SIZE_IN_BYTES + BYTE_SIZE_IN_BYTES * 2
+_LOCAL_DATE_SIZE_IN_BYTES = INT_SIZE_IN_BYTES + BYTE_SIZE_IN_BYTES * 2
 _LOCAL_TIME_SIZE_IN_BYTES = BYTE_SIZE_IN_BYTES * 3 + INT_SIZE_IN_BYTES
 _LOCAL_DATE_TIME_SIZE_IN_BYTES = _LOCAL_DATE_SIZE_IN_BYTES + _LOCAL_TIME_SIZE_IN_BYTES
 _OFFSET_DATE_TIME_SIZE_IN_BYTES = _LOCAL_DATE_TIME_SIZE_IN_BYTES + INT_SIZE_IN_BYTES
@@ -303,9 +303,9 @@ class FixSizedTypesCodec(object):
 
     @staticmethod
     def decode_local_date(buf, offset):
-        year = FixSizedTypesCodec.decode_short(buf, offset)
-        month = FixSizedTypesCodec.decode_byte(buf, offset + SHORT_SIZE_IN_BYTES)
-        day = FixSizedTypesCodec.decode_byte(buf, offset + SHORT_SIZE_IN_BYTES + BYTE_SIZE_IN_BYTES)
+        year = FixSizedTypesCodec.decode_int(buf, offset)
+        month = FixSizedTypesCodec.decode_byte(buf, offset + INT_SIZE_IN_BYTES)
+        day = FixSizedTypesCodec.decode_byte(buf, offset + INT_SIZE_IN_BYTES + BYTE_SIZE_IN_BYTES)
 
         return date(year, month, day)
 
@@ -652,48 +652,32 @@ class ListCNLocalDateCodec(object):
     @staticmethod
     def decode(msg):
         return ListCNFixedSizeCodec.decode(
-            msg, _LOCAL_DATE_SIZE_IN_BYTES, ListCNLocalDateCodec._decode_item
+            msg, _LOCAL_DATE_SIZE_IN_BYTES, FixSizedTypesCodec.decode_local_date
         )
-
-    @staticmethod
-    def _decode_item(buf, offset):
-        return FixSizedTypesCodec.decode_local_date(buf, offset).isoformat()
 
 
 class ListCNLocalTimeCodec(object):
     @staticmethod
     def decode(msg):
         return ListCNFixedSizeCodec.decode(
-            msg, _LOCAL_TIME_SIZE_IN_BYTES, ListCNLocalTimeCodec._decode_item
+            msg, _LOCAL_TIME_SIZE_IN_BYTES, FixSizedTypesCodec.decode_local_time
         )
-
-    @staticmethod
-    def _decode_item(buf, offset):
-        return FixSizedTypesCodec.decode_local_time(buf, offset).isoformat()
 
 
 class ListCNLocalDateTimeCodec(object):
     @staticmethod
     def decode(msg):
         return ListCNFixedSizeCodec.decode(
-            msg, _LOCAL_DATE_TIME_SIZE_IN_BYTES, ListCNLocalDateTimeCodec._decode_item
+            msg, _LOCAL_DATE_TIME_SIZE_IN_BYTES, FixSizedTypesCodec.decode_local_date_time
         )
-
-    @staticmethod
-    def _decode_item(buf, offset):
-        return FixSizedTypesCodec.decode_local_date_time(buf, offset).isoformat()
 
 
 class ListCNOffsetDateTimeCodec(object):
     @staticmethod
     def decode(msg):
         return ListCNFixedSizeCodec.decode(
-            msg, _OFFSET_DATE_TIME_SIZE_IN_BYTES, ListCNOffsetDateTimeCodec._decode_item
+            msg, _OFFSET_DATE_TIME_SIZE_IN_BYTES, FixSizedTypesCodec.decode_offset_date_time
         )
-
-    @staticmethod
-    def _decode_item(buf, offset):
-        return FixSizedTypesCodec.decode_offset_date_time(buf, offset).isoformat()
 
 
 class BigDecimalCodec(object):
@@ -704,9 +688,7 @@ class BigDecimalCodec(object):
         unscaled_value = int_from_bytes(buf[INT_SIZE_IN_BYTES : INT_SIZE_IN_BYTES + size])
         scale = FixSizedTypesCodec.decode_int(buf, INT_SIZE_IN_BYTES + size)
         sign = 0 if unscaled_value >= 0 else 1
-        return str(
-            Decimal((sign, tuple(int(digit) for digit in str(abs(unscaled_value))), -1 * scale))
-        )
+        return Decimal((sign, tuple(int(digit) for digit in str(abs(unscaled_value))), -1 * scale))
 
 
 class SqlPageCodec(object):

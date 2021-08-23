@@ -30,21 +30,29 @@ class DistributedObjectsTest(SingleMemberTestCase):
         self.member.shutdown()
 
     def test_get_distributed_objects(self):
-        six.assertCountEqual(self, [], self.client.get_distributed_objects())
+        six.assertCountEqual(
+            self, [], self._filter_internal_objects(self.client.get_distributed_objects())
+        )
 
         m = self.client.get_map("map")
         s = self.client.get_set("set")
         q = self.client.get_queue("queue")
 
         self.assertTrueEventually(
-            lambda: six.assertCountEqual(self, [m, s, q], self.client.get_distributed_objects())
+            lambda: six.assertCountEqual(
+                self,
+                [m, s, q],
+                self._filter_internal_objects(self.client.get_distributed_objects()),
+            )
         )
 
     def test_get_distributed_objects_clears_destroyed_proxies(self):
         m = self.client.get_map("map")
 
         self.assertTrueEventually(
-            lambda: six.assertCountEqual(self, [m], self.client.get_distributed_objects())
+            lambda: six.assertCountEqual(
+                self, [m], self._filter_internal_objects(self.client.get_distributed_objects())
+            )
         )
 
         other_client = hazelcast.HazelcastClient(**self.config)
@@ -52,7 +60,9 @@ class DistributedObjectsTest(SingleMemberTestCase):
         other_clients_map.destroy()
 
         self.assertTrueEventually(
-            lambda: six.assertCountEqual(self, [], self.client.get_distributed_objects())
+            lambda: six.assertCountEqual(
+                self, [], self._filter_internal_objects(self.client.get_distributed_objects())
+            )
         )
         other_client.shutdown()
 
@@ -133,3 +143,7 @@ class DistributedObjectsTest(SingleMemberTestCase):
 
     def test_remove_invalid_distributed_object_listener(self):
         self.assertFalse(self.client.remove_distributed_object_listener("invalid-reg-id").result())
+
+    @staticmethod
+    def _filter_internal_objects(distributed_objects):
+        return [obj for obj in distributed_objects if not obj.name.startswith("__")]
