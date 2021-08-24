@@ -317,20 +317,6 @@ class ConnectionManager(object):
         else:
             raise IOError("No connection found to cluster")
 
-    def _get_connection_from_load_balancer(self, should_get_data_member):
-        load_balancer = self._load_balancer
-        member = None
-        if should_get_data_member:
-            if load_balancer.can_get_next_data_member():
-                member = load_balancer.next_data_member()
-        else:
-            member = load_balancer.next()
-
-        if not member:
-            return None
-
-        return self.get_connection(member.uuid)
-
     def _get_or_connect_to_address(self, address):
         for connection in list(six.itervalues(self.active_connections)):
             if connection.remote_address == address:
