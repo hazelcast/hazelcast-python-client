@@ -5,7 +5,7 @@ import unittest
 from hazelcast.proxy.ringbuffer import OVERFLOW_POLICY_FAIL, MAX_BATCH_SIZE
 from hazelcast.serialization.api import IdentifiedDataSerializable
 from tests.base import SingleMemberTestCase
-from tests.util import random_string, is_client_version_older_than, get_current_timestamp
+from tests.util import random_string, compare_client_version
 from hazelcast.six.moves import range
 
 CAPACITY = 10
@@ -120,7 +120,7 @@ class RingBufferTest(SingleMemberTestCase):
 
 
 @unittest.skipIf(
-    is_client_version_older_than("4.1"), "Tests the features added in 4.1 version of the client"
+    compare_client_version("4.1") < 0, "Tests the features added in 4.1 version of the client"
 )
 class RingbufferReadManyTest(SingleMemberTestCase):
     @classmethod

@@ -7,6 +7,8 @@ from hazelcast.config import SSLProtocol
 from hazelcast.util import calculate_version
 
 # time.monotonic() is more consistent since it uses cpu clock rather than system clock. Use it if available.
+from tests.hzrc.ttypes import Lang
+
 if hasattr(time, "monotonic"):
     get_current_timestamp = time.monotonic
 else:
@@ -90,27 +92,60 @@ def set_attr(*args, **kwargs):
     return wrap_ob
 
 
-def mark_server_version_at_least(test, client, expected_version):
-    if is_server_version_older_than(client, expected_version):
+def mark_server_version_at_least(test, client, version):
+    if compare_server_version(client, version) < 0:
         test.skipTest("Expected a newer server")
 
 
-def is_server_version_older_than(client, expected_version):
+def mark_server_version_at_most(test, client, version):
+    if compare_server_version(client, version) >= 0:
+        test.skipTest("Expected an older server")
+
+
+def compare_server_version(client, version):
+    """Returns
+    - 0 if they are equal
+    - positive number if server version is newer than the version
+    - negative number if server version is older than the version
+    """
     connection = client._connection_manager.get_random_connection()
     server_version = connection.server_version
-    expected_version = calculate_version(expected_version)
-    return server_version < expected_version
+    version = calculate_version(version)
+    return server_version - version
 
 
-def mark_client_version_at_least(test, expected_version):
-    if is_client_version_older_than(expected_version):
+def compare_server_version_with_rc(rc, version):
+    """Returns
+    - 0 if they are equal
+    - positive number if server version is newer than the version
+    - negative number if server version is older than the version
+    """
+    script = """result=com.hazelcast.instance.GeneratedBuildProperties.VERSION;"""
+    result = rc.executeOnController(None, script, Lang.JAVASCRIPT)
+    server_version = calculate_version(result.result.decode())
+    version = calculate_version(version)
+    return server_version - version
+
+
+def mark_client_version_at_least(test, version):
+    if compare_client_version(version) < 0:
         test.skipTest("Expected a newer client")
 
 
-def is_client_version_older_than(expected_version):
-    version = calculate_version(__version__)
-    expected_version = calculate_version(expected_version)
-    return version < expected_version
+def mark_client_version_at_most(test, version):
+    if compare_client_version(version) >= 0:
+        test.skipTest("Expected an older client")
+
+
+def compare_client_version(version):
+    """Returns
+    - 0 if they are equal
+    - positive number if client version is newer than the version
+    - negative number if client version is older than the version
+    """
+    client_version = calculate_version(__version__)
+    version = calculate_version(version)
+    return client_version - version
 
 
 def open_connection_to_address(client, uuid):

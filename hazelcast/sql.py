@@ -1313,23 +1313,11 @@ class _InternalSqlService(object):
         Returns:
             SqlResult: The execution result.
         """
-
-        # Get a random Data member (non-lite member)
-        connection = self._connection_manager.get_random_connection(True)
-        if not connection:
-            # Either the client is not connected to the cluster, or
-            # there are no data members in the cluster.
-            raise HazelcastSqlError(
-                self.get_client_id(),
-                _SqlErrorCode.CONNECTION_PROBLEM,
-                "Client is not currently connected to the cluster.",
-                None,
-            )
+        connection = self._get_query_connection()
+        # Create a new, unique query id.
+        query_id = _SqlQueryId.from_uuid(connection.remote_uuid)
 
         try:
-            # Create a new, unique query id.
-            query_id = _SqlQueryId.from_uuid(connection.remote_uuid)
-
             # Serialize the passed parameters.
             serialized_params = [
                 self._serialization_service.to_data(param) for param in statement.parameters
@@ -1397,7 +1385,7 @@ class _InternalSqlService(object):
 
         Args:
             error (Exception): The error to reraise.
-            connection (hazelcast.connection.Connection): Connection
+            connection (hazelcast.connection.Connection|None): Connection
                 that the query requests are routed to. If it is not
                 live, we will inform the user about the possible
                 cluster topology change.
@@ -1405,7 +1393,7 @@ class _InternalSqlService(object):
         Returns:
             HazelcastSqlError: The reraised error.
         """
-        if not connection.live:
+        if connection and not connection.live:
             return HazelcastSqlError(
                 self.get_client_id(),
                 _SqlErrorCode.CONNECTION_PROBLEM,
@@ -1437,6 +1425,25 @@ class _InternalSqlService(object):
         invocation = Invocation(request, connection=connection)
         self._invocation_service.invoke(invocation)
         return invocation.future
+
+    def _get_query_connection(self):
+        try:
+            # Get a random Data member (non-lite member)
+            connection = self._connection_manager.get_random_connection_for_sql()
+        except Exception as e:
+            raise self.re_raise(e, None)
+
+        if not connection:
+            # Either the client is not connected to the cluster, or
+            # there are no data members in the cluster.
+            raise HazelcastSqlError(
+                self.get_client_id(),
+                _SqlErrorCode.CONNECTION_PROBLEM,
+                "Client is not connected",
+                None,
+            )
+
+        return connection
 
 
 class SqlExpectedResultType(object):
