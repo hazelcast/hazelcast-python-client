@@ -7,6 +7,7 @@ However, we had to edit ``ReferenceObjects`` while generating the file because t
 such serializers for the Python client yet. The list of skipped items from ``ReferenceObjects``
 are shown below.
 
+* aDate
 * aSimpleMapEntry
 * aSimpleImmutableMapEntry
 * aBigDecimal
@@ -33,8 +34,6 @@ are shown below.
 * synchronousQueue
 * linkedTransferQueue
 * partitionPredicate
-* Aggregators (all of them)
-* Projections (all of them)
 * Part of the linkedList because it contain items listed above
 * Part of the arrayList because it contain items listed above and below. 
 Apart from these, we also removed number types other than anInt, because in the Python client we can specify a 
@@ -54,6 +53,7 @@ below.
 * ints
 * longs
 * strings
+* aLocalDateTime
 * aClass
 * linkedList
 
@@ -70,17 +70,23 @@ provided at the end of this file for future usages.
 ```java
 package com.hazelcast.nio.serialization.compatibility;
 
+import com.hazelcast.aggregation.Aggregators;
 import com.hazelcast.internal.serialization.impl.HeapData;
 import com.hazelcast.internal.serialization.Data;
 import com.hazelcast.nio.serialization.Portable;
+import com.hazelcast.projection.Projections;
 import com.hazelcast.query.Predicates;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.CharBuffer;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.UUID;
 
@@ -168,23 +174,31 @@ class ReferenceObjects {
             aCustomStreamSerializable,
             aCustomByteArraySerializable, aData);
 
-    static Date aDate;
+    static LocalDate aLocalDate;
+    static LocalTime aLocalTime;
+    static LocalDateTime aLocalDateTime;
+    static OffsetDateTime anOffsetDateTime;
 
     static {
         Calendar calendar = Calendar.getInstance();
         calendar.set(1990, Calendar.FEBRUARY, 1, 0, 0, 0);
         calendar.set(Calendar.MILLISECOND, 0);
         calendar.set(Calendar.ZONE_OFFSET, 0);
-        aDate = calendar.getTime();
+        aLocalDate = LocalDate.of(2021, 6, 28);
+        aLocalTime = LocalTime.of(11, 22, 41, 123456000);
+        aLocalDateTime = LocalDateTime.of(aLocalDate, aLocalTime);
+        anOffsetDateTime = OffsetDateTime.of(aLocalDateTime, ZoneOffset.ofHours(18));
     }
 
     static BigInteger aBigInteger = new BigInteger("1314432323232411");
+    static BigDecimal aBigDecimal = new BigDecimal("31231.12331");
     static Class aClass = BigDecimal.class;
 
     static ArrayList nonNullList = new ArrayList(asList(
             aBoolean, aDouble, anInt, anSqlString, anInnerPortable,
             bytes, aCustomStreamSerializable, aCustomByteArraySerializable,
-            anIdentifiedDataSerializable, aPortable, aDate));
+            anIdentifiedDataSerializable, aPortable,
+            aBigDecimal, aLocalDate, aLocalTime, anOffsetDateTime));
 
     static ArrayList arrayList = new ArrayList(asList(aNullObject, nonNullList));
 
@@ -195,7 +209,7 @@ class ReferenceObjects {
             booleans, bytes, chars, doubles, shorts, floats, ints, longs, strings,
             aCustomStreamSerializable, aCustomByteArraySerializable,
             anIdentifiedDataSerializable, aPortable,
-            aDate, aBigInteger, aClass,
+            aLocalDate, aLocalTime, aLocalDateTime, anOffsetDateTime, aBigInteger, aBigDecimal, aClass,
             arrayList, linkedList,
 
             // predicates
@@ -221,6 +235,30 @@ class ReferenceObjects {
                     Predicates.greaterThan(anSqlString, anInt),
                     Predicates.greaterEqual(anSqlString, anInt)),
             Predicates.instanceOf(aCustomStreamSerializable.getClass()),
+
+            // Aggregators
+            Aggregators.distinct(anSqlString),
+            Aggregators.integerMax(anSqlString),
+            Aggregators.maxBy(anSqlString),
+            Aggregators.comparableMin(anSqlString),
+            Aggregators.minBy(anSqlString),
+            Aggregators.count(anSqlString),
+            Aggregators.numberAvg(anSqlString),
+            Aggregators.integerAvg(anSqlString),
+            Aggregators.longAvg(anSqlString),
+            Aggregators.doubleAvg(anSqlString),
+            Aggregators.integerSum(anSqlString),
+            Aggregators.longSum(anSqlString),
+            Aggregators.doubleSum(anSqlString),
+            Aggregators.fixedPointSum(anSqlString),
+            Aggregators.floatingPointSum(anSqlString),
+            Aggregators.bigDecimalSum(anSqlString),
+
+            // projections
+            Projections.singleAttribute(anSqlString),
+            Projections.multiAttribute(anSqlString, anSqlString, anSqlString),
+            Projections.identity()
+
     };
 }
 ```

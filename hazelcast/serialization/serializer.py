@@ -1,6 +1,5 @@
-import binascii
-import time
-from datetime import datetime
+import datetime
+import decimal
 
 from hazelcast import six
 from hazelcast.core import HazelcastJsonValue
@@ -9,7 +8,7 @@ from hazelcast.serialization.api import StreamSerializer
 from hazelcast.serialization.base import HazelcastSerializationError
 from hazelcast.serialization.serialization_const import *
 from hazelcast.six.moves import range, cPickle
-from hazelcast.util import UUIDUtil
+from hazelcast.util import UUIDUtil, int_from_bytes, int_to_bytes, timezone
 
 if not six.PY2:
     long = int
@@ -248,51 +247,42 @@ class StringArraySerializer(BaseSerializer):
 
 
 # EXTENSIONS
-class DateTimeSerializer(BaseSerializer):
-    def read(self, inp):
-        long_time = inp.read_long()
-        return datetime.fromtimestamp(long_time / 1000.0)
-
-    def write(self, out, obj):
-        long_time = long(time.mktime(obj.timetuple())) * 1000
-        out.write_long(long_time)
-
-    def get_type_id(self):
-        return JAVA_DEFAULT_TYPE_DATE
-
-
 class BigIntegerSerializer(BaseSerializer):
     def read(self, inp):
         length = inp.read_int()
-        if length == NULL_ARRAY_LENGTH:
-            return None
         result = bytearray(length)
-        if length > 0:
-            inp.read_into(result, 0, length)
-        if result[0] & 0x80:
-            neg = bytearray()
-            for c in result:
-                neg.append(c ^ 0xFF)
-            return -1 * int(binascii.hexlify(neg), 16) - 1
-        return int(binascii.hexlify(result), 16)
+        inp.read_into(result, 0, length)
+        return int_from_bytes(result)
 
     def write(self, out, obj):
-        the_big_int = -obj - 1 if obj < 0 else obj
-        end_index = -1 if (type(obj) == long and six.PY2) else None
-        hex_str = hex(the_big_int)[2:end_index]
-        if len(hex_str) % 2 == 1:
-            prefix = "0"  # "f" if obj < 0 else "0"
-            hex_str = prefix + hex_str
-        num_array = bytearray(binascii.unhexlify(bytearray(hex_str, encoding="utf-8")))
-        if obj < 0:
-            neg = bytearray()
-            for c in num_array:
-                neg.append(c ^ 0xFF)
-            num_array = neg
-        out.write_byte_array(num_array)
+        out.write_byte_array(int_to_bytes(obj))
 
     def get_type_id(self):
         return JAVA_DEFAULT_TYPE_BIG_INTEGER
+
+
+class BigDecimalSerializer(BaseSerializer):
+    def read(self, inp):
+        length = inp.read_int()
+        result = bytearray(length)
+        inp.read_into(result, 0, length)
+        unscaled_value = int_from_bytes(result)
+        scale = inp.read_int()
+        sign = 0 if unscaled_value >= 0 else 1
+        return decimal.Decimal(
+            (sign, tuple(int(digit) for digit in str(abs(unscaled_value))), -1 * scale)
+        )
+
+    def write(self, out, obj):
+        sign, digits, exponent = obj.as_tuple()
+        unscaled_value = long("".join([str(digit) for digit in digits]))
+        if sign == 1:
+            unscaled_value = -1 * unscaled_value
+        out.write_byte_array(int_to_bytes(unscaled_value))
+        out.write_int(-1 * exponent)
+
+    def get_type_id(self):
+        return JAVA_DEFAULT_TYPE_BIG_DECIMAL
 
 
 class JavaClassSerializer(BaseSerializer):
@@ -344,6 +334,97 @@ class LinkedListSerializer(BaseSerializer):
 
     def get_type_id(self):
         return JAVA_DEFAULT_TYPE_LINKED_LIST
+
+
+class LocalDateSerializer(BaseSerializer):
+    def read(self, inp):
+        return datetime.date(
+            inp.read_int(),
+            inp.read_byte(),
+            inp.read_byte(),
+        )
+
+    def write(self, out, obj):
+        out.write_int(obj.year)
+        out.write_byte(obj.month)
+        out.write_byte(obj.day)
+
+    def get_type_id(self):
+        return JAVA_DEFAULT_TYPE_LOCAL_DATE
+
+
+class LocalTimeSerializer(BaseSerializer):
+    def read(self, inp):
+        return datetime.time(
+            inp.read_byte(),
+            inp.read_byte(),
+            inp.read_byte(),
+            inp.read_int() // 1000,  # server sends nanoseconds
+        )
+
+    def write(self, out, obj):
+        out.write_byte(obj.hour)
+        out.write_byte(obj.minute)
+        out.write_byte(obj.second)
+        out.write_int(obj.microsecond * 1000)  # server expects nanoseconds
+
+    def get_type_id(self):
+        return JAVA_DEFAULT_TYPE_LOCAL_TIME
+
+
+class LocalDateTimeSerializer(BaseSerializer):
+    def read(self, inp):
+        return datetime.datetime(
+            inp.read_int(),
+            inp.read_byte(),
+            inp.read_byte(),
+            inp.read_byte(),
+            inp.read_byte(),
+            inp.read_byte(),
+            inp.read_int() // 1000,  # server sends nanoseconds
+        )
+
+    # "write(self, out, obj)" is never called so not implemented here
+
+    def get_type_id(self):
+        return JAVA_DEFAULT_TYPE_LOCAL_DATE_TIME
+
+
+class OffsetDateTimeSerializer(BaseSerializer):
+    def read(self, inp):
+        return datetime.datetime(
+            inp.read_int(),
+            inp.read_byte(),
+            inp.read_byte(),
+            inp.read_byte(),
+            inp.read_byte(),
+            inp.read_byte(),
+            inp.read_int() // 1000,  # server sends nanoseconds
+            timezone(datetime.timedelta(seconds=inp.read_int())),
+        )
+
+    def write(self, out, obj):
+        out.write_int(obj.year)
+        out.write_byte(obj.month)
+        out.write_byte(obj.day)
+        out.write_byte(obj.hour)
+        out.write_byte(obj.minute)
+        out.write_byte(obj.second)
+        out.write_int(obj.microsecond * 1000)  # server expects nanoseconds
+
+        timezone_info = obj.tzinfo
+        if not timezone_info:
+            out.write_int(0)
+            return
+
+        utc_offset = timezone_info.utcoffset(None)
+        if utc_offset:
+            out.write_int(int(utc_offset.total_seconds()))
+        else:
+            out.write_int(0)
+
+    def get_type_id(self):
+        return JAVA_DEFAULT_TYPE_OFFSET_DATE_TIME
 
 
 class PythonObjectSerializer(BaseSerializer):

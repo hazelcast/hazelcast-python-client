@@ -1,3 +1,5 @@
+import datetime
+import decimal
 import uuid
 
 from hazelcast import six
@@ -101,12 +103,16 @@ class SerializationServiceV1(BaseSerializationService):
         self._registry.register_constant_serializer(DoubleArraySerializer())
         self._registry.register_constant_serializer(StringArraySerializer())
         # EXTENSIONS
-        self._registry.register_constant_serializer(DateTimeSerializer(), datetime)
         self._registry.register_constant_serializer(BigIntegerSerializer())
+        self._registry.register_constant_serializer(BigDecimalSerializer(), decimal.Decimal)
         self._registry.register_constant_serializer(JavaClassSerializer())
         self._registry.register_constant_serializer(ArraySerializer())
         self._registry.register_constant_serializer(ArrayListSerializer(), list)
         self._registry.register_constant_serializer(LinkedListSerializer())
+        self._registry.register_constant_serializer(LocalDateSerializer(), datetime.date)
+        self._registry.register_constant_serializer(LocalTimeSerializer(), datetime.time)
+        self._registry.register_constant_serializer(LocalDateTimeSerializer())
+        self._registry.register_constant_serializer(OffsetDateTimeSerializer(), datetime.datetime)
         self._registry.register_constant_serializer(
             HazelcastJsonValueSerializer(), HazelcastJsonValue
         )

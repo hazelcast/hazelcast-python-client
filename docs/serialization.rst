@@ -11,21 +11,27 @@ chapter.
 
 Hazelcast serializes all your objects before sending them to the server.
 The ``bool``, ``int``, ``long`` (for Python 2), ``float``, ``str``,
-``unicode`` (for Python 2) and ``bytearray`` types are serialized
-natively and you cannot override this behavior. The following table is
-the conversion of types for the Java server side.
+``unicode`` (for Python 2), ``bytearray``, ``list`` ``datetime.date``,
+``datetime.time``, ``datetime.datetime``, and ``decimal.Decimal`` types are
+serialized natively and you cannot override this behavior. The following
+table is the conversion of types for the Java server side.
 
-========= ======================================
-Python    Java
-========= ======================================
-bool      Boolean
-int       Byte, Short, Integer, Long, BigInteger
-long      Byte, Short, Integer, Long, BigInteger
-float     Float, Double
-str       String
-unicode   String
-bytearray byte[]
-========= ======================================
+================= ================================================
+Python            Java
+================= ================================================
+bool              Boolean
+int               Byte, Short, Integer, Long, java.math.BigInteger
+long              Byte, Short, Integer, Long, java.math.BigInteger
+float             Float, Double
+str               String
+unicode           String
+bytearray         byte[]
+list              java.util.ArrayList
+datetime.date     java.time.LocalDate
+datetime.time     java.time.LocalTime
+datetime.datetime java.time.OffsetDateTime
+decimal.Decimal   java.math.BigDecimal
+================= ================================================
 
 
 .. Note:: A ``int`` or ``long`` type is serialized as ``Integer`` by
