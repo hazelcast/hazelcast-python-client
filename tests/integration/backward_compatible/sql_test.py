@@ -78,12 +78,15 @@ class SqlTestBase(HazelcastTestCase):
     def setUp(self):
         self.map_name = random_string()
         self.map = self.client.get_map(self.map_name).blocking()
-        mark_server_version_at_least(self, self.client, "4.2")
+        self._mark_minimum_server_version()
 
         # Skip tests if major versions of the client/server do not match.
         is_v5_or_newer_client = compare_client_version("5.0") >= 0
         if is_v5_or_newer_client ^ self.is_v5_or_newer_server:
             self.skipTest("Major versions of the client and the server do not match.")
+
+    def _mark_minimum_server_version(self):
+        mark_server_version_at_least(self, self.client, "5.0")
 
     def tearDown(self):
         self.map.clear()
