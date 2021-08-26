@@ -231,13 +231,7 @@ class SqlServiceTest(SqlTestBase):
             # -1 comes from the fact that, we don't fetch the first page.
             expected = math.ceil(float(entry_count) / statement.cursor_buffer_size) - 1
             actual = patched.call_count
-
-            # In 5.0+, some pages other than the last page might also be
-            # not full.
-            if self.is_v5_or_newer_server:
-                self.assertGreaterEqual(actual, expected)
-            else:
-                self.assertEqual(expected, actual)
+            self.assertEqual(expected, actual)
 
     def test_execute_statement_with_copy(self):
         self._populate_map()
