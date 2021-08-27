@@ -2074,13 +2074,13 @@ using the ``next_page()`` method.
 .. Note:: ``PagingPredicate``, also known as Order & Limit, is not supported in
     Transactional Context.
 
-Fast-Aggregations
+Aggregations
 ~~~~~~~~~~~~~~~~~
 
-Fast-Aggregations feature provides some aggregate functions, such as ``sum``,
-``average``, ``max``, and ``min``, on top of Hazelcast ``Map`` entries. Their
-performance is high since they run in parallel for each partition and are 
-highly optimized for speed and low memory consumption.
+Aggregations allow computing a value of some function (e.g ``sum`` or ``max``)
+over the stored map entries. The computation is performed in a fully
+distributed manner, so no data other than the computed function value is
+transferred to the client, making the computation fast.
 
 The ``aggregator`` module provides a wide variety of built-in aggregators. The
 full list is presented below:
