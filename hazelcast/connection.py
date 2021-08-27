@@ -172,7 +172,7 @@ class ConnectionManager(object):
                     return connection
 
         # Otherwise iterate over connections and return the first one
-        for member_uuid, connection in list(six.iteritems(self.active_connections)):
+        for connection in list(six.itervalues(self.active_connections)):
             return connection
 
         # Failed to get a connection
@@ -190,7 +190,7 @@ class ConnectionManager(object):
             - ``None``, if there is no connection.
 
         Returns:
-            Connection: Random connection.
+            Connection: A random connection for SQL.
         """
         if self._smart_routing_enabled:
             # There might be a race - the chosen member might be just connected or disconnected.

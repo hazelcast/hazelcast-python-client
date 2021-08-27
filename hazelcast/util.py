@@ -504,6 +504,7 @@ def member_of_larger_same_version_group(members):
                 "More than 2 distinct member versions found: %s, %s, %s" % (version0, version1, v)
             )
 
+    # no data members
     if count0 == 0:
         return None
 
@@ -514,6 +515,7 @@ def member_of_larger_same_version_group(members):
         count = count0
         version = version1
 
+    # return a random member from the larger group
     random_member_idx = random.randrange(0, count)
     for member in members:
         if not member.lite_member and _is_same_version(version, member.version):

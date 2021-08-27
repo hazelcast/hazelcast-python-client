@@ -60,9 +60,7 @@ class SqlTestBase(HazelcastTestCase):
         cls.is_v5_or_newer_server = compare_server_version_with_rc(cls.rc, "5.0") >= 0
 
         # enable Jet if the server is 5.0+
-        cluster_config = (
-            SERVER_CONFIG % JET_ENABLED_CONFIG if cls.is_v5_or_newer_server else SERVER_CONFIG % ""
-        )
+        cluster_config = SERVER_CONFIG % (JET_ENABLED_CONFIG if cls.is_v5_or_newer_server else "")
         cls.cluster = cls.create_cluster(cls.rc, cluster_config)
         cls.member = cls.cluster.start_member()
         cls.client = HazelcastClient(
@@ -82,11 +80,11 @@ class SqlTestBase(HazelcastTestCase):
 
         # Skip tests if major versions of the client/server do not match.
         is_v5_or_newer_client = compare_client_version("5.0") >= 0
-        if is_v5_or_newer_client ^ self.is_v5_or_newer_server:
+        if is_v5_or_newer_client != self.is_v5_or_newer_server:
             self.skipTest("Major versions of the client and the server do not match.")
 
     def _mark_minimum_server_version(self):
-        mark_server_version_at_least(self, self.client, "5.0")
+        mark_server_version_at_least(self, self.client, "4.2")
 
     def tearDown(self):
         self.map.clear()
@@ -677,7 +675,8 @@ class SqlServiceV4LiteMemberClusterTest(SingleMemberTestCase):
 class SqlServiceV5LiteMemberClusterTest(SingleMemberTestCase):
     @classmethod
     def configure_cluster(cls):
-        return LITE_MEMBER_CONFIG % ""
+        is_v5_or_newer_server = compare_server_version_with_rc(cls.rc, "5.0") >= 0
+        return LITE_MEMBER_CONFIG % (JET_ENABLED_CONFIG if is_v5_or_newer_server else "")
 
     @classmethod
     def configure_client(cls, config):

@@ -1428,14 +1428,11 @@ class _InternalSqlService(object):
 
     def _get_query_connection(self):
         try:
-            # Get a random Data member (non-lite member)
             connection = self._connection_manager.get_random_connection_for_sql()
         except Exception as e:
             raise self.re_raise(e, None)
 
         if not connection:
-            # Either the client is not connected to the cluster, or
-            # there are no data members in the cluster.
             raise HazelcastSqlError(
                 self.get_client_id(),
                 _SqlErrorCode.CONNECTION_PROBLEM,

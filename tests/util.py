@@ -6,9 +6,9 @@ from hazelcast import __version__
 from hazelcast.config import SSLProtocol
 from hazelcast.util import calculate_version
 
-# time.monotonic() is more consistent since it uses cpu clock rather than system clock. Use it if available.
 from tests.hzrc.ttypes import Lang
 
+# time.monotonic() is more consistent since it uses cpu clock rather than system clock. Use it if available.
 if hasattr(time, "monotonic"):
     get_current_timestamp = time.monotonic
 else:
