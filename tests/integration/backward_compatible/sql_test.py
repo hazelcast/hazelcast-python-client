@@ -777,7 +777,7 @@ class JetSqlTest(SqlTestBase):
         TYPE IMap
         OPTIONS (
             'keyFormat' = 'int',
-            'valueFormat' = 'json'
+            'valueFormat' = 'json-flat'
         )
         """
             % self.map_name
