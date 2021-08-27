@@ -15,8 +15,8 @@ from mock import patch
 from tests.util import (
     compare_server_version_with_rc,
     compare_client_version,
-    mark_server_version_at_least,
-    mark_server_version_at_most,
+    skip_if_server_version_older_than,
+    skip_if_server_version_newer_than_or_equal,
 )
 
 try:
@@ -76,15 +76,15 @@ class SqlTestBase(HazelcastTestCase):
     def setUp(self):
         self.map_name = random_string()
         self.map = self.client.get_map(self.map_name).blocking()
-        self._mark_minimum_server_version()
+        self._setup_skip_condition()
 
         # Skip tests if major versions of the client/server do not match.
         is_v5_or_newer_client = compare_client_version("5.0") >= 0
         if is_v5_or_newer_client != self.is_v5_or_newer_server:
             self.skipTest("Major versions of the client and the server do not match.")
 
-    def _mark_minimum_server_version(self):
-        mark_server_version_at_least(self, self.client, "4.2")
+    def _setup_skip_condition(self):
+        skip_if_server_version_older_than(self, self.client, "4.2")
 
     def tearDown(self):
         self.map.clear()
@@ -650,8 +650,8 @@ class SqlServiceV4LiteMemberClusterTest(SingleMemberTestCase):
         return config
 
     def setUp(self):
-        mark_server_version_at_least(self, self.client, "4.2")
-        mark_server_version_at_most(self, self.client, "5.0")
+        skip_if_server_version_older_than(self, self.client, "4.2")
+        skip_if_server_version_newer_than_or_equal(self, self.client, "5.0")
 
     def test_execute(self):
         with self.assertRaises(HazelcastSqlError) as cm:
@@ -684,7 +684,7 @@ class SqlServiceV5LiteMemberClusterTest(SingleMemberTestCase):
         return config
 
     def setUp(self):
-        mark_server_version_at_least(self, self.client, "5.0")
+        skip_if_server_version_older_than(self, self.client, "5.0")
 
     def test_execute(self):
         with self.assertRaises(HazelcastSqlError) as cm:
@@ -739,7 +739,7 @@ class SqlServiceV5MixedClusterTest(HazelcastTestCase):
         cls.rc.exit()
 
     def setUp(self):
-        mark_server_version_at_least(self, self.client, "5.0")
+        skip_if_server_version_older_than(self, self.client, "5.0")
 
     def test_mixed_cluster(self):
         map_name = random_string()
@@ -756,8 +756,8 @@ class SqlServiceV5MixedClusterTest(HazelcastTestCase):
     compare_client_version("5.0") < 0, "Tests the features added in 5.0 version of the client"
 )
 class JetSqlTest(SqlTestBase):
-    def _mark_minimum_server_version(self):
-        mark_server_version_at_least(self, self.client, "5.0")
+    def _setup_skip_condition(self):
+        skip_if_server_version_older_than(self, self.client, "5.0")
 
     def test_streaming_sql_query(self):
         with self.client.sql.execute("SELECT * FROM TABLE(generate_stream(100))") as result:

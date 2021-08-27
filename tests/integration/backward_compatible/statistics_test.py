@@ -9,7 +9,7 @@ from hazelcast.serialization import BE_INT, INT_SIZE_IN_BYTES
 from hazelcast.statistics import Statistics
 from tests.base import HazelcastTestCase
 from tests.hzrc.ttypes import Lang
-from tests.util import get_current_timestamp, random_string, mark_client_version_at_least
+from tests.util import get_current_timestamp, random_string, skip_if_client_version_older_than
 
 
 class StatisticsTest(HazelcastTestCase):
@@ -186,7 +186,7 @@ class StatisticsTest(HazelcastTestCase):
         client.shutdown()
 
     def test_metrics_blob(self):
-        mark_client_version_at_least(self, "4.2.1")
+        skip_if_client_version_older_than(self, "4.2.1")
 
         map_name = random_string()
         client = HazelcastClient(

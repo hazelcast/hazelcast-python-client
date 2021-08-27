@@ -18,7 +18,7 @@ from tests.util import (
     random_string,
     event_collector,
     get_current_timestamp,
-    mark_client_version_at_least,
+    skip_if_client_version_older_than,
 )
 
 CAPACITY = 10
@@ -494,7 +494,7 @@ class ReliableTopicTest(SingleMemberTestCase):
         self.assertTrueEventually(assertion)
 
     def test_client_receives_when_server_publish_messages(self):
-        mark_client_version_at_least(self, "4.2.1")
+        skip_if_client_version_older_than(self, "4.2.1")
 
         topic_name = random_string()
         topic = self.get_topic(topic_name)

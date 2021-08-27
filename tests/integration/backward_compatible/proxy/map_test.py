@@ -56,7 +56,7 @@ from tests.util import (
     get_current_timestamp,
     compare_client_version,
     compare_server_version,
-    mark_client_version_at_least,
+    skip_if_client_version_older_than,
     random_string,
 )
 
@@ -444,7 +444,7 @@ class MapTest(SingleMemberTestCase):
     def test_put_get_large_payload(self):
         # The fix for reading large payloads is introduced in 4.2.1
         # See https://github.com/hazelcast/hazelcast-python-client/pull/436
-        mark_client_version_at_least(self, "4.2.1")
+        skip_if_client_version_older_than(self, "4.2.1")
 
         payload = bytearray(os.urandom(16 * 1024 * 1024))
         start = get_current_timestamp()

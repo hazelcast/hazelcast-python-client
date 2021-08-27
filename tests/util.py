@@ -92,12 +92,12 @@ def set_attr(*args, **kwargs):
     return wrap_ob
 
 
-def mark_server_version_at_least(test, client, version):
+def skip_if_server_version_older_than(test, client, version):
     if compare_server_version(client, version) < 0:
         test.skipTest("Expected a newer server")
 
 
-def mark_server_version_at_most(test, client, version):
+def skip_if_server_version_newer_than_or_equal(test, client, version):
     if compare_server_version(client, version) >= 0:
         test.skipTest("Expected an older server")
 
@@ -127,12 +127,12 @@ def compare_server_version_with_rc(rc, version):
     return server_version - version
 
 
-def mark_client_version_at_least(test, version):
+def skip_if_client_version_older_than(test, version):
     if compare_client_version(version) < 0:
         test.skipTest("Expected a newer client")
 
 
-def mark_client_version_at_most(test, version):
+def skip_if_client_version_newer_than_or_equal(test, version):
     if compare_client_version(version) >= 0:
         test.skipTest("Expected an older client")
 

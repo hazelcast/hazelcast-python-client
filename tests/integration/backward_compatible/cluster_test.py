@@ -4,7 +4,7 @@ import tempfile
 from hazelcast import HazelcastClient, six
 from hazelcast.util import RandomLB, RoundRobinLB
 from tests.base import HazelcastTestCase
-from tests.util import set_attr, random_string, event_collector, mark_client_version_at_least
+from tests.util import set_attr, random_string, event_collector, skip_if_client_version_older_than
 
 
 class ClusterTest(HazelcastTestCase):
@@ -228,7 +228,7 @@ class HotRestartEventTest(HazelcastTestCase):
         self.assertEqual(member.uuid, str(members[0].uuid))
 
     def test_when_member_started_with_the_same_address(self):
-        mark_client_version_at_least(self, "4.2")
+        skip_if_client_version_older_than(self, "4.2")
 
         old_member = self.cluster.start_member()
         self.client = HazelcastClient(cluster_name=self.cluster.id)
