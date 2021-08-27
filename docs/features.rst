@@ -29,7 +29,7 @@ features:
 - Entry Processor
 - Built-in Predicates
 - Listener with Predicate
-- Fast Aggregations
+- Aggregations
 - Projections
 - Near Cache Support
 - Programmatic Configuration
