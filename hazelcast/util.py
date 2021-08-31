@@ -454,3 +454,71 @@ def try_to_get_error_message(error):
     elif len(error.args) > 0:
         return error.args[0]
     return None
+
+
+def _is_same_version(v1, v2):
+    # Ignores the patch version
+    return v1.major == v2.major and v1.minor == v2.minor
+
+
+def _is_newer_version(v1, v2):
+    # Ignores the patch version
+    return v1.major > v2.major or (v1.major == v2.major and v1.minor > v2.minor)
+
+
+def member_of_larger_same_version_group(members):
+    """Finds a larger same-version group of data members from a collection of
+    members and return a random member from the group.
+
+    If the same-version groups have the same size, return a member from the
+    newer group.
+
+    Args:
+        members (list[hazelcast.core.MemberInfo]): List of all members.
+
+    Returns:
+        hazelcast.core.MemberInfo: The chosen member or ``None``, if no data
+        member is found.
+    """
+    # The members should have at most 2 different version (ignoring the patch
+    # version).
+
+    version0 = None
+    version1 = None
+    count0 = 0
+    count1 = 0
+
+    for member in members:
+        if member.lite_member:
+            continue
+
+        v = member.version
+        if not version0 or _is_same_version(version0, v):
+            version0 = v
+            count0 += 1
+        elif not version1 or _is_same_version(version1, v):
+            version1 = v
+            count1 += 1
+        else:
+            raise ValueError(
+                "More than 2 distinct member versions found: %s, %s, %s" % (version0, version1, v)
+            )
+
+    # no data members
+    if count0 == 0:
+        return None
+
+    if count0 > count1 or count0 == count1 and _is_newer_version(version0, version1):
+        count = count0
+        version = version0
+    else:
+        count = count0
+        version = version1
+
+    # return a random member from the larger group
+    random_member_idx = random.randrange(0, count)
+    for member in members:
+        if not member.lite_member and _is_same_version(version, member.version):
+            random_member_idx -= 1
+            if random_member_idx < 0:
+                return member

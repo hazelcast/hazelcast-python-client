@@ -14,18 +14,18 @@ except ImportError:
 
 from tests.base import SingleMemberTestCase
 from tests.util import (
-    is_client_version_older_than,
+    compare_client_version,
     random_string,
     event_collector,
     get_current_timestamp,
-    mark_client_version_at_least,
+    skip_if_client_version_older_than,
 )
 
 CAPACITY = 10
 
 
 @unittest.skipIf(
-    is_client_version_older_than("4.1"), "Tests the features added in 4.1 version of the client"
+    compare_client_version("4.1") < 0, "Tests the features added in 4.1 version of the client"
 )
 class ReliableTopicTest(SingleMemberTestCase):
     @classmethod
@@ -38,7 +38,7 @@ class ReliableTopicTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
         config["cluster_name"] = cls.cluster.id
-        if not is_client_version_older_than("4.1"):
+        if not compare_client_version("4.1") < 0:
             # Add these config elements only to the 4.1+ clients
             # since the older versions do not know anything
             # about them.
@@ -494,7 +494,7 @@ class ReliableTopicTest(SingleMemberTestCase):
         self.assertTrueEventually(assertion)
 
     def test_client_receives_when_server_publish_messages(self):
-        mark_client_version_at_least(self, "4.2.1")
+        skip_if_client_version_older_than(self, "4.2.1")
 
         topic_name = random_string()
         topic = self.get_topic(topic_name)

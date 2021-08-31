@@ -32,11 +32,17 @@ from hazelcast.protocol.codec import (
     client_authentication_custom_codec,
     client_ping_codec,
 )
-from hazelcast.util import AtomicInteger, calculate_version, UNKNOWN_VERSION
+from hazelcast.util import (
+    AtomicInteger,
+    calculate_version,
+    UNKNOWN_VERSION,
+    member_of_larger_same_version_group,
+)
 
 _logger = logging.getLogger(__name__)
 
 _INF = float("inf")
+_SQL_CONNECTION_RANDOM_ATTEMPTS = 10
 
 
 class _WaitStrategy(object):
@@ -156,25 +162,65 @@ class ConnectionManager(object):
     def get_connection(self, member_uuid):
         return self.active_connections.get(member_uuid, None)
 
-    def get_random_connection(self, should_get_data_member=False):
+    def get_random_connection(self):
+        # Try getting the connection from the load balancer, if smart routing is enabled
         if self._smart_routing_enabled:
-            connection = self._get_connection_from_load_balancer(should_get_data_member)
-            if connection:
-                return connection
+            member = self._load_balancer.next()
+            if member:
+                connection = self.get_connection(member.uuid)
+                if connection:
+                    return connection
 
-        # We should not get to this point under normal circumstances
-        # for the smart client. For uni-socket client, there would be
-        # a single connection in the dict. Therefore, copying the list
-        # should be acceptable.
+        # Otherwise iterate over connections and return the first one
+        for connection in list(six.itervalues(self.active_connections)):
+            return connection
+
+        # Failed to get a connection
+        return None
+
+    def get_random_connection_for_sql(self):
+        """Returns a random connection for SQL.
+
+        The connection is tried to be selected in the following order.
+
+            - Random connection to a data member from the larger same-version
+              group.
+            - Random connection to a data member.
+            - Any random connection
+            - ``None``, if there is no connection.
+
+        Returns:
+            Connection: A random connection for SQL.
+        """
+        if self._smart_routing_enabled:
+            # There might be a race - the chosen member might be just connected or disconnected.
+            # Try a couple of times, the member_of_larger_same_version_group returns a random
+            # connection, we might be lucky...
+            for _ in range(_SQL_CONNECTION_RANDOM_ATTEMPTS):
+                members = self._cluster_service.get_members()
+                member = member_of_larger_same_version_group(members)
+                if not member:
+                    break
+
+                connection = self.get_connection(member.uuid)
+                if connection:
+                    return connection
+
+        # Otherwise iterate over connections and return the first one
+        # that's not to a lite member.
+        first_connection = None
         for member_uuid, connection in list(six.iteritems(self.active_connections)):
-            if should_get_data_member:
-                member = self._cluster_service.get_member(member_uuid)
-                if not member or member.lite_member:
-                    continue
+            if not first_connection:
+                first_connection = connection
+
+            member = self._cluster_service.get_member(member_uuid)
+            if not member or member.lite_member:
+                continue
 
             return connection
 
-        return None
+        # Failed to get a connection to a data member.
+        return first_connection
 
     def start(self, load_balancer):
         if self.live:
@@ -270,20 +316,6 @@ class ConnectionManager(object):
             raise ClientOfflineError()
         else:
             raise IOError("No connection found to cluster")
-
-    def _get_connection_from_load_balancer(self, should_get_data_member):
-        load_balancer = self._load_balancer
-        member = None
-        if should_get_data_member:
-            if load_balancer.can_get_next_data_member():
-                member = load_balancer.next_data_member()
-        else:
-            member = load_balancer.next()
-
-        if not member:
-            return None
-
-        return self.get_connection(member.uuid)
 
     def _get_or_connect_to_address(self, address):
         for connection in list(six.itervalues(self.active_connections)):

@@ -54,9 +54,9 @@ from tests.util import (
     event_collector,
     fill_map,
     get_current_timestamp,
-    is_client_version_older_than,
-    is_server_version_older_than,
-    mark_client_version_at_least,
+    compare_client_version,
+    compare_server_version,
+    skip_if_client_version_older_than,
     random_string,
 )
 
@@ -364,7 +364,7 @@ class MapTest(SingleMemberTestCase):
         self.assertIsNotNone(entry_view.cost)
         self.assertIsNotNone(entry_view.creation_time)
         self.assertIsNotNone(entry_view.expiration_time)
-        if is_server_version_older_than(self.client, "4.2"):
+        if compare_server_version(self.client, "4.2") < 0:
             self.assertEqual(entry_view.hits, 2)
         else:
             # 4.2+ servers do not collect per entry stats by default
@@ -444,7 +444,7 @@ class MapTest(SingleMemberTestCase):
     def test_put_get_large_payload(self):
         # The fix for reading large payloads is introduced in 4.2.1
         # See https://github.com/hazelcast/hazelcast-python-client/pull/436
-        mark_client_version_at_least(self, "4.2.1")
+        skip_if_client_version_older_than(self, "4.2.1")
 
         payload = bytearray(os.urandom(16 * 1024 * 1024))
         start = get_current_timestamp()
@@ -780,7 +780,7 @@ class MapMaxIdleTest(SingleMemberTestCase):
 
 
 @unittest.skipIf(
-    is_client_version_older_than("4.2.1"), "Tests the features added in 4.2.1 version of the client"
+    compare_client_version("4.2.1") < 0, "Tests the features added in 4.2.1 version of the client"
 )
 class MapAggregatorsIntTest(SingleMemberTestCase):
     @classmethod
@@ -883,7 +883,7 @@ class MapAggregatorsIntTest(SingleMemberTestCase):
 
 
 @unittest.skipIf(
-    is_client_version_older_than("4.2.1"), "Tests the features added in 4.2.1 version of the client"
+    compare_client_version("4.2.1") < 0, "Tests the features added in 4.2.1 version of the client"
 )
 class MapAggregatorsLongTest(SingleMemberTestCase):
     @classmethod
@@ -925,7 +925,7 @@ class MapAggregatorsLongTest(SingleMemberTestCase):
 
 
 @unittest.skipIf(
-    is_client_version_older_than("4.2.1"), "Tests the features added in 4.2.1 version of the client"
+    compare_client_version("4.2.1") < 0, "Tests the features added in 4.2.1 version of the client"
 )
 class MapAggregatorsDoubleTest(SingleMemberTestCase):
     @classmethod
@@ -1026,7 +1026,7 @@ class MapAggregatorsDoubleTest(SingleMemberTestCase):
 
 
 @unittest.skipIf(
-    is_client_version_older_than("4.2.1"), "Tests the features added in 4.2.1 version of the client"
+    compare_client_version("4.2.1") < 0, "Tests the features added in 4.2.1 version of the client"
 )
 class MapProjectionsTest(SingleMemberTestCase):
     @classmethod

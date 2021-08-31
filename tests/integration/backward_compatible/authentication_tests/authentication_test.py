@@ -3,7 +3,7 @@ import unittest
 
 from hazelcast.errors import HazelcastError
 from tests.base import HazelcastTestCase
-from tests.util import get_abs_path, set_attr, is_client_version_older_than
+from tests.util import get_abs_path, set_attr, compare_client_version
 from hazelcast.client import HazelcastClient
 
 try:
@@ -14,7 +14,7 @@ except ImportError:
 
 @set_attr(enterprise=True)
 @unittest.skipIf(
-    is_client_version_older_than("4.2.1"), "Tests the features added in 4.2.1 version of the client"
+    compare_client_version("4.2.1") < 0, "Tests the features added in 4.2.1 version of the client"
 )
 class AuthenticationTest(HazelcastTestCase):
     current_directory = os.path.dirname(__file__)

@@ -32,7 +32,7 @@ class SqlMockTest(unittest.TestCase):
         self.connection = MagicMock()
 
         connection_manager = MagicMock(client_uuid=uuid.uuid4())
-        connection_manager.get_random_connection = MagicMock(return_value=self.connection)
+        connection_manager.get_random_connection_for_sql = MagicMock(return_value=self.connection)
 
         serialization_service = MagicMock()
         serialization_service.to_object.side_effect = lambda arg: arg
