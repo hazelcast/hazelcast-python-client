@@ -378,7 +378,13 @@ else:
 if hasattr(int, "to_bytes"):
 
     def int_to_bytes(number):
-        # number of bytes to represent the number
+        # number of bytes to represent the number.
+        # For numbers that has not exactly 8n bit_length,
+        # adding 8 and performing integer division with 8
+        # let us get the correct width because
+        # (8n + m + 8) // 8 = n + 0 + 1 (assuming m < 8).
+        # For negative numbers, we add 1 to get rid of the
+        # effects of the leading 1 (the sign bit).
         width = (8 + (number + (number < 0)).bit_length()) // 8
         return number.to_bytes(length=width, byteorder="big", signed=True)
 
