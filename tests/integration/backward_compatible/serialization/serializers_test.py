@@ -11,9 +11,9 @@ from tests.base import SingleMemberTestCase
 from tests.hzrc.ttypes import Lang
 from tests.util import (
     random_string,
-    mark_client_version_at_most,
-    mark_client_version_at_least,
-    mark_server_version_at_least,
+    skip_if_client_version_newer_than_or_equal,
+    skip_if_client_version_older_than,
+    skip_if_server_version_older_than,
 )
 
 try:
@@ -169,7 +169,7 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(value, response)
 
     def test_datetime(self):
-        mark_client_version_at_most(self, "5.0")
+        skip_if_client_version_newer_than_or_equal(self, "5.0")
         value = datetime.datetime.now()
         self.map.set("key", value)
         self.assertEqual(value.timetuple(), self.map.get("key").timetuple())
@@ -217,7 +217,7 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(value, response)
 
     def test_decimal(self):
-        mark_client_version_at_least(self, "5.0")
+        skip_if_client_version_older_than(self, "5.0")
         decimal_value = "1234567890123456789012345678901234567890.987654321"
         value = decimal.Decimal(decimal_value)
         self.map.set("key", value)
@@ -233,8 +233,8 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(value, list(map(int, response[1:-1].split(", "))))
 
     def test_datetime_date(self):
-        mark_client_version_at_least(self, "5.0")
-        mark_server_version_at_least(self, self.client, "5.0")
+        skip_if_client_version_older_than(self, "5.0")
+        skip_if_server_version_older_than(self, self.client, "5.0")
         value = datetime.datetime.now().date()
         self.map.set("key", value)
         self.assertEqual(value, self.map.get("key"))
@@ -242,8 +242,8 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(response, value.strftime("%Y-%m-%d"))
 
     def test_datetime_time(self):
-        mark_client_version_at_least(self, "5.0")
-        mark_server_version_at_least(self, self.client, "5.0")
+        skip_if_client_version_older_than(self, "5.0")
+        skip_if_server_version_older_than(self, self.client, "5.0")
         value = datetime.datetime.now().time()
         self.map.set("key", value)
         self.assertEqual(value, self.map.get("key"))
@@ -251,8 +251,8 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(response, value.strftime("%H:%M:%S.%f"))
 
     def test_datetime_datetime(self):
-        mark_client_version_at_least(self, "5.0")
-        mark_server_version_at_least(self, self.client, "5.0")
+        skip_if_client_version_older_than(self, "5.0")
+        skip_if_server_version_older_than(self, self.client, "5.0")
         value = datetime.datetime.now(timezone(datetime.timedelta(seconds=1800)))
         self.map.set("key", value)
         self.assertEqual(value, self.map.get("key"))
@@ -346,7 +346,7 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(["hey", six.u("1⚐中💦2😭‍🙆😔5")], self.map.get("key"))
 
     def test_date_from_server(self):
-        mark_client_version_at_most(self, "5.0")
+        skip_if_client_version_newer_than_or_equal(self, "5.0")
         self.assertTrue(self.set_on_server("new java.util.Date(100, 11, 15, 23, 59, 49)"))
         # server adds 1900 to year. Also, month is 0-based for server and 1-based for the client
         self.assertEqual(datetime.datetime(2000, 12, 15, 23, 59, 49), self.map.get("key"))
@@ -373,7 +373,7 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(-1234567890123456789012345678901234567890, self.map.get("key"))
 
     def test_big_decimal_from_server(self):
-        mark_client_version_at_least(self, "5.0")
+        skip_if_client_version_older_than(self, "5.0")
         self.assertTrue(self.set_on_server('new java.math.BigDecimal("12.12")'))
         self.assertEqual(decimal.Decimal("12.12"), self.map.get("key"))
 
@@ -435,28 +435,28 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(["a", "b", "c"], self.map.get("key"))
 
     def test_local_date_from_server(self):
-        mark_client_version_at_least(self, "5.0")
-        mark_server_version_at_least(self, self.client, "5.0")
+        skip_if_client_version_older_than(self, "5.0")
+        skip_if_server_version_older_than(self, self.client, "5.0")
         self.assertTrue(self.set_on_server("java.time.LocalDate.of(2000, 12, 15)"))
         self.assertEqual(datetime.date(2000, 12, 15), self.map.get("key"))
 
     def test_local_time_from_server(self):
-        mark_client_version_at_least(self, "5.0")
-        mark_server_version_at_least(self, self.client, "5.0")
+        skip_if_client_version_older_than(self, "5.0")
+        skip_if_server_version_older_than(self, self.client, "5.0")
         self.assertTrue(self.set_on_server("java.time.LocalTime.of(18, 3, 35)"))
         self.assertEqual(datetime.time(18, 3, 35), self.map.get("key"))
 
     def test_local_date_time_from_server(self):
-        mark_client_version_at_least(self, "5.0")
-        mark_server_version_at_least(self, self.client, "5.0")
+        skip_if_client_version_older_than(self, "5.0")
+        skip_if_server_version_older_than(self, self.client, "5.0")
         self.assertTrue(
             self.set_on_server("java.time.LocalDateTime.of(2021, 8, 24, 0, 59, 55, 987654000)")
         )
         self.assertEqual(datetime.datetime(2021, 8, 24, 0, 59, 55, 987654), self.map.get("key"))
 
     def test_offset_date_time_from_server(self):
-        mark_client_version_at_least(self, "5.0")
-        mark_server_version_at_least(self, self.client, "5.0")
+        skip_if_client_version_older_than(self, "5.0")
+        skip_if_server_version_older_than(self, self.client, "5.0")
         self.assertTrue(
             self.set_on_server(
                 "java.time.OffsetDateTime.of(2021, 8, 24, 0, 59, 55, 987654000, "
