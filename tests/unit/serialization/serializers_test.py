@@ -1,5 +1,6 @@
 # coding=utf-8
 import datetime
+import decimal
 import unittest
 import uuid
 
@@ -10,6 +11,7 @@ from hazelcast.errors import HazelcastSerializationError
 from hazelcast.serialization import BE_INT
 from hazelcast.predicate import *
 from hazelcast.serialization.service import SerializationServiceV1
+from hazelcast.util import timezone
 
 
 class A(object):
@@ -65,11 +67,29 @@ class SerializersTest(unittest.TestCase):
     def test_uuid(self):
         self.validate(uuid.uuid4())
 
-    def test_datetime(self):
-        d = datetime.datetime.now()
+    def test_datetime_datetime(self):
+        d = datetime.datetime.now(tz=timezone(datetime.timedelta(hours=-15)))
         serialized = self.service.to_data(d)
         deserialized = self.service.to_object(serialized)
-        self.assertEqual(d.timetuple(), deserialized.timetuple())
+        self.assertEqual(d, deserialized)
+
+    def test_datetime_date(self):
+        d = datetime.datetime.now().date()
+        serialized = self.service.to_data(d)
+        deserialized = self.service.to_object(serialized)
+        self.assertEqual(d, deserialized)
+
+    def test_datetime_time(self):
+        d = datetime.datetime.now().time()
+        serialized = self.service.to_data(d)
+        deserialized = self.service.to_object(serialized)
+        self.assertEqual(d, deserialized)
+
+    def test_decimal(self):
+        d = decimal.Decimal("-123456.789")
+        serialized = self.service.to_data(d)
+        deserialized = self.service.to_object(serialized)
+        self.assertEqual(d, deserialized)
 
     def test_list(self):
         self.validate([1, 2.0, "a", None, bytearray("abc".encode()), [], [1, 2, 3]])

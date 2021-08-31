@@ -359,20 +359,50 @@ class UUIDUtil(object):
 
 if hasattr(int, "from_bytes"):
 
-    def int_from_bytes(buffer):
-        return int.from_bytes(buffer, "big", signed=True)
+    def int_from_bytes(buf):
+        return int.from_bytes(buf, "big", signed=True)
 
 
 else:
     # Compatibility with Python 2
-    def int_from_bytes(buffer):
-        buffer = bytearray(buffer)
-        if buffer[0] & 0x80:
+    def int_from_bytes(buf):
+        buf = bytearray(buf)
+        if buf[0] & 0x80:
             neg = bytearray()
-            for c in buffer:
-                neg.append(~c)
+            for c in buf:
+                neg.append(c ^ 0xFF)
             return -1 * int(binascii.hexlify(neg), 16) - 1
-        return int(binascii.hexlify(buffer), 16)
+        return int(binascii.hexlify(buf), 16)
+
+
+if hasattr(int, "to_bytes"):
+
+    def int_to_bytes(number):
+        # Number of bytes to represent the number.
+        # For numbers that don't have exactly 8n bit_length,
+        # adding 8 and performing integer division with 8
+        # let us get the correct length because
+        # (8n + m + 8) // 8 = n + 0 + 1 (assuming m < 8).
+        # For negative numbers, we add 1 to get rid of the
+        # effects of the leading 1 (the sign bit).
+        width = (8 + (number + (number < 0)).bit_length()) // 8
+        return number.to_bytes(length=width, byteorder="big", signed=True)
+
+
+else:
+    # Compatibility with Python 2
+    def int_to_bytes(number):
+        is_neg = number < 0
+        number = -number - 1 if is_neg else number
+        # Number of bytes to represent the number * 2, so that
+        # each byte is represented with 2 digit hex numbers.
+        width = ((8 + number.bit_length()) // 8) * 2
+        fmt = "%%0%dx" % width
+        buf = bytearray(binascii.unhexlify(fmt % number))
+        if is_neg:
+            for i in range(len(buf)):
+                buf[i] = buf[i] ^ 0xFF
+        return buf
 
 
 try:
@@ -397,6 +427,15 @@ except ImportError:
 
         def dst(self, dt):
             return timedelta(0)
+
+        def __eq__(self, other):
+            return isinstance(other, FixedOffsetTimezone) and self._offset == other._offset
+
+        def __ne__(self, other):
+            return not self.__eq__(other)
+
+        def __hash__(self):
+            return hash(self._offset)
 
     timezone = FixedOffsetTimezone
 

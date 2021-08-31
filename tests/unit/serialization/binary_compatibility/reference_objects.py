@@ -1,13 +1,14 @@
 # coding=utf-8
 import datetime
+import decimal
 import re
 import uuid
 
-from hazelcast import predicate
+from hazelcast import predicate, aggregator, projection
 from hazelcast import six
 from hazelcast.serialization.api import Portable, IdentifiedDataSerializable
 from hazelcast.serialization.data import Data
-from hazelcast.util import to_signed
+from hazelcast.util import to_signed, timezone
 
 IDENTIFIED_DATA_SERIALIZABLE_FACTORY_ID = 1
 PORTABLE_FACTORY_ID = 1
@@ -681,8 +682,14 @@ REFERENCE_OBJECTS = {
             ],
         )
     ),
-    "Date": datetime.datetime.fromtimestamp(633830400),
+    "LocalDate": datetime.date(2021, 6, 28),
+    "LocalTime": datetime.time(11, 22, 41, 123456),
+    "LocalDateTime": datetime.datetime(2021, 6, 28, 11, 22, 41, 123456),
+    "OffsetDateTime": datetime.datetime(
+        2021, 6, 28, 11, 22, 41, 123456, timezone(datetime.timedelta(hours=18))
+    ),
     "BigInteger": 1314432323232411,
+    "BigDecimal": decimal.Decimal("31231.12331"),
     "Class": _to_unicode("java.math.BigDecimal"),
 }
 
@@ -764,7 +771,10 @@ _non_null_list = [
     _custom_byte_array_serializable,
     _identified,
     _portable,
-    REFERENCE_OBJECTS["Date"],
+    REFERENCE_OBJECTS["BigDecimal"],
+    REFERENCE_OBJECTS["LocalDate"],
+    REFERENCE_OBJECTS["LocalTime"],
+    REFERENCE_OBJECTS["OffsetDateTime"],
 ]
 
 REFERENCE_OBJECTS.update(
@@ -808,6 +818,26 @@ REFERENCE_OBJECTS.update(
         "InstanceOfPredicate": predicate.instance_of(
             "com.hazelcast.nio.serialization.compatibility.CustomStreamSerializable"
         ),
+        "DistinctValuesAggregator": aggregator.distinct(_sql_string),
+        "MaxAggregator": aggregator.max_(_sql_string),
+        "MaxByAggregator": aggregator.max_by(_sql_string),
+        "MinAggregator": aggregator.min_(_sql_string),
+        "MinByAggregator": aggregator.min_by(_sql_string),
+        "CountAggregator": aggregator.count(_sql_string),
+        "NumberAverageAggregator": aggregator.number_avg(_sql_string),
+        "IntegerAverageAggregator": aggregator.int_avg(_sql_string),
+        "LongAverageAggregator": aggregator.long_avg(_sql_string),
+        "DoubleAverageAggregator": aggregator.double_avg(_sql_string),
+        "IntegerSumAggregator": aggregator.int_sum(_sql_string),
+        "LongSumAggregator": aggregator.long_sum(_sql_string),
+        "DoubleSumAggregator": aggregator.double_sum(_sql_string),
+        "FixedSumAggregator": aggregator.fixed_point_sum(_sql_string),
+        "FloatingPointSumAggregator": aggregator.floating_point_sum(_sql_string),
+        "SingleAttributeProjection": projection.single_attribute(_sql_string),
+        "MultiAttributeProjection": projection.multi_attribute(
+            _sql_string, _sql_string, _sql_string
+        ),
+        "IdentityProjection": projection.identity(),
     }
 )
 
@@ -823,6 +853,7 @@ _SKIP_ON_SERIALIZE = {
     "long[]",
     "String[]",
     "Class",
+    "LocalDateTime",
     "LinkedList",
 }
 
@@ -831,7 +862,7 @@ def skip_on_serialize(object_type):
     return object_type in _SKIP_ON_SERIALIZE
 
 
-_SKIP_ON_DESERIALIZE_PATTERN = re.compile(r"^.*Predicate$")
+_SKIP_ON_DESERIALIZE_PATTERN = re.compile(r"^.*(Predicate|Aggregator|Projection)$")
 
 
 def skip_on_deserialize(object_type):
