@@ -378,10 +378,10 @@ else:
 if hasattr(int, "to_bytes"):
 
     def int_to_bytes(number):
-        # number of bytes to represent the number.
-        # For numbers that has not exactly 8n bit_length,
+        # Number of bytes to represent the number.
+        # For numbers that don't have exactly 8n bit_length,
         # adding 8 and performing integer division with 8
-        # let us get the correct width because
+        # let us get the correct length because
         # (8n + m + 8) // 8 = n + 0 + 1 (assuming m < 8).
         # For negative numbers, we add 1 to get rid of the
         # effects of the leading 1 (the sign bit).
@@ -394,7 +394,7 @@ else:
     def int_to_bytes(number):
         is_neg = number < 0
         number = -number - 1 if is_neg else number
-        # number of bytes to represent the number * 2, so that
+        # Number of bytes to represent the number * 2, so that
         # each byte is represented with 2 digit hex numbers.
         width = ((8 + number.bit_length()) // 8) * 2
         fmt = "%%0%dx" % width
