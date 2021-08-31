@@ -276,61 +276,18 @@ class LoadBalancer(object):
         """
         raise NotImplementedError("next")
 
-    def next_data_member(self):
-        """Returns the next data member to route to.
-
-        Returns:
-            hazelcast.core.MemberInfo: The next data member or
-            ``None`` if no data member is available.
-        """
-        return None
-
-    def can_get_next_data_member(self):
-        """Returns whether this instance supports getting data members
-         through a call to :func:`next_data_member`.
-
-        Returns:
-            bool: ``True`` if this instance supports getting data members.
-        """
-        return False
-
-
-class _Members(object):
-    __slots__ = ("members", "data_members")
-
-    def __init__(self, members, data_members):
-        self.members = members
-        self.data_members = data_members
-
 
 class _AbstractLoadBalancer(LoadBalancer):
     def __init__(self):
         self._cluster_service = None
-        self._members = _Members([], [])
+        self._members = []
 
     def init(self, cluster_service):
         self._cluster_service = cluster_service
         cluster_service.add_listener(self._listener, self._listener, True)
 
-    def next(self):
-        members = self._members.members
-        return self._next(members)
-
-    def next_data_member(self):
-        members = self._members.data_members
-        return self._next(members)
-
-    def can_get_next_data_member(self):
-        return True
-
     def _listener(self, _):
-        members = self._cluster_service.get_members()
-        data_members = [member for member in members if not member.lite_member]
-
-        self._members = _Members(members, data_members)
-
-    def _next(self, members):
-        raise NotImplementedError("_next")
+        self._members = self._cluster_service.get_members()
 
 
 class RoundRobinLB(_AbstractLoadBalancer):
@@ -345,7 +302,8 @@ class RoundRobinLB(_AbstractLoadBalancer):
         super(RoundRobinLB, self).__init__()
         self._idx = 0
 
-    def _next(self, members):
+    def next(self):
+        members = self._members
         if not members:
             return None
 
@@ -358,7 +316,8 @@ class RoundRobinLB(_AbstractLoadBalancer):
 class RandomLB(_AbstractLoadBalancer):
     """A load balancer that selects a random member to route to."""
 
-    def _next(self, members):
+    def next(self):
+        members = self._members
         if not members:
             return None
         idx = random.randrange(0, len(members))
