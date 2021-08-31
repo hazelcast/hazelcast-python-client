@@ -1507,49 +1507,24 @@ Data Types
 The SQL service supports a set of SQL data types. Every data type is mapped to
 a Python type that represents the type’s value.
 
-======================== ===============
+======================== ========================================
 Type Name                Python Type
-======================== ===============
+======================== ========================================
 BOOLEAN                  bool
 VARCHAR                  str
 TINYINT                  int
 SMALLINT                 int
 INTEGER                  int
 BIGINT                   int
-DECIMAL                  str
+DECIMAL                  decimal.Decimal
 REAL                     float
 DOUBLE                   float
-DATE                     str
-TIME                     str
-TIMESTAMP                str
-TIMESTAMP_WITH_TIME_ZONE str
+DATE                     datetime.date
+TIME                     datetime.time
+TIMESTAMP                datetime.datetime
+TIMESTAMP_WITH_TIME_ZONE datetime.datetime (with non-None tzinfo)
 OBJECT                   Any Python type
-======================== ===============
-
-Note that, the following types are returned as strings, with the following
-formats.
-
-- ``DATE`` with the ``YYYY-MM-DD`` format.
-- ``TIME`` with the ``HH:MM:SS[.ffffff]`` format.
-- ``TIMESTAMP`` with the ``YYYY-MM-DDTHH:MM:SS[.ffffff]`` format.
-- ``TIMESTAMP_WITH_TIME_ZONE`` with the
-  ``YYYY-MM-DDTHH:MM:SS[.ffffff](+|-)HH:MM[:SS]`` format.
-- ``DECIMAL`` with the floating point number format.
-
-If you want to use these types in queries, you have to send them as strings
-and add explicit ``CAST`` to queries.
-
-``CAST`` operator has the following syntax:
-
-.. code:: sql
-
-    CAST(? AS TYPE)
-
-An example usage is shown below:
-
-.. code:: python
-
-    client.sql.execute("SELECT * FROM map WHERE date < CAST(? AS DATE)", "2021-06-02")
+======================== ========================================
 
 SELECT
 ~~~~~~

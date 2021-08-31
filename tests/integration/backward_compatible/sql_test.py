@@ -1,20 +1,26 @@
+import datetime
 import decimal
 import math
 import random
 import string
 import unittest
 
-from hazelcast import six
+from hazelcast import six, HazelcastClient
 from hazelcast.future import ImmediateFuture
 from hazelcast.serialization.api import Portable
-from tests.base import SingleMemberTestCase
+from tests.base import SingleMemberTestCase, HazelcastTestCase
 from tests.hzrc.ttypes import Lang
 from mock import patch
 
-from tests.util import is_client_version_older_than, mark_server_version_at_least
+from tests.util import (
+    is_client_version_older_than,
+    mark_server_version_at_least,
+    is_server_version_older_than,
+)
 
 try:
     from hazelcast.sql import HazelcastSqlError, SqlStatement, SqlExpectedResultType, SqlColumnType
+    from hazelcast.util import timezone
 except ImportError:
     # For backward compatibility. If we cannot import those, we won't
     # be even referencing them in tests.
@@ -30,25 +36,79 @@ SERVER_CONFIG = """
             <portable-factory factory-id="666">com.hazelcast.client.test.PortableFactory
             </portable-factory>
         </portable-factories>
-    </serialization>
+    </serialization>%s
 </hazelcast>
 """
 
+JET_ENABLED_CONFIG = """
+    <jet enabled="true" />
+"""
 
-class SqlTestBase(SingleMemberTestCase):
-    @classmethod
-    def configure_cluster(cls):
-        return SERVER_CONFIG
+
+class SqlTestBase(HazelcastTestCase):
+
+    rc = None
+    cluster = None
+    is_v5_or_newer_server = True
+    client = None
 
     @classmethod
-    def configure_client(cls, config):
-        config["cluster_name"] = cls.cluster.id
-        config["portable_factories"] = {666: {6: Student}}
-        return config
+    def setUpClass(cls):
+        cls.rc = cls.create_rc()
+
+        # We don't know the member version before starting a member.
+        # That's why, we are creating (and shutting down) a dummy
+        # cluster to determine the member version.
+        dummy_cluster = None
+        dummy_client = None
+
+        try:
+            dummy_cluster = cls.create_cluster(cls.rc)
+            dummy_cluster.start_member()
+            dummy_client = HazelcastClient(cluster_name=dummy_cluster.id)
+
+            if is_server_version_older_than(dummy_client, "5.0"):
+                cls.is_v5_or_newer_server = False
+        finally:
+            if dummy_client:
+                dummy_client.shutdown()
+
+            if dummy_cluster:
+                cls.rc.terminateCluster(dummy_cluster.id)
+
+        # enable Jet if the server is 5.0+
+        cluster_config = (
+            SERVER_CONFIG % JET_ENABLED_CONFIG if cls.is_v5_or_newer_server else SERVER_CONFIG % ""
+        )
+        cls.cluster = cls.create_cluster(cls.rc, cluster_config)
+        cls.member = cls.cluster.start_member()
+        cls.client = HazelcastClient(
+            cluster_name=cls.cluster.id, portable_factories={666: {6: Student}}
+        )
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.client.shutdown()
+        cls.rc.terminateCluster(cls.cluster.id)
+        cls.rc.exit()
 
     def setUp(self):
         self.map_name = random_string()
         self.map = self.client.get_map(self.map_name).blocking()
+        self._mark_minimum_server_version()
+
+        # Skip tests if major versions of the client/server do not match.
+
+        if (  # 4.x client with 5.x server
+            is_client_version_older_than("5.0")
+            and not is_server_version_older_than(self.client, "5.0")
+        ) or (  # 5.x client with 4.x server
+            not is_client_version_older_than("5.0")
+            and is_server_version_older_than(self.client, "5.0")
+        ):
+            self.skipTest("Major versions of the client and the server do not match.")
+
+    def _mark_minimum_server_version(self):
         mark_server_version_at_least(self, self.client, "4.2")
 
     def tearDown(self):
@@ -168,10 +228,10 @@ class SqlServiceTest(SqlTestBase):
             six.assertCountEqual(
                 self, [i for i in range(entry_count)], [row.get_object("age") for row in result]
             )
-            # -1 comes from the fact that, we don't fetch the first page
-            self.assertEqual(
-                math.ceil(float(entry_count) / statement.cursor_buffer_size) - 1, patched.call_count
-            )
+            # -1 comes from the fact that, we don't fetch the first page.
+            expected = math.ceil(float(entry_count) / statement.cursor_buffer_size) - 1
+            actual = patched.call_count
+            self.assertEqual(expected, actual)
 
     def test_execute_statement_with_copy(self):
         self._populate_map()
@@ -452,6 +512,9 @@ class SqlColumnTypesReadTest(SqlTestBase):
 
     def test_date(self):
         def value_factory(key):
+            if self.is_v5_or_newer_server:
+                return datetime.date(key + 2000, key + 1, key + 1)
+
             return "%d-%02d-%02d" % (key + 2000, key + 1, key + 1)
 
         self._populate_map_via_rc("java.time.LocalDate.of(key + 2000, key + 1, key + 1)")
@@ -459,6 +522,9 @@ class SqlColumnTypesReadTest(SqlTestBase):
 
     def test_time(self):
         def value_factory(key):
+            if self.is_v5_or_newer_server:
+                return datetime.time(key, key, key, key)
+
             time = "%02d:%02d:%02d" % (key, key, key)
             if key != 0:
                 time += ".%06d" % key
@@ -469,6 +535,9 @@ class SqlColumnTypesReadTest(SqlTestBase):
 
     def test_timestamp(self):
         def value_factory(key):
+            if self.is_v5_or_newer_server:
+                return datetime.datetime(key + 2000, key + 1, key + 1, key, key, key, key)
+
             timestamp = "%d-%02d-%02dT%02d:%02d:%02d" % (
                 key + 2000,
                 key + 1,
@@ -489,6 +558,18 @@ class SqlColumnTypesReadTest(SqlTestBase):
 
     def test_timestamp_with_time_zone(self):
         def value_factory(key):
+            if self.is_v5_or_newer_server:
+                return datetime.datetime(
+                    key + 2000,
+                    key + 1,
+                    key + 1,
+                    key,
+                    key,
+                    key,
+                    key,
+                    timezone(datetime.timedelta(hours=key)),
+                )
+
             timestamp = "%d-%02d-%02dT%02d:%02d:%02d" % (
                 key + 2000,
                 key + 1,
@@ -510,7 +591,11 @@ class SqlColumnTypesReadTest(SqlTestBase):
 
     def test_decimal(self):
         def value_factory(key):
-            return str(decimal.Decimal((0, (key,), -1 * key)))
+            d = decimal.Decimal((0, (key,), -1 * key))
+            if self.is_v5_or_newer_server:
+                return d
+
+            return str(d)
 
         self._populate_map_via_rc("java.math.BigDecimal.valueOf(key, key)")
         self._validate_rows(SqlColumnType.DECIMAL, value_factory)
@@ -605,6 +690,56 @@ class SqlServiceLiteMemberClusterTest(SingleMemberTestCase):
 
         # Make sure that exception is originating from the client
         self.assertNotEqual(self.member.uuid, str(cm.exception.originating_member_uuid))
+
+
+@unittest.skipIf(
+    is_client_version_older_than("5.0"), "Tests the features added in 5.0 version of the client"
+)
+class JetSqlTest(SqlTestBase):
+    def _mark_minimum_server_version(self):
+        mark_server_version_at_least(self, self.client, "5.0")
+
+    def test_streaming_sql_query(self):
+        with self.client.sql.execute("SELECT * FROM TABLE(generate_stream(100))") as result:
+            for idx, row in enumerate(result):
+                self.assertEqual(idx, row.get_object("v"))
+                if idx == 200:
+                    break
+
+    def test_federated_query(self):
+        query = (
+            """
+        CREATE MAPPING %s (
+            __key INT,
+            name VARCHAR,
+            age INT
+        )
+        TYPE IMap
+        OPTIONS (
+            'keyFormat' = 'int',
+            'valueFormat' = 'json'
+        )
+        """
+            % self.map_name
+        )
+
+        with self.client.sql.execute(query) as result:
+            self.assertEqual(0, result.update_count().result())
+
+        insert_into_query = (
+            """
+        INSERT INTO %s (__key, name, age) 
+        VALUES (1, 'John', 42)
+        """
+            % self.map_name
+        )
+
+        with self.client.sql.execute(insert_into_query) as result:
+            self.assertEqual(0, result.update_count().result())
+
+        self.assertEqual(1, self.map.size())
+        entry = self.map.get(1)
+        self.assertEqual({"name": "John", "age": 42}, entry.loads())
 
 
 class Student(Portable):
