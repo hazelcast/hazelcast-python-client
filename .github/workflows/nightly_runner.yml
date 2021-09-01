@@ -31,3 +31,11 @@ jobs:
         env:
           HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
         run: python run_tests.py
+      - name: Upload remote controller logs on test failure
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: rc-logs-${{ matrix.python-version }}-${{ matrix.os }}
+          path: |
+            rc_stderr.log
+            rc_stdout.log

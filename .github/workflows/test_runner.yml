@@ -37,17 +37,18 @@ jobs:
         env:
           HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
         run: python run_tests.py
-      - name: Publish results to Codecov
-        uses: codecov/codecov-action@v1
-        with:
-          files: ./coverage.xml
-      - name: Upload remote controller logs
+      - name: Upload remote controller logs on test failure
         uses: actions/upload-artifact@v2
+        if: failure()
         with:
           name: rc-logs-${{ matrix.python-version }}-${{ matrix.os }}
           path: |
             rc_stderr.log
             rc_stdout.log
+      - name: Publish results to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          files: ./coverage.xml
   run-linter:
     runs-on: ubuntu-latest
     name: Run black to check the code style
