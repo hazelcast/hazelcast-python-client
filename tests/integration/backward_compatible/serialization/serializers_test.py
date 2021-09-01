@@ -244,7 +244,20 @@ class SerializersLiveTest(SingleMemberTestCase):
     def test_datetime_time(self):
         skip_if_client_version_older_than(self, "5.0")
         skip_if_server_version_older_than(self, self.client, "5.0")
-        value = datetime.datetime.now().time()
+        value = datetime.datetime.now()
+        if value.microsecond % 1000 == 0:
+            # A little hack for Windows. Time is precise to the
+            # milliseconds there. If we send the microseconds
+            # we have now, due to trailing zeros, get_from_server()
+            # call below will return the string representation with
+            # 3 digits for the microseconds. But, Python always expects
+            # 6 digits. So, the assertion will fail. To fix that,
+            # we add 1 microseconds to the value, so that in the Java
+            # side, nanoseconds representation will only have 3 trailing
+            # zeros, and will send the data as we want.
+            value = value + datetime.timedelta(microseconds=1)
+        value = value.time()
+
         self.map.set("key", value)
         self.assertEqual(value, self.map.get("key"))
         response = self.get_from_server()
@@ -254,10 +267,25 @@ class SerializersLiveTest(SingleMemberTestCase):
         skip_if_client_version_older_than(self, "5.0")
         skip_if_server_version_older_than(self, self.client, "5.0")
         value = datetime.datetime.now(timezone(datetime.timedelta(seconds=1800)))
+        if value.microsecond % 1000 == 0:
+            # A little hack for Windows. Time is precise to the
+            # milliseconds there. If we send the microseconds
+            # we have now, due to trailing zeros, get_from_server()
+            # call below will return the string representation with
+            # 3 digits for the microseconds. But, Python always expects
+            # 6 digits. So, the assertion will fail. To fix that,
+            # we add 1 microseconds to the value, so that in the Java
+            # side, nanoseconds representation will only have 3 trailing
+            # zeros, and will send the data as we want.
+            value = value + datetime.timedelta(microseconds=1)
+
         self.map.set("key", value)
         self.assertEqual(value, self.map.get("key"))
         response = self.get_from_server()
-        self.assertEqual(response, value.strftime("%Y-%m-%dT%H:%M:%S.%f+00:30"))
+        expected = value.strftime("%Y-%m-%dT%H:%M:%S.%f%z")
+        # Java sends offset with a : in between
+        expected = "%s:%s" % (expected[:-2], expected[-2:])
+        self.assertEqual(response, expected)
 
     def test_bool_from_server(self):
         self.assertTrue(self.set_on_server("true"))
