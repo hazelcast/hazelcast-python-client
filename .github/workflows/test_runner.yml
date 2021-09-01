@@ -41,6 +41,13 @@ jobs:
         uses: codecov/codecov-action@v1
         with:
           files: ./coverage.xml
+      - name: Upload remote controller logs
+        uses: actions/upload-artifact@v2
+        with:
+          name: rc-logs-${{ matrix.python-version }}-${{ matrix.os }}
+          path: |
+            rc_stderr.log
+            rc_stdout.log
   run-linter:
     runs-on: ubuntu-latest
     name: Run black to check the code style
