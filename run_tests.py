@@ -27,6 +27,8 @@ if __name__ == "__main__":
             rc_process = start_rc(rc_stdout, rc_stderr)
             try:
                 wait_until_rc_is_ready()
+                sys.stdout.flush()
+
                 args = [
                     __file__,
                     "-v",
@@ -36,6 +38,7 @@ if __name__ == "__main__":
                     "--cover-package=hazelcast",
                     "--cover-inclusive",
                     "--nologcapture",
+                    "--traverse-namespace",
                     "tests",
                 ]
 
