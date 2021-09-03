@@ -283,7 +283,7 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(value, self.map.get("key"))
         response = self.get_from_server()
         expected = value.strftime("%Y-%m-%dT%H:%M:%S.%f%z")
-        # Java sends offset with a : in between
+        # Java sends offset string with a : in between hour and minute
         expected = "%s:%s" % (expected[:-2], expected[-2:])
         self.assertEqual(response, expected)
 

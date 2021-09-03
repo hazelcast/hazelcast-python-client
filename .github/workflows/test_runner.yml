@@ -65,7 +65,7 @@ jobs:
           pip install -r requirements-dev.txt
       - name: Run black
         run: |
-          black --config black.toml .
+          black --check --config black.toml .
   generate_docs:
     runs-on: ubuntu-latest
     name: Generate documentation
