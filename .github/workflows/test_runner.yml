@@ -83,4 +83,4 @@ jobs:
       - name: Generate documentation
         working-directory: docs
         run: |
-          make html
+          make html SPHINXOPTS="-W --keep-going"
