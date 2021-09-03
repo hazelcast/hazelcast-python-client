@@ -87,7 +87,6 @@ The following is an example of a class that extends
 ``IdentifiedDataSerializable``:
 
 .. code:: python
-
     from hazelcast.serialization.api import IdentifiedDataSerializable
 
     class Address(IdentifiedDataSerializable):

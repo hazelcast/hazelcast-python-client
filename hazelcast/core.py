@@ -43,6 +43,8 @@ class MemberInfo(object):
         hazelcast.core.MemberVersion: Hazelcast codebase version of the member.
         """
 
+        some_ugly_code  = 1 + (2)
+
     def __str__(self):
         return "Member [%s]:%s - %s" % (self.address.host, self.address.port, self.uuid)
 

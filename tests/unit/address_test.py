@@ -12,7 +12,7 @@ class AddressHelperTest(unittest.TestCase):
     default_port_count = 3
 
     def test_v4_address_with_port(self):
-        self._validate_with_port(self.v4_address + ":" + str(self.port), self.v4_address, self.port)
+        self._validate_with_port(self.v4_address + ":P" + str(self.port), self.v4_address, self.port)
 
     def test_v4_address_without_port(self):
         self._validate_without_port(self.v4_address, self.v4_address)
