@@ -184,7 +184,7 @@ information and uses the correct one to serialize and deserialize
 portable objects depending on the member. This is very helpful when you
 are doing a rolling upgrade without shutting down the cluster.
 
-Also note that portable serialization is totally language independent
+Also note that portable serialization is completely language independent
 and is used as the binary protocol between Hazelcast server and clients.
 
 A sample portable implementation of a ``Foo`` class looks like the
@@ -427,12 +427,12 @@ string. If an error occurs during the conversion, it is raised directly.
 If a string argument is provided to the constructor, it is used as it
 is.
 
-No JSON parsing is performed but it is your responsibility to provide
-correctly formatted JSON strings. The client will not validate the
-string, and it will send it to the cluster as it is. If you submit
-incorrectly formatted JSON strings and, later, if you query those
-objects, it is highly possible that you will get formatting errors since
-the server will fail to deserialize or find the query fields.
+In the constructor, no JSON parsing is performed. It is your responsibility
+to provide correctly formatted JSON strings. The client will not validate the
+string, it will send it to the cluster as it is. If you submit incorrectly
+formatted JSON strings and, later, if you query those objects, it is highly
+possible that you will get formatting errors since the server will fail to
+deserialize or find the query fields.
 
 Here is an example of how you can construct a ``HazelcastJsonValue`` and
 put to the map:
@@ -445,7 +445,7 @@ put to the map:
     # # From JSON serializable object
     json_map.put("item2", HazelcastJsonValue({"age": 20}))
 
-You can query JSON objects in the cluster using the ``Predicate``\ s of
+You can query JSON objects in the cluster using the ``Predicate`` of
 your choice. An example JSON query for querying the values whose age is
 less than 6 is shown below:
 

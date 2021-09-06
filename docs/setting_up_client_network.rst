@@ -36,7 +36,7 @@ recommended that you give the addresses for all the members.
         ]
     )
 
-If the port part is omitted, then ``5701``, ``5702`` and ``5703`` will
+If the port part is omitted, then ports ``5701``, ``5702``, and ``5703`` will
 be tried in a random order.
 
 You can specify multiple addresses with or without the port information
