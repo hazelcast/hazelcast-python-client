@@ -8,7 +8,7 @@ from hazelcast.util import calculate_version
 
 from tests.hzrc.ttypes import Lang
 
-# time.monotonic() is more consistent since it uses cpu clock rather than system clock. Use it if available.
+# time.monotonic() cannot go backwards. Use it if available.
 if hasattr(time, "monotonic"):
     get_current_timestamp = time.monotonic
 else:

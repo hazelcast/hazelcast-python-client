@@ -44,11 +44,15 @@ class CountDownLatchTest(CPTestCase):
         self.assertFalse(latch.await_latch(0))
 
     def test_await_latch_with_timeout(self):
+        timeout = 0.1
         latch = self.get_latch(1)
         start = get_current_timestamp()
-        self.assertFalse(latch.await_latch(0.1))
+        self.assertFalse(latch.await_latch(timeout))
         time_passed = get_current_timestamp() - start
-        self.assertTrue(time_passed > 0.1)
+        self.assertTrue(
+            time_passed >= timeout,
+            "Time passed is less than %s, which is %s" % (timeout, time_passed),
+        )
 
     def test_await_latch_multiple_waiters(self):
         latch = self.get_latch(1)
