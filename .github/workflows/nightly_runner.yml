@@ -1,10 +1,11 @@
 name: Runs the tests nightly
 on:
+  workflow_dispatch:
   schedule:
     - cron: '0 2 * * *'
 jobs:
   run-tests:
-    runs-on: ${{ matrix.os == "ubuntu-latest" && matrix.python-version == "3.4" && "ubuntu-18.04" || matrix.os }}
+    runs-on: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.4' && 'ubuntu-18.04' || matrix.os }}
     name: Run tests with Python ${{ matrix.python-version }} on ${{ matrix.os }}
     strategy:
       matrix:
