@@ -240,7 +240,13 @@ class _MessageRunner(object):
                     member = None
                     if message.publisher_address:
                         member = MemberInfo(
-                            message.publisher_address, None, None, False, _UNKNOWN_MEMBER_VERSION
+                            message.publisher_address,
+                            None,
+                            None,
+                            False,
+                            _UNKNOWN_MEMBER_VERSION,
+                            None,
+                            {},
                         )
 
                     topic_message = TopicMessage(
