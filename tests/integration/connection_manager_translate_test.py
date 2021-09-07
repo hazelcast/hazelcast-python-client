@@ -29,10 +29,10 @@ class ConnectionManagerTranslateTest(HazelcastTestCase):
         cls.rc.terminateCluster(cls.cluster.id)
         cls.rc.exit()
 
-    def setUp(self) -> None:
+    def setUp(self):
         self.client = None
 
-    def tearDown(self) -> None:
+    def tearDown(self):
         if self.client:
             self.client.shutdown()
 
