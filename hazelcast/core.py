@@ -3,7 +3,6 @@ import json
 
 from hazelcast import six
 from hazelcast.six.moves import range
-from hazelcast import util
 
 CLIENT_TYPE = "PYH"
 SERIALIZATION_VERSION = 1
@@ -14,12 +13,12 @@ class MemberInfo(object):
     Represents a member in the cluster with its address, uuid, lite member status, attributes and version.
     """
 
-    __slots__ = ("address", "uuid", "attributes", "lite_member", "version")
+    __slots__ = ("address", "uuid", "attributes", "lite_member", "version", "address_map")
 
-    def __init__(self, address, uuid, attributes, lite_member, version, *_):
+    def __init__(self, address, uuid, attributes, lite_member, version, _, address_map):
         self.address = address
         """
-        hazelcast.core.Address: Address of the member.
+        Address: Address of the member.
         """
 
         self.uuid = uuid
@@ -40,11 +39,22 @@ class MemberInfo(object):
 
         self.version = version
         """
-        hazelcast.core.MemberVersion: Hazelcast codebase version of the member.
+        MemberVersion: Hazelcast codebase version of the member.
+        """
+
+        self.address_map = address_map
+        """
+        dict[EndpointQualifier, Address]: Dictionary of server socket
+        addresses per :class:`EndpointQualifier` of this member.
         """
 
     def __str__(self):
-        return "Member [%s]:%s - %s" % (self.address.host, self.address.port, self.uuid)
+        return "Member [%s]:%s - %s%s" % (
+            self.address.host,
+            self.address.port,
+            self.uuid,
+            " lite" if self.lite_member else "",
+        )
 
     def __repr__(self):
         return "Member(address=%s, uuid=%s, attributes=%s, lite_member=%s, version=%s)" % (
@@ -94,6 +104,85 @@ class Address(object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+
+class ProtocolType(object):
+    """Types of server sockets.
+
+    A member typically responds to several types of protocols for
+    member-to-member, client-member protocol, WAN communication etc. The
+    default configuration uses a single server socket to listen for all kinds
+    of protocol types configured, Advanced Network Config of the server allows
+    configuration of multiple server sockets.
+    """
+
+    # We had to put dummy documentations for the constants
+    # so that they are displayed on the API documentation.
+
+    MEMBER = 0
+    """Type of member server sockets."""
+
+    CLIENT = 1
+    """Type of client server sockets."""
+
+    WAN = 2
+    """Type of WAN server sockets."""
+
+    REST = 3
+    """Type of REST server sockets."""
+
+    MEMCACHE = 4
+    """Type of Memcached server sockets."""
+
+
+class EndpointQualifier(object):
+    """Uniquely identifies groups of network connections sharing a common
+    :class:`ProtocolType` and the same network settings, when Hazelcast server
+    is configured with Advanced Network Configuration enabled.
+
+    In some cases, just the :class:`ProtocolType` is enough (e.g. since there
+    can be only a single member server socket).
+
+    When just the :class:`ProtocolType` is not enough (for example when
+    configuring outgoing WAN connections to 2 different target clusters),
+    an :attr:`identifier` is used to uniquely identify the network
+    configuration.
+    """
+
+    __slots__ = ("_protocol_type", "_identifier")
+
+    def __init__(self, protocol_type, identifier):
+        self._protocol_type = protocol_type
+        self._identifier = identifier
+
+    @property
+    def protocol_type(self):
+        """ProtocolType: Protocol type of the endpoint."""
+        return self._protocol_type
+
+    @property
+    def identifier(self):
+        """str: Unique identifier for same-protocol-type endpoints."""
+        return self._identifier
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, EndpointQualifier)
+            and self._protocol_type == other._protocol_type
+            and self._identifier == other._identifier
+        )
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash((self._protocol_type, self._identifier))
+
+    def __repr__(self):
+        return "EndpointQualifier(protocol_type=%s, identifier=%s)" % (
+            self._protocol_type,
+            self._identifier,
+        )
 
 
 class AddressHelper(object):
@@ -326,7 +415,8 @@ class HazelcastJsonValue(object):
     """
 
     def __init__(self, value):
-        util.check_not_none(value, "JSON string or the object cannot be None.")
+        if value is None:
+            raise AssertionError("JSON string or the object cannot be None.")
         if isinstance(value, six.string_types):
             self._json_string = value
         else:
@@ -373,6 +463,9 @@ class MemberVersion(object):
         self.major = major
         self.minor = minor
         self.patch = patch
+
+    def __repr__(self):
+        return "MemberVersion(major=%s, minor=%s, patch=%s)" % (self.major, self.minor, self.patch)
 
 
 class MapEntry(object):

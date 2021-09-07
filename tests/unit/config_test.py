@@ -846,6 +846,16 @@ class ConfigTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             cfg.token_provider = object()
 
+    def test_use_public_addresses(self):
+        config = self.config
+        self.assertFalse(config.use_public_addresses)
+
+        with self.assertRaises(TypeError):
+            config.use_public_addresses = None
+
+        config.use_public_addresses = True
+        self.assertTrue(config.use_public_addresses)
+
 
 class IndexConfigTest(unittest.TestCase):
     def test_defaults(self):

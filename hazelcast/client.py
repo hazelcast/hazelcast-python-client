@@ -332,6 +332,9 @@ class HazelcastClient(object):
         token_provider (hazelcast.security.TokenProvider): Token provider for
             custom authentication (Enterprise feature). Note that token_provider
             setting has priority over credentials settings.
+        use_public_addresses (bool): When set to ``True``, client uses the
+            public addresses reported by members while connecting to them, if
+            available. By default, set to ``False``.
     """
 
     _CLIENT_ID = AtomicInteger()

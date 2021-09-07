@@ -8,7 +8,13 @@ import uuid
 
 from hazelcast import six, __version__
 from hazelcast.config import ReconnectMode
-from hazelcast.core import AddressHelper, CLIENT_TYPE, SERIALIZATION_VERSION
+from hazelcast.core import (
+    AddressHelper,
+    CLIENT_TYPE,
+    SERIALIZATION_VERSION,
+    EndpointQualifier,
+    ProtocolType,
+)
 from hazelcast.errors import (
     AuthenticationError,
     TargetDisconnectedError,
@@ -43,6 +49,7 @@ _logger = logging.getLogger(__name__)
 
 _INF = float("inf")
 _SQL_CONNECTION_RANDOM_ATTEMPTS = 10
+_CLIENT_PUBLIC_ENDPOINT_QUALIFIER = EndpointQualifier(ProtocolType.CLIENT, "public")
 
 
 class _WaitStrategy(object):
@@ -147,6 +154,9 @@ class ConnectionManager(object):
         self._labels = frozenset(config.labels)
         self._cluster_id = None
         self._load_balancer = None
+        self._use_public_addresses = (
+            isinstance(address_provider, DefaultAddressProvider) and config.use_public_addresses
+        )
 
     def add_listener(self, on_connection_opened=None, on_connection_closed=None):
         """Registers a ConnectionListener.
@@ -335,7 +345,7 @@ class ConnectionManager(object):
             return ImmediateFuture(connection)
 
         try:
-            translated = self._translate(member.address)
+            translated = self._translate_member_address(member)
             connection = self._create_connection(translated)
             return self._authenticate(connection).continue_with(self._on_auth, connection)
         except Exception as e:
@@ -360,6 +370,16 @@ class ConnectionManager(object):
             )
 
         return translated
+
+    def _translate_member_address(self, member):
+        if self._use_public_addresses:
+            public_address = member.address_map.get(_CLIENT_PUBLIC_ENDPOINT_QUALIFIER, None)
+            if public_address:
+                return public_address
+
+            return member.address
+
+        return self._translate(member.address)
 
     def _trigger_cluster_reconnection(self):
         if self._reconnect_mode == ReconnectMode.OFF:

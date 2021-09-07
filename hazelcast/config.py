@@ -576,6 +576,7 @@ class _Config(object):
         "_creds_username",
         "_creds_password",
         "_token_provider",
+        "_use_public_addresses",
     )
 
     def __init__(self):
@@ -630,6 +631,7 @@ class _Config(object):
         self._creds_username = None
         self._creds_password = None
         self._token_provider = None
+        self._use_public_addresses = False
 
     @property
     def cluster_members(self):
@@ -1334,6 +1336,19 @@ class _Config(object):
         if token_fun is None or not isinstance(token_fun, types.MethodType):
             raise TypeError("token_provider must be an object with a token method")
         self._token_provider = token_provider
+
+    @property
+    def use_public_addresses(self):
+        # type: () -> bool
+        return self._use_public_addresses
+
+    @use_public_addresses.setter
+    def use_public_addresses(self, value):
+        # type: (bool) -> None
+        if isinstance(value, bool):
+            self._use_public_addresses = value
+        else:
+            raise TypeError("use_public_addresses must be a boolean")
 
     @classmethod
     def from_dict(cls, d):
