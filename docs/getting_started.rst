@@ -100,7 +100,7 @@ The start scripts will automatically add your compiled classes to the
 ``CLASSPATH``.
 
 Note that if you are adding an ``IdentifiedDataSerializable`` or a
-``Portable`` class, you need to add its factory too. Then, you should
+``Portable`` class, you need to add its factory too. Then you should
 configure the factory in the ``hazelcast.xml`` configuration file. This
 file resides in the ``bin`` directory where you extracted the
 ``hazelcast-<version>.zip`` (or ``tar``).
@@ -297,10 +297,10 @@ default settings.
 
     client = hazelcast.HazelcastClient()
 
-If you run the Hazelcast IMDG members in a different server than the
+If you run the Hazelcast IMDG members on a different server than the
 client, you most probably have configured the members’ ports and cluster
 names as explained in the previous section. If you did, then you need to
-make certain changes to the network settings of your client.
+make match those changes to the network settings of your client.
 
 Cluster Name Setting
 ^^^^^^^^^^^^^^^^^^^^
@@ -448,13 +448,13 @@ Now, run the following code.
     with the complete code.
 
 
-You will see this time we add only the sales employees but we get the
-list of all known employees including the ones in IT. That is because
+You will see this time we added only the sales employees but we got the
+list of all known employees including the ones in IT. This is because
 our map lives in the cluster and no matter which client we use, we can
 access the whole map.
 
 You may wonder why we have used ``result()`` method over the
-``entry_set()`` method of the ``personnel_map``. That is because the
+``entry_set()`` method of the ``personnel_map``. This is because the
 Hazelcast Python client is designed to be fully asynchronous. Every
 method call over distributed objects such as ``put()``, ``get()``,
 ``entry_set()``, etc. will return a ``Future`` object that is similar to

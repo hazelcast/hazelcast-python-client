@@ -66,7 +66,7 @@ modes.
 Smart Client
 ~~~~~~~~~~~~
 
-In the smart mode, the clients connect to each cluster member. Since
+In the smart mode, the clients connect to all the cluster members. Since
 each data partition uses the well known and consistent hashing
 algorithm, each client can send an operation to the relevant cluster
 member, which increases the overall throughput and efficiency. Smart
@@ -80,7 +80,7 @@ member instead of each member in the cluster. Firewalls, security or
 some custom networking issues can be the reason for these cases.
 
 In the unisocket client mode, the client will only connect to one of the
-configured addresses. This single member will behave as a gateway to the
+configured member addresses. This single member will behave as a gateway to the
 other members. For any operation requested from the client, it will
 redirect the request to the relevant member and return the response back
 to the client returned from this member.
@@ -2185,7 +2185,7 @@ These benefits do not come for free, please consider the following
 trade-offs:
 
 - Clients with a Near Cache will have to hold the extra cached data,
-  which increases memory consumption.
+  which increases their memory consumption.
 - If invalidation is enabled and entries are updated frequently, then
   invalidations will be costly.
 - Near Cache breaks the strong consistency guarantees; you might be
