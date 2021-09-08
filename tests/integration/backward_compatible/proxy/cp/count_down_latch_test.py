@@ -1,3 +1,4 @@
+import os
 from threading import Thread
 
 from hazelcast.errors import DistributedObjectDestroyedError, OperationTimeoutError
@@ -44,14 +45,23 @@ class CountDownLatchTest(CPTestCase):
         self.assertFalse(latch.await_latch(0))
 
     def test_await_latch_with_timeout(self):
-        timeout = 0.1
+        timeout = 1
         latch = self.get_latch(1)
         start = get_current_timestamp()
         self.assertFalse(latch.await_latch(timeout))
         time_passed = get_current_timestamp() - start
+
+        expected_time_passed = timeout
+        if os.name == "nt":
+            # On Windows, we were getting random test failures due to expected
+            # time passed being slightly less than the timeout. This is due to
+            # the low time resolution there (15-16ms). If we are on Windows, we
+            # lower our expectations and settle for a slightly lower value.
+            expected_time_passed *= 0.95
+
         self.assertTrue(
-            time_passed >= timeout,
-            "Time passed is less than %s, which is %s" % (timeout, time_passed),
+            time_passed >= expected_time_passed,
+            "Time passed is less than %s, which is %s" % (expected_time_passed, time_passed),
         )
 
     def test_await_latch_multiple_waiters(self):
