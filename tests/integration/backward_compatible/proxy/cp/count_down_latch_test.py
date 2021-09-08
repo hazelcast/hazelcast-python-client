@@ -61,7 +61,7 @@ class CountDownLatchTest(CPTestCase):
 
         self.assertTrue(
             time_passed >= expected_time_passed,
-            "Time passed is less than %s, which is %s" % (timeout, expected_time_passed),
+            "Time passed is less than %s, which is %s" % (expected_time_passed, time_passed),
         )
 
     def test_await_latch_multiple_waiters(self):
