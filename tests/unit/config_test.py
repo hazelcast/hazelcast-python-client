@@ -846,15 +846,15 @@ class ConfigTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             cfg.token_provider = object()
 
-    def test_use_public_addresses(self):
+    def test_use_public_ip(self):
         config = self.config
-        self.assertFalse(config.use_public_addresses)
+        self.assertFalse(config.use_public_ip)
 
         with self.assertRaises(TypeError):
-            config.use_public_addresses = None
+            config.use_public_ip = None
 
-        config.use_public_addresses = True
-        self.assertTrue(config.use_public_addresses)
+        config.use_public_ip = True
+        self.assertTrue(config.use_public_ip)
 
 
 class IndexConfigTest(unittest.TestCase):

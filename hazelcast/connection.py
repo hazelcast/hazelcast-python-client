@@ -154,8 +154,8 @@ class ConnectionManager(object):
         self._labels = frozenset(config.labels)
         self._cluster_id = None
         self._load_balancer = None
-        self._use_public_addresses = (
-            isinstance(address_provider, DefaultAddressProvider) and config.use_public_addresses
+        self._use_public_ip = (
+            isinstance(address_provider, DefaultAddressProvider) and config.use_public_ip
         )
 
     def add_listener(self, on_connection_opened=None, on_connection_closed=None):
@@ -372,7 +372,7 @@ class ConnectionManager(object):
         return translated
 
     def _translate_member_address(self, member):
-        if self._use_public_addresses:
+        if self._use_public_ip:
             public_address = member.address_map.get(_CLIENT_PUBLIC_ENDPOINT_QUALIFIER, None)
             if public_address:
                 return public_address

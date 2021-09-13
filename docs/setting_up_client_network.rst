@@ -152,7 +152,7 @@ their own public external IP addresses, they pass this information to the
 client. As a result, the client can use public addresses for communication.
 
 In order to use this feature, make sure your cluster members are accessible
-from the network the client resides in, then set ``use_public_addresses``
+from the network the client resides in, then set ``use_public_ip``
 configuration option to ``True`` while constructing the client. You should also
 specify the public address of at least one member in the configuration:
 
@@ -160,7 +160,7 @@ specify the public address of at least one member in the configuration:
 
     client = hazelcast.HazelcastClient(
         cluster_members=["myserver.publicaddress.com:5701"],
-        use_public_address=True,
+        use_public_ip=True,
     )
 
 This solution works everywhere without further configuration (Kubernetes, AWS,

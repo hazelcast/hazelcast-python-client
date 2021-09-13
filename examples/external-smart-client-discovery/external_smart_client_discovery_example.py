@@ -5,7 +5,7 @@ import hazelcast
 # using their public addresses, if available.
 client = hazelcast.HazelcastClient(
     cluster_members=["myserver.publicaddress.com:5701"],
-    use_public_addresses=True,
+    use_public_ip=True,
 )
 
 m = client.get_map("my-map").blocking()

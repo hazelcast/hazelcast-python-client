@@ -74,7 +74,7 @@ class ConnectionManagerTranslateTest(HazelcastTestCase):
         self.client = HazelcastClient(
             cluster_name=self.cluster.id,
             cluster_connect_timeout=1.0,
-            use_public_addresses=True,
+            use_public_ip=True,
         )
 
         member = MemberInfo(
@@ -99,7 +99,7 @@ class ConnectionManagerTranslateTest(HazelcastTestCase):
             cluster_name=self.cluster.id,
             cluster_connect_timeout=1.0,
             connection_timeout=1.0,
-            use_public_addresses=False,
+            use_public_ip=False,
         )
 
         member = MemberInfo(
