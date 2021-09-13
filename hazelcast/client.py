@@ -293,7 +293,7 @@ class HazelcastClient(object):
 
             - Member throws an exception.
             - Connection between the client and member is closed.
-            - Client's heartbeat requests are timed out.
+            - The client's heartbeat requests are timed out.
 
             Time passed since invocation started is compared with this property.
             If the time is already passed, then the exception is delegated to the user.
@@ -304,13 +304,14 @@ class HazelcastClient(object):
 
         invocation_retry_pause (float): Pause time between each retry cycle of an
             invocation in seconds. By default, set to ``1.0``.
-        statistics_enabled (bool): When set to ``True``, client statistics collection
-            is enabled. By default, set to ``False``.
+        statistics_enabled (bool): When set to ``True``, the client statistics
+            collection is enabled. By default, set to ``False``.
         statistics_period (float): The period in seconds the statistics run.
-        shuffle_member_list (bool): Client shuffles the given member list to prevent
-            all clients to connect to the same node when this property is set to
-            ``True``. When it is set to ``False``, the client tries to connect to
-            the nodes in the given order. By default, set to ``True``.
+        shuffle_member_list (bool): The Client shuffles the given member list
+            to prevent all clients to connect to the same node when this
+            property is set to ``True``. When it is set to ``False``, the
+            client tries to connect to the nodes in the given order. By
+            default, set to ``True``.
         backup_ack_to_client_enabled (bool): Enables the client to get backup
             acknowledgements directly from the member that backups are applied,
             which reduces number of hops and increases performance for smart clients.
