@@ -60,7 +60,6 @@ class ConnectionManagerTranslateTest(HazelcastTestCase):
         ):
             self.client = HazelcastClient(
                 cluster_name=self.cluster.id,
-                cluster_connect_timeout=1.0,
             )
             # If the translate is used for this, it would return
             # the unreachable address and the connection attempt
@@ -73,7 +72,6 @@ class ConnectionManagerTranslateTest(HazelcastTestCase):
     def test_translate_is_used_when_member_has_public_client_address(self):
         self.client = HazelcastClient(
             cluster_name=self.cluster.id,
-            cluster_connect_timeout=1.0,
             use_public_ip=True,
         )
 
@@ -97,7 +95,6 @@ class ConnectionManagerTranslateTest(HazelcastTestCase):
     ):
         self.client = HazelcastClient(
             cluster_name=self.cluster.id,
-            cluster_connect_timeout=1.0,
             connection_timeout=1.0,
             use_public_ip=False,
         )
