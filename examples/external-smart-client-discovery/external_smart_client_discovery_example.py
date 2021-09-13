@@ -1,7 +1,6 @@
 import hazelcast
 
-
-# Client will try to connect to cluster using the provided
+# Client will try to connect to the cluster using the provided
 # public address and it will connect to the other cluster members
 # using their public addresses, if available.
 client = hazelcast.HazelcastClient(

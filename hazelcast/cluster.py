@@ -291,12 +291,14 @@ class _InternalClusterService(object):
             if address_map:
                 address = address_map.get(
                     _CLIENT_ENDPOINT_QUALIFIER,
-                    address_map.get(_MEMBER_ENDPOINT_QUALIFIER, member_info.address),
+                    address_map.get(_MEMBER_ENDPOINT_QUALIFIER, None),
                 )
                 member_info.address = address
             else:
                 # It might be None on 4.0 servers.
-                member_info.address_map = {}
+                member_info.address_map = {
+                    _MEMBER_ENDPOINT_QUALIFIER: member_info.address,
+                }
 
             new_members[member_info.uuid] = member_info
         return _MemberListSnapshot(version, new_members)

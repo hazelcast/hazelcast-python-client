@@ -10,7 +10,8 @@ SERIALIZATION_VERSION = 1
 
 class MemberInfo(object):
     """
-    Represents a member in the cluster with its address, uuid, lite member status, attributes and version.
+    Represents a member in the cluster with its address, uuid, lite member
+    status, attributes, version, and address map.
     """
 
     __slots__ = ("address", "uuid", "attributes", "lite_member", "version", "address_map")
@@ -112,8 +113,8 @@ class ProtocolType(object):
     A member typically responds to several types of protocols for
     member-to-member, client-member protocol, WAN communication etc. The
     default configuration uses a single server socket to listen for all kinds
-    of protocol types configured, Advanced Network Config of the server allows
-    configuration of multiple server sockets.
+    of protocol types configured, while Advanced Network Config of the server
+    allows configuration of multiple server sockets.
     """
 
     # We had to put dummy documentations for the constants
