@@ -125,7 +125,7 @@ class SqlTestBase(HazelcastTestCase):
 
         create_mapping_query = """
         CREATE MAPPING "%s" (
-            __key INT,
+            __key INT%s
             %s
         )
         TYPE IMaP 
@@ -137,6 +137,7 @@ class SqlTestBase(HazelcastTestCase):
         )
         """ % (
             self.map_name,
+            "," if len(columns) > 0 else "",
             ",\n".join(["%s %s" % (c_name, c_type) for c_name, c_type in columns.items()]),
             factory_id,
             class_id,
@@ -541,6 +542,35 @@ class SqlResultTest(SqlTestBase):
                     raise RuntimeError("expected")
 
         self.assertIsInstance(result.close(), ImmediateFuture)
+
+    def test_lazy_deserialization(self):
+        skip_if_client_version_older_than(self, "5.0")
+
+        # Using a Portable that is not defined on the client-side.
+        self._create_mapping_for_portable(666, 1, {})
+
+        script = (
+            """
+        var m = instance_0.getMap("%s");
+        m.put(1, new com.hazelcast.client.test.Employee(1, "Joe"));
+        """
+            % self.map_name
+        )
+
+        res = self.rc.executeOnController(self.cluster.id, script, Lang.JAVASCRIPT)
+        self.assertTrue(res.success)
+
+        with self.client.sql.execute('SELECT __key, this FROM "%s"' % self.map_name) as result:
+            rows = list(result)
+            self.assertEqual(1, len(rows))
+            row = rows[0]
+            # We should be able to deserialize parts of the response
+            self.assertEqual(1, row.get_object("__key"))
+
+            # We should throw lazily when we try to access the columns
+            # that are not deserializable
+            with self.assertRaises(HazelcastSqlError):
+                row.get_object("this")
 
 
 @unittest.skipIf(
