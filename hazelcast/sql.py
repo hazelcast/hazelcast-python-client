@@ -250,9 +250,9 @@ class SqlColumnMetadata(object):
 class _SqlError(object):
     """Server-side error that is propagated to the client."""
 
-    __slots__ = ("code", "message", "originating_member_uuid")
+    __slots__ = ("code", "message", "originating_member_uuid", "suggestion")
 
-    def __init__(self, code, message, originating_member_uuid):
+    def __init__(self, code, message, originating_member_uuid, _, suggestion):
         self.code = code
         """_SqlErrorCode: The error code."""
 
@@ -261,6 +261,9 @@ class _SqlError(object):
 
         self.originating_member_uuid = originating_member_uuid
         """uuid.UUID: UUID of the member that caused or initiated an error condition."""
+
+        self.suggestion = suggestion
+        """str: Suggested SQL statement to remediate experienced error."""
 
 
 class _SqlPage(object):
@@ -409,11 +412,6 @@ class _SqlErrorCode(object):
     A problem with partition distribution.
     """
 
-    MAP_DESTROYED = 1006
-    """
-    An error caused by a concurrent destroy of a map.
-    """
-
     MAP_LOADING_IN_PROGRESS = 1007
     """
     Map loading is not finished yet.
@@ -429,6 +427,11 @@ class _SqlErrorCode(object):
     An error caused by an attempt to query an index that is not valid.
     """
 
+    OBJECT_NOT_FOUND = 1010
+    """
+    Object (mapping/table) not found.
+    """
+
     DATA_EXCEPTION = 2000
     """
     An error with data conversion or transformation.
@@ -438,9 +441,10 @@ class _SqlErrorCode(object):
 class HazelcastSqlError(HazelcastError):
     """Represents an error occurred during the SQL query execution."""
 
-    def __init__(self, originating_member_uuid, code, message, cause):
+    def __init__(self, originating_member_uuid, code, message, cause, suggestion=None):
         super(HazelcastSqlError, self).__init__(message, cause)
         self._originating_member_uuid = originating_member_uuid
+        self._suggestion = suggestion
 
         # TODO: This is private API, might be good to make it public or
         #  remove this information altogether.
@@ -450,6 +454,11 @@ class HazelcastSqlError(HazelcastError):
     def originating_member_uuid(self):
         """uuid.UUID: UUID of the member that caused or initiated an error condition."""
         return self._originating_member_uuid
+
+    @property
+    def suggestion(self):
+        """str: Suggested SQL statement to remediate experienced error."""
+        return self._suggestion
 
 
 class SqlRowMetadata(object):
@@ -1216,7 +1225,13 @@ class SqlResult(object):
             ``None`` otherwise.
         """
         if error:
-            return HazelcastSqlError(error.originating_member_uuid, error.code, error.message, None)
+            return HazelcastSqlError(
+                error.originating_member_uuid,
+                error.code,
+                error.message,
+                None,
+                error.suggestion,
+            )
         return None
 
     def _on_execute_error(self, error):
