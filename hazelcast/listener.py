@@ -3,6 +3,7 @@ import sys
 import threading
 from uuid import uuid4
 
+import hazelcast.future
 from hazelcast import six
 from hazelcast.errors import HazelcastError, HazelcastClientNotActiveError, TargetDisconnectedError
 from hazelcast.future import combine_futures, ImmediateFuture
@@ -86,6 +87,7 @@ class ListenerService(object):
             if not listener_registration:
                 return ImmediateFuture(False)
 
+            futures = []
             for connection, event_registration in six.iteritems(
                 listener_registration.connection_registrations
             ):
@@ -105,24 +107,27 @@ class ListenerService(object):
                 )
                 self._invocation_service.invoke(invocation)
 
-                def handler(f, connection=connection):
+                def handler(f, captured_connection=connection):
                     e = f.exception()
-                    if e:
-                        if isinstance(
-                            e, (HazelcastClientNotActiveError, IOError, TargetDisconnectedError)
-                        ):
-                            return
+                    if not e:
+                        return
 
-                        _logger.warning(
-                            "Deregistration of listener with ID %s has failed for address %s",
-                            user_registration_id,
-                            connection.remote_address,
-                        )
+                    if isinstance(
+                        e, (HazelcastClientNotActiveError, IOError, TargetDisconnectedError)
+                    ):
+                        return
+
+                    _logger.warning(
+                        "Deregistration of listener with ID %s has failed for address %s",
+                        user_registration_id,
+                        captured_connection.remote_address,
+                    )
 
                 invocation.future.add_done_callback(handler)
+                futures.append(invocation.future)
 
             listener_registration.connection_registrations.clear()
-            return ImmediateFuture(True)
+            return combine_futures(futures).continue_with(lambda _: True)
 
     def handle_client_message(self, message, correlation_id):
         handler = self._event_handlers.get(correlation_id, None)

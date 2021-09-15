@@ -394,7 +394,7 @@ class ImmediateExceptionFutureTest(unittest.TestCase):
 
 
 class CombineFutureTest(unittest.TestCase):
-    def test_combine_futures(self):
+    def test_combining(self):
         f1, f2, f3 = Future(), Future(), Future()
 
         combined = combine_futures([f1, f2, f3])
@@ -408,7 +408,7 @@ class CombineFutureTest(unittest.TestCase):
         f3.set_result("done3")
         self.assertEqual(combined.result(), ["done1", "done2", "done3"])
 
-    def test_combine_futures_exception(self):
+    def test_exceptional_result(self):
         f1, f2, f3 = Future(), Future(), Future()
 
         combined = combine_futures([f1, f2, f3])
@@ -420,10 +420,58 @@ class CombineFutureTest(unittest.TestCase):
 
         self.assertEqual(e, combined.exception())
 
-    def test_combine_futures_with_empty_list(self):
+    def test_empty_input(self):
         combined = combine_futures([])
         self.assertTrue(combined.done())
         self.assertEqual([], combined.result())
+
+    def test_completion_order(self):
+        # Verifies that the returned list order is
+        # consistent with the order of input futures
+        # regardless of the completion order of futures.
+        f1, f2, f3 = Future(), Future(), Future()
+        combined = combine_futures([f1, f2, f3])
+
+        f3.set_result(3)
+        f1.set_result(1)
+        f2.set_result(2)
+
+        self.assertEqual([1, 2, 3], combined.result())
+
+    def test_waiting_for_all_inputs(self):
+        # Verifies that we wait for all futures, even if some
+        # of them fails.
+        f1, f2, f3 = Future(), Future(), Future()
+        combined = combine_futures([f1, f2, f3])
+
+        e = RuntimeError("expected")
+        f1.set_exception(e)
+        self.assertFalse(combined.done())
+        f2.set_result(1)
+        self.assertFalse(combined.done())
+        f3.set_result(2)
+        self.assertTrue(combined.done())
+        self.assertFalse(combined.is_success())
+        self.assertEqual(e, combined.exception())
+
+    def test_returning_first_error(self):
+        # Verifies that we return the first error occurred, even
+        # if more than one of the input futures completed
+        # exceptionally.
+        f1, f2, f3 = Future(), Future(), Future()
+        combined = combine_futures([f1, f2, f3])
+
+        e1 = RuntimeError("expected")
+        f1.set_exception(e1)
+        self.assertFalse(combined.done())
+        e2 = RuntimeError("expected2")
+        f2.set_exception(e2)
+        self.assertFalse(combined.done())
+        e3 = RuntimeError("expected3")
+        f3.set_exception(e3)
+        self.assertTrue(combined.done())
+        self.assertFalse(combined.is_success())
+        self.assertEqual(e1, combined.exception())
 
 
 class MakeBlockingTest(unittest.TestCase):

@@ -254,31 +254,56 @@ class ImmediateExceptionFuture(Future):
 def combine_futures(futures):
     """Combines set of Futures.
 
+    It waits for the completion of the all input Futures regardless
+    of their output.
+
+    The returned Future completes with the list of the results of the input
+    Futures, respecting the input order.
+
+    If one of the input Futures completes exceptionally, the returned
+    Future also completes exceptionally. In case of multiple exceptional
+    completions, the returned Future will be completed with the first
+    exceptional result.
+
     Args:
         futures (list[Future]): List of Futures to be combined.
 
     Returns:
         Future: Result of the combination.
     """
-    expected = len(futures)
-    results = []
-    if expected == 0:
+    count = len(futures)
+    results = [None] * count
+    if count == 0:
         return ImmediateFuture(results)
 
     completed = AtomicInteger()
     combined = Future()
+    errors = []
 
-    def done(f):
-        if not combined.done():
-            if f.is_success():  # TODO: ensure ordering of results as original list
-                results.append(f.result())
-                if completed.get_and_increment() + 1 == expected:
-                    combined.set_result(results)
+    def done(future, index):
+        if future.is_success():
+            results[index] = future.result()
+        else:
+            if not errors:
+                # We are fine with this check-then-act.
+                # At most, we will end up with couple of
+                # errors stored in case of the concurrent calls.
+                # The idea behind this check is to try to minimize
+                # the number of errors we store without
+                # synchronization, as we only need the first error.
+                errors.append((future.exception(), future.traceback()))
+
+        if count == completed.increment_and_get():
+            if errors:
+                first_exception, first_traceback = errors[0]
+                combined.set_exception(first_exception, first_traceback)
             else:
-                combined.set_exception(f.exception(), f.traceback())
+                combined.set_result(results)
 
-    for future in futures:
-        future.add_done_callback(done)
+    for index, future in enumerate(futures):
+        # Capture the index in the closure or else we
+        # will only update the last element.
+        future.add_done_callback(lambda f, captured_index=index: done(f, captured_index))
 
     return combined
 
