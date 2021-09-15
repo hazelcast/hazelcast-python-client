@@ -1358,6 +1358,11 @@ streams and data at rest in other data stores.
     Hazelcast platform. In order for the client and the server to be fully
     compatible with each other, their major versions must be the same.
 
+.. warning::
+
+    You cannot run SQL queries on lite members. This limitation will be removed
+    in future releases.
+
 Supported Queries
 ~~~~~~~~~~~~~~~~~
 
@@ -1422,6 +1427,12 @@ This query will generate an infinite stream of values and will perform a query
 with a filter on it. In SQL, a stream is like a table with infinitely many rows
 which you can only access sequentially and thus never reach the end. For
 example, you will get an error if you try to aggregate the whole stream.
+
+.. tip::
+
+    For a tutorial on building a data pipeline with a streaming query, see
+    `Get Started with SQL Pipelines
+    <https://docs.hazelcast.com/hazelcast/latest/pipelines/learn-sql.html>`__.
 
 **Federated Queries**
 
@@ -1610,7 +1621,7 @@ fields depends on the serialization format, as described below:
   objects, the object is deserialized if needed and then analyzed using the
   reflection mechanism (on the server-side). Only public fields and getters
   are taken into account. See the `IMDG Reference Manual
-  <https://docs.hazelcast.com/imdg/latest/sql/querying-imap.html#key-and-value-fields>`__
+  <https://docs.hazelcast.com/hazelcast/latest/query/querying-maps-sql.html#querying-object-fields>`__
   for details.
 
 Consider the ``Employee`` class from the example above; the SQL service can
@@ -1639,7 +1650,7 @@ using `CREATE MAPPING
 statement.
 
 For example, this code snippet creates a mapping to a new map called
-``my_map``, which stores the JSON values ``name`` and ``salary`` and query
+``employees``, which stores the JSON values ``name`` and ``salary`` and query
 it:
 
 .. code:: python
@@ -1740,7 +1751,7 @@ Available connectors are:
   Read from and write to Kafka topics.
 - `File
   <https://docs.hazelcast.com/hazelcast/latest/sql/file-connector.html>`__:
-  Read from a https://docs.hazelcast.com/hazelcast/latest/sql/connectors.htmllocal or remote file.
+  Read from a local or remote file.
 - `IMap
   <https://docs.hazelcast.com/hazelcast/latest/sql/imap-connector.html>`__:
   Read from and write to an IMap.
