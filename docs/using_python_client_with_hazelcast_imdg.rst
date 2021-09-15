@@ -1349,19 +1349,193 @@ the entry processor in the ``Map`` methods. See the following example.
 SQL
 ---
 
-The SQL service provided by Hazelcast Python client allows you to query
-data stored in ``Map`` declaratively.
+You can use SQL to query map entries in Hazelcast as well as real-time event
+streams and data at rest in other data stores.
 
 .. warning::
 
-    The SQL feature is currently in beta. The compatibility between versions
-    is not guaranteed. API might change between versions without notice.
-    While in beta, the SQL feature is tested against the same major versions
-    of the client and the server.
+    The SQL feature is stabilized in 5.0 versions of the client and the
+    Hazelcast platform. In order for the client and the server to be fully
+    compatible with each other, their major versions must be the same.
 
-**Example: How to Query a Map using SQL**
+.. warning::
 
-Consider that we have a map called ``emp`` that contains values of type
+    You cannot run SQL queries on lite members. This limitation will be removed
+    in future releases.
+
+Supported Queries
+~~~~~~~~~~~~~~~~~
+
+With SQL you can run various types of queries to get insight from your data:
+
+- Ad-hoc queries, also known as point queries or online transactional
+  processing (OLTP) queries.
+- Batch queries, also known as online analytical processing (OLAP) queries.
+- Streaming queries, also known as continuous queries.
+- Federated queries.
+
+**Ad-Hoc Queries**
+
+Ad-hoc queries allow you to retrieve a small subset of data from a large
+dataset. Usually these queries are simple and you can have many of them running
+concurrently in a Hazelcast cluster.
+
+A common use case for ad-hoc queries is individual business transactions where
+you need to get or update data.
+
+For example, a hotel may use Hazelcast to cache its bookings in a map. To find
+out which rooms are available, the staff could use the following query:
+
+.. code:: sql
+
+    SELECT room, booking_date FROM hotel_bookings;
+
+**Batch Queries**
+
+Batch queries allow you to query large datasets either in a single or multiple
+systems and/or run aggregations on them to get deeper insights. Usually these
+queries are complex and you can run a small number of them concurrently in a
+Hazelcast cluster.
+
+Common uses of OLAP include business reporting functions such as financial
+analysis, budgeting, and forecast planning.
+
+For example:
+
+.. code:: sql
+
+    SELECT COUNT(DISTINCT color) FROM cars;
+
+For a list of available aggregations, see `SQL Functions and Operators
+<https://docs.hazelcast.com/hazelcast/latest/sql/expressions.html>`__ section
+of the reference manual.
+
+**Streaming Queries**
+
+Streaming queries are those that continuously produces results. These queries
+get data from unbounded sources such as real-time event streams. Results can be
+delivered to your app, stored in Hazelcast (in a map) or can be sent downstream
+to a remote data system such as a database.
+
+A simple example of a streaming query:
+
+.. code:: sql
+
+    SELECT * FROM TABLE(generate_stream(100)) WHERE v / 10 * 10 = v;
+
+This query will generate an infinite stream of values and will perform a query
+with a filter on it. In SQL, a stream is like a table with infinitely many rows
+which you can only access sequentially and thus never reach the end. For
+example, you will get an error if you try to aggregate the whole stream.
+
+.. tip::
+
+    For a tutorial on building a data pipeline with a streaming query, see
+    `Get Started with SQL Pipelines
+    <https://docs.hazelcast.com/hazelcast/latest/pipelines/learn-sql.html>`__.
+
+**Federated Queries**
+
+Federated queries are those that join tables from different datasets. Normally,
+querying in SQL is database or dataset-specific. However Hazelcast comes with
+built-in connectors to allow you to pull information from different sources
+and present a more complete picture of the data.
+
+To allow you to query data in sources other than distributed maps in a cluster,
+Hazelcast uses the concept of mappings.
+
+A mapping is a connection to a data source about which tells Hazelcast about
+the source’s data model, data access patterns, and serialization formats.
+Hazelcast uses these mappings to access resources in these data sources as if
+they were SQL tables.
+
+Hazelcast provides `connectors
+<https://docs.hazelcast.com/hazelcast/latest/sql/connectors.html>`__ that allow
+you to create mappings to Apache Kafka, your local file system, and distributed
+maps. Using these mappings, you can run SQL queries against data in these data
+sources.
+
+For example, this query creates a mapping to a Kafka topic that streams trading
+data as JSON:
+
+.. code:: sql
+
+    CREATE MAPPING trades(
+        __key BIGINT,
+        ticker VARCHAR,
+        amount INT)
+    TYPE Kafka
+    OPTIONS (
+        'keyFormat' = 'bigint',
+        'valueFormat' = 'json',
+        'bootstrap.servers' = '127.0.0.1:9092');
+
+The following query gets the full company name for each ticker from a Hazelcast
+map called ``companies``.
+
+.. code:: sql
+
+    SELECT
+        trades.ticker, trades.amount, companies.name
+    FROM
+        trades
+    JOIN companies
+    ON trades.ticker = companies.ticker;
+
+SQL Statements
+~~~~~~~~~~~~~~
+
+**Data Manipulation Language(DML) Statements**
+
+- `SELECT <https://docs.hazelcast.com/hazelcast/latest/sql/select.html>`__:
+  Read data from a table.
+- `SINK INTO/INSERT INTO
+  <https://docs.hazelcast.com/hazelcast/latest/sql/sink-into.html>`__:
+  Ingest data into a map and/or forward data to other systems.
+- `UPDATE <https://docs.hazelcast.com/hazelcast/latest/sql/update.html>`__:
+  Overwrite values in map entries.
+- `DELETE <https://docs.hazelcast.com/hazelcast/latest/sql/delete.html>`__:
+  Delete map entries.
+
+**Data Definition Language(DDL) Statements**
+
+- `CREATE MAPPING
+  <https://docs.hazelcast.com/hazelcast/latest/sql/create-mapping.html>`__:
+  Map a local or remote data object to a table that Hazelcast can access.
+- `SHOW MAPPINGS
+  <https://docs.hazelcast.com/hazelcast/latest/sql/show-mappings.html>`__:
+  Get the names of existing mappings.
+- `DROP MAPPING
+  <https://docs.hazelcast.com/hazelcast/latest/sql/drop-mapping.html>`__:
+  Remove a mapping.
+
+**Job Management Statements**
+
+- `CREATE JOB
+  <https://docs.hazelcast.com/hazelcast/latest/sql/create-job.html>`__:
+  Create a job that is not tied to the client session.
+- `ALTER JOB
+  <https://docs.hazelcast.com/hazelcast/latest/sql/alter-job.html>`__:
+  Restart, suspend, or resume a job.
+- `SHOW JOBS
+  <https://docs.hazelcast.com/hazelcast/latest/sql/show-jobs.html>`__:
+  Get the names of all running jobs.
+- `DROP JOB <https://docs.hazelcast.com/hazelcast/latest/sql/drop-job.html>`__:
+  Cancel a job.
+- `CREATE OR REPLACE SNAPSHOT (Enterprise only)
+  <https://docs.hazelcast.com/hazelcast/latest/sql/create-snapshot.html>`__:
+  Create a snapshot of a running job, so you can stop and restart it at a
+  later date.
+- `DROP SNAPSHOT (Enterprise only)
+  <https://docs.hazelcast.com/hazelcast/latest/sql/drop-snapshot.html>`__:
+  Cancel a running job.
+
+Querying Map
+~~~~~~~~~~~~
+
+With SQL you can query the keys and values of maps in your cluster.
+
+Assume that we have a map called ``emp`` that contains values of type
 ``Employee``:
 
 .. code:: python
@@ -1396,18 +1570,14 @@ The following code prints names of the employees whose age is less than 30:
         print(name)
 
 
-Querying Map
-~~~~~~~~~~~~
-
-The following subsections describe how you can access Hazelcast ``Map`` objects
-and perform queries on them.
+The following subsections describe how you can access Hazelcast maps
+and perform queries on them in more details.
 
 **Names**
 
-The SQL service exposes ``Map`` objects as tables in the predefined
-``partitioned`` schema using exact names. This schema is in the SQL service
-search path so that you can access the ``Map`` objects with or without the
-schema name.
+The SQL service exposes maps as tables in the predefined ``partitioned``
+schema using exact names. This schema is in the SQL service search path so
+that you can access the ``Map`` objects with or without the schema name.
 
 Schema and table names are case-sensitive; you can access the ``employee`` map,
 for example, as ``employee`` or ``partitioned.employee``, but not as
@@ -1420,17 +1590,16 @@ for example, as ``employee`` or ``partitioned.employee``, but not as
 
 **Fields**
 
-The SQL service resolves fields accessible from the SQL automatically. The
-service reads the first local entry pair of the ``Map`` to construct the list
-of fields. If the ``Map`` does not have local entries on the member where the
-query is started, then the list of fields cannot be resolved, and an exception
-is thrown.
+The SQL service resolves fields in map entries automatically by reading the
+first local entry in the map. If the map does not have local entries on the
+member where the query is started, then the list of fields cannot be resolved,
+and an exception is thrown.
 
 Field names are case-sensitive.
 
 **Key and Value Objects**
 
-A ``Map`` entry consists of a key and a value. These are accessible through
+A map entry consists of a key and a value. These are accessible through
 the ``__key`` and ``this`` aliases. The following query returns the keys and
 values of all entries in a map:
 
@@ -1452,15 +1621,8 @@ fields depends on the serialization format, as described below:
   objects, the object is deserialized if needed and then analyzed using the
   reflection mechanism (on the server-side). Only public fields and getters
   are taken into account. See the `IMDG Reference Manual
-  <https://docs.hazelcast.com/imdg/latest/sql/querying-imap.html#key-and-value-fields>`__
+  <https://docs.hazelcast.com/hazelcast/latest/query/querying-maps-sql.html#querying-object-fields>`__
   for details.
-
-.. note::
-
-    You cannot query JSON fields in SQL. If you want to query JSON, see
-    :ref:`using_python_client_with_hazelcast_imdg:Querying with JSON Strings`
-    section.
-
 
 Consider the ``Employee`` class from the example above; the SQL service can
 access the following fields:
@@ -1482,6 +1644,46 @@ from the map:
 If both the key and value have fields with the same name, then the field of
 the value is exposed.
 
+To query JSON objects or empty maps, you should create an explicit mapping
+using `CREATE MAPPING
+<https://docs.hazelcast.com/hazelcast/latest/sql/create-mapping.html>`__
+statement.
+
+For example, this code snippet creates a mapping to a new map called
+``employees``, which stores the JSON values ``name`` and ``salary`` and query
+it:
+
+.. code:: python
+
+    client = hazelcast.HazelcastClient()
+
+    mapping_query = """
+    CREATE MAPPING employees (
+        __key INT,
+        name VARCHAR,
+        salary INT)
+    TYPE IMap
+    OPTIONS (
+        'keyFormat' = 'int',
+        'valueFormat' = 'json'
+    );
+    """
+
+    with client.sql.execute(mapping_query) as result:
+        # wait until query completes
+        result.update_count().result()
+
+    employees = client.get_map("employees").blocking()
+    employees.set(1, HazelcastJsonValue({"name": "John Doe", "salary": 60000}))
+    employees.set(2, HazelcastJsonValue({"name": "Jane Doe", "salary": 80000}))
+
+    select_query = "SELECT name FROM employees WHERE salary > 75000"
+
+    with client.sql.execute(select_query) as result:
+        for row in result:
+            print(row.get_object("name"))
+
+
 **"SELECT *" Queries**
 
 You may use the ``SELECT * FROM <table>`` syntax to get all the table fields.
@@ -1495,11 +1697,6 @@ does not return the ``this`` field, because the value has nested fields
 
     -- Returns __key, name, age
     SELECT * FROM employee
-
-**Indexes**
-
-The SQL service can use ``Map`` indexes to speed up the execution of certain
-queries. ``SORTED`` and ``HASH`` indexes are supported.
 
 Data Types
 ~~~~~~~~~~
@@ -1526,99 +1723,42 @@ TIMESTAMP_WITH_TIME_ZONE datetime.datetime (with non-None tzinfo)
 OBJECT                   Any Python type
 ======================== ========================================
 
-SELECT
-~~~~~~
+Functions and Operators
+~~~~~~~~~~~~~~~~~~~~~~~
 
-**Synopsis**
+Hazelcast supports logical and ``IS`` predicates, comparison and mathematical
+operators, and aggregate, mathematical, trigonometric, string, table-valued,
+and special functions.
 
-.. code:: sql
-
-    SELECT [ * | expression [ [ AS ] expression_alias ] [, ...] ]
-    FROM table_name [ [ AS ] table_alias ]
-    [WHERE condition]
-
-
-**Description**
-
-The ``SELECT`` command retrieves rows from a table. A row is a sequence of
-expressions defined after the ``SELECT`` keyword. Expressions may have
-optional aliases.
-
-``table_name`` refers to a single ``Map`` data structure. A table may have an
-optional alias.
-
-An optional ``WHERE`` clause defines a condition, that is any expression that
-evaluates to a result of type boolean. Any row that doesn’t satisfy the
-condition is eliminated from the result.
-
-**Sorting**
-
-You can use the standard SQL clauses ``ORDER BY``, ``LIMIT``, and ``OFFSET``
-to sort and limit the result set.
-
-
-.. warning::
-
-    Note that, you must add sorted indexes to the map object’s fields to be
-    sorted by. For example, for the ``SELECT * FROM persons ORDER BY name ASC``
-    query, there has to be a sorted index on the ``name`` field as shown below:
-
-    .. code:: python
-
-        persons = client.get_map("persons")
-        persons.add_index(attributes=["name"], index_type=IndexType.SORTED)
-
-See the below examples for sorting.
-
-The following statement gets the top five employees ordered by the
-``first_name`` field and skipping the first three ones:
-
-.. code:: sql
-
-    SELECT
-        employee_id, first_name, last_name
-    FROM
-        employees
-    ORDER BY first_name
-    LIMIT 5 OFFSET 3;
-
-
-The following statement gets the top five employees with the highest salaries.
-
-.. code:: sql
-
-    SELECT
-        employee_id, first_name, last_name, salary
-    FROM
-        employees
-    ORDER BY salary DESC
-    LIMIT 5;
-
-**Unsupported Features**
-
-The following features are **not supported** and are planned for future releases:
-
-- ``GROUP BY`` / ``HAVING``
-- ``JOIN``
-- set operators (``UNION``, ``INTERSECT``, ``MINUS``)
-- subqueries (``SELECT ... FROM table WHERE x = (SELECT …)``)
-
-Expressions
-~~~~~~~~~~~
-
-Hazelcast SQL supports logical predicates, `IS` predicates, comparison
-operators, mathematical functions and operators, string functions, and special
-functions.
-
-See `IMDG Reference Manual
-<https://docs.hazelcast.com/imdg/latest/sql/querying-imap.html#key-and-value-fields>`__
+See the `Reference Manual
+<https://docs.hazelcast.com/hazelcast/latest/sql/expressions.html>`__
 for details.
 
-Lite Members
-~~~~~~~~~~~~
+Source and Sink Connectors
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You cannot start SQL queries on lite members. This limitation will be removed
-in future releases.
+SQL connectors are extensions that allow you to communicate with external
+systems such as databases, using SQL. These connectors are configured to read
+and write data in the most efficient way for their respective system.
+
+To use a connector, you must use the `CREATE MAPPING statement
+<https://docs.hazelcast.com/hazelcast/latest/sql/create-mapping.html>`__.
+
+Available connectors are:
+
+- `Apache Kafka
+  <https://docs.hazelcast.com/hazelcast/latest/sql/kafka-connector.html>`__:
+  Read from and write to Kafka topics.
+- `File
+  <https://docs.hazelcast.com/hazelcast/latest/sql/file-connector.html>`__:
+  Read from a local or remote file.
+- `IMap
+  <https://docs.hazelcast.com/hazelcast/latest/sql/imap-connector.html>`__:
+  Read from and write to an IMap.
+
+See the `Reference Manual
+<https://docs.hazelcast.com/hazelcast/latest/sql/connectors.html>`__ for
+details.
 
 Distributed Query
 -----------------
