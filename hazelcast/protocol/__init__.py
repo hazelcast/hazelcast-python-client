@@ -45,13 +45,6 @@ class StackTraceElement(object):
         return not self.__eq__(other)
 
 
-class EndpointQualifier(object):
-    __slots__ = ()
-
-    def __init__(self, _, __):
-        pass
-
-
 class RaftGroupId(object):
     __slots__ = ("name", "seed", "id")
 

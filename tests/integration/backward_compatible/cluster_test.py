@@ -1,10 +1,23 @@
 import os
 import tempfile
+import unittest
 
 from hazelcast import HazelcastClient, six
 from hazelcast.util import RandomLB, RoundRobinLB
-from tests.base import HazelcastTestCase
-from tests.util import set_attr, random_string, event_collector, skip_if_client_version_older_than
+from tests.base import HazelcastTestCase, SingleMemberTestCase
+from tests.util import (
+    set_attr,
+    random_string,
+    event_collector,
+    skip_if_client_version_older_than,
+    compare_client_version,
+)
+
+try:
+    from hazelcast.core import EndpointQualifier, ProtocolType
+except ImportError:
+    # Added in 5.0 version of the client.
+    pass
 
 
 class ClusterTest(HazelcastTestCase):
@@ -272,4 +285,59 @@ class HotRestartEventTest(HazelcastTestCase):
         </hazelcast>""" % (
             port,
             self.tmp_dir,
+        )
+
+
+_SERVER_PORT = 5701
+_CLIENT_PORT = 5702
+_SERVER_WITH_CLIENT_ENDPOINT = """
+<hazelcast xmlns="http://www.hazelcast.com/schema/config"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.hazelcast.com/schema/config
+    http://www.hazelcast.com/schema/config/hazelcast-config-4.0.xsd">
+    <advanced-network enabled="true">
+        <member-server-socket-endpoint-config>
+            <port>%s</port>
+        </member-server-socket-endpoint-config>
+        <client-server-socket-endpoint-config>
+            <port>%s</port>
+        </client-server-socket-endpoint-config>
+    </advanced-network>
+</hazelcast>
+""" % (
+    _SERVER_PORT,
+    _CLIENT_PORT,
+)
+
+
+@unittest.skipIf(
+    compare_client_version("5.0") < 0, "Tests the features added in 5.0 version of the client"
+)
+class AdvancedNetworkConfigTest(SingleMemberTestCase):
+    @classmethod
+    def configure_cluster(cls):
+        return _SERVER_WITH_CLIENT_ENDPOINT
+
+    @classmethod
+    def configure_client(cls, config):
+        config["cluster_members"] = ["localhost:%s" % _CLIENT_PORT]
+        config["cluster_name"] = cls.cluster.id
+        return config
+
+    def test_member_list(self):
+        members = self.client.cluster_service.get_members()
+        self.assertEqual(1, len(members))
+        member = members[0]
+
+        # Make sure member address is assigned to client endpoint port
+        self.assertEqual(_CLIENT_PORT, member.address.port)
+
+        # Make sure there are mappings for CLIENT and MEMBER endpoints
+        self.assertEqual(2, len(member.address_map))
+        self.assertEqual(
+            _SERVER_PORT, member.address_map.get(EndpointQualifier(ProtocolType.MEMBER, None)).port
+        )
+        self.assertEqual(
+            _CLIENT_PORT,
+            member.address_map.get(EndpointQualifier(ProtocolType.CLIENT, None)).port,
         )

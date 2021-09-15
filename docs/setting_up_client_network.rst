@@ -129,6 +129,44 @@ your client and cluster members as described in the
 :ref:`securing_client_connection:tls/ssl for hazelcast python clients`
 section.
 
+External Smart Client Discovery
+-------------------------------
+
+.. warning::
+
+    This feature requires Hazelcast IMDG 4.2 or higher version.
+
+The client sends requests directly to cluster members in the smart client mode
+(default) in order to reduce hops to accomplish operations. Because of that,
+the client should know the addresses of members in the cluster.
+
+In cloud-like environments, or Kubernetes, there are usually two network
+interfaces: the private and public network interfaces. When the client is in
+the same network as the members, it uses their private network addresses.
+Otherwise, if the client and the Hazelcast cluster are on different networks,
+the client cannot connect to members using their private network addresses.
+Hazelcast 4.2 introduced External Smart Client Discovery to solve that issue.
+The client needs to communicate with all cluster members via their public IP
+addresses in this case. Whenever Hazelcast cluster members are able to resolve
+their own public external IP addresses, they pass this information to the
+client. As a result, the client can use public addresses for communication.
+
+In order to use this feature, make sure your cluster members are accessible
+from the network the client resides in, then set ``use_public_ip``
+configuration option to ``True`` while constructing the client. You should also
+specify the public address of at least one member in the configuration:
+
+.. code:: python
+
+    client = hazelcast.HazelcastClient(
+        cluster_members=["myserver.publicaddress.com:5701"],
+        use_public_ip=True,
+    )
+
+This solution works everywhere without further configuration (Kubernetes, AWS,
+GCP, Azure, etc.) as long as the corresponding plugin is enabled in Hazelcast
+server configuration.
+
 Configuring Backup Acknowledgment
 ---------------------------------
 

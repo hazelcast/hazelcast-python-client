@@ -4,6 +4,7 @@ import uuid
 from collections import OrderedDict
 
 from hazelcast import six
+from hazelcast.core import EndpointQualifier, ProtocolType
 from hazelcast.errors import TargetDisconnectedError, IllegalStateError
 from hazelcast.util import check_not_none
 
@@ -47,6 +48,8 @@ class ClientInfo(object):
 
 _EMPTY_SNAPSHOT = _MemberListSnapshot(-1, OrderedDict())
 _INITIAL_MEMBERS_TIMEOUT_SECONDS = 120
+_CLIENT_ENDPOINT_QUALIFIER = EndpointQualifier(ProtocolType.CLIENT, None)
+_MEMBER_ENDPOINT_QUALIFIER = EndpointQualifier(ProtocolType.MEMBER, None)
 
 
 class ClusterService(object):
@@ -284,6 +287,19 @@ class _InternalClusterService(object):
     def _create_snapshot(version, member_infos):
         new_members = OrderedDict()
         for member_info in member_infos:
+            address_map = member_info.address_map
+            if address_map:
+                address = address_map.get(
+                    _CLIENT_ENDPOINT_QUALIFIER,
+                    address_map.get(_MEMBER_ENDPOINT_QUALIFIER, None),
+                )
+                member_info.address = address
+            else:
+                # It might be None on 4.0 servers.
+                member_info.address_map = {
+                    _MEMBER_ENDPOINT_QUALIFIER: member_info.address,
+                }
+
             new_members[member_info.uuid] = member_info
         return _MemberListSnapshot(version, new_members)
 

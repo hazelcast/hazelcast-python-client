@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from hazelcast import six
 from hazelcast.config import _ReliableTopicConfig, TopicOverloadPolicy
-from hazelcast.core import MemberInfo, MemberVersion
+from hazelcast.core import MemberInfo, MemberVersion, EndpointQualifier, ProtocolType
 from hazelcast.errors import (
     OperationTimeoutError,
     IllegalArgumentError,
@@ -26,6 +26,7 @@ _MAX_BACKOFF = 2.0
 _RINGBUFFER_PREFIX = "_hz_rb_"
 
 _UNKNOWN_MEMBER_VERSION = MemberVersion(0, 0, 0)
+_MEMBER_ENDPOINT_QUALIFIER = EndpointQualifier(ProtocolType.MEMBER, None)
 
 _logger = logging.getLogger(__name__)
 
@@ -240,7 +241,15 @@ class _MessageRunner(object):
                     member = None
                     if message.publisher_address:
                         member = MemberInfo(
-                            message.publisher_address, None, None, False, _UNKNOWN_MEMBER_VERSION
+                            message.publisher_address,
+                            None,
+                            None,
+                            False,
+                            _UNKNOWN_MEMBER_VERSION,
+                            None,
+                            {
+                                _MEMBER_ENDPOINT_QUALIFIER: message.publisher_address,
+                            },
                         )
 
                     topic_message = TopicMessage(

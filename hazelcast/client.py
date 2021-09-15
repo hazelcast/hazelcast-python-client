@@ -51,16 +51,16 @@ class HazelcastClient(object):
     distributed data structures on the Hazelcast clusters.
 
     Keyword Args:
-        cluster_members (`list[str]`): Candidate address list that client
-            will use to establish initial connection.
-            By default, set to ``["127.0.0.1"]``.
+        cluster_members (`list[str]`): Candidate address list that the client
+            will use to establish initial connection. By default, set to
+            ``["127.0.0.1"]``.
         cluster_name (str): Name of the cluster to connect to. The name is
             sent as part of the the client authentication message and may
             be verified on the member. By default, set to ``dev``.
         client_name (str): Name of the client instance. By default,
             set to ``hz.client_${CLIENT_ID}``, where ``CLIENT_ID`` starts
             from ``0`` and it is incremented by ``1`` for each new client.
-        connection_timeout (float): Socket timeout value in seconds for
+        connection_timeout (float): Socket timeout value in seconds for the
             client to connect member nodes. Setting this to ``0`` makes
             the connection blocking. By default, set to ``5.0``.
         socket_options (`list[tuple]`): List of socket option tuples. The
@@ -103,13 +103,13 @@ class HazelcastClient(object):
             separating them with a colon.
         cloud_discovery_token (str): Discovery token of the Hazelcast Cloud cluster.
             When this value is set, Hazelcast Cloud discovery is enabled.
-        async_start (bool): Enables non-blocking start mode of :class:`HazelcastClient`.
+        async_start (bool): Enables non-blocking start mode of the client.
             When set to ``True``, the client creation will not wait to connect to
             cluster. The client instance will throw exceptions until it connects to
-            cluster and becomes ready. If set to ``False``, :class:`HazelcastClient`
+            cluster and becomes ready. If set to ``False``, the client
             will block until a cluster connection established and it is ready to use
             the client instance. By default, set to ``False``.
-        reconnect_mode (int|str): Defines how a client reconnects to cluster after a
+        reconnect_mode (int|str): Defines how the client reconnects to cluster after a
             disconnect. By default, set to ``ON``. See the
             :class:`hazelcast.config.ReconnectMode` for possible values.
         retry_initial_backoff (float): Wait period in seconds after the first failure
@@ -241,7 +241,7 @@ class HazelcastClient(object):
               By default, set to ``16``.
 
         load_balancer (hazelcast.util.LoadBalancer): Load balancer implementation
-            for the client
+            for the client.
         membership_listeners (`list[tuple[function, function]]`): List of membership
             listener tuples. Tuples must be of size ``2``. The first element will
             be the function to be called when a member is added, and the second
@@ -293,7 +293,7 @@ class HazelcastClient(object):
 
             - Member throws an exception.
             - Connection between the client and member is closed.
-            - Client's heartbeat requests are timed out.
+            - The client's heartbeat requests are timed out.
 
             Time passed since invocation started is compared with this property.
             If the time is already passed, then the exception is delegated to the user.
@@ -304,14 +304,15 @@ class HazelcastClient(object):
 
         invocation_retry_pause (float): Pause time between each retry cycle of an
             invocation in seconds. By default, set to ``1.0``.
-        statistics_enabled (bool): When set to ``True``, client statistics collection
-            is enabled. By default, set to ``False``.
+        statistics_enabled (bool): When set to ``True``, the client statistics
+            collection is enabled. By default, set to ``False``.
         statistics_period (float): The period in seconds the statistics run.
-        shuffle_member_list (bool): Client shuffles the given member list to prevent
-            all clients to connect to the same node when this property is set to
-            ``True``. When it is set to ``False``, the client tries to connect to
-            the nodes in the given order. By default, set to ``True``.
-        backup_ack_to_client_enabled (bool): Enables client to get backup
+        shuffle_member_list (bool): The Client shuffles the given member list
+            to prevent all clients to connect to the same node when this
+            property is set to ``True``. When it is set to ``False``, the
+            client tries to connect to the nodes in the given order. By
+            default, set to ``True``.
+        backup_ack_to_client_enabled (bool): Enables the client to get backup
             acknowledgements directly from the member that backups are applied,
             which reduces number of hops and increases performance for smart clients.
             This option has no effect for unisocket clients. By default, set
@@ -332,6 +333,9 @@ class HazelcastClient(object):
         token_provider (hazelcast.security.TokenProvider): Token provider for
             custom authentication (Enterprise feature). Note that token_provider
             setting has priority over credentials settings.
+        use_public_ip (bool): When set to ``True``, the client uses the public
+            IP addresses reported by members while connecting to them, if
+            available. By default, set to ``False``.
     """
 
     _CLIENT_ID = AtomicInteger()
