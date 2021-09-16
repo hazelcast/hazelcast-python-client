@@ -116,12 +116,12 @@ class SqlMockTest(unittest.TestCase):
 
     def test_close_when_close_request_fails(self):
         future = self.result.close()
-        self.set_close_error(HazelcastSqlError(None, _SqlErrorCode.MAP_DESTROYED, "expected", None))
+        self.set_close_error(HazelcastSqlError(None, _SqlErrorCode.PARSING, "expected", None))
 
         with self.assertRaises(HazelcastSqlError) as cm:
             future.result()
 
-        self.assertEqual(_SqlErrorCode.MAP_DESTROYED, cm.exception._code)
+        self.assertEqual(_SqlErrorCode.PARSING, cm.exception._code)
 
     def test_fetch_error(self):
         self.set_execute_response_with_rows(is_last=False)
@@ -184,7 +184,10 @@ class SqlMockTest(unittest.TestCase):
         self.assertEqual(_SqlErrorCode.CANCELLED_BY_USER, cm.exception._code)
 
     def set_fetch_response_with_error(self):
-        response = {"row_page": None, "error": _SqlError(_SqlErrorCode.PARSING, "expected", None)}
+        response = {
+            "row_page": None,
+            "error": _SqlError(_SqlErrorCode.PARSING, "expected", None, None, ""),
+        }
         self.set_future_result_or_exception(response, sql_fetch_codec._REQUEST_MESSAGE_TYPE)
 
     def set_fetch_error(self, error):

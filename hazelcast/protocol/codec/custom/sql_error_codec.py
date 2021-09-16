@@ -19,6 +19,7 @@ class SqlErrorCodec(object):
         FixSizedTypesCodec.encode_uuid(initial_frame_buf, _ORIGINATING_MEMBER_ID_ENCODE_OFFSET, sql_error.originating_member_id)
         buf.extend(initial_frame_buf)
         CodecUtil.encode_nullable(buf, sql_error.message, StringCodec.encode)
+        CodecUtil.encode_nullable(buf, sql_error.suggestion, StringCodec.encode)
         if is_final:
             buf.extend(END_FINAL_FRAME_BUF)
         else:
@@ -31,5 +32,10 @@ class SqlErrorCodec(object):
         code = FixSizedTypesCodec.decode_int(initial_frame.buf, _CODE_DECODE_OFFSET)
         originating_member_id = FixSizedTypesCodec.decode_uuid(initial_frame.buf, _ORIGINATING_MEMBER_ID_DECODE_OFFSET)
         message = CodecUtil.decode_nullable(msg, StringCodec.decode)
+        is_suggestion_exists = False
+        suggestion = None
+        if not msg.peek_next_frame().is_end_frame():
+            suggestion = CodecUtil.decode_nullable(msg, StringCodec.decode)
+            is_suggestion_exists = True
         CodecUtil.fast_forward_to_end_frame(msg)
-        return _SqlError(code, message, originating_member_id)
+        return _SqlError(code, message, originating_member_id, is_suggestion_exists, suggestion)

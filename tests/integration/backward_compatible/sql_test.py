@@ -17,6 +17,7 @@ from tests.util import (
     compare_client_version,
     skip_if_server_version_older_than,
     skip_if_server_version_newer_than_or_equal,
+    skip_if_client_version_older_than,
 )
 
 try:
@@ -314,6 +315,26 @@ class SqlServiceTest(SqlTestBase):
 
     # Can't test the schema, because the IMDG SQL engine does not support
     # specifying a schema yet.
+
+    def test_provided_suggestions(self):
+        skip_if_client_version_older_than(self, "5.0")
+        skip_if_server_version_older_than(self, self.client, "5.0")
+
+        # We don't create a mapping intentionally to get suggestions
+        self.map.put(1, "value-1")
+        select_all_query = 'SELECT * FROM "%s"' % self.map_name
+        with self.assertRaises(HazelcastSqlError) as cm:
+            with self.client.sql.execute(select_all_query) as result:
+                result.update_count().result()
+
+        with self.client.sql.execute(cm.exception.suggestion) as result:
+            result.update_count().result()
+
+        with self.client.sql.execute(select_all_query) as result:
+            self.assertEqual(
+                [(1, "value-1")],
+                [(r.get_object("__key"), r.get_object("this")) for r in result],
+            )
 
 
 @unittest.skipIf(
