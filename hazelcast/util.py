@@ -101,6 +101,16 @@ class AtomicInteger(object):
             self._counter += 1
             return res
 
+    def increment_and_get(self):
+        """Increments the current value and returns it.
+
+        Returns:
+            int: Incremented value of AtomicInteger.
+        """
+        with self._mux:
+            self._counter += 1
+            return self._counter
+
     def get(self):
         """Returns the current value.
 
