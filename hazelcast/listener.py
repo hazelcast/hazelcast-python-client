@@ -3,7 +3,6 @@ import sys
 import threading
 from uuid import uuid4
 
-import hazelcast.future
 from hazelcast import six
 from hazelcast.errors import HazelcastError, HazelcastClientNotActiveError, TargetDisconnectedError
 from hazelcast.future import combine_futures, ImmediateFuture
@@ -118,9 +117,10 @@ class ListenerService(object):
                         return
 
                     _logger.warning(
-                        "Deregistration of listener with ID %s has failed for address %s",
+                        "Deregistration of listener with ID %s has failed for address %s: %s",
                         user_registration_id,
                         captured_connection.remote_address,
+                        e,
                     )
 
                 invocation.future.add_done_callback(handler)
