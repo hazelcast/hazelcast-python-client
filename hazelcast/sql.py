@@ -523,11 +523,12 @@ class SqlRowMetadata(object):
 class SqlRow(object):
     """One of the rows of an SQL query result."""
 
-    __slots__ = ("_row_metadata", "_row")
+    __slots__ = ("_row_metadata", "_row", "_deserialize_fn")
 
-    def __init__(self, row_metadata, row):
+    def __init__(self, row_metadata, row, deserialize_fn):
         self._row_metadata = row_metadata
         self._row = row
+        self._deserialize_fn = deserialize_fn
 
     def get_object(self, column_name):
         """Gets the value in the column indicated by the column name.
@@ -539,6 +540,13 @@ class SqlRow(object):
         The type of the returned value depends on the SQL type of the column.
         No implicit conversions are performed on the value.
 
+        Warnings:
+
+            Each call to this method might result in a deserialization if the
+            column type for this object is :const:`SqlColumnType.OBJECT`.
+            It is advised to assign the result of this method call to some
+            variable and reuse it.
+
         Args:
             column_name (str):
 
@@ -548,6 +556,7 @@ class SqlRow(object):
         Raises:
             ValueError: If a column with the given name does not exist.
             AssertionError: If the column name is not a string.
+            HazelcastSqlError: If the object cannot be deserialized.
 
         See Also:
             :attr:`metadata`
@@ -561,13 +570,20 @@ class SqlRow(object):
         index = self._row_metadata.find_column(column_name)
         if index == SqlRowMetadata.COLUMN_NOT_FOUND:
             raise ValueError("Column '%s' doesn't exist" % column_name)
-        return self._row[index]
+        return self._deserialize_fn(self._row[index])
 
     def get_object_with_index(self, column_index):
         """Gets the value of the column by index.
 
         The class of the returned value depends on the SQL type of the column.
         No implicit conversions are performed on the value.
+
+        Warnings:
+
+            Each call to this method might result in a deserialization if the
+            column type for this object is :const:`SqlColumnType.OBJECT`.
+            It is advised to assign the result of this method call to some
+            variable and reuse it.
 
         Args:
             column_index (int): Zero-based column index.
@@ -578,6 +594,7 @@ class SqlRow(object):
         Raises:
             IndexError: If the column index is out of bounds.
             AssertionError: If the column index is not an integer.
+            HazelcastSqlError: If the object cannot be deserialized.
 
         See Also:
             :attr:`metadata`
@@ -585,7 +602,7 @@ class SqlRow(object):
             :attr:`SqlColumnMetadata.type`
         """
         check_is_int(column_index, "Column index must be an integer")
-        return self._row[column_index]
+        return self._deserialize_fn(self._row[column_index])
 
     @property
     def metadata(self):
@@ -598,7 +615,7 @@ class SqlRow(object):
             % (
                 self._row_metadata.get_column(i).name,
                 get_attr_name(SqlColumnType, self._row_metadata.get_column(i).type),
-                self._row[i],
+                self.get_object_with_index(i),
             )
             for i in range(self._row_metadata.column_count)
         )
@@ -679,12 +696,8 @@ class _IteratorBase(object):
             list: The row pointed by the current position.
         """
 
-        # The column might contain user objects so we have to deserialize it.
-        # Deserialization is no-op if the value is not Data.
-        return [
-            self.deserialize_fn(self.page.get_value(i, self.position))
-            for i in range(self.page.column_count)
-        ]
+        # Deserialization happens lazily while getting the object.
+        return [self.page.get_value(i, self.position) for i in range(self.page.column_count)]
 
 
 class _FutureProducingIterator(_IteratorBase):
@@ -724,7 +737,7 @@ class _FutureProducingIterator(_IteratorBase):
 
         row = self._get_current_row()
         self.position += 1
-        return SqlRow(self.row_metadata, row)
+        return SqlRow(self.row_metadata, row, self.deserialize_fn)
 
     def _has_next(self):
         """Returns a Future indicating whether there are more rows
@@ -788,7 +801,7 @@ class _BlockingIterator(_IteratorBase):
 
         row = self._get_current_row()
         self.position += 1
-        return SqlRow(self.row_metadata, row)
+        return SqlRow(self.row_metadata, row, self.deserialize_fn)
 
     def _has_next(self):
         while self.position == self.row_count:
@@ -1364,7 +1377,15 @@ class _InternalSqlService(object):
             raise self.re_raise(e, connection)
 
     def deserialize_object(self, obj):
-        return self._serialization_service.to_object(obj)
+        try:
+            return self._serialization_service.to_object(obj)
+        except Exception as e:
+            raise HazelcastSqlError(
+                self.get_client_id(),
+                _SqlErrorCode.GENERIC,
+                "Failed to deserialize query result value: %s" % try_to_get_error_message(e),
+                e,
+            )
 
     def fetch(self, connection, query_id, cursor_buffer_size):
         """Fetches the next page of the query execution.
