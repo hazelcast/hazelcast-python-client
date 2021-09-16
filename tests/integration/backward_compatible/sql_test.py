@@ -99,7 +99,7 @@ class SqlTestBase(HazelcastTestCase):
             return
 
         create_mapping_query = """
-        CREATE MAPPING %s (
+        CREATE MAPPING "%s" (
             __key INT,
             this %s
         )
@@ -123,7 +123,7 @@ class SqlTestBase(HazelcastTestCase):
             return
 
         create_mapping_query = """
-        CREATE MAPPING %s (
+        CREATE MAPPING "%s" (
             __key INT,
             %s
         )
