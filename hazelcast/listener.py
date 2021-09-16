@@ -193,13 +193,20 @@ class ListenerService(object):
 
 class ClusterViewListenerService(object):
     def __init__(
-        self, client, connection_manager, partition_service, cluster_service, invocation_service
+        self,
+        client,
+        connection_manager,
+        partition_service,
+        cluster_service,
+        invocation_service,
+        reactor,
     ):
         self._client = client
         self._partition_service = partition_service
         self._connection_manager = connection_manager
         self._cluster_service = cluster_service
         self._invocation_service = invocation_service
+        self._reactor = reactor
         self._listener_added_connection = None
 
     def start(self):
@@ -220,6 +227,11 @@ class ClusterViewListenerService(object):
             self._try_register(new_connection)
 
     def _try_register(self, connection):
+        if not self._connection_manager.live:
+            # There is no point on trying the register a backup listener
+            # if the client is about to shutdown.
+            return
+
         if self._listener_added_connection:
             return
 
@@ -235,7 +247,17 @@ class ClusterViewListenerService(object):
             try:
                 f.result()
             except:
-                self._try_register_to_random_connection(connection)
+                # Schedule the next register attempt on the next
+                # iteration of the event loop. This is mainly an attempt
+                # to get rid of the possible StackOverflow errors
+                # due to immediately failing registration attempts.
+                # In case of such scenarios, the thread that does the
+                # registration attempt may execute this callback immediately
+                # and it can result in an infinite chain of registration attempts
+                # until the stack size goes over the limit.
+                self._reactor.add_timer(
+                    0, lambda: self._try_register_to_random_connection(connection)
+                )
 
         invocation.future.add_done_callback(callback)
 

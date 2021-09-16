@@ -5,6 +5,11 @@ from tests.base import HazelcastTestCase
 
 
 class CPTestCase(HazelcastTestCase):
+
+    rc = None
+    cluster = None
+    client = None
+
     @classmethod
     def setUpClass(cls):
         cls.rc = cls.create_rc()

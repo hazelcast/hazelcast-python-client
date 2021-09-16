@@ -393,6 +393,7 @@ class HazelcastClient(object):
             self._internal_partition_service,
             self._internal_cluster_service,
             self._invocation_service,
+            self._reactor,
         )
         self._shutdown_lock = threading.RLock()
         self._invocation_service.init(
