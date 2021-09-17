@@ -1567,6 +1567,8 @@ The following code prints names of the employees whose age is less than 30:
 
     for row in result:
         name = row.get_object("name")
+        # or, you can use the [] operator
+        # name = row["name"]
         print(name)
 
 
@@ -1681,7 +1683,10 @@ it:
 
     with client.sql.execute(select_query) as result:
         for row in result:
-            print(row.get_object("name"))
+            name = row.get_object("name")
+            # or, you can use the [] operator
+            # name = row["name"]
+            print(name)
 
 
 **"SELECT *" Queries**

@@ -521,7 +521,24 @@ class SqlRowMetadata(object):
 
 
 class SqlRow(object):
-    """One of the rows of an SQL query result."""
+    """One of the rows of an SQL query result.
+
+    The columns of the rows can be retrieved using
+
+    - :func:`get_object` with column name.
+    - :func:`get_object_with_index` with column index.
+
+    Apart from these methods, the row objects can also be treated as a ``dict``
+    or ``list`` and columns can be retrieved using the ``[]`` operator.
+
+    If an integer value is passed to the ``[]`` operator, it will implicitly
+    call the :func:`get_object_with_index` and return the result.
+
+    For any other type passed into the the ``[]`` operator, :func:`get_object`
+    will be called. Note that, :func:`get_object` expects ``str`` values.
+    Hence, the ``[]`` operator will raise error for any type other than integer
+    and string.
+    """
 
     __slots__ = ("_row_metadata", "_row", "_deserialize_fn")
 
@@ -608,6 +625,12 @@ class SqlRow(object):
     def metadata(self):
         """SqlRowMetadata: The row metadata."""
         return self._row_metadata
+
+    def __getitem__(self, item):
+        if isinstance(item, six.integer_types):
+            return self.get_object_with_index(item)
+
+        return self.get_object(item)
 
     def __repr__(self):
         return "[%s]" % ", ".join(
