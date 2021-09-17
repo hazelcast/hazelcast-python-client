@@ -23,86 +23,39 @@ _logger = logging.getLogger(__name__)
 class SqlService(object):
     """A service to execute SQL statements.
 
-    The service allows you to query data stored in a
-    :class:`Map <hazelcast.proxy.map.Map>`.
-
     Warnings:
 
-        The service is in beta state. Behavior and API might change
-        in future releases.
+        In order to use this service, Jet engine must be enabled on the members
+        and the ``hazelcast-sql`` module must be in the classpath of the
+        members.
 
-    **Querying an IMap**
+        If you are using the our CLI, Docker image, or distributions to start
+        Hazelcast members, then you don't need to do anything, as the above
+        preconditions are already satisfied for such members.
 
-    Every Map instance is exposed as a table with the same name in the
-    ``partitioned`` schema. The ``partitioned`` schema is included into
-    a default search path, therefore a Map could be referenced in an
-    SQL statement with or without the schema name.
+        However, if you are using Hazelcast members in the embedded mode, or
+        receiving errors saying that ``The Jet engine is disabled`` or
+        ``Cannot execute SQL query because "hazelcast-sql" module is not in the
+        classpath.`` while executing queries, enable the Jet engine following
+        one of the instructions pointed out in the error message, or add the
+        ``hazelcast-sql`` module to your member's classpath.
 
-    **Column resolution**
+    **Overview**
 
-    Every table backed by a Map has a set of columns that are resolved
-    automatically. Column resolution uses Map entries located on the
-    member that initiates the query. The engine extracts columns from a
-    key and a value and then merges them into a single column set.
-    In case the key and the value have columns with the same name, the
-    key takes precedence.
+    Hazelcast is currently able to execute distributed SQL queries using the
+    following connectors:
 
-    Columns are extracted from objects as follows (which happens on the
-    server-side):
+    - IMap (to query data stored in a :class:`Map <hazelcast.proxy.map.Map>`)
+    - Kafka
+    - Files
 
-    - For non-Portable objects, public getters and fields are used to
-      populate the column list. For getters, the first letter is converted
-      to lower case. A getter takes precedence over a field in case of naming
-      conflict.
-    - For :class:`Portable <hazelcast.serialization.api.Portable>` objects,
-      field names used in the
-      :func:`write_portable() <hazelcast.serialization.api.Portable.write_portable>`
-      method are used to populate the column list.
+    SQL statements are not atomic. *INSERT*/*SINK* can fail and commit part of
+    the data.
 
-    The whole key and value objects could be accessed through special fields
-    ``__key`` and ``this``, respectively. If key (value) object has fields,
-    then the whole key (value) field is exposed as a normal field. Otherwise the
-    field is hidden. Hidden fields can be accessed directly, but are not returned
-    by ``SELECT * FROM ...`` queries.
+    **Usage**
 
-    Consider the following key/value model: ::
-
-        class PersonKey(Portable):
-            def __init__(self, person_id=None, department_id=None):
-                self.person_id = person_id
-                self.department_id = department_id
-
-            def write_portable(self, writer):
-                writer.write_long("person_id", self.person_id)
-                writer.write_long("department_id", self.department_id)
-
-            ...
-
-        class Person(Portable):
-            def __init__(self, name=None):
-                self.name = name
-
-            def write_portable(self, writer):
-                writer.write_string("name", self.name)
-
-            ...
-
-    This model will be resolved to the following table columns:
-
-    - person_id ``BIGINT``
-    - department_id ``BIGINT``
-    - name ``VARCHAR``
-    - __key ``OBJECT`` (hidden)
-    - this ``OBJECT`` (hidden)
-
-    **Consistency**
-
-    Results returned from Map query are weakly consistent:
-
-    - If an entry was not updated during iteration, it is guaranteed to be
-      returned exactly once
-    - If an entry was modified during iteration, it might be returned zero,
-      one or several times
+    Before you can access any object using SQL, a *mapping* has to be created.
+    See the documentation for the ``CREATE MAPPING`` command.
 
     **Usage**
 
@@ -121,19 +74,8 @@ class SqlService(object):
             print(row.get_object("name"))
             ...
 
-
     See the documentation of the :class:`SqlResult` for more information about
     different iteration methods.
-
-    Notes:
-
-        When an SQL statement is submitted to a member, it is parsed and
-        optimized by the ``hazelcast-sql`` module. The ``hazelcast-sql`` must
-        be in the classpath, otherwise an exception will be thrown. If you
-        are using ``hazelcast`` or ``hazelcast-enterprise``, then you need to have
-        ``hazelcast-sql`` in the classpath. If you are using the Docker image,
-        the SQL module is included by default.
-
     """
 
     def __init__(self, internal_sql_service):
