@@ -618,18 +618,18 @@ class MapTest(SingleMemberTestCase):
         self.assertTrue(str(self.map).startswith("Map"))
 
     def test_add_interceptor(self):
-        interceptor = MapGetInterceptor("hell")
+        interceptor = MapGetInterceptor(":")
         registration_id = self.map.add_interceptor(interceptor)
         self.assertIsNotNone(registration_id)
 
-        self.map.set(1, "o")
+        self.map.set(1, ")")
         value = self.map.get(1)
-        self.assertEqual("hello", value)
+        self.assertEqual(":)", value)
 
     def test_remove_interceptor(self):
         skip_if_client_version_older_than(self, "5.0")
 
-        interceptor = MapGetInterceptor("hell")
+        interceptor = MapGetInterceptor(":")
         registration_id = self.map.add_interceptor(interceptor)
         self.assertIsNotNone(registration_id)
         self.assertTrue(self.map.remove_interceptor(registration_id))
@@ -638,9 +638,9 @@ class MapTest(SingleMemberTestCase):
         self.assertFalse(self.map.remove_interceptor(registration_id))
 
         # Make sure that the interceptor is indeed removed
-        self.map.set(1, "o")
+        self.map.set(1, ")")
         value = self.map.get(1)
-        self.assertEqual("o", value)
+        self.assertEqual(")", value)
 
     def fill_map(self, count=10):
         m = {"key-%d" % x: "value-%d" % x for x in range(0, count)}
