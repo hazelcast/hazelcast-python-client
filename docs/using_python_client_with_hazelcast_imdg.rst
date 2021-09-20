@@ -1563,7 +1563,7 @@ The following code prints names of the employees whose age is less than 30:
 
 .. code:: python
 
-    result = client.sql.execute("SELECT name FROM emp WHERE age < ?", 30)
+    result = client.sql.execute("SELECT name FROM emp WHERE age < ?", 30).result()
 
     for row in result:
         name = row.get_object("name")
@@ -1658,6 +1658,7 @@ it:
 .. code:: python
 
     client = hazelcast.HazelcastClient()
+    employees = client.get_map("employees").blocking()
 
     mapping_query = """
     CREATE MAPPING employees (
@@ -1671,17 +1672,14 @@ it:
     );
     """
 
-    with client.sql.execute(mapping_query) as result:
-        # wait until query completes
-        result.update_count().result()
+    client.sql.execute(mapping_query).result():
 
-    employees = client.get_map("employees").blocking()
     employees.set(1, HazelcastJsonValue({"name": "John Doe", "salary": 60000}))
     employees.set(2, HazelcastJsonValue({"name": "Jane Doe", "salary": 80000}))
 
     select_query = "SELECT name FROM employees WHERE salary > 75000"
 
-    with client.sql.execute(select_query) as result:
+    with client.sql.execute(select_query).result() as result:
         for row in result:
             name = row.get_object("name")
             # or, you can use the [] operator

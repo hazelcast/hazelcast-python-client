@@ -94,7 +94,7 @@ class SqlService(object):
                 :func:`SqlStatement.add_parameter`.
 
         Returns:
-            SqlResult: The execution result.
+            hazelcast.future.Future[SqlResult]: The execution result.
 
         Raises:
             HazelcastSqlError: In case of execution error.
@@ -110,7 +110,7 @@ class SqlService(object):
             statement (SqlStatement): Statement to be executed
 
         Returns:
-           SqlResult: The execution result.
+            hazelcast.future.Future[SqlResult]: The execution result.
 
         Raises:
             HazelcastSqlError: In case of execution error.
@@ -589,9 +589,9 @@ class SqlRow(object):
 class _ExecuteResponse(object):
     """Represent the response of the first execute request."""
 
-    __slots__ = ("row_metadata", "row_page", "update_count")
+    __slots__ = ("row_metadata", "row_page", "update_count", "error")
 
-    def __init__(self, row_metadata, row_page, update_count):
+    def __init__(self, row_metadata, row_page, update_count, error):
         self.row_metadata = row_metadata
         """SqlRowMetadata: Row metadata or None, if the response only 
         contains update count."""
@@ -603,6 +603,11 @@ class _ExecuteResponse(object):
 
         self.update_count = update_count
         """int: Update count or -1 if the result is a rowset."""
+
+        self.error = error
+        """HazelcastSqlError: Error for the execute request or None, if there
+        is no error.
+        """
 
 
 class _IteratorBase(object):
@@ -797,18 +802,17 @@ class SqlResult(object):
     The first, and the easiest one is to iterate over the rows
     in a blocking fashion. ::
 
-        result = client.sql.execute("SELECT ...")
+        result = client.sql.execute("SELECT ...").result()
         for row in result:
             # Process the row.
             print(row)
 
     The second option is to use the non-blocking API with callbacks. ::
 
-        result = client.sql.execute("SELECT ...")
-        it = result.iterator()  # Future of iterator
+        future = client.sql.execute("SELECT ...")  # Future of SqlResult
 
-        def on_iterator_response(iterator_future):
-            iterator = iterator_future.result()
+        def on_response(sql_result_future):
+            iterator = sql_result_future.result().iterator()
 
             def on_next_row(row_future):
                 try:
@@ -824,7 +828,7 @@ class SqlResult(object):
 
             next(iterator).add_done_callback(on_next_row)
 
-        it.add_done_callback(on_iterator_response)
+        future.add_done_callback(on_response)
 
     When in doubt, use the blocking API shown in the first code sample.
 
@@ -839,7 +843,7 @@ class SqlResult(object):
     statement to automatically close the query even if an exception
     is thrown in the iteration. ::
 
-        with client.sql.execute("SELECT ...") as result:
+        with client.sql.execute("SELECT ...").result() as result:
             for row in result:
                 # Process the row.
                 print(row)
@@ -848,13 +852,13 @@ class SqlResult(object):
     To get the number of rows updated by the query, use the
     :func:`update_count`. ::
 
-        update_count = client.sql.execute("SELECT ...").update_count().result()
+        update_count = client.sql.execute("UPDATE ...").result().update_count()
 
     One does not have to call :func:`close` in this case, because the result
     will already be closed in the server-side.
     """
 
-    def __init__(self, sql_service, connection, query_id, cursor_buffer_size, execute_future):
+    def __init__(self, sql_service, connection, query_id, cursor_buffer_size, execute_response):
         self._sql_service = sql_service
         """_InternalSqlService: Reference to the SQL service."""
 
@@ -871,14 +875,13 @@ class SqlResult(object):
         self._lock = RLock()
         """RLock: Protects the shared access to instance variables below."""
 
-        self._execute_response = Future()
-        """Future: Will be resolved with :class:`_ExecuteResponse` once the
-        execute request is resolved."""
+        self._execute_response = execute_response
+        """_ExecuteResponse: Response for the first execute request."""
 
         self._iterator_requested = False
         """bool: Flag that shows whether an iterator is already requested."""
 
-        self._closed = False
+        self._closed = self._is_closed(execute_response)
         """bool: Flag that shows whether the query execution is still active
         on the server side. When ``True``, there is no need to send the "close" 
         request to the server."""
@@ -887,22 +890,19 @@ class SqlResult(object):
         """Future: Will be set, if there are more pages to fetch on the server
         side. It should be set to ``None`` once the fetch is completed."""
 
-        execute_future.add_done_callback(self._handle_execute_response)
-
     def iterator(self):
         """Returns the iterator over the result rows.
 
         The iterator may be requested only once.
 
-        The returned Future results with:
-
-        - :class:`HazelcastSqlError`: In case of an SQL execution error.
-        - **ValueError**: If the result only contains an update count, or the
-          iterator is already requested.
+        Raises:
+            HazelcastSqlError: In case of an SQL execution error.
+            ValueError: If the result only contains an update count, or the
+                iterator is already requested.
 
         Returns:
-            Future[Iterator[Future[SqlRow]]]: Iterator that produces Future
-            of :class:`SqlRow` s. See the class documentation for the correct
+            Iterator[Future[SqlRow]]: Iterator that produces Future of
+            :class:`SqlRow` s. See the class documentation for the correct
             way to use this.
         """
         return self._get_iterator(False)
@@ -910,64 +910,58 @@ class SqlResult(object):
     def is_row_set(self):
         """Returns whether this result has rows to iterate.
 
-        The returned Future results with:
-
-        - :class:`HazelcastSqlError`: In case of an SQL execution error.
+        Raises:
+            HazelcastSqlError: In case of an SQL execution error.
 
         Returns:
-            Future[bool]:
+            bool:
         """
+        response = self._execute_response
+        if response.error:
+            raise response.error
 
-        def continuation(future):
-            response = future.result()
-            # By design, if the row_metadata (or row_page) is None,
-            # we only got the update count.
-            return response.row_metadata is not None
-
-        return self._execute_response.continue_with(continuation)
+        # By design, if the row_metadata (or row_page) is None,
+        # we only got the update count.
+        return response.row_metadata is not None
 
     def update_count(self):
         """Returns the number of rows updated by the statement or ``-1`` if this
         result is a row set. In case the result doesn't contain rows but the
         update count isn't applicable or known, ``0`` is returned.
 
-        The returned Future results with:
-
-        - :class:`HazelcastSqlError`: In case of an SQL execution error.
+        Raises:
+            HazelcastSqlError: In case of an SQL execution error.
 
         Returns:
-            Future[int]:
+            int:
         """
+        response = self._execute_response
+        if response.error:
+            raise response.error
 
-        def continuation(future):
-            response = future.result()
-            # This will be set to -1, when we got row set on the client side.
-            # See _on_execute_response.
-            return response.update_count
-
-        return self._execute_response.continue_with(continuation)
+        # This will be set to -1, when we got row set on the client side.
+        # See _on_execute_response.
+        return response.update_count
 
     def get_row_metadata(self):
         """Gets the row metadata.
 
-        The returned Future results with:
-
-        - :class:`HazelcastSqlError`: In case of an SQL execution error.
-        - **ValueError**: If the result only contains an update count.
+        Raises:
+            HazelcastSqlError: In case of an SQL execution error.
+            ValueError: If the result only contains an update count.
 
         Returns:
-            Future[SqlRowMetadata]:
+            SqlRowMetadata:
         """
 
-        def continuation(future):
-            response = future.result()
+        response = self._execute_response
+        if response.error:
+            raise response.error
 
-            if not response.row_metadata:
-                raise ValueError("This result contains only update count")
+        if not response.row_metadata:
+            raise ValueError("This result contains only update count")
 
-            return response.row_metadata
-
-        return self._execute_response.continue_with(continuation)
+        return response.row_metadata
 
     def close(self):
         """Release the resources associated with the query result.
@@ -999,12 +993,6 @@ class SqlResult(object):
                 None,
             )
 
-            if not self._execute_response.done():
-                # If the cancellation is initiated before the first response is
-                # received, then throw cancellation errors on the dependent
-                # methods (update count, row metadata, iterator).
-                self._on_execute_error(error)
-
             if not self._fetch_future:
                 # Make sure that all subsequent fetches will fail.
                 self._fetch_future = Future()
@@ -1027,9 +1015,8 @@ class SqlResult(object):
             )
 
     def __iter__(self):
-        # Get blocking iterator, and wait for the
-        # first page.
-        return self._get_iterator(True).result()
+        # Get the blocking iterator
+        return self._get_iterator(True)
 
     def _get_iterator(self, should_get_blocking):
         """Gets the iterator after the execute request finishes.
@@ -1038,41 +1025,39 @@ class SqlResult(object):
             should_get_blocking (bool): Whether to get a blocking iterator.
 
         Returns:
-            Future[Iterator]:
+            Iterator:
         """
+        response = self._execute_response
+        if response.error:
+            raise response.error
 
-        def continuation(future):
-            response = future.result()
+        if not response.row_metadata:
+            # Can't get an iterator when we only have update count
+            raise ValueError("This result contains only update count")
 
-            with self._lock:
-                if not response.row_metadata:
-                    # Can't get an iterator when we only have update count
-                    raise ValueError("This result contains only update count")
+        with self._lock:
+            if self._iterator_requested:
+                # Can't get an iterator when we already get one
+                raise ValueError("Iterator can be requested only once")
 
-                if self._iterator_requested:
-                    # Can't get an iterator when we already get one
-                    raise ValueError("Iterator can be requested only once")
+            self._iterator_requested = True
 
-                self._iterator_requested = True
+        if should_get_blocking:
+            iterator = _BlockingIterator(
+                response.row_metadata,
+                self._fetch_next_page,
+                self._sql_service.deserialize_object,
+            )
+        else:
+            iterator = _FutureProducingIterator(
+                response.row_metadata,
+                self._fetch_next_page,
+                self._sql_service.deserialize_object,
+            )
 
-                if should_get_blocking:
-                    iterator = _BlockingIterator(
-                        response.row_metadata,
-                        self._fetch_next_page,
-                        self._sql_service.deserialize_object,
-                    )
-                else:
-                    iterator = _FutureProducingIterator(
-                        response.row_metadata,
-                        self._fetch_next_page,
-                        self._sql_service.deserialize_object,
-                    )
-
-                # Pass the first page information to the iterator
-                iterator.on_next_page(response.row_page)
-                return iterator
-
-        return self._execute_response.continue_with(continuation)
+        # Pass the first page information to the iterator
+        iterator.on_next_page(response.row_page)
+        return iterator
 
     def _fetch_next_page(self):
         """Fetches the next page, if there is no fetch request
@@ -1115,10 +1100,17 @@ class SqlResult(object):
         try:
             response = future.result()
 
-            response_error = self._handle_response_error(response["error"])
+            response_error = response["error"]
             if response_error:
                 # There is a server side error sent to client.
-                self._on_fetch_error(response_error)
+                sql_error = HazelcastSqlError(
+                    response_error.originating_member_uuid,
+                    response_error.code,
+                    response_error.message,
+                    None,
+                    response_error.suggestion,
+                )
+                self._on_fetch_error(sql_error)
                 return
 
             # The result contains the next page, as expected.
@@ -1159,109 +1151,33 @@ class SqlResult(object):
             # might result in an infinite loop for non-blocking iterators
             future.set_result(page)
 
-    def _handle_execute_response(self, future):
-        """Handles the result of the execute request, by either:
-
-        - setting it to an exception so that the dependent methods
-          (iterator, update_count etc.) fails immediately
-        - setting it to an execute response
-
-        Args:
-            future (Future):
-        """
-        try:
-            response = future.result()
-
-            response_error = self._handle_response_error(response["error"])
-            if response_error:
-                # There is a server-side error sent to the client.
-                self._on_execute_error(response_error)
-                return
-
-            row_metadata = response["row_metadata"]
-            if row_metadata is not None:
-                # The result contains some rows, not an update count.
-                row_metadata = SqlRowMetadata(row_metadata)
-
-            self._on_execute_response(row_metadata, response["row_page"], response["update_count"])
-        except Exception as e:
-            # Something went bad, we couldn't get response from
-            # the server, invocation failed.
-            self._on_execute_error(self._sql_service.re_raise(e, self._connection))
-
     @staticmethod
-    def _handle_response_error(error):
-        """If the error is not ``None``, return it as
-        :class:`HazelcastSqlError` so that we can raise
-        it to user.
+    def _is_closed(execute_response):
+        """Returns whether the result is already
+        closed or not.
+
+        Result might be closed if the first response
+
+        - contains the last page of the rowset (single page rowset)
+        - contains just the update count
+        - resulted in an error
 
         Args:
-            error (_SqlError): The error or ``None``.
+            execute_response (_ExecuteResponse): The first response
 
         Returns:
-            HazelcastSqlError: If the error is not ``None``,
-            ``None`` otherwise.
+            bool: ``True`` if the result is already closed, ``False``
+            otherwise.
         """
-        if error:
-            return HazelcastSqlError(
-                error.originating_member_uuid,
-                error.code,
-                error.message,
-                None,
-                error.suggestion,
-            )
-        return None
-
-    def _on_execute_error(self, error):
-        """Called when the first execute request is failed.
-
-        Args:
-            error (HazelcastSqlError): The wrapped error that can
-            be raised to the user.
-        """
-        with self._lock:
-            if self._closed:
-                # User might be already cancelled it.
-                return
-
-            self._execute_response.set_exception(error)
-
-    def _on_execute_response(self, row_metadata, row_page, update_count):
-        """Called when the first execute request is succeeded.
-
-        Args:
-            row_metadata (SqlRowMetadata): The row metadata. Might be ``None``
-                if the response only contains the update count.
-            row_page (_SqlPage): The first page of the result. Might be
-                ``None`` if the response only contains the update count.
-            update_count (int): The update count.
-        """
-        with self._lock:
-            if self._closed:
-                # User might be already cancelled it.
-                return
-
-            if row_metadata:
-                # Result contains the row set for the query.
-                # Set the update count to -1.
-                response = _ExecuteResponse(row_metadata, row_page, -1)
-
-                if row_page.is_last:
-                    # This is the last page, close the result.
-                    self._closed = True
-
-                self._execute_response.set_result(response)
-            else:
-                # Result only contains the update count.
-                response = _ExecuteResponse(None, None, update_count)
-                self._execute_response.set_result(response)
-
-                # There is nothing more we can get from the server.
-                self._closed = True
+        return (
+            execute_response.row_page is None  # Just an update count
+            or execute_response.row_page.is_last  # Single page result
+            or execute_response.error  # Error on the first request
+        )
 
     def __enter__(self):
-        # The execute request is already sent.
-        # There is nothing more to do.
+        # The response for the execute request is already
+        # received. There is nothing more to do.
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -1330,14 +1246,16 @@ class _InternalSqlService(object):
             invocation = Invocation(
                 request, connection=connection, response_handler=sql_execute_codec.decode_response
             )
-
-            result = SqlResult(
-                self, connection, query_id, statement.cursor_buffer_size, invocation.future
-            )
-
             self._invocation_service.invoke(invocation)
-
-            return result
+            return invocation.future.continue_with(
+                lambda future: SqlResult(
+                    self,
+                    connection,
+                    query_id,
+                    statement.cursor_buffer_size,
+                    self._handle_execute_response(future, connection),
+                )
+            )
         except Exception as e:
             raise self.re_raise(e, connection)
 
@@ -1442,6 +1360,46 @@ class _InternalSqlService(object):
             )
 
         return connection
+
+    def _handle_execute_response(self, future, connection):
+        """Handles the result of the execute request.
+
+        Args:
+            future (Future): The execute request's future.
+
+        Returns:
+            _ExecuteResponse: The response for the first execute request.
+            It can be either a rowset, an update count, or an SQL related
+            error.
+        """
+        try:
+            response = future.result()
+
+            response_error = response["error"]
+            if response_error:
+                # There is a server-side error sent to the client.
+                sql_error = HazelcastSqlError(
+                    response_error.originating_member_uuid,
+                    response_error.code,
+                    response_error.message,
+                    None,
+                    response_error.suggestion,
+                )
+                return _ExecuteResponse(None, None, None, sql_error)
+
+            row_metadata = response["row_metadata"]
+            if row_metadata is not None:
+                # The result contains some rows, not an update count.
+                row_metadata = SqlRowMetadata(row_metadata)
+                # Set the update count to -1.
+                return _ExecuteResponse(row_metadata, response["row_page"], -1, None)
+
+            # Result only contains the update count.
+            return _ExecuteResponse(None, None, response["update_count"], None)
+        except Exception as e:
+            # Something went bad, we couldn't get response from
+            # the server, invocation failed.
+            return _ExecuteResponse(None, None, None, self.re_raise(e, connection))
 
 
 class SqlExpectedResultType(object):

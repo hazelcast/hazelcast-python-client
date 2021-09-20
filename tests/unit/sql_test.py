@@ -4,6 +4,7 @@ import uuid
 
 from mock import MagicMock
 
+from hazelcast.future import ImmediateFuture
 from hazelcast.protocol.codec import sql_execute_codec, sql_close_codec, sql_fetch_codec
 from hazelcast.protocol.client_message import _OUTBOUND_MESSAGE_MESSAGE_TYPE_OFFSET
 from hazelcast.serialization import LE_INT
@@ -55,67 +56,73 @@ class SqlMockTest(unittest.TestCase):
 
     def test_iterator_with_rows(self):
         self.set_execute_response_with_rows()
-        self.assertEqual(-1, self.result.update_count().result())
-        self.assertTrue(self.result.is_row_set().result())
-        self.assertIsInstance(self.result.get_row_metadata().result(), SqlRowMetadata)
-        self.assertEqual(EXPECTED_ROWS, self.get_rows_from_iterator())
+        result = self.result.result()
+
+        self.assertEqual(-1, result.update_count())
+        self.assertTrue(result.is_row_set())
+        self.assertIsInstance(result.get_row_metadata(), SqlRowMetadata)
+        self.assertEqual(EXPECTED_ROWS, self.get_rows_from_iterator(result))
 
     def test_blocking_iterator_with_rows(self):
         self.set_execute_response_with_rows()
-        self.assertEqual(-1, self.result.update_count().result())
-        self.assertTrue(self.result.is_row_set().result())
-        self.assertIsInstance(self.result.get_row_metadata().result(), SqlRowMetadata)
-        self.assertEqual(EXPECTED_ROWS, self.get_rows_from_blocking_iterator())
+        result = self.result.result()
+
+        self.assertEqual(-1, result.update_count())
+        self.assertTrue(result.is_row_set())
+        self.assertIsInstance(result.get_row_metadata(), SqlRowMetadata)
+        self.assertEqual(EXPECTED_ROWS, self.get_rows_from_blocking_iterator(result))
 
     def test_iterator_with_update_count(self):
         self.set_execute_response_with_update_count()
-        self.assertEqual(EXPECTED_UPDATE_COUNT, self.result.update_count().result())
-        self.assertFalse(self.result.is_row_set().result())
+        result = self.result.result()
+
+        self.assertEqual(EXPECTED_UPDATE_COUNT, result.update_count())
+        self.assertFalse(result.is_row_set())
 
         with self.assertRaises(ValueError):
-            self.result.get_row_metadata().result()
+            result.get_row_metadata()
 
         with self.assertRaises(ValueError):
-            self.result.iterator().result()
+            result.iterator()
 
     def test_blocking_iterator_with_update_count(self):
         self.set_execute_response_with_update_count()
-        self.assertEqual(EXPECTED_UPDATE_COUNT, self.result.update_count().result())
-        self.assertFalse(self.result.is_row_set().result())
+        result = self.result.result()
+
+        self.assertEqual(EXPECTED_UPDATE_COUNT, result.update_count())
+        self.assertFalse(result.is_row_set())
 
         with self.assertRaises(ValueError):
-            self.result.get_row_metadata().result()
+            result.get_row_metadata()
 
         with self.assertRaises(ValueError):
-            for _ in self.result:
+            for _ in result:
                 pass
 
     def test_execute_error(self):
         self.set_execute_error(RuntimeError("expected"))
+        result = self.result.result()
+
         with self.assertRaises(HazelcastSqlError) as cm:
-            iter(self.result)
+            iter(result)
 
         self.assertEqual(_SqlErrorCode.GENERIC, cm.exception._code)
 
     def test_execute_error_when_connection_is_not_live(self):
         self.connection.live = False
         self.set_execute_error(RuntimeError("expected"))
+        result = self.result.result()
+
         with self.assertRaises(HazelcastSqlError) as cm:
-            iter(self.result)
+            iter(result)
 
         self.assertEqual(_SqlErrorCode.CONNECTION_PROBLEM, cm.exception._code)
 
-    def test_close_when_execute_is_not_done(self):
-        future = self.result.close()
-        self.set_close_response()
-        self.assertIsNone(future.result())
-        with self.assertRaises(HazelcastSqlError) as cm:
-            iter(self.result)
-
-        self.assertEqual(_SqlErrorCode.CANCELLED_BY_USER, cm.exception._code)
-
     def test_close_when_close_request_fails(self):
-        future = self.result.close()
+        self.set_execute_response_with_rows(is_last=False)
+        result = self.result.result()
+
+        future = result.close()
         self.set_close_error(HazelcastSqlError(None, _SqlErrorCode.PARSING, "expected", None))
 
         with self.assertRaises(HazelcastSqlError) as cm:
@@ -123,15 +130,24 @@ class SqlMockTest(unittest.TestCase):
 
         self.assertEqual(_SqlErrorCode.PARSING, cm.exception._code)
 
+    def test_close_when_execute_fails(self):
+        self.set_execute_error(RuntimeError("expected"))
+        result = self.result.result()
+
+        future = result.close()
+        self.assertIsInstance(future, ImmediateFuture)
+
     def test_fetch_error(self):
         self.set_execute_response_with_rows(is_last=False)
-        result = []
-        i = self.result.iterator().result()
-        # First page contains two rows
-        result.append(next(i).result().get_object_with_index(0))
-        result.append(next(i).result().get_object_with_index(0))
+        result = self.result.result()
 
-        self.assertEqual(EXPECTED_ROWS, result)
+        rows = []
+        i = result.iterator()
+        # First page contains two rows
+        rows.append(next(i).result().get_object_with_index(0))
+        rows.append(next(i).result().get_object_with_index(0))
+
+        self.assertEqual(EXPECTED_ROWS, rows)
 
         # initiate the fetch request
         future = next(i)
@@ -145,13 +161,15 @@ class SqlMockTest(unittest.TestCase):
 
     def test_fetch_server_error(self):
         self.set_execute_response_with_rows(is_last=False)
-        result = []
-        i = self.result.iterator().result()
-        # First page contains two rows
-        result.append(next(i).result().get_object_with_index(0))
-        result.append(next(i).result().get_object_with_index(0))
+        result = self.result.result()
 
-        self.assertEqual(EXPECTED_ROWS, result)
+        rows = []
+        i = result.iterator()
+        # First page contains two rows
+        rows.append(next(i).result().get_object_with_index(0))
+        rows.append(next(i).result().get_object_with_index(0))
+
+        self.assertEqual(EXPECTED_ROWS, rows)
 
         # initiate the fetch request
         future = next(i)
@@ -165,18 +183,20 @@ class SqlMockTest(unittest.TestCase):
 
     def test_close_in_between_fetches(self):
         self.set_execute_response_with_rows(is_last=False)
-        result = []
-        i = self.result.iterator().result()
-        # First page contains two rows
-        result.append(next(i).result().get_object_with_index(0))
-        result.append(next(i).result().get_object_with_index(0))
+        result = self.result.result()
 
-        self.assertEqual(EXPECTED_ROWS, result)
+        rows = []
+        i = result.iterator()
+        # First page contains two rows
+        rows.append(next(i).result().get_object_with_index(0))
+        rows.append(next(i).result().get_object_with_index(0))
+
+        self.assertEqual(EXPECTED_ROWS, rows)
 
         # initiate the fetch request
         future = next(i)
 
-        self.result.close()
+        result.close()
 
         with self.assertRaises(HazelcastSqlError) as cm:
             future.result()
@@ -202,18 +222,20 @@ class SqlMockTest(unittest.TestCase):
     def set_execute_response_with_update_count(self):
         self.set_execute_response(EXPECTED_UPDATE_COUNT, None, None, None)
 
-    def get_rows_from_blocking_iterator(self):
-        return [row.get_object_with_index(0) for row in self.result]
+    @staticmethod
+    def get_rows_from_blocking_iterator(result):
+        return [row.get_object_with_index(0) for row in result]
 
-    def get_rows_from_iterator(self):
-        result = []
-        for row_future in self.result.iterator().result():
+    @staticmethod
+    def get_rows_from_iterator(result):
+        rows = []
+        for row_future in result.iterator():
             try:
                 row = row_future.result()
-                result.append(row.get_object_with_index(0))
+                rows.append(row.get_object_with_index(0))
             except StopIteration:
                 break
-        return result
+        return rows
 
     def set_execute_response_with_rows(self, is_last=True):
         self.set_execute_response(
