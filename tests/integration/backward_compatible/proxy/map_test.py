@@ -81,6 +81,27 @@ class EntryProcessor(IdentifiedDataSerializable):
         return self.CLASS_ID
 
 
+class MapGetInterceptor(IdentifiedDataSerializable):
+
+    FACTORY_ID = 666
+    CLASS_ID = 6
+
+    def __init__(self, prefix):
+        self.prefix = prefix
+
+    def write_data(self, object_data_output):
+        write_string_to_output(object_data_output, self.prefix)
+
+    def read_data(self, object_data_input):
+        pass
+
+    def get_factory_id(self):
+        return self.FACTORY_ID
+
+    def get_class_id(self):
+        return self.CLASS_ID
+
+
 class MapTest(SingleMemberTestCase):
     @classmethod
     def configure_cluster(cls):
@@ -595,6 +616,31 @@ class MapTest(SingleMemberTestCase):
 
     def test_str(self):
         self.assertTrue(str(self.map).startswith("Map"))
+
+    def test_add_interceptor(self):
+        interceptor = MapGetInterceptor(":")
+        registration_id = self.map.add_interceptor(interceptor)
+        self.assertIsNotNone(registration_id)
+
+        self.map.set(1, ")")
+        value = self.map.get(1)
+        self.assertEqual(":)", value)
+
+    def test_remove_interceptor(self):
+        skip_if_client_version_older_than(self, "5.0")
+
+        interceptor = MapGetInterceptor(":")
+        registration_id = self.map.add_interceptor(interceptor)
+        self.assertIsNotNone(registration_id)
+        self.assertTrue(self.map.remove_interceptor(registration_id))
+
+        # Unknown registration id should return False
+        self.assertFalse(self.map.remove_interceptor(registration_id))
+
+        # Make sure that the interceptor is indeed removed
+        self.map.set(1, ")")
+        value = self.map.get(1)
+        self.assertEqual(")", value)
 
     def fill_map(self, count=10):
         m = {"key-%d" % x: "value-%d" % x for x in range(0, count)}

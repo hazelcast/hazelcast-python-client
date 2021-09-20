@@ -65,6 +65,7 @@ from hazelcast.protocol.codec import (
     map_put_if_absent_with_max_idle_codec,
     map_put_transient_with_max_idle_codec,
     map_set_with_max_idle_codec,
+    map_remove_interceptor_codec,
 )
 from hazelcast.proxy.base import (
     Proxy,
@@ -1085,6 +1086,21 @@ class Map(Proxy):
             hazelcast.future.Future[bool]: ``True`` if registration is removed, ``False`` otherwise.
         """
         return self._deregister_listener(registration_id)
+
+    def remove_interceptor(self, registration_id):
+        """Removes the given interceptor for this map, so it will not intercept
+        operations anymore.
+
+        Args:
+            registration_id (str): Registration ID of the map interceptor.
+
+        Returns:
+            hazelcast.future.Future[bool]: ``True`` if the interceptor is
+            removed, ``False`` otherwise.
+        """
+        check_not_none(registration_id, "Interceptor registration id should not be None")
+        request = map_remove_interceptor_codec.encode_request(self.name, registration_id)
+        return self._invoke(request, map_remove_interceptor_codec.decode_response)
 
     def replace(self, key, value):
         """Replaces the entry for a key only if it is currently mapped to some value.
