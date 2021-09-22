@@ -3,7 +3,7 @@ import uuid
 from threading import RLock
 
 from hazelcast.errors import HazelcastError
-from hazelcast.future import Future, ImmediateFuture
+from hazelcast.future import Future, ImmediateFuture, ImmediateExceptionFuture
 from hazelcast.invocation import Invocation
 from hazelcast.util import (
     UUIDUtil,
@@ -589,7 +589,7 @@ class SqlRow(object):
 class _ExecuteResponse(object):
     """Represent the response of the first execute request."""
 
-    __slots__ = ("row_metadata", "row_page", "update_count", "error")
+    __slots__ = ("row_metadata", "row_page", "update_count")
 
     def __init__(self, row_metadata, row_page, update_count, error):
         self.row_metadata = row_metadata
@@ -603,11 +603,6 @@ class _ExecuteResponse(object):
 
         self.update_count = update_count
         """int: Update count or -1 if the result is a rowset."""
-
-        self.error = error
-        """HazelcastSqlError: Error for the execute request or None, if there
-        is no error.
-        """
 
 
 class _IteratorBase(object):
@@ -916,13 +911,9 @@ class SqlResult(object):
         Returns:
             bool:
         """
-        response = self._execute_response
-        if response.error:
-            raise response.error
-
         # By design, if the row_metadata (or row_page) is None,
         # we only got the update count.
-        return response.row_metadata is not None
+        return self._execute_response.row_metadata is not None
 
     def update_count(self):
         """Returns the number of rows updated by the statement or ``-1`` if this
@@ -935,13 +926,9 @@ class SqlResult(object):
         Returns:
             int:
         """
-        response = self._execute_response
-        if response.error:
-            raise response.error
-
         # This will be set to -1, when we got row set on the client side.
         # See _on_execute_response.
-        return response.update_count
+        return self._execute_response.update_count
 
     def get_row_metadata(self):
         """Gets the row metadata.
@@ -955,9 +942,6 @@ class SqlResult(object):
         """
 
         response = self._execute_response
-        if response.error:
-            raise response.error
-
         if not response.row_metadata:
             raise ValueError("This result contains only update count")
 
@@ -1028,9 +1012,6 @@ class SqlResult(object):
             Iterator:
         """
         response = self._execute_response
-        if response.error:
-            raise response.error
-
         if not response.row_metadata:
             # Can't get an iterator when we only have update count
             raise ValueError("This result contains only update count")
@@ -1160,7 +1141,6 @@ class SqlResult(object):
 
         - contains the last page of the rowset (single page rowset)
         - contains just the update count
-        - resulted in an error
 
         Args:
             execute_response (_ExecuteResponse): The first response
@@ -1172,7 +1152,6 @@ class SqlResult(object):
         return (
             execute_response.row_page is None  # Just an update count
             or execute_response.row_page.is_last  # Single page result
-            or execute_response.error  # Error on the first request
         )
 
     def __enter__(self):
@@ -1204,7 +1183,7 @@ class _InternalSqlService(object):
             *params: Query parameters.
 
         Returns:
-            SqlResult: The execution result.
+            hazelcast.future.Future[SqlResult]: The execution result.
         """
         statement = SqlStatement(sql)
 
@@ -1220,13 +1199,15 @@ class _InternalSqlService(object):
             statement (SqlStatement): The statement to execute.
 
         Returns:
-            SqlResult: The execution result.
+            hazelcast.future.Future[SqlResult]: The execution result.
         """
-        connection = self._get_query_connection()
-        # Create a new, unique query id.
-        query_id = _SqlQueryId.from_uuid(connection.remote_uuid)
 
+        connection = None
         try:
+            connection = self._get_query_connection()
+            # Create a new, unique query id.
+            query_id = _SqlQueryId.from_uuid(connection.remote_uuid)
+
             # Serialize the passed parameters.
             serialized_params = [
                 self._serialization_service.to_data(param) for param in statement.parameters
@@ -1257,7 +1238,7 @@ class _InternalSqlService(object):
                 )
             )
         except Exception as e:
-            raise self.re_raise(e, connection)
+            return ImmediateExceptionFuture(self.re_raise(e, connection))
 
     def deserialize_object(self, obj):
         try:
@@ -1369,37 +1350,36 @@ class _InternalSqlService(object):
 
         Returns:
             _ExecuteResponse: The response for the first execute request.
-            It can be either a rowset, an update count, or an SQL related
-            error.
+            It can be either a rowset or an update count response.
         """
         try:
             response = future.result()
-
-            response_error = response["error"]
-            if response_error:
-                # There is a server-side error sent to the client.
-                sql_error = HazelcastSqlError(
-                    response_error.originating_member_uuid,
-                    response_error.code,
-                    response_error.message,
-                    None,
-                    response_error.suggestion,
-                )
-                return _ExecuteResponse(None, None, None, sql_error)
-
-            row_metadata = response["row_metadata"]
-            if row_metadata is not None:
-                # The result contains some rows, not an update count.
-                row_metadata = SqlRowMetadata(row_metadata)
-                # Set the update count to -1.
-                return _ExecuteResponse(row_metadata, response["row_page"], -1, None)
-
-            # Result only contains the update count.
-            return _ExecuteResponse(None, None, response["update_count"], None)
         except Exception as e:
             # Something went bad, we couldn't get response from
             # the server, invocation failed.
-            return _ExecuteResponse(None, None, None, self.re_raise(e, connection))
+            raise self.re_raise(e, connection)
+
+        response_error = response["error"]
+        if response_error:
+            # There is a server-side error sent to the client.
+            sql_error = HazelcastSqlError(
+                response_error.originating_member_uuid,
+                response_error.code,
+                response_error.message,
+                None,
+                response_error.suggestion,
+            )
+            raise sql_error
+
+        row_metadata = response["row_metadata"]
+        if row_metadata is not None:
+            # The result contains some rows, not an update count.
+            row_metadata = SqlRowMetadata(row_metadata)
+            # Set the update count to -1.
+            return _ExecuteResponse(row_metadata, response["row_page"], -1, None)
+
+        # Result only contains the update count.
+        return _ExecuteResponse(None, None, response["update_count"], None)
 
 
 class SqlExpectedResultType(object):

@@ -101,9 +101,9 @@ class SqlMockTest(unittest.TestCase):
 
     def test_execute_error(self):
         self.set_execute_error(RuntimeError("expected"))
-        result = self.result.result()
 
         with self.assertRaises(HazelcastSqlError) as cm:
+            result = self.result.result()
             iter(result)
 
         self.assertEqual(_SqlErrorCode.GENERIC, cm.exception._code)
@@ -111,9 +111,9 @@ class SqlMockTest(unittest.TestCase):
     def test_execute_error_when_connection_is_not_live(self):
         self.connection.live = False
         self.set_execute_error(RuntimeError("expected"))
-        result = self.result.result()
 
         with self.assertRaises(HazelcastSqlError) as cm:
+            result = self.result.result()
             iter(result)
 
         self.assertEqual(_SqlErrorCode.CONNECTION_PROBLEM, cm.exception._code)
@@ -129,13 +129,6 @@ class SqlMockTest(unittest.TestCase):
             future.result()
 
         self.assertEqual(_SqlErrorCode.PARSING, cm.exception._code)
-
-    def test_close_when_execute_fails(self):
-        self.set_execute_error(RuntimeError("expected"))
-        result = self.result.result()
-
-        future = result.close()
-        self.assertIsInstance(future, ImmediateFuture)
 
     def test_fetch_error(self):
         self.set_execute_response_with_rows(is_last=False)

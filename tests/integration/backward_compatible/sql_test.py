@@ -114,11 +114,7 @@ class SqlTestBase(HazelcastTestCase):
             value_format.lower(),
         )
 
-        result = self.execute(create_mapping_query)
-        # We don't throw until a method over the result is called.
-        # We are calling update_count to verify that create mapping
-        # request succeeded.
-        self.update_count(result)
+        self.execute(create_mapping_query)
 
     def _create_mapping_for_portable(self, factory_id, class_id, columns):
         if not self.is_v5_or_newer_server:
@@ -145,11 +141,7 @@ class SqlTestBase(HazelcastTestCase):
             class_id,
         )
 
-        result = self.execute(create_mapping_query)
-        # We don't throw until a method over the result is called.
-        # We are calling update_count to verify that create mapping
-        # request succeeded.
-        self.update_count(result)
+        self.execute(create_mapping_query)
 
     def execute(self, query, *args):
         if self.is_v5_or_newer_client:
@@ -225,18 +217,20 @@ class SqlServiceTest(SqlTestBase):
     def test_execute_with_mismatched_params_when_sql_has_more(self):
         self._create_mapping()
         self._populate_map()
-        result = self.execute('SELECT * FROM "%s" WHERE __key > ? AND this > ?' % self.map_name, 5)
 
         with self.assertRaises(HazelcastSqlError):
+            result = self.execute(
+                'SELECT * FROM "%s" WHERE __key > ? AND this > ?' % self.map_name, 5
+            )
             for _ in result:
                 pass
 
     def test_execute_with_mismatched_params_when_params_has_more(self):
         self._create_mapping()
         self._populate_map()
-        result = self.execute('SELECT * FROM "%s" WHERE this > ?' % self.map_name, 5, 6)
 
         with self.assertRaises(HazelcastSqlError):
+            result = self.execute('SELECT * FROM "%s" WHERE this > ?' % self.map_name, 5, 6)
             for _ in result:
                 pass
 
@@ -270,9 +264,9 @@ class SqlServiceTest(SqlTestBase):
         self._populate_map()
         statement = SqlStatement('SELECT * FROM "%s" WHERE __key > ? AND this > ?' % self.map_name)
         statement.parameters = [5]
-        result = self.execute_statement(statement)
 
         with self.assertRaises(HazelcastSqlError):
+            result = self.execute_statement(statement)
             for _ in result:
                 pass
 
@@ -281,9 +275,9 @@ class SqlServiceTest(SqlTestBase):
         self._populate_map()
         statement = SqlStatement('SELECT * FROM "%s" WHERE this > ?' % self.map_name)
         statement.parameters = [5, 6]
-        result = self.execute_statement(statement)
 
         with self.assertRaises(HazelcastSqlError):
+            result = self.execute_statement(statement)
             for _ in result:
                 pass
 
@@ -327,8 +321,8 @@ class SqlServiceTest(SqlTestBase):
         result = self.execute_statement(copy_statement)
         self.assertEqual([9], [row.get_object_with_index(0) for row in result])
 
-        result = self.execute_statement(statement)
         with self.assertRaises(HazelcastSqlError):
+            result = self.execute_statement(statement)
             for _ in result:
                 pass
 
@@ -353,9 +347,9 @@ class SqlServiceTest(SqlTestBase):
         self._populate_map()
         statement = SqlStatement('SELECT * FROM "%s"' % self.map_name)
         statement.expected_result_type = SqlExpectedResultType.UPDATE_COUNT
-        result = self.execute_statement(statement)
 
         with self.assertRaises(HazelcastSqlError):
+            result = self.execute_statement(statement)
             for _ in result:
                 pass
 
@@ -370,11 +364,9 @@ class SqlServiceTest(SqlTestBase):
         self.map.put(1, "value-1")
         select_all_query = 'SELECT * FROM "%s"' % self.map_name
         with self.assertRaises(HazelcastSqlError) as cm:
-            result = self.execute(select_all_query)
-            self.update_count(result)
+            self.execute(select_all_query)
 
-        result = self.execute(cm.exception.suggestion)
-        self.update_count(result)
+        self.execute(cm.exception.suggestion)
 
         with self.execute(select_all_query) as result:
             self.assertEqual(
@@ -963,11 +955,7 @@ class SqlServiceV5MixedClusterTest(HazelcastTestCase):
             % map_name
         )
 
-        result = self.client.sql.execute(create_mapping_query).result()
-        # We don't throw until a method over the result is called.
-        # We are calling update_count to verify that create mapping
-        # request succeeded.
-        result.update_count()
+        self.client.sql.execute(create_mapping_query).result()
 
         m = self.client.get_map(map_name).blocking()
         m.put(1, 1)
@@ -1009,11 +997,7 @@ class JetSqlTest(SqlTestBase):
             % self.map_name
         )
 
-        result = self.execute(query)
-        # We don't throw until a method over the result is called.
-        # We are calling update_count to verify that create mapping
-        # request succeeded.
-        self.update_count(result)
+        self.execute(query)
 
         insert_into_query = (
             """
