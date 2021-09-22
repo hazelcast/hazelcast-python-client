@@ -617,7 +617,7 @@ class SqlResultTest(SqlTestBase):
         self._populate_map(entry_count, value_factory)
 
         expected = [(i, value_factory(i)) for i in range(entry_count)]
-        with self.client.sql.execute('SELECT __key, this FROM "%s"' % self.map_name) as result:
+        with self.execute('SELECT __key, this FROM "%s"' % self.map_name) as result:
             # Verify that both row[integer] and row[string] works
             six.assertCountEqual(self, expected, [(row[0], row["this"]) for row in result])
 
