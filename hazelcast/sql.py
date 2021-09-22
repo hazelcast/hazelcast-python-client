@@ -29,7 +29,7 @@ class SqlService(object):
         and the ``hazelcast-sql`` module must be in the classpath of the
         members.
 
-        If you are using the our CLI, Docker image, or distributions to start
+        If you are using the CLI, Docker image, or distributions to start
         Hazelcast members, then you don't need to do anything, as the above
         preconditions are already satisfied for such members.
 
