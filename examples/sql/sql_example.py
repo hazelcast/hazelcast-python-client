@@ -67,6 +67,11 @@ with client.sql.execute("SELECT * FROM customers") as result:
         # Get the object with the column index
         is_active = row.get_object_with_index(is_active_index)
 
+        # Rows can also be used similar to lists
+        # with integer column indexes
+
+        # is_active = row[is_active_index]
+
         print(name, age, is_active)
 
 # Construct a statement object to control the properties of the query
@@ -86,13 +91,20 @@ with client.sql.execute_statement(statement) as result:
         key = row.get_object("__key")
         age = row.get_object("age")
 
+        # Rows can also be used similar to dictionaries
+        # with string column names
+
+        # key = row["__key"]
+        # age = row["age"]
+
         print(key, age)
 
 # Parameters can be passed directly in the basic execution syntax
 result = client.sql.execute("SELECT this FROM customers WHERE age > ? AND age < ?", 30, 40)
 
 for row in result:
-    customer = row.get_object("this")
+    # Access columns with [] operator
+    customer = row["this"]
     print(customer)
 
 # Query can be closed explicitly
