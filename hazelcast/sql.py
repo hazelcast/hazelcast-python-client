@@ -891,7 +891,6 @@ class SqlResult(object):
         The iterator may be requested only once.
 
         Raises:
-            HazelcastSqlError: In case of an SQL execution error.
             ValueError: If the result only contains an update count, or the
                 iterator is already requested.
 
@@ -905,9 +904,6 @@ class SqlResult(object):
     def is_row_set(self):
         """Returns whether this result has rows to iterate.
 
-        Raises:
-            HazelcastSqlError: In case of an SQL execution error.
-
         Returns:
             bool:
         """
@@ -920,9 +916,6 @@ class SqlResult(object):
         result is a row set. In case the result doesn't contain rows but the
         update count isn't applicable or known, ``0`` is returned.
 
-        Raises:
-            HazelcastSqlError: In case of an SQL execution error.
-
         Returns:
             int:
         """
@@ -934,7 +927,6 @@ class SqlResult(object):
         """Gets the row metadata.
 
         Raises:
-            HazelcastSqlError: In case of an SQL execution error.
             ValueError: If the result only contains an update count.
 
         Returns:
