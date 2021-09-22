@@ -17,7 +17,9 @@ class HeartbeatTest(HazelcastTestCase):
         self.cluster = self.create_cluster(self.rc)
         self.member = self.rc.startMember(self.cluster.id)
         self.client = HazelcastClient(
-            cluster_name=self.cluster.id, heartbeat_interval=0.5, heartbeat_timeout=2
+            cluster_name=self.cluster.id,
+            heartbeat_interval=0.5,
+            heartbeat_timeout=2,
         )
 
     def tearDown(self):

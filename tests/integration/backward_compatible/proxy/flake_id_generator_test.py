@@ -105,11 +105,12 @@ class FlakeIdGeneratorIdOutOfRangeTest(HazelcastTestCase):
         self.cluster.start_member()
 
     def tearDown(self):
+        self.rc.terminateCluster(self.cluster.id)
         self.rc.exit()
 
     def test_new_id_with_at_least_one_suitable_member(self):
         response = self.assign_out_of_range_node_id(self.cluster.id, random.randint(0, 1))
-        self.assertTrueEventually(lambda: response.success and response.result is not None)
+        self.assertTrue(response.success and response.result is not None)
 
         client = HazelcastClient(cluster_name=self.cluster.id, smart_routing=False)
 
@@ -123,10 +124,10 @@ class FlakeIdGeneratorIdOutOfRangeTest(HazelcastTestCase):
 
     def test_new_id_fails_when_all_members_are_out_of_node_id_range(self):
         response1 = self.assign_out_of_range_node_id(self.cluster.id, 0)
-        self.assertTrueEventually(lambda: response1.success and response1.result is not None)
+        self.assertTrue(response1.success and response1.result is not None)
 
         response2 = self.assign_out_of_range_node_id(self.cluster.id, 1)
-        self.assertTrueEventually(lambda: response2.success and response2.result is not None)
+        self.assertTrue(response2.success and response2.result is not None)
 
         client = HazelcastClient(cluster_name=self.cluster.id)
         generator = client.get_flake_id_generator("test").blocking()
@@ -138,11 +139,12 @@ class FlakeIdGeneratorIdOutOfRangeTest(HazelcastTestCase):
         client.shutdown()
 
     def assign_out_of_range_node_id(self, cluster_id, instance_id):
-        script = (
-            "def assign_out_of_range_node_id():\n"
-            "\tinstance_{}.getCluster().getLocalMember().setMemberListJoinVersion(100000)\n"
-            "\treturn instance_{}.getCluster().getLocalMember().getMemberListJoinVersion()\n"
-            "result = str(assign_out_of_range_node_id())\n".format(instance_id, instance_id)
+        script = """
+        instance_%s.getCluster().getLocalMember().setMemberListJoinVersion(100000);
+        result = "" + instance_%s.getCluster().getLocalMember().getMemberListJoinVersion();
+        """ % (
+            instance_id,
+            instance_id,
         )
 
-        return self.rc.executeOnController(cluster_id, script, Lang.PYTHON)
+        return self.rc.executeOnController(cluster_id, script, Lang.JAVASCRIPT)

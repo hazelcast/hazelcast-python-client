@@ -10,7 +10,7 @@ from tests.util import get_current_timestamp
 class ClientTest(HazelcastTestCase):
     def test_client_only_listens(self):
         rc = self.create_rc()
-        client_heartbeat_seconds = 8
+        client_heartbeat_seconds = 4
 
         cluster_config = (
             """
