@@ -591,7 +591,7 @@ class _ExecuteResponse(object):
 
     __slots__ = ("row_metadata", "row_page", "update_count")
 
-    def __init__(self, row_metadata, row_page, update_count, error):
+    def __init__(self, row_metadata, row_page, update_count):
         self.row_metadata = row_metadata
         """SqlRowMetadata: Row metadata or None, if the response only 
         contains update count."""
@@ -1368,10 +1368,10 @@ class _InternalSqlService(object):
             # The result contains some rows, not an update count.
             row_metadata = SqlRowMetadata(row_metadata)
             # Set the update count to -1.
-            return _ExecuteResponse(row_metadata, response["row_page"], -1, None)
+            return _ExecuteResponse(row_metadata, response["row_page"], -1)
 
         # Result only contains the update count.
-        return _ExecuteResponse(None, None, response["update_count"], None)
+        return _ExecuteResponse(None, None, response["update_count"])
 
 
 class SqlExpectedResultType(object):
