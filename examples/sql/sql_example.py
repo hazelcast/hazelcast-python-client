@@ -40,8 +40,27 @@ customers.set(1, Customer("Peter", 42, True))
 customers.set(2, Customer("John", 23, False))
 customers.set(3, Customer("Joe", 33, True))
 
+# Create mapping for the customers. This needs to be done only once per map.
+client.sql.execute(
+    """
+CREATE MAPPING customers (
+    __key INT,
+    name VARCHAR,
+    age INT,
+    is_active BOOLEAN
+)
+TYPE IMap
+OPTIONS (
+  'keyFormat' = 'int',
+  'valueFormat' = 'portable',
+  'valuePortableFactoryId' = '1',
+  'valuePortableClassId' = '1'
+)
+    """
+).result()
+
 # Project a single column that fits the criterion
-result = client.sql.execute("SELECT name FROM customers WHERE age < 35 AND is_active")
+result = client.sql.execute("SELECT name FROM customers WHERE age < 35 AND is_active").result()
 
 for row in result:
     # Get the object with the given column name in the row
@@ -52,7 +71,7 @@ for row in result:
 # Also, with statement can be used to close the resources on the
 # server-side if something goes bad while iterating over rows.
 
-with client.sql.execute("SELECT * FROM customers") as result:
+with client.sql.execute("SELECT * FROM customers").result() as result:
     for row in result:
         # Get the objects with column names
         name = row.get_object("name")
@@ -83,9 +102,9 @@ statement = SqlStatement("SELECT __key, age FROM customers WHERE name LIKE ?")
 statement.add_parameter("Jo%")
 statement.timeout = 5
 
-with client.sql.execute_statement(statement) as result:
+with client.sql.execute_statement(statement).result() as result:
     # Row metadata can also be retrieved from the result
-    row_metadata = result.get_row_metadata().result()
+    row_metadata = result.get_row_metadata()
 
     for row in result:
         key = row.get_object("__key")
@@ -100,7 +119,7 @@ with client.sql.execute_statement(statement) as result:
         print(key, age)
 
 # Parameters can be passed directly in the basic execution syntax
-result = client.sql.execute("SELECT this FROM customers WHERE age > ? AND age < ?", 30, 40)
+result = client.sql.execute("SELECT this FROM customers WHERE age > ? AND age < ?", 30, 40).result()
 
 for row in result:
     # Access columns with [] operator

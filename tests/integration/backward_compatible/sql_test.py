@@ -52,14 +52,14 @@ class SqlTestBase(HazelcastTestCase):
     rc = None
     cluster = None
     is_v5_or_newer_server = None
+    is_v5_or_newer_client = None
     client = None
 
     @classmethod
     def setUpClass(cls):
         cls.rc = cls.create_rc()
-
         cls.is_v5_or_newer_server = compare_server_version_with_rc(cls.rc, "5.0") >= 0
-
+        cls.is_v5_or_newer_client = compare_client_version("5.0") >= 0
         # enable Jet if the server is 5.0+
         cluster_config = SERVER_CONFIG % (JET_ENABLED_CONFIG if cls.is_v5_or_newer_server else "")
         cls.cluster = cls.create_cluster(cls.rc, cluster_config)
@@ -80,8 +80,7 @@ class SqlTestBase(HazelcastTestCase):
         self._setup_skip_condition()
 
         # Skip tests if major versions of the client/server do not match.
-        is_v5_or_newer_client = compare_client_version("5.0") >= 0
-        if is_v5_or_newer_client != self.is_v5_or_newer_server:
+        if self.is_v5_or_newer_client != self.is_v5_or_newer_server:
             self.skipTest("Major versions of the client and the server do not match.")
 
     def _setup_skip_condition(self):
@@ -115,8 +114,7 @@ class SqlTestBase(HazelcastTestCase):
             value_format.lower(),
         )
 
-        with self.client.sql.execute(create_mapping_query) as result:
-            result.update_count().result()
+        self.execute(create_mapping_query)
 
     def _create_mapping_for_portable(self, factory_id, class_id, columns):
         if not self.is_v5_or_newer_server:
@@ -143,8 +141,49 @@ class SqlTestBase(HazelcastTestCase):
             class_id,
         )
 
-        with self.client.sql.execute(create_mapping_query) as result:
-            result.update_count().result()
+        self.execute(create_mapping_query)
+
+    def execute(self, query, *args):
+        if self.is_v5_or_newer_client:
+            return self.client.sql.execute(query, *args).result()
+
+        # Compatibility with 4.x clients
+        return self.client.sql.execute(query, *args)
+
+    def execute_statement(self, statement):
+        if self.is_v5_or_newer_client:
+            return self.client.sql.execute_statement(statement).result()
+
+        # Compatibility with 4.x clients
+        return self.client.sql.execute_statement(statement)
+
+    def update_count(self, result):
+        if self.is_v5_or_newer_client:
+            return result.update_count()
+
+        # Compatibility with 4.x clients
+        return result.update_count().result()
+
+    def iterator(self, result):
+        if self.is_v5_or_newer_client:
+            return result.iterator()
+
+        # Compatibility with 4.x clients
+        return result.iterator().result()
+
+    def is_row_set(self, result):
+        if self.is_v5_or_newer_client:
+            return result.is_row_set()
+
+        # Compatibility with 4.x clients
+        return result.is_row_set().result()
+
+    def get_row_metadata(self, result):
+        if self.is_v5_or_newer_client:
+            return result.get_row_metadata()
+
+        # Compatibility with 4.x clients
+        return result.get_row_metadata().result()
 
 
 @unittest.skipIf(
@@ -155,7 +194,7 @@ class SqlServiceTest(SqlTestBase):
         self._create_mapping()
         entry_count = 11
         self._populate_map(entry_count)
-        result = self.client.sql.execute('SELECT * FROM "%s"' % self.map_name)
+        result = self.execute('SELECT * FROM "%s"' % self.map_name)
         six.assertCountEqual(
             self,
             [(i, i) for i in range(entry_count)],
@@ -166,7 +205,7 @@ class SqlServiceTest(SqlTestBase):
         self._create_mapping()
         entry_count = 13
         self._populate_map(entry_count)
-        result = self.client.sql.execute(
+        result = self.execute(
             'SELECT this FROM "%s" WHERE __key > ? AND this > ?' % self.map_name, 5, 6
         )
         six.assertCountEqual(
@@ -178,20 +217,20 @@ class SqlServiceTest(SqlTestBase):
     def test_execute_with_mismatched_params_when_sql_has_more(self):
         self._create_mapping()
         self._populate_map()
-        result = self.client.sql.execute(
-            'SELECT * FROM "%s" WHERE __key > ? AND this > ?' % self.map_name, 5
-        )
 
         with self.assertRaises(HazelcastSqlError):
+            result = self.execute(
+                'SELECT * FROM "%s" WHERE __key > ? AND this > ?' % self.map_name, 5
+            )
             for _ in result:
                 pass
 
     def test_execute_with_mismatched_params_when_params_has_more(self):
         self._create_mapping()
         self._populate_map()
-        result = self.client.sql.execute('SELECT * FROM "%s" WHERE this > ?' % self.map_name, 5, 6)
 
         with self.assertRaises(HazelcastSqlError):
+            result = self.execute('SELECT * FROM "%s" WHERE this > ?' % self.map_name, 5, 6)
             for _ in result:
                 pass
 
@@ -200,7 +239,7 @@ class SqlServiceTest(SqlTestBase):
         entry_count = 12
         self._populate_map(entry_count, str)
         statement = SqlStatement('SELECT this FROM "%s"' % self.map_name)
-        result = self.client.sql.execute_statement(statement)
+        result = self.execute_statement(statement)
 
         six.assertCountEqual(
             self,
@@ -216,7 +255,7 @@ class SqlServiceTest(SqlTestBase):
             'SELECT age FROM "%s" WHERE height = CAST(? AS REAL)' % self.map_name
         )
         statement.add_parameter(13.0)
-        result = self.client.sql.execute_statement(statement)
+        result = self.execute_statement(statement)
 
         six.assertCountEqual(self, [13], [row.get_object("age") for row in result])
 
@@ -225,9 +264,9 @@ class SqlServiceTest(SqlTestBase):
         self._populate_map()
         statement = SqlStatement('SELECT * FROM "%s" WHERE __key > ? AND this > ?' % self.map_name)
         statement.parameters = [5]
-        result = self.client.sql.execute_statement(statement)
 
         with self.assertRaises(HazelcastSqlError):
+            result = self.execute_statement(statement)
             for _ in result:
                 pass
 
@@ -236,9 +275,9 @@ class SqlServiceTest(SqlTestBase):
         self._populate_map()
         statement = SqlStatement('SELECT * FROM "%s" WHERE this > ?' % self.map_name)
         statement.parameters = [5, 6]
-        result = self.client.sql.execute_statement(statement)
 
         with self.assertRaises(HazelcastSqlError):
+            result = self.execute_statement(statement)
             for _ in result:
                 pass
 
@@ -248,7 +287,7 @@ class SqlServiceTest(SqlTestBase):
         self._populate_map(entry_count, lambda v: Student(v, v))
         statement = SqlStatement('SELECT age FROM "%s" WHERE height < 10' % self.map_name)
         statement.timeout = 100
-        result = self.client.sql.execute_statement(statement)
+        result = self.execute_statement(statement)
 
         six.assertCountEqual(
             self, [i for i in range(10)], [row.get_object("age") for row in result]
@@ -260,7 +299,7 @@ class SqlServiceTest(SqlTestBase):
         self._populate_map(entry_count, lambda v: Student(v, v))
         statement = SqlStatement('SELECT age FROM "%s"' % self.map_name)
         statement.cursor_buffer_size = 3
-        result = self.client.sql.execute_statement(statement)
+        result = self.execute_statement(statement)
 
         with patch.object(result, "_fetch_next_page", wraps=result._fetch_next_page) as patched:
             six.assertCountEqual(
@@ -279,11 +318,11 @@ class SqlServiceTest(SqlTestBase):
         copy_statement = statement.copy()
         statement.clear_parameters()
 
-        result = self.client.sql.execute_statement(copy_statement)
+        result = self.execute_statement(copy_statement)
         self.assertEqual([9], [row.get_object_with_index(0) for row in result])
 
-        result = self.client.sql.execute_statement(statement)
         with self.assertRaises(HazelcastSqlError):
+            result = self.execute_statement(statement)
             for _ in result:
                 pass
 
@@ -295,7 +334,7 @@ class SqlServiceTest(SqlTestBase):
         self._populate_map(entry_count, lambda v: Student(v, v))
         statement = SqlStatement('SELECT age FROM "%s" WHERE age < 3' % self.map_name)
         statement.expected_result_type = SqlExpectedResultType.ROWS
-        result = self.client.sql.execute_statement(statement)
+        result = self.execute_statement(statement)
 
         six.assertCountEqual(self, [i for i in range(3)], [row.get_object("age") for row in result])
 
@@ -308,9 +347,9 @@ class SqlServiceTest(SqlTestBase):
         self._populate_map()
         statement = SqlStatement('SELECT * FROM "%s"' % self.map_name)
         statement.expected_result_type = SqlExpectedResultType.UPDATE_COUNT
-        result = self.client.sql.execute_statement(statement)
 
         with self.assertRaises(HazelcastSqlError):
+            result = self.execute_statement(statement)
             for _ in result:
                 pass
 
@@ -325,13 +364,11 @@ class SqlServiceTest(SqlTestBase):
         self.map.put(1, "value-1")
         select_all_query = 'SELECT * FROM "%s"' % self.map_name
         with self.assertRaises(HazelcastSqlError) as cm:
-            with self.client.sql.execute(select_all_query) as result:
-                result.update_count().result()
+            self.execute(select_all_query)
 
-        with self.client.sql.execute(cm.exception.suggestion) as result:
-            result.update_count().result()
+        self.execute(cm.exception.suggestion)
 
-        with self.client.sql.execute(select_all_query) as result:
+        with self.execute(select_all_query) as result:
             self.assertEqual(
                 [(1, "value-1")],
                 [(r.get_object("__key"), r.get_object("this")) for r in result],
@@ -345,7 +382,7 @@ class SqlResultTest(SqlTestBase):
     def test_blocking_iterator(self):
         self._create_mapping()
         self._populate_map()
-        result = self.client.sql.execute('SELECT __key FROM "%s"' % self.map_name)
+        result = self.execute('SELECT __key FROM "%s"' % self.map_name)
 
         six.assertCountEqual(
             self, [i for i in range(10)], [row.get_object_with_index(0) for row in result]
@@ -354,7 +391,7 @@ class SqlResultTest(SqlTestBase):
     def test_blocking_iterator_when_iterator_requested_more_than_once(self):
         self._create_mapping()
         self._populate_map()
-        result = self.client.sql.execute('SELECT this FROM "%s"' % self.map_name)
+        result = self.execute('SELECT this FROM "%s"' % self.map_name)
 
         six.assertCountEqual(
             self, [i for i in range(10)], [row.get_object_with_index(0) for row in result]
@@ -369,7 +406,7 @@ class SqlResultTest(SqlTestBase):
         self._populate_map()
         statement = SqlStatement('SELECT __key FROM "%s"' % self.map_name)
         statement.cursor_buffer_size = 1  # Each page will contain just 1 result
-        result = self.client.sql.execute_statement(statement)
+        result = self.execute_statement(statement)
 
         six.assertCountEqual(
             self, [i for i in range(10)], [row.get_object_with_index(0) for row in result]
@@ -378,26 +415,21 @@ class SqlResultTest(SqlTestBase):
     def test_iterator(self):
         self._create_mapping()
         self._populate_map()
-        result = self.client.sql.execute('SELECT __key FROM "%s"' % self.map_name)
+        result = self.execute('SELECT __key FROM "%s"' % self.map_name)
 
-        iterator_future = result.iterator()
+        iterator = self.iterator(result)
 
         rows = []
 
-        def cb(f):
-            iterator = f.result()
+        def iterate(row_future):
+            try:
+                row = row_future.result()
+                rows.append(row.get_object_with_index(0))
+                next(iterator).add_done_callback(iterate)
+            except StopIteration:
+                pass
 
-            def iterate(row_future):
-                try:
-                    row = row_future.result()
-                    rows.append(row.get_object_with_index(0))
-                    next(iterator).add_done_callback(iterate)
-                except StopIteration:
-                    pass
-
-            next(iterator).add_done_callback(iterate)
-
-        iterator_future.add_done_callback(cb)
+        next(iterator).add_done_callback(iterate)
 
         def assertion():
             six.assertCountEqual(
@@ -411,9 +443,9 @@ class SqlResultTest(SqlTestBase):
     def test_iterator_when_iterator_requested_more_than_once(self):
         self._create_mapping()
         self._populate_map()
-        result = self.client.sql.execute('SELECT this FROM "%s"' % self.map_name)
+        result = self.execute('SELECT this FROM "%s"' % self.map_name)
 
-        iterator = result.iterator().result()
+        iterator = self.iterator(result)
 
         rows = []
         for row_future in iterator:
@@ -426,16 +458,16 @@ class SqlResultTest(SqlTestBase):
         six.assertCountEqual(self, [i for i in range(10)], rows)
 
         with self.assertRaises(ValueError):
-            result.iterator().result()
+            self.iterator(result)
 
     def test_iterator_with_multi_paged_result(self):
         self._create_mapping()
         self._populate_map()
         statement = SqlStatement('SELECT __key FROM "%s"' % self.map_name)
         statement.cursor_buffer_size = 1  # Each page will contain just 1 result
-        result = self.client.sql.execute_statement(statement)
+        result = self.execute_statement(statement)
 
-        iterator = result.iterator().result()
+        iterator = self.iterator(result)
 
         rows = []
         for row_future in iterator:
@@ -450,9 +482,9 @@ class SqlResultTest(SqlTestBase):
     def test_request_blocking_iterator_after_iterator(self):
         self._create_mapping()
         self._populate_map()
-        result = self.client.sql.execute('SELECT * FROM "%s"' % self.map_name)
+        result = self.execute('SELECT * FROM "%s"' % self.map_name)
 
-        result.iterator().result()
+        self.iterator(result)
 
         with self.assertRaises(ValueError):
             for _ in result:
@@ -461,35 +493,35 @@ class SqlResultTest(SqlTestBase):
     def test_request_iterator_after_blocking_iterator(self):
         self._create_mapping()
         self._populate_map()
-        result = self.client.sql.execute('SELECT * FROM "%s"' % self.map_name)
+        result = self.execute('SELECT * FROM "%s"' % self.map_name)
 
         for _ in result:
             pass
 
         with self.assertRaises(ValueError):
-            result.iterator().result()
+            self.iterator(result)
 
     # Can't test the case we would expect row to be not set, because the IMDG SQL
     # engine does not support update/insert queries now.
     def test_is_row_set_when_row_is_set(self):
         self._create_mapping()
         self._populate_map()
-        result = self.client.sql.execute('SELECT * FROM "%s"' % self.map_name)
-        self.assertTrue(result.is_row_set().result())
+        result = self.execute('SELECT * FROM "%s"' % self.map_name)
+        self.assertTrue(self.is_row_set(result))
 
     # Can't test the case we would expect a non-negative updated count, because the IMDG SQL
     # engine does not support update/insert queries now.
     def test_update_count_when_there_is_no_update(self):
         self._create_mapping()
         self._populate_map()
-        result = self.client.sql.execute('SELECT * FROM "%s" WHERE __key > 5' % self.map_name)
-        self.assertEqual(-1, result.update_count().result())
+        result = self.execute('SELECT * FROM "%s" WHERE __key > 5' % self.map_name)
+        self.assertEqual(-1, self.update_count(result))
 
     def test_get_row_metadata(self):
         self._create_mapping("VARCHAR")
         self._populate_map(value_factory=str)
-        result = self.client.sql.execute('SELECT __key, this FROM "%s"' % self.map_name)
-        row_metadata = result.get_row_metadata().result()
+        result = self.execute('SELECT __key, this FROM "%s"' % self.map_name)
+        row_metadata = self.get_row_metadata(result)
         self.assertEqual(2, row_metadata.column_count)
         columns = row_metadata.columns
         self.assertEqual(SqlColumnType.INTEGER, columns[0].type)
@@ -500,9 +532,10 @@ class SqlResultTest(SqlTestBase):
     def test_close_after_query_execution(self):
         self._create_mapping()
         self._populate_map()
-        result = self.client.sql.execute('SELECT * FROM "%s"' % self.map_name)
+        result = self.execute('SELECT * FROM "%s"' % self.map_name)
         for _ in result:
             pass
+
         self.assertIsNone(result.close().result())
 
     def test_close_when_query_is_active(self):
@@ -510,7 +543,7 @@ class SqlResultTest(SqlTestBase):
         self._populate_map()
         statement = SqlStatement('SELECT * FROM "%s"' % self.map_name)
         statement.cursor_buffer_size = 1  # Each page will contain 1 row
-        result = self.client.sql.execute_statement(statement)
+        result = self.execute_statement(statement)
 
         # Fetch couple of pages
         iterator = iter(result)
@@ -525,7 +558,7 @@ class SqlResultTest(SqlTestBase):
     def test_with_statement(self):
         self._create_mapping()
         self._populate_map()
-        with self.client.sql.execute('SELECT this FROM "%s"' % self.map_name) as result:
+        with self.execute('SELECT this FROM "%s"' % self.map_name) as result:
             six.assertCountEqual(
                 self, [i for i in range(10)], [row.get_object_with_index(0) for row in result]
             )
@@ -537,7 +570,7 @@ class SqlResultTest(SqlTestBase):
         statement.cursor_buffer_size = 1  # so that it doesn't close immediately
 
         with self.assertRaises(RuntimeError):
-            with self.client.sql.execute_statement(statement) as result:
+            with self.execute_statement(statement) as result:
                 for _ in result:
                     raise RuntimeError("expected")
 
@@ -560,7 +593,7 @@ class SqlResultTest(SqlTestBase):
         res = self.rc.executeOnController(self.cluster.id, script, Lang.JAVASCRIPT)
         self.assertTrue(res.success)
 
-        with self.client.sql.execute('SELECT __key, this FROM "%s"' % self.map_name) as result:
+        with self.execute('SELECT __key, this FROM "%s"' % self.map_name) as result:
             rows = list(result)
             self.assertEqual(1, len(rows))
             row = rows[0]
@@ -584,7 +617,7 @@ class SqlResultTest(SqlTestBase):
         self._populate_map(entry_count, value_factory)
 
         expected = [(i, value_factory(i)) for i in range(entry_count)]
-        with self.client.sql.execute('SELECT __key, this FROM "%s"' % self.map_name) as result:
+        with self.execute('SELECT __key, this FROM "%s"' % self.map_name) as result:
             # Verify that both row[integer] and row[string] works
             six.assertCountEqual(self, expected, [(row[0], row["this"]) for row in result])
 
@@ -737,7 +770,7 @@ class SqlColumnTypesReadTest(SqlTestBase):
     def test_null(self):
         self._create_mapping("INTEGER")
         self._populate_map()
-        result = self.client.sql.execute('SELECT __key, NULL AS this FROM "%s"' % self.map_name)
+        result = self.execute('SELECT __key, NULL AS this FROM "%s"' % self.map_name)
         self._validate_result(result, SqlColumnType.NULL, lambda _: None)
 
     def test_object(self):
@@ -746,19 +779,19 @@ class SqlColumnTypesReadTest(SqlTestBase):
 
         self._create_mapping_for_portable(666, 6, {"age": "BIGINT", "height": "REAL"})
         self._populate_map(value_factory=value_factory)
-        result = self.client.sql.execute('SELECT __key, this FROM "%s"' % self.map_name)
+        result = self.execute('SELECT __key, this FROM "%s"' % self.map_name)
         self._validate_result(result, SqlColumnType.OBJECT, value_factory)
 
     def test_null_only_column(self):
         self._create_mapping("INTEGER")
         self._populate_map()
-        result = self.client.sql.execute(
+        result = self.execute(
             'SELECT __key, CAST(NULL AS INTEGER) as this FROM "%s"' % self.map_name
         )
         self._validate_result(result, SqlColumnType.INTEGER, lambda _: None)
 
     def _validate_rows(self, expected_type, value_factory=lambda key: key):
-        result = self.client.sql.execute('SELECT __key, this FROM "%s"' % self.map_name)
+        result = self.execute('SELECT __key, this FROM "%s"' % self.map_name)
         self._validate_result(result, expected_type, value_factory)
 
     def _validate_result(self, result, expected_type, factory):
@@ -850,8 +883,8 @@ class SqlServiceV5LiteMemberClusterTest(SingleMemberTestCase):
 
     def test_execute(self):
         with self.assertRaises(HazelcastSqlError) as cm:
-            with self.client.sql.execute("SOME QUERY") as result:
-                result.update_count().result()
+            with self.client.sql.execute("SOME QUERY").result() as result:
+                result.update_count()
 
         # Make sure that exception is originating from the server
         self.assertEqual(self.member.uuid, str(cm.exception.originating_member_uuid))
@@ -859,8 +892,8 @@ class SqlServiceV5LiteMemberClusterTest(SingleMemberTestCase):
     def test_execute_statement(self):
         statement = SqlStatement("SOME QUERY")
         with self.assertRaises(HazelcastSqlError) as cm:
-            with self.client.sql.execute_statement(statement) as result:
-                result.update_count().result()
+            with self.client.sql.execute_statement(statement).result() as result:
+                result.update_count()
 
         # Make sure that exception is originating from the server
         self.assertEqual(self.member.uuid, str(cm.exception.originating_member_uuid))
@@ -922,12 +955,11 @@ class SqlServiceV5MixedClusterTest(HazelcastTestCase):
             % map_name
         )
 
-        with self.client.sql.execute(create_mapping_query) as result:
-            result.update_count().result()
+        self.client.sql.execute(create_mapping_query).result()
 
         m = self.client.get_map(map_name).blocking()
         m.put(1, 1)
-        with self.client.sql.execute("SELECT this FROM %s" % map_name) as result:
+        with self.client.sql.execute("SELECT this FROM %s" % map_name).result() as result:
             rows = [row.get_object("this") for row in result]
 
         self.assertEqual(1, len(rows))
@@ -942,7 +974,7 @@ class JetSqlTest(SqlTestBase):
         skip_if_server_version_older_than(self, self.client, "5.0")
 
     def test_streaming_sql_query(self):
-        with self.client.sql.execute("SELECT * FROM TABLE(generate_stream(100))") as result:
+        with self.execute("SELECT * FROM TABLE(generate_stream(100))") as result:
             for idx, row in enumerate(result):
                 self.assertEqual(idx, row.get_object("v"))
                 if idx == 200:
@@ -965,8 +997,7 @@ class JetSqlTest(SqlTestBase):
             % self.map_name
         )
 
-        with self.client.sql.execute(query) as result:
-            self.assertEqual(0, result.update_count().result())
+        self.execute(query)
 
         insert_into_query = (
             """
@@ -976,8 +1007,8 @@ class JetSqlTest(SqlTestBase):
             % self.map_name
         )
 
-        with self.client.sql.execute(insert_into_query) as result:
-            self.assertEqual(0, result.update_count().result())
+        with self.execute(insert_into_query) as result:
+            self.assertEqual(0, self.update_count(result))
 
         self.assertEqual(1, self.map.size())
         entry = self.map.get(1)
