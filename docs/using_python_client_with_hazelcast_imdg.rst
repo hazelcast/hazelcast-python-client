@@ -1672,7 +1672,7 @@ it:
     );
     """
 
-    client.sql.execute(mapping_query).result():
+    client.sql.execute(mapping_query).result()
 
     employees.set(1, HazelcastJsonValue({"name": "John Doe", "salary": 60000}))
     employees.set(2, HazelcastJsonValue({"name": "Jane Doe", "salary": 80000}))

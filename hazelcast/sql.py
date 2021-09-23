@@ -67,7 +67,7 @@ class SqlService(object):
 
         client = hazelcast.HazelcastClient()
 
-        result = client.sql.execute("SELECT * FROM person")
+        result = client.sql.execute("SELECT * FROM person").result()
 
         for row in result:
             print(row.get_object("person_id"))
@@ -1142,7 +1142,7 @@ class SqlResult(object):
             otherwise.
         """
         return (
-            execute_response.row_page is None  # Just an update count
+            execute_response.row_metadata is None  # Just an update count
             or execute_response.row_page.is_last  # Single page result
         )
 
