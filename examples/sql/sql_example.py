@@ -2,7 +2,6 @@ from __future__ import print_function
 
 import hazelcast
 from hazelcast.serialization.api import Portable
-from hazelcast.sql import SqlStatement
 
 
 class Customer(Portable):
@@ -93,16 +92,13 @@ with client.sql.execute("SELECT * FROM customers").result() as result:
 
         print(name, age, is_active)
 
-# Construct a statement object to control the properties of the query
 # Special keywords __key and this can be used to refer to key and value.
 # Also, a placeholder parameters can be specified
-statement = SqlStatement("SELECT __key, age FROM customers WHERE name LIKE ?")
+query = "SELECT __key, age FROM customers WHERE name LIKE ?"
 
-# Parameters will replace the placeholders on the server side
-statement.add_parameter("Jo%")
-statement.timeout = 5
-
-with client.sql.execute_statement(statement).result() as result:
+# Parameters will replace the placeholders on the server side.
+# Properties of the query can be configured with keyword arguments.
+with client.sql.execute(query, "Jo%", timeout=5).result() as result:
     # Row metadata can also be retrieved from the result
     row_metadata = result.get_row_metadata()
 
@@ -128,3 +124,5 @@ for row in result:
 
 # Query can be closed explicitly
 result.close().result()
+
+client.shutdown()
