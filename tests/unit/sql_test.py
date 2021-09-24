@@ -4,7 +4,6 @@ import uuid
 
 from mock import MagicMock
 
-from hazelcast.future import ImmediateFuture
 from hazelcast.protocol.codec import sql_execute_codec, sql_close_codec, sql_fetch_codec
 from hazelcast.protocol.client_message import _OUTBOUND_MESSAGE_MESSAGE_TYPE_OFFSET
 from hazelcast.serialization import LE_INT
@@ -18,7 +17,7 @@ from hazelcast.sql import (
     HazelcastSqlError,
     _SqlErrorCode,
     _SqlError,
-    SqlStatement,
+    _SqlStatement,
     SqlExpectedResultType,
 )
 from hazelcast.util import try_to_get_enum_value
@@ -268,27 +267,27 @@ class SqlInvalidInputTest(unittest.TestCase):
         valid_inputs = ["a", "   a", "  a  "]
 
         for valid in valid_inputs:
-            statement = SqlStatement(valid)
+            statement = _SqlStatement(valid, [])
             self.assertEqual(valid, statement.sql)
 
         invalid_inputs = ["", "   ", None, 1]
 
         for invalid in invalid_inputs:
             with self.assertRaises((ValueError, AssertionError)):
-                SqlStatement(invalid)
+                _SqlStatement(invalid, [])
 
     def test_statement_timeout(self):
         valid_inputs = [-1, 0, 15, 1.5]
 
         for valid in valid_inputs:
-            statement = SqlStatement("sql")
+            statement = _SqlStatement("sql", [])
             statement.timeout = valid
             self.assertEqual(valid, statement.timeout)
 
         invalid_inputs = [-10, -100, "hey", None]
 
         for invalid in invalid_inputs:
-            statement = SqlStatement("sql")
+            statement = _SqlStatement("sql", [])
             with self.assertRaises((ValueError, AssertionError)):
                 statement.timeout = invalid
 
@@ -296,14 +295,14 @@ class SqlInvalidInputTest(unittest.TestCase):
         valid_inputs = [1, 10, 999999]
 
         for valid in valid_inputs:
-            statement = SqlStatement("something")
+            statement = _SqlStatement("something", [])
             statement.cursor_buffer_size = valid
             self.assertEqual(valid, statement.cursor_buffer_size)
 
         invalid_inputs = [0, -10, -99999, "hey", None, 1.0]
 
         for invalid in invalid_inputs:
-            statement = SqlStatement("something")
+            statement = _SqlStatement("something", [])
             with self.assertRaises((ValueError, AssertionError)):
                 statement.cursor_buffer_size = invalid
 
@@ -316,7 +315,7 @@ class SqlInvalidInputTest(unittest.TestCase):
         ]
 
         for valid in valid_inputs:
-            statement = SqlStatement("something")
+            statement = _SqlStatement("something", [])
             statement.expected_result_type = valid
             self.assertEqual(
                 try_to_get_enum_value(valid, SqlExpectedResultType), statement.expected_result_type
@@ -326,7 +325,7 @@ class SqlInvalidInputTest(unittest.TestCase):
 
         for invalid in invalid_inputs:
             with self.assertRaises(TypeError):
-                statement = SqlStatement("something")
+                statement = _SqlStatement("something")
                 statement.expected_result_type = invalid
 
     def test_row_metadata_get_column(self):
