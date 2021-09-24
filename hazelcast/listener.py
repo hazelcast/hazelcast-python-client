@@ -193,7 +193,12 @@ class ListenerService(object):
 
 class ClusterViewListenerService(object):
     def __init__(
-        self, client, connection_manager, partition_service, cluster_service, invocation_service
+        self,
+        client,
+        connection_manager,
+        partition_service,
+        cluster_service,
+        invocation_service,
     ):
         self._client = client
         self._partition_service = partition_service
@@ -220,6 +225,11 @@ class ClusterViewListenerService(object):
             self._try_register(new_connection)
 
     def _try_register(self, connection):
+        if not self._connection_manager.live:
+            # There is no point on trying the register a backup listener
+            # if the client is about to shutdown.
+            return
+
         if self._listener_added_connection:
             return
 
