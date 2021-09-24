@@ -220,7 +220,7 @@ class _InternalClusterService(object):
             )
 
         current = self._member_list_snapshot
-        if version >= current.version:
+        if version > current.version:
             self._apply_new_state_and_fire_events(current, snapshot)
 
         if current is _EMPTY_SNAPSHOT:
