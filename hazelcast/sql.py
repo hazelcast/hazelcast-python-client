@@ -86,7 +86,7 @@ class SqlService(object):
 
         Args:
             sql (str): SQL string.
-            *params: Query parameters that will replaces the placeholders at
+            *params: Query parameters that will replace the placeholders at
                 the server-side. You may define parameter placeholders in the
                 query with the ``?`` character. For every placeholder, a
                 parameter value must be provided.
