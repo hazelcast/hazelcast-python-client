@@ -1718,6 +1718,19 @@ See the `Reference Manual
 <https://docs.hazelcast.com/hazelcast/latest/sql/expressions.html>`__
 for details.
 
+Improving the Performance of SQL Queries
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can improve the performance of queries over maps by indexing map entries.
+
+To find out more about indexing map entries, see
+:func:`add_index() <hazelcast.proxy.map.Map.add_index>` method.
+
+If you find that your queries lead to out of memory exceptions (OOME), consider
+decreasing the value of the Jet engine’s `max-processor-accumulated-records
+option
+<https://docs.hazelcast.com/hazelcast/latest/configuration/jet-configuration#list-of-configuration-options>`__.
+
 Limitations
 ~~~~~~~~~~~
 
