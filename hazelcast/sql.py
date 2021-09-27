@@ -57,8 +57,6 @@ class SqlService(object):
     Before you can access any object using SQL, a *mapping* has to be created.
     See the documentation for the ``CREATE MAPPING`` command.
 
-    **Usage**
-
     When a query is executed, an :class:`SqlResult` is returned. You may get
     row iterator from the result. The result must be closed at the end. The
     iterator will close the result automatically when it is exhausted given
