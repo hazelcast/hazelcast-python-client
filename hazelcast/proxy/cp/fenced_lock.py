@@ -30,7 +30,7 @@ class FencedLock(SessionAwareCPProxy):
     available on at most one side of the partition.
 
     FencedLock works on top of CP sessions. Please refer to CP Session
-    IMDG documentation section for more information.
+    documentation section for more information.
 
     By default, FencedLock is reentrant. Once a caller acquires
     the lock, it can acquire the lock reentrantly as many times as it wants

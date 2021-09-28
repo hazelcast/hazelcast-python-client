@@ -40,4 +40,4 @@ Following commands starts the tests:
     python run_tests.py
 
 Test script automatically downloads ``hazelcast-remote-controller`` and
-Hazelcast IMDG. The script uses Maven to download those.
+Hazelcast. The script uses Maven to download those.

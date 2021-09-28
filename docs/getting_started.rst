@@ -12,61 +12,68 @@ Requirements
 - Windows, Linux/UNIX or Mac OS X
 - Python 2.7 or Python 3.4 or newer
 - Java 8 or newer
-- Hazelcast IMDG 4.0 or newer
+- Hazelcast 4.0 or newer
 - Latest Hazelcast Python client
 
-Working with Hazelcast IMDG Clusters
-------------------------------------
+Working with Hazelcast Clusters
+-------------------------------
 
-Hazelcast Python client requires a working Hazelcast IMDG cluster to
+Hazelcast Python client requires a working Hazelcast cluster to
 run. This cluster handles storage and manipulation of the user data.
-Clients are a way to connect to the Hazelcast IMDG cluster and access
+Clients are a way to connect to the Hazelcast cluster and access
 such data.
 
-Hazelcast IMDG cluster consists of one or more cluster members. These
+Hazelcast cluster consists of one or more cluster members. These
 members generally run on multiple virtual or physical machines and are
 connected to each other via network. Any data put on the cluster is
 partitioned to multiple members transparent to the user. It is therefore
 very easy to scale the system by adding new members as the data grows.
-Hazelcast IMDG cluster also offers resilience. Should any hardware or
+Hazelcast cluster also offers resilience. Should any hardware or
 software problem causes a crash to any member, the data on that member
 is recovered from backups and the cluster continues to operate without
 any downtime. Hazelcast clients are an easy way to connect to a
-Hazelcast IMDG cluster and perform tasks on distributed data structures
+Hazelcast cluster and perform tasks on distributed data structures
 that live on the cluster.
 
 In order to use Hazelcast Python client, we first need to setup a
-Hazelcast IMDG cluster.
+Hazelcast cluster.
 
-Setting Up a Hazelcast IMDG Cluster
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Setting Up a Hazelcast Cluster
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There are following options to start a Hazelcast IMDG cluster easily:
+There are following options to start a Hazelcast cluster easily:
 
-- You can run standalone members by downloading and running JAR files
-  from the website.
-- You can embed members to your Java projects.
 - You can use our `Docker
   images <https://hub.docker.com/r/hazelcast/hazelcast/>`__.
 
-We are going to download JARs from the website and run a standalone
-member for this guide.
+  .. code:: bash
+
+      docker run -p 5701:5701 hazelcast/hazelcast:5.0
+
+- You can use `Hazelcast CLI
+  <https://docs.hazelcast.com/hazelcast/latest/getting-started/install-hazelcast#using-a-package-manager>`__.
+- You can run standalone members by downloading and running distribution
+  files from the website.
+- You can embed members to your Java projects.
+
+We are going to download distribution files from the website and run
+a standalone member for this guide.
 
 Running Standalone JARs
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Follow the instructions below to create a Hazelcast IMDG cluster:
+Follow the instructions below to create a Hazelcast cluster:
 
-1. Go to Hazelcast’s download `page <https://hazelcast.org/download/>`__
-   and download either the ``.zip`` or ``.tar`` distribution of
-   Hazelcast IMDG.
+1. Go to Hazelcast’s download `page
+   <https://hazelcast.com/open-source-projects/downloads/>`__
+   and download either the ``.zip`` or ``.tar`` distribution of Hazelcast.
 2. Decompress the contents into any directory that you want to run
    members from.
 3. Change into the directory that you decompressed the Hazelcast content
    and then into the ``bin`` directory.
-4. Use either ``start.sh`` or ``start.bat`` depending on your operating
+4. Use either ``hz-start`` or ``hz-start.bat`` depending on your operating
    system. Once you run the start script, you should see the Hazelcast
-   IMDG logs in the terminal.
+   logs in the terminal.
 
 You should see a log similar to the following, which means that your
 1-member cluster is ready to be used:
@@ -126,8 +133,8 @@ If you want to add a ``Portable`` class, you should use
 ``<portable-factories>`` instead of ``<data-serializable-factories>`` in
 the above configuration.
 
-See the `Hazelcast IMDG Reference
-Manual <http://docs.hazelcast.org/docs/latest/manual/html-single/index.html#getting-started>`__
+See the `Hazelcast Reference Manual
+<https://docs.hazelcast.com/hazelcast/latest/getting-started/install-hazelcast>`__
 for more information on setting up the clusters.
 
 Downloading and Installing
@@ -151,13 +158,13 @@ command:
 Basic Configuration
 -------------------
 
-If you are using Hazelcast IMDG and Python client on the same computer,
+If you are using Hazelcast and Python client on the same computer,
 generally the default configuration should be fine. This is great for
 trying out the client. However, if you run the client on a different
 computer than any of the cluster members, you may need to do some simple
 configurations such as specifying the member addresses.
 
-The Hazelcast IMDG members and clients have their own configuration
+The Hazelcast members and clients have their own configuration
 options. You may need to reflect some of the member side configurations
 on the client side to properly connect to the cluster.
 
@@ -165,27 +172,27 @@ This section describes the most common configuration elements to get you
 started in no time. It discusses some member side configuration options
 to ease the understanding of Hazelcast’s ecosystem. Then, the client
 side configuration options regarding the cluster connection are
-discussed. The configurations for the Hazelcast IMDG data structures
+discussed. The configurations for the Hazelcast data structures
 that can be used in the Python client are discussed in the following
 sections.
 
-See the `Hazelcast IMDG Reference
-Manual <https://docs.hazelcast.org/docs/latest/manual/html-single/index.html>`__
+See the `Hazelcast Reference Manual
+<https://docs.hazelcast.com/hazelcast/latest/>`__
 and :ref:`configuration_overview:configuration overview` section for
 more information.
 
-Configuring Hazelcast IMDG
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Configuring Hazelcast
+~~~~~~~~~~~~~~~~~~~~~
 
-Hazelcast IMDG aims to run out-of-the-box for most common scenarios.
+Hazelcast aims to run out-of-the-box for most common scenarios.
 However if you have limitations on your network such as multicast being
-disabled, you may have to configure your Hazelcast IMDG members so that
+disabled, you may have to configure your Hazelcast members so that
 they can find each other on the network. Also, since most of the
 distributed data structures are configurable, you may want to configure
 them according to your needs. We will show you the basics about network
 configuration here.
 
-You can use the following options to configure Hazelcast IMDG:
+You can use the following options to configure Hazelcast:
 
 - Using the ``hazelcast.xml`` configuration file.
 - Programmatically configuring the member before starting it from the
@@ -297,7 +304,7 @@ default settings.
 
     client = hazelcast.HazelcastClient()
 
-If you run the Hazelcast IMDG members on a different server than the
+If you run the Hazelcast members on a different server than the
 client, you most probably have configured the members’ ports and cluster
 names as explained in the previous section. If you did, then you need to
 make match those changes to the network settings of your client.

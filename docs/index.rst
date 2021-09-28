@@ -16,13 +16,13 @@ Hazelcast Python Client
 
 ----
 
-`Hazelcast <https://hazelcast.org/>`__ is an open-source distributed
+`Hazelcast <https://hazelcast.com/>`__ is an open-source distributed
 in-memory data store and computation platform that provides a wide
 variety of distributed data structures and concurrency primitives.
 
-Hazelcast Python client is a way to communicate to Hazelcast IMDG
-clusters and access the cluster data. The client provides a
-Future-based asynchronous API suitable for wide ranges of use cases.
+Hazelcast Python client is a way to communicate to Hazelcast clusters
+and access the cluster data. The client provides a Future-based
+asynchronous API suitable for wide ranges of use cases.
 
 
 Overview
@@ -62,8 +62,8 @@ Usage
     client.shutdown()
 
 
-If you are using Hazelcast IMDG and the Python client on the same
-machine, the default configuration should work out-of-the-box. However,
+If you are using Hazelcast and the Python client on the same machine,
+the default configuration should work out-of-the-box. However,
 you may need to configure the client to connect to cluster nodes that
 are running on different machines or to customize client properties.
 
@@ -124,7 +124,7 @@ Features
     serialization
     setting_up_client_network
     client_connection_strategy
-    using_python_client_with_hazelcast_imdg
+    using_python_client_with_hazelcast
     securing_client_connection
     development_and_testing
     getting_help
