@@ -398,7 +398,6 @@ class HazelcastJsonValue(object):
     JSON strings.
 
     HazelcastJsonValue is queried using Hazelcast's querying language.
-    See `Distributed Query section <https://github.com/hazelcast/hazelcast-python-client#77-distributed-query>`_.
 
     In terms of querying, numbers in JSON strings are treated as either
     Long or Double in the Java side. str, bool and None

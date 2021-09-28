@@ -601,7 +601,7 @@ CP Subsystem
 
 Hazelcast 4.0 introduces CP concurrency primitives with respect to
 the `CAP principle
-<http://awoc.wolski.fi/dlib/big-data/Brewer_podc_keynote_2000.pdf>`__,
+<https://awoc.wolski.fi/dlib/big-data/Brewer_podc_keynote_2000.pdf>`__,
 i.e., they always maintain
 `linearizability <https://aphyr.com/posts/313-strong-consistency-models>`__
 and prefer consistency to availability during network partitions and

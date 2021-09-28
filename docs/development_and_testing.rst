@@ -11,8 +11,8 @@ Building and Using Client From Sources
 Follow the below steps to build and install Hazelcast Python client from
 its source:
 
-1. Clone the GitHub repository
-   (https://github.com/hazelcast/hazelcast-python-client.git).
+1. Clone the `GitHub repository
+   <https://github.com/hazelcast/hazelcast-python-client>`__.
 2. Run ``python setup.py install`` to install the Python client.
 
 If you are planning to contribute:
