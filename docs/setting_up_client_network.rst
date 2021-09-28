@@ -48,7 +48,7 @@ Setting Smart Routing
 
 Smart routing defines whether the client mode is smart or unisocket. See
 the
-:ref:`using_python_client_with_hazelcast_imdg:python client operation modes`
+:ref:`using_python_client_with_hazelcast:python client operation modes`
 section for the description of smart and unisocket modes.
 
 .. code:: python
@@ -134,7 +134,7 @@ External Smart Client Discovery
 
 .. warning::
 
-    This feature requires Hazelcast IMDG 4.2 or higher version.
+    This feature requires Hazelcast 4.2 or higher version.
 
 The client sends requests directly to cluster members in the smart client mode
 (default) in order to reduce hops to accomplish operations. Because of that,

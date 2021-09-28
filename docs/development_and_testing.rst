@@ -11,8 +11,8 @@ Building and Using Client From Sources
 Follow the below steps to build and install Hazelcast Python client from
 its source:
 
-1. Clone the GitHub repository
-   (https://github.com/hazelcast/hazelcast-python-client.git).
+1. Clone the `GitHub repository
+   <https://github.com/hazelcast/hazelcast-python-client>`__.
 2. Run ``python setup.py install`` to install the Python client.
 
 If you are planning to contribute:
@@ -40,4 +40,4 @@ Following commands starts the tests:
     python run_tests.py
 
 Test script automatically downloads ``hazelcast-remote-controller`` and
-Hazelcast IMDG. The script uses Maven to download those.
+Hazelcast. The script uses Maven to download those.

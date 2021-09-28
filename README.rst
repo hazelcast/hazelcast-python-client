@@ -16,13 +16,13 @@ Hazelcast Python Client
 
 ----
 
-`Hazelcast <https://hazelcast.org/>`__ is an open-source distributed
+`Hazelcast <https://hazelcast.com/>`__ is an open-source distributed
 in-memory data store and computation platform that provides a wide
 variety of distributed data structures and concurrency primitives.
 
-Hazelcast Python client is a way to communicate to Hazelcast IMDG
-clusters and access the cluster data. The client provides a
-Future-based asynchronous API suitable for wide ranges of use cases.
+Hazelcast Python client is a way to communicate to Hazelcast clusters
+and access the cluster data. The client provides a Future-based
+asynchronous API suitable for wide ranges of use cases.
 
 Installation
 ------------
@@ -30,15 +30,15 @@ Installation
 Hazelcast
 ~~~~~~~~~
 
-Hazelcast Python client requires a working Hazelcast IMDG cluster to
-run. This cluster handles the storage and manipulation of the user data.
+Hazelcast Python client requires a working Hazelcast cluster to run.
+This cluster handles the storage and manipulation of the user data.
 
-A Hazelcast IMDG cluster consists of one or more cluster members. These
+A Hazelcast cluster consists of one or more cluster members. These
 members generally run on multiple virtual or physical machines and are
 connected to each other via the network. Any data put on the cluster is
 partitioned to multiple members transparent to the user. It is therefore
 very easy to scale the system by adding new members as the data grows.
-Hazelcast IMDG cluster also offers resilience. Should any hardware or
+Hazelcast cluster also offers resilience. Should any hardware or
 software problem causes a crash to any member, the data on that member
 is recovered from backups and the cluster continues to operate without
 any downtime.
@@ -49,12 +49,12 @@ images <https://hub.docker.com/r/hazelcast/hazelcast/>`__.
 
 .. code:: bash
 
-   docker run -p 5701:5701 hazelcast/hazelcast:4.2
+   docker run -p 5701:5701 hazelcast/hazelcast:5.0
 
 You can also use our ZIP or TAR
-`distributions <https://hazelcast.org/imdg/download/archives/#hazelcast-imdg>`__.
+`distributions <https://hazelcast.com/open-source-projects/downloads/>`__.
 Once you have downloaded, you can start the Hazelcast member using
-the ``bin/start.sh`` script.
+the ``bin/hz-start`` script.
 
 Client
 ~~~~~~
@@ -100,8 +100,8 @@ Usage
     client.shutdown()
 
 
-If you are using Hazelcast IMDG and the Python client on the same
-machine, the default configuration should work out-of-the-box. However,
+If you are using Hazelcast and the Python client on the same machine,
+the default configuration should work out-of-the-box. However,
 you may need to configure the client to connect to cluster nodes that
 are running on different machines or to customize client properties.
 
@@ -149,7 +149,7 @@ Features
 -  Ability to listen to client lifecycle, cluster state, and distributed
    data structure events
 -  and `many
-   more <https://hazelcast.org/imdg/clients-languages/python/#client-features>`__
+   more <https://hazelcast.com/clients/python/#client-features>`__
 
 Getting Help
 ------------
@@ -177,7 +177,7 @@ Issue Reports
 For issue reports, please share the following information with us to
 quickly resolve the problems:
 
--  Hazelcast IMDG and the client version that you use
+-  Hazelcast and the client version that you use
 -  General information about the environment and the architecture you
    use like Python version, cluster size, number of clients, Java
    version, JVM parameters, operating system etc.
@@ -195,7 +195,7 @@ Development
 ^^^^^^^^^^^
 
 1. Clone the `GitHub repository
-   <https://github.com/hazelcast/hazelcast-python-client.git>`__.
+   <https://github.com/hazelcast/hazelcast-python-client>`__.
 2. Run ``python setup.py install`` to install the Python client.
 
 If you are planning to contribute:
@@ -223,7 +223,7 @@ Following commands starts the tests:
     python run_tests.py
 
 Test script automatically downloads ``hazelcast-remote-controller`` and
-Hazelcast IMDG. The script uses Maven to download those.
+Hazelcast. The script uses Maven to download those.
 
 License
 -------
@@ -235,5 +235,5 @@ Copyright
 
 Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
 
-Visit `www.hazelcast.com <http://www.hazelcast.com>`__ for more
+Visit `hazelcast.com <https://hazelcast.com>`__ for more
 information.

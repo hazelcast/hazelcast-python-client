@@ -14,9 +14,9 @@ How to try these examples
 * If not, you can use our official Docker images to start a member.
 
     ```bash
-    docker run -p 5701:5701 hazelcast/hazelcast:4.2
+    docker run -p 5701:5701 hazelcast/hazelcast:5.0
     ```
   To see the other ways to start Hazelcast members, see 
-  [Working with Hazelcast IMDG Clusters](https://hazelcast.readthedocs.io/en/stable/getting_started.html#working-with-hazelcast-imdg-clusters)
+  [Working with Hazelcast Clusters](https://hazelcast.readthedocs.io/en/stable/getting_started.html#working-with-hazelcast-clusters)
   section of our documentation.
   

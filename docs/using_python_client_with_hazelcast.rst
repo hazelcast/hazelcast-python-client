@@ -1,7 +1,7 @@
-Using Python Client with Hazelcast IMDG
-=======================================
+Using Python Client with Hazelcast
+==================================
 
-This chapter provides information on how you can use Hazelcast IMDG’s
+This chapter provides information on how you can use Hazelcast
 data structures in the Python client, after giving some basic
 information including an overview to the client API, operation modes of
 the client and how it handles the failures.
@@ -163,8 +163,8 @@ Using Map
 Hazelcast Map is a distributed dictionary. Through the Python client,
 you can perform operations like reading and writing from/to a Hazelcast
 Map with the well known get and put methods. For details, see the `Map
-section <https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#map>`__
-in the Hazelcast IMDG Reference Manual.
+section <https://docs.hazelcast.com/hazelcast/latest/data-structures/map>`__
+in the Hazelcast Reference Manual.
 
 A Map usage example is shown below.
 
@@ -186,8 +186,8 @@ Using MultiMap
 
 Hazelcast MultiMap is a distributed and specialized map where you can
 store multiple values under a single key. For details, see the `MultiMap
-section <https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#multimap>`__
-in the Hazelcast IMDG Reference Manual.
+section <https://docs.hazelcast.com/hazelcast/latest/data-structures/multimap>`__
+in the Hazelcast Reference Manual.
 
 A MultiMap usage example is shown below.
 
@@ -216,8 +216,8 @@ Hazelcast Replicated Map is a distributed key-value data structure where
 the data is replicated to all members in the cluster. It provides full
 replication of entries to all members for high speed access. For
 details, see the `Replicated Map
-section <https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#replicated-map>`__
-in the Hazelcast IMDG Reference Manual.
+section <https://docs.hazelcast.com/hazelcast/latest/data-structures/replicated-map>`__
+in the Hazelcast Reference Manual.
 
 A Replicated Map usage example is shown below.
 
@@ -243,8 +243,8 @@ Using Queue
 
 Hazelcast Queue is a distributed queue which enables all cluster members
 to interact with it. For details, see the `Queue
-section <https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#queue>`__
-in the Hazelcast IMDG Reference Manual.
+section <https://docs.hazelcast.com/hazelcast/latest/data-structures/queue>`__
+in the Hazelcast Reference Manual.
 
 A Queue usage example is shown below.
 
@@ -273,8 +273,8 @@ Using Set
 
 Hazelcast Set is a distributed set which does not allow duplicate
 elements. For details, see the `Set
-section <https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#set>`__
-in the Hazelcast IMDG Reference Manual.
+section <https://docs.hazelcast.com/hazelcast/latest/data-structures/set>`__
+in the Hazelcast Reference Manual.
 
 A Set usage example is shown below.
 
@@ -300,8 +300,8 @@ Using List
 
 Hazelcast List is a distributed list which allows duplicate elements and
 preserves the order of elements. For details, see the `List
-section <https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#list>`__
-in the Hazelcast IMDG Reference Manual.
+section <https://docs.hazelcast.com/hazelcast/latest/data-structures/list>`__
+in the Hazelcast Reference Manual.
 
 A List usage example is shown below.
 
@@ -334,8 +334,8 @@ items are overwritten or expired. You can reach each element in a
 Ringbuffer using a sequence ID, which is mapped to the elements between
 the head and tail (inclusive) of the Ringbuffer. For details, see the
 `Ringbuffer
-section <https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#ringbuffer>`__
-in the Hazelcast IMDG Reference Manual.
+section <https://docs.hazelcast.com/hazelcast/latest/data-structures/ringbuffer>`__
+in the Hazelcast Reference Manual.
 
 A Ringbuffer usage example is shown below.
 
@@ -359,10 +359,11 @@ A Ringbuffer usage example is shown below.
 Using ReliableTopic
 ~~~~~~~~~~~~~~~~~~~
 
-Hazelcast ReliableTopic is a distributed topic implementation backed up by the Ringbuffer
-data structure. For details, see the
-`Reliable Topic section <https://docs.hazelcast.com/imdg/latest/data-structures/reliable-topic.html>`__
-in the Hazelcast IMDG Reference Manual.
+Hazelcast ReliableTopic is a distributed topic implementation backed up by
+the Ringbuffer data structure. For details, see the
+`Reliable Topic section
+<https://docs.hazelcast.com/hazelcast/latest/data-structures/reliable-topic>`__
+in the Hazelcast Reference Manual.
 
 A Reliable Topic usage example is shown below.
 
@@ -409,9 +410,9 @@ Using Topic
 ~~~~~~~~~~~
 
 Hazelcast Topic is a distribution mechanism for publishing messages that
-are delivered to multiple subscribers. For details, see the `Topic
-section <https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#topic>`__
-in the Hazelcast IMDG Reference Manual.
+are delivered to multiple subscribers. For details, see the `Topic section
+<https://docs.hazelcast.com/hazelcast/latest/data-structures/topic>`__
+in the Hazelcast Reference Manual.
 
 A Topic usage example is shown below.
 
@@ -443,9 +444,9 @@ You can create a ``Transaction`` object using the Python client to
 begin, commit and rollback a transaction. You can obtain
 transaction-aware instances of queues, maps, sets, lists and multimaps
 via the ``Transaction`` object, work with them and commit or rollback in
-one shot. For details, see the `Transactions
-section <https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#transactions>`__
-in the Hazelcast IMDG Reference Manual.
+one shot. For details, see the `Transactions section
+<https://docs.hazelcast.com/hazelcast/latest/transactions/creating-a-transaction-interface>`__
+in the Hazelcast Reference Manual.
 
 .. code:: python
 
@@ -519,10 +520,10 @@ Using PN Counter
 
 Hazelcast ``PNCounter`` (Positive-Negative Counter) is a CRDT
 positive-negative counter implementation. It is an eventually consistent
-counter given there is no member failure. For details, see the `PN
-Counter
-section <https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#pn-counter>`__
-in the Hazelcast IMDG Reference Manual.
+counter given there is no member failure. For details, see the
+`PN Counter section
+<https://docs.hazelcast.com/hazelcast/latest/data-structures/pn-counter>`__
+in the Hazelcast Reference Manual.
 
 A PN Counter usage example is shown below.
 
@@ -550,9 +551,9 @@ Using Flake ID Generator
 Hazelcast ``FlakeIdGenerator`` is used to generate cluster-wide unique
 identifiers. Generated identifiers are long primitive values and are
 k-ordered (roughly ordered). IDs are in the range from ``0`` to ``2^63-1``
-(maximum signed long value). For details, see the `FlakeIdGenerator
-section <https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#flakeidgenerator>`__
-in the Hazelcast IMDG Reference Manual.
+(maximum signed long value). For details, see the `FlakeIdGenerator section
+<https://docs.hazelcast.com/hazelcast/latest/data-structures/flake-id-generator>`__
+in the Hazelcast Reference Manual.
 
 .. code:: python
 
@@ -598,9 +599,9 @@ attributes:
 CP Subsystem
 ~~~~~~~~~~~~
 
-Hazelcast IMDG 4.0 introduces CP concurrency primitives with respect to
-the `CAP
-principle <http://awoc.wolski.fi/dlib/big-data/Brewer_podc_keynote_2000.pdf>`__,
+Hazelcast 4.0 introduces CP concurrency primitives with respect to
+the `CAP principle
+<https://awoc.wolski.fi/dlib/big-data/Brewer_podc_keynote_2000.pdf>`__,
 i.e., they always maintain
 `linearizability <https://aphyr.com/posts/313-strong-consistency-models>`__
 and prefer consistency to availability during network partitions and
@@ -610,8 +611,8 @@ All data structures within CP Subsystem are available through
 ``client.cp_subsystem`` component of the client.
 
 Before using Atomic Long, Lock, and Semaphore, CP Subsystem has to be
-enabled on cluster-side. Refer to `CP
-Subsystem <https://docs.hazelcast.org/docs/latest/manual/html-single/#cp-subsystem>`__
+enabled on cluster-side. Refer to `CP Subsystem
+<https://docs.hazelcast.com/hazelcast/latest/cp-subsystem/cp-subsystem>`__
 documentation for more information.
 
 Data structures in CP Subsystem run in CP groups. Each CP group elects
@@ -658,8 +659,8 @@ AtomicLong implementation does not offer exactly-once / effectively-once
 execution semantics. It goes with at-least-once execution semantics by
 default and can cause an API call to be committed multiple times in case
 of CP member failures. It can be tuned to offer at-most-once execution
-semantics. Please see
-`fail-on-indeterminate-operation-state <https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#cp-subsystem-configuration>`__
+semantics. Please see `fail-on-indeterminate-operation-state
+<https://docs.hazelcast.com/hazelcast/latest/cp-subsystem/configuration>`__
 server-side setting.
 
 Using Lock
@@ -688,8 +689,8 @@ A basic Lock usage example is shown below.
         lock.unlock()
 
 FencedLock works on top of CP sessions. It keeps a CP session open while
-the lock is acquired. Please refer to `CP
-Session <https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#cp-sessions>`__
+the lock is acquired. Please refer to `CP Session
+<https://docs.hazelcast.com/hazelcast/latest/cp-subsystem/sessions>`__
 documentation for more information.
 
 By default, FencedLock is reentrant. Once a caller acquires the lock, it
@@ -737,7 +738,7 @@ After that, once Client-1 comes back alive, its write request will be
 rejected by the external service, and only Client-2 will be able to
 safely talk to it.
 
-.. figure:: https://docs.hazelcast.org/docs/latest/manual/html-single/images/FencedLock.png
+.. figure:: https://docs.hazelcast.com/hazelcast/latest/_images/FencedLock.png
    :alt: CP Fenced Lock diagram
 
    CP Fenced Lock diagram
@@ -823,8 +824,8 @@ Semaphore data structure has two variations:
   If a Hazelcast server or a client fails while holding some permits,
   they will not be automatically released. You can use the sessionless
   CP Semaphore implementation by enabling JDK compatibility
-  ``jdk-compatible`` server-side setting. Refer to `Semaphore
-  configuration <https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#semaphore-configuration>`__
+  ``jdk-compatible`` server-side setting. Refer to `Semaphore configuration
+  <https://docs.hazelcast.com/hazelcast/latest/cp-subsystem/configuration#semaphore-configuration>`__
   documentation for more details.
 
 Using CountDownLatch
@@ -926,8 +927,8 @@ AtomicReference does not offer exactly-once / effectively-once execution
 semantics. It goes with at-least-once execution semantics by default and
 can cause an API call to be committed multiple times in case of CP
 member failures. It can be tuned to offer at-most-once execution
-semantics. Please see
-`fail-on-indeterminate-operation-state <https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#cp-subsystem-configuration>`__
+semantics. Please see `fail-on-indeterminate-operation-state
+<https://docs.hazelcast.com/hazelcast/latest/cp-subsystem/configuration>`__
 server-side setting.
 
 Distributed Events
@@ -1168,7 +1169,7 @@ See the following example.
 Distributed Computing
 ---------------------
 
-This chapter explains how you can use Hazelcast IMDG’s entry processor
+This chapter explains how you can use Hazelcast entry processor
 implementation in the Python client.
 
 Using EntryProcessor
@@ -1329,9 +1330,9 @@ shown below.
 The code that runs on the entries is implemented in Java on the server
 side. The client side entry processor is used to specify which entry
 processor should be called. For more details about the Java
-implementation of the entry processor, see the `Entry Processor
-section <https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#entry-processor>`__
-in the Hazelcast IMDG Reference Manual.
+implementation of the entry processor, see the `Entry Processor section
+<https://docs.hazelcast.com/hazelcast/latest/computing/entry-processor>`__
+in the Hazelcast Reference Manual.
 
 After the above implementations and configuration are done and you start
 the server where your library is added to its ``CLASSPATH``, you can use
@@ -1403,7 +1404,7 @@ for reference.
 Query different datasets such as Kafka topics and Hazelcast maps, using a
 single query. Normally, querying in SQL is database or dataset-specific.
 However, with :ref:`mappings
-<using_python_client_with_hazelcast_imdg:mappings>`, you can pull information
+<using_python_client_with_hazelcast:mappings>`, you can pull information
 from different sources to present a more complete picture.
 
 See the `Get Started with SQL Over Files
@@ -1892,7 +1893,7 @@ method sends the predicate to all cluster members and merges the results
 coming from them.
 
 .. Note:: Predicates can also be applied to ``key_set`` and
-    ``entry_set`` of the Hazelcast IMDG’s distributed map.
+    ``entry_set`` of a map.
 
 Querying with SQL
 ^^^^^^^^^^^^^^^^^
@@ -2451,9 +2452,9 @@ Near Cache Invalidation
 
 Invalidation is the process of removing an entry from the Near Cache
 when its value is updated or it is removed from the original map (to
-prevent stale reads). See the `Near Cache Invalidation
-section <https://docs.hazelcast.org/docs/latest/manual/html-single/#near-cache-invalidation>`__
-in the Hazelcast IMDG Reference Manual.
+prevent stale reads). See the `Near Cache Invalidation section
+<https://docs.hazelcast.com/hazelcast/latest/performance/near-cache.html#near-cache-invalidation>`__
+in the Hazelcast Reference Manual.
 
 Monitoring and Logging
 ----------------------
@@ -2513,8 +2514,8 @@ client as follows:
     pip install -e .[stats]
 
 After enabling the client statistics, you can monitor your clients using
-Hazelcast Management Center. Please refer to the `Monitoring Clients
-section <https://docs.hazelcast.org/docs/management-center/latest/manual/html/index.html#monitoring-clients>`__
+Hazelcast Management Center. Please refer to the `Monitoring Clients section
+<https://docs.hazelcast.com/management-center/latest/monitor-imdg/monitor-clients>`__
 in the Hazelcast Management Center Reference Manual for more information
 on the client statistics.
 
@@ -2623,8 +2624,8 @@ connections.
 
 You can also group your clients using the client labels. These client
 groups can be blacklisted in Hazelcast Management Center so that they
-can be prevented from connecting to a cluster. See the `related
-section <https://docs.hazelcast.org/docs/management-center/latest/manual/html/index.html#changing-cluster-client-filtering>`__
+can be prevented from connecting to a cluster. See the `related section
+<https://docs.hazelcast.com/management-center/latest/monitor-imdg/client-filtering>`__
 in the Hazelcast Management Center Reference Manual for more information
 on this topic.
 
@@ -2664,7 +2665,7 @@ Configuring Load Balancer
 Load Balancer configuration allows you to specify which cluster member
 to send next operation when queried.
 
-If it is a :ref:`using_python_client_with_hazelcast_imdg:smart client`,
+If it is a :ref:`using_python_client_with_hazelcast:smart client`,
 only the operations that are not key-based are routed to the member
 that is returned by the ``LoadBalancer``. If it is not a smart client,
 ``LoadBalancer`` is ignored.

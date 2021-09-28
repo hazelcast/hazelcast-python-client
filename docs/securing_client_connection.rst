@@ -5,7 +5,7 @@ This chapter describes the security features of Hazelcast Python client.
 These include using TLS/SSL for connections between members and between
 clients and members, mutual authentication, username/password authentication,
 token authentication and Kerberos authentication. These security features
-require **Hazelcast IMDG Enterprise** edition.
+require **Hazelcast Enterprise** edition.
 
 TLS/SSL
 -------
@@ -32,8 +32,8 @@ TLS/SSL for Hazelcast Members
 
 Hazelcast allows you to encrypt socket level communication between
 Hazelcast members and between Hazelcast clients and members, for end to
-end encryption. To use it, see the `TLS/SSL for Hazelcast Members
-section <http://docs.hazelcast.org/docs/latest/manual/html-single/index.html#tls-ssl-for-hazelcast-members>`__.
+end encryption. To use it, see the `TLS/SSL for Hazelcast Members section
+<https://docs.hazelcast.com/hazelcast/latest/security/tls-ssl.html#tlsssl-for-hazelcast-members>`__.
 
 TLS/SSL for Hazelcast Python Clients
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -252,8 +252,8 @@ property on the server side in the ``hazelcast.xml`` file:
 
 You can see the details of setting mutual authentication on the server
 side in the `Mutual Authentication
-section <https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#mutual-authentication>`__
-of the Hazelcast IMDG Reference Manual.
+section <https://docs.hazelcast.com/hazelcast/latest/security/tls-ssl.html#mutual-authentication>`__
+of the Hazelcast Reference Manual.
 
 On the client side, you have to provide ``ssl_cafile``, ``ssl_certfile``
 and ``ssl_keyfile`` on top of the other TLS/SSL configurations. See the
@@ -289,7 +289,7 @@ Then, on the client-side, set ``creds_username`` and ``creds_password`` in the c
     )
 
 Check out the documentation on `Password Credentials
-<https://docs.hazelcast.com/imdg/latest/security/security-realms.html#password-credentials>`__
+<https://docs.hazelcast.com/hazelcast/latest/security/security-realms.html#password-credentials>`__
 of the Hazelcast Documentation.
 
 Token-Based Authentication
