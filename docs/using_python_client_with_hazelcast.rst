@@ -1893,7 +1893,7 @@ method sends the predicate to all cluster members and merges the results
 coming from them.
 
 .. Note:: Predicates can also be applied to ``key_set`` and
-    ``entry_set`` of the map.
+    ``entry_set`` of a map.
 
 Querying with SQL
 ^^^^^^^^^^^^^^^^^
