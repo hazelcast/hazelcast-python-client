@@ -34,7 +34,6 @@ _IS_BACKUP_EVENT_FLAG = 1 << 7
 
 # For codecs
 def create_initial_buffer(size, message_type, is_final=False):
-    size += SIZE_OF_FRAME_LENGTH_AND_FLAGS
     buf = bytearray(size)
     LE_INT.pack_into(buf, 0, size)
     flags = _UNFRAGMENTED_MESSAGE_FLAGS
