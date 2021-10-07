@@ -1234,6 +1234,7 @@ class _InternalSqlService(object):
                 statement.schema,
                 statement.expected_result_type,
                 query_id,
+                False,
             )
 
             invocation = Invocation(

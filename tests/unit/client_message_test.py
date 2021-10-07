@@ -52,6 +52,77 @@ class OutboundMessageTest(unittest.TestCase):
         self.assertEqual(99, message.buf[0])
         self.assertEqual(0, copy.buf[0])  # should be a deep copy
 
+    def test_encode(self):
+        msg = client_authentication_codec.encode_request(
+            "dev",
+            "username",
+            "password",
+            uuid.UUID(hex="1862c7d2-f89c-4151-981d-07a6287089d3"),
+            "PYH",
+            1,
+            "5.0",
+            "hz.client_0",
+            ["label"],
+        )
+
+        # fmt: off
+        expected = [
+            # initial frame
+            40, 0, 0, 0,  # length
+            0, 192,  # flags
+            0, 1, 0, 0,  # message type
+            0, 0, 0, 0, 0, 0, 0, 0,  # correlation id
+            255, 255, 255, 255,  # partition id
+            0, 81, 65, 156, 248, 210, 199, 98, 24, 211, 137, 112, 40, 166, 7, 29, 152,  # uuid
+            1,  # serialization version
+
+            # cluster name frame
+            9, 0, 0, 0,  # length
+            0, 0,  # flags
+            100, 101, 118,  # cluster name
+
+            # username frame
+            14, 0, 0, 0,  # length
+            0, 0,  # length
+            117, 115, 101, 114, 110, 97, 109, 101,  # username
+
+            # password frame
+            14, 0, 0, 0,  # length
+            0, 0,  # flags
+            112, 97, 115, 115, 119, 111, 114, 100,  # password
+
+            # client type frame
+            9, 0, 0, 0,  # length
+            0, 0,  # flags
+            80, 89, 72,  # client type
+
+            # client version frame
+            9, 0, 0, 0,  # length
+            0, 0,  # flags
+            53, 46, 48,  # version
+
+            # client name frame
+            17, 0, 0, 0,  # length
+            0, 0,  # flags
+            104, 122, 46, 99, 108, 105, 101, 110, 116, 95, 48,  # client name
+
+            # labels begin frame
+            6, 0, 0, 0,  # length
+            0, 16,  # flags
+
+            # labels[0] frame
+            11, 0, 0, 0,  # length
+            0, 0,  # flags
+            108, 97, 98, 101, 108,  # labels[0]
+
+            # labels end frame
+            6, 0, 0, 0,  # length
+            0, 40,  # flags
+        ]
+        # fmt: on
+
+        self.assertEqual(bytearray(expected), msg.buf)
+
 
 BEGIN_FRAME = Frame(bytearray(0), 1 << 12)
 END_FRAME = Frame(bytearray(), 1 << 11)
