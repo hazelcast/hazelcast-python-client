@@ -1,10 +1,11 @@
 import time
+import unittest
 
-from tests.base import HazelcastTestCase
+from tests.base import HazelcastTestCase, SingleMemberTestCase
 from hazelcast.client import HazelcastClient
 from hazelcast.lifecycle import LifecycleState
 from tests.hzrc.ttypes import Lang
-from tests.util import get_current_timestamp
+from tests.util import get_current_timestamp, random_string
 
 
 class ClientTest(HazelcastTestCase):
@@ -110,3 +111,32 @@ class ClientLabelsTest(HazelcastTestCase):
             client_uuid
         )
         return self.rc.executeOnController(self.cluster.id, script, Lang.JAVASCRIPT).result
+
+
+class ClientTcpMetricsTest(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        config["cluster_name"] = cls.cluster.id
+        return config
+
+    def test_bytes_received(self):
+        reactor = self.client._reactor
+
+        bytes_received = reactor.bytes_received
+        self.assertGreater(bytes_received, 0)
+
+        m = self.client.get_map(random_string()).blocking()
+        m.get(random_string())
+
+        self.assertGreater(reactor.bytes_received, bytes_received)
+
+    def test_bytes_sent(self):
+        reactor = self.client._reactor
+
+        bytes_sent = reactor.bytes_sent
+        self.assertGreater(bytes_sent, 0)
+
+        m = self.client.get_map(random_string()).blocking()
+        m.set(random_string(), random_string())
+
+        self.assertGreater(reactor.bytes_sent, bytes_sent)
