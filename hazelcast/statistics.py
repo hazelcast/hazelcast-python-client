@@ -25,6 +25,8 @@ _EMPTY_ATTRIBUTE_VALUE = ""
 _NEAR_CACHE_DESCRIPTOR_PREFIX = "nearcache"
 _NEAR_CACHE_DESCRIPTOR_DISCRIMINATOR = "name"
 
+_TCP_METRICS_PREFIX = "tcp"
+
 
 class Statistics(object):
     def __init__(
@@ -130,7 +132,7 @@ class Statistics(object):
             self._registered_system_gauges[gauge_name] = (gauge_fn, value_type)
         except Exception as e:
             _logger.debug(
-                "Unable to register the system related gauge %s. Error: %s" % (gauge_name, e)
+                "Unable to register the system related gauge %s. Error: %s", gauge_name, e
             )
 
     def _register_process_gauge(self, gauge_name, gauge_fn, value_type=ValueType.LONG):
@@ -141,7 +143,7 @@ class Statistics(object):
             self._registered_process_gauges[gauge_name] = (gauge_fn, value_type)
         except Exception as e:
             _logger.debug(
-                "Unable to register the process related gauge %s. Error: %s" % (gauge_name, e)
+                "Unable to register the process related gauge %s. Error: %s", gauge_name, e
             )
 
     def _collect_and_send_stats(self):
@@ -157,6 +159,7 @@ class Statistics(object):
         self._add_client_attributes(attributes, connection)
         self._add_near_cache_metrics(attributes, compressor)
         self._add_system_and_process_metrics(attributes, compressor)
+        self._add_tcp_metrics(compressor)
         self._send_stats(
             collection_timestamp, "".join(attributes), compressor.generate_blob(), connection
         )
@@ -180,7 +183,7 @@ class Statistics(object):
                     attributes, compressor, gauge_name, value, value_type
                 )
             except:
-                _logger.exception("Error while collecting '%s'." % gauge_name)
+                _logger.exception("Error while collecting '%s'.", gauge_name)
 
         if not self._registered_process_gauges:
             # Do not create the process object if no process-related
@@ -195,7 +198,7 @@ class Statistics(object):
                     attributes, compressor, gauge_name, value, value_type
                 )
             except:
-                _logger.exception("Error while collecting '%s'." % gauge_name)
+                _logger.exception("Error while collecting '%s'.", gauge_name)
 
     def _add_system_or_process_metric(self, attributes, compressor, gauge_name, value, value_type):
         # We don't have any metrics that do not have prefix.
@@ -342,8 +345,25 @@ class Statistics(object):
             self._add_attribute(attributes, metric, value, nc_name_with_prefix)
         except:
             _logger.exception(
-                "Error while collecting %s metric for near cache '%s'" % (metric, nc_name)
+                "Error while collecting %s metric for near cache '%s'.", metric, nc_name
             )
+
+    def _add_tcp_metrics(self, compressor):
+        self._add_tcp_metric(compressor, "bytesSend", self._reactor.bytes_sent)
+        self._add_tcp_metric(compressor, "bytesReceived", self._reactor.bytes_received)
+
+    def _add_tcp_metric(
+        self, compressor, metric, value, value_type=ValueType.LONG, unit=ProbeUnit.BYTES
+    ):
+        descriptor = MetricDescriptor(
+            metric=metric,
+            prefix=_TCP_METRICS_PREFIX,
+            unit=unit,
+        )
+        try:
+            self._add_metric(compressor, descriptor, value, value_type)
+        except:
+            _logger.exception("Error while collecting '%s.%s'.", _TCP_METRICS_PREFIX, metric)
 
     def _add_metric(self, compressor, descriptor, value, value_type):
         if value_type == ValueType.LONG:
