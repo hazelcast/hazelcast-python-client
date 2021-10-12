@@ -16,7 +16,7 @@ Hazelcast Python Client
 
 ----
 
-`Hazelcast <https://hazelcast.org/>`__ is an open-source distributed
+`Hazelcast <https://hazelcast.com/>`__ is an open-source distributed
 in-memory data store and computation platform that provides a wide
 variety of distributed data structures and concurrency primitives.
 
@@ -52,7 +52,7 @@ images <https://hub.docker.com/r/hazelcast/hazelcast/>`__.
    docker run -p 5701:5701 hazelcast/hazelcast:4.2
 
 You can also use our ZIP or TAR
-`distributions <https://hazelcast.org/imdg/download/archives/#hazelcast-imdg>`__.
+`distributions <https://hazelcast.com/open-source-projects/downloads/>`__.
 Once you have downloaded, you can start the Hazelcast member using
 the ``bin/start.sh`` script.
 
@@ -149,7 +149,7 @@ Features
 -  Ability to listen to client lifecycle, cluster state, and distributed
    data structure events
 -  and `many
-   more <https://hazelcast.org/imdg/clients-languages/python/#client-features>`__
+   more <https://hazelcast.com/clients/python/#client-features>`__
 
 Getting Help
 ------------
@@ -235,5 +235,5 @@ Copyright
 
 Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
 
-Visit `www.hazelcast.com <http://www.hazelcast.com>`__ for more
+Visit `hazelcast.com <https://hazelcast.com>`__ for more
 information.

@@ -411,7 +411,7 @@ else:
         if buffer[0] & 0x80:
             neg = bytearray()
             for c in buffer:
-                neg.append(~c)
+                neg.append(c ^ 0xFF)
             return -1 * int(binascii.hexlify(neg), 16) - 1
         return int(binascii.hexlify(buffer), 16)
 
