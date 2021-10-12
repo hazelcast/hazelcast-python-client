@@ -1,5 +1,4 @@
 import time
-import unittest
 
 from tests.base import HazelcastTestCase, SingleMemberTestCase
 from hazelcast.client import HazelcastClient
