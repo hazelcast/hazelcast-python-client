@@ -3,9 +3,9 @@
 SOAK test for the Hazelcast Python client should be executed in an 
 environment described below.
 
-- There should be 3 servers involved. Let's call those servers
+- There should be 3 machines involved. Let's call those machines
 `A`, `B`, and `C`.
-- Two of those will be used for servers, and the remaining one 
+- Two of those will be used for members, and the remaining one 
 will be used for the clients. Let's assume that `A` and `B` will
 be the member machines, and `C` will be the client machine.
 - There should be 2 members per machine with the total of 4 members.
@@ -24,7 +24,7 @@ calls during the duration of the test.
 - The test programs should run for 48 hours.
 - At the end of the 48 hours, the followings must be verified:
   - All the client processes are successfully started and shut down.
-  - Logs produced by the clients/servers should not contain any errors
+  - Logs produced by the clients/members should not contain any errors
   printed.
 
 # Usage
@@ -35,10 +35,10 @@ to this folder for the member machines.
   - You can upload those JARs from your computer using `scp` or download
   JARs from `https://repo1.maven.org/maven2/com/hazelcast/hazelcast/${VERSION}/`.
 - Make sure the versions of the JARs and the version written in 
-`start_servers.sh` are the same.
-- Run `start_servers.sh` on 2 server machines. The script will start
+`start_members.sh` are the same.
+- Run `start_members.sh` on 2 member machines. The script will start
 2 members.
-- Check the server logs outputted to `server_logs/hazelcast-out-[0|1]`
+- Check the member logs outputted to `member_logs/hazelcast-out-[0|1]`
 and make sure that
   - They are using the `hazelcast.xml` in this folder.
   - They can form a 4-member cluster.
@@ -72,7 +72,7 @@ and started the SOAK test operations.
 - Come back 48 hours later, and do the followings:
   - Clients should be automatically shutdown after 48 hours. Verify
   there is no client left running.
-  - Collect client and server logs and analyze them. There should
+  - Collect client and member logs and analyze them. There should
   be no errors printed.
   - Manually shutdown the members.
   - If you have come this far without any problems, good for you! 
