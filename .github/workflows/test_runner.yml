@@ -80,4 +80,4 @@ jobs:
       - name: Generate documentation
         working-directory: docs
         run: |
-          make html SPHINXOPTS="-W --keep-going"
+          make html SPHINXOPTS="-W --keep-going -b linkcheck"

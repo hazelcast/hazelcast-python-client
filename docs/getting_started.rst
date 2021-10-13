@@ -57,7 +57,8 @@ Running Standalone JARs
 
 Follow the instructions below to create a Hazelcast IMDG cluster:
 
-1. Go to Hazelcast’s download `page <https://hazelcast.org/download/>`__
+1. Go to Hazelcast’s download `page
+   <https://hazelcast.com/open-source-projects/downloads/>`__
    and download either the ``.zip`` or ``.tar`` distribution of
    Hazelcast IMDG.
 2. Decompress the contents into any directory that you want to run
@@ -127,7 +128,7 @@ If you want to add a ``Portable`` class, you should use
 the above configuration.
 
 See the `Hazelcast IMDG Reference
-Manual <http://docs.hazelcast.org/docs/latest/manual/html-single/index.html#getting-started>`__
+Manual <https://docs.hazelcast.com/imdg/latest/installation/installing-upgrading>`__
 for more information on setting up the clusters.
 
 Downloading and Installing
@@ -170,7 +171,7 @@ that can be used in the Python client are discussed in the following
 sections.
 
 See the `Hazelcast IMDG Reference
-Manual <https://docs.hazelcast.org/docs/latest/manual/html-single/index.html>`__
+Manual <https://docs.hazelcast.com/imdg/latest/>`__
 and :ref:`configuration_overview:configuration overview` section for
 more information.
 

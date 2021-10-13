@@ -33,7 +33,7 @@ TLS/SSL for Hazelcast Members
 Hazelcast allows you to encrypt socket level communication between
 Hazelcast members and between Hazelcast clients and members, for end to
 end encryption. To use it, see the `TLS/SSL for Hazelcast Members
-section <http://docs.hazelcast.org/docs/latest/manual/html-single/index.html#tls-ssl-for-hazelcast-members>`__.
+section <https://docs.hazelcast.com/imdg/latest/security/tls-ssl#tlsssl-for-hazelcast-members>`__.
 
 TLS/SSL for Hazelcast Python Clients
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -252,7 +252,7 @@ property on the server side in the ``hazelcast.xml`` file:
 
 You can see the details of setting mutual authentication on the server
 side in the `Mutual Authentication
-section <https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#mutual-authentication>`__
+section <https://docs.hazelcast.com/imdg/latest/security/tls-ssl#mutual-authentication>`__
 of the Hazelcast IMDG Reference Manual.
 
 On the client side, you have to provide ``ssl_cafile``, ``ssl_certfile``
