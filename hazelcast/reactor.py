@@ -344,6 +344,8 @@ class AsyncoreReactor(object):
                 loop.shutdown()
             loop = _BasicLoop(self.map)
         self._loop = loop
+        self.bytes_sent = 0
+        self.bytes_received = 0
 
     def start(self):
         self._loop.start()
@@ -421,9 +423,11 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         try:
             while True:
                 data = self.recv(receive_buffer_size)
+                bytes_received = len(data)
+                self._reactor.bytes_received += bytes_received
                 reader.read(data)
                 self.last_read_time = time.time()
-                if len(data) < receive_buffer_size:
+                if bytes_received < receive_buffer_size:
                     break
         except socket.error as err:
             if err.args[0] not in _RETRYABLE_ERROR_CODES:
@@ -461,7 +465,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
             buf.truncate(0)
 
         try:
-            sent = self.send(bytes_)
+            bytes_sent = self.send(bytes_)
         except socket.error as err:
             if err.args[0] in _RETRYABLE_ERROR_CODES:
                 # Couldn't write the bytes but we should
@@ -474,9 +478,9 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
             # No exception is thrown during the send
             self.last_write_time = time.time()
             self.sent_protocol_bytes = True
-
-            if sent < len(bytes_):
-                write_queue.appendleft(bytes_[sent:])
+            self._reactor.bytes_sent += bytes_sent
+            if bytes_sent < len(bytes_):
+                write_queue.appendleft(bytes_[bytes_sent:])
 
     def handle_close(self):
         _logger.warning("Connection closed by server")
