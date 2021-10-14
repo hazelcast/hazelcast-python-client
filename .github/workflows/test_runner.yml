@@ -3,11 +3,11 @@ on:
   push:
     branches:
       - master
-      - 4.*.z
+      - '[45].*.z'
   pull_request:
     branches:
       - master
-      - 4.*.z
+      - '[45].*.z'
 jobs:
   run-tests:
     runs-on: ${{ matrix.os }}
