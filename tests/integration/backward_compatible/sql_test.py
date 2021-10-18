@@ -166,7 +166,7 @@ class SqlTestBase(HazelcastTestCase):
         for arg in args:
             statement.add_parameter(arg)
 
-        for key, value in kwargs:
+        for key, value in kwargs.items():
             setattr(statement, key, value)
 
         return self.client.sql.execute_statement(statement)
