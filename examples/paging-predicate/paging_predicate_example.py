@@ -1,8 +1,8 @@
 import random
 
 import hazelcast
+from hazelcast import predicate
 from hazelcast.core import HazelcastJsonValue
-from hazelcast.predicate import between, paging, true
 from hazelcast.serialization.api import IdentifiedDataSerializable
 
 
@@ -51,37 +51,35 @@ for i in range(42):
         ),
     )
 
-
 # Use the paging predicate with true predicate
 # to get all students with the page size of 10.
 # It also uses the custom comparator we have
 # written and sorts the values in ascending
 # order of age.
-predicate = paging(
-    predicate=true(),
+paging_predicate = predicate.paging(
+    predicate=predicate.true(),
     page_size=10,
     comparator=AgeComparator(),
 )
-print(students.values(predicate))
+print(students.values(paging_predicate))
 
 # Set up the next page and fetch it.
-predicate.next_page()
-print(students.values(predicate))
-
+paging_predicate.next_page()
+print(students.values(paging_predicate))
 
 # This time, we will fetch students with the
 # student_id between 10 to 40 with the page size
 # of 5. We will also make use of the custom comparator
 # and sort the results in descending order of age.
-predicate = paging(
-    predicate=between("student_id", 10, 40),
+paging_predicate = predicate.paging(
+    predicate=predicate.between("student_id", 10, 40),
     page_size=5,
     comparator=AgeComparator(reverse=True),
 )
-print(students.values(predicate))
+print(students.values(paging_predicate))
 
 # Set up the next page and fetch it.
-predicate.next_page()
-print(students.values(predicate))
+paging_predicate.next_page()
+print(students.values(paging_predicate))
 
 client.shutdown()

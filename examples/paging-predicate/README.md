@@ -22,7 +22,7 @@ to let the member identify which comparator to use.
 To start a Hazelcast member with that comparator defined, you
 can use the following ways.
 
-Note that, you would need a Java compiler for both.
+Note that, you need a Java compiler for both.
 
 ## Starting The Member With Maven
 
