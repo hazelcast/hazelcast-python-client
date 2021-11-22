@@ -51,5 +51,5 @@ setup(
     package_dir={"hazelcast": "hazelcast"},
     install_requires=[],
     extras_require=extras,
-    tests_require=["thrift", "nose", "coverage", "psutil", "mock", "parameterized"],
+    tests_require=["thrift", "pytest", "pytest-cov", "psutil", "mock", "parameterized"],
 )

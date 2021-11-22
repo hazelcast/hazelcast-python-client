@@ -2,11 +2,12 @@ import os
 import tempfile
 import unittest
 
+import pytest
+
 from hazelcast import HazelcastClient, six
 from hazelcast.util import RandomLB, RoundRobinLB
 from tests.base import HazelcastTestCase, SingleMemberTestCase
 from tests.util import (
-    set_attr,
     random_string,
     event_collector,
     skip_if_client_version_older_than,
@@ -195,7 +196,7 @@ class LoadBalancersWithRealClusterTest(HazelcastTestCase):
         return members.members
 
 
-@set_attr(enterprise=True)
+@pytest.mark.enterprise
 class HotRestartEventTest(HazelcastTestCase):
     @classmethod
     def setUpClass(cls):

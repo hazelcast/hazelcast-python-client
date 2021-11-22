@@ -181,7 +181,7 @@ class PredicateTest(SingleMemberTestCase):
         six.assertCountEqual(self, [], self.map.key_set(predicate))
 
 
-class TestPortable(Portable):
+class SimplePortable(Portable):
     def __init__(self, field=None):
         self.field = field
 
@@ -202,7 +202,7 @@ class PredicatePortableTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
         config["cluster_name"] = cls.cluster.id
-        config["portable_factories"] = {1: {1: TestPortable}}
+        config["portable_factories"] = {1: {1: SimplePortable}}
         return config
 
     def setUp(self):
@@ -212,7 +212,7 @@ class PredicatePortableTest(SingleMemberTestCase):
         self.map.destroy()
 
     def fill_map(self, count=1000):
-        m = {x: TestPortable(x) for x in range(0, count)}
+        m = {x: SimplePortable(x) for x in range(0, count)}
         self.map.put_all(m)
         return m
 

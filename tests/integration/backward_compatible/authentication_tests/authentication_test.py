@@ -1,9 +1,11 @@
 import os
 import unittest
 
+import pytest
+
 from hazelcast.errors import HazelcastError
 from tests.base import HazelcastTestCase
-from tests.util import get_abs_path, set_attr, compare_client_version
+from tests.util import get_abs_path, compare_client_version
 from hazelcast.client import HazelcastClient
 
 try:
@@ -12,7 +14,7 @@ except ImportError:
     pass
 
 
-@set_attr(enterprise=True)
+@pytest.mark.enterprise
 @unittest.skipIf(
     compare_client_version("4.2.1") < 0, "Tests the features added in 4.2.1 version of the client"
 )

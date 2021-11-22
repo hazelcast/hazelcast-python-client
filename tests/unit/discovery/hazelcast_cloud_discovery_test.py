@@ -89,7 +89,7 @@ class Server(object):
         self.server.shutdown()
 
 
-class TestClient(HazelcastClient):
+class DummyClient(HazelcastClient):
     def _start(self):
         # Let the client to initialize the cloud address provider and translator, don't actually start it.
         pass
@@ -144,7 +144,7 @@ class HazelcastCloudDiscoveryTest(TestCase):
         old = HazelcastCloudDiscovery._CLOUD_URL_BASE
         try:
             HazelcastCloudDiscovery._CLOUD_URL_BASE = "%s:%s" % (HOST, self.server.port)
-            client = TestClient(cloud_discovery_token=TOKEN)
+            client = DummyClient(cloud_discovery_token=TOKEN)
             client._address_provider.cloud_discovery._ctx = self.ctx
 
             private_addresses, secondaries = client._address_provider.load_addresses()
