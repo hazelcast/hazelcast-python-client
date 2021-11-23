@@ -2,7 +2,6 @@ import logging
 import time
 from uuid import uuid4
 
-from hazelcast import six
 from hazelcast.config import _ReliableTopicConfig, TopicOverloadPolicy
 from hazelcast.core import MemberInfo, MemberVersion, EndpointQualifier, ProtocolType
 from hazelcast.errors import (
@@ -688,7 +687,7 @@ class ReliableTopic(Proxy):
         Destroys underlying Proxy and RingBuffer instances.
         """
 
-        for runner in list(six.itervalues(self._runners)):
+        for runner in list(self._runners.values()):
             runner.cancel()
 
         self._runners.clear()

@@ -1,6 +1,5 @@
 from unittest import TestCase
 
-from hazelcast import six
 from hazelcast.core import Address
 from hazelcast.discovery import HazelcastCloudDiscovery, HazelcastCloudAddressProvider
 
@@ -27,7 +26,7 @@ class HazelcastCloudProviderTest(TestCase):
 
         self.assertEqual(4, len(addresses))
         self.assertEqual(0, len(secondaries))
-        six.assertCountEqual(self, list(self.expected_addresses.keys()), addresses)
+        self.assertCountEqual(list(self.expected_addresses.keys()), addresses)
 
     def test_load_addresses_with_exception(self):
         self.provider.cloud_discovery.discover_nodes = self.mock_discover_nodes_with_exception

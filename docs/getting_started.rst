@@ -10,7 +10,7 @@ Requirements
 ------------
 
 - Windows, Linux/UNIX or Mac OS X
-- Python 2.7 or Python 3.4 or newer
+- Python 3.6 or newer
 - Java 8 or newer
 - Hazelcast 4.0 or newer
 - Latest Hazelcast Python client

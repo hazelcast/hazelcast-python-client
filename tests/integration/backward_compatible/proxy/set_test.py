@@ -1,7 +1,6 @@
 from hazelcast.proxy.base import ItemEventType
 from tests.base import SingleMemberTestCase
 from tests.util import random_string, event_collector
-from hazelcast import six
 
 
 class SetTest(SingleMemberTestCase):
@@ -96,7 +95,7 @@ class SetTest(SingleMemberTestCase):
         _all = ["1", "2", "3"]
         add_resp = self.set.add_all(_all)
         set_all = self.set.get_all()
-        six.assertCountEqual(self, _all, set_all)
+        self.assertCountEqual(_all, set_all)
         self.assertTrue(add_resp)
 
     def test_add_all_null_element(self):
@@ -133,7 +132,7 @@ class SetTest(SingleMemberTestCase):
         _all = ["1", "2", "3"]
         self.set.add_all(_all)
         all_result = self.set.get_all()
-        six.assertCountEqual(self, all_result, _all)
+        self.assertCountEqual(all_result, _all)
 
     def test_is_empty(self):
         is_empty = self.set.is_empty()

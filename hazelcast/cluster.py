@@ -3,7 +3,6 @@ import threading
 import uuid
 from collections import OrderedDict
 
-from hazelcast import six
 from hazelcast.core import EndpointQualifier, ProtocolType
 from hazelcast.errors import TargetDisconnectedError, IllegalStateError
 from hazelcast.util import check_not_none
@@ -135,7 +134,7 @@ class _InternalClusterService(object):
             return list(snapshot.members.values())
 
         members = []
-        for member in six.itervalues(snapshot.members):
+        for member in snapshot.members.values():
             if member_selector(member):
                 members.append(member)
         return members
@@ -166,7 +165,7 @@ class _InternalClusterService(object):
 
         if fire_for_existing and member_added:
             snapshot = self._member_list_snapshot
-            for member in six.itervalues(snapshot.members):
+            for member in snapshot.members.values():
                 member_added(member)
 
         return registration_id
@@ -236,7 +235,7 @@ class _InternalClusterService(object):
     def _fire_membership_events(self, dead_members, new_members):
         # Removal events should be fired first
         for dead_member in dead_members:
-            for _, handler in six.itervalues(self._listeners):
+            for _, handler in self._listeners.values():
                 if handler:
                     try:
                         handler(dead_member)
@@ -244,7 +243,7 @@ class _InternalClusterService(object):
                         _logger.exception("Exception in membership listener")
 
         for new_member in new_members:
-            for handler, _ in six.itervalues(self._listeners):
+            for handler, _ in self._listeners.values():
                 if handler:
                     try:
                         handler(new_member)
@@ -253,8 +252,8 @@ class _InternalClusterService(object):
 
     def _detect_membership_events(self, previous_members, current_members):
         new_members = []
-        dead_members = set(six.itervalues(previous_members))
-        for member in six.itervalues(current_members):
+        dead_members = set(previous_members.values())
+        for member in current_members.values():
             try:
                 dead_members.remove(member)
             except KeyError:
@@ -281,7 +280,7 @@ class _InternalClusterService(object):
     @staticmethod
     def _members_string(members):
         n = len(members)
-        return "\n\nMembers [%s] {\n\t%s\n}\n" % (n, "\n\t".join(map(str, six.itervalues(members))))
+        return "\n\nMembers [%s] {\n\t%s\n}\n" % (n, "\n\t".join(map(str, members.values())))
 
     @staticmethod
     def _create_snapshot(version, member_infos):

@@ -1,3 +1,4 @@
+import operator
 import unittest
 from types import FunctionType
 
@@ -10,8 +11,6 @@ from hazelcast.serialization.api import (
     StreamSerializer,
     IdentifiedDataSerializable,
 )
-from hazelcast import six
-from hazelcast.six.moves import range
 
 
 class APITestCase(unittest.TestCase):
@@ -27,10 +26,9 @@ class APITestCase(unittest.TestCase):
 
     def _call_all_func(self, class_type):
         for meth in class_type.__dict__.values():
-            try:
-                if isinstance(meth, FunctionType):
-                    with self.assertRaises(NotImplementedError):
-                        params = [i for i in range(0, six.get_function_code(meth).co_argcount)]
-                        meth(*params)
-            except TypeError as e:
-                six.print_(e)
+            if isinstance(meth, FunctionType):
+                with self.assertRaises(NotImplementedError):
+                    params = [
+                        i for i in range(0, operator.attrgetter("__code__")(meth).co_argcount)
+                    ]
+                    meth(*params)

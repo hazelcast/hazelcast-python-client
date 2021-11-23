@@ -2,7 +2,6 @@ import unittest
 import binascii
 
 from hazelcast.serialization.input import _ObjectDataInput
-from hazelcast import six
 
 
 class InputTestCase(unittest.TestCase):
@@ -41,7 +40,7 @@ class InputTestCase(unittest.TestCase):
         initial_pos = _input._pos
         char = _input.read_char()
         self.assertEqual(0, initial_pos)
-        self.assertEqual(six.unichr(0x00E7), char)
+        self.assertEqual(chr(0x00E7), char)
 
     def test_char_le(self):
         buff = bytearray(binascii.unhexlify("e7000000"))
@@ -49,7 +48,7 @@ class InputTestCase(unittest.TestCase):
         initial_pos = _input._pos
         char = _input.read_char()
         self.assertEqual(0, initial_pos)
-        self.assertEqual(six.unichr(0x00E7), char)
+        self.assertEqual(chr(0x00E7), char)
 
     def test_skip_bytes(self):
         inp = _ObjectDataInput(bytearray(10))

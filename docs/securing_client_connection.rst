@@ -179,9 +179,8 @@ protocols:
 
 ..
 
-    Note that TLSv1+ requires at least Python 2.7.9 or Python 3.4 built
-    with OpenSSL 1.0.1+, and TLSv1_3 requires at least Python 2.7.15 or
-    Python 3.7 built with OpenSSL 1.1.1+.
+    Note that TLSv1_3 requires at least Python 3.7 built with
+    OpenSSL 1.1.1+.
 
 These protocol versions can be selected using the ``ssl_protocol`` as
 follows:

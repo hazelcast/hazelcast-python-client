@@ -10,21 +10,19 @@ serialization methods. You will see these methods throughout this
 chapter.
 
 Hazelcast serializes all your objects before sending them to the server.
-The ``bool``, ``int``, ``long`` (for Python 2), ``float``, ``str``,
-``unicode`` (for Python 2), ``bytearray``, ``list`` ``datetime.date``,
-``datetime.time``, ``datetime.datetime``, and ``decimal.Decimal`` types are
-serialized natively and you cannot override this behavior. The following
-table is the conversion of types for the Java server side.
+The ``bool``, ``int``, ``float``, ``str``, ``bytearray``, ``list``,
+``datetime.date``, ``datetime.time``, ``datetime.datetime``, and
+``decimal.Decimal`` types are serialized natively and you cannot override
+this behavior. The following table is the conversion of types for the
+Java server side.
 
 ================= ================================================
 Python            Java
 ================= ================================================
 bool              Boolean
 int               Byte, Short, Integer, Long, java.math.BigInteger
-long              Byte, Short, Integer, Long, java.math.BigInteger
 float             Float, Double
 str               String
-unicode           String
 bytearray         byte[]
 list              java.util.ArrayList
 datetime.date     java.time.LocalDate
@@ -34,7 +32,7 @@ decimal.Decimal   java.math.BigDecimal
 ================= ================================================
 
 
-.. Note:: A ``int`` or ``long`` type is serialized as ``Integer`` by
+.. Note:: An ``int`` is serialized as ``Integer`` by
     default. You can configure this behavior using the
     ``default_int_type`` argument.
 
@@ -63,8 +61,8 @@ When Hazelcast Python client serializes an object:
 6. If the above check fails, it will use the registered
    :ref:`serialization:global serialization` if one exists.
 
-7. If the above check fails, then the Python client uses ``cPickle``
-   (for Python 2) or ``pickle`` (for Python 3) by default.
+7. If the above check fails, then the Python client uses ``pickle``
+   by default.
 
 However, ``cPickle/pickle Serialization`` is not the best way of
 serialization in terms of performance and interoperability between the

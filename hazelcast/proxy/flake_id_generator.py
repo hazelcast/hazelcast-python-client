@@ -10,7 +10,7 @@ from hazelcast.future import ImmediateFuture, Future
 
 
 class FlakeIdGenerator(Proxy):
-    """A cluster-wide unique ID generator. Generated IDs are int (long in case of the Python 2 on 32 bit architectures)
+    """A cluster-wide unique ID generator. Generated IDs are int
     values and are k-ordered (roughly ordered). IDs are in the range from 0 to 2^63 - 1.
 
     The IDs contain timestamp component and a node ID component, which is assigned when the member
@@ -157,9 +157,6 @@ class _IdBatch(object):
             raise StopIteration
 
         return next(self._next_id)
-
-    # For Python 2 compatibility
-    next = __next__
 
 
 class _Block(object):

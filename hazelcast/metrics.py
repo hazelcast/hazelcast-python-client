@@ -1,6 +1,5 @@
 import zlib
 
-from hazelcast import six
 from hazelcast.serialization import (
     BYTE_SIZE_IN_BYTES,
     CHAR_SIZE_IN_BYTES,
@@ -328,9 +327,6 @@ class _OutputBuffer(object):
 
     def compress(self):
         buf = self.to_bytearray()
-        if six.PY2:
-            # Python2 expects this to be read-only buffer
-            buf = bytes(buf)
 
         # Set level to 1 for best speed (less CPU overhead)
         return zlib.compress(buf, 1)

@@ -8,8 +8,7 @@ from hazelcast.errors import HazelcastInstanceNotActiveError, HazelcastSerializa
 from hazelcast.serialization.input import _ObjectDataInput
 from hazelcast.serialization.output import _ObjectDataOutput
 from hazelcast.serialization.serializer import *
-from hazelcast import six
-
+from hazelcast.util import re_raise
 
 _int_type_to_type_id = {
     IntType.BYTE: CONSTANT_TYPE_BYTE,
@@ -26,13 +25,11 @@ def empty_partitioning_strategy(_):
 
 def handle_exception(e, traceback):
     if isinstance(e, MemoryError):
-        # TODO
-        six.print_("OUT OF MEMORY")
-        six.reraise(MemoryError, e, traceback)
+        re_raise(MemoryError("OUT OF MEMORY"), traceback)
     elif isinstance(e, HazelcastSerializationError):
-        six.reraise(HazelcastSerializationError, e, traceback)
+        re_raise(e, traceback)
     else:
-        six.reraise(HazelcastSerializationError, HazelcastSerializationError(e.args[0]), traceback)
+        re_raise(HazelcastSerializationError(e.args[0]), traceback)
 
 
 def is_null_data(data):
@@ -81,9 +78,6 @@ class BaseSerializationService(object):
             return Data(out.to_byte_array())
         except:
             handle_exception(sys.exc_info()[1], sys.exc_info()[2])
-        finally:
-            pass
-            # return out to pool
 
     def to_object(self, data):
         """Deserialize input data
@@ -112,9 +106,6 @@ class BaseSerializationService(object):
             return serializer.read(inp)
         except:
             handle_exception(sys.exc_info()[1], sys.exc_info()[2])
-        finally:
-            pass
-            # return out to pool
 
     def write_object(self, out, obj):
         if isinstance(obj, Data):
@@ -255,11 +246,11 @@ class SerializerRegistry(object):
         if isinstance(obj, Portable):
             return self._portable_serializer
 
-        if isinstance(obj, six.string_types):
+        if isinstance(obj, str):
             return self.serializer_by_type_id(CONSTANT_TYPE_STRING)
 
         # LOCATE NUMERIC TYPES
-        if obj_type in six.integer_types:
+        if obj_type is int:
             type_id = self._int_type_id
             if type_id is None:
                 # VAR size

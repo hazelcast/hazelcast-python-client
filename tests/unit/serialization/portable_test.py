@@ -6,10 +6,7 @@ from hazelcast.serialization import SerializationServiceV1
 from hazelcast.serialization.api import Portable
 from hazelcast.serialization.portable.classdef import ClassDefinitionBuilder
 from tests.unit.serialization.identified_test import create_identified, SerializationV1Identified
-from hazelcast import six
 
-if not six.PY2:
-    long = int
 
 FACTORY_ID = 1
 
@@ -258,14 +255,13 @@ class Child(Portable):
 def create_portable():
     identified = create_identified()
     inner_portable = InnerPortable("Inner Text", 666)
-    long_var = long("1341431221l") if six.PY2 else 1341431221
     return SerializationV1Portable(
         99,
         True,
         "c",
         11,
         1234134,
-        long_var,
+        1341431221,
         1.0,
         2.0,
         bytearray([1, 2, 3]),

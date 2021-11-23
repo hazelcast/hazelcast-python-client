@@ -2,7 +2,6 @@ import os
 import time
 import unittest
 
-from hazelcast import six
 
 try:
     from hazelcast.aggregator import (
@@ -44,7 +43,6 @@ from hazelcast.errors import HazelcastError
 from hazelcast.predicate import greater_or_equal, less_or_equal, sql, paging, true
 from hazelcast.proxy.map import EntryEventType
 from hazelcast.serialization.api import IdentifiedDataSerializable
-from hazelcast.six.moves import range
 from tests.base import SingleMemberTestCase
 from tests.integration.backward_compatible.util import (
     read_string_from_input,
@@ -284,7 +282,7 @@ class MapTest(SingleMemberTestCase):
     def test_entry_set(self):
         entries = self.fill_map()
 
-        six.assertCountEqual(self, self.map.entry_set(), list(six.iteritems(entries)))
+        self.assertCountEqual(self.map.entry_set(), list(entries.items()))
 
     def test_entry_set_with_predicate(self):
         self.fill_map()
@@ -312,8 +310,8 @@ class MapTest(SingleMemberTestCase):
 
         values = self.map.execute_on_entries(EntryProcessor("processed"))
 
-        six.assertCountEqual(self, expected_entry_set, self.map.entry_set())
-        six.assertCountEqual(self, expected_entry_set, values)
+        self.assertCountEqual(expected_entry_set, self.map.entry_set())
+        self.assertCountEqual(expected_entry_set, values)
 
     def test_execute_on_entries_with_predicate(self):
         m = self.fill_map()
@@ -322,8 +320,8 @@ class MapTest(SingleMemberTestCase):
 
         values = self.map.execute_on_entries(EntryProcessor("processed"), sql("__key < 'key-5'"))
 
-        six.assertCountEqual(self, expected_entry_set, self.map.entry_set())
-        six.assertCountEqual(self, expected_values, values)
+        self.assertCountEqual(expected_entry_set, self.map.entry_set())
+        self.assertCountEqual(expected_values, values)
 
     def test_execute_on_key(self):
         self.map.put("test-key", "test-value")
@@ -338,8 +336,8 @@ class MapTest(SingleMemberTestCase):
 
         values = self.map.execute_on_keys(list(m.keys()), EntryProcessor("processed"))
 
-        six.assertCountEqual(self, expected_entry_set, self.map.entry_set())
-        six.assertCountEqual(self, expected_entry_set, values)
+        self.assertCountEqual(expected_entry_set, self.map.entry_set())
+        self.assertCountEqual(expected_entry_set, values)
 
     def test_execute_on_keys_with_empty_key_list(self):
         m = self.fill_map()
@@ -348,7 +346,7 @@ class MapTest(SingleMemberTestCase):
         values = self.map.execute_on_keys([], EntryProcessor("processed"))
 
         self.assertEqual([], values)
-        six.assertCountEqual(self, expected_entry_set, self.map.entry_set())
+        self.assertCountEqual(expected_entry_set, self.map.entry_set())
 
     def test_flush(self):
         self.fill_map()
@@ -368,7 +366,7 @@ class MapTest(SingleMemberTestCase):
 
         actual = self.map.get_all(list(expected.keys()))
 
-        six.assertCountEqual(self, expected, actual)
+        self.assertCountEqual(expected, actual)
 
     def test_get_all_when_no_keys(self):
         self.assertEqual(self.map.get_all([]), {})
@@ -418,7 +416,7 @@ class MapTest(SingleMemberTestCase):
     def test_key_set(self):
         keys = list(self.fill_map().keys())
 
-        six.assertCountEqual(self, self.map.key_set(), keys)
+        self.assertCountEqual(self.map.key_set(), keys)
 
     def test_key_set_with_predicate(self):
         self.fill_map()
@@ -439,7 +437,7 @@ class MapTest(SingleMemberTestCase):
 
         entries = self.map.entry_set()
 
-        six.assertCountEqual(self, entries, six.iteritems(m))
+        self.assertCountEqual(entries, m.items())
 
     def test_put_all_when_no_keys(self):
         self.assertIsNone(self.map.put_all({}))
@@ -607,7 +605,7 @@ class MapTest(SingleMemberTestCase):
     def test_values(self):
         values = list(self.fill_map().values())
 
-        six.assertCountEqual(self, list(self.map.values()), values)
+        self.assertCountEqual(list(self.map.values()), values)
 
     def test_values_with_predicate(self):
         self.fill_map()
@@ -672,13 +670,13 @@ class MapStoreTest(SingleMemberTestCase):
         self.map.evict_all()
         self.map.load_all()
         entry_set = self.map.get_all(self.entries.keys())
-        six.assertCountEqual(self, entry_set, self.entries)
+        self.assertCountEqual(entry_set, self.entries)
 
     def test_load_all_with_key_set_loads_given_keys(self):
         self.map.evict_all()
         self.map.load_all(["key0", "key1"])
         entry_set = self.map.get_all(["key0", "key1"])
-        six.assertCountEqual(self, entry_set, {"key0": "val0", "key1": "val1"})
+        self.assertCountEqual(entry_set, {"key0": "val0", "key1": "val1"})
 
     def test_load_all_overrides_entries_in_memory_by_default(self):
         self.map.evict_all()
@@ -686,7 +684,7 @@ class MapStoreTest(SingleMemberTestCase):
         self.map.put_transient("key1", "new1")
         self.map.load_all(["key0", "key1"])
         entry_set = self.map.get_all(["key0", "key1"])
-        six.assertCountEqual(self, entry_set, {"key0": "val0", "key1": "val1"})
+        self.assertCountEqual(entry_set, {"key0": "val0", "key1": "val1"})
 
     def test_load_all_with_replace_existing_false_does_not_override(self):
         self.map.evict_all()
@@ -694,7 +692,7 @@ class MapStoreTest(SingleMemberTestCase):
         self.map.put_transient("key1", "new1")
         self.map.load_all(["key0", "key1"], replace_existing_values=False)
         entry_set = self.map.get_all(["key0", "key1"])
-        six.assertCountEqual(self, entry_set, {"key0": "new0", "key1": "new1"})
+        self.assertCountEqual(entry_set, {"key0": "new0", "key1": "new1"})
 
     def test_evict(self):
         self.map.evict("key0")
@@ -1098,27 +1096,26 @@ class MapProjectionsTest(SingleMemberTestCase):
 
     def test_single_attribute(self):
         attributes = self.map.project(single_attribute("attr1"))
-        six.assertCountEqual(self, [1, 4], attributes)
+        self.assertCountEqual([1, 4], attributes)
 
     def test_single_attribute_with_predicate(self):
         attributes = self.map.project(single_attribute("attr1"), greater_or_equal("attr1", 4))
-        six.assertCountEqual(self, [4], attributes)
+        self.assertCountEqual([4], attributes)
 
     def test_multi_attribute(self):
         attributes = self.map.project(multi_attribute("attr1", "attr2"))
-        six.assertCountEqual(self, [[1, 2], [4, 5]], attributes)
+        self.assertCountEqual([[1, 2], [4, 5]], attributes)
 
     def test_multi_attribute_with_predicate(self):
         attributes = self.map.project(
             multi_attribute("attr1", "attr2"),
             greater_or_equal("attr2", 3),
         )
-        six.assertCountEqual(self, [[4, 5]], attributes)
+        self.assertCountEqual([[4, 5]], attributes)
 
     def test_identity(self):
         attributes = self.map.project(identity())
-        six.assertCountEqual(
-            self,
+        self.assertCountEqual(
             [
                 HazelcastJsonValue('{"attr1": 4, "attr2": 5, "attr3": 6}'),
                 HazelcastJsonValue('{"attr1": 1, "attr2": 2, "attr3": 3}'),
@@ -1128,8 +1125,7 @@ class MapProjectionsTest(SingleMemberTestCase):
 
     def test_identity_with_predicate(self):
         attributes = self.map.project(identity(), greater_or_equal("attr2", 3))
-        six.assertCountEqual(
-            self,
+        self.assertCountEqual(
             [HazelcastJsonValue('{"attr1": 4, "attr2": 5, "attr3": 6}')],
             [attribute.value for attribute in attributes],
         )

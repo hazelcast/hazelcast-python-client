@@ -10,7 +10,6 @@ from hazelcast.serialization.portable.classdef import (
     FieldDefinition,
 )
 from hazelcast.serialization.portable.writer import ClassDefinitionWriter
-from hazelcast.six.moves import range
 
 
 class PortableContext(object):

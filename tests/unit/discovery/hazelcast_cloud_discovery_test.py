@@ -1,9 +1,8 @@
 import ssl
 import os
 import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
-from hazelcast.six.moves import BaseHTTPServer
-from hazelcast import six
 from unittest import TestCase
 from hazelcast.core import Address
 from hazelcast.errors import HazelcastCertificationError
@@ -41,7 +40,7 @@ PRIVATE_LINK_ADDRESSES = {
 }
 
 
-class CloudHTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+class CloudHTTPHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         idx = self.path.find("=")
         if idx > 0:
@@ -66,14 +65,14 @@ class CloudHTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-type", "text/html")
         self.end_headers()
-        self.wfile.write(six.b(message))
+        self.wfile.write(message.encode())
 
 
 class Server(object):
     cur_dir = os.path.dirname(__file__)
 
     def __init__(self):
-        self.server = BaseHTTPServer.HTTPServer((HOST, 0), CloudHTTPHandler)
+        self.server = HTTPServer((HOST, 0), CloudHTTPHandler)
         self.server.socket = ssl.wrap_socket(
             self.server.socket,
             get_abs_path(self.cur_dir, "key.pem"),
@@ -97,6 +96,9 @@ class DummyClient(HazelcastClient):
 
 class HazelcastCloudDiscoveryTest(TestCase):
     cur_dir = os.path.dirname(__file__)
+    ctx = None
+    server = None
+    server_thread = None
 
     @classmethod
     def setUpClass(cls):
@@ -114,14 +116,14 @@ class HazelcastCloudDiscoveryTest(TestCase):
         discovery._ctx = self.ctx
         addresses = discovery.discover_nodes()
 
-        six.assertCountEqual(self, ADDRESSES, addresses)
+        self.assertCountEqual(ADDRESSES, addresses)
 
     def test_private_link_response(self):
         discovery = create_discovery(HOST, self.server.port, CLOUD_URL, PRIVATE_LINK_TOKEN)
         discovery._ctx = self.ctx
         addresses = discovery.discover_nodes()
 
-        six.assertCountEqual(self, PRIVATE_LINK_ADDRESSES, addresses)
+        self.assertCountEqual(PRIVATE_LINK_ADDRESSES, addresses)
 
     def test_not_found_response(self):
         discovery = create_discovery(HOST, self.server.port, CLOUD_URL, "INVALID_TOKEN")
@@ -149,8 +151,8 @@ class HazelcastCloudDiscoveryTest(TestCase):
 
             private_addresses, secondaries = client._address_provider.load_addresses()
 
-            six.assertCountEqual(self, list(ADDRESSES.keys()), private_addresses)
-            six.assertCountEqual(self, secondaries, [])
+            self.assertCountEqual(list(ADDRESSES.keys()), private_addresses)
+            self.assertCountEqual(secondaries, [])
 
             for private_address in private_addresses:
                 translated_address = client._address_provider.translate(private_address)

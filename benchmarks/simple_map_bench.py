@@ -4,8 +4,6 @@ import time
 import logging
 import sys
 from os.path import dirname
-from hazelcast import six
-from hazelcast.six.moves import range
 
 sys.path.append(dirname(dirname(dirname(__file__))))
 
@@ -77,10 +75,9 @@ def do_benchmark():
     counter = 1
     while counter < 1000:
         time.sleep(5)
-        six.print_("ops per second : " + \
-              str(sum([t.gets + t.puts + t.removes for t in threads]) // (time.time() - start)))
+        print("ops per second : " + str(sum([t.gets + t.puts + t.removes for t in threads]) // (time.time() - start)))
         for t in threads:
-            six.print_("{}: put: {} get: {}: remove: {}".format(t.name, t.puts, t.gets, t.removes))
+            print("{}: put: {} get: {}: remove: {}".format(t.name, t.puts, t.gets, t.removes))
         counter += 1
 
 

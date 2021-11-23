@@ -4,7 +4,6 @@ from hazelcast.serialization import INT_SIZE_IN_BYTES, NULL_ARRAY_LENGTH
 from hazelcast.serialization.api import PortableWriter
 from hazelcast.serialization.output import EmptyObjectDataOutput
 from hazelcast.serialization.portable.classdef import FieldType, ClassDefinitionBuilder
-from hazelcast.six.moves import range
 
 
 class DefaultPortableWriter(PortableWriter):

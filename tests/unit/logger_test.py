@@ -1,10 +1,10 @@
 import logging
 import unittest
+from io import StringIO
 
 from mock import MagicMock
 
 from hazelcast.lifecycle import _InternalLifecycleService
-from hazelcast.six import StringIO
 
 
 class LoggerTest(unittest.TestCase):

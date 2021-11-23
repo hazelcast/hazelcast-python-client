@@ -15,7 +15,6 @@ from hazelcast.util import (
     check_is_int,
     try_to_get_enum_value,
 )
-from hazelcast import six
 
 _logger = logging.getLogger(__name__)
 
@@ -310,7 +309,7 @@ class SqlColumnType(object):
 
     BIGINT = 5
     """
-    Represented by ``int`` (for Python 3) or ``long`` (for Python 2).
+    Represented by ``int``.
     """
 
     DECIMAL = 6
@@ -486,7 +485,7 @@ class SqlRowMetadata(object):
         Raises:
             AssertionError: If the column name is not a string.
         """
-        check_true(isinstance(column_name, six.string_types), "Column name must be a string")
+        check_true(isinstance(column_name, str), "Column name must be a string")
         return self._name_to_index.get(column_name, SqlRowMetadata.COLUMN_NOT_FOUND)
 
     def __repr__(self):
@@ -603,7 +602,7 @@ class SqlRow(object):
         return self._row_metadata
 
     def __getitem__(self, item):
-        if isinstance(item, six.integer_types):
+        if isinstance(item, int):
             return self.get_object_with_index(item)
 
         return self.get_object(item)
@@ -709,10 +708,6 @@ class _FutureProducingIterator(_IteratorBase):
     def __iter__(self):
         return self
 
-    def next(self):
-        # Defined for backward-compatibility with Python 2.
-        return self.__next__()
-
     def __next__(self):
         return self._has_next().continue_with(self._has_next_continuation)
 
@@ -788,10 +783,6 @@ class _BlockingIterator(_IteratorBase):
 
     def __iter__(self):
         return self
-
-    def next(self):
-        # Defined for backward-compatibility with Python 2.
-        return self.__next__()
 
     def __next__(self):
         if not self._has_next():
@@ -1443,7 +1434,7 @@ class _SqlStatement(object):
 
     @sql.setter
     def sql(self, sql):
-        check_true(isinstance(sql, six.string_types), "SQL must be a string")
+        check_true(isinstance(sql, str), "SQL must be a string")
 
         if not sql.strip():
             raise ValueError("SQL cannot be empty")
@@ -1457,7 +1448,7 @@ class _SqlStatement(object):
     @schema.setter
     def schema(self, schema):
         check_true(
-            isinstance(schema, six.string_types) or schema is None,
+            isinstance(schema, str) or schema is None,
             "Schema must be a string or None",
         )
         self._schema = schema

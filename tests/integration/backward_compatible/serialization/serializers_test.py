@@ -3,7 +3,7 @@ import datetime
 import decimal
 import uuid
 
-from hazelcast import six, HazelcastClient
+from hazelcast import HazelcastClient
 from hazelcast.config import IntType
 from hazelcast.core import HazelcastJsonValue
 from hazelcast.serialization import MAX_BYTE, MAX_SHORT, MAX_INT, MAX_LONG
@@ -15,15 +15,6 @@ from tests.util import (
     skip_if_client_version_older_than,
     skip_if_server_version_older_than,
 )
-
-try:
-    from hazelcast.util import timezone
-except ImportError:
-    # Added in 4.2 version of the client
-    pass
-
-if not six.PY2:
-    long = int
 
 
 class SerializersLiveTest(SingleMemberTestCase):
@@ -109,7 +100,7 @@ class SerializersLiveTest(SingleMemberTestCase):
         value = -1 * (1 << 63)
         self.map.set("key", value)
         self.assertEqual(value, self.map.get("key"))
-        response = long(self.get_from_server())
+        response = int(self.get_from_server())
         self.assertEqual(value, response)
 
     def test_double(self):
@@ -127,21 +118,21 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(value, response)
 
     def test_utf_string(self):
-        value = six.u("Iñtërnâtiônàlizætiøn")
+        value = "Iñtërnâtiônàlizætiøn"
         self.map.set("key", value)
         self.assertEqual(value, self.map.get("key"))
         response = self.get_from_server()
         self.assertEqual(value, response)
 
     def test_emoji(self):
-        value = six.u("1⚐中💦2😭‍🙆😔5")
+        value = "1⚐中💦2😭‍🙆😔5"
         self.map.set("key", value)
         self.assertEqual(value, self.map.get("key"))
         response = self.get_from_server()
         self.assertEqual(value, response)
 
     def test_utf_chars(self):
-        value = six.u("\u0040\u0041\u01DF\u06A0\u12E0\u1D306")
+        value = "\u0040\u0041\u01DF\u06A0\u12E0\u1D306"
         self.map.set("key", value)
         self.assertEqual(value, self.map.get("key"))
         response = self.get_from_server()
@@ -181,7 +172,7 @@ class SerializersLiveTest(SingleMemberTestCase):
         value = 1 << 128
         self.map.set("key", value)
         self.assertEqual(value, self.map.get("key"))
-        response = long(self.get_from_server())
+        response = int(self.get_from_server())
         self.assertEqual(value, response)
 
     def test_variable_integer(self):
@@ -189,31 +180,31 @@ class SerializersLiveTest(SingleMemberTestCase):
         value = MAX_BYTE
         self.map.set("key", value)
         self.assertEqual(value, self.map.get("key"))
-        response = long(self.get_from_server())
+        response = int(self.get_from_server())
         self.assertEqual(value, response)
 
         value = MAX_SHORT
         self.map.set("key", value)
         self.assertEqual(value, self.map.get("key"))
-        response = long(self.get_from_server())
+        response = int(self.get_from_server())
         self.assertEqual(value, response)
 
         value = MAX_INT
         self.map.set("key", value)
         self.assertEqual(value, self.map.get("key"))
-        response = long(self.get_from_server())
+        response = int(self.get_from_server())
         self.assertEqual(value, response)
 
         value = MAX_LONG
         self.map.set("key", value)
         self.assertEqual(value, self.map.get("key"))
-        response = long(self.get_from_server())
+        response = int(self.get_from_server())
         self.assertEqual(value, response)
 
         value = 1234567890123456789012345678901234567890
         self.map.set("key", value)
         self.assertEqual(value, self.map.get("key"))
-        response = long(self.get_from_server())
+        response = int(self.get_from_server())
         self.assertEqual(value, response)
 
     def test_decimal(self):
@@ -266,7 +257,7 @@ class SerializersLiveTest(SingleMemberTestCase):
     def test_datetime_datetime(self):
         skip_if_client_version_older_than(self, "5.0")
         skip_if_server_version_older_than(self, self.client, "5.0")
-        value = datetime.datetime.now(timezone(datetime.timedelta(seconds=1800)))
+        value = datetime.datetime.now(datetime.timezone(datetime.timedelta(seconds=1800)))
         if value.microsecond % 1000 == 0:
             # A little hack for Windows. Time is precise to the
             # milliseconds there. If we send the microseconds
@@ -320,8 +311,8 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(-12332.0, self.map.get("key"))
 
     def test_string_from_server(self):
-        self.assertTrue(self.set_on_server(six.u('"1⚐中💦2😭‍🙆😔5"')))
-        self.assertEqual(six.u("1⚐中💦2😭‍🙆😔5"), self.map.get("key"))
+        self.assertTrue(self.set_on_server('"1⚐中💦2😭‍🙆😔5"'))
+        self.assertEqual("1⚐中💦2😭‍🙆😔5", self.map.get("key"))
 
     def test_uuid_from_server(self):
         self.assertTrue(self.set_on_server("new java.util.UUID(0, 1)"))
@@ -368,10 +359,8 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual([3123.0, -123.0], self.map.get("key"))
 
     def test_string_array_from_server(self):
-        self.assertTrue(
-            self.set_on_server(six.u('Java.to(["hey", "1⚐中💦2😭‍🙆😔5"], "java.lang.String[]")'))
-        )
-        self.assertEqual(["hey", six.u("1⚐中💦2😭‍🙆😔5")], self.map.get("key"))
+        self.assertTrue(self.set_on_server('Java.to(["hey", "1⚐中💦2😭‍🙆😔5"], "java.lang.String[]")'))
+        self.assertEqual(["hey", "1⚐中💦2😭‍🙆😔5"], self.map.get("key"))
 
     def test_date_from_server(self):
         skip_if_client_version_newer_than_or_equal(self, "5.0")
@@ -493,7 +482,7 @@ class SerializersLiveTest(SingleMemberTestCase):
         )
         self.assertEqual(
             datetime.datetime(
-                2021, 8, 24, 0, 59, 55, 987654, timezone(datetime.timedelta(seconds=2400))
+                2021, 8, 24, 0, 59, 55, 987654, datetime.timezone(datetime.timedelta(seconds=2400))
             ),
             self.map.get("key"),
         )

@@ -1,6 +1,3 @@
-from hazelcast.six.moves import range
-
-
 class ErrorHolder(object):
     __slots__ = ("error_code", "class_name", "message", "stack_trace_elements")
 

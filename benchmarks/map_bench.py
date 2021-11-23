@@ -3,7 +3,6 @@ import time
 import logging
 import sys
 from os.path import dirname
-from hazelcast.six.moves import range
 
 sys.path.append(dirname(dirname(dirname(__file__))))
 

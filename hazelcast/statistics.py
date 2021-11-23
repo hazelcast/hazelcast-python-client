@@ -6,7 +6,7 @@ from hazelcast.invocation import Invocation
 from hazelcast.metrics import MetricsCompressor, MetricDescriptor, ValueType, ProbeUnit
 from hazelcast.protocol.codec import client_statistics_codec
 from hazelcast.util import current_time_in_millis, to_millis, to_nanos, current_time
-from hazelcast import six, __version__
+from hazelcast import __version__
 
 try:
     import psutil
@@ -176,7 +176,7 @@ class Statistics(object):
             # Nothing to do if psutil is not found
             return
 
-        for gauge_name, (gauge_fn, value_type) in six.iteritems(self._registered_system_gauges):
+        for gauge_name, (gauge_fn, value_type) in self._registered_system_gauges.items():
             try:
                 value = gauge_fn()
                 self._add_system_or_process_metric(
@@ -191,7 +191,7 @@ class Statistics(object):
             return
 
         process = psutil.Process()
-        for gauge_name, (gauge_fn, value_type) in six.iteritems(self._registered_process_gauges):
+        for gauge_name, (gauge_fn, value_type) in self._registered_process_gauges.items():
             try:
                 value = gauge_fn(process)
                 self._add_system_or_process_metric(

@@ -1,7 +1,6 @@
 import re
 import types
 
-from hazelcast import six
 from hazelcast.errors import InvalidConfigurationError
 from hazelcast.serialization.api import StreamSerializer, IdentifiedDataSerializable, Portable
 from hazelcast.serialization.portable.classdef import ClassDefinition
@@ -96,8 +95,7 @@ class InMemoryFormat(object):
 class SSLProtocol(object):
     """SSL protocol options.
 
-    TLSv1+ requires at least Python 2.7.9 or Python 3.4 build with OpenSSL 1.0.1+
-    TLSv1_3 requires at least Python 2.7.15 or Python 3.7 build with OpenSSL 1.1.1+
+    TLSv1_3 requires at least Python 3.7 build with OpenSSL 1.1.1+
     """
 
     SSLv2 = 0
@@ -283,7 +281,7 @@ class BitmapIndexOptions(object):
     @classmethod
     def from_dict(cls, d):
         options = cls()
-        for k, v in six.iteritems(d):
+        for k, v in d.items():
             try:
                 options.__setattr__(k, v)
             except AttributeError:
@@ -329,7 +327,7 @@ class IndexConfig(object):
 
     @name.setter
     def name(self, value):
-        if isinstance(value, (six.string_types, none_type)):
+        if isinstance(value, (str, none_type)):
             self._name = value
         else:
             raise TypeError("name must be a string or None")
@@ -372,7 +370,7 @@ class IndexConfig(object):
     @classmethod
     def from_dict(cls, d):
         config = cls()
-        for k, v in six.iteritems(d):
+        for k, v in d.items():
             if v is not None:
                 try:
                     config.__setattr__(k, v)
@@ -641,7 +639,7 @@ class _Config(object):
     def cluster_members(self, value):
         if isinstance(value, list):
             for address in value:
-                if not isinstance(address, six.string_types):
+                if not isinstance(address, str):
                     raise TypeError("cluster_members must be list of strings")
 
             self._cluster_members = value
@@ -654,7 +652,7 @@ class _Config(object):
 
     @cluster_name.setter
     def cluster_name(self, value):
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             self._cluster_name = value
         else:
             raise TypeError("cluster_name must be a string")
@@ -665,7 +663,7 @@ class _Config(object):
 
     @client_name.setter
     def client_name(self, value):
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             self._client_name = value
         else:
             raise TypeError("client_name must be a string")
@@ -740,7 +738,7 @@ class _Config(object):
 
     @ssl_cafile.setter
     def ssl_cafile(self, value):
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             self._ssl_cafile = value
         else:
             raise TypeError("ssl_cafile must be a string")
@@ -751,7 +749,7 @@ class _Config(object):
 
     @ssl_certfile.setter
     def ssl_certfile(self, value):
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             self._ssl_certfile = value
         else:
             raise TypeError("ssl_certfile must be a string")
@@ -762,7 +760,7 @@ class _Config(object):
 
     @ssl_keyfile.setter
     def ssl_keyfile(self, value):
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             self._ssl_keyfile = value
         else:
             raise TypeError("ssl_keyfile must be a string")
@@ -773,7 +771,7 @@ class _Config(object):
 
     @ssl_password.setter
     def ssl_password(self, value):
-        if isinstance(value, (six.string_types, six.binary_type, bytearray)) or callable(value):
+        if isinstance(value, (str, bytes, bytearray)) or callable(value):
             self._ssl_password = value
         else:
             raise TypeError("ssl_password must be string, bytes, bytearray or callable")
@@ -792,7 +790,7 @@ class _Config(object):
 
     @ssl_ciphers.setter
     def ssl_ciphers(self, value):
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             self._ssl_ciphers = value
         else:
             raise TypeError("ssl_ciphers must be a string")
@@ -803,7 +801,7 @@ class _Config(object):
 
     @cloud_discovery_token.setter
     def cloud_discovery_token(self, value):
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             self._cloud_discovery_token = value
         else:
             raise TypeError("cloud_discovery_token must be a string")
@@ -915,15 +913,15 @@ class _Config(object):
     @data_serializable_factories.setter
     def data_serializable_factories(self, value):
         if isinstance(value, dict):
-            for factory_id, factory in six.iteritems(value):
-                if not isinstance(factory_id, six.integer_types):
+            for factory_id, factory in value.items():
+                if not isinstance(factory_id, int):
                     raise TypeError("Keys of data_serializable_factories must be integers")
 
                 if not isinstance(factory, dict):
                     raise TypeError("Values of data_serializable_factories must be dict")
 
-                for class_id, clazz in six.iteritems(factory):
-                    if not isinstance(class_id, six.integer_types):
+                for class_id, clazz in factory.items():
+                    if not isinstance(class_id, int):
                         raise TypeError(
                             "Keys of factories of data_serializable_factories must be integers"
                         )
@@ -947,15 +945,15 @@ class _Config(object):
     @portable_factories.setter
     def portable_factories(self, value):
         if isinstance(value, dict):
-            for factory_id, factory in six.iteritems(value):
-                if not isinstance(factory_id, six.integer_types):
+            for factory_id, factory in value.items():
+                if not isinstance(factory_id, int):
                     raise TypeError("Keys of portable_factories must be integers")
 
                 if not isinstance(factory, dict):
                     raise TypeError("Values of portable_factories must be dict")
 
-                for class_id, clazz in six.iteritems(factory):
-                    if not isinstance(class_id, six.integer_types):
+                for class_id, clazz in factory.items():
+                    if not isinstance(class_id, int):
                         raise TypeError("Keys of factories of portable_factories must be integers")
 
                     if not (isinstance(clazz, type) and issubclass(clazz, Portable)):
@@ -1033,7 +1031,7 @@ class _Config(object):
     @custom_serializers.setter
     def custom_serializers(self, value):
         if isinstance(value, dict):
-            for _type, serializer in six.iteritems(value):
+            for _type, serializer in value.items():
                 if not isinstance(_type, type):
                     raise TypeError("Keys of custom_serializers must be types")
 
@@ -1054,8 +1052,8 @@ class _Config(object):
     def near_caches(self, value):
         if isinstance(value, dict):
             configs = dict()
-            for name, config in six.iteritems(value):
-                if not isinstance(name, six.string_types):
+            for name, config in value.items():
+                if not isinstance(name, str):
                     raise TypeError("Keys of near_caches must be strings")
 
                 if not isinstance(config, dict):
@@ -1128,8 +1126,8 @@ class _Config(object):
     def flake_id_generators(self, value):
         if isinstance(value, dict):
             configs = dict()
-            for name, config in six.iteritems(value):
-                if not isinstance(name, six.string_types):
+            for name, config in value.items():
+                if not isinstance(name, str):
                     raise TypeError("Keys of flake_id_generators must be strings")
 
                 if not isinstance(config, dict):
@@ -1149,8 +1147,8 @@ class _Config(object):
     def reliable_topics(self, value):
         if isinstance(value, dict):
             configs = {}
-            for name, config in six.iteritems(value):
-                if not isinstance(name, six.string_types):
+            for name, config in value.items():
+                if not isinstance(name, str):
                     raise TypeError("Keys of reliable_topics must be strings")
 
                 if not isinstance(config, dict):
@@ -1170,7 +1168,7 @@ class _Config(object):
     def labels(self, value):
         if isinstance(value, list):
             for label in value:
-                if not isinstance(label, six.string_types):
+                if not isinstance(label, str):
                     raise TypeError("labels must be list of strings")
 
             self._labels = value
@@ -1308,7 +1306,7 @@ class _Config(object):
     @creds_username.setter
     def creds_username(self, username):
         # type: (_Config, str) -> None
-        if not isinstance(username, six.string_types):
+        if not isinstance(username, str):
             raise TypeError("creds_password must be a string")
         self._creds_username = username
 
@@ -1320,7 +1318,7 @@ class _Config(object):
     @creds_password.setter
     def creds_password(self, password):
         # type: (_Config, str) -> None
-        if not isinstance(password, six.string_types):
+        if not isinstance(password, str):
             raise TypeError("creds_password must be a string")
         self._creds_password = password
 
@@ -1353,7 +1351,7 @@ class _Config(object):
     @classmethod
     def from_dict(cls, d):
         config = cls()
-        for k, v in six.iteritems(d):
+        for k, v in d.items():
             if v is not None:
                 try:
                     config.__setattr__(k, v)
@@ -1479,7 +1477,7 @@ class _NearCacheConfig(object):
     @classmethod
     def from_dict(cls, d):
         config = cls()
-        for k, v in six.iteritems(d):
+        for k, v in d.items():
             try:
                 config.__setattr__(k, v)
             except AttributeError:
@@ -1525,7 +1523,7 @@ class _FlakeIdGeneratorConfig(object):
     @classmethod
     def from_dict(cls, d):
         config = cls()
-        for k, v in six.iteritems(d):
+        for k, v in d.items():
             try:
                 config.__setattr__(k, v)
             except AttributeError:
@@ -1566,7 +1564,7 @@ class _ReliableTopicConfig(object):
     @classmethod
     def from_dict(cls, d):
         config = cls()
-        for k, v in six.iteritems(d):
+        for k, v in d.items():
             try:
                 config.__setattr__(k, v)
             except AttributeError:

@@ -6,8 +6,6 @@ import time
 
 import hazelcast
 from hazelcast.config import NearCacheConfig, InMemoryFormat
-from hazelcast import six
-from hazelcast.six.moves import range
 
 sys.path.append(dirname(dirname(dirname(__file__))))
 
@@ -54,12 +52,12 @@ def init():
 
     my_map = client.get_map(MAP_NAME).blocking()
 
-    six.print_("START INIT")
+    print("START INIT")
     for key in range(0, ENTRY_COUNT):
         my_map.put(key, VALUE)
     for key in range(0, ENTRY_COUNT):
         my_map.get(key)
-    six.print_("INIT COMPLETE")
+    print("INIT COMPLETE")
     return my_map
 
 
@@ -68,7 +66,7 @@ def bench(my_map):
     hit = my_map._near_cache._cache_hit
     for key in range(0, ENTRY_COUNT):
         my_map.get(key)
-    six.print_("op / sec :", ENTRY_COUNT // (time.time() - start), "hit:", my_map._near_cache._cache_hit-hit)
+    print("op / sec :", ENTRY_COUNT // (time.time() - start), "hit:", my_map._near_cache._cache_hit-hit)
 
 
 if __name__ == '__main__':

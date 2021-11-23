@@ -82,7 +82,6 @@ from hazelcast.util import (
     ImmutableLazyDataList,
     IterationType,
 )
-from hazelcast import six
 
 
 class Map(Proxy):
@@ -934,7 +933,7 @@ class Map(Proxy):
         partition_service = self._context.partition_service
         partition_map = {}
 
-        for key, value in six.iteritems(map):
+        for key, value in map.items():
             check_not_none(key, "key can't be None")
             check_not_none(value, "value can't be None")
             entry = (self._to_data(key), self._to_data(value))
@@ -945,7 +944,7 @@ class Map(Proxy):
                 partition_map[partition_id] = [entry]
 
         futures = []
-        for partition_id, entry_list in six.iteritems(partition_map):
+        for partition_id, entry_list in partition_map.items():
             request = map_put_all_codec.encode_request(
                 self.name, entry_list, False
             )  # TODO trigger map loader
@@ -1397,8 +1396,8 @@ class Map(Proxy):
                 map_get_all_codec.decode_response(message), self._to_object
             )
 
-        for partition_id, key_dict in six.iteritems(partition_to_keys):
-            request = map_get_all_codec.encode_request(self.name, six.itervalues(key_dict))
+        for partition_id, key_dict in partition_to_keys.items():
+            request = map_get_all_codec.encode_request(self.name, key_dict.values())
             future = self._invoke_on_partition(request, partition_id, handler)
             futures.append(future)
 
@@ -1611,7 +1610,7 @@ class MapFeatNearCache(Map):
     def _get_all_internal(self, partition_to_keys, futures=None):
         if futures is None:
             futures = []
-        for key_dic in six.itervalues(partition_to_keys):
+        for key_dic in partition_to_keys.values():
             for key in list(key_dic.keys()):
                 try:
                     key_data = key_dic[key]

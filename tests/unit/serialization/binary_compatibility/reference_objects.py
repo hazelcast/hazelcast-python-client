@@ -5,10 +5,9 @@ import re
 import uuid
 
 from hazelcast import predicate, aggregator, projection
-from hazelcast import six
 from hazelcast.serialization.api import Portable, IdentifiedDataSerializable
 from hazelcast.serialization.data import Data
-from hazelcast.util import to_signed, timezone
+from hazelcast.util import to_signed
 
 IDENTIFIED_DATA_SERIALIZABLE_FACTORY_ID = 1
 PORTABLE_FACTORY_ID = 1
@@ -44,12 +43,6 @@ def is_equal(a, b):
     return a == b
 
 
-def _to_unicode(s):
-    if six.PY3:
-        return s
-    return unicode(s, encoding="utf-8")
-
-
 def _get_reference_str():
     s = []
     for i in range(0xFFFF):
@@ -57,7 +50,7 @@ def _get_reference_str():
             s.append(i)
 
     s.extend([0] * (0xFFFF - len(s)))
-    return "".join(map(six.unichr, s))
+    return "".join(map(chr, s))
 
 
 class AnInnerPortable(Portable):
@@ -650,13 +643,13 @@ class APortable(Portable):
         )
 
 
-_sql_string = _to_unicode("this > 5 AND this < 100")
+_sql_string = "this > 5 AND this < 100"
 
 REFERENCE_OBJECTS = {
     "NULL": None,
     "Boolean": True,
     "Byte": 113,
-    "Character": _to_unicode("x"),
+    "Character": "x",
     "Double": -897543.3678909,
     "Short": -500,
     "Float": 900.5678,
@@ -666,31 +659,26 @@ REFERENCE_OBJECTS = {
     "UUID": uuid.UUID(hex="ffffffff-fcf5-eb9f-0000-00000000ddd5"),
     "boolean[]": [True, False, True],
     "byte[]": bytearray([112, 4, 255, 4, 112, 221, 43]),
-    "char[]": list(map(_to_unicode, ["a", "b", "c"])),
+    "char[]": ["a", "b", "c"],
     "double[]": [-897543.3678909, 11.1, 22.2, 33.3],
     "short[]": [-500, 2, 3],
     "float[]": [900.5678, 1.0, 2.1, 3.4],
     "int[]": [56789, 2, 3],
     "long[]": [-50992225, 1231232141, 2, 3],
-    "String[]": list(
-        map(
-            _to_unicode,
-            [
-                "Pijamalı hasta, yağız şoföre çabucak güvendi.",
-                "イロハニホヘト チリヌルヲ ワカヨタレソ ツネナラム",
-                "The quick brown fox jumps over the lazy dog",
-            ],
-        )
-    ),
+    "String[]": [
+        "Pijamalı hasta, yağız şoföre çabucak güvendi.",
+        "イロハニホヘト チリヌルヲ ワカヨタレソ ツネナラム",
+        "The quick brown fox jumps over the lazy dog",
+    ],
     "LocalDate": datetime.date(2021, 6, 28),
     "LocalTime": datetime.time(11, 22, 41, 123456),
     "LocalDateTime": datetime.datetime(2021, 6, 28, 11, 22, 41, 123456),
     "OffsetDateTime": datetime.datetime(
-        2021, 6, 28, 11, 22, 41, 123456, timezone(datetime.timedelta(hours=18))
+        2021, 6, 28, 11, 22, 41, 123456, datetime.timezone(datetime.timedelta(hours=18))
     ),
     "BigInteger": 1314432323232411,
     "BigDecimal": decimal.Decimal("31231.12331"),
-    "Class": _to_unicode("java.math.BigDecimal"),
+    "Class": "java.math.BigDecimal",
 }
 
 _data = Data(bytearray([49, 49, 49, 51, 49, 51, 49, 50, 51, 49, 51, 49, 51, 49, 51, 49, 51, 49]))

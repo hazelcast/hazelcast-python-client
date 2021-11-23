@@ -7,7 +7,6 @@ from collections import OrderedDict
 from mock import MagicMock
 from parameterized import parameterized
 
-from hazelcast import six
 from hazelcast.config import _Config
 from hazelcast.core import Address
 from hazelcast.reactor import (
@@ -213,16 +212,8 @@ class SocketedWakerTest(unittest.TestCase):
 
         waker.close()
 
-        if six.PY3:
-            self.assertEqual(-1, writer.fileno())
-            self.assertEqual(-1, reader.fileno())
-        else:
-            # Closed sockets raise socket.error with EBADF error code in Python2
-            with self.assertRaises(socket.error):
-                writer.fileno()
-
-            with self.assertRaises(socket.error):
-                reader.fileno()
+        self.assertEqual(-1, writer.fileno())
+        self.assertEqual(-1, reader.fileno())
 
 
 class PipedWakerTest(unittest.TestCase):
