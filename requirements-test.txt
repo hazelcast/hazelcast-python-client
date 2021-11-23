@@ -1,6 +1,6 @@
 thrift==0.13.0
-nose==1.3.7
-coverage==4.5.4
-psutil>=5.8.0; python_version != "3.4" or os_name != "nt"
+psutil>=5.8.0
 mock==3.0.5
 parameterized==0.7.4
+pytest==6.2.5
+pytest-cov==3.0.0

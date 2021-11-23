@@ -5,11 +5,11 @@ on:
     - cron: '0 2 * * *'
 jobs:
   run-tests:
-    runs-on: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.4' && 'ubuntu-18.04' || matrix.os }}
+    runs-on: ${{ matrix.os }}
     name: Run tests with Python ${{ matrix.python-version }} on ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [ 2.7, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9 ]
+        python-version: [ '3.6', '3.7', '3.8', '3.9', '3.10' ]
         os: [ ubuntu-latest, windows-latest ]
       fail-fast: false
     steps:

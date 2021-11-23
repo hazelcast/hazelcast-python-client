@@ -1,10 +1,10 @@
 import os
 import socket
+import subprocess
 import sys
 import time
 from contextlib import closing
 
-import nose
 
 from start_rc import start_rc
 
@@ -30,26 +30,19 @@ if __name__ == "__main__":
                 sys.stdout.flush()
 
                 args = [
-                    __file__,
-                    "-v",
-                    "--with-xunit",
-                    "--with-coverage",
-                    "--cover-xml",
-                    "--cover-package=hazelcast",
-                    "--cover-inclusive",
-                    "--nologcapture",
-                    "--traverse-namespace",
-                    "tests",
+                    "pytest",
+                    "--cov=hazelcast",
+                    "--cov-report=xml",
                 ]
 
                 enterprise_key = os.environ.get("HAZELCAST_ENTERPRISE_KEY", None)
                 if not enterprise_key:
-                    args.extend(["-A", "not enterprise"])
+                    args.extend(["-m", "not enterprise"])
 
-                return_code = nose.run_exit(argv=args)
+                process = subprocess.run(args)
                 rc_process.kill()
                 rc_process.wait()
-                sys.exit(return_code)
+                sys.exit(process.returncode)
             except:
                 rc_process.kill()
                 rc_process.wait()

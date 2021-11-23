@@ -1,13 +1,15 @@
 import os
 
+import pytest
+
 from tests.base import HazelcastTestCase
 from hazelcast.client import HazelcastClient
 from hazelcast.errors import HazelcastError
 from hazelcast.config import SSLProtocol
-from tests.util import get_ssl_config, fill_map, get_abs_path, set_attr
+from tests.util import get_ssl_config, fill_map, get_abs_path
 
 
-@set_attr(enterprise=True)
+@pytest.mark.enterprise
 class SSLTest(HazelcastTestCase):
     current_directory = os.path.dirname(__file__)
     rc = None

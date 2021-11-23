@@ -1,12 +1,14 @@
 import os
 
+import pytest
+
 from tests.base import HazelcastTestCase
 from hazelcast.client import HazelcastClient
 from hazelcast.errors import HazelcastError
-from tests.util import get_ssl_config, get_abs_path, set_attr
+from tests.util import get_ssl_config, get_abs_path
 
 
-@set_attr(enterprise=True)
+@pytest.mark.enterprise
 class MutualAuthenticationTest(HazelcastTestCase):
     current_directory = os.path.dirname(__file__)
     rc = None

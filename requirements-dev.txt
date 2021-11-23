@@ -1,4 +1,4 @@
 -r requirements-test.txt
-black==21.7b0; python_version >= "3.6"
-Sphinx==4.2.0; python_version >= "3.6"
-sphinx-rtd-theme==1.0.0; python_version >= "3.6"
+black==21.7b0
+Sphinx==4.2.0
+sphinx-rtd-theme==1.0.0

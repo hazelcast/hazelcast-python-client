@@ -3,7 +3,6 @@ import threading
 from random import choice
 from unittest import skip
 
-from nose.plugins.attrib import attr
 
 from tests.base import SingleMemberTestCase
 from tests.util import random_string
@@ -20,7 +19,6 @@ class ThreadingTest(SingleMemberTestCase):
     def setUp(self):
         self.map = self.client.get_map(random_string()).blocking()
 
-    @attr("stress_test")
     @skip
     def test_operation_from_multiple_threads(self):
         num_threads = 4

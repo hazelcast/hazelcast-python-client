@@ -6,9 +6,9 @@ from hazelcast.serialization.service import SerializationServiceV1
 from hazelcast.six.moves import cPickle
 
 
-class TestGlobalSerializer(StreamSerializer):
+class GlobalSerializer(StreamSerializer):
     def __init__(self):
-        super(TestGlobalSerializer, self).__init__()
+        super(GlobalSerializer, self).__init__()
 
     def read(self, inp):
         string = inp.read_string()
@@ -86,7 +86,7 @@ class TheOtherCustomSerializer(StreamSerializer):
 class CustomSerializationTestCase(unittest.TestCase):
     def test_global_encode_decode(self):
         config = _Config()
-        config.global_serializer = TestGlobalSerializer
+        config.global_serializer = GlobalSerializer
 
         service = SerializationServiceV1(config)
         obj = CustomClass("uid", "some name", "description text")
@@ -111,7 +111,7 @@ class CustomSerializationTestCase(unittest.TestCase):
     def test_global_custom_serializer(self):
         config = _Config()
         config.custom_serializers = {CustomClass: CustomSerializer}
-        config.global_serializer = TestGlobalSerializer
+        config.global_serializer = GlobalSerializer
 
         service = SerializationServiceV1(config)
         obj = CustomClass("uid", "some name", "description text")

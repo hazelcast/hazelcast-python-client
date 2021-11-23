@@ -81,17 +81,6 @@ def generate_key_owned_by_instance(client, uuid):
             return key
 
 
-def set_attr(*args, **kwargs):
-    def wrap_ob(ob):
-        for name in args:
-            setattr(ob, name, True)
-        for name, value in kwargs.items():
-            setattr(ob, name, value)
-        return ob
-
-    return wrap_ob
-
-
 def skip_if_server_version_older_than(test, client, version):
     if compare_server_version(client, version) < 0:
         test.skipTest("Expected a newer server")

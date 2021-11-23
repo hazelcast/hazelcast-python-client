@@ -43,7 +43,7 @@ class ConnectionManagerTranslateTest(HazelcastTestCase):
             with patch.object(
                 HazelcastClient,
                 "_create_address_provider",
-                return_value=TestAddressProvider(True, self.member.address),
+                return_value=StaticAddressProvider(True, self.member.address),
             ):
                 self.client = HazelcastClient(
                     cluster_name=self.cluster.id,
@@ -52,7 +52,7 @@ class ConnectionManagerTranslateTest(HazelcastTestCase):
                 )
 
     def test_translate_is_not_used_when_getting_existing_connection(self):
-        provider = TestAddressProvider(False, self.member.address)
+        provider = StaticAddressProvider(False, self.member.address)
         with patch.object(
             HazelcastClient,
             "_create_address_provider",
@@ -116,7 +116,7 @@ class ConnectionManagerTranslateTest(HazelcastTestCase):
             conn_manager._get_or_connect_to_member(member).result()
 
 
-class TestAddressProvider(object):
+class StaticAddressProvider(object):
     def __init__(self, should_translate, member_address):
         self.should_translate = should_translate
         self.member_address = member_address
