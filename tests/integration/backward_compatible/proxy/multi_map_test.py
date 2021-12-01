@@ -6,8 +6,6 @@ from hazelcast.errors import HazelcastError
 from hazelcast.proxy.map import EntryEventType
 from tests.base import SingleMemberTestCase
 from tests.util import random_string, event_collector
-from hazelcast import six
-from hazelcast.six.moves import range
 
 
 class MultiMapTest(SingleMemberTestCase):
@@ -109,11 +107,11 @@ class MultiMapTest(SingleMemberTestCase):
         mm = self.fill_map()
 
         entry_list = []
-        for key, list in six.iteritems(mm):
+        for key, list in mm.items():
             for value in list:
                 entry_list.append((key, value))
 
-        six.assertCountEqual(self, self.multi_map.entry_set(), entry_list)
+        self.assertCountEqual(self.multi_map.entry_set(), entry_list)
 
     def test_force_unlock(self):
         self.multi_map.put("key", "value")
@@ -135,7 +133,7 @@ class MultiMapTest(SingleMemberTestCase):
     def test_key_set(self):
         keys = list(self.fill_map().keys())
 
-        six.assertCountEqual(self, self.multi_map.key_set(), keys)
+        self.assertCountEqual(self.multi_map.key_set(), keys)
 
     def test_lock(self):
         self.multi_map.put("key", "value")
@@ -150,7 +148,7 @@ class MultiMapTest(SingleMemberTestCase):
         self.assertTrue(self.multi_map.put("key", "value2"))
         self.assertFalse(self.multi_map.put("key", "value2"))
 
-        six.assertCountEqual(self, self.multi_map.get("key"), ["value1", "value2"])
+        self.assertCountEqual(self.multi_map.get("key"), ["value1", "value2"])
 
     def test_remove(self):
         self.multi_map.put("key", "value")
@@ -168,7 +166,7 @@ class MultiMapTest(SingleMemberTestCase):
 
         removed = self.multi_map.remove_all("key")
 
-        six.assertCountEqual(self, removed, ["value", "value2"])
+        self.assertCountEqual(removed, ["value", "value2"])
         self.assertEqual(self.multi_map.size(), 0)
 
     def test_remove_entry_listener(self):
@@ -214,7 +212,7 @@ class MultiMapTest(SingleMemberTestCase):
 
     def test_values(self):
         values = list(self.fill_map().values())
-        six.assertCountEqual(self, list(self.multi_map.values()), itertools.chain(*values))
+        self.assertCountEqual(list(self.multi_map.values()), itertools.chain(*values))
 
     def test_str(self):
         self.assertTrue(str(self.multi_map).startswith("MultiMap"))
@@ -224,7 +222,7 @@ class MultiMapTest(SingleMemberTestCase):
             "key-%d" % x: ["value-%d-%d" % (x, y) for y in range(0, value_count)]
             for x in range(0, key_count)
         }
-        for k, l in six.iteritems(map):
+        for k, l in map.items():
             for v in l:
                 self.multi_map.put(k, v)
 

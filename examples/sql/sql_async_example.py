@@ -3,8 +3,6 @@
 # for the capabilities of the SQL service. The code sample here is just to
 # demonstrate the concept of async usage of the SQL service. When in doubt,
 # use the blocking iterator method in `sql_example.py`.
-from __future__ import print_function
-
 import hazelcast
 
 client = hazelcast.HazelcastClient()

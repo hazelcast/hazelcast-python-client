@@ -1,5 +1,4 @@
 from unittest import TestCase
-from hazelcast import six
 from hazelcast.core import Address
 from hazelcast.connection import DefaultAddressProvider
 
@@ -9,15 +8,14 @@ class DefaultAddressProviderTest(TestCase):
         initial_list = ["192.168.0.1:5701"]
         provider = DefaultAddressProvider(initial_list)
         primaries, secondaries = provider.load_addresses()
-        six.assertCountEqual(self, primaries, [Address("192.168.0.1", 5701)])
-        six.assertCountEqual(self, secondaries, [])
+        self.assertCountEqual(primaries, [Address("192.168.0.1", 5701)])
+        self.assertCountEqual(secondaries, [])
 
     def test_load_addresses_with_multiple_addresses(self):
         initial_list = ["192.168.0.1:5701", "192.168.0.1:5702", "192.168.0.2:5701"]
         provider = DefaultAddressProvider(initial_list)
         primaries, secondaries = provider.load_addresses()
-        six.assertCountEqual(
-            self,
+        self.assertCountEqual(
             primaries,
             [
                 Address("192.168.0.1", 5701),
@@ -25,34 +23,32 @@ class DefaultAddressProviderTest(TestCase):
                 Address("192.168.0.2", 5701),
             ],
         )
-        six.assertCountEqual(self, secondaries, [])
+        self.assertCountEqual(secondaries, [])
 
     # we deal with duplicate addresses in the ConnectionManager#_get_possible_addresses
     def test_load_addresses_with_duplicate_addresses(self):
         initial_list = ["192.168.0.1:5701", "192.168.0.1:5701"]
         provider = DefaultAddressProvider(initial_list)
         primaries, secondaries = provider.load_addresses()
-        six.assertCountEqual(
-            self, primaries, [Address("192.168.0.1", 5701), Address("192.168.0.1", 5701)]
+        self.assertCountEqual(
+            primaries, [Address("192.168.0.1", 5701), Address("192.168.0.1", 5701)]
         )
-        six.assertCountEqual(self, secondaries, [])
+        self.assertCountEqual(secondaries, [])
 
     def test_load_addresses_with_empty_addresses(self):
         initial_list = []
         provider = DefaultAddressProvider(initial_list)
         primaries, secondaries = provider.load_addresses()
-        six.assertCountEqual(self, primaries, [Address("127.0.0.1", 5701)])
-        six.assertCountEqual(
-            self, secondaries, [Address("127.0.0.1", 5702), Address("127.0.0.1", 5703)]
-        )
+        self.assertCountEqual(primaries, [Address("127.0.0.1", 5701)])
+        self.assertCountEqual(secondaries, [Address("127.0.0.1", 5702), Address("127.0.0.1", 5703)])
 
     def test_load_addresses_without_port(self):
         initial_list = ["192.168.0.1"]
         provider = DefaultAddressProvider(initial_list)
         primaries, secondaries = provider.load_addresses()
-        six.assertCountEqual(self, primaries, [Address("192.168.0.1", 5701)])
-        six.assertCountEqual(
-            self, secondaries, [Address("192.168.0.1", 5702), Address("192.168.0.1", 5703)]
+        self.assertCountEqual(primaries, [Address("192.168.0.1", 5701)])
+        self.assertCountEqual(
+            secondaries, [Address("192.168.0.1", 5702), Address("192.168.0.1", 5703)]
         )
 
     def test_translate(self):

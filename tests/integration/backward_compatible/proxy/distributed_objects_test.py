@@ -7,7 +7,6 @@ from hazelcast.core import DistributedObjectEventType
 from hazelcast.proxy import MAP_SERVICE
 from tests.base import SingleMemberTestCase
 from tests.util import event_collector, LoggingContext
-from hazelcast import six
 
 
 class DistributedObjectsTest(SingleMemberTestCase):
@@ -30,8 +29,8 @@ class DistributedObjectsTest(SingleMemberTestCase):
         self.member.shutdown()
 
     def test_get_distributed_objects(self):
-        six.assertCountEqual(
-            self, [], self._filter_internal_objects(self.client.get_distributed_objects())
+        self.assertCountEqual(
+            [], self._filter_internal_objects(self.client.get_distributed_objects())
         )
 
         m = self.client.get_map("map")
@@ -39,8 +38,7 @@ class DistributedObjectsTest(SingleMemberTestCase):
         q = self.client.get_queue("queue")
 
         self.assertTrueEventually(
-            lambda: six.assertCountEqual(
-                self,
+            lambda: self.assertCountEqual(
                 [m, s, q],
                 self._filter_internal_objects(self.client.get_distributed_objects()),
             )
@@ -50,8 +48,8 @@ class DistributedObjectsTest(SingleMemberTestCase):
         m = self.client.get_map("map")
 
         self.assertTrueEventually(
-            lambda: six.assertCountEqual(
-                self, [m], self._filter_internal_objects(self.client.get_distributed_objects())
+            lambda: self.assertCountEqual(
+                [m], self._filter_internal_objects(self.client.get_distributed_objects())
             )
         )
 
@@ -60,8 +58,8 @@ class DistributedObjectsTest(SingleMemberTestCase):
         other_clients_map.destroy()
 
         self.assertTrueEventually(
-            lambda: six.assertCountEqual(
-                self, [], self._filter_internal_objects(self.client.get_distributed_objects())
+            lambda: self.assertCountEqual(
+                [], self._filter_internal_objects(self.client.get_distributed_objects())
             )
         )
         other_client.shutdown()

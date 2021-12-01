@@ -7,8 +7,7 @@ from tests.hzrc.ttypes import Lang
 
 from tests.base import SingleMemberTestCase, HazelcastTestCase
 from tests.util import random_string
-from hazelcast.six.moves import range
-from hazelcast import six, HazelcastClient
+from hazelcast import HazelcastClient
 
 
 class MapTest(SingleMemberTestCase):
@@ -106,9 +105,9 @@ class MapTest(SingleMemberTestCase):
 
     def fill_map_and_near_cache(self, count=10):
         fill_content = {"key-%d" % x: "value-%d" % x for x in range(0, count)}
-        for k, v in six.iteritems(fill_content):
+        for k, v in fill_content.items():
             self.map.put(k, v)
-        for k, v in six.iteritems(fill_content):
+        for k, v in fill_content.items():
             self.map.get(k)
         return fill_content
 

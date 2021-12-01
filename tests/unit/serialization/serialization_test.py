@@ -4,7 +4,6 @@ from hazelcast.config import _Config
 from hazelcast.core import Address
 from hazelcast.serialization.data import Data
 from hazelcast.serialization.service import SerializationServiceV1
-from hazelcast.six.moves import range
 
 
 class SerializationTestCase(unittest.TestCase):

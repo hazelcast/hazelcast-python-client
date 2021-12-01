@@ -1,4 +1,3 @@
-from hazelcast.six import string_types
 from hazelcast.core import Address
 
 
@@ -22,7 +21,7 @@ class BasicTokenProvider(TokenProvider):
     """BasicTokenProvider sends the given token to the authentication endpoint."""
 
     def __init__(self, token=""):
-        if isinstance(token, string_types):
+        if isinstance(token, str):
             self._token = token.encode("utf-8")
         elif isinstance(token, bytes):
             self._token = token

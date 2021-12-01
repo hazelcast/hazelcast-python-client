@@ -1,5 +1,4 @@
 from hazelcast.errors import HazelcastSerializationError
-from hazelcast import six
 
 
 class FieldType(object):
@@ -75,7 +74,7 @@ class ClassDefinition(object):
             index = field_name_or_index
             count = self.get_field_count()
             if 0 <= index < count:
-                for field in six.itervalues(self.field_defs):
+                for field in self.field_defs.values():
                     if field.index == index:
                         return field
             raise IndexError("Index is out of bound. Index: %s and size: %s" % (index, count))

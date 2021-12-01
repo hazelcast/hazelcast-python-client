@@ -1,9 +1,7 @@
 import random
 
-from hazelcast import six
 from hazelcast.config import InMemoryFormat, EvictionPolicy
 from hazelcast.util import current_time
-from hazelcast.six.moves import range
 from sys import getsizeof
 
 
@@ -292,7 +290,7 @@ class NearCacheManager(object):
         return near_cache
 
     def clear_near_caches(self):
-        for cache in six.itervalues(self._caches):
+        for cache in self._caches.values():
             cache._clear()
 
     def destroy_near_cache(self, name):

@@ -4,7 +4,6 @@ from time import sleep
 from hazelcast.config import _Config
 from hazelcast.near_cache import *
 from hazelcast.serialization import SerializationServiceV1
-from hazelcast.six.moves import range
 
 
 class NearCacheTestCase(unittest.TestCase):

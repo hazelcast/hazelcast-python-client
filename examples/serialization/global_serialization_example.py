@@ -1,8 +1,7 @@
+import pickle
+
 import hazelcast
 
-# We are using six.moves.cPickle to support both Python 2 and Python 3.
-# You can use cPickle for Python 2 or pickle for Python 3
-from hazelcast.six.moves import cPickle
 from hazelcast.serialization.api import StreamSerializer
 
 
@@ -24,11 +23,11 @@ class GlobalSerializer(StreamSerializer):
 
     def read(self, inp):
         string = inp.read_string()
-        obj = cPickle.loads(string.encode())
+        obj = pickle.loads(string.encode())
         return obj
 
     def write(self, out, obj):
-        out.write_string(cPickle.dumps(obj, 0).decode("utf-8"))
+        out.write_string(pickle.dumps(obj, 0).decode("utf-8"))
 
     def get_type_id(self):
         return self.GLOBAL_SERIALIZER_ID

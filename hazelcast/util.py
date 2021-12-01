@@ -4,15 +4,10 @@ import threading
 import time
 import uuid
 
+from collections.abc import Sequence, Iterable
+
 from hazelcast.serialization import UUID_MSB_SHIFT, UUID_LSB_MASK, UUID_MSB_MASK
 
-try:
-    from collections.abc import Sequence, Iterable
-except ImportError:
-    # Compatibility for Python2
-    from collections import Sequence, Iterable
-
-from hazelcast import six
 
 DEFAULT_ADDRESS = "127.0.0.1"
 DEFAULT_PORT = 5701
@@ -47,7 +42,7 @@ def check_is_number(val, message="Number value expected"):
 
 
 def check_is_int(val, message="Int value expected"):
-    if not isinstance(val, six.integer_types):
+    if not isinstance(val, int):
         raise AssertionError(message)
 
 
@@ -225,14 +220,14 @@ def to_signed(unsigned, bit_len):
 
 
 def get_attr_name(cls, value):
-    for attr_name, attr_value in six.iteritems(vars(cls)):
+    for attr_name, attr_value in vars(cls).items():
         if attr_value == value:
             return attr_name
     return None
 
 
 def _get_enum_value(cls, key):
-    if isinstance(key, six.string_types):
+    if isinstance(key, str):
         return getattr(cls, key, None)
     return None
 
@@ -258,7 +253,7 @@ def try_to_get_enum_value(value, enum_class):
             )
 
 
-number_types = (six.integer_types, float)
+number_types = (int, float)
 none_type = type(None)
 
 
@@ -367,87 +362,20 @@ class UUIDUtil(object):
         )
 
 
-if hasattr(int, "from_bytes"):
-
-    def int_from_bytes(buf):
-        return int.from_bytes(buf, "big", signed=True)
+def int_from_bytes(buf):
+    return int.from_bytes(buf, "big", signed=True)
 
 
-else:
-    # Compatibility with Python 2
-    def int_from_bytes(buf):
-        buf = bytearray(buf)
-        if buf[0] & 0x80:
-            neg = bytearray()
-            for c in buf:
-                neg.append(c ^ 0xFF)
-            return -1 * int(binascii.hexlify(neg), 16) - 1
-        return int(binascii.hexlify(buf), 16)
-
-
-if hasattr(int, "to_bytes"):
-
-    def int_to_bytes(number):
-        # Number of bytes to represent the number.
-        # For numbers that don't have exactly 8n bit_length,
-        # adding 8 and performing integer division with 8
-        # let us get the correct length because
-        # (8n + m + 8) // 8 = n + 0 + 1 (assuming m < 8).
-        # For negative numbers, we add 1 to get rid of the
-        # effects of the leading 1 (the sign bit).
-        width = (8 + (number + (number < 0)).bit_length()) // 8
-        return number.to_bytes(length=width, byteorder="big", signed=True)
-
-
-else:
-    # Compatibility with Python 2
-    def int_to_bytes(number):
-        is_neg = number < 0
-        number = -number - 1 if is_neg else number
-        # Number of bytes to represent the number * 2, so that
-        # each byte is represented with 2 digit hex numbers.
-        width = ((8 + number.bit_length()) // 8) * 2
-        fmt = "%%0%dx" % width
-        buf = bytearray(binascii.unhexlify(fmt % number))
-        if is_neg:
-            for i in range(len(buf)):
-                buf[i] = buf[i] ^ 0xFF
-        return buf
-
-
-try:
-    from datetime import timezone
-except ImportError:
-    from datetime import tzinfo, timedelta
-
-    # There is no tzinfo implementation(timezone) in the
-    # Python 2. Here we provide the bare minimum
-    # to the user.
-    class FixedOffsetTimezone(tzinfo):
-        __slots__ = ("_offset",)
-
-        def __init__(self, offset):
-            self._offset = offset
-
-        def utcoffset(self, dt):
-            return self._offset
-
-        def tzname(self, dt):
-            return None
-
-        def dst(self, dt):
-            return timedelta(0)
-
-        def __eq__(self, other):
-            return isinstance(other, FixedOffsetTimezone) and self._offset == other._offset
-
-        def __ne__(self, other):
-            return not self.__eq__(other)
-
-        def __hash__(self):
-            return hash(self._offset)
-
-    timezone = FixedOffsetTimezone
+def int_to_bytes(number):
+    # Number of bytes to represent the number.
+    # For numbers that don't have exactly 8n bit_length,
+    # adding 8 and performing integer division with 8
+    # let us get the correct length because
+    # (8n + m + 8) // 8 = n + 0 + 1 (assuming m < 8).
+    # For negative numbers, we add 1 to get rid of the
+    # effects of the leading 1 (the sign bit).
+    width = (8 + (number + (number < 0)).bit_length()) // 8
+    return number.to_bytes(length=width, byteorder="big", signed=True)
 
 
 def try_to_get_error_message(error):
@@ -530,3 +458,10 @@ def member_of_larger_same_version_group(members):
             random_member_idx -= 1
             if random_member_idx < 0:
                 return member
+
+
+def re_raise(exception, traceback):
+    if exception.__traceback__ is not traceback:
+        raise exception.with_traceback(traceback)
+
+    raise exception

@@ -1,10 +1,10 @@
 import json
 import logging
 import ssl
+from http.client import HTTPSConnection
 
 from hazelcast.errors import HazelcastCertificationError
 from hazelcast.core import AddressHelper
-from hazelcast.six.moves import http_client
 
 _logger = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ class HazelcastCloudDiscovery(object):
                 addresses to public addresses.
         """
         try:
-            https_connection = http_client.HTTPSConnection(
+            https_connection = HTTPSConnection(
                 host=self._CLOUD_URL_BASE, timeout=self._connection_timeout, context=self._ctx
             )
             https_connection.request(

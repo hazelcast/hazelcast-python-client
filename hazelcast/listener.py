@@ -3,7 +3,6 @@ import sys
 import threading
 from uuid import uuid4
 
-from hazelcast import six
 from hazelcast.errors import HazelcastError, HazelcastClientNotActiveError, TargetDisconnectedError
 from hazelcast.future import combine_futures, ImmediateFuture
 from hazelcast.invocation import Invocation
@@ -64,7 +63,7 @@ class ListenerService(object):
             self._active_registrations[registration_id] = registration
 
             futures = []
-            for connection in list(six.itervalues(self._connection_manager.active_connections)):
+            for connection in list(self._connection_manager.active_connections.values()):
                 future = self._register_on_connection(registration_id, registration, connection)
                 futures.append(future)
 
@@ -87,9 +86,10 @@ class ListenerService(object):
                 return ImmediateFuture(False)
 
             futures = []
-            for connection, event_registration in six.iteritems(
-                listener_registration.connection_registrations
-            ):
+            for (
+                connection,
+                event_registration,
+            ) in listener_registration.connection_registrations.items():
                 # Remove local handler
                 self.remove_event_handler(event_registration.correlation_id)
                 # The rest is for deleting the remote registration
@@ -178,12 +178,12 @@ class ListenerService(object):
 
     def _connection_added(self, connection):
         with self._registration_lock:
-            for user_reg_id, listener_registration in six.iteritems(self._active_registrations):
+            for user_reg_id, listener_registration in self._active_registrations.items():
                 self._register_on_connection(user_reg_id, listener_registration, connection)
 
     def _connection_removed(self, connection):
         with self._registration_lock:
-            for listener_registration in six.itervalues(self._active_registrations):
+            for listener_registration in self._active_registrations.values():
                 event_registration = listener_registration.connection_registrations.pop(
                     connection, None
                 )

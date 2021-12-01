@@ -5,7 +5,7 @@ import random
 import string
 import unittest
 
-from hazelcast import six, HazelcastClient
+from hazelcast import HazelcastClient
 from hazelcast.future import ImmediateFuture
 from hazelcast.serialization.api import Portable
 from tests.base import SingleMemberTestCase, HazelcastTestCase
@@ -22,7 +22,6 @@ from tests.util import (
 
 try:
     from hazelcast.sql import HazelcastSqlError, SqlExpectedResultType, SqlColumnType
-    from hazelcast.util import timezone
 except ImportError:
     # For backward compatibility. If we cannot import those, we won't
     # be even referencing them in tests.
@@ -209,8 +208,7 @@ class SqlServiceTest(SqlTestBase):
         entry_count = 11
         self._populate_map(entry_count)
         result = self.execute('SELECT * FROM "%s"' % self.map_name)
-        six.assertCountEqual(
-            self,
+        self.assertCountEqual(
             [(i, i) for i in range(entry_count)],
             [(row.get_object("__key"), row.get_object("this")) for row in result],
         )
@@ -222,8 +220,7 @@ class SqlServiceTest(SqlTestBase):
         result = self.execute(
             'SELECT this FROM "%s" WHERE __key > ? AND this > ?' % self.map_name, 5, 6
         )
-        six.assertCountEqual(
-            self,
+        self.assertCountEqual(
             [i for i in range(7, entry_count)],
             [row.get_object("this") for row in result],
         )
@@ -254,8 +251,7 @@ class SqlServiceTest(SqlTestBase):
         self._populate_map(entry_count, str)
         result = self.execute_statement('SELECT this FROM "%s"' % self.map_name)
 
-        six.assertCountEqual(
-            self,
+        self.assertCountEqual(
             [str(i) for i in range(entry_count)],
             [row.get_object_with_index(0) for row in result],
         )
@@ -269,7 +265,7 @@ class SqlServiceTest(SqlTestBase):
             13.0,
         )
 
-        six.assertCountEqual(self, [13], [row.get_object("age") for row in result])
+        self.assertCountEqual([13], [row.get_object("age") for row in result])
 
     def test_execute_statement_with_mismatched_params_when_sql_has_more(self):
         self._create_mapping()
@@ -305,9 +301,7 @@ class SqlServiceTest(SqlTestBase):
             timeout=100,
         )
 
-        six.assertCountEqual(
-            self, [i for i in range(10)], [row.get_object("age") for row in result]
-        )
+        self.assertCountEqual([i for i in range(10)], [row.get_object("age") for row in result])
 
     def test_execute_statement_with_cursor_buffer_size(self):
         self._create_mapping_for_portable(666, 6, {"age": "BIGINT", "height": "REAL"})
@@ -319,8 +313,8 @@ class SqlServiceTest(SqlTestBase):
         )
 
         with patch.object(result, "_fetch_next_page", wraps=result._fetch_next_page) as patched:
-            six.assertCountEqual(
-                self, [i for i in range(entry_count)], [row.get_object("age") for row in result]
+            self.assertCountEqual(
+                [i for i in range(entry_count)], [row.get_object("age") for row in result]
             )
             # -1 comes from the fact that, we don't fetch the first page.
             expected = math.ceil(entry_count / 3.0) - 1
@@ -338,7 +332,7 @@ class SqlServiceTest(SqlTestBase):
             expected_result_type=SqlExpectedResultType.ROWS,
         )
 
-        six.assertCountEqual(self, [i for i in range(3)], [row.get_object("age") for row in result])
+        self.assertCountEqual([i for i in range(3)], [row.get_object("age") for row in result])
 
     # Can't test the case we would expect an update count, because the IMDG SQL
     # engine does not support such query as of now.
@@ -387,8 +381,8 @@ class SqlResultTest(SqlTestBase):
         self._populate_map()
         result = self.execute('SELECT __key FROM "%s"' % self.map_name)
 
-        six.assertCountEqual(
-            self, [i for i in range(10)], [row.get_object_with_index(0) for row in result]
+        self.assertCountEqual(
+            [i for i in range(10)], [row.get_object_with_index(0) for row in result]
         )
 
     def test_blocking_iterator_when_iterator_requested_more_than_once(self):
@@ -396,8 +390,8 @@ class SqlResultTest(SqlTestBase):
         self._populate_map()
         result = self.execute('SELECT this FROM "%s"' % self.map_name)
 
-        six.assertCountEqual(
-            self, [i for i in range(10)], [row.get_object_with_index(0) for row in result]
+        self.assertCountEqual(
+            [i for i in range(10)], [row.get_object_with_index(0) for row in result]
         )
 
         with self.assertRaises(ValueError):
@@ -413,8 +407,8 @@ class SqlResultTest(SqlTestBase):
             cursor_buffer_size=1,
         )
 
-        six.assertCountEqual(
-            self, [i for i in range(10)], [row.get_object_with_index(0) for row in result]
+        self.assertCountEqual(
+            [i for i in range(10)], [row.get_object_with_index(0) for row in result]
         )
 
     def test_iterator(self):
@@ -437,8 +431,7 @@ class SqlResultTest(SqlTestBase):
         next(iterator).add_done_callback(iterate)
 
         def assertion():
-            six.assertCountEqual(
-                self,
+            self.assertCountEqual(
                 [i for i in range(10)],
                 rows,
             )
@@ -460,7 +453,7 @@ class SqlResultTest(SqlTestBase):
             except StopIteration:
                 break
 
-        six.assertCountEqual(self, [i for i in range(10)], rows)
+        self.assertCountEqual([i for i in range(10)], rows)
 
         with self.assertRaises(ValueError):
             self.iterator(result)
@@ -484,7 +477,7 @@ class SqlResultTest(SqlTestBase):
             except StopIteration:
                 break
 
-        six.assertCountEqual(self, [i for i in range(10)], rows)
+        self.assertCountEqual([i for i in range(10)], rows)
 
     def test_request_blocking_iterator_after_iterator(self):
         self._create_mapping()
@@ -568,8 +561,8 @@ class SqlResultTest(SqlTestBase):
         self._create_mapping()
         self._populate_map()
         with self.execute('SELECT this FROM "%s"' % self.map_name) as result:
-            six.assertCountEqual(
-                self, [i for i in range(10)], [row.get_object_with_index(0) for row in result]
+            self.assertCountEqual(
+                [i for i in range(10)], [row.get_object_with_index(0) for row in result]
             )
 
     def test_with_statement_when_iteration_throws(self):
@@ -629,7 +622,7 @@ class SqlResultTest(SqlTestBase):
         expected = [(i, value_factory(i)) for i in range(entry_count)]
         with self.execute('SELECT __key, this FROM "%s"' % self.map_name) as result:
             # Verify that both row[integer] and row[string] works
-            six.assertCountEqual(self, expected, [(row[0], row["this"]) for row in result])
+            self.assertCountEqual(expected, [(row[0], row["this"]) for row in result])
 
 
 @unittest.skipIf(
@@ -742,7 +735,7 @@ class SqlColumnTypesReadTest(SqlTestBase):
                     key,
                     key,
                     key,
-                    timezone(datetime.timedelta(hours=key)),
+                    datetime.timezone(datetime.timedelta(hours=key)),
                 )
 
             timestamp = "%d-%02d-%02dT%02d:%02d:%02d" % (

@@ -549,9 +549,9 @@ Using Flake ID Generator
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 Hazelcast ``FlakeIdGenerator`` is used to generate cluster-wide unique
-identifiers. Generated identifiers are long primitive values and are
+identifiers. Generated identifiers are int primitive values and are
 k-ordered (roughly ordered). IDs are in the range from ``0`` to ``2^63-1``
-(maximum signed long value). For details, see the `FlakeIdGenerator section
+(maximum signed 64-bit int value). For details, see the `FlakeIdGenerator section
 <https://docs.hazelcast.com/hazelcast/latest/data-structures/flake-id-generator>`__
 in the Hazelcast Reference Manual.
 

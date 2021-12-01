@@ -6,7 +6,7 @@ import threading
 import time
 import uuid
 
-from hazelcast import six, __version__
+from hazelcast import __version__
 from hazelcast.config import ReconnectMode
 from hazelcast.core import (
     AddressHelper,
@@ -182,7 +182,7 @@ class ConnectionManager(object):
                     return connection
 
         # Otherwise iterate over connections and return the first one
-        for connection in list(six.itervalues(self.active_connections)):
+        for connection in list(self.active_connections.values()):
             return connection
 
         # Failed to get a connection
@@ -219,7 +219,7 @@ class ConnectionManager(object):
         # Otherwise iterate over connections and return the first one
         # that's not to a lite member.
         first_connection = None
-        for member_uuid, connection in list(six.iteritems(self.active_connections)):
+        for member_uuid, connection in list(self.active_connections.items()):
             if not first_connection:
                 first_connection = connection
 
@@ -252,7 +252,7 @@ class ConnectionManager(object):
         self._heartbeat_manager.shutdown()
 
         # Need to create copy of connection values to avoid modification errors on runtime
-        for connection in list(six.itervalues(self.active_connections)):
+        for connection in list(self.active_connections.values()):
             connection.close("Hazelcast client is shutting down", None)
 
         self.active_connections.clear()
@@ -328,7 +328,7 @@ class ConnectionManager(object):
             raise IOError("No connection found to cluster")
 
     def _get_or_connect_to_address(self, address):
-        for connection in list(six.itervalues(self.active_connections)):
+        for connection in list(self.active_connections.values()):
             if connection.remote_address == address:
                 return ImmediateFuture(connection)
 
@@ -720,7 +720,7 @@ class _HeartbeatManager(object):
                 return
 
             now = time.time()
-            for connection in list(six.itervalues(conn_manager.active_connections)):
+            for connection in list(conn_manager.active_connections.values()):
                 self._check_connection(now, connection)
             self._heartbeat_timer = self._reactor.add_timer(self._heartbeat_interval, _heartbeat)
 

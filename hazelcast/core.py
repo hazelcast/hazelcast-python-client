@@ -1,8 +1,6 @@
 """Hazelcast Core objects and constants."""
 import json
 
-from hazelcast import six
-from hazelcast.six.moves import range
 
 CLIENT_TYPE = "PYH"
 SERIALIZATION_VERSION = 1
@@ -417,7 +415,7 @@ class HazelcastJsonValue(object):
     def __init__(self, value):
         if value is None:
             raise AssertionError("JSON string or the object cannot be None.")
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             self._json_string = value
         else:
             self._json_string = json.dumps(value)

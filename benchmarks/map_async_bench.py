@@ -4,8 +4,6 @@ import sys
 import threading
 import time
 from os.path import dirname
-from hazelcast import six
-from hazelcast.six.moves import range
 
 sys.path.append(dirname(dirname(dirname(__file__))))
 
@@ -72,8 +70,8 @@ def do_benchmark():
     t.run()
     t.event.wait(1)
     time_taken = time.time() - start
-    six.print_("Took {} seconds for {} requests".format(time_taken, REQ_COUNT))
-    six.print_("ops per second: {}".format(t.ops // time_taken))
+    print("Took {} seconds for {} requests".format(time_taken, REQ_COUNT))
+    print("ops per second: {}".format(t.ops // time_taken))
 
 
 if __name__ == '__main__':

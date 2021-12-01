@@ -1,6 +1,5 @@
 from hazelcast.serialization.api import *
 from hazelcast.serialization.bits import *
-from hazelcast.six.moves import range
 
 
 class _ObjectDataOutput(ObjectDataOutput):

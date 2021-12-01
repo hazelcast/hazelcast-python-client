@@ -15,7 +15,6 @@ from hazelcast.proxy.transactional_multi_map import TransactionalMultiMap
 from hazelcast.proxy.transactional_queue import TransactionalQueue
 from hazelcast.proxy.transactional_set import TransactionalSet
 from hazelcast.util import thread_id
-from hazelcast.six.moves import range
 
 _logger = logging.getLogger(__name__)
 

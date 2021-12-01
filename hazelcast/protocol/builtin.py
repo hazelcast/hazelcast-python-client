@@ -1,9 +1,7 @@
 import uuid
-from datetime import date, time, datetime, timedelta
+from datetime import date, time, datetime, timedelta, timezone
 from decimal import Decimal
 
-from hazelcast import six
-from hazelcast.six.moves import range
 from hazelcast.protocol.client_message import (
     NULL_FRAME_BUF,
     BEGIN_FRAME_BUF,
@@ -34,7 +32,7 @@ from hazelcast.serialization.bits import (
     DOUBLE_SIZE_IN_BYTES,
 )
 from hazelcast.serialization.data import Data
-from hazelcast.util import int_from_bytes, timezone
+from hazelcast.util import int_from_bytes
 
 _LOCAL_DATE_SIZE_IN_BYTES = INT_SIZE_IN_BYTES + BYTE_SIZE_IN_BYTES * 2
 _LOCAL_TIME_SIZE_IN_BYTES = BYTE_SIZE_IN_BYTES * 3 + INT_SIZE_IN_BYTES
@@ -502,7 +500,7 @@ class MapCodec(object):
     @staticmethod
     def encode(buf, m, key_encoder, value_encoder, is_final=False):
         buf.extend(BEGIN_FRAME_BUF)
-        for key, value in six.iteritems(m):
+        for key, value in m.items():
             key_encoder(buf, key)
             value_encoder(buf, value)
         if is_final:

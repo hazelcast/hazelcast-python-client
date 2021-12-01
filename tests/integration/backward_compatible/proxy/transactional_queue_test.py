@@ -3,7 +3,6 @@ from time import sleep
 
 from tests.base import SingleMemberTestCase
 from tests.util import random_string
-from hazelcast.six.moves import range
 
 
 class TransactionalQueueTest(SingleMemberTestCase):

@@ -1,17 +1,13 @@
 import datetime
 import decimal
+import pickle
 
-from hazelcast import six
 from hazelcast.core import HazelcastJsonValue
 from hazelcast.serialization.bits import *
 from hazelcast.serialization.api import StreamSerializer
 from hazelcast.serialization.base import HazelcastSerializationError
 from hazelcast.serialization.serialization_const import *
-from hazelcast.six.moves import range, cPickle
-from hazelcast.util import UUIDUtil, int_from_bytes, int_to_bytes, timezone
-
-if not six.PY2:
-    long = int
+from hazelcast.util import UUIDUtil, int_from_bytes, int_to_bytes
 
 
 class BaseSerializer(StreamSerializer):
@@ -275,7 +271,7 @@ class BigDecimalSerializer(BaseSerializer):
 
     def write(self, out, obj):
         sign, digits, exponent = obj.as_tuple()
-        unscaled_value = long("".join([str(digit) for digit in digits]))
+        unscaled_value = int("".join([str(digit) for digit in digits]))
         if sign == 1:
             unscaled_value = -1 * unscaled_value
         out.write_byte_array(int_to_bytes(unscaled_value))
@@ -400,7 +396,7 @@ class OffsetDateTimeSerializer(BaseSerializer):
             inp.read_byte(),
             inp.read_byte(),
             inp.read_int() // 1000,  # server sends nanoseconds
-            timezone(datetime.timedelta(seconds=inp.read_int())),
+            datetime.timezone(datetime.timedelta(seconds=inp.read_int())),
         )
 
     def write(self, out, obj):
@@ -430,10 +426,10 @@ class OffsetDateTimeSerializer(BaseSerializer):
 class PythonObjectSerializer(BaseSerializer):
     def read(self, inp):
         str = inp.read_string().encode()
-        return cPickle.loads(str)
+        return pickle.loads(str)
 
     def write(self, out, obj):
-        out.write_string(cPickle.dumps(obj, 0).decode("utf-8"))
+        out.write_string(pickle.dumps(obj, 0).decode("utf-8"))
 
     def get_type_id(self):
         return PYTHON_TYPE_PICKLE

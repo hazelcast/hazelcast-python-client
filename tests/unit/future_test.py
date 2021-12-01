@@ -10,8 +10,6 @@ from hazelcast.future import (
     make_blocking,
     ImmediateExceptionFuture,
 )
-from hazelcast import six
-from hazelcast.six.moves import range
 
 
 class FutureTest(unittest.TestCase):
@@ -60,7 +58,7 @@ class FutureTest(unittest.TestCase):
 
             original_tb = traceback.extract_tb(exc_info[2])
             # shift traceback to discard the last frames
-            shift = 2 if six.PY2 else 3
+            shift = 3
             actual_tb = traceback.extract_tb(info[2])[shift:]
 
             self.assertEqual(original_tb, actual_tb)

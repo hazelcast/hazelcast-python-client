@@ -4,14 +4,12 @@ import decimal
 import unittest
 import uuid
 
-from hazelcast import six
 from hazelcast.core import HazelcastJsonValue
 from hazelcast.config import _Config
 from hazelcast.errors import HazelcastSerializationError
 from hazelcast.serialization import BE_INT
 from hazelcast.predicate import *
 from hazelcast.serialization.service import SerializationServiceV1
-from hazelcast.util import timezone
 
 
 class A(object):
@@ -51,9 +49,9 @@ class SerializersTest(unittest.TestCase):
     def test_string(self):
         self.validate("")
         self.validate("client")
-        self.validate(six.u("1⚐中💦2😭‍🙆😔5"))
-        self.validate(six.u("Iñtërnâtiônàlizætiøn"))
-        self.validate(six.u("\u0040\u0041\u01DF\u06A0\u12E0\u1D30"))
+        self.validate("1⚐中💦2😭‍🙆😔5")
+        self.validate("Iñtërnâtiônàlizætiøn")
+        self.validate("\u0040\u0041\u01DF\u06A0\u12E0\u1D30")
 
     def test_bytearray(self):
         self.validate(bytearray("abc".encode()))
@@ -68,7 +66,7 @@ class SerializersTest(unittest.TestCase):
         self.validate(uuid.uuid4())
 
     def test_datetime_datetime(self):
-        d = datetime.datetime.now(tz=timezone(datetime.timedelta(hours=-15)))
+        d = datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=-15)))
         serialized = self.service.to_data(d)
         deserialized = self.service.to_object(serialized)
         self.assertEqual(d, deserialized)

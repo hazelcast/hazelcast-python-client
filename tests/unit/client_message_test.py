@@ -2,7 +2,6 @@
 import unittest
 import uuid
 
-from hazelcast import six
 from hazelcast.connection import _Reader
 from hazelcast.errors import _ErrorsCodec
 from hazelcast.protocol import ErrorHolder
@@ -201,7 +200,7 @@ class EncodeDecodeTest(unittest.TestCase):
 
     def test_byte_array(self):
         self.mark_initial_frame_as_non_final()
-        b = six.u("abc©☺𩸽").encode("utf-8")
+        b = "abc©☺𩸽".encode("utf-8")
         ByteArrayCodec.encode(self.buf, b, True)
         message = self.write_and_decode()
         message.next_frame()  # initial frame
@@ -278,7 +277,7 @@ class EncodeDecodeTest(unittest.TestCase):
 
     def test_list(self):
         self.mark_initial_frame_as_non_final()
-        l = list(map(six.u, ["a", "b", "c", "😃"]))
+        l = ["a", "b", "c", "😃"]
         ListMultiFrameCodec.encode(self.buf, l, StringCodec.encode)
         ListMultiFrameCodec.encode_nullable(self.buf, l, StringCodec.encode)
         ListMultiFrameCodec.encode_nullable(self.buf, None, StringCodec.encode)
@@ -323,7 +322,7 @@ class EncodeDecodeTest(unittest.TestCase):
 
     def test_string(self):
         self.mark_initial_frame_as_non_final()
-        string = six.u("abc©☺𩸽🐶😁")
+        string = "abc©☺𩸽🐶😁"
         StringCodec.encode(self.buf, string, True)
         message = self.write_and_decode()
         message.next_frame()  # initial frame

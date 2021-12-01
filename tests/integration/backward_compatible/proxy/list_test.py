@@ -1,7 +1,6 @@
 from hazelcast.proxy.base import ItemEventType
 from tests.base import SingleMemberTestCase
 from tests.util import random_string, event_collector
-from hazelcast import six
 
 
 class ListTest(SingleMemberTestCase):
@@ -128,7 +127,7 @@ class ListTest(SingleMemberTestCase):
         add_resp = self.list.add_all_at(1, _all)
         _all_resp = self.list.list_iterator(1)
         self.assertTrue(add_resp)
-        six.assertCountEqual(self, _all, _all_resp)
+        self.assertCountEqual(_all, _all_resp)
 
     def test_add_all_at_null_element(self):
         _all = ["1", "2", "3", None]

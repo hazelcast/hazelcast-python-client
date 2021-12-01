@@ -29,8 +29,7 @@ from tests.integration.backward_compatible.util import (
     read_string_from_reader,
 )
 from tests.util import random_string, get_abs_path
-from hazelcast import six, HazelcastClient
-from hazelcast.six.moves import range
+from hazelcast import HazelcastClient
 
 
 class PredicateTest(SingleMemberTestCase):
@@ -64,65 +63,65 @@ class PredicateTest(SingleMemberTestCase):
     def test_sql(self):
         self.fill_map()
         predicate = sql("this == 'value-1'")
-        six.assertCountEqual(self, self.map.key_set(predicate), ["key-1"])
+        self.assertCountEqual(self.map.key_set(predicate), ["key-1"])
 
     def test_and(self):
         self.fill_map()
         predicate = and_(equal("this", "value-1"), equal("this", "value-2"))
-        six.assertCountEqual(self, self.map.key_set(predicate), [])
+        self.assertCountEqual(self.map.key_set(predicate), [])
 
     def test_or(self):
         self.fill_map()
         predicate = or_(equal("this", "value-1"), equal("this", "value-2"))
-        six.assertCountEqual(self, self.map.key_set(predicate), ["key-1", "key-2"])
+        self.assertCountEqual(self.map.key_set(predicate), ["key-1", "key-2"])
 
     def test_not(self):
         self.fill_map(count=3)
         predicate = not_(equal("this", "value-1"))
-        six.assertCountEqual(self, self.map.key_set(predicate), ["key-0", "key-2"])
+        self.assertCountEqual(self.map.key_set(predicate), ["key-0", "key-2"])
 
     def test_between(self):
         self.fill_map_numeric()
 
         predicate = between("this", 1, 20)
-        six.assertCountEqual(self, self.map.key_set(predicate), list(range(1, 21)))
+        self.assertCountEqual(self.map.key_set(predicate), list(range(1, 21)))
 
     def test_equal(self):
         self.fill_map()
         predicate = equal("this", "value-1")
-        six.assertCountEqual(self, self.map.key_set(predicate), ["key-1"])
+        self.assertCountEqual(self.map.key_set(predicate), ["key-1"])
 
     def test_not_equal(self):
         self.fill_map(count=3)
         predicate = not_equal("this", "value-1")
 
-        six.assertCountEqual(self, self.map.key_set(predicate), ["key-0", "key-2"])
+        self.assertCountEqual(self.map.key_set(predicate), ["key-0", "key-2"])
 
     def test_in(self):
         self.fill_map_numeric(count=10)
         predicate = in_("this", 1, 5, 7)
 
-        six.assertCountEqual(self, self.map.key_set(predicate), [1, 5, 7])
+        self.assertCountEqual(self.map.key_set(predicate), [1, 5, 7])
 
     def test_less_than(self):
         self.fill_map_numeric()
         predicate = less("this", 10)
-        six.assertCountEqual(self, self.map.key_set(predicate), list(range(0, 10)))
+        self.assertCountEqual(self.map.key_set(predicate), list(range(0, 10)))
 
     def test_less_than_or_equal(self):
         self.fill_map_numeric()
         predicate = less_or_equal("this", 10)
-        six.assertCountEqual(self, self.map.key_set(predicate), list(range(0, 11)))
+        self.assertCountEqual(self.map.key_set(predicate), list(range(0, 11)))
 
     def test_greater_than(self):
         self.fill_map_numeric()
         predicate = greater("this", 10)
-        six.assertCountEqual(self, self.map.key_set(predicate), list(range(11, 100)))
+        self.assertCountEqual(self.map.key_set(predicate), list(range(11, 100)))
 
     def test_greater_than_or_equal(self):
         self.fill_map_numeric()
         predicate = greater_or_equal("this", 10)
-        six.assertCountEqual(self, self.map.key_set(predicate), list(range(10, 100)))
+        self.assertCountEqual(self.map.key_set(predicate), list(range(10, 100)))
 
     def test_like(self):
         self.map.put("key-1", "a_value")
@@ -132,7 +131,7 @@ class PredicateTest(SingleMemberTestCase):
 
         predicate = like("this", "a%")
 
-        six.assertCountEqual(self, self.map.key_set(predicate), ["key-1", "key-3"])
+        self.assertCountEqual(self.map.key_set(predicate), ["key-1", "key-3"])
 
     def test_ilike(self):
         self.map.put("key-1", "a_value")
@@ -141,7 +140,7 @@ class PredicateTest(SingleMemberTestCase):
 
         predicate = ilike("this", "a%")
 
-        six.assertCountEqual(self, self.map.key_set(predicate), ["key-1", "key-3"])
+        self.assertCountEqual(self.map.key_set(predicate), ["key-1", "key-3"])
 
     def test_regex(self):
         self.map.put("key-1", "car")
@@ -150,7 +149,7 @@ class PredicateTest(SingleMemberTestCase):
 
         predicate = regex("this", "c[ar].*")
 
-        six.assertCountEqual(self, self.map.key_set(predicate), ["key-1", "key-2"])
+        self.assertCountEqual(self.map.key_set(predicate), ["key-1", "key-2"])
 
     def test_instance_of(self):
         self.map.put("key-1", True)
@@ -159,26 +158,26 @@ class PredicateTest(SingleMemberTestCase):
 
         predicate = instance_of("java.lang.Boolean")
 
-        six.assertCountEqual(self, self.map.key_set(predicate), ["key-1"])
+        self.assertCountEqual(self.map.key_set(predicate), ["key-1"])
 
     def test_true(self):
         m = self.fill_map()
         predicate = true()
-        six.assertCountEqual(self, self.map.key_set(predicate), list(m.keys()))
+        self.assertCountEqual(self.map.key_set(predicate), list(m.keys()))
 
     def test_false(self):
         self.fill_map()
         predicate = false()
-        six.assertCountEqual(self, self.map.key_set(predicate), [])
+        self.assertCountEqual(self.map.key_set(predicate), [])
 
     def test_paging(self):
         self.fill_map_numeric()
         predicate = paging(less("this", 4), 2)
-        six.assertCountEqual(self, [0, 1], self.map.key_set(predicate))
+        self.assertCountEqual([0, 1], self.map.key_set(predicate))
         predicate.next_page()
-        six.assertCountEqual(self, [2, 3], self.map.key_set(predicate))
+        self.assertCountEqual([2, 3], self.map.key_set(predicate))
         predicate.next_page()
-        six.assertCountEqual(self, [], self.map.key_set(predicate))
+        self.assertCountEqual([], self.map.key_set(predicate))
 
 
 class SimplePortable(Portable):
@@ -325,6 +324,11 @@ class NestedPredicatePortableTest(SingleMemberTestCase):
 
 
 class PagingPredicateTest(HazelcastTestCase):
+    rc = None
+    cluster = None
+    client = None
+    map = None
+
     @classmethod
     def setUpClass(cls):
         cls.rc = cls.create_rc()

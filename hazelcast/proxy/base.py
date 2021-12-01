@@ -1,7 +1,6 @@
 from hazelcast.future import make_blocking
 from hazelcast.invocation import Invocation
 from hazelcast.partition import string_partition_strategy
-from hazelcast import six
 from hazelcast.util import get_attr_name
 
 MAX_SIZE = float("inf")
@@ -317,7 +316,7 @@ class TopicMessage(object):
 
 def get_entry_listener_flags(**kwargs):
     flags = 0
-    for (key, value) in six.iteritems(kwargs):
+    for key, value in kwargs.items():
         if value:
             flags |= getattr(EntryEventType, key)
     return flags

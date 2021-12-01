@@ -4,7 +4,7 @@ import unittest
 
 import pytest
 
-from hazelcast import HazelcastClient, six
+from hazelcast import HazelcastClient
 from hazelcast.util import RandomLB, RoundRobinLB
 from tests.base import HazelcastTestCase, SingleMemberTestCase
 from tests.util import (
@@ -162,8 +162,8 @@ class LoadBalancersWithRealClusterTest(HazelcastTestCase):
         lb = client._load_balancer
         self.assertTrue(isinstance(lb, RandomLB))
 
-        six.assertCountEqual(
-            self, self.addresses, list(map(lambda m: m.address, self._get_members_from_lb(lb)))
+        self.assertCountEqual(
+            self.addresses, list(map(lambda m: m.address, self._get_members_from_lb(lb)))
         )
         for _ in range(10):
             self.assertTrue(lb.next().address in self.addresses)
@@ -177,8 +177,8 @@ class LoadBalancersWithRealClusterTest(HazelcastTestCase):
         lb = client._load_balancer
         self.assertTrue(isinstance(lb, RoundRobinLB))
 
-        six.assertCountEqual(
-            self, self.addresses, list(map(lambda m: m.address, self._get_members_from_lb(lb)))
+        self.assertCountEqual(
+            self.addresses, list(map(lambda m: m.address, self._get_members_from_lb(lb)))
         )
         for i in range(10):
             self.assertEqual(self.addresses[i % len(self.addresses)], lb.next().address)

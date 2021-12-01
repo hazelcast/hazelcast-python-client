@@ -1,7 +1,5 @@
 from hazelcast.serialization.api import *
 from hazelcast.serialization.bits import *
-from hazelcast import six
-from hazelcast.six.moves import range
 
 
 class _ObjectDataInput(ObjectDataInput):
@@ -58,7 +56,7 @@ class _ObjectDataInput(ObjectDataInput):
 
     def read_char(self, position=None):
         char_ord = self.read_short(position)
-        return six.unichr(char_ord)
+        return chr(char_ord)
 
     def read_short(self, position=None):
         self._check_available(self._pos, SHORT_SIZE_IN_BYTES)

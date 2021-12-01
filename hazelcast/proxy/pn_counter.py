@@ -11,7 +11,6 @@ from hazelcast.protocol.codec import (
     pn_counter_get_configured_replica_count_codec,
 )
 from hazelcast.errors import NoDataMemberInClusterError
-from hazelcast.six.moves import range
 
 _logger = logging.getLogger(__name__)
 

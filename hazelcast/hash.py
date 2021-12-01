@@ -1,5 +1,4 @@
 from hazelcast.serialization import LE_UINT
-from hazelcast.six.moves import range
 
 
 def murmur_hash3_x86_32(data):

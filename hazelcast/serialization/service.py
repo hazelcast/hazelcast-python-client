@@ -2,7 +2,6 @@ import datetime
 import decimal
 import uuid
 
-from hazelcast import six
 from hazelcast.serialization.base import BaseSerializationService
 from hazelcast.serialization.objects import (
     CanonicalizingHashSet,
@@ -54,7 +53,7 @@ class SerializationServiceV1(BaseSerializationService):
         self._register_constant_serializers()
 
         # Register Custom Serializers
-        for _type, custom_serializer in six.iteritems(config.custom_serializers):
+        for _type, custom_serializer in config.custom_serializers.items():
             self._registry.safe_register_serializer(custom_serializer(), _type)
 
         # Register Global Serializer

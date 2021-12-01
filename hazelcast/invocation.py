@@ -16,7 +16,6 @@ from hazelcast.errors import (
 from hazelcast.future import Future
 from hazelcast.protocol.codec import client_local_backup_listener_codec
 from hazelcast.util import AtomicInteger
-from hazelcast import six
 
 _logger = logging.getLogger(__name__)
 
@@ -156,7 +155,7 @@ class InvocationService(object):
         self._shutdown = True
         if self._clean_resources_timer:
             self._clean_resources_timer.cancel()
-        for invocation in list(six.itervalues(self._pending)):
+        for invocation in list(self._pending.values()):
             self._notify_error(invocation, HazelcastClientNotActiveError())
 
     def _invoke_on_partition_owner(self, invocation, partition_id):

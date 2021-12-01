@@ -1,7 +1,7 @@
 import logging
 import uuid
 
-from hazelcast import six, __version__
+from hazelcast import __version__
 
 _logger = logging.getLogger(__name__)
 
@@ -123,7 +123,7 @@ class _InternalLifecycleService(object):
             new_state (str): The new state of the instance.
         """
         _logger.info("HazelcastClient %s is %s", __version__, new_state)
-        for on_state_change in six.itervalues(self._listeners):
+        for on_state_change in self._listeners.values():
             if on_state_change:
                 try:
                     on_state_change(new_state)

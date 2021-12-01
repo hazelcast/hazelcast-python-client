@@ -6,7 +6,6 @@ from hazelcast.proxy.ringbuffer import OVERFLOW_POLICY_FAIL, MAX_BATCH_SIZE
 from hazelcast.serialization.api import IdentifiedDataSerializable
 from tests.base import SingleMemberTestCase
 from tests.util import random_string, compare_client_version
-from hazelcast.six.moves import range
 
 CAPACITY = 10
 

@@ -2,7 +2,7 @@ import itertools
 import time
 import zlib
 
-from hazelcast import __version__, six
+from hazelcast import __version__
 from hazelcast.client import HazelcastClient
 from hazelcast.core import CLIENT_TYPE
 from hazelcast.serialization import BE_INT, INT_SIZE_IN_BYTES
@@ -206,9 +206,6 @@ class StatisticsTest(HazelcastTestCase):
         response = self.wait_for_statistics_collection(client_uuid, get_metric_blob=True)
 
         result = bytearray(response.result)
-        if six.PY2:
-            # Python2 expects this to be read-only buffer
-            result = bytes(result)
 
         # We will try to decompress the blob according to its contract
         # to verify we have sent something that make sense

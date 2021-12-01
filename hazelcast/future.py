@@ -2,8 +2,7 @@ import logging
 import sys
 import threading
 
-from hazelcast.util import AtomicInteger
-from hazelcast import six
+from hazelcast.util import AtomicInteger, re_raise
 
 _logger = logging.getLogger(__name__)
 NONE_RESULT = object()
@@ -39,10 +38,11 @@ class Future(object):
 
         Args:
             exception (Exception): Exception to be threw in case of error.
-            traceback (function): Function to be called on traceback.
+            traceback (types.TracebackType): Traceback of the exception.
         """
         if not isinstance(exception, BaseException):
             raise RuntimeError("Exception must be of BaseException type")
+
         self._exception = exception
         self._traceback = traceback
         self._event.set()
@@ -57,7 +57,7 @@ class Future(object):
         self._reactor_check()
         self._event.wait()
         if self._exception:
-            six.reraise(self._exception.__class__, self._exception, self._traceback)
+            re_raise(self._exception, self._traceback)
         if self._result == NONE_RESULT:
             return None
         else:
@@ -101,7 +101,7 @@ class Future(object):
         return self._exception
 
     def traceback(self):
-        """Traceback function for the Future."""
+        """Traceback of the exception."""
         self._reactor_check()
         self._event.wait()
         return self._traceback
@@ -245,7 +245,7 @@ class ImmediateExceptionFuture(Future):
         return self._traceback
 
     def result(self):
-        six.reraise(self._exception.__class__, self._exception, self._traceback)
+        re_raise(self._exception, self._traceback)
 
     def add_done_callback(self, callback):
         self._invoke_cb(callback)

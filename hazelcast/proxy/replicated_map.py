@@ -20,7 +20,6 @@ from hazelcast.protocol.codec import (
 )
 from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType
 from hazelcast.util import to_millis, check_not_none, ImmutableLazyDataList
-from hazelcast import six
 
 
 class ReplicatedMap(Proxy):
@@ -273,7 +272,7 @@ class ReplicatedMap(Proxy):
             hazelcast.future.Future[None]:
         """
         entries = []
-        for key, value in six.iteritems(source):
+        for key, value in source.items():
             check_not_none(key, "key can't be None")
             check_not_none(value, "value can't be None")
             entries.append((self._to_data(key), self._to_data(value)))
