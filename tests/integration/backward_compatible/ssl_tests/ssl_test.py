@@ -61,6 +61,8 @@ class SSLTest(HazelcastTestCase):
         with self.assertRaises(HazelcastError):
             HazelcastClient(**get_ssl_config(cluster.id, True))
 
+        raise RuntimeError("expected error")
+
     def test_ssl_enabled_map_size(self):
         cluster = self.create_cluster(self.rc, self.configure_cluster(self.hazelcast_ssl_xml))
         cluster.start_member()
