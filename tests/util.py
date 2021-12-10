@@ -144,7 +144,7 @@ def open_connection_to_address(client, uuid):
     m.destroy()
 
 
-class LoggingContext(object):
+class LoggingContext:
     def __init__(self, logger, level):
         self.logger = logger
         self.level = level

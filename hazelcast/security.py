@@ -1,7 +1,7 @@
 from hazelcast.core import Address
 
 
-class TokenProvider(object):
+class TokenProvider:
     """TokenProvider is a base class for token providers."""
 
     def token(self, address=None):

@@ -3,7 +3,7 @@ import hazelcast
 from hazelcast.serialization.api import StreamSerializer
 
 
-class CustomSerializableType(object):
+class CustomSerializableType:
     def __init__(self, value=None):
         self.value = value
 

@@ -81,7 +81,7 @@ class AnInnerPortable(Portable):
         return not self.__eq__(other)
 
 
-class CustomStreamSerializable(object):
+class CustomStreamSerializable:
     def __init__(self, i=None, f=None):
         self.i = i
         self.f = f
@@ -97,7 +97,7 @@ class CustomStreamSerializable(object):
         return not self.__eq__(other)
 
 
-class CustomByteArraySerializable(object):
+class CustomByteArraySerializable:
     def __init__(self, i=None, f=None):
         self.i = i
         self.f = f

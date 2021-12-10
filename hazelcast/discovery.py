@@ -9,7 +9,7 @@ from hazelcast.core import AddressHelper
 _logger = logging.getLogger(__name__)
 
 
-class HazelcastCloudAddressProvider(object):
+class HazelcastCloudAddressProvider:
     """Provides initial addresses for client to find and connect to a node
     and resolves private IP addresses of Hazelcast Cloud service.
     """
@@ -61,7 +61,7 @@ class HazelcastCloudAddressProvider(object):
             _logger.warning("Failed to load addresses from Hazelcast.cloud: %s", e)
 
 
-class HazelcastCloudDiscovery(object):
+class HazelcastCloudDiscovery:
     """Discovery service that discover nodes via Hazelcast.cloud
     https://coordinator.hazelcast.cloud/cluster/discovery?token=<TOKEN>
     """

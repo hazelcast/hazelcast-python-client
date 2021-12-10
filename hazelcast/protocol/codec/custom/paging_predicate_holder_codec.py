@@ -14,7 +14,7 @@ _ITERATION_TYPE_ID_DECODE_OFFSET = _PAGE_DECODE_OFFSET + INT_SIZE_IN_BYTES
 _INITIAL_FRAME_SIZE = _ITERATION_TYPE_ID_ENCODE_OFFSET + BYTE_SIZE_IN_BYTES - SIZE_OF_FRAME_LENGTH_AND_FLAGS
 
 
-class PagingPredicateHolderCodec(object):
+class PagingPredicateHolderCodec:
     @staticmethod
     def encode(buf, paging_predicate_holder, is_final=False):
         initial_frame_buf = create_initial_buffer_custom(_INITIAL_FRAME_SIZE)

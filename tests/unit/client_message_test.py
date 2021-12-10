@@ -338,7 +338,7 @@ class EncodeDecodeTest(unittest.TestCase):
         self.assertIsNone(CodecUtil.decode_nullable(message, StringCodec.decode))
 
 
-class _MutableInteger(object):
+class _MutableInteger:
     def __init__(self, initial_value):
         self.value = initial_value
 

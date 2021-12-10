@@ -63,7 +63,7 @@ def create_initial_buffer_custom(size, is_begin_frame=False):
         return buf
 
 
-class OutboundMessage(object):
+class OutboundMessage:
     __slots__ = ("buf", "retryable")
 
     def __init__(self, buf, retryable):
@@ -97,7 +97,7 @@ class OutboundMessage(object):
         )
 
 
-class Frame(object):
+class Frame:
     __slots__ = ("buf", "flags", "next")
 
     def __init__(self, buf, flags):
@@ -141,7 +141,7 @@ class Frame(object):
         return i == flag_mask
 
 
-class InboundMessage(object):
+class InboundMessage:
     __slots__ = ("start_frame", "end_frame", "_next_frame")
 
     def __init__(self, start_frame):
@@ -219,7 +219,7 @@ LE_UINT16.pack_into(
 )
 
 
-class ClientMessageBuilder(object):
+class ClientMessageBuilder:
     def __init__(self, message_callback):
         self._fragmented_messages = dict()
         self._message_callback = message_callback

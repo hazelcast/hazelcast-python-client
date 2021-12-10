@@ -116,7 +116,7 @@ class ConnectionManagerTranslateTest(HazelcastTestCase):
             conn_manager._get_or_connect_to_member(member).result()
 
 
-class StaticAddressProvider(object):
+class StaticAddressProvider:
     def __init__(self, should_translate, member_address):
         self.should_translate = should_translate
         self.member_address = member_address

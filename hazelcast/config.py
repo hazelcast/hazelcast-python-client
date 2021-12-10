@@ -14,7 +14,7 @@ from hazelcast.util import (
 )
 
 
-class IntType(object):
+class IntType:
     """Integer type options that can be used by serialization service."""
 
     VAR = 0
@@ -54,7 +54,7 @@ class IntType(object):
     """
 
 
-class EvictionPolicy(object):
+class EvictionPolicy:
     """Near Cache eviction policy options."""
 
     NONE = 0
@@ -78,7 +78,7 @@ class EvictionPolicy(object):
     """
 
 
-class InMemoryFormat(object):
+class InMemoryFormat:
     """Near Cache in memory format of the values."""
 
     BINARY = 0
@@ -92,7 +92,7 @@ class InMemoryFormat(object):
     """
 
 
-class SSLProtocol(object):
+class SSLProtocol:
     """SSL protocol options.
 
     TLSv1_3 requires at least Python 3.7 build with OpenSSL 1.1.1+
@@ -129,7 +129,7 @@ class SSLProtocol(object):
     """
 
 
-class QueryConstants(object):
+class QueryConstants:
     """Contains constants for Query."""
 
     KEY_ATTRIBUTE_NAME = "__key"
@@ -143,7 +143,7 @@ class QueryConstants(object):
     """
 
 
-class UniqueKeyTransformation(object):
+class UniqueKeyTransformation:
     """Defines an assortment of transformations which can be applied to unique key values."""
 
     OBJECT = 0
@@ -166,7 +166,7 @@ class UniqueKeyTransformation(object):
     """
 
 
-class IndexType(object):
+class IndexType:
     """Type of the index."""
 
     SORTED = 0
@@ -185,7 +185,7 @@ class IndexType(object):
     """
 
 
-class ReconnectMode(object):
+class ReconnectMode:
     """Reconnect options."""
 
     OFF = 0
@@ -204,7 +204,7 @@ class ReconnectMode(object):
     """
 
 
-class TopicOverloadPolicy(object):
+class TopicOverloadPolicy:
     """A policy to deal with an overloaded topic; a topic where there is no
     place to store new messages.
 
@@ -250,7 +250,7 @@ class TopicOverloadPolicy(object):
     """The publish call immediately fails."""
 
 
-class BitmapIndexOptions(object):
+class BitmapIndexOptions:
     __slots__ = ("_unique_key", "_unique_key_transformation")
 
     def __init__(self, unique_key=None, unique_key_transformation=None):
@@ -297,7 +297,7 @@ class BitmapIndexOptions(object):
         )
 
 
-class IndexConfig(object):
+class IndexConfig:
     __slots__ = ("_name", "_type", "_attributes", "_bitmap_index_options")
 
     def __init__(self, name=None, type=None, attributes=None, bitmap_index_options=None):
@@ -389,7 +389,7 @@ class IndexConfig(object):
         )
 
 
-class IndexUtil(object):
+class IndexUtil:
     _MAX_ATTRIBUTES = 255
     """Maximum number of attributes allowed in the index."""
 
@@ -521,7 +521,7 @@ _DEFAULT_STATISTICS_PERIOD = 3.0
 _DEFAULT_OPERATION_BACKUP_TIMEOUT = 5.0
 
 
-class _Config(object):
+class _Config:
     __slots__ = (
         "_cluster_members",
         "_cluster_name",
@@ -1360,7 +1360,7 @@ class _Config(object):
         return config
 
 
-class _NearCacheConfig(object):
+class _NearCacheConfig:
     __slots__ = (
         "_invalidate_on_change",
         "_in_memory_format",
@@ -1487,7 +1487,7 @@ class _NearCacheConfig(object):
         return config
 
 
-class _FlakeIdGeneratorConfig(object):
+class _FlakeIdGeneratorConfig:
     __slots__ = ("_prefetch_count", "_prefetch_validity")
 
     def __init__(self):
@@ -1533,7 +1533,7 @@ class _FlakeIdGeneratorConfig(object):
         return config
 
 
-class _ReliableTopicConfig(object):
+class _ReliableTopicConfig:
     __slots__ = ("_read_batch_size", "_overload_policy")
 
     def __init__(self):

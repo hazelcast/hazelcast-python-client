@@ -52,7 +52,7 @@ _SQL_CONNECTION_RANDOM_ATTEMPTS = 10
 _CLIENT_PUBLIC_ENDPOINT_QUALIFIER = EndpointQualifier(ProtocolType.CLIENT, "public")
 
 
-class _WaitStrategy(object):
+class _WaitStrategy:
     def __init__(self, initial_backoff, max_backoff, multiplier, cluster_connect_timeout, jitter):
         self._initial_backoff = initial_backoff
         self._max_backoff = max_backoff
@@ -103,14 +103,14 @@ class _WaitStrategy(object):
         return True
 
 
-class _AuthenticationStatus(object):
+class _AuthenticationStatus:
     AUTHENTICATED = 0
     CREDENTIALS_FAILED = 1
     SERIALIZATION_VERSION_MISMATCH = 2
     NOT_ALLOWED_IN_CLUSTER = 3
 
 
-class ConnectionManager(object):
+class ConnectionManager:
     """ConnectionManager is responsible for managing ``Connection`` objects."""
 
     def __init__(
@@ -700,7 +700,7 @@ class ConnectionManager(object):
         return addresses
 
 
-class _HeartbeatManager(object):
+class _HeartbeatManager:
     _heartbeat_timer = None
 
     def __init__(self, connection_manager, client, config, reactor, invocation_service):
@@ -752,7 +752,7 @@ class _HeartbeatManager(object):
 _frame_header = struct.Struct("<iH")
 
 
-class _Reader(object):
+class _Reader:
     def __init__(self, builder):
         self._buf = io.BytesIO()
         self._builder = builder
@@ -828,7 +828,7 @@ class _Reader(object):
         return self._bytes_written - self._bytes_read
 
 
-class Connection(object):
+class Connection:
     """Connection object which stores connection related information and operations."""
 
     def __init__(self, connection_manager, connection_id, message_callback):
@@ -912,7 +912,7 @@ class Connection(object):
         return self._id
 
 
-class DefaultAddressProvider(object):
+class DefaultAddressProvider:
     """Provides initial addresses for client to find and connect to a node.
 
     It also provides a no-op translator.

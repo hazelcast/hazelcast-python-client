@@ -3,7 +3,7 @@ import hazelcast
 from hazelcast.serialization.api import StreamSerializer
 
 
-class TimeOfDay(object):
+class TimeOfDay:
     def __init__(self, hour, minute, second):
         self.hour = hour
         self.minute = minute

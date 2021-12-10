@@ -448,7 +448,7 @@ class FencedLock(SessionAwareCPProxy):
         return self._invoke(request, codec.decode_response)
 
 
-class _LockOwnershipState(object):
+class _LockOwnershipState:
     def __init__(self, state):
         self.fence = state["fence"]
         self.lock_count = state["lock_count"]

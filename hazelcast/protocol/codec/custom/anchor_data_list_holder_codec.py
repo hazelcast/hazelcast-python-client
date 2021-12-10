@@ -6,7 +6,7 @@ from hazelcast.protocol.builtin import EntryListCodec
 from hazelcast.protocol.builtin import DataCodec
 
 
-class AnchorDataListHolderCodec(object):
+class AnchorDataListHolderCodec:
     @staticmethod
     def encode(buf, anchor_data_list_holder, is_final=False):
         buf.extend(BEGIN_FRAME_BUF)

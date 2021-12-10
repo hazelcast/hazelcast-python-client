@@ -10,7 +10,7 @@ def _no_op_response_handler(_):
     return None
 
 
-class Proxy(object):
+class Proxy:
     """Provides basic functionality for Hazelcast Proxies."""
 
     def __init__(self, service_name, name, context):
@@ -88,7 +88,7 @@ class PartitionSpecificProxy(Proxy):
         return invocation.future
 
 
-class TransactionalProxy(object):
+class TransactionalProxy:
     """Provides an interface for all transactional distributed objects."""
 
     def __init__(self, name, transaction, context):
@@ -110,7 +110,7 @@ class TransactionalProxy(object):
         return '%s(name="%s")' % (type(self).__name__, self.name)
 
 
-class ItemEventType(object):
+class ItemEventType:
     """Type of item events."""
 
     ADDED = 1
@@ -124,7 +124,7 @@ class ItemEventType(object):
     """
 
 
-class EntryEventType(object):
+class EntryEventType:
     """Type of entry event."""
 
     ADDED = 1
@@ -178,7 +178,7 @@ class EntryEventType(object):
     """
 
 
-class ItemEvent(object):
+class ItemEvent:
     """Map Item event.
 
     Attributes:
@@ -200,7 +200,7 @@ class ItemEvent(object):
         return self._to_object(self._item_data)
 
 
-class EntryEvent(object):
+class EntryEvent:
     """Map Entry event.
 
     Attributes:
@@ -268,7 +268,7 @@ class EntryEvent(object):
 _SENTINEL = object()
 
 
-class TopicMessage(object):
+class TopicMessage:
     """Topic message."""
 
     __slots__ = ("_name", "_message_data", "_message", "_publish_time", "_member", "_to_object")

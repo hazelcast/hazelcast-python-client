@@ -5,7 +5,7 @@ import hazelcast
 from hazelcast.serialization.api import StreamSerializer
 
 
-class ColorGroup(object):
+class ColorGroup:
     def __init__(self, id, name, colors):
         self.id = id
         self.name = name

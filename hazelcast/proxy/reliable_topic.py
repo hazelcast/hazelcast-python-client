@@ -30,7 +30,7 @@ _MEMBER_ENDPOINT_QUALIFIER = EndpointQualifier(ProtocolType.MEMBER, None)
 _logger = logging.getLogger(__name__)
 
 
-class ReliableMessageListener(object):
+class ReliableMessageListener:
     """A message listener for :class:`ReliableTopic`.
 
     A message listener will not be called concurrently (provided that it's
@@ -150,7 +150,7 @@ class ReliableMessageListener(object):
         raise NotImplementedError("is_terminal")
 
 
-class _MessageRunner(object):
+class _MessageRunner:
     def __init__(
         self,
         registration_id,
