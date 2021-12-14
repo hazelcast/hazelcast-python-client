@@ -12,7 +12,7 @@ _PATCH_DECODE_OFFSET = _MINOR_DECODE_OFFSET + BYTE_SIZE_IN_BYTES
 _INITIAL_FRAME_SIZE = _PATCH_ENCODE_OFFSET + BYTE_SIZE_IN_BYTES - SIZE_OF_FRAME_LENGTH_AND_FLAGS
 
 
-class MemberVersionCodec(object):
+class MemberVersionCodec:
     @staticmethod
     def encode(buf, member_version, is_final=False):
         initial_frame_buf = create_initial_buffer_custom(_INITIAL_FRAME_SIZE)

@@ -1,7 +1,7 @@
 from hazelcast.errors import HazelcastSerializationError
 
 
-class FieldType(object):
+class FieldType:
     PORTABLE = 0
     BYTE = 1
     BOOLEAN = 2
@@ -26,7 +26,7 @@ class FieldType(object):
     STRING_ARRAY = 19
 
 
-class FieldDefinition(object):
+class FieldDefinition:
     def __init__(self, index, field_name, field_type, version, factory_id=0, class_id=0):
         self.index = index
         self.field_name = field_name
@@ -59,7 +59,7 @@ class FieldDefinition(object):
         )
 
 
-class ClassDefinition(object):
+class ClassDefinition:
     def __init__(self, factory_id, class_id, version):
         self.factory_id = factory_id
         self.class_id = class_id
@@ -130,7 +130,7 @@ class ClassDefinition(object):
         return hash((self.factory_id, self.class_id, self.version))
 
 
-class ClassDefinitionBuilder(object):
+class ClassDefinitionBuilder:
     """Builder class to construct :class:`ClassDefinition` of
     :class:`hazelcast.serialization.api.Portable` objects.
 

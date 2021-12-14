@@ -4,7 +4,7 @@ from hazelcast.protocol.builtin import StringCodec
 from hazelcast.core import DistributedObjectInfo
 
 
-class DistributedObjectInfoCodec(object):
+class DistributedObjectInfoCodec:
     @staticmethod
     def encode(buf, distributed_object_info, is_final=False):
         buf.extend(BEGIN_FRAME_BUF)

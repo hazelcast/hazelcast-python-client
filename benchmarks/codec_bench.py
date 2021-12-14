@@ -6,7 +6,7 @@ from hazelcast.serialization import SerializationServiceV1, calculate_size_data
 from hazelcast.config import  SerializationConfig
 
 
-class Bench(object):
+class Bench:
     def __init__(self):
         self.service = SerializationServiceV1(SerializationConfig())
         key = "Test" * 1000

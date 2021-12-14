@@ -11,7 +11,7 @@ _ERROR_CODE_DECODE_OFFSET = 0
 _INITIAL_FRAME_SIZE = _ERROR_CODE_ENCODE_OFFSET + INT_SIZE_IN_BYTES - SIZE_OF_FRAME_LENGTH_AND_FLAGS
 
 
-class ErrorHolderCodec(object):
+class ErrorHolderCodec:
     @staticmethod
     def encode(buf, error_holder, is_final=False):
         initial_frame_buf = create_initial_buffer_custom(_INITIAL_FRAME_SIZE)

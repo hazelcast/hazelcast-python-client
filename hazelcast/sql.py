@@ -19,7 +19,7 @@ from hazelcast.util import (
 _logger = logging.getLogger(__name__)
 
 
-class SqlService(object):
+class SqlService:
     """A service to execute SQL statements.
 
     Warnings:
@@ -151,7 +151,7 @@ class SqlService(object):
         return self._service.execute(sql, params, kwargs)
 
 
-class _SqlQueryId(object):
+class _SqlQueryId:
     """Cluster-wide unique query ID."""
 
     __slots__ = ("member_id_high", "member_id_low", "local_id_high", "local_id_low")
@@ -191,7 +191,7 @@ class _SqlQueryId(object):
         return cls(member_msb, member_lsb, local_msb, local_lsb)
 
 
-class SqlColumnMetadata(object):
+class SqlColumnMetadata:
     """Metadata of a column in an SQL row."""
 
     __slots__ = ("_name", "_type", "_nullable")
@@ -222,7 +222,7 @@ class SqlColumnMetadata(object):
         return "%s %s" % (self.name, get_attr_name(SqlColumnType, self.type))
 
 
-class _SqlError(object):
+class _SqlError:
     """Server-side error that is propagated to the client."""
 
     __slots__ = ("code", "message", "originating_member_uuid", "suggestion")
@@ -241,7 +241,7 @@ class _SqlError(object):
         """str: Suggested SQL statement to remediate experienced error."""
 
 
-class _SqlPage(object):
+class _SqlPage:
     """A finite set of rows returned to the user."""
 
     __slots__ = ("_column_types", "_columns", "_is_last")
@@ -280,7 +280,7 @@ class _SqlPage(object):
         return self._columns[column_index][row_index]
 
 
-class SqlColumnType(object):
+class SqlColumnType:
 
     VARCHAR = 0
     """
@@ -360,7 +360,7 @@ class SqlColumnType(object):
     """
 
 
-class _SqlErrorCode(object):
+class _SqlErrorCode:
 
     GENERIC = -1
     """
@@ -436,7 +436,7 @@ class HazelcastSqlError(HazelcastError):
         return self._suggestion
 
 
-class SqlRowMetadata(object):
+class SqlRowMetadata:
     """Metadata for the returned rows."""
 
     __slots__ = ("_columns", "_name_to_index")
@@ -495,7 +495,7 @@ class SqlRowMetadata(object):
         )
 
 
-class SqlRow(object):
+class SqlRow:
     """One of the rows of an SQL query result.
 
     The columns of the rows can be retrieved using
@@ -619,7 +619,7 @@ class SqlRow(object):
         )
 
 
-class _ExecuteResponse(object):
+class _ExecuteResponse:
     """Represent the response of the first execute request."""
 
     __slots__ = ("row_metadata", "row_page", "update_count")
@@ -638,7 +638,7 @@ class _ExecuteResponse(object):
         """int: Update count or -1 if the result is a rowset."""
 
 
-class _IteratorBase(object):
+class _IteratorBase:
     """Base class for the blocking and Future-producing
     iterators to use."""
 
@@ -811,7 +811,7 @@ class _BlockingIterator(_IteratorBase):
         return True
 
 
-class SqlResult(object):
+class SqlResult:
     """SQL query result.
 
     Depending on the statement type it represents a stream of
@@ -1182,7 +1182,7 @@ class SqlResult(object):
         self.close().result()
 
 
-class _InternalSqlService(object):
+class _InternalSqlService:
     """Internal SQL service that offers more public API
     than the one exposed to the user.
     """
@@ -1386,7 +1386,7 @@ class _InternalSqlService(object):
         return _ExecuteResponse(None, None, response["update_count"])
 
 
-class SqlExpectedResultType(object):
+class SqlExpectedResultType:
     """The expected statement result type."""
 
     ANY = 0
@@ -1409,7 +1409,7 @@ _TIMEOUT_NOT_SET = -1
 _DEFAULT_CURSOR_BUFFER_SIZE = 4096
 
 
-class _SqlStatement(object):
+class _SqlStatement:
     """Definition of an SQL statement."""
 
     def __init__(

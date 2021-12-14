@@ -9,7 +9,7 @@ _PORT_DECODE_OFFSET = 0
 _INITIAL_FRAME_SIZE = _PORT_ENCODE_OFFSET + INT_SIZE_IN_BYTES - SIZE_OF_FRAME_LENGTH_AND_FLAGS
 
 
-class AddressCodec(object):
+class AddressCodec:
     @staticmethod
     def encode(buf, address, is_final=False):
         initial_frame_buf = create_initial_buffer_custom(_INITIAL_FRAME_SIZE)

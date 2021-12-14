@@ -78,7 +78,7 @@ def validate_serializer(serializer, _type):
         raise ValueError("Serializer should be an instance of %s" % _type.__name__)
 
 
-class AtomicInteger(object):
+class AtomicInteger:
     """An Integer which can work atomically."""
 
     def __init__(self, initial=0):
@@ -257,7 +257,7 @@ number_types = (int, float)
 none_type = type(None)
 
 
-class LoadBalancer(object):
+class LoadBalancer:
     """Load balancer allows you to send operations to one of a number of endpoints (Members).
     It is up to the implementation to use different load balancing policies.
 
@@ -329,7 +329,7 @@ class RandomLB(_AbstractLoadBalancer):
         return members[idx]
 
 
-class IterationType(object):
+class IterationType:
     """To differentiate users selection on result collection on map-wide
     operations like ``entry_set``, ``key_set``, ``values`` etc.
     """
@@ -344,7 +344,7 @@ class IterationType(object):
     """Iterate over entries"""
 
 
-class UUIDUtil(object):
+class UUIDUtil:
     @staticmethod
     def to_bits(value):
         i = value.int

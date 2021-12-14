@@ -12,7 +12,7 @@ from hazelcast.util import check_not_none
 _logger = logging.getLogger(__name__)
 
 
-class _ListenerRegistration(object):
+class _ListenerRegistration:
     __slots__ = (
         "registration_request",
         "decode_register_response",
@@ -31,7 +31,7 @@ class _ListenerRegistration(object):
         self.connection_registrations = {}  # Dict of Connection, EventRegistration
 
 
-class _EventRegistration(object):
+class _EventRegistration:
     __slots__ = ("server_registration_id", "correlation_id")
 
     def __init__(self, server_registration_id, correlation_id):
@@ -39,7 +39,7 @@ class _EventRegistration(object):
         self.correlation_id = correlation_id
 
 
-class ListenerService(object):
+class ListenerService:
     def __init__(self, client, config, connection_manager, invocation_service):
         self._client = client
         self._connection_manager = connection_manager
@@ -191,7 +191,7 @@ class ListenerService(object):
                     self.remove_event_handler(event_registration.correlation_id)
 
 
-class ClusterViewListenerService(object):
+class ClusterViewListenerService:
     def __init__(
         self,
         client,

@@ -19,7 +19,7 @@ from thrift.transport import TTransport
 all_structs = []
 
 
-class Iface(object):
+class Iface:
     def ping(self):
         pass
 
@@ -1027,7 +1027,7 @@ class Processor(Iface, TProcessor):
 # HELPER FUNCTIONS AND STRUCTURES
 
 
-class ping_args(object):
+class ping_args:
 
 
     def read(self, iprot):
@@ -1070,7 +1070,7 @@ ping_args.thrift_spec = (
 )
 
 
-class ping_result(object):
+class ping_result:
     """
     Attributes:
      - success
@@ -1131,7 +1131,7 @@ ping_result.thrift_spec = (
 )
 
 
-class clean_args(object):
+class clean_args:
 
 
     def read(self, iprot):
@@ -1174,7 +1174,7 @@ clean_args.thrift_spec = (
 )
 
 
-class clean_result(object):
+class clean_result:
     """
     Attributes:
      - success
@@ -1235,7 +1235,7 @@ clean_result.thrift_spec = (
 )
 
 
-class exit_args(object):
+class exit_args:
 
 
     def read(self, iprot):
@@ -1278,7 +1278,7 @@ exit_args.thrift_spec = (
 )
 
 
-class exit_result(object):
+class exit_result:
     """
     Attributes:
      - success
@@ -1339,7 +1339,7 @@ exit_result.thrift_spec = (
 )
 
 
-class createCluster_args(object):
+class createCluster_args:
     """
     Attributes:
      - hzVersion
@@ -1413,7 +1413,7 @@ createCluster_args.thrift_spec = (
 )
 
 
-class createCluster_result(object):
+class createCluster_result:
     """
     Attributes:
      - success
@@ -1488,7 +1488,7 @@ createCluster_result.thrift_spec = (
 )
 
 
-class createClusterKeepClusterName_args(object):
+class createClusterKeepClusterName_args:
     """
     Attributes:
      - hzVersion
@@ -1562,7 +1562,7 @@ createClusterKeepClusterName_args.thrift_spec = (
 )
 
 
-class createClusterKeepClusterName_result(object):
+class createClusterKeepClusterName_result:
     """
     Attributes:
      - success
@@ -1637,7 +1637,7 @@ createClusterKeepClusterName_result.thrift_spec = (
 )
 
 
-class startMember_args(object):
+class startMember_args:
     """
     Attributes:
      - clusterId
@@ -1699,7 +1699,7 @@ startMember_args.thrift_spec = (
 )
 
 
-class startMember_result(object):
+class startMember_result:
     """
     Attributes:
      - success
@@ -1774,7 +1774,7 @@ startMember_result.thrift_spec = (
 )
 
 
-class shutdownMember_args(object):
+class shutdownMember_args:
     """
     Attributes:
      - clusterId
@@ -1848,7 +1848,7 @@ shutdownMember_args.thrift_spec = (
 )
 
 
-class shutdownMember_result(object):
+class shutdownMember_result:
     """
     Attributes:
      - success
@@ -1909,7 +1909,7 @@ shutdownMember_result.thrift_spec = (
 )
 
 
-class terminateMember_args(object):
+class terminateMember_args:
     """
     Attributes:
      - clusterId
@@ -1983,7 +1983,7 @@ terminateMember_args.thrift_spec = (
 )
 
 
-class terminateMember_result(object):
+class terminateMember_result:
     """
     Attributes:
      - success
@@ -2044,7 +2044,7 @@ terminateMember_result.thrift_spec = (
 )
 
 
-class suspendMember_args(object):
+class suspendMember_args:
     """
     Attributes:
      - clusterId
@@ -2118,7 +2118,7 @@ suspendMember_args.thrift_spec = (
 )
 
 
-class suspendMember_result(object):
+class suspendMember_result:
     """
     Attributes:
      - success
@@ -2179,7 +2179,7 @@ suspendMember_result.thrift_spec = (
 )
 
 
-class resumeMember_args(object):
+class resumeMember_args:
     """
     Attributes:
      - clusterId
@@ -2253,7 +2253,7 @@ resumeMember_args.thrift_spec = (
 )
 
 
-class resumeMember_result(object):
+class resumeMember_result:
     """
     Attributes:
      - success
@@ -2314,7 +2314,7 @@ resumeMember_result.thrift_spec = (
 )
 
 
-class shutdownCluster_args(object):
+class shutdownCluster_args:
     """
     Attributes:
      - clusterId
@@ -2376,7 +2376,7 @@ shutdownCluster_args.thrift_spec = (
 )
 
 
-class shutdownCluster_result(object):
+class shutdownCluster_result:
     """
     Attributes:
      - success
@@ -2437,7 +2437,7 @@ shutdownCluster_result.thrift_spec = (
 )
 
 
-class terminateCluster_args(object):
+class terminateCluster_args:
     """
     Attributes:
      - clusterId
@@ -2499,7 +2499,7 @@ terminateCluster_args.thrift_spec = (
 )
 
 
-class terminateCluster_result(object):
+class terminateCluster_result:
     """
     Attributes:
      - success
@@ -2560,7 +2560,7 @@ terminateCluster_result.thrift_spec = (
 )
 
 
-class splitMemberFromCluster_args(object):
+class splitMemberFromCluster_args:
     """
     Attributes:
      - memberId
@@ -2622,7 +2622,7 @@ splitMemberFromCluster_args.thrift_spec = (
 )
 
 
-class splitMemberFromCluster_result(object):
+class splitMemberFromCluster_result:
     """
     Attributes:
      - success
@@ -2684,7 +2684,7 @@ splitMemberFromCluster_result.thrift_spec = (
 )
 
 
-class mergeMemberToCluster_args(object):
+class mergeMemberToCluster_args:
     """
     Attributes:
      - clusterId
@@ -2758,7 +2758,7 @@ mergeMemberToCluster_args.thrift_spec = (
 )
 
 
-class mergeMemberToCluster_result(object):
+class mergeMemberToCluster_result:
     """
     Attributes:
      - success
@@ -2820,7 +2820,7 @@ mergeMemberToCluster_result.thrift_spec = (
 )
 
 
-class executeOnController_args(object):
+class executeOnController_args:
     """
     Attributes:
      - clusterId
@@ -2906,7 +2906,7 @@ executeOnController_args.thrift_spec = (
 )
 
 
-class executeOnController_result(object):
+class executeOnController_result:
     """
     Attributes:
      - success

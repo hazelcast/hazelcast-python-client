@@ -24,7 +24,7 @@ def _no_op_response_handler(_):
     pass
 
 
-class Invocation(object):
+class Invocation:
     __slots__ = (
         "request",
         "timeout",
@@ -79,7 +79,7 @@ class Invocation(object):
         self.future.set_exception(exception, traceback)
 
 
-class InvocationService(object):
+class InvocationService:
     _CLEAN_RESOURCES_PERIOD = 0.1
 
     def __init__(self, client, config, reactor):

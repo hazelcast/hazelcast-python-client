@@ -6,7 +6,7 @@ from hazelcast import __version__
 _logger = logging.getLogger(__name__)
 
 
-class LifecycleState(object):
+class LifecycleState:
     """Lifecycle states."""
 
     STARTING = "STARTING"
@@ -40,7 +40,7 @@ class LifecycleState(object):
     """
 
 
-class LifecycleService(object):
+class LifecycleService:
     """
     Lifecycle service for the Hazelcast client. Allows to determine
     state of the client and add or remove lifecycle listeners.
@@ -83,7 +83,7 @@ class LifecycleService(object):
         self._service.remove_listener(registration_id)
 
 
-class _InternalLifecycleService(object):
+class _InternalLifecycleService:
     def __init__(self, config):
         self.running = False
         self._listeners = {}

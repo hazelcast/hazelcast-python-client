@@ -68,7 +68,7 @@ class CloudHTTPHandler(BaseHTTPRequestHandler):
         self.wfile.write(message.encode())
 
 
-class Server(object):
+class Server:
     cur_dir = os.path.dirname(__file__)
 
     def __init__(self):

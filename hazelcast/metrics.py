@@ -36,7 +36,7 @@ _OUTPUT_BUFFER_INITIAL_SIZE = 1024
 _OUTPUT_BUFFER_GROW_FACTOR = 1.2
 
 
-class MetricDescriptor(object):
+class MetricDescriptor:
     """Describes a metric to be sent to the members.
 
     It is a simplified version of the Java's MetricDescriptorImpl, sufficient
@@ -64,7 +64,7 @@ class MetricDescriptor(object):
         """ProbeUnit: Unit of the metric."""
 
 
-class ProbeUnit(object):
+class ProbeUnit:
     """Measurement unit of a probe.
 
     The values of the constants below should be in sync with the ProbeUnit
@@ -98,7 +98,7 @@ class ProbeUnit(object):
     # the Python client, as we don't use such enum members.
 
 
-class ValueType(object):
+class ValueType:
     """Type of the metric values.
 
     The values of the constants below should be in sync ValueType enum in Java.
@@ -108,7 +108,7 @@ class ValueType(object):
     DOUBLE = 1
 
 
-class MetricsCompressor(object):
+class MetricsCompressor:
     """Compresses metrics into a ``bytearray`` blob.
 
     The compressor uses dictionary based delta compression and deflates
@@ -281,7 +281,7 @@ class MetricsCompressor(object):
             last_word_text = word_text
 
 
-class _OutputBuffer(object):
+class _OutputBuffer:
     __slots__ = ("_buf", "_pos")
 
     def __init__(self, size=None):
@@ -346,7 +346,7 @@ class _OutputBuffer(object):
         return len(self._buf) - self._pos
 
 
-class _Word(object):
+class _Word:
     __slots__ = ("word", "dict_id")
 
     def __init__(self, word, dict_id):
@@ -354,7 +354,7 @@ class _Word(object):
         self.dict_id = dict_id
 
 
-class _MetricsDictionary(object):
+class _MetricsDictionary:
     """Stores word -> id mappings.
 
     Used by :class:`MetricsCompressor`'s dictionary-based algorithm.

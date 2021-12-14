@@ -3,7 +3,7 @@ User API for Serialization.
 """
 
 
-class ObjectDataOutput(object):
+class ObjectDataOutput:
     """ObjectDataOutput provides an interface to convert any of primitive types or arrays of them to series of bytes and
     write them on a stream.
     """
@@ -229,7 +229,7 @@ class ObjectDataOutput(object):
         raise NotImplementedError()
 
 
-class ObjectDataInput(object):
+class ObjectDataInput:
     """ObjectDataInput provides an interface to read bytes from a stream and reconstruct it to any of primitive types or
     arrays of them.
     """
@@ -475,7 +475,7 @@ class ObjectDataInput(object):
         raise NotImplementedError()
 
 
-class IdentifiedDataSerializable(object):
+class IdentifiedDataSerializable:
     """IdentifiedDataSerializable is an alternative serialization method to Python pickle, which also avoids reflection
     during de-serialization.
 
@@ -523,7 +523,7 @@ class IdentifiedDataSerializable(object):
         )
 
 
-class Portable(object):
+class Portable:
     """Portable provides an alternative serialization method.
 
     Instead of relying on reflection, each Portable is created by a registered PortableFactory.
@@ -567,7 +567,7 @@ class Portable(object):
         raise NotImplementedError()
 
 
-class StreamSerializer(object):
+class StreamSerializer:
     """A base class for custom serialization."""
 
     def write(self, out, obj):
@@ -606,7 +606,7 @@ class StreamSerializer(object):
         raise NotImplementedError()
 
 
-class PortableReader(object):
+class PortableReader:
     """Provides a mean of reading portable fields from binary in form of Python primitives and arrays of these
     primitives, nested portable fields and array of portable fields.
     """
@@ -920,7 +920,7 @@ class PortableReader(object):
         raise NotImplementedError()
 
 
-class PortableWriter(object):
+class PortableWriter:
     """Provides a mean of writing portable fields to a binary in form of Python primitives and arrays of these
     primitives, nested portable fields and array of portable fields.
     """

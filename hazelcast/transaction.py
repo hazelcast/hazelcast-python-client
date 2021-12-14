@@ -44,7 +44,7 @@ inconsistent state.
 RETRY_COUNT = 20
 
 
-class TransactionManager(object):
+class TransactionManager:
     """Manages the execution of client transactions and provides Transaction objects."""
 
     def __init__(self, context):
@@ -83,7 +83,7 @@ class TransactionManager(object):
         return Transaction(self._context, connection, timeout, durability, transaction_type)
 
 
-class Transaction(object):
+class Transaction:
     """Provides transactional operations: beginning/committing transactions, but also retrieving
     transactional data-structures like the TransactionalMap.
     """

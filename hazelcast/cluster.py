@@ -10,7 +10,7 @@ from hazelcast.util import check_not_none
 _logger = logging.getLogger(__name__)
 
 
-class _MemberListSnapshot(object):
+class _MemberListSnapshot:
     __slots__ = ("version", "members")
 
     def __init__(self, version, members):
@@ -18,7 +18,7 @@ class _MemberListSnapshot(object):
         self.members = members
 
 
-class ClientInfo(object):
+class ClientInfo:
     """Local information of the client.
 
     Attributes:
@@ -51,7 +51,7 @@ _CLIENT_ENDPOINT_QUALIFIER = EndpointQualifier(ProtocolType.CLIENT, None)
 _MEMBER_ENDPOINT_QUALIFIER = EndpointQualifier(ProtocolType.MEMBER, None)
 
 
-class ClusterService(object):
+class ClusterService:
     """
     Cluster service for Hazelcast clients.
 
@@ -109,7 +109,7 @@ class ClusterService(object):
         return self._service.get_members(member_selector)
 
 
-class _InternalClusterService(object):
+class _InternalClusterService:
     def __init__(self, client, config):
         self._client = client
         self._connection_manager = None
@@ -303,7 +303,7 @@ class _InternalClusterService(object):
         return _MemberListSnapshot(version, new_members)
 
 
-class VectorClock(object):
+class VectorClock:
     """Vector clock consisting of distinct replica logical clocks.
 
     The vector clock may be read from different thread but concurrent

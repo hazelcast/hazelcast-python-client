@@ -11,7 +11,7 @@ _ID_DECODE_OFFSET = _SEED_DECODE_OFFSET + LONG_SIZE_IN_BYTES
 _INITIAL_FRAME_SIZE = _ID_ENCODE_OFFSET + LONG_SIZE_IN_BYTES - SIZE_OF_FRAME_LENGTH_AND_FLAGS
 
 
-class RaftGroupIdCodec(object):
+class RaftGroupIdCodec:
     @staticmethod
     def encode(buf, raft_group_id, is_final=False):
         initial_frame_buf = create_initial_buffer_custom(_INITIAL_FRAME_SIZE)

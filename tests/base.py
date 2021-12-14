@@ -10,7 +10,7 @@ import hazelcast
 from hazelcast.core import Address
 
 
-class _Member(object):
+class _Member:
     def __init__(self, rc, cluster, member):
         self.rc, self.cluster, self.member = rc, cluster, member
         self.uuid = member.uuid
@@ -20,7 +20,7 @@ class _Member(object):
         self.rc.terminateMember(self.cluster.id, self.member.uuid)
 
 
-class _Cluster(object):
+class _Cluster:
     def __init__(self, rc, cluster):
         self.cluster = cluster
         self.rc = rc

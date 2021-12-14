@@ -17,7 +17,7 @@ from thrift.transport import TTransport
 all_structs = []
 
 
-class Lang(object):
+class Lang:
     JAVASCRIPT = 1
     GROOVY = 2
     PYTHON = 3
@@ -38,7 +38,7 @@ class Lang(object):
     }
 
 
-class Cluster(object):
+class Cluster:
     """
     Attributes:
      - id
@@ -95,7 +95,7 @@ class Cluster(object):
         return not (self == other)
 
 
-class Member(object):
+class Member:
     """
     Attributes:
      - uuid
@@ -174,7 +174,7 @@ class Member(object):
         return not (self == other)
 
 
-class Response(object):
+class Response:
     """
     Attributes:
      - success

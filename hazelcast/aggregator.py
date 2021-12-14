@@ -4,7 +4,7 @@ from hazelcast.serialization.api import IdentifiedDataSerializable
 _AGGREGATORS_FACTORY_ID = -29
 
 
-class Aggregator(object):
+class Aggregator:
     """Marker base class for all aggregators.
 
     Aggregators allow computing a value of some function (e.g sum or max) over

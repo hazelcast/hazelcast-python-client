@@ -25,7 +25,7 @@ from hazelcast.proxy.cp.semaphore import SessionAwareSemaphore, SessionlessSemap
 from hazelcast.util import check_true, AtomicInteger, thread_id
 
 
-class CPSubsystem(object):
+class CPSubsystem:
     """CP Subsystem is a component of Hazelcast that builds a strongly consistent
     layer for a set of distributed data structures.
 
@@ -194,7 +194,7 @@ LOCK_SERVICE = "hz:raft:lockService"
 SEMAPHORE_SERVICE = "hz:raft:semaphoreService"
 
 
-class CPProxyManager(object):
+class CPProxyManager:
     def __init__(self, context):
         self._context = context
         self._lock_proxies = dict()  # proxy_name to FencedLock
@@ -256,7 +256,7 @@ class CPProxyManager(object):
         return invocation.future.result()
 
 
-class _SessionState(object):
+class _SessionState:
     __slots__ = ("id", "group_id", "ttl", "creation_time", "acquire_count")
 
     def __init__(self, state_id, group_id, ttl):
@@ -295,7 +295,7 @@ class _SessionState(object):
 _NO_SESSION_ID = -1
 
 
-class ProxySessionManager(object):
+class ProxySessionManager:
     def __init__(self, context):
         self._context = context
         self._mutexes = dict()  # RaftGroupId to RLock

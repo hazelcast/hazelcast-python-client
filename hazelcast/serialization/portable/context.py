@@ -12,7 +12,7 @@ from hazelcast.serialization.portable.classdef import (
 from hazelcast.serialization.portable.writer import ClassDefinitionWriter
 
 
-class PortableContext(object):
+class PortableContext:
     def __init__(self, serialization_service, portable_version):
         self.serialization_service = serialization_service
         self.portable_version = portable_version
@@ -115,7 +115,7 @@ class PortableContext(object):
         return self._class_defs[factory_id]
 
 
-class ClassDefinitionContext(object):
+class ClassDefinitionContext:
     def __init__(self, factory_id, portable_version):
         self._factory_id = factory_id
         self._portable_version = portable_version

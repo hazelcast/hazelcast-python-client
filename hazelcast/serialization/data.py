@@ -9,7 +9,7 @@ DATA_OFFSET = 8
 HEAP_DATA_OVERHEAD = DATA_OFFSET
 
 
-class Data(object):
+class Data:
     """Data is basic unit of serialization.
 
     It stores binary form of an object serialized by serialization service.

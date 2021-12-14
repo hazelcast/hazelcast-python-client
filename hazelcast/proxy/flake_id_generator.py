@@ -73,7 +73,7 @@ class FlakeIdGenerator(Proxy):
         return self._invoke(request, handler)
 
 
-class _AutoBatcher(object):
+class _AutoBatcher:
     def __init__(self, batch_size, validity, id_generator):
         self._batch_size = batch_size
         self._validity = validity
@@ -141,7 +141,7 @@ class _AutoBatcher(object):
                 self._request_in_air = False
 
 
-class _IdBatch(object):
+class _IdBatch:
     def __init__(self, base, increment, batch_size):
         self._base = base
         self._increment = increment
@@ -159,7 +159,7 @@ class _IdBatch(object):
         return next(self._next_id)
 
 
-class _Block(object):
+class _Block:
     def __init__(self, id_batch, validity):
         self._id_batch = id_batch
         self._iterator = iter(self._id_batch)
