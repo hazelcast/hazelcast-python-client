@@ -7,7 +7,7 @@ def _no_op_response_handler(_):
     return None
 
 
-class BaseCPProxy(object):
+class BaseCPProxy:
     def __init__(self, context, group_id, service_name, proxy_name, object_name):
         self._context = context
         self._group_id = group_id

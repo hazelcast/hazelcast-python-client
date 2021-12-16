@@ -25,7 +25,7 @@ ENTRY_COUNT = 10000
 OBSERVATION_INTERVAL = 10.0
 
 
-class SoakTestCoordinator(object):
+class SoakTestCoordinator:
     def __init__(self, test_duration, address):
         self._tests_failed = False
         self._thread_count_before = threading.active_count()
@@ -212,7 +212,7 @@ class OperationCountObserver(threading.Thread):
             logging.info("Operations Per Second: %s\n", op_count / OBSERVATION_INTERVAL)
 
 
-class OperationCounter(object):
+class OperationCounter:
     def __init__(self):
         self._count = 0
         self._lock = threading.Lock()

@@ -3,7 +3,7 @@ import unittest
 from hazelcast.util import RandomLB, RoundRobinLB
 
 
-class _MockClusterService(object):
+class _MockClusterService:
     def __init__(self, members):
         self._members = members
 

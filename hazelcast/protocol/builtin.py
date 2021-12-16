@@ -40,7 +40,7 @@ _LOCAL_DATE_TIME_SIZE_IN_BYTES = _LOCAL_DATE_SIZE_IN_BYTES + _LOCAL_TIME_SIZE_IN
 _OFFSET_DATE_TIME_SIZE_IN_BYTES = _LOCAL_DATE_TIME_SIZE_IN_BYTES + INT_SIZE_IN_BYTES
 
 
-class CodecUtil(object):
+class CodecUtil:
     @staticmethod
     def fast_forward_to_end_frame(msg):
         # We are starting from 1 because of the BEGIN_FRAME we read
@@ -82,7 +82,7 @@ class CodecUtil(object):
         return is_null
 
 
-class ByteArrayCodec(object):
+class ByteArrayCodec:
     @staticmethod
     def encode(buf, value, is_final=False):
         header = bytearray(SIZE_OF_FRAME_LENGTH_AND_FLAGS)
@@ -97,7 +97,7 @@ class ByteArrayCodec(object):
         return msg.next_frame().buf
 
 
-class DataCodec(object):
+class DataCodec:
     @staticmethod
     def encode(buf, value, is_final=False):
         value_bytes = value.to_bytes()
@@ -130,7 +130,7 @@ class DataCodec(object):
             return DataCodec.decode(msg)
 
 
-class EntryListCodec(object):
+class EntryListCodec:
     @staticmethod
     def encode(buf, entries, key_encoder, value_encoder, is_final=False):
         buf.extend(BEGIN_FRAME_BUF)
@@ -175,7 +175,7 @@ class EntryListCodec(object):
 _UUID_LONG_ENTRY_SIZE_IN_BYTES = UUID_SIZE_IN_BYTES + LONG_SIZE_IN_BYTES
 
 
-class EntryListUUIDLongCodec(object):
+class EntryListUUIDLongCodec:
     @staticmethod
     def encode(buf, entries, is_final=False):
         n = len(entries)
@@ -204,7 +204,7 @@ class EntryListUUIDLongCodec(object):
         return result
 
 
-class EntryListUUIDListIntegerCodec(object):
+class EntryListUUIDListIntegerCodec:
     @staticmethod
     def encode(buf, entries, is_final=False):
         keys = []
@@ -226,7 +226,7 @@ class EntryListUUIDListIntegerCodec(object):
         return result
 
 
-class FixSizedTypesCodec(object):
+class FixSizedTypesCodec:
     @staticmethod
     def encode_int(buf, offset, value):
         LE_INT.pack_into(buf, offset, value)
@@ -331,7 +331,7 @@ class FixSizedTypesCodec(object):
         return datetime_value.replace(tzinfo=timezone(timedelta(seconds=offset_seconds)))
 
 
-class ListIntegerCodec(object):
+class ListIntegerCodec:
     @staticmethod
     def encode(buf, arr, is_final=False):
         n = len(arr)
@@ -356,7 +356,7 @@ class ListIntegerCodec(object):
         return result
 
 
-class ListLongCodec(object):
+class ListLongCodec:
     @staticmethod
     def encode(buf, arr, is_final=False):
         n = len(arr)
@@ -381,7 +381,7 @@ class ListLongCodec(object):
         return result
 
 
-class ListMultiFrameCodec(object):
+class ListMultiFrameCodec:
     @staticmethod
     def encode(buf, arr, encoder, is_final=False):
         buf.extend(BEGIN_FRAME_BUF)
@@ -446,7 +446,7 @@ class ListMultiFrameCodec(object):
             return ListMultiFrameCodec.decode(msg, decoder)
 
 
-class ListUUIDCodec(object):
+class ListUUIDCodec:
     @staticmethod
     def encode(buf, arr, is_final=False):
         n = len(arr)
@@ -471,7 +471,7 @@ class ListUUIDCodec(object):
         return result
 
 
-class LongArrayCodec(object):
+class LongArrayCodec:
     @staticmethod
     def encode(buf, arr, is_final=False):
         n = len(arr)
@@ -496,7 +496,7 @@ class LongArrayCodec(object):
         return result
 
 
-class MapCodec(object):
+class MapCodec:
     @staticmethod
     def encode(buf, m, key_encoder, value_encoder, is_final=False):
         buf.extend(BEGIN_FRAME_BUF)
@@ -538,7 +538,7 @@ class MapCodec(object):
             return MapCodec.decode(msg, key_decoder, value_decoder)
 
 
-class StringCodec(object):
+class StringCodec:
     @staticmethod
     def encode(buf, value, is_final=False):
         value_bytes = value.encode("utf-8")
@@ -554,7 +554,7 @@ class StringCodec(object):
         return msg.next_frame().buf.decode("utf-8")
 
 
-class ListCNFixedSizeCodec(object):
+class ListCNFixedSizeCodec:
     _TYPE_NULL_ONLY = 1
     _TYPE_NOT_NULL_ONLY = 2
     _TYPE_MIXED = 3
@@ -596,7 +596,7 @@ class ListCNFixedSizeCodec(object):
             return response
 
 
-class ListCNBooleanCodec(object):
+class ListCNBooleanCodec:
     @staticmethod
     def decode(msg):
         return ListCNFixedSizeCodec.decode(
@@ -604,13 +604,13 @@ class ListCNBooleanCodec(object):
         )
 
 
-class ListCNByteCodec(object):
+class ListCNByteCodec:
     @staticmethod
     def decode(msg):
         return ListCNFixedSizeCodec.decode(msg, BYTE_SIZE_IN_BYTES, FixSizedTypesCodec.decode_byte)
 
 
-class ListCNShortCodec(object):
+class ListCNShortCodec:
     @staticmethod
     def decode(msg):
         return ListCNFixedSizeCodec.decode(
@@ -618,19 +618,19 @@ class ListCNShortCodec(object):
         )
 
 
-class ListCNIntegerCodec(object):
+class ListCNIntegerCodec:
     @staticmethod
     def decode(msg):
         return ListCNFixedSizeCodec.decode(msg, INT_SIZE_IN_BYTES, FixSizedTypesCodec.decode_int)
 
 
-class ListCNLongCodec(object):
+class ListCNLongCodec:
     @staticmethod
     def decode(msg):
         return ListCNFixedSizeCodec.decode(msg, LONG_SIZE_IN_BYTES, FixSizedTypesCodec.decode_long)
 
 
-class ListCNFloatCodec(object):
+class ListCNFloatCodec:
     @staticmethod
     def decode(msg):
         return ListCNFixedSizeCodec.decode(
@@ -638,7 +638,7 @@ class ListCNFloatCodec(object):
         )
 
 
-class ListCNDoubleCodec(object):
+class ListCNDoubleCodec:
     @staticmethod
     def decode(msg):
         return ListCNFixedSizeCodec.decode(
@@ -646,7 +646,7 @@ class ListCNDoubleCodec(object):
         )
 
 
-class ListCNLocalDateCodec(object):
+class ListCNLocalDateCodec:
     @staticmethod
     def decode(msg):
         return ListCNFixedSizeCodec.decode(
@@ -654,7 +654,7 @@ class ListCNLocalDateCodec(object):
         )
 
 
-class ListCNLocalTimeCodec(object):
+class ListCNLocalTimeCodec:
     @staticmethod
     def decode(msg):
         return ListCNFixedSizeCodec.decode(
@@ -662,7 +662,7 @@ class ListCNLocalTimeCodec(object):
         )
 
 
-class ListCNLocalDateTimeCodec(object):
+class ListCNLocalDateTimeCodec:
     @staticmethod
     def decode(msg):
         return ListCNFixedSizeCodec.decode(
@@ -670,7 +670,7 @@ class ListCNLocalDateTimeCodec(object):
         )
 
 
-class ListCNOffsetDateTimeCodec(object):
+class ListCNOffsetDateTimeCodec:
     @staticmethod
     def decode(msg):
         return ListCNFixedSizeCodec.decode(
@@ -678,7 +678,7 @@ class ListCNOffsetDateTimeCodec(object):
         )
 
 
-class BigDecimalCodec(object):
+class BigDecimalCodec:
     @staticmethod
     def decode(msg):
         buf = msg.next_frame().buf
@@ -689,7 +689,7 @@ class BigDecimalCodec(object):
         return Decimal((sign, tuple(int(digit) for digit in str(abs(unscaled_value))), -1 * scale))
 
 
-class SqlPageCodec(object):
+class SqlPageCodec:
     @staticmethod
     def decode(msg):
         from hazelcast.sql import SqlColumnType, _SqlPage

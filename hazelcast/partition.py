@@ -6,7 +6,7 @@ from hazelcast.hash import hash_to_index
 _logger = logging.getLogger(__name__)
 
 
-class _PartitionTable(object):
+class _PartitionTable:
     __slots__ = ("connection", "version", "partitions")
 
     def __init__(self, connection, version, partitions):
@@ -18,7 +18,7 @@ class _PartitionTable(object):
         return "PartitionTable(connection=%s, version=%s)" % (self.connection, self.version)
 
 
-class PartitionService(object):
+class PartitionService:
     """
     Allows to retrieve information about the partition count, the partition owner
     or the partition id of a key.
@@ -67,7 +67,7 @@ class PartitionService(object):
         return self._service.partition_count
 
 
-class _InternalPartitionService(object):
+class _InternalPartitionService:
     __slots__ = ("partition_count", "_client", "_partition_table")
 
     def __init__(self, client):

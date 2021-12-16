@@ -29,7 +29,7 @@ class GlobalSerializer(StreamSerializer):
         pass
 
 
-class CustomClass(object):
+class CustomClass:
     def __init__(self, uid, name, text, source=None):
         self.uid = uid
         self.name = name

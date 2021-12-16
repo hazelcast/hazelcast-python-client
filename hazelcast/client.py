@@ -46,7 +46,7 @@ __all__ = ("HazelcastClient",)
 _logger = logging.getLogger(__name__)
 
 
-class HazelcastClient(object):
+class HazelcastClient:
     """Hazelcast client instance to access and manipulate
     distributed data structures on the Hazelcast clusters.
 
@@ -197,7 +197,7 @@ class HazelcastClient(object):
 
             .. code-block:: python
 
-                class SomeClass(object):
+                class SomeClass:
                     # omitting the implementation
                     pass
 
@@ -752,7 +752,7 @@ class HazelcastClient(object):
         return load_balancer
 
 
-class _ClientContext(object):
+class _ClientContext:
     """
     Context holding all the required services, managers and the configuration for a Hazelcast client.
     """

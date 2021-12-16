@@ -59,7 +59,7 @@ def _set_nonblocking(fd):
     fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
 
 
-class _SocketAdapter(object):
+class _SocketAdapter:
     def __init__(self, fd):
         self._fd = fd
 
@@ -158,7 +158,7 @@ class _SocketedWaker(_AbstractWaker):
         self._writer.close()
 
 
-class _AbstractLoop(object):
+class _AbstractLoop:
     def __init__(self, map):
         self._map = map
         self._timers = []  # Accessed only from the reactor thread
@@ -326,7 +326,7 @@ class _BasicLoop(_AbstractLoop):
         self._map.clear()
 
 
-class AsyncoreReactor(object):
+class AsyncoreReactor:
     def __init__(self):
         self.map = {}
         loop = None
@@ -584,7 +584,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
 
 @total_ordering
-class Timer(object):
+class Timer:
     __slots__ = ("end", "timer_ended_cb", "canceled")
 
     def __init__(self, end, timer_ended_cb):

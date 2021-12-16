@@ -272,7 +272,7 @@ class PipedWakerTest(unittest.TestCase):
             os.read(r_fd, 1)
 
 
-class MockServer(object):
+class MockServer:
     def __init__(self):
         self._s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._s.settimeout(3.0)

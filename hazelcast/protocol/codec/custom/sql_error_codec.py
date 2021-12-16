@@ -11,7 +11,7 @@ _ORIGINATING_MEMBER_ID_DECODE_OFFSET = _CODE_DECODE_OFFSET + INT_SIZE_IN_BYTES
 _INITIAL_FRAME_SIZE = _ORIGINATING_MEMBER_ID_ENCODE_OFFSET + UUID_SIZE_IN_BYTES - SIZE_OF_FRAME_LENGTH_AND_FLAGS
 
 
-class SqlErrorCodec(object):
+class SqlErrorCodec:
     @staticmethod
     def encode(buf, sql_error, is_final=False):
         initial_frame_buf = create_initial_buffer_custom(_INITIAL_FRAME_SIZE)

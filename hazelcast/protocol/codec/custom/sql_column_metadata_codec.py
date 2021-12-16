@@ -11,7 +11,7 @@ _NULLABLE_DECODE_OFFSET = _TYPE_DECODE_OFFSET + INT_SIZE_IN_BYTES
 _INITIAL_FRAME_SIZE = _NULLABLE_ENCODE_OFFSET + BOOLEAN_SIZE_IN_BYTES - SIZE_OF_FRAME_LENGTH_AND_FLAGS
 
 
-class SqlColumnMetadataCodec(object):
+class SqlColumnMetadataCodec:
     @staticmethod
     def encode(buf, sql_column_metadata, is_final=False):
         initial_frame_buf = create_initial_buffer_custom(_INITIAL_FRAME_SIZE)

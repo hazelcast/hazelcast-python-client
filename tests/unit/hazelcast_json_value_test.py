@@ -23,7 +23,7 @@ class HazelcastJsonValueTest(unittest.TestCase):
         self.assertEqual(json.dumps(self.json_obj), json_value.to_string())
 
     def test_hazelcast_json_value_construction_with_non_json_serializable_object(self):
-        class A(object):
+        class A:
             def __init__(self):
                 self.b = "c"
 

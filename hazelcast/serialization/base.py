@@ -40,7 +40,7 @@ def index_for_default_type(type_id):
     return -type_id
 
 
-class BaseSerializationService(object):
+class BaseSerializationService:
     def __init__(
         self, version, global_partition_strategy, output_buffer_size, is_big_endian, int_type
     ):
@@ -160,7 +160,7 @@ class BaseSerializationService(object):
         self._registry.destroy()
 
 
-class SerializerRegistry(object):
+class SerializerRegistry:
     def __init__(self, int_type):
         self._global_serializer = None
         self._portable_serializer = None

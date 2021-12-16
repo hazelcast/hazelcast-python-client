@@ -42,7 +42,7 @@ def do_benchmark():
 
     client = hazelcast.HazelcastClient(config)
 
-    class Test(object):
+    class Test:
 
         def __init__(self):
             self.ops = 0

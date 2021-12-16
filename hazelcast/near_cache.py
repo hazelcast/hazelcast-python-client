@@ -25,7 +25,7 @@ _eviction_key_func = {
 }
 
 
-class DataRecord(object):
+class DataRecord:
     """An expirable and evictable data object which represents a cache entry."""
 
     def __init__(self, key, value, create_time=None, ttl_seconds=None):
@@ -259,7 +259,7 @@ class NearCache(dict):
         return "NearCache(len=%s, evicted=%s)" % (self.__len__(), self._evictions)
 
 
-class NearCacheManager(object):
+class NearCacheManager:
     def __init__(self, config, serialization_service):
         self._config = config
         self._serialization_service = serialization_service

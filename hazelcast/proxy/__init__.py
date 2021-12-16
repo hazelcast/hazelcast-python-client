@@ -43,7 +43,7 @@ _proxy_init = {
 }
 
 
-class ProxyManager(object):
+class ProxyManager:
     def __init__(self, context):
         self._context = context
         self._proxies = {}

@@ -8,7 +8,7 @@ _logger = logging.getLogger(__name__)
 NONE_RESULT = object()
 
 
-class Future(object):
+class Future:
     """Future is used for representing an asynchronous computation result."""
 
     _result = None
@@ -171,7 +171,7 @@ class Future(object):
         chained_future.add_done_callback(callback)
 
 
-class _Event(object):
+class _Event:
     _flag = False
 
     def __init__(self):
@@ -308,7 +308,7 @@ def combine_futures(futures):
     return combined
 
 
-class _BlockingWrapper(object):
+class _BlockingWrapper:
     def __init__(self, wrapped):
         self._wrapped = wrapped
 

@@ -640,7 +640,7 @@ from hazelcast.protocol.builtin import ListMultiFrameCodec
 from hazelcast.protocol.codec.custom.error_holder_codec import ErrorHolderCodec
 
 
-class _ErrorsCodec(object):
+class _ErrorsCodec:
     @staticmethod
     def decode(msg):
         msg.next_frame()

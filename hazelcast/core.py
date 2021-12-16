@@ -6,7 +6,7 @@ CLIENT_TYPE = "PYH"
 SERIALIZATION_VERSION = 1
 
 
-class MemberInfo(object):
+class MemberInfo:
     """
     Represents a member in the cluster with its address, uuid, lite member
     status, attributes, version, and address map.
@@ -78,7 +78,7 @@ class MemberInfo(object):
         return not self.__eq__(other)
 
 
-class Address(object):
+class Address:
     """Represents an address of a member in the cluster."""
 
     def __init__(self, host, port):
@@ -105,7 +105,7 @@ class Address(object):
         return not self.__eq__(other)
 
 
-class ProtocolType(object):
+class ProtocolType:
     """Types of server sockets.
 
     A member typically responds to several types of protocols for
@@ -134,7 +134,7 @@ class ProtocolType(object):
     """Type of Memcached server sockets."""
 
 
-class EndpointQualifier(object):
+class EndpointQualifier:
     """Uniquely identifies groups of network connections sharing a common
     :class:`ProtocolType` and the same network settings, when Hazelcast server
     is configured with Advanced Network Configuration enabled.
@@ -184,7 +184,7 @@ class EndpointQualifier(object):
         )
 
 
-class AddressHelper(object):
+class AddressHelper:
     @staticmethod
     def get_possible_addresses(address):
         address = AddressHelper.address_from_str(address)
@@ -224,7 +224,7 @@ class AddressHelper(object):
         return Address(host, port)
 
 
-class DistributedObjectInfo(object):
+class DistributedObjectInfo:
     def __init__(self, service_name, name):
         self.service_name = service_name
         self.name = name
@@ -241,7 +241,7 @@ class DistributedObjectInfo(object):
         return False
 
 
-class DistributedObjectEventType(object):
+class DistributedObjectEventType:
     """Type of the distributed object event."""
 
     CREATED = "CREATED"
@@ -255,7 +255,7 @@ class DistributedObjectEventType(object):
     """
 
 
-class DistributedObjectEvent(object):
+class DistributedObjectEvent:
     """Distributed Object Event"""
 
     def __init__(self, name, service_name, event_type, source):
@@ -288,7 +288,7 @@ class DistributedObjectEvent(object):
         )
 
 
-class SimpleEntryView(object):
+class SimpleEntryView:
     """EntryView represents a readonly view of a map entry."""
 
     def __init__(
@@ -388,7 +388,7 @@ class SimpleEntryView(object):
         )
 
 
-class HazelcastJsonValue(object):
+class HazelcastJsonValue:
     """HazelcastJsonValue is a wrapper for JSON formatted strings.
 
     It is preferred to store HazelcastJsonValue instead of Strings for JSON formatted strings.
@@ -450,7 +450,7 @@ class HazelcastJsonValue(object):
         return self._json_string
 
 
-class MemberVersion(object):
+class MemberVersion:
     """
     Determines the Hazelcast codebase version in terms of major.minor.patch version.
     """
@@ -466,7 +466,7 @@ class MemberVersion(object):
         return "MemberVersion(major=%s, minor=%s, patch=%s)" % (self.major, self.minor, self.patch)
 
 
-class MapEntry(object):
+class MapEntry:
     """
     Represents the entry of a Map, with key and value fields.
     """

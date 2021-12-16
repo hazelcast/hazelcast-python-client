@@ -28,7 +28,7 @@ _NEAR_CACHE_DESCRIPTOR_DISCRIMINATOR = "name"
 _TCP_METRICS_PREFIX = "tcp"
 
 
-class Statistics(object):
+class Statistics:
     def __init__(
         self, client, config, reactor, connection_manager, invocation_service, near_cache_manager
     ):

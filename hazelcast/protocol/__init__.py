@@ -1,4 +1,4 @@
-class ErrorHolder(object):
+class ErrorHolder:
     __slots__ = ("error_code", "class_name", "message", "stack_trace_elements")
 
     def __init__(self, error_code, class_name, message, stack_trace_elements):
@@ -20,7 +20,7 @@ class ErrorHolder(object):
         return not self.__eq__(other)
 
 
-class StackTraceElement(object):
+class StackTraceElement:
     __slots__ = ("class_name", "method_name", "file_name", "line_number")
 
     def __init__(self, class_name, method_name, file_name, line_number):
@@ -42,7 +42,7 @@ class StackTraceElement(object):
         return not self.__eq__(other)
 
 
-class RaftGroupId(object):
+class RaftGroupId:
     __slots__ = ("name", "seed", "id")
 
     def __init__(self, name, seed, group_id):
@@ -68,7 +68,7 @@ class RaftGroupId(object):
         return "RaftGroupId(name=%s, seed=%s, id=%s)" % (self.name, self.seed, self.id)
 
 
-class AnchorDataListHolder(object):
+class AnchorDataListHolder:
     __slots__ = ("anchor_page_list", "anchor_data_list")
 
     def __init__(self, page_list, data_list):
@@ -88,7 +88,7 @@ class AnchorDataListHolder(object):
         return object_list
 
 
-class PagingPredicateHolder(object):
+class PagingPredicateHolder:
     __slots__ = (
         "anchor_data_list_holder",
         "predicate_data",

@@ -12,7 +12,7 @@ from hazelcast.predicate import *
 from hazelcast.serialization.service import SerializationServiceV1
 
 
-class A(object):
+class A:
     def __init__(self, x):
         self.x = x
 

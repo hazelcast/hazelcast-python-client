@@ -4,7 +4,7 @@ from hazelcast.util import IterationType, get_attr_name
 PREDICATE_FACTORY_ID = -20
 
 
-class Predicate(object):
+class Predicate:
     """Represents a map entry predicate. Implementations of this class are
     basic building blocks for performing queries on map entries.
 

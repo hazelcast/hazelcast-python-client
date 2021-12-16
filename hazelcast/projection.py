@@ -3,7 +3,7 @@ from hazelcast.serialization.api import IdentifiedDataSerializable
 _PROJECTIONS_FACTORY_ID = -30
 
 
-class Projection(object):
+class Projection:
     """Marker base class for all projections.
 
     Projections allow the client to transform (strip down) each query result

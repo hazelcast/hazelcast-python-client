@@ -15,7 +15,7 @@ _LITE_MEMBER_DECODE_OFFSET = _UUID_DECODE_OFFSET + UUID_SIZE_IN_BYTES
 _INITIAL_FRAME_SIZE = _LITE_MEMBER_ENCODE_OFFSET + BOOLEAN_SIZE_IN_BYTES - SIZE_OF_FRAME_LENGTH_AND_FLAGS
 
 
-class MemberInfoCodec(object):
+class MemberInfoCodec:
     @staticmethod
     def encode(buf, member_info, is_final=False):
         initial_frame_buf = create_initial_buffer_custom(_INITIAL_FRAME_SIZE)
