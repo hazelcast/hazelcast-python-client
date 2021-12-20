@@ -1,3 +1,6 @@
+import typing
+
+from hazelcast.future import Future
 from hazelcast.protocol.codec import (
     atomic_long_add_and_get_codec,
     atomic_long_compare_and_set_codec,
@@ -28,22 +31,22 @@ class AtomicLong(BaseCPProxy):
     server-side setting.
     """
 
-    def add_and_get(self, delta):
+    def add_and_get(self, delta: int) -> Future[int]:
         """Atomically adds the given value to the current value.
 
         Args:
             delta (int): The value to add to the current value.
 
         Returns:
-            hazelcast.future.Future[int]: The updated value, the given value added
-            to the current value
+            Future[int]: The updated value, the given value added to the
+            current value
         """
         check_is_int(delta)
         codec = atomic_long_add_and_get_codec
         request = codec.encode_request(self._group_id, self._object_name, delta)
         return self._invoke(request, codec.decode_response)
 
-    def compare_and_set(self, expect, update):
+    def compare_and_set(self, expect: int, update: int) -> Future[bool]:
         """Atomically sets the value to the given updated value
         only if the current value equals the expected value.
 
@@ -52,8 +55,8 @@ class AtomicLong(BaseCPProxy):
             update (int): The new value.
 
         Returns:
-            hazelcast.future.Future[bool]: ``True`` if successful; or ``False`` if
-            the actual value was not equal to the expected value.
+            Future[bool]: ``True`` if successful; or ``False`` if the actual
+            value was not equal to the expected value.
         """
         check_is_int(expect)
         check_is_int(update)
@@ -61,107 +64,107 @@ class AtomicLong(BaseCPProxy):
         request = codec.encode_request(self._group_id, self._object_name, expect, update)
         return self._invoke(request, codec.decode_response)
 
-    def decrement_and_get(self):
+    def decrement_and_get(self) -> Future[int]:
         """Atomically decrements the current value by one.
 
         Returns:
-            hazelcast.future.Future[int]: The updated value, the current value
-            decremented by one.
+            Future[int]: The updated value, the current value decremented by
+            one.
         """
         return self.add_and_get(-1)
 
-    def get_and_decrement(self):
+    def get_and_decrement(self) -> Future[int]:
         """Atomically decrements the current value by one.
 
         Returns:
-            hazelcast.future.Future[int]: The old value.
+            Future[int]: The old value.
         """
         return self.get_and_add(-1)
 
-    def get(self):
+    def get(self) -> Future[int]:
         """Gets the current value.
 
         Returns:
-            hazelcast.future.Future[int]: The current value.
+            Future[int]: The current value.
         """
         codec = atomic_long_get_codec
         request = codec.encode_request(self._group_id, self._object_name)
         return self._invoke(request, codec.decode_response)
 
-    def get_and_add(self, delta):
+    def get_and_add(self, delta: int) -> Future[int]:
         """Atomically adds the given value to the current value.
 
         Args:
             delta (int): The value to add to the current value.
 
         Returns:
-            hazelcast.future.Future[int]: The old value before the add.
+            Future[int]: The old value before the add.
         """
         check_is_int(delta)
         codec = atomic_long_get_and_add_codec
         request = codec.encode_request(self._group_id, self._object_name, delta)
         return self._invoke(request, codec.decode_response)
 
-    def get_and_set(self, new_value):
+    def get_and_set(self, new_value: int) -> Future[int]:
         """Atomically sets the given value and returns the old value.
 
         Args:
             new_value (int): The new value.
 
         Returns:
-            hazelcast.future.Future[int]: The old value.
+            Future[int]: The old value.
         """
         check_is_int(new_value)
         codec = atomic_long_get_and_set_codec
         request = codec.encode_request(self._group_id, self._object_name, new_value)
         return self._invoke(request, codec.decode_response)
 
-    def increment_and_get(self):
+    def increment_and_get(self) -> Future[int]:
         """Atomically increments the current value by one.
 
         Returns:
-            hazelcast.future.Future[int]: The updated value, the current value
-            incremented by one.
+            Future[int]: The updated value, the current value incremented by
+            one.
         """
         return self.add_and_get(1)
 
-    def get_and_increment(self):
+    def get_and_increment(self) -> Future[int]:
         """Atomically increments the current value by one.
 
         Returns:
-            hazelcast.future.Future[int]: The old value.
+            Future[int]: The old value.
         """
         return self.get_and_add(1)
 
-    def set(self, new_value):
+    def set(self, new_value: int) -> Future[None]:
         """Atomically sets the given value.
 
         Args:
             new_value (int): The new value
 
         Returns:
-            hazelcast.future.Future[None]:
+            Future[None]:
         """
         check_is_int(new_value)
         codec = atomic_long_get_and_set_codec
         request = codec.encode_request(self._group_id, self._object_name, new_value)
         return self._invoke(request)
 
-    def alter(self, function):
+    def alter(self, function: typing.Any) -> Future[None]:
         """Alters the currently stored value by applying a function on it.
 
         Notes:
-            ``function`` must be an instance of ``IdentifiedDataSerializable`` or
-            ``Portable`` that has a counterpart that implements the
-            ``com.hazelcast.core.IFunction`` interface registered on the server-side with
-            the actual implementation of the function to be applied.
+            ``function`` must be an instance Hazelcast serializable type that
+            has a counterpart that implements the
+            ``com.hazelcast.core.IFunction`` interface registered on the
+            server-side with the actual implementation of the function to be
+            applied.
 
         Args:
-            function (hazelcast.serialization.api.Portable or hazelcast.serialization.api.IdentifiedDataSerializable):
-                The function that alters the currently stored value.
+            function: The function that alters the currently stored value.
 
         Returns:
-            hazelcast.future.Future[None]:
+            Future[None]:
         """
         check_not_none(function, "Function cannot be None")
         function_data = self._to_data(function)
@@ -173,21 +176,22 @@ class AtomicLong(BaseCPProxy):
         request = codec.encode_request(self._group_id, self._object_name, function_data, 1)
         return self._invoke(request)
 
-    def alter_and_get(self, function):
-        """Alters the currently stored value by applying a function on it and gets the result.
+    def alter_and_get(self, function: typing.Any) -> Future[int]:
+        """Alters the currently stored value by applying a function on it and
+        gets the result.
 
         Notes:
-            ``function`` must be an instance of ``IdentifiedDataSerializable`` or
-            ``Portable`` that has a counterpart that implements the
-            ``com.hazelcast.core.IFunction`` interface registered on the server-side with
-            the actual implementation of the function to be applied.
+            ``function`` must be an instance Hazelcast serializable type that
+            has a counterpart that implements the
+            ``com.hazelcast.core.IFunction`` interface registered on the
+            server-side with the actual implementation of the function to be
+            applied.
 
         Args:
-            function (hazelcast.serialization.api.Portable or hazelcast.serialization.api.IdentifiedDataSerializable):
-                The function that alters the currently stored value.
+            function: The function that alters the currently stored value.
 
         Returns:
-            hazelcast.future.Future[int]: The new value.
+            Future[int]: The new value.
         """
         check_not_none(function, "Function cannot be None")
         function_data = self._to_data(function)
@@ -196,21 +200,22 @@ class AtomicLong(BaseCPProxy):
         request = codec.encode_request(self._group_id, self._object_name, function_data, 1)
         return self._invoke(request, codec.decode_response)
 
-    def get_and_alter(self, function):
-        """Alters the currently stored value by applying a function on it on and gets the old value.
+    def get_and_alter(self, function: typing.Any) -> Future[int]:
+        """Alters the currently stored value by applying a function on it on
+        and gets the old value.
 
         Notes:
-            ``function`` must be an instance of ``IdentifiedDataSerializable`` or
-            ``Portable`` that has a counterpart that implements the
-            ``com.hazelcast.core.IFunction`` interface registered on the server-side with
-            the actual implementation of the function to be applied.
+            ``function`` must be an instance Hazelcast serializable type that
+            has a counterpart that implements the
+            ``com.hazelcast.core.IFunction`` interface registered on the
+            server-side with the actual implementation of the function to be
+            applied.
 
         Args:
-            function (hazelcast.serialization.api.Portable or hazelcast.serialization.api.IdentifiedDataSerializable):
-                The function that alters the currently stored value.
+            function: The function that alters the currently stored value.
 
         Returns:
-            hazelcast.future.Future[int]: The old value.
+            Future[int]: The old value.
         """
         check_not_none(function, "Function cannot be None")
         function_data = self._to_data(function)
@@ -219,21 +224,22 @@ class AtomicLong(BaseCPProxy):
         request = codec.encode_request(self._group_id, self._object_name, function_data, 0)
         return self._invoke(request, codec.decode_response)
 
-    def apply(self, function):
-        """Applies a function on the value, the actual stored value will not change.
+    def apply(self, function: typing.Any) -> Future[typing.Any]:
+        """Applies a function on the value, the actual stored value will not
+        change.
 
         Notes:
-            ``function`` must be an instance of ``IdentifiedDataSerializable`` or
-            ``Portable`` that has a counterpart that implements the
-            ``com.hazelcast.core.IFunction`` interface registered on the server-side with
-            the actual implementation of the function to be applied.
+            ``function`` must be an instance Hazelcast serializable type that
+            has a counterpart that implements the
+            ``com.hazelcast.core.IFunction`` interface registered on the
+            server-side with the actual implementation of the function to be
+            applied.
 
         Args:
-            function (hazelcast.serialization.api.Portable or hazelcast.serialization.api.IdentifiedDataSerializable):
-                The function applied to the currently stored value.
+            function: The function applied to the currently stored value.
 
         Returns:
-            hazelcast.future.Future[any]: The result of the function application.
+            Future[any]: The result of the function application.
         """
         check_not_none(function, "Function cannot be None")
         function_data = self._to_data(function)

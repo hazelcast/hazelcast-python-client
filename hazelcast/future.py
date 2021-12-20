@@ -1,17 +1,22 @@
 import logging
 import sys
 import threading
+import types
+
+import typing
 
 from hazelcast.util import AtomicInteger, re_raise
 
 _logger = logging.getLogger(__name__)
-NONE_RESULT = object()
+_SENTINEL = object()
+
+ResultType = typing.TypeVar("ResultType")
 
 
-class Future:
+class Future(typing.Generic[ResultType]):
     """Future is used for representing an asynchronous computation result."""
 
-    _result = None
+    _result = _SENTINEL
     _exception = None
     _traceback = None
     _threading_locals = threading.local()
@@ -20,20 +25,17 @@ class Future:
         self._callbacks = []
         self._event = _Event()
 
-    def set_result(self, result):
+    def set_result(self, result: ResultType) -> None:
         """Sets the result of the Future.
 
         Args:
             result: Result of the Future.
         """
-        if result is None:
-            self._result = NONE_RESULT
-        else:
-            self._result = result
+        self._result = result
         self._event.set()
         self._invoke_callbacks()
 
-    def set_exception(self, exception, traceback=None):
+    def set_exception(self, exception: Exception, traceback: types.TracebackType = None) -> None:
         """Sets the exception for this Future in case of errors.
 
         Args:
@@ -48,8 +50,9 @@ class Future:
         self._event.set()
         self._invoke_callbacks()
 
-    def result(self):
-        """Returns the result of the Future, which makes the call synchronous if the result has not been computed yet.
+    def result(self) -> ResultType:
+        """Returns the result of the Future, which makes the call synchronous
+        if the result has not been computed yet.
 
         Returns:
             Result of the Future.
@@ -58,10 +61,7 @@ class Future:
         self._event.wait()
         if self._exception:
             re_raise(self._exception, self._traceback)
-        if self._result == NONE_RESULT:
-            return None
-        else:
-            return self._result
+        return self._result
 
     def _reactor_check(self):
         if not self.done() and hasattr(self._threading_locals, "is_reactor_thread"):
@@ -70,11 +70,11 @@ class Future:
                 "Use add_done_callback instead."
             )
 
-    def is_success(self):
+    def is_success(self) -> bool:
         """Determines whether the result can be successfully computed or not."""
-        return self._result is not None
+        return self._result is not _SENTINEL
 
-    def done(self):
+    def done(self) -> bool:
         """Determines whether the result is computed or not.
 
         Returns:
@@ -82,15 +82,17 @@ class Future:
         """
         return self._event.is_set()
 
-    def running(self):
-        """Determines whether the asynchronous call, the computation is still running or not.
+    def running(self) -> bool:
+        """Determines whether the asynchronous call, the computation is still
+        running or not.
 
         Returns:
-            bool: ``True`` if the  result is being computed, ``False`` otherwise.
+            bool: ``True`` if the  result is being computed, ``False``
+            otherwise.
         """
         return not self.done()
 
-    def exception(self):
+    def exception(self) -> typing.Optional[Exception]:
         """Returns the exceptional result, if any.
 
         Returns:
@@ -100,13 +102,13 @@ class Future:
         self._event.wait()
         return self._exception
 
-    def traceback(self):
+    def traceback(self) -> typing.Optional[types.TracebackType]:
         """Traceback of the exception."""
         self._reactor_check()
         self._event.wait()
         return self._traceback
 
-    def add_done_callback(self, callback):
+    def add_done_callback(self, callback: typing.Callable[["Future"], None]) -> None:
         run_callback = False
         with self._event.condition:
             if self.done():
@@ -127,14 +129,19 @@ class Future:
         except:
             _logger.exception("Exception when invoking callback")
 
-    def continue_with(self, continuation_func, *args):
+    def continue_with(
+        self,
+        continuation_func: typing.Callable[..., typing.Union["Future", typing.Any]],
+        *args: typing.Any
+    ) -> "Future":
         """Create a continuation that executes when the Future is completed.
 
         Args:
-            continuation_func (function): A function which takes the Future as the only parameter.
-                Return value of the function will be set as the result of the continuation future.
-                If the return value of the function is another Future, it will be chained
-                to the returned Future.
+            continuation_func (function): A function which takes the Future as
+                the only parameter. Return value of the function will be set as
+                the result of the continuation future. If the return value of
+                the function is another Future, it will be chained to the
+                returned Future.
             *args: Arguments to be passed into ``continuation_function``.
 
         Returns:
@@ -196,7 +203,7 @@ class ImmediateFuture(Future):
     def __init__(self, result):
         self._result = result
 
-    def set_exception(self, exception):
+    def set_exception(self, exception, traceback=None):
         raise NotImplementedError()
 
     def set_result(self, result):
@@ -251,7 +258,7 @@ class ImmediateExceptionFuture(Future):
         self._invoke_cb(callback)
 
 
-def combine_futures(futures):
+def combine_futures(futures: typing.Sequence[Future]) -> Future:
     """Combines set of Futures.
 
     It waits for the completion of the all input Futures regardless

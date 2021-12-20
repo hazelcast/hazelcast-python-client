@@ -1,3 +1,5 @@
+import typing
+
 from hazelcast.serialization.api import IdentifiedDataSerializable
 from hazelcast.util import IterationType, get_attr_name
 
@@ -76,11 +78,11 @@ class PagingPredicate(Predicate):
     To be able to reuse for another query, one should call :func:`reset`.
     """
 
-    def reset(self):
+    def reset(self) -> None:
         """Resets the predicate for reuse."""
         raise NotImplementedError("reset")
 
-    def next_page(self):
+    def next_page(self) -> int:
         """Sets page index to next page.
 
         If new index is out of range, the query results that this
@@ -91,7 +93,7 @@ class PagingPredicate(Predicate):
         """
         raise NotImplementedError("next_page")
 
-    def previous_page(self):
+    def previous_page(self) -> int:
         """Sets page index to previous page.
 
         If current page index is 0, this method does nothing.
@@ -102,7 +104,7 @@ class PagingPredicate(Predicate):
         raise NotImplementedError("previous_page")
 
     @property
-    def page(self):
+    def page(self) -> int:
         """The current page index.
 
 
@@ -115,11 +117,11 @@ class PagingPredicate(Predicate):
         raise NotImplementedError("page")
 
     @page.setter
-    def page(self, new_page):
+    def page(self, new_page: int) -> None:
         raise NotImplementedError("page.setter")
 
     @property
-    def page_size(self):
+    def page_size(self) -> int:
         """The page size.
 
         :getter: Returns the page size.
@@ -360,9 +362,10 @@ class _PagingPredicate(_AbstractPredicate, PagingPredicate):
         self._internal_predicate = predicate
         self._page_size = page_size
         self._page = 0  # initialized to be on first page
-        self.comparator = comparator
-        self.iteration_type = IterationType.ENTRY
-        self.anchor_list = []  # List of pairs: (nearest page, (anchor key, anchor value))
+        self.comparator: typing.Any = comparator
+        self.iteration_type: int = IterationType.ENTRY
+        # List of pairs: (nearest page, (anchor key, anchor value))
+        self.anchor_list: typing.List[typing.Tuple[int, typing.Tuple[typing.Any, typing.Any]]] = []
 
     def __repr__(self):
         return "PagingPredicate(predicate=%s, page_size=%s, comparator=%s)" % (
@@ -383,37 +386,37 @@ class _PagingPredicate(_AbstractPredicate, PagingPredicate):
             output.write_object(anchor_key)
             output.write_object(anchor_value)
 
-    def next_page(self):
+    def next_page(self) -> int:
         self.page += 1
         return self.page
 
-    def previous_page(self):
+    def previous_page(self) -> int:
         if self.page != 0:
             self.page -= 1
         return self.page
 
-    def reset(self):
+    def reset(self) -> None:
         self.iteration_type = IterationType.ENTRY
         del self.anchor_list[:]
         self.page = 0
 
     @property
-    def page(self):
+    def page(self) -> int:
         return self._page
 
     @page.setter
-    def page(self, new_page):
+    def page(self, new_page: int) -> None:
         if new_page < 0:
             raise ValueError("new_page should be positive or 0.")
 
         self._page = new_page
 
     @property
-    def page_size(self):
+    def page_size(self) -> int:
         return self._page_size
 
 
-def sql(expression):
+def sql(expression: str) -> Predicate:
     """Creates a predicate that will pass items that match the given SQL
     ``where`` expression.
 
@@ -442,7 +445,7 @@ def sql(expression):
     return _SqlPredicate(expression)
 
 
-def equal(attribute, value):
+def equal(attribute: str, value: typing.Any) -> Predicate:
     """Creates a predicate that will pass items if the given ``value`` and the
     value stored under the given item ``attribute`` are equal.
 
@@ -457,7 +460,7 @@ def equal(attribute, value):
     return _EqualPredicate(attribute, value)
 
 
-def not_equal(attribute, value):
+def not_equal(attribute: str, value: typing.Any) -> Predicate:
     """Creates a predicate that will pass items if the given ``value`` and the
     value stored under the given item ``attribute`` are not equal.
 
@@ -472,7 +475,7 @@ def not_equal(attribute, value):
     return _NotEqualPredicate(attribute, value)
 
 
-def like(attribute, pattern):
+def like(attribute: str, pattern: typing.Optional[str]) -> Predicate:
     """Creates a predicate that will pass items if the given ``pattern``
     matches the value stored under the given item ``attribute``.
 
@@ -495,7 +498,7 @@ def like(attribute, pattern):
     return _LikePredicate(attribute, pattern)
 
 
-def ilike(attribute, pattern):
+def ilike(attribute: str, pattern: typing.Optional[str]) -> Predicate:
     """Creates a predicate that will pass items if the given ``pattern``
     matches  the value stored under the given item ``attribute`` in a
     case-insensitive manner.
@@ -519,7 +522,7 @@ def ilike(attribute, pattern):
     return _ILikePredicate(attribute, pattern)
 
 
-def regex(attribute, pattern):
+def regex(attribute: str, pattern: typing.Optional[str]) -> Predicate:
     """Creates a predicate that will pass items if the given ``pattern``
     matches the value stored under the given item ``attribute``.
 
@@ -539,7 +542,7 @@ def regex(attribute, pattern):
     return _RegexPredicate(attribute, pattern)
 
 
-def and_(*predicates):
+def and_(*predicates: Predicate) -> Predicate:
     """Creates a predicate that will perform the logical ``and`` operation on
     the given predicates.
 
@@ -556,7 +559,7 @@ def and_(*predicates):
     return _AndPredicate(predicates)
 
 
-def or_(*predicates):
+def or_(*predicates: Predicate) -> Predicate:
     """Creates a predicate that will perform the logical ``or`` operation on
     the given predicates.
 
@@ -573,7 +576,7 @@ def or_(*predicates):
     return _OrPredicate(predicates)
 
 
-def not_(predicate):
+def not_(predicate: Predicate) -> Predicate:
     """Creates a predicate that will negate the result of the given
     ``predicate``.
 
@@ -586,7 +589,7 @@ def not_(predicate):
     return _NotPredicate(predicate)
 
 
-def between(attribute, from_, to):
+def between(attribute: str, from_: typing.Any, to: typing.Any) -> Predicate:
     """Creates a predicate that will pass items if the value stored under the
     given item ``attribute`` is contained inside the given range.
 
@@ -604,7 +607,7 @@ def between(attribute, from_, to):
     return _BetweenPredicate(attribute, from_, to)
 
 
-def in_(attribute, *values):
+def in_(attribute: str, *values: typing.Any) -> Predicate:
     """Creates a predicate that will pass items if the value stored under the
     given item ``attribute`` is a member of the given ``values``.
 
@@ -619,7 +622,7 @@ def in_(attribute, *values):
     return _InPredicate(attribute, values)
 
 
-def instance_of(class_name):
+def instance_of(class_name: str) -> Predicate:
     """Creates a predicate that will pass entries for which the value class is
     an instance of the given ``class_name``.
 
@@ -633,7 +636,7 @@ def instance_of(class_name):
     return _InstanceOfPredicate(class_name)
 
 
-def false():
+def false() -> Predicate:
     """Creates a predicate that will filter out all items.
 
     Returns:
@@ -642,7 +645,7 @@ def false():
     return _FalsePredicate()
 
 
-def true():
+def true() -> Predicate:
     """Creates a predicate that will pass all items.
 
     Returns:
@@ -651,7 +654,7 @@ def true():
     return _TruePredicate()
 
 
-def paging(predicate, page_size, comparator=None):
+def paging(predicate: Predicate, page_size: int, comparator: typing.Any = None) -> PagingPredicate:
     """Creates a paging predicate with an inner predicate, page size and
     comparator. Results will be filtered via inner predicate and will be
     ordered via comparator if provided.
@@ -661,8 +664,7 @@ def paging(predicate, page_size, comparator=None):
             be filtered. Can be ``None``. In that case, results will not be
             filtered.
         page_size (int): The page size.
-        comparator (hazelcast.serialization.api.Portable or hazelcast.serialization.api.IdentifiedDataSerializable):
-            The comparator through which results will be ordered. The
+        comparator: The comparator through which results will be ordered. The
             comparision logic must be defined on the server side. Can be
             ``None``. In that case, the results will be returned in natural
             order.
@@ -673,7 +675,7 @@ def paging(predicate, page_size, comparator=None):
     return _PagingPredicate(predicate, page_size, comparator)
 
 
-def greater(attribute, value):
+def greater(attribute: str, value: typing.Any) -> Predicate:
     """
     Creates a predicate that will pass items if the value stored under the
     given item ``attribute`` is greater than the given ``value``.
@@ -690,7 +692,7 @@ def greater(attribute, value):
     return _GreaterLessPredicate(attribute, value, False, False)
 
 
-def greater_or_equal(attribute, value):
+def greater_or_equal(attribute: str, value: typing.Any) -> Predicate:
     """Creates a predicate that will pass items if the value stored under the
     given item ``attribute`` is greater than or equal to the given ``value``.
 
@@ -706,7 +708,7 @@ def greater_or_equal(attribute, value):
     return _GreaterLessPredicate(attribute, value, True, False)
 
 
-def less(attribute, value):
+def less(attribute: str, value: typing.Any) -> Predicate:
     """Creates a predicate that will pass items if the value stored under the
     given item ``attribute`` is less than the given ``value``.
 
@@ -722,7 +724,7 @@ def less(attribute, value):
     return _GreaterLessPredicate(attribute, value, False, True)
 
 
-def less_or_equal(attribute, value):
+def less_or_equal(attribute: str, value: typing.Any) -> Predicate:
     """Creates a predicate that will pass items if the value stored under the
     given item ``attribute`` is less than or equal to the given ``value``.
 

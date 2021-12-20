@@ -1,3 +1,5 @@
+import typing
+
 from hazelcast.future import ImmediateFuture, Future
 from hazelcast.protocol.codec import (
     ringbuffer_add_all_codec,
@@ -11,6 +13,7 @@ from hazelcast.protocol.codec import (
     ringbuffer_tail_sequence_codec,
 )
 from hazelcast.proxy.base import PartitionSpecificProxy
+from hazelcast.types import ItemType
 from hazelcast.util import (
     check_not_negative,
     check_not_none,
@@ -48,7 +51,85 @@ The maximum number of items to be added to RingBuffer or read from RingBuffer at
 """
 
 
-class Ringbuffer(PartitionSpecificProxy):
+class ReadResult(ImmutableLazyDataList):
+    """Defines the result of a :func:`Ringbuffer.read_many` operation."""
+
+    SEQUENCE_UNAVAILABLE = -1
+    """Value returned from methods returning a sequence number when the
+    information is not available (e.g. because of rolling upgrade and some
+    members not returning the sequence).
+    """
+
+    def __init__(self, read_count, next_seq, items, item_seqs, to_object):
+        super(ReadResult, self).__init__(items, to_object)
+        self._read_count = read_count
+        self._next_seq = next_seq
+        self._item_seqs = item_seqs
+
+    @property
+    def read_count(self) -> int:
+        """int: The number of items that have been read before filtering.
+
+        If no filter is set, then the :attr:`read_count` will be equal to
+        :attr:`size`.
+
+        But if a filter is applied, it could be that items are read, but are
+        filtered out. So, if you are trying to make another read based on
+        this, then you should increment the sequence by :attr:`read_count` and
+        not by :attr:`size`.
+
+        Otherwise you will be re-reading the same filtered messages.
+        """
+        return self._read_count
+
+    @property
+    def size(self) -> int:
+        """int: The result set size.
+
+        See Also:
+            :attr:`read_count`
+        """
+        return len(self._list_data)
+
+    @property
+    def next_sequence_to_read_from(self) -> int:
+        """int: The sequence of the item following the last read item.
+
+        This sequence can then be used to read items following the ones
+        returned by this result set.
+
+        Usually this sequence is equal to the sequence used to retrieve this
+        result set incremented by the :attr:`read_count`. In cases when the
+        reader tolerates lost items, this is not the case.
+
+        For instance, if the reader requests an item with a stale sequence (one
+        which has already been overwritten), the read will jump to the oldest
+        sequence and read from there.
+
+        Similarly, if the reader requests an item in the future (e.g. because
+        the partition was lost and the reader was unaware of this), the read
+        method will jump back to the newest available sequence.
+
+        Because of these jumps and only in the case when the reader is loss
+        tolerant, the next sequence must be retrieved using this method.
+        A return value of :const:`SEQUENCE_UNAVAILABLE` means that the
+        information is not available.
+        """
+        return self._next_seq
+
+    def get_sequence(self, index: int) -> int:
+        """Return the sequence number for the item at the given index.
+
+        Args:
+            index (int): The index.
+
+        Returns:
+            int: The sequence number for the ringbuffer item.
+        """
+        return self._item_seqs[index]
+
+
+class Ringbuffer(PartitionSpecificProxy, typing.Generic[ItemType]):
     """A Ringbuffer is an append-only data-structure where the content is
     stored in a ring like structure.
 
@@ -84,11 +165,11 @@ class Ringbuffer(PartitionSpecificProxy):
         super(Ringbuffer, self).__init__(service_name, name, context)
         self._capacity = None
 
-    def capacity(self):
+    def capacity(self) -> Future[int]:
         """Returns the capacity of this Ringbuffer.
 
         Returns:
-            hazelcast.future.Future[int]: The capacity of Ringbuffer.
+            Future[int]: The capacity of Ringbuffer.
         """
         if not self._capacity:
 
@@ -101,28 +182,28 @@ class Ringbuffer(PartitionSpecificProxy):
 
         return ImmediateFuture(self._capacity)
 
-    def size(self):
+    def size(self) -> Future[int]:
         """Returns number of items in the Ringbuffer.
 
         Returns:
-            hazelcast.future.Future[int]: The size of Ringbuffer.
+            Future[int]: The size of Ringbuffer.
         """
         request = ringbuffer_size_codec.encode_request(self.name)
         return self._invoke(request, ringbuffer_size_codec.decode_response)
 
-    def tail_sequence(self):
+    def tail_sequence(self) -> Future[int]:
         """Returns the sequence of the tail.
 
         The tail is the side of the Ringbuffer where the items are added to.
         The initial value of the tail is ``-1``.
 
         Returns:
-            hazelcast.future.Future[int]: The sequence of the tail.
+            Future[int]: The sequence of the tail.
         """
         request = ringbuffer_tail_sequence_codec.encode_request(self.name)
         return self._invoke(request, ringbuffer_tail_sequence_codec.decode_response)
 
-    def head_sequence(self):
+    def head_sequence(self) -> Future[int]:
         """Returns the sequence of the head.
 
         The head is the side of the Ringbuffer where the oldest items in the
@@ -131,26 +212,25 @@ class Ringbuffer(PartitionSpecificProxy):
         than tail).
 
         Returns:
-            hazelcast.future.Future[int]: The sequence of the head.
+            Future[int]: The sequence of the head.
         """
         request = ringbuffer_head_sequence_codec.encode_request(self.name)
         return self._invoke(request, ringbuffer_head_sequence_codec.decode_response)
 
-    def remaining_capacity(self):
+    def remaining_capacity(self) -> Future[int]:
         """Returns the remaining capacity of the Ringbuffer.
 
         Returns:
-            hazelcast.future.Future[int]: The remaining capacity of Ringbuffer.
+            Future[int]: The remaining capacity of Ringbuffer.
         """
         request = ringbuffer_remaining_capacity_codec.encode_request(self.name)
         return self._invoke(request, ringbuffer_remaining_capacity_codec.decode_response)
 
-    def add(self, item, overflow_policy=OVERFLOW_POLICY_OVERWRITE):
+    def add(self, item, overflow_policy: int = OVERFLOW_POLICY_OVERWRITE) -> Future[int]:
         """Adds the specified item to the tail of the Ringbuffer.
 
         If there is no space in the Ringbuffer, the action is determined by
-        ``overflow_policy`` as :const:`OVERFLOW_POLICY_OVERWRITE` or
-        :const:`OVERFLOW_POLICY_FAIL`.
+        ``overflow_policy``.
 
         Args:
             item: The specified item to be added.
@@ -158,14 +238,18 @@ class Ringbuffer(PartitionSpecificProxy):
                 no space.
 
         Returns:
-            hazelcast.future.Future[int]: The sequenceId of the added item, or
-            ``-1`` if the add failed.
+            Future[int]: The sequenceId of the added item, or ``-1`` if the add
+            failed.
         """
         item_data = self._to_data(item)
         request = ringbuffer_add_codec.encode_request(self.name, overflow_policy, item_data)
         return self._invoke(request, ringbuffer_add_codec.decode_response)
 
-    def add_all(self, items, overflow_policy=OVERFLOW_POLICY_OVERWRITE):
+    def add_all(
+        self,
+        items: typing.Sequence[ItemType],
+        overflow_policy: int = OVERFLOW_POLICY_OVERWRITE,
+    ) -> Future[int]:
         """Adds all of the item in the specified collection to the tail of the
         Ringbuffer.
 
@@ -174,18 +258,17 @@ class Ringbuffer(PartitionSpecificProxy):
         The items are added in the order of the Iterator of the collection.
 
         If there is no space in the Ringbuffer, the action is determined by
-        ``overflow_policy`` as :const:`OVERFLOW_POLICY_OVERWRITE` or
-        :const:`OVERFLOW_POLICY_FAIL`.
+        ``overflow_policy``.
 
         Args:
             items (list): The specified collection which contains the items
                 to be added.
-            overflow_policy (int): The OverflowPolicy to be used when there
-                is no space.
+            overflow_policy (int): The OverflowPolicy to be used when there is
+                no space.
 
         Returns:
-            hazelcast.future.Future[int]: The sequenceId of the last written item,
-            or ``-1`` of the last write is failed.
+            Future[int]: The sequenceId of the last written item, or ``-1`` of
+            the last write is failed.
         """
         check_not_empty(items, "items can't be empty")
         if len(items) > MAX_BATCH_SIZE:
@@ -201,7 +284,7 @@ class Ringbuffer(PartitionSpecificProxy):
         )
         return self._invoke(request, ringbuffer_add_all_codec.decode_response)
 
-    def read_one(self, sequence):
+    def read_one(self, sequence: int) -> Future[ItemType]:
         """Reads one item from the Ringbuffer.
 
         If the sequence is one beyond the current tail, this call blocks until
@@ -222,7 +305,9 @@ class Ringbuffer(PartitionSpecificProxy):
         request = ringbuffer_read_one_codec.encode_request(self.name, sequence)
         return self._invoke(request, handler)
 
-    def read_many(self, start_sequence, min_count, max_count, filter=None):
+    def read_many(
+        self, start_sequence: int, min_count: int, max_count: int, filter: typing.Any = None
+    ) -> Future[ReadResult]:
         """Reads a batch of items from the Ringbuffer.
 
         If the number of available items after the first read item is smaller
@@ -266,7 +351,7 @@ class Ringbuffer(PartitionSpecificProxy):
             filter: Filter to select returned elements.
 
         Returns:
-            hazelcast.future.Future[ReadResult]: The list of read items.
+            Future[ReadResult]: The list of read items.
         """
         check_not_negative(start_sequence, "sequence can't be smaller than 0")
         check_not_negative(min_count, "min count can't be smaller than 0")
@@ -303,81 +388,3 @@ class Ringbuffer(PartitionSpecificProxy):
             return self._invoke(request, handler)
 
         return self.capacity().continue_with(continuation)
-
-
-class ReadResult(ImmutableLazyDataList):
-    """Defines the result of a :func:`Ringbuffer.read_many` operation."""
-
-    SEQUENCE_UNAVAILABLE = -1
-    """Value returned from methods returning a sequence number when the
-    information is not available (e.g. because of rolling upgrade and some
-    members not returning the sequence).
-    """
-
-    def __init__(self, read_count, next_seq, items, item_seqs, to_object):
-        super(ReadResult, self).__init__(items, to_object)
-        self._read_count = read_count
-        self._next_seq = next_seq
-        self._item_seqs = item_seqs
-
-    @property
-    def read_count(self):
-        """int: The number of items that have been read before filtering.
-
-        If no filter is set, then the :attr:`read_count` will be equal to
-        :attr:`size`.
-
-        But if a filter is applied, it could be that items are read, but are
-        filtered out. So, if you are trying to make another read based on
-        this, then you should increment the sequence by :attr:`read_count` and
-        not by :attr:`size`.
-
-        Otherwise you will be re-reading the same filtered messages.
-        """
-        return self._read_count
-
-    @property
-    def size(self):
-        """int: The result set size.
-
-        See Also:
-            :attr:`read_count`
-        """
-        return len(self._list_data)
-
-    @property
-    def next_sequence_to_read_from(self):
-        """int: The sequence of the item following the last read item.
-
-        This sequence can then be used to read items following the ones
-        returned by this result set.
-
-        Usually this sequence is equal to the sequence used to retrieve this
-        result set incremented by the :attr:`read_count`. In cases when the
-        reader tolerates lost items, this is not the case.
-
-        For instance, if the reader requests an item with a stale sequence (one
-        which has already been overwritten), the read will jump to the oldest
-        sequence and read from there.
-
-        Similarly, if the reader requests an item in the future (e.g. because
-        the partition was lost and the reader was unaware of this), the read
-        method will jump back to the newest available sequence.
-
-        Because of these jumps and only in the case when the reader is loss
-        tolerant, the next sequence must be retrieved using this method.
-        A return value of :const:`SEQUENCE_UNAVAILABLE` means that the
-        information is not available.
-        """
-        return self._next_seq
-
-    def get_sequence(self, index):
-        """Return the sequence number for the item at the given index.
-
-        Args:
-            index (int): The index.
-
-        Returns:
-            int: The sequence number for the ringbuffer item.
-        """
-        return self._item_seqs[index]

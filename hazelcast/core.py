@@ -1,6 +1,9 @@
 """Hazelcast Core objects and constants."""
 import json
+import typing
+import uuid
 
+from hazelcast.types import KeyType, ValueType
 
 CLIENT_TYPE = "PYH"
 SERIALIZATION_VERSION = 1
@@ -14,34 +17,34 @@ class MemberInfo:
 
     __slots__ = ("address", "uuid", "attributes", "lite_member", "version", "address_map")
 
-    def __init__(self, address, uuid, attributes, lite_member, version, _, address_map):
-        self.address = address
+    def __init__(self, address, member_uuid, attributes, lite_member, version, _, address_map):
+        self.address: Address = address
         """
         Address: Address of the member.
         """
 
-        self.uuid = uuid
+        self.uuid: uuid.UUID = member_uuid
         """
         uuid.UUID: UUID of the member.
         """
 
-        self.attributes = attributes
+        self.attributes: typing.Dict[str, str] = attributes
         """
         dict[str, str]: Configured attributes of the member.
         """
 
-        self.lite_member = lite_member
+        self.lite_member: bool = lite_member
         """
         bool: ``True`` if the member is a lite member, ``False`` otherwise.
         Lite members do not own any partition.
         """
 
-        self.version = version
+        self.version: MemberVersion = version
         """
         MemberVersion: Hazelcast codebase version of the member.
         """
 
-        self.address_map = address_map
+        self.address_map: typing.Dict[EndpointQualifier, Address] = address_map
         """
         dict[EndpointQualifier, Address]: Dictionary of server socket
         addresses per :class:`EndpointQualifier` of this member.
@@ -82,12 +85,12 @@ class Address:
     """Represents an address of a member in the cluster."""
 
     def __init__(self, host, port):
-        self.host = host
+        self.host: str = host
         """
         str: Host of the address.
         """
 
-        self.port = port
+        self.port: int = port
         """
         int: Port of the address.
         """
@@ -155,12 +158,12 @@ class EndpointQualifier:
         self._identifier = identifier
 
     @property
-    def protocol_type(self):
-        """ProtocolType: Protocol type of the endpoint."""
+    def protocol_type(self) -> int:
+        """int: Protocol type of the endpoint."""
         return self._protocol_type
 
     @property
-    def identifier(self):
+    def identifier(self) -> str:
         """str: Unique identifier for same-protocol-type endpoints."""
         return self._identifier
 
@@ -259,22 +262,22 @@ class DistributedObjectEvent:
     """Distributed Object Event"""
 
     def __init__(self, name, service_name, event_type, source):
-        self.name = name
+        self.name: str = name
         """
         str: Name of the distributed object.
         """
 
-        self.service_name = service_name
+        self.service_name: str = service_name
         """
         str: Service name of the distributed object.
         """
 
-        self.event_type = event_type
+        self.event_type: str = event_type
         """
         str: Event type. Either ``CREATED`` or ``DESTROYED``.
         """
 
-        self.source = source
+        self.source: uuid.UUID = source
         """
         uuid.UUID: UUID of the member that fired the event.
         """
@@ -288,7 +291,7 @@ class DistributedObjectEvent:
         )
 
 
-class SimpleEntryView:
+class SimpleEntryView(typing.Generic[KeyType, ValueType]):
     """EntryView represents a readonly view of a map entry."""
 
     def __init__(
@@ -306,62 +309,62 @@ class SimpleEntryView:
         ttl,
         max_idle,
     ):
-        self.key = key
+        self.key: KeyType = key
         """
         The key of the entry.
         """
 
-        self.value = value
+        self.value: ValueType = value
         """
         The value of the entry.
         """
 
-        self.cost = cost
+        self.cost: int = cost
         """
         int: The cost in bytes of the entry.
         """
 
-        self.creation_time = creation_time
+        self.creation_time: int = creation_time
         """
         int: The creation time of the entry.
         """
 
-        self.expiration_time = expiration_time
+        self.expiration_time: int = expiration_time
         """
         int: The expiration time of the entry.
         """
 
-        self.hits = hits
+        self.hits: int = hits
         """
         int: Number of hits of the entry.
         """
 
-        self.last_access_time = last_access_time
+        self.last_access_time: int = last_access_time
         """
         int: The last access time for the entry.
         """
 
-        self.last_stored_time = last_stored_time
+        self.last_stored_time: int = last_stored_time
         """
         int: The last store time for the value.
         """
 
-        self.last_update_time = last_update_time
+        self.last_update_time: int = last_update_time
         """
         int: The last time the value was updated.
         """
 
-        self.version = version
+        self.version: int = version
         """
         int: The version of the entry.
         """
 
-        self.ttl = ttl
+        self.ttl: int = ttl
         """
         int: The last set time to live milliseconds.
         """
 
-        self.max_idle = max_idle
+        self.max_idle: int = max_idle
         """
         int: The last set max idle time in milliseconds.
         """
@@ -412,7 +415,7 @@ class HazelcastJsonValue:
     None values are not allowed.
     """
 
-    def __init__(self, value):
+    def __init__(self, value: typing.Union[str, typing.Any]):
         if value is None:
             raise AssertionError("JSON string or the object cannot be None.")
         if isinstance(value, str):
@@ -420,7 +423,7 @@ class HazelcastJsonValue:
         else:
             self._json_string = json.dumps(value)
 
-    def to_string(self):
+    def to_string(self) -> str:
         """Returns unaltered string that was used to create this object.
 
         Returns:
@@ -428,7 +431,7 @@ class HazelcastJsonValue:
         """
         return self._json_string
 
-    def loads(self):
+    def loads(self) -> typing.Any:
         """Deserializes the string that was used to create this object
         and returns as Python object.
 
@@ -458,15 +461,15 @@ class MemberVersion:
     __slots__ = ("major", "minor", "patch")
 
     def __init__(self, major, minor, patch):
-        self.major = major
-        self.minor = minor
-        self.patch = patch
+        self.major: int = major
+        self.minor: int = minor
+        self.patch: int = patch
 
     def __repr__(self):
         return "MemberVersion(major=%s, minor=%s, patch=%s)" % (self.major, self.minor, self.patch)
 
 
-class MapEntry:
+class MapEntry(typing.Generic[KeyType, ValueType]):
     """
     Represents the entry of a Map, with key and value fields.
     """
@@ -478,11 +481,11 @@ class MapEntry:
         self._value = value
 
     @property
-    def key(self):
+    def key(self) -> KeyType:
         """Key of the entry."""
         return self._key
 
     @property
-    def value(self):
+    def value(self) -> ValueType:
         """Value of the entry."""
         return self._value

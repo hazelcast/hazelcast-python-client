@@ -1,6 +1,11 @@
+import typing
+import uuid
+
+from hazelcast.core import MemberInfo
 from hazelcast.future import make_blocking
 from hazelcast.invocation import Invocation
 from hazelcast.partition import string_partition_strategy
+from hazelcast.types import KeyType, ValueType, ItemType, MessageType
 from hazelcast.util import get_attr_name
 
 MAX_SIZE = float("inf")
@@ -27,11 +32,12 @@ class Proxy:
         self._deregister_listener = listener_service.deregister_listener
         self._is_smart = context.config.smart_routing
 
-    def destroy(self):
+    def destroy(self) -> bool:
         """Destroys this proxy.
 
         Returns:
-            bool: ``True`` if this proxy is destroyed successfully, ``False`` otherwise.
+            bool: ``True`` if this proxy is destroyed successfully,
+            ``False`` otherwise.
         """
         self._on_destroy()
         return self._context.proxy_manager.destroy_proxy(self.service_name, self.name)
@@ -178,35 +184,36 @@ class EntryEventType:
     """
 
 
-class ItemEvent:
+class ItemEvent(typing.Generic[ItemType]):
     """Map Item event.
 
     Attributes:
         name (str): Name of the proxy that fired the event.
         event_type (ItemEventType): Type of the event.
-        member (hazelcast.core.MemberInfo): Member that fired the event.
+        member (MemberInfo): Member that fired the event.
     """
 
     def __init__(self, name, item_data, event_type, member, to_object):
-        self.name = name
+        self.name: str = name
         self._item_data = item_data
-        self.event_type = event_type
-        self.member = member
+        self.event_type: int = event_type
+        self.member: MemberInfo = member
         self._to_object = to_object
 
     @property
-    def item(self):
+    def item(self) -> ItemType:
         """The item related to the event."""
         return self._to_object(self._item_data)
 
 
-class EntryEvent:
+class EntryEvent(typing.Generic[KeyType, ValueType]):
     """Map Entry event.
 
     Attributes:
         event_type (EntryEventType): Type of the event.
         uuid (uuid.UUID): UUID of the member that fired the event.
-        number_of_affected_entries (int): Number of affected entries by this event.
+        number_of_affected_entries (int): Number of affected entries by this
+            event.
     """
 
     def __init__(
@@ -217,7 +224,7 @@ class EntryEvent:
         old_value,
         merging_value,
         event_type,
-        uuid,
+        member_uuid,
         number_of_affected_entries,
     ):
         self._to_object = to_object
@@ -225,27 +232,27 @@ class EntryEvent:
         self._value_data = value
         self._old_value_data = old_value
         self._merging_value_data = merging_value
-        self.event_type = event_type
-        self.uuid = uuid
-        self.number_of_affected_entries = number_of_affected_entries
+        self.event_type: int = event_type
+        self.uuid: uuid.UUID = member_uuid
+        self.number_of_affected_entries: int = number_of_affected_entries
 
     @property
-    def key(self):
+    def key(self) -> KeyType:
         """The key of this entry event."""
         return self._to_object(self._key_data)
 
     @property
-    def old_value(self):
+    def old_value(self) -> ValueType:
         """The old value of the entry event."""
         return self._to_object(self._old_value_data)
 
     @property
-    def value(self):
+    def value(self) -> ValueType:
         """The value of the entry event."""
         return self._to_object(self._value_data)
 
     @property
-    def merging_value(self):
+    def merging_value(self) -> ValueType:
         """The incoming merging value of the entry event."""
         return self._to_object(self._merging_value_data)
 
@@ -268,7 +275,7 @@ class EntryEvent:
 _SENTINEL = object()
 
 
-class TopicMessage:
+class TopicMessage(typing.Generic[MessageType]):
     """Topic message."""
 
     __slots__ = ("_name", "_message_data", "_message", "_publish_time", "_member", "_to_object")
@@ -282,22 +289,22 @@ class TopicMessage:
         self._to_object = to_object
 
     @property
-    def name(self):
+    def name(self) -> str:
         """str: Name of the proxy that fired the event."""
         return self._name
 
     @property
-    def publish_time(self):
+    def publish_time(self) -> int:
         """int: UNIX time that the event is published as seconds."""
         return self._publish_time
 
     @property
-    def member(self):
-        """hazelcast.core.MemberInfo: Member that fired the event."""
+    def member(self) -> MemberInfo:
+        """MemberInfo: Member that fired the event."""
         return self._member
 
     @property
-    def message(self):
+    def message(self) -> MessageType:
         """The message sent to Topic."""
         if self._message is not _SENTINEL:
             return self._message

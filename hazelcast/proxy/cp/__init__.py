@@ -1,5 +1,6 @@
-from hazelcast.future import make_blocking
+from hazelcast.future import make_blocking, Future
 from hazelcast.invocation import Invocation
+from hazelcast.protocol import RaftGroupId
 from hazelcast.protocol.codec import cp_group_destroy_cp_object_codec
 
 
@@ -19,7 +20,7 @@ class BaseCPProxy:
         self._to_data = serialization_service.to_data
         self._to_object = serialization_service.to_object
 
-    def destroy(self):
+    def destroy(self) -> Future[None]:
         """Destroys this proxy."""
         codec = cp_group_destroy_cp_object_codec
         request = codec.encode_request(self._group_id, self._service_name, self._object_name)
@@ -42,10 +43,11 @@ class SessionAwareCPProxy(BaseCPProxy):
         )
         self._session_manager = context.proxy_session_manager
 
-    def get_group_id(self):
+    def get_group_id(self) -> RaftGroupId:
         """
         Returns:
-           hazelcast.protocol.RaftGroupId: Id of the CP group that runs this proxy.
+           hazelcast.protocol.RaftGroupId: Id of the CP group that runs this
+           proxy.
         """
         return self._group_id
 

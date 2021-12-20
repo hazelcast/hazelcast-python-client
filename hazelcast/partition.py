@@ -1,4 +1,7 @@
 import logging
+import uuid
+
+import typing
 
 from hazelcast.errors import ClientOfflineError
 from hazelcast.hash import hash_to_index
@@ -30,7 +33,7 @@ class PartitionService:
         self._service = internal_partition_service
         self._serialization_service = serialization_service
 
-    def get_partition_owner(self, partition_id):
+    def get_partition_owner(self, partition_id: int) -> typing.Optional[uuid.UUID]:
         """
         Returns the owner of the partition if it's set, ``None`` otherwise.
 
@@ -42,7 +45,7 @@ class PartitionService:
         """
         return self._service.get_partition_owner(partition_id)
 
-    def get_partition_id(self, key):
+    def get_partition_id(self, key: typing.Any) -> int:
         """
         Returns the partition id for a key data.
 
@@ -55,7 +58,7 @@ class PartitionService:
         key_data = self._serialization_service.to_data(key)
         return self._service.get_partition_id(key_data)
 
-    def get_partition_count(self):
+    def get_partition_count(self) -> int:
         """
         Returns partition count of the connected cluster.
 

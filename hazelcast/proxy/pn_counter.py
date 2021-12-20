@@ -62,77 +62,86 @@ class PNCounter(Proxy):
         self._max_replica_count = 0
         self._current_target_replica_address = None
 
-    def get(self):
+    def get(self) -> Future[int]:
         """Returns the current value of the counter.
 
         Returns:
-            hazelcast.future.Future[int]: The current value of the counter.
+            Future[int]: The current value of the counter.
 
         Raises:
-            NoDataMemberInClusterError: if the cluster does not contain any data members.
+            NoDataMemberInClusterError: if the cluster does not contain any
+                data members.
             ConsistencyLostError: if the session guarantees have been lost.
         """
         return self._invoke_internal(pn_counter_get_codec)
 
-    def get_and_add(self, delta):
-        """Adds the given value to the current value and returns the previous value.
+    def get_and_add(self, delta: int) -> Future[int]:
+        """Adds the given value to the current value and returns the previous
+        value.
 
         Args:
           delta (int): The value to add.
 
         Returns:
-            hazelcast.future.Future[int]: The previous value.
+            Future[int]: The previous value.
 
         Raises:
-            NoDataMemberInClusterError: if the cluster does not contain any data members.
+            NoDataMemberInClusterError: if the cluster does not contain any
+                data members.
             ConsistencyLostError: if the session guarantees have been lost.
         """
 
         return self._invoke_internal(pn_counter_add_codec, delta=delta, get_before_update=True)
 
-    def add_and_get(self, delta):
-        """Adds the given value to the current value and returns the updated value.
+    def add_and_get(self, delta: int) -> Future[int]:
+        """Adds the given value to the current value and returns the updated
+        value.
 
         Args:
             delta (int): The value to add.
 
         Returns:
-            hazelcast.future.Future[int]: The updated value.
+            Future[int]: The updated value.
 
         Raises:
-            NoDataMemberInClusterError: if the cluster does not contain any data members.
+            NoDataMemberInClusterError: if the cluster does not contain any
+                data members.
             ConsistencyLostError: if the session guarantees have been lost.
         """
 
         return self._invoke_internal(pn_counter_add_codec, delta=delta, get_before_update=False)
 
-    def get_and_subtract(self, delta):
-        """Subtracts the given value from the current value and returns the previous value.
+    def get_and_subtract(self, delta: int) -> Future[int]:
+        """Subtracts the given value from the current value and returns the
+        previous value.
 
         Args:
             delta (int): The value to subtract.
 
         Returns:
-            hazelcast.future.Future[int]: The previous value.
+            Future[int]: The previous value.
 
         Raises:
-            NoDataMemberInClusterError: if the cluster does not contain any data members.
+            NoDataMemberInClusterError: if the cluster does not contain any
+                data members.
             ConsistencyLostError: if the session guarantees have been lost.
         """
 
         return self._invoke_internal(pn_counter_add_codec, delta=-1 * delta, get_before_update=True)
 
-    def subtract_and_get(self, delta):
-        """Subtracts the given value from the current value and returns the updated value.
+    def subtract_and_get(self, delta: int) -> Future[int]:
+        """Subtracts the given value from the current value and returns the
+        updated value.
 
         Args:
             delta (int): The value to subtract.
 
         Returns:
-            hazelcast.future.Future[int]: The updated value.
+            Future[int]: The updated value.
 
         Raises:
-            NoDataMemberInClusterError: if the cluster does not contain any data members.
+            NoDataMemberInClusterError: if the cluster does not contain any
+                data members.
             ConsistencyLostError: if the session guarantees have been lost.
         """
 
@@ -140,64 +149,68 @@ class PNCounter(Proxy):
             pn_counter_add_codec, delta=-1 * delta, get_before_update=False
         )
 
-    def get_and_decrement(self):
+    def get_and_decrement(self) -> Future[int]:
         """Decrements the counter value by one and returns the previous value.
 
         Returns:
-            hazelcast.future.Future[int]: The previous value.
+            Future[int]: The previous value.
 
         Raises:
-            NoDataMemberInClusterError: if the cluster does not contain any data members.
+            NoDataMemberInClusterError: if the cluster does not contain any
+                data members.
             ConsistencyLostError: if the session guarantees have been lost.
         """
 
         return self._invoke_internal(pn_counter_add_codec, delta=-1, get_before_update=True)
 
-    def decrement_and_get(self):
+    def decrement_and_get(self) -> Future[int]:
         """Decrements the counter value by one and returns the updated value.
 
         Returns:
-            hazelcast.future.Future[int]: The updated value.
+            Future[int]: The updated value.
 
         Raises:
-            NoDataMemberInClusterError: if the cluster does not contain any data members.
+            NoDataMemberInClusterError: if the cluster does not contain any
+                data members.
             ConsistencyLostError: if the session guarantees have been lost.
         """
 
         return self._invoke_internal(pn_counter_add_codec, delta=-1, get_before_update=False)
 
-    def get_and_increment(self):
+    def get_and_increment(self) -> Future[int]:
         """Increments the counter value by one and returns the previous value.
 
         Returns:
-            hazelcast.future.Future[int]: The previous value.
+            Future[int]: The previous value.
 
         Raises:
-            NoDataMemberInClusterError: if the cluster does not contain any data members.
+            NoDataMemberInClusterError: if the cluster does not contain any
+                data members.
             ConsistencyLostError: if the session guarantees have been lost.
         """
 
         return self._invoke_internal(pn_counter_add_codec, delta=1, get_before_update=True)
 
-    def increment_and_get(self):
+    def increment_and_get(self) -> Future[int]:
         """Increments the counter value by one and returns the updated value.
 
         Returns:
-            hazelcast.future.Future[int]: The updated value.
+            Future[int]: The updated value.
 
         Raises:
-            NoDataMemberInClusterError: if the cluster does not contain any data members.
-            UnsupportedOperationError: if the cluster version is less than 3.10.
+            NoDataMemberInClusterError: if the cluster does not contain any
+                data members.
             ConsistencyLostError: if the session guarantees have been lost.
         """
 
         return self._invoke_internal(pn_counter_add_codec, delta=1, get_before_update=False)
 
-    def reset(self):
+    def reset(self) -> None:
         """Resets the observed state by this PN counter.
 
-        This method may be used after a method invocation has thrown a ``ConsistencyLostError``
-        to reset the proxy and to be able to start a new session.
+        This method may be used after a method invocation has thrown a
+        ``ConsistencyLostError`` to reset the proxy and to be able to start a
+        new session.
         """
 
         self._observed_clock = VectorClock()

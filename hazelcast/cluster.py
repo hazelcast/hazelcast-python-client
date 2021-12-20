@@ -1,9 +1,10 @@
 import logging
 import threading
+import typing
 import uuid
 from collections import OrderedDict
 
-from hazelcast.core import EndpointQualifier, ProtocolType
+from hazelcast.core import EndpointQualifier, ProtocolType, MemberInfo, Address
 from hazelcast.errors import TargetDisconnectedError, IllegalStateError
 from hazelcast.util import check_not_none
 
@@ -31,10 +32,10 @@ class ClientInfo:
     __slots__ = ("uuid", "address", "name", "labels")
 
     def __init__(self, client_uuid, address, name, labels):
-        self.uuid = client_uuid
-        self.address = address
-        self.name = name
-        self.labels = labels
+        self.uuid: uuid.UUID = client_uuid
+        self.address: Address = address
+        self.name: str = name
+        self.labels: typing.Set[str] = labels
 
     def __repr__(self):
         return "ClientInfo(uuid=%s, address=%s, name=%s, labels=%s)" % (
@@ -62,49 +63,63 @@ class ClusterService:
     def __init__(self, internal_cluster_service):
         self._service = internal_cluster_service
 
-    def add_listener(self, member_added=None, member_removed=None, fire_for_existing=False):
+    def add_listener(
+        self,
+        member_added: typing.Callable[[MemberInfo], None] = None,
+        member_removed: typing.Callable[[MemberInfo], None] = None,
+        fire_for_existing=False,
+    ) -> str:
         """
         Adds a membership listener to listen for membership updates.
 
-        It will be notified when a member is added to cluster or removed from cluster.
-        There is no check for duplicate registrations, so if you register the listener
-        twice, it will get events twice.
+        It will be notified when a member is added to cluster or removed from
+        cluster. There is no check for duplicate registrations, so if you
+        register the listener twice, it will get events twice.
 
         Args:
-            member_added (function): Function to be called when a member is added to the cluster.
-            member_removed (function): Function to be called when a member is removed from the cluster.
-            fire_for_existing (bool): Whether or not fire member_added for existing members.
+            member_added (function): Function to be called when a member is
+                added to the cluster.
+            member_removed (function): Function to be called when a member is
+                removed from the cluster.
+            fire_for_existing (bool): Whether or not fire member_added for
+                existing members.
 
         Returns:
-            str: Registration id of the listener which will be used for removing this listener.
+            str: Registration id of the listener which will be used for
+            removing this listener.
         """
         return self._service.add_listener(member_added, member_removed, fire_for_existing)
 
-    def remove_listener(self, registration_id):
+    def remove_listener(self, registration_id: str) -> bool:
         """
         Removes the specified membership listener.
 
         Args:
-            registration_id (str): Registration id of the listener to be removed.
+            registration_id (str): Registration id of the listener to be
+                removed.
 
         Returns:
             bool: ``True`` if the registration is removed, ``False`` otherwise.
         """
         return self._service.remove_listener(registration_id)
 
-    def get_members(self, member_selector=None):
+    def get_members(
+        self, member_selector: typing.Callable[[MemberInfo], bool] = None
+    ) -> typing.List[MemberInfo]:
         """
         Lists the current members in the cluster.
 
         Every member in the cluster returns the members in the same order.
-        To obtain the oldest member in the cluster, you can retrieve the first item in the list.
+        To obtain the oldest member in the cluster, you can retrieve the first
+        item in the list.
 
         Args:
             member_selector (function): Function to filter members to return.
-                If not provided, the returned list will contain all the available cluster members.
+                If not provided, the returned list will contain all the
+                available cluster members.
 
         Returns:
-            list[hazelcast.core.MemberInfo]: Current members in the cluster
+            list[MemberInfo]: Current members in the cluster
         """
         return self._service.get_members(member_selector)
 

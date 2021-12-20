@@ -1,11 +1,12 @@
+import typing
+
 from hazelcast.core import Address
 
 
 class TokenProvider:
     """TokenProvider is a base class for token providers."""
 
-    def token(self, address=None):
-        # type: (TokenProvider, Address) -> bytes
+    def token(self, address: Address = None) -> bytes:
         """Returns a token to be used for token-based authentication.
 
         Args:
@@ -20,7 +21,7 @@ class TokenProvider:
 class BasicTokenProvider(TokenProvider):
     """BasicTokenProvider sends the given token to the authentication endpoint."""
 
-    def __init__(self, token=""):
+    def __init__(self, token: typing.Union[str, bytes] = ""):
         if isinstance(token, str):
             self._token = token.encode("utf-8")
         elif isinstance(token, bytes):
@@ -28,5 +29,5 @@ class BasicTokenProvider(TokenProvider):
         else:
             raise TypeError("token must be either a str or bytes object")
 
-    def token(self, address=None):
+    def token(self, address: Address = None) -> bytes:
         return self._token
