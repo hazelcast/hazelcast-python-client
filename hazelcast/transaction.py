@@ -4,7 +4,6 @@ import time
 import uuid
 
 from hazelcast.errors import TransactionError, IllegalStateError
-from hazelcast.future import make_blocking
 from hazelcast.invocation import Invocation
 from hazelcast.protocol.codec import (
     transaction_create_codec,
@@ -237,7 +236,7 @@ class Transaction:
         except KeyError:
             proxy = proxy_type(name, self, self._context)
             self._objects[key] = proxy
-            return make_blocking(proxy)
+            return proxy
 
     def _check_thread(self):
         if not thread_id() == self.thread_id:

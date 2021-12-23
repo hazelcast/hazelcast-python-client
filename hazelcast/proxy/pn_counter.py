@@ -15,7 +15,7 @@ from hazelcast.errors import NoDataMemberInClusterError
 _logger = logging.getLogger(__name__)
 
 
-class PNCounter(Proxy):
+class PNCounter(Proxy["BlockingPNCounter"]):
     """PN (Positive-Negative) CRDT counter.
 
     The counter supports adding and subtracting values as well as
@@ -215,6 +215,9 @@ class PNCounter(Proxy):
 
         self._observed_clock = VectorClock()
 
+    def blocking(self) -> "BlockingPNCounter":
+        return BlockingPNCounter(self)
+
     def _invoke_internal(self, codec, **kwargs):
         delegated_future = Future()
         self._set_result_or_error(
@@ -332,3 +335,75 @@ class PNCounter(Proxy):
             vector_clock.set_replica_timestamp(replica_id, timestamp)
 
         return vector_clock
+
+
+class BlockingPNCounter(PNCounter):
+    __slots__ = ("_wrapped", "name", "service_name")
+
+    def __init__(self, wrapped: PNCounter):
+        self.name = wrapped.name
+        self.service_name = wrapped.service_name
+        self._wrapped = wrapped
+
+    def get(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.get().result()
+
+    def get_and_add(  # type: ignore[override]
+        self,
+        delta: int,
+    ) -> int:
+        return self._wrapped.get_and_add(delta).result()
+
+    def add_and_get(  # type: ignore[override]
+        self,
+        delta: int,
+    ) -> int:
+        return self._wrapped.add_and_get(delta).result()
+
+    def get_and_subtract(  # type: ignore[override]
+        self,
+        delta: int,
+    ) -> int:
+        return self._wrapped.get_and_subtract(delta).result()
+
+    def subtract_and_get(  # type: ignore[override]
+        self,
+        delta: int,
+    ) -> int:
+        return self._wrapped.subtract_and_get(delta).result()
+
+    def get_and_decrement(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.get_and_decrement().result()
+
+    def decrement_and_get(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.decrement_and_get().result()
+
+    def get_and_increment(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.get_and_increment().result()
+
+    def increment_and_get(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.increment_and_get().result()
+
+    def reset(  # type: ignore[override]
+        self,
+    ) -> None:
+        self._wrapped.reset()
+
+    def destroy(self) -> bool:
+        return self._wrapped.destroy()
+
+    def blocking(self) -> "BlockingPNCounter":
+        return self
+
+    def __repr__(self) -> str:
+        return self._wrapped.__repr__()

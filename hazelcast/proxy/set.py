@@ -254,3 +254,102 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
         """
         request = set_size_codec.encode_request(self.name)
         return self._invoke(request, set_size_codec.decode_response)
+
+    def blocking(self) -> "BlockingSet[ItemType]":
+        return BlockingSet(self)
+
+
+class BlockingSet(Set[ItemType]):
+    __slots__ = ("_wrapped", "name", "service_name")
+
+    def __init__(self, wrapped: Set[ItemType]):
+        self.name = wrapped.name
+        self.service_name = wrapped.service_name
+        self._wrapped = wrapped
+
+    def add(  # type: ignore[override]
+        self,
+        item: ItemType,
+    ) -> bool:
+        return self._wrapped.add(item).result()
+
+    def add_all(  # type: ignore[override]
+        self,
+        items: typing.Sequence[ItemType],
+    ) -> bool:
+        return self._wrapped.add_all(items).result()
+
+    def add_listener(  # type: ignore[override]
+        self,
+        include_value: bool = False,
+        item_added_func: typing.Callable[[ItemEvent[ItemType]], None] = None,
+        item_removed_func: typing.Callable[[ItemEvent[ItemType]], None] = None,
+    ) -> str:
+        return self._wrapped.add_listener(
+            include_value, item_added_func, item_removed_func
+        ).result()
+
+    def clear(  # type: ignore[override]
+        self,
+    ) -> None:
+        return self._wrapped.clear().result()
+
+    def contains(  # type: ignore[override]
+        self,
+        item: ItemType,
+    ) -> bool:
+        return self._wrapped.contains(item).result()
+
+    def contains_all(  # type: ignore[override]
+        self,
+        items: typing.Sequence[ItemType],
+    ) -> bool:
+        return self._wrapped.contains_all(items).result()
+
+    def get_all(  # type: ignore[override]
+        self,
+    ) -> typing.List[ItemType]:
+        return self._wrapped.get_all().result()
+
+    def is_empty(  # type: ignore[override]
+        self,
+    ) -> bool:
+        return self._wrapped.is_empty().result()
+
+    def remove(  # type: ignore[override]
+        self,
+        item: ItemType,
+    ) -> bool:
+        return self._wrapped.remove(item).result()
+
+    def remove_all(  # type: ignore[override]
+        self,
+        items: typing.Sequence[ItemType],
+    ) -> bool:
+        return self._wrapped.remove_all(items).result()
+
+    def remove_listener(  # type: ignore[override]
+        self,
+        registration_id: str,
+    ) -> bool:
+        return self._wrapped.remove_listener(registration_id).result()
+
+    def retain_all(  # type: ignore[override]
+        self,
+        items: typing.Sequence[ItemType],
+    ) -> bool:
+        return self._wrapped.retain_all(items).result()
+
+    def size(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.size().result()
+
+    def blocking(self) -> "BlockingSet[ItemType]":
+        return self
+
+    def destroy(self) -> bool:
+        return self._wrapped.destroy()
+
+    def __repr__(self) -> str:
+        return self._wrapped.__repr__()

@@ -15,7 +15,7 @@ class CountDownLatchTest(CPTestCase):
     def test_latch_in_another_group(self):
         latch = self.get_latch()
         another_latch = self.client.cp_subsystem.get_count_down_latch(
-            latch._proxy_name + "@another"
+            latch._wrapped._proxy_name + "@another"
         ).blocking()
 
         another_latch.try_set_count(42)
@@ -31,7 +31,9 @@ class CountDownLatchTest(CPTestCase):
         with self.assertRaises(DistributedObjectDestroyedError):
             latch.get_count()
 
-        latch2 = self.client.cp_subsystem.get_count_down_latch(latch._proxy_name).blocking()
+        latch2 = self.client.cp_subsystem.get_count_down_latch(
+            latch._wrapped._proxy_name
+        ).blocking()
 
         with self.assertRaises(DistributedObjectDestroyedError):
             latch2.get_count()

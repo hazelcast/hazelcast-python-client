@@ -28,7 +28,7 @@ from hazelcast.types import ItemType
 from hazelcast.util import check_not_none, to_millis, ImmutableLazyDataList
 
 
-class Queue(PartitionSpecificProxy, typing.Generic[ItemType]):
+class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
     """Concurrent, blocking, distributed, observable queue.
 
     Queue is not a partitioned data-structure. All of the Queue content is
@@ -396,3 +396,143 @@ class Queue(PartitionSpecificProxy, typing.Generic[ItemType]):
 
         request = queue_take_codec.encode_request(self.name)
         return self._invoke(request, handler)
+
+    def blocking(self) -> "BlockingQueue[ItemType]":
+        return BlockingQueue(self)
+
+
+class BlockingQueue(Queue[ItemType]):
+    __slots__ = ("_wrapped", "name", "service_name")
+
+    def __init__(self, wrapped: Queue[ItemType]):
+        self.name = wrapped.name
+        self.service_name = wrapped.service_name
+        self._wrapped = wrapped
+
+    def add(  # type: ignore[override]
+        self,
+        item: ItemType,
+    ) -> bool:
+        return self._wrapped.add(item).result()
+
+    def add_all(  # type: ignore[override]
+        self,
+        items: typing.Sequence[ItemType],
+    ) -> bool:
+        return self._wrapped.add_all(items).result()
+
+    def add_listener(  # type: ignore[override]
+        self,
+        include_value: bool = False,
+        item_added_func: typing.Callable[[ItemEvent[ItemType]], None] = None,
+        item_removed_func: typing.Callable[[ItemEvent[ItemType]], None] = None,
+    ) -> str:
+        return self._wrapped.add_listener(
+            include_value, item_added_func, item_removed_func
+        ).result()
+
+    def clear(  # type: ignore[override]
+        self,
+    ) -> None:
+        return self._wrapped.clear().result()
+
+    def contains(  # type: ignore[override]
+        self,
+        item: ItemType,
+    ) -> bool:
+        return self._wrapped.contains(item).result()
+
+    def contains_all(  # type: ignore[override]
+        self,
+        items: typing.Sequence[ItemType],
+    ) -> bool:
+        return self._wrapped.contains_all(items).result()
+
+    def drain_to(  # type: ignore[override]
+        self,
+        target_list: typing.List[ItemType],
+        max_size: int = -1,
+    ) -> int:
+        return self._wrapped.drain_to(target_list, max_size).result()
+
+    def iterator(  # type: ignore[override]
+        self,
+    ) -> typing.List[ItemType]:
+        return self._wrapped.iterator().result()
+
+    def is_empty(  # type: ignore[override]
+        self,
+    ) -> bool:
+        return self._wrapped.is_empty().result()
+
+    def offer(  # type: ignore[override]
+        self,
+        item: ItemType,
+        timeout: float = 0,
+    ) -> bool:
+        return self._wrapped.offer(item, timeout).result()
+
+    def peek(  # type: ignore[override]
+        self,
+    ) -> typing.Optional[ItemType]:
+        return self._wrapped.peek().result()
+
+    def poll(  # type: ignore[override]
+        self,
+        timeout: float = 0,
+    ) -> typing.Optional[ItemType]:
+        return self._wrapped.poll(timeout).result()
+
+    def put(  # type: ignore[override]
+        self,
+        item: ItemType,
+    ) -> None:
+        return self._wrapped.put(item).result()
+
+    def remaining_capacity(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.remaining_capacity().result()
+
+    def remove(  # type: ignore[override]
+        self,
+        item: ItemType,
+    ) -> bool:
+        return self._wrapped.remove(item).result()
+
+    def remove_all(  # type: ignore[override]
+        self,
+        items: typing.Sequence[ItemType],
+    ) -> bool:
+        return self._wrapped.remove_all(items).result()
+
+    def remove_listener(  # type: ignore[override]
+        self,
+        registration_id: str,
+    ) -> bool:
+        return self._wrapped.remove_listener(registration_id).result()
+
+    def retain_all(  # type: ignore[override]
+        self,
+        items: typing.Sequence[ItemType],
+    ) -> bool:
+        return self._wrapped.retain_all(items).result()
+
+    def size(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.size().result()
+
+    def take(  # type: ignore[override]
+        self,
+    ) -> ItemType:
+        return self._wrapped.take().result()
+
+    def destroy(self) -> bool:
+        return self._wrapped.destroy()
+
+    def blocking(self) -> "BlockingQueue[ItemType]":
+        return self
+
+    def __repr__(self) -> str:
+        return self._wrapped.__repr__()

@@ -1,4 +1,6 @@
+import abc
 import time
+import typing
 import uuid
 
 from hazelcast.errors import SessionExpiredError, WaitKeyCancelledError, IllegalStateError
@@ -25,7 +27,7 @@ the drain response is returned.
 _NO_SESSION_ID = -1
 
 
-class Semaphore(BaseCPProxy):
+class Semaphore(BaseCPProxy["BlockingSemaphore"]):
     """A linearizable, distributed semaphore.
 
     Semaphores are often used to restrict the number of callers that can access
@@ -283,6 +285,10 @@ class Semaphore(BaseCPProxy):
         """
         raise NotImplementedError("try_acquire")
 
+    @abc.abstractmethod
+    def blocking(self) -> "BlockingSemaphore":
+        pass
+
     def _do_change_permits(self, permits):
         raise NotImplementedError("_do_change_permits")
 
@@ -323,10 +329,13 @@ class SessionAwareSemaphore(Semaphore, SessionAwareCPProxy):
 
     def try_acquire(self, permits=1, timeout=0):
         check_true(permits > 0, "Permits must be positive")
-        timeout = max(0, timeout)
+        timeout = max(0.0, timeout)
         current_thread_id = thread_id()
         invocation_uuid = uuid.uuid4()
         return self._do_try_acquire(current_thread_id, invocation_uuid, permits, timeout)
+
+    def blocking(self) -> "BlockingSemaphore":
+        return BlockingSemaphore(self)
 
     def _do_acquire(self, current_thread_id, invocation_uuid, permits):
         def do_acquire_once(session_id):
@@ -512,8 +521,11 @@ class SessionlessSemaphore(Semaphore):
 
     def try_acquire(self, permits=1, timeout=0):
         check_true(permits > 0, "Permits must be positive")
-        timeout = max(0, timeout)
+        timeout = max(0.0, timeout)
         return self._get_thread_id().continue_with(self._do_try_acquire, permits, timeout)
+
+    def blocking(self) -> "BlockingSemaphore":
+        return BlockingSemaphore(self)
 
     def _do_try_acquire(self, global_thread_id, permits, timeout):
         global_thread_id = global_thread_id.result()
@@ -590,3 +602,71 @@ class SessionlessSemaphore(Semaphore):
 
     def _get_thread_id(self):
         return self._session_manager.get_or_create_unique_thread_id(self._group_id)
+
+
+class BlockingSemaphore(Semaphore):
+    __slots__ = ("_wrapped",)
+
+    def __init__(self, wrapped: typing.Union[SessionAwareSemaphore, SessionlessSemaphore]):
+        self._wrapped = wrapped
+
+    def init(  # type: ignore[override]
+        self,
+        permits: int,
+    ) -> bool:
+        return self._wrapped.init(permits).result()
+
+    def acquire(  # type: ignore[override]
+        self,
+        permits: int = 1,
+    ) -> None:
+        return self._wrapped.acquire(permits).result()
+
+    def available_permits(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.available_permits().result()
+
+    def drain_permits(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.drain_permits().result()
+
+    def reduce_permits(  # type: ignore[override]
+        self,
+        reduction: int,
+    ) -> None:
+        return self._wrapped.reduce_permits(reduction).result()
+
+    def increase_permits(  # type: ignore[override]
+        self,
+        increase: int,
+    ) -> None:
+        return self._wrapped.increase_permits(increase).result()
+
+    def release(  # type: ignore[override]
+        self,
+        permits: int = 1,
+    ) -> None:
+        return self._wrapped.release(permits).result()
+
+    def try_acquire(  # type: ignore[override]
+        self,
+        permits: int = 1,
+        timeout: float = 0,
+    ) -> bool:
+        return self._wrapped.try_acquire(permits, timeout).result()
+
+    def destroy(  # type: ignore[override]
+        self,
+    ) -> None:
+        return self._wrapped.destroy().result()
+
+    def blocking(self) -> "BlockingSemaphore":
+        return self
+
+    def __repr__(self) -> str:
+        return self._wrapped.__repr__()
+
+    def _do_change_permits(self, permits):
+        pass

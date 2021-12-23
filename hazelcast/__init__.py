@@ -4,15 +4,6 @@ __version__ = "5.1"
 # to avoid "No handlers could be found" warnings.
 import logging
 
-try:
-    from logging import NullHandler
-except ImportError:
-
-    class NullHandler(logging.Handler):
-        def emit(self, record):
-            pass
-
-
-logging.getLogger(__name__).addHandler(NullHandler())
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 from hazelcast.client import HazelcastClient

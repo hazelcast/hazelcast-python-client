@@ -538,7 +538,7 @@ def _no_op_continuation(future):
     future.result()
 
 
-class ReliableTopic(Proxy, typing.Generic[MessageType]):
+class ReliableTopic(Proxy["BlockingReliableTopic"], typing.Generic[MessageType]):
     """Hazelcast provides distribution mechanism for publishing messages that
     are delivered to multiple subscribers, which is also known as a
     publish/subscribe (pub/sub) messaging model. Publish and subscriptions are
@@ -701,6 +701,9 @@ class ReliableTopic(Proxy, typing.Generic[MessageType]):
         super(ReliableTopic, self).destroy()
         return self._ringbuffer.destroy()
 
+    def blocking(self) -> "BlockingReliableTopic[MessageType]":
+        return BlockingReliableTopic(self)
+
     def _add_or_fail(self, message):
         def continuation(future):
             sequence_id = future.result()
@@ -796,3 +799,48 @@ class ReliableTopic(Proxy, typing.Generic[MessageType]):
             raise TypeError("Listener must be a callable")
 
         return _ReliableMessageListenerAdapter(listener)
+
+
+class BlockingReliableTopic(ReliableTopic[MessageType]):
+    __slots__ = ("_wrapped", "name", "service_name")
+
+    def __init__(self, wrapped: ReliableTopic[MessageType]):
+        self.name = wrapped.name
+        self.service_name = wrapped.service_name
+        self._wrapped = wrapped
+
+    def publish(  # type: ignore[override]
+        self,
+        message: MessageType,
+    ) -> None:
+        return self._wrapped.publish(message).result()
+
+    def publish_all(  # type: ignore[override]
+        self,
+        messages: typing.Sequence[MessageType],
+    ) -> None:
+        return self._wrapped.publish_all(messages).result()
+
+    def add_listener(  # type: ignore[override]
+        self,
+        listener: typing.Union[
+            ReliableMessageListener,
+            typing.Callable[[TopicMessage[MessageType]], None],
+        ],
+    ) -> str:
+        return self._wrapped.add_listener(listener).result()
+
+    def remove_listener(  # type: ignore[override]
+        self,
+        registration_id: str,
+    ) -> bool:
+        return self._wrapped.remove_listener(registration_id).result()
+
+    def destroy(self) -> bool:
+        return self._wrapped.destroy()
+
+    def blocking(self) -> "BlockingReliableTopic[MessageType]":
+        return self
+
+    def __repr__(self) -> str:
+        return self._wrapped.__repr__()

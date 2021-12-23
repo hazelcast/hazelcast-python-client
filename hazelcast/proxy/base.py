@@ -1,11 +1,11 @@
+import abc
 import typing
 import uuid
 
 from hazelcast.core import MemberInfo
-from hazelcast.future import make_blocking
 from hazelcast.invocation import Invocation
 from hazelcast.partition import string_partition_strategy
-from hazelcast.types import KeyType, ValueType, ItemType, MessageType
+from hazelcast.types import KeyType, ValueType, ItemType, MessageType, BlockingProxyType
 from hazelcast.util import get_attr_name
 
 MAX_SIZE = float("inf")
@@ -15,10 +15,10 @@ def _no_op_response_handler(_):
     return None
 
 
-class Proxy:
+class Proxy(typing.Generic[BlockingProxyType], abc.ABC):
     """Provides basic functionality for Hazelcast Proxies."""
 
-    def __init__(self, service_name, name, context):
+    def __init__(self, service_name: str, name: str, context):
         self.service_name = service_name
         self.name = name
         self._context = context
@@ -45,7 +45,7 @@ class Proxy:
     def _on_destroy(self):
         pass
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '%s(name="%s")' % (type(self).__name__, self.name)
 
     def _invoke(self, request, response_handler=_no_op_response_handler):
@@ -73,12 +73,13 @@ class Proxy:
         self._invocation_service.invoke(invocation)
         return invocation.future
 
-    def blocking(self):
+    @abc.abstractmethod
+    def blocking(self) -> BlockingProxyType:
         """Returns a version of this proxy with only blocking method calls."""
-        return make_blocking(self)
+        pass
 
 
-class PartitionSpecificProxy(Proxy):
+class PartitionSpecificProxy(Proxy[BlockingProxyType], abc.ABC):
     """Provides basic functionality for Partition Specific Proxies."""
 
     def __init__(self, service_name, name, context):
@@ -110,7 +111,7 @@ class TransactionalProxy:
             request, connection=self.transaction.connection, response_handler=response_handler
         )
         self._invocation_service.invoke(invocation)
-        return invocation.future
+        return invocation.future.result()
 
     def __repr__(self):
         return '%s(name="%s")' % (type(self).__name__, self.name)

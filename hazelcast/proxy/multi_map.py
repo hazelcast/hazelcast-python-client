@@ -32,7 +32,7 @@ from hazelcast.util import check_not_none, thread_id, to_millis, ImmutableLazyDa
 EntryEventCallable = typing.Callable[[EntryEvent[KeyType, ValueType]], None]
 
 
-class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
+class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
     """A specialized map whose keys can be associated with multiple values."""
 
     def __init__(self, service_name, name, context):
@@ -525,3 +525,151 @@ class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
             self.name, key_data, thread_id(), self._reference_id_generator.get_and_increment()
         )
         return self._invoke_on_key(request, key_data)
+
+    def blocking(self) -> "BlockingMultiMap[KeyType, ValueType]":
+        return BlockingMultiMap(self)
+
+
+class BlockingMultiMap(MultiMap[KeyType, ValueType]):
+    __slots__ = ("_wrapped", "name", "service_name")
+
+    def __init__(self, wrapped: MultiMap[KeyType, ValueType]):
+        self.name = wrapped.name
+        self.service_name = wrapped.service_name
+        self._wrapped = wrapped
+
+    def add_entry_listener(  # type: ignore[override]
+        self,
+        include_value: bool = False,
+        key: KeyType = None,
+        added_func: EntryEventCallable = None,
+        removed_func: EntryEventCallable = None,
+        clear_all_func: EntryEventCallable = None,
+    ) -> str:
+        return self._wrapped.add_entry_listener(
+            include_value, key, added_func, removed_func, clear_all_func
+        ).result()
+
+    def contains_key(  # type: ignore[override]
+        self,
+        key: KeyType,
+    ) -> bool:
+        return self._wrapped.contains_key(key).result()
+
+    def contains_value(  # type: ignore[override]
+        self,
+        value: ValueType,
+    ) -> bool:
+        return self._wrapped.contains_value(value).result()
+
+    def contains_entry(  # type: ignore[override]
+        self,
+        key: KeyType,
+        value: ValueType,
+    ) -> bool:
+        return self._wrapped.contains_entry(key, value).result()
+
+    def clear(  # type: ignore[override]
+        self,
+    ) -> None:
+        return self._wrapped.clear().result()
+
+    def entry_set(  # type: ignore[override]
+        self,
+    ) -> typing.List[typing.Tuple[KeyType, ValueType]]:
+        return self._wrapped.entry_set().result()
+
+    def get(  # type: ignore[override]
+        self,
+        key: KeyType,
+    ) -> typing.Optional[typing.List[ValueType]]:
+        return self._wrapped.get(key).result()
+
+    def is_locked(  # type: ignore[override]
+        self,
+        key: KeyType,
+    ) -> bool:
+        return self._wrapped.is_locked(key).result()
+
+    def force_unlock(  # type: ignore[override]
+        self,
+        key: KeyType,
+    ) -> None:
+        return self._wrapped.force_unlock(key).result()
+
+    def key_set(  # type: ignore[override]
+        self,
+    ) -> typing.List[KeyType]:
+        return self._wrapped.key_set().result()
+
+    def lock(  # type: ignore[override]
+        self,
+        key: KeyType,
+        lease_time: float = None,
+    ) -> None:
+        return self._wrapped.lock(key, lease_time).result()
+
+    def remove(  # type: ignore[override]
+        self,
+        key: KeyType,
+        value: ValueType,
+    ) -> bool:
+        return self._wrapped.remove(key, value).result()
+
+    def remove_all(  # type: ignore[override]
+        self,
+        key: KeyType,
+    ) -> typing.List[ValueType]:
+        return self._wrapped.remove_all(key).result()
+
+    def put(  # type: ignore[override]
+        self,
+        key: KeyType,
+        value: ValueType,
+    ) -> bool:
+        return self._wrapped.put(key, value).result()
+
+    def remove_entry_listener(  # type: ignore[override]
+        self,
+        registration_id: str,
+    ) -> bool:
+        return self._wrapped.remove_entry_listener(registration_id).result()
+
+    def size(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.size().result()
+
+    def value_count(  # type: ignore[override]
+        self,
+        key: KeyType,
+    ) -> int:
+        return self._wrapped.value_count(key).result()
+
+    def values(  # type: ignore[override]
+        self,
+    ) -> typing.List[ValueType]:
+        return self._wrapped.values().result()
+
+    def try_lock(  # type: ignore[override]
+        self,
+        key: KeyType,
+        lease_time: float = None,
+        timeout: float = 0,
+    ) -> bool:
+        return self._wrapped.try_lock(key, lease_time, timeout).result()
+
+    def unlock(  # type: ignore[override]
+        self,
+        key: KeyType,
+    ) -> None:
+        return self._wrapped.unlock(key).result()
+
+    def destroy(self) -> bool:
+        return self._wrapped.destroy()
+
+    def blocking(self) -> "BlockingMultiMap[KeyType, ValueType]":
+        return self
+
+    def __repr__(self) -> str:
+        return self._wrapped.__repr__()

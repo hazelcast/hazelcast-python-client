@@ -1,14 +1,18 @@
-from hazelcast.future import make_blocking, Future
+import abc
+import typing
+
+from hazelcast.future import Future
 from hazelcast.invocation import Invocation
 from hazelcast.protocol import RaftGroupId
 from hazelcast.protocol.codec import cp_group_destroy_cp_object_codec
+from hazelcast.types import BlockingProxyType
 
 
 def _no_op_response_handler(_):
     return None
 
 
-class BaseCPProxy:
+class BaseCPProxy(typing.Generic[BlockingProxyType], abc.ABC):
     def __init__(self, context, group_id, service_name, proxy_name, object_name):
         self._context = context
         self._group_id = group_id
@@ -26,9 +30,10 @@ class BaseCPProxy:
         request = codec.encode_request(self._group_id, self._service_name, self._object_name)
         return self._invoke(request)
 
-    def blocking(self):
+    @abc.abstractmethod
+    def blocking(self) -> BlockingProxyType:
         """Returns a version of this proxy with only blocking method calls."""
-        return make_blocking(self)
+        pass
 
     def _invoke(self, request, response_handler=_no_op_response_handler):
         invocation = Invocation(request, response_handler=response_handler)
@@ -36,7 +41,7 @@ class BaseCPProxy:
         return invocation.future
 
 
-class SessionAwareCPProxy(BaseCPProxy):
+class SessionAwareCPProxy(BaseCPProxy[BlockingProxyType], abc.ABC):
     def __init__(self, context, group_id, service_name, proxy_name, object_name):
         super(SessionAwareCPProxy, self).__init__(
             context, group_id, service_name, proxy_name, object_name

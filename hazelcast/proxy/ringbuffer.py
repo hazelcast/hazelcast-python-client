@@ -129,7 +129,7 @@ class ReadResult(ImmutableLazyDataList):
         return self._item_seqs[index]
 
 
-class Ringbuffer(PartitionSpecificProxy, typing.Generic[ItemType]):
+class Ringbuffer(PartitionSpecificProxy["BlockingRingbuffer"], typing.Generic[ItemType]):
     """A Ringbuffer is an append-only data-structure where the content is
     stored in a ring like structure.
 
@@ -388,3 +388,78 @@ class Ringbuffer(PartitionSpecificProxy, typing.Generic[ItemType]):
             return self._invoke(request, handler)
 
         return self.capacity().continue_with(continuation)
+
+    def blocking(self) -> "BlockingRingbuffer[ItemType]":
+        return BlockingRingbuffer(self)
+
+
+class BlockingRingbuffer(Ringbuffer[ItemType]):
+    __slots__ = ("_wrapped", "name", "service_name")
+
+    def __init__(self, wrapped: Ringbuffer[ItemType]):
+        self.name = wrapped.name
+        self.service_name = wrapped.service_name
+        self._wrapped = wrapped
+
+    def capacity(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.capacity().result()
+
+    def size(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.size().result()
+
+    def tail_sequence(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.tail_sequence().result()
+
+    def head_sequence(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.head_sequence().result()
+
+    def remaining_capacity(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.remaining_capacity().result()
+
+    def add(  # type: ignore[override]
+        self,
+        item,
+        overflow_policy: int = OVERFLOW_POLICY_OVERWRITE,
+    ) -> int:
+        return self._wrapped.add(item, overflow_policy).result()
+
+    def add_all(  # type: ignore[override]
+        self,
+        items: typing.Sequence[ItemType],
+        overflow_policy: int = OVERFLOW_POLICY_OVERWRITE,
+    ) -> int:
+        return self._wrapped.add_all(items, overflow_policy).result()
+
+    def read_one(  # type: ignore[override]
+        self,
+        sequence: int,
+    ) -> ItemType:
+        return self._wrapped.read_one(sequence).result()
+
+    def read_many(  # type: ignore[override]
+        self,
+        start_sequence: int,
+        min_count: int,
+        max_count: int,
+        filter: typing.Any = None,
+    ) -> ReadResult:
+        return self._wrapped.read_many(start_sequence, min_count, max_count, filter).result()
+
+    def destroy(self) -> bool:
+        return self._wrapped.destroy()
+
+    def blocking(self) -> "BlockingRingbuffer[ItemType]":
+        return self
+
+    def __repr__(self) -> str:
+        return self._wrapped.__repr__()

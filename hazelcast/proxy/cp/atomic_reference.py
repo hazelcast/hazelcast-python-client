@@ -13,7 +13,7 @@ from hazelcast.types import ElementType
 from hazelcast.util import check_not_none
 
 
-class AtomicReference(BaseCPProxy, typing.Generic[ElementType]):
+class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[ElementType]):
     """A distributed, highly available object reference with atomic operations.
 
     AtomicReference offers linearizability during crash failures and network
@@ -250,3 +250,88 @@ class AtomicReference(BaseCPProxy, typing.Generic[ElementType]):
             return self._to_object(codec.decode_response(response))
 
         return self._invoke(request, handler)
+
+    def blocking(self) -> "BlockingAtomicReference[ElementType]":
+        return BlockingAtomicReference(self)
+
+
+class BlockingAtomicReference(AtomicReference[ElementType]):
+    __slots__ = ("_wrapped",)
+
+    def __init__(self, wrapped: AtomicReference[ElementType]):
+        self._wrapped = wrapped
+
+    def compare_and_set(  # type: ignore[override]
+        self,
+        expect: ElementType,
+        update: ElementType,
+    ) -> bool:
+        return self._wrapped.compare_and_set(expect, update).result()
+
+    def get(  # type: ignore[override]
+        self,
+    ) -> ElementType:
+        return self._wrapped.get().result()
+
+    def set(  # type: ignore[override]
+        self,
+        new_value: ElementType,
+    ) -> None:
+        return self._wrapped.set(new_value).result()
+
+    def get_and_set(  # type: ignore[override]
+        self,
+        new_value: ElementType,
+    ) -> ElementType:
+        return self._wrapped.get_and_set(new_value).result()
+
+    def is_none(  # type: ignore[override]
+        self,
+    ) -> bool:
+        return self._wrapped.is_none().result()
+
+    def clear(  # type: ignore[override]
+        self,
+    ) -> None:
+        return self._wrapped.clear().result()
+
+    def contains(  # type: ignore[override]
+        self,
+        value: typing.Optional[ElementType],
+    ) -> bool:
+        return self._wrapped.contains(value).result()
+
+    def alter(  # type: ignore[override]
+        self,
+        function: typing.Any,
+    ) -> None:
+        return self._wrapped.alter(function).result()
+
+    def alter_and_get(  # type: ignore[override]
+        self,
+        function: typing.Any,
+    ) -> ElementType:
+        return self._wrapped.alter_and_get(function).result()
+
+    def get_and_alter(  # type: ignore[override]
+        self,
+        function: typing.Any,
+    ) -> ElementType:
+        return self._wrapped.get_and_alter(function).result()
+
+    def apply(  # type: ignore[override]
+        self,
+        function: typing.Any,
+    ) -> ElementType:
+        return self._wrapped.apply(function).result()
+
+    def destroy(  # type: ignore[override]
+        self,
+    ) -> None:
+        return self._wrapped.destroy().result()
+
+    def blocking(self) -> "BlockingAtomicReference[ElementType]":
+        return self
+
+    def __repr__(self) -> str:
+        return self._wrapped.__repr__()

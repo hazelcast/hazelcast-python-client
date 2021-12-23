@@ -51,10 +51,10 @@ class PNCounterBasicTest(SingleMemberTestCase):
 
     def test_reset(self):
         self.pn_counter.get_and_add(1)
-        old_vector_clock = self.pn_counter._observed_clock
+        old_vector_clock = self.pn_counter._wrapped._observed_clock
         self.pn_counter.reset()
 
-        self.assertNotEqual(old_vector_clock, self.pn_counter._observed_clock)
+        self.assertNotEqual(old_vector_clock, self.pn_counter._wrapped._observed_clock)
 
     def check_pn_counter_method(self, return_value, expected_return_value, expected_get_value):
         get_value = self.pn_counter.get()
@@ -80,7 +80,7 @@ class PNCounterConsistencyTest(HazelcastTestCase):
     def test_consistency_lost_error_raised_when_target_terminates(self):
         self.pn_counter.add_and_get(3)
 
-        replica_address = self.pn_counter._current_target_replica_address
+        replica_address = self.pn_counter._wrapped._current_target_replica_address
 
         self.rc.terminateMember(self.cluster.id, str(replica_address.uuid))
         with self.assertRaises(ConsistencyLostError):
@@ -89,7 +89,7 @@ class PNCounterConsistencyTest(HazelcastTestCase):
     def test_counter_can_continue_session_by_calling_reset(self):
         self.pn_counter.add_and_get(3)
 
-        replica_address = self.pn_counter._current_target_replica_address
+        replica_address = self.pn_counter._wrapped._current_target_replica_address
 
         self.rc.terminateMember(self.cluster.id, str(replica_address.uuid))
         self.pn_counter.reset()

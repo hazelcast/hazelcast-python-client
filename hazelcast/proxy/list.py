@@ -31,7 +31,7 @@ from hazelcast.types import ItemType
 from hazelcast.util import check_not_none, ImmutableLazyDataList
 
 
-class List(PartitionSpecificProxy, typing.Generic[ItemType]):
+class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
     """Concurrent, distributed implementation of List.
 
     The Hazelcast List is not a partitioned data-structure. So all the content
@@ -471,3 +471,165 @@ class List(PartitionSpecificProxy, typing.Generic[ItemType]):
 
         request = list_sub_codec.encode_request(self.name, from_index, to_index)
         return self._invoke(request, handler)
+
+    def blocking(self) -> "BlockingList[ItemType]":
+        return BlockingList(self)
+
+
+class BlockingList(List[ItemType]):
+    __slots__ = ("_wrapped", "name", "service_name")
+
+    def __init__(self, wrapped: List[ItemType]):
+        self.name = wrapped.name
+        self.service_name = wrapped.service_name
+        self._wrapped = wrapped
+
+    def add(  # type: ignore[override]
+        self,
+        item: ItemType,
+    ) -> bool:
+        return self._wrapped.add(item).result()
+
+    def add_at(  # type: ignore[override]
+        self,
+        index: int,
+        item: ItemType,
+    ) -> None:
+        return self._wrapped.add_at(index, item).result()
+
+    def add_all(  # type: ignore[override]
+        self,
+        items: typing.Sequence[ItemType],
+    ) -> bool:
+        return self._wrapped.add_all(items).result()
+
+    def add_all_at(  # type: ignore[override]
+        self,
+        index: int,
+        items: typing.Sequence[ItemType],
+    ) -> bool:
+        return self._wrapped.add_all_at(index, items).result()
+
+    def add_listener(  # type: ignore[override]
+        self,
+        include_value: bool = False,
+        item_added_func: typing.Callable[[ItemEvent[ItemType]], None] = None,
+        item_removed_func: typing.Callable[[ItemEvent[ItemType]], None] = None,
+    ) -> str:
+        return self._wrapped.add_listener(
+            include_value, item_added_func, item_removed_func
+        ).result()
+
+    def clear(  # type: ignore[override]
+        self,
+    ) -> None:
+        return self._wrapped.clear().result()
+
+    def contains(  # type: ignore[override]
+        self,
+        item: ItemType,
+    ) -> bool:
+        return self._wrapped.contains(item).result()
+
+    def contains_all(  # type: ignore[override]
+        self,
+        items: typing.Sequence[ItemType],
+    ) -> bool:
+        return self._wrapped.contains_all(items).result()
+
+    def get(  # type: ignore[override]
+        self,
+        index: int,
+    ) -> ItemType:
+        return self._wrapped.get(index).result()
+
+    def get_all(  # type: ignore[override]
+        self,
+    ) -> typing.List[ItemType]:
+        return self._wrapped.get_all().result()
+
+    def iterator(  # type: ignore[override]
+        self,
+    ) -> typing.List[ItemType]:
+        return self._wrapped.iterator().result()
+
+    def index_of(  # type: ignore[override]
+        self,
+        item: ItemType,
+    ) -> int:
+        return self._wrapped.index_of(item).result()
+
+    def is_empty(  # type: ignore[override]
+        self,
+    ) -> Future[bool]:
+        return self._wrapped.is_empty()
+
+    def last_index_of(  # type: ignore[override]
+        self,
+        item: ItemType,
+    ) -> int:
+        return self._wrapped.last_index_of(item).result()
+
+    def list_iterator(  # type: ignore[override]
+        self,
+        index: int = 0,
+    ) -> typing.List[ItemType]:
+        return self._wrapped.list_iterator(index).result()
+
+    def remove(  # type: ignore[override]
+        self,
+        item: ItemType,
+    ) -> bool:
+        return self._wrapped.remove(item).result()
+
+    def remove_at(  # type: ignore[override]
+        self,
+        index: int,
+    ) -> ItemType:
+        return self._wrapped.remove_at(index).result()
+
+    def remove_all(  # type: ignore[override]
+        self,
+        items: typing.Sequence[ItemType],
+    ) -> bool:
+        return self._wrapped.remove_all(items).result()
+
+    def remove_listener(  # type: ignore[override]
+        self,
+        registration_id: str,
+    ) -> bool:
+        return self._wrapped.remove_listener(registration_id).result()
+
+    def retain_all(  # type: ignore[override]
+        self,
+        items: typing.Sequence[ItemType],
+    ) -> bool:
+        return self._wrapped.retain_all(items).result()
+
+    def size(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.size().result()
+
+    def set_at(  # type: ignore[override]
+        self,
+        index: int,
+        item: ItemType,
+    ) -> ItemType:
+        return self._wrapped.set_at(index, item).result()
+
+    def sub_list(  # type: ignore[override]
+        self,
+        from_index: int,
+        to_index: int,
+    ) -> typing.List[ItemType]:
+        return self._wrapped.sub_list(from_index, to_index).result()
+
+    def blocking(self) -> "BlockingList[ItemType]":
+        return self
+
+    def destroy(self) -> bool:
+        return self._wrapped.destroy()
+
+    def __repr__(self) -> str:
+        return self._wrapped.__repr__()

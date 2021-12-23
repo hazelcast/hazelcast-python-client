@@ -20,7 +20,7 @@ class FencedLockTest(CPTestCase):
 
     def test_lock_in_another_group(self):
         another_lock = self.client.cp_subsystem.get_lock(
-            self.lock._proxy_name + "@another"
+            self.lock._wrapped._proxy_name + "@another"
         ).blocking()
         self.assert_valid_fence(another_lock.lock())
         try:
@@ -31,7 +31,9 @@ class FencedLockTest(CPTestCase):
 
     def test_lock_after_client_shutdown(self):
         another_client = HazelcastClient(cluster_name=self.cluster.id)
-        another_lock = another_client.cp_subsystem.get_lock(self.lock._proxy_name).blocking()
+        another_lock = another_client.cp_subsystem.get_lock(
+            self.lock._wrapped._proxy_name
+        ).blocking()
         self.assert_valid_fence(another_lock.lock())
         self.assertTrue(another_lock.is_locked())
         self.assertTrue(self.lock.is_locked())
@@ -50,7 +52,7 @@ class FencedLockTest(CPTestCase):
         with self.assertRaises(DistributedObjectDestroyedError):
             self.lock.lock()
 
-        lock2 = self.client.cp_subsystem.get_lock(self.lock._proxy_name).blocking()
+        lock2 = self.client.cp_subsystem.get_lock(self.lock._wrapped._proxy_name).blocking()
 
         with self.assertRaises(DistributedObjectDestroyedError):
             lock2.lock()
