@@ -1,7 +1,7 @@
 import pickle
 import unittest
 
-from hazelcast.config import _Config
+from hazelcast.config import Config
 from hazelcast.serialization.api import StreamSerializer
 from hazelcast.serialization.service import SerializationServiceV1
 
@@ -85,7 +85,7 @@ class TheOtherCustomSerializer(StreamSerializer):
 
 class CustomSerializationTestCase(unittest.TestCase):
     def test_global_encode_decode(self):
-        config = _Config()
+        config = Config()
         config.global_serializer = GlobalSerializer
 
         service = SerializationServiceV1(config)
@@ -97,7 +97,7 @@ class CustomSerializationTestCase(unittest.TestCase):
         self.assertEqual("GLOBAL", obj2.source)
 
     def test_custom_serializer(self):
-        config = _Config()
+        config = Config()
         config.custom_serializers = {CustomClass: CustomSerializer}
 
         service = SerializationServiceV1(config)
@@ -109,7 +109,7 @@ class CustomSerializationTestCase(unittest.TestCase):
         self.assertEqual("CUSTOM", obj2.source)
 
     def test_global_custom_serializer(self):
-        config = _Config()
+        config = Config()
         config.custom_serializers = {CustomClass: CustomSerializer}
         config.global_serializer = GlobalSerializer
 
@@ -122,7 +122,7 @@ class CustomSerializationTestCase(unittest.TestCase):
         self.assertEqual("CUSTOM", obj2.source)
 
     def test_double_register_custom_serializer(self):
-        config = _Config()
+        config = Config()
         config.custom_serializers = {CustomClass: CustomSerializer}
         service = SerializationServiceV1(config)
 

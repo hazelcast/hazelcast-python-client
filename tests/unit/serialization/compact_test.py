@@ -5,7 +5,7 @@ import uuid
 
 from parameterized import parameterized
 
-from hazelcast.config import _Config
+from hazelcast.config import Config
 from hazelcast.errors import HazelcastSerializationError
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.serialization.api import CompactSerializer, CompactReader, CompactWriter
@@ -257,7 +257,7 @@ class NestedSerializerTest(unittest.TestCase):
             return self._serialize(serialization_service, obj)
 
     def test_missing_serializer(self):
-        config = _Config()
+        config = Config()
         config.compact_serializers = [ParentSerializer()]
         service = SerializationServiceV1(config)
 

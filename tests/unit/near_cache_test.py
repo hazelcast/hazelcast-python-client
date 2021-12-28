@@ -1,14 +1,14 @@
 import unittest
 from time import sleep
 
-from hazelcast.config import _Config
+from hazelcast.config import Config
 from hazelcast.near_cache import *
 from hazelcast.serialization import SerializationServiceV1
 
 
 class NearCacheTestCase(unittest.TestCase):
     def setUp(self):
-        self.service = SerializationServiceV1(_Config())
+        self.service = SerializationServiceV1(Config())
 
     def tearDown(self):
         self.service.destroy()

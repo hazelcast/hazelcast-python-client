@@ -1,6 +1,6 @@
 import unittest
 
-from hazelcast.config import _Config
+from hazelcast.config import Config
 from hazelcast.core import Address
 from hazelcast.serialization.data import Data
 from hazelcast.serialization.service import SerializationServiceV1
@@ -8,7 +8,7 @@ from hazelcast.serialization.service import SerializationServiceV1
 
 class SerializationTestCase(unittest.TestCase):
     def setUp(self):
-        self.service = SerializationServiceV1(_Config())
+        self.service = SerializationServiceV1(Config())
 
     def tearDown(self):
         self.service.destroy()

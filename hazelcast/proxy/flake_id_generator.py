@@ -3,7 +3,7 @@ import threading
 import collections
 
 from hazelcast.proxy.base import Proxy, MAX_SIZE
-from hazelcast.config import _FlakeIdGeneratorConfig
+from hazelcast.config import FlakeIdGeneratorConfig
 from hazelcast.util import current_time
 from hazelcast.protocol.codec import flake_id_generator_new_id_batch_codec
 from hazelcast.future import ImmediateFuture, Future
@@ -44,7 +44,7 @@ class FlakeIdGenerator(Proxy["BlockingFlakeIdGenerator"]):
 
         config = context.config.flake_id_generators.get(name, None)
         if config is None:
-            config = _FlakeIdGeneratorConfig()
+            config = FlakeIdGeneratorConfig()
 
         self._auto_batcher = _AutoBatcher(
             config.prefetch_count, config.prefetch_validity, self._new_id_batch

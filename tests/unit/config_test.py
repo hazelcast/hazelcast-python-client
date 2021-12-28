@@ -1,7 +1,9 @@
+import socket
+import typing
 import unittest
 
 from hazelcast.config import (
-    _Config,
+    Config,
     SSLProtocol,
     ReconnectMode,
     IntType,
@@ -13,25 +15,199 @@ from hazelcast.config import (
     QueryConstants,
     BitmapIndexOptions,
     TopicOverloadPolicy,
+    NearCacheConfig,
+    FlakeIdGeneratorConfig,
+    ReliableTopicConfig,
 )
+from hazelcast.core import Address
 from hazelcast.errors import InvalidConfigurationError
-from hazelcast.security import BasicTokenProvider
-from hazelcast.serialization.api import IdentifiedDataSerializable, Portable, StreamSerializer
-from hazelcast.serialization.portable.classdef import ClassDefinition
+from hazelcast.security import BasicTokenProvider, TokenProvider
+from hazelcast.serialization.api import (
+    IdentifiedDataSerializable,
+    Portable,
+    StreamSerializer,
+    ObjectDataInput,
+    ObjectDataOutput,
+    PortableWriter,
+    PortableReader,
+    CompactSerializer,
+    CompactSerializableClass,
+    CompactWriter,
+    CompactReader,
+)
+from hazelcast.serialization.portable.classdef import ClassDefinition, ClassDefinitionBuilder
 from hazelcast.util import RandomLB
 
 
 class ConfigTest(unittest.TestCase):
     def setUp(self):
-        self.config = _Config()
+        self.config = Config()
+
+    def test_from_dict(self):
+        config_dict = {
+            "cluster_members": ["192.168.1.1:5704"],
+            "cluster_name": "not-dev",
+            "client_name": "client0",
+            "connection_timeout": 1.0,
+            "socket_options": [(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)],
+            "redo_operation": True,
+            "smart_routing": False,
+            "ssl_enabled": True,
+            "ssl_cafile": "ca.pem",
+            "ssl_certfile": "cert.pem",
+            "ssl_keyfile": "key.pem",
+            "ssl_password": "pass",
+            "ssl_protocol": SSLProtocol.TLSv1_3,
+            "ssl_ciphers": "DHE-RSA-AES128-SHA",
+            "cloud_discovery_token": "abc123",
+            "async_start": True,
+            "reconnect_mode": ReconnectMode.OFF,
+            "retry_initial_backoff": 9,
+            "retry_max_backoff": 99,
+            "retry_jitter": 0.9,
+            "retry_multiplier": 1.9,
+            "cluster_connect_timeout": 999,
+            "portable_version": 10,
+            "data_serializable_factories": {1: {1: SomeIdentified}},
+            "portable_factories": {2: {2: SomePortable}},
+            "compact_serializers": [SomeClassSerializer()],
+            "class_definitions": [CLASS_DEFINITION],
+            "check_class_definition_errors": False,
+            "is_big_endian": False,
+            "default_int_type": IntType.LONG,
+            "global_serializer": GlobalSerializer,
+            "custom_serializers": {CustomSerializable: CustomSerializer},
+            "near_caches": {
+                "map0": {
+                    "invalidate_on_change": False,
+                    "in_memory_format": InMemoryFormat.OBJECT,
+                    "time_to_live": 1,
+                    "max_idle": 2,
+                    "eviction_policy": EvictionPolicy.RANDOM,
+                    "eviction_max_size": 999,
+                    "eviction_sampling_count": 9,
+                    "eviction_sampling_pool_size": 99,
+                }
+            },
+            "load_balancer": RandomLB(),
+            "membership_listeners": [(lambda m: print(m), None)],
+            "lifecycle_listeners": [lambda s: print(s)],
+            "flake_id_generators": {
+                "gen0": {
+                    "prefetch_count": 99,
+                    "prefetch_validity": 999,
+                }
+            },
+            "reliable_topics": {
+                "topic0": {
+                    "read_batch_size": 9,
+                    "overload_policy": TopicOverloadPolicy.ERROR,
+                }
+            },
+            "labels": ["label"],
+            "heartbeat_interval": 9,
+            "heartbeat_timeout": 99,
+            "invocation_timeout": 999,
+            "invocation_retry_pause": 9.5,
+            "statistics_enabled": True,
+            "statistics_period": 9,
+            "shuffle_member_list": False,
+            "backup_ack_to_client_enabled": False,
+            "operation_backup_timeout": 99.9,
+            "fail_on_indeterminate_operation_state": True,
+            "creds_username": "user",
+            "creds_password": "pass",
+            "token_provider": SomeTokenProvider(),
+            "use_public_ip": True,
+        }
+
+        config = Config.from_dict(config_dict)
+        self.assertEqual(["192.168.1.1:5704"], config.cluster_members)
+        self.assertEqual("not-dev", config.cluster_name)
+        self.assertEqual("client0", config.client_name)
+        self.assertEqual(1.0, config.connection_timeout)
+        self.assertEqual([(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)], config.socket_options)
+        self.assertTrue(config.redo_operation)
+        self.assertFalse(config.smart_routing)
+        self.assertTrue(config.ssl_enabled)
+        self.assertEqual("ca.pem", config.ssl_cafile)
+        self.assertEqual("cert.pem", config.ssl_certfile)
+        self.assertEqual("key.pem", config.ssl_keyfile)
+        self.assertEqual("pass", config.ssl_password)
+        self.assertEqual(SSLProtocol.TLSv1_3, config.ssl_protocol)
+        self.assertEqual("DHE-RSA-AES128-SHA", config.ssl_ciphers)
+        self.assertEqual("abc123", config.cloud_discovery_token)
+        self.assertTrue(config.async_start)
+        self.assertEqual(ReconnectMode.OFF, config.reconnect_mode)
+        self.assertEqual(9, config.retry_initial_backoff)
+        self.assertEqual(99, config.retry_max_backoff)
+        self.assertEqual(0.9, config.retry_jitter)
+        self.assertEqual(1.9, config.retry_multiplier)
+        self.assertEqual(999, config.cluster_connect_timeout)
+        self.assertEqual(10, config.portable_version)
+        self.assertEqual({1: {1: SomeIdentified}}, config.data_serializable_factories)
+        self.assertEqual({2: {2: SomePortable}}, config.portable_factories)
+        self.assertEqual(1, len(config.compact_serializers))
+        self.assertIsInstance(config.compact_serializers[0], SomeClassSerializer)
+        self.assertEqual([CLASS_DEFINITION], config.class_definitions)
+        self.assertFalse(config.check_class_definition_errors)
+        self.assertFalse(config.is_big_endian)
+        self.assertEqual(IntType.LONG, config.default_int_type)
+        self.assertEqual(GlobalSerializer, config.global_serializer)
+        self.assertEqual({CustomSerializable: CustomSerializer}, config.custom_serializers)
+
+        nc_config = config.near_caches["map0"]
+        self.assertFalse(nc_config.invalidate_on_change)
+        self.assertEqual(InMemoryFormat.OBJECT, nc_config.in_memory_format)
+        self.assertEqual(1, nc_config.time_to_live)
+        self.assertEqual(2, nc_config.max_idle)
+        self.assertEqual(EvictionPolicy.RANDOM, nc_config.eviction_policy)
+        self.assertEqual(999, nc_config.eviction_max_size)
+        self.assertEqual(9, nc_config.eviction_sampling_count)
+        self.assertEqual(99, nc_config.eviction_sampling_pool_size)
+
+        self.assertIsInstance(config.load_balancer, RandomLB)
+
+        membership_listeners = config.membership_listeners
+        self.assertEqual(1, len(membership_listeners))
+        self.assertTrue(callable(membership_listeners[0][0]))
+        self.assertIsNone(membership_listeners[0][1])
+
+        lifecycle_listeners = config.lifecycle_listeners
+        self.assertEqual(1, len(lifecycle_listeners))
+        self.assertTrue(callable(lifecycle_listeners[0]))
+
+        fig_config = config.flake_id_generators["gen0"]
+        self.assertEqual(99, fig_config.prefetch_count)
+        self.assertEqual(999, fig_config.prefetch_validity)
+
+        reliable_topic_config = config.reliable_topics["topic0"]
+        self.assertEqual(9, reliable_topic_config.read_batch_size)
+        self.assertEqual(TopicOverloadPolicy.ERROR, reliable_topic_config.overload_policy)
+
+        self.assertEqual(["label"], config.labels)
+        self.assertEqual(9, config.heartbeat_interval)
+        self.assertEqual(99, config.heartbeat_timeout)
+        self.assertEqual(999, config.invocation_timeout)
+        self.assertEqual(9.5, config.invocation_retry_pause)
+        self.assertTrue(config.statistics_enabled)
+        self.assertEqual(9, config.statistics_period)
+        self.assertFalse(config.shuffle_member_list)
+        self.assertFalse(config.backup_ack_to_client_enabled)
+        self.assertEqual(99.9, config.operation_backup_timeout)
+        self.assertTrue(config.fail_on_indeterminate_operation_state)
+        self.assertEqual("user", config.creds_username)
+        self.assertEqual("pass", config.creds_password)
+        self.assertIsInstance(config.token_provider, SomeTokenProvider)
+        self.assertTrue(config.use_public_ip)
 
     def test_from_dict_defaults(self):
-        config = _Config.from_dict({})
+        config = Config.from_dict({})
         for item in self.config.__slots__:
             self.assertEqual(getattr(self.config, item), getattr(config, item))
 
     def test_from_dict_with_a_few_changes(self):
-        config = _Config.from_dict({"client_name": "hazel", "cluster_name": "cast"})
+        config = Config.from_dict({"client_name": "hazel", "cluster_name": "cast"})
         for item in self.config.__slots__:
             if item == "_client_name" or item == "_cluster_name":
                 continue
@@ -41,13 +217,13 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual("cast", config.cluster_name)
 
     def test_from_dict_skip_none_item(self):
-        config = _Config.from_dict({"cluster_name": None, "cluster_members": None})
+        config = Config.from_dict({"cluster_name": None, "cluster_members": None})
         for item in self.config.__slots__:
             self.assertEqual(getattr(self.config, item), getattr(config, item))
 
     def test_from_dict_with_invalid_elements(self):
         with self.assertRaises(InvalidConfigurationError):
-            _Config.from_dict({"invalid_elem": False})
+            Config.from_dict({"invalid_elem": False})
 
     def test_cluster_members(self):
         config = self.config
@@ -106,7 +282,7 @@ class ConfigTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             config.socket_options = (1, 2, 3)
 
-        options = [(1, 2, 3), [4, 5, 6]]
+        options = [(1, 2, 3), (4, 5, 6)]
         config.socket_options = options
         self.assertEqual(options, config.socket_options)
 
@@ -183,8 +359,8 @@ class ConfigTest(unittest.TestCase):
         config.ssl_password = b"qwe"
         self.assertEqual(b"qwe", config.ssl_password)
 
-        config.ssl_password = bytearray([1, 2, 3])
-        self.assertEqual(bytearray([1, 2, 3]), config.ssl_password)
+        config.ssl_password = b"123"
+        self.assertEqual(b"123", config.ssl_password)
 
         config.ssl_password = lambda: "123"
         self.assertEqual("123", config.ssl_password())
@@ -389,6 +565,27 @@ class ConfigTest(unittest.TestCase):
         config.portable_factories = factories
         self.assertEqual(factories, config.portable_factories)
 
+    def test_compact_serializers(self):
+        config = self.config
+        self.assertEqual([], config.compact_serializers)
+
+        invalid_configs = [
+            [None],
+            [""],
+            [SomeClassSerializer(), 1],
+            [SomeClassSerializer(), None],
+            "",
+        ]
+
+        for invalid_config in invalid_configs:
+            with self.assertRaises(TypeError):
+                config.compact_serializers = invalid_config
+
+        serializers = [SomeClassSerializer()]
+        config.compact_serializers = serializers
+
+        self.assertEqual(serializers, config.compact_serializers)
+
     def test_class_definitions(self):
         config = self.config
         self.assertEqual([], config.class_definitions)
@@ -549,6 +746,28 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(20, nc_config.eviction_sampling_count)
         self.assertEqual(15, nc_config.eviction_sampling_pool_size)
 
+    def test_near_cache_config_from_dict(self):
+        nc_config_dict = {
+            "invalidate_on_change": False,
+            "in_memory_format": "OBJECT",
+            "time_to_live": 10,
+            "max_idle": 20,
+            "eviction_policy": EvictionPolicy.NONE,
+            "eviction_max_size": 9999,
+            "eviction_sampling_count": 99,
+            "eviction_sampling_pool_size": 999,
+        }
+
+        nc_config = NearCacheConfig.from_dict(nc_config_dict)
+        self.assertFalse(nc_config.invalidate_on_change)
+        self.assertEqual(InMemoryFormat.OBJECT, nc_config.in_memory_format)
+        self.assertEqual(10, nc_config.time_to_live)
+        self.assertEqual(20, nc_config.max_idle)
+        self.assertEqual(EvictionPolicy.NONE, nc_config.eviction_policy)
+        self.assertEqual(9999, nc_config.eviction_max_size)
+        self.assertEqual(99, nc_config.eviction_sampling_count)
+        self.assertEqual(999, nc_config.eviction_sampling_pool_size)
+
     def test_load_balancer(self):
         config = self.config
         self.assertIsNone(config.load_balancer)
@@ -651,6 +870,13 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(20, fig_config.prefetch_count)
         self.assertEqual(30, fig_config.prefetch_validity)
 
+    def test_flake_id_generator_config_from_dict(self):
+        fig_config_dict = {"prefetch_count": 999, "prefetch_validity": 9999.99}
+
+        fig_config = FlakeIdGeneratorConfig.from_dict(fig_config_dict)
+        self.assertEqual(999, fig_config.prefetch_count)
+        self.assertEqual(9999.99, fig_config.prefetch_validity)
+
     def test_reliable_topics_invalid_configs(self):
         config = self.config
         self.assertEqual({}, config.reliable_topics)
@@ -701,6 +927,16 @@ class ConfigTest(unittest.TestCase):
         topic_config = config.reliable_topics["a"]
         self.assertEqual(TopicOverloadPolicy.ERROR, topic_config.overload_policy)
         self.assertEqual(42, topic_config.read_batch_size)
+
+    def test_reliable_topic_config_from_dict(self):
+        rt_config_dict = {
+            "overload_policy": TopicOverloadPolicy.DISCARD_NEWEST,
+            "read_batch_size": 84,
+        }
+
+        rt_config = ReliableTopicConfig.from_dict(rt_config_dict)
+        self.assertEqual(TopicOverloadPolicy.DISCARD_NEWEST, rt_config.overload_policy)
+        self.assertEqual(84, rt_config.read_batch_size)
 
     def test_labels(self):
         config = self.config
@@ -836,7 +1072,7 @@ class ConfigTest(unittest.TestCase):
 
     def test_auth_fromdict(self):
         tp = BasicTokenProvider("tok")
-        cfg = _Config().from_dict(
+        cfg = Config().from_dict(
             {
                 "creds_username": "user",
                 "creds_password": "pass",
@@ -848,7 +1084,7 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(tp, cfg.token_provider)
 
     def test_auth_failure(self):
-        cfg = _Config()
+        cfg = Config()
         with self.assertRaises(TypeError):
             cfg.creds_username = 1
         with self.assertRaises(TypeError):
@@ -1043,3 +1279,89 @@ class BitmapIndexOptionsTest(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             options.unique_key_transformation = 132
+
+
+CLASS_DEFINITION = ClassDefinitionBuilder(1, 1).add_int_field("a").build()
+
+
+class SomeIdentified(IdentifiedDataSerializable):
+    def write_data(self, object_data_output: ObjectDataOutput) -> None:
+        pass
+
+    def read_data(self, object_data_input: ObjectDataInput) -> None:
+        pass
+
+    def get_factory_id(self) -> int:
+        return 1
+
+    def get_class_id(self) -> int:
+        return 1
+
+
+class SomePortable(Portable):
+    def write_portable(self, writer: "PortableWriter") -> None:
+        pass
+
+    def read_portable(self, reader: "PortableReader") -> None:
+        pass
+
+    def get_factory_id(self) -> int:
+        return 2
+
+    def get_class_id(self) -> int:
+        return 2
+
+
+class GlobalSerializer(StreamSerializer):
+    def write(self, out: ObjectDataOutput, obj: typing.Any) -> None:
+        pass
+
+    def read(self, inp: ObjectDataInput) -> typing.Any:
+        pass
+
+    def get_type_id(self) -> int:
+        return 1
+
+    def destroy(self) -> None:
+        pass
+
+
+class CustomSerializable:
+    pass
+
+
+class CustomSerializer(StreamSerializer):
+    def write(self, out: ObjectDataOutput, obj: typing.Any) -> None:
+        pass
+
+    def read(self, inp: ObjectDataInput) -> typing.Any:
+        pass
+
+    def get_type_id(self) -> int:
+        return 2
+
+    def destroy(self) -> None:
+        pass
+
+
+class SomeTokenProvider(TokenProvider):
+    def token(self, address: Address = None) -> bytes:
+        return b""
+
+
+class SomeClass:
+    pass
+
+
+class SomeClassSerializer(CompactSerializer[SomeClass]):
+    def read(self, reader: CompactReader) -> SomeClass:
+        return SomeClass()
+
+    def write(self, writer: CompactWriter, obj: SomeClass) -> None:
+        pass
+
+    def get_class(self) -> typing.Type[SomeClass]:
+        return SomeClass
+
+    def get_type_name(self) -> str:
+        return "SomeClass"
