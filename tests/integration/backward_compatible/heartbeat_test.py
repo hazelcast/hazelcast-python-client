@@ -1,3 +1,6 @@
+import threading
+import time
+
 from hazelcast import HazelcastClient
 from hazelcast.core import Address
 from tests.base import HazelcastTestCase
@@ -5,6 +8,8 @@ from tests.util import open_connection_to_address, wait_for_partition_table
 
 
 class HeartbeatTest(HazelcastTestCase):
+    rc = None
+
     @classmethod
     def setUpClass(cls):
         cls.rc = cls.create_rc()
@@ -48,25 +53,48 @@ class HeartbeatTest(HazelcastTestCase):
             connection_added_collector, connection_removed_collector
         )
 
-        self.simulate_heartbeat_lost(self.client, addr, 2)
+        assertion_succeeded = False
+
+        def run():
+            nonlocal assertion_succeeded
+            # It is possible for client to override the set last_read_time
+            # of the connection, in case of the periodically sent heartbeat
+            # requests getting responses, right after we try to set a new
+            # value to it, before the next iteration of the heartbeat manager.
+            # In this case, the connection won't be closed, and the test would
+            # fail. To avoid it, we will try multiple times.
+            for i in range(10):
+                if assertion_succeeded:
+                    # We have successfully simulated heartbeat loss
+                    return
+
+                for connection in self.client._connection_manager.active_connections.values():
+                    if connection.remote_address == addr:
+                        connection.last_read_time -= 2
+                        break
+
+                time.sleep((i + 1) * 0.1)
+
+        simulation_thread = threading.Thread(target=run)
+        simulation_thread.start()
 
         def assert_heartbeat_stopped_and_restored():
-            self.assertEqual(1, len(connection_added_collector.connections))
-            self.assertEqual(1, len(connection_removed_collector.connections))
-            stopped_connection = connection_added_collector.connections[0]
-            restored_connection = connection_removed_collector.connections[0]
+            nonlocal assertion_succeeded
+            self.assertGreaterEqual(len(connection_added_collector.connections), 1)
+            self.assertGreaterEqual(len(connection_removed_collector.connections), 1)
+
+            stopped_connection = connection_removed_collector.connections[0]
+            restored_connection = connection_added_collector.connections[0]
+
             self.assertEqual(
-                stopped_connection.connected_address, Address(member2.host, member2.port)
+                stopped_connection.connected_address,
+                Address(member2.host, member2.port),
             )
             self.assertEqual(
-                restored_connection.connected_address, Address(member2.host, member2.port)
+                restored_connection.connected_address,
+                Address(member2.host, member2.port),
             )
+            assertion_succeeded = True
 
         self.assertTrueEventually(assert_heartbeat_stopped_and_restored)
-
-    @staticmethod
-    def simulate_heartbeat_lost(client, address, timeout):
-        for connection in client._connection_manager.active_connections.values():
-            if connection.remote_address == address:
-                connection.last_read_time -= timeout
-                break
+        simulation_thread.join()

@@ -1,3 +1,6 @@
+import threading
+import time
+
 from parameterized import parameterized
 
 from tests.base import HazelcastTestCase
@@ -74,13 +77,37 @@ class ListenerAddMemberTest(HazelcastTestCase):
         self.client_config["smart_routing"] = is_smart
         client = self.create_client(self.client_config)
         random_map = client.get_map(random_string()).blocking()
-        random_map.add_entry_listener(added_func=self.collector)
+        random_map.add_entry_listener(added_func=self.collector, updated_func=self.collector)
         m2 = self.cluster.start_member()
         wait_for_partition_table(client)
         key_m2 = generate_key_owned_by_instance(client, m2.uuid)
-        random_map.put(key_m2, "value")
+
+        assertion_succeeded = False
+
+        def run():
+            nonlocal assertion_succeeded
+            # When a new connection is added, we add the existing
+            # listeners to it, but we do it non-blocking. So, it might
+            # be the case that, the listener registration request is
+            # sent to the new member, but not completed yet.
+            # So, we might not get an event for the put. To avoid this,
+            # we will put multiple times.
+            for i in range(10):
+                if assertion_succeeded:
+                    # We have successfully got an event
+                    return
+
+                random_map.put(key_m2, f"value-{i}")
+
+                time.sleep((i + 1) * 0.1)
+
+        put_thread = threading.Thread(target=run)
+        put_thread.start()
 
         def assert_event():
-            self.assertEqual(1, len(self.collector.events))
+            nonlocal assertion_succeeded
+            self.assertGreaterEqual(len(self.collector.events), 1)
+            assertion_succeeded = True
 
         self.assertTrueEventually(assert_event)
+        put_thread.join()
