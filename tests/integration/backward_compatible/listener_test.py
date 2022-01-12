@@ -82,9 +82,10 @@ class ListenerAddMemberTest(HazelcastTestCase):
         wait_for_partition_table(client)
         key_m2 = generate_key_owned_by_instance(client, m2.uuid)
 
-        assertion_succeeded = [False]
+        assertion_succeeded = False
 
         def run():
+            nonlocal assertion_succeeded
             # When a new connection is added, we add the existing
             # listeners to it, but we do it non-blocking. So, it might
             # be the case that, the listener registration request is
@@ -92,7 +93,7 @@ class ListenerAddMemberTest(HazelcastTestCase):
             # So, we might not get an event for the put. To avoid this,
             # we will put multiple times.
             for i in range(10):
-                if assertion_succeeded[0]:
+                if assertion_succeeded:
                     # We have successfully got an event
                     return
 
@@ -104,8 +105,9 @@ class ListenerAddMemberTest(HazelcastTestCase):
         put_thread.start()
 
         def assert_event():
-            self.assertTrue(len(self.collector.events) >= 1)
-            assertion_succeeded[0] = True
+            nonlocal assertion_succeeded
+            self.assertGreaterEqual(len(self.collector.events), 1)
+            assertion_succeeded = True
 
         self.assertTrueEventually(assert_event)
         put_thread.join()
