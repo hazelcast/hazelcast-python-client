@@ -53,10 +53,12 @@ class HeartbeatTest(HazelcastTestCase):
             connection_added_collector, connection_removed_collector
         )
 
-        start_simulation = threading.Event()
         assertion_succeeded = [False]
         simulation_thread = self.simulate_heartbeat_loss(
-            self.client, addr, 2, start_simulation, assertion_succeeded
+            self.client,
+            addr,
+            2,
+            assertion_succeeded,
         )
 
         def assert_heartbeat_stopped_and_restored():
@@ -76,16 +78,12 @@ class HeartbeatTest(HazelcastTestCase):
             )
             assertion_succeeded[0] = True
 
-        start_simulation.set()
         self.assertTrueEventually(assert_heartbeat_stopped_and_restored)
         simulation_thread.join()
 
     @staticmethod
-    def simulate_heartbeat_loss(client, address, timeout, start_simulation, assertion_succeeded):
+    def simulate_heartbeat_loss(client, address, timeout, assertion_succeeded):
         def run():
-            # Wait until the main thread signals we should start the simulation
-            start_simulation.wait()
-
             # It is possible for client to override the set last_read_time
             # of the connection, in case of the periodically sent heartbeat
             # requests getting responses, right after we try to set a new

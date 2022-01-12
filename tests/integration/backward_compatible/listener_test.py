@@ -82,13 +82,9 @@ class ListenerAddMemberTest(HazelcastTestCase):
         wait_for_partition_table(client)
         key_m2 = generate_key_owned_by_instance(client, m2.uuid)
 
-        start_put = threading.Event()
         assertion_succeeded = [False]
 
         def run():
-            # Wait until the main thread signals we should start the map#put
-            start_put.wait()
-
             # When a new connection is added, we add the existing
             # listeners to it, but we do it non-blocking. So, it might
             # be the case that, the listener registration request is
@@ -111,6 +107,5 @@ class ListenerAddMemberTest(HazelcastTestCase):
             self.assertTrue(len(self.collector.events) >= 1)
             assertion_succeeded[0] = True
 
-        start_put.set()
         self.assertTrueEventually(assert_event)
         put_thread.join()
