@@ -80,6 +80,7 @@ from hazelcast.proxy.base import (
 )
 from hazelcast.predicate import PagingPredicate, Predicate
 from hazelcast.types import AggregatorResultType, KeyType, ValueType, ProjectionType
+from hazelcast.serialization.compact import SchemaNotReplicatedError
 from hazelcast.util import (
     check_not_none,
     thread_id,
@@ -666,7 +667,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             The value for the specified key.
         """
         check_not_none(key, "key can't be None")
-        key_data = self._to_data(key)
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.get, key)
+
         return self._get_internal(key_data)
 
     def get_all(self, keys: typing.Sequence[KeyType]) -> Future[typing.Dict[KeyType, ValueType]]:
@@ -958,8 +963,12 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
-        key_data = self._to_data(key)
-        value_data = self._to_data(value)
+        try:
+            key_data = self._to_data(key)
+            value_data = self._to_data(value)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.put, key, value, ttl, max_idle)
+
         return self._put_internal(key_data, value_data, ttl, max_idle)
 
     def put_all(self, map: typing.Dict[KeyType, ValueType]) -> Future[None]:

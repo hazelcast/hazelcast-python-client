@@ -40,35 +40,35 @@ class DefaultPortableReader(PortableReader):
 
     def read_boolean(self, field_name):
         pos = self._read_position(field_name, FieldType.BOOLEAN)
-        return self._in.read_boolean(pos)
+        return self._in.read_boolean_positional(pos)
 
     def read_byte(self, field_name):
         pos = self._read_position(field_name, FieldType.BYTE)
-        return self._in.read_byte(pos)
+        return self._in.read_byte_positional(pos)
 
     def read_char(self, field_name):
         pos = self._read_position(field_name, FieldType.CHAR)
-        return self._in.read_char(pos)
+        return self._in.read_char_positional(pos)
 
     def read_short(self, field_name):
         pos = self._read_position(field_name, FieldType.SHORT)
-        return self._in.read_short(pos)
+        return self._in.read_short_positional(pos)
 
     def read_int(self, field_name):
         pos = self._read_position(field_name, FieldType.INT)
-        return self._in.read_int(pos)
+        return self._in.read_int_positional(pos)
 
     def read_long(self, field_name):
         pos = self._read_position(field_name, FieldType.LONG)
-        return self._in.read_long(pos)
+        return self._in.read_long_positional(pos)
 
     def read_float(self, field_name):
         pos = self._read_position(field_name, FieldType.FLOAT)
-        return self._in.read_float(pos)
+        return self._in.read_float_positional(pos)
 
     def read_double(self, field_name):
         pos = self._read_position(field_name, FieldType.DOUBLE)
-        return self._in.read_double(pos)
+        return self._in.read_double_positional(pos)
 
     def read_string(self, field_name):
         cur_pos = self._in.position()
@@ -209,7 +209,7 @@ class DefaultPortableReader(PortableReader):
             if length > 0:
                 offset = self._in.position()
                 for i in range(0, length):
-                    start = self._in.read_int(offset + i * bits.INT_SIZE_IN_BYTES)
+                    start = self._in.read_int_positional(offset + i * bits.INT_SIZE_IN_BYTES)
                     self._in.set_position(start)
                     portables[i] = self._portable_serializer.read_internal(
                         self._in, factory_id, class_id
@@ -226,7 +226,7 @@ class DefaultPortableReader(PortableReader):
 
     def get_raw_data_input(self):
         if not self._raw:
-            pos = self._in.read_int(
+            pos = self._in.read_int_positional(
                 self._offset + self._class_def.get_field_count() * bits.INT_SIZE_IN_BYTES
             )
             self._in.set_position(pos)
@@ -279,8 +279,8 @@ class DefaultPortableReader(PortableReader):
         )
 
     def _read_position_by_field_def(self, fd):
-        pos = self._in.read_int(self._offset + fd.index * bits.INT_SIZE_IN_BYTES)
-        _len = self._in.read_short(pos)
+        pos = self._in.read_int_positional(self._offset + fd.index * bits.INT_SIZE_IN_BYTES)
+        _len = self._in.read_short_positional(pos)
         # name + len + type
         return pos + bits.SHORT_SIZE_IN_BYTES + _len + 1
 

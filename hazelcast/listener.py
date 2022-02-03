@@ -1,12 +1,15 @@
 import logging
 import sys
 import threading
+import typing
 from uuid import uuid4
 
 from hazelcast.errors import HazelcastError, HazelcastClientNotActiveError, TargetDisconnectedError
 from hazelcast.future import combine_futures, ImmediateFuture
-from hazelcast.invocation import Invocation
+from hazelcast.invocation import Invocation, CompactSchemaService
+from hazelcast.protocol.client_message import InboundMessage
 from hazelcast.protocol.codec import client_add_cluster_view_listener_codec
+from hazelcast.serialization.compact import SchemaNotFoundError
 from hazelcast.util import check_not_none
 
 _logger = logging.getLogger(__name__)
@@ -40,10 +43,18 @@ class _EventRegistration:
 
 
 class ListenerService:
-    def __init__(self, client, config, connection_manager, invocation_service):
+    def __init__(
+        self,
+        client,
+        config,
+        connection_manager,
+        invocation_service,
+        compact_schema_service: CompactSchemaService,
+    ):
         self._client = client
         self._connection_manager = connection_manager
         self._invocation_service = invocation_service
+        self._compact_schema_service = compact_schema_service
         self._is_smart = config.smart_routing
         self._active_registrations = {}  # Dict of user_registration_id, ListenerRegistration
         self._registration_lock = threading.RLock()
@@ -129,12 +140,38 @@ class ListenerService:
             listener_registration.connection_registrations.clear()
             return combine_futures(futures).continue_with(lambda _: True)
 
-    def handle_client_message(self, message, correlation_id):
+    def handle_client_message(self, message: InboundMessage, correlation_id: int):
         handler = self._event_handlers.get(correlation_id, None)
         if handler:
-            handler(message)
+            try:
+                handler(message)
+            except SchemaNotFoundError as e:
+                self._fetch_schema_and_handle_again(e, handler, message, correlation_id)
         else:
             _logger.debug("Got event message with unknown correlation id: %s", message)
+
+    def _fetch_schema_and_handle_again(
+        self,
+        error: SchemaNotFoundError,
+        handler: typing.Callable[[InboundMessage], None],
+        message: InboundMessage,
+        correlation_id: int,
+    ) -> None:
+        def callback(future):
+            try:
+                schema = future.result()
+                self._compact_schema_service.register_fetched_schema(schema)
+            except:
+                _logger.exception(
+                    f"Failed to call event handler: {handler} with message: {message}"
+                )
+                return
+
+            message.reset_next_frame()
+            self.handle_client_message(message, correlation_id)
+
+        fetch_schema_future = self._compact_schema_service.fetch_schema(error.schema_id)
+        fetch_schema_future.add_done_callback(callback)
 
     def add_event_handler(self, correlation_id, event_handler):
         self._event_handlers[correlation_id] = event_handler

@@ -8,6 +8,7 @@ from hazelcast import predicate, aggregator, projection
 from hazelcast.serialization.api import Portable, IdentifiedDataSerializable
 from hazelcast.serialization.data import Data
 from hazelcast.util import to_signed
+from tests.util import is_equal
 
 IDENTIFIED_DATA_SERIALIZABLE_FACTORY_ID = 1
 PORTABLE_FACTORY_ID = 1
@@ -16,31 +17,6 @@ INNER_PORTABLE_CLASS_ID = 2
 DATA_SERIALIZABLE_CLASS_ID = 1
 CUSTOM_STREAM_SERIALIZABLE_ID = 1
 CUSTOM_BYTE_ARRAY_SERIALIZABLE_ID = 2
-
-
-def _almost_equal(a, b):
-    return abs(a - b) <= max(1e-04 * max(abs(a), abs(b)), 0.0)
-
-
-def is_equal(a, b):
-    if type(a) != type(b):
-        return False
-
-    if isinstance(a, float):
-        return _almost_equal(a, b)
-
-    if isinstance(a, list):
-        n = len(a)
-        if n != len(b):
-            return False
-
-        for i in range(n):
-            if not is_equal(a[i], b[i]):
-                return False
-
-        return True
-
-    return a == b
 
 
 def _get_reference_str():
@@ -114,7 +90,7 @@ class CustomByteArraySerializable:
 
 
 def _write_data_to_out(data, out):
-    payload = data.to_bytes() if data is not None else None
+    payload = data.buffer if data is not None else None
     out.write_byte_array(payload)
 
 

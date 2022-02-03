@@ -100,7 +100,7 @@ class ByteArrayCodec:
 class DataCodec:
     @staticmethod
     def encode(buf, value, is_final=False):
-        value_bytes = value.to_bytes()
+        value_bytes = value.buffer
         header = bytearray(SIZE_OF_FRAME_LENGTH_AND_FLAGS)
         LE_INT.pack_into(header, 0, SIZE_OF_FRAME_LENGTH_AND_FLAGS + len(value_bytes))
         if is_final:

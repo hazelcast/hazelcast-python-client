@@ -3,6 +3,21 @@ from hazelcast.serialization.bits import *
 
 
 class _ObjectDataInput(ObjectDataInput):
+    __slots__ = (
+        "_buffer",
+        "_service",
+        "_is_big_endian",
+        "_pos",
+        "_size",
+        "_FMT_INT8",
+        "_FMT_INT",
+        "_FMT_SHORT",
+        "_FMT_CHAR",
+        "_FMT_LONG",
+        "_FMT_FLOAT",
+        "_FMT_DOUBLE",
+    )
+
     def __init__(self, buff, offset=0, serialization_service=None, is_big_endian=True):
         self._buffer = buff
         self._service = serialization_service
@@ -11,7 +26,6 @@ class _ObjectDataInput(ObjectDataInput):
         self._size = len(buff)
         # Local cache struct formats according to endianness
         self._FMT_INT8 = BE_INT8 if self._is_big_endian else LE_INT8
-        self._FMT_UINT8 = BE_UINT8 if self._is_big_endian else LE_UINT8
         self._FMT_INT = BE_INT if self._is_big_endian else LE_INT
         self._FMT_SHORT = BE_INT16 if self._is_big_endian else LE_INT16
         self._FMT_CHAR = BE_UINT16 if self._is_big_endian else LE_UINT16
@@ -43,44 +57,91 @@ class _ObjectDataInput(ObjectDataInput):
         self._pos += count
         return count
 
-    def read_boolean(self, position=None):
-        return self.read_byte(position) != 0
+    def read_boolean(self):
+        return self.read_byte() != 0
 
-    def read_byte(self, position=None):
+    def read_boolean_positional(self, position: int) -> bool:
+        return self.read_byte_positional(position) != 0
+
+    def read_byte(self):
         self._check_available(self._pos, BYTE_SIZE_IN_BYTES)
-        return self._read_from_buff(self._FMT_INT8, BYTE_SIZE_IN_BYTES, position)
+        value = self._FMT_INT8.unpack_from(self._buffer, self._pos)[0]
+        self._pos += BYTE_SIZE_IN_BYTES
+        return value
 
-    def read_unsigned_byte(self, position=None):
+    def read_byte_positional(self, position: int) -> int:
+        self._check_available(position, BYTE_SIZE_IN_BYTES)
+        return self._FMT_INT8.unpack_from(self._buffer, position)[0]
+
+    def read_unsigned_byte(self):
         self._check_available(self._pos, BYTE_SIZE_IN_BYTES)
-        return self._read_from_buff(self._FMT_UINT8, BYTE_SIZE_IN_BYTES, position)
+        value = self._buffer[self._pos]
+        self._pos += BYTE_SIZE_IN_BYTES
+        return value
 
-    def read_char(self, position=None):
-        char_ord = self.read_short(position)
+    def read_char(self):
+        char_ord = self.read_short()
         return chr(char_ord)
 
-    def read_short(self, position=None):
-        self._check_available(self._pos, SHORT_SIZE_IN_BYTES)
-        return self._read_from_buff(self._FMT_SHORT, SHORT_SIZE_IN_BYTES, position)
+    def read_char_positional(self, position: int) -> str:
+        char_ord = self.read_short_positional(position)
+        return chr(char_ord)
 
-    def read_unsigned_short(self, position=None):
+    def read_short(self):
         self._check_available(self._pos, SHORT_SIZE_IN_BYTES)
-        return self._read_from_buff(self._FMT_CHAR, SHORT_SIZE_IN_BYTES, position)
+        value = self._FMT_SHORT.unpack_from(self._buffer, self._pos)[0]
+        self._pos += SHORT_SIZE_IN_BYTES
+        return value
 
-    def read_int(self, position=None):
+    def read_short_positional(self, position: int) -> int:
+        self._check_available(position, SHORT_SIZE_IN_BYTES)
+        return self._FMT_SHORT.unpack_from(self._buffer, position)[0]
+
+    def read_unsigned_short(self):
+        self._check_available(self._pos, SHORT_SIZE_IN_BYTES)
+        value = self._FMT_CHAR.unpack_from(self._buffer, self._pos)[0]
+        self._pos += SHORT_SIZE_IN_BYTES
+        return value
+
+    def read_int(self):
+        self._check_available(self._pos, INT_SIZE_IN_BYTES)
+        value = self._FMT_INT.unpack_from(self._buffer, self._pos)[0]
+        self._pos += INT_SIZE_IN_BYTES
+        return value
+
+    def read_int_positional(self, position: int) -> int:
         self._check_available(position, INT_SIZE_IN_BYTES)
-        return self._read_from_buff(self._FMT_INT, INT_SIZE_IN_BYTES, position)
+        return self._FMT_INT.unpack_from(self._buffer, position)[0]
 
-    def read_long(self, position=None):
+    def read_long(self):
         self._check_available(self._pos, LONG_SIZE_IN_BYTES)
-        return self._read_from_buff(self._FMT_LONG, LONG_SIZE_IN_BYTES, position)
+        value = self._FMT_LONG.unpack_from(self._buffer, self._pos)[0]
+        self._pos += LONG_SIZE_IN_BYTES
+        return value
 
-    def read_float(self, position=None):
+    def read_long_positional(self, position: int) -> int:
+        self._check_available(position, LONG_SIZE_IN_BYTES)
+        return self._FMT_LONG.unpack_from(self._buffer, position)[0]
+
+    def read_float(self):
         self._check_available(self._pos, FLOAT_SIZE_IN_BYTES)
-        return self._read_from_buff(self._FMT_FLOAT, FLOAT_SIZE_IN_BYTES, position)
+        value = self._FMT_FLOAT.unpack_from(self._buffer, self._pos)[0]
+        self._pos += FLOAT_SIZE_IN_BYTES
+        return value
 
-    def read_double(self, position=None):
+    def read_float_positional(self, position: int) -> float:
+        self._check_available(position, FLOAT_SIZE_IN_BYTES)
+        return self._FMT_FLOAT.unpack_from(self._buffer, position)[0]
+
+    def read_double(self):
         self._check_available(self._pos, DOUBLE_SIZE_IN_BYTES)
-        return self._read_from_buff(self._FMT_DOUBLE, DOUBLE_SIZE_IN_BYTES, position)
+        value = self._FMT_DOUBLE.unpack_from(self._buffer, self._pos)[0]
+        self._pos += DOUBLE_SIZE_IN_BYTES
+        return value
+
+    def read_double_positional(self, position: int) -> float:
+        self._check_available(position, DOUBLE_SIZE_IN_BYTES)
+        return self._FMT_DOUBLE.unpack_from(self._buffer, position)[0]
 
     def read_string(self):
         length = self.read_int()
@@ -100,6 +161,9 @@ class _ObjectDataInput(ObjectDataInput):
             self.read_into(result, 0, length)
 
         return result
+
+    def read_i8_array(self) -> typing.List[int]:
+        return self._read_array_fnc(self.read_byte)
 
     def read_boolean_array(self):
         return self._read_array_fnc(self.read_boolean)
@@ -153,31 +217,13 @@ class _ObjectDataInput(ObjectDataInput):
 
     # HELPERS
     def _check_available(self, position, size):
-        _position = self._pos if position is None else position
-        if _position < 0:
+        if position < 0:
             raise ValueError
-        if self._size - _position < size:
+        if self._size - position < size:
             raise EOFError("Cannot read %s bytes!" % size)
-
-    def _read_from_buff(self, fmt, size, position=None):
-        if position is None:
-            val = fmt.unpack_from(self._buffer, self._pos)
-            self._pos += size
-        else:
-            val = fmt.unpack_from(self._buffer, position)
-        return val[0]
 
     def _read_array_fnc(self, read_item_fnc):
         length = self.read_int()
         if length == NULL_ARRAY_LENGTH:
             return None
-        if length > 0:
-            return [read_item_fnc() for _ in range(0, length)]
-        return []
-
-    def __repr__(self):
-        from binascii import hexlify
-
-        buf = hexlify(self._buffer)
-        pos_ = self._pos * 2
-        return buf[:pos_] + "[" + buf[pos_] + "]" + buf[pos_ + 1 :]
+        return [read_item_fnc() for _ in range(length)]

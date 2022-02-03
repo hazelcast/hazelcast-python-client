@@ -110,6 +110,30 @@ class _AuthenticationStatus:
     NOT_ALLOWED_IN_CLUSTER = 3
 
 
+class _ClientState:
+    INITIAL = 0
+    """
+    Clients start with this state. 
+    Once a client connects to a cluster, it directly switches to 
+    `INITIALIZED_ON_CLUSTER` instead of `CONNECTED_TO_CLUSTER` because on 
+    startup a client has no local state to send to the cluster.
+    """
+
+    CONNECTED_TO_CLUSTER = 1
+    """
+    When a client switches to a new cluster, it moves to this state. It means 
+    that the client has connected to a new cluster but not sent its local 
+    state to the new cluster yet.
+    """
+
+    INITIALIZED_ON_CLUSTER = 2
+    """
+    When a client sends its local state to the cluster it has connected, it 
+    switches to this state.
+    Invocations are allowed in this state.
+    """
+
+
 class ConnectionManager:
     """ConnectionManager is responsible for managing ``Connection`` objects."""
 
@@ -124,6 +148,7 @@ class ConnectionManager:
         cluster_service,
         invocation_service,
         near_cache_manager,
+        send_state_to_cluster_fn,
     ):
         self.live = False
         self.active_connections = {}  # uuid to connection, must be modified under the _lock
@@ -138,6 +163,8 @@ class ConnectionManager:
         self._cluster_service = cluster_service
         self._invocation_service = invocation_service
         self._near_cache_manager = near_cache_manager
+        self._send_state_to_cluster_fn = send_state_to_cluster_fn
+        self._client_state = _ClientState.INITIAL  # must be modified under the _lock
         self._smart_routing_enabled = config.smart_routing
         self._wait_strategy = self._init_wait_strategy(config)
         self._reconnect_mode = config.reconnect_mode
@@ -283,10 +310,11 @@ class ConnectionManager:
             )
             return
 
+        disconnected = False
+        removed = False
+        trigger_reconnection = False
         with self._lock:
             connection = self.active_connections.get(remote_uuid, None)
-            disconnected = False
-            removed = False
             if connection == closed_connection:
                 self.active_connections.pop(remote_uuid, None)
                 removed = True
@@ -298,10 +326,14 @@ class ConnectionManager:
                 )
 
                 if not self.active_connections:
-                    disconnected = True
+                    trigger_reconnection = True
+                    if self._client_state == _ClientState.INITIALIZED_ON_CLUSTER:
+                        disconnected = True
 
         if disconnected:
             self._lifecycle_service.fire_lifecycle_event(LifecycleState.DISCONNECTED)
+
+        if trigger_reconnection:
             self._trigger_cluster_reconnection()
 
         if removed:
@@ -319,10 +351,16 @@ class ConnectionManager:
             )
 
     def check_invocation_allowed(self):
-        if self.active_connections:
+        state = self._client_state
+        if state == _ClientState.INITIALIZED_ON_CLUSTER and self.active_connections:
             return
 
-        if self._async_start or self._reconnect_mode == ReconnectMode.ASYNC:
+        if state == _ClientState.INITIAL:
+            if self._async_start:
+                raise ClientOfflineError()
+            else:
+                raise IOError("No connection found to cluster since the client is starting.")
+        elif self._reconnect_mode == ReconnectMode.ASYNC:
             raise ClientOfflineError()
         else:
             raise IOError("No connection found to cluster")
@@ -631,8 +669,13 @@ class ConnectionManager:
             self.active_connections[remote_uuid] = connection
             if is_initial_connection:
                 self._cluster_id = new_cluster_id
+                if changed_cluster:
+                    self._client_state = _ClientState.CONNECTED_TO_CLUSTER
+                    self._initialize_on_cluster(new_cluster_id)
+                else:
+                    self._client_state = _ClientState.INITIALIZED_ON_CLUSTER
 
-        if is_initial_connection:
+        if is_initial_connection and not changed_cluster:
             self._lifecycle_service.fire_lifecycle_event(LifecycleState.CONNECTED)
 
         _logger.info(
@@ -654,6 +697,51 @@ class ConnectionManager:
             self.on_connection_close(connection)
 
         return connection
+
+    def _initialize_on_cluster(self, cluster_id) -> None:
+        with self._lock:
+            if cluster_id != self._cluster_id:
+                _logger.warning(
+                    f"Client won't send the state to the cluster: {cluster_id}"
+                    f"because it switched to a new cluster: {self._cluster_id}"
+                )
+                return
+
+        def callback(future):
+            try:
+                future.result()
+                if cluster_id == self._cluster_id:
+                    _logger.debug("The client state is sent to the cluster %s", cluster_id)
+
+                    with self._lock:
+                        self._client_state = _ClientState.INITIALIZED_ON_CLUSTER
+
+                    self._lifecycle_service.fire_lifecycle_event(LifecycleState.CONNECTED)
+
+                elif _logger.isEnabledFor(logging.DEBUG):
+                    _logger.warning(
+                        "Cannot set client state to 'INITIALIZED_ON_CLUSTER'"
+                        f"because current cluster id: {self._cluster_id}"
+                        f"is different than the expected cluster id: {cluster_id}"
+                    )
+            except:
+                retry_on_error()
+
+        def retry_on_error():
+            _logger.exception(f"Failure during sending client state to the cluster {cluster_id}")
+            with self._lock:
+                if cluster_id != self._cluster_id:
+                    return
+
+                if _logger.isEnabledFor(logging.DEBUG):
+                    _logger.warning(f"Retrying sending client state to the cluster: {cluster_id}")
+
+                self._initialize_on_cluster(cluster_id)
+
+        try:
+            self._send_state_to_cluster_fn().add_done_callback(callback)
+        except:
+            retry_on_error()
 
     def _check_client_state_on_cluster_change(self, connection):
         if self.active_connections:
