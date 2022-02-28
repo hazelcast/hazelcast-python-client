@@ -6,6 +6,7 @@ import string
 import unittest
 
 from hazelcast import HazelcastClient
+from hazelcast.core import HazelcastJsonValue
 from hazelcast.future import ImmediateFuture
 from hazelcast.serialization.api import Portable
 from tests.base import SingleMemberTestCase, HazelcastTestCase
@@ -792,6 +793,19 @@ class SqlColumnTypesReadTest(SqlTestBase):
             'SELECT __key, CAST(NULL AS INTEGER) as this FROM "%s"' % self.map_name
         )
         self._validate_result(result, SqlColumnType.INTEGER, lambda _: None)
+
+    def test_json(self):
+        skip_if_client_version_older_than(self, "5.1")
+        skip_if_server_version_older_than(self, self.client, "5.1")
+
+        def value_factory(key):
+            return HazelcastJsonValue({"key": key})
+
+        self._create_mapping("JSON")
+        self._populate_map(value_factory=value_factory)
+
+        result = self.execute(f"SELECT __key, this FROM {self.map_name}")
+        self._validate_result(result, SqlColumnType.JSON, value_factory)
 
     def _validate_rows(self, expected_type, value_factory=lambda key: key):
         result = self.execute('SELECT __key, this FROM "%s"' % self.map_name)
