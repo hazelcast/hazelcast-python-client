@@ -17,6 +17,8 @@ client = hazelcast.HazelcastClient(
     # Select the protocol used in SSL communication.
     # This step is optional. Default is TLSv1_2
     ssl_protocol=SSLProtocol.TLSv1_3,
+    # Ideally, perform hostname verification
+    ssl_check_hostname=True,
 )
 
 hz_map = client.get_map("ssl-map").blocking()
