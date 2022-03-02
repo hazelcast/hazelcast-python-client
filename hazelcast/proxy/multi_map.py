@@ -25,7 +25,7 @@ from hazelcast.protocol.codec import (
     multi_map_values_codec,
 )
 from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType
-from hazelcast.types import ValueType, KeyType, Numeric
+from hazelcast.types import ValueType, KeyType
 from hazelcast.util import check_not_none, thread_id, to_millis, ImmutableLazyDataList
 
 
@@ -285,7 +285,7 @@ class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
         request = multi_map_key_set_codec.encode_request(self.name)
         return self._invoke(request, handler)
 
-    def lock(self, key: KeyType, lease_time: Numeric = None) -> Future[None]:
+    def lock(self, key: KeyType, lease_time: float = None) -> Future[None]:
         """Acquires the lock for the specified key infinitely or for the
         specified lease time if provided.
 
@@ -465,9 +465,7 @@ class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
         request = multi_map_values_codec.encode_request(self.name)
         return self._invoke(request, handler)
 
-    def try_lock(
-        self, key: KeyType, lease_time: Numeric = None, timeout: Numeric = 0
-    ) -> Future[bool]:
+    def try_lock(self, key: KeyType, lease_time: float = None, timeout: float = 0) -> Future[bool]:
         """Tries to acquire the lock for the specified key.
 
         When the lock is not available:

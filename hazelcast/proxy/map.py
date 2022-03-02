@@ -79,7 +79,7 @@ from hazelcast.proxy.base import (
     MAX_SIZE,
 )
 from hazelcast.predicate import PagingPredicate, Predicate
-from hazelcast.types import AggregatorResultType, Numeric, KeyType, ValueType, ProjectionType
+from hazelcast.types import AggregatorResultType, KeyType, ValueType, ProjectionType
 from hazelcast.util import (
     check_not_none,
     thread_id,
@@ -864,7 +864,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
             request = map_load_all_codec.encode_request(self.name, replace_existing_values)
             return self._invoke(request)
 
-    def lock(self, key: KeyType, lease_time: Numeric = None) -> Future[None]:
+    def lock(self, key: KeyType, lease_time: float = None) -> Future[None]:
         """Acquires the lock for the specified key infinitely or for the
         specified lease time if provided.
 
@@ -954,7 +954,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return self._invoke(request, handler)
 
     def put(
-        self, key: KeyType, value: ValueType, ttl: Numeric = None, max_idle: Numeric = None
+        self, key: KeyType, value: ValueType, ttl: float = None, max_idle: float = None
     ) -> Future[typing.Optional[ValueType]]:
         """Associates the specified value with the specified key in this map.
 
@@ -1033,7 +1033,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return combine_futures(futures)
 
     def put_if_absent(
-        self, key: KeyType, value: ValueType, ttl: Numeric = None, max_idle: Numeric = None
+        self, key: KeyType, value: ValueType, ttl: float = None, max_idle: float = None
     ) -> Future[typing.Optional[ValueType]]:
         """Associates the specified key with the given value if it is not
         already associated.
@@ -1080,7 +1080,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return self._put_if_absent_internal(key_data, value_data, ttl, max_idle)
 
     def put_transient(
-        self, key: KeyType, value: ValueType, ttl: Numeric = None, max_idle: Numeric = None
+        self, key: KeyType, value: ValueType, ttl: float = None, max_idle: float = None
     ) -> Future[None]:
         """Same as ``put``, but MapStore defined at the server side will not
         be called.
@@ -1273,7 +1273,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return self._replace_if_same_internal(key_data, old_value_data, new_value_data)
 
     def set(
-        self, key: KeyType, value: ValueType, ttl: Numeric = None, max_idle: Numeric = None
+        self, key: KeyType, value: ValueType, ttl: float = None, max_idle: float = None
     ) -> Future[None]:
         """Puts an entry into this map.
 
@@ -1307,7 +1307,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         value_data = self._to_data(value)
         return self._set_internal(key_data, value_data, ttl, max_idle)
 
-    def set_ttl(self, key: KeyType, ttl: Numeric) -> Future[None]:
+    def set_ttl(self, key: KeyType, ttl: float) -> Future[None]:
         """Updates the TTL (time to live) value of the entry specified by the
         given key with a new TTL value.
 
@@ -1337,9 +1337,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         request = map_size_codec.encode_request(self.name)
         return self._invoke(request, map_size_codec.decode_response)
 
-    def try_lock(
-        self, key: KeyType, lease_time: Numeric = None, timeout: Numeric = 0
-    ) -> Future[bool]:
+    def try_lock(self, key: KeyType, lease_time: float = None, timeout: float = 0) -> Future[bool]:
         """Tries to acquire the lock for the specified key.
 
         When the lock is not available:
@@ -1388,7 +1386,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         self._invocation_service.invoke(invocation)
         return invocation.future
 
-    def try_put(self, key: KeyType, value: ValueType, timeout: Numeric = 0) -> Future[bool]:
+    def try_put(self, key: KeyType, value: ValueType, timeout: float = 0) -> Future[bool]:
         """Tries to put the given key and value into this map and returns
         immediately if timeout is not provided.
 
@@ -1411,7 +1409,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
 
         return self._try_put_internal(key_data, value_data, timeout)
 
-    def try_remove(self, key: KeyType, timeout: Numeric = 0) -> Future[bool]:
+    def try_remove(self, key: KeyType, timeout: float = 0) -> Future[bool]:
         """Tries to remove the given key from this map and returns immediately
         if timeout is not provided.
 

@@ -22,7 +22,7 @@ from hazelcast.protocol.codec import (
     transactional_map_values_with_predicate_codec,
 )
 from hazelcast.proxy.base import TransactionalProxy
-from hazelcast.types import ValueType, KeyType, Numeric
+from hazelcast.types import ValueType, KeyType
 from hazelcast.util import check_not_none, to_millis, thread_id, ImmutableLazyDataList
 
 
@@ -121,7 +121,7 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
         return self._invoke(request, transactional_map_is_empty_codec.decode_response)
 
     def put(
-        self, key: KeyType, value: ValueType, ttl: Numeric = None
+        self, key: KeyType, value: ValueType, ttl: float = None
     ) -> Future[typing.Optional[ValueType]]:
         """Transactional implementation of
         :func:`Map.put(key, value, ttl) <hazelcast.proxy.map.Map.put>`

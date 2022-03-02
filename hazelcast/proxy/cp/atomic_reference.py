@@ -25,7 +25,7 @@ class AtomicReference(BaseCPProxy, typing.Generic[ElementType]):
 
     - AtomicReference works based on the byte-content and not on the
       object-reference. If you use the ``compare_and_set()`` method, do not
-      change to the original value because its serialized content will then be
+      change the original value because its serialized content will then be
       different.
     - All methods returning an object return a private copy. You can modify the
       private copy, but the rest of the world is shielded from your changes. If
@@ -38,7 +38,7 @@ class AtomicReference(BaseCPProxy, typing.Generic[ElementType]):
       `alter()` is executed. This deserialization is done for every call that
       needs to have the object instead of the binary content, so be careful
       with expensive object graphs that need to be deserialized.
-    - If you have an object with many fields or an object graph and you only
+    - If you have an object with many fields or an object graph, and you only
       need to calculate some information or need a subset of fields, you can
       use the `apply()` method. With the `apply()` method, the whole object
       does not need to be sent over the line; only the information that is
@@ -151,11 +151,10 @@ class AtomicReference(BaseCPProxy, typing.Generic[ElementType]):
         """Alters the currently stored reference by applying a function on it.
 
         Notes:
-            ``function`` must be an instance Hazelcast serializable type that
-            has a counterpart that implements the
-            ``com.hazelcast.core.IFunction`` interface registered on the
-            server-side with the actual implementation of the function to be
-            applied.
+            ``function`` must be an instance of Hazelcast serializable type.
+            It must have a counterpart registered in the server-side that
+            implements the ``com.hazelcast.core.IFunction`` interface with
+            the actual logic of the function to be applied.
 
         Args:
             function: The function that alters the currently stored reference.
@@ -175,11 +174,10 @@ class AtomicReference(BaseCPProxy, typing.Generic[ElementType]):
         gets the result.
 
         Notes:
-            ``function`` must be an instance Hazelcast serializable type that
-            has a counterpart that implements the
-            ``com.hazelcast.core.IFunction`` interface registered on the
-            server-side with the actual implementation of the function to be
-            applied.
+            ``function`` must be an instance of Hazelcast serializable type.
+            It must have a counterpart registered in the server-side that
+            implements the ``com.hazelcast.core.IFunction`` interface with
+            the actual logic of the function to be applied.
 
         Args:
             function: The function that alters the currently stored reference.
@@ -203,11 +201,10 @@ class AtomicReference(BaseCPProxy, typing.Generic[ElementType]):
         and gets the old value.
 
         Notes:
-            ``function`` must be an instance Hazelcast serializable type that
-            has a counterpart that implements the
-            ``com.hazelcast.core.IFunction`` interface registered on the
-            server-side with the actual implementation of the function to be
-            applied.
+            ``function`` must be an instance of Hazelcast serializable type.
+            It must have a counterpart registered in the server-side that
+            implements the ``com.hazelcast.core.IFunction`` interface with
+            the actual logic of the function to be applied.
 
         Args:
             function: The function that alters the currently stored reference.
@@ -232,11 +229,10 @@ class AtomicReference(BaseCPProxy, typing.Generic[ElementType]):
         change.
 
         Notes:
-            ``function`` must be an instance Hazelcast serializable type that
-            has a counterpart that implements the
-            ``com.hazelcast.core.IFunction`` interface registered on the
-            server-side with the actual implementation of the function to be
-            applied.
+            ``function`` must be an instance of Hazelcast serializable type.
+            It must have a counterpart registered in the server-side that
+            implements the ``com.hazelcast.core.IFunction`` interface with
+            the actual logic of the function to be applied.
 
         Args:
             function: The function applied on the currently stored reference.

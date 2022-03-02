@@ -7,7 +7,6 @@ from threading import RLock
 from hazelcast.errors import HazelcastError
 from hazelcast.future import Future, ImmediateFuture, ImmediateExceptionFuture
 from hazelcast.invocation import Invocation
-from hazelcast.types import Numeric
 from hazelcast.util import (
     UUIDUtil,
     to_millis,
@@ -108,7 +107,7 @@ class SqlService:
         sql: str,
         *params: typing.Any,
         cursor_buffer_size: int = _DEFAULT_CURSOR_BUFFER_SIZE,
-        timeout: Numeric = _TIMEOUT_NOT_SET,
+        timeout: float = _TIMEOUT_NOT_SET,
         expected_result_type: int = SqlExpectedResultType.ANY,
         schema: str = None
     ) -> Future["SqlResult"]:

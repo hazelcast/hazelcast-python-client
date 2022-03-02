@@ -31,11 +31,13 @@ class ClientInfo:
 
     __slots__ = ("uuid", "address", "name", "labels")
 
-    def __init__(self, client_uuid, address, name, labels):
-        self.uuid: uuid.UUID = client_uuid
-        self.address: Address = address
-        self.name: str = name
-        self.labels: typing.Set[str] = labels
+    def __init__(
+        self, client_uuid: uuid.UUID, address: Address, name: str, labels: typing.Set[str]
+    ):
+        self.uuid = client_uuid
+        self.address = address
+        self.name = name
+        self.labels = labels
 
     def __repr__(self):
         return "ClientInfo(uuid=%s, address=%s, name=%s, labels=%s)" % (
@@ -72,9 +74,9 @@ class ClusterService:
         """
         Adds a membership listener to listen for membership updates.
 
-        It will be notified when a member is added to cluster or removed from
-        cluster. There is no check for duplicate registrations, so if you
-        register the listener twice, it will get events twice.
+        It will be notified when a member is added to the cluster or removed
+        from the cluster. There is no check for duplicate registrations,
+        so if you register the listener twice, it will get events twice.
 
         Args:
             member_added (function): Function to be called when a member is

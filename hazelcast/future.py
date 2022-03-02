@@ -130,9 +130,7 @@ class Future(typing.Generic[ResultType]):
             _logger.exception("Exception when invoking callback")
 
     def continue_with(
-        self,
-        continuation_func: typing.Callable[..., typing.Union["Future", typing.Any]],
-        *args: typing.Any
+        self, continuation_func: typing.Callable[..., typing.Any], *args: typing.Any
     ) -> "Future":
         """Create a continuation that executes when the Future is completed.
 

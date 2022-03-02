@@ -12,7 +12,6 @@ from hazelcast.protocol.codec import (
     semaphore_release_codec,
 )
 from hazelcast.proxy.cp import SessionAwareCPProxy, BaseCPProxy
-from hazelcast.types import Numeric
 from hazelcast.util import check_not_negative, check_true, thread_id, to_millis
 
 _DRAIN_SESSION_ACQ_COUNT = 1024
@@ -253,7 +252,7 @@ class Semaphore(BaseCPProxy):
         """
         raise NotImplementedError("release")
 
-    def try_acquire(self, permits: int = 1, timeout: Numeric = 0) -> Future[bool]:
+    def try_acquire(self, permits: int = 1, timeout: float = 0) -> Future[bool]:
         """Acquires the given number of permits and returns ``True``, if they
         become available during the given waiting time.
 

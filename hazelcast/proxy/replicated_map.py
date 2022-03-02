@@ -23,7 +23,7 @@ from hazelcast.protocol.codec import (
     replicated_map_values_codec,
 )
 from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType
-from hazelcast.types import KeyType, ValueType, Numeric
+from hazelcast.types import KeyType, ValueType
 from hazelcast.util import to_millis, check_not_none, ImmutableLazyDataList
 
 
@@ -253,7 +253,7 @@ class ReplicatedMap(Proxy, typing.Generic[KeyType, ValueType]):
         return self._invoke_on_partition(request, self._partition_id, handler)
 
     def put(
-        self, key: KeyType, value: ValueType, ttl: Numeric = 0
+        self, key: KeyType, value: ValueType, ttl: float = 0
     ) -> Future[typing.Optional[ValueType]]:
         """Associates the specified value with the specified key in this map.
 

@@ -24,7 +24,7 @@ from hazelcast.protocol.codec import (
     queue_take_codec,
 )
 from hazelcast.proxy.base import PartitionSpecificProxy, ItemEvent, ItemEventType
-from hazelcast.types import Numeric, ItemType
+from hazelcast.types import ItemType
 from hazelcast.util import check_not_none, to_millis, ImmutableLazyDataList
 
 
@@ -213,7 +213,7 @@ class Queue(PartitionSpecificProxy, typing.Generic[ItemType]):
         request = queue_is_empty_codec.encode_request(self.name)
         return self._invoke(request, queue_is_empty_codec.decode_response)
 
-    def offer(self, item: ItemType, timeout: Numeric = 0) -> Future[bool]:
+    def offer(self, item: ItemType, timeout: float = 0) -> Future[bool]:
         """Inserts the specified element into this queue if it is possible to
         do so immediately without violating capacity restrictions.
 
@@ -251,7 +251,7 @@ class Queue(PartitionSpecificProxy, typing.Generic[ItemType]):
         request = queue_peek_codec.encode_request(self.name)
         return self._invoke(request, handler)
 
-    def poll(self, timeout: Numeric = 0) -> Future[typing.Optional[ItemType]]:
+    def poll(self, timeout: float = 0) -> Future[typing.Optional[ItemType]]:
         """Retrieves and removes the head of this queue.
 
         If this queue is empty:

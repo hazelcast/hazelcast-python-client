@@ -9,14 +9,14 @@ from hazelcast.protocol.codec import (
     transactional_queue_take_codec,
 )
 from hazelcast.proxy.base import TransactionalProxy
-from hazelcast.types import ItemType, Numeric
+from hazelcast.types import ItemType
 from hazelcast.util import check_not_none, to_millis, thread_id
 
 
 class TransactionalQueue(TransactionalProxy, typing.Generic[ItemType]):
     """Transactional implementation of :class:`~hazelcast.proxy.queue.Queue`."""
 
-    def offer(self, item: ItemType, timeout: Numeric = 0) -> Future[bool]:
+    def offer(self, item: ItemType, timeout: float = 0) -> Future[bool]:
         """Transactional implementation of
         :func:`Queue.offer(item, timeout) <hazelcast.proxy.queue.Queue.offer>`
 
@@ -53,7 +53,7 @@ class TransactionalQueue(TransactionalProxy, typing.Generic[ItemType]):
         )
         return self._invoke(request, handler)
 
-    def poll(self, timeout: Numeric = 0) -> Future[typing.Optional[ItemType]]:
+    def poll(self, timeout: float = 0) -> Future[typing.Optional[ItemType]]:
         """Transactional implementation of
         :func:`Queue.poll(timeout) <hazelcast.proxy.queue.Queue.poll>`
 
@@ -75,7 +75,7 @@ class TransactionalQueue(TransactionalProxy, typing.Generic[ItemType]):
         )
         return self._invoke(request, handler)
 
-    def peek(self, timeout: Numeric = 0) -> Future[typing.Optional[ItemType]]:
+    def peek(self, timeout: float = 0) -> Future[typing.Optional[ItemType]]:
         """Transactional implementation of
         :func:`Queue.peek(timeout) <hazelcast.proxy.queue.Queue.peek>`
 

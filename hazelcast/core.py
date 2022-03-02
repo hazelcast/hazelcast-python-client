@@ -415,7 +415,7 @@ class HazelcastJsonValue:
     None values are not allowed.
     """
 
-    def __init__(self, value: typing.Union[str, typing.Any]):
+    def __init__(self, value: typing.Any):
         if value is None:
             raise AssertionError("JSON string or the object cannot be None.")
         if isinstance(value, str):

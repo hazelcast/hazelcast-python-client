@@ -16,7 +16,6 @@ from hazelcast.protocol.codec import (
     fenced_lock_get_lock_ownership_codec,
 )
 from hazelcast.proxy.cp import SessionAwareCPProxy
-from hazelcast.types import Numeric
 from hazelcast.util import thread_id, to_millis
 
 _NO_SESSION_ID = -1
@@ -68,7 +67,7 @@ class FencedLock(SessionAwareCPProxy):
 
     def lock(self) -> Future[int]:
         """Acquires the lock and returns the fencing token assigned to the
-        current thread for this lock acquire.
+        current thread.
 
         If the lock is acquired reentrantly, the same fencing token is returned,
         or the ``lock()`` call can fail with ``LockAcquireLimitReachedError``
@@ -118,11 +117,11 @@ class FencedLock(SessionAwareCPProxy):
         invocation_uuid = uuid.uuid4()
         return self._do_lock(current_thread_id, invocation_uuid)
 
-    def try_lock(self, timeout: Numeric = 0) -> Future[int]:
+    def try_lock(self, timeout: float = 0) -> Future[int]:
         """Acquires the lock if it is free within the given waiting time,
         or already held by the current thread at the time of invocation and,
         the acquire limit is not exceeded, and returns the fencing token
-        assigned to the current thread for this lock acquire.
+        assigned to the current thread.
 
         If the lock is acquired reentrantly, the same fencing token is returned.
         If the lock acquire limit is exceeded, then this method immediately

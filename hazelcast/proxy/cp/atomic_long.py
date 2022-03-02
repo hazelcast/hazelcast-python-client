@@ -154,11 +154,10 @@ class AtomicLong(BaseCPProxy):
         """Alters the currently stored value by applying a function on it.
 
         Notes:
-            ``function`` must be an instance Hazelcast serializable type that
-            has a counterpart that implements the
-            ``com.hazelcast.core.IFunction`` interface registered on the
-            server-side with the actual implementation of the function to be
-            applied.
+            ``function`` must be an instance of Hazelcast serializable type.
+            It must have a counterpart registered in the server-side that
+            implements the ``com.hazelcast.core.IFunction`` interface with
+            the actual logic of the function to be applied.
 
         Args:
             function: The function that alters the currently stored value.
@@ -181,11 +180,10 @@ class AtomicLong(BaseCPProxy):
         gets the result.
 
         Notes:
-            ``function`` must be an instance Hazelcast serializable type that
-            has a counterpart that implements the
-            ``com.hazelcast.core.IFunction`` interface registered on the
-            server-side with the actual implementation of the function to be
-            applied.
+            ``function`` must be an instance of Hazelcast serializable type.
+            It must have a counterpart registered in the server-side that
+            implements the ``com.hazelcast.core.IFunction`` interface with
+            the actual logic of the function to be applied.
 
         Args:
             function: The function that alters the currently stored value.
@@ -201,15 +199,14 @@ class AtomicLong(BaseCPProxy):
         return self._invoke(request, codec.decode_response)
 
     def get_and_alter(self, function: typing.Any) -> Future[int]:
-        """Alters the currently stored value by applying a function on it on
-        and gets the old value.
+        """Alters the currently stored value by applying a function on it and
+        gets the old value.
 
         Notes:
-            ``function`` must be an instance Hazelcast serializable type that
-            has a counterpart that implements the
-            ``com.hazelcast.core.IFunction`` interface registered on the
-            server-side with the actual implementation of the function to be
-            applied.
+            ``function`` must be an instance of Hazelcast serializable type.
+            It must have a counterpart registered in the server-side that
+            implements the ``com.hazelcast.core.IFunction`` interface with
+            the actual logic of the function to be applied.
 
         Args:
             function: The function that alters the currently stored value.
@@ -229,11 +226,10 @@ class AtomicLong(BaseCPProxy):
         change.
 
         Notes:
-            ``function`` must be an instance Hazelcast serializable type that
-            has a counterpart that implements the
-            ``com.hazelcast.core.IFunction`` interface registered on the
-            server-side with the actual implementation of the function to be
-            applied.
+            ``function`` must be an instance of Hazelcast serializable type.
+            It must have a counterpart registered in the server-side that
+            implements the ``com.hazelcast.core.IFunction`` interface with
+            the actual logic of the function to be applied.
 
         Args:
             function: The function applied to the currently stored value.

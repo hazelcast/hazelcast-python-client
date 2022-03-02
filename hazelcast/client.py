@@ -54,7 +54,7 @@ from hazelcast.serialization import SerializationServiceV1
 from hazelcast.sql import SqlService, _InternalSqlService
 from hazelcast.statistics import Statistics
 from hazelcast.transaction import TWO_PHASE, Transaction, TransactionManager
-from hazelcast.types import Numeric, KeyType, ValueType, ItemType, MessageType
+from hazelcast.types import KeyType, ValueType, ItemType, MessageType
 from hazelcast.util import AtomicInteger, RoundRobinLB
 
 __all__ = ("HazelcastClient",)
@@ -417,7 +417,7 @@ class HazelcastClient:
         self._internal_sql_service = _InternalSqlService(
             self._connection_manager, self._serialization_service, self._invocation_service
         )
-        self._sql = SqlService(self._internal_sql_service)
+        self._sql_service = SqlService(self._internal_sql_service)
         self._init_context()
         self._start()
 
@@ -600,7 +600,7 @@ class HazelcastClient:
         return self._proxy_manager.get_or_create(TOPIC_SERVICE, name)
 
     def new_transaction(
-        self, timeout: Numeric = 120, durability: int = 1, type: int = TWO_PHASE
+        self, timeout: float = 120, durability: int = 1, type: int = TWO_PHASE
     ) -> Transaction:
         """Creates a new Transaction associated with the current thread
          using default or given options.
@@ -750,7 +750,7 @@ class HazelcastClient:
     @property
     def sql(self) -> SqlService:
         """Returns a service to execute distributed SQL queries."""
-        return self._sql
+        return self._sql_service
 
     def _create_address_provider(self):
         config = self._config

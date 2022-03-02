@@ -13,7 +13,7 @@ class FlakeIdGenerator(Proxy):
     """A cluster-wide unique ID generator. Generated IDs are int values and
     are k-ordered (roughly ordered). IDs are in the range from 0 to 2^63 - 1.
 
-    The IDs contain timestamp component and a node ID component, which is
+    The IDs contain a timestamp component and a node ID component, which is
     assigned when the member joins the cluster. This allows the IDs to be
     ordered and unique without any coordination between members, which makes
     the generator safe even in split-brain scenario.
@@ -54,8 +54,8 @@ class FlakeIdGenerator(Proxy):
         """Generates and returns a cluster-wide unique ID.
 
         This method goes to a random member and gets a batch of IDs, which will
-        then be returned locally for limited time. The pre-fetch size and the
-        validity time can be configured.
+        then be returned locally for a limited time. The pre-fetch size and
+        the validity time can be configured.
 
         Note:
             Values returned from this method may not be strictly ordered.

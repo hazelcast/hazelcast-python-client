@@ -7,4 +7,3 @@ MessageType = typing.TypeVar("MessageType")
 ProjectionType = typing.TypeVar("ProjectionType")
 AggregatorResultType = typing.TypeVar("AggregatorResultType")
 ElementType = typing.TypeVar("ElementType")
-Numeric = typing.Union[int, float]
