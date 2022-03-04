@@ -29,13 +29,21 @@ class FieldType:
 
 
 class FieldDefinition:
-    def __init__(self, index, field_name, field_type, version, factory_id=0, class_id=0):
-        self.index: int = index
-        self.field_name: str = field_name
-        self.field_type: int = field_type
-        self.version: int = version
-        self.factory_id: int = factory_id
-        self.class_id: int = class_id
+    def __init__(
+        self,
+        index: int,
+        field_name: str,
+        field_type: int,
+        version: int,
+        factory_id: int = 0,
+        class_id: int = 0,
+    ):
+        self.index = index
+        self.field_name = field_name
+        self.field_type = field_type
+        self.version = version
+        self.factory_id = factory_id
+        self.class_id = class_id
 
     def __eq__(self, other):
         return (
@@ -144,9 +152,9 @@ class ClassDefinitionBuilder:
     """
 
     def __init__(self, factory_id: int, class_id: int, version: int = 0):
-        self.factory_id: int = factory_id
-        self.class_id: int = class_id
-        self.version: int = version
+        self.factory_id = factory_id
+        self.class_id = class_id
+        self.version = version
 
         self._index = 0
         self._done = False

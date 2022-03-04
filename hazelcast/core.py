@@ -17,34 +17,43 @@ class MemberInfo:
 
     __slots__ = ("address", "uuid", "attributes", "lite_member", "version", "address_map")
 
-    def __init__(self, address, member_uuid, attributes, lite_member, version, _, address_map):
-        self.address: Address = address
+    def __init__(
+        self,
+        address: "Address",
+        member_uuid: uuid.UUID,
+        attributes: typing.Dict[str, str],
+        lite_member: bool,
+        version: "MemberVersion",
+        _,
+        address_map: typing.Dict["EndpointQualifier", "Address"],
+    ):
+        self.address = address
         """
         Address: Address of the member.
         """
 
-        self.uuid: uuid.UUID = member_uuid
+        self.uuid = member_uuid
         """
         uuid.UUID: UUID of the member.
         """
 
-        self.attributes: typing.Dict[str, str] = attributes
+        self.attributes = attributes
         """
         dict[str, str]: Configured attributes of the member.
         """
 
-        self.lite_member: bool = lite_member
+        self.lite_member = lite_member
         """
         bool: ``True`` if the member is a lite member, ``False`` otherwise.
         Lite members do not own any partition.
         """
 
-        self.version: MemberVersion = version
+        self.version = version
         """
         MemberVersion: Hazelcast codebase version of the member.
         """
 
-        self.address_map: typing.Dict[EndpointQualifier, Address] = address_map
+        self.address_map = address_map
         """
         dict[EndpointQualifier, Address]: Dictionary of server socket
         addresses per :class:`EndpointQualifier` of this member.
@@ -84,13 +93,13 @@ class MemberInfo:
 class Address:
     """Represents an address of a member in the cluster."""
 
-    def __init__(self, host, port):
-        self.host: str = host
+    def __init__(self, host: str, port: int):
+        self.host = host
         """
         str: Host of the address.
         """
 
-        self.port: int = port
+        self.port = port
         """
         int: Port of the address.
         """
@@ -153,7 +162,7 @@ class EndpointQualifier:
 
     __slots__ = ("_protocol_type", "_identifier")
 
-    def __init__(self, protocol_type, identifier):
+    def __init__(self, protocol_type: int, identifier: str):
         self._protocol_type = protocol_type
         self._identifier = identifier
 
@@ -261,23 +270,23 @@ class DistributedObjectEventType:
 class DistributedObjectEvent:
     """Distributed Object Event"""
 
-    def __init__(self, name, service_name, event_type, source):
-        self.name: str = name
+    def __init__(self, name: str, service_name: str, event_type: str, source: uuid.UUID):
+        self.name = name
         """
         str: Name of the distributed object.
         """
 
-        self.service_name: str = service_name
+        self.service_name = service_name
         """
         str: Service name of the distributed object.
         """
 
-        self.event_type: str = event_type
+        self.event_type = event_type
         """
         str: Event type. Either ``CREATED`` or ``DESTROYED``.
         """
 
-        self.source: uuid.UUID = source
+        self.source = source
         """
         uuid.UUID: UUID of the member that fired the event.
         """
@@ -296,75 +305,75 @@ class SimpleEntryView(typing.Generic[KeyType, ValueType]):
 
     def __init__(
         self,
-        key,
-        value,
-        cost,
-        creation_time,
-        expiration_time,
-        hits,
-        last_access_time,
-        last_stored_time,
-        last_update_time,
-        version,
-        ttl,
-        max_idle,
+        key: KeyType,
+        value: ValueType,
+        cost: int,
+        creation_time: int,
+        expiration_time: int,
+        hits: int,
+        last_access_time: int,
+        last_stored_time: int,
+        last_update_time: int,
+        version: int,
+        ttl: int,
+        max_idle: int,
     ):
-        self.key: KeyType = key
+        self.key = key
         """
         The key of the entry.
         """
 
-        self.value: ValueType = value
+        self.value = value
         """
         The value of the entry.
         """
 
-        self.cost: int = cost
+        self.cost = cost
         """
         int: The cost in bytes of the entry.
         """
 
-        self.creation_time: int = creation_time
+        self.creation_time = creation_time
         """
         int: The creation time of the entry.
         """
 
-        self.expiration_time: int = expiration_time
+        self.expiration_time = expiration_time
         """
         int: The expiration time of the entry.
         """
 
-        self.hits: int = hits
+        self.hits = hits
         """
         int: Number of hits of the entry.
         """
 
-        self.last_access_time: int = last_access_time
+        self.last_access_time = last_access_time
         """
         int: The last access time for the entry.
         """
 
-        self.last_stored_time: int = last_stored_time
+        self.last_stored_time = last_stored_time
         """
         int: The last store time for the value.
         """
 
-        self.last_update_time: int = last_update_time
+        self.last_update_time = last_update_time
         """
         int: The last time the value was updated.
         """
 
-        self.version: int = version
+        self.version = version
         """
         int: The version of the entry.
         """
 
-        self.ttl: int = ttl
+        self.ttl = ttl
         """
         int: The last set time to live milliseconds.
         """
 
-        self.max_idle: int = max_idle
+        self.max_idle = max_idle
         """
         int: The last set max idle time in milliseconds.
         """
@@ -460,10 +469,10 @@ class MemberVersion:
 
     __slots__ = ("major", "minor", "patch")
 
-    def __init__(self, major, minor, patch):
-        self.major: int = major
-        self.minor: int = minor
-        self.patch: int = patch
+    def __init__(self, major: int, minor: int, patch: int):
+        self.major = major
+        self.minor = minor
+        self.patch = patch
 
     def __repr__(self):
         return "MemberVersion(major=%s, minor=%s, patch=%s)" % (self.major, self.minor, self.patch)
@@ -476,7 +485,7 @@ class MapEntry(typing.Generic[KeyType, ValueType]):
 
     __slots__ = ("_key", "_value")
 
-    def __init__(self, key=None, value=None):
+    def __init__(self, key: KeyType = None, value: ValueType = None):
         self._key = key
         self._value = value
 

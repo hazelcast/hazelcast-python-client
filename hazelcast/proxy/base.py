@@ -193,11 +193,11 @@ class ItemEvent(typing.Generic[ItemType]):
         member (MemberInfo): Member that fired the event.
     """
 
-    def __init__(self, name, item_data, event_type, member, to_object):
-        self.name: str = name
+    def __init__(self, name: str, item_data, event_type: int, member: MemberInfo, to_object):
+        self.name = name
         self._item_data = item_data
-        self.event_type: int = event_type
-        self.member: MemberInfo = member
+        self.event_type = event_type
+        self.member = member
         self._to_object = to_object
 
     @property
@@ -223,18 +223,18 @@ class EntryEvent(typing.Generic[KeyType, ValueType]):
         value,
         old_value,
         merging_value,
-        event_type,
-        member_uuid,
-        number_of_affected_entries,
+        event_type: int,
+        member_uuid: uuid.UUID,
+        number_of_affected_entries: int,
     ):
         self._to_object = to_object
         self._key_data = key
         self._value_data = value
         self._old_value_data = old_value
         self._merging_value_data = merging_value
-        self.event_type: int = event_type
-        self.uuid: uuid.UUID = member_uuid
-        self.number_of_affected_entries: int = number_of_affected_entries
+        self.event_type = event_type
+        self.uuid = member_uuid
+        self.number_of_affected_entries = number_of_affected_entries
 
     @property
     def key(self) -> KeyType:
