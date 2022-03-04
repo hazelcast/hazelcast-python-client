@@ -3,11 +3,9 @@ import typing
 import uuid
 
 from hazelcast.core import MemberInfo
-from hazelcast.future import Future
+from hazelcast.types import KeyType, ValueType, ItemType, MessageType, BlockingProxyType
 from hazelcast.invocation import Invocation
 from hazelcast.partition import string_partition_strategy
-from hazelcast.serialization.compact import SchemaNotReplicatedError
-from hazelcast.types import KeyType, ValueType, ItemType, MessageType, BlockingProxyType
 from hazelcast.util import get_attr_name
 
 MAX_SIZE = float("inf")
@@ -33,20 +31,7 @@ class Proxy(typing.Generic[BlockingProxyType], abc.ABC):
         self._register_listener = listener_service.register_listener
         self._deregister_listener = listener_service.deregister_listener
         self._is_smart = context.config.smart_routing
-        self._send_compact_schema = context.compact_schema_service.send_schema
-
-    def _send_schema_and_retry(
-        self,
-        error: SchemaNotReplicatedError,
-        func: typing.Callable[..., Future],
-        *args: typing.Any,
-        **kwargs: typing.Any
-    ) -> Future:
-        def continuation(future):
-            future.result()
-            return func(*args, **kwargs)
-
-        return self._send_compact_schema(error.schema, error.clazz).continue_with(continuation)
+        self._send_schema_and_retry = context.compact_schema_service.send_schema_and_retry
 
     def destroy(self) -> bool:
         """Destroys this proxy.
@@ -121,6 +106,11 @@ class TransactionalProxy:
         serialization_service = context.serialization_service
         self._to_object = serialization_service.to_object
         self._to_data = serialization_service.to_data
+        self._send_schema_and_retry = context.compact_schema_service.send_schema_and_retry
+        self._no_op_func = lambda: None
+
+    def _send_schema(self, error):
+        return self._send_schema_and_retry(error, self._no_op_func).result()
 
     def _invoke(self, request, response_handler=_no_op_response_handler):
         invocation = Invocation(
@@ -206,21 +196,16 @@ class ItemEvent(typing.Generic[ItemType]):
 
     Attributes:
         name: Name of the proxy that fired the event.
+        item: The item related to the event.
         event_type: Type of the event.
         member: Member that fired the event.
     """
 
-    def __init__(self, name: str, item_data, event_type: int, member: MemberInfo, to_object):
+    def __init__(self, name: str, item: ItemEventType, event_type: int, member: MemberInfo):
         self.name = name
-        self._item_data = item_data
+        self.item = item
         self.event_type = event_type
         self.member = member
-        self._to_object = to_object
-
-    @property
-    def item(self) -> ItemType:
-        """The item related to the event."""
-        return self._to_object(self._item_data)
 
 
 class EntryEvent(typing.Generic[KeyType, ValueType]):
@@ -230,47 +215,29 @@ class EntryEvent(typing.Generic[KeyType, ValueType]):
         event_type: Type of the event.
         uuid: UUID of the member that fired the event.
         number_of_affected_entries: Number of affected entries by this event.
+        key: The key of this entry event.
+        value: The value of the entry event.
+        old_value: The old value of the entry event.
+        merging_value: The incoming merging value of the entry event.
     """
 
     def __init__(
         self,
-        to_object,
-        key,
-        value,
-        old_value,
-        merging_value,
+        key: KeyType,
+        value: ValueType,
+        old_value: ValueType,
+        merging_value: ValueType,
         event_type: int,
         member_uuid: uuid.UUID,
         number_of_affected_entries: int,
     ):
-        self._to_object = to_object
-        self._key_data = key
-        self._value_data = value
-        self._old_value_data = old_value
-        self._merging_value_data = merging_value
+        self.key = key
+        self.value = value
+        self.old_value = old_value
+        self.merging_value = merging_value
         self.event_type = event_type
         self.uuid = member_uuid
         self.number_of_affected_entries = number_of_affected_entries
-
-    @property
-    def key(self) -> KeyType:
-        """The key of this entry event."""
-        return self._to_object(self._key_data)
-
-    @property
-    def old_value(self) -> ValueType:
-        """The old value of the entry event."""
-        return self._to_object(self._old_value_data)
-
-    @property
-    def value(self) -> ValueType:
-        """The value of the entry event."""
-        return self._to_object(self._value_data)
-
-    @property
-    def merging_value(self) -> ValueType:
-        """The incoming merging value of the entry event."""
-        return self._to_object(self._merging_value_data)
 
     def __repr__(self):
         return (
@@ -288,21 +255,16 @@ class EntryEvent(typing.Generic[KeyType, ValueType]):
         )
 
 
-_SENTINEL = object()
-
-
 class TopicMessage(typing.Generic[MessageType]):
     """Topic message."""
 
-    __slots__ = ("_name", "_message_data", "_message", "_publish_time", "_member", "_to_object")
+    __slots__ = ("_name", "_message", "_publish_time", "_member")
 
-    def __init__(self, name, message_data, publish_time, member, to_object):
+    def __init__(self, name, message, publish_time, member):
         self._name = name
-        self._message_data = message_data
-        self._message = _SENTINEL
+        self._message = message
         self._publish_time = publish_time
         self._member = member
-        self._to_object = to_object
 
     @property
     def name(self) -> str:
@@ -322,10 +284,6 @@ class TopicMessage(typing.Generic[MessageType]):
     @property
     def message(self) -> MessageType:
         """The message sent to Topic."""
-        if self._message is not _SENTINEL:
-            return self._message
-
-        self._message = self._to_object(self._message_data)
         return self._message
 
     def __repr__(self):

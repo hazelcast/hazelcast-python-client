@@ -7,6 +7,7 @@ from threading import RLock
 from hazelcast.errors import HazelcastError
 from hazelcast.future import Future, ImmediateFuture, ImmediateExceptionFuture
 from hazelcast.invocation import Invocation
+from hazelcast.serialization.compact import SchemaNotReplicatedError
 from hazelcast.util import (
     UUIDUtil,
     to_millis,
@@ -1207,10 +1208,17 @@ class _InternalSqlService:
     than the one exposed to the user.
     """
 
-    def __init__(self, connection_manager, serialization_service, invocation_service):
+    def __init__(
+        self,
+        connection_manager,
+        serialization_service,
+        invocation_service,
+        send_schema_and_retry_fn,
+    ):
         self._connection_manager = connection_manager
         self._serialization_service = serialization_service
         self._invocation_service = invocation_service
+        self._send_schema_and_retry_fn = send_schema_and_retry_fn
 
     def execute(self, sql, params, cursor_buffer_size, timeout, expected_result_type, schema):
         """Constructs a statement and executes it.
@@ -1233,14 +1241,17 @@ class _InternalSqlService:
 
         connection = None
         try:
+            try:
+                # Serialize the passed parameters.
+                serialized_params = [
+                    self._serialization_service.to_data(param) for param in statement.parameters
+                ]
+            except SchemaNotReplicatedError as e:
+                return self._send_schema_and_retry_fn(e, self.execute, sql, params, kwargs)
+
             connection = self._get_query_connection()
             # Create a new, unique query id.
             query_id = _SqlQueryId.from_uuid(connection.remote_uuid)
-
-            # Serialize the passed parameters.
-            serialized_params = [
-                self._serialization_service.to_data(param) for param in statement.parameters
-            ]
 
             request = sql_execute_codec.encode_request(
                 statement.sql,

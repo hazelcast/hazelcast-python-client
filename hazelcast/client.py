@@ -379,7 +379,9 @@ class HazelcastClient:
         self._address_provider = self._create_address_provider()
         self._internal_partition_service = _InternalPartitionService(self)
         self._partition_service = PartitionService(
-            self._internal_partition_service, self._serialization_service
+            self._internal_partition_service,
+            self._serialization_service,
+            self._compact_schema_service.send_schema_and_retry,
         )
         self._internal_cluster_service = _InternalClusterService(self, config)
         self._cluster_service = ClusterService(self._internal_cluster_service)
@@ -431,7 +433,10 @@ class HazelcastClient:
             self._compact_schema_service,
         )
         self._internal_sql_service = _InternalSqlService(
-            self._connection_manager, self._serialization_service, self._invocation_service
+            self._connection_manager,
+            self._serialization_service,
+            self._invocation_service,
+            self._compact_schema_service.send_schema_and_retry,
         )
         self._sql_service = SqlService(self._internal_sql_service)
         self._init_context()

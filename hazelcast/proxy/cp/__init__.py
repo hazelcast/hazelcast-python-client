@@ -23,6 +23,7 @@ class BaseCPProxy(typing.Generic[BlockingProxyType], abc.ABC):
         serialization_service = context.serialization_service
         self._to_data = serialization_service.to_data
         self._to_object = serialization_service.to_object
+        self._send_schema_and_retry = context.compact_schema_service.send_schema_and_retry
 
     def destroy(self) -> Future[None]:
         """Destroys this proxy."""

@@ -14,6 +14,7 @@ from hazelcast.protocol.codec import (
 )
 from hazelcast.proxy.base import PartitionSpecificProxy
 from hazelcast.types import ItemType
+from hazelcast.serialization.compact import SchemaNotReplicatedError
 from hazelcast.util import (
     check_not_negative,
     check_not_none,
@@ -240,7 +241,11 @@ class Ringbuffer(PartitionSpecificProxy["BlockingRingbuffer"], typing.Generic[It
         Returns:
             The sequenceId of the added item, or ``-1`` if the add failed.
         """
-        item_data = self._to_data(item)
+        try:
+            item_data = self._to_data(item)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.add, item, overflow_policy)
+
         request = ringbuffer_add_codec.encode_request(self.name, overflow_policy, item_data)
         return self._invoke(request, ringbuffer_add_codec.decode_response)
 
@@ -273,10 +278,13 @@ class Ringbuffer(PartitionSpecificProxy["BlockingRingbuffer"], typing.Generic[It
         if len(items) > MAX_BATCH_SIZE:
             raise AssertionError("Batch size can't be greater than %d" % MAX_BATCH_SIZE)
 
-        item_data_list = []
-        for item in items:
-            check_not_none(item, "item can't be None")
-            item_data_list.append(self._to_data(item))
+        try:
+            item_data_list = []
+            for item in items:
+                check_not_none(item, "item can't be None")
+                item_data_list.append(self._to_data(item))
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.add_all, items, overflow_policy)
 
         request = ringbuffer_add_all_codec.encode_request(
             self.name, item_data_list, overflow_policy
@@ -358,9 +366,15 @@ class Ringbuffer(PartitionSpecificProxy["BlockingRingbuffer"], typing.Generic[It
         check_true(
             max_count < MAX_BATCH_SIZE, "max count can't be greater than %d" % MAX_BATCH_SIZE
         )
+        try:
+            filter_data = self._to_data(filter)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(
+                e, self.read_many, start_sequence, min_count, max_count, filter
+            )
 
         request = ringbuffer_read_many_codec.encode_request(
-            self.name, start_sequence, min_count, max_count, self._to_data(filter)
+            self.name, start_sequence, min_count, max_count, filter_data
         )
 
         def handler(message):

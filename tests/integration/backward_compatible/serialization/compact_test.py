@@ -686,27 +686,31 @@ class CompactOnClusterRestartTest(CompactTestBase):
 
 class CompactWithListenerTest(CompactTestBase):
     def test_map_listener(self):
-        client = self.create_client(
-            {
-                "cluster_name": self.cluster.id,
-                "compact_serializers": {
-                    SomeFields: SomeFieldsSerializer([FieldDefinition(name="int32")])
-                },
-            }
-        )
+        config = {
+            "cluster_name": self.cluster.id,
+            "compact_serializers": {
+                SomeFields: SomeFieldsSerializer([FieldDefinition(name="int32")])
+            },
+        }
+        client = self.create_client(config)
 
-        m = client.get_map(random_string()).blocking()
+        map_name = random_string()
+        m = client.get_map(map_name).blocking()
 
         counter = AtomicInteger()
 
-        def listener(entry_event):
-            entry_event.value  # Force it to throw SchemaNotFoundError
-            # This won't be necessary once we eagerly deserialize
-            # the event
+        def listener(_):
             counter.add(1)
 
         m.add_entry_listener(include_value=True, added_func=listener)
-        m.put(1, SomeFields(int32=42))
+
+        # Put the entry from other client to not create a local
+        # registry in the actual client. This will force it to
+        # go the cluster to fetch the schema.
+        other_client = self.create_client(config)
+        other_client_map = other_client.get_map(map_name).blocking()
+        other_client_map.put(1, SomeFields(int32=42))
+
         self.assertTrueEventually(lambda: self.assertEqual(1, counter.get()))
 
 

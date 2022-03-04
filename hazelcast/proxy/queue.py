@@ -25,6 +25,7 @@ from hazelcast.protocol.codec import (
 )
 from hazelcast.proxy.base import PartitionSpecificProxy, ItemEvent, ItemEventType
 from hazelcast.types import ItemType
+from hazelcast.serialization.compact import SchemaNotReplicatedError
 from hazelcast.util import check_not_none, to_millis, ImmutableLazyDataList
 
 
@@ -63,10 +64,13 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
             ``True`` if this queue is changed after call, ``False`` otherwise.
         """
         check_not_none(items, "Value can't be None")
-        data_items = []
-        for item in items:
-            check_not_none(item, "Value can't be None")
-            data_items.append(self._to_data(item))
+        try:
+            data_items = []
+            for item in items:
+                check_not_none(item, "Value can't be None")
+                data_items.append(self._to_data(item))
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.add_all, items)
 
         request = queue_add_all_codec.encode_request(self.name, data_items)
         return self._invoke(request, queue_add_all_codec.decode_response)
@@ -94,11 +98,11 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
         codec = queue_add_listener_codec
         request = codec.encode_request(self.name, include_value, self._is_smart)
 
-        def handle_event_item(item, uuid, event_type):
-            item = item if include_value else None
+        def handle_event_item(item_data, uuid, event_type):
+            item = self._to_object(item_data) if include_value else None
             member = self._context.cluster_service.get_member(uuid)
 
-            item_event = ItemEvent(self.name, item, event_type, member, self._to_object)
+            item_event = ItemEvent(self.name, item, event_type, member)
             if event_type == ItemEventType.ADDED:
                 if item_added_func:
                     item_added_func(item_event)
@@ -129,7 +133,11 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
             otherwise.
         """
         check_not_none(item, "Item can't be None")
-        item_data = self._to_data(item)
+        try:
+            item_data = self._to_data(item)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.contains, item)
+
         request = queue_contains_codec.encode_request(self.name, item_data)
         return self._invoke(request, queue_contains_codec.decode_response)
 
@@ -146,10 +154,13 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
             this queue, ``False`` otherwise.
         """
         check_not_none(items, "Items can't be None")
-        data_items = []
-        for item in items:
-            check_not_none(item, "item can't be None")
-            data_items.append(self._to_data(item))
+        try:
+            data_items = []
+            for item in items:
+                check_not_none(item, "item can't be None")
+                data_items.append(self._to_data(item))
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.contains_all, items)
 
         request = queue_contains_all_codec.encode_request(self.name, data_items)
         return self._invoke(request, queue_contains_all_codec.decode_response)
@@ -176,7 +187,8 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
 
         def handler(message):
             response = queue_drain_to_max_size_codec.decode_response(message)
-            target_list.extend(map(self._to_object, response))
+            items = [self._to_object(item) for item in response]
+            target_list.extend(items)
             return len(response)
 
         request = queue_drain_to_max_size_codec.encode_request(self.name, max_size)
@@ -225,7 +237,11 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
             otherwise.
         """
         check_not_none(item, "Value can't be None")
-        element_data = self._to_data(item)
+        try:
+            element_data = self._to_data(item)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.offer, item, timeout)
+
         request = queue_offer_codec.encode_request(self.name, element_data, to_millis(timeout))
         return self._invoke(request, queue_offer_codec.decode_response)
 
@@ -274,7 +290,11 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
             item: The specified item.
         """
         check_not_none(item, "Value can't be None")
-        element_data = self._to_data(item)
+        try:
+            element_data = self._to_data(item)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.put, item)
+
         request = queue_put_codec.encode_request(self.name, element_data)
         return self._invoke(request)
 
@@ -298,7 +318,11 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
             otherwise.
         """
         check_not_none(item, "Value can't be None")
-        item_data = self._to_data(item)
+        try:
+            item_data = self._to_data(item)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.remove, item)
+
         request = queue_remove_codec.encode_request(self.name, item_data)
         return self._invoke(request, queue_remove_codec.decode_response)
 
@@ -313,10 +337,13 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
             ``True`` if the call changed this queue, ``False`` otherwise.
         """
         check_not_none(items, "Value can't be None")
-        data_items = []
-        for item in items:
-            check_not_none(item, "Value can't be None")
-            data_items.append(self._to_data(item))
+        try:
+            data_items = []
+            for item in items:
+                check_not_none(item, "Value can't be None")
+                data_items.append(self._to_data(item))
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.remove_all, items)
 
         request = queue_compare_and_remove_all_codec.encode_request(self.name, data_items)
         return self._invoke(request, queue_compare_and_remove_all_codec.decode_response)
@@ -350,10 +377,14 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
             otherwise.
         """
         check_not_none(items, "Value can't be None")
-        data_items = []
-        for item in items:
-            check_not_none(item, "Value can't be None")
-            data_items.append(self._to_data(item))
+        try:
+            data_items = []
+            for item in items:
+                check_not_none(item, "Value can't be None")
+                data_items.append(self._to_data(item))
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.retain_all, items)
+
         request = queue_compare_and_retain_all_codec.encode_request(self.name, data_items)
         return self._invoke(request, queue_compare_and_retain_all_codec.decode_response)
 
