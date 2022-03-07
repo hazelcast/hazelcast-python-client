@@ -154,8 +154,7 @@ class FencedLock(SessionAwareCPProxy):
             :func:`lock` function for more information about fences.
 
         Args:
-            timeout (int or float): The maximum time to wait for the lock
-                in seconds.
+            timeout (float): The maximum time to wait for the lock in seconds.
 
         Returns:
             Future[int]: The fencing token if the lock was acquired and

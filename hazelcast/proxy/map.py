@@ -292,7 +292,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         and returning incorrect results.
 
         Args:
-            attributes (list[str]): List of indexed attributes.
+            attributes (typing.Sequence[str]): List of indexed attributes.
             index_type (int|str): Type of the index. By default, set to
                 ``SORTED``.
             name (str): Name of the index.
@@ -599,8 +599,8 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         collection.
 
         Args:
-            keys (list): Collection of the keys for the entries to be
-                processed.
+            keys (typing.Sequence): Collection of the keys for the entries to
+                be processed.
             entry_processor: A stateful serializable object which represents
                 the EntryProcessor defined on server side. This object must
                 have a serializable EntryProcessor counter part registered on
@@ -707,7 +707,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
             ``__eq__`` defined in key's class.
 
         Args:
-            keys (list): Keys to get.
+            keys (typing.Sequence): Keys to get.
 
         Returns:
             Future[dict]: Dictionary of map entries.
@@ -849,7 +849,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         keys if provided.
 
         Args:
-            keys (list): Keys of the entry values to load.
+            keys (typing.Sequence): Keys of the entry values to load.
             replace_existing_values (bool): Whether the existing values will be
                 replaced or not with those loaded from the server side
                 MapLoader.
@@ -893,8 +893,8 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
 
         Args:
             key: The key to lock.
-            lease_time (int or float): Time in seconds to wait before releasing
-                the lock.
+            lease_time (float): Time in seconds to wait before releasing the
+                lock.
 
         Returns:
             Future[None]:
@@ -974,14 +974,14 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         Args:
             key: The specified key.
             value: The value to associate with the key.
-            ttl (int or float): Maximum time in seconds for this entry to stay
-                in the map. If not provided, the value configured on the
-                server side configuration will be used. Setting this to
-                ``0`` means infinite time-to-live.
-            max_idle (int or float): Maximum time in seconds for this entry to
-                stay idle in the map. If not provided, the value configured on
-                the server side configuration will be used. Setting this to
-                ``0`` means infinite max idle time.
+            ttl (float): Maximum time in seconds for this entry to stay in the
+                map. If not provided, the value configured on the server side
+                configuration will be used. Setting this to ``0`` means
+                infinite time-to-live.
+            max_idle (float): Maximum time in seconds for this entry to stay
+                idle in the map. If not provided, the value configured on the
+                server side configuration will be used. Setting this to ``0``
+                means infinite max idle time.
 
         Returns:
             Future[any]: Previous value associated with key or ``None`` if
@@ -1060,14 +1060,14 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         Args:
             key: Key of the entry.
             value: Value of the entry.
-            ttl (int or float): Maximum time in seconds for this entry to stay
-                in the map. If not provided, the value configured on the
-                server side configuration will be used. Setting this to
-                ``0`` means infinite time-to-live.
-            max_idle (int or float): Maximum time in seconds for this entry to
-                stay idle in the map. If not provided, the value configured on
-                the server side configuration will be used. Setting this to
-                ``0`` means infinite max idle time.
+            ttl (float): Maximum time in seconds for this entry to stay in the
+                map. If not provided, the value configured on the server side
+                configuration will be used. Setting this to ``0`` means
+                infinite time-to-live.
+            max_idle (float): Maximum time in seconds for this entry to stay
+                idle in the map. If not provided, the value configured on the
+                server side configuration will be used. Setting this to ``0``
+                means infinite max idle time.
 
         Returns:
             Future[any]: Old value of the entry.
@@ -1093,14 +1093,14 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         Args:
             key: Key of the entry.
             value: Value of the entry.
-            ttl (int or float): Maximum time in seconds for this entry to stay
-                in the map. If not provided, the value configured on the
-                server side configuration will be used. Setting this to
-                ``0`` means infinite time-to-live.
-            max_idle (int or float): Maximum time in seconds for this entry to
-                stay idle in the map. If not provided, the value configured on
-                the server side configuration will be used. Setting this to
-                ``0`` means infinite max idle time.
+            ttl (float): Maximum time in seconds for this entry to stay in the
+                map. If not provided, the value configured on the server side
+                configuration will be used. Setting this to ``0`` means
+                infinite time-to-live.
+            max_idle (float): Maximum time in seconds for this entry to stay
+                idle in the map. If not provided, the value configured on the
+                server side configuration will be used. Setting this to ``0``
+                means infinite max idle time.
 
         Returns:
             Future[None]:
@@ -1289,14 +1289,14 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         Args:
             key: Key of the entry.
             value: Value of the entry.
-            ttl (int or float): Maximum time in seconds for this entry to stay
-                in the map. If not provided, the value configured on the
+            ttl (float): Maximum time in seconds for this entry to stay in the
+                map. If not provided, the value configured on the server side
+                configuration will be used. Setting this to ``0`` means
+                infinite time-to-live.
+            max_idle (float): Maximum time in seconds for this entry to stay
+                idle in the map. If not provided, the value configured on the
                 server side configuration will be used. Setting this to ``0``
-                means infinite time-to-live.
-            max_idle (int or float): Maximum time in seconds for this entry to
-                stay idle in the map. If not provided, the value configured on
-                the server side configuration will be used. Setting this to
-                ``0`` means infinite max idle time.
+                means infinite max idle time.
 
         Returns:
             Future[None]:
@@ -1317,8 +1317,8 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
 
         Args:
             key: The key of the map entry.
-            ttl (int or float): Maximum time in seconds for this entry to stay
-                in the map. Setting this to ``0`` means infinite time-to-live.
+            ttl (float): Maximum time in seconds for this entry to stay in the
+            map. Setting this to ``0`` means infinite time-to-live.
 
         Returns:
             Future[None]:
@@ -1356,10 +1356,9 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
 
         Args:
             key: Key to lock in this map.
-            lease_time (int or float): Time in seconds to wait before releasing
-                the lock.
-            timeout (int or float): Maximum time in seconds to wait for the
+            lease_time (float): Time in seconds to wait before releasing the
                 lock.
+            timeout (float): Maximum time in seconds to wait for the lock.
 
         Returns:
             Future[bool]: ``True`` if the lock was acquired, ``False``
@@ -1396,7 +1395,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         Args:
             key: Key of the entry.
             value: Value of the entry.
-            timeout (int or float): Maximum time in seconds to wait.
+            timeout (float): Maximum time in seconds to wait.
 
         Returns:
             Future[bool] ``True`` if the put is successful, ``False`` otherwise.
@@ -1418,7 +1417,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
 
         Args:
             key: Key of the entry to be deleted.
-            timeout (int or float): Maximum time in seconds to wait.
+            timeout (float): Maximum time in seconds to wait.
 
         Returns:
             Future[bool]: ``True`` if the remove is successful, ``False``

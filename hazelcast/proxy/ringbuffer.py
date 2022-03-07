@@ -261,8 +261,8 @@ class Ringbuffer(PartitionSpecificProxy, typing.Generic[ItemType]):
         ``overflow_policy``.
 
         Args:
-            items (list): The specified collection which contains the items
-                to be added.
+            items (typing.Sequence): The specified collection which contains
+                the items to be added.
             overflow_policy (int): The OverflowPolicy to be used when there is
                 no space.
 

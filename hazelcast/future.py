@@ -271,7 +271,7 @@ def combine_futures(futures: typing.Sequence[Future]) -> Future:
     exceptional result.
 
     Args:
-        futures (list[Future]): List of Futures to be combined.
+        futures (typing.Sequence[Future]): List of Futures to be combined.
 
     Returns:
         Future: Result of the combination.

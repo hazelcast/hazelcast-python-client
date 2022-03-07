@@ -58,7 +58,8 @@ class Queue(PartitionSpecificProxy, typing.Generic[ItemType]):
         """Adds the elements in the specified collection to this queue.
 
         Args:
-            items (list): Collection which includes the items to be added.
+            items (typing.Sequence): Collection which includes the items to be
+                added.
 
         Returns:
             Future[bool]: ``True`` if this queue is changed after call,
@@ -145,8 +146,8 @@ class Queue(PartitionSpecificProxy, typing.Generic[ItemType]):
         specified collection or not.
 
         Args:
-            items (list): The specified collection which includes the items
-                to be searched.
+            items (typing.Sequence): The specified collection which includes
+                the items to be searched.
 
         Returns:
             Future[bool]: ``True`` if all of the items in the specified
@@ -225,8 +226,7 @@ class Queue(PartitionSpecificProxy, typing.Generic[ItemType]):
 
         Args:
             item: The item to be added.
-            timeout (int or float): Maximum time in seconds to wait for
-                addition.
+            timeout (float): Maximum time in seconds to wait for addition.
 
         Returns:
             Future[bool]: ``True`` if the element was added to this queue,
@@ -261,8 +261,7 @@ class Queue(PartitionSpecificProxy, typing.Generic[ItemType]):
         - If the timeout is not provided, returns ``None``.
 
         Args:
-            timeout (int or float): Maximum time in seconds to wait for
-                addition.
+            timeout (float): Maximum time in seconds to wait for addition.
 
         Returns:
             Future[any]: The head of this queue, or ``None`` if this queue is
@@ -321,7 +320,7 @@ class Queue(PartitionSpecificProxy, typing.Generic[ItemType]):
         queue.
 
         Args:
-            items (list): The specified collection.
+            items (typing.Sequence): The specified collection.
 
         Returns:
             Future[bool]: ``True`` if the call changed this queue, ``False``
@@ -358,8 +357,8 @@ class Queue(PartitionSpecificProxy, typing.Generic[ItemType]):
         collection will be retained.
 
         Args:
-            items (list): Collection which includes the elements to be retained
-            in this set.
+            items (typing.Sequence): Collection which includes the elements to
+                be retained in this set.
 
         Returns:
             Future[bool]: ``True`` if this queue changed as a result of the

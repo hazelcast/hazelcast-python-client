@@ -65,7 +65,7 @@ class Executor(Proxy):
         """Executes a task on each of the specified members.
 
         Args:
-            members (list[MemberInfo]): The specified members.
+            members (typing.Sequence[MemberInfo]): The specified members.
             task: The task executed on the specified members.
 
         Returns:

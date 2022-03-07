@@ -60,7 +60,7 @@ class CountDownLatch(BaseCPProxy):
         will not wait at all.
 
         Args:
-            timeout (int or float): The maximum time to wait in seconds
+            timeout (float): The maximum time to wait in seconds
 
         Returns:
             Future[bool]: ``True`` if the count reached zero, ``False`` if the

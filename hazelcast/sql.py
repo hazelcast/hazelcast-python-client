@@ -1230,7 +1230,7 @@ class _InternalSqlService:
             sql (str): SQL string.
             params (tuple): Query parameters.
             cursor_buffer_size (int): Cursor buffer size.
-            timeout (int or float): Timeout of the query.
+            timeout (float): Timeout of the query.
             expected_result_type (SqlExpectedResultType): Expected result type
                 of the query.
             schema (str or None): The schema name.

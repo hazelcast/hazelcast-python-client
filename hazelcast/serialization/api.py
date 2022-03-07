@@ -131,71 +131,71 @@ class ObjectDataOutput:
         """
         raise NotImplementedError()
 
-    def write_boolean_array(self, val: typing.List[bool]) -> None:
+    def write_boolean_array(self, val: typing.Sequence[bool]) -> None:
         """Writes a bool array to this output stream.
 
         Args:
-            val (list[bool]): The bool array to be written.
+            val (typing.Sequence[bool]): The bool array to be written.
         """
         raise NotImplementedError()
 
-    def write_char_array(self, val: typing.List[str]) -> None:
+    def write_char_array(self, val: typing.Sequence[str]) -> None:
         """Writes a char array to this output stream.
 
         Args:
-            val  (list[str]): The char array to be written.
+            val  (typing.Sequence[str]): The char array to be written.
         """
         raise NotImplementedError()
 
-    def write_int_array(self, val: typing.List[int]) -> None:
+    def write_int_array(self, val: typing.Sequence[int]) -> None:
         """Writes a int array to this output stream.
 
         Args:
-            val (list[int]): The int array to be written.
+            val (typing.Sequence[int]): The int array to be written.
         """
         raise NotImplementedError()
 
-    def write_long_array(self, val: typing.List[int]) -> None:
+    def write_long_array(self, val: typing.Sequence[int]) -> None:
         """Writes a long array to this output stream.
 
         Args:
-            val (list[int]): The long array to be written.
+            val (typing.Sequence[int]): The long array to be written.
         """
         raise NotImplementedError()
 
-    def write_double_array(self, val: typing.List[float]) -> None:
+    def write_double_array(self, val: typing.Sequence[float]) -> None:
         """Writes a double array to this output stream.
 
         Args:
-            val (list[float]): The double array to be written.
+            val (typing.Sequence[float]): The double array to be written.
         """
         raise NotImplementedError()
 
-    def write_float_array(self, val: typing.List[float]) -> None:
+    def write_float_array(self, val: typing.Sequence[float]) -> None:
         """Writes a float array to this output stream.
 
         Args:
-            val (list[float]): The float array to be written.
+            val (typing.Sequence[float]): The float array to be written.
         """
         raise NotImplementedError()
 
-    def write_short_array(self, val: typing.List[int]) -> None:
+    def write_short_array(self, val: typing.Sequence[int]) -> None:
         """Writes a short array to this output stream.
 
         Args:
-            val (list[int]): The short array to be written.
+            val (typing.Sequence[int]): The short array to be written.
         """
         raise NotImplementedError()
 
-    def write_string_array(self, val: typing.List[str]) -> None:
+    def write_string_array(self, val: typing.Sequence[str]) -> None:
         """Writes a UTF-8 String array to this output stream.
 
         Args:
-            val (list[str]): The UTF-8 String array to be written.
+            val (typing.Sequence[str]): The UTF-8 String array to be written.
         """
         raise NotImplementedError()
 
-    def write_utf_array(self, val: typing.List[str]) -> None:
+    def write_utf_array(self, val: typing.Sequence[str]) -> None:
         """Writes a UTF-8 String array to this output stream.
 
         .. deprecated:: 4.1
@@ -203,7 +203,7 @@ class ObjectDataOutput:
             next major version. Use :func:`write_string_array` instead.
 
         Args:
-            val (list[str]): The UTF-8 String array to be written.
+            val (typing.Sequence[str]): The UTF-8 String array to be written.
         """
         raise NotImplementedError()
 
@@ -1050,79 +1050,79 @@ class PortableWriter:
         """
         raise NotImplementedError()
 
-    def write_boolean_array(self, field_name: str, values: typing.List[bool]) -> None:
+    def write_boolean_array(self, field_name: str, values: typing.Sequence[bool]) -> None:
         """Writes a primitive bool array.
 
         Args:
             field_name (str): Name of the field.
-            values (list[bool]): Bool array to be written.
+            values (typing.Sequence[bool]): Bool array to be written.
         """
         raise NotImplementedError()
 
-    def write_char_array(self, field_name: str, values: typing.List[str]) -> None:
+    def write_char_array(self, field_name: str, values: typing.Sequence[str]) -> None:
         """Writes a primitive char array.
 
         Args:
             field_name (str): Name of the field.
-            values (list[str]): Char array to be written.
+            values (typing.Sequence[str]): Char array to be written.
         """
         raise NotImplementedError()
 
-    def write_int_array(self, field_name: str, values: typing.List[int]) -> None:
+    def write_int_array(self, field_name: str, values: typing.Sequence[int]) -> None:
         """Writes a primitive int array.
 
         Args:
             field_name (str): Name of the field.
-            values (list[int]): Int array to be written.
+            values (typing.Sequence[int]): Int array to be written.
         """
         raise NotImplementedError()
 
-    def write_long_array(self, field_name: str, values: typing.List[int]) -> None:
+    def write_long_array(self, field_name: str, values: typing.Sequence[int]) -> None:
         """Writes a primitive long array.
 
         Args:
             field_name (str): Name of the field.
-            values (list[int]): Long array to be written.
+            values (typing.Sequence[int]): Long array to be written.
         """
         raise NotImplementedError()
 
-    def write_double_array(self, field_name: str, values: typing.List[float]) -> None:
+    def write_double_array(self, field_name: str, values: typing.Sequence[float]) -> None:
         """Writes a primitive double array.
 
         Args:
             field_name (str): Name of the field.
-            values (list[float]): Double array to be written.
+            values (typing.Sequence[float]): Double array to be written.
         """
         raise NotImplementedError()
 
-    def write_float_array(self, field_name: str, values: typing.List[float]) -> None:
+    def write_float_array(self, field_name: str, values: typing.Sequence[float]) -> None:
         """Writes a primitive float array.
 
         Args:
             field_name (str): Name of the field.
-            values (list[float]): Float array to be written.
+            values (typing.Sequence[float]): Float array to be written.
         """
         raise NotImplementedError()
 
-    def write_short_array(self, field_name: str, values: typing.List[int]) -> None:
+    def write_short_array(self, field_name: str, values: typing.Sequence[int]) -> None:
         """Writes a primitive short array.
 
         Args:
             field_name (str): Name of the field.
-            values: (list[int]): Short array to be written.
+            values: (typing.Sequence[int]): Short array to be written.
         """
         raise NotImplementedError()
 
-    def write_string_array(self, field_name: str, values: typing.List[str]) -> None:
+    def write_string_array(self, field_name: str, values: typing.Sequence[str]) -> None:
         """Writes a UTF-8 String array.
 
         Args:
             field_name (str): Name of the field.
-            values: (str): UTF-8 String array to be written.
+            values: (typing.Sequence[str]): UTF-8 String array to be written.
         """
         raise NotImplementedError()
 
-    def write_utf_array(self, field_name: str, values: typing.List[str]) -> None:
+    def write_utf_array(self, field_name: str, values: typing.Sequence[str]) -> None:
         """Writes a UTF-8 String array.
 
         .. deprecated:: 4.1
@@ -1131,16 +1131,16 @@ class PortableWriter:
 
         Args:
             field_name (str): Name of the field.
-            values: (str): UTF-8 String array to be written.
+            values: (typing.Sequence[str]): UTF-8 String array to be written.
         """
         raise NotImplementedError()
 
-    def write_portable_array(self, field_name: str, values: typing.List[Portable]) -> None:
+    def write_portable_array(self, field_name: str, values: typing.Sequence[Portable]) -> None:
         """Writes a portable array.
 
         Args:
             field_name (str): Name of the field.
-            values (list[hazelcast.serialization.api.Portable]): Portable array to be written.
+            values (typing.Sequence[Portable]): Portable array to be written.
         """
         raise NotImplementedError()
 

@@ -79,8 +79,8 @@ class List(PartitionSpecificProxy, typing.Generic[ItemType]):
         iterator.
 
         Args:
-            items (list): The specified collection which includes the elements
-            to be added to list.
+            items (typing.Sequence): The specified collection which includes
+                the elements to be added to list.
 
         Returns:
             Future[bool]: ``True`` if this call changed the list, ``False``
@@ -106,8 +106,8 @@ class List(PartitionSpecificProxy, typing.Generic[ItemType]):
         Args:
             index (int): The specified index at which the first element of
                 specified collection is added.
-            items (list): The specified collection which includes the elements
-                to be added to list.
+            items (typing.Sequence): The specified collection which includes
+                the elements to be added to list.
 
         Returns:
             Future[bool]: ``True`` if this call changed the list, ``False``
@@ -196,8 +196,8 @@ class List(PartitionSpecificProxy, typing.Generic[ItemType]):
         collection or not.
 
         Args:
-            items (list): The specified collection which includes the items to
-                be searched.
+            items (typing.Sequence): The specified collection which includes
+                the items to be searched.
 
         Returns:
             Future[bool]: ``True`` if all of the items in specified collection
@@ -369,7 +369,7 @@ class List(PartitionSpecificProxy, typing.Generic[ItemType]):
         collection from this list.
 
         Args:
-            items (list): The specified collection.
+            items (typing.Sequence): The specified collection.
 
         Returns:
             Future[bool]: ``True`` if this list changed as a result of the
@@ -406,8 +406,8 @@ class List(PartitionSpecificProxy, typing.Generic[ItemType]):
         removed from this list.
 
         Args:
-            items (list): Collections which includes the elements to be
-            retained in this list.
+            items (typing.Sequence): Collections which includes the elements
+                to be retained in this list.
 
         Returns:
             Future[bool]: ``True`` if this list changed as a result of the

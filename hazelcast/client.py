@@ -606,10 +606,10 @@ class HazelcastClient:
          using default or given options.
 
         Args:
-            timeout (int or float): The timeout in seconds determines
-                the maximum lifespan of a transaction. So if a transaction
-                is configured with a timeout of 2 minutes, then it will
-                automatically rollback if it hasn't committed yet.
+            timeout (float): The timeout in seconds determines the maximum
+                lifespan of a transaction. So if a transaction is configured
+                with a timeout of 2 minutes, then it will automatically
+                rollback if it hasn't committed yet.
             durability (int): The durability is the number of machines that
                 can take over if a member fails during a transaction commit
                 or rollback.

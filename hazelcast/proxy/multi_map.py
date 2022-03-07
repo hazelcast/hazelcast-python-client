@@ -306,8 +306,8 @@ class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
 
         Args:
             key: The key to lock.
-            lease_time (int or float): Time in seconds to wait before releasing
-                the lock.
+            lease_time (float): Time in seconds to wait before releasing the
+                lock.
 
         Returns:
             Future[None]:
@@ -484,10 +484,9 @@ class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
 
         Args:
             key: Key to lock in this map.
-            lease_time (int or float): Time in seconds to wait before releasing
-                the lock.
-            timeout (int or float): Maximum time in seconds to wait for the
+            lease_time (float): Time in seconds to wait before releasing the
                 lock.
+            timeout (float): Maximum time in seconds to wait for the lock.
 
         Returns:
             Future[bool]: ``True`` if the lock was acquired, ``False``

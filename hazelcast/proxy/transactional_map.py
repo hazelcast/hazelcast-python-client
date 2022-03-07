@@ -132,7 +132,7 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
         Args:
             key: The specified key.
             value: The value to associate with the key.
-            ttl (int or float): Maximum time in seconds for this entry to stay.
+            ttl (float): Maximum time in seconds for this entry to stay.
 
         Returns:
             Future[any]: Previous value associated with key or ``None`` if there

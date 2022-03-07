@@ -52,7 +52,7 @@ class _SingleAttributeProjection(_AbstractProjection[ProjectionType]):
 
 
 class _MultiAttributeProjection(_AbstractProjection[typing.List[typing.Any]]):
-    def __init__(self, attribute_paths: typing.List[str]):
+    def __init__(self, attribute_paths: typing.Sequence[str]):
         if not attribute_paths:
             raise ValueError("Specify at least one attribute path")
 

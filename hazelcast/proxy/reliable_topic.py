@@ -595,7 +595,7 @@ class ReliableTopic(Proxy, typing.Generic[MessageType]):
         """Publishes all messages to all subscribers of this topic.
 
         Args:
-            messages (list): Messages to publish.
+            messages (typing.Sequence): Messages to publish.
 
         Returns:
             Future[None]:

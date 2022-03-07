@@ -22,8 +22,7 @@ class TransactionalQueue(TransactionalProxy, typing.Generic[ItemType]):
 
         Args:
             item: The item to be added.
-            timeout (int or float): Maximum time in seconds to wait for
-                addition.
+            timeout (float): Maximum time in seconds to wait for addition.
 
         Returns:
             Future[bool]: ``True`` if the element was added to this queue,
@@ -58,8 +57,7 @@ class TransactionalQueue(TransactionalProxy, typing.Generic[ItemType]):
         :func:`Queue.poll(timeout) <hazelcast.proxy.queue.Queue.poll>`
 
         Args:
-            timeout (int or float): Maximum time in seconds to wait for
-                addition.
+            timeout (float): Maximum time in seconds to wait for addition.
 
         Returns:
             Future[any]: The head of this queue, or ``None`` if this queue is
@@ -80,8 +78,7 @@ class TransactionalQueue(TransactionalProxy, typing.Generic[ItemType]):
         :func:`Queue.peek(timeout) <hazelcast.proxy.queue.Queue.peek>`
 
         Args:
-            timeout (int or float): Maximum time in seconds to wait for
-                addition.
+            timeout (float): Maximum time in seconds to wait for addition.
 
         Returns:
             Future[any]: The head of this queue, or ``None`` if this queue is

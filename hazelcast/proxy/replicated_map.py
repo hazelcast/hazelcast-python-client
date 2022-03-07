@@ -264,8 +264,8 @@ class ReplicatedMap(Proxy, typing.Generic[KeyType, ValueType]):
         Args:
             key: The specified key.
             value: The value to associate with the key.
-            ttl (int or float): Maximum time in seconds for this entry to stay,
-                if not provided, the value configured on server side
+            ttl (float): Maximum time in seconds for this entry to stay, if
+                not provided, the value configured on server side
                 configuration will be used.
 
         Returns:

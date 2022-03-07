@@ -45,7 +45,8 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
         in this set.
 
         Args:
-            items (list): Collection which includes the items to be added.
+            items (typing.Sequence): Collection which includes the items to
+                be added.
 
         Returns:
             Future[bool]: ``True`` if this set is changed after call, ``False``
@@ -132,8 +133,8 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
         specified collection or not.
 
         Args:
-            items (list): The specified collection which includes the items to
-                be searched.
+            items (typing.Sequence): The specified collection which includes
+                the items to be searched.
 
         Returns:
             Future[bool]: ``True`` if all of the items in the specified
@@ -187,12 +188,12 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
         request = set_remove_codec.encode_request(self.name, item_data)
         return self._invoke(request, set_remove_codec.decode_response)
 
-    def remove_all(self, items: typing.List[ItemType]) -> Future[bool]:
+    def remove_all(self, items: typing.Sequence[ItemType]) -> Future[bool]:
         """Removes all of the elements of the specified collection from this
         set.
 
         Args:
-            items (list): The specified collection.
+            items (typing.Sequence): The specified collection.
 
         Returns:
             Future[bool]: ``True`` if the call changed this set, ``False``
@@ -229,8 +230,8 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
         collection will be retained.
 
         Args:
-            items (list): Collection which includes the elements to be
-                retained in this set.
+            items (typing.Sequence): Collection which includes the elements
+                to be retained in this set.
 
         Returns:
             Future[bool]: ``True`` if this set changed as a result of the call,
