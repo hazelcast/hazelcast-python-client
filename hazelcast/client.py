@@ -536,7 +536,7 @@ class HazelcastClient:
             name (str): Name of the PN Counter.
 
         Returns:
-            PNCounter: The PN Counter.
+            PNCounter: Distributed PN Counter instance with the specified name.
         """
         return self._proxy_manager.get_or_create(PN_COUNTER_SERVICE, name)
 
@@ -547,7 +547,8 @@ class HazelcastClient:
             name (str): Name of the ReliableTopic.
 
         Returns:
-            ReliableTopic: The ReliableTopic.
+            ReliableTopic: Distributed ReliableTopic instance with the
+            specified name.
         """
         return self._proxy_manager.get_or_create(RELIABLE_TOPIC_SERVICE, name)
 

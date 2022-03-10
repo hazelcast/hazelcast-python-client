@@ -270,8 +270,8 @@ class Semaphore(BaseCPProxy):
         Args:
             permits (int): The number of permits to acquire; defaults to ``1``
                 when not specified.
-            timeout (int): Optional timeout in seconds to wait for the permits;
-                when it's not specified the operation will return
+            timeout (float): Optional timeout in seconds to wait for the
+                permits; when it's not specified the operation will return
                 immediately after the acquire attempt
 
         Returns:
