@@ -196,6 +196,24 @@ class HazelcastClient:
                     }
                 })
 
+        compact_serializers (dict[typing.Type, hazelcast.serialization.api.CompactSerializer]):
+            Dictionary of classes to be serialized with Compact serialization
+            to Compact serializers.
+
+            .. code-block:: python
+
+                class Foo:
+                    pass
+
+                class FooSerializer(CompactSerializer[Foo]):
+                    pass
+
+                client = HazelcastClient(
+                    compact_serializers={
+                        Foo: FooSerializer(),
+                    },
+                )
+
         class_definitions (`list[hazelcast.serialization.portable.classdef.ClassDefinition]`):
             List of all portable class definitions.
         check_class_definition_errors (bool): When enabled, serialization system
