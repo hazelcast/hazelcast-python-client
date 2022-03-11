@@ -1,5 +1,6 @@
 import logging
 import uuid
+import typing
 
 from hazelcast import __version__
 
@@ -49,28 +50,30 @@ class LifecycleService:
     def __init__(self, internal_lifecycle_service):
         self._service = internal_lifecycle_service
 
-    def is_running(self):
+    def is_running(self) -> bool:
         """
         Checks whether or not the instance is running.
 
         Returns:
-            bool: ``True`` if the client is active and running, ``False`` otherwise.
+            bool: ``True`` if the client is active and running, ``False``
+            otherwise.
         """
         return self._service.running
 
-    def add_listener(self, on_state_change):
+    def add_listener(self, on_state_change: typing.Callable[[str], None]) -> str:
         """
         Adds a listener to listen for lifecycle events.
 
         Args:
-            on_state_change (function): Function to be called when lifecycle state is changed.
+            on_state_change (function): Function to be called when lifecycle
+            state is changed.
 
         Returns:
             str: Registration id of the listener
         """
         return self._service.add_listener(on_state_change)
 
-    def remove_listener(self, registration_id):
+    def remove_listener(self, registration_id: str) -> bool:
         """
         Removes a lifecycle listener.
 
@@ -78,9 +81,10 @@ class LifecycleService:
             registration_id (str): The id of the listener to be removed.
 
         Returns:
-            bool: ``True`` if the listener is removed successfully, ``False`` otherwise.
+            bool: ``True`` if the listener is removed successfully, ``False``
+            otherwise.
         """
-        self._service.remove_listener(registration_id)
+        return self._service.remove_listener(registration_id)
 
 
 class _InternalLifecycleService:

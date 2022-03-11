@@ -1,4 +1,6 @@
+import enum
 import logging
+import typing
 import uuid
 from threading import RLock
 
@@ -17,6 +19,28 @@ from hazelcast.util import (
 )
 
 _logger = logging.getLogger(__name__)
+
+_TIMEOUT_NOT_SET = -1
+_DEFAULT_CURSOR_BUFFER_SIZE = 4096
+
+
+class SqlExpectedResultType:
+    """The expected statement result type."""
+
+    ANY = 0
+    """
+    The statement may produce either rows or an update count.
+    """
+
+    ROWS = 1
+    """
+    The statement must produce rows. An exception is thrown is the statement produces an update count.
+    """
+
+    UPDATE_COUNT = 2
+    """
+    The statement must produce an update count. An exception is thrown is the statement produces rows.
+    """
 
 
 class SqlService:
@@ -78,7 +102,15 @@ class SqlService:
     def __init__(self, internal_sql_service):
         self._service = internal_sql_service
 
-    def execute(self, sql, *params, **kwargs):
+    def execute(
+        self,
+        sql: str,
+        *params: typing.Any,
+        cursor_buffer_size: int = _DEFAULT_CURSOR_BUFFER_SIZE,
+        timeout: float = _TIMEOUT_NOT_SET,
+        expected_result_type: int = SqlExpectedResultType.ANY,
+        schema: str = None
+    ) -> Future["SqlResult"]:
         """Executes an SQL statement.
 
         Args:
@@ -87,8 +119,6 @@ class SqlService:
                 the server-side. You may define parameter placeholders in the
                 query with the ``?`` character. For every placeholder, a
                 parameter value must be provided.
-
-        Keyword Args:
             cursor_buffer_size (int): The cursor buffer size measured in the
                 number of rows.
 
@@ -118,8 +148,7 @@ class SqlService:
                 prohibited.
 
                 Defaults to ``-1``.
-            expected_result_type (SqlExpectedResultType): The expected result
-                type.
+            expected_result_type (int): The expected result type.
             schema (str or None): The schema name.
 
                 The engine will try to resolve the non-qualified object
@@ -133,7 +162,7 @@ class SqlService:
                 path is used.
 
         Returns:
-            hazelcast.future.Future[SqlResult]: The execution result.
+            Future[SqlResult]: The execution result.
 
         Raises:
             HazelcastSqlError: In case of execution error.
@@ -148,7 +177,9 @@ class SqlService:
                 the values or names of the members of the
                 :class:`SqlExpectedResultType`.
         """
-        return self._service.execute(sql, params, kwargs)
+        return self._service.execute(
+            sql, params, cursor_buffer_size, timeout, expected_result_type, schema
+        )
 
 
 class _SqlQueryId:
@@ -202,17 +233,17 @@ class SqlColumnMetadata:
         self._nullable = nullable if is_nullable_exists else True
 
     @property
-    def name(self):
+    def name(self) -> str:
         """str: Name of the column."""
         return self._name
 
     @property
-    def type(self):
-        """SqlColumnType: Type of the column."""
+    def type(self) -> int:
+        """int: Type of the column."""
         return self._type
 
     @property
-    def nullable(self):
+    def nullable(self) -> bool:
         """bool: ``True`` if this column values can be ``None``, ``False``
         otherwise.
         """
@@ -426,12 +457,12 @@ class HazelcastSqlError(HazelcastError):
         self._code = code
 
     @property
-    def originating_member_uuid(self):
+    def originating_member_uuid(self) -> uuid.UUID:
         """uuid.UUID: UUID of the member that caused or initiated an error condition."""
         return self._originating_member_uuid
 
     @property
-    def suggestion(self):
+    def suggestion(self) -> str:
         """str: Suggested SQL statement to remediate experienced error."""
         return self._suggestion
 
@@ -449,16 +480,16 @@ class SqlRowMetadata:
         self._name_to_index = {column.name: index for index, column in enumerate(columns)}
 
     @property
-    def columns(self):
+    def columns(self) -> typing.List[SqlColumnMetadata]:
         """list[SqlColumnMetadata]: List of column metadata."""
         return self._columns
 
     @property
-    def column_count(self):
+    def column_count(self) -> int:
         """int: Number of columns in the row."""
         return len(self._columns)
 
-    def get_column(self, index):
+    def get_column(self, index: int) -> SqlColumnMetadata:
         """
         Args:
             index (int): Zero-based column index.
@@ -473,7 +504,7 @@ class SqlRowMetadata:
         check_is_int(index, "Index must an integer")
         return self._columns[index]
 
-    def find_column(self, column_name):
+    def find_column(self, column_name: str) -> int:
         """
         Args:
             column_name (str): Name of the column.
@@ -522,7 +553,7 @@ class SqlRow:
         self._row = row
         self._deserialize_fn = deserialize_fn
 
-    def get_object(self, column_name):
+    def get_object(self, column_name: str) -> typing.Any:
         """Gets the value in the column indicated by the column name.
 
         Column name should be one of those defined in :class:`SqlRowMetadata`,
@@ -564,7 +595,7 @@ class SqlRow:
             raise ValueError("Column '%s' doesn't exist" % column_name)
         return self._deserialize_fn(self._row[index])
 
-    def get_object_with_index(self, column_index):
+    def get_object_with_index(self, column_index: int) -> typing.Any:
         """Gets the value of the column by index.
 
         The class of the returned value depends on the SQL type of the column.
@@ -597,11 +628,11 @@ class SqlRow:
         return self._deserialize_fn(self._row[column_index])
 
     @property
-    def metadata(self):
+    def metadata(self) -> SqlRowMetadata:
         """SqlRowMetadata: The row metadata."""
         return self._row_metadata
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: typing.Union[int, str]) -> typing.Any:
         if isinstance(item, int):
             return self.get_object_with_index(item)
 
@@ -811,7 +842,7 @@ class _BlockingIterator(_IteratorBase):
         return True
 
 
-class SqlResult:
+class SqlResult(typing.Iterable[SqlRow]):
     """SQL query result.
 
     Depending on the statement type it represents a stream of
@@ -910,7 +941,7 @@ class SqlResult:
         """Future: Will be set, if there are more pages to fetch on the server
         side. It should be set to ``None`` once the fetch is completed."""
 
-    def iterator(self):
+    def iterator(self) -> typing.Iterator[Future[SqlRow]]:
         """Returns the iterator over the result rows.
 
         The iterator may be requested only once.
@@ -926,7 +957,7 @@ class SqlResult:
         """
         return self._get_iterator(False)
 
-    def is_row_set(self):
+    def is_row_set(self) -> bool:
         """Returns whether this result has rows to iterate.
 
         Returns:
@@ -936,7 +967,7 @@ class SqlResult:
         # we only got the update count.
         return self._execute_response.row_metadata is not None
 
-    def update_count(self):
+    def update_count(self) -> int:
         """Returns the number of rows updated by the statement or ``-1`` if this
         result is a row set. In case the result doesn't contain rows but the
         update count isn't applicable or known, ``0`` is returned.
@@ -948,7 +979,7 @@ class SqlResult:
         # See _on_execute_response.
         return self._execute_response.update_count
 
-    def get_row_metadata(self):
+    def get_row_metadata(self) -> SqlRowMetadata:
         """Gets the row metadata.
 
         Raises:
@@ -964,7 +995,7 @@ class SqlResult:
 
         return response.row_metadata
 
-    def close(self):
+    def close(self) -> Future[None]:
         """Release the resources associated with the query result.
 
         The query engine delivers the rows asynchronously. The query may
@@ -1192,18 +1223,24 @@ class _InternalSqlService:
         self._serialization_service = serialization_service
         self._invocation_service = invocation_service
 
-    def execute(self, sql, params, kwargs):
+    def execute(self, sql, params, cursor_buffer_size, timeout, expected_result_type, schema):
         """Constructs a statement and executes it.
 
         Args:
             sql (str): SQL string.
             params (tuple): Query parameters.
-            kwargs (dict): Arguments to customize the query.
+            cursor_buffer_size (int): Cursor buffer size.
+            timeout (float): Timeout of the query.
+            expected_result_type (SqlExpectedResultType): Expected result type
+                of the query.
+            schema (str or None): The schema name.
 
         Returns:
             hazelcast.future.Future[SqlResult]: The execution result.
         """
-        statement = _SqlStatement(sql, params, **kwargs)
+        statement = _SqlStatement(
+            sql, params, cursor_buffer_size, timeout, expected_result_type, schema
+        )
 
         connection = None
         try:
@@ -1386,47 +1423,33 @@ class _InternalSqlService:
         return _ExecuteResponse(None, None, response["update_count"])
 
 
-class SqlExpectedResultType:
-    """The expected statement result type."""
-
-    ANY = 0
-    """
-    The statement may produce either rows or an update count.
-    """
-
-    ROWS = 1
-    """
-    The statement must produce rows. An exception is thrown is the statement produces an update count.
-    """
-
-    UPDATE_COUNT = 2
-    """
-    The statement must produce an update count. An exception is thrown is the statement produces rows.
-    """
-
-
-_TIMEOUT_NOT_SET = -1
-_DEFAULT_CURSOR_BUFFER_SIZE = 4096
-
-
 class _SqlStatement:
+    __slots__ = (
+        "_sql",
+        "parameters",
+        "_cursor_buffer_size",
+        "_timeout",
+        "_expected_result_type",
+        "_schema",
+    )
+
     """Definition of an SQL statement."""
 
     def __init__(
         self,
         sql,
         parameters,
-        timeout=_TIMEOUT_NOT_SET,
-        cursor_buffer_size=_DEFAULT_CURSOR_BUFFER_SIZE,
-        schema=None,
-        expected_result_type=SqlExpectedResultType.ANY,
+        cursor_buffer_size,
+        timeout,
+        expected_result_type,
+        schema,
     ):
         self.sql = sql
         self.parameters = parameters
-        self.timeout = timeout
         self.cursor_buffer_size = cursor_buffer_size
-        self.schema = schema
+        self.timeout = timeout
         self.expected_result_type = expected_result_type
+        self.schema = schema
 
     @property
     def sql(self):

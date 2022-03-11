@@ -45,7 +45,7 @@ class StackTraceElement:
 class RaftGroupId:
     __slots__ = ("name", "seed", "id")
 
-    def __init__(self, name, seed, group_id):
+    def __init__(self, name: str, seed: int, group_id: int):
         self.name = name
         self.seed = seed
         self.id = group_id

@@ -258,18 +258,20 @@ none_type = type(None)
 
 
 class LoadBalancer:
-    """Load balancer allows you to send operations to one of a number of endpoints (Members).
-    It is up to the implementation to use different load balancing policies.
+    """Load balancer allows you to send operations to one of a number of
+    endpoints (Members). It is up to the implementation to use different
+    load balancing policies.
 
-    If the client is configured with smart routing,
-    only the operations that are not key based will be routed to the endpoint
+    If the client is configured with smart routing, only the operations that
+    are not key based will be routed to the endpoint
     """
 
     def init(self, cluster_service):
         """Initializes the load balancer.
 
         Args:
-            cluster_service (hazelcast.cluster.ClusterService): The cluster service to select members from
+            cluster_service (hazelcast.cluster.ClusterService): The cluster
+                service to select members from
         """
         raise NotImplementedError("init")
 
@@ -277,7 +279,8 @@ class LoadBalancer:
         """Returns the next member to route to.
 
         Returns:
-            hazelcast.core.MemberInfo: the next member or ``None`` if no member is available.
+            hazelcast.core.MemberInfo: the next member or ``None`` if no member
+                is available.
         """
         raise NotImplementedError("next")
 
@@ -299,8 +302,8 @@ class RoundRobinLB(_AbstractLoadBalancer):
     """A load balancer implementation that relies on using round robin
     to a next member to send a request to.
 
-    Round robin is done based on best effort basis, the order of members for concurrent calls to
-    the next() is not guaranteed.
+    Round robin is done based on best effort basis, the order of members for
+    concurrent calls to the next() is not guaranteed.
     """
 
     def __init__(self):

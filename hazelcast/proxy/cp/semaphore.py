@@ -2,7 +2,7 @@ import time
 import uuid
 
 from hazelcast.errors import SessionExpiredError, WaitKeyCancelledError, IllegalStateError
-from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
+from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture, Future
 from hazelcast.protocol.codec import (
     semaphore_init_codec,
     semaphore_acquire_codec,
@@ -46,43 +46,45 @@ class Semaphore(BaseCPProxy):
     possible for one member to invoke ``acquire()`` before another member,
     but its request hits the primary replica after the other member.
 
-    This class also provides convenient ways to work with multiple permits at once.
-    Beware of the increased risk of indefinite postponement when using the
-    multiple-permit acquire. If permits are released one by one, a caller waiting
-    for one permit will acquire it before a caller waiting for multiple permits
-    regardless of the call order.
+    This class also provides convenient ways to work with multiple permits at
+    once. Beware of the increased risk of indefinite postponement when using the
+    multiple-permit acquire. If permits are released one by one, a caller
+    waiting for one permit will acquire it before a caller waiting for multiple
+    permits regardless of the call order.
 
     Correct usage of a semaphore is established by programming convention
     in the application.
 
-    It works on top of the Raft consensus algorithm. It offers linearizability during crash
-    failures and network partitions. It is CP with respect to the CAP principle.
-    If a network partition occurs, it remains available on at most one side of
-    the partition.
+    It works on top of the Raft consensus algorithm. It offers linearizability
+    during crash failures and network partitions. It is CP with respect to the
+    CAP principle. If a network partition occurs, it remains available on at
+    most one side of the partition.
 
     It has 2 variations:
 
-    - The default implementation accessed via ``cp_subsystem`` is session-aware. In this
-      one, when a caller makes its very first ``acquire()`` call, it starts
-      a new CP session with the underlying CP group. Then, liveliness of the
-      caller is tracked via this CP session. When the caller fails, permits
+    - The default implementation accessed via ``cp_subsystem`` is session-aware.
+      In this one, when a caller makes its very first ``acquire()`` call, it
+      starts a new CP session with the underlying CP group. Then, liveliness of
+      the caller is tracked via this CP session. When the caller fails, permits
       acquired by this caller are automatically and safely released. However,
-      the session-aware version comes with a limitation, that is, a client cannot
-      release permits before acquiring them first. In other words, a client can release
-      only the permits it has acquired earlier. It means, you can acquire a permit
-      from one thread and release it from another thread using the same Hazelcast client,
-      but not different instances of Hazelcast client. You can use the session-aware
-      CP Semaphore implementation by disabling JDK compatibility via ``jdk-compatible``
-      server-side setting. Although the session-aware implementation has a minor
-      difference to the JDK Semaphore, we think it is a better fit for distributed
-      environments because of its safe auto-cleanup mechanism for acquired permits.
+      the session-aware version comes with a limitation, that is, a client
+      cannot release permits before acquiring them first. In other words, a
+      client can release only the permits it has acquired earlier. It means, you
+      can acquire a permit from one thread and release it from another thread
+      using the same Hazelcast client, but not different instances of Hazelcast
+      client. You can use the session-aware CP Semaphore implementation by
+      disabling JDK compatibility via ``jdk-compatible`` server-side setting.
+      Although the session-aware implementation has a minor difference to the
+      JDK Semaphore, we think it is a better fit for distributed environments
+      because of its safe auto-cleanup mechanism for acquired permits.
     - The second implementation offered by ``cp_subsystem`` is sessionless. This
-      implementation does not perform auto-cleanup of acquired permits on failures.
-      Acquired permits are not bound to threads and permits can be released without
-      acquiring first. However, you need to handle failed permit owners on your own.
-      If a Hazelcast server or a client fails while holding some permits, they will not be
-      automatically released. You can use the sessionless CP Semaphore implementation
-      by enabling JDK compatibility via ``jdk-compatible`` server-side setting.
+      implementation does not perform auto-cleanup of acquired permits on
+      failures. Acquired permits are not bound to threads and permits can be
+      released without acquiring first. However, you need to handle failed
+      permit owners on your own. If a Hazelcast server or a client fails while
+      holding some permits, they will not be automatically released. You can
+      use the sessionless CP Semaphore implementation by enabling JDK
+      compatibility via ``jdk-compatible`` server-side setting.
 
     There is a subtle difference between the lock and semaphore abstractions.
     A lock can be assigned to at most one endpoint at a time, so we have a total
@@ -92,10 +94,10 @@ class Semaphore(BaseCPProxy):
     For this reason, the fencing token approach, which is explained in
     :class:`~hazelcast.proxy.cp.fenced_lock.FencedLock`, does not work for the
     semaphore abstraction. Moreover, each permit is an independent entity.
-    Multiple permit acquires and reentrant lock acquires of a single endpoint are
-    not equivalent. The only case where a semaphore behaves like a lock is the
-    binary case, where the semaphore has only 1 permit. In this case, the semaphore
-    works like a non-reentrant lock.
+    Multiple permit acquires and reentrant lock acquires of a single endpoint
+    are not equivalent. The only case where a semaphore behaves like a lock is
+    the binary case, where the semaphore has only 1 permit. In this case, the
+    semaphore works like a non-reentrant lock.
 
     All of the API methods in the new CP Semaphore implementation offer
     the exactly-once execution semantics for the session-aware version.
@@ -105,15 +107,16 @@ class Semaphore(BaseCPProxy):
     JDK-compatible CP Semaphore.
     """
 
-    def init(self, permits):
-        """Tries to initialize this Semaphore instance with the given permit count.
+    def init(self, permits: int) -> Future[bool]:
+        """Tries to initialize this Semaphore instance with the given permit
+        count.
 
         Args:
             permits (int): The given permit count.
 
         Returns:
-            hazelcast.future.Future[bool]: ``True`` if the initialization succeeds,
-            ``False`` if already initialized.
+            Future[bool]: ``True`` if the initialization succeeds, ``False`` if
+            already initialized.
 
         Raises:
             AssertionError: If the ``permits`` is negative.
@@ -123,7 +126,7 @@ class Semaphore(BaseCPProxy):
         request = codec.encode_request(self._group_id, self._object_name, permits)
         return self._invoke(request, codec.decode_response)
 
-    def acquire(self, permits=1):
+    def acquire(self, permits: int = 1) -> Future[None]:
         """Acquires the given number of permits if they are available,
         and returns immediately, reducing the number of available permits
         by the given amount.
@@ -137,38 +140,40 @@ class Semaphore(BaseCPProxy):
         - This Semaphore instance is destroyed
 
         Args:
-            permits (int): Optional number of permits to acquire; defaults to ``1``
-                when not specified
+            permits (int): Optional number of permits to acquire; defaults
+                to ``1`` when not specified
 
         Returns:
-            hazelcast.future.Future[None]:
+            Future[None]:
 
         Raises:
             AssertionError: If the ``permits`` is not positive.
         """
         raise NotImplementedError("acquire")
 
-    def available_permits(self):
-        """Returns the current number of permits currently available in this semaphore.
+    def available_permits(self) -> Future[int]:
+        """Returns the current number of permits currently available in this
+        semaphore.
 
         This method is typically used for debugging and testing purposes.
 
         Returns:
-            hazelcast.future.Future[int]: The number of permits available in this semaphore.
+            Future[int]: The number of permits available in this semaphore.
         """
         codec = semaphore_available_permits_codec
         request = codec.encode_request(self._group_id, self._object_name)
         return self._invoke(request, codec.decode_response)
 
-    def drain_permits(self):
-        """Acquires and returns all permits that are available at invocation time.
+    def drain_permits(self) -> Future[int]:
+        """Acquires and returns all permits that are available at invocation
+        time.
 
         Returns:
-            hazelcast.future.Future[int]: The number of permits drained.
+            Future[int]: The number of permits drained.
         """
         raise NotImplementedError("drain_permits")
 
-    def reduce_permits(self, reduction):
+    def reduce_permits(self, reduction: int) -> Future[None]:
         """Reduces the number of available permits by the indicated amount.
 
         This method differs from ``acquire`` as it does not block until permits
@@ -179,7 +184,7 @@ class Semaphore(BaseCPProxy):
             reduction (int): The number of permits to reduce.
 
         Returns:
-            hazelcast.future.Future[None]:
+            Future[None]:
 
         Raises:
              AssertionError: If the ``reduction`` is negative.
@@ -190,7 +195,7 @@ class Semaphore(BaseCPProxy):
 
         return self._do_change_permits(-reduction)
 
-    def increase_permits(self, increase):
+    def increase_permits(self, increase: int) -> Future[None]:
         """Increases the number of available permits by the indicated amount.
 
         If there are some callers waiting for permits to become available, they
@@ -201,7 +206,7 @@ class Semaphore(BaseCPProxy):
             increase (int): The number of permits to increase.
 
         Returns:
-            hazelcast.future.Future[None]:
+            Future[None]:
 
         Raises:
             AssertionError: If ``increase`` is negative.
@@ -212,7 +217,7 @@ class Semaphore(BaseCPProxy):
 
         return self._do_change_permits(increase)
 
-    def release(self, permits=1):
+    def release(self, permits: int = 1) -> Future[None]:
         """Releases the given number of permits and increases the number of
         available permits by that amount.
 
@@ -234,25 +239,25 @@ class Semaphore(BaseCPProxy):
         in the application.
 
         Args:
-            permits (int): Optional number of permits to release; defaults to ``1``
-                when not specified.
+            permits (int): Optional number of permits to release; defaults to
+                ``1`` when not specified.
 
         Returns:
-            hazelcast.future.Future[None]:
+            Future[None]:
 
         Raises:
             AssertionError: If the ``permits`` is not positive.
-            IllegalStateError: if the Semaphore is non-JDK-compatible and the caller
-                does not have a permit
+            IllegalStateError: if the Semaphore is non-JDK-compatible and the
+                caller does not have a permit
         """
         raise NotImplementedError("release")
 
-    def try_acquire(self, permits=1, timeout=0):
+    def try_acquire(self, permits: int = 1, timeout: float = 0) -> Future[bool]:
         """Acquires the given number of permits and returns ``True``, if they
         become available during the given waiting time.
 
-        If permits are acquired, the number of available permits in the Semaphore
-        instance is also reduced by the given amount.
+        If permits are acquired, the number of available permits in the
+        Semaphore instance is also reduced by the given amount.
 
         If no sufficient permits are available, then the result of the returned
         future is not set until one of the following things happens:
@@ -265,14 +270,13 @@ class Semaphore(BaseCPProxy):
         Args:
             permits (int): The number of permits to acquire; defaults to ``1``
                 when not specified.
-            timeout (int): Optional timeout in seconds to wait for the permits;
-                when it's not specified the operation will return
+            timeout (float): Optional timeout in seconds to wait for the
+                permits; when it's not specified the operation will return
                 immediately after the acquire attempt
 
         Returns:
-            hazelcast.future.Future[bool]: ``True`` if all permits were acquired,
-            ``False`` if the waiting time elapsed before all permits could be
-            acquired
+            Future[bool]: ``True`` if all permits were acquired, ``False`` if
+            the waiting time elapsed before all permits could be acquired
 
         Raises:
             AssertionError: If the ``permits`` is not positive.

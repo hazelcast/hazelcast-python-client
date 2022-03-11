@@ -1,6 +1,8 @@
 import logging
 import threading
 import time
+import uuid
+
 from hazelcast.errors import TransactionError, IllegalStateError
 from hazelcast.future import make_blocking
 from hazelcast.invocation import Invocation
@@ -89,10 +91,10 @@ class Transaction:
     """
 
     state = _STATE_NOT_STARTED
-    id = None
-    start_time = None
+    id: uuid.UUID = None
+    start_time: float = None
     _locals = threading.local()
-    thread_id = None
+    thread_id: int = None
 
     def __init__(self, context, connection, timeout, durability, transaction_type):
         self._context = context
@@ -102,7 +104,7 @@ class Transaction:
         self.transaction_type = transaction_type
         self._objects = {}
 
-    def begin(self):
+    def begin(self) -> None:
         """Begins this transaction."""
         if hasattr(self._locals, "transaction_exists") and self._locals.transaction_exists:
             raise TransactionError("Nested transactions are not allowed.")
@@ -130,7 +132,7 @@ class Transaction:
             self._locals.transaction_exists = False
             raise
 
-    def commit(self):
+    def commit(self) -> None:
         """Commits this transaction."""
         self._check_thread()
         if self.state != _STATE_ACTIVE:
@@ -149,7 +151,7 @@ class Transaction:
         finally:
             self._locals.transaction_exists = False
 
-    def rollback(self):
+    def rollback(self) -> None:
         """Rollback of this current transaction."""
         self._check_thread()
         if self.state not in (_STATE_ACTIVE, _STATE_PARTIAL_COMMIT):
@@ -165,63 +167,63 @@ class Transaction:
         finally:
             self._locals.transaction_exists = False
 
-    def get_list(self, name):
+    def get_list(self, name: str) -> TransactionalList:
         """Returns the transactional list instance with the specified name.
 
         Args:
             name (str): The specified name.
 
         Returns:
-            hazelcast.proxy.transactional_list.TransactionalList`: The instance of Transactional List
-                with the specified name.
+            TransactionalList`: The instance of Transactional List with the
+            specified name.
         """
         return self._get_or_create_object(name, TransactionalList)
 
-    def get_map(self, name):
+    def get_map(self, name: str) -> TransactionalMap:
         """Returns the transactional map instance with the specified name.
 
         Args:
             name (str): The specified name.
 
         Returns:
-            hazelcast.proxy.transactional_map.TransactionalMap: The instance of Transactional Map
-                with the specified name.
+            TransactionalMap: The instance of Transactional Map with the
+            specified name.
         """
         return self._get_or_create_object(name, TransactionalMap)
 
-    def get_multi_map(self, name):
+    def get_multi_map(self, name: str) -> TransactionalMultiMap:
         """Returns the transactional multimap instance with the specified name.
 
         Args:
             name (str): The specified name.
 
         Returns:
-            hazelcast.proxy.transactional_multi_map.TransactionalMultiMap: The instance of Transactional MultiMap
-                with the specified name.
+            TransactionalMultiMap: The instance of Transactional MultiMap with
+            the specified name.
         """
         return self._get_or_create_object(name, TransactionalMultiMap)
 
-    def get_queue(self, name):
+    def get_queue(self, name: str) -> TransactionalQueue:
         """Returns the transactional queue instance with the specified name.
 
         Args:
             name (str): The specified name.
 
         Returns:
-            hazelcast.proxy.transactional_queue.TransactionalQueue: The instance of Transactional Queue
-                with the specified name.
+            TransactionalQueue: The instance of Transactional Queue with the
+            specified name.
         """
         return self._get_or_create_object(name, TransactionalQueue)
 
-    def get_set(self, name):
+    def get_set(self, name: str) -> TransactionalSet:
         """Returns the transactional set instance with the specified name.
 
         Args:
             name (str): The specified name.
 
         Returns:
-            hazelcast.proxy.transactional_set.TransactionalSet: The instance of Transactional Set
-                with the specified name.
+            TransactionalSet: The instance of Transactional Set with the
+            specified name.
         """
         return self._get_or_create_object(name, TransactionalSet)
 

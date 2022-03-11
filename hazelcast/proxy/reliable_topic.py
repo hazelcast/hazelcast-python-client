@@ -1,5 +1,6 @@
 import logging
 import time
+import typing
 from uuid import uuid4
 
 from hazelcast.config import _ReliableTopicConfig, TopicOverloadPolicy
@@ -17,6 +18,7 @@ from hazelcast.future import ImmediateFuture, Future
 from hazelcast.proxy.base import Proxy, TopicMessage
 from hazelcast.proxy.ringbuffer import OVERFLOW_POLICY_FAIL, OVERFLOW_POLICY_OVERWRITE
 from hazelcast.serialization.objects import ReliableTopicMessage
+from hazelcast.types import MessageType
 from hazelcast.util import check_not_none
 
 _INITIAL_BACKOFF = 0.1
@@ -30,7 +32,7 @@ _MEMBER_ENDPOINT_QUALIFIER = EndpointQualifier(ProtocolType.MEMBER, None)
 _logger = logging.getLogger(__name__)
 
 
-class ReliableMessageListener:
+class ReliableMessageListener(typing.Generic[MessageType]):
     """A message listener for :class:`ReliableTopic`.
 
     A message listener will not be called concurrently (provided that it's
@@ -76,7 +78,7 @@ class ReliableMessageListener:
     :func:`retrieve_initial_sequence` is called.
     """
 
-    def on_message(self, message):
+    def on_message(self, message: TopicMessage[MessageType]):
         """
         Invoked when a message is received for the added reliable topic.
 
@@ -84,12 +86,11 @@ class ReliableMessageListener:
         consider delegating that task to an executor or a thread pool.
 
         Args:
-            message (hazelcast.proxy.base.TopicMessage): The message that
-                is received for the topic
+            message (TopicMessage): The message that is received for the topic
         """
         raise NotImplementedError("on_message")
 
-    def retrieve_initial_sequence(self):
+    def retrieve_initial_sequence(self) -> int:
         """
         Retrieves the initial sequence from which this ReliableMessageListener
         should start.
@@ -106,7 +107,7 @@ class ReliableMessageListener:
         """
         raise NotImplementedError("retrieve_initial_sequence")
 
-    def store_sequence(self, sequence):
+    def store_sequence(self, sequence: int) -> None:
         """
         Informs the ReliableMessageListener that it should store the sequence.
         This method is called before the message is processed. Can be used to
@@ -117,15 +118,15 @@ class ReliableMessageListener:
         """
         raise NotImplementedError("store_sequence")
 
-    def is_loss_tolerant(self):
+    def is_loss_tolerant(self) -> bool:
         """
-        Checks if this ReliableMessageListener is able to deal with message loss.
-        Even though the reliable topic promises to be reliable, it can be that a
-        ReliableMessageListener is too slow. Eventually the message won't be
-        available anymore.
+        Checks if this ReliableMessageListener is able to deal with message
+        loss. Even though the reliable topic promises to be reliable, it can
+        be that a ReliableMessageListener is too slow. Eventually the message
+        won't be available anymore.
 
-        If the ReliableMessageListener is not loss tolerant and the topic detects
-        that there are missing messages, it will terminate the
+        If the ReliableMessageListener is not loss tolerant and the topic
+        detects that there are missing messages, it will terminate the
         ReliableMessageListener.
 
         Returns:
@@ -134,7 +135,7 @@ class ReliableMessageListener:
         """
         raise NotImplementedError("is_loss_tolerant")
 
-    def is_terminal(self, error):
+    def is_terminal(self, error: Exception) -> bool:
         """
         Checks if the ReliableMessageListener should be terminated based on an
         error raised while calling :func:`on_message`.
@@ -144,8 +145,8 @@ class ReliableMessageListener:
                 :func:`on_message`
 
         Returns:
-            bool: ``True`` if the ReliableMessageListener should terminate itself,
-            ``False`` if it should keep on running.
+            bool: ``True`` if the ReliableMessageListener should terminate
+            itself, ``False`` if it should keep on running.
         """
         raise NotImplementedError("is_terminal")
 
@@ -537,7 +538,7 @@ def _no_op_continuation(future):
     future.result()
 
 
-class ReliableTopic(Proxy):
+class ReliableTopic(Proxy, typing.Generic[MessageType]):
     """Hazelcast provides distribution mechanism for publishing messages that
     are delivered to multiple subscribers, which is also known as a
     publish/subscribe (pub/sub) messaging model. Publish and subscriptions are
@@ -566,14 +567,14 @@ class ReliableTopic(Proxy):
         self._ringbuffer = context.client.get_ringbuffer(_RINGBUFFER_PREFIX + name)
         self._runners = {}
 
-    def publish(self, message):
+    def publish(self, message: MessageType) -> Future[None]:
         """Publishes the message to all subscribers of this topic.
 
         Args:
             message: The message.
 
         Returns:
-            hazelcast.future.Future[None]:
+            Future[None]:
         """
         check_not_none(message, "Message cannot be None")
 
@@ -590,14 +591,14 @@ class ReliableTopic(Proxy):
         elif overload_policy == TopicOverloadPolicy.DISCARD_NEWEST:
             return self._add_or_discard(topic_message)
 
-    def publish_all(self, messages):
+    def publish_all(self, messages: typing.Sequence[MessageType]) -> Future[None]:
         """Publishes all messages to all subscribers of this topic.
 
         Args:
-            messages (list): Messages to publish.
+            messages (typing.Sequence): Messages to publish.
 
         Returns:
-            hazelcast.future.Future[None]:
+            Future[None]:
         """
         check_not_none(messages, "Messages cannot be None")
 
@@ -618,7 +619,12 @@ class ReliableTopic(Proxy):
         elif overload_policy == TopicOverloadPolicy.DISCARD_NEWEST:
             return self._add_messages_or_discard(topic_messages)
 
-    def add_listener(self, listener):
+    def add_listener(
+        self,
+        listener: typing.Union[
+            ReliableMessageListener, typing.Callable[[TopicMessage[MessageType]], None]
+        ],
+    ) -> Future[str]:
         """Subscribes to this reliable topic.
 
         It can be either a simple function or an instance of an
@@ -636,7 +642,7 @@ class ReliableTopic(Proxy):
             listener (function or ReliableMessageListener): Listener to add.
 
         Returns:
-            hazelcast.future.Future[str]: The registration id.
+            Future[str]: The registration id.
         """
         check_not_none(listener, "None listener is not allowed")
 
@@ -662,7 +668,7 @@ class ReliableTopic(Proxy):
 
         return runner.start().continue_with(continuation)
 
-    def remove_listener(self, registration_id):
+    def remove_listener(self, registration_id: str) -> Future[bool]:
         """Stops receiving messages for the given message listener.
 
         If the given listener already removed, this method does nothing.
@@ -671,8 +677,8 @@ class ReliableTopic(Proxy):
             registration_id (str): ID of listener registration.
 
         Returns:
-            hazelcast.future.Future[bool]: ``True`` if registration is
-            removed, ``False`` otherwise.
+            Future[bool]: ``True`` if registration is removed, ``False``
+            otherwise.
         """
         check_not_none(registration_id, "Registration id cannot be None")
         runner = self._runners.get(registration_id, None)
@@ -682,7 +688,7 @@ class ReliableTopic(Proxy):
         runner.cancel()
         return ImmediateFuture(True)
 
-    def destroy(self):
+    def destroy(self) -> bool:
         """
         Destroys underlying Proxy and RingBuffer instances.
         """

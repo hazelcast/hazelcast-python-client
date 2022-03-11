@@ -1,3 +1,5 @@
+import typing
+
 from hazelcast.errors import HazelcastSerializationError
 
 
@@ -27,7 +29,15 @@ class FieldType:
 
 
 class FieldDefinition:
-    def __init__(self, index, field_name, field_type, version, factory_id=0, class_id=0):
+    def __init__(
+        self,
+        index: int,
+        field_name: str,
+        field_type: int,
+        version: int,
+        factory_id: int = 0,
+        class_id: int = 0,
+    ):
         self.index = index
         self.field_name = field_name
         self.field_type = field_type
@@ -69,7 +79,7 @@ class ClassDefinition:
     def add_field_def(self, field_def):
         self.field_defs[field_def.field_name] = field_def
 
-    def get_field(self, field_name_or_index):
+    def get_field(self, field_name_or_index: typing.Union[int, str]) -> FieldDefinition:
         if isinstance(field_name_or_index, int):
             index = field_name_or_index
             count = self.get_field_count()
@@ -81,25 +91,25 @@ class ClassDefinition:
         else:
             return self.field_defs.get(field_name_or_index, None)
 
-    def has_field(self, field_name):
+    def has_field(self, field_name: str) -> bool:
         return field_name in self.field_defs
 
-    def get_field_names(self):
+    def get_field_names(self) -> typing.List[str]:
         return list(self.field_defs.keys())
 
-    def get_field_type(self, field_name):
+    def get_field_type(self, field_name: str) -> int:
         fd = self.get_field(field_name)
         if fd:
             return fd.field_type
         raise ValueError("Unknown field: %s" % field_name)
 
-    def get_field_class_id(self, field_name):
+    def get_field_class_id(self, field_name: str) -> int:
         fd = self.get_field(field_name)
         if fd:
             return fd.class_id
         raise ValueError("Unknown field: %s" % field_name)
 
-    def get_field_count(self):
+    def get_field_count(self) -> int:
         return len(self.field_defs)
 
     def set_version_if_not_set(self, version):
@@ -141,7 +151,7 @@ class ClassDefinitionBuilder:
     method.
     """
 
-    def __init__(self, factory_id, class_id, version=0):
+    def __init__(self, factory_id: int, class_id: int, version: int = 0):
         self.factory_id = factory_id
         self.class_id = class_id
         self.version = version
@@ -151,7 +161,9 @@ class ClassDefinitionBuilder:
         self._field_defs = list()
         self._field_names = set()
 
-    def add_portable_field(self, field_name, class_def):
+    def add_portable_field(
+        self, field_name: str, class_def: ClassDefinition
+    ) -> "ClassDefinitionBuilder":
         """Adds the field with the Portable type to the
         class definition.
 
@@ -179,7 +191,7 @@ class ClassDefinitionBuilder:
         )
         return self
 
-    def add_byte_field(self, field_name):
+    def add_byte_field(self, field_name: str) -> "ClassDefinitionBuilder":
         """Adds the field with the byte type to the
         class definition.
 
@@ -197,7 +209,7 @@ class ClassDefinitionBuilder:
         self._add_field_by_type(field_name, FieldType.BYTE, self.version)
         return self
 
-    def add_boolean_field(self, field_name):
+    def add_boolean_field(self, field_name: str) -> "ClassDefinitionBuilder":
         """Adds the field with the boolean type to the
         class definition.
 
@@ -215,7 +227,7 @@ class ClassDefinitionBuilder:
         self._add_field_by_type(field_name, FieldType.BOOLEAN, self.version)
         return self
 
-    def add_char_field(self, field_name):
+    def add_char_field(self, field_name: str) -> "ClassDefinitionBuilder":
         """Adds the field with the char type to the
         class definition.
 
@@ -233,7 +245,7 @@ class ClassDefinitionBuilder:
         self._add_field_by_type(field_name, FieldType.CHAR, self.version)
         return self
 
-    def add_short_field(self, field_name):
+    def add_short_field(self, field_name: str) -> "ClassDefinitionBuilder":
         """Adds the field with the short type to the
         class definition.
 
@@ -251,7 +263,7 @@ class ClassDefinitionBuilder:
         self._add_field_by_type(field_name, FieldType.SHORT, self.version)
         return self
 
-    def add_int_field(self, field_name):
+    def add_int_field(self, field_name: str) -> "ClassDefinitionBuilder":
         """Adds the field with the int type to the
         class definition.
 
@@ -269,7 +281,7 @@ class ClassDefinitionBuilder:
         self._add_field_by_type(field_name, FieldType.INT, self.version)
         return self
 
-    def add_long_field(self, field_name):
+    def add_long_field(self, field_name: str) -> "ClassDefinitionBuilder":
         """Adds the field with the long type to the
         class definition.
 
@@ -287,7 +299,7 @@ class ClassDefinitionBuilder:
         self._add_field_by_type(field_name, FieldType.LONG, self.version)
         return self
 
-    def add_float_field(self, field_name):
+    def add_float_field(self, field_name: str) -> "ClassDefinitionBuilder":
         """Adds the field with the float type to the
         class definition.
 
@@ -305,7 +317,7 @@ class ClassDefinitionBuilder:
         self._add_field_by_type(field_name, FieldType.FLOAT, self.version)
         return self
 
-    def add_double_field(self, field_name):
+    def add_double_field(self, field_name: str) -> "ClassDefinitionBuilder":
         """Adds the field with the double type to the
         class definition.
 
@@ -323,7 +335,7 @@ class ClassDefinitionBuilder:
         self._add_field_by_type(field_name, FieldType.DOUBLE, self.version)
         return self
 
-    def add_string_field(self, field_name):
+    def add_string_field(self, field_name: str) -> "ClassDefinitionBuilder":
         """Adds the field with the string type to the
         class definition.
 
@@ -341,7 +353,7 @@ class ClassDefinitionBuilder:
         self._add_field_by_type(field_name, FieldType.STRING, self.version)
         return self
 
-    def add_utf_field(self, field_name):
+    def add_utf_field(self, field_name: str) -> "ClassDefinitionBuilder":
         """Adds the field with the string type to the
         class definition.
 
@@ -362,7 +374,9 @@ class ClassDefinitionBuilder:
         """
         return self.add_string_field(field_name)
 
-    def add_portable_array_field(self, field_name, class_def):
+    def add_portable_array_field(
+        self, field_name: str, class_def: ClassDefinition
+    ) -> "ClassDefinitionBuilder":
         """Adds the field with the Portable array type to the
         class definition.
 
@@ -390,7 +404,7 @@ class ClassDefinitionBuilder:
         )
         return self
 
-    def add_byte_array_field(self, field_name):
+    def add_byte_array_field(self, field_name: str) -> "ClassDefinitionBuilder":
         """Adds the field with the byte array type to the
         class definition.
 
@@ -408,7 +422,7 @@ class ClassDefinitionBuilder:
         self._add_field_by_type(field_name, FieldType.BYTE_ARRAY, self.version)
         return self
 
-    def add_boolean_array_field(self, field_name):
+    def add_boolean_array_field(self, field_name: str) -> "ClassDefinitionBuilder":
         """Adds the field with the boolean array type to the
         class definition.
 
@@ -426,7 +440,7 @@ class ClassDefinitionBuilder:
         self._add_field_by_type(field_name, FieldType.BOOLEAN_ARRAY, self.version)
         return self
 
-    def add_char_array_field(self, field_name):
+    def add_char_array_field(self, field_name: str) -> "ClassDefinitionBuilder":
         """Adds the field with the char array type to the
         class definition.
 
@@ -444,7 +458,7 @@ class ClassDefinitionBuilder:
         self._add_field_by_type(field_name, FieldType.CHAR_ARRAY, self.version)
         return self
 
-    def add_short_array_field(self, field_name):
+    def add_short_array_field(self, field_name: str) -> "ClassDefinitionBuilder":
         """Adds the field with the short array type to the
         class definition.
 
@@ -462,7 +476,7 @@ class ClassDefinitionBuilder:
         self._add_field_by_type(field_name, FieldType.SHORT_ARRAY, self.version)
         return self
 
-    def add_int_array_field(self, field_name):
+    def add_int_array_field(self, field_name: str) -> "ClassDefinitionBuilder":
         """Adds the field with the int array type to the
         class definition.
 
@@ -480,7 +494,7 @@ class ClassDefinitionBuilder:
         self._add_field_by_type(field_name, FieldType.INT_ARRAY, self.version)
         return self
 
-    def add_long_array_field(self, field_name):
+    def add_long_array_field(self, field_name: str) -> "ClassDefinitionBuilder":
         """Adds the field with the long array type to the
         class definition.
 
@@ -498,7 +512,7 @@ class ClassDefinitionBuilder:
         self._add_field_by_type(field_name, FieldType.LONG_ARRAY, self.version)
         return self
 
-    def add_float_array_field(self, field_name):
+    def add_float_array_field(self, field_name: str) -> "ClassDefinitionBuilder":
         """Adds the field with the float array type to the
         class definition.
 
@@ -516,7 +530,7 @@ class ClassDefinitionBuilder:
         self._add_field_by_type(field_name, FieldType.FLOAT_ARRAY, self.version)
         return self
 
-    def add_double_array_field(self, field_name):
+    def add_double_array_field(self, field_name: str) -> "ClassDefinitionBuilder":
         """Adds the field with the double array type to the
         class definition.
 
@@ -534,7 +548,7 @@ class ClassDefinitionBuilder:
         self._add_field_by_type(field_name, FieldType.DOUBLE_ARRAY, self.version)
         return self
 
-    def add_string_array_field(self, field_name):
+    def add_string_array_field(self, field_name: str) -> "ClassDefinitionBuilder":
         """Adds the field with the string array type to the
         class definition.
 
@@ -552,7 +566,7 @@ class ClassDefinitionBuilder:
         self._add_field_by_type(field_name, FieldType.STRING_ARRAY, self.version)
         return self
 
-    def add_utf_array_field(self, field_name):
+    def add_utf_array_field(self, field_name: str) -> "ClassDefinitionBuilder":
         """Adds the field with the string array type to the
         class definition.
 
@@ -587,7 +601,7 @@ class ClassDefinitionBuilder:
         self._field_defs.append(field_def)
         return self
 
-    def build(self):
+    def build(self) -> ClassDefinition:
         """Builds and returns the class definition.
 
         Returns:

@@ -1,9 +1,13 @@
+import typing
+
+from hazelcast.core import MapEntry
 from hazelcast.serialization.api import IdentifiedDataSerializable
+from hazelcast.types import ProjectionType, KeyType, ValueType
 
 _PROJECTIONS_FACTORY_ID = -30
 
 
-class Projection:
+class Projection(typing.Generic[ProjectionType]):
     """Marker base class for all projections.
 
     Projections allow the client to transform (strip down) each query result
@@ -13,7 +17,7 @@ class Projection:
     pass
 
 
-class _AbstractProjection(Projection, IdentifiedDataSerializable):
+class _AbstractProjection(Projection[ProjectionType], IdentifiedDataSerializable):
     def write_data(self, object_data_output):
         raise NotImplementedError("write_data")
 
@@ -27,8 +31,7 @@ class _AbstractProjection(Projection, IdentifiedDataSerializable):
         raise NotImplementedError("get_class_id")
 
 
-def _validate_attribute_path(attribute_path):
-    # type: (str) -> None
+def _validate_attribute_path(attribute_path: str) -> None:
     if not attribute_path:
         raise ValueError("attribute_path must not be None or empty")
 
@@ -36,9 +39,8 @@ def _validate_attribute_path(attribute_path):
         raise ValueError("attribute_path must not contain [any] operators")
 
 
-class _SingleAttributeProjection(_AbstractProjection):
-    def __init__(self, attribute_path):
-        # type: (str) -> None
+class _SingleAttributeProjection(_AbstractProjection[ProjectionType]):
+    def __init__(self, attribute_path: str):
         _validate_attribute_path(attribute_path)
         self._attribute_path = attribute_path
 
@@ -49,9 +51,8 @@ class _SingleAttributeProjection(_AbstractProjection):
         return 0
 
 
-class _MultiAttributeProjection(_AbstractProjection):
-    def __init__(self, attribute_paths):
-        # type: (list[str]) -> None
+class _MultiAttributeProjection(_AbstractProjection[typing.List[typing.Any]]):
+    def __init__(self, attribute_paths: typing.Sequence[str]):
         if not attribute_paths:
             raise ValueError("Specify at least one attribute path")
 
@@ -67,7 +68,7 @@ class _MultiAttributeProjection(_AbstractProjection):
         return 1
 
 
-class _IdentityProjection(_AbstractProjection):
+class _IdentityProjection(_AbstractProjection[MapEntry[KeyType, ValueType]]):
     def write_data(self, object_data_output):
         pass
 
@@ -75,8 +76,7 @@ class _IdentityProjection(_AbstractProjection):
         return 2
 
 
-def single_attribute(attribute_path):
-    # type: (str) -> Projection
+def single_attribute(attribute_path: str) -> Projection[ProjectionType]:
     """Creates a projection that extracts the value of
     the given attribute path.
 
@@ -90,8 +90,7 @@ def single_attribute(attribute_path):
     return _SingleAttributeProjection(attribute_path)
 
 
-def multi_attribute(*attribute_paths):
-    # type: (str) -> Projection
+def multi_attribute(*attribute_paths: str) -> Projection[typing.List[typing.Any]]:
     """Creates a projection that extracts the values of
     one or more attribute paths.
 
@@ -105,12 +104,11 @@ def multi_attribute(*attribute_paths):
     return _MultiAttributeProjection(list(attribute_paths))
 
 
-def identity():
-    # type: () -> Projection
+def identity() -> Projection[MapEntry[KeyType, ValueType]]:
     """Creates a projection that does no transformation.
 
     Returns:
-        Projection[hazelcast.core.MapEntry]: A projection that does no
+        Projection[MapEntry]: A projection that does no
         transformation.
     """
     return _IdentityProjection()

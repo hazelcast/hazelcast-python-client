@@ -1,33 +1,44 @@
+import typing
+
+from hazelcast.future import Future
 from hazelcast.protocol.codec import (
     topic_add_message_listener_codec,
     topic_publish_codec,
     topic_remove_message_listener_codec,
 )
 from hazelcast.proxy.base import PartitionSpecificProxy, TopicMessage
+from hazelcast.types import MessageType
 
 
-class Topic(PartitionSpecificProxy):
-    """Hazelcast provides distribution mechanism for publishing messages that are delivered to multiple subscribers,
-    which is also known as a publish/subscribe (pub/sub) messaging model.
+class Topic(PartitionSpecificProxy, typing.Generic[MessageType]):
+    """Hazelcast provides distribution mechanism for publishing messages that
+    are delivered to multiple subscribers, which is also known as a
+    publish/subscribe (pub/sub) messaging model.
 
-    Publish and subscriptions are cluster-wide. When a member subscribes for a topic,
-    it is actually registering for messages published by any member in the cluster,
-    including the new members joined after you added the listener.
+    Publish and subscriptions are cluster-wide. When a member subscribes for
+    a topic, it is actually registering for messages published by any member
+    in the cluster, including the new members joined after you added the
+    listener.
 
-    Messages are ordered, meaning that listeners(subscribers) will process the messages in the order they are actually
-    published.
+    Messages are ordered, meaning that listeners(subscribers) will process the
+    messages in the order they are actually published.
     """
 
-    def add_listener(self, on_message=None):
+    def add_listener(
+        self, on_message: typing.Callable[[TopicMessage[MessageType]], None] = None
+    ) -> Future[str]:
         """Subscribes to this topic.
 
-        When someone publishes a message on this topic, ``on_message`` function is called if provided.
+        When someone publishes a message on this topic, ``on_message`` function
+        is called if provided.
 
         Args:
-            on_message (function): Function to be called when a message is published.
+            on_message (function): Function to be called when a message is
+                published.
 
         Returns:
-            hazelcast.future.Future[str]: A registration id which is used as a key to remove the listener.
+            Future[str]: A registration id which is used as a key to remove the
+            listener.
         """
         codec = topic_add_message_listener_codec
         request = codec.encode_request(self.name, self._is_smart)
@@ -46,28 +57,30 @@ class Topic(PartitionSpecificProxy):
             lambda m: codec.handle(m, handle),
         )
 
-    def publish(self, message):
+    def publish(self, message: MessageType) -> Future[None]:
         """Publishes the message to all subscribers of this topic
 
         Args:
             message: The message to be published.
 
         Returns:
-            hazelcast.future.Future[None]:
+            Future[None]:
         """
         message_data = self._to_data(message)
         request = topic_publish_codec.encode_request(self.name, message_data)
         return self._invoke(request)
 
-    def remove_listener(self, registration_id):
+    def remove_listener(self, registration_id: str) -> Future[bool]:
         """Stops receiving messages for the given message listener.
 
         If the given listener already removed, this method does nothing.
 
         Args:
-            registration_id (str): Registration id of the listener to be removed.
+            registration_id (str): Registration id of the listener to be
+                removed.
 
         Returns:
-            hazelcast.future.Future[bool]: ``True`` if the listener is removed, ``False`` otherwise.
+            Future[bool]: ``True`` if the listener is removed, ``False``
+            otherwise.
         """
         return self._deregister_listener(registration_id)

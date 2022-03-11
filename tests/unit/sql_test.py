@@ -267,27 +267,27 @@ class SqlInvalidInputTest(unittest.TestCase):
         valid_inputs = ["a", "   a", "  a  "]
 
         for valid in valid_inputs:
-            statement = _SqlStatement(valid, [])
+            statement = _SqlStatement(valid, [], 1, 1, 1, "")
             self.assertEqual(valid, statement.sql)
 
         invalid_inputs = ["", "   ", None, 1]
 
         for invalid in invalid_inputs:
             with self.assertRaises((ValueError, AssertionError)):
-                _SqlStatement(invalid, [])
+                _SqlStatement(invalid, [], 1, 1, 1, "")
 
     def test_statement_timeout(self):
         valid_inputs = [-1, 0, 15, 1.5]
 
         for valid in valid_inputs:
-            statement = _SqlStatement("sql", [])
+            statement = _SqlStatement("sql", [], 1, 1, 1, "")
             statement.timeout = valid
             self.assertEqual(valid, statement.timeout)
 
         invalid_inputs = [-10, -100, "hey", None]
 
         for invalid in invalid_inputs:
-            statement = _SqlStatement("sql", [])
+            statement = _SqlStatement("sql", [], 1, 1, 1, "")
             with self.assertRaises((ValueError, AssertionError)):
                 statement.timeout = invalid
 
@@ -295,14 +295,14 @@ class SqlInvalidInputTest(unittest.TestCase):
         valid_inputs = [1, 10, 999999]
 
         for valid in valid_inputs:
-            statement = _SqlStatement("something", [])
+            statement = _SqlStatement("something", [], 1, 1, 1, "")
             statement.cursor_buffer_size = valid
             self.assertEqual(valid, statement.cursor_buffer_size)
 
         invalid_inputs = [0, -10, -99999, "hey", None, 1.0]
 
         for invalid in invalid_inputs:
-            statement = _SqlStatement("something", [])
+            statement = _SqlStatement("something", [], 1, 1, 1, "")
             with self.assertRaises((ValueError, AssertionError)):
                 statement.cursor_buffer_size = invalid
 
@@ -315,7 +315,7 @@ class SqlInvalidInputTest(unittest.TestCase):
         ]
 
         for valid in valid_inputs:
-            statement = _SqlStatement("something", [])
+            statement = _SqlStatement("something", [], 1, 1, 1, "")
             statement.expected_result_type = valid
             self.assertEqual(
                 try_to_get_enum_value(valid, SqlExpectedResultType), statement.expected_result_type
@@ -325,7 +325,7 @@ class SqlInvalidInputTest(unittest.TestCase):
 
         for invalid in invalid_inputs:
             with self.assertRaises(TypeError):
-                statement = _SqlStatement("something")
+                statement = _SqlStatement("something", [], 1, 1, 1, "")
                 statement.expected_result_type = invalid
 
     def test_row_metadata_get_column(self):

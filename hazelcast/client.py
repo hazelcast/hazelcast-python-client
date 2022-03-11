@@ -1,44 +1,60 @@
 import logging
 import sys
 import threading
+import typing
 
 from hazelcast.cluster import ClusterService, _InternalClusterService
 from hazelcast.config import _Config
 from hazelcast.connection import ConnectionManager, DefaultAddressProvider
-from hazelcast.core import DistributedObjectInfo, DistributedObjectEvent
+from hazelcast.core import DistributedObjectEvent, DistributedObjectInfo
 from hazelcast.cp import CPSubsystem, ProxySessionManager
 from hazelcast.discovery import HazelcastCloudAddressProvider
 from hazelcast.errors import IllegalStateError
-from hazelcast.invocation import InvocationService, Invocation
+from hazelcast.future import Future
+from hazelcast.invocation import Invocation, InvocationService
 from hazelcast.lifecycle import LifecycleService, LifecycleState, _InternalLifecycleService
-from hazelcast.listener import ListenerService, ClusterViewListenerService
+from hazelcast.listener import ClusterViewListenerService, ListenerService
 from hazelcast.near_cache import NearCacheManager
 from hazelcast.partition import PartitionService, _InternalPartitionService
 from hazelcast.protocol.codec import (
-    client_get_distributed_objects_codec,
     client_add_distributed_object_listener_codec,
+    client_get_distributed_objects_codec,
     client_remove_distributed_object_listener_codec,
 )
 from hazelcast.proxy import (
-    ProxyManager,
-    MAP_SERVICE,
-    QUEUE_SERVICE,
+    EXECUTOR_SERVICE,
+    FLAKE_ID_GENERATOR_SERVICE,
     LIST_SERVICE,
-    SET_SERVICE,
+    MAP_SERVICE,
     MULTI_MAP_SERVICE,
+    PN_COUNTER_SERVICE,
+    QUEUE_SERVICE,
+    RELIABLE_TOPIC_SERVICE,
     REPLICATED_MAP_SERVICE,
     RINGBUFFER_SERVICE,
+    SET_SERVICE,
     TOPIC_SERVICE,
-    RELIABLE_TOPIC_SERVICE,
-    EXECUTOR_SERVICE,
-    PN_COUNTER_SERVICE,
-    FLAKE_ID_GENERATOR_SERVICE,
+    Executor,
+    FlakeIdGenerator,
+    List,
+    MultiMap,
+    PNCounter,
+    ProxyManager,
+    Queue,
+    ReliableTopic,
+    ReplicatedMap,
+    Ringbuffer,
+    Set,
+    Topic,
 )
+from hazelcast.proxy.base import Proxy
+from hazelcast.proxy.map import Map
 from hazelcast.reactor import AsyncoreReactor
 from hazelcast.serialization import SerializationServiceV1
-from hazelcast.sql import _InternalSqlService, SqlService
+from hazelcast.sql import SqlService, _InternalSqlService
 from hazelcast.statistics import Statistics
-from hazelcast.transaction import TWO_PHASE, TransactionManager
+from hazelcast.transaction import TWO_PHASE, Transaction, TransactionManager
+from hazelcast.types import KeyType, ValueType, ItemType, MessageType
 from hazelcast.util import AtomicInteger, RoundRobinLB
 
 __all__ = ("HazelcastClient",)
@@ -401,7 +417,7 @@ class HazelcastClient:
         self._internal_sql_service = _InternalSqlService(
             self._connection_manager, self._serialization_service, self._invocation_service
         )
-        self.sql = SqlService(self._internal_sql_service)
+        self._sql_service = SqlService(self._internal_sql_service)
         self._init_context()
         self._start()
 
@@ -446,164 +462,179 @@ class HazelcastClient:
             raise
         _logger.info("Client started")
 
-    def get_executor(self, name):
+    def get_executor(self, name: str) -> Executor:
         """Creates cluster-wide ExecutorService.
 
         Args:
             name (str): Name of the Executor proxy.
 
         Returns:
-            hazelcast.proxy.executor.Executor: Executor proxy for the given name.
+            Executor: Executor proxy for the given name.
         """
         return self._proxy_manager.get_or_create(EXECUTOR_SERVICE, name)
 
-    def get_flake_id_generator(self, name):
+    def get_flake_id_generator(self, name: str) -> FlakeIdGenerator:
         """Creates or returns a cluster-wide FlakeIdGenerator.
 
         Args:
             name (str): Name of the FlakeIdGenerator proxy.
 
         Returns:
-            hazelcast.proxy.flake_id_generator.FlakeIdGenerator: FlakeIdGenerator proxy for the given name
+            FlakeIdGenerator: FlakeIdGenerator proxy for the given name
 
         """
         return self._proxy_manager.get_or_create(FLAKE_ID_GENERATOR_SERVICE, name)
 
-    def get_queue(self, name):
+    def get_queue(self, name: str) -> Queue[ItemType]:
         """Returns the distributed queue instance with the specified name.
 
         Args:
             name (str): Name of the distributed queue.
 
         Returns:
-            hazelcast.proxy.queue.Queue: Distributed queue instance with the specified name.
+            Queue: Distributed queue instance with the specified name.
         """
         return self._proxy_manager.get_or_create(QUEUE_SERVICE, name)
 
-    def get_list(self, name):
+    def get_list(self, name: str) -> List[ItemType]:
         """Returns the distributed list instance with the specified name.
 
         Args:
             name (str): Name of the distributed list.
 
         Returns:
-            hazelcast.proxy.list.List: Distributed list instance with the specified name.
+            List: Distributed list instance with the specified name.
         """
         return self._proxy_manager.get_or_create(LIST_SERVICE, name)
 
-    def get_map(self, name):
+    def get_map(self, name: str) -> Map[KeyType, ValueType]:
         """Returns the distributed map instance with the specified name.
 
         Args:
             name (str): Name of the distributed map.
 
         Returns:
-            hazelcast.proxy.map.Map: Distributed map instance with the specified name.
+            Map: Distributed map instance with the specified name.
         """
         return self._proxy_manager.get_or_create(MAP_SERVICE, name)
 
-    def get_multi_map(self, name):
+    def get_multi_map(self, name: str) -> MultiMap[KeyType, ValueType]:
         """Returns the distributed MultiMap instance with the specified name.
 
         Args:
             name (str): Name of the distributed MultiMap.
 
         Returns:
-            hazelcast.proxy.multi_map.MultiMap: Distributed MultiMap instance with the specified name.
+            MultiMap: Distributed MultiMap instance with the specified name.
         """
         return self._proxy_manager.get_or_create(MULTI_MAP_SERVICE, name)
 
-    def get_pn_counter(self, name):
+    def get_pn_counter(self, name: str) -> PNCounter:
         """Returns the PN Counter instance with the specified name.
 
         Args:
             name (str): Name of the PN Counter.
 
         Returns:
-            hazelcast.proxy.pn_counter.PNCounter: The PN Counter.
+            PNCounter: Distributed PN Counter instance with the specified name.
         """
         return self._proxy_manager.get_or_create(PN_COUNTER_SERVICE, name)
 
-    def get_reliable_topic(self, name):
+    def get_reliable_topic(self, name: str) -> ReliableTopic[MessageType]:
         """Returns the ReliableTopic instance with the specified name.
 
         Args:
             name (str): Name of the ReliableTopic.
 
         Returns:
-            hazelcast.proxy.reliable_topic.ReliableTopic: The ReliableTopic.
+            ReliableTopic: Distributed ReliableTopic instance with the
+            specified name.
         """
         return self._proxy_manager.get_or_create(RELIABLE_TOPIC_SERVICE, name)
 
-    def get_replicated_map(self, name):
-        """Returns the distributed ReplicatedMap instance with the specified name.
+    def get_replicated_map(self, name: str) -> ReplicatedMap[KeyType, ValueType]:
+        """Returns the distributed ReplicatedMap instance with the specified
+        name.
 
         Args:
             name (str): Name of the distributed ReplicatedMap.
 
         Returns:
-            hazelcast.proxy.replicated_map.ReplicatedMap: Distributed ReplicatedMap instance with the specified name.
+            ReplicatedMap: Distributed ReplicatedMap instance with the
+            specified name.
         """
         return self._proxy_manager.get_or_create(REPLICATED_MAP_SERVICE, name)
 
-    def get_ringbuffer(self, name):
+    def get_ringbuffer(self, name: str) -> Ringbuffer[ItemType]:
         """Returns the distributed Ringbuffer instance with the specified name.
 
         Args:
             name (str): Name of the distributed Ringbuffer.
 
         Returns:
-            hazelcast.proxy.ringbuffer.Ringbuffer: Distributed RingBuffer instance with the specified name.
+            Ringbuffer: Distributed RingBuffer instance with the specified
+            name.
         """
 
         return self._proxy_manager.get_or_create(RINGBUFFER_SERVICE, name)
 
-    def get_set(self, name):
+    def get_set(self, name: str) -> Set[ItemType]:
         """Returns the distributed Set instance with the specified name.
 
         Args:
             name (str): Name of the distributed Set.
 
         Returns:
-            hazelcast.proxy.set.Set: Distributed Set instance with the specified name.
+            Set: Distributed Set instance with the specified name.
         """
         return self._proxy_manager.get_or_create(SET_SERVICE, name)
 
-    def get_topic(self, name):
+    def get_topic(self, name: str) -> Topic[MessageType]:
         """Returns the Topic instance with the specified name.
 
         Args:
             name (str): Name of the Topic.
 
         Returns:
-            hazelcast.proxy.topic.Topic: The Topic.
+            Topic: The Topic.
         """
         return self._proxy_manager.get_or_create(TOPIC_SERVICE, name)
 
-    def new_transaction(self, timeout=120, durability=1, type=TWO_PHASE):
-        """Creates a new Transaction associated with the current thread using default or given options.
+    def new_transaction(
+        self, timeout: float = 120, durability: int = 1, type: int = TWO_PHASE
+    ) -> Transaction:
+        """Creates a new Transaction associated with the current thread
+         using default or given options.
 
         Args:
-            timeout (int): The timeout in seconds determines the maximum lifespan of a transaction. So if a
-                transaction is configured with a timeout of 2 minutes, then it will automatically rollback if it hasn't
-                committed yet.
-            durability (int): The durability is the number of machines that can take over if a member fails during a
-                transaction commit or rollback.
-            type (int): The transaction type which can be ``TWO_PHASE`` or ``ONE_PHASE``.
+            timeout (float): The timeout in seconds determines the maximum
+                lifespan of a transaction. So if a transaction is configured
+                with a timeout of 2 minutes, then it will automatically
+                rollback if it hasn't committed yet.
+            durability (int): The durability is the number of machines that
+                can take over if a member fails during a transaction commit
+                or rollback.
+            type (int): The transaction type which can be
+                ``TWO_PHASE`` or ``ONE_PHASE``.
 
         Returns:
-            hazelcast.transaction.Transaction: New Transaction associated with the current thread.
+            Transaction: New Transaction associated with the current thread.
         """
         return self._transaction_manager.new_transaction(timeout, durability, type)
 
-    def add_distributed_object_listener(self, listener_func):
-        """Adds a listener which will be notified when a new distributed object is created or destroyed.
+    def add_distributed_object_listener(
+        self, listener_func: typing.Callable[[DistributedObjectEvent], None]
+    ) -> Future[str]:
+        """Adds a listener which will be notified when a new distributed object
+        is created or destroyed.
 
         Args:
-            listener_func (function): Function to be called when a distributed object is created or destroyed.
+            listener_func (function): Function to be called when a distributed
+                object is created or destroyed.
 
         Returns:
-            hazelcast.future.Future[str]: A registration id which is used as a key to remove the listener.
+            Future[str]: A registration id which is used as a key to remove the
+            listener.
         """
         is_smart = self._config.smart_routing
         codec = client_add_distributed_object_listener_codec
@@ -623,7 +654,7 @@ class HazelcastClient:
             event_handler,
         )
 
-    def remove_distributed_object_listener(self, registration_id):
+    def remove_distributed_object_listener(self, registration_id: str) -> Future[bool]:
         """Removes the specified distributed object listener.
 
         Returns silently if there is no such listener added before.
@@ -632,17 +663,20 @@ class HazelcastClient:
             registration_id (str): The id of registered listener.
 
         Returns:
-            hazelcast.future.Future[bool]: ``True`` if registration is removed, ``False`` otherwise.
+            Future[bool]: ``True`` if registration is removed, ``False``
+            otherwise.
         """
         return self._listener_service.deregister_listener(registration_id)
 
-    def get_distributed_objects(self):
-        """Returns all distributed objects such as; queue, map, set, list, topic, lock, multimap.
+    def get_distributed_objects(self) -> Future[typing.List[Proxy]]:
+        """Returns all distributed objects such as; queue, map, set, list,
+        topic, lock, multimap.
 
-        Also, as a side effect, it clears the local instances of the destroyed proxies.
+        Also, as a side effect, it clears the local instances of the destroyed
+        proxies.
 
         Returns:
-            list[hazelcast.proxy.base.Proxy]: List of instances created by Hazelcast.
+            list[Proxy]: List of instances created by Hazelcast.
         """
         request = client_get_distributed_objects_codec.encode_request()
         invocation = Invocation(request, response_handler=lambda m: m)
@@ -667,7 +701,7 @@ class HazelcastClient:
 
         return self._proxy_manager.get_distributed_objects()
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Shuts down this HazelcastClient."""
         with self._shutdown_lock:
             if self._internal_lifecycle_service.running:
@@ -682,37 +716,42 @@ class HazelcastClient:
                 self._internal_lifecycle_service.fire_lifecycle_event(LifecycleState.SHUTDOWN)
 
     @property
-    def name(self):
+    def name(self) -> str:
         """str: Name of the client."""
         return self._name
 
     @property
-    def lifecycle_service(self):
+    def lifecycle_service(self) -> LifecycleService:
         """LifecycleService: Lifecycle service allows you to check if the
         client is running and add and remove lifecycle listeners.
         """
         return self._lifecycle_service
 
     @property
-    def partition_service(self):
+    def partition_service(self) -> PartitionService:
         """PartitionService: Partition service allows you to get partition
         count, introspect the partition owners, and partition ids of keys.
         """
         return self._partition_service
 
     @property
-    def cluster_service(self):
+    def cluster_service(self) -> ClusterService:
         """ClusterService: Cluster service allows you to get the list of
         the cluster members and add and remove membership listeners.
         """
         return self._cluster_service
 
     @property
-    def cp_subsystem(self):
+    def cp_subsystem(self) -> CPSubsystem:
         """CPSubsystem: CP Subsystem offers set of in-memory linearizable
         data structures.
         """
         return self._cp_subsystem
+
+    @property
+    def sql(self) -> SqlService:
+        """Returns a service to execute distributed SQL queries."""
+        return self._sql_service
 
     def _create_address_provider(self):
         config = self._config
@@ -754,7 +793,8 @@ class HazelcastClient:
 
 class _ClientContext:
     """
-    Context holding all the required services, managers and the configuration for a Hazelcast client.
+    Context holding all the required services, managers and the configuration
+    for a Hazelcast client.
     """
 
     def __init__(self):

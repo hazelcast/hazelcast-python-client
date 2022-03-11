@@ -7,7 +7,7 @@ Hazelcast Python Client
 .. image:: https://img.shields.io/readthedocs/hazelcast
     :target: https://hazelcast.readthedocs.io
     :alt: Read the Docs
-.. image:: https://hz-community-slack.herokuapp.com/badge.svg
+.. image:: https://img.shields.io/badge/slack-chat-green.svg
     :target: https://slack.hazelcast.com
     :alt: Join the community on Slack
 .. image:: https://img.shields.io/pypi/l/hazelcast-python-client

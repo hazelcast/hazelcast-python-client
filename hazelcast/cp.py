@@ -21,13 +21,13 @@ from hazelcast.proxy.cp.atomic_long import AtomicLong
 from hazelcast.proxy.cp.atomic_reference import AtomicReference
 from hazelcast.proxy.cp.count_down_latch import CountDownLatch
 from hazelcast.proxy.cp.fenced_lock import FencedLock
-from hazelcast.proxy.cp.semaphore import SessionAwareSemaphore, SessionlessSemaphore
+from hazelcast.proxy.cp.semaphore import SessionAwareSemaphore, SessionlessSemaphore, Semaphore
 from hazelcast.util import check_true, AtomicInteger, thread_id
 
 
 class CPSubsystem:
-    """CP Subsystem is a component of Hazelcast that builds a strongly consistent
-    layer for a set of distributed data structures.
+    """CP Subsystem is a component of Hazelcast that builds a strongly
+    consistent layer for a set of distributed data structures.
 
     Its APIs can be used for implementing distributed coordination use cases,
     such as leader election, distributed locking, synchronization, and metadata
@@ -54,7 +54,7 @@ class CPSubsystem:
     def __init__(self, context):
         self._proxy_manager = CPProxyManager(context)
 
-    def get_atomic_long(self, name):
+    def get_atomic_long(self, name: str) -> AtomicLong:
         """Returns the distributed AtomicLong instance with given name.
 
         The instance is created on CP Subsystem.
@@ -69,52 +69,51 @@ class CPSubsystem:
             name (str): Name of the AtomicLong.
 
         Returns:
-            hazelcast.proxy.cp.atomic_long.AtomicLong: The AtomicLong proxy
-            for the given name.
+            AtomicLong: The AtomicLong proxy for the given name.
         """
         return self._proxy_manager.get_or_create(ATOMIC_LONG_SERVICE, name)
 
-    def get_atomic_reference(self, name):
+    def get_atomic_reference(self, name: str) -> AtomicReference:
         """Returns the distributed AtomicReference instance with given name.
 
         The instance is created on CP Subsystem.
 
         If no group name is given within the ``name`` argument, then the
         AtomicLong instance will be created on the DEFAULT CP group.
-        If a group name is given, like ``.get_atomic_reference("myRef@group1")``,
-        the given group will be initialized first, if not initialized
-        already, and then the instance will be created on this group.
+        If a group name is given, like
+        ``.get_atomic_reference("myRef@group1")``, the given group will be
+        initialized first, if not initialized already, and then the instance
+        will be created on this group.
 
         Args:
             name (str): Name of the AtomicReference.
 
         Returns:
-            hazelcast.proxy.cp.atomic_reference.AtomicReference: The AtomicReference
-            proxy for the given name.
+            AtomicReference: The AtomicReference proxy for the given name.
         """
         return self._proxy_manager.get_or_create(ATOMIC_REFERENCE_SERVICE, name)
 
-    def get_count_down_latch(self, name):
+    def get_count_down_latch(self, name: str) -> CountDownLatch:
         """Returns the distributed CountDownLatch instance with given name.
 
         The instance is created on CP Subsystem.
 
         If no group name is given within the ``name`` argument, then the
         CountDownLatch instance will be created on the DEFAULT CP group.
-        If a group name is given, like ``.get_count_down_latch("myLatch@group1")``,
-        the given group will be initialized first, if not initialized
-        already, and then the instance will be created on this group.
+        If a group name is given, like
+        ``.get_count_down_latch("myLatch@group1")``, the given group will be
+        initialized first, if not initialized already, and then the instance
+        will be created on this group.
 
         Args:
             name (str): Name of the CountDownLatch.
 
         Returns:
-            hazelcast.proxy.cp.count_down_latch.CountDownLatch: The CountDownLatch
-            proxy for the given name.
+            CountDownLatch: The CountDownLatch proxy for the given name.
         """
         return self._proxy_manager.get_or_create(COUNT_DOWN_LATCH_SERVICE, name)
 
-    def get_lock(self, name):
+    def get_lock(self, name: str) -> FencedLock:
         """Returns the distributed FencedLock instance instance with given name.
 
         The instance is created on CP Subsystem.
@@ -129,12 +128,11 @@ class CPSubsystem:
             name (str): Name of the FencedLock
 
         Returns:
-            hazelcast.proxy.cp.fenced_lock.FencedLock: The FencedLock proxy
-            for the given name.
+            FencedLock: The FencedLock proxy for the given name.
         """
         return self._proxy_manager.get_or_create(LOCK_SERVICE, name)
 
-    def get_semaphore(self, name):
+    def get_semaphore(self, name: str) -> Semaphore:
         """Returns the distributed Semaphore instance instance with given name.
 
         The instance is created on CP Subsystem.
@@ -149,7 +147,7 @@ class CPSubsystem:
             name (str): Name of the Semaphore
 
         Returns:
-            hazelcast.proxy.cp.semaphore.Semaphore: The Semaphore proxy for the given name.
+            Semaphore: The Semaphore proxy for the given name.
         """
         return self._proxy_manager.get_or_create(SEMAPHORE_SERVICE, name)
 

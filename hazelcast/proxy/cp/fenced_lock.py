@@ -8,7 +8,7 @@ from hazelcast.errors import (
     WaitKeyCancelledError,
     IllegalMonitorStateError,
 )
-from hazelcast.future import ImmediateExceptionFuture
+from hazelcast.future import ImmediateExceptionFuture, Future
 from hazelcast.protocol.codec import (
     fenced_lock_lock_codec,
     fenced_lock_try_lock_codec,
@@ -65,9 +65,9 @@ class FencedLock(SessionAwareCPProxy):
         super(FencedLock, self).__init__(context, group_id, service_name, proxy_name, object_name)
         self._lock_session_ids = dict()  # thread-id to session id that has acquired the lock
 
-    def lock(self):
-        """Acquires the lock and returns the fencing token assigned to the current
-        thread for this lock acquire.
+    def lock(self) -> Future[int]:
+        """Acquires the lock and returns the fencing token assigned to the
+        current thread.
 
         If the lock is acquired reentrantly, the same fencing token is returned,
         or the ``lock()`` call can fail with ``LockAcquireLimitReachedError``
@@ -105,7 +105,7 @@ class FencedLock(SessionAwareCPProxy):
         previous tokens, independent of the thread that has acquired the lock.
 
         Returns:
-            hazelcast.future.Future[int]: The fencing token.
+            Future[int]: The fencing token.
 
         Raises:
             LockOwnershipLostError: If the underlying CP session was
@@ -117,15 +117,15 @@ class FencedLock(SessionAwareCPProxy):
         invocation_uuid = uuid.uuid4()
         return self._do_lock(current_thread_id, invocation_uuid)
 
-    def try_lock(self, timeout=0):
+    def try_lock(self, timeout: float = 0) -> Future[int]:
         """Acquires the lock if it is free within the given waiting time,
         or already held by the current thread at the time of invocation and,
         the acquire limit is not exceeded, and returns the fencing token
-        assigned to the current thread for this lock acquire.
+        assigned to the current thread.
 
         If the lock is acquired reentrantly, the same fencing token is returned.
-        If the lock acquire limit is exceeded, then this method immediately returns
-        :const:`INVALID_FENCE` that represents a failed lock attempt.
+        If the lock acquire limit is exceeded, then this method immediately
+        returns :const:`INVALID_FENCE` that represents a failed lock attempt.
 
         If the lock is not available then the current thread becomes disabled
         for thread scheduling purposes and lies dormant until the lock is
@@ -154,10 +154,10 @@ class FencedLock(SessionAwareCPProxy):
             :func:`lock` function for more information about fences.
 
         Args:
-            timeout (int): The maximum time to wait for the lock in seconds.
+            timeout (float): The maximum time to wait for the lock in seconds.
 
         Returns:
-            hazelcast.future.Future[int]: The fencing token if the lock was acquired and
+            Future[int]: The fencing token if the lock was acquired and
             :const:`INVALID_FENCE` otherwise.
 
         Raises:
@@ -169,11 +169,12 @@ class FencedLock(SessionAwareCPProxy):
         timeout = max(0, timeout)
         return self._do_try_lock(current_thread_id, invocation_uuid, timeout)
 
-    def unlock(self):
-        """Releases the lock if the lock is currently held by the current thread.
+    def unlock(self) -> Future[None]:
+        """Releases the lock if the lock is currently held by the current
+        thread.
 
         Returns:
-            hazelcast.future.Future[None]:
+            Future[None]:
 
         Raises:
             LockOwnershipLostError: If the underlying CP session was
@@ -215,12 +216,12 @@ class FencedLock(SessionAwareCPProxy):
             check_response
         )
 
-    def is_locked(self):
+    def is_locked(self) -> Future[bool]:
         """Returns whether this lock is locked or not.
 
         Returns:
-            hazelcast.future.Future[bool]: ``True`` if this lock is locked by any thread
-            in the cluster, ``False`` otherwise.
+            Future[bool]: ``True`` if this lock is locked by any thread in the
+            cluster, ``False`` otherwise.
 
         Raises:
             LockOwnershipLostError: If the underlying CP session was
@@ -245,11 +246,11 @@ class FencedLock(SessionAwareCPProxy):
 
         return self._request_get_lock_ownership_state().continue_with(check_response)
 
-    def is_locked_by_current_thread(self):
+    def is_locked_by_current_thread(self) -> Future[bool]:
         """Returns whether the lock is held by the current thread or not.
 
         Returns:
-            hazelcast.future.Future[bool]: ``True`` if the lock is held by the current thread,
+            Future[bool]: ``True`` if the lock is held by the current thread,
             ``False`` otherwise.
 
         Raises:
@@ -276,13 +277,13 @@ class FencedLock(SessionAwareCPProxy):
 
         return self._request_get_lock_ownership_state().continue_with(check_response)
 
-    def get_lock_count(self):
+    def get_lock_count(self) -> Future[int]:
         """Returns the reentrant lock count if the lock is held by any thread
         in the cluster.
 
         Returns:
-            hazelcast.future.Future[int]: The reentrant lock count if the lock is held
-            by any thread in the cluster
+            Future[int]: The reentrant lock count if the lock is held by any
+            thread in the cluster
 
         Raises:
             LockOwnershipLostError: If the underlying CP session was
@@ -307,7 +308,7 @@ class FencedLock(SessionAwareCPProxy):
 
         return self._request_get_lock_ownership_state().continue_with(check_response)
 
-    def destroy(self):
+    def destroy(self) -> Future[None]:
         self._lock_session_ids.clear()
         return super(FencedLock, self).destroy()
 

@@ -1,6 +1,9 @@
 """Hazelcast Core objects and constants."""
 import json
+import typing
+import uuid
 
+from hazelcast.types import KeyType, ValueType
 
 CLIENT_TYPE = "PYH"
 SERIALIZATION_VERSION = 1
@@ -14,13 +17,22 @@ class MemberInfo:
 
     __slots__ = ("address", "uuid", "attributes", "lite_member", "version", "address_map")
 
-    def __init__(self, address, uuid, attributes, lite_member, version, _, address_map):
+    def __init__(
+        self,
+        address: "Address",
+        member_uuid: uuid.UUID,
+        attributes: typing.Dict[str, str],
+        lite_member: bool,
+        version: "MemberVersion",
+        _,
+        address_map: typing.Dict["EndpointQualifier", "Address"],
+    ):
         self.address = address
         """
         Address: Address of the member.
         """
 
-        self.uuid = uuid
+        self.uuid = member_uuid
         """
         uuid.UUID: UUID of the member.
         """
@@ -81,7 +93,7 @@ class MemberInfo:
 class Address:
     """Represents an address of a member in the cluster."""
 
-    def __init__(self, host, port):
+    def __init__(self, host: str, port: int):
         self.host = host
         """
         str: Host of the address.
@@ -150,17 +162,17 @@ class EndpointQualifier:
 
     __slots__ = ("_protocol_type", "_identifier")
 
-    def __init__(self, protocol_type, identifier):
+    def __init__(self, protocol_type: int, identifier: str):
         self._protocol_type = protocol_type
         self._identifier = identifier
 
     @property
-    def protocol_type(self):
-        """ProtocolType: Protocol type of the endpoint."""
+    def protocol_type(self) -> int:
+        """int: Protocol type of the endpoint."""
         return self._protocol_type
 
     @property
-    def identifier(self):
+    def identifier(self) -> str:
         """str: Unique identifier for same-protocol-type endpoints."""
         return self._identifier
 
@@ -258,7 +270,7 @@ class DistributedObjectEventType:
 class DistributedObjectEvent:
     """Distributed Object Event"""
 
-    def __init__(self, name, service_name, event_type, source):
+    def __init__(self, name: str, service_name: str, event_type: str, source: uuid.UUID):
         self.name = name
         """
         str: Name of the distributed object.
@@ -288,23 +300,23 @@ class DistributedObjectEvent:
         )
 
 
-class SimpleEntryView:
+class SimpleEntryView(typing.Generic[KeyType, ValueType]):
     """EntryView represents a readonly view of a map entry."""
 
     def __init__(
         self,
-        key,
-        value,
-        cost,
-        creation_time,
-        expiration_time,
-        hits,
-        last_access_time,
-        last_stored_time,
-        last_update_time,
-        version,
-        ttl,
-        max_idle,
+        key: KeyType,
+        value: ValueType,
+        cost: int,
+        creation_time: int,
+        expiration_time: int,
+        hits: int,
+        last_access_time: int,
+        last_stored_time: int,
+        last_update_time: int,
+        version: int,
+        ttl: int,
+        max_idle: int,
     ):
         self.key = key
         """
@@ -412,7 +424,7 @@ class HazelcastJsonValue:
     None values are not allowed.
     """
 
-    def __init__(self, value):
+    def __init__(self, value: typing.Any):
         if value is None:
             raise AssertionError("JSON string or the object cannot be None.")
         if isinstance(value, str):
@@ -420,7 +432,7 @@ class HazelcastJsonValue:
         else:
             self._json_string = json.dumps(value)
 
-    def to_string(self):
+    def to_string(self) -> str:
         """Returns unaltered string that was used to create this object.
 
         Returns:
@@ -428,7 +440,7 @@ class HazelcastJsonValue:
         """
         return self._json_string
 
-    def loads(self):
+    def loads(self) -> typing.Any:
         """Deserializes the string that was used to create this object
         and returns as Python object.
 
@@ -457,7 +469,7 @@ class MemberVersion:
 
     __slots__ = ("major", "minor", "patch")
 
-    def __init__(self, major, minor, patch):
+    def __init__(self, major: int, minor: int, patch: int):
         self.major = major
         self.minor = minor
         self.patch = patch
@@ -466,23 +478,23 @@ class MemberVersion:
         return "MemberVersion(major=%s, minor=%s, patch=%s)" % (self.major, self.minor, self.patch)
 
 
-class MapEntry:
+class MapEntry(typing.Generic[KeyType, ValueType]):
     """
     Represents the entry of a Map, with key and value fields.
     """
 
     __slots__ = ("_key", "_value")
 
-    def __init__(self, key=None, value=None):
+    def __init__(self, key: KeyType = None, value: ValueType = None):
         self._key = key
         self._value = value
 
     @property
-    def key(self):
+    def key(self) -> KeyType:
         """Key of the entry."""
         return self._key
 
     @property
-    def value(self):
+    def value(self) -> ValueType:
         """Value of the entry."""
         return self._value
