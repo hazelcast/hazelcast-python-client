@@ -114,12 +114,12 @@ class SqlService:
         """Executes an SQL statement.
 
         Args:
-            sql (str): SQL string.
+            sql: SQL string.
             *params: Query parameters that will replace the placeholders at
                 the server-side. You may define parameter placeholders in the
                 query with the ``?`` character. For every placeholder, a
                 parameter value must be provided.
-            cursor_buffer_size (int): The cursor buffer size measured in the
+            cursor_buffer_size: The cursor buffer size measured in the
                 number of rows.
 
                 When a statement is submitted for execution, a
@@ -138,7 +138,7 @@ class SqlService:
                 memory consumption.
 
                 Defaults to ``4096``.
-            timeout (float or int): The execution timeout in seconds.
+            timeout: The execution timeout in seconds.
 
                 If the timeout is reached for a running statement, it will be
                 cancelled forcefully.
@@ -148,8 +148,8 @@ class SqlService:
                 prohibited.
 
                 Defaults to ``-1``.
-            expected_result_type (int): The expected result type.
-            schema (str or None): The schema name.
+            expected_result_type: The expected result type.
+            schema: The schema name.
 
                 The engine will try to resolve the non-qualified object
                 identifiers from the statement in the given schema. If not
@@ -162,7 +162,7 @@ class SqlService:
                 path is used.
 
         Returns:
-            Future[SqlResult]: The execution result.
+            The execution result.
 
         Raises:
             HazelcastSqlError: In case of execution error.
@@ -212,7 +212,7 @@ class _SqlQueryId:
             member_uuid (uuid.UUID): UUID of the member.
 
         Returns:
-            _SqlQueryId: Generated unique query id.
+            Generated unique query id.
         """
         local_id = uuid.uuid4()
 
@@ -234,19 +234,17 @@ class SqlColumnMetadata:
 
     @property
     def name(self) -> str:
-        """str: Name of the column."""
+        """Name of the column."""
         return self._name
 
     @property
     def type(self) -> int:
-        """int: Type of the column."""
+        """Type of the column."""
         return self._type
 
     @property
     def nullable(self) -> bool:
-        """bool: ``True`` if this column values can be ``None``, ``False``
-        otherwise.
-        """
+        """``True`` if this column values can be ``None``, ``False`` otherwise."""
         return self._nullable
 
     def __repr__(self):
@@ -458,12 +456,12 @@ class HazelcastSqlError(HazelcastError):
 
     @property
     def originating_member_uuid(self) -> uuid.UUID:
-        """uuid.UUID: UUID of the member that caused or initiated an error condition."""
+        """UUID of the member that caused or initiated an error condition."""
         return self._originating_member_uuid
 
     @property
     def suggestion(self) -> str:
-        """str: Suggested SQL statement to remediate experienced error."""
+        """Suggested SQL statement to remediate experienced error."""
         return self._suggestion
 
 
@@ -481,21 +479,21 @@ class SqlRowMetadata:
 
     @property
     def columns(self) -> typing.List[SqlColumnMetadata]:
-        """list[SqlColumnMetadata]: List of column metadata."""
+        """List of column metadata."""
         return self._columns
 
     @property
     def column_count(self) -> int:
-        """int: Number of columns in the row."""
+        """Number of columns in the row."""
         return len(self._columns)
 
     def get_column(self, index: int) -> SqlColumnMetadata:
         """
         Args:
-            index (int): Zero-based column index.
+            index: Zero-based column index.
 
         Returns:
-            SqlColumnMetadata: Metadata for the given column index.
+            Metadata for the given column index.
 
         Raises:
             IndexError: If the index is out of bounds.
@@ -507,11 +505,11 @@ class SqlRowMetadata:
     def find_column(self, column_name: str) -> int:
         """
         Args:
-            column_name (str): Name of the column.
+            column_name: Name of the column.
 
         Returns:
-            int: Column index or :const:`COLUMN_NOT_FOUND` if a column
-            with the given name is not found.
+            Column index or :const:`COLUMN_NOT_FOUND` if a column with the
+            given name is not found.
 
         Raises:
             AssertionError: If the column name is not a string.
@@ -571,7 +569,7 @@ class SqlRow:
             variable and reuse it.
 
         Args:
-            column_name (str):
+            column_name: The column name.
 
         Returns:
             Value of the column.
@@ -609,7 +607,7 @@ class SqlRow:
             variable and reuse it.
 
         Args:
-            column_index (int): Zero-based column index.
+            column_index: Zero-based column index.
 
         Returns:
             Value of the column.
@@ -629,7 +627,7 @@ class SqlRow:
 
     @property
     def metadata(self) -> SqlRowMetadata:
-        """SqlRowMetadata: The row metadata."""
+        """The row metadata."""
         return self._row_metadata
 
     def __getitem__(self, item: typing.Union[int, str]) -> typing.Any:
@@ -951,29 +949,21 @@ class SqlResult(typing.Iterable[SqlRow]):
                 iterator is already requested.
 
         Returns:
-            Iterator[Future[SqlRow]]: Iterator that produces Future of
-            :class:`SqlRow` s. See the class documentation for the correct
-            way to use this.
+            Iterator that produces Future of :class:`SqlRow` s. See the class
+            documentation for the correct way to use this.
         """
         return self._get_iterator(False)
 
     def is_row_set(self) -> bool:
-        """Returns whether this result has rows to iterate.
-
-        Returns:
-            bool:
-        """
+        """Returns whether this result has rows to iterate."""
         # By design, if the row_metadata (or row_page) is None,
         # we only got the update count.
         return self._execute_response.row_metadata is not None
 
     def update_count(self) -> int:
-        """Returns the number of rows updated by the statement or ``-1`` if this
-        result is a row set. In case the result doesn't contain rows but the
-        update count isn't applicable or known, ``0`` is returned.
-
-        Returns:
-            int:
+        """Returns the number of rows updated by the statement or ``-1`` if
+        this result is a row set. In case the result doesn't contain rows but
+        the update count isn't applicable or known, ``0`` is returned.
         """
         # This will be set to -1, when we got row set on the client side.
         # See _on_execute_response.
@@ -984,9 +974,6 @@ class SqlResult(typing.Iterable[SqlRow]):
 
         Raises:
             ValueError: If the result only contains an update count.
-
-        Returns:
-            SqlRowMetadata:
         """
 
         response = self._execute_response
@@ -1008,9 +995,6 @@ class SqlResult(typing.Iterable[SqlRow]):
 
         - :class:`HazelcastSqlError`: In case there is an error closing the
           result.
-
-        Returns:
-            Future[None]:
         """
 
         with self._lock:

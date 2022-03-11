@@ -68,7 +68,7 @@ class ReadResult(ImmutableLazyDataList):
 
     @property
     def read_count(self) -> int:
-        """int: The number of items that have been read before filtering.
+        """The number of items that have been read before filtering.
 
         If no filter is set, then the :attr:`read_count` will be equal to
         :attr:`size`.
@@ -78,13 +78,13 @@ class ReadResult(ImmutableLazyDataList):
         this, then you should increment the sequence by :attr:`read_count` and
         not by :attr:`size`.
 
-        Otherwise you will be re-reading the same filtered messages.
+        Otherwise, you will be re-reading the same filtered messages.
         """
         return self._read_count
 
     @property
     def size(self) -> int:
-        """int: The result set size.
+        """The result set size.
 
         See Also:
             :attr:`read_count`
@@ -93,7 +93,7 @@ class ReadResult(ImmutableLazyDataList):
 
     @property
     def next_sequence_to_read_from(self) -> int:
-        """int: The sequence of the item following the last read item.
+        """The sequence of the item following the last read item.
 
         This sequence can then be used to read items following the ones
         returned by this result set.
@@ -121,10 +121,10 @@ class ReadResult(ImmutableLazyDataList):
         """Return the sequence number for the item at the given index.
 
         Args:
-            index (int): The index.
+            index: The index.
 
         Returns:
-            int: The sequence number for the ringbuffer item.
+            The sequence number for the ringbuffer item.
         """
         return self._item_seqs[index]
 
@@ -169,7 +169,7 @@ class Ringbuffer(PartitionSpecificProxy["BlockingRingbuffer"], typing.Generic[It
         """Returns the capacity of this Ringbuffer.
 
         Returns:
-            Future[int]: The capacity of Ringbuffer.
+            The capacity of Ringbuffer.
         """
         if not self._capacity:
 
@@ -186,7 +186,7 @@ class Ringbuffer(PartitionSpecificProxy["BlockingRingbuffer"], typing.Generic[It
         """Returns number of items in the Ringbuffer.
 
         Returns:
-            Future[int]: The size of Ringbuffer.
+            The size of Ringbuffer.
         """
         request = ringbuffer_size_codec.encode_request(self.name)
         return self._invoke(request, ringbuffer_size_codec.decode_response)
@@ -198,7 +198,7 @@ class Ringbuffer(PartitionSpecificProxy["BlockingRingbuffer"], typing.Generic[It
         The initial value of the tail is ``-1``.
 
         Returns:
-            Future[int]: The sequence of the tail.
+            The sequence of the tail.
         """
         request = ringbuffer_tail_sequence_codec.encode_request(self.name)
         return self._invoke(request, ringbuffer_tail_sequence_codec.decode_response)
@@ -212,7 +212,7 @@ class Ringbuffer(PartitionSpecificProxy["BlockingRingbuffer"], typing.Generic[It
         than tail).
 
         Returns:
-            Future[int]: The sequence of the head.
+            The sequence of the head.
         """
         request = ringbuffer_head_sequence_codec.encode_request(self.name)
         return self._invoke(request, ringbuffer_head_sequence_codec.decode_response)
@@ -221,7 +221,7 @@ class Ringbuffer(PartitionSpecificProxy["BlockingRingbuffer"], typing.Generic[It
         """Returns the remaining capacity of the Ringbuffer.
 
         Returns:
-            Future[int]: The remaining capacity of Ringbuffer.
+            The remaining capacity of Ringbuffer.
         """
         request = ringbuffer_remaining_capacity_codec.encode_request(self.name)
         return self._invoke(request, ringbuffer_remaining_capacity_codec.decode_response)
@@ -234,12 +234,11 @@ class Ringbuffer(PartitionSpecificProxy["BlockingRingbuffer"], typing.Generic[It
 
         Args:
             item: The specified item to be added.
-            overflow_policy (int): the OverflowPolicy to be used when there is
-                no space.
+            overflow_policy: the OverflowPolicy to be used when there is no
+                space.
 
         Returns:
-            Future[int]: The sequenceId of the added item, or ``-1`` if the add
-            failed.
+            The sequenceId of the added item, or ``-1`` if the add failed.
         """
         item_data = self._to_data(item)
         request = ringbuffer_add_codec.encode_request(self.name, overflow_policy, item_data)
@@ -261,14 +260,14 @@ class Ringbuffer(PartitionSpecificProxy["BlockingRingbuffer"], typing.Generic[It
         ``overflow_policy``.
 
         Args:
-            items (typing.Sequence): The specified collection which contains
-                the items to be added.
-            overflow_policy (int): The OverflowPolicy to be used when there is
-                no space.
+            items: The specified collection which contains the items to be
+                added.
+            overflow_policy: The OverflowPolicy to be used when there is no
+                space.
 
         Returns:
-            Future[int]: The sequenceId of the last written item, or ``-1`` of
-            the last write is failed.
+            The sequenceId of the last written item, or ``-1`` of the last
+            write is failed.
         """
         check_not_empty(items, "items can't be empty")
         if len(items) > MAX_BATCH_SIZE:
@@ -292,7 +291,7 @@ class Ringbuffer(PartitionSpecificProxy["BlockingRingbuffer"], typing.Generic[It
         this call is going to block.
 
         Args:
-            sequence (int): The sequence of the item to read.
+            sequence: The sequence of the item to read.
 
         Returns:
             The read item.
@@ -345,13 +344,13 @@ class Ringbuffer(PartitionSpecificProxy["BlockingRingbuffer"], typing.Generic[It
         minimum number of items.
 
         Args:
-            start_sequence (int): The start sequence of the first item to read.
-            min_count (int): The minimum number of items to read.
-            max_count (int): The maximum number of items to read.
+            start_sequence: The start sequence of the first item to read.
+            min_count: The minimum number of items to read.
+            max_count: The maximum number of items to read.
             filter: Filter to select returned elements.
 
         Returns:
-            Future[ReadResult]: The list of read items.
+            The list of read items.
         """
         check_not_negative(start_sequence, "sequence can't be smaller than 0")
         check_not_negative(min_count, "min count can't be smaller than 0")

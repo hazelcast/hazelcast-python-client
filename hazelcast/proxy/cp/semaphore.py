@@ -114,11 +114,11 @@ class Semaphore(BaseCPProxy["BlockingSemaphore"]):
         count.
 
         Args:
-            permits (int): The given permit count.
+            permits: The given permit count.
 
         Returns:
-            Future[bool]: ``True`` if the initialization succeeds, ``False`` if
-            already initialized.
+            ``True`` if the initialization succeeds, ``False`` if already
+            initialized.
 
         Raises:
             AssertionError: If the ``permits`` is negative.
@@ -142,11 +142,8 @@ class Semaphore(BaseCPProxy["BlockingSemaphore"]):
         - This Semaphore instance is destroyed
 
         Args:
-            permits (int): Optional number of permits to acquire; defaults
-                to ``1`` when not specified
-
-        Returns:
-            Future[None]:
+            permits: Optional number of permits to acquire; defaults to ``1``
+                when not specified
 
         Raises:
             AssertionError: If the ``permits`` is not positive.
@@ -160,7 +157,7 @@ class Semaphore(BaseCPProxy["BlockingSemaphore"]):
         This method is typically used for debugging and testing purposes.
 
         Returns:
-            Future[int]: The number of permits available in this semaphore.
+            The number of permits available in this semaphore.
         """
         codec = semaphore_available_permits_codec
         request = codec.encode_request(self._group_id, self._object_name)
@@ -171,7 +168,7 @@ class Semaphore(BaseCPProxy["BlockingSemaphore"]):
         time.
 
         Returns:
-            Future[int]: The number of permits drained.
+            The number of permits drained.
         """
         raise NotImplementedError("drain_permits")
 
@@ -183,10 +180,7 @@ class Semaphore(BaseCPProxy["BlockingSemaphore"]):
         they are not released with this call.
 
         Args:
-            reduction (int): The number of permits to reduce.
-
-        Returns:
-            Future[None]:
+            reduction: The number of permits to reduce.
 
         Raises:
              AssertionError: If the ``reduction`` is negative.
@@ -205,10 +199,7 @@ class Semaphore(BaseCPProxy["BlockingSemaphore"]):
         they are not released with this call.
 
         Args:
-            increase (int): The number of permits to increase.
-
-        Returns:
-            Future[None]:
+            increase: The number of permits to increase.
 
         Raises:
             AssertionError: If ``increase`` is negative.
@@ -241,11 +232,8 @@ class Semaphore(BaseCPProxy["BlockingSemaphore"]):
         in the application.
 
         Args:
-            permits (int): Optional number of permits to release; defaults to
-                ``1`` when not specified.
-
-        Returns:
-            Future[None]:
+            permits: Optional number of permits to release; defaults to ``1``
+                when not specified.
 
         Raises:
             AssertionError: If the ``permits`` is not positive.
@@ -270,15 +258,15 @@ class Semaphore(BaseCPProxy["BlockingSemaphore"]):
         - The specified waiting time elapses
 
         Args:
-            permits (int): The number of permits to acquire; defaults to ``1``
-                when not specified.
-            timeout (float): Optional timeout in seconds to wait for the
-                permits; when it's not specified the operation will return
-                immediately after the acquire attempt
+            permits: The number of permits to acquire; defaults to ``1`` when
+                not specified.
+            timeout: Optional timeout in seconds to wait for the permits; when
+                it's not specified the operation will return immediately after
+                the acquire attempt.
 
         Returns:
-            Future[bool]: ``True`` if all permits were acquired, ``False`` if
-            the waiting time elapsed before all permits could be acquired
+            ``True`` if all permits were acquired, ``False`` if the waiting
+            time elapsed before all permits could be acquired
 
         Raises:
             AssertionError: If the ``permits`` is not positive.

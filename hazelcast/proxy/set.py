@@ -32,8 +32,7 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
             item: The specified item to be added.
 
         Returns:
-            Future[bool]: ``True`` if this set is changed after call, ``False``
-            otherwise.
+            ``True`` if this set is changed after call, ``False`` otherwise.
         """
         check_not_none(item, "Value can't be None")
         element_data = self._to_data(item)
@@ -45,12 +44,10 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
         in this set.
 
         Args:
-            items (typing.Sequence): Collection which includes the items to
-                be added.
+            items: Collection which includes the items to be added.
 
         Returns:
-            Future[bool]: ``True`` if this set is changed after call, ``False``
-            otherwise.
+            ``True`` if this set is changed after call, ``False`` otherwise.
         """
         check_not_none(items, "Value can't be None")
         data_items = []
@@ -72,16 +69,15 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
         Listener will be notified for all container add/remove events.
 
         Args:
-            include_value (bool): Whether received events include the updated
-                item or not.
-            item_added_func (function): Function to be called when an item is
-                added to this set.
-            item_removed_func (function): Function to be called when an item
-                is deleted from this set.
+            include_value: Whether received events include the updated item or
+                not.
+            item_added_func: Function to be called when an item is added to
+                this set.
+            item_removed_func: Function to be called when an item is deleted
+                from this set.
 
         Returns:
-            Future[str]: A registration id which is used as a key to remove the
-            listener.
+            A registration id which is used as a key to remove the listener.
         """
         request = set_add_listener_codec.encode_request(self.name, include_value, self._is_smart)
 
@@ -105,11 +101,7 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
         )
 
     def clear(self) -> Future[None]:
-        """Clears the set. Set will be empty with this call.
-
-        Returns:
-            Future[None]:
-        """
+        """Clears the set. Set will be empty with this call."""
         request = set_clear_codec.encode_request(self.name)
         return self._invoke(request)
 
@@ -120,8 +112,8 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
             item: The specified item to be searched.
 
         Returns:
-            Future[bool]: ``True`` if the specified item exists in this set,
-            ``False`` otherwise.
+            ``True`` if the specified item exists in this set, ``False``
+            otherwise.
         """
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)
@@ -129,16 +121,16 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
         return self._invoke(request, set_contains_codec.decode_response)
 
     def contains_all(self, items: typing.Sequence[ItemType]) -> Future[bool]:
-        """Determines whether this set contains all of the items in the
-        specified collection or not.
+        """Determines whether this set contains all items in the specified
+        collection or not.
 
         Args:
-            items (typing.Sequence): The specified collection which includes
-                the items to be searched.
+            items: The specified collection which includes the items to be
+                searched.
 
         Returns:
-            Future[bool]: ``True`` if all of the items in the specified
-            collection exist in this set, ``False`` otherwise.
+            ``True`` if all the items in the specified collection exist in
+            this set, ``False`` otherwise.
         """
         check_not_none(items, "Value can't be None")
         data_items = []
@@ -150,10 +142,10 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
         return self._invoke(request, set_contains_all_codec.decode_response)
 
     def get_all(self) -> Future[typing.List[ItemType]]:
-        """Returns all of the items in the set.
+        """Returns all the items in the set.
 
         Returns:
-            Future[list]: List of the items in this set.
+            List of the items in this set.
         """
 
         def handler(message):
@@ -168,7 +160,7 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
         """Determines whether this set is empty or not.
 
         Returns:
-            Future[bool]: ``True`` if this set is empty, ``False`` otherwise.
+            ``True`` if this set is empty, ``False`` otherwise.
         """
         request = set_is_empty_codec.encode_request(self.name)
         return self._invoke(request, set_is_empty_codec.decode_response)
@@ -180,8 +172,8 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
             item: The specified element to be removed.
 
         Returns:
-            Future[bool]: ``True`` if the specified element exists in this set,
-            ``False`` otherwise.
+            ``True`` if the specified element exists in this set, ``False``
+            otherwise.
         """
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)
@@ -193,11 +185,10 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
         set.
 
         Args:
-            items (typing.Sequence): The specified collection.
+            items: The specified collection.
 
         Returns:
-            Future[bool]: ``True`` if the call changed this set, ``False``
-            otherwise.
+            ``True`` if the call changed this set, ``False`` otherwise.
         """
         check_not_none(items, "Value can't be None")
         data_items = []
@@ -214,11 +205,10 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
         Returns silently if the specified listener was not added before.
 
         Args:
-            registration_id (str): Id of the listener to be deleted.
+            registration_id: Id of the listener to be deleted.
 
         Returns:
-            Future[bool]: ``True`` if the item listener is removed, ``False``
-            otherwise.
+            ``True`` if the item listener is removed, ``False`` otherwise.
         """
         return self._deregister_listener(registration_id)
 
@@ -230,12 +220,12 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
         collection will be retained.
 
         Args:
-            items (typing.Sequence): Collection which includes the elements
-                to be retained in this set.
+            items: Collection which includes the elements to be retained in
+                this set.
 
         Returns:
-            Future[bool]: ``True`` if this set changed as a result of the call,
-            ``False`` otherwise.
+            ``True`` if this set changed as a result of the call, ``False``
+            otherwise.
         """
         check_not_none(items, "Value can't be None")
         data_items = []
@@ -250,7 +240,7 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
         """Returns the number of items in this set.
 
         Returns:
-            Future[int]: Number of items in this set.
+            Number of items in this set.
         """
         request = set_size_codec.encode_request(self.name)
         return self._invoke(request, set_size_codec.decode_response)

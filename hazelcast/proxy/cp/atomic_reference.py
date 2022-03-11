@@ -18,7 +18,8 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
 
     AtomicReference offers linearizability during crash failures and network
     partitions. It is CP with respect to the CAP principle. If a network
-    partition occurs, it remains available on at most one side of the partition.
+    partition occurs, it remains available on at most one side of the
+    partition.
 
     The following are some considerations you need to know when you use
     AtomicReference:
@@ -61,8 +62,8 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
             update: The new value.
 
         Returns:
-            Future[bool]: ``True`` if successful, or ``False`` if the actual
-            value was not equal to the expected value.
+            ``True`` if successful, or ``False`` if the actual value was not
+            equal to the expected value.
         """
         expected_data = self._to_data(expect)
         new_data = self._to_data(update)
@@ -74,7 +75,7 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
         """Gets the current value.
 
         Returns:
-            Future[any]: The current value.
+            The current value.
         """
         codec = atomic_ref_get_codec
         request = codec.encode_request(self._group_id, self._object_name)
@@ -89,9 +90,6 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
 
         Args:
             new_value: The new value.
-
-        Returns:
-            Future[None]:
         """
         new_value_data = self._to_data(new_value)
         codec = atomic_ref_set_codec
@@ -105,7 +103,7 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
             new_value: The new value.
 
         Returns:
-            Future[any]: The old value.
+            The old value.
         """
         new_value_data = self._to_data(new_value)
         codec = atomic_ref_set_codec
@@ -120,17 +118,12 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
         """Checks if the stored reference is ``None``.
 
         Returns:
-            Future[bool]: ``True`` if the stored reference is ``None``,
-            ``False`` otherwise.
+            ``True`` if the stored reference is ``None``, ``False`` otherwise.
         """
         return self.contains(None)
 
     def clear(self) -> Future[None]:
-        """Clears the current stored reference, so it becomes ``None``.
-
-        Returns:
-            Future[None]:
-        """
+        """Clears the current stored reference, so it becomes ``None``."""
         return self.set(None)
 
     def contains(self, value: typing.Optional[ElementType]) -> Future[bool]:
@@ -140,7 +133,7 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
             value: The value to check (is allowed to be ``None``).
 
         Returns:
-            Future[bool]: ``True`` if the value is found, ``False`` otherwise.
+            ``True`` if the value is found, ``False`` otherwise.
         """
         value_data = self._to_data(value)
         codec = atomic_ref_contains_codec
@@ -158,9 +151,6 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
 
         Args:
             function: The function that alters the currently stored reference.
-
-        Returns:
-            Future[None]:
         """
         check_not_none(function, "Function cannot be None")
         function_data = self._to_data(function)
@@ -170,8 +160,8 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
         return self._invoke(request)
 
     def alter_and_get(self, function: typing.Any) -> Future[ElementType]:
-        """Alters the currently stored reference by applying a function on it and
-        gets the result.
+        """Alters the currently stored reference by applying a function on it
+        and gets the result.
 
         Notes:
             ``function`` must be an instance of Hazelcast serializable type.
@@ -183,7 +173,7 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
             function: The function that alters the currently stored reference.
 
         Returns:
-            Future[any]: The new value, the result of the applied function.
+            The new value, the result of the applied function.
         """
         check_not_none(function, "Function cannot be None")
         function_data = self._to_data(function)
@@ -197,8 +187,8 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
         return self._invoke(request, handler)
 
     def get_and_alter(self, function: typing.Any) -> Future[ElementType]:
-        """Alters the currently stored reference by applying a function on it on
-        and gets the old value.
+        """Alters the currently stored reference by applying a function on it
+        on and gets the old value.
 
         Notes:
             ``function`` must be an instance of Hazelcast serializable type.
@@ -210,8 +200,7 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
             function: The function that alters the currently stored reference.
 
         Returns:
-            Future[any]: The old value, the value before the function is
-            applied.
+            The old value, the value before the function is applied.
         """
         check_not_none(function, "Function cannot be None")
         function_data = self._to_data(function)
@@ -238,7 +227,7 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
             function: The function applied on the currently stored reference.
 
         Returns:
-            Future[any]: The result of the function application.
+            The result of the function application.
         """
         check_not_none(function, "Function cannot be None")
         function_data = self._to_data(function)

@@ -64,21 +64,18 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
 
         Args:
             key: Key for filtering the events.
-            predicate (Predicate): Predicate for filtering the events.
-            added_func (function): Function to be called when an entry is
-                added to map.
-            removed_func (function): Function to be called when an entry is
-                removed from map.
-            updated_func (function): Function to be called when an entry is
-                updated.
-            evicted_func (function): Function to be called when an entry is
-                evicted from map.
-            clear_all_func (function): Function to be called when entries are
-                cleared from map.
+            predicate: Predicate for filtering the events.
+            added_func: Function to be called when an entry is added to map.
+            removed_func: Function to be called when an entry is removed from
+                map.
+            updated_func: Function to be called when an entry is updated.
+            evicted_func: Function to be called when an entry is evicted from
+                map.
+            clear_all_func: Function to be called when entries are cleared
+                from map.
 
         Returns:
-            Future[str]: A registration id which is used as a key to remove the
-            listener.
+            A registration id which is used as a key to remove the listener.
         """
         if key and predicate:
             codec = replicated_map_add_entry_listener_to_key_with_predicate_codec
@@ -131,11 +128,7 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
         )
 
     def clear(self) -> Future[None]:
-        """Wipes data out of the replicated map.
-
-        Returns:
-            Future[None]:
-        """
+        """Wipes data out of the replicated map."""
         request = replicated_map_clear_codec.encode_request(self.name)
         return self._invoke(request)
 
@@ -151,8 +144,8 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
             key: The specified key.
 
         Returns:
-            Future[bool]: ``True`` if this map contains an entry for the
-            specified key, ``False`` otherwise.
+            ``True`` if this map contains an entry for the specified key,
+            ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
@@ -169,8 +162,8 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
             value: The specified value.
 
         Returns:
-            Future[bool]: ``True`` if this map contains an entry for the
-            specified value, ``False`` otherwise.
+            ``True`` if this map contains an entry for the specified value,
+            ``False`` otherwise.
         """
         check_not_none(value, "value can't be None")
         value_data = self._to_data(value)
@@ -187,7 +180,7 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
             reflected in the list, and vice-versa.
 
         Returns:
-            Future[list[tuple]]: The list of key-value tuples in the map.
+            The list of key-value tuples in the map.
         """
 
         def handler(message):
@@ -211,7 +204,7 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
             key: The specified key.
 
         Returns:
-            Future[any]: The value associated with the specified key.
+            The value associated with the specified key.
         """
         check_not_none(key, "key can't be None")
 
@@ -226,7 +219,7 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
         """Returns ``True`` if this map contains no key-value mappings.
 
         Returns:
-            Future[bool]: ``True`` if this map contains no key-value mappings.
+            ``True`` if this map contains no key-value mappings.
         """
         request = replicated_map_is_empty_codec.encode_request(self.name)
         return self._invoke_on_partition(
@@ -241,7 +234,7 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
             reflected in the list, and vice-versa.
 
         Returns:
-            Future[list]: A list of the clone of the keys.
+            A list of the clone of the keys.
         """
 
         def handler(message):
@@ -264,13 +257,13 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
         Args:
             key: The specified key.
             value: The value to associate with the key.
-            ttl (float): Maximum time in seconds for this entry to stay, if
-                not provided, the value configured on server side
-                configuration will be used.
+            ttl: Maximum time in seconds for this entry to stay, if not
+                provided, the value configured on server side configuration
+                will be used.
 
         Returns:
-            Future[any]: Previous value associated with key or ``None`` if
-            there was no mapping for key.
+            Previous value associated with key or ``None`` if there was no
+            mapping for key.
         """
         check_not_none(key, "key can't be None")
         check_not_none(key, "value can't be None")
@@ -286,17 +279,13 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
         return self._invoke_on_key(request, key_data, handler)
 
     def put_all(self, source: typing.Dict[KeyType, ValueType]) -> Future[None]:
-        """Copies all of the mappings from the specified map to this map.
+        """Copies all the mappings from the specified map to this map.
 
         No atomicity guarantees are given. In the case of a failure,
-        some of the key-value tuples may get written, while others are not.
+        some key-value tuples may get written, while others are not.
 
         Args:
-            source (dict): Map which includes mappings to be stored in this
-                map.
-
-        Returns:
-            Future[None]:
+            source: Map which includes mappings to be stored in this map.
         """
         entries = []
         for key, value in source.items():
@@ -322,8 +311,8 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
             key: Key of the mapping to be deleted.
 
         Returns:
-            Future[any]: The previous value associated with key, or ``None`` if
-            there was no mapping for key.
+            The previous value associated with key, or ``None`` if there was
+            no mapping for key.
         """
         check_not_none(key, "key can't be None")
 
@@ -340,11 +329,10 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
         Returns silently if there is no such listener added before.
 
         Args:
-            registration_id (str): Id of registered listener.
+            registration_id: Id of registered listener.
 
         Returns:
-            Future[bool]: ``True`` if registration is removed, ``False``
-            otherwise.
+            ``True`` if registration is removed, ``False`` otherwise.
         """
         return self._deregister_listener(registration_id)
 
@@ -352,7 +340,7 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
         """Returns the number of entries in this multimap.
 
         Returns:
-            Future[int]: Number of entries in this multimap.
+            Number of entries in this multimap.
         """
         request = replicated_map_size_codec.encode_request(self.name)
         return self._invoke_on_partition(
@@ -367,7 +355,7 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
             are NOT reflected in the list, and vice-versa.
 
         Returns:
-            Future[list]: The list of values in the map.
+            The list of values in the map.
         """
 
         def handler(message):

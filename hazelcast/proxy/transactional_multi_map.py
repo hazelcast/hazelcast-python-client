@@ -28,8 +28,8 @@ class TransactionalMultiMap(TransactionalProxy, typing.Generic[KeyType, ValueTyp
             value: The value to be stored.
 
         Returns:
-            bool: ``True`` if the size of the multimap is increased, ``False``
-            if the multimap already contains the key-value tuple.
+            ``True`` if the size of the multimap is increased, ``False`` if
+            the multimap already contains the key-value tuple.
         """
         check_not_none(key, "key can't be none")
         check_not_none(value, "value can't be none")
@@ -49,7 +49,7 @@ class TransactionalMultiMap(TransactionalProxy, typing.Generic[KeyType, ValueTyp
             key: The key whose associated values are returned.
 
         Returns:
-            list: The collection of the values associated with the key.
+            The collection of the values associated with the key.
         """
         check_not_none(key, "key can't be none")
 
@@ -73,7 +73,7 @@ class TransactionalMultiMap(TransactionalProxy, typing.Generic[KeyType, ValueTyp
             value: The value of the entry to remove.
 
         Returns:
-            bool: ``True`` if the item is removed, ``False`` otherwise
+            ``True`` if the item is removed, ``False`` otherwise.
         """
         check_not_none(key, "key can't be none")
         check_not_none(value, "value can't be none")
@@ -93,7 +93,7 @@ class TransactionalMultiMap(TransactionalProxy, typing.Generic[KeyType, ValueTyp
             key: The key of the entries to remove.
 
         Returns:
-            list: The collection of the values associated with the key.
+            The collection of the values associated with the key.
         """
         check_not_none(key, "key can't be none")
 
@@ -116,7 +116,7 @@ class TransactionalMultiMap(TransactionalProxy, typing.Generic[KeyType, ValueTyp
             key: The key whose number of values is to be returned.
 
         Returns:
-            int: The number of values matching the given key in the multimap.
+            The number of values matching the given key in the multimap.
         """
         check_not_none(key, "key can't be none")
 
@@ -131,7 +131,7 @@ class TransactionalMultiMap(TransactionalProxy, typing.Generic[KeyType, ValueTyp
         :func:`MultiMap.size() <hazelcast.proxy.multi_map.MultiMap.size>`
 
         Returns:
-            int: the number of key-value tuples in the multimap.
+            The number of key-value tuples in the multimap.
         """
         request = transactional_multi_map_size_codec.encode_request(
             self.name, self.transaction.id, thread_id()

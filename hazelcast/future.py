@@ -39,8 +39,8 @@ class Future(typing.Generic[ResultType]):
         """Sets the exception for this Future in case of errors.
 
         Args:
-            exception (Exception): Exception to be threw in case of error.
-            traceback (types.TracebackType): Traceback of the exception.
+            exception: Exception to raise in case of error.
+            traceback: Traceback of the exception.
         """
         if not isinstance(exception, BaseException):
             raise RuntimeError("Exception must be of BaseException type")
@@ -78,7 +78,7 @@ class Future(typing.Generic[ResultType]):
         """Determines whether the result is computed or not.
 
         Returns:
-            bool: ``True`` if the result is computed, ``False`` otherwise.
+            ``True`` if the result is computed, ``False`` otherwise.
         """
         return self._event.is_set()
 
@@ -87,8 +87,7 @@ class Future(typing.Generic[ResultType]):
         running or not.
 
         Returns:
-            bool: ``True`` if the  result is being computed, ``False``
-            otherwise.
+            ``True`` if the  result is being computed, ``False`` otherwise.
         """
         return not self.done()
 
@@ -96,7 +95,7 @@ class Future(typing.Generic[ResultType]):
         """Returns the exceptional result, if any.
 
         Returns:
-            Exception: Exception of this Future.
+            Exceptional result of this Future.
         """
         self._reactor_check()
         self._event.wait()
@@ -135,15 +134,15 @@ class Future(typing.Generic[ResultType]):
         """Create a continuation that executes when the Future is completed.
 
         Args:
-            continuation_func (function): A function which takes the Future as
-                the only parameter. Return value of the function will be set as
-                the result of the continuation future. If the return value of
-                the function is another Future, it will be chained to the
-                returned Future.
+            continuation_func: A function which takes the Future as the only
+                parameter. Return value of the function will be set as the
+                result of the continuation future. If the return value of the
+                function is another Future, it will be chained to the returned
+                Future.
             *args: Arguments to be passed into ``continuation_function``.
 
         Returns:
-            Future: A new Future which will be completed when the continuation is done.
+            A new Future which will be completed when the continuation is done.
         """
         future = Future()
 
@@ -271,10 +270,10 @@ def combine_futures(futures: typing.Sequence[Future]) -> Future:
     exceptional result.
 
     Args:
-        futures (typing.Sequence[Future]): List of Futures to be combined.
+        futures: List of Futures to be combined.
 
     Returns:
-        Future: Result of the combination.
+        Result of the combination.
     """
     count = len(futures)
     results = [None] * count

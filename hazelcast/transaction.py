@@ -67,26 +67,32 @@ class TransactionManager:
             if count + 1 == RETRY_COUNT:
                 raise IllegalStateError("No active connection is found")
 
-    def new_transaction(self, timeout, durability, transaction_type):
-        """Creates a Transaction object with given timeout, durability and transaction type.
+    def new_transaction(
+        self, timeout: float, durability: int, transaction_type: int
+    ) -> "Transaction":
+        """Creates a Transaction object with given timeout, durability and
+        transaction type.
 
         Args:
-            timeout (int): The timeout in seconds determines the maximum lifespan of a transaction.
-            durability (int): The durability is the number of machines that can take over if a member fails during a
-                transaction commit or rollback
-            transaction_type (int): the transaction type which can be ``hazelcast.transaction.TWO_PHASE``
-                or ``hazelcast.transaction.ONE_PHASE``
+            timeout: The timeout in seconds determines the maximum lifespan
+                of a transaction.
+            durability: The durability is the number of machines that can take
+                over if a member fails during a transaction commit or rollback.
+            transaction_type: the transaction type which can be
+                ``hazelcast.transaction.TWO_PHASE`` or
+                ``hazelcast.transaction.ONE_PHASE``.
 
         Returns:
-          hazelcast.transaction.Transaction: New created Transaction.
+          New created Transaction.
         """
         connection = self._connect()
         return Transaction(self._context, connection, timeout, durability, transaction_type)
 
 
 class Transaction:
-    """Provides transactional operations: beginning/committing transactions, but also retrieving
-    transactional data-structures like the TransactionalMap.
+    """Provides transactional operations: beginning/committing transactions,
+    but also retrieving transactional data-structures like the
+    TransactionalMap.
     """
 
     state = _STATE_NOT_STARTED
@@ -170,11 +176,10 @@ class Transaction:
         """Returns the transactional list instance with the specified name.
 
         Args:
-            name (str): The specified name.
+            name: The specified name.
 
         Returns:
-            TransactionalList`: The instance of Transactional List with the
-            specified name.
+            The instance of Transactional List with the specified name.
         """
         return self._get_or_create_object(name, TransactionalList)
 
@@ -182,11 +187,10 @@ class Transaction:
         """Returns the transactional map instance with the specified name.
 
         Args:
-            name (str): The specified name.
+            name: The specified name.
 
         Returns:
-            TransactionalMap: The instance of Transactional Map with the
-            specified name.
+            The instance of Transactional Map with the specified name.
         """
         return self._get_or_create_object(name, TransactionalMap)
 
@@ -194,11 +198,10 @@ class Transaction:
         """Returns the transactional multimap instance with the specified name.
 
         Args:
-            name (str): The specified name.
+            name: The specified name.
 
         Returns:
-            TransactionalMultiMap: The instance of Transactional MultiMap with
-            the specified name.
+            The instance of Transactional MultiMap with the specified name.
         """
         return self._get_or_create_object(name, TransactionalMultiMap)
 
@@ -206,11 +209,10 @@ class Transaction:
         """Returns the transactional queue instance with the specified name.
 
         Args:
-            name (str): The specified name.
+            name: The specified name.
 
         Returns:
-            TransactionalQueue: The instance of Transactional Queue with the
-            specified name.
+            The instance of Transactional Queue with the specified name.
         """
         return self._get_or_create_object(name, TransactionalQueue)
 
@@ -218,11 +220,10 @@ class Transaction:
         """Returns the transactional set instance with the specified name.
 
         Args:
-            name (str): The specified name.
+            name: The specified name.
 
         Returns:
-            TransactionalSet: The instance of Transactional Set with the
-            specified name.
+            The instance of Transactional Set with the specified name.
         """
         return self._get_or_create_object(name, TransactionalSet)
 

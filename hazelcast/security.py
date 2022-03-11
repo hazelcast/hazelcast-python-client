@@ -10,10 +10,10 @@ class TokenProvider:
         """Returns a token to be used for token-based authentication.
 
         Args:
-            address (hazelcast.core.Address): Connected address for the member.
+            address: Connected address for the member.
 
         Returns:
-            bytes: token as a bytes object.
+            token as a bytes object.
         """
         pass
 

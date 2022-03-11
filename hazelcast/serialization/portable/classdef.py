@@ -70,11 +70,11 @@ class FieldDefinition:
 
 
 class ClassDefinition:
-    def __init__(self, factory_id, class_id, version):
+    def __init__(self, factory_id: int, class_id: int, version: int):
         self.factory_id = factory_id
         self.class_id = class_id
         self.version = version
-        self.field_defs = {}  # string:FieldDefinition
+        self.field_defs: typing.Dict[str, FieldDefinition] = {}
 
     def add_field_def(self, field_def):
         self.field_defs[field_def.field_name] = field_def
@@ -168,12 +168,11 @@ class ClassDefinitionBuilder:
         class definition.
 
         Args:
-            field_name (str): Name of the field to add.
-            class_def (ClassDefinition): Class definition
-                of the nested Portable.
+            field_name: Name of the field to add.
+            class_def: Class definition of the nested Portable.
 
         Returns:
-            ClassDefinitionBuilder: Itself for chaining.
+            Itself for chaining.
 
         Raises:
             HazelcastSerializationError: If this method is called
@@ -196,10 +195,10 @@ class ClassDefinitionBuilder:
         class definition.
 
         Args:
-            field_name (str): Name of the field to add.
+            field_name: Name of the field to add.
 
         Returns:
-            ClassDefinitionBuilder: Itself for chaining.
+            Itself for chaining.
 
         Raises:
             HazelcastSerializationError: If this method is called
@@ -214,10 +213,10 @@ class ClassDefinitionBuilder:
         class definition.
 
         Args:
-            field_name (str): Name of the field to add.
+            field_name: Name of the field to add.
 
         Returns:
-            ClassDefinitionBuilder: Itself for chaining.
+            Itself for chaining.
 
         Raises:
             HazelcastSerializationError: If this method is called
@@ -232,10 +231,10 @@ class ClassDefinitionBuilder:
         class definition.
 
         Args:
-            field_name (str): Name of the field to add.
+            field_name: Name of the field to add.
 
         Returns:
-            ClassDefinitionBuilder: Itself for chaining.
+            Itself for chaining.
 
         Raises:
             HazelcastSerializationError: If this method is called
@@ -250,10 +249,10 @@ class ClassDefinitionBuilder:
         class definition.
 
         Args:
-            field_name (str): Name of the field to add.
+            field_name: Name of the field to add.
 
         Returns:
-            ClassDefinitionBuilder: Itself for chaining.
+            Itself for chaining.
 
         Raises:
             HazelcastSerializationError: If this method is called
@@ -268,10 +267,10 @@ class ClassDefinitionBuilder:
         class definition.
 
         Args:
-            field_name (str): Name of the field to add.
+            field_name: Name of the field to add.
 
         Returns:
-            ClassDefinitionBuilder: Itself for chaining.
+            Itself for chaining.
 
         Raises:
             HazelcastSerializationError: If this method is called
@@ -286,10 +285,10 @@ class ClassDefinitionBuilder:
         class definition.
 
         Args:
-            field_name (str): Name of the field to add.
+            field_name: Name of the field to add.
 
         Returns:
-            ClassDefinitionBuilder: Itself for chaining.
+            Itself for chaining.
 
         Raises:
             HazelcastSerializationError: If this method is called
@@ -304,10 +303,10 @@ class ClassDefinitionBuilder:
         class definition.
 
         Args:
-            field_name (str): Name of the field to add.
+            field_name: Name of the field to add.
 
         Returns:
-            ClassDefinitionBuilder: Itself for chaining.
+            Itself for chaining.
 
         Raises:
             HazelcastSerializationError: If this method is called
@@ -322,10 +321,10 @@ class ClassDefinitionBuilder:
         class definition.
 
         Args:
-            field_name (str): Name of the field to add.
+            field_name: Name of the field to add.
 
         Returns:
-            ClassDefinitionBuilder: Itself for chaining.
+            Itself for chaining.
 
         Raises:
             HazelcastSerializationError: If this method is called
@@ -340,10 +339,10 @@ class ClassDefinitionBuilder:
         class definition.
 
         Args:
-            field_name (str): Name of the field to add.
+            field_name: Name of the field to add.
 
         Returns:
-            ClassDefinitionBuilder: Itself for chaining.
+            Itself for chaining.
 
         Raises:
             HazelcastSerializationError: If this method is called
@@ -358,10 +357,10 @@ class ClassDefinitionBuilder:
         class definition.
 
         Args:
-            field_name (str): Name of the field to add.
+            field_name: Name of the field to add.
 
         Returns:
-            ClassDefinitionBuilder: Itself for chaining.
+            Itself for chaining.
 
         Raises:
             HazelcastSerializationError: If this method is called
@@ -381,12 +380,11 @@ class ClassDefinitionBuilder:
         class definition.
 
         Args:
-            field_name (str): Name of the field to add.
-            class_def (ClassDefinition): Class definition
-                of the nested Portable.
+            field_name: Name of the field to add.
+            class_def: Class definition of the nested Portable.
 
         Returns:
-            ClassDefinitionBuilder: Itself for chaining.
+            Itself for chaining.
 
         Raises:
             HazelcastSerializationError: If this method is called
@@ -409,10 +407,10 @@ class ClassDefinitionBuilder:
         class definition.
 
         Args:
-            field_name (str): Name of the field to add.
+            field_name: Name of the field to add.
 
         Returns:
-            ClassDefinitionBuilder: Itself for chaining.
+            Itself for chaining.
 
         Raises:
             HazelcastSerializationError: If this method is called
@@ -427,10 +425,10 @@ class ClassDefinitionBuilder:
         class definition.
 
         Args:
-            field_name (str): Name of the field to add.
+            field_name: Name of the field to add.
 
         Returns:
-            ClassDefinitionBuilder: Itself for chaining.
+            Itself for chaining.
 
         Raises:
             HazelcastSerializationError: If this method is called
@@ -445,10 +443,10 @@ class ClassDefinitionBuilder:
         class definition.
 
         Args:
-            field_name (str): Name of the field to add.
+            field_name: Name of the field to add.
 
         Returns:
-            ClassDefinitionBuilder: Itself for chaining.
+            Itself for chaining.
 
         Raises:
             HazelcastSerializationError: If this method is called
@@ -463,10 +461,10 @@ class ClassDefinitionBuilder:
         class definition.
 
         Args:
-            field_name (str): Name of the field to add.
+            field_name: Name of the field to add.
 
         Returns:
-            ClassDefinitionBuilder: Itself for chaining.
+            Itself for chaining.
 
         Raises:
             HazelcastSerializationError: If this method is called
@@ -481,10 +479,10 @@ class ClassDefinitionBuilder:
         class definition.
 
         Args:
-            field_name (str): Name of the field to add.
+            field_name: Name of the field to add.
 
         Returns:
-            ClassDefinitionBuilder: Itself for chaining.
+            Itself for chaining.
 
         Raises:
             HazelcastSerializationError: If this method is called
@@ -499,10 +497,10 @@ class ClassDefinitionBuilder:
         class definition.
 
         Args:
-            field_name (str): Name of the field to add.
+            field_name: Name of the field to add.
 
         Returns:
-            ClassDefinitionBuilder: Itself for chaining.
+            Itself for chaining.
 
         Raises:
             HazelcastSerializationError: If this method is called
@@ -517,10 +515,10 @@ class ClassDefinitionBuilder:
         class definition.
 
         Args:
-            field_name (str): Name of the field to add.
+            field_name: Name of the field to add.
 
         Returns:
-            ClassDefinitionBuilder: Itself for chaining.
+            Itself for chaining.
 
         Raises:
             HazelcastSerializationError: If this method is called
@@ -535,10 +533,10 @@ class ClassDefinitionBuilder:
         class definition.
 
         Args:
-            field_name (str): Name of the field to add.
+            field_name: Name of the field to add.
 
         Returns:
-            ClassDefinitionBuilder: Itself for chaining.
+            Itself for chaining.
 
         Raises:
             HazelcastSerializationError: If this method is called
@@ -553,10 +551,10 @@ class ClassDefinitionBuilder:
         class definition.
 
         Args:
-            field_name (str): Name of the field to add.
+            field_name: Name of the field to add.
 
         Returns:
-            ClassDefinitionBuilder: Itself for chaining.
+            Itself for chaining.
 
         Raises:
             HazelcastSerializationError: If this method is called
@@ -571,10 +569,10 @@ class ClassDefinitionBuilder:
         class definition.
 
         Args:
-            field_name (str): Name of the field to add.
+            field_name: Name of the field to add.
 
         Returns:
-            ClassDefinitionBuilder: Itself for chaining.
+            Itself for chaining.
 
         Raises:
             HazelcastSerializationError: If this method is called
@@ -602,11 +600,7 @@ class ClassDefinitionBuilder:
         return self
 
     def build(self) -> ClassDefinition:
-        """Builds and returns the class definition.
-
-        Returns:
-            ClassDefinition:
-        """
+        """Builds and returns the class definition."""
         self._done = True
         cd = ClassDefinition(self.factory_id, self.class_id, self.version)
         for field_def in self._field_defs:

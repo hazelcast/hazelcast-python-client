@@ -60,11 +60,11 @@ class CountDownLatch(BaseCPProxy["BlockingCountDownLatch"]):
         will not wait at all.
 
         Args:
-            timeout (float): The maximum time to wait in seconds
+            timeout: The maximum time to wait in seconds
 
         Returns:
-            Future[bool]: ``True`` if the count reached zero, ``False`` if the
-            waiting time elapsed before the count reached zero
+            ``True`` if the count reached zero, ``False`` if the waiting time
+            elapsed before the count reached zero
         Raises:
             IllegalStateError: If the Hazelcast instance was shut down while
                 waiting.
@@ -89,9 +89,6 @@ class CountDownLatch(BaseCPProxy["BlockingCountDownLatch"]):
         - Countdown owner is set to ``None``.
 
         If the current count equals zero, then nothing happens.
-
-        Returns:
-            Future[None]:
         """
         invocation_uuid = uuid.uuid4()
 
@@ -104,7 +101,7 @@ class CountDownLatch(BaseCPProxy["BlockingCountDownLatch"]):
         """Returns the current count.
 
         Returns:
-            Future[int]: The current count.
+            The current count.
         """
         codec = count_down_latch_get_count_codec
         request = codec.encode_request(self._group_id, self._object_name)
@@ -117,12 +114,12 @@ class CountDownLatch(BaseCPProxy["BlockingCountDownLatch"]):
         ``False``.
 
         Args:
-            count (int): The number of times ``count_down()`` must be invoked
-                before callers can pass through ``await_latch()``.
+            count: The number of times ``count_down()`` must be invoked before
+                callers can pass through ``await_latch()``.
 
         Returns:
-            Future[bool]: ``True`` if the new count was set, ``False`` if the
-            current count is not zero.
+            ``True`` if the new count was set, ``False`` if the current count
+            is not zero.
         """
         check_is_int(count)
         check_true(count > 0, "Count must be positive")

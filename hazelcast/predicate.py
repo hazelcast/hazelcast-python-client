@@ -89,7 +89,7 @@ class PagingPredicate(Predicate):
         paging predicate will retrieve will be an empty list.
 
         Returns:
-            int: Updated page index
+            Updated page index
         """
         raise NotImplementedError("next_page")
 
@@ -99,7 +99,7 @@ class PagingPredicate(Predicate):
         If current page index is 0, this method does nothing.
 
         Returns:
-            int: Updated page index.
+            Updated page index.
         """
         raise NotImplementedError("previous_page")
 
@@ -112,7 +112,6 @@ class PagingPredicate(Predicate):
         :setter: Sets the current page index. If the page is out of range, the
             query results that this paging predicate will retrieve will be an
             empty list. New page index must be greater than or equal to ``0``.
-        :type: int
         """
         raise NotImplementedError("page")
 
@@ -125,7 +124,6 @@ class PagingPredicate(Predicate):
         """The page size.
 
         :getter: Returns the page size.
-        :type: int
         """
         raise NotImplementedError("page_size")
 
@@ -437,10 +435,10 @@ def sql(expression: str) -> Predicate:
       like it.
 
     Args:
-        expression (str): The ``where`` expression.
+        expression: The ``where`` expression.
 
     Returns:
-        Predicate: The created **sql** predicate instance.
+        The created **sql** predicate instance.
     """
     return _SqlPredicate(expression)
 
@@ -450,12 +448,12 @@ def equal(attribute: str, value: typing.Any) -> Predicate:
     value stored under the given item ``attribute`` are equal.
 
     Args:
-        attribute (str): The attribute to fetch the value for comparison from.
+        attribute: The attribute to fetch the value for comparison from.
         value: The value to compare the attribute value against. Can be
             ``None``.
 
     Returns:
-        Predicate: The created **equal** predicate instance.
+        The created **equal** predicate instance.
     """
     return _EqualPredicate(attribute, value)
 
@@ -465,12 +463,12 @@ def not_equal(attribute: str, value: typing.Any) -> Predicate:
     value stored under the given item ``attribute`` are not equal.
 
     Args:
-        attribute (str): The attribute to fetch the value for comparison from.
+        attribute: The attribute to fetch the value for comparison from.
         value: The value to compare the attribute value against. Can be
             ``None``.
 
     Returns:
-        Predicate: The created **not equal** predicate instance.
+        The created **not equal** predicate instance.
     """
     return _NotEqualPredicate(attribute, value)
 
@@ -480,17 +478,16 @@ def like(attribute: str, pattern: typing.Optional[str]) -> Predicate:
     matches the value stored under the given item ``attribute``.
 
     Args:
-        attribute (str): The attribute to fetch the value for matching from.
-        pattern (str): The pattern to match the attribute value against.
-            The ``%`` (percentage sign) is a placeholder for multiple
-            characters, the ``_`` (underscore) is a placeholder for a single
-            character. If you need to match the percentage sign or the
-            underscore character itself, escape it with the backslash, for
-            example ``"\\%"`` string will match the percentage sign. Can be
-            ``None``.
+        attribute: The attribute to fetch the value for matching from.
+        pattern: The pattern to match the attribute value against. The ``%``
+            (percentage sign) is a placeholder for multiple characters, the
+            ``_`` (underscore) is a placeholder for a single character. If you
+            need to match the percentage sign or the underscore character
+            itself, escape it with the backslash, for example ``"\\%"`` string
+            will match the percentage sign. Can be ``None``.
 
     Returns:
-        Predicate: The created **like** predicate instance.
+        The created **like** predicate instance.
 
     See Also:
         :func:`ilike` and :func:`regex`
@@ -504,17 +501,16 @@ def ilike(attribute: str, pattern: typing.Optional[str]) -> Predicate:
     case-insensitive manner.
 
     Args:
-        attribute (str): The attribute to fetch the value for matching from.
-        pattern (str): The pattern to match the attribute value against.
-            The ``%`` (percentage sign) is a placeholder for multiple
-            characters, the ``_`` (underscore) is a placeholder for a single
-            character. If you need to match the percentage sign or the
-            underscore character itself, escape it with the backslash, for
-            example ``"\\%"`` string will match the percentage sign. Can be
-            ``None``.
+        attribute: The attribute to fetch the value for matching from.
+        pattern: The pattern to match the attribute value against. The ``%``
+            (percentage sign) is a placeholder for multiple characters, the
+            ``_`` (underscore) is a placeholder for a single character. If you
+            need to match the percentage sign or the underscore character
+            itself, escape it with the backslash, for example ``"\\%"`` string
+            will match the percentage sign. Can be ``None``.
 
     Returns:
-        Predicate: The created **case-insensitive like** predicate instance.
+        The created **case-insensitive like** predicate instance.
 
     See Also:
         :func:`like` and :func:`regex`
@@ -527,14 +523,14 @@ def regex(attribute: str, pattern: typing.Optional[str]) -> Predicate:
     matches the value stored under the given item ``attribute``.
 
     Args:
-        attribute (str): The attribute to fetch the value for matching from.
-        pattern (str): The pattern to match the attribute value against. The
-            pattern interpreted exactly the same as described in
+        attribute: The attribute to fetch the value for matching from.
+        pattern: The pattern to match the attribute value against. The pattern
+            interpreted exactly the same as described in
             https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html.
             Can be ``None``.
 
     Returns:
-        Predicate: The created **regex** predicate instance.
+        The created **regex** predicate instance.
 
     See Also:
         :func:`ilike` and :func:`like`
@@ -550,11 +546,11 @@ def and_(*predicates: Predicate) -> Predicate:
     evaluate to ``true`` and will pass any item.
 
     Args:
-        *predicates (Predicate): The child predicates to form the resulting
-            ``and`` predicate from.
+        *predicates: The child predicates to form the resulting ``and``
+            predicate from.
 
     Returns:
-        Predicate: The created **and** predicate instance.
+        The created **and** predicate instance.
     """
     return _AndPredicate(predicates)
 
@@ -567,11 +563,11 @@ def or_(*predicates: Predicate) -> Predicate:
     evaluate to ``false`` and will never pass any items.
 
     Args:
-        *predicates (Predicate): The child predicates to form the resulting
-            ``or`` predicate from.
+        *predicates: The child predicates to form the resulting ``or``
+            predicate from.
 
     Returns:
-        Predicate: The created **or** predicate instance.
+        The created **or** predicate instance.
     """
     return _OrPredicate(predicates)
 
@@ -581,10 +577,10 @@ def not_(predicate: Predicate) -> Predicate:
     ``predicate``.
 
     Args:
-        predicate (Predicate): The predicate to negate the value of.
+        predicate: The predicate to negate the value of.
 
     Returns:
-        Predicate: The created **not** predicate instance.
+        The created **not** predicate instance.
     """
     return _NotPredicate(predicate)
 
@@ -597,12 +593,12 @@ def between(attribute: str, from_: typing.Any, to: typing.Any) -> Predicate:
     bound. The bounds are inclusive.
 
     Args:
-        attribute (str): The attribute to fetch the value to check from.
+        attribute: The attribute to fetch the value to check from.
         from_: The inclusive lower bound of the range to check.
         to: The inclusive upper bound of the range to check.
 
     Returns:
-        Predicate: The created **between** predicate.
+        The created **between** predicate.
     """
     return _BetweenPredicate(attribute, from_, to)
 
@@ -612,12 +608,12 @@ def in_(attribute: str, *values: typing.Any) -> Predicate:
     given item ``attribute`` is a member of the given ``values``.
 
     Args:
-        attribute (str): The attribute to fetch the value to test from.
+        attribute: The attribute to fetch the value to test from.
         *values: The values set to test the membership in. Individual values
             can be ``None``.
 
     Returns:
-        Predicate: The created **in** predicate.
+        The created **in** predicate.
     """
     return _InPredicate(attribute, values)
 
@@ -627,11 +623,10 @@ def instance_of(class_name: str) -> Predicate:
     an instance of the given ``class_name``.
 
     Args:
-        class_name (str): The name of class the created predicate will check
-            for.
+        class_name: The name of class the created predicate will check for.
 
     Returns:
-        Predicate: The created **instance of** predicate.
+        The created **instance of** predicate.
     """
     return _InstanceOfPredicate(class_name)
 
@@ -640,7 +635,7 @@ def false() -> Predicate:
     """Creates a predicate that will filter out all items.
 
     Returns:
-        Predicate: The created **false** predicate.
+        The created **false** predicate.
     """
     return _FalsePredicate()
 
@@ -649,7 +644,7 @@ def true() -> Predicate:
     """Creates a predicate that will pass all items.
 
     Returns:
-        Predicate: The created **true** predicate.
+        The created **true** predicate.
     """
     return _TruePredicate()
 
@@ -660,17 +655,16 @@ def paging(predicate: Predicate, page_size: int, comparator: typing.Any = None) 
     ordered via comparator if provided.
 
     Args:
-        predicate (Predicate): The inner predicate through which results will
-            be filtered. Can be ``None``. In that case, results will not be
-            filtered.
-        page_size (int): The page size.
+        predicate: The inner predicate through which results will be filtered.
+            Can be ``None``. In that case, results will not be filtered.
+        page_size: The page size.
         comparator: The comparator through which results will be ordered. The
             comparision logic must be defined on the server side. Can be
             ``None``. In that case, the results will be returned in natural
             order.
 
     Returns:
-        PagingPredicate: The created **paging** predicate.
+        The created **paging** predicate.
     """
     return _PagingPredicate(predicate, page_size, comparator)
 
@@ -681,13 +675,13 @@ def greater(attribute: str, value: typing.Any) -> Predicate:
     given item ``attribute`` is greater than the given ``value``.
 
     Args:
-        attribute (str): The left-hand side attribute to fetch the value for
+        attribute: The left-hand side attribute to fetch the value for
             comparison from.
         value: The right-hand side value to compare the attribute value
             against.
 
     Returns:
-        Predicate: The created **greater than** predicate.
+        The created **greater than** predicate.
     """
     return _GreaterLessPredicate(attribute, value, False, False)
 
@@ -697,13 +691,13 @@ def greater_or_equal(attribute: str, value: typing.Any) -> Predicate:
     given item ``attribute`` is greater than or equal to the given ``value``.
 
     Args:
-        attribute (str): the left-hand side attribute to fetch the value for
+        attribute: the left-hand side attribute to fetch the value for
             comparison from.
         value: The right-hand side value to compare the attribute value
             against.
 
     Returns:
-        Predicate: The created **greater than or equal to** predicate.
+        The created **greater than or equal to** predicate.
     """
     return _GreaterLessPredicate(attribute, value, True, False)
 
@@ -713,13 +707,13 @@ def less(attribute: str, value: typing.Any) -> Predicate:
     given item ``attribute`` is less than the given ``value``.
 
     Args:
-        attribute (str): The left-hand side attribute to fetch the value for
+        attribute: The left-hand side attribute to fetch the value for
             comparison from.
         value: The right-hand side value to compare the attribute value
             against.
 
     Returns:
-        Predicate: The created **less than** predicate.
+        The created **less than** predicate.
     """
     return _GreaterLessPredicate(attribute, value, False, True)
 
@@ -729,12 +723,12 @@ def less_or_equal(attribute: str, value: typing.Any) -> Predicate:
     given item ``attribute`` is less than or equal to the given ``value``.
 
     Args:
-        attribute (str): The left-hand side attribute to fetch the value for
+        attribute: The left-hand side attribute to fetch the value for
             comparison from.
         value: The right-hand side value to compare the attribute value
             against.
 
     Returns:
-        Predicate: The created **less than or equal to** predicate.
+        The created **less than or equal to** predicate.
     """
     return _GreaterLessPredicate(attribute, value, True, True)

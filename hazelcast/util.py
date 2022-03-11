@@ -1,4 +1,3 @@
-import binascii
 import random
 import threading
 import time
@@ -280,7 +279,7 @@ class LoadBalancer:
 
         Returns:
             hazelcast.core.MemberInfo: the next member or ``None`` if no member
-                is available.
+            is available.
         """
         raise NotImplementedError("next")
 

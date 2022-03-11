@@ -20,11 +20,11 @@ class Executor(Proxy["BlockingExecutor"]):
         """Executes a task on the owner of the specified key.
 
         Args:
-          key: The specified key.
-          task: A task executed on the owner of the specified key.
+            key: The specified key.
+            task: A task executed on the owner of the specified key.
 
         Returns:
-          Future: future representing pending completion of the task.
+            The result of the task.
         """
         check_not_none(key, "key can't be None")
         check_not_none(task, "task can't be None")
@@ -48,11 +48,11 @@ class Executor(Proxy["BlockingExecutor"]):
         """Executes a task on the specified member.
 
         Args:
-          member (MemberInfo): The specified member.
-          task: The task executed on the specified member.
+            member: The specified member.
+            task: The task executed on the specified member.
 
         Returns:
-          Future: Future representing pending completion of the task.
+            The result of the task.
         """
         check_not_none(task, "task can't be None")
         task_data = self._to_data(task)
@@ -65,12 +65,11 @@ class Executor(Proxy["BlockingExecutor"]):
         """Executes a task on each of the specified members.
 
         Args:
-            members (typing.Sequence[MemberInfo]): The specified members.
+            members: The specified members.
             task: The task executed on the specified members.
 
         Returns:
-            Future[list]: Future representing pending completion of the task on
-            each member.
+            The list of results of the tasks on each member.
         """
         task_data = self._to_data(task)
         futures = []
@@ -81,14 +80,13 @@ class Executor(Proxy["BlockingExecutor"]):
         return future.combine_futures(futures)
 
     def execute_on_all_members(self, task: typing.Any) -> Future[typing.List[typing.Any]]:
-        """Executes a task on all of the known cluster members.
+        """Executes a task on all the known cluster members.
 
         Args:
-            task: The task executed on the all of the members.
+            task: The task executed on the all the members.
 
         Returns:
-            Future[list]: Future representing pending completion of the task on
-            each member.
+            The list of results of the tasks on each member.
         """
         return self.execute_on_members(self._context.cluster_service.get_members(), task)
 
@@ -96,8 +94,7 @@ class Executor(Proxy["BlockingExecutor"]):
         """Determines whether this executor has been shutdown or not.
 
         Returns:
-            Future[bool]: ``True`` if the executor has been shutdown,
-            ``False`` otherwise.
+            ``True`` if the executor has been shutdown, ``False`` otherwise.
         """
         request = executor_service_is_shutdown_codec.encode_request(self.name)
         return self._invoke(request, executor_service_is_shutdown_codec.decode_response)
@@ -106,9 +103,6 @@ class Executor(Proxy["BlockingExecutor"]):
         """Initiates a shutdown process which works orderly. Tasks that were
         submitted before shutdown are executed but new task will not be
         accepted.
-
-        Returns:
-            Future[None]:
         """
         request = executor_service_shutdown_codec.encode_request(self.name)
         return self._invoke(request)

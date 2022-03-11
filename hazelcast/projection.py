@@ -14,8 +14,6 @@ class Projection(typing.Generic[ProjectionType]):
     object in order to avoid redundant network traffic.
     """
 
-    pass
-
 
 class _AbstractProjection(Projection[ProjectionType], IdentifiedDataSerializable):
     def write_data(self, object_data_output):
@@ -81,11 +79,10 @@ def single_attribute(attribute_path: str) -> Projection[ProjectionType]:
     the given attribute path.
 
     Args:
-        attribute_path (str): Path to extract the attribute from.
+        attribute_path: Path to extract the attribute from.
 
     Returns:
-        Projection[any]: A projection that extracts the value of the given
-        attribute path.
+        A projection that extracts the value of the given attribute path.
     """
     return _SingleAttributeProjection(attribute_path)
 
@@ -95,11 +92,10 @@ def multi_attribute(*attribute_paths: str) -> Projection[typing.List[typing.Any]
     one or more attribute paths.
 
     Args:
-        *attribute_paths (str): Paths to extract the attributes from.
+        *attribute_paths: Paths to extract the attributes from.
 
     Returns:
-        Projection[list]: A projection that extracts the values of the given
-        attribute paths.
+        A projection that extracts the values of the given attribute paths.
     """
     return _MultiAttributeProjection(list(attribute_paths))
 
@@ -108,7 +104,6 @@ def identity() -> Projection[MapEntry[KeyType, ValueType]]:
     """Creates a projection that does no transformation.
 
     Returns:
-        Projection[MapEntry]: A projection that does no
-        transformation.
+        A projection that does no transformation.
     """
     return _IdentityProjection()

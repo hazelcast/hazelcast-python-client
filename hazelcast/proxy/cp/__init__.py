@@ -51,27 +51,26 @@ class SessionAwareCPProxy(BaseCPProxy[BlockingProxyType], abc.ABC):
     def get_group_id(self) -> RaftGroupId:
         """
         Returns:
-           hazelcast.protocol.RaftGroupId: Id of the CP group that runs this
-           proxy.
+           Id of the CP group that runs this proxy.
         """
         return self._group_id
 
-    def _get_session_id(self):
+    def _get_session_id(self) -> int:
         """
         Returns:
-            int: Session id.
+            Session id.
         """
         return self._session_manager.get_session_id(self._group_id)
 
-    def _acquire_session(self, count=1):
+    def _acquire_session(self, count: int = 1) -> Future[int]:
         """
         Returns:
-            hazelcast.future.Future[int]: Session id.
+            Session id.
         """
         return self._session_manager.acquire_session(self._group_id, count)
 
-    def _release_session(self, session_id, count=1):
+    def _release_session(self, session_id: int, count: int = 1) -> None:
         self._session_manager.release_session(self._group_id, session_id, count)
 
-    def _invalidate_session(self, session_id):
+    def _invalidate_session(self, session_id: int) -> None:
         self._session_manager.invalidate_session(self._group_id, session_id)

@@ -466,10 +466,10 @@ class HazelcastClient:
         """Creates cluster-wide ExecutorService.
 
         Args:
-            name (str): Name of the Executor proxy.
+            name: Name of the Executor proxy.
 
         Returns:
-            Executor: Executor proxy for the given name.
+            Executor proxy for the given name.
         """
         return self._proxy_manager.get_or_create(EXECUTOR_SERVICE, name)
 
@@ -477,11 +477,10 @@ class HazelcastClient:
         """Creates or returns a cluster-wide FlakeIdGenerator.
 
         Args:
-            name (str): Name of the FlakeIdGenerator proxy.
+            name: Name of the FlakeIdGenerator proxy.
 
         Returns:
-            FlakeIdGenerator: FlakeIdGenerator proxy for the given name
-
+            FlakeIdGenerator proxy for the given name.
         """
         return self._proxy_manager.get_or_create(FLAKE_ID_GENERATOR_SERVICE, name)
 
@@ -489,10 +488,10 @@ class HazelcastClient:
         """Returns the distributed queue instance with the specified name.
 
         Args:
-            name (str): Name of the distributed queue.
+            name: Name of the distributed queue.
 
         Returns:
-            Queue: Distributed queue instance with the specified name.
+            Distributed queue instance with the specified name.
         """
         return self._proxy_manager.get_or_create(QUEUE_SERVICE, name)
 
@@ -500,10 +499,10 @@ class HazelcastClient:
         """Returns the distributed list instance with the specified name.
 
         Args:
-            name (str): Name of the distributed list.
+            name: Name of the distributed list.
 
         Returns:
-            List: Distributed list instance with the specified name.
+            Distributed list instance with the specified name.
         """
         return self._proxy_manager.get_or_create(LIST_SERVICE, name)
 
@@ -511,10 +510,10 @@ class HazelcastClient:
         """Returns the distributed map instance with the specified name.
 
         Args:
-            name (str): Name of the distributed map.
+            name: Name of the distributed map.
 
         Returns:
-            Map: Distributed map instance with the specified name.
+            Distributed map instance with the specified name.
         """
         return self._proxy_manager.get_or_create(MAP_SERVICE, name)
 
@@ -522,10 +521,10 @@ class HazelcastClient:
         """Returns the distributed MultiMap instance with the specified name.
 
         Args:
-            name (str): Name of the distributed MultiMap.
+            name: Name of the distributed MultiMap.
 
         Returns:
-            MultiMap: Distributed MultiMap instance with the specified name.
+            Distributed MultiMap instance with the specified name.
         """
         return self._proxy_manager.get_or_create(MULTI_MAP_SERVICE, name)
 
@@ -533,10 +532,10 @@ class HazelcastClient:
         """Returns the PN Counter instance with the specified name.
 
         Args:
-            name (str): Name of the PN Counter.
+            name: Name of the PN Counter.
 
         Returns:
-            PNCounter: Distributed PN Counter instance with the specified name.
+            Distributed PN Counter instance with the specified name.
         """
         return self._proxy_manager.get_or_create(PN_COUNTER_SERVICE, name)
 
@@ -544,11 +543,10 @@ class HazelcastClient:
         """Returns the ReliableTopic instance with the specified name.
 
         Args:
-            name (str): Name of the ReliableTopic.
+            name: Name of the ReliableTopic.
 
         Returns:
-            ReliableTopic: Distributed ReliableTopic instance with the
-            specified name.
+            Distributed ReliableTopic instance with the specified name.
         """
         return self._proxy_manager.get_or_create(RELIABLE_TOPIC_SERVICE, name)
 
@@ -557,11 +555,10 @@ class HazelcastClient:
         name.
 
         Args:
-            name (str): Name of the distributed ReplicatedMap.
+            name: Name of the distributed ReplicatedMap.
 
         Returns:
-            ReplicatedMap: Distributed ReplicatedMap instance with the
-            specified name.
+            Distributed ReplicatedMap instance with the specified name.
         """
         return self._proxy_manager.get_or_create(REPLICATED_MAP_SERVICE, name)
 
@@ -569,11 +566,10 @@ class HazelcastClient:
         """Returns the distributed Ringbuffer instance with the specified name.
 
         Args:
-            name (str): Name of the distributed Ringbuffer.
+            name: Name of the distributed Ringbuffer.
 
         Returns:
-            Ringbuffer: Distributed RingBuffer instance with the specified
-            name.
+            Distributed RingBuffer instance with the specified name.
         """
 
         return self._proxy_manager.get_or_create(RINGBUFFER_SERVICE, name)
@@ -582,10 +578,10 @@ class HazelcastClient:
         """Returns the distributed Set instance with the specified name.
 
         Args:
-            name (str): Name of the distributed Set.
+            name: Name of the distributed Set.
 
         Returns:
-            Set: Distributed Set instance with the specified name.
+            Distributed Set instance with the specified name.
         """
         return self._proxy_manager.get_or_create(SET_SERVICE, name)
 
@@ -593,10 +589,10 @@ class HazelcastClient:
         """Returns the Topic instance with the specified name.
 
         Args:
-            name (str): Name of the Topic.
+            name: Name of the Topic.
 
         Returns:
-            Topic: The Topic.
+            The Topic.
         """
         return self._proxy_manager.get_or_create(TOPIC_SERVICE, name)
 
@@ -607,18 +603,17 @@ class HazelcastClient:
          using default or given options.
 
         Args:
-            timeout (float): The timeout in seconds determines the maximum
-                lifespan of a transaction. So if a transaction is configured
-                with a timeout of 2 minutes, then it will automatically
-                rollback if it hasn't committed yet.
-            durability (int): The durability is the number of machines that
-                can take over if a member fails during a transaction commit
-                or rollback.
-            type (int): The transaction type which can be
-                ``TWO_PHASE`` or ``ONE_PHASE``.
+            timeout: The timeout in seconds determines the maximum lifespan of
+                a transaction. So if a transaction is configured with a
+                timeout of 2 minutes, then it will automatically rollback if
+                it hasn't committed yet.
+            durability: The durability is the number of machines that can take
+                over if a member fails during a transaction commit or rollback.
+            type: The transaction type which can be ``TWO_PHASE``
+                or ``ONE_PHASE``.
 
         Returns:
-            Transaction: New Transaction associated with the current thread.
+            New Transaction associated with the current thread.
         """
         return self._transaction_manager.new_transaction(timeout, durability, type)
 
@@ -629,12 +624,11 @@ class HazelcastClient:
         is created or destroyed.
 
         Args:
-            listener_func (function): Function to be called when a distributed
-                object is created or destroyed.
+            listener_func: Function to be called when a distributed object is
+                created or destroyed.
 
         Returns:
-            Future[str]: A registration id which is used as a key to remove the
-            listener.
+            A registration id which is used as a key to remove the listener.
         """
         is_smart = self._config.smart_routing
         codec = client_add_distributed_object_listener_codec
@@ -660,11 +654,10 @@ class HazelcastClient:
         Returns silently if there is no such listener added before.
 
         Args:
-            registration_id (str): The id of registered listener.
+            registration_id: The id of registered listener.
 
         Returns:
-            Future[bool]: ``True`` if registration is removed, ``False``
-            otherwise.
+            ``True`` if registration is removed, ``False`` otherwise.
         """
         return self._listener_service.deregister_listener(registration_id)
 
@@ -676,7 +669,7 @@ class HazelcastClient:
         proxies.
 
         Returns:
-            list[Proxy]: List of instances created by Hazelcast.
+            List of instances created by Hazelcast.
         """
         request = client_get_distributed_objects_codec.encode_request()
         invocation = Invocation(request, response_handler=lambda m: m)
@@ -717,20 +710,20 @@ class HazelcastClient:
 
     @property
     def name(self) -> str:
-        """str: Name of the client."""
+        """Name of the client."""
         return self._name
 
     @property
     def lifecycle_service(self) -> LifecycleService:
-        """LifecycleService: Lifecycle service allows you to check if the
-        client is running and add and remove lifecycle listeners.
+        """Lifecycle service allows you to check if the client is running and
+        add and remove lifecycle listeners.
         """
         return self._lifecycle_service
 
     @property
     def partition_service(self) -> PartitionService:
-        """PartitionService: Partition service allows you to get partition
-        count, introspect the partition owners, and partition ids of keys.
+        """Partition service allows you to get partition count, introspect
+        the partition owners, and partition ids of keys.
         """
         return self._partition_service
 
@@ -743,9 +736,7 @@ class HazelcastClient:
 
     @property
     def cp_subsystem(self) -> CPSubsystem:
-        """CPSubsystem: CP Subsystem offers set of in-memory linearizable
-        data structures.
-        """
+        """CP Subsystem offers set of in-memory linearizable data structures."""
         return self._cp_subsystem
 
     @property

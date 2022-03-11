@@ -43,8 +43,7 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
             item: The specified item.
 
         Returns:
-            Future[bool]: ``True`` if element is successfully
-            added, ``False`` otherwise.
+            ``True`` if element is successfully added, ``False`` otherwise.
         """
 
         def result_fnc(f):
@@ -58,12 +57,10 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
         """Adds the elements in the specified collection to this queue.
 
         Args:
-            items (typing.Sequence): Collection which includes the items to be
-                added.
+            items: Collection which includes the items to be added.
 
         Returns:
-            Future[bool]: ``True`` if this queue is changed after call,
-            ``False`` otherwise.
+            ``True`` if this queue is changed after call, ``False`` otherwise.
         """
         check_not_none(items, "Value can't be None")
         data_items = []
@@ -84,16 +81,15 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
          all queue add/remove events.
 
         Args:
-            include_value (bool): Whether received events include the updated
-                item or not.
-            item_added_func (function): Function to be called when an item is
-                added to this set.
-            item_removed_func (function): Function to be called when an item
-                is deleted from this set.
+            include_value: Whether received events include the updated item or
+                not.
+            item_added_func: Function to be called when an item is added to
+                this set.
+            item_removed_func: Function to be called when an item is deleted
+                from this set.
 
         Returns:
-            Future[str]: A registration id which is used as a key to remove the
-            listener.
+            A registration id which is used as a key to remove the listener.
         """
         codec = queue_add_listener_codec
         request = codec.encode_request(self.name, include_value, self._is_smart)
@@ -118,11 +114,7 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
         )
 
     def clear(self) -> Future[None]:
-        """Clears this queue. Queue will be empty after this call.
-
-        Returns:
-            Future[None]:
-        """
+        """Clears this queue. Queue will be empty after this call."""
         request = queue_clear_codec.encode_request(self.name)
         return self._invoke(request)
 
@@ -133,8 +125,8 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
             item: The specified item to be searched.
 
         Returns:
-            Future[bool]: ``True`` if the specified item exists in this queue,
-            ``False`` otherwise.
+            ``True`` if the specified item exists in this queue, ``False``
+            otherwise.
         """
         check_not_none(item, "Item can't be None")
         item_data = self._to_data(item)
@@ -146,12 +138,12 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
         specified collection or not.
 
         Args:
-            items (typing.Sequence): The specified collection which includes
-                the items to be searched.
+            items: The specified collection which includes the items to be
+                searched.
 
         Returns:
-            Future[bool]: ``True`` if all of the items in the specified
-            collection exist in this queue, ``False`` otherwise.
+            ``True`` if all of the items in the specified collection exist in
+            this queue, ``False`` otherwise.
         """
         check_not_none(items, "Items can't be None")
         data_items = []
@@ -174,12 +166,12 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
         and putting into collection.
 
         Args:
-            target_list (list): the list where the items in this queue will be
+            target_list: the list where the items in this queue will be
                 transferred.
-            max_size (int): The maximum number items to transfer.
+            max_size: The maximum number items to transfer.
 
         Returns:
-            Future[int]: Number of transferred items.
+            Number of transferred items.
         """
 
         def handler(message):
@@ -191,10 +183,10 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
         return self._invoke(request, handler)
 
     def iterator(self) -> Future[typing.List[ItemType]]:
-        """Returns all of the items in this queue.
+        """Returns all the items in this queue.
 
         Returns:
-            Future[list]: Collection of items in this queue.
+            Collection of items in this queue.
         """
 
         def handler(message):
@@ -209,7 +201,7 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
         """Determines whether this set is empty or not.
 
         Returns:
-            Future[bool]: ``True`` if this queue is empty, ``False`` otherwise.
+            ``True`` if this queue is empty, ``False`` otherwise.
         """
         request = queue_is_empty_codec.encode_request(self.name)
         return self._invoke(request, queue_is_empty_codec.decode_response)
@@ -226,11 +218,11 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
 
         Args:
             item: The item to be added.
-            timeout (float): Maximum time in seconds to wait for addition.
+            timeout: Maximum time in seconds to wait for addition.
 
         Returns:
-            Future[bool]: ``True`` if the element was added to this queue,
-            ``False`` otherwise.
+            ``True`` if the element was added to this queue, ``False``
+            otherwise.
         """
         check_not_none(item, "Value can't be None")
         element_data = self._to_data(item)
@@ -241,8 +233,7 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
         """Retrieves the head of queue without removing it from the queue.
 
         Returns:
-            Future[any]: The head of this queue, or ``None`` if this queue is
-            empty.
+            The head of this queue, or ``None`` if this queue is empty.
         """
 
         def handler(message):
@@ -261,12 +252,11 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
         - If the timeout is not provided, returns ``None``.
 
         Args:
-            timeout (float): Maximum time in seconds to wait for addition.
+            timeout: Maximum time in seconds to wait for addition.
 
         Returns:
-            Future[any]: The head of this queue, or ``None`` if this queue is
-            empty or specified timeout elapses before an item is added to the
-            queue.
+            The head of this queue, or ``None`` if this queue is empty or
+            specified timeout elapses before an item is added to the queue.
         """
 
         def handler(message):
@@ -282,9 +272,6 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
 
         Args:
             item: The specified item.
-
-        Returns:
-            Future[None]:
         """
         check_not_none(item, "Value can't be None")
         element_data = self._to_data(item)
@@ -295,7 +282,7 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
         """Returns the remaining capacity of this queue.
 
         Returns:
-            Future[int]: Remaining capacity of this queue.
+            Remaining capacity of this queue.
         """
         request = queue_remaining_capacity_codec.encode_request(self.name)
         return self._invoke(request, queue_remaining_capacity_codec.decode_response)
@@ -307,8 +294,8 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
             item: The specified element to be removed.
 
         Returns:
-            Future[bool]: ``True`` if the specified element exists in this
-            queue, ``False`` otherwise.
+            ``True`` if the specified element exists in this queue, ``False``
+            otherwise.
         """
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)
@@ -320,11 +307,10 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
         queue.
 
         Args:
-            items (typing.Sequence): The specified collection.
+            items: The specified collection.
 
         Returns:
-            Future[bool]: ``True`` if the call changed this queue, ``False``
-            otherwise.
+            ``True`` if the call changed this queue, ``False`` otherwise.
         """
         check_not_none(items, "Value can't be None")
         data_items = []
@@ -341,11 +327,10 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
         Returns silently if the specified listener was not added before.
 
         Args:
-            registration_id (str): Id of the listener to be deleted.
+            registration_id: Id of the listener to be deleted.
 
         Returns:
-            Future[bool]: ``True`` if the item listener is removed, ``False``
-            otherwise.
+            ``True`` if the item listener is removed, ``False`` otherwise.
         """
         return self._deregister_listener(registration_id)
 
@@ -357,12 +342,12 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
         collection will be retained.
 
         Args:
-            items (typing.Sequence): Collection which includes the elements to
-                be retained in this set.
+            items: Collection which includes the elements to be retained in
+                this set.
 
         Returns:
-            Future[bool]: ``True`` if this queue changed as a result of the
-            call, ``False`` otherwise.
+            ``True`` if this queue changed as a result of the call, ``False``
+            otherwise.
         """
         check_not_none(items, "Value can't be None")
         data_items = []
@@ -378,7 +363,7 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
         If the size is greater than ``2**31 - 1``, it returns ``2**31 - 1``.
 
         Returns:
-            Future[int]: Size of the queue.
+            Size of the queue.
         """
         request = queue_size_codec.encode_request(self.name)
         return self._invoke(request, queue_size_codec.decode_response)
@@ -388,7 +373,7 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
         until an item becomes available.
 
         Returns:
-            Future[any]: The head of this queue.
+            The head of this queue.
         """
 
         def handler(message):

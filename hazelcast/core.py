@@ -29,34 +29,34 @@ class MemberInfo:
     ):
         self.address = address
         """
-        Address: Address of the member.
+        Address of the member.
         """
 
         self.uuid = member_uuid
         """
-        uuid.UUID: UUID of the member.
+        UUID of the member.
         """
 
         self.attributes = attributes
         """
-        dict[str, str]: Configured attributes of the member.
+        Configured attributes of the member.
         """
 
         self.lite_member = lite_member
         """
-        bool: ``True`` if the member is a lite member, ``False`` otherwise.
-        Lite members do not own any partition.
+        ``True`` if the member is a lite member, ``False`` otherwise. Lite 
+        members do not own any partition.
         """
 
         self.version = version
         """
-        MemberVersion: Hazelcast codebase version of the member.
+        Hazelcast codebase version of the member.
         """
 
         self.address_map = address_map
         """
-        dict[EndpointQualifier, Address]: Dictionary of server socket
-        addresses per :class:`EndpointQualifier` of this member.
+        Dictionary of server socket addresses per :class:`EndpointQualifier` 
+        of this member.
         """
 
     def __str__(self):
@@ -96,12 +96,12 @@ class Address:
     def __init__(self, host: str, port: int):
         self.host = host
         """
-        str: Host of the address.
+        Host of the address.
         """
 
         self.port = port
         """
-        int: Port of the address.
+        Port of the address.
         """
 
     def __repr__(self):
@@ -168,12 +168,12 @@ class EndpointQualifier:
 
     @property
     def protocol_type(self) -> int:
-        """int: Protocol type of the endpoint."""
+        """Protocol type of the endpoint."""
         return self._protocol_type
 
     @property
     def identifier(self) -> str:
-        """str: Unique identifier for same-protocol-type endpoints."""
+        """Unique identifier for same-protocol-type endpoints."""
         return self._identifier
 
     def __eq__(self, other):
@@ -273,22 +273,22 @@ class DistributedObjectEvent:
     def __init__(self, name: str, service_name: str, event_type: str, source: uuid.UUID):
         self.name = name
         """
-        str: Name of the distributed object.
+        Name of the distributed object.
         """
 
         self.service_name = service_name
         """
-        str: Service name of the distributed object.
+        Service name of the distributed object.
         """
 
         self.event_type = event_type
         """
-        str: Event type. Either ``CREATED`` or ``DESTROYED``.
+        Event type. Either ``CREATED`` or ``DESTROYED``.
         """
 
         self.source = source
         """
-        uuid.UUID: UUID of the member that fired the event.
+        UUID of the member that fired the event.
         """
 
     def __repr__(self):
@@ -330,52 +330,52 @@ class SimpleEntryView(typing.Generic[KeyType, ValueType]):
 
         self.cost = cost
         """
-        int: The cost in bytes of the entry.
+        The cost in bytes of the entry.
         """
 
         self.creation_time = creation_time
         """
-        int: The creation time of the entry.
+        The creation time of the entry.
         """
 
         self.expiration_time = expiration_time
         """
-        int: The expiration time of the entry.
+        The expiration time of the entry.
         """
 
         self.hits = hits
         """
-        int: Number of hits of the entry.
+        Number of hits of the entry.
         """
 
         self.last_access_time = last_access_time
         """
-        int: The last access time for the entry.
+        The last access time for the entry.
         """
 
         self.last_stored_time = last_stored_time
         """
-        int: The last store time for the value.
+        The last store time for the value.
         """
 
         self.last_update_time = last_update_time
         """
-        int: The last time the value was updated.
+        The last time the value was updated.
         """
 
         self.version = version
         """
-        int: The version of the entry.
+        The version of the entry.
         """
 
         self.ttl = ttl
         """
-        int: The last set time to live milliseconds.
+        The last set time to live milliseconds.
         """
 
         self.max_idle = max_idle
         """
-        int: The last set max idle time in milliseconds.
+        The last set max idle time in milliseconds.
         """
 
     def __repr__(self):
@@ -403,9 +403,9 @@ class SimpleEntryView(typing.Generic[KeyType, ValueType]):
 class HazelcastJsonValue:
     """HazelcastJsonValue is a wrapper for JSON formatted strings.
 
-    It is preferred to store HazelcastJsonValue instead of Strings for JSON formatted strings.
-    Users can run predicates and use indexes on the attributes of the underlying
-    JSON strings.
+    It is preferred to store HazelcastJsonValue instead of Strings for JSON
+    formatted strings. Users can run predicates and use indexes on the
+    attributes of the underlying JSON strings.
 
     HazelcastJsonValue is queried using Hazelcast's querying language.
 
@@ -436,7 +436,7 @@ class HazelcastJsonValue:
         """Returns unaltered string that was used to create this object.
 
         Returns:
-            str: The original string.
+            The original string.
         """
         return self._json_string
 
@@ -445,7 +445,7 @@ class HazelcastJsonValue:
         and returns as Python object.
 
         Returns:
-            any: The Python object represented by the original string.
+            The Python object represented by the original string.
         """
         return json.loads(self._json_string)
 

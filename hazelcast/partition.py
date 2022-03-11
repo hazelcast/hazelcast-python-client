@@ -23,8 +23,8 @@ class _PartitionTable:
 
 class PartitionService:
     """
-    Allows to retrieve information about the partition count, the partition owner
-    or the partition id of a key.
+    Allows retrieving information about the partition count, the partition
+    owner or the partition id of a key.
     """
 
     __slots__ = ("_service", "_serialization_service")
@@ -38,10 +38,10 @@ class PartitionService:
         Returns the owner of the partition if it's set, ``None`` otherwise.
 
         Args:
-            partition_id (int): The partition id.
+            partition_id: The partition id.
 
         Returns:
-            uuid.UUID: Owner of the partition
+            Owner of the partition
         """
         return self._service.get_partition_owner(partition_id)
 
@@ -53,7 +53,7 @@ class PartitionService:
             key: The given key.
 
         Returns:
-            int: The partition id.
+            The partition id.
         """
         key_data = self._serialization_service.to_data(key)
         return self._service.get_partition_id(key_data)
@@ -65,7 +65,7 @@ class PartitionService:
         If partition table is not fetched yet, this method returns ``0``.
 
         Returns:
-            int: The partition count
+            The partition count
         """
         return self._service.partition_count
 

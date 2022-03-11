@@ -55,8 +55,7 @@ class LifecycleService:
         Checks whether or not the instance is running.
 
         Returns:
-            bool: ``True`` if the client is active and running, ``False``
-            otherwise.
+            ``True`` if the client is active and running, ``False`` otherwise.
         """
         return self._service.running
 
@@ -65,11 +64,11 @@ class LifecycleService:
         Adds a listener to listen for lifecycle events.
 
         Args:
-            on_state_change (function): Function to be called when lifecycle
-            state is changed.
+            on_state_change: Function to be called when lifecycle state is
+                changed.
 
         Returns:
-            str: Registration id of the listener
+            Registration id of the listener
         """
         return self._service.add_listener(on_state_change)
 
@@ -78,10 +77,10 @@ class LifecycleService:
         Removes a lifecycle listener.
 
         Args:
-            registration_id (str): The id of the listener to be removed.
+            registration_id: The id of the listener to be removed.
 
         Returns:
-            bool: ``True`` if the listener is removed successfully, ``False``
+            ``True`` if the listener is removed successfully, ``False``
             otherwise.
         """
         return self._service.remove_listener(registration_id)

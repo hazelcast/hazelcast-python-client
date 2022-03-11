@@ -66,7 +66,7 @@ class PNCounter(Proxy["BlockingPNCounter"]):
         """Returns the current value of the counter.
 
         Returns:
-            Future[int]: The current value of the counter.
+            The current value of the counter.
 
         Raises:
             NoDataMemberInClusterError: if the cluster does not contain any
@@ -80,10 +80,10 @@ class PNCounter(Proxy["BlockingPNCounter"]):
         value.
 
         Args:
-          delta (int): The value to add.
+          delta: The value to add.
 
         Returns:
-            Future[int]: The previous value.
+            The previous value.
 
         Raises:
             NoDataMemberInClusterError: if the cluster does not contain any
@@ -98,10 +98,10 @@ class PNCounter(Proxy["BlockingPNCounter"]):
         value.
 
         Args:
-            delta (int): The value to add.
+            delta: The value to add.
 
         Returns:
-            Future[int]: The updated value.
+            The updated value.
 
         Raises:
             NoDataMemberInClusterError: if the cluster does not contain any
@@ -116,10 +116,10 @@ class PNCounter(Proxy["BlockingPNCounter"]):
         previous value.
 
         Args:
-            delta (int): The value to subtract.
+            delta: The value to subtract.
 
         Returns:
-            Future[int]: The previous value.
+            The previous value.
 
         Raises:
             NoDataMemberInClusterError: if the cluster does not contain any
@@ -134,10 +134,10 @@ class PNCounter(Proxy["BlockingPNCounter"]):
         updated value.
 
         Args:
-            delta (int): The value to subtract.
+            delta: The value to subtract.
 
         Returns:
-            Future[int]: The updated value.
+            The updated value.
 
         Raises:
             NoDataMemberInClusterError: if the cluster does not contain any
@@ -153,7 +153,7 @@ class PNCounter(Proxy["BlockingPNCounter"]):
         """Decrements the counter value by one and returns the previous value.
 
         Returns:
-            Future[int]: The previous value.
+            The previous value.
 
         Raises:
             NoDataMemberInClusterError: if the cluster does not contain any
@@ -167,7 +167,7 @@ class PNCounter(Proxy["BlockingPNCounter"]):
         """Decrements the counter value by one and returns the updated value.
 
         Returns:
-            Future[int]: The updated value.
+            The updated value.
 
         Raises:
             NoDataMemberInClusterError: if the cluster does not contain any
@@ -181,7 +181,7 @@ class PNCounter(Proxy["BlockingPNCounter"]):
         """Increments the counter value by one and returns the previous value.
 
         Returns:
-            Future[int]: The previous value.
+            The previous value.
 
         Raises:
             NoDataMemberInClusterError: if the cluster does not contain any
@@ -195,7 +195,7 @@ class PNCounter(Proxy["BlockingPNCounter"]):
         """Increments the counter value by one and returns the updated value.
 
         Returns:
-            Future[int]: The updated value.
+            The updated value.
 
         Raises:
             NoDataMemberInClusterError: if the cluster does not contain any

@@ -36,8 +36,8 @@ class Proxy(typing.Generic[BlockingProxyType], abc.ABC):
         """Destroys this proxy.
 
         Returns:
-            bool: ``True`` if this proxy is destroyed successfully,
-            ``False`` otherwise.
+            ``True`` if this proxy is destroyed successfully, ``False``
+            otherwise.
         """
         self._on_destroy()
         return self._context.proxy_manager.destroy_proxy(self.service_name, self.name)
@@ -189,9 +189,9 @@ class ItemEvent(typing.Generic[ItemType]):
     """Map Item event.
 
     Attributes:
-        name (str): Name of the proxy that fired the event.
-        event_type (ItemEventType): Type of the event.
-        member (MemberInfo): Member that fired the event.
+        name: Name of the proxy that fired the event.
+        event_type: Type of the event.
+        member: Member that fired the event.
     """
 
     def __init__(self, name: str, item_data, event_type: int, member: MemberInfo, to_object):
@@ -211,10 +211,9 @@ class EntryEvent(typing.Generic[KeyType, ValueType]):
     """Map Entry event.
 
     Attributes:
-        event_type (EntryEventType): Type of the event.
-        uuid (uuid.UUID): UUID of the member that fired the event.
-        number_of_affected_entries (int): Number of affected entries by this
-            event.
+        event_type: Type of the event.
+        uuid: UUID of the member that fired the event.
+        number_of_affected_entries: Number of affected entries by this event.
     """
 
     def __init__(
@@ -291,17 +290,17 @@ class TopicMessage(typing.Generic[MessageType]):
 
     @property
     def name(self) -> str:
-        """str: Name of the proxy that fired the event."""
+        """Name of the proxy that fired the event."""
         return self._name
 
     @property
     def publish_time(self) -> int:
-        """int: UNIX time that the event is published as seconds."""
+        """UNIX time that the event is published as seconds."""
         return self._publish_time
 
     @property
     def member(self) -> MemberInfo:
-        """MemberInfo: Member that fired the event."""
+        """Member that fired the event."""
         return self._member
 
     @property

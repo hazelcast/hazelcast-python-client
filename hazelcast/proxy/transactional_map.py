@@ -36,7 +36,7 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
             key: The specified key.
 
         Returns:
-            bool: ``True`` if this map contains an entry for the specified key,
+            ``True`` if this map contains an entry for the specified key,
             ``False`` otherwise.
         """
         check_not_none(key, "key can't be none")
@@ -99,7 +99,7 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
         :func:`Map.size() <hazelcast.proxy.map.Map.size>`
 
         Returns:
-            int: Number of entries in this map.
+            Number of entries in this map.
         """
         request = transactional_map_size_codec.encode_request(
             self.name, self.transaction.id, thread_id()
@@ -111,8 +111,8 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
         :func:`Map.is_empty() <hazelcast.proxy.map.Map.is_empty>`
 
         Returns:
-            bool: ``True`` if this map contains no key-value mappings,
-            ``False`` otherwise.
+            ``True`` if this map contains no key-value mappings, ``False``
+            otherwise.
         """
         request = transactional_map_is_empty_codec.encode_request(
             self.name, self.transaction.id, thread_id()
@@ -129,7 +129,7 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
         Args:
             key: The specified key.
             value: The value to associate with the key.
-            ttl (float): Maximum time in seconds for this entry to stay.
+            ttl: Maximum time in seconds for this entry to stay.
 
         Returns:
             Previous value associated with key or ``None`` if there was no
@@ -238,7 +238,7 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
             new_value: The new value to replace the old value.
 
         Returns:
-            bool: ``True`` if the value was replaced, ``False`` otherwise.
+            ``True`` if the value was replaced, ``False`` otherwise.
         """
         check_not_none(key, "key can't be none")
         check_not_none(old_value, "old_value can't be none")
@@ -289,7 +289,7 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
             value: Remove the key if it has this value.
 
         Returns:
-            bool: ``True`` if the value was removed, ``False`` otherwise.
+            ``True`` if the value was removed, ``False`` otherwise.
         """
         check_not_none(key, "key can't be none")
         check_not_none(value, "value can't be none")
@@ -327,7 +327,7 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
             predicate (Predicate): Predicate to filter the entries.
 
         Returns:
-            list: A list of the clone of the keys.
+            A list of the clone of the keys.
         """
         if predicate:
 
@@ -362,7 +362,7 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
             predicate (Predicate): Predicate to filter the entries.
 
         Returns:
-            list: A list of clone of the values contained in this map.
+            A list of clone of the values contained in this map.
         """
         if predicate:
 
