@@ -229,13 +229,17 @@ The following is an example configuration:
 Checking Hostname
 ^^^^^^^^^^^^^^^^^
 
+.. warning::
+
+    This feature requires Python 3.7 or newer.
+
 During the TLS/SSL handshake, the client can verify that the hostname
 or the IP address of the member matches with the information provided
-in the member's certificate's Subject Alternative Name extension or 
-Common Name field in the Subject field.
+in the Subject Alternative Name extension or Common Name field in the
+Subject field of the member's certificate.
 
-The hostname the client uses during the verification process is the
-hostname of the configured member address in the client constructor.
+The hostname used during the verification process is the hostname of
+the configured member address in the client constructor.
 
 By default, hostname verification is disabled, but it is highly
 encouraged to enable it to avoid certain types of attack vectors.

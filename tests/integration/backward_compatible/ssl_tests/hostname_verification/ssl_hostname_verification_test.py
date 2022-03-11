@@ -1,4 +1,5 @@
 import os
+import sys
 import unittest
 
 import pytest
@@ -34,7 +35,12 @@ MEMBER_CONFIG = """
 
 
 @unittest.skipIf(
-    compare_client_version("5.1") < 0, "Tests the features added in 5.1 version of the client"
+    sys.version_info < (3, 7),
+    "Hostname verification feature requires Python 3.7+",
+)
+@unittest.skipIf(
+    compare_client_version("5.1") < 0,
+    "Tests the features added in 5.1 version of the client",
 )
 @pytest.mark.enterprise
 class SslHostnameVerificationTest(HazelcastTestCase):
