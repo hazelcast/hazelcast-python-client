@@ -450,7 +450,7 @@ class SessionAwareSemaphore(Semaphore, SessionAwareCPProxy):
 
     def _request_acquire(self, session_id, current_thread_id, invocation_uuid, permits, timeout):
         codec = semaphore_acquire_codec
-        if timeout > 0:
+        if timeout >= 0:
             timeout = to_millis(timeout)
 
         request = codec.encode_request(
@@ -549,7 +549,7 @@ class SessionlessSemaphore(Semaphore):
 
     def _request_acquire(self, global_thread_id, invocation_uuid, permits, timeout):
         codec = semaphore_acquire_codec
-        if timeout > 0:
+        if timeout >= 0:
             timeout = to_millis(timeout)
 
         request = codec.encode_request(
