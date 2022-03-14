@@ -141,8 +141,7 @@ class ReliableMessageListener(typing.Generic[MessageType]):
         error raised while calling :func:`on_message`.
 
         Args:
-            error (Exception): The error raised while calling
-                :func:`on_message`
+            error: The error raised while calling :func:`on_message`
 
         Returns:
             ``True`` if the ReliableMessageListener should terminate itself,
@@ -272,16 +271,16 @@ class _MessageRunner:
             if not self._handle_internal_error(e):
                 self.cancel()
 
-    def _is_loss_tolerable(self, loss_count):
+    def _is_loss_tolerable(self, loss_count: int) -> bool:
         """Called when message loss is detected.
 
         Checks if the listener is able to tolerate the loss.
 
         Args:
-            loss_count (int): Number of lost messages.
+            loss_count: Number of lost messages.
 
         Returns:
-            bool: ``True`` if the listener may continue reading.
+            ``True`` if the listener may continue reading.
         """
         if self._listener.is_loss_tolerant():
             _logger.debug(
@@ -302,7 +301,7 @@ class _MessageRunner:
         )
         return False
 
-    def _terminate(self, error):
+    def _terminate(self, error: Exception) -> bool:
         """Checks if we should terminate the listener
         based on the error we received while calling the
         on_message for this message.
@@ -314,11 +313,10 @@ class _MessageRunner:
         printed and listener will continue.
 
         Args:
-            error (Exception): Error we received while
-                calling the listener.
+            error: Error we received while calling the listener.
 
         Returns:
-            bool: Should terminate the listener or not.
+            Should terminate the listener or not.
         """
         if self._cancelled:
             return True
@@ -350,7 +348,7 @@ class _MessageRunner:
             )
             return True
 
-    def _handle_internal_error(self, error):
+    def _handle_internal_error(self, error: Exception) -> bool:
         """Called when the read_many request is failed.
 
         Based on the error we receive, we will act differently.
@@ -361,12 +359,11 @@ class _MessageRunner:
         to the server, and based on that, call next_batch.
 
         Args:
-            error (Exception): The error we received.
+            error: The error we received.
 
         Returns:
-            bool: ``True`` if the error is handled internally.
-            ``False`` otherwise. When, ``False`` is returned,
-            listener should be cancelled.
+            ``True`` if the error is handled internally. ``False`` otherwise.
+            When, ``False`` is returned, listener should be cancelled.
         """
         if isinstance(error, HazelcastClientNotActiveError):
             return self._handle_client_not_active_error()
