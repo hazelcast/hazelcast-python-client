@@ -53,19 +53,17 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
         events.
 
         Args:
-            include_value (bool): Whether received event should include the
-                value or not.
+            include_value: Whether received event should include the value or
+                not.
             key: Key for filtering the events.
-            added_func (function): Function to be called when an entry is
-                added to map.
-            removed_func (function): Function to be called when an entry is
-                removed from map.
-            clear_all_func (function): Function to be called when entries
-                are cleared from map.
+            added_func: Function to be called when an entry is added to map.
+            removed_func: Function to be called when an entry is removed from
+                map.
+            clear_all_func: Function to be called when entries are cleared
+                from map.
 
         Returns:
-            Future[str]: A registration id which is used as a key to remove the
-            listener.
+            A registration id which is used as a key to remove the listener.
         """
         if key:
             codec = multi_map_add_entry_listener_to_key_codec
@@ -114,8 +112,8 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             key: The specified key.
 
         Returns:
-            Future[bool]: ``True`` if this multimap contains an entry for the
-            specified key, ``False`` otherwise.
+            ``True`` if this multimap contains an entry for the specified key,
+            ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
@@ -131,8 +129,8 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             value: The specified value.
 
         Returns:
-            Future[bool]: ``True`` if this multimap contains an entry for the
-            specified value, ``False`` otherwise.
+            ``True`` if this multimap contains an entry for the specified
+            value, ``False`` otherwise.
         """
         check_not_none(value, "value can't be None")
         value_data = self._to_data(value)
@@ -147,8 +145,8 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             value: The specified value.
 
         Returns:
-            Future[bool]: ``True`` if this multimap contains the key-value
-            tuple, ``False`` otherwise.
+            ``True`` if this multimap contains the key-value tuple, ``False``
+            otherwise.
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
@@ -163,11 +161,7 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
         )
 
     def clear(self) -> Future[None]:
-        """Clears the multimap. Removes all key-value tuples.
-
-        Returns:
-            Future[None]:
-        """
+        """Clears the multimap. Removes all key-value tuples."""
         request = multi_map_clear_codec.encode_request(self.name)
         return self._invoke(request)
 
@@ -179,7 +173,7 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             reflected in the list, and vice-versa.
 
         Returns:
-            Future[list]: The list of key-value tuples in the multimap.
+            The list of key-value tuples in the multimap.
         """
 
         def handler(message):
@@ -207,8 +201,7 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             key: The specified key.
 
         Returns:
-            Future[list]: The list of the values associated with the specified
-            key.
+            The list of the values associated with the specified key.
         """
         check_not_none(key, "key can't be None")
 
@@ -233,7 +226,7 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             key: The key that is checked for lock.
 
         Returns:
-            Future[bool]: ``True`` if lock is acquired, ``False`` otherwise.
+            ``True`` if lock is acquired, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
@@ -255,9 +248,6 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
 
         Args:
             key: The key to lock.
-
-        Returns:
-            Future[None]:
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
@@ -274,7 +264,7 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             reflected in the list, and vice-versa.
 
         Returns:
-            Future[list]: A list of the clone of the keys.
+            A list of the clone of the keys.
         """
 
         def handler(message):
@@ -306,11 +296,7 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
 
         Args:
             key: The key to lock.
-            lease_time (float): Time in seconds to wait before releasing the
-                lock.
-
-        Returns:
-            Future[None]:
+            lease_time: Time in seconds to wait before releasing the lock.
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
@@ -336,8 +322,8 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             value: The value of the entry to remove.
 
         Returns:
-            Future[bool]: ``True`` if the size of the multimap changed after
-            the remove operation, ``False`` otherwise.
+            ``True`` if the size of the multimap changed after the remove
+            operation, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
         check_not_none(key, "value can't be None")
@@ -365,8 +351,7 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             key: The key of the entries to remove.
 
         Returns:
-            Future[list]: The collection of removed values associated with the
-            given key.
+            The collection of removed values associated with the given key.
         """
         check_not_none(key, "key can't be None")
 
@@ -392,8 +377,8 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             value: The value to be stored.
 
         Returns:
-            Future[bool]: ``True`` if size of the multimap is increased,
-            ``False`` if the multimap already contains the key-value tuple.
+            ``True`` if size of the multimap is increased, ``False`` if the
+            multimap already contains the key-value tuple.
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
@@ -408,11 +393,10 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
         Returns silently if there is no such listener added before.
 
         Args:
-            registration_id (str): Id of registered listener.
+            registration_id: Id of registered listener.
 
         Returns:
-            Future[bool]: ``True`` if registration is removed, ``False``
-            otherwise.
+            ``True`` if registration is removed, ``False`` otherwise.
         """
         return self._deregister_listener(registration_id)
 
@@ -420,7 +404,7 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
         """Returns the number of entries in this multimap.
 
         Returns:
-            Future[int]: Number of entries in this multimap.
+            Number of entries in this multimap.
         """
         request = multi_map_size_codec.encode_request(self.name)
         return self._invoke(request, multi_map_size_codec.decode_response)
@@ -438,8 +422,7 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             key: The key whose values count is to be returned.
 
         Returns:
-            Future[int]: The number of values that match the given key in the
-            multimap.
+            The number of values that match the given key in the multimap.
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
@@ -454,7 +437,7 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             are NOT reflected in the list, and vice-versa.
 
         Returns:
-            Future[list]: The list of values in the multimap.
+            The list of values in the multimap.
         """
 
         def handler(message):
@@ -484,13 +467,11 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
 
         Args:
             key: Key to lock in this map.
-            lease_time (float): Time in seconds to wait before releasing the
-                lock.
-            timeout (float): Maximum time in seconds to wait for the lock.
+            lease_time: Time in seconds to wait before releasing the lock.
+            timeout: Maximum time in seconds to wait for the lock.
 
         Returns:
-            Future[bool]: ``True`` if the lock was acquired, ``False``
-            otherwise.
+            ``True`` if the lock was acquired, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
@@ -515,9 +496,6 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
 
         Args:
             key: The key to lock.
-
-        Returns:
-            Future[None]:
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)

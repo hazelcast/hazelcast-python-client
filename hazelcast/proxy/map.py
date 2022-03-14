@@ -149,32 +149,29 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         parameters.
 
         Args:
-            include_value (bool): Whether received event should include the
-                value or not.
+            include_value: Whether received event should include the value or
+                not.
             key: Key for filtering the events.
-            predicate (Predicate): Predicate for filtering the events.
-            added_func (function): Function to be called when an entry is added
-                to map.
-            removed_func (function): Function to be called when an entry is
-                removed from map.
-            updated_func (function): Function to be called when an entry is
-                updated.
-            evicted_func (function): Function to be called when an entry is
-                evicted from map.
-            evict_all_func (function): Function to be called when entries are
-                evicted from map.
-            clear_all_func (function): Function to be called when entries are
-                cleared from map.
-            merged_func (function): Function to be called when WAN replicated
-                entry is merged_func.
-            expired_func (function): Function to be called when an entry's live
-                time is expired.
-            loaded_func (function): Function to be called when an entry is
-                loaded from a map loader.
+            predicate: Predicate for filtering the events.
+            added_func: Function to be called when an entry is added to map.
+            removed_func: Function to be called when an entry is removed from
+                map.
+            updated_func: Function to be called when an entry is updated.
+            evicted_func: Function to be called when an entry is evicted from
+                map.
+            evict_all_func: Function to be called when entries are evicted
+                from map.
+            clear_all_func: Function to be called when entries are cleared
+                from map.
+            merged_func: Function to be called when WAN replicated entry is
+                merged.
+            expired_func: Function to be called when an entry's live time is
+                expired.
+            loaded_func: Function to be called when an entry is loaded from a
+                map loader.
 
         Returns:
-            Future[str]: A registration id which is used as a key to remove the
-            listener.
+            A registration id which is used as a key to remove the listener.
         """
         flags = get_entry_listener_flags(
             ADDED=added_func,
@@ -292,25 +289,21 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         and returning incorrect results.
 
         Args:
-            attributes (typing.Sequence[str]): List of indexed attributes.
-            index_type (int|str): Type of the index. By default, set to
-                ``SORTED``.
-            name (str): Name of the index.
-            bitmap_index_options (dict): Bitmap index options.
+            attributes: List of indexed attributes.
+            index_type: Type of the index. By default, set to ``SORTED``.
+            name: Name of the index.
+            bitmap_index_options: Bitmap index options.
 
                 - **unique_key:** (str): The unique key attribute is used as a
                   source of values which uniquely identify each entry being
                   inserted into an index. Defaults to ``KEY_ATTRIBUTE_NAME``.
-                  See the :class:`hazelcast.config.QueryConstants` for possible
-                  values.
-                - **unique_key_transformation** (int|str): The transformation is
-                  applied to every value extracted from the unique key attribue.
-                  Defaults to ``OBJECT``. See the
-                  :class:`hazelcast.config.UniqueKeyTransformation` for possible
-                  values.
-
-        Returns:
-            Future[None]:
+                  See the :class:`hazelcast.config.QueryConstants` for
+                  possible values.
+                - **unique_key_transformation** (int|str): The transformation
+                  is applied to every value extracted from the unique key
+                  attribue. Defaults to ``OBJECT``. See the
+                  :class:`hazelcast.config.UniqueKeyTransformation` for
+                  possible values.
         """
         d = {
             "name": name,
@@ -334,7 +327,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
                 methods.
 
         Returns:
-            Future[str]: Id of registered interceptor.
+            Id of registered interceptor.
         """
         interceptor_data = self._to_data(interceptor)
 
@@ -348,11 +341,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         with the predicate, if given.
 
         Args:
-            aggregator (Aggregator): Aggregator to aggregate the entries with.
-            predicate (Predicate): Predicate to filter the entries with.
+            aggregator: Aggregator to aggregate the entries with.
+            predicate: Predicate to filter the entries with.
 
         Returns:
-            Future: The result of the aggregation.
+            The result of the aggregation.
         """
         check_not_none(aggregator, "aggregator can't be none")
         aggregator_data = self._to_data(aggregator)
@@ -380,9 +373,6 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         """Clears the map.
 
         The ``MAP_CLEARED`` event is fired for any registered listeners.
-
-        Returns:
-            Future[None]:
         """
         request = map_clear_codec.encode_request(self.name)
         return self._invoke(request)
@@ -399,8 +389,8 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             key: The specified key.
 
         Returns:
-            Future[bool]: ``True`` if this map contains an entry for the
-            specified key, ``False`` otherwise.
+            ``True`` if this map contains an entry for the specified key,
+            ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
@@ -414,8 +404,8 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             value: The specified value.
 
         Returns:
-            Future[bool]: ``True`` if this map contains an entry for the
-            specified value, ``False`` otherwise.
+            ``True`` if this map contains an entry for the specified value,
+            ``False`` otherwise.
         """
         check_not_none(value, "value can't be None")
         value_data = self._to_data(value)
@@ -444,9 +434,6 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
 
         Args:
             key: Key of the mapping to be deleted.
-
-        Returns:
-            Future[None]:
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
@@ -462,10 +449,10 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             reflected in the list, and vice-versa.
 
         Args:
-            predicate (Predicate): Predicate for the map to filter entries.
+            predicate: Predicate for the map to filter entries.
 
         Returns:
-            Future[list]: The list of key-value tuples in the map.
+            The list of key-value tuples in the map.
         """
         if predicate:
             if isinstance(predicate, PagingPredicate):
@@ -511,7 +498,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             key: Key to evict.
 
         Returns:
-            Future[bool]: ``True`` if the key is evicted, ``False`` otherwise.
+            ``True`` if the key is evicted, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
@@ -521,9 +508,6 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         """Evicts all keys from this map except the locked ones.
 
         The ``EVICT_ALL`` event is fired for any registered listeners.
-
-        Returns:
-            Future[None]:
         """
         request = map_evict_all_codec.encode_request(self.name)
         return self._invoke(request)
@@ -541,11 +525,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
                 have a serializable EntryProcessor counter part registered
                 on server side with the actual
                 ``com.hazelcast.map.EntryProcessor`` implementation.
-            predicate (Predicate): Predicate for filtering the entries.
+            predicate: Predicate for filtering the entries.
 
         Returns:
-            Future[list]: List of map entries which includes the keys and the
-            results of the entry process.
+            List of map entries which includes the keys and the results of the
+            entry process.
         """
         if predicate:
 
@@ -585,7 +569,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
                 ``com.hazelcast.map.EntryProcessor`` implementation.
 
         Returns:
-            Future[any]: Result of entry process.
+            Result of entry process.
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
@@ -599,8 +583,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         collection.
 
         Args:
-            keys (typing.Sequence): Collection of the keys for the entries to
-                be processed.
+            keys: Collection of the keys for the entries to be processed.
             entry_processor: A stateful serializable object which represents
                 the EntryProcessor defined on server side. This object must
                 have a serializable EntryProcessor counter part registered on
@@ -608,8 +591,8 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
                 ``com.hazelcast.map.EntryProcessor`` implementation.
 
         Returns:
-            Future[list]: List of map entries which includes the keys and the
-            results of the entry process.
+            List of map entries which includes the keys and the results of the
+            entry process.
         """
         key_list = []
         for key in keys:
@@ -631,11 +614,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         return self._invoke(request, handler)
 
     def flush(self) -> Future[None]:
-        """Flushes all the local dirty entries.
-
-        Returns:
-            Future[None]:
-        """
+        """Flushes all the local dirty entries."""
         request = map_flush_codec.encode_request(self.name)
         return self._invoke(request)
 
@@ -653,9 +632,6 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
 
         Args:
             key: The key to lock.
-
-        Returns:
-            Future[None]:
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
@@ -687,7 +663,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             key: The specified key.
 
         Returns:
-            Future[any]: The value for the specified key.
+            The value for the specified key.
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
@@ -707,10 +683,10 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             ``__eq__`` defined in key's class.
 
         Args:
-            keys (typing.Sequence): Keys to get.
+            keys: Keys to get.
 
         Returns:
-            Future[dict]: Dictionary of map entries.
+            Dictionary of map entries.
         """
         check_not_none(keys, "keys can't be None")
         if not keys:
@@ -748,7 +724,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             key: The key of the entry.
 
         Returns:
-            Future[SimpleEntryView]: EntryView of the specified key.
+            EntryView of the specified key.
         """
         check_not_none(key, "key can't be None")
 
@@ -770,8 +746,8 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         """Returns whether this map contains no key-value mappings or not.
 
         Returns:
-            Future[bool]: ``True`` if this map contains no key-value mappings,
-            ``False`` otherwise.
+            ``True`` if this map contains no key-value mappings, ``False``
+            otherwise.
         """
         request = map_is_empty_codec.encode_request(self.name)
         return self._invoke(request, map_is_empty_codec.decode_response)
@@ -788,7 +764,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             key: The key that is checked for lock
 
         Returns:
-            Future[bool]: ``True`` if lock is acquired, ``False`` otherwise.
+            ``True`` if lock is acquired, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
@@ -805,10 +781,10 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             reflected in the list, and vice-versa.
 
         Args:
-            predicate (Predicate) Predicate to filter the entries.
+            predicate: Predicate to filter the entries.
 
         Returns:
-            Future[list]: A list of the clone of the keys.
+            A list of the clone of the keys.
         """
         if predicate:
             if isinstance(predicate, PagingPredicate):
@@ -849,13 +825,10 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         keys if provided.
 
         Args:
-            keys (typing.Sequence): Keys of the entry values to load.
-            replace_existing_values (bool): Whether the existing values will be
+            keys: Keys of the entry values to load.
+            replace_existing_values: Whether the existing values will be
                 replaced or not with those loaded from the server side
                 MapLoader.
-
-        Returns:
-            Future[None]:
         """
         if keys:
             key_data_list = list(map(self._to_data, keys))
@@ -893,11 +866,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
 
         Args:
             key: The key to lock.
-            lease_time (float): Time in seconds to wait before releasing the
-                lock.
-
-        Returns:
-            Future[None]:
+            lease_time: Time in seconds to wait before releasing the lock.
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
@@ -921,11 +890,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         with the predicate, if given.
 
         Args:
-            projection (Projection): Projection to project the entries with.
-            predicate (Predicate): Predicate to filter the entries with.
+            projection: Projection to project the entries with.
+            predicate: Predicate to filter the entries with.
 
         Returns:
-            Future: The result of the projection.
+            The result of the projection.
         """
         check_not_none(projection, "Projection can't be none")
         projection_data = self._to_data(projection)
@@ -974,18 +943,18 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         Args:
             key: The specified key.
             value: The value to associate with the key.
-            ttl (float): Maximum time in seconds for this entry to stay in the
-                map. If not provided, the value configured on the server side
+            ttl: Maximum time in seconds for this entry to stay in the map. If
+                not provided, the value configured on the server side
                 configuration will be used. Setting this to ``0`` means
                 infinite time-to-live.
-            max_idle (float): Maximum time in seconds for this entry to stay
-                idle in the map. If not provided, the value configured on the
-                server side configuration will be used. Setting this to ``0``
-                means infinite max idle time.
+            max_idle: Maximum time in seconds for this entry to stay idle in
+                the map. If not provided, the value configured on the server
+                side configuration will be used. Setting this to ``0`` means
+                infinite max idle time.
 
         Returns:
-            Future[any]: Previous value associated with key or ``None`` if
-            there was no mapping for key.
+            Previous value associated with key or ``None`` if there was no
+            mapping for key.
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
@@ -994,16 +963,13 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         return self._put_internal(key_data, value_data, ttl, max_idle)
 
     def put_all(self, map: typing.Dict[KeyType, ValueType]) -> Future[None]:
-        """Copies all of the mappings from the specified map to this map.
+        """Copies all the mappings from the specified map to this map.
 
-        No atomicity guarantees are given. In the case of a failure, some of
-        the key-value tuples may get written, while others are not.
+        No atomicity guarantees are given. In the case of a failure, some
+        key-value tuples may get written, while others are not.
 
         Args:
-            map (dict): Map which includes mappings to be stored in this map.
-
-        Returns:
-            Future[None]:
+            map: Dictionary which includes mappings to be stored in this map.
         """
         check_not_none(map, "map can't be None")
         if not map:
@@ -1060,17 +1026,17 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         Args:
             key: Key of the entry.
             value: Value of the entry.
-            ttl (float): Maximum time in seconds for this entry to stay in the
-                map. If not provided, the value configured on the server side
+            ttl: Maximum time in seconds for this entry to stay in the map. If
+                not provided, the value configured on the server side
                 configuration will be used. Setting this to ``0`` means
                 infinite time-to-live.
-            max_idle (float): Maximum time in seconds for this entry to stay
-                idle in the map. If not provided, the value configured on the
-                server side configuration will be used. Setting this to ``0``
-                means infinite max idle time.
+            max_idle: Maximum time in seconds for this entry to stay idle in
+                the map. If not provided, the value configured on the server
+                side configuration will be used. Setting this to ``0`` means
+                infinite max idle time.
 
         Returns:
-            Future[any]: Old value of the entry.
+            Old value of the entry.
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
@@ -1093,17 +1059,14 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         Args:
             key: Key of the entry.
             value: Value of the entry.
-            ttl (float): Maximum time in seconds for this entry to stay in the
-                map. If not provided, the value configured on the server side
+            ttl: Maximum time in seconds for this entry to stay in the map. If
+                not provided, the value configured on the server side
                 configuration will be used. Setting this to ``0`` means
                 infinite time-to-live.
-            max_idle (float): Maximum time in seconds for this entry to stay
-                idle in the map. If not provided, the value configured on the
-                server side configuration will be used. Setting this to ``0``
-                means infinite max idle time.
-
-        Returns:
-            Future[None]:
+            max_idle: Maximum time in seconds for this entry to stay idle in
+                the map. If not provided, the value configured on the server
+                side configuration will be used. Setting this to ``0`` means
+                infinite max idle time.
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
@@ -1127,8 +1090,8 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             key: Key of the mapping to be deleted.
 
         Returns:
-            Future[any]: The previous value associated with key, or ``None`` if
-            there was no mapping for key.
+            The previous value associated with key, or ``None`` if there was
+            no mapping for key.
         """
         check_not_none(key, "key can't be None")
         key_data = self._to_data(key)
@@ -1157,8 +1120,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             value: Remove the key if it has this value.
 
         Returns:
-            Future[bool]: ``True`` if the value was removed, ``False``
-            otherwise.
+            ``True`` if the value was removed, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
@@ -1173,11 +1135,10 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         Returns silently if there is no such listener added before.
 
         Args:
-            registration_id (str): Id of registered listener.
+            registration_id: Id of registered listener.
 
         Returns:
-            Future[bool]: ``True`` if registration is removed, ``False``
-            otherwise.
+            ``True`` if registration is removed, ``False`` otherwise.
         """
         return self._deregister_listener(registration_id)
 
@@ -1186,11 +1147,10 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         operations anymore.
 
         Args:
-            registration_id (str): Registration ID of the map interceptor.
+            registration_id: Registration ID of the map interceptor.
 
         Returns:
-            Future[bool]: ``True`` if the interceptor is removed, ``False``
-            otherwise.
+            ``True`` if the interceptor is removed, ``False`` otherwise.
         """
         check_not_none(registration_id, "Interceptor registration id should not be None")
         request = map_remove_interceptor_codec.encode_request(self.name, registration_id)
@@ -1222,8 +1182,8 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             value: The value to replace the previous value.
 
         Returns:
-            Future[any]: Previous value associated with key, or ``None`` if
-            there was no mapping for key.
+            Previous value associated with key, or ``None`` if there was no
+            mapping for key.
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
@@ -1259,8 +1219,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             new_value: The new value to replace the old value.
 
         Returns:
-            Future[bool]: ``True`` if the value was replaced, ``False``
-            otherwise.
+            ``True`` if the value was replaced, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
         check_not_none(old_value, "old_value can't be None")
@@ -1289,17 +1248,14 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         Args:
             key: Key of the entry.
             value: Value of the entry.
-            ttl (float): Maximum time in seconds for this entry to stay in the
-                map. If not provided, the value configured on the server side
+            ttl: Maximum time in seconds for this entry to stay in the map. If
+                not provided, the value configured on the server side
                 configuration will be used. Setting this to ``0`` means
                 infinite time-to-live.
-            max_idle (float): Maximum time in seconds for this entry to stay
-                idle in the map. If not provided, the value configured on the
-                server side configuration will be used. Setting this to ``0``
-                means infinite max idle time.
-
-        Returns:
-            Future[None]:
+            max_idle: Maximum time in seconds for this entry to stay idle in
+                the map. If not provided, the value configured on the server
+                side configuration will be used. Setting this to ``0`` means
+                infinite max idle time.
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
@@ -1317,11 +1273,8 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
 
         Args:
             key: The key of the map entry.
-            ttl (float): Maximum time in seconds for this entry to stay in the
-            map. Setting this to ``0`` means infinite time-to-live.
-
-        Returns:
-            Future[None]:
+            ttl: Maximum time in seconds for this entry to stay in the map.
+                Setting this to ``0`` means infinite time-to-live.
         """
         check_not_none(key, "key can't be None")
         check_not_none(ttl, "ttl can't be None")
@@ -1332,7 +1285,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         """Returns the number of entries in this map.
 
         Returns:
-            Future[int]: Number of entries in this map.
+            Number of entries in this map.
         """
         request = map_size_codec.encode_request(self.name)
         return self._invoke(request, map_size_codec.decode_response)
@@ -1356,13 +1309,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
 
         Args:
             key: Key to lock in this map.
-            lease_time (float): Time in seconds to wait before releasing the
-                lock.
-            timeout (float): Maximum time in seconds to wait for the lock.
+            lease_time: Time in seconds to wait before releasing the lock.
+            timeout: Maximum time in seconds to wait for the lock.
 
         Returns:
-            Future[bool]: ``True`` if the lock was acquired, ``False``
-            otherwise.
+            ``True`` if the lock was acquired, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
 
@@ -1395,10 +1346,10 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         Args:
             key: Key of the entry.
             value: Value of the entry.
-            timeout (float): Maximum time in seconds to wait.
+            timeout: Maximum time in seconds to wait.
 
         Returns:
-            Future[bool] ``True`` if the put is successful, ``False`` otherwise.
+            ``True`` if the put is successful, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
@@ -1417,11 +1368,10 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
 
         Args:
             key: Key of the entry to be deleted.
-            timeout (float): Maximum time in seconds to wait.
+            timeout: Maximum time in seconds to wait.
 
         Returns:
-            Future[bool]: ``True`` if the remove is successful, ``False``
-            otherwise.
+            ``True`` if the remove is successful, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
 
@@ -1437,9 +1387,6 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
 
         Args:
             key: The key to lock.
-
-        Returns:
-            Future[None]:
         """
         check_not_none(key, "key can't be None")
 
@@ -1458,10 +1405,10 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             reflected in the list, and vice-versa.
 
         Args:
-            predicate (Predicate): Predicate to filter the entries.
+            predicate: Predicate to filter the entries.
 
         Returns:
-            Future[list]: A list of clone of the values contained in this map.
+            A list of clone of the values contained in this map.
         """
         if predicate:
             if isinstance(predicate, PagingPredicate):

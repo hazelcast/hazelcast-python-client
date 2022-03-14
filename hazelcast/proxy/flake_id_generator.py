@@ -61,7 +61,7 @@ class FlakeIdGenerator(Proxy["BlockingFlakeIdGenerator"]):
             Values returned from this method may not be strictly ordered.
 
         Returns:
-            Future[int]: New cluster-wide unique ID.
+            New cluster-wide unique ID.
 
         Raises:
             HazelcastError: If node ID for all members in the cluster is out

@@ -1,4 +1,3 @@
-import binascii
 import random
 import threading
 import time
@@ -81,44 +80,45 @@ def validate_serializer(serializer, _type):
 class AtomicInteger:
     """An Integer which can work atomically."""
 
-    def __init__(self, initial=0):
+    def __init__(self, initial: int = 0):
         self._mux = threading.RLock()
         self._counter = initial
 
-    def get_and_increment(self):
+    def get_and_increment(self) -> int:
         """Returns the current value and increment it.
 
         Returns:
-            int: Current value of AtomicInteger.
+            Current value of AtomicInteger.
         """
         with self._mux:
             res = self._counter
             self._counter += 1
             return res
 
-    def increment_and_get(self):
+    def increment_and_get(self) -> int:
         """Increments the current value and returns it.
 
         Returns:
-            int: Incremented value of AtomicInteger.
+            Incremented value of AtomicInteger.
         """
         with self._mux:
             self._counter += 1
             return self._counter
 
-    def get(self):
+    def get(self) -> int:
         """Returns the current value.
 
         Returns:
-            int: The current value.
+            The current value.
         """
         with self._mux:
             return self._counter
 
-    def add(self, count):
+    def add(self, count: int):
         """Adds the given value to the current value.
+
         Args:
-            count (int): The value to add.
+            count: The value to add.
         """
         with self._mux:
             self._counter += count
@@ -280,7 +280,7 @@ class LoadBalancer:
 
         Returns:
             hazelcast.core.MemberInfo: the next member or ``None`` if no member
-                is available.
+            is available.
         """
         raise NotImplementedError("next")
 

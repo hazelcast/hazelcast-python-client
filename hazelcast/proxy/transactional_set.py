@@ -21,7 +21,7 @@ class TransactionalSet(TransactionalProxy, typing.Generic[ItemType]):
             item: The new item to be added.
 
         Returns:
-            bool: ``True`` if item is added successfully, ``False`` otherwise.
+            ``True`` if item is added successfully, ``False`` otherwise.
         """
         check_not_none(item, "item can't be none")
         item_data = self._to_data(item)
@@ -38,7 +38,7 @@ class TransactionalSet(TransactionalProxy, typing.Generic[ItemType]):
             item: The specified item to be deleted.
 
         Returns:
-            bool: ``True`` if item is remove successfully, ``False`` otherwise.
+            ``True`` if item is remove successfully, ``False`` otherwise.
         """
         check_not_none(item, "item can't be none")
         item_data = self._to_data(item)
@@ -52,7 +52,7 @@ class TransactionalSet(TransactionalProxy, typing.Generic[ItemType]):
         :func:`Set.size() <hazelcast.proxy.set.Set.size>`
 
         Returns:
-            int: Size of the set.
+            Size of the set.
         """
         request = transactional_set_size_codec.encode_request(
             self.name, self.transaction.id, thread_id()

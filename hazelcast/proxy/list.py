@@ -46,7 +46,7 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
             item: the specified item to be appended to this list.
 
         Returns:
-            Future[bool]: ``True`` if item is added, ``False`` otherwise.
+            ``True`` if item is added, ``False`` otherwise.
         """
         check_not_none(item, "Value can't be None")
         element_data = self._to_data(item)
@@ -59,11 +59,8 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
         right, if any.
 
         Args:
-            index (int): The specified index to insert the item.
+            index: The specified index to insert the item.
             item: The specified item to be inserted.
-
-        Returns:
-            Future[None]:
         """
         check_not_none(item, "Value can't be None")
         element_data = self._to_data(item)
@@ -79,12 +76,11 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
         iterator.
 
         Args:
-            items (typing.Sequence): The specified collection which includes
-                the elements to be added to list.
+            items: The specified collection which includes the elements to be
+                added to list.
 
         Returns:
-            Future[bool]: ``True`` if this call changed the list, ``False``
-            otherwise.
+            ``True`` if this call changed the list, ``False`` otherwise.
         """
         check_not_none(items, "Value can't be None")
         data_items = []
@@ -104,14 +100,13 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
         collection's iterator.
 
         Args:
-            index (int): The specified index at which the first element of
-                specified collection is added.
-            items (typing.Sequence): The specified collection which includes
-                the elements to be added to list.
+            index: The specified index at which the first element of specified
+                collection is added.
+            items: The specified collection which includes the elements to be
+                added to list.
 
         Returns:
-            Future[bool]: ``True`` if this call changed the list, ``False``
-            otherwise.
+            ``True`` if this call changed the list, ``False`` otherwise.
         """
         check_not_none(items, "Value can't be None")
         data_items = []
@@ -132,16 +127,14 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
         all list add/remove events.
 
         Args:
-            include_value (bool): Whether received events include the updated
-                item or not.
-            item_added_func (function):  To be called when an item is added to
-                this list.
-            item_removed_func (function): To be called when an item is deleted
-                from this list.
+            include_value: Whether received events include the updated item or
+                not.
+            item_added_func: To be called when an item is added to this list.
+            item_removed_func: To be called when an item is deleted from this
+                list.
 
         Returns:
-            Future[str]: A registration id which is used as a key to remove the
-            listener.
+            A registration id which is used as a key to remove the listener.
         """
         request = list_add_listener_codec.encode_request(self.name, include_value, self._is_smart)
 
@@ -168,9 +161,6 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
         """Clears the list.
 
         List will be empty with this call.
-
-        Returns:
-            Future[None]:
         """
         request = list_clear_codec.encode_request(self.name)
         return self._invoke(request)
@@ -182,8 +172,8 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
             item: The specified item.
 
         Returns:
-            Future[bool]: ``True`` if the specified item exists in this list,
-            ``False`` otherwise.
+            `True`` if the specified item exists in this list, ``False``
+            otherwise.
         """
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)
@@ -196,12 +186,12 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
         collection or not.
 
         Args:
-            items (typing.Sequence): The specified collection which includes
-                the items to be searched.
+            items: The specified collection which includes the items to be
+                searched.
 
         Returns:
-            Future[bool]: ``True`` if all of the items in specified collection
-            exist in this list, ``False`` otherwise.
+            ``True`` if all of the items in specified collection exist in this
+            list, ``False`` otherwise.
         """
         check_not_none(items, "Items can't be None")
         data_items = []
@@ -216,10 +206,10 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
         """Returns the item which is in the specified position in this list.
 
         Args:
-            index (int): the specified index of the item to be returned.
+            index: the specified index of the item to be returned.
 
         Returns:
-            Future[any]: the item in the specified position in this list.
+            The item in the specified position in this list.
         """
 
         def handler(message):
@@ -229,10 +219,10 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
         return self._invoke(request, handler)
 
     def get_all(self) -> Future[typing.List[ItemType]]:
-        """Returns all of the items in this list.
+        """Returns all the items in this list.
 
         Returns:
-            Future[list]: All of the items in this list.
+            All the items in this list.
         """
 
         def handler(message):
@@ -248,7 +238,7 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
         sequence, same with ``get_all``.
 
         Returns:
-            Future[list]: All of the items in this list.
+            All the items in this list.
         """
 
         def handler(message):
@@ -269,8 +259,8 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
             item: The specified item to be searched for.
 
         Returns:
-             Future[int]: The first index of specified item's occurrences,
-             ``-1`` if item is not present in this list.
+             The first index of specified item's occurrences, ``-1`` if item
+             is not present in this list.
         """
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)
@@ -282,8 +272,7 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
         """Determines whether this list is empty or not.
 
         Returns:
-            Future[bool]: ``True`` if the list contains no elements, ``False``
-            otherwise.
+            ``True`` if the list contains no elements, ``False`` otherwise.
         """
 
         request = list_is_empty_codec.encode_request(self.name)
@@ -298,8 +287,8 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
             item: The specified item to be searched for.
 
         Returns:
-            Future[int]: The last index of specified item's occurrences, ``-1``
-            if item is not present in this list.
+            The last index of specified item's occurrences, ``-1`` if item is
+            not present in this list.
         """
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)
@@ -313,11 +302,11 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
         If an index is provided, iterator starts from this index.
 
         Args:
-            index: (int), index of first element to be returned from the
-                list iterator.
+            index: Index of first element to be returned from the list
+                iterator.
 
         Returns:
-            Future[list]: List of the elements in this list.
+            List of the elements in this list.
         """
 
         def handler(message):
@@ -336,8 +325,8 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
             item: The specified element.
 
         Returns:
-            Future[bool]: ``True`` if the specified element is present in this
-            list, ``False`` otherwise.
+            ``True`` if the specified element is present in this list,
+            ``False`` otherwise.
         """
         check_not_none(item, "Value can't be None")
         item_data = self._to_data(item)
@@ -348,14 +337,14 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
     def remove_at(self, index: int) -> Future[ItemType]:
         """Removes the item at the specified position in this list.
 
-        Element in this position and following elements are shifted to the left,
-        if any.
+        Element in this position and following elements are shifted to the
+        left, if any.
 
         Args:
-            index (int): Index of the item to be removed.
+            index: Index of the item to be removed.
 
         Returns:
-            Future[any]: The item previously at the specified index.
+            The item previously at the specified index.
         """
 
         def handler(message):
@@ -369,11 +358,11 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
         collection from this list.
 
         Args:
-            items (typing.Sequence): The specified collection.
+            items: The specified collection.
 
         Returns:
-            Future[bool]: ``True`` if this list changed as a result of the
-            call, ``False`` otherwise.
+            ``True`` if this list changed as a result of the call,
+            ``False`` otherwise.
         """
         check_not_none(items, "Value can't be None")
         data_items = []
@@ -390,11 +379,10 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
         Returns silently if the specified listener was not added before.
 
         Args:
-            registration_id (str): Id of the listener to be deleted.
+            registration_id: Id of the listener to be deleted.
 
         Returns:
-            Future[bool]: ``True`` if the item listener is removed, ``False``
-            otherwise.
+            ``True`` if the item listener is removed, ``False`` otherwise.
         """
         return self._deregister_listener(registration_id)
 
@@ -406,12 +394,12 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
         removed from this list.
 
         Args:
-            items (typing.Sequence): Collections which includes the elements
-                to be retained in this list.
+            items: Collections which includes the elements to be retained in
+                this list.
 
         Returns:
-            Future[bool]: ``True`` if this list changed as a result of the
-            call, ``False`` otherwise.
+            ``True`` if this list changed as a result of the call, ``False``
+            otherwise.
         """
         check_not_none(items, "Value can't be None")
         data_items = []
@@ -426,7 +414,7 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
         """Returns the number of elements in this list.
 
         Returns:
-            Future[int]: Number of elements in this list.
+            Number of elements in this list.
         """
         request = list_size_codec.encode_request(self.name)
         return self._invoke(request, list_size_codec.decode_response)
@@ -436,11 +424,11 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
         position in this list.
 
         Args:
-            index (int): Index of the item to be replaced.
+            index: Index of the item to be replaced.
             item: Item to be stored.
 
         Returns:
-            Future[any]: the previous item in the specified index.
+            The previous item in the specified index.
         """
         check_not_none(item, "Value can't be None")
         element_data = self._to_data(item)
@@ -459,11 +447,11 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
         the returned list are reflected in this list, and vice-versa.
 
         Args:
-            from_index (int): The start point(inclusive) of the sub_list.
-            to_index (int): The end point(exclusive) of the sub_list.
+            from_index: The start point(inclusive) of the sub_list.
+            to_index: The end point(exclusive) of the sub_list.
 
         Returns:
-            Future[list]: A view of the specified range within this list.
+            A view of the specified range within this list.
         """
 
         def handler(message):

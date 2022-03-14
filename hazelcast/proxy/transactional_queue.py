@@ -21,10 +21,10 @@ class TransactionalQueue(TransactionalProxy, typing.Generic[ItemType]):
 
         Args:
             item: The item to be added.
-            timeout (float): Maximum time in seconds to wait for addition.
+            timeout: Maximum time in seconds to wait for addition.
 
         Returns:
-            bool: ``True`` if the element was added to this queue, ``False``
+            ``True`` if the element was added to this queue, ``False``
             otherwise.
         """
         check_not_none(item, "item can't be none")
@@ -56,7 +56,7 @@ class TransactionalQueue(TransactionalProxy, typing.Generic[ItemType]):
         :func:`Queue.poll(timeout) <hazelcast.proxy.queue.Queue.poll>`
 
         Args:
-            timeout (float): Maximum time in seconds to wait for addition.
+            timeout: Maximum time in seconds to wait for addition.
 
         Returns:
             The head of this queue, or ``None`` if this queue is empty or
@@ -76,7 +76,7 @@ class TransactionalQueue(TransactionalProxy, typing.Generic[ItemType]):
         :func:`Queue.peek(timeout) <hazelcast.proxy.queue.Queue.peek>`
 
         Args:
-            timeout (float): Maximum time in seconds to wait for addition.
+            timeout: Maximum time in seconds to wait for addition.
 
         Returns:
             The head of this queue, or ``None`` if this queue is empty or
@@ -96,7 +96,7 @@ class TransactionalQueue(TransactionalProxy, typing.Generic[ItemType]):
         :func:`Queue.size() <hazelcast.proxy.queue.Queue.size>`
 
         Returns:
-            int: Size of the queue.
+            Size of the queue.
         """
         request = transactional_queue_size_codec.encode_request(
             self.name, self.transaction.id, thread_id()

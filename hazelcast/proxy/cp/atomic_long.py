@@ -35,11 +35,10 @@ class AtomicLong(BaseCPProxy["BlockingAtomicLong"]):
         """Atomically adds the given value to the current value.
 
         Args:
-            delta (int): The value to add to the current value.
+            delta: The value to add to the current value.
 
         Returns:
-            Future[int]: The updated value, the given value added to the
-            current value
+            The updated value, the given value added to the current value.
         """
         check_is_int(delta)
         codec = atomic_long_add_and_get_codec
@@ -51,12 +50,12 @@ class AtomicLong(BaseCPProxy["BlockingAtomicLong"]):
         only if the current value equals the expected value.
 
         Args:
-            expect (int): The expected value.
-            update (int): The new value.
+            expect: The expected value.
+            update: The new value.
 
         Returns:
-            Future[bool]: ``True`` if successful; or ``False`` if the actual
-            value was not equal to the expected value.
+            ``True`` if successful; or ``False`` if the actual value was not
+            equal to the expected value.
         """
         check_is_int(expect)
         check_is_int(update)
@@ -68,8 +67,7 @@ class AtomicLong(BaseCPProxy["BlockingAtomicLong"]):
         """Atomically decrements the current value by one.
 
         Returns:
-            Future[int]: The updated value, the current value decremented by
-            one.
+            The updated value, the current value decremented by one.
         """
         return self.add_and_get(-1)
 
@@ -77,7 +75,7 @@ class AtomicLong(BaseCPProxy["BlockingAtomicLong"]):
         """Atomically decrements the current value by one.
 
         Returns:
-            Future[int]: The old value.
+            The old value.
         """
         return self.get_and_add(-1)
 
@@ -85,7 +83,7 @@ class AtomicLong(BaseCPProxy["BlockingAtomicLong"]):
         """Gets the current value.
 
         Returns:
-            Future[int]: The current value.
+            The current value.
         """
         codec = atomic_long_get_codec
         request = codec.encode_request(self._group_id, self._object_name)
@@ -95,10 +93,10 @@ class AtomicLong(BaseCPProxy["BlockingAtomicLong"]):
         """Atomically adds the given value to the current value.
 
         Args:
-            delta (int): The value to add to the current value.
+            delta: The value to add to the current value.
 
         Returns:
-            Future[int]: The old value before the add.
+            The old value before the add.
         """
         check_is_int(delta)
         codec = atomic_long_get_and_add_codec
@@ -109,10 +107,10 @@ class AtomicLong(BaseCPProxy["BlockingAtomicLong"]):
         """Atomically sets the given value and returns the old value.
 
         Args:
-            new_value (int): The new value.
+            new_value: The new value.
 
         Returns:
-            Future[int]: The old value.
+            The old value.
         """
         check_is_int(new_value)
         codec = atomic_long_get_and_set_codec
@@ -123,8 +121,7 @@ class AtomicLong(BaseCPProxy["BlockingAtomicLong"]):
         """Atomically increments the current value by one.
 
         Returns:
-            Future[int]: The updated value, the current value incremented by
-            one.
+            The updated value, the current value incremented by one.
         """
         return self.add_and_get(1)
 
@@ -132,7 +129,7 @@ class AtomicLong(BaseCPProxy["BlockingAtomicLong"]):
         """Atomically increments the current value by one.
 
         Returns:
-            Future[int]: The old value.
+            The old value.
         """
         return self.get_and_add(1)
 
@@ -140,10 +137,7 @@ class AtomicLong(BaseCPProxy["BlockingAtomicLong"]):
         """Atomically sets the given value.
 
         Args:
-            new_value (int): The new value
-
-        Returns:
-            Future[None]:
+            new_value: The new value
         """
         check_is_int(new_value)
         codec = atomic_long_get_and_set_codec
@@ -161,9 +155,6 @@ class AtomicLong(BaseCPProxy["BlockingAtomicLong"]):
 
         Args:
             function: The function that alters the currently stored value.
-
-        Returns:
-            Future[None]:
         """
         check_not_none(function, "Function cannot be None")
         function_data = self._to_data(function)
@@ -189,7 +180,7 @@ class AtomicLong(BaseCPProxy["BlockingAtomicLong"]):
             function: The function that alters the currently stored value.
 
         Returns:
-            Future[int]: The new value.
+            The new value.
         """
         check_not_none(function, "Function cannot be None")
         function_data = self._to_data(function)
@@ -212,7 +203,7 @@ class AtomicLong(BaseCPProxy["BlockingAtomicLong"]):
             function: The function that alters the currently stored value.
 
         Returns:
-            Future[int]: The old value.
+            The old value.
         """
         check_not_none(function, "Function cannot be None")
         function_data = self._to_data(function)
@@ -235,7 +226,7 @@ class AtomicLong(BaseCPProxy["BlockingAtomicLong"]):
             function: The function applied to the currently stored value.
 
         Returns:
-            Future[any]: The result of the function application.
+            The result of the function application.
         """
         check_not_none(function, "Function cannot be None")
         function_data = self._to_data(function)

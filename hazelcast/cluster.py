@@ -23,10 +23,10 @@ class ClientInfo:
     """Local information of the client.
 
     Attributes:
-        uuid (uuid.UUID): Unique id of this client instance.
-        address (hazelcast.core.Address): Local address that is used to communicate with cluster.
-        name (str): Name of the client.
-        labels (set[str]): Read-only set of all labels of this client.
+        uuid: Unique id of this client instance.
+        address: Local address that is used to communicate with cluster.
+        name: Name of the client.
+        labels: Read-only set of all labels of this client.
     """
 
     __slots__ = ("uuid", "address", "name", "labels")
@@ -79,16 +79,16 @@ class ClusterService:
         so if you register the listener twice, it will get events twice.
 
         Args:
-            member_added (function): Function to be called when a member is
-                added to the cluster.
-            member_removed (function): Function to be called when a member is
-                removed from the cluster.
-            fire_for_existing (bool): Whether or not fire member_added for
-                existing members.
+            member_added: Function to be called when a member is added to the
+                cluster.
+            member_removed: Function to be called when a member is removed
+                from the cluster.
+            fire_for_existing: Whether or not fire member_added for existing
+                members.
 
         Returns:
-            str: Registration id of the listener which will be used for
-            removing this listener.
+            Registration id of the listener which will be used for removing
+            this listener.
         """
         return self._service.add_listener(member_added, member_removed, fire_for_existing)
 
@@ -97,11 +97,10 @@ class ClusterService:
         Removes the specified membership listener.
 
         Args:
-            registration_id (str): Registration id of the listener to be
-                removed.
+            registration_id: Registration id of the listener to be removed.
 
         Returns:
-            bool: ``True`` if the registration is removed, ``False`` otherwise.
+            ``True`` if the registration is removed, ``False`` otherwise.
         """
         return self._service.remove_listener(registration_id)
 
@@ -116,12 +115,12 @@ class ClusterService:
         item in the list.
 
         Args:
-            member_selector (function): Function to filter members to return.
-                If not provided, the returned list will contain all the
-                available cluster members.
+            member_selector: Function to filter members to return. If not
+                provided, the returned list will contain all the available
+                cluster members.
 
         Returns:
-            list[MemberInfo]: Current members in the cluster
+            Current members in the cluster
         """
         return self._service.get_members(member_selector)
 
@@ -334,16 +333,17 @@ class VectorClock:
     def __init__(self):
         self._replica_timestamps = {}
 
-    def is_after(self, other):
+    def is_after(self, other: "VectorClock") -> bool:
         """Returns ``True`` if this vector clock is causally strictly after the
         provided vector clock. This means that it the provided clock is neither
         equal to, greater than or concurrent to this vector clock.
 
         Args:
-            other (hazelcast.cluster.VectorClock): Vector clock to be compared
+            other: Vector clock to be compared
 
         Returns:
-            bool: ``True`` if this vector clock is strictly after the other vector clock, ``False`` otherwise.
+            ``True`` if this vector clock is strictly after the other vector
+            clock, ``False`` otherwise.
         """
         any_timestamp_greater = False
         for replica_id, other_timestamp in other.entry_set():
@@ -357,29 +357,32 @@ class VectorClock:
         # there is at least one local timestamp greater or local vector clock has additional timestamps
         return any_timestamp_greater or other.size() < self.size()
 
-    def set_replica_timestamp(self, replica_id, timestamp):
+    def set_replica_timestamp(self, replica_id: str, timestamp: int) -> None:
         """Sets the logical timestamp for the given replica ID.
 
         Args:
-            replica_id (str): Replica ID.
-            timestamp (int): Timestamp for the given replica ID.
+            replica_id: Replica ID.
+            timestamp: Timestamp for the given replica ID.
         """
         self._replica_timestamps[replica_id] = timestamp
 
-    def entry_set(self):
-        """Returns the entry set of the replica timestamps in a format of list of tuples.
+    def entry_set(self) -> typing.List[typing.Tuple[str, int]]:
+        """Returns the entry set of the replica timestamps in a format of list
+        of tuples.
 
-        Each tuple contains the replica ID and the timestamp associated with it.
+        Each tuple contains the replica ID and the timestamp associated with
+        it.
 
         Returns:
-            list: List of tuples.
+            List of tuples.
         """
         return list(self._replica_timestamps.items())
 
-    def size(self):
-        """Returns the number of timestamps that are in the replica timestamps dictionary.
+    def size(self) -> int:
+        """Returns the number of timestamps that are in the replica timestamps
+        dictionary.
 
         Returns:
-            int: Number of timestamps in the replica timestamps.
+            Number of timestamps in the replica timestamps.
         """
         return len(self._replica_timestamps)

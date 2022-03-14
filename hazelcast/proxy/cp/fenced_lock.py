@@ -106,7 +106,7 @@ class FencedLock(SessionAwareCPProxy["BlockingFencedLock"]):
         previous tokens, independent of the thread that has acquired the lock.
 
         Returns:
-            Future[int]: The fencing token.
+            The fencing token.
 
         Raises:
             LockOwnershipLostError: If the underlying CP session was
@@ -155,10 +155,10 @@ class FencedLock(SessionAwareCPProxy["BlockingFencedLock"]):
             :func:`lock` function for more information about fences.
 
         Args:
-            timeout (float): The maximum time to wait for the lock in seconds.
+            timeout: The maximum time to wait for the lock in seconds.
 
         Returns:
-            Future[int]: The fencing token if the lock was acquired and
+            The fencing token if the lock was acquired and
             :const:`INVALID_FENCE` otherwise.
 
         Raises:
@@ -173,9 +173,6 @@ class FencedLock(SessionAwareCPProxy["BlockingFencedLock"]):
     def unlock(self) -> Future[None]:
         """Releases the lock if the lock is currently held by the current
         thread.
-
-        Returns:
-            Future[None]:
 
         Raises:
             LockOwnershipLostError: If the underlying CP session was
@@ -221,8 +218,8 @@ class FencedLock(SessionAwareCPProxy["BlockingFencedLock"]):
         """Returns whether this lock is locked or not.
 
         Returns:
-            Future[bool]: ``True`` if this lock is locked by any thread in the
-            cluster, ``False`` otherwise.
+            ``True`` if this lock is locked by any thread in the cluster,
+            ``False`` otherwise.
 
         Raises:
             LockOwnershipLostError: If the underlying CP session was
@@ -251,8 +248,8 @@ class FencedLock(SessionAwareCPProxy["BlockingFencedLock"]):
         """Returns whether the lock is held by the current thread or not.
 
         Returns:
-            Future[bool]: ``True`` if the lock is held by the current thread,
-            ``False`` otherwise.
+            ``True`` if the lock is held by the current thread, ``False``
+            otherwise.
 
         Raises:
             LockOwnershipLostError: If the underlying CP session was
@@ -283,8 +280,8 @@ class FencedLock(SessionAwareCPProxy["BlockingFencedLock"]):
         in the cluster.
 
         Returns:
-            Future[int]: The reentrant lock count if the lock is held by any
-            thread in the cluster
+            The reentrant lock count if the lock is held by any thread in the
+            cluster.
 
         Raises:
             LockOwnershipLostError: If the underlying CP session was

@@ -33,12 +33,10 @@ class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]
         is called if provided.
 
         Args:
-            on_message (function): Function to be called when a message is
-                published.
+            on_message: Function to be called when a message is published.
 
         Returns:
-            Future[str]: A registration id which is used as a key to remove the
-            listener.
+            A registration id which is used as a key to remove the listener.
         """
         codec = topic_add_message_listener_codec
         request = codec.encode_request(self.name, self._is_smart)
@@ -62,9 +60,6 @@ class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]
 
         Args:
             message: The message to be published.
-
-        Returns:
-            Future[None]:
         """
         message_data = self._to_data(message)
         request = topic_publish_codec.encode_request(self.name, message_data)
@@ -76,12 +71,10 @@ class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]
         If the given listener already removed, this method does nothing.
 
         Args:
-            registration_id (str): Registration id of the listener to be
-                removed.
+            registration_id: Registration id of the listener to be removed.
 
         Returns:
-            Future[bool]: ``True`` if the listener is removed, ``False``
-            otherwise.
+            ``True`` if the listener is removed, ``False`` otherwise.
         """
         return self._deregister_listener(registration_id)
 

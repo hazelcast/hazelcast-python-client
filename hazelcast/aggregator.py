@@ -183,10 +183,10 @@ def count(attribute_path: str = None) -> Aggregator[int]:
     Accepts ``None`` input values and ``None`` extracted values.
 
     Args:
-        attribute_path (str): Extracts values from this path, if given.
+        attribute_path: Extracts values from this path, if given.
 
     Returns:
-        Aggregator[int]: An aggregator that counts the input values.
+        An aggregator that counts the input values.
     """
     return _CountAggregator(attribute_path)
 
@@ -197,11 +197,10 @@ def distinct(attribute_path: str = None) -> Aggregator[typing.Set[AggregatorResu
     Accepts ``None`` input values and ``None`` extracted values.
 
     Args:
-        attribute_path (str): Extracts values from this path, if given.
+        attribute_path: Extracts values from this path, if given.
 
     Returns:
-        Aggregator[set]: An aggregator that calculates the distinct set of
-        input values.
+        An aggregator that calculates the distinct set of input values.
     """
     return _DistinctValuesAggregator(attribute_path)
 
@@ -218,11 +217,10 @@ def double_avg(attribute_path: str = None) -> Aggregator[float]:
     unless they are out of range for ``double`` type in Java.
 
     Args:
-        attribute_path (str): Extracts values from this path, if given.
+        attribute_path: Extracts values from this path, if given.
 
     Returns:
-        Aggregator[float]: An aggregator that calculates the average of
-        the input values.
+        An aggregator that calculates the average of the input values.
     """
     return _DoubleAverageAggregator(attribute_path)
 
@@ -239,11 +237,10 @@ def double_sum(attribute_path: str = None) -> Aggregator[float]:
     unless they are out of range for ``double`` type in Java.
 
     Args:
-        attribute_path (str): Extracts values from this path, if given.
+        attribute_path: Extracts values from this path, if given.
 
     Returns:
-        Aggregator[float]: An aggregator that calculates the sum of the input
-        values.
+        An aggregator that calculates the sum of the input values.
     """
     return _DoubleSumAggregator(attribute_path)
 
@@ -258,11 +255,10 @@ def fixed_point_sum(attribute_path: str = None) -> Aggregator[int]:
     client unless they are out of range for ``long`` type in Java.
 
     Args:
-        attribute_path (str): Extracts values from this path, if given.
+        attribute_path: Extracts values from this path, if given.
 
     Returns:
-        Aggregator[int]: An aggregator that calculates the sum of the
-        input values.
+        An aggregator that calculates the sum of the input values.
     """
     return _FixedPointSumAggregator(attribute_path)
 
@@ -277,11 +273,10 @@ def floating_point_sum(attribute_path: str = None) -> Aggregator[float]:
     client unless they are out of range for ``double`` type in Java.
 
     Args:
-        attribute_path (str): Extracts values from this path, if given.
+        attribute_path: Extracts values from this path, if given.
 
     Returns:
-        Aggregator[float]: An aggregator that calculates the sum of the
-        input values.
+        An aggregator that calculates the sum of the input values.
     """
     return _FloatingPointSumAggregator(attribute_path)
 
@@ -298,11 +293,10 @@ def int_avg(attribute_path: str = None) -> Aggregator[int]:
     are out of range for ``int`` type in Java.
 
     Args:
-        attribute_path (str): Extracts values from this path, if given.
+        attribute_path: Extracts values from this path, if given.
 
     Returns:
-        Aggregator[int]: An aggregator that calculates the average of the
-        input values.
+        An aggregator that calculates the average of the input values.
     """
     return _IntegerAverageAggregator(attribute_path)
 
@@ -319,11 +313,10 @@ def int_sum(attribute_path: str = None) -> Aggregator[int]:
     are out of range for ``int`` type in Java.
 
     Args:
-        attribute_path (str): Extracts values from this path, if given.
+        attribute_path: Extracts values from this path, if given.
 
     Returns:
-        Aggregator[int]: An aggregator that calculates the sum of the
-        input values.
+        An aggregator that calculates the sum of the input values.
     """
     return _IntegerSumAggregator(attribute_path)
 
@@ -340,11 +333,10 @@ def long_avg(attribute_path: str = None) -> Aggregator[int]:
     are out of range for ``long`` type in Java.
 
     Args:
-        attribute_path (str): Extracts values from this path, if given.
+        attribute_path: Extracts values from this path, if given.
 
     Returns:
-        Aggregator[int]: An aggregator that calculates the average of the
-        input values.
+        An aggregator that calculates the average of the input values.
     """
     return _LongAverageAggregator(attribute_path)
 
@@ -361,11 +353,10 @@ def long_sum(attribute_path: str = None) -> Aggregator[int]:
     are out of range for ``long`` type in Java.
 
     Args:
-        attribute_path (str): Extracts values from this path, if given.
+        attribute_path: Extracts values from this path, if given.
 
     Returns:
-        Aggregator[int]: An aggregator that calculates the sum of the
-        input values.
+        An aggregator that calculates the sum of the input values.
     """
     return _LongSumAggregator(attribute_path)
 
@@ -382,11 +373,10 @@ def max_(attribute_path: str = None) -> Aggregator[AggregatorResultType]:
     equivalents of types like ``int``, ``str``, and ``float``.
 
     Args:
-        attribute_path (str): Extracts values from this path, if given.
+        attribute_path: Extracts values from this path, if given.
 
     Returns:
-        Aggregator[any]: An aggregator that calculates the max of the input
-        values.
+        An aggregator that calculates the max of the input values.
     """
     return _MaxAggregator(attribute_path)
 
@@ -403,11 +393,10 @@ def min_(attribute_path: str = None) -> Aggregator[AggregatorResultType]:
     equivalents of types like ``int``, ``str``, and ``float``.
 
     Args:
-        attribute_path (str): Extracts values from this path, if given.
+        attribute_path: Extracts values from this path, if given.
 
     Returns:
-        Aggregator[any]: An aggregator that calculates the min of the
-        input values.
+        An aggregator that calculates the min of the input values.
     """
     return _MinAggregator(attribute_path)
 
@@ -422,11 +411,10 @@ def number_avg(attribute_path: str = None) -> Aggregator[float]:
     client unless they are out of range for ``double`` type in Java.
 
     Args:
-        attribute_path (str): Extracts values from this path, if given.
+        attribute_path: Extracts values from this path, if given.
 
     Returns:
-        Aggregator[float]: An aggregator that calculates the average of
-        the input values.
+        An aggregator that calculates the average of the input values.
     """
     return _NumberAverageAggregator(attribute_path)
 
@@ -446,11 +434,11 @@ def max_by(attribute_path: str) -> Aggregator[MapEntry[KeyType, ValueType]]:
     equivalents of types like ``int``, ``str``, and ``float``.
 
     Args:
-        attribute_path (str): Path to extract values from.
+        attribute_path: Path to extract values from.
 
     Returns:
-        Aggregator[MapEntry]: An aggregator that calculates the input value
-        containing the maximum value extracted from the path.
+        An aggregator that calculates the input value containing the maximum
+        value extracted from the path.
     """
     return _MaxByAggregator(attribute_path)
 
@@ -470,10 +458,10 @@ def min_by(attribute_path: str) -> Aggregator[MapEntry[KeyType, ValueType]]:
     equivalents of types like ``int``, ``str``, and ``float``.
 
     Args:
-        attribute_path (str): Path to extract values from.
+        attribute_path: Path to extract values from.
 
     Returns:
-        Aggregator[MapEntry]: An aggregator that calculates the input value
-        containing the minimum value extracted from the path.
+        An aggregator that calculates the input value containing the minimum
+        value extracted from the path.
     """
     return _MinByAggregator(attribute_path)

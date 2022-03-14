@@ -66,10 +66,10 @@ class CPSubsystem:
         already, and then the instance will be created on this group.
 
         Args:
-            name (str): Name of the AtomicLong.
+            name: Name of the AtomicLong.
 
         Returns:
-            AtomicLong: The AtomicLong proxy for the given name.
+            The AtomicLong proxy for the given name.
         """
         return self._proxy_manager.get_or_create(ATOMIC_LONG_SERVICE, name)
 
@@ -86,10 +86,10 @@ class CPSubsystem:
         will be created on this group.
 
         Args:
-            name (str): Name of the AtomicReference.
+            name: Name of the AtomicReference.
 
         Returns:
-            AtomicReference: The AtomicReference proxy for the given name.
+            The AtomicReference proxy for the given name.
         """
         return self._proxy_manager.get_or_create(ATOMIC_REFERENCE_SERVICE, name)
 
@@ -106,15 +106,15 @@ class CPSubsystem:
         will be created on this group.
 
         Args:
-            name (str): Name of the CountDownLatch.
+            name: Name of the CountDownLatch.
 
         Returns:
-            CountDownLatch: The CountDownLatch proxy for the given name.
+            The CountDownLatch proxy for the given name.
         """
         return self._proxy_manager.get_or_create(COUNT_DOWN_LATCH_SERVICE, name)
 
     def get_lock(self, name: str) -> FencedLock:
-        """Returns the distributed FencedLock instance instance with given name.
+        """Returns the distributed FencedLock instance with given name.
 
         The instance is created on CP Subsystem.
 
@@ -125,15 +125,15 @@ class CPSubsystem:
         already, and then the instance will be created on this group.
 
         Args:
-            name (str): Name of the FencedLock
+            name: Name of the FencedLock
 
         Returns:
-            FencedLock: The FencedLock proxy for the given name.
+            The FencedLock proxy for the given name.
         """
         return self._proxy_manager.get_or_create(LOCK_SERVICE, name)
 
     def get_semaphore(self, name: str) -> Semaphore:
-        """Returns the distributed Semaphore instance instance with given name.
+        """Returns the distributed Semaphore instance with given name.
 
         The instance is created on CP Subsystem.
 
@@ -144,10 +144,10 @@ class CPSubsystem:
         already, and then the instance will be created on this group.
 
         Args:
-            name (str): Name of the Semaphore
+            name: Name of the Semaphore
 
         Returns:
-            Semaphore: The Semaphore proxy for the given name.
+            The Semaphore proxy for the given name.
         """
         return self._proxy_manager.get_or_create(SEMAPHORE_SERVICE, name)
 

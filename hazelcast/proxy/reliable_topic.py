@@ -78,7 +78,7 @@ class ReliableMessageListener(typing.Generic[MessageType]):
     :func:`retrieve_initial_sequence` is called.
     """
 
-    def on_message(self, message: TopicMessage[MessageType]):
+    def on_message(self, message: TopicMessage[MessageType]) -> None:
         """
         Invoked when a message is received for the added reliable topic.
 
@@ -86,7 +86,7 @@ class ReliableMessageListener(typing.Generic[MessageType]):
         consider delegating that task to an executor or a thread pool.
 
         Args:
-            message (TopicMessage): The message that is received for the topic
+            message: The message that is received for the topic
         """
         raise NotImplementedError("on_message")
 
@@ -103,7 +103,7 @@ class ReliableMessageListener(typing.Generic[MessageType]):
         If you don't add one, then you will be receiving the same message twice.
 
         Returns:
-            int: The initial sequence.
+            The initial sequence.
         """
         raise NotImplementedError("retrieve_initial_sequence")
 
@@ -114,7 +114,7 @@ class ReliableMessageListener(typing.Generic[MessageType]):
         make a durable subscription.
 
         Args:
-            sequence (int): The sequence.
+            sequence: The sequence.
         """
         raise NotImplementedError("store_sequence")
 
@@ -130,8 +130,8 @@ class ReliableMessageListener(typing.Generic[MessageType]):
         ReliableMessageListener.
 
         Returns:
-            bool: ``True`` if the ReliableMessageListener is tolerant towards
-            losing messages.
+            ``True`` if the ReliableMessageListener is tolerant towards losing
+            messages.
         """
         raise NotImplementedError("is_loss_tolerant")
 
@@ -141,12 +141,11 @@ class ReliableMessageListener(typing.Generic[MessageType]):
         error raised while calling :func:`on_message`.
 
         Args:
-            error (Exception): The error raised while calling
-                :func:`on_message`
+            error: The error raised while calling :func:`on_message`
 
         Returns:
-            bool: ``True`` if the ReliableMessageListener should terminate
-            itself, ``False`` if it should keep on running.
+            ``True`` if the ReliableMessageListener should terminate itself,
+            ``False`` if it should keep on running.
         """
         raise NotImplementedError("is_terminal")
 
@@ -272,16 +271,16 @@ class _MessageRunner:
             if not self._handle_internal_error(e):
                 self.cancel()
 
-    def _is_loss_tolerable(self, loss_count):
+    def _is_loss_tolerable(self, loss_count: int) -> bool:
         """Called when message loss is detected.
 
         Checks if the listener is able to tolerate the loss.
 
         Args:
-            loss_count (int): Number of lost messages.
+            loss_count: Number of lost messages.
 
         Returns:
-            bool: ``True`` if the listener may continue reading.
+            ``True`` if the listener may continue reading.
         """
         if self._listener.is_loss_tolerant():
             _logger.debug(
@@ -302,7 +301,7 @@ class _MessageRunner:
         )
         return False
 
-    def _terminate(self, error):
+    def _terminate(self, error: Exception) -> bool:
         """Checks if we should terminate the listener
         based on the error we received while calling the
         on_message for this message.
@@ -314,11 +313,10 @@ class _MessageRunner:
         printed and listener will continue.
 
         Args:
-            error (Exception): Error we received while
-                calling the listener.
+            error: Error we received while calling the listener.
 
         Returns:
-            bool: Should terminate the listener or not.
+            Should terminate the listener or not.
         """
         if self._cancelled:
             return True
@@ -350,7 +348,7 @@ class _MessageRunner:
             )
             return True
 
-    def _handle_internal_error(self, error):
+    def _handle_internal_error(self, error: Exception) -> bool:
         """Called when the read_many request is failed.
 
         Based on the error we receive, we will act differently.
@@ -361,12 +359,11 @@ class _MessageRunner:
         to the server, and based on that, call next_batch.
 
         Args:
-            error (Exception): The error we received.
+            error: The error we received.
 
         Returns:
-            bool: ``True`` if the error is handled internally.
-            ``False`` otherwise. When, ``False`` is returned,
-            listener should be cancelled.
+            ``True`` if the error is handled internally. ``False`` otherwise.
+            When, ``False`` is returned, listener should be cancelled.
         """
         if isinstance(error, HazelcastClientNotActiveError):
             return self._handle_client_not_active_error()
@@ -572,9 +569,6 @@ class ReliableTopic(Proxy["BlockingReliableTopic"], typing.Generic[MessageType])
 
         Args:
             message: The message.
-
-        Returns:
-            Future[None]:
         """
         check_not_none(message, "Message cannot be None")
 
@@ -595,10 +589,7 @@ class ReliableTopic(Proxy["BlockingReliableTopic"], typing.Generic[MessageType])
         """Publishes all messages to all subscribers of this topic.
 
         Args:
-            messages (typing.Sequence): Messages to publish.
-
-        Returns:
-            Future[None]:
+            messages: Messages to publish.
         """
         check_not_none(messages, "Messages cannot be None")
 
@@ -639,10 +630,10 @@ class ReliableTopic(Proxy["BlockingReliableTopic"], typing.Generic[MessageType])
         More than one message listener can be added on one instance.
 
         Args:
-            listener (function or ReliableMessageListener): Listener to add.
+            listener: Listener to add.
 
         Returns:
-            Future[str]: The registration id.
+            The registration id.
         """
         check_not_none(listener, "None listener is not allowed")
 
@@ -674,11 +665,10 @@ class ReliableTopic(Proxy["BlockingReliableTopic"], typing.Generic[MessageType])
         If the given listener already removed, this method does nothing.
 
         Args:
-            registration_id (str): ID of listener registration.
+            registration_id: ID of listener registration.
 
         Returns:
-            Future[bool]: ``True`` if registration is removed, ``False``
-            otherwise.
+            ``True`` if registration is removed, ``False`` otherwise.
         """
         check_not_none(registration_id, "Registration id cannot be None")
         runner = self._runners.get(registration_id, None)
@@ -689,9 +679,7 @@ class ReliableTopic(Proxy["BlockingReliableTopic"], typing.Generic[MessageType])
         return ImmediateFuture(True)
 
     def destroy(self) -> bool:
-        """
-        Destroys underlying Proxy and RingBuffer instances.
-        """
+        """Destroys underlying Proxy and RingBuffer instances."""
 
         for runner in list(self._runners.values()):
             runner.cancel()

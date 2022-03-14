@@ -23,8 +23,7 @@ class TransactionalList(TransactionalProxy, typing.Generic[ItemType]):
             item: The new item to be added.
 
         Returns:
-            bool: ``True`` if the item is added successfully, ``False``
-            otherwise.
+            ``True`` if the item is added successfully, ``False`` otherwise.
         """
         check_not_none(item, "item can't be none")
         item_data = self._to_data(item)
@@ -41,8 +40,7 @@ class TransactionalList(TransactionalProxy, typing.Generic[ItemType]):
             item: The specified item to be removed.
 
         Returns:
-            bool: ``True`` if the item is removed successfully, ``False``
-            otherwise.
+            ``True`` if the item is removed successfully, ``False`` otherwise.
         """
         check_not_none(item, "item can't be none")
         item_data = self._to_data(item)
@@ -56,7 +54,7 @@ class TransactionalList(TransactionalProxy, typing.Generic[ItemType]):
         :func:`List.size() <hazelcast.proxy.list.List.size>`
 
         Returns:
-            int: The size of the list.
+            The size of the list.
         """
         request = transactional_list_size_codec.encode_request(
             self.name, self.transaction.id, thread_id()

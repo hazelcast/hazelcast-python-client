@@ -15,9 +15,9 @@ class ObjectDataOutput:
         """Writes the content of the buffer to this output stream.
 
         Args:
-            buff (bytearray): Input buffer.
-            offset (int): Offset of the buffer where copy begin.
-            length (int): Length of data to be copied from the offset into stream.
+            buff: Input buffer.
+            offset: Offset of the buffer where copy begin.
+            length: Length of data to be copied from the offset into stream.
         """
         raise NotImplementedError()
 
@@ -27,7 +27,7 @@ class ObjectDataOutput:
         Single byte value 1 represent True, 0 represent False
 
         Args:
-            val (bool): The bool to be written.
+            val: The bool to be written.
         """
         raise NotImplementedError()
 
@@ -35,7 +35,7 @@ class ObjectDataOutput:
         """Writes a byte value to this output stream.
 
         Args:
-            val (int): The byte value to be written.
+            val: The byte value to be written.
         """
         raise NotImplementedError()
 
@@ -43,7 +43,7 @@ class ObjectDataOutput:
         """Writes a short value to this output stream.
 
         Args:
-            val (int): The short value to be written.
+            val: The short value to be written.
         """
         raise NotImplementedError()
 
@@ -51,15 +51,15 @@ class ObjectDataOutput:
         """Writes a char value to this output stream.
 
         Args:
-            val (str): The char value to be written.
+            val: The char value to be written.
         """
         raise NotImplementedError()
 
     def write_int(self, val: int) -> None:
-        """Writes a int value to this output stream.
+        """Writes an int value to this output stream.
 
         Args:
-            val (int): The int value to be written.
+            val: The int value to be written.
         """
         raise NotImplementedError()
 
@@ -67,7 +67,7 @@ class ObjectDataOutput:
         """Writes a long value to this output stream.
 
         Args:
-            val (int): The long value to be written.
+            val: The long value to be written.
         """
         raise NotImplementedError()
 
@@ -75,7 +75,7 @@ class ObjectDataOutput:
         """Writes a float value to this output stream.
 
         Args:
-            val (float): The float value to be written.
+            val: The float value to be written.
         """
         raise NotImplementedError()
 
@@ -83,7 +83,7 @@ class ObjectDataOutput:
         """Writes a double value to this output stream.
 
         Args:
-            val (float): The double value to be written.
+            val: The double value to be written.
         """
         raise NotImplementedError()
 
@@ -91,7 +91,7 @@ class ObjectDataOutput:
         """Writes a string to this output stream.
 
         Args:
-            val (str): The string to be written.
+            val: The string to be written.
         """
         raise NotImplementedError()
 
@@ -99,7 +99,7 @@ class ObjectDataOutput:
         """Writes every character of string to this output stream.
 
         Args:
-            val (str): The string to be written.
+            val: The string to be written.
         """
         raise NotImplementedError()
 
@@ -107,7 +107,7 @@ class ObjectDataOutput:
         """Writes UTF-8 string to this output stream.
 
         Args:
-            val (str): The UTF-8 string to be written.
+            val: The UTF-8 string to be written.
         """
         raise NotImplementedError()
 
@@ -119,7 +119,7 @@ class ObjectDataOutput:
             next major version. Use :func:`write_string` instead.
 
         Args:
-            val (str): The UTF-8 string to be written.
+            val: The UTF-8 string to be written.
         """
         raise NotImplementedError()
 
@@ -127,7 +127,7 @@ class ObjectDataOutput:
         """Writes a byte array to this output stream.
 
         Args:
-            val (bytearray): The byte array to be written.
+            val: The byte array to be written.
         """
         raise NotImplementedError()
 
@@ -135,7 +135,7 @@ class ObjectDataOutput:
         """Writes a bool array to this output stream.
 
         Args:
-            val (typing.Sequence[bool]): The bool array to be written.
+            val: The bool array to be written.
         """
         raise NotImplementedError()
 
@@ -143,7 +143,7 @@ class ObjectDataOutput:
         """Writes a char array to this output stream.
 
         Args:
-            val  (typing.Sequence[str]): The char array to be written.
+            val: The char array to be written.
         """
         raise NotImplementedError()
 
@@ -151,7 +151,7 @@ class ObjectDataOutput:
         """Writes a int array to this output stream.
 
         Args:
-            val (typing.Sequence[int]): The int array to be written.
+            val: The int array to be written.
         """
         raise NotImplementedError()
 
@@ -159,7 +159,7 @@ class ObjectDataOutput:
         """Writes a long array to this output stream.
 
         Args:
-            val (typing.Sequence[int]): The long array to be written.
+            val: The long array to be written.
         """
         raise NotImplementedError()
 
@@ -167,7 +167,7 @@ class ObjectDataOutput:
         """Writes a double array to this output stream.
 
         Args:
-            val (typing.Sequence[float]): The double array to be written.
+            val: The double array to be written.
         """
         raise NotImplementedError()
 
@@ -175,7 +175,7 @@ class ObjectDataOutput:
         """Writes a float array to this output stream.
 
         Args:
-            val (typing.Sequence[float]): The float array to be written.
+            val: The float array to be written.
         """
         raise NotImplementedError()
 
@@ -183,7 +183,7 @@ class ObjectDataOutput:
         """Writes a short array to this output stream.
 
         Args:
-            val (typing.Sequence[int]): The short array to be written.
+            val: The short array to be written.
         """
         raise NotImplementedError()
 
@@ -191,7 +191,7 @@ class ObjectDataOutput:
         """Writes a UTF-8 String array to this output stream.
 
         Args:
-            val (typing.Sequence[str]): The UTF-8 String array to be written.
+            val: The UTF-8 String array to be written.
         """
         raise NotImplementedError()
 
@@ -203,7 +203,7 @@ class ObjectDataOutput:
             next major version. Use :func:`write_string_array` instead.
 
         Args:
-            val (typing.Sequence[str]): The UTF-8 String array to be written.
+            val: The UTF-8 String array to be written.
         """
         raise NotImplementedError()
 
@@ -219,34 +219,30 @@ class ObjectDataOutput:
         """Returns a copy of internal byte array.
 
         Returns:
-            bytearray: The copy of internal byte array
+            The copy of internal byte array
         """
         raise NotImplementedError()
 
     def get_byte_order(self) -> str:
-        """Returns the order of bytes, as BIG_ENDIAN or LITTLE_ENDIAN.
-
-        Returns:
-            str:
-        """
+        """Returns the order of bytes, as BIG_ENDIAN or LITTLE_ENDIAN."""
         raise NotImplementedError()
 
 
 class ObjectDataInput:
-    """ObjectDataInput provides an interface to read bytes from a stream and reconstruct it to any of primitive types or
-    arrays of them.
+    """ObjectDataInput provides an interface to read bytes from a stream and
+    reconstruct it to any of primitive types or arrays of them.
     """
 
     def read_into(self, buff: bytearray, offset: int = None, length: int = None) -> bytearray:
         """Reads the content of the buffer into an array of bytes.
 
         Args:
-            buff (bytearray): Input buffer.
-            offset (int): Offset of the buffer where the read begin.
-            length (int): Length of data to be read.
+            buff: Input buffer.
+            offset: Offset of the buffer where the read begin.
+            length: Length of data to be read.
 
         Returns:
-            bytearray: The read data.
+            The read data.
         """
         raise NotImplementedError()
 
@@ -254,10 +250,10 @@ class ObjectDataInput:
         """Skips over given number of bytes from input stream.
 
         Args:
-            count (int): Number of bytes to be skipped.
+            count: Number of bytes to be skipped.
 
         Returns:
-            int: The actual number of bytes skipped.
+            The actual number of bytes skipped.
         """
         raise NotImplementedError()
 
@@ -265,7 +261,7 @@ class ObjectDataInput:
         """Reads 1 byte from input stream and convert it to a bool value.
 
         Returns:
-            bool: The bool value read.
+            The bool value read.
         """
         raise NotImplementedError()
 
@@ -273,7 +269,7 @@ class ObjectDataInput:
         """Reads 1 byte from input stream and returns it.
 
         Returns:
-            int: The byte value read.
+            The byte value read.
         """
         raise NotImplementedError()
 
@@ -281,7 +277,7 @@ class ObjectDataInput:
         """Reads 1 byte from input stream, zero-extends it and returns.
 
         Returns:
-            int: The unsigned byte value read.
+            The unsigned byte value read.
         """
         raise NotImplementedError()
 
@@ -289,7 +285,7 @@ class ObjectDataInput:
         """Reads 2 bytes from input stream and returns a short value.
 
         Returns:
-            int: The short value read.
+            The short value read.
         """
         raise NotImplementedError()
 
@@ -297,7 +293,7 @@ class ObjectDataInput:
         """Reads 2 bytes from input stream and returns an int value.
 
         Returns:
-            int: The unsigned short value read.
+            The unsigned short value read.
         """
         raise NotImplementedError()
 
@@ -305,7 +301,7 @@ class ObjectDataInput:
         """Reads 2 bytes from the input stream and returns a str value.
 
         Returns:
-            str: The char value read.
+            The char value read.
         """
         raise NotImplementedError()
 
@@ -313,7 +309,7 @@ class ObjectDataInput:
         """Reads 4 bytes from input stream and returns an int value.
 
         Returns:
-            int: The int value read.
+            The int value read.
         """
         raise NotImplementedError()
 
@@ -321,7 +317,7 @@ class ObjectDataInput:
         """Reads 8 bytes from input stream and returns a long value.
 
         Returns:
-            int: The int value read.
+            The int value read.
         """
         raise NotImplementedError()
 
@@ -329,7 +325,7 @@ class ObjectDataInput:
         """Reads 4 bytes from input stream and returns a float value.
 
         Returns:
-            float: The float value read.
+            The float value read.
         """
         raise NotImplementedError()
 
@@ -337,7 +333,7 @@ class ObjectDataInput:
         """Reads 8 bytes from input stream and returns a double value.
 
         Returns:
-            float: The double value read.
+            The double value read.
         """
         raise NotImplementedError()
 
@@ -345,7 +341,7 @@ class ObjectDataInput:
         """Reads a UTF-8 string from input stream and returns it.
 
         Returns:
-            str: The UTF-8 string read.
+            The UTF-8 string read.
         """
         raise NotImplementedError()
 
@@ -357,7 +353,7 @@ class ObjectDataInput:
             next major version. Use :func:`read_string` instead.
 
         Returns:
-            str: The UTF-8 string read.
+            The UTF-8 string read.
         """
         raise NotImplementedError()
 
@@ -365,7 +361,7 @@ class ObjectDataInput:
         """Reads a byte array from input stream and returns it.
 
         Returns:
-            bytearray: The byte array read.
+            The byte array read.
         """
         raise NotImplementedError()
 
@@ -373,7 +369,7 @@ class ObjectDataInput:
         """Reads a bool array from input stream and returns it.
 
         Returns:
-            list[bool]: The bool array read.
+            The bool array read.
         """
         raise NotImplementedError()
 
@@ -381,7 +377,7 @@ class ObjectDataInput:
         """Reads a char array from input stream and returns it.
 
         Returns:
-            list[str]: The char array read.
+            The char array read.
         """
         raise NotImplementedError()
 
@@ -389,7 +385,7 @@ class ObjectDataInput:
         """Reads a int array from input stream and returns it.
 
         Returns:
-            list[int]: The int array read.
+            The int array read.
         """
         raise NotImplementedError()
 
@@ -397,7 +393,7 @@ class ObjectDataInput:
         """Reads a long array from input stream and returns it.
 
         Returns:
-            list[int]: The long array read.
+            The long array read.
         """
         raise NotImplementedError()
 
@@ -405,7 +401,7 @@ class ObjectDataInput:
         """Reads a double array from input stream and returns it.
 
         Returns:
-            list[float]: The double array read.
+            The double array read.
         """
         raise NotImplementedError()
 
@@ -413,7 +409,7 @@ class ObjectDataInput:
         """Reads a float array from input stream and returns it.
 
         Returns:
-            list[float]: The float array read.
+            The float array read.
         """
         raise NotImplementedError()
 
@@ -421,7 +417,7 @@ class ObjectDataInput:
         """Reads a short array from input stream and returns it.
 
         Returns:
-            list[int]: The short array read.
+            The short array read.
         """
         raise NotImplementedError()
 
@@ -429,7 +425,7 @@ class ObjectDataInput:
         """Reads a UTF-8 string array from input stream and returns it.
 
         Returns:
-            list[str]: The UTF-8 string array read.
+            The UTF-8 string array read.
         """
         raise NotImplementedError()
 
@@ -441,12 +437,12 @@ class ObjectDataInput:
             next major version. Use :func:`read_string_array` instead.
 
         Returns:
-            list[str]: The UTF-8 string array read.
+            The UTF-8 string array read.
         """
         raise NotImplementedError()
 
     def read_object(self) -> typing.Any:
-        """Reads a object from input stream and returns it.
+        """Reads an object from input stream and returns it.
 
         Returns:
             The object read.
@@ -454,18 +450,14 @@ class ObjectDataInput:
         raise NotImplementedError()
 
     def get_byte_order(self) -> str:
-        """Returns the order of bytes, as BIG_ENDIAN or LITTLE_ENDIAN.
-
-        Returns:
-            str:
-        """
+        """Returns the order of bytes, as BIG_ENDIAN or LITTLE_ENDIAN."""
         raise NotImplementedError()
 
     def position(self) -> int:
         """Returns current position in buffer.
 
         Returns:
-            int: Current position in buffer.
+            Current position in buffer.
         """
         raise NotImplementedError()
 
@@ -473,23 +465,24 @@ class ObjectDataInput:
         """Returns size of buffer.
 
         Returns:
-            int: size of buffer.
+            Size of buffer.
         """
         raise NotImplementedError()
 
 
 class IdentifiedDataSerializable:
-    """IdentifiedDataSerializable is an alternative serialization method to Python pickle, which also avoids reflection
-    during de-serialization.
+    """IdentifiedDataSerializable is an alternative serialization method to
+    Python pickle, which also avoids reflection during de-serialization.
 
-    Each IdentifiedDataSerializable is created by a registered DataSerializableFactory.
+    Each IdentifiedDataSerializable is created by a registered
+    DataSerializableFactory.
     """
 
     def write_data(self, object_data_output: ObjectDataOutput) -> None:
         """Writes object fields to output stream.
 
         Args:
-            object_data_output (hazelcast.serialization.api.ObjectDataOutput): The output.
+            object_data_output: The output.
         """
         raise NotImplementedError(
             "read_data must be implemented to serialize this IdentifiedDataSerializable"
@@ -499,7 +492,7 @@ class IdentifiedDataSerializable:
         """Reads fields from the input stream.
 
         Args:
-            object_data_input (hazelcast.serialization.api.ObjectDataInput): The input.
+            object_data_input: The input.
         """
         raise NotImplementedError(
             "read_data must be implemented to deserialize this IdentifiedDataSerializable"
@@ -509,17 +502,18 @@ class IdentifiedDataSerializable:
         """Returns DataSerializableFactory factory id for this class.
 
         Returns:
-            int: The factory id.
+            The factory id.
         """
         raise NotImplementedError(
             "This method must return the factory ID for this IdentifiedDataSerializable"
         )
 
     def get_class_id(self) -> int:
-        """Returns type identifier for this class. Id should be unique per DataSerializableFactory.
+        """Returns type identifier for this class. Id should be unique per
+        DataSerializableFactory.
 
         Returns:
-            int: The type id.
+            The type id.
         """
         raise NotImplementedError(
             "This method must return the class ID for this IdentifiedDataSerializable"
@@ -541,7 +535,7 @@ class Portable:
         """Serialize this portable object using given PortableWriter.
 
         Args:
-            writer (hazelcast.serialization.api.PortableWriter): The PortableWriter.
+            writer: The PortableWriter.
         """
         raise NotImplementedError()
 
@@ -549,7 +543,7 @@ class Portable:
         """Read portable fields using PortableReader.
 
         Args:
-            reader (hazelcast.serialization.api.PortableReader): The PortableReader.
+            reader: The PortableReader.
         """
         raise NotImplementedError()
 
@@ -557,15 +551,16 @@ class Portable:
         """Returns PortableFactory id for this portable class
 
         Returns:
-            int: The factory id.
+            The factory id.
         """
         raise NotImplementedError()
 
     def get_class_id(self) -> int:
-        """Returns class identifier for this portable class. Class id should be unique per PortableFactory.
+        """Returns class identifier for this portable class. Class id should
+        be unique per PortableFactory.
 
         Returns:
-            int: The class id.
+            The class id.
         """
         raise NotImplementedError()
 
@@ -577,7 +572,7 @@ class StreamSerializer:
         """Writes object to ObjectDataOutput
 
         Args:
-            out (hazelcast.serialization.api.ObjectDataOutput): Stream that object will be written to.
+            out: Stream that object will be written to.
             obj: The object to be written.
         """
         raise NotImplementedError("write method must be implemented")
@@ -586,7 +581,7 @@ class StreamSerializer:
         """Reads object from objectDataInputStream
 
         Args:
-            inp (hazelcast.serialization.api.ObjectDataInput): Stream that object will read from.
+            inp: Stream that object will read from.
 
         Returns:
             The read object.
@@ -597,7 +592,7 @@ class StreamSerializer:
         """Returns typeId of serializer.
 
         Returns:
-            int: The type id of the serializer.
+            The type id of the serializer.
         """
         raise NotImplementedError("get_type_id must be implemented")
 
@@ -610,26 +605,28 @@ class StreamSerializer:
 
 
 class PortableReader:
-    """Provides a mean of reading portable fields from binary in form of Python primitives and arrays of these
-    primitives, nested portable fields and array of portable fields.
+    """Provides a mean of reading portable fields from binary in form of
+    Python primitives and arrays of these primitives, nested portable fields
+    and array of portable fields.
     """
 
     def get_version(self) -> int:
         """Returns the global version of portable classes.
 
         Returns:
-            int: Global version of portable classes.
+            Global version of portable classes.
         """
         raise NotImplementedError()
 
     def has_field(self, field_name: str) -> bool:
-        """Determine whether the field name exists in this portable class or not.
+        """Determine whether the field name exists in this portable class or
+        not.
 
         Args:
-            field_name (str): name of the field (does not support nested paths).
+            field_name: name of the field (does not support nested paths).
 
         Returns:
-            bool: ``True`` if the field name exists in class, ``False`` otherwise.
+            ``True`` if the field name exists in class, ``False`` otherwise.
         """
         raise NotImplementedError()
 
@@ -637,7 +634,7 @@ class PortableReader:
         """Returns the set of field names on this portable class.
 
         Returns:
-            set: Set of field names on this portable class.
+            Set of field names on this portable class.
         """
         raise NotImplementedError()
 
@@ -645,10 +642,10 @@ class PortableReader:
         """Returns the field type of given field name.
 
         Args:
-            field_name (str): Name of the field.
+            field_name: Name of the field.
 
         Returns:
-            hazelcast.serialization.portable.classdef.FieldType: The field type.
+            The field type.
         """
         raise NotImplementedError()
 
@@ -656,10 +653,10 @@ class PortableReader:
         """Returns the class id of given field.
 
         Args:
-          field_name (str): Name of the field.
+          field_name: Name of the field.
 
         Returns:
-            int: class id of given field.
+            Class id of given field.
         """
         raise NotImplementedError()
 
@@ -667,10 +664,10 @@ class PortableReader:
         """Reads a primitive int.
 
         Args:
-            field_name (str): Name of the field.
+            field_name: Name of the field.
 
         Returns:
-            int: The int value read.
+            The int value read.
         """
         raise NotImplementedError()
 
@@ -678,10 +675,10 @@ class PortableReader:
         """Reads a primitive long.
 
         Args:
-            field_name (str): Name of the field.
+            field_name: Name of the field.
 
         Returns:
-            int: The long value read.
+            The long value read.
         """
         raise NotImplementedError()
 
@@ -689,10 +686,10 @@ class PortableReader:
         """Reads a UTF-8 String.
 
         Args:
-            field_name (str): Name of the field.
+            field_name: Name of the field.
 
         Returns:
-            str: The UTF-8 String read.
+            The UTF-8 String read.
         """
         raise NotImplementedError()
 
@@ -704,10 +701,10 @@ class PortableReader:
             next major version. Use :func:`read_string` instead.
 
         Args:
-            field_name (str): Name of the field.
+            field_name: Name of the field.
 
         Returns:
-            str: The UTF-8 String read.
+            The UTF-8 String read.
         """
         raise NotImplementedError()
 
@@ -715,10 +712,10 @@ class PortableReader:
         """Reads a primitive bool.
 
         Args:
-            field_name (str): Name of the field.
+            field_name: Name of the field.
 
         Returns:
-            bool: The bool value read.
+            The bool value read.
         """
         raise NotImplementedError()
 
@@ -726,10 +723,10 @@ class PortableReader:
         """Reads a primitive byte.
 
         Args:
-            field_name (str): Name of the field.
+            field_name: Name of the field.
 
         Returns:
-            int: The byte value read.
+            The byte value read.
         """
         raise NotImplementedError()
 
@@ -737,10 +734,10 @@ class PortableReader:
         """Reads a primitive char.
 
         Args:
-            field_name (str): Name of the field.
+            field_name: Name of the field.
 
         Returns:
-            str: The char value read.
+            The char value read.
         """
         raise NotImplementedError()
 
@@ -748,10 +745,10 @@ class PortableReader:
         """Reads a primitive double.
 
         Args:
-            field_name (str): Name of the field.
+            field_name: Name of the field.
 
         Returns:
-            float: The double value read.
+            The double value read.
         """
         raise NotImplementedError()
 
@@ -759,10 +756,10 @@ class PortableReader:
         """Reads a primitive float.
 
         Args:
-            field_name (str): Name of the field.
+            field_name: Name of the field.
 
         Returns:
-            float: The float value read.
+            The float value read.
         """
         raise NotImplementedError()
 
@@ -770,10 +767,10 @@ class PortableReader:
         """Reads a primitive short.
 
         Args:
-            field_name (str): Name of the field.
+            field_name: Name of the field.
 
         Returns:
-            int: The short value read.
+            The short value read.
         """
         raise NotImplementedError()
 
@@ -781,10 +778,10 @@ class PortableReader:
         """Reads a portable.
 
         Args:
-            field_name (str): Name of the field.
+            field_name: Name of the field.
 
         Returns:
-            hazelcast.serialization.api.Portable: The portable read.
+            The portable read.
         """
         raise NotImplementedError()
 
@@ -792,10 +789,10 @@ class PortableReader:
         """Reads a primitive byte array.
 
         Args:
-            field_name (str): Name of the field.
+            field_name: Name of the field.
 
         Returns:
-            bytearray: The byte array read.
+            The byte array read.
         """
         raise NotImplementedError()
 
@@ -803,10 +800,10 @@ class PortableReader:
         """Reads a primitive bool array.
 
         Args:
-            field_name (str): Name of the field.
+            field_name: Name of the field.
 
         Returns:
-            list[bool]): The bool array read.
+            The bool array read.
         """
         raise NotImplementedError()
 
@@ -814,10 +811,10 @@ class PortableReader:
         """Reads a primitive char array.
 
         Args:
-            field_name (str): Name of the field.
+            field_name: Name of the field.
 
         Returns:
-            list[str]): The char array read.
+            The char array read.
         """
         raise NotImplementedError()
 
@@ -825,10 +822,10 @@ class PortableReader:
         """Reads a primitive int array.
 
         Args:
-            field_name (str): Name of the field.
+            field_name: Name of the field.
 
         Returns:
-            list[int]: The int array read.
+            The int array read.
         """
         raise NotImplementedError()
 
@@ -836,10 +833,10 @@ class PortableReader:
         """Reads a primitive long array.
 
         Args:
-            field_name (str): Name of the field.
+            field_name: Name of the field.
 
         Returns:
-            list[int]: The long array read.
+            The long array read.
         """
         raise NotImplementedError()
 
@@ -847,10 +844,10 @@ class PortableReader:
         """Reads a primitive double array.
 
         Args:
-            field_name (str): Name of the field.
+            field_name: Name of the field.
 
         Returns:
-            list[float]: The double array read.
+            The double array read.
         """
         raise NotImplementedError()
 
@@ -858,10 +855,10 @@ class PortableReader:
         """Reads a primitive float array.
 
         Args:
-            field_name (str): Name of the field.
+            field_name: Name of the field.
 
         Returns:
-            list[float]: The float array read.
+            The float array read.
         """
         raise NotImplementedError()
 
@@ -869,10 +866,10 @@ class PortableReader:
         """Reads a primitive short array.
 
         Args:
-            field_name (str): Name of the field.
+            field_name: Name of the field.
 
         Returns:
-            list[int]: The short array read.
+            The short array read.
         """
         raise NotImplementedError()
 
@@ -880,10 +877,10 @@ class PortableReader:
         """Reads a UTF-8 String array.
 
         Args:
-            field_name (str): Name of the field.
+            field_name: Name of the field.
 
         Returns:
-            str: The UTF-8 String array read.
+            The UTF-8 String array read.
         """
         raise NotImplementedError()
 
@@ -895,10 +892,10 @@ class PortableReader:
             next major version. Use :func:`read_string_array` instead.
 
         Args:
-            field_name (str): Name of the field.
+            field_name: Name of the field.
 
         Returns:
-            str: The UTF-8 String array read.
+            The UTF-8 String array read.
         """
         raise NotImplementedError()
 
@@ -906,34 +903,36 @@ class PortableReader:
         """Reads a portable array.
 
         Args:
-            field_name (str): Name of the field.
+            field_name: Name of the field.
 
         Returns:
-            list[hazelcast.serialization.api.Portable]: The portable array read.
+            The portable array read.
         """
         raise NotImplementedError()
 
     def get_raw_data_input(self) -> ObjectDataInput:
-        """After reading portable fields, one can read remaining fields in old fashioned way
-        consecutively from the end of stream. After get_raw_data_input() called, no data can be read.
+        """After reading portable fields, one can read remaining fields in
+        old fashioned way consecutively from the end of stream. After
+        get_raw_data_input() called, no data can be read.
 
         Returns:
-            hazelcast.serialization.api.ObjectDataInput: The input.
+            The input.
         """
         raise NotImplementedError()
 
 
 class PortableWriter:
-    """Provides a mean of writing portable fields to a binary in form of Python primitives and arrays of these
-    primitives, nested portable fields and array of portable fields.
+    """Provides a mean of writing portable fields to a binary in form of
+    Python primitives and arrays of these primitives, nested portable fields
+    and array of portable fields.
     """
 
     def write_int(self, field_name: str, value: int) -> None:
         """Writes a primitive int.
 
         Args:
-            field_name (str): Name of the field.
-            value (int): Int value to be written.
+            field_name: Name of the field.
+            value: Int value to be written.
         """
         raise NotImplementedError()
 
@@ -941,8 +940,8 @@ class PortableWriter:
         """Writes a primitive long.
 
         Args:
-            field_name (str): Name of the field.
-            value (int): Long value to be written.
+            field_name: Name of the field.
+            value: Long value to be written.
         """
         raise NotImplementedError()
 
@@ -950,8 +949,8 @@ class PortableWriter:
         """Writes an UTF string.
 
         Args:
-            field_name (str): Name of the field.
-            value (str): UTF string value to be written.
+            field_name: Name of the field.
+            value: UTF string value to be written.
         """
         raise NotImplementedError()
 
@@ -963,8 +962,8 @@ class PortableWriter:
             next major version. Use :func:`write_string` instead.
 
         Args:
-            field_name (str): Name of the field.
-            value (str): UTF string value to be written.
+            field_name: Name of the field.
+            value: UTF string value to be written.
         """
         raise NotImplementedError()
 
@@ -972,8 +971,8 @@ class PortableWriter:
         """Writes a primitive bool.
 
         Args:
-            field_name (str): Name of the field.
-            value (bool): Bool value to be written.
+            field_name: Name of the field.
+            value: Bool value to be written.
         """
         raise NotImplementedError()
 
@@ -981,8 +980,8 @@ class PortableWriter:
         """Writes a primitive byte.
 
         Args:
-            field_name (str): Name of the field.
-            value (int): Byte value to be written.
+            field_name: Name of the field.
+            value: Byte value to be written.
         """
         raise NotImplementedError()
 
@@ -990,8 +989,8 @@ class PortableWriter:
         """Writes a primitive char.
 
         Args:
-            field_name (str): Name of the field.
-            value (str): Char value to be written.
+            field_name: Name of the field.
+            value: Char value to be written.
         """
         raise NotImplementedError()
 
@@ -999,8 +998,8 @@ class PortableWriter:
         """Writes a primitive double.
 
         Args:
-            field_name (str): Name of the field.
-            value (float): Double value to be written.
+            field_name: Name of the field.
+            value: Double value to be written.
         """
         raise NotImplementedError()
 
@@ -1008,8 +1007,8 @@ class PortableWriter:
         """Writes a primitive float.
 
         Args:
-            field_name (str): Name of the field.
-            value (float): Float value to be written.
+            field_name: Name of the field.
+            value: Float value to be written.
         """
         raise NotImplementedError()
 
@@ -1017,8 +1016,8 @@ class PortableWriter:
         """Writes a primitive short.
 
         Args:
-            field_name (str): Name of the field.
-            value (int): Short value to be written.
+            field_name: Name of the field.
+            value: Short value to be written.
         """
         raise NotImplementedError()
 
@@ -1026,18 +1025,19 @@ class PortableWriter:
         """Writes a Portable.
 
         Args:
-            field_name (str): Name of the field.
-            portable (hazelcast.serialization.api.Portable): Portable to be written.
+            field_name: Name of the field.
+            portable: Portable to be written.
         """
         raise NotImplementedError()
 
     def write_null_portable(self, field_name: str, factory_id: int, class_id: int) -> None:
-        """To write a null portable value, user needs to provide class and factory ids of related class.
+        """To write a null portable value, user needs to provide class and
+        factory ids of related class.
 
         Args:
-            field_name (str): Name of the field.
-            factory_id (int): Factory id of related portable class.
-            class_id (int): Class id of related portable class.
+            field_name: Name of the field.
+            factory_id: Factory id of related portable class.
+            class_id: Class id of related portable class.
         """
         raise NotImplementedError()
 
@@ -1045,8 +1045,8 @@ class PortableWriter:
         """Writes a primitive byte array.
 
         Args:
-            field_name (str): Name of the field.
-            values (bytearray): Bytearray to be written.
+            field_name: Name of the field.
+            values: Bytearray to be written.
         """
         raise NotImplementedError()
 
@@ -1054,8 +1054,8 @@ class PortableWriter:
         """Writes a primitive bool array.
 
         Args:
-            field_name (str): Name of the field.
-            values (typing.Sequence[bool]): Bool array to be written.
+            field_name: Name of the field.
+            values: Bool array to be written.
         """
         raise NotImplementedError()
 
@@ -1063,8 +1063,8 @@ class PortableWriter:
         """Writes a primitive char array.
 
         Args:
-            field_name (str): Name of the field.
-            values (typing.Sequence[str]): Char array to be written.
+            field_name: Name of the field.
+            values: Char array to be written.
         """
         raise NotImplementedError()
 
@@ -1072,8 +1072,8 @@ class PortableWriter:
         """Writes a primitive int array.
 
         Args:
-            field_name (str): Name of the field.
-            values (typing.Sequence[int]): Int array to be written.
+            field_name: Name of the field.
+            values: Int array to be written.
         """
         raise NotImplementedError()
 
@@ -1081,8 +1081,8 @@ class PortableWriter:
         """Writes a primitive long array.
 
         Args:
-            field_name (str): Name of the field.
-            values (typing.Sequence[int]): Long array to be written.
+            field_name: Name of the field.
+            values: Long array to be written.
         """
         raise NotImplementedError()
 
@@ -1090,8 +1090,8 @@ class PortableWriter:
         """Writes a primitive double array.
 
         Args:
-            field_name (str): Name of the field.
-            values (typing.Sequence[float]): Double array to be written.
+            field_name: Name of the field.
+            values: Double array to be written.
         """
         raise NotImplementedError()
 
@@ -1099,8 +1099,8 @@ class PortableWriter:
         """Writes a primitive float array.
 
         Args:
-            field_name (str): Name of the field.
-            values (typing.Sequence[float]): Float array to be written.
+            field_name: Name of the field.
+            values: Float array to be written.
         """
         raise NotImplementedError()
 
@@ -1108,8 +1108,8 @@ class PortableWriter:
         """Writes a primitive short array.
 
         Args:
-            field_name (str): Name of the field.
-            values: (typing.Sequence[int]): Short array to be written.
+            field_name: Name of the field.
+            values: Short array to be written.
         """
         raise NotImplementedError()
 
@@ -1117,8 +1117,8 @@ class PortableWriter:
         """Writes a UTF-8 String array.
 
         Args:
-            field_name (str): Name of the field.
-            values: (typing.Sequence[str]): UTF-8 String array to be written.
+            field_name: Name of the field.
+            values: UTF-8 String array to be written.
         """
         raise NotImplementedError()
 
@@ -1130,8 +1130,8 @@ class PortableWriter:
             next major version. Use :func:`write_string_array` instead.
 
         Args:
-            field_name (str): Name of the field.
-            values: (typing.Sequence[str]): UTF-8 String array to be written.
+            field_name: Name of the field.
+            values: UTF-8 String array to be written.
         """
         raise NotImplementedError()
 
@@ -1139,16 +1139,17 @@ class PortableWriter:
         """Writes a portable array.
 
         Args:
-            field_name (str): Name of the field.
-            values (typing.Sequence[Portable]): Portable array to be written.
+            field_name: Name of the field.
+            values: Portable array to be written.
         """
         raise NotImplementedError()
 
     def get_raw_data_output(self) -> ObjectDataOutput:
-        """After writing portable fields, one can write remaining fields in old fashioned way
-        consecutively at the end of stream. After get_raw_data_output() called, no data can be written.
+        """After writing portable fields, one can write remaining fields in
+        old fashioned way consecutively at the end of stream. After
+        get_raw_data_output() called, no data can be written.
 
         Returns:
-            hazelcast.serialization.api.ObjectDataOutput: The output.
+            The output.
         """
         raise NotImplementedError()
