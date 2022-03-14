@@ -9,6 +9,7 @@ from hazelcast.errors import (
     IllegalMonitorStateError,
 )
 from hazelcast.future import ImmediateExceptionFuture, Future
+from hazelcast.protocol import RaftGroupId
 from hazelcast.protocol.codec import (
     fenced_lock_lock_codec,
     fenced_lock_try_lock_codec,
@@ -21,7 +22,7 @@ from hazelcast.util import thread_id, to_millis
 _NO_SESSION_ID = -1
 
 
-class FencedLock(SessionAwareCPProxy):
+class FencedLock(SessionAwareCPProxy["BlockingFencedLock"]):
     """A linearizable, distributed lock.
 
     FencedLock is CP with respect to the CAP principle. It works on top
@@ -166,7 +167,7 @@ class FencedLock(SessionAwareCPProxy):
         """
         current_thread_id = thread_id()
         invocation_uuid = uuid.uuid4()
-        timeout = max(0, timeout)
+        timeout = max(0.0, timeout)
         return self._do_try_lock(current_thread_id, invocation_uuid, timeout)
 
     def unlock(self) -> Future[None]:
@@ -312,6 +313,9 @@ class FencedLock(SessionAwareCPProxy):
         self._lock_session_ids.clear()
         return super(FencedLock, self).destroy()
 
+    def blocking(self) -> "BlockingFencedLock":
+        return BlockingFencedLock(self)
+
     def _do_lock(self, current_thread_id, invocation_uuid):
         def do_lock_once(session_id):
             session_id = session_id.result()
@@ -447,6 +451,58 @@ class FencedLock(SessionAwareCPProxy):
         codec = fenced_lock_get_lock_ownership_codec
         request = codec.encode_request(self._group_id, self._object_name)
         return self._invoke(request, codec.decode_response)
+
+
+class BlockingFencedLock(FencedLock):
+    __slots__ = ("_wrapped",)
+
+    def __init__(self, wrapped: FencedLock):
+        self._wrapped = wrapped
+
+    def lock(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.lock().result()
+
+    def try_lock(  # type: ignore[override]
+        self,
+        timeout: float = 0,
+    ) -> int:
+        return self._wrapped.try_lock(timeout).result()
+
+    def unlock(  # type: ignore[override]
+        self,
+    ) -> None:
+        return self._wrapped.unlock().result()
+
+    def is_locked(  # type: ignore[override]
+        self,
+    ) -> bool:
+        return self._wrapped.is_locked().result()
+
+    def is_locked_by_current_thread(  # type: ignore[override]
+        self,
+    ) -> bool:
+        return self._wrapped.is_locked_by_current_thread().result()
+
+    def get_lock_count(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.get_lock_count().result()
+
+    def destroy(  # type: ignore[override]
+        self,
+    ) -> None:
+        return self._wrapped.destroy().result()
+
+    def get_group_id(self) -> RaftGroupId:
+        return self._wrapped.get_group_id()
+
+    def blocking(self) -> "BlockingFencedLock":
+        return self
+
+    def __repr__(self) -> str:
+        return self._wrapped.__repr__()
 
 
 class _LockOwnershipState:

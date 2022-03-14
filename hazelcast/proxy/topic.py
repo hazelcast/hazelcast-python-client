@@ -10,7 +10,7 @@ from hazelcast.proxy.base import PartitionSpecificProxy, TopicMessage
 from hazelcast.types import MessageType
 
 
-class Topic(PartitionSpecificProxy, typing.Generic[MessageType]):
+class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]):
     """Hazelcast provides distribution mechanism for publishing messages that
     are delivered to multiple subscribers, which is also known as a
     publish/subscribe (pub/sub) messaging model.
@@ -84,3 +84,42 @@ class Topic(PartitionSpecificProxy, typing.Generic[MessageType]):
             otherwise.
         """
         return self._deregister_listener(registration_id)
+
+    def blocking(self) -> "BlockingTopic[MessageType]":
+        return BlockingTopic(self)
+
+
+class BlockingTopic(Topic[MessageType]):
+    __slots__ = ("_wrapped", "name", "service_name")
+
+    def __init__(self, wrapped: Topic[MessageType]):
+        self.name = wrapped.name
+        self.service_name = wrapped.service_name
+        self._wrapped = wrapped
+
+    def add_listener(  # type: ignore[override]
+        self,
+        on_message: typing.Callable[[TopicMessage[MessageType]], None] = None,
+    ) -> str:
+        return self._wrapped.add_listener(on_message).result()
+
+    def publish(  # type: ignore[override]
+        self,
+        message: MessageType,
+    ) -> None:
+        return self._wrapped.publish(message).result()
+
+    def remove_listener(  # type: ignore[override]
+        self,
+        registration_id: str,
+    ) -> bool:
+        return self._wrapped.remove_listener(registration_id).result()
+
+    def destroy(self) -> bool:
+        return self._wrapped.destroy()
+
+    def blocking(self) -> "BlockingTopic[MessageType]":
+        return self
+
+    def __repr__(self) -> str:
+        return self._wrapped.__repr__()

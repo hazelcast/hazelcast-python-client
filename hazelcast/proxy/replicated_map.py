@@ -30,7 +30,7 @@ from hazelcast.util import to_millis, check_not_none, ImmutableLazyDataList
 EntryEventCallable = typing.Callable[[EntryEvent[KeyType, ValueType]], None]
 
 
-class ReplicatedMap(Proxy, typing.Generic[KeyType, ValueType]):
+class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, ValueType]):
     """A ReplicatedMap is a map-like data structure with weak consistency and
     values locally stored on every node of the cluster.
 
@@ -377,3 +377,112 @@ class ReplicatedMap(Proxy, typing.Generic[KeyType, ValueType]):
 
         request = replicated_map_values_codec.encode_request(self.name)
         return self._invoke_on_partition(request, self._partition_id, handler)
+
+    def blocking(self) -> "BlockingReplicatedMap[KeyType, ValueType]":
+        return BlockingReplicatedMap(self)
+
+
+class BlockingReplicatedMap(ReplicatedMap[KeyType, ValueType]):
+    __slots__ = ("_wrapped", "name", "service_name")
+
+    def __init__(self, wrapped: ReplicatedMap[KeyType, ValueType]):
+        self.name = wrapped.name
+        self.service_name = wrapped.service_name
+        self._wrapped = wrapped
+
+    def add_entry_listener(  # type: ignore[override]
+        self,
+        key: KeyType = None,
+        predicate: Predicate = None,
+        added_func: EntryEventCallable = None,
+        removed_func: EntryEventCallable = None,
+        updated_func: EntryEventCallable = None,
+        evicted_func: EntryEventCallable = None,
+        clear_all_func: EntryEventCallable = None,
+    ) -> str:
+        return self._wrapped.add_entry_listener(
+            key, predicate, added_func, removed_func, updated_func, evicted_func, clear_all_func
+        ).result()
+
+    def clear(  # type: ignore[override]
+        self,
+    ) -> None:
+        return self._wrapped.clear().result()
+
+    def contains_key(  # type: ignore[override]
+        self,
+        key: KeyType,
+    ) -> bool:
+        return self._wrapped.contains_key(key).result()
+
+    def contains_value(  # type: ignore[override]
+        self,
+        value: ValueType,
+    ) -> bool:
+        return self._wrapped.contains_value(value).result()
+
+    def entry_set(  # type: ignore[override]
+        self,
+    ) -> typing.List[typing.Tuple[KeyType, ValueType]]:
+        return self._wrapped.entry_set().result()
+
+    def get(  # type: ignore[override]
+        self,
+        key: KeyType,
+    ) -> typing.Optional[ValueType]:
+        return self._wrapped.get(key).result()
+
+    def is_empty(  # type: ignore[override]
+        self,
+    ) -> bool:
+        return self._wrapped.is_empty().result()
+
+    def key_set(  # type: ignore[override]
+        self,
+    ) -> typing.List[KeyType]:
+        return self._wrapped.key_set().result()
+
+    def put(  # type: ignore[override]
+        self,
+        key: KeyType,
+        value: ValueType,
+        ttl: float = 0,
+    ) -> typing.Optional[ValueType]:
+        return self._wrapped.put(key, value, ttl).result()
+
+    def put_all(  # type: ignore[override]
+        self,
+        source: typing.Dict[KeyType, ValueType],
+    ) -> None:
+        return self._wrapped.put_all(source).result()
+
+    def remove(  # type: ignore[override]
+        self,
+        key: KeyType,
+    ) -> typing.Optional[ValueType]:
+        return self._wrapped.remove(key).result()
+
+    def remove_entry_listener(  # type: ignore[override]
+        self,
+        registration_id: str,
+    ) -> bool:
+        return self._wrapped.remove_entry_listener(registration_id).result()
+
+    def size(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.size().result()
+
+    def values(  # type: ignore[override]
+        self,
+    ) -> typing.List[ValueType]:
+        return self._wrapped.values().result()
+
+    def destroy(self) -> bool:
+        return self._wrapped.destroy()
+
+    def blocking(self) -> "BlockingReplicatedMap[KeyType, ValueType]":
+        return self
+
+    def __repr__(self) -> str:
+        return self._wrapped.__repr__()

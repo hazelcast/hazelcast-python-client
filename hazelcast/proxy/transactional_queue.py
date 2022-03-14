@@ -1,6 +1,5 @@
 import typing
 
-from hazelcast.future import Future
 from hazelcast.protocol.codec import (
     transactional_queue_offer_codec,
     transactional_queue_peek_codec,
@@ -16,7 +15,7 @@ from hazelcast.util import check_not_none, to_millis, thread_id
 class TransactionalQueue(TransactionalProxy, typing.Generic[ItemType]):
     """Transactional implementation of :class:`~hazelcast.proxy.queue.Queue`."""
 
-    def offer(self, item: ItemType, timeout: float = 0) -> Future[bool]:
+    def offer(self, item: ItemType, timeout: float = 0) -> bool:
         """Transactional implementation of
         :func:`Queue.offer(item, timeout) <hazelcast.proxy.queue.Queue.offer>`
 
@@ -25,8 +24,8 @@ class TransactionalQueue(TransactionalProxy, typing.Generic[ItemType]):
             timeout (float): Maximum time in seconds to wait for addition.
 
         Returns:
-            Future[bool]: ``True`` if the element was added to this queue,
-            ``False`` otherwise.
+            bool: ``True`` if the element was added to this queue, ``False``
+            otherwise.
         """
         check_not_none(item, "item can't be none")
 
@@ -36,12 +35,12 @@ class TransactionalQueue(TransactionalProxy, typing.Generic[ItemType]):
         )
         return self._invoke(request, transactional_queue_offer_codec.decode_response)
 
-    def take(self) -> Future[ItemType]:
+    def take(self) -> ItemType:
         """Transactional implementation of
         :func:`Queue.take() <hazelcast.proxy.queue.Queue.take>`
 
         Returns:
-            Future[any]: The head of this queue.
+            The head of this queue.
         """
 
         def handler(message):
@@ -52,7 +51,7 @@ class TransactionalQueue(TransactionalProxy, typing.Generic[ItemType]):
         )
         return self._invoke(request, handler)
 
-    def poll(self, timeout: float = 0) -> Future[typing.Optional[ItemType]]:
+    def poll(self, timeout: float = 0) -> typing.Optional[ItemType]:
         """Transactional implementation of
         :func:`Queue.poll(timeout) <hazelcast.proxy.queue.Queue.poll>`
 
@@ -60,9 +59,8 @@ class TransactionalQueue(TransactionalProxy, typing.Generic[ItemType]):
             timeout (float): Maximum time in seconds to wait for addition.
 
         Returns:
-            Future[any]: The head of this queue, or ``None`` if this queue is
-            empty or specified timeout elapses before an item is added to the
-            queue.
+            The head of this queue, or ``None`` if this queue is empty or
+            specified timeout elapses before an item is added to the queue.
         """
 
         def handler(message):
@@ -73,7 +71,7 @@ class TransactionalQueue(TransactionalProxy, typing.Generic[ItemType]):
         )
         return self._invoke(request, handler)
 
-    def peek(self, timeout: float = 0) -> Future[typing.Optional[ItemType]]:
+    def peek(self, timeout: float = 0) -> typing.Optional[ItemType]:
         """Transactional implementation of
         :func:`Queue.peek(timeout) <hazelcast.proxy.queue.Queue.peek>`
 
@@ -81,9 +79,8 @@ class TransactionalQueue(TransactionalProxy, typing.Generic[ItemType]):
             timeout (float): Maximum time in seconds to wait for addition.
 
         Returns:
-            Future[any]: The head of this queue, or ``None`` if this queue is
-            empty or specified timeout elapses before an item is added to the
-            queue.
+            The head of this queue, or ``None`` if this queue is empty or
+            specified timeout elapses before an item is added to the queue.
         """
 
         def handler(message):
@@ -94,12 +91,12 @@ class TransactionalQueue(TransactionalProxy, typing.Generic[ItemType]):
         )
         return self._invoke(request, handler)
 
-    def size(self) -> Future[int]:
+    def size(self) -> int:
         """Transactional implementation of
         :func:`Queue.size() <hazelcast.proxy.queue.Queue.size>`
 
         Returns:
-            Future[int]: Size of the queue.
+            int: Size of the queue.
         """
         request = transactional_queue_size_codec.encode_request(
             self.name, self.transaction.id, thread_id()

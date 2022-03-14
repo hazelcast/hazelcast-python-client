@@ -13,7 +13,7 @@ from hazelcast.proxy.base import Proxy
 from hazelcast.util import check_not_none
 
 
-class Executor(Proxy):
+class Executor(Proxy["BlockingExecutor"]):
     """An object that executes submitted executable tasks."""
 
     def execute_on_key_owner(self, key: typing.Any, task: typing.Any) -> Future[typing.Any]:
@@ -121,3 +121,61 @@ class Executor(Proxy):
             self.name, uuid, task_data, member_uuid
         )
         return self._invoke_on_target(request, member_uuid, handler)
+
+    def blocking(self) -> "BlockingExecutor":
+        return BlockingExecutor(self)
+
+
+class BlockingExecutor(Executor):
+    __slots__ = ("_wrapped", "name", "service_name")
+
+    def __init__(self, wrapped: Executor):
+        self.name = wrapped.name
+        self.service_name = wrapped.service_name
+        self._wrapped = wrapped
+
+    def execute_on_key_owner(  # type: ignore[override]
+        self,
+        key: typing.Any,
+        task: typing.Any,
+    ) -> typing.Any:
+        return self._wrapped.execute_on_key_owner(key, task).result()
+
+    def execute_on_member(  # type: ignore[override]
+        self,
+        member: MemberInfo,
+        task: typing.Any,
+    ) -> typing.Any:
+        return self._wrapped.execute_on_member(member, task).result()
+
+    def execute_on_members(  # type: ignore[override]
+        self,
+        members: typing.Sequence[MemberInfo],
+        task: typing.Any,
+    ) -> typing.List[typing.Any]:
+        return self._wrapped.execute_on_members(members, task).result()
+
+    def execute_on_all_members(  # type: ignore[override]
+        self,
+        task: typing.Any,
+    ) -> typing.List[typing.Any]:
+        return self._wrapped.execute_on_all_members(task).result()
+
+    def is_shutdown(  # type: ignore[override]
+        self,
+    ) -> bool:
+        return self._wrapped.is_shutdown().result()
+
+    def shutdown(  # type: ignore[override]
+        self,
+    ) -> None:
+        return self._wrapped.shutdown().result()
+
+    def blocking(self) -> "BlockingExecutor":
+        return self
+
+    def destroy(self) -> bool:
+        return self._wrapped.destroy()
+
+    def __repr__(self) -> str:
+        return self._wrapped.__repr__()

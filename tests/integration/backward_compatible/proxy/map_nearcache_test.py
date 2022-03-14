@@ -39,8 +39,8 @@ class MapTest(SingleMemberTestCase):
         value3 = self.map.get(key)
         self.assertEqual(value, value2)
         self.assertEqual(value, value3)
-        self.assertEqual(1, self.map._near_cache._hits)
-        self.assertEqual(1, self.map._near_cache._misses)
+        self.assertEqual(1, self.map._wrapped._near_cache._hits)
+        self.assertEqual(1, self.map._wrapped._near_cache._misses)
 
     def test_put_get_remove(self):
         key = "key"
@@ -51,26 +51,26 @@ class MapTest(SingleMemberTestCase):
         self.map.remove(key)
         self.assertEqual(value, value2)
         self.assertEqual(value, value3)
-        self.assertEqual(1, self.map._near_cache._hits)
-        self.assertEqual(1, self.map._near_cache._misses)
-        self.assertEqual(0, len(self.map._near_cache))
+        self.assertEqual(1, self.map._wrapped._near_cache._hits)
+        self.assertEqual(1, self.map._wrapped._near_cache._misses)
+        self.assertEqual(0, len(self.map._wrapped._near_cache))
 
     def test_invalidate_single_key(self):
         self.fill_map_and_near_cache(10)
-        initial_cache_size = len(self.map._near_cache)
+        initial_cache_size = len(self.map._wrapped._near_cache)
         script = """map = instance_0.getMap("{}");map.remove("key-5")""".format(self.map.name)
         response = self.rc.executeOnController(self.cluster.id, script, Lang.PYTHON)
         self.assertTrue(response.success)
         self.assertEqual(initial_cache_size, 10)
 
         def assertion():
-            self.assertEqual(len(self.map._near_cache), 9)
+            self.assertEqual(len(self.map._wrapped._near_cache), 9)
 
         self.assertTrueEventually(assertion)
 
     def test_invalidate_nonexist_key(self):
         self.fill_map_and_near_cache(10)
-        initial_cache_size = len(self.map._near_cache)
+        initial_cache_size = len(self.map._wrapped._near_cache)
         script = (
             """
         var map = instance_0.getMap("%s");
@@ -86,20 +86,20 @@ class MapTest(SingleMemberTestCase):
 
         def assertion():
             self.assertEqual(self.map.size(), 11)
-            self.assertEqual(len(self.map._near_cache), 10)
+            self.assertEqual(len(self.map._wrapped._near_cache), 10)
 
         self.assertTrueEventually(assertion)
 
     def test_invalidate_multiple_keys(self):
         self.fill_map_and_near_cache(10)
-        initial_cache_size = len(self.map._near_cache)
+        initial_cache_size = len(self.map._wrapped._near_cache)
         script = """map = instance_0.getMap("{}");map.clear()""".format(self.map.name)
         response = self.rc.executeOnController(self.cluster.id, script, Lang.PYTHON)
         self.assertTrue(response.success)
         self.assertEqual(initial_cache_size, 10)
 
         def assertion():
-            self.assertEqual(len(self.map._near_cache), 0)
+            self.assertEqual(len(self.map._wrapped._near_cache), 0)
 
         self.assertTrueEventually(assertion)
 

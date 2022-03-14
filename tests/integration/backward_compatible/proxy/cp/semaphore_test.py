@@ -29,7 +29,7 @@ class SemaphoreTest(CPTestCase):
     def test_semaphore_in_another_group(self, semaphore_type):
         semaphore = self.get_semaphore(semaphore_type, 1)
         another_semaphore = self.client.cp_subsystem.get_semaphore(
-            semaphore._proxy_name + "@another"
+            semaphore._wrapped._proxy_name + "@another"
         ).blocking()
 
         self.assertEqual(1, semaphore.available_permits())
@@ -48,7 +48,9 @@ class SemaphoreTest(CPTestCase):
         with self.assertRaises(DistributedObjectDestroyedError):
             semaphore.init(1)
 
-        semaphore2 = self.client.cp_subsystem.get_semaphore(semaphore._proxy_name).blocking()
+        semaphore2 = self.client.cp_subsystem.get_semaphore(
+            semaphore._wrapped._proxy_name
+        ).blocking()
 
         with self.assertRaises(DistributedObjectDestroyedError):
             semaphore2.init(1)
@@ -57,7 +59,7 @@ class SemaphoreTest(CPTestCase):
         semaphore = self.get_semaphore("sessionaware", 1)
         another_client = HazelcastClient(cluster_name=self.cluster.id)
         another_semaphore = another_client.cp_subsystem.get_semaphore(
-            semaphore._proxy_name
+            semaphore._wrapped._proxy_name
         ).blocking()
         another_semaphore.acquire(1)
         self.assertEqual(0, another_semaphore.available_permits())
@@ -229,7 +231,7 @@ class SemaphoreTest(CPTestCase):
         semaphore = self.get_semaphore("sessionless")
         another_client = HazelcastClient(cluster_name=self.cluster.id)
         another_semaphore = another_client.cp_subsystem.get_semaphore(
-            semaphore._proxy_name
+            semaphore._wrapped._proxy_name
         ).blocking()
         self.assertTrue(another_semaphore.init(1))
         another_semaphore.acquire()

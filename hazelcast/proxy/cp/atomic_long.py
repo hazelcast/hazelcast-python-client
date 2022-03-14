@@ -14,7 +14,7 @@ from hazelcast.proxy.cp import BaseCPProxy
 from hazelcast.util import check_not_none, check_is_int
 
 
-class AtomicLong(BaseCPProxy):
+class AtomicLong(BaseCPProxy["BlockingAtomicLong"]):
     """AtomicLong is a redundant and highly available distributed counter
     for 64-bit integers (``long`` type in Java).
 
@@ -246,3 +246,104 @@ class AtomicLong(BaseCPProxy):
             return self._to_object(codec.decode_response(response))
 
         return self._invoke(request, handler)
+
+    def blocking(self) -> "BlockingAtomicLong":
+        return BlockingAtomicLong(self)
+
+
+class BlockingAtomicLong(AtomicLong):
+    __slots__ = ("_wrapped",)
+
+    def __init__(self, wrapped: AtomicLong):
+        self._wrapped = wrapped
+
+    def add_and_get(  # type: ignore[override]
+        self,
+        delta: int,
+    ) -> int:
+        return self._wrapped.add_and_get(delta).result()
+
+    def compare_and_set(  # type: ignore[override]
+        self,
+        expect: int,
+        update: int,
+    ) -> bool:
+        return self._wrapped.compare_and_set(expect, update).result()
+
+    def decrement_and_get(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.decrement_and_get().result()
+
+    def get_and_decrement(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.get_and_decrement().result()
+
+    def get(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.get().result()
+
+    def get_and_add(  # type: ignore[override]
+        self,
+        delta: int,
+    ) -> int:
+        return self._wrapped.get_and_add(delta).result()
+
+    def get_and_set(  # type: ignore[override]
+        self,
+        new_value: int,
+    ) -> int:
+        return self._wrapped.get_and_set(new_value).result()
+
+    def increment_and_get(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.increment_and_get().result()
+
+    def get_and_increment(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.get_and_increment().result()
+
+    def set(  # type: ignore[override]
+        self,
+        new_value: int,
+    ) -> None:
+        return self._wrapped.set(new_value).result()
+
+    def alter(  # type: ignore[override]
+        self,
+        function: typing.Any,
+    ) -> None:
+        return self._wrapped.alter(function).result()
+
+    def alter_and_get(  # type: ignore[override]
+        self,
+        function: typing.Any,
+    ) -> int:
+        return self._wrapped.alter_and_get(function).result()
+
+    def get_and_alter(  # type: ignore[override]
+        self,
+        function: typing.Any,
+    ) -> int:
+        return self._wrapped.get_and_alter(function).result()
+
+    def apply(  # type: ignore[override]
+        self,
+        function: typing.Any,
+    ) -> typing.Any:
+        return self._wrapped.apply(function).result()
+
+    def destroy(  # type: ignore[override]
+        self,
+    ) -> None:
+        return self._wrapped.destroy().result()
+
+    def blocking(self) -> "BlockingAtomicLong":
+        return self
+
+    def __repr__(self) -> str:
+        return self._wrapped.__repr__()

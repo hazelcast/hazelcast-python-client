@@ -92,7 +92,7 @@ from hazelcast.util import (
 EntryEventCallable = typing.Callable[[EntryEvent[KeyType, ValueType]], None]
 
 
-class Map(Proxy, typing.Generic[KeyType, ValueType]):
+class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
     """Hazelcast Map client proxy to access the map on the cluster.
 
     Concurrent, distributed, observable and queryable map. This map can work
@@ -1495,6 +1495,9 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
 
         return self._invoke(request, handler)
 
+    def blocking(self) -> "BlockingMap[KeyType, ValueType]":
+        return BlockingMap(self)
+
     # internals
     def _contains_key_internal(self, key_data):
         request = map_contains_key_codec.encode_request(self.name, key_data, thread_id())
@@ -1645,7 +1648,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return self._invoke_on_key(request, key_data, handler)
 
 
-class MapFeatNearCache(Map):
+class MapFeatNearCache(Map[KeyType, ValueType]):
     """Map proxy implementation featuring Near Cache"""
 
     def __init__(self, service_name, name, context):
@@ -1667,6 +1670,9 @@ class MapFeatNearCache(Map):
         if keys is None and replace_existing_values:
             self._near_cache.clear()
         return super(MapFeatNearCache, self).load_all(keys, replace_existing_values)
+
+    def blocking(self) -> "BlockingMap[KeyType, ValueType]":
+        return BlockingMap(self)
 
     def _on_destroy(self):
         self._remove_near_cache_invalidation_listener()
@@ -1809,6 +1815,335 @@ class MapFeatNearCache(Map):
     def _delete_internal(self, key_data):
         self._invalidate_cache(key_data)
         return super(MapFeatNearCache, self)._delete_internal(key_data)
+
+
+class BlockingMap(Map[KeyType, ValueType]):
+    __slots__ = ("_wrapped", "name", "service_name")
+
+    def __init__(
+        self, wrapped: typing.Union[Map[KeyType, ValueType], MapFeatNearCache[KeyType, ValueType]]
+    ):
+        self.name = wrapped.name
+        self.service_name = wrapped.service_name
+        self._wrapped = wrapped
+
+    def add_entry_listener(  # type: ignore[override]
+        self,
+        include_value: bool = False,
+        key: KeyType = None,
+        predicate: Predicate = None,
+        added_func: EntryEventCallable = None,
+        removed_func: EntryEventCallable = None,
+        updated_func: EntryEventCallable = None,
+        evicted_func: EntryEventCallable = None,
+        evict_all_func: EntryEventCallable = None,
+        clear_all_func: EntryEventCallable = None,
+        merged_func: EntryEventCallable = None,
+        expired_func: EntryEventCallable = None,
+        loaded_func: EntryEventCallable = None,
+    ) -> str:
+        return self._wrapped.add_entry_listener(
+            include_value,
+            key,
+            predicate,
+            added_func,
+            removed_func,
+            updated_func,
+            evicted_func,
+            evict_all_func,
+            clear_all_func,
+            merged_func,
+            expired_func,
+            loaded_func,
+        ).result()
+
+    def add_index(  # type: ignore[override]
+        self,
+        attributes: typing.Sequence[str] = None,
+        index_type: typing.Union[int, str] = IndexType.SORTED,
+        name: str = None,
+        bitmap_index_options: typing.Dict[str, typing.Any] = None,
+    ) -> None:
+        return self._wrapped.add_index(attributes, index_type, name, bitmap_index_options).result()
+
+    def add_interceptor(  # type: ignore[override]
+        self,
+        interceptor: typing.Any,
+    ) -> str:
+        return self._wrapped.add_interceptor(interceptor).result()
+
+    def aggregate(  # type: ignore[override]
+        self,
+        aggregator: Aggregator[AggregatorResultType],
+        predicate: Predicate = None,
+    ) -> AggregatorResultType:
+        return self._wrapped.aggregate(aggregator, predicate).result()
+
+    def clear(  # type: ignore[override]
+        self,
+    ) -> None:
+        return self._wrapped.clear().result()
+
+    def contains_key(  # type: ignore[override]
+        self,
+        key: KeyType,
+    ) -> bool:
+        return self._wrapped.contains_key(key).result()
+
+    def contains_value(  # type: ignore[override]
+        self,
+        value: ValueType,
+    ) -> bool:
+        return self._wrapped.contains_value(value).result()
+
+    def delete(  # type: ignore[override]
+        self,
+        key: KeyType,
+    ) -> None:
+        return self._wrapped.delete(key).result()
+
+    def entry_set(  # type: ignore[override]
+        self,
+        predicate: Predicate = None,
+    ) -> typing.List[typing.Tuple[KeyType, ValueType]]:
+        return self._wrapped.entry_set(predicate).result()
+
+    def evict(  # type: ignore[override]
+        self,
+        key: KeyType,
+    ) -> bool:
+        return self._wrapped.evict(key).result()
+
+    def evict_all(  # type: ignore[override]
+        self,
+    ) -> None:
+        return self._wrapped.evict_all().result()
+
+    def execute_on_entries(  # type: ignore[override]
+        self,
+        entry_processor: typing.Any,
+        predicate: Predicate = None,
+    ) -> typing.List[typing.Any]:
+        return self._wrapped.execute_on_entries(entry_processor, predicate).result()
+
+    def execute_on_key(  # type: ignore[override]
+        self,
+        key: KeyType,
+        entry_processor: typing.Any,
+    ) -> typing.Any:
+        return self._wrapped.execute_on_key(key, entry_processor).result()
+
+    def execute_on_keys(  # type: ignore[override]
+        self,
+        keys: typing.Sequence[KeyType],
+        entry_processor: typing.Any,
+    ) -> typing.List[typing.Any]:
+        return self._wrapped.execute_on_keys(keys, entry_processor).result()
+
+    def flush(  # type: ignore[override]
+        self,
+    ) -> None:
+        return self._wrapped.flush().result()
+
+    def force_unlock(  # type: ignore[override]
+        self,
+        key: KeyType,
+    ) -> None:
+        return self._wrapped.force_unlock(key).result()
+
+    def get(  # type: ignore[override]
+        self,
+        key: KeyType,
+    ) -> typing.Optional[ValueType]:
+        return self._wrapped.get(key).result()
+
+    def get_all(  # type: ignore[override]
+        self,
+        keys: typing.Sequence[KeyType],
+    ) -> typing.Dict[KeyType, ValueType]:
+        return self._wrapped.get_all(keys).result()
+
+    def get_entry_view(  # type: ignore[override]
+        self,
+        key: KeyType,
+    ) -> SimpleEntryView[KeyType, ValueType]:
+        return self._wrapped.get_entry_view(key).result()
+
+    def is_empty(  # type: ignore[override]
+        self,
+    ) -> bool:
+        return self._wrapped.is_empty().result()
+
+    def is_locked(  # type: ignore[override]
+        self,
+        key: KeyType,
+    ) -> bool:
+        return self._wrapped.is_locked(key).result()
+
+    def key_set(  # type: ignore[override]
+        self,
+        predicate: Predicate = None,
+    ) -> typing.List[ValueType]:
+        return self._wrapped.key_set(predicate).result()
+
+    def load_all(  # type: ignore[override]
+        self,
+        keys: typing.Sequence[KeyType] = None,
+        replace_existing_values: bool = True,
+    ) -> None:
+        return self._wrapped.load_all(keys, replace_existing_values).result()
+
+    def lock(  # type: ignore[override]
+        self,
+        key: KeyType,
+        lease_time: float = None,
+    ) -> None:
+        return self._wrapped.lock(key, lease_time).result()
+
+    def project(  # type: ignore[override]
+        self,
+        projection: Projection[ProjectionType],
+        predicate: Predicate = None,
+    ) -> ProjectionType:
+        return self._wrapped.project(projection, predicate).result()
+
+    def put(  # type: ignore[override]
+        self,
+        key: KeyType,
+        value: ValueType,
+        ttl: float = None,
+        max_idle: float = None,
+    ) -> typing.Optional[ValueType]:
+        return self._wrapped.put(key, value, ttl, max_idle).result()
+
+    def put_all(  # type: ignore[override]
+        self,
+        map: typing.Dict[KeyType, ValueType],
+    ) -> None:
+        return self._wrapped.put_all(map).result()
+
+    def put_if_absent(  # type: ignore[override]
+        self,
+        key: KeyType,
+        value: ValueType,
+        ttl: float = None,
+        max_idle: float = None,
+    ) -> typing.Optional[ValueType]:
+        return self._wrapped.put_if_absent(key, value, ttl, max_idle).result()
+
+    def put_transient(  # type: ignore[override]
+        self,
+        key: KeyType,
+        value: ValueType,
+        ttl: float = None,
+        max_idle: float = None,
+    ) -> None:
+        return self._wrapped.put_transient(key, value, ttl, max_idle).result()
+
+    def remove(  # type: ignore[override]
+        self,
+        key: KeyType,
+    ) -> typing.Optional[ValueType]:
+        return self._wrapped.remove(key).result()
+
+    def remove_if_same(  # type: ignore[override]
+        self,
+        key: KeyType,
+        value: ValueType,
+    ) -> bool:
+        return self._wrapped.remove_if_same(key, value).result()
+
+    def remove_entry_listener(  # type: ignore[override]
+        self,
+        registration_id: str,
+    ) -> bool:
+        return self._wrapped.remove_entry_listener(registration_id).result()
+
+    def remove_interceptor(  # type: ignore[override]
+        self,
+        registration_id: str,
+    ) -> bool:
+        return self._wrapped.remove_interceptor(registration_id).result()
+
+    def replace(  # type: ignore[override]
+        self,
+        key: KeyType,
+        value: ValueType,
+    ) -> typing.Optional[ValueType]:
+        return self._wrapped.replace(key, value).result()
+
+    def replace_if_same(  # type: ignore[override]
+        self,
+        key: ValueType,
+        old_value: ValueType,
+        new_value: ValueType,
+    ) -> bool:
+        return self._wrapped.replace_if_same(key, old_value, new_value).result()
+
+    def set(  # type: ignore[override]
+        self,
+        key: KeyType,
+        value: ValueType,
+        ttl: float = None,
+        max_idle: float = None,
+    ) -> None:
+        return self._wrapped.set(key, value, ttl, max_idle).result()
+
+    def set_ttl(  # type: ignore[override]
+        self,
+        key: KeyType,
+        ttl: float,
+    ) -> None:
+        return self._wrapped.set_ttl(key, ttl).result()
+
+    def size(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.size().result()
+
+    def try_lock(  # type: ignore[override]
+        self,
+        key: KeyType,
+        lease_time: float = None,
+        timeout: float = 0,
+    ) -> bool:
+        return self._wrapped.try_lock(key, lease_time, timeout).result()
+
+    def try_put(  # type: ignore[override]
+        self,
+        key: KeyType,
+        value: ValueType,
+        timeout: float = 0,
+    ) -> bool:
+        return self._wrapped.try_put(key, value, timeout).result()
+
+    def try_remove(  # type: ignore[override]
+        self,
+        key: KeyType,
+        timeout: float = 0,
+    ) -> bool:
+        return self._wrapped.try_remove(key, timeout).result()
+
+    def unlock(  # type: ignore[override]
+        self,
+        key: KeyType,
+    ) -> None:
+        return self._wrapped.unlock(key).result()
+
+    def values(  # type: ignore[override]
+        self,
+        predicate: Predicate = None,
+    ) -> typing.List[ValueType]:
+        return self._wrapped.values(predicate).result()
+
+    def blocking(self) -> "BlockingMap[KeyType, ValueType]":
+        return self
+
+    def destroy(self) -> bool:
+        return self._wrapped.destroy()
+
+    def __repr__(self) -> str:
+        return self._wrapped.__repr__()
 
 
 def create_map_proxy(service_name, name, context):

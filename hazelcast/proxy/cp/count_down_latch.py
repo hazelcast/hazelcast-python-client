@@ -13,7 +13,7 @@ from hazelcast.proxy.cp import BaseCPProxy
 from hazelcast.util import to_millis, check_true, check_is_number, check_is_int
 
 
-class CountDownLatch(BaseCPProxy):
+class CountDownLatch(BaseCPProxy["BlockingCountDownLatch"]):
     """A distributed, concurrent countdown latch data structure.
 
     CountDownLatch is a cluster-wide synchronization aid
@@ -70,7 +70,7 @@ class CountDownLatch(BaseCPProxy):
                 waiting.
         """
         check_is_number(timeout)
-        timeout = max(0, timeout)
+        timeout = max(0.0, timeout)
         invocation_uuid = uuid.uuid4()
         codec = count_down_latch_await_codec
         request = codec.encode_request(
@@ -151,3 +151,46 @@ class CountDownLatch(BaseCPProxy):
             self._group_id, self._object_name, invocation_uuid, expected_round
         )
         return self._invoke(request)
+
+    def blocking(self) -> "BlockingCountDownLatch":
+        return BlockingCountDownLatch(self)
+
+
+class BlockingCountDownLatch(CountDownLatch):
+    __slots__ = ("_wrapped",)
+
+    def __init__(self, wrapped: CountDownLatch):
+        self._wrapped = wrapped
+
+    def await_latch(  # type: ignore[override]
+        self,
+        timeout: float,
+    ) -> bool:
+        return self._wrapped.await_latch(timeout).result()
+
+    def count_down(  # type: ignore[override]
+        self,
+    ) -> None:
+        return self._wrapped.count_down().result()
+
+    def get_count(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.get_count().result()
+
+    def try_set_count(  # type: ignore[override]
+        self,
+        count: int,
+    ) -> bool:
+        return self._wrapped.try_set_count(count).result()
+
+    def destroy(  # type: ignore[override]
+        self,
+    ) -> None:
+        return self._wrapped.destroy().result()
+
+    def blocking(self) -> "BlockingCountDownLatch":
+        return self
+
+    def __repr__(self) -> str:
+        return self._wrapped.__repr__()

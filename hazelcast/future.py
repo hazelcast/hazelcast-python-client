@@ -311,38 +311,3 @@ def combine_futures(futures: typing.Sequence[Future]) -> Future:
         future.add_done_callback(lambda f, captured_index=index: done(f, captured_index))
 
     return combined
-
-
-class _BlockingWrapper:
-    def __init__(self, wrapped):
-        self._wrapped = wrapped
-
-    def __getattr__(self, item):
-        inner = getattr(self._wrapped, item)
-        if callable(inner):
-            return self.wrap(inner)
-        return inner
-
-    def wrap(self, inner):
-        def f(*args, **kwargs):
-            result = inner(*args, **kwargs)
-            if isinstance(result, Future):
-                return result.result()
-            return result
-
-        return f
-
-    def __repr__(self):
-        return self._wrapped.__repr__()
-
-
-def make_blocking(instance):
-    """Takes an instance and returns an object whose methods which return non-blocking Future become blocking calls.
-
-    Args:
-        instance: A non-blocking instance.
-
-    Returns:
-        Blocking version of given non-blocking instance.
-    """
-    return _BlockingWrapper(instance)

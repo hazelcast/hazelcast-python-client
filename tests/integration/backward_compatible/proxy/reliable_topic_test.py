@@ -226,7 +226,7 @@ class ReliableTopicTest(SingleMemberTestCase):
         self.assertEqual(0, len(messages))
 
         # Should be cancelled on message loss
-        self.assertTrueEventually(lambda: self.assertEqual(0, len(topic._runners)))
+        self.assertTrueEventually(lambda: self.assertEqual(0, len(topic._wrapped._runners)))
 
     def test_add_listener_when_on_message_raises_error(self):
         topic = self.get_topic(random_string())
@@ -261,7 +261,7 @@ class ReliableTopicTest(SingleMemberTestCase):
         self.assertTrueEventually(lambda: self.assertEqual(list(range(5)), messages))
 
         # Should be cancelled since on_message raised error
-        self.assertTrueEventually(lambda: self.assertEqual(0, len(topic._runners)))
+        self.assertTrueEventually(lambda: self.assertEqual(0, len(topic._wrapped._runners)))
 
     def test_add_listener_when_on_message_and_is_terminal_raises_error(self):
         topic = self.get_topic(random_string())
@@ -296,7 +296,7 @@ class ReliableTopicTest(SingleMemberTestCase):
         self.assertTrueEventually(lambda: self.assertEqual(list(range(5)), messages))
 
         # Should be cancelled since on_message raised error
-        self.assertTrueEventually(lambda: self.assertEqual(0, len(topic._runners)))
+        self.assertTrueEventually(lambda: self.assertEqual(0, len(topic._wrapped._runners)))
 
     def test_add_listener_with_non_callable(self):
         topic = self.get_topic(random_string())
@@ -525,10 +525,10 @@ class ReliableTopicTest(SingleMemberTestCase):
         )
 
     def get_ringbuffer_data(self, topic):
-        ringbuffer = topic._ringbuffer
+        ringbuffer = topic._wrapped._ringbuffer
         return list(
             map(
-                lambda m: topic._to_object(m.payload),
+                lambda m: topic._wrapped._to_object(m.payload),
                 ringbuffer.read_many(
                     ringbuffer.head_sequence().result(), CAPACITY, CAPACITY
                 ).result(),

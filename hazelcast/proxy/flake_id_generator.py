@@ -9,7 +9,7 @@ from hazelcast.protocol.codec import flake_id_generator_new_id_batch_codec
 from hazelcast.future import ImmediateFuture, Future
 
 
-class FlakeIdGenerator(Proxy):
+class FlakeIdGenerator(Proxy["BlockingFlakeIdGenerator"]):
     """A cluster-wide unique ID generator. Generated IDs are int values and
     are k-ordered (roughly ordered). IDs are in the range from 0 to 2^63 - 1.
 
@@ -69,6 +69,9 @@ class FlakeIdGenerator(Proxy):
         """
         return self._auto_batcher.new_id()
 
+    def blocking(self) -> "BlockingFlakeIdGenerator":
+        return BlockingFlakeIdGenerator(self)
+
     def _new_id_batch(self, batch_size):
         def handler(message):
             response = flake_id_generator_new_id_batch_codec.decode_response(message)
@@ -76,6 +79,29 @@ class FlakeIdGenerator(Proxy):
 
         request = flake_id_generator_new_id_batch_codec.encode_request(self.name, batch_size)
         return self._invoke(request, handler)
+
+
+class BlockingFlakeIdGenerator(FlakeIdGenerator):
+    __slots__ = ("_wrapped", "name", "service_name")
+
+    def __init__(self, wrapped: FlakeIdGenerator):
+        self.name = wrapped.name
+        self.service_name = wrapped.service_name
+        self._wrapped = wrapped
+
+    def new_id(  # type: ignore[override]
+        self,
+    ) -> int:
+        return self._wrapped.new_id().result()
+
+    def destroy(self) -> bool:
+        return self._wrapped.destroy()
+
+    def blocking(self) -> "BlockingFlakeIdGenerator":
+        return self
+
+    def __repr__(self) -> str:
+        return self._wrapped.__repr__()
 
 
 class _AutoBatcher:
