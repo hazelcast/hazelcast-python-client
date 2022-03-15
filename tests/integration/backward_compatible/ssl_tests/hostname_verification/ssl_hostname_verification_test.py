@@ -55,59 +55,67 @@ class SslHostnameVerificationTest(HazelcastTestCase):
 
     def test_hostname_verification_with_loopback_san(self):
         # SAN entry is present with different possible values
-        self.start_member_with("tls-host-loopback-san.p12")
+        file_name = "tls-host-loopback-san"
+        self.start_member_with(f"{file_name}.p12")
 
-        self.start_client_with("tls-host-loopback-san.pem", "127.0.0.1:5701")
-        self.start_client_with("tls-host-loopback-san.pem", "localhost:5701")
+        self.start_client_with(f"{file_name}.pem", "127.0.0.1:5701")
+        self.start_client_with(f"{file_name}.pem", "localhost:5701")
 
     def test_hostname_verification_with_loopback_dns_san(self):
         # SAN entry is present, but only with `dns:localhost`
-        self.start_member_with("tls-host-loopback-san-dns.p12")
-        self.start_client_with("tls-host-loopback-san-dns.pem", "localhost:5701")
+        file_name = "tls-host-loopback-san-dns"
+        self.start_member_with(f"{file_name}.p12")
+
+        self.start_client_with(f"{file_name}.pem", "localhost:5701")
 
         with self.assertRaisesRegex(IllegalStateError, "Unable to connect to any cluster"):
-            self.start_client_with("tls-host-loopback-san-dns.pem", "127.0.0.1:5701")
+            self.start_client_with(f"{file_name}.pem", "127.0.0.1:5701")
 
     def test_hostname_verification_with_different_san(self):
         # There is a valid entry, but it does not match with the address of the member.
-        self.start_member_with("tls-host-not-our-san.p12")
+        file_name = "tls-host-not-our-san"
+        self.start_member_with(f"{file_name}.p12")
 
         with self.assertRaisesRegex(IllegalStateError, "Unable to connect to any cluster"):
-            self.start_client_with("tls-host-not-our-san.pem", "localhost:5701")
+            self.start_client_with(f"{file_name}.pem", "localhost:5701")
 
         with self.assertRaisesRegex(IllegalStateError, "Unable to connect to any cluster"):
-            self.start_client_with("tls-host-loopback-san-dns.pem", "127.0.0.1:5701")
+            self.start_client_with(f"{file_name}.pem", "127.0.0.1:5701")
 
     def test_hostname_verification_with_loopback_cn(self):
         # No entry in SAN but an entry in CN which checked as a fallback
         # when no entry in SAN is present.
-        self.start_member_with("tls-host-loopback-cn.p12")
+        file_name = "tls-host-loopback-cn"
+        self.start_member_with(f"{file_name}.p12")
 
-        self.start_client_with("tls-host-loopback-cn.pem", "localhost:5701")
+        self.start_client_with(f"{file_name}.pem", "localhost:5701")
 
         # See https://stackoverflow.com/a/8444863/12394291. IP addresses in CN
         # are not supported. So, we don't have a test for it.
         with self.assertRaisesRegex(IllegalStateError, "Unable to connect to any cluster"):
-            self.start_client_with("tls-host-loopback-cn.pem", "127.0.0.1:5701")
+            self.start_client_with(f"{file_name}.pem", "127.0.0.1:5701")
 
     def test_hostname_verification_with_no_entry(self):
         # No entry either in the SAN or CN. No way to verify hostname.
-        self.start_member_with("tls-host-no-entry.p12")
+        file_name = "tls-host-no-entry"
+        self.start_member_with(f"{file_name}.p12")
 
         with self.assertRaisesRegex(IllegalStateError, "Unable to connect to any cluster"):
-            self.start_client_with("tls-host-no-entry.pem", "localhost:5701")
+            self.start_client_with(f"{file_name}.pem", "localhost:5701")
 
         with self.assertRaisesRegex(IllegalStateError, "Unable to connect to any cluster"):
-            self.start_client_with("tls-host-no-entry.pem", "127.0.0.1:5701")
+            self.start_client_with(f"{file_name}.pem", "127.0.0.1:5701")
 
     def test_hostname_verification_disabled(self):
         # When hostname verification is disabled, the scenarious that
         # would fail in `test_hostname_verification_with_no_entry` will
         # no longer fail, showing that it is working as expected.
-        self.start_member_with("tls-host-no-entry.p12")
+        file_name = "tls-host-no-entry"
+        self.start_member_with(f"{file_name}.p12")
 
-        self.start_client_with("tls-host-no-entry.pem", "localhost:5701", check_hostname=False)
-        self.start_client_with("tls-host-no-entry.pem", "127.0.0.1:5701", check_hostname=False)
+        self.start_client_with(f"{file_name}.pem", "localhost:5701", check_hostname=False)
+
+        self.start_client_with(f"{file_name}.pem", "127.0.0.1:5701", check_hostname=False)
 
     def start_client_with(
         self,
