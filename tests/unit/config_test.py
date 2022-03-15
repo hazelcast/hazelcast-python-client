@@ -215,6 +215,16 @@ class ConfigTest(unittest.TestCase):
         config.ssl_ciphers = "123"
         self.assertEqual("123", config.ssl_ciphers)
 
+    def test_ssl_check_hostname(self):
+        config = self.config
+        self.assertFalse(config.ssl_check_hostname)
+
+        with self.assertRaises(TypeError):
+            config.ssl_check_hostname = "localhost"
+
+        config.ssl_check_hostname = True
+        self.assertTrue(config.ssl_check_hostname)
+
     def test_cloud_discovery_token(self):
         config = self.config
         self.assertIsNone(config.cloud_discovery_token)

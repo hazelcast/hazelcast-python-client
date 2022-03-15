@@ -117,6 +117,9 @@ class HazelcastClient:
         ssl_ciphers (str): String in the OpenSSL cipher list format to set the
             available ciphers for sockets. More than one cipher can be set by
             separating them with a colon.
+        ssl_check_hostname (bool): When set to ``True``, verifies that the
+            hostname in the member's certificate and the address of the member
+            matches during the handshake. By default, set to ``False``.
         cloud_discovery_token (str): Discovery token of the Hazelcast Cloud cluster.
             When this value is set, Hazelcast Cloud discovery is enabled.
         async_start (bool): Enables non-blocking start mode of the client.

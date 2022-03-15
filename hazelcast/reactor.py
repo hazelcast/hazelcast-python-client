@@ -13,8 +13,9 @@ import time
 from collections import deque
 from functools import total_ordering
 from heapq import heappush, heappop
+from threading import get_ident
 
-from hazelcast.config import SSLProtocol
+from hazelcast.config import SSLProtocol, _Config
 from hazelcast.connection import Connection
 from hazelcast.core import Address
 from hazelcast.errors import HazelcastError
@@ -24,12 +25,6 @@ try:
     import fcntl
 except ImportError:
     fcntl = None
-
-try:
-    from _thread import get_ident
-except ImportError:
-    # Python2
-    from thread import get_ident
 
 _logger = logging.getLogger(__name__)
 
@@ -391,8 +386,9 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         # set the socket timeout to 0 explicitly
         self.socket.settimeout(0)
         self._set_socket_options(config)
+
         if config.ssl_enabled:
-            self._wrap_as_ssl_socket(config)
+            self._wrap_as_ssl_socket(config, address.host)
 
         try:
             self.connect((address.host, address.port))
@@ -533,7 +529,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
             self.socket.setsockopt(level, option_name, value)
 
-    def _wrap_as_ssl_socket(self, config):
+    def _wrap_as_ssl_socket(self, config: _Config, hostname: str):
         ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
 
         protocol = config.ssl_protocol
@@ -570,7 +566,12 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         if config.ssl_ciphers:
             ssl_context.set_ciphers(config.ssl_ciphers)
 
-        self.socket = ssl_context.wrap_socket(self.socket)
+        server_hostname = None
+        if config.ssl_check_hostname:
+            ssl_context.check_hostname = True
+            server_hostname = hostname
+
+        self.socket = ssl_context.wrap_socket(self.socket, server_hostname=server_hostname)
 
     def __repr__(self):
         return "Connection(id=%s, live=%s, remote_address=%s)" % (

@@ -537,6 +537,7 @@ class _Config:
         "_ssl_password",
         "_ssl_protocol",
         "_ssl_ciphers",
+        "_ssl_check_hostname",
         "_cloud_discovery_token",
         "_async_start",
         "_reconnect_mode",
@@ -592,6 +593,7 @@ class _Config:
         self._ssl_password = None
         self._ssl_protocol = SSLProtocol.TLSv1_2
         self._ssl_ciphers = None
+        self._ssl_check_hostname = False
         self._cloud_discovery_token = None
         self._async_start = False
         self._reconnect_mode = ReconnectMode.ON
@@ -794,6 +796,17 @@ class _Config:
             self._ssl_ciphers = value
         else:
             raise TypeError("ssl_ciphers must be a string")
+
+    @property
+    def ssl_check_hostname(self) -> bool:
+        return self._ssl_check_hostname
+
+    @ssl_check_hostname.setter
+    def ssl_check_hostname(self, value: bool) -> None:
+        if isinstance(value, bool):
+            self._ssl_check_hostname = value
+        else:
+            raise TypeError("ssl_check_hostname must be a boolean")
 
     @property
     def cloud_discovery_token(self):
