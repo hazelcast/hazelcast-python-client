@@ -1,4 +1,7 @@
+import logging
 import hazelcast
+
+logging.basicConfig(level=logging.INFO)
 
 client = hazelcast.HazelcastClient(
     # Set up cluster name for authentication

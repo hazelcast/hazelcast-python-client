@@ -1,8 +1,10 @@
+import logging
+import hazelcast
 import pickle
 
-import hazelcast
-
 from hazelcast.serialization.api import StreamSerializer
+
+logging.basicConfig(level=logging.INFO)
 
 
 class ColorGroup:
@@ -12,7 +14,7 @@ class ColorGroup:
         self.colors = colors
 
     def __repr__(self):
-        return "ColorGroup(id=%s, name=%s, colors=%s)" % (self.id, self.name, self.colors)
+        return f"ColorGroup(id={self.id}, name={self.name}, colors={self.colors})"
 
 
 class GlobalSerializer(StreamSerializer):
@@ -38,14 +40,18 @@ class GlobalSerializer(StreamSerializer):
 
 client = hazelcast.HazelcastClient(global_serializer=GlobalSerializer)
 
-group = ColorGroup(id=1, name="Reds", colors=["Crimson", "Red", "Ruby", "Maroon"])
+group = ColorGroup(
+    id=1,
+    name="Reds",
+    colors=["Crimson", "Red", "Ruby", "Maroon"],
+)
 
-my_map = client.get_map("map").blocking()
+colors_map = client.get_map("colors_map").blocking()
 
-my_map.put("group1", group)
+colors_map.put("group1", group)
 
-color_group = my_map.get("group1")
+color_group = colors_map.get("group1")
 
-print("Received:", color_group)
+print(f"Received: {color_group}")
 
 client.shutdown()

@@ -1,6 +1,9 @@
+import logging
 import hazelcast
 
 from hazelcast.serialization.api import Portable
+
+logging.basicConfig(level=logging.INFO)
 
 
 class Customer(Portable):
@@ -31,7 +34,13 @@ class Customer(Portable):
 
 # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
 client = hazelcast.HazelcastClient(
-    portable_factories={Customer.FACTORY_ID: {Customer.CLASS_ID: Customer}}
+    portable_factories={
+        Customer.FACTORY_ID: {
+            Customer.CLASS_ID: Customer,
+        },
+    },
 )
+
 # Customer can be used here
+
 client.shutdown()

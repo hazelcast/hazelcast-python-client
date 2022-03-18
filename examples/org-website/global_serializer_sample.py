@@ -1,6 +1,9 @@
+import logging
 import hazelcast
 
 from hazelcast.serialization.api import StreamSerializer
+
+logging.basicConfig(level=logging.INFO)
 
 
 class GlobalSerializer(StreamSerializer):
@@ -21,5 +24,7 @@ class GlobalSerializer(StreamSerializer):
 
 # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
 client = hazelcast.HazelcastClient(global_serializer=GlobalSerializer)
+
 # GlobalSerializer will serialize/deserialize all non-builtin types
+
 client.shutdown()

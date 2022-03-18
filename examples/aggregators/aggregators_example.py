@@ -1,7 +1,10 @@
+import logging
 import hazelcast
 
 from hazelcast.aggregator import count, number_avg, max_by
 from hazelcast.predicate import less_or_equal
+
+logging.basicConfig(level=logging.INFO)
 
 client = hazelcast.HazelcastClient()
 
@@ -17,15 +20,15 @@ people.put_all(
 )
 
 people_count = people.aggregate(count())
-print("There are %d people." % people_count)
+print(f"There are {people_count} people.")
 
 children_count = people.aggregate(count(), less_or_equal("this", 18))
-print("There are %d children." % children_count)
+print(f"There are {children_count} children.")
 
 average_age = people.aggregate(number_avg())
-print("Average age is %f." % average_age)
+print(f"Average age is {average_age}.")
 
 eldest_person = people.aggregate(max_by("this"))
-print("Eldest person is %s, with the age of %d." % (eldest_person.key, eldest_person.value))
+print(f"Eldest person is {eldest_person.key}, with the age of {eldest_person.value}.")
 
 client.shutdown()

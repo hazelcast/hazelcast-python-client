@@ -1,20 +1,22 @@
+import logging
 import hazelcast
+
+logging.basicConfig(level=logging.INFO)
 
 client = hazelcast.HazelcastClient()
 
-my_set = client.get_set("set")
+names = client.get_set("names").blocking()
 
-my_set.add("Item1")
-my_set.add("Item1")
-my_set.add("Item2")
+names.add("John")
+names.add("Jake")
+names.add("Jade")
 
-found = my_set.contains("Item2").result()
-print("Set contains Item2:", found)
+found = names.contains("Jake")
+print(f"Set contains Jake: {found}")
 
-items = my_set.get_all().result()
-print("Size of set:", len(items))
+items = names.get_all()
+print(f"Size of set: {len(items)}")
 
-print("\nAll Items:")
 for item in items:
     print(item)
 

@@ -1,9 +1,12 @@
+import logging
+import hazelcast
 import random
 
-import hazelcast
 from hazelcast import predicate
 from hazelcast.core import HazelcastJsonValue
 from hazelcast.serialization.api import IdentifiedDataSerializable
+
+logging.basicConfig(level=logging.INFO)
 
 
 class AgeComparator(IdentifiedDataSerializable):
@@ -68,7 +71,7 @@ paging_predicate.next_page()
 print(students.values(paging_predicate))
 
 # This time, we will fetch students with the
-# student_id between 10 to 40 with the page size
+# student_id between 10 and 40 with the page size
 # of 5. We will also make use of the custom comparator
 # and sort the results in descending order of age.
 paging_predicate = predicate.paging(

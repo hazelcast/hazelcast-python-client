@@ -1,5 +1,9 @@
+import logging
 import hazelcast
+
 from hazelcast.serialization.api import Portable
+
+logging.basicConfig(level=logging.INFO)
 
 
 class Customer(Portable):
@@ -25,10 +29,16 @@ class Customer(Portable):
         return 1
 
     def __repr__(self):
-        return "Customer(name=%s, age=%s, is_active=%s)" % (self.name, self.age, self.is_active)
+        return f"Customer(name={self.name}, age={self.age}, is_active={self.is_active})"
 
 
-client = hazelcast.HazelcastClient(portable_factories={1: {1: Customer}})
+client = hazelcast.HazelcastClient(
+    portable_factories={
+        1: {
+            1: Customer,
+        },
+    },
+)
 
 customers = client.get_map("customers").blocking()
 
@@ -40,7 +50,7 @@ customers.set(3, Customer("Joe", 33, True))
 # Create mapping for the customers. This needs to be done only once per map.
 client.sql.execute(
     """
-CREATE MAPPING customers (
+CREATE OR REPLACE MAPPING customers (
     __key INT,
     name VARCHAR,
     age INT,

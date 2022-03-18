@@ -1,7 +1,10 @@
+import logging
 import hazelcast
 
 from hazelcast.core import HazelcastJsonValue
 from hazelcast.predicate import and_, greater, sql
+
+logging.basicConfig(level=logging.INFO)
 
 client = hazelcast.HazelcastClient()
 employees_map = client.get_map("employees").blocking()

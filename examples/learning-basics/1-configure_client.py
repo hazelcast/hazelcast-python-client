@@ -1,4 +1,7 @@
+import logging
 import hazelcast
+
+logging.basicConfig(level=logging.INFO)
 
 # Create a client using the configuration below
 client = hazelcast.HazelcastClient(

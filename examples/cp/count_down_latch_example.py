@@ -1,18 +1,24 @@
+import logging
 import hazelcast
+
+logging.basicConfig(level=logging.INFO)
 
 client = hazelcast.HazelcastClient()
 
-latch = client.cp_subsystem.get_count_down_latch("my-latch")
-initialized = latch.try_set_count(3).result()
-print("Initialized:", initialized)
-count = latch.get_count().result()
-print("Count:", count)
+latch = client.cp_subsystem.get_count_down_latch("my-latch").blocking()
 
-latch.await_latch(10).add_done_callback(lambda f: print("Result of await:", f.result()))
+initial_count = latch.try_set_count(3)
+print(f"Initialized with: {initial_count}")
+
+count = latch.get_count()
+print(f"Count: {count}")
+
+await_result = latch.await_latch(10)
+print(f"Result of await: {await_result}")
 
 for _ in range(3):
-    latch.count_down().result()
-    count = latch.get_count().result()
+    latch.count_down()
+    count = latch.get_count()
     print("Current count:", count)
 
 client.shutdown()

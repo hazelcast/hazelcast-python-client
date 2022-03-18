@@ -1,6 +1,9 @@
+import logging
 import hazelcast
 
 from hazelcast.serialization.api import IdentifiedDataSerializable
+
+logging.basicConfig(level=logging.INFO)
 
 
 # Entry Processor must be implemented on the server side
@@ -23,14 +26,14 @@ class EntryProcessor(IdentifiedDataSerializable):
 
 client = hazelcast.HazelcastClient()
 
-my_map = client.get_map("processor-map")
+processor_map = client.get_map("processor_map").blocking()
 
-my_map.put("test_key", 0)
+processor_map.put("test_key", 0)
 
 # Entry Processor should be implemented on the server side
-my_map.execute_on_key("test_key", EntryProcessor())
+processor_map.execute_on_key("test_key", EntryProcessor())
 
-value = my_map.get("test_key").result()
+value = processor_map.get("test_key")
 print(value)
 
 client.shutdown()

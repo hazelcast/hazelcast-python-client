@@ -1,18 +1,26 @@
+import logging
 import hazelcast
+
+logging.basicConfig(level=logging.INFO)
 
 # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
 client = hazelcast.HazelcastClient()
+
 # Get the Distributed List from Cluster.
-my_list = client.get_list("my-distributed-list").blocking()
+distributed_list = client.get_list("distributed_list").blocking()
+
 # Add element to the list
-my_list.add("item1")
-my_list.add("item2")
+distributed_list.add("item1")
+distributed_list.add("item2")
 
 # Remove the first element
-print("Removed:", my_list.remove_at(0))
+print(f"Removed: {distributed_list.remove_at(0)}")
+
 # There is only one element left
-print("Current size is", my_list.size())
+print(f"Current size is {distributed_list.size()}")
+
 # Clear the list
-my_list.clear()
+distributed_list.clear()
+
 # Shutdown this Hazelcast Client
 client.shutdown()

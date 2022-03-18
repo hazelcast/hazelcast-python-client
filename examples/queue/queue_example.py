@@ -1,21 +1,24 @@
+import logging
 import hazelcast
 import threading
 
+logging.basicConfig(level=logging.INFO)
+
 client = hazelcast.HazelcastClient()
 
-queue = client.get_queue("queue")
+queue = client.get_queue("queue").blocking()
 
 
 def produce():
     for i in range(100):
-        queue.offer("value-" + str(i))
+        queue.offer(f"value-{i}")
 
 
 def consume():
     consumed_count = 0
     while consumed_count < 100:
-        head = queue.take().result()
-        print("Consuming {}".format(head))
+        head = queue.take()
+        print(f"Consuming {head}")
         consumed_count += 1
 
 

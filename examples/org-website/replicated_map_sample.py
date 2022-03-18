@@ -1,16 +1,24 @@
+import logging
 import hazelcast
+
+logging.basicConfig(level=logging.INFO)
 
 # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
 client = hazelcast.HazelcastClient()
-# Get a Replicated Map called "my-replicated-map"
-rmap = client.get_replicated_map("my-replicated-map").blocking()
+
+# Get a Replicated Map called "replicated_map"
+replicated_map = client.get_replicated_map("replicated_map").blocking()
+
 # Put and Get a value from the Replicated Map
-replaced_value = rmap.put("key", "value")
 # key/value replicated to all members
-print("replaced value =", replaced_value)
+replaced_value = replicated_map.put("key", "value")
+
 # Will be None as its first update
-value = rmap.get("key")
+print(f"replaced value = {replaced_value}")
+
 # the value is retrieved from a random member in the cluster
-print("value for key =", value)
+value = replicated_map.get("key")
+print(f"value for key = {value}")
+
 # Shutdown this Hazelcast Client
 client.shutdown()

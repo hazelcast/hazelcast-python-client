@@ -1,6 +1,9 @@
+import logging
 import hazelcast
 
 from hazelcast.serialization.api import Portable
+
+logging.basicConfig(level=logging.INFO)
 
 
 class MessagePrinter(Portable):
@@ -25,15 +28,21 @@ class MessagePrinter(Portable):
 
 # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
 client = hazelcast.HazelcastClient()
+
 # Get the Distributed Executor Service
-ex = client.get_executor("my-distributed-executor")
-# Get the an Hazelcast Cluster Member
+ex = client.get_executor("my-distributed-executor").blocking()
+
+# Get the Hazelcast Cluster Member
 member = client.cluster_service.get_members()[0]
+
 # Submit the MessagePrinter Runnable to the first Hazelcast Cluster Member
 ex.execute_on_member(member, MessagePrinter("message to very first member of the cluster"))
+
 # Submit the MessagePrinter Runnable to all Hazelcast Cluster Members
 ex.execute_on_all_members(MessagePrinter("message to all members in the cluster"))
+
 # Submit the MessagePrinter Runnable to the Hazelcast Cluster Member owning the key called "key"
 ex.execute_on_key_owner("key", MessagePrinter("message to the member that owns the following key"))
+
 # Shutdown this Hazelcast Client
 client.shutdown()

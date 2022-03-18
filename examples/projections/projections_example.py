@@ -1,8 +1,11 @@
+import logging
 import hazelcast
 
 from hazelcast.core import HazelcastJsonValue
 from hazelcast.predicate import less_or_equal
 from hazelcast.projection import single_attribute, multi_attribute
+
+logging.basicConfig(level=logging.INFO)
 
 client = hazelcast.HazelcastClient()
 
@@ -18,12 +21,12 @@ people.put_all(
 )
 
 names = people.project(single_attribute("name"))
-print("Names of the people are %s." % names)
+print(f"Names of the people are {names}.")
 
 children_names = people.project(single_attribute("name"), less_or_equal("age", 18))
-print("Names of the children are %s." % children_names)
+print(f"Names of the children are {children_names}.")
 
 names_and_ages = people.project(multi_attribute("name", "age"))
-print("Names and ages of the people are %s." % names_and_ages)
+print(f"Names and ages of the people are {names_and_ages}.")
 
 client.shutdown()

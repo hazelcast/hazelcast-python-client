@@ -1,8 +1,11 @@
-import time
+import logging
 import hazelcast
+import time
 
 from hazelcast.serialization.api import Portable
 from hazelcast.predicate import sql
+
+logging.basicConfig(level=logging.INFO)
 
 
 class Employee(Portable):
@@ -28,35 +31,33 @@ class Employee(Portable):
         return self.CLASS_ID
 
     def __str__(self):
-        return "Employee(name:%s, age:%s)" % (self.name, self.age)
+        return f"Employee(name={self.name}, age={self.age})"
 
     def __eq__(self, other):
         return isinstance(other, Employee) and self.name == other.name and self.age == other.age
 
 
 client = hazelcast.HazelcastClient(
-    portable_factories={Employee.FACTORY_ID: {Employee.CLASS_ID: Employee}}
+    portable_factories={
+        Employee.FACTORY_ID: {
+            Employee.CLASS_ID: Employee,
+        },
+    },
 )
 
-my_map = client.get_map("employee-map")
+employee_map = client.get_map("employee_map").blocking()
 
-my_map.put(0, Employee("Jack", 28))
-my_map.put(1, Employee("Jane", 29))
-my_map.put(2, Employee("Joe", 30))
+employee_map.put(0, Employee("Jack", 28))
+employee_map.put(1, Employee("Jane", 29))
+employee_map.put(2, Employee("Joe", 30))
 
-print("Map Size:", my_map.size().result())
+map_size = employee_map.size()
+print(f"Map Size: {map_size}")
 
 predicate = sql("age <= 29")
 
+values = employee_map.values(predicate)
+for value in values:
+    print(f"Value: {value}")
 
-def values_callback(f):
-    result_set = f.result()
-    print("Query Result Size:", len(result_set))
-    for value in result_set:
-        print("Value:", value)
-
-
-my_map.values(predicate).add_done_callback(values_callback)
-
-time.sleep(3)
 client.shutdown()

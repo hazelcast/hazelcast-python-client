@@ -1,21 +1,33 @@
+import logging
 import hazelcast
+
+logging.basicConfig(level=logging.INFO)
 
 client = hazelcast.HazelcastClient()
 
-my_list = client.get_list("cities-list")
+cities = client.get_list("cities").blocking()
 
-my_list.add("Tokyo")
-my_list.add("Paris")
-my_list.add("London")
-my_list.add("New York")
-my_list.add("Istanbul")
+cities.add("Tokyo")
+cities.add("Paris")
+cities.add("London")
+cities.add("New York")
+cities.add("Istanbul")
 
-print("List size: {}".format(my_list.size().result()))
-print("First element: {}".format(my_list.get(0).result()))
-print("Contains Istanbul: {}".format(my_list.contains("Istanbul").result()))
-print("Sublist: {}".format(my_list.sub_list(3, 5).result()))
+list_size = cities.size()
+print(f"List size: {list_size}")
 
-my_list.remove("Tokyo")
-print("Final size: {}".format(my_list.size().result()))
+first_element = cities.get(0)
+print(f"First element: {first_element}")
+
+contains_istanbul = cities.contains("Istanbul")
+print(f"Contains Istanbul: {contains_istanbul}")
+
+sublist = cities.sub_list(3, 5)
+print(f"Sublist: {sublist}")
+
+cities.remove("Tokyo")
+
+final_size = cities.size()
+print(f"Final size: {final_size}")
 
 client.shutdown()

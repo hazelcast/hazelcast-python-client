@@ -1,14 +1,21 @@
+import logging
 import hazelcast
 
-
-def distributed_object_listener(event):
-    print("Distributed object event >>>", event.name, event.service_name, event.event_type)
-
+logging.basicConfig(level=logging.INFO)
 
 client = hazelcast.HazelcastClient()
 
+
+def listener(event):
+    print(
+        f"Name: {event.name}, "
+        f"Service name: {event.service_name}, "
+        f"Event type: {event.event_type}"
+    )
+
+
 # Register the listener
-reg_id = client.add_distributed_object_listener(distributed_object_listener).result()
+reg_id = client.add_distributed_object_listener(listener).result()
 
 map_name = "test_map"
 

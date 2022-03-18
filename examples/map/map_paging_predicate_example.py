@@ -1,6 +1,10 @@
+import logging
 import hazelcast
+
 from hazelcast.serialization.api import IdentifiedDataSerializable
 from hazelcast.predicate import paging, true
+
+logging.basicConfig(level=logging.INFO)
 
 client = hazelcast.HazelcastClient()
 
@@ -19,7 +23,7 @@ m1.put_all(
 )
 
 size = m1.size()
-print("Added %s elements" % size)
+print(f"Added {size} elements")
 
 # When using paging predicate without a comparator,
 # server sorts the entries according to their default
@@ -30,8 +34,10 @@ predicate = paging(true(), 2)  # Get all values with page size of 2
 # Prints pages of size 2 in the [1, 2], [3, 4], [5, 6], [7] order
 for i in range(4):
     values = m1.values(predicate)
-    print("Page %s:%s" % (i, values))
-    predicate.next_page()  # Call next_page on predicate to get the next page on the next iteration
+    print(f"Page {i}:{values}")
+
+    # Call next_page on predicate to get the next page on the next iteration
+    predicate.next_page()
 
 
 # If you want to sort results differently, you have to use

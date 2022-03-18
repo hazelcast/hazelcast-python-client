@@ -1,18 +1,27 @@
+import logging
 import hazelcast
+
+logging.basicConfig(level=logging.INFO)
 
 # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
 client = hazelcast.HazelcastClient()
-# Get a Blocking Queue called "my-distributed-queue"
-queue = client.get_queue("my-distributed-queue").blocking()
+
+# Get a Blocking Queue called "distributed_queue"
+distributed_queue = client.get_queue("distributed_queue").blocking()
+
 # Offer a String into the Distributed Queue
-queue.offer("item")
+distributed_queue.offer("item")
+
 # Poll the Distributed Queue and return the String
-item = queue.poll()
+item = distributed_queue.poll()
+
 # Timed blocking Operations
-queue.offer("anotheritem", 0.5)
-another_item = queue.poll(5)
+distributed_queue.offer("another item", 0.5)
+another_item = distributed_queue.poll(5)
+
 # Indefinitely blocking Operations
-queue.put("yetanotheritem")
-print(queue.take())
+distributed_queue.put("yet another item")
+print(distributed_queue.take())
+
 # Shutdown this Hazelcast Client
 client.shutdown()

@@ -1,7 +1,11 @@
+import logging
 import hazelcast
+
 from hazelcast.config import SSLProtocol
 
-# Hazelcast server should be started with SSL enabled to use SSLConfig
+logging.basicConfig(level=logging.INFO)
+
+# Hazelcast server should be started with SSL enabled
 
 # Start a new Hazelcast client with SSL configuration.
 client = hazelcast.HazelcastClient(
@@ -14,9 +18,9 @@ client = hazelcast.HazelcastClient(
     ssl_protocol=SSLProtocol.TLSv1_3,
 )
 
-hz_map = client.get_map("ssl-map").blocking()
-hz_map.put("key", "value")
+ssl_map = client.get_map("ssl_map").blocking()
+ssl_map.put("key", "value")
 
-print(hz_map.get("key"))
+print(ssl_map.get("key"))
 
 client.shutdown()

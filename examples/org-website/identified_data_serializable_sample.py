@@ -1,6 +1,9 @@
+import logging
 import hazelcast
 
 from hazelcast.serialization.api import IdentifiedDataSerializable
+
+logging.basicConfig(level=logging.INFO)
 
 
 class Employee(IdentifiedDataSerializable):
@@ -28,7 +31,13 @@ class Employee(IdentifiedDataSerializable):
 
 # Start the Hazelcast Client and connect to an already running Hazelcast Cluster on 127.0.0.1
 client = hazelcast.HazelcastClient(
-    data_serializable_factories={Employee.FACTORY_ID: {Employee.CLASS_ID: Employee}}
+    data_serializable_factories={
+        Employee.FACTORY_ID: {
+            Employee.CLASS_ID: Employee,
+        },
+    },
 )
+
 # Employee can be used here
+
 client.shutdown()

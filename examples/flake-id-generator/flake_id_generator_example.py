@@ -1,4 +1,7 @@
+import logging
 import hazelcast
+
+logging.basicConfig(level=logging.INFO)
 
 client = hazelcast.HazelcastClient(
     flake_id_generators={
@@ -12,6 +15,6 @@ client = hazelcast.HazelcastClient(
 generator = client.get_flake_id_generator("id-generator").blocking()
 
 for _ in range(100):
-    print("Id:", generator.new_id())
+    print(f"Id: {generator.new_id()}")
 
 client.shutdown()

@@ -1,6 +1,9 @@
+import logging
 import hazelcast
 
 from hazelcast.serialization.api import Portable
+
+logging.basicConfig(level=logging.INFO)
 
 
 class Engineer(Portable):
@@ -29,21 +32,28 @@ class Engineer(Portable):
         return self.CLASS_ID
 
     def __repr__(self):
-        return "Engineer(name=%s, age=%s, languages=%s)" % (self.name, self.age, self.languages)
+        return f"Engineer(name={self.name}, age={self.age}, languages={self.languages})"
 
 
 client = hazelcast.HazelcastClient(
-    portable_factories={Engineer.FACTORY_ID: {Engineer.CLASS_ID: Engineer}}
+    portable_factories={
+        Engineer.FACTORY_ID: {
+            Engineer.CLASS_ID: Engineer,
+        },
+    },
 )
 
-my_map = client.get_map("map")
+engineers = client.get_map("engineers").blocking()
 
-engineer = Engineer("John Doe", 30, ["Python", "Java", "C#", "C++", "Node.js", "Go"])
+engineer = Engineer(
+    "John Doe",
+    30,
+    ["Python", "Java", "C#", "C++", "Node.js", "Go"],
+)
 
-my_map.put("engineer1", engineer)
+engineers.put("engineer1", engineer)
 
-returned_engineer = my_map.get("engineer1").result()
-
-print("Received", returned_engineer)
+returned_engineer = engineers.get("engineer1")
+print(f"Received {returned_engineer}")
 
 client.shutdown()

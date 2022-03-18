@@ -1,23 +1,23 @@
+import logging
 import hazelcast
+
+logging.basicConfig(level=logging.INFO)
 
 client = hazelcast.HazelcastClient()
 
-my_map = client.get_map("my-map")
+capitals = client.get_map("capitals").blocking()
 
 # Fill the map
-my_map.put("1", "Tokyo")
-my_map.put("2", "Paris")
-my_map.put("3", "Istanbul")
+capitals.put("1", "Tokyo")
+capitals.put("2", "Paris")
+capitals.put("3", "Ankara")
 
-print("Entry with key 3:", my_map.get("3").result())
+print(f"Entry with key 3: {capitals.get('3')}")
 
-print("Map size:", my_map.size().result())
+print(f"Map size: {capitals.size()}")
 
 # Print the map
-print("\nIterating over the map: \n")
-
-entries = my_map.entry_set().result()
-for key, value in entries:
-    print("%s -> %s" % (key, value))
+for key, value in capitals.entry_set():
+    print(f"{key} -> {value}")
 
 client.shutdown()

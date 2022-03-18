@@ -1,6 +1,9 @@
+import logging
 import hazelcast
 
 from hazelcast.serialization.api import StreamSerializer
+
+logging.basicConfig(level=logging.INFO)
 
 
 class TimeOfDay:
@@ -10,7 +13,7 @@ class TimeOfDay:
         self.second = second
 
     def __repr__(self):
-        return "TimeOfDay(hour=%s, minute=%s, second=%s)" % (self.hour, self.minute, self.second)
+        return f"TimeOfDay(hour={self.hour}, minute={self.minute}, second={self.second})"
 
 
 class CustomSerializer(StreamSerializer):
@@ -36,13 +39,18 @@ class CustomSerializer(StreamSerializer):
         pass
 
 
-client = hazelcast.HazelcastClient(custom_serializers={TimeOfDay: CustomSerializer})
+client = hazelcast.HazelcastClient(
+    custom_serializers={
+        TimeOfDay: CustomSerializer,
+    },
+)
 
-my_map = client.get_map("map").blocking()
+time_map = client.get_map("time_map").blocking()
+
 time_of_day = TimeOfDay(13, 36, 59)
-my_map.put("time", time_of_day)
+time_map.put("time", time_of_day)
 
-time = my_map.get("time")
+time = time_map.get("time")
 print("Time is", time)
 
 client.shutdown()

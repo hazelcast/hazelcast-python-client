@@ -1,19 +1,21 @@
+import logging
 import hazelcast
-import time
 
-
-def on_message(event):
-    print("Got message:", event.message)
-    print("Publish time:", event.publish_time)
-
+logging.basicConfig(level=logging.INFO)
 
 client = hazelcast.HazelcastClient()
 
 topic = client.get_topic("topic").blocking()
+
+
+def on_message(event):
+    print(f"Got message: {event.message}")
+    print(f"Publish time: {event.publish_time}")
+
+
 topic.add_listener(on_message)
 
 for i in range(10):
-    topic.publish("Message " + str(i))
-    time.sleep(0.1)
+    topic.publish(f"Message {i}")
 
 client.shutdown()

@@ -1,6 +1,9 @@
+import logging
 import hazelcast
 
 from hazelcast.serialization.api import IdentifiedDataSerializable
+
+logging.basicConfig(level=logging.INFO)
 
 
 class Student(IdentifiedDataSerializable):
@@ -29,21 +32,24 @@ class Student(IdentifiedDataSerializable):
         return self.CLASS_ID
 
     def __repr__(self):
-        return "Student(id=%s, name=%s, gpa=%s)" % (self.id, self.name, self.gpa)
+        return f"Student(id={self.id}, name={self.name}, gpa={self.gpa})"
 
 
 client = hazelcast.HazelcastClient(
-    data_serializable_factories={Student.FACTORY_ID: {Student.CLASS_ID: Student}}
+    data_serializable_factories={
+        Student.FACTORY_ID: {
+            Student.CLASS_ID: Student,
+        },
+    },
 )
 
-my_map = client.get_map("map")
+students = client.get_map("students").blocking()
 
 student = Student(1, "John Doe", 3.0)
 
-my_map.put("student1", student)
+students.put("student1", student)
 
-returned_student = my_map.get("student1").result()
-
-print("Received:", returned_student)
+returned_student = students.get("student1")
+print(f"Received: {returned_student}")
 
 client.shutdown()

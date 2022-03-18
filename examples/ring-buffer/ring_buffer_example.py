@@ -1,14 +1,18 @@
+import logging
 import hazelcast
+
+logging.basicConfig(level=logging.INFO)
 
 client = hazelcast.HazelcastClient()
 
-rb = client.get_ringbuffer("ring-buffer").blocking()
-print("Capacity of the ring buffer:", rb.capacity())
+ringbuffer = client.get_ringbuffer("ringbuffer").blocking()
 
-sequence = rb.add("First item")
-print("Size:", rb.size())
+print(f"Capacity of the ring buffer: {ringbuffer.capacity()}")
 
-item = rb.read_one(sequence)
-print("The item at the sequence %s is %s" % (sequence, item))
+sequence = ringbuffer.add("First item")
+print(f"Size: {ringbuffer.size()}")
+
+item = ringbuffer.read_one(sequence)
+print(f"The item at the sequence {sequence} is {item}")
 
 client.shutdown()

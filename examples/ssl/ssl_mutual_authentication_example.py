@@ -1,13 +1,17 @@
+import logging
 import hazelcast
+
 from hazelcast.config import SSLProtocol
 
-# To use SSLConfig with mutual authentication, Hazelcast server should be started with
-# SSL and mutual authentication enabled
+logging.basicConfig(level=logging.INFO)
+
+# To use SSLConfig with mutual authentication, Hazelcast server should be
+# started with SSL and mutual authentication enabled
 
 # Start a new Hazelcast client with SSL configuration.
 client = hazelcast.HazelcastClient(
     cluster_members=["foo.bar.com:8888"],
-    ssl_enable=True,
+    ssl_enabled=True,
     # Absolute paths of PEM files must be given
     ssl_cafile="/path/of/server.pem",
     ssl_certfile="/path/of/client.pem",
@@ -21,9 +25,9 @@ client = hazelcast.HazelcastClient(
     ssl_check_hostname=True,
 )
 
-hz_map = client.get_map("ssl-map").blocking()
-hz_map.put("key", "value")
+ssl_map = client.get_map("ssl_map").blocking()
+ssl_map.put("key", "value")
 
-print(hz_map.get("key"))
+print(ssl_map.get("key"))
 
 client.shutdown()

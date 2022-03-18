@@ -1,34 +1,40 @@
+import logging
+import hazelcast
 import time
 
-import hazelcast
+logging.basicConfig(level=logging.INFO)
+
+client = hazelcast.HazelcastClient()
+
+listener_map = client.get_map("listener_map").blocking()
 
 
 def entry_added(event):
-    print("Entry added with key: %s, value: %s" % (event.key, event.value))
+    print(f"Entry added with key: {event.key}, value: {event.value}")
 
 
 def entry_removed(event):
-    print("Entry removed with key:", event.key)
+    print(f"Entry removed with key: {event.key}")
 
 
 def entry_updated(event):
     print(
-        "Entry updated with key: %s, old value: %s, new value: %s"
-        % (event.key, event.old_value, event.value)
+        f"Entry updated with key: {event.key}, "
+        f"old value: {event.old_value}, "
+        f"new value: {event.value}"
     )
 
 
-client = hazelcast.HazelcastClient()
-
-my_map = client.get_map("listener-map").blocking()
-
-my_map.add_entry_listener(
-    True, added_func=entry_added, removed_func=entry_removed, updated_func=entry_updated
+listener_map.add_entry_listener(
+    include_value=True,
+    added_func=entry_added,
+    removed_func=entry_removed,
+    updated_func=entry_updated,
 )
 
-my_map.put("key", "value")
-my_map.put("key", "new value")
-my_map.remove("key")
+listener_map.put("key", "value")
+listener_map.put("key", "new value")
+listener_map.remove("key")
 
 time.sleep(3)
 
