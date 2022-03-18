@@ -1598,7 +1598,7 @@ objects and queries it using nested fields, which is not possible with the
 
     client.sql.execute(
         """
-    CREATE MAPPING IF NOT EXISTS json_employees
+    CREATE OR REPLACE MAPPING json_employees
     TYPE IMap
     OPTIONS (
         'keyFormat' = 'int',
@@ -1679,7 +1679,7 @@ top-level fields:
 
     client.sql.execute(
         """
-    CREATE MAPPING IF NOT EXISTS json_flat_employees (
+    CREATE OR REPLACE MAPPING json_flat_employees (
         __key INT,
         name VARCHAR,
         salary INT

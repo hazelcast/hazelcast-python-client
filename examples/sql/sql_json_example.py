@@ -13,7 +13,7 @@ employees.put(2, HazelcastJsonValue('{"name": "Jake", "age": 18}'))
 # Create mapping for the employees map. This needs to be done only once per map.
 client.sql.execute(
     """
-CREATE MAPPING IF NOT EXISTS employees
+CREATE OR REPLACE MAPPING employees
 TYPE IMap
 OPTIONS (
     'keyFormat' = 'int',
@@ -27,6 +27,7 @@ result = client.sql.execute(
     """
 SELECT JSON_VALUE(this, '$.name') AS name
 FROM employees
+WHERE JSON_VALUE(this, '$.age' RETURNING INT) > 25
     """
 ).result()
 
