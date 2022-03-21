@@ -13,6 +13,10 @@ from hazelcast.serialization import (
     LONG_SIZE_IN_BYTES,
     FLOAT_SIZE_IN_BYTES,
     DOUBLE_SIZE_IN_BYTES,
+    MAX_BYTE,
+    MIN_BYTE,
+    MAX_SHORT,
+    MIN_SHORT,
 )
 from hazelcast.serialization.api import (
     CompactSerializer,
@@ -1305,7 +1309,7 @@ class DefaultCompactReader(CompactReader):
         field = self._schema.fields.get(field_name)
         if not field:
             raise HazelcastSerializationError(
-                f"No field with the name '{field_name}' can found in the {self._schema}"
+                f"No field with the name '{field_name}' can be found in the {self._schema}"
             )
 
         return field
@@ -1423,15 +1427,7 @@ class DefaultCompactReader(CompactReader):
             for i in range(item_count):
                 item_position = position_reader.read(inp, item_positions_position, i)
                 if item_position == PositionReader.NULL_POSITION:
-                    method_suffix = field.kind.name.lower()
-                    nullable_method_suffix_parts = method_suffix.split("_", 2)  # array_of_something
-                    nullable_method_suffix_parts.insert(2, "nullable")
-                    nullable_method_suffix = "_".join(nullable_method_suffix_parts)
-                    raise HazelcastSerializationError(
-                        f"Error while reading '{field.name}'."
-                        f"A `None` item cannot be read with `read_{method_suffix}` method."
-                        f"Use 'read_{nullable_method_suffix}' method instead."
-                    )
+                    self._raise_on_none_value_in_fix_sized_item_array(field)
 
             inp.set_position(data_start_position - INT_SIZE_IN_BYTES)
             return reader()
@@ -1523,6 +1519,18 @@ class DefaultCompactReader(CompactReader):
 
     def _read_compact_helper(self) -> typing.Any:
         return self._compact_serializer.read(self._inp)
+
+    @staticmethod
+    def _raise_on_none_value_in_fix_sized_item_array(field: "FieldDescriptor") -> typing.NoReturn:
+        method_suffix = field.kind.name.lower()
+        nullable_method_suffix_parts = method_suffix.split("_", 2)  # array_of_something
+        nullable_method_suffix_parts.insert(2, "nullable")
+        nullable_method_suffix = "_".join(nullable_method_suffix_parts)
+        raise HazelcastSerializationError(
+            f"Error while reading '{field.name}'."
+            f"A `None` item cannot be read with `read_{method_suffix}` method."
+            f"Use 'read_{nullable_method_suffix}' method instead."
+        )
 
 
 class SchemaWriter(CompactWriter):
@@ -1902,12 +1910,12 @@ class PositionReader(abc.ABC):
     NULL_POSITION = -1
     """Position of the null fields."""
 
-    UINT8_POSITION_READER_RANGE = 255
+    UINT8_POSITION_READER_RANGE = MAX_BYTE - MIN_BYTE
     """Range of the positions that can be represented by a single byte and can
     be read with :class:`UInt8PositionReader`.
     """
 
-    UINT16_POSITION_READER_RANGE = 65535
+    UINT16_POSITION_READER_RANGE = MAX_SHORT - MIN_SHORT
     """Range of the positions that can be represented by two bytes and can be
     read with :class:`UInt16PositionReader`.
     """
