@@ -222,7 +222,8 @@ class _ObjectDataOutput(ObjectDataOutput):
                 item_write_fnc(item)
 
     def _ensure_available(self, length):
-        if (len(self._buffer) - self._pos) >= length:
+        available = len(self._buffer) - self._pos
+        if available >= length:
             return
 
         buffer_length = len(self._buffer)

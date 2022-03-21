@@ -1,7 +1,6 @@
 import logging
 import time
 import functools
-import typing
 
 from hazelcast.errors import (
     create_error_from_message,
@@ -14,16 +13,11 @@ from hazelcast.errors import (
     IndeterminateOperationStateError,
     OperationTimeoutError,
 )
-from hazelcast.future import Future, ImmediateFuture
+from hazelcast.future import Future
 from hazelcast.protocol.client_message import InboundMessage
-from hazelcast.protocol.codec import (
-    client_local_backup_listener_codec,
-    client_fetch_schema_codec,
-    client_send_schema_codec,
-    client_send_all_schemas_codec,
-)
+from hazelcast.protocol.codec import client_local_backup_listener_codec
 from hazelcast.util import AtomicInteger
-from hazelcast.serialization.compact import CompactStreamSerializer, Schema, SchemaNotFoundError
+from hazelcast.serialization.compact import SchemaNotFoundError
 
 _logger = logging.getLogger(__name__)
 
@@ -270,10 +264,12 @@ class InvocationService:
     def _fetch_schema_and_complete_again(
         self, error: SchemaNotFoundError, invocation: Invocation, message: InboundMessage
     ) -> None:
+        schema_id = error.schema_id
+
         def callback(future):
             try:
                 schema = future.result()
-                self._compact_schema_service.register_fetched_schema(schema)
+                self._compact_schema_service.register_fetched_schema(schema_id, schema)
             except Exception as e:
                 self._complete_with_error(invocation, e)
                 return
@@ -281,7 +277,7 @@ class InvocationService:
             message.reset_next_frame()
             self._complete(invocation, message)
 
-        fetch_schema_future = self._compact_schema_service.fetch_schema(error.schema_id)
+        fetch_schema_future = self._compact_schema_service.fetch_schema(schema_id)
         fetch_schema_future.add_done_callback(callback)
 
     def _notify_error(self, invocation, error):
@@ -409,49 +405,3 @@ class InvocationService:
             return
 
         self._complete(invocation, invocation.pending_response)
-
-
-class CompactSchemaService:
-    def __init__(
-        self,
-        compact_serializer: CompactStreamSerializer,
-        invocation_service: InvocationService,
-    ):
-        self._compact_serializer = compact_serializer
-        self._invocation_service = invocation_service
-
-    def fetch_schema(self, schema_id: int) -> Future:
-        request = client_fetch_schema_codec.encode_request(schema_id)
-        fetch_schema_invocation = Invocation(
-            request,
-            response_handler=client_fetch_schema_codec.decode_response,
-        )
-        self._invocation_service.invoke(fetch_schema_invocation)
-        return fetch_schema_invocation.future
-
-    def send_schema(self, schema: Schema, clazz: typing.Type) -> Future:
-        request = client_send_schema_codec.encode_request(schema)
-        invocation = Invocation(request)
-
-        def continuation(future):
-            future.result()
-            self._compact_serializer.register_sent_schema(schema, clazz)
-
-        self._invocation_service.invoke(invocation)
-        return invocation.future.continue_with(continuation)
-
-    def send_all_schemas(self) -> Future:
-        schemas = self._compact_serializer.get_sent_schemas()
-        if not schemas:
-            _logger.debug("There is no schema to send to the cluster.")
-            return ImmediateFuture(None)
-
-        _logger.debug("Sending the following schemas to the cluster: %s", schemas)
-
-        request = client_send_all_schemas_codec.encode_request(schemas)
-        invocation = Invocation(request, urgent=True)
-        self._invocation_service.invoke(invocation)
-        return invocation.future
-
-    def register_fetched_schema(self, schema: Schema) -> None:
-        self._compact_serializer.register_fetched_schema(schema)

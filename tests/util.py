@@ -1,3 +1,4 @@
+import math
 import os
 import time
 
@@ -157,16 +158,12 @@ class LoggingContext:
         self.logger.setLevel(self.old_level)
 
 
-def _almost_equal(a, b):
-    return abs(a - b) <= max(1e-04 * max(abs(a), abs(b)), 0.0)
-
-
 def is_equal(a, b):
     if type(a) != type(b):
         return False
 
     if isinstance(a, float):
-        return _almost_equal(a, b)
+        return math.isclose(a, b, rel_tol=1e-04)
 
     if isinstance(a, list):
         n = len(a)

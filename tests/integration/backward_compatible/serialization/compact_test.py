@@ -14,33 +14,14 @@ from hazelcast.serialization.api import (
     CompactSerializer,
     CompactReader,
     CompactWriter,
-    FieldKind,
 )
-from hazelcast.serialization.compact import FIELD_OPERATIONS
+from hazelcast.serialization.compact import FIELD_OPERATIONS, FieldKind
 from hazelcast.util import AtomicInteger
 from tests.base import HazelcastTestCase
 from tests.util import is_equal, random_string
 
 
-def get_field_kinds_supported_by_compact() -> typing.List[FieldKind]:
-    field_kinds = {kind for kind in FieldKind}
-
-    for unsupported_kind in [
-        FieldKind.CHAR,
-        FieldKind.ARRAY_OF_CHAR,
-        FieldKind.PORTABLE,
-        FieldKind.ARRAY_OF_PORTABLE,
-    ]:
-        field_kinds.remove(unsupported_kind)
-
-    kinds = list(field_kinds)
-    kinds.sort(key=lambda k: k.value)
-    return kinds
-
-
-FIELD_KINDS = get_field_kinds_supported_by_compact()
-
-
+FIELD_KINDS = [kind for kind in FieldKind]
 FIX_SIZED_FIELD_KINDS = [kind for kind in FIELD_KINDS if not FIELD_OPERATIONS[kind].is_var_sized()]
 VAR_SIZED_FIELD_KINDS = [kind for kind in FIELD_KINDS if FIELD_OPERATIONS[kind].is_var_sized()]
 

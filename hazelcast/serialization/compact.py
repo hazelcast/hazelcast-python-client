@@ -2,12 +2,12 @@ import abc
 import collections
 import datetime
 import decimal
+import enum
 import typing
 
 from hazelcast.errors import HazelcastError, HazelcastSerializationError, IllegalStateError
 from hazelcast.serialization import (
     BYTE_SIZE_IN_BYTES,
-    CHAR_SIZE_IN_BYTES,
     SHORT_SIZE_IN_BYTES,
     INT_SIZE_IN_BYTES,
     LONG_SIZE_IN_BYTES,
@@ -19,7 +19,6 @@ from hazelcast.serialization.api import (
     ObjectDataOutput,
     CompactWriter,
     CompactReader,
-    FieldKind,
     ObjectDataInput,
 )
 from hazelcast.serialization.input import _ObjectDataInput
@@ -1331,7 +1330,7 @@ class DefaultCompactReader(CompactReader):
     @staticmethod
     def _raise_mismatched_field_kind_error(
         field_name: str, field_kind: "FieldKind", expected_field_kind: "FieldKind"
-    ) -> None:
+    ) -> typing.NoReturn:
         raise HazelcastSerializationError(
             f"Mismatched field types. "
             f"Expected: {expected_field_kind}, found: {field_kind} for the '{field_name}'."
@@ -1904,12 +1903,12 @@ class PositionReader(abc.ABC):
     """Position of the null fields."""
 
     UINT8_POSITION_READER_RANGE = 255
-    """Range of the positions that can be represented by a single byte and can 
+    """Range of the positions that can be represented by a single byte and can
     be read with :class:`UInt8PositionReader`.
     """
 
     UINT16_POSITION_READER_RANGE = 65535
-    """Range of the positions that can be represented by two bytes and can be 
+    """Range of the positions that can be represented by two bytes and can be
     read with :class:`UInt16PositionReader`.
     """
 
@@ -1967,6 +1966,51 @@ class Int32PositionReader(PositionReader):
 _INT32_POSITION_READER_INSTANCE = Int32PositionReader()
 
 
+class FieldKind(enum.IntEnum):
+    BOOLEAN = 0
+    ARRAY_OF_BOOLEAN = 1
+    INT8 = 2
+    ARRAY_OF_INT8 = 3
+    INT16 = 6
+    ARRAY_OF_INT16 = 7
+    INT32 = 8
+    ARRAY_OF_INT32 = 9
+    INT64 = 10
+    ARRAY_OF_INT64 = 11
+    FLOAT32 = 12
+    ARRAY_OF_FLOAT32 = 13
+    FLOAT64 = 14
+    ARRAY_OF_FLOAT64 = 15
+    STRING = 16
+    ARRAY_OF_STRING = 17
+    DECIMAL = 18
+    ARRAY_OF_DECIMAL = 19
+    TIME = 20
+    ARRAY_OF_TIME = 21
+    DATE = 22
+    ARRAY_OF_DATE = 23
+    TIMESTAMP = 24
+    ARRAY_OF_TIMESTAMP = 25
+    TIMESTAMP_WITH_TIMEZONE = 26
+    ARRAY_OF_TIMESTAMP_WITH_TIMEZONE = 27
+    COMPACT = 28
+    ARRAY_OF_COMPACT = 29
+    NULLABLE_BOOLEAN = 32
+    ARRAY_OF_NULLABLE_BOOLEAN = 33
+    NULLABLE_INT8 = 34
+    ARRAY_OF_NULLABLE_INT8 = 35
+    NULLABLE_INT16 = 36
+    ARRAY_OF_NULLABLE_INT16 = 37
+    NULLABLE_INT32 = 38
+    ARRAY_OF_NULLABLE_INT32 = 39
+    NULLABLE_INT64 = 40
+    ARRAY_OF_NULLABLE_INT64 = 41
+    NULLABLE_FLOAT32 = 42
+    ARRAY_OF_NULLABLE_FLOAT32 = 43
+    NULLABLE_FLOAT64 = 44
+    ARRAY_OF_NULLABLE_FLOAT64 = 45
+
+
 class FieldKindOperations(abc.ABC):
     _VAR_SIZE = -1
 
@@ -1992,15 +2036,6 @@ class Int8Operations(FieldKindOperations):
 
 
 class ArrayOfInt8Operations(FieldKindOperations):
-    pass
-
-
-class CharOperations(FieldKindOperations):
-    def size_in_bytes(self) -> int:
-        return CHAR_SIZE_IN_BYTES
-
-
-class ArrayOfCharOperations(FieldKindOperations):
     pass
 
 
@@ -2105,14 +2140,6 @@ class ArrayOfCompactOperations(FieldKindOperations):
     pass
 
 
-class PortableOperations(FieldKindOperations):
-    pass
-
-
-class ArrayOfPortableOperations(FieldKindOperations):
-    pass
-
-
 class NullableBooleanOperations(FieldKindOperations):
     pass
 
@@ -2174,8 +2201,8 @@ FIELD_OPERATIONS: typing.List[FieldKindOperations] = [
     ArrayOfBooleanOperations(),
     Int8Operations(),
     ArrayOfInt8Operations(),
-    CharOperations(),
-    ArrayOfCharOperations(),
+    None,
+    None,
     Int16Operations(),
     ArrayOfInt16Operations(),
     Int32Operations(),
@@ -2200,8 +2227,8 @@ FIELD_OPERATIONS: typing.List[FieldKindOperations] = [
     ArrayOfTimestampWithTimezoneOperations(),
     CompactOperations(),
     ArrayOfCompactOperations(),
-    PortableOperations(),
-    ArrayOfPortableOperations(),
+    None,
+    None,
     NullableBooleanOperations(),
     ArrayOfNullableBooleanOperations(),
     NullableInt8Operations(),

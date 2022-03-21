@@ -4,6 +4,7 @@ import threading
 import typing
 
 from hazelcast.cluster import ClusterService, _InternalClusterService
+from hazelcast.compact import CompactSchemaService
 from hazelcast.config import _Config
 from hazelcast.connection import ConnectionManager, DefaultAddressProvider
 from hazelcast.core import DistributedObjectEvent, DistributedObjectInfo
@@ -11,7 +12,7 @@ from hazelcast.cp import CPSubsystem, ProxySessionManager
 from hazelcast.discovery import HazelcastCloudAddressProvider
 from hazelcast.errors import IllegalStateError
 from hazelcast.future import Future
-from hazelcast.invocation import InvocationService, Invocation, CompactSchemaService
+from hazelcast.invocation import InvocationService, Invocation
 from hazelcast.lifecycle import LifecycleService, LifecycleState, _InternalLifecycleService
 from hazelcast.listener import ClusterViewListenerService, ListenerService
 from hazelcast.near_cache import NearCacheManager

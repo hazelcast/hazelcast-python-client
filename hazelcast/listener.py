@@ -4,9 +4,10 @@ import threading
 import typing
 from uuid import uuid4
 
+from hazelcast.compact import CompactSchemaService
 from hazelcast.errors import HazelcastError, HazelcastClientNotActiveError, TargetDisconnectedError
 from hazelcast.future import combine_futures, ImmediateFuture
-from hazelcast.invocation import Invocation, CompactSchemaService
+from hazelcast.invocation import Invocation
 from hazelcast.protocol.client_message import InboundMessage
 from hazelcast.protocol.codec import client_add_cluster_view_listener_codec
 from hazelcast.serialization.compact import SchemaNotFoundError
@@ -157,10 +158,12 @@ class ListenerService:
         message: InboundMessage,
         correlation_id: int,
     ) -> None:
+        schema_id = error.schema_id
+
         def callback(future):
             try:
                 schema = future.result()
-                self._compact_schema_service.register_fetched_schema(schema)
+                self._compact_schema_service.register_fetched_schema(schema_id, schema)
             except:
                 _logger.exception(
                     f"Failed to call event handler: {handler} with message: {message}"
@@ -170,7 +173,7 @@ class ListenerService:
             message.reset_next_frame()
             self.handle_client_message(message, correlation_id)
 
-        fetch_schema_future = self._compact_schema_service.fetch_schema(error.schema_id)
+        fetch_schema_future = self._compact_schema_service.fetch_schema(schema_id)
         fetch_schema_future.add_done_callback(callback)
 
     def add_event_handler(self, correlation_id, event_handler):

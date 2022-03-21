@@ -5,7 +5,6 @@ import uuid
 
 from parameterized import parameterized
 
-from hazelcast.serialization.api import FieldKind
 from hazelcast.serialization.compact import (
     RabinFingerprint,
     SchemaWriter,
@@ -13,21 +12,8 @@ from hazelcast.serialization.compact import (
     Schema,
     FIELD_OPERATIONS,
     _BOOLEANS_PER_BYTE,
+    FieldKind,
 )
-
-
-def get_field_kinds_supported_by_compact() -> typing.Set[FieldKind]:
-    field_kinds = {kind for kind in FieldKind}
-
-    for unsupported_kind in [
-        FieldKind.CHAR,
-        FieldKind.ARRAY_OF_CHAR,
-        FieldKind.PORTABLE,
-        FieldKind.ARRAY_OF_PORTABLE,
-    ]:
-        field_kinds.remove(unsupported_kind)
-
-    return field_kinds
 
 
 class RabinFingerprintTest(unittest.TestCase):
@@ -94,9 +80,7 @@ class RabinFingerprintTest(unittest.TestCase):
 
 class SchemaTest(unittest.TestCase):
     def test_constructor(self):
-        fields = [
-            FieldDescriptor(kind.name, kind) for kind in get_field_kinds_supported_by_compact()
-        ]
+        fields = [FieldDescriptor(kind.name, kind) for kind in FieldKind]
         schema = Schema("something", fields)
         self._verify_schema(schema, fields)
 
@@ -187,12 +171,10 @@ class SchemaTest(unittest.TestCase):
 
 class SchemaWriterTest(unittest.TestCase):
     def test_schema_writer(self):
-        field_kinds = get_field_kinds_supported_by_compact()
-
         writer = SchemaWriter("something")
 
         fields = []
-        for kind in field_kinds:
+        for kind in FieldKind:
             name = str(uuid.uuid4())
             getattr(writer, f"write_{kind.name.lower()}")(name, None)
             fields.append((name, kind))

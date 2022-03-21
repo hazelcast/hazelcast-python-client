@@ -3041,6 +3041,10 @@ class CompactSerializer(typing.Generic[CompactSerializableClass], abc.ABC):
 
         Returns:
             The object read.
+
+        Raises:
+            hazelcast.errors.HazelcastSerializationError: In case of failure
+                to read.
         """
 
     @abc.abstractmethod
@@ -3050,6 +3054,10 @@ class CompactSerializer(typing.Generic[CompactSerializableClass], abc.ABC):
         Args:
             writer: Writer to serialize the fields.
             obj: Object to be serialized.
+
+        Raises:
+            hazelcast.errors.HazelcastSerializationError: In case of failure
+                to write.
         """
 
     @abc.abstractmethod
@@ -3060,58 +3068,3 @@ class CompactSerializer(typing.Generic[CompactSerializableClass], abc.ABC):
         Returns:
             The type name.
         """
-
-
-class FieldKind(enum.IntEnum):
-    """
-    Warnings:
-        This API is in the BETA status and any part of it might be changed
-        without a prior notice, until it is promoted to the stable status.
-    """
-
-    BOOLEAN = 0
-    ARRAY_OF_BOOLEAN = 1
-    INT8 = 2
-    ARRAY_OF_INT8 = 3
-    CHAR = 4
-    ARRAY_OF_CHAR = 5
-    INT16 = 6
-    ARRAY_OF_INT16 = 7
-    INT32 = 8
-    ARRAY_OF_INT32 = 9
-    INT64 = 10
-    ARRAY_OF_INT64 = 11
-    FLOAT32 = 12
-    ARRAY_OF_FLOAT32 = 13
-    FLOAT64 = 14
-    ARRAY_OF_FLOAT64 = 15
-    STRING = 16
-    ARRAY_OF_STRING = 17
-    DECIMAL = 18
-    ARRAY_OF_DECIMAL = 19
-    TIME = 20
-    ARRAY_OF_TIME = 21
-    DATE = 22
-    ARRAY_OF_DATE = 23
-    TIMESTAMP = 24
-    ARRAY_OF_TIMESTAMP = 25
-    TIMESTAMP_WITH_TIMEZONE = 26
-    ARRAY_OF_TIMESTAMP_WITH_TIMEZONE = 27
-    COMPACT = 28
-    ARRAY_OF_COMPACT = 29
-    PORTABLE = 30
-    ARRAY_OF_PORTABLE = 31
-    NULLABLE_BOOLEAN = 32
-    ARRAY_OF_NULLABLE_BOOLEAN = 33
-    NULLABLE_INT8 = 34
-    ARRAY_OF_NULLABLE_INT8 = 35
-    NULLABLE_INT16 = 36
-    ARRAY_OF_NULLABLE_INT16 = 37
-    NULLABLE_INT32 = 38
-    ARRAY_OF_NULLABLE_INT32 = 39
-    NULLABLE_INT64 = 40
-    ARRAY_OF_NULLABLE_INT64 = 41
-    NULLABLE_FLOAT32 = 42
-    ARRAY_OF_NULLABLE_FLOAT32 = 43
-    NULLABLE_FLOAT64 = 44
-    ARRAY_OF_NULLABLE_FLOAT64 = 45
