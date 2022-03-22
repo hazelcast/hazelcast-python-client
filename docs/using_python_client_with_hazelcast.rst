@@ -1844,15 +1844,8 @@ future releases.
 - You cannot run SQL queries on lite members.
 - The only supported Hazelcast data structure is map. You cannot query other
   data structures such as replicated maps.
-- No support for the ``CREATE INDEX`` statement. To create indexes for maps in
-  Hazelcast, see the :func:`add_index() <hazelcast.proxy.map.Map.add_index>`
-  method.
-- No support for the ``JSON`` type. You can’t use functions such as
-  ``JSON_VALUE`` or ``JSON_QUERY``.
 - Limited support for joins. See `Join Tables
   <https://docs.hazelcast.com/hazelcast/latest/sql/select.html#join-tables>`__.
-- No support for window functions. You cannot group or aggregate results in
-  streaming queries.
 
 Distributed Query
 -----------------
