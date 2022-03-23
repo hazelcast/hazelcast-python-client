@@ -532,12 +532,10 @@ class DefaultCompactWriter(CompactWriter):
         out.write_int(item_count)
 
         data_position = out.position()
-        positions = []
-        for item in value:
-            if item is None:
-                positions.append(PositionReader.NULL_POSITION)
-            else:
-                positions.append(out.position() - data_position)
+        positions = [PositionReader.NULL_POSITION] * item_count
+        for index, item in enumerate(value):
+            if item is not None:
+                positions[index] = out.position() - data_position
                 item_writer(item)
 
         data_length = out.position() - data_position
@@ -1450,16 +1448,14 @@ class DefaultCompactReader(CompactReader):
             item_count = inp.read_int()
             data_start_position = inp.position()
 
-            values = []
+            values = [None] * item_count
             position_reader = PositionReader.reader_for(data_length)
             item_positions_position = data_start_position + data_length
             for i in range(item_count):
                 item_position = position_reader.read(inp, item_positions_position, i)
-                if item_position == PositionReader.NULL_POSITION:
-                    values.append(None)
-                else:
+                if item_position != PositionReader.NULL_POSITION:
                     inp.set_position(data_start_position + item_position)
-                    values.append(item_reader())
+                    values[i] = item_reader()
 
             return values
         finally:
@@ -1826,12 +1822,13 @@ class FieldDescriptor:
 
 def _init_fingerprint_table() -> typing.Tuple[int, typing.List[int]]:
     empty = -4513414715797952619
-    table = []
-    for i in range(256):
+    table_size = 256
+    table = [0] * table_size
+    for i in range(table_size):
         fp = i
         for _ in range(8):
             fp = ((fp % 0x10000000000000000) >> 1) ^ (empty & -(fp & 1))
-        table.append(fp)
+        table[i] = fp
     return empty, table
 
 
