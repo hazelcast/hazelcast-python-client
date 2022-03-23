@@ -745,9 +745,16 @@ class SqlPageCodec:
                 columns[i] = column
             elif column_type_id == SqlColumnType.OBJECT:
                 columns[i] = ListMultiFrameCodec.decode_contains_nullable(msg, DataCodec.decode)
+            elif column_type_id == SqlColumnType.JSON:
+                columns[i] = ListMultiFrameCodec.decode_contains_nullable(
+                    msg, HazelcastJsonValueCodec.decode
+                )
             else:
                 raise ValueError("Unknown type %s" % column_type_id)
 
         CodecUtil.fast_forward_to_end_frame(msg)
 
         return _SqlPage(column_type_ids, columns, is_last)
+
+
+from hazelcast.protocol.codec.custom.hazelcast_json_value_codec import HazelcastJsonValueCodec

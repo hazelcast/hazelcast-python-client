@@ -388,6 +388,11 @@ class SqlColumnType:
     The only valid value of ``NULL`` type is ``None``.
     """
 
+    JSON = 15
+    """
+    Represented by :class:`hazelcast.core.HazelcastJsonValue`.
+    """
+
 
 class _SqlErrorCode:
 

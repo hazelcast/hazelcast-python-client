@@ -1572,22 +1572,114 @@ Query parameters have the following benefits:
 Querying JSON Objects
 ~~~~~~~~~~~~~~~~~~~~~
 
-To query JSON objects, you should create an explicit mapping using the
+In Hazelcast, the SQL service supports the following ways of working with
+JSON data:
+
+- ``json``: Maps JSON data to a single column of ``JSON`` type where you can
+  use `JsonPath
+  <https://docs.hazelcast.com/hazelcast/latest/sql/working-with-json#querying-json>`__
+  syntax to query and filter it, including nested levels.
+- ``json-flat``: Maps JSON top-level fields to columns with non-JSON types
+  where you can query only top-level keys.
+
+**json**
+
+To query ``json`` objects, you should create an explicit mapping using the
 `CREATE MAPPING
 <https://docs.hazelcast.com/hazelcast/latest/sql/create-mapping.html>`__
 statement, similar to the example above.
 
 For example, this code snippet creates a mapping to a new map called
-``json_employees``, which stores the JSON values ``name`` and ``salary`` and
-query it:
+``json_employees``, which stores the JSON values as ``HazelcastJsonValue``
+objects and queries it using nested fields, which is not possible with the
+``json-flat`` type:
 
 .. code:: python
 
-    client = hazelcast.HazelcastClient()
+    client.sql.execute(
+        """
+    CREATE OR REPLACE MAPPING json_employees
+    TYPE IMap
+    OPTIONS (
+        'keyFormat' = 'int',
+        'valueFormat' = 'json'
+    )
+        """
+    ).result()
+
+    json_employees = client.get_map("json_employees").blocking()
+
+    json_employees.set(
+        1,
+        HazelcastJsonValue(
+            {
+                "personal": {"name": "John Doe"},
+                "job": {"salary": 60000},
+            }
+        ),
+    )
+
+    json_employees.set(
+        2,
+        HazelcastJsonValue(
+            {
+                "personal": {"name": "Jane Doe"},
+                "job": {"salary": 80000},
+            }
+        ),
+    )
+
+    with client.sql.execute(
+        """
+    SELECT JSON_VALUE(this, '$.personal.name') AS name
+    FROM json_employees
+    WHERE JSON_VALUE(this, '$.job.salary' RETURNING INT) > ?
+        """,
+        75000,
+    ).result() as result:
+        for row in result:
+            print(f"Name: {row['name']}")
+
+The ``json`` data type comes with full support for querying JSON in maps and
+Kafka topics.
+
+
+**JSON Functions**
+
+Hazelcast supports the following functions, which can retrieve JSON data.
+
+- `JSON_QUERY <https://docs.hazelcast.com/hazelcast/latest/sql/functions-and-operators#json_query>`__
+  : Extracts a JSON value from a JSON document or a JSON-formatted string that
+  matches a given JsonPath expression.
+
+- `JSON_VALUE <https://docs.hazelcast.com/hazelcast/latest/sql/functions-and-operators#json_value>`__
+  : Extracts a primitive value, such as a string, number, or boolean that
+  matches a given JsonPath expression. This function returns ``NULL`` if a
+  non-primitive value is matched, unless the ``ON ERROR`` behavior is changed.
+
+- `JSON_ARRAY <https://docs.hazelcast.com/hazelcast/latest/sql/functions-and-operators#json_array>`__
+  : Returns a JSON array from a list of input data.
+
+- `JSON_OBJECT <https://docs.hazelcast.com/hazelcast/latest/sql/functions-and-operators#json_object>`__
+  : Returns a JSON object from the given key/value pairs.
+
+**json-flat**
+
+To query ``json-flat`` objects, you should create an explicit mapping using the
+`CREATE MAPPING
+<https://docs.hazelcast.com/hazelcast/latest/sql/create-mapping.html>`__
+statement, similar to the example above.
+
+For example, this code snippet creates a mapping to a new map called
+``json_flat_employees``, which stores the JSON values with columns ``name``
+and ``salary`` as ``HazelcastJsonValue`` objects and queries it using
+top-level fields:
+
+.. code:: python
 
     client.sql.execute(
         """
-    CREATE MAPPING json_employees (
+    CREATE OR REPLACE MAPPING json_flat_employees (
         __key INT,
         name VARCHAR,
         salary INT
@@ -1600,9 +1692,9 @@ query it:
         """
     ).result()
 
-    json_employees = client.get_map("json_employees").blocking()
+    json_flat_employees = client.get_map("json_flat_employees").blocking()
 
-    json_employees.set(
+    json_flat_employees.set(
         1,
         HazelcastJsonValue(
             {
@@ -1612,7 +1704,7 @@ query it:
         ),
     )
 
-    json_employees.set(
+    json_flat_employees.set(
         2,
         HazelcastJsonValue(
             {
@@ -1623,17 +1715,27 @@ query it:
     )
 
     with client.sql.execute(
-        """
-    SELECT __key AS employee_id,
-           name,
-           salary
-    FROM   json_employees
-    WHERE  salary > ?
-        """,
-        75000,
+            """
+    SELECT name
+    FROM json_flat_employees
+    WHERE salary > ?
+            """,
+            75000,
     ).result() as result:
         for row in result:
-            print(row["employee_id"], row["name"], row["salary"])
+            print(f"Name: {row['name']}")
+
+Note that, in ``json-flat`` type, top-level columns must be explicitly
+specified while creating the mapping.
+
+The ``json-flat`` format comes with partial support for querying JSON in maps,
+Kafka topics, and files.
+
+For more information about working with JSON using SQL see
+`Working with JSON
+<https://docs.hazelcast.com/hazelcast/latest/sql/working-with-json>`__
+in Hazelcast reference manual.
+
 
 SQL Statements
 ~~~~~~~~~~~~~~
@@ -1706,6 +1808,7 @@ TIME                     datetime.time
 TIMESTAMP                datetime.datetime
 TIMESTAMP_WITH_TIME_ZONE datetime.datetime (with non-None tzinfo)
 OBJECT                   Any Python type
+JSON                     HazelcastJsonValue
 ======================== ========================================
 
 Functions and Operators
@@ -1741,15 +1844,8 @@ future releases.
 - You cannot run SQL queries on lite members.
 - The only supported Hazelcast data structure is map. You cannot query other
   data structures such as replicated maps.
-- No support for the ``CREATE INDEX`` statement. To create indexes for maps in
-  Hazelcast, see the :func:`add_index() <hazelcast.proxy.map.Map.add_index>`
-  method.
-- No support for the ``JSON`` type. You can’t use functions such as
-  ``JSON_VALUE`` or ``JSON_QUERY``.
 - Limited support for joins. See `Join Tables
   <https://docs.hazelcast.com/hazelcast/latest/sql/select.html#join-tables>`__.
-- No support for window functions. You cannot group or aggregate results in
-  streaming queries.
 
 Distributed Query
 -----------------
