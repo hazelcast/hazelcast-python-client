@@ -409,7 +409,7 @@ class CompactTest(CompactTestBase):
             map_name=random_string(),
             value_to_put=REFERENCE_OBJECTS[field_kind],
             field_name=field_name,
-            reader_method_name=f"read_{field_name}_or",
+            reader_method_name=f"read_{field_name}_or_default",
             default_value_to_read=object(),
         )
         obj = m.get("key")
@@ -424,7 +424,7 @@ class CompactTest(CompactTestBase):
             value_to_put=REFERENCE_OBJECTS[field_kind],
             field_name=field_name,
             field_name_to_read="not-a-field",
-            reader_method_name=f"read_{field_name}_or",
+            reader_method_name=f"read_{field_name}_or_default",
             default_value_to_read=default_value,
         )
         obj = m.get("key")
@@ -441,7 +441,7 @@ class CompactTest(CompactTestBase):
             field_name=field_name,
             field_name_to_read=field_name,
             writer_method_name=f"write_{mismatched_field_kind.name.lower()}",
-            reader_method_name=f"read_{field_name}_or",
+            reader_method_name=f"read_{field_name}_or_default",
             default_value_to_read=default_value,
         )
         obj = m.get("key")
@@ -579,7 +579,7 @@ class CompactSchemaEvolutionTest(CompactTestBase):
         careful_v2_field_definitions = v1_field_definitions + [
             FieldDefinition(
                 name=new_field_name,
-                reader_method_name=f"read_{new_field_name}_or",
+                reader_method_name=f"read_{new_field_name}_or_default",
                 default_value_to_read=new_field_default_value,
             )
         ]
@@ -634,7 +634,7 @@ class CompactSchemaEvolutionTest(CompactTestBase):
         careful_v1_field_definitions = v2_field_definitions + [
             FieldDefinition(
                 name=removed_field_name,
-                reader_method_name=f"read_{removed_field_name}_or",
+                reader_method_name=f"read_{removed_field_name}_or_default",
                 default_value_to_read=removed_field_default_value,
             )
         ]

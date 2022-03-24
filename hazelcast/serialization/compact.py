@@ -605,7 +605,7 @@ class DefaultCompactReader(CompactReader):
                 field_name, kind, FieldKind.BOOLEAN
             )
 
-    def read_boolean_or(self, field_name: str, default: bool) -> bool:
+    def read_boolean_or_default(self, field_name: str, default: bool) -> bool:
         if not self._is_field_exists(field_name, FieldKind.BOOLEAN):
             return default
 
@@ -623,7 +623,7 @@ class DefaultCompactReader(CompactReader):
                 field_name, kind, FieldKind.NULLABLE_BOOLEAN
             )
 
-    def read_nullable_boolean_or(
+    def read_nullable_boolean_or_default(
         self, field_name: str, default: typing.Optional[bool]
     ) -> typing.Optional[bool]:
         if not self._is_field_exists(field_name, FieldKind.NULLABLE_BOOLEAN):
@@ -643,7 +643,7 @@ class DefaultCompactReader(CompactReader):
                 field_name, kind, FieldKind.INT8
             )
 
-    def read_int8_or(self, field_name: str, default: int) -> int:
+    def read_int8_or_default(self, field_name: str, default: int) -> int:
         if not self._is_field_exists(field_name, FieldKind.INT8):
             return default
 
@@ -661,7 +661,7 @@ class DefaultCompactReader(CompactReader):
                 field_name, kind, FieldKind.NULLABLE_INT8
             )
 
-    def read_nullable_int8_or(
+    def read_nullable_int8_or_default(
         self, field_name: str, default: typing.Optional[int]
     ) -> typing.Optional[int]:
         if not self._is_field_exists(field_name, FieldKind.NULLABLE_INT8):
@@ -681,7 +681,7 @@ class DefaultCompactReader(CompactReader):
                 field_name, kind, FieldKind.INT16
             )
 
-    def read_int16_or(self, field_name: str, default: int) -> int:
+    def read_int16_or_default(self, field_name: str, default: int) -> int:
         if not self._is_field_exists(field_name, FieldKind.INT16):
             return default
 
@@ -699,7 +699,7 @@ class DefaultCompactReader(CompactReader):
                 field_name, kind, FieldKind.NULLABLE_INT16
             )
 
-    def read_nullable_int16_or(
+    def read_nullable_int16_or_default(
         self, field_name: str, default: typing.Optional[int]
     ) -> typing.Optional[int]:
         if not self._is_field_exists(field_name, FieldKind.NULLABLE_INT16):
@@ -719,7 +719,7 @@ class DefaultCompactReader(CompactReader):
                 field_name, kind, FieldKind.INT32
             )
 
-    def read_int32_or(self, field_name: str, default: int) -> int:
+    def read_int32_or_default(self, field_name: str, default: int) -> int:
         if not self._is_field_exists(field_name, FieldKind.INT32):
             return default
 
@@ -737,7 +737,7 @@ class DefaultCompactReader(CompactReader):
                 field_name, kind, FieldKind.NULLABLE_INT32
             )
 
-    def read_nullable_int32_or(
+    def read_nullable_int32_or_default(
         self, field_name: str, default: typing.Optional[int]
     ) -> typing.Optional[int]:
         if not self._is_field_exists(field_name, FieldKind.NULLABLE_INT32):
@@ -757,7 +757,7 @@ class DefaultCompactReader(CompactReader):
                 field_name, kind, FieldKind.INT64
             )
 
-    def read_int64_or(self, field_name: str, default: int) -> int:
+    def read_int64_or_default(self, field_name: str, default: int) -> int:
         if not self._is_field_exists(field_name, FieldKind.INT64):
             return default
 
@@ -775,7 +775,7 @@ class DefaultCompactReader(CompactReader):
                 field_name, kind, FieldKind.NULLABLE_INT64
             )
 
-    def read_nullable_int64_or(
+    def read_nullable_int64_or_default(
         self, field_name: str, default: typing.Optional[int]
     ) -> typing.Optional[int]:
         if not self._is_field_exists(field_name, FieldKind.NULLABLE_INT64):
@@ -795,7 +795,7 @@ class DefaultCompactReader(CompactReader):
                 field_name, kind, FieldKind.FLOAT32
             )
 
-    def read_float32_or(self, field_name: str, default: float) -> float:
+    def read_float32_or_default(self, field_name: str, default: float) -> float:
         if not self._is_field_exists(field_name, FieldKind.FLOAT32):
             return default
 
@@ -813,7 +813,7 @@ class DefaultCompactReader(CompactReader):
                 field_name, kind, FieldKind.NULLABLE_FLOAT32
             )
 
-    def read_nullable_float32_or(
+    def read_nullable_float32_or_default(
         self, field_name: str, default: typing.Optional[float]
     ) -> typing.Optional[float]:
         if not self._is_field_exists(field_name, FieldKind.NULLABLE_FLOAT32):
@@ -833,7 +833,7 @@ class DefaultCompactReader(CompactReader):
                 field_name, kind, FieldKind.FLOAT64
             )
 
-    def read_float64_or(self, field_name: str, default: float) -> float:
+    def read_float64_or_default(self, field_name: str, default: float) -> float:
         if not self._is_field_exists(field_name, FieldKind.FLOAT64):
             return default
 
@@ -851,7 +851,7 @@ class DefaultCompactReader(CompactReader):
                 field_name, kind, FieldKind.NULLABLE_FLOAT64
             )
 
-    def read_nullable_float64_or(
+    def read_nullable_float64_or_default(
         self, field_name: str, default: typing.Optional[float]
     ) -> typing.Optional[float]:
         if not self._is_field_exists(field_name, FieldKind.NULLABLE_FLOAT64):
@@ -863,7 +863,7 @@ class DefaultCompactReader(CompactReader):
         field = self._get_field_with_kind_check(field_name, FieldKind.STRING)
         return self._read_var_sized_field(field, self._inp.read_string)
 
-    def read_string_or(
+    def read_string_or_default(
         self, field_name: str, default: typing.Optional[str]
     ) -> typing.Optional[str]:
         if not self._is_field_exists(field_name, FieldKind.STRING):
@@ -875,7 +875,7 @@ class DefaultCompactReader(CompactReader):
         field = self._get_field_with_kind_check(field_name, FieldKind.DECIMAL)
         return self._read_var_sized_field(field, self._read_decimal_helper)
 
-    def read_decimal_or(
+    def read_decimal_or_default(
         self, field_name: str, default: typing.Optional[decimal.Decimal]
     ) -> typing.Optional[decimal.Decimal]:
         if not self._is_field_exists(field_name, FieldKind.DECIMAL):
@@ -887,7 +887,7 @@ class DefaultCompactReader(CompactReader):
         field = self._get_field_with_kind_check(field_name, FieldKind.TIME)
         return self._read_var_sized_field(field, self._read_time_helper)
 
-    def read_time_or(
+    def read_time_or_default(
         self, field_name: str, default: typing.Optional[datetime.time]
     ) -> typing.Optional[datetime.time]:
         if not self._is_field_exists(field_name, FieldKind.TIME):
@@ -899,7 +899,7 @@ class DefaultCompactReader(CompactReader):
         field = self._get_field_with_kind_check(field_name, FieldKind.DATE)
         return self._read_var_sized_field(field, self._read_date_helper)
 
-    def read_date_or(
+    def read_date_or_default(
         self, field_name: str, default: typing.Optional[datetime.date]
     ) -> typing.Optional[datetime.date]:
         if not self._is_field_exists(field_name, FieldKind.DATE):
@@ -911,7 +911,7 @@ class DefaultCompactReader(CompactReader):
         field = self._get_field_with_kind_check(field_name, FieldKind.TIMESTAMP)
         return self._read_var_sized_field(field, self._read_timestamp_helper)
 
-    def read_timestamp_or(
+    def read_timestamp_or_default(
         self, field_name: str, default: typing.Optional[datetime.datetime]
     ) -> typing.Optional[datetime.datetime]:
         if not self._is_field_exists(field_name, FieldKind.TIMESTAMP):
@@ -923,7 +923,7 @@ class DefaultCompactReader(CompactReader):
         field = self._get_field_with_kind_check(field_name, FieldKind.TIMESTAMP_WITH_TIMEZONE)
         return self._read_var_sized_field(field, self._read_timestamp_with_timezone_helper)
 
-    def read_timestamp_with_timezone_or(
+    def read_timestamp_with_timezone_or_default(
         self, field_name: str, default: typing.Optional[datetime.datetime]
     ) -> typing.Optional[datetime.datetime]:
         if not self._is_field_exists(field_name, FieldKind.TIMESTAMP_WITH_TIMEZONE):
@@ -935,7 +935,7 @@ class DefaultCompactReader(CompactReader):
         field = self._get_field_with_kind_check(field_name, FieldKind.COMPACT)
         return self._read_var_sized_field(field, self._read_compact_helper)
 
-    def read_compact_or(
+    def read_compact_or_default(
         self, field_name: str, default: typing.Optional[typing.Any]
     ) -> typing.Optional[typing.Any]:
         if not self._is_field_exists(field_name, FieldKind.COMPACT):
@@ -957,7 +957,7 @@ class DefaultCompactReader(CompactReader):
                 field_name, kind, FieldKind.ARRAY_OF_BOOLEAN
             )
 
-    def read_array_of_boolean_or(
+    def read_array_of_boolean_or_default(
         self, field_name: str, default: typing.Optional[typing.List[bool]]
     ) -> typing.Optional[typing.List[bool]]:
         if not self._is_field_exists(field_name, FieldKind.ARRAY_OF_BOOLEAN):
@@ -979,7 +979,7 @@ class DefaultCompactReader(CompactReader):
                 field_name, kind, FieldKind.ARRAY_OF_NULLABLE_BOOLEAN
             )
 
-    def read_array_of_nullable_boolean_or(
+    def read_array_of_nullable_boolean_or_default(
         self, field_name: str, default: typing.Optional[typing.List[typing.Optional[bool]]]
     ) -> typing.Optional[typing.List[typing.Optional[bool]]]:
         if not self._is_field_exists(field_name, FieldKind.ARRAY_OF_NULLABLE_BOOLEAN):
@@ -995,7 +995,7 @@ class DefaultCompactReader(CompactReader):
             self._inp.read_i8_array,
         )
 
-    def read_array_of_int8_or(
+    def read_array_of_int8_or_default(
         self, field_name: str, default: typing.Optional[typing.List[int]]
     ) -> typing.Optional[typing.List[int]]:
         if not self._is_field_exists(field_name, FieldKind.ARRAY_OF_INT8):
@@ -1014,7 +1014,7 @@ class DefaultCompactReader(CompactReader):
             self._inp.read_byte,
         )
 
-    def read_array_of_nullable_int8_or(
+    def read_array_of_nullable_int8_or_default(
         self, field_name: str, default: typing.Optional[typing.List[typing.Optional[int]]]
     ) -> typing.Optional[typing.List[typing.Optional[int]]]:
         if not self._is_field_exists(field_name, FieldKind.ARRAY_OF_NULLABLE_INT8):
@@ -1030,7 +1030,7 @@ class DefaultCompactReader(CompactReader):
             self._inp.read_short_array,
         )
 
-    def read_array_of_int16_or(
+    def read_array_of_int16_or_default(
         self, field_name: str, default: typing.Optional[typing.List[int]]
     ) -> typing.Optional[typing.List[int]]:
         if not self._is_field_exists(field_name, FieldKind.ARRAY_OF_INT16):
@@ -1049,7 +1049,7 @@ class DefaultCompactReader(CompactReader):
             self._inp.read_short,
         )
 
-    def read_array_of_nullable_int16_or(
+    def read_array_of_nullable_int16_or_default(
         self, field_name: str, default: typing.Optional[typing.List[typing.Optional[int]]]
     ) -> typing.Optional[typing.List[typing.Optional[int]]]:
         if not self._is_field_exists(field_name, FieldKind.ARRAY_OF_NULLABLE_INT16):
@@ -1065,7 +1065,7 @@ class DefaultCompactReader(CompactReader):
             self._inp.read_int_array,
         )
 
-    def read_array_of_int32_or(
+    def read_array_of_int32_or_default(
         self, field_name: str, default: typing.Optional[typing.List[int]]
     ) -> typing.Optional[typing.List[int]]:
         if not self._is_field_exists(field_name, FieldKind.ARRAY_OF_INT32):
@@ -1084,7 +1084,7 @@ class DefaultCompactReader(CompactReader):
             self._inp.read_int,
         )
 
-    def read_array_of_nullable_int32_or(
+    def read_array_of_nullable_int32_or_default(
         self, field_name: str, default: typing.Optional[typing.List[typing.Optional[int]]]
     ) -> typing.Optional[typing.List[typing.Optional[int]]]:
         if not self._is_field_exists(field_name, FieldKind.ARRAY_OF_NULLABLE_INT32):
@@ -1100,7 +1100,7 @@ class DefaultCompactReader(CompactReader):
             self._inp.read_long_array,
         )
 
-    def read_array_of_int64_or(
+    def read_array_of_int64_or_default(
         self, field_name: str, default: typing.Optional[typing.List[int]]
     ) -> typing.Optional[typing.List[int]]:
         if not self._is_field_exists(field_name, FieldKind.ARRAY_OF_INT64):
@@ -1119,7 +1119,7 @@ class DefaultCompactReader(CompactReader):
             self._inp.read_long,
         )
 
-    def read_array_of_nullable_int64_or(
+    def read_array_of_nullable_int64_or_default(
         self, field_name: str, default: typing.Optional[typing.List[typing.Optional[int]]]
     ) -> typing.Optional[typing.List[typing.Optional[int]]]:
         if not self._is_field_exists(field_name, FieldKind.ARRAY_OF_NULLABLE_INT64):
@@ -1135,7 +1135,7 @@ class DefaultCompactReader(CompactReader):
             self._inp.read_float_array,
         )
 
-    def read_array_of_float32_or(
+    def read_array_of_float32_or_default(
         self, field_name: str, default: typing.Optional[typing.List[float]]
     ) -> typing.Optional[typing.List[float]]:
         if not self._is_field_exists(field_name, FieldKind.ARRAY_OF_FLOAT32):
@@ -1154,7 +1154,7 @@ class DefaultCompactReader(CompactReader):
             self._inp.read_float,
         )
 
-    def read_array_of_nullable_float32_or(
+    def read_array_of_nullable_float32_or_default(
         self, field_name: str, default: typing.Optional[typing.List[typing.Optional[float]]]
     ) -> typing.Optional[typing.List[typing.Optional[float]]]:
         if not self._is_field_exists(field_name, FieldKind.ARRAY_OF_NULLABLE_FLOAT32):
@@ -1170,7 +1170,7 @@ class DefaultCompactReader(CompactReader):
             self._inp.read_double_array,
         )
 
-    def read_array_of_float64_or(
+    def read_array_of_float64_or_default(
         self, field_name: str, default: typing.Optional[typing.List[float]]
     ) -> typing.Optional[typing.List[float]]:
         if not self._is_field_exists(field_name, FieldKind.ARRAY_OF_FLOAT64):
@@ -1189,7 +1189,7 @@ class DefaultCompactReader(CompactReader):
             self._inp.read_double,
         )
 
-    def read_array_of_nullable_float64_or(
+    def read_array_of_nullable_float64_or_default(
         self, field_name: str, default: typing.Optional[typing.List[typing.Optional[float]]]
     ) -> typing.Optional[typing.List[typing.Optional[float]]]:
         if not self._is_field_exists(field_name, FieldKind.ARRAY_OF_NULLABLE_FLOAT64):
@@ -1203,7 +1203,7 @@ class DefaultCompactReader(CompactReader):
         field = self._get_field_with_kind_check(field_name, FieldKind.ARRAY_OF_STRING)
         return self._read_var_sized_item_array(field, self._inp.read_string)
 
-    def read_array_of_string_or(
+    def read_array_of_string_or_default(
         self, field_name: str, default: typing.Optional[typing.List[typing.Optional[str]]]
     ) -> typing.Optional[typing.List[typing.Optional[str]]]:
         if not self._is_field_exists(field_name, FieldKind.ARRAY_OF_STRING):
@@ -1217,7 +1217,7 @@ class DefaultCompactReader(CompactReader):
         field = self._get_field_with_kind_check(field_name, FieldKind.ARRAY_OF_DECIMAL)
         return self._read_var_sized_item_array(field, self._read_decimal_helper)
 
-    def read_array_of_decimal_or(
+    def read_array_of_decimal_or_default(
         self,
         field_name: str,
         default: typing.Optional[typing.List[typing.Optional[decimal.Decimal]]],
@@ -1233,7 +1233,7 @@ class DefaultCompactReader(CompactReader):
         field = self._get_field_with_kind_check(field_name, FieldKind.ARRAY_OF_TIME)
         return self._read_var_sized_item_array(field, self._read_time_helper)
 
-    def read_array_of_time_or(
+    def read_array_of_time_or_default(
         self, field_name: str, default: typing.Optional[typing.List[typing.Optional[datetime.time]]]
     ) -> typing.Optional[typing.List[typing.Optional[datetime.time]]]:
         if not self._is_field_exists(field_name, FieldKind.ARRAY_OF_TIME):
@@ -1247,7 +1247,7 @@ class DefaultCompactReader(CompactReader):
         field = self._get_field_with_kind_check(field_name, FieldKind.ARRAY_OF_DATE)
         return self._read_var_sized_item_array(field, self._read_date_helper)
 
-    def read_array_of_date_or(
+    def read_array_of_date_or_default(
         self, field_name: str, default: typing.Optional[typing.List[typing.Optional[datetime.date]]]
     ) -> typing.Optional[typing.List[typing.Optional[datetime.date]]]:
         if not self._is_field_exists(field_name, FieldKind.ARRAY_OF_DATE):
@@ -1261,7 +1261,7 @@ class DefaultCompactReader(CompactReader):
         field = self._get_field_with_kind_check(field_name, FieldKind.ARRAY_OF_TIMESTAMP)
         return self._read_var_sized_item_array(field, self._read_timestamp_helper)
 
-    def read_array_of_timestamp_or(
+    def read_array_of_timestamp_or_default(
         self,
         field_name: str,
         default: typing.Optional[typing.List[typing.Optional[datetime.datetime]]],
@@ -1279,7 +1279,7 @@ class DefaultCompactReader(CompactReader):
         )
         return self._read_var_sized_item_array(field, self._read_timestamp_with_timezone_helper)
 
-    def read_array_of_timestamp_with_timezone_or(
+    def read_array_of_timestamp_with_timezone_or_default(
         self,
         field_name: str,
         default: typing.Optional[typing.List[typing.Optional[datetime.datetime]]],
@@ -1295,7 +1295,7 @@ class DefaultCompactReader(CompactReader):
         field = self._get_field_with_kind_check(field_name, FieldKind.ARRAY_OF_COMPACT)
         return self._read_var_sized_item_array(field, self._read_compact_helper)
 
-    def read_array_of_compact_or(
+    def read_array_of_compact_or_default(
         self, field_name: str, default: typing.Optional[typing.List[typing.Optional[typing.Any]]]
     ) -> typing.Optional[typing.List[typing.Optional[typing.Any]]]:
         if not self._is_field_exists(field_name, FieldKind.ARRAY_OF_COMPACT):
