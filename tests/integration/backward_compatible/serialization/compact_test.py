@@ -20,11 +20,9 @@ from hazelcast.util import AtomicInteger
 from tests.base import HazelcastTestCase
 from tests.util import is_equal, random_string
 
-
 FIELD_KINDS = [kind for kind in FieldKind]
 FIX_SIZED_FIELD_KINDS = [kind for kind in FIELD_KINDS if not FIELD_OPERATIONS[kind].is_var_sized()]
 VAR_SIZED_FIELD_KINDS = [kind for kind in FIELD_KINDS if FIELD_OPERATIONS[kind].is_var_sized()]
-
 
 FIX_SIZED_TO_NULLABLE = {
     FieldKind.BOOLEAN: FieldKind.NULLABLE_BOOLEAN,
@@ -104,12 +102,12 @@ class CompactTest(CompactTestBase):
 
     @parameterized.expand(
         [
-            ("small", 1),
-            ("medium", 20),
-            ("large", 42),
+            ("uint8_reader", 1),
+            ("uint16_reader", 20),
+            ("int32_reader", 42),
         ]
     )
-    def test_write_then_read_object(self, _, array_item_count):
+    def test_write_then_read_object_with_different_position_readers(self, _, array_item_count):
         reference_objects = {
             FieldKind.ARRAY_OF_STRING: ["x" * (i * 100) for i in range(1, array_item_count)],
             FieldKind.INT32: 32,
@@ -275,9 +273,7 @@ class CompactTest(CompactTestBase):
             )
         ]
     )
-    def test_write_fix_sized_then_read_as_nullable_fix_sized(
-        self, _, field_kind, nullable_field_kind
-    ):
+    def test_write_then_read_as_nullable(self, _, field_kind, nullable_field_kind):
         map_name = random_string()
         field_name = field_kind.name.lower()
         self._put_entry(
@@ -315,9 +311,7 @@ class CompactTest(CompactTestBase):
             )
         ]
     )
-    def test_write_nullable_fix_sized_then_read_as_fix_sized(
-        self, _, field_kind, nullable_field_kind
-    ):
+    def test_write_as_nullable_then_read(self, _, field_kind, nullable_field_kind):
         map_name = random_string()
         nullable_method_suffix = nullable_field_kind.name.lower()
         field_name = field_kind.name.lower()

@@ -129,6 +129,16 @@ class OutputTestCase(unittest.TestCase):
         )
         self.assertEqual(8, out.position())
 
+    def test_write_int_big_endian(self):
+        out = _ObjectDataOutput(8, None)
+        out.write_int_big_endian(42)
+        out.write_int_big_endian(-13)
+        self.assertEqual(
+            bytearray([0, 0, 0, 42, 255, 255, 255, 243]),
+            out.to_byte_array(),
+        )
+        self.assertEqual(8, out.position())
+
     def test_write_int_positional(self):
         out = _ObjectDataOutput(8, None)
         out.write_zero_bytes(8)
