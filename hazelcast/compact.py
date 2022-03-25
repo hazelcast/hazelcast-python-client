@@ -25,7 +25,7 @@ class CompactSchemaService:
 
     def fetch_schema(self, schema_id: int) -> Future:
         _logger.debug(
-            "Could not find schema with the id %s locally. " "It will be fetched from the cluster.",
+            "Could not find schema with the id %s locally. It will be fetched from the cluster.",
             schema_id,
         )
 

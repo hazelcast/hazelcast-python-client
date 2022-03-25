@@ -4,7 +4,6 @@ User API for Serialization.
 import abc
 import datetime
 import decimal
-import enum
 import typing
 
 from hazelcast.serialization.portable.classdef import FieldType
