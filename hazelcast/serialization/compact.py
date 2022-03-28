@@ -70,6 +70,8 @@ class CompactStreamSerializer(BaseSerializer):
         return TYPE_COMPACT
 
     def register_fetched_schema(self, schema: "Schema") -> None:
+        # This method is only called in the reactor thread,
+        # as a callback/continuation.
         schema_id = schema.schema_id
         existing_schema = self._id_to_schema.get(schema_id)
         if not existing_schema:
@@ -84,6 +86,8 @@ class CompactStreamSerializer(BaseSerializer):
             )
 
     def register_sent_schema(self, schema: "Schema", clazz: typing.Type) -> None:
+        # This method is only called in the reactor thread,
+        # as a callback/continuation.
         existing_schema = self._type_to_schema.get(clazz)
         if not existing_schema:
             self._type_to_schema[clazz] = schema
