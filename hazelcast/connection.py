@@ -699,13 +699,13 @@ class ConnectionManager:
         return connection
 
     def _initialize_on_cluster(self, cluster_id) -> None:
-        with self._lock:
-            if cluster_id != self._cluster_id:
-                _logger.warning(
-                    f"Client won't send the state to the cluster: {cluster_id}"
-                    f"because it switched to a new cluster: {self._cluster_id}"
-                )
-                return
+        # This method is only called in the reactor thread
+        if cluster_id != self._cluster_id:
+            _logger.warning(
+                f"Client won't send the state to the cluster: {cluster_id}"
+                f"because it switched to a new cluster: {self._cluster_id}"
+            )
+            return
 
         def callback(future):
             try:
@@ -713,8 +713,7 @@ class ConnectionManager:
                 if cluster_id == self._cluster_id:
                     _logger.debug("The client state is sent to the cluster %s", cluster_id)
 
-                    with self._lock:
-                        self._client_state = _ClientState.INITIALIZED_ON_CLUSTER
+                    self._client_state = _ClientState.INITIALIZED_ON_CLUSTER
 
                     self._lifecycle_service.fire_lifecycle_event(LifecycleState.CONNECTED)
 
@@ -729,14 +728,14 @@ class ConnectionManager:
 
         def retry_on_error():
             _logger.exception(f"Failure during sending client state to the cluster {cluster_id}")
-            with self._lock:
-                if cluster_id != self._cluster_id:
-                    return
 
-                if _logger.isEnabledFor(logging.DEBUG):
-                    _logger.warning(f"Retrying sending client state to the cluster: {cluster_id}")
+            if cluster_id != self._cluster_id:
+                return
 
-                self._initialize_on_cluster(cluster_id)
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.warning(f"Retrying sending client state to the cluster: {cluster_id}")
+
+            self._initialize_on_cluster(cluster_id)
 
         try:
             self._send_state_to_cluster_fn().add_done_callback(callback)
