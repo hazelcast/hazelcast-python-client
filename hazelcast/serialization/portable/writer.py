@@ -121,7 +121,7 @@ class DefaultPortableWriter(PortableWriter):
                 portable = values[i]
                 _check_portable_attributes(fd, portable)
                 _pos_val = self._out.position()
-                self._out.write_int(_pos_val, _offset + i * INT_SIZE_IN_BYTES)
+                self._out.write_int_positional(_pos_val, _offset + i * INT_SIZE_IN_BYTES)
                 self._portable_serializer.write_internal(self._out, portable)
 
     def write_null_portable(self, field_name, factory_id, class_id):
@@ -135,7 +135,7 @@ class DefaultPortableWriter(PortableWriter):
             _pos_val = self._out.position()
             # last index
             _index = self._class_def.get_field_count()
-            self._out.write_int(_pos_val, self._offset + _index * INT_SIZE_IN_BYTES)
+            self._out.write_int_positional(_pos_val, self._offset + _index * INT_SIZE_IN_BYTES)
         self._raw = True
         return self._out
 
@@ -167,7 +167,7 @@ class DefaultPortableWriter(PortableWriter):
     def _write_field_def(self, index, field_name, field_type):
         pos_val = self._out.position()
         position = self._offset + index * INT_SIZE_IN_BYTES
-        self._out.write_int(pos_val, position)
+        self._out.write_int_positional(pos_val, position)
         self._out.write_short(len(field_name))
         self._out.write_from(field_name.encode("utf-8"))
         self._out.write_byte(field_type)
@@ -175,7 +175,7 @@ class DefaultPortableWriter(PortableWriter):
     def end(self):
         # write final offset
         _pos_value = self._out.position()
-        self._out.write_int(_pos_value, self._begin_pos)
+        self._out.write_int_positional(_pos_value, self._begin_pos)
 
 
 def _check_portable_attributes(field_def, portable):

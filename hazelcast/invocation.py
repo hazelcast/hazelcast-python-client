@@ -14,8 +14,10 @@ from hazelcast.errors import (
     OperationTimeoutError,
 )
 from hazelcast.future import Future
+from hazelcast.protocol.client_message import InboundMessage
 from hazelcast.protocol.codec import client_local_backup_listener_codec
 from hazelcast.util import AtomicInteger
+from hazelcast.serialization.compact import SchemaNotFoundError
 
 _logger = logging.getLogger(__name__)
 
@@ -68,16 +70,6 @@ class Invocation:
         self.pending_response = None
         self.pending_response_received_time = -1
 
-    def set_response(self, response):
-        try:
-            result = self.response_handler(response)
-            self.future.set_result(result)
-        except Exception as e:
-            self.future.set_exception(e)
-
-    def set_exception(self, exception, traceback=None):
-        self.future.set_exception(exception, traceback)
-
 
 class InvocationService:
     _CLEAN_RESOURCES_PERIOD = 0.1
@@ -105,12 +97,14 @@ class InvocationService:
         self._backup_timeout = config.operation_backup_timeout
         self._clean_resources_timer = None
         self._shutdown = False
+        self._compact_schema_service = None
 
-    def init(self, partition_service, connection_manager, listener_service):
+    def init(self, partition_service, connection_manager, listener_service, compact_schema_service):
         self._partition_service = partition_service
         self._connection_manager = connection_manager
         self._listener_service = listener_service
         self._check_invocation_allowed_fn = connection_manager.check_invocation_allowed
+        self._compact_schema_service = compact_schema_service
 
     def start(self):
         self._start_clean_resources_timer()
@@ -249,6 +243,43 @@ class InvocationService:
         invocation.sent_connection = connection
         return True
 
+    def _complete(self, invocation: Invocation, client_message: InboundMessage) -> None:
+        try:
+            result = invocation.response_handler(client_message)
+            invocation.future.set_result(result)
+        except SchemaNotFoundError as e:
+            self._fetch_schema_and_complete_again(e, invocation, client_message)
+            return
+        except Exception as e:
+            invocation.future.set_exception(e)
+
+        correlation_id = invocation.request.get_correlation_id()
+        self._pending.pop(correlation_id, None)
+
+    def _complete_with_error(self, invocation, error):
+        invocation.future.set_exception(error, None)
+        correlation_id = invocation.request.get_correlation_id()
+        self._pending.pop(correlation_id, None)
+
+    def _fetch_schema_and_complete_again(
+        self, error: SchemaNotFoundError, invocation: Invocation, message: InboundMessage
+    ) -> None:
+        schema_id = error.schema_id
+
+        def callback(future):
+            try:
+                schema = future.result()
+                self._compact_schema_service.register_fetched_schema(schema_id, schema)
+            except Exception as e:
+                self._complete_with_error(invocation, e)
+                return
+
+            message.reset_next_frame()
+            self._complete(invocation, message)
+
+        fetch_schema_future = self._compact_schema_service.fetch_schema(schema_id)
+        fetch_schema_future.add_done_callback(callback)
+
     def _notify_error(self, invocation, error):
         _logger.debug("Got exception for request %s, error: %s", invocation.request, error)
 
@@ -294,11 +325,6 @@ class InvocationService:
 
         return False
 
-    def _complete_with_error(self, invocation, error):
-        invocation.set_exception(error, None)
-        correlation_id = invocation.request.get_correlation_id()
-        self._pending.pop(correlation_id, None)
-
     def _register_backup_listener(self):
         codec = client_local_backup_listener_codec
         request = codec.encode_request()
@@ -335,11 +361,6 @@ class InvocationService:
             return
 
         self._complete(invocation, invocation.pending_response)
-
-    def _complete(self, invocation, client_message):
-        invocation.set_response(client_message)
-        correlation_id = invocation.request.get_correlation_id()
-        self._pending.pop(correlation_id, None)
 
     def _start_clean_resources_timer(self):
         def run():

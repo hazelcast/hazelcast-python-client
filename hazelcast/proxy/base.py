@@ -3,8 +3,10 @@ import typing
 import uuid
 
 from hazelcast.core import MemberInfo
+from hazelcast.future import Future
 from hazelcast.invocation import Invocation
 from hazelcast.partition import string_partition_strategy
+from hazelcast.serialization.compact import SchemaNotReplicatedError
 from hazelcast.types import KeyType, ValueType, ItemType, MessageType, BlockingProxyType
 from hazelcast.util import get_attr_name
 
@@ -31,6 +33,20 @@ class Proxy(typing.Generic[BlockingProxyType], abc.ABC):
         self._register_listener = listener_service.register_listener
         self._deregister_listener = listener_service.deregister_listener
         self._is_smart = context.config.smart_routing
+        self._send_compact_schema = context.compact_schema_service.send_schema
+
+    def _send_schema_and_retry(
+        self,
+        error: SchemaNotReplicatedError,
+        func: typing.Callable[..., Future],
+        *args: typing.Any,
+        **kwargs: typing.Any
+    ) -> Future:
+        def continuation(future):
+            future.result()
+            return func(*args, **kwargs)
+
+        return self._send_compact_schema(error.schema, error.clazz).continue_with(continuation)
 
     def destroy(self) -> bool:
         """Destroys this proxy.

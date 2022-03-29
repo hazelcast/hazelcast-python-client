@@ -46,7 +46,7 @@ class SerializationTestCase(unittest.TestCase):
         obj = "TEST"
         data = self.service.to_data(obj)
 
-        self.assertEqual(16, len(data.to_bytes()))
+        self.assertEqual(16, len(data.buffer))
 
     def test_python_pickle_serialization(self):
         obj = Address("localhost", 5701)

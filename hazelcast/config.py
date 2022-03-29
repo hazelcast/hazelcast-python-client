@@ -1,8 +1,14 @@
 import re
 import types
+import typing
 
 from hazelcast.errors import InvalidConfigurationError
-from hazelcast.serialization.api import StreamSerializer, IdentifiedDataSerializable, Portable
+from hazelcast.serialization.api import (
+    StreamSerializer,
+    IdentifiedDataSerializable,
+    Portable,
+    CompactSerializer,
+)
 from hazelcast.serialization.portable.classdef import ClassDefinition
 from hazelcast.security import TokenProvider
 from hazelcast.util import (
@@ -576,6 +582,7 @@ class _Config:
         "_creds_password",
         "_token_provider",
         "_use_public_ip",
+        "_compact_serializers",
     )
 
     def __init__(self):
@@ -632,6 +639,7 @@ class _Config:
         self._creds_password = None
         self._token_provider = None
         self._use_public_ip = False
+        self._compact_serializers: typing.Dict[typing.Type, CompactSerializer] = {}
 
     @property
     def cluster_members(self):
@@ -1360,6 +1368,24 @@ class _Config:
             self._use_public_ip = value
         else:
             raise TypeError("use_public_ip must be a boolean")
+
+    @property
+    def compact_serializers(self) -> typing.Dict[typing.Type, CompactSerializer]:
+        return self._compact_serializers
+
+    @compact_serializers.setter
+    def compact_serializers(self, value: typing.Dict[typing.Type, CompactSerializer]) -> None:
+        if isinstance(value, dict):
+            for clazz, serializer in value.items():
+                if not isinstance(clazz, type):
+                    raise TypeError("Keys of compact_serializers must be classes")
+
+                if not isinstance(serializer, CompactSerializer):
+                    raise TypeError("Values of compact_serializers must be CompactSerializer")
+
+            self._compact_serializers = value
+        else:
+            raise TypeError("compact_serializers must be a dict")
 
     @classmethod
     def from_dict(cls, d):
