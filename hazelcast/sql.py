@@ -1247,7 +1247,16 @@ class _InternalSqlService:
                     self._serialization_service.to_data(param) for param in statement.parameters
                 ]
             except SchemaNotReplicatedError as e:
-                return self._send_schema_and_retry_fn(e, self.execute, sql, params, kwargs)
+                return self._send_schema_and_retry_fn(
+                    e,
+                    self.execute,
+                    sql,
+                    params,
+                    cursor_buffer_size,
+                    timeout,
+                    expected_result_type,
+                    schema,
+                )
 
             connection = self._get_query_connection()
             # Create a new, unique query id.

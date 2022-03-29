@@ -814,17 +814,18 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         partition_service = self._context.partition_service
         partition_to_keys = {}
 
-        try:
-            for key in keys:
-                check_not_none(key, "key can't be None")
+        for key in keys:
+            check_not_none(key, "key can't be None")
+            try:
                 key_data = self._to_data(key)
-                partition_id = partition_service.get_partition_id(key_data)
-                try:
-                    partition_to_keys[partition_id][key] = key_data
-                except KeyError:
-                    partition_to_keys[partition_id] = {key: key_data}
-        except SchemaNotReplicatedError as e:
-            return self._send_schema_and_retry(e, self.get_all, keys)
+            except SchemaNotReplicatedError as e:
+                return self._send_schema_and_retry(e, self.get_all, keys)
+
+            partition_id = partition_service.get_partition_id(key_data)
+            try:
+                partition_to_keys[partition_id][key] = key_data
+            except KeyError:
+                partition_to_keys[partition_id] = {key: key_data}
 
         return self._get_all_internal(partition_to_keys)
 
@@ -916,8 +917,9 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         """
         if predicate:
             if isinstance(predicate, PagingPredicate):
+                predicate.iteration_type = IterationType.KEY
+
                 try:
-                    predicate.iteration_type = IterationType.KEY
                     holder = PagingPredicateHolder.of(predicate, self._to_data)
                 except SchemaNotReplicatedError as e:
                     return self._send_schema_and_retry(e, self.key_set, predicate)
@@ -1059,7 +1061,6 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             request = map_project_with_predicate_codec.encode_request(
                 self.name, projection_data, predicate_data
             )
-            return self._invoke(request, handler)
         else:
             try:
                 projection_data = self._to_data(projection)
@@ -1135,18 +1136,19 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         partition_service = self._context.partition_service
         partition_map = {}
 
-        try:
-            for key, value in map.items():
-                check_not_none(key, "key can't be None")
-                check_not_none(value, "value can't be None")
+        for key, value in map.items():
+            check_not_none(key, "key can't be None")
+            check_not_none(value, "value can't be None")
+            try:
                 entry = (self._to_data(key), self._to_data(value))
-                partition_id = partition_service.get_partition_id(entry[0])
-                try:
-                    partition_map[partition_id].append(entry)
-                except KeyError:
-                    partition_map[partition_id] = [entry]
-        except SchemaNotReplicatedError as e:
-            return self._send_schema_and_retry(e, self.put_all, map)
+            except SchemaNotReplicatedError as e:
+                return self._send_schema_and_retry(e, self.put_all, map)
+
+            partition_id = partition_service.get_partition_id(entry[0])
+            try:
+                partition_map[partition_id].append(entry)
+            except KeyError:
+                partition_map[partition_id] = [entry]
 
         futures = []
         for partition_id, entry_list in partition_map.items():
@@ -1611,8 +1613,9 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         """
         if predicate:
             if isinstance(predicate, PagingPredicate):
+                predicate.iteration_type = IterationType.VALUE
+
                 try:
-                    predicate.iteration_type = IterationType.VALUE
                     holder = PagingPredicateHolder.of(predicate, self._to_data)
                 except SchemaNotReplicatedError as e:
                     return self._send_schema_and_retry(e, self.values, predicate)

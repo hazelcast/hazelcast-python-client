@@ -147,7 +147,7 @@ class ListenerService:
             try:
                 handler(message)
             except SchemaNotFoundError as e:
-                self._fetch_schema_and_handle_again(e, handler, message, correlation_id)
+                self._fetch_schema_and_handle_again(e, handler, message)
         else:
             _logger.debug("Got event message with unknown correlation id: %s", message)
 
@@ -156,7 +156,6 @@ class ListenerService:
         error: SchemaNotFoundError,
         handler: typing.Callable[[InboundMessage], None],
         message: InboundMessage,
-        correlation_id: int,
     ) -> None:
         schema_id = error.schema_id
 
@@ -171,7 +170,10 @@ class ListenerService:
                 return
 
             message.reset_next_frame()
-            self.handle_client_message(message, correlation_id)
+            try:
+                handler(message)
+            except SchemaNotFoundError as e:
+                self._fetch_schema_and_handle_again(e, handler, message)
 
         fetch_schema_future = self._compact_schema_service.fetch_schema(schema_id)
         fetch_schema_future.add_done_callback(callback)

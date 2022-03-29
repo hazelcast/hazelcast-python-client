@@ -256,35 +256,22 @@ class EntryEvent(typing.Generic[KeyType, ValueType]):
 
 
 class TopicMessage(typing.Generic[MessageType]):
-    """Topic message."""
+    """Topic message.
 
-    __slots__ = ("_name", "_message", "_publish_time", "_member")
+    Attributes:
+        name: Name of the proxy that fired the event.
+        message: The message sent to Topic.
+        publish_time: UNIX time that the event is published as seconds.
+        member: Member that fired the event.
+    """
 
-    def __init__(self, name, message, publish_time, member):
+    __slots__ = ("name", "message", "publish_time", "member")
+
+    def __init__(self, name: str, message: MessageType, publish_time: int, member: MemberInfo):
         self._name = name
         self._message = message
         self._publish_time = publish_time
         self._member = member
-
-    @property
-    def name(self) -> str:
-        """Name of the proxy that fired the event."""
-        return self._name
-
-    @property
-    def publish_time(self) -> int:
-        """UNIX time that the event is published as seconds."""
-        return self._publish_time
-
-    @property
-    def member(self) -> MemberInfo:
-        """Member that fired the event."""
-        return self._member
-
-    @property
-    def message(self) -> MessageType:
-        """The message sent to Topic."""
-        return self._message
 
     def __repr__(self):
         return "TopicMessage(message=%s, publish_time=%s, topic_name=%s, publishing_member=%s)" % (

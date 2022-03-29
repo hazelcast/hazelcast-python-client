@@ -72,7 +72,7 @@ class CompactStreamSerializer(BaseSerializer):
         serializer = self._type_name_to_serializer.get(schema.type_name)
         if not serializer:
             raise HazelcastSerializationError(
-                f"No serializer is registered for the type name '{schema.type_name}'"
+                f"No compact serializer is registered for the type name '{schema.type_name}'"
             )
 
         reader = DefaultCompactReader(self, inp, schema)  # type: ignore
@@ -86,7 +86,7 @@ class CompactStreamSerializer(BaseSerializer):
         # as a callback/continuation.
         if not schema:
             raise HazelcastSerializationError(
-                f"No schema with id '{schema.schema_id}' " f"can be found on the cluster."
+                f"No schema with id '{schema.schema_id}' can be found on the cluster."
             )
 
         schema_id = schema.schema_id
