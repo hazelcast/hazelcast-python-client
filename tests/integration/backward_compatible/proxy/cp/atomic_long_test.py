@@ -77,10 +77,10 @@ class AtomicLongTest(CPTestCase):
         self.assertEqual(0, self.atomic_long.get())
         self.atomic_long.set(11)
         self.assertEqual(11, self.atomic_long.get())
-        long_max = 2 ** 63 - 1
+        long_max = 2**63 - 1
         self.atomic_long.set(long_max)
         self.assertEqual(long_max, self.atomic_long.get())
-        long_min = -(2 ** 63)
+        long_min = -(2**63)
         self.atomic_long.set(long_min)
         self.assertEqual(long_min, self.atomic_long.get())
 

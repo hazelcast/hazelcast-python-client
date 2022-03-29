@@ -63,9 +63,9 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = u"Hazelcast Python Client"
-copyright = u"2022, Hazelcast Inc."
-author = u"Hazelcast Inc. Developers"
+project = "Hazelcast Python Client"
+copyright = "2022, Hazelcast Inc."
+author = "Hazelcast Inc. Developers"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -244,7 +244,7 @@ latex_documents = [
     (
         master_doc,
         "hazelcast-python-client.tex",
-        u"Hazelcast Python Client Documentation",
+        "Hazelcast Python Client Documentation",
         author,
         "manual",
     ),
@@ -276,7 +276,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, "hazelcast-python-client", u"Hazelcast Python Client Documentation", [author], 1)
+    (master_doc, "hazelcast-python-client", "Hazelcast Python Client Documentation", [author], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -292,7 +292,7 @@ texinfo_documents = [
     (
         master_doc,
         "hazelcast-python-client",
-        u"Hazelcast Python Client Documentation",
+        "Hazelcast Python Client Documentation",
         author,
         "hazelcast-python-client",
         "One line description of project.",
