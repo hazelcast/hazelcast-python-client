@@ -373,7 +373,7 @@ class HazelcastClient:
         self._lifecycle_service = LifecycleService(self._internal_lifecycle_service)
         self._invocation_service = InvocationService(self, config, self._reactor)
         self._compact_schema_service = CompactSchemaService(
-            self._serialization_service.get_compact_stream_serializer(),
+            self._serialization_service.compact_stream_serializer,
             self._invocation_service,
         )
         self._address_provider = self._create_address_provider()

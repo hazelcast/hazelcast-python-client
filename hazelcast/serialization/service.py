@@ -90,10 +90,7 @@ class SerializationServiceV1:
         self._data_serializer = IdentifiedDataSerializer(factories)
 
         # Register Global Serializer
-        self._global_serializer = None
-        global_serializer = config.global_serializer
-        if global_serializer:
-            self._global_serializer = global_serializer()
+        self._global_serializer = config.global_serializer() if config.global_serializer else None
 
         self._null_serializer = NoneSerializer()
         self._python_serializer = PythonObjectSerializer()
@@ -207,16 +204,15 @@ class SerializationServiceV1:
         pk = _ps(obj)
         if pk is not None and pk is not obj:
             partitioning_key = self.to_data(pk, empty_partitioning_strategy)
-            partitioning_hash = (
-                0 if partitioning_key is None else partitioning_key.get_partition_hash()
-            )
+            partitioning_hash = partitioning_key.get_partition_hash()
         return partitioning_hash
 
     def destroy(self):
         self._active = False
         self._registry.destroy()
 
-    def get_compact_stream_serializer(self) -> CompactStreamSerializer:
+    @property
+    def compact_stream_serializer(self) -> CompactStreamSerializer:
         return self._compact_stream_serializer
 
     @staticmethod
