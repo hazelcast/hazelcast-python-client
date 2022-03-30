@@ -1668,12 +1668,19 @@ class SqlCompactCompatibilityTest(CompactCompatibilityBase):
         super().tearDown()
 
     def test_sql(self):
-        self.client.sql.execute(
-            f'INSERT INTO "{self.map_name}" VALUES(?, ?)',
-            1,
-            INNER_COMPACT_INSTANCE.string_field,
+        self._put_from_another_client(1, INNER_COMPACT_INSTANCE)
+        result = self.client.sql.execute(
+            f'SELECT this FROM "{self.map_name}" WHERE ? IS NOT NULL',
+            OUTER_COMPACT_INSTANCE,
         ).result()
-        self.assertEqual(INNER_COMPACT_INSTANCE, self.map.get(1))
+
+        rows = [row["this"] for row in result]
+        self.assertEqual([INNER_COMPACT_INSTANCE], rows)
+
+    def _put_from_another_client(self, key, value):
+        other_client = self.create_client(self.client_config)
+        other_client_map = other_client.get_map(self.map_name).blocking()
+        other_client_map.put(key, value)
 
 
 class PartitionServiceCompactCompatibilityTest(CompactCompatibilityBase):
