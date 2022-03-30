@@ -268,10 +268,10 @@ class TopicMessage(typing.Generic[MessageType]):
     __slots__ = ("name", "message", "publish_time", "member")
 
     def __init__(self, name: str, message: MessageType, publish_time: int, member: MemberInfo):
-        self._name = name
-        self._message = message
-        self._publish_time = publish_time
-        self._member = member
+        self.name = name
+        self.message = message
+        self.publish_time = publish_time
+        self.member = member
 
     def __repr__(self):
         return "TopicMessage(message=%s, publish_time=%s, topic_name=%s, publishing_member=%s)" % (
