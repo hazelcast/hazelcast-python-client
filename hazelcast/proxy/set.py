@@ -19,6 +19,7 @@ from hazelcast.protocol.codec import (
 
 from hazelcast.proxy.base import PartitionSpecificProxy, ItemEvent, ItemEventType
 from hazelcast.types import ItemType
+from hazelcast.serialization.compact import SchemaNotReplicatedError
 from hazelcast.util import check_not_none, ImmutableLazyDataList
 
 
@@ -35,7 +36,11 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
             ``True`` if this set is changed after call, ``False`` otherwise.
         """
         check_not_none(item, "Value can't be None")
-        element_data = self._to_data(item)
+        try:
+            element_data = self._to_data(item)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.add, item)
+
         request = set_add_codec.encode_request(self.name, element_data)
         return self._invoke(request, set_add_codec.decode_response)
 
@@ -50,10 +55,13 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
             ``True`` if this set is changed after call, ``False`` otherwise.
         """
         check_not_none(items, "Value can't be None")
-        data_items = []
-        for item in items:
-            check_not_none(item, "Value can't be None")
-            data_items.append(self._to_data(item))
+        try:
+            data_items = []
+            for item in items:
+                check_not_none(item, "Value can't be None")
+                data_items.append(self._to_data(item))
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.add_all, items)
 
         request = set_add_all_codec.encode_request(self.name, data_items)
         return self._invoke(request, set_add_all_codec.decode_response)
@@ -81,11 +89,11 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
         """
         request = set_add_listener_codec.encode_request(self.name, include_value, self._is_smart)
 
-        def handle_event_item(item, uuid, event_type):
-            item = item if include_value else None
+        def handle_event_item(item_data, uuid, event_type):
+            item = self._to_object(item_data) if include_value else None
             member = self._context.cluster_service.get_member(uuid)
 
-            item_event = ItemEvent(self.name, item, event_type, member, self._to_object)
+            item_event = ItemEvent(self.name, item, event_type, member)
             if event_type == ItemEventType.ADDED:
                 if item_added_func:
                     item_added_func(item_event)
@@ -116,7 +124,11 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
             otherwise.
         """
         check_not_none(item, "Value can't be None")
-        item_data = self._to_data(item)
+        try:
+            item_data = self._to_data(item)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.contains, item)
+
         request = set_contains_codec.encode_request(self.name, item_data)
         return self._invoke(request, set_contains_codec.decode_response)
 
@@ -133,10 +145,13 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
             this set, ``False`` otherwise.
         """
         check_not_none(items, "Value can't be None")
-        data_items = []
-        for item in items:
-            check_not_none(item, "Value can't be None")
-            data_items.append(self._to_data(item))
+        try:
+            data_items = []
+            for item in items:
+                check_not_none(item, "Value can't be None")
+                data_items.append(self._to_data(item))
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.contains_all, items)
 
         request = set_contains_all_codec.encode_request(self.name, data_items)
         return self._invoke(request, set_contains_all_codec.decode_response)
@@ -176,7 +191,11 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
             otherwise.
         """
         check_not_none(item, "Value can't be None")
-        item_data = self._to_data(item)
+        try:
+            item_data = self._to_data(item)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.remove, item)
+
         request = set_remove_codec.encode_request(self.name, item_data)
         return self._invoke(request, set_remove_codec.decode_response)
 
@@ -191,10 +210,13 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
             ``True`` if the call changed this set, ``False`` otherwise.
         """
         check_not_none(items, "Value can't be None")
-        data_items = []
-        for item in items:
-            check_not_none(item, "Value can't be None")
-            data_items.append(self._to_data(item))
+        try:
+            data_items = []
+            for item in items:
+                check_not_none(item, "Value can't be None")
+                data_items.append(self._to_data(item))
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.remove_all, items)
 
         request = set_compare_and_remove_all_codec.encode_request(self.name, data_items)
         return self._invoke(request, set_compare_and_remove_all_codec.decode_response)
@@ -228,10 +250,13 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
             otherwise.
         """
         check_not_none(items, "Value can't be None")
-        data_items = []
-        for item in items:
-            check_not_none(item, "Value can't be None")
-            data_items.append(self._to_data(item))
+        try:
+            data_items = []
+            for item in items:
+                check_not_none(item, "Value can't be None")
+                data_items.append(self._to_data(item))
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.retain_all, items)
 
         request = set_compare_and_retain_all_codec.encode_request(self.name, data_items)
         return self._invoke(request, set_compare_and_retain_all_codec.decode_response)

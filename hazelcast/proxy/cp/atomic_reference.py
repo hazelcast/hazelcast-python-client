@@ -10,6 +10,7 @@ from hazelcast.protocol.codec import (
 )
 from hazelcast.proxy.cp import BaseCPProxy
 from hazelcast.types import ElementType
+from hazelcast.serialization.compact import SchemaNotReplicatedError
 from hazelcast.util import check_not_none
 
 
@@ -65,8 +66,12 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
             ``True`` if successful, or ``False`` if the actual value was not
             equal to the expected value.
         """
-        expected_data = self._to_data(expect)
-        new_data = self._to_data(update)
+        try:
+            expected_data = self._to_data(expect)
+            new_data = self._to_data(update)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.compare_and_set, expect, update)
+
         codec = atomic_ref_compare_and_set_codec
         request = codec.encode_request(self._group_id, self._object_name, expected_data, new_data)
         return self._invoke(request, codec.decode_response)
@@ -91,7 +96,11 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
         Args:
             new_value: The new value.
         """
-        new_value_data = self._to_data(new_value)
+        try:
+            new_value_data = self._to_data(new_value)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.set, new_value)
+
         codec = atomic_ref_set_codec
         request = codec.encode_request(self._group_id, self._object_name, new_value_data, False)
         return self._invoke(request)
@@ -105,7 +114,11 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
         Returns:
             The old value.
         """
-        new_value_data = self._to_data(new_value)
+        try:
+            new_value_data = self._to_data(new_value)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.get_and_set, new_value)
+
         codec = atomic_ref_set_codec
         request = codec.encode_request(self._group_id, self._object_name, new_value_data, True)
 
@@ -135,7 +148,11 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
         Returns:
             ``True`` if the value is found, ``False`` otherwise.
         """
-        value_data = self._to_data(value)
+        try:
+            value_data = self._to_data(value)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.contains, value)
+
         codec = atomic_ref_contains_codec
         request = codec.encode_request(self._group_id, self._object_name, value_data)
         return self._invoke(request, codec.decode_response)
@@ -153,7 +170,11 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
             function: The function that alters the currently stored reference.
         """
         check_not_none(function, "Function cannot be None")
-        function_data = self._to_data(function)
+        try:
+            function_data = self._to_data(function)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.alter, function)
+
         codec = atomic_ref_apply_codec
         # 0 means don't return the value
         request = codec.encode_request(self._group_id, self._object_name, function_data, 0, True)
@@ -176,7 +197,11 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
             The new value, the result of the applied function.
         """
         check_not_none(function, "Function cannot be None")
-        function_data = self._to_data(function)
+        try:
+            function_data = self._to_data(function)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.alter_and_get, function)
+
         codec = atomic_ref_apply_codec
         # 2 means return the new value
         request = codec.encode_request(self._group_id, self._object_name, function_data, 2, True)
@@ -203,7 +228,11 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
             The old value, the value before the function is applied.
         """
         check_not_none(function, "Function cannot be None")
-        function_data = self._to_data(function)
+        try:
+            function_data = self._to_data(function)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.get_and_alter, function)
+
         codec = atomic_ref_apply_codec
         # 1 means return the old value
         request = codec.encode_request(self._group_id, self._object_name, function_data, 1, True)
@@ -230,7 +259,11 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
             The result of the function application.
         """
         check_not_none(function, "Function cannot be None")
-        function_data = self._to_data(function)
+        try:
+            function_data = self._to_data(function)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.apply, function)
+
         codec = atomic_ref_apply_codec
         # 2 means return the new value
         request = codec.encode_request(self._group_id, self._object_name, function_data, 2, False)

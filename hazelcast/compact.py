@@ -9,7 +9,11 @@ from hazelcast.protocol.codec import (
     client_send_schema_codec,
     client_send_all_schemas_codec,
 )
-from hazelcast.serialization.compact import CompactStreamSerializer, Schema
+from hazelcast.serialization.compact import (
+    CompactStreamSerializer,
+    Schema,
+    SchemaNotReplicatedError,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -37,19 +41,28 @@ class CompactSchemaService:
         self._invocation_service.invoke(fetch_schema_invocation)
         return fetch_schema_invocation.future
 
-    def send_schema(self, schema: Schema, clazz: typing.Type) -> Future:
+    def send_schema_and_retry(
+        self,
+        error: SchemaNotReplicatedError,
+        func: typing.Callable[..., Future],
+        *args: typing.Any,
+        **kwargs: typing.Any,
+    ) -> Future:
+        schema = error.schema
+        clazz = error.clazz
         request = client_send_schema_codec.encode_request(schema)
         invocation = Invocation(request)
 
         def continuation(future):
             future.result()
-            self._compact_serializer.register_sent_schema(schema, clazz)
+            self._compact_serializer.register_schema_to_type(schema, clazz)
+            return func(*args, **kwargs)
 
         self._invocation_service.invoke(invocation)
         return invocation.future.continue_with(continuation)
 
     def send_all_schemas(self) -> Future:
-        schemas = self._compact_serializer.get_sent_schemas()
+        schemas = self._compact_serializer.get_schemas()
         if not schemas:
             _logger.debug("There is no schema to send to the cluster.")
             return ImmediateFuture(None)
@@ -67,4 +80,4 @@ class CompactSchemaService:
                 f"The schema with the id {schema_id} can not be found in the cluster."
             )
 
-        self._compact_serializer.register_fetched_schema(schema)
+        self._compact_serializer.register_schema_to_id(schema)

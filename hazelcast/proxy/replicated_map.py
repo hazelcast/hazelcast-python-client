@@ -24,6 +24,7 @@ from hazelcast.protocol.codec import (
 )
 from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType
 from hazelcast.types import KeyType, ValueType
+from hazelcast.serialization.compact import SchemaNotReplicatedError
 from hazelcast.util import to_millis, check_not_none, ImmutableLazyDataList
 
 
@@ -78,31 +79,75 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
             A registration id which is used as a key to remove the listener.
         """
         if key and predicate:
+            try:
+                key_data = self._to_data(key)
+                predicate_data = self._to_data(predicate)
+            except SchemaNotReplicatedError as e:
+                return self._send_schema_and_retry(
+                    e,
+                    self.add_entry_listener,
+                    key,
+                    predicate,
+                    added_func,
+                    removed_func,
+                    updated_func,
+                    evicted_func,
+                    clear_all_func,
+                )
             codec = replicated_map_add_entry_listener_to_key_with_predicate_codec
-            key_data = self._to_data(key)
-            predicate_data = self._to_data(predicate)
             request = codec.encode_request(self.name, key_data, predicate_data, self._is_smart)
         elif key and not predicate:
+            try:
+                key_data = self._to_data(key)
+            except SchemaNotReplicatedError as e:
+                return self._send_schema_and_retry(
+                    e,
+                    self.add_entry_listener,
+                    key,
+                    predicate,
+                    added_func,
+                    removed_func,
+                    updated_func,
+                    evicted_func,
+                    clear_all_func,
+                )
             codec = replicated_map_add_entry_listener_to_key_codec
-            key_data = self._to_data(key)
             request = codec.encode_request(self.name, key_data, self._is_smart)
         elif not key and predicate:
+            try:
+                predicate = self._to_data(predicate)
+            except SchemaNotReplicatedError as e:
+                return self._send_schema_and_retry(
+                    e,
+                    self.add_entry_listener,
+                    key,
+                    predicate,
+                    added_func,
+                    removed_func,
+                    updated_func,
+                    evicted_func,
+                    clear_all_func,
+                )
             codec = replicated_map_add_entry_listener_with_predicate_codec
-            predicate = self._to_data(predicate)
             request = codec.encode_request(self.name, predicate, self._is_smart)
         else:
             codec = replicated_map_add_entry_listener_codec
             request = codec.encode_request(self.name, self._is_smart)
 
         def handle_event_entry(
-            key, value, old_value, merging_value, event_type, uuid, number_of_affected_entries
+            key_data,
+            value_data,
+            old_value_data,
+            merging_value_data,
+            event_type,
+            uuid,
+            number_of_affected_entries,
         ):
             event = EntryEvent(
-                self._to_object,
-                key,
-                value,
-                old_value,
-                merging_value,
+                self._to_object(key_data),
+                self._to_object(value_data),
+                self._to_object(old_value_data),
+                self._to_object(merging_value_data),
                 event_type,
                 uuid,
                 number_of_affected_entries,
@@ -148,7 +193,11 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
             ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
-        key_data = self._to_data(key)
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.contains_key, key)
+
         request = replicated_map_contains_key_codec.encode_request(self.name, key_data)
         return self._invoke_on_key(
             request, key_data, replicated_map_contains_key_codec.decode_response
@@ -166,7 +215,11 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
             ``False`` otherwise.
         """
         check_not_none(value, "value can't be None")
-        value_data = self._to_data(value)
+        try:
+            value_data = self._to_data(value)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.contains_value, value)
+
         request = replicated_map_contains_value_codec.encode_request(self.name, value_data)
         return self._invoke_on_partition(
             request, self._partition_id, replicated_map_contains_value_codec.decode_response
@@ -207,11 +260,14 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
             The value associated with the specified key.
         """
         check_not_none(key, "key can't be None")
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.get, key)
 
         def handler(message):
             return self._to_object(replicated_map_get_codec.decode_response(message))
 
-        key_data = self._to_data(key)
         request = replicated_map_get_codec.encode_request(self.name, key_data)
         return self._invoke_on_key(request, key_data, handler)
 
@@ -267,12 +323,15 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
         """
         check_not_none(key, "key can't be None")
         check_not_none(key, "value can't be None")
+        try:
+            key_data = self._to_data(key)
+            value_data = self._to_data(value)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.put, key, value, ttl)
 
         def handler(message):
             return self._to_object(replicated_map_put_codec.decode_response(message))
 
-        key_data = self._to_data(key)
-        value_data = self._to_data(value)
         request = replicated_map_put_codec.encode_request(
             self.name, key_data, value_data, to_millis(ttl)
         )
@@ -287,11 +346,14 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
         Args:
             source: Map which includes mappings to be stored in this map.
         """
-        entries = []
-        for key, value in source.items():
-            check_not_none(key, "key can't be None")
-            check_not_none(value, "value can't be None")
-            entries.append((self._to_data(key), self._to_data(value)))
+        try:
+            entries = []
+            for key, value in source.items():
+                check_not_none(key, "key can't be None")
+                check_not_none(value, "value can't be None")
+                entries.append((self._to_data(key), self._to_data(value)))
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.put_all, source)
 
         request = replicated_map_put_all_codec.encode_request(self.name, entries)
         return self._invoke(request)
@@ -315,11 +377,14 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
             no mapping for key.
         """
         check_not_none(key, "key can't be None")
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.remove, key)
 
         def handler(message):
             return self._to_object(replicated_map_remove_codec.decode_response(message))
 
-        key_data = self._to_data(key)
         request = replicated_map_remove_codec.encode_request(self.name, key_data)
         return self._invoke_on_key(request, key_data, handler)
 

@@ -17,6 +17,7 @@ from hazelcast.errors import (
 from hazelcast.future import ImmediateFuture, Future
 from hazelcast.proxy.base import Proxy, TopicMessage
 from hazelcast.proxy.ringbuffer import OVERFLOW_POLICY_FAIL, OVERFLOW_POLICY_OVERWRITE
+from hazelcast.serialization.compact import SchemaNotReplicatedError
 from hazelcast.serialization.objects import ReliableTopicMessage
 from hazelcast.types import MessageType
 from hazelcast.util import check_not_none
@@ -253,10 +254,9 @@ class _MessageRunner:
 
                     topic_message = TopicMessage(
                         self._topic_name,
-                        message.payload,
+                        self._to_object(message.payload),
                         message.publish_time,
                         member,
-                        self._to_object,
                     )
                     self._listener.on_message(topic_message)
                 except Exception as e:
@@ -571,8 +571,11 @@ class ReliableTopic(Proxy["BlockingReliableTopic"], typing.Generic[MessageType])
             message: The message.
         """
         check_not_none(message, "Message cannot be None")
+        try:
+            payload = self._to_data(message)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.publish, message)
 
-        payload = self._to_data(message)
         topic_message = ReliableTopicMessage(time.time(), None, payload)
 
         overload_policy = self._config.overload_policy
@@ -592,13 +595,14 @@ class ReliableTopic(Proxy["BlockingReliableTopic"], typing.Generic[MessageType])
             messages: Messages to publish.
         """
         check_not_none(messages, "Messages cannot be None")
-
-        topic_messages = []
-
-        for message in messages:
-            check_not_none(message, "Message cannot be None")
-            payload = self._to_data(message)
-            topic_messages.append(ReliableTopicMessage(time.time(), None, payload))
+        try:
+            topic_messages = []
+            for message in messages:
+                check_not_none(message, "Message cannot be None")
+                payload = self._to_data(message)
+                topic_messages.append(ReliableTopicMessage(time.time(), None, payload))
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.publish_all, messages)
 
         overload_policy = self._config.overload_policy
         if overload_policy == TopicOverloadPolicy.BLOCK:

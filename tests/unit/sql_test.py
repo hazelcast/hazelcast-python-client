@@ -48,7 +48,10 @@ class SqlMockTest(unittest.TestCase):
         invocation_service.invoke.side_effect = invoke
 
         self.internal_service = _InternalSqlService(
-            connection_manager, serialization_service, invocation_service
+            connection_manager,
+            serialization_service,
+            invocation_service,
+            MagicMock(),
         )
         self.service = SqlService(self.internal_service)
         self.result = self.service.execute("SOME QUERY")

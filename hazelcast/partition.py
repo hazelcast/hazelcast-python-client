@@ -5,6 +5,7 @@ import typing
 
 from hazelcast.errors import ClientOfflineError
 from hazelcast.hash import hash_to_index
+from hazelcast.serialization.compact import SchemaNotReplicatedError
 
 _logger = logging.getLogger(__name__)
 
@@ -27,11 +28,12 @@ class PartitionService:
     owner or the partition id of a key.
     """
 
-    __slots__ = ("_service", "_serialization_service")
+    __slots__ = ("_service", "_serialization_service", "_send_schema_and_retry_fn")
 
-    def __init__(self, internal_partition_service, serialization_service):
+    def __init__(self, internal_partition_service, serialization_service, send_schema_and_retry_fn):
         self._service = internal_partition_service
         self._serialization_service = serialization_service
+        self._send_schema_and_retry_fn = send_schema_and_retry_fn
 
     def get_partition_owner(self, partition_id: int) -> typing.Optional[uuid.UUID]:
         """
@@ -55,7 +57,12 @@ class PartitionService:
         Returns:
             The partition id.
         """
-        key_data = self._serialization_service.to_data(key)
+        try:
+            key_data = self._serialization_service.to_data(key)
+        except SchemaNotReplicatedError as e:
+            self._send_schema_and_retry_fn(e, lambda: None).result()
+            return self.get_partition_id(key)
+
         return self._service.get_partition_id(key_data)
 
     def get_partition_count(self) -> int:

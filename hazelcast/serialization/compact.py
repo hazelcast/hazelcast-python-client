@@ -49,7 +49,14 @@ class CompactStreamSerializer(BaseSerializer):
         schema = self._type_to_schema.get(clazz)
         if not schema:
             schema = CompactStreamSerializer._build_schema(serializer, obj)
-            raise SchemaNotReplicatedError(schema, clazz)
+            # Check if we already fetched the schema from the cluster.
+            if schema.schema_id not in self._id_to_schema:
+                raise SchemaNotReplicatedError(schema, clazz)
+
+            # No need to raise the not replicated error, as we just
+            # fetched it from the cluster. Let's register it to our
+            # local and continue
+            self.register_schema_to_type(schema, clazz)
 
         out.write_long(schema.schema_id)
         writer = DefaultCompactWriter(self, out, schema)  # type: ignore
@@ -62,14 +69,19 @@ class CompactStreamSerializer(BaseSerializer):
         if not schema:
             raise SchemaNotFoundError(schema_id)
 
-        serializer = self._type_name_to_serializer[schema.type_name]
+        serializer = self._type_name_to_serializer.get(schema.type_name)
+        if not serializer:
+            raise HazelcastSerializationError(
+                f"No compact serializer is registered for the type name '{schema.type_name}'"
+            )
+
         reader = DefaultCompactReader(self, inp, schema)  # type: ignore
         return serializer.read(reader)
 
     def get_type_id(self) -> int:
         return TYPE_COMPACT
 
-    def register_fetched_schema(self, schema: "Schema") -> None:
+    def register_schema_to_id(self, schema: "Schema") -> None:
         # This method is only called in the reactor thread,
         # as a callback/continuation.
         schema_id = schema.schema_id
@@ -85,9 +97,13 @@ class CompactStreamSerializer(BaseSerializer):
                 f"new schema: {schema}."
             )
 
-    def register_sent_schema(self, schema: "Schema", clazz: typing.Type) -> None:
+    def register_schema_to_type(self, schema: "Schema", clazz: typing.Type) -> None:
         # This method is only called in the reactor thread,
         # as a callback/continuation.
+        # Put it to local registry to avoid need to fetch it once
+        # we read a data with the same schema id
+        self.register_schema_to_id(schema)
+
         existing_schema = self._type_to_schema.get(clazz)
         if not existing_schema:
             self._type_to_schema[clazz] = schema
@@ -100,8 +116,8 @@ class CompactStreamSerializer(BaseSerializer):
                 f"new schema: {schema}."
             )
 
-    def get_sent_schemas(self) -> typing.List["Schema"]:
-        return list(self._type_to_schema.values())
+    def get_schemas(self) -> typing.List["Schema"]:
+        return list(self._id_to_schema.values())
 
     @staticmethod
     def _build_schema(serializer: CompactSerializer, obj: typing.Any) -> "Schema":

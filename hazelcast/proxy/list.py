@@ -28,6 +28,7 @@ from hazelcast.protocol.codec import (
 )
 from hazelcast.proxy.base import PartitionSpecificProxy, ItemEvent, ItemEventType
 from hazelcast.types import ItemType
+from hazelcast.serialization.compact import SchemaNotReplicatedError
 from hazelcast.util import check_not_none, ImmutableLazyDataList
 
 
@@ -49,7 +50,11 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
             ``True`` if item is added, ``False`` otherwise.
         """
         check_not_none(item, "Value can't be None")
-        element_data = self._to_data(item)
+        try:
+            element_data = self._to_data(item)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.add, item)
+
         request = list_add_codec.encode_request(self.name, element_data)
         return self._invoke(request, list_add_codec.decode_response)
 
@@ -63,7 +68,10 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
             item: The specified item to be inserted.
         """
         check_not_none(item, "Value can't be None")
-        element_data = self._to_data(item)
+        try:
+            element_data = self._to_data(item)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.add_at, index, item)
 
         request = list_add_with_index_codec.encode_request(self.name, index, element_data)
         return self._invoke(request)
@@ -83,10 +91,14 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
             ``True`` if this call changed the list, ``False`` otherwise.
         """
         check_not_none(items, "Value can't be None")
-        data_items = []
-        for item in items:
-            check_not_none(item, "Value can't be None")
-            data_items.append(self._to_data(item))
+
+        try:
+            data_items = []
+            for item in items:
+                check_not_none(item, "Value can't be None")
+                data_items.append(self._to_data(item))
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.add_all, items)
 
         request = list_add_all_codec.encode_request(self.name, data_items)
         return self._invoke(request, list_add_all_codec.decode_response)
@@ -109,10 +121,13 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
             ``True`` if this call changed the list, ``False`` otherwise.
         """
         check_not_none(items, "Value can't be None")
-        data_items = []
-        for item in items:
-            check_not_none(item, "Value can't be None")
-            data_items.append(self._to_data(item))
+        try:
+            data_items = []
+            for item in items:
+                check_not_none(item, "Value can't be None")
+                data_items.append(self._to_data(item))
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.add_all_at, index, items)
 
         request = list_add_all_with_index_codec.encode_request(self.name, index, data_items)
         return self._invoke(request, list_add_all_with_index_codec.decode_response)
@@ -138,11 +153,11 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
         """
         request = list_add_listener_codec.encode_request(self.name, include_value, self._is_smart)
 
-        def handle_event_item(item, uuid, event_type):
-            item = item if include_value else None
+        def handle_event_item(item_data, uuid, event_type):
+            item = self._to_object(item_data) if include_value else None
             member = self._context.cluster_service.get_member(uuid)
 
-            item_event = ItemEvent(self.name, item, event_type, member, self._to_object)
+            item_event = ItemEvent(self.name, item, event_type, member)
             if event_type == ItemEventType.ADDED:
                 if item_added_func:
                     item_added_func(item_event)
@@ -176,7 +191,10 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
             otherwise.
         """
         check_not_none(item, "Value can't be None")
-        item_data = self._to_data(item)
+        try:
+            item_data = self._to_data(item)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.contains, item)
 
         request = list_contains_codec.encode_request(self.name, item_data)
         return self._invoke(request, list_contains_codec.decode_response)
@@ -194,10 +212,13 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
             list, ``False`` otherwise.
         """
         check_not_none(items, "Items can't be None")
-        data_items = []
-        for item in items:
-            check_not_none(item, "item can't be None")
-            data_items.append(self._to_data(item))
+        try:
+            data_items = []
+            for item in items:
+                check_not_none(item, "item can't be None")
+                data_items.append(self._to_data(item))
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.contains_all, items)
 
         request = list_contains_all_codec.encode_request(self.name, data_items)
         return self._invoke(request, list_contains_all_codec.decode_response)
@@ -263,7 +284,10 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
              is not present in this list.
         """
         check_not_none(item, "Value can't be None")
-        item_data = self._to_data(item)
+        try:
+            item_data = self._to_data(item)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.index_of, item)
 
         request = list_index_of_codec.encode_request(self.name, item_data)
         return self._invoke(request, list_index_of_codec.decode_response)
@@ -291,7 +315,10 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
             not present in this list.
         """
         check_not_none(item, "Value can't be None")
-        item_data = self._to_data(item)
+        try:
+            item_data = self._to_data(item)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.last_index_of, item)
 
         request = list_last_index_of_codec.encode_request(self.name, item_data)
         return self._invoke(request, list_last_index_of_codec.decode_response)
@@ -329,7 +356,10 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
             ``False`` otherwise.
         """
         check_not_none(item, "Value can't be None")
-        item_data = self._to_data(item)
+        try:
+            item_data = self._to_data(item)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.remove, item)
 
         request = list_remove_codec.encode_request(self.name, item_data)
         return self._invoke(request, list_remove_codec.decode_response)
@@ -365,10 +395,13 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
             ``False`` otherwise.
         """
         check_not_none(items, "Value can't be None")
-        data_items = []
-        for item in items:
-            check_not_none(item, "Value can't be None")
-            data_items.append(self._to_data(item))
+        try:
+            data_items = []
+            for item in items:
+                check_not_none(item, "Value can't be None")
+                data_items.append(self._to_data(item))
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.remove_all, items)
 
         request = list_compare_and_remove_all_codec.encode_request(self.name, data_items)
         return self._invoke(request, list_compare_and_remove_all_codec.decode_response)
@@ -402,10 +435,13 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
             otherwise.
         """
         check_not_none(items, "Value can't be None")
-        data_items = []
-        for item in items:
-            check_not_none(item, "Value can't be None")
-            data_items.append(self._to_data(item))
+        try:
+            data_items = []
+            for item in items:
+                check_not_none(item, "Value can't be None")
+                data_items.append(self._to_data(item))
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.retain_all, items)
 
         request = list_compare_and_retain_all_codec.encode_request(self.name, data_items)
         return self._invoke(request, list_compare_and_retain_all_codec.decode_response)
@@ -431,7 +467,10 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
             The previous item in the specified index.
         """
         check_not_none(item, "Value can't be None")
-        element_data = self._to_data(item)
+        try:
+            element_data = self._to_data(item)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.set_at, index, item)
 
         def handler(message):
             return self._to_object(list_set_codec.decode_response(message))

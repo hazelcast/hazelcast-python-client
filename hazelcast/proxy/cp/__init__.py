@@ -14,7 +14,6 @@ def _no_op_response_handler(_):
 
 class BaseCPProxy(typing.Generic[BlockingProxyType], abc.ABC):
     def __init__(self, context, group_id, service_name, proxy_name, object_name):
-        self._context = context
         self._group_id = group_id
         self._service_name = service_name
         self._proxy_name = proxy_name
@@ -23,6 +22,7 @@ class BaseCPProxy(typing.Generic[BlockingProxyType], abc.ABC):
         serialization_service = context.serialization_service
         self._to_data = serialization_service.to_data
         self._to_object = serialization_service.to_object
+        self._send_schema_and_retry = context.compact_schema_service.send_schema_and_retry
 
     def destroy(self) -> Future[None]:
         """Destroys this proxy."""

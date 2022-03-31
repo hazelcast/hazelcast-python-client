@@ -22,6 +22,7 @@ from hazelcast.protocol.codec import (
 )
 from hazelcast.proxy.base import TransactionalProxy
 from hazelcast.types import ValueType, KeyType
+from hazelcast.serialization.compact import SchemaNotReplicatedError
 from hazelcast.util import check_not_none, to_millis, thread_id, ImmutableLazyDataList
 
 
@@ -40,7 +41,12 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
             ``False`` otherwise.
         """
         check_not_none(key, "key can't be none")
-        key_data = self._to_data(key)
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            self._send_schema(e)
+            return self.contains_key(key)
+
         request = transactional_map_contains_key_codec.encode_request(
             self.name, self.transaction.id, thread_id(), key_data
         )
@@ -57,11 +63,15 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
             The value for the specified key.
         """
         check_not_none(key, "key can't be none")
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            self._send_schema(e)
+            return self.get(key)
 
         def handler(message):
             return self._to_object(transactional_map_get_codec.decode_response(message))
 
-        key_data = self._to_data(key)
         request = transactional_map_get_codec.encode_request(
             self.name, self.transaction.id, thread_id(), key_data
         )
@@ -84,11 +94,15 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
             :func:`Map.get(key) <hazelcast.proxy.map.Map.get>`
         """
         check_not_none(key, "key can't be none")
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            self._send_schema(e)
+            return self.get_for_update(key)
 
         def handler(message):
             return self._to_object(transactional_map_get_for_update_codec.decode_response(message))
 
-        key_data = self._to_data(key)
         request = transactional_map_get_for_update_codec.encode_request(
             self.name, self.transaction.id, thread_id(), key_data
         )
@@ -137,12 +151,16 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
         """
         check_not_none(key, "key can't be none")
         check_not_none(value, "value can't be none")
+        try:
+            key_data = self._to_data(key)
+            value_data = self._to_data(value)
+        except SchemaNotReplicatedError as e:
+            self._send_schema(e)
+            return self.put(key, value, ttl)
 
         def handler(message):
             return self._to_object(transactional_map_put_codec.decode_response(message))
 
-        key_data = self._to_data(key)
-        value_data = self._to_data(value)
         request = transactional_map_put_codec.encode_request(
             self.name, self.transaction.id, thread_id(), key_data, value_data, to_millis(ttl)
         )
@@ -164,12 +182,16 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
         """
         check_not_none(key, "key can't be none")
         check_not_none(value, "value can't be none")
+        try:
+            key_data = self._to_data(key)
+            value_data = self._to_data(value)
+        except SchemaNotReplicatedError as e:
+            self._send_schema(e)
+            return self.put_if_absent(key, value)
 
         def handler(message):
             return self._to_object(transactional_map_put_if_absent_codec.decode_response(message))
 
-        key_data = self._to_data(key)
-        value_data = self._to_data(value)
         request = transactional_map_put_if_absent_codec.encode_request(
             self.name, self.transaction.id, thread_id(), key_data, value_data
         )
@@ -188,9 +210,13 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
         """
         check_not_none(key, "key can't be none")
         check_not_none(value, "value can't be none")
+        try:
+            key_data = self._to_data(key)
+            value_data = self._to_data(value)
+        except SchemaNotReplicatedError as e:
+            self._send_schema(e)
+            return self.set(key, value)
 
-        key_data = self._to_data(key)
-        value_data = self._to_data(value)
         request = transactional_map_set_codec.encode_request(
             self.name, self.transaction.id, thread_id(), key_data, value_data
         )
@@ -213,12 +239,16 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
         """
         check_not_none(key, "key can't be none")
         check_not_none(value, "value can't be none")
+        try:
+            key_data = self._to_data(key)
+            value_data = self._to_data(value)
+        except SchemaNotReplicatedError as e:
+            self._send_schema(e)
+            return self.replace(key, value)
 
         def handler(message):
             return self._to_object(transactional_map_replace_codec.decode_response(message))
 
-        key_data = self._to_data(key)
-        value_data = self._to_data(value)
         request = transactional_map_replace_codec.encode_request(
             self.name, self.transaction.id, thread_id(), key_data, value_data
         )
@@ -243,10 +273,14 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
         check_not_none(key, "key can't be none")
         check_not_none(old_value, "old_value can't be none")
         check_not_none(new_value, "new_value can't be none")
+        try:
+            key_data = self._to_data(key)
+            old_value_data = self._to_data(old_value)
+            new_value_data = self._to_data(new_value)
+        except SchemaNotReplicatedError as e:
+            self._send_schema(e)
+            return self.replace_if_same(key, old_value, new_value)
 
-        key_data = self._to_data(key)
-        old_value_data = self._to_data(old_value)
-        new_value_data = self._to_data(new_value)
         request = transactional_map_replace_if_same_codec.encode_request(
             self.name, self.transaction.id, thread_id(), key_data, old_value_data, new_value_data
         )
@@ -267,11 +301,15 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
             mapping for key.
         """
         check_not_none(key, "key can't be none")
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            self._send_schema(e)
+            return self.remove(key)
 
         def handler(message):
             return self._to_object(transactional_map_remove_codec.decode_response(message))
 
-        key_data = self._to_data(key)
         request = transactional_map_remove_codec.encode_request(
             self.name, self.transaction.id, thread_id(), key_data
         )
@@ -293,9 +331,13 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
         """
         check_not_none(key, "key can't be none")
         check_not_none(value, "value can't be none")
+        try:
+            key_data = self._to_data(key)
+            value_data = self._to_data(value)
+        except SchemaNotReplicatedError as e:
+            self._send_schema(e)
+            return self.remove_if_same(key, value)
 
-        key_data = self._to_data(key)
-        value_data = self._to_data(value)
         request = transactional_map_remove_if_same_codec.encode_request(
             self.name, self.transaction.id, thread_id(), key_data, value_data
         )
@@ -312,8 +354,12 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
             key: Key of the mapping to be deleted.
         """
         check_not_none(key, "key can't be none")
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            self._send_schema(e)
+            return self.delete(key)
 
-        key_data = self._to_data(key)
         request = transactional_map_delete_codec.encode_request(
             self.name, self.transaction.id, thread_id(), key_data
         )
@@ -330,6 +376,11 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
             A list of the clone of the keys.
         """
         if predicate:
+            try:
+                predicate_data = self._to_data(predicate)
+            except SchemaNotReplicatedError as e:
+                self._send_schema(e)
+                return self.key_set(predicate)
 
             def handler(message):
                 return ImmutableLazyDataList(
@@ -337,7 +388,6 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
                     self._to_object,
                 )
 
-            predicate_data = self._to_data(predicate)
             request = transactional_map_key_set_with_predicate_codec.encode_request(
                 self.name, self.transaction.id, thread_id(), predicate_data
             )
@@ -365,6 +415,11 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
             A list of clone of the values contained in this map.
         """
         if predicate:
+            try:
+                predicate_data = self._to_data(predicate)
+            except SchemaNotReplicatedError as e:
+                self._send_schema(e)
+                return self.values(predicate)
 
             def handler(message):
                 return ImmutableLazyDataList(
@@ -372,7 +427,6 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
                     self._to_object,
                 )
 
-            predicate_data = self._to_data(predicate)
             request = transactional_map_values_with_predicate_codec.encode_request(
                 self.name, self.transaction.id, thread_id(), predicate_data
             )

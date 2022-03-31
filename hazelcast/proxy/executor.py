@@ -10,6 +10,7 @@ from hazelcast.protocol.codec import (
     executor_service_submit_to_member_codec,
 )
 from hazelcast.proxy.base import Proxy
+from hazelcast.serialization.compact import SchemaNotReplicatedError
 from hazelcast.util import check_not_none
 
 
@@ -29,16 +30,20 @@ class Executor(Proxy["BlockingExecutor"]):
         check_not_none(key, "key can't be None")
         check_not_none(task, "task can't be None")
 
+        try:
+            key_data = self._to_data(key)
+            task_data = self._to_data(task)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.execute_on_key_owner, key, task)
+
+        partition_id = self._context.partition_service.get_partition_id(key_data)
+        uuid = uuid4()
+
         def handler(message):
             return self._to_object(
                 executor_service_submit_to_partition_codec.decode_response(message)
             )
 
-        key_data = self._to_data(key)
-        task_data = self._to_data(task)
-
-        partition_id = self._context.partition_service.get_partition_id(key_data)
-        uuid = uuid4()
         request = executor_service_submit_to_partition_codec.encode_request(
             self.name, uuid, task_data
         )
@@ -55,7 +60,11 @@ class Executor(Proxy["BlockingExecutor"]):
             The result of the task.
         """
         check_not_none(task, "task can't be None")
-        task_data = self._to_data(task)
+        try:
+            task_data = self._to_data(task)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.execute_on_member, member, task)
+
         uuid = uuid4()
         return self._execute_on_member(uuid, task_data, member.uuid)
 
@@ -71,12 +80,17 @@ class Executor(Proxy["BlockingExecutor"]):
         Returns:
             The list of results of the tasks on each member.
         """
-        task_data = self._to_data(task)
+        try:
+            task_data = self._to_data(task)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.execute_on_members, members, task)
+
         futures = []
         uuid = uuid4()
         for member in members:
             f = self._execute_on_member(uuid, task_data, member.uuid)
             futures.append(f)
+
         return future.combine_futures(futures)
 
     def execute_on_all_members(self, task: typing.Any) -> Future[typing.List[typing.Any]]:
