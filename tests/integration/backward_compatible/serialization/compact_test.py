@@ -1,56 +1,98 @@
 import copy
 import datetime
 import decimal
+import enum
 import itertools
 import random
-
 import typing
+import unittest
 
 from parameterized import parameterized
 
 from hazelcast.errors import HazelcastSerializationError
 from hazelcast.predicate import sql
-from hazelcast.serialization.api import (
-    CompactSerializer,
-    CompactReader,
-    CompactWriter,
-)
-from hazelcast.serialization.compact import FIELD_OPERATIONS, FieldKind
 from hazelcast.util import AtomicInteger
 from tests.base import HazelcastTestCase
-from tests.util import is_equal, random_string
+from tests.util import (
+    is_equal,
+    random_string,
+    compare_client_version,
+    compare_server_version_with_rc,
+)
 
-FIELD_KINDS = [kind for kind in FieldKind]
-FIX_SIZED_FIELD_KINDS = [kind for kind in FIELD_KINDS if not FIELD_OPERATIONS[kind].is_var_sized()]
-VAR_SIZED_FIELD_KINDS = [kind for kind in FIELD_KINDS if FIELD_OPERATIONS[kind].is_var_sized()]
+try:
+    from hazelcast.serialization.api import (
+        CompactSerializer,
+        CompactReader,
+        CompactWriter,
+    )
+    from hazelcast.serialization.compact import FIELD_OPERATIONS, FieldKind
 
-FIX_SIZED_TO_NULLABLE = {
-    FieldKind.BOOLEAN: FieldKind.NULLABLE_BOOLEAN,
-    FieldKind.INT8: FieldKind.NULLABLE_INT8,
-    FieldKind.INT16: FieldKind.NULLABLE_INT16,
-    FieldKind.INT32: FieldKind.NULLABLE_INT32,
-    FieldKind.INT64: FieldKind.NULLABLE_INT64,
-    FieldKind.FLOAT32: FieldKind.NULLABLE_FLOAT32,
-    FieldKind.FLOAT64: FieldKind.NULLABLE_FLOAT64,
-}
+    _COMPACT_AVAILABLE = True
+except ImportError:
+    # For backward compatibility tests
 
-FIX_SIZED_ARRAY_TO_NULLABLE_FIX_SIZED_ARRAY = {
-    FieldKind.ARRAY_OF_BOOLEAN: FieldKind.ARRAY_OF_NULLABLE_BOOLEAN,
-    FieldKind.ARRAY_OF_INT8: FieldKind.ARRAY_OF_NULLABLE_INT8,
-    FieldKind.ARRAY_OF_INT16: FieldKind.ARRAY_OF_NULLABLE_INT16,
-    FieldKind.ARRAY_OF_INT32: FieldKind.ARRAY_OF_NULLABLE_INT32,
-    FieldKind.ARRAY_OF_INT64: FieldKind.ARRAY_OF_NULLABLE_INT64,
-    FieldKind.ARRAY_OF_FLOAT32: FieldKind.ARRAY_OF_NULLABLE_FLOAT32,
-    FieldKind.ARRAY_OF_FLOAT64: FieldKind.ARRAY_OF_NULLABLE_FLOAT64,
-}
+    T = typing.TypeVar("T")
 
-ARRAY_FIELD_KINDS_WITH_NULLABLE_ITEMS = [
-    kind
-    for kind in VAR_SIZED_FIELD_KINDS
-    if ("ARRAY" in kind.name) and (kind not in FIX_SIZED_ARRAY_TO_NULLABLE_FIX_SIZED_ARRAY)
-]
+    class CompactSerializer(typing.Generic[T]):
+        pass
+
+    class CompactReader:
+        pass
+
+    class CompactWriter:
+        pass
+
+    class FieldKind(enum.Enum):
+        pass
+
+    _COMPACT_AVAILABLE = False
 
 
+if _COMPACT_AVAILABLE:
+    FIELD_KINDS = [kind for kind in FieldKind]
+    FIX_SIZED_FIELD_KINDS = [
+        kind for kind in FIELD_KINDS if not FIELD_OPERATIONS[kind].is_var_sized()
+    ]
+    VAR_SIZED_FIELD_KINDS = [kind for kind in FIELD_KINDS if FIELD_OPERATIONS[kind].is_var_sized()]
+
+    FIX_SIZED_TO_NULLABLE = {
+        FieldKind.BOOLEAN: FieldKind.NULLABLE_BOOLEAN,
+        FieldKind.INT8: FieldKind.NULLABLE_INT8,
+        FieldKind.INT16: FieldKind.NULLABLE_INT16,
+        FieldKind.INT32: FieldKind.NULLABLE_INT32,
+        FieldKind.INT64: FieldKind.NULLABLE_INT64,
+        FieldKind.FLOAT32: FieldKind.NULLABLE_FLOAT32,
+        FieldKind.FLOAT64: FieldKind.NULLABLE_FLOAT64,
+    }
+
+    FIX_SIZED_ARRAY_TO_NULLABLE_FIX_SIZED_ARRAY = {
+        FieldKind.ARRAY_OF_BOOLEAN: FieldKind.ARRAY_OF_NULLABLE_BOOLEAN,
+        FieldKind.ARRAY_OF_INT8: FieldKind.ARRAY_OF_NULLABLE_INT8,
+        FieldKind.ARRAY_OF_INT16: FieldKind.ARRAY_OF_NULLABLE_INT16,
+        FieldKind.ARRAY_OF_INT32: FieldKind.ARRAY_OF_NULLABLE_INT32,
+        FieldKind.ARRAY_OF_INT64: FieldKind.ARRAY_OF_NULLABLE_INT64,
+        FieldKind.ARRAY_OF_FLOAT32: FieldKind.ARRAY_OF_NULLABLE_FLOAT32,
+        FieldKind.ARRAY_OF_FLOAT64: FieldKind.ARRAY_OF_NULLABLE_FLOAT64,
+    }
+
+    ARRAY_FIELD_KINDS_WITH_NULLABLE_ITEMS = [
+        kind
+        for kind in VAR_SIZED_FIELD_KINDS
+        if ("ARRAY" in kind.name) and (kind not in FIX_SIZED_ARRAY_TO_NULLABLE_FIX_SIZED_ARRAY)
+    ]
+else:
+    FIELD_KINDS = []
+    FIX_SIZED_FIELD_KINDS = []
+    VAR_SIZED_FIELD_KINDS = []
+    FIX_SIZED_TO_NULLABLE = {}
+    FIX_SIZED_ARRAY_TO_NULLABLE_FIX_SIZED_ARRAY = {}
+    ARRAY_FIELD_KINDS_WITH_NULLABLE_ITEMS = []
+
+
+@unittest.skipIf(
+    compare_client_version("5.1") < 0, "Tests the features added in 5.1 version of the client"
+)
 class CompactTestBase(HazelcastTestCase):
     rc = None
     cluster = None
@@ -59,12 +101,15 @@ class CompactTestBase(HazelcastTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.rc = cls.create_rc()
+        if compare_server_version_with_rc(cls.rc, "5.1") < 0:
+            cls.rc.exit()
+            raise unittest.SkipTest("Compact serialization requires 5.1 server")
 
         config = """
         <hazelcast xmlns="http://www.hazelcast.com/schema/config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:schemaLocation="http://www.hazelcast.com/schema/config
-           http://www.hazelcast.com/schema/config/hazelcast-config-5.0.xsd">
+           http://www.hazelcast.com/schema/config/hazelcast-config-5.1.xsd">
             <serialization>
                     <compact-serialization enabled="true" />
             </serialization>
@@ -169,7 +214,9 @@ class CompactTest(CompactTestBase):
 
         self._write_then_read0(all_fields, Serializer(list(all_fields.keys())))
 
-    @parameterized.expand([(field_kind.name, field_kind) for field_kind in FIELD_KINDS])
+    @parameterized.expand(
+        [(field_kind.name, field_kind) for field_kind in FIELD_KINDS], skip_on_empty=True
+    )
     def test_write_then_read(self, _, field_kind):
         field_name = field_kind.name.lower()
         m = self._put_entry(
@@ -180,7 +227,10 @@ class CompactTest(CompactTestBase):
         obj = m.get("key")
         self.assertTrue(is_equal(REFERENCE_OBJECTS[field_kind], getattr(obj, field_name)))
 
-    @parameterized.expand([(field_kind.name, field_kind) for field_kind in VAR_SIZED_FIELD_KINDS])
+    @parameterized.expand(
+        [(field_kind.name, field_kind) for field_kind in VAR_SIZED_FIELD_KINDS],
+        skip_on_empty=True,
+    )
     def test_write_none_then_read(self, _, field_kind):
         field_name = field_kind.name.lower()
         m = self._put_entry(
@@ -192,7 +242,8 @@ class CompactTest(CompactTestBase):
         self.assertIsNone(getattr(obj, field_name))
 
     @parameterized.expand(
-        [(field_kind.name, field_kind) for field_kind in ARRAY_FIELD_KINDS_WITH_NULLABLE_ITEMS]
+        [(field_kind.name, field_kind) for field_kind in ARRAY_FIELD_KINDS_WITH_NULLABLE_ITEMS],
+        skip_on_empty=True,
     )
     def test_write_array_with_none_items_then_read(self, _, field_kind):
         field_name = field_kind.name.lower()
@@ -206,7 +257,10 @@ class CompactTest(CompactTestBase):
         obj = m.get("key")
         self.assertTrue(is_equal(value, getattr(obj, field_name)))
 
-    @parameterized.expand([(field_kind.name, field_kind) for field_kind in FIELD_KINDS])
+    @parameterized.expand(
+        [(field_kind.name, field_kind) for field_kind in FIELD_KINDS],
+        skip_on_empty=True,
+    )
     def test_read_when_field_does_not_exist(self, _, field_kind):
         map_name = random_string()
         field_name = field_kind.name.lower()
@@ -238,7 +292,10 @@ class CompactTest(CompactTestBase):
         with self.assertRaisesRegex(HazelcastSerializationError, "No field with the name"):
             evolved_m.get("key")
 
-    @parameterized.expand([(field_kind.name, field_kind) for field_kind in FIELD_KINDS])
+    @parameterized.expand(
+        [(field_kind.name, field_kind) for field_kind in FIELD_KINDS],
+        skip_on_empty=True,
+    )
     def test_read_with_type_mismatch(self, _, field_kind):
         map_name = random_string()
         mismatched_field_kind = FIELD_KINDS[(field_kind.value + 1) % len(FIELD_KINDS)]
@@ -271,7 +328,8 @@ class CompactTest(CompactTestBase):
                 FIX_SIZED_TO_NULLABLE.items(),
                 FIX_SIZED_ARRAY_TO_NULLABLE_FIX_SIZED_ARRAY.items(),
             )
-        ]
+        ],
+        skip_on_empty=True,
     )
     def test_write_then_read_as_nullable(self, _, field_kind, nullable_field_kind):
         map_name = random_string()
@@ -309,7 +367,8 @@ class CompactTest(CompactTestBase):
                 FIX_SIZED_TO_NULLABLE.items(),
                 FIX_SIZED_ARRAY_TO_NULLABLE_FIX_SIZED_ARRAY.items(),
             )
-        ]
+        ],
+        skip_on_empty=True,
     )
     def test_write_as_nullable_then_read(self, _, field_kind, nullable_field_kind):
         map_name = random_string()
@@ -338,7 +397,8 @@ class CompactTest(CompactTestBase):
         [
             (field_kind.name, field_kind, nullable_field_kind)
             for field_kind, nullable_field_kind in FIX_SIZED_TO_NULLABLE.items()
-        ]
+        ],
+        skip_on_empty=True,
     )
     def test_write_nullable_fix_sized_as_none_then_read_as_fix_sized(
         self, _, field_kind, nullable_field_kind
@@ -369,7 +429,8 @@ class CompactTest(CompactTestBase):
         [
             (field_kind.name, field_kind, nullable_field_kind)
             for field_kind, nullable_field_kind in FIX_SIZED_ARRAY_TO_NULLABLE_FIX_SIZED_ARRAY.items()
-        ]
+        ],
+        skip_on_empty=True,
     )
     def test_write_nullable_fix_sized_array_with_none_item_then_read_as_fix_sized_array(
         self, _, field_kind, nullable_field_kind
@@ -396,7 +457,10 @@ class CompactTest(CompactTestBase):
         with self.assertRaisesRegex(HazelcastSerializationError, "A `None` item cannot be read"):
             m.get("key")
 
-    @parameterized.expand([(field_kind.name, field_kind) for field_kind in FIELD_KINDS])
+    @parameterized.expand(
+        [(field_kind.name, field_kind) for field_kind in FIELD_KINDS],
+        skip_on_empty=True,
+    )
     def test_write_then_read_with_default_value(self, _, field_kind):
         field_name = field_kind.name.lower()
         m = self._put_entry(
@@ -409,7 +473,10 @@ class CompactTest(CompactTestBase):
         obj = m.get("key")
         self.assertTrue(is_equal(REFERENCE_OBJECTS[field_kind], getattr(obj, field_name)))
 
-    @parameterized.expand([(field_kind.name, field_kind) for field_kind in FIELD_KINDS])
+    @parameterized.expand(
+        [(field_kind.name, field_kind) for field_kind in FIELD_KINDS],
+        skip_on_empty=True,
+    )
     def test_write_then_read_with_default_value_when_field_name_does_not_match(self, _, field_kind):
         field_name = field_kind.name.lower()
         default_value = object()
@@ -424,7 +491,10 @@ class CompactTest(CompactTestBase):
         obj = m.get("key")
         self.assertTrue(getattr(obj, field_name) is default_value)
 
-    @parameterized.expand([(field_kind.name, field_kind) for field_kind in FIELD_KINDS])
+    @parameterized.expand(
+        [(field_kind.name, field_kind) for field_kind in FIELD_KINDS],
+        skip_on_empty=True,
+    )
     def test_write_then_read_with_default_value_when_field_type_does_not_match(self, _, field_kind):
         field_name = field_kind.name.lower()
         mismatched_field_kind = FIELD_KINDS[(field_kind.value + 1) % len(FIELD_KINDS)]
@@ -800,53 +870,54 @@ class SomeFieldsSerializer(CompactSerializer[SomeFields]):
         return SomeFieldsSerializer(field_definitions)
 
 
-REFERENCE_OBJECTS = {
-    FieldKind.BOOLEAN: True,
-    FieldKind.ARRAY_OF_BOOLEAN: [True, False, True, True, True, False, True, True, False],
-    FieldKind.INT8: 42,
-    FieldKind.ARRAY_OF_INT8: [42, -128, -1, 127],
-    FieldKind.INT16: -456,
-    FieldKind.ARRAY_OF_INT16: [-4231, 12343, 0],
-    FieldKind.INT32: 21212121,
-    FieldKind.ARRAY_OF_INT32: [-1, 1, 0, 9999999],
-    FieldKind.INT64: 123456789,
-    FieldKind.ARRAY_OF_INT64: [11, -123456789],
-    FieldKind.FLOAT32: 12.5,
-    FieldKind.ARRAY_OF_FLOAT32: [-13.13, 12345.67, 0.1, 9876543.2, -99999.99],
-    FieldKind.FLOAT64: 12345678.90123,
-    FieldKind.ARRAY_OF_FLOAT64: [-12345.67],
-    FieldKind.STRING: "üğişçöa",
-    FieldKind.ARRAY_OF_STRING: ["17", "😊 😇 🙂", "abc"],
-    FieldKind.DECIMAL: decimal.Decimal("123.456"),
-    FieldKind.ARRAY_OF_DECIMAL: [decimal.Decimal("0"), decimal.Decimal("-123456.789")],
-    FieldKind.TIME: datetime.time(2, 3, 4, 5),
-    FieldKind.ARRAY_OF_TIME: [datetime.time(8, 7, 6, 5)],
-    FieldKind.DATE: datetime.date(2022, 1, 1),
-    FieldKind.ARRAY_OF_DATE: [datetime.date(2021, 11, 11), datetime.date(2020, 3, 3)],
-    FieldKind.TIMESTAMP: datetime.datetime(2022, 2, 2, 3, 3, 3, 4),
-    FieldKind.ARRAY_OF_TIMESTAMP: [datetime.datetime(1990, 2, 12, 13, 14, 54, 98765)],
-    FieldKind.TIMESTAMP_WITH_TIMEZONE: datetime.datetime(
-        200, 10, 10, 16, 44, 42, 12345, datetime.timezone(datetime.timedelta(hours=2))
-    ),
-    FieldKind.ARRAY_OF_TIMESTAMP_WITH_TIMEZONE: [
-        datetime.datetime(
-            2001, 1, 10, 12, 24, 2, 45, datetime.timezone(datetime.timedelta(hours=-2))
-        )
-    ],
-    FieldKind.COMPACT: Nested(42, "42"),
-    FieldKind.ARRAY_OF_COMPACT: [Nested(-42, "-42"), Nested(123, "123")],
-    FieldKind.NULLABLE_BOOLEAN: False,
-    FieldKind.ARRAY_OF_NULLABLE_BOOLEAN: [False, False, True],
-    FieldKind.NULLABLE_INT8: 34,
-    FieldKind.ARRAY_OF_NULLABLE_INT8: [-32, 32],
-    FieldKind.NULLABLE_INT16: 36,
-    FieldKind.ARRAY_OF_NULLABLE_INT16: [37, -37, 0, 12345],
-    FieldKind.NULLABLE_INT32: -38,
-    FieldKind.ARRAY_OF_NULLABLE_INT32: [-39, 2134567, -8765432, 39],
-    FieldKind.NULLABLE_INT64: -4040,
-    FieldKind.ARRAY_OF_NULLABLE_INT64: [1, 41, -1, 12312312312, -9312912391],
-    FieldKind.NULLABLE_FLOAT32: 42.4,
-    FieldKind.ARRAY_OF_NULLABLE_FLOAT32: [-43.4, 434.43],
-    FieldKind.NULLABLE_FLOAT64: 44.12,
-    FieldKind.ARRAY_OF_NULLABLE_FLOAT64: [45.678, -4567.8, 0.12345],
-}
+if _COMPACT_AVAILABLE:
+    REFERENCE_OBJECTS = {
+        FieldKind.BOOLEAN: True,
+        FieldKind.ARRAY_OF_BOOLEAN: [True, False, True, True, True, False, True, True, False],
+        FieldKind.INT8: 42,
+        FieldKind.ARRAY_OF_INT8: [42, -128, -1, 127],
+        FieldKind.INT16: -456,
+        FieldKind.ARRAY_OF_INT16: [-4231, 12343, 0],
+        FieldKind.INT32: 21212121,
+        FieldKind.ARRAY_OF_INT32: [-1, 1, 0, 9999999],
+        FieldKind.INT64: 123456789,
+        FieldKind.ARRAY_OF_INT64: [11, -123456789],
+        FieldKind.FLOAT32: 12.5,
+        FieldKind.ARRAY_OF_FLOAT32: [-13.13, 12345.67, 0.1, 9876543.2, -99999.99],
+        FieldKind.FLOAT64: 12345678.90123,
+        FieldKind.ARRAY_OF_FLOAT64: [-12345.67],
+        FieldKind.STRING: "üğişçöa",
+        FieldKind.ARRAY_OF_STRING: ["17", "😊 😇 🙂", "abc"],
+        FieldKind.DECIMAL: decimal.Decimal("123.456"),
+        FieldKind.ARRAY_OF_DECIMAL: [decimal.Decimal("0"), decimal.Decimal("-123456.789")],
+        FieldKind.TIME: datetime.time(2, 3, 4, 5),
+        FieldKind.ARRAY_OF_TIME: [datetime.time(8, 7, 6, 5)],
+        FieldKind.DATE: datetime.date(2022, 1, 1),
+        FieldKind.ARRAY_OF_DATE: [datetime.date(2021, 11, 11), datetime.date(2020, 3, 3)],
+        FieldKind.TIMESTAMP: datetime.datetime(2022, 2, 2, 3, 3, 3, 4),
+        FieldKind.ARRAY_OF_TIMESTAMP: [datetime.datetime(1990, 2, 12, 13, 14, 54, 98765)],
+        FieldKind.TIMESTAMP_WITH_TIMEZONE: datetime.datetime(
+            200, 10, 10, 16, 44, 42, 12345, datetime.timezone(datetime.timedelta(hours=2))
+        ),
+        FieldKind.ARRAY_OF_TIMESTAMP_WITH_TIMEZONE: [
+            datetime.datetime(
+                2001, 1, 10, 12, 24, 2, 45, datetime.timezone(datetime.timedelta(hours=-2))
+            )
+        ],
+        FieldKind.COMPACT: Nested(42, "42"),
+        FieldKind.ARRAY_OF_COMPACT: [Nested(-42, "-42"), Nested(123, "123")],
+        FieldKind.NULLABLE_BOOLEAN: False,
+        FieldKind.ARRAY_OF_NULLABLE_BOOLEAN: [False, False, True],
+        FieldKind.NULLABLE_INT8: 34,
+        FieldKind.ARRAY_OF_NULLABLE_INT8: [-32, 32],
+        FieldKind.NULLABLE_INT16: 36,
+        FieldKind.ARRAY_OF_NULLABLE_INT16: [37, -37, 0, 12345],
+        FieldKind.NULLABLE_INT32: -38,
+        FieldKind.ARRAY_OF_NULLABLE_INT32: [-39, 2134567, -8765432, 39],
+        FieldKind.NULLABLE_INT64: -4040,
+        FieldKind.ARRAY_OF_NULLABLE_INT64: [1, 41, -1, 12312312312, -9312912391],
+        FieldKind.NULLABLE_FLOAT32: 42.4,
+        FieldKind.ARRAY_OF_NULLABLE_FLOAT32: [-43.4, 434.43],
+        FieldKind.NULLABLE_FLOAT64: 44.12,
+        FieldKind.ARRAY_OF_NULLABLE_FLOAT64: [45.678, -4567.8, 0.12345],
+    }
