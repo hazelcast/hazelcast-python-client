@@ -280,7 +280,7 @@ class ConnectionManager:
 
         # Need to create copy of connection values to avoid modification errors on runtime
         for connection in list(self.active_connections.values()):
-            connection.close("Hazelcast client is shutting down", None)
+            connection.close_connection("Hazelcast client is shutting down", None)
 
         self.active_connections.clear()
         del self._connection_listeners[:]
@@ -613,9 +613,9 @@ class ConnectionManager:
     def _on_auth(self, response, connection):
         try:
             response = client_authentication_codec.decode_response(response.result())
-        except Exception as err:
-            connection.close("Failed to authenticate connection", err)
-            raise err
+        except Exception as e:
+            connection.close_connection("Failed to authenticate connection", e)
+            raise e
 
         status = response["status"]
         if status == _AuthenticationStatus.AUTHENTICATED:
@@ -632,7 +632,7 @@ class ConnectionManager:
                 "Authentication status code not supported. status: %s" % status
             )
 
-        connection.close("Failed to authenticate connection", err)
+        connection.close_connection("Failed to authenticate connection", err)
         raise err
 
     def _handle_successful_auth(self, response, connection):
@@ -649,7 +649,7 @@ class ConnectionManager:
 
             existing = self.active_connections.get(remote_uuid, None)
             if existing:
-                connection.close(
+                connection.close_connection(
                     "Duplicate connection to same member with UUID: %s" % remote_uuid, None
                 )
                 return existing
@@ -750,7 +750,7 @@ class ConnectionManager:
             # we can operate on. In those scenarios, we rely on the fact that we will
             # reopen the connections.
             reason = "Connection does not belong to the cluster %s" % self._cluster_id
-            connection.close(reason, None)
+            connection.close_connection(reason, None)
             raise ValueError(reason)
 
     def _on_cluster_restart(self):
@@ -824,7 +824,7 @@ class _HeartbeatManager:
 
         if (now - connection.last_read_time) > self._heartbeat_timeout:
             _logger.warning("Heartbeat failed over the connection: %s", connection)
-            connection.close(
+            connection.close_connection(
                 "Heartbeat timed out",
                 TargetDisconnectedError("Heartbeat timed out to connection %s" % connection),
             )
@@ -950,7 +950,8 @@ class Connection:
         self._write(message.buf)
         return True
 
-    def close(self, reason, cause):
+    # Not named close to distinguish it from the asyncore.dispatcher.close.
+    def close_connection(self, reason, cause):
         """Closes the connection.
 
         Args:

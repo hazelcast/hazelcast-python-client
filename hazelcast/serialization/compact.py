@@ -149,13 +149,13 @@ class DefaultCompactWriter(CompactWriter):
         self._schema = schema
 
         if schema.var_sized_field_count != 0:
-            self._var_sized_field_positions = [0] * schema.var_sized_field_count
+            self._var_sized_field_positions: typing.List[int] = [0] * schema.var_sized_field_count
             self._data_start_position = out.position() + INT_SIZE_IN_BYTES
 
             # Skip data length (4 bytes) + fix sized fields
             out.write_zero_bytes(schema.fix_sized_fields_length + INT_SIZE_IN_BYTES)
         else:
-            self._var_sized_field_positions = None
+            self._var_sized_field_positions = []
             self._data_start_position = out.position()
 
             # Skip fix sized_fields. No need to write data length when
@@ -589,7 +589,7 @@ class DefaultCompactReader(CompactReader):
             self._data_start_position = inp.position()
             self._var_sized_field_positions_position = self._data_start_position + data_length
             if data_length < PositionReader.UINT8_POSITION_READER_RANGE:
-                self._position_reader = _UINT8_POSITION_READER_INSTANCE
+                self._position_reader: PositionReader = _UINT8_POSITION_READER_INSTANCE
                 end_position = self._var_sized_field_positions_position + var_sized_field_count
             elif data_length < PositionReader.UINT16_POSITION_READER_RANGE:
                 self._position_reader = _UINT16_POSITION_READER_INSTANCE
@@ -621,7 +621,7 @@ class DefaultCompactReader(CompactReader):
         elif kind == FieldKind.NULLABLE_BOOLEAN:
             return self._read_var_sized_field_non_none(field, self._inp.read_boolean)
         else:
-            DefaultCompactReader._raise_mismatched_field_kind_error(
+            raise DefaultCompactReader._create_mismatched_field_kind_error(
                 field_name, kind, FieldKind.BOOLEAN
             )
 
@@ -639,7 +639,7 @@ class DefaultCompactReader(CompactReader):
         elif kind == FieldKind.NULLABLE_BOOLEAN:
             return self._read_var_sized_field(field, self._inp.read_boolean)
         else:
-            DefaultCompactReader._raise_mismatched_field_kind_error(
+            raise DefaultCompactReader._create_mismatched_field_kind_error(
                 field_name, kind, FieldKind.NULLABLE_BOOLEAN
             )
 
@@ -659,7 +659,7 @@ class DefaultCompactReader(CompactReader):
         elif kind == FieldKind.NULLABLE_INT8:
             return self._read_var_sized_field_non_none(field, self._inp.read_byte)
         else:
-            DefaultCompactReader._raise_mismatched_field_kind_error(
+            raise DefaultCompactReader._create_mismatched_field_kind_error(
                 field_name, kind, FieldKind.INT8
             )
 
@@ -677,7 +677,7 @@ class DefaultCompactReader(CompactReader):
         elif kind == FieldKind.NULLABLE_INT8:
             return self._read_var_sized_field(field, self._inp.read_byte)
         else:
-            DefaultCompactReader._raise_mismatched_field_kind_error(
+            raise DefaultCompactReader._create_mismatched_field_kind_error(
                 field_name, kind, FieldKind.NULLABLE_INT8
             )
 
@@ -697,7 +697,7 @@ class DefaultCompactReader(CompactReader):
         elif kind == FieldKind.NULLABLE_INT16:
             return self._read_var_sized_field_non_none(field, self._inp.read_short)
         else:
-            DefaultCompactReader._raise_mismatched_field_kind_error(
+            raise DefaultCompactReader._create_mismatched_field_kind_error(
                 field_name, kind, FieldKind.INT16
             )
 
@@ -715,7 +715,7 @@ class DefaultCompactReader(CompactReader):
         elif kind == FieldKind.NULLABLE_INT16:
             return self._read_var_sized_field(field, self._inp.read_short)
         else:
-            DefaultCompactReader._raise_mismatched_field_kind_error(
+            raise DefaultCompactReader._create_mismatched_field_kind_error(
                 field_name, kind, FieldKind.NULLABLE_INT16
             )
 
@@ -735,7 +735,7 @@ class DefaultCompactReader(CompactReader):
         elif kind == FieldKind.NULLABLE_INT32:
             return self._read_var_sized_field_non_none(field, self._inp.read_int)
         else:
-            DefaultCompactReader._raise_mismatched_field_kind_error(
+            raise DefaultCompactReader._create_mismatched_field_kind_error(
                 field_name, kind, FieldKind.INT32
             )
 
@@ -753,7 +753,7 @@ class DefaultCompactReader(CompactReader):
         elif kind == FieldKind.NULLABLE_INT32:
             return self._read_var_sized_field(field, self._inp.read_int)
         else:
-            DefaultCompactReader._raise_mismatched_field_kind_error(
+            raise DefaultCompactReader._create_mismatched_field_kind_error(
                 field_name, kind, FieldKind.NULLABLE_INT32
             )
 
@@ -773,7 +773,7 @@ class DefaultCompactReader(CompactReader):
         elif kind == FieldKind.NULLABLE_INT64:
             return self._read_var_sized_field_non_none(field, self._inp.read_long)
         else:
-            DefaultCompactReader._raise_mismatched_field_kind_error(
+            raise DefaultCompactReader._create_mismatched_field_kind_error(
                 field_name, kind, FieldKind.INT64
             )
 
@@ -791,7 +791,7 @@ class DefaultCompactReader(CompactReader):
         elif kind == FieldKind.NULLABLE_INT64:
             return self._read_var_sized_field(field, self._inp.read_long)
         else:
-            DefaultCompactReader._raise_mismatched_field_kind_error(
+            raise DefaultCompactReader._create_mismatched_field_kind_error(
                 field_name, kind, FieldKind.NULLABLE_INT64
             )
 
@@ -811,7 +811,7 @@ class DefaultCompactReader(CompactReader):
         elif kind == FieldKind.NULLABLE_FLOAT32:
             return self._read_var_sized_field_non_none(field, self._inp.read_float)
         else:
-            DefaultCompactReader._raise_mismatched_field_kind_error(
+            raise DefaultCompactReader._create_mismatched_field_kind_error(
                 field_name, kind, FieldKind.FLOAT32
             )
 
@@ -829,7 +829,7 @@ class DefaultCompactReader(CompactReader):
         elif kind == FieldKind.NULLABLE_FLOAT32:
             return self._read_var_sized_field(field, self._inp.read_float)
         else:
-            DefaultCompactReader._raise_mismatched_field_kind_error(
+            raise DefaultCompactReader._create_mismatched_field_kind_error(
                 field_name, kind, FieldKind.NULLABLE_FLOAT32
             )
 
@@ -849,7 +849,7 @@ class DefaultCompactReader(CompactReader):
         elif kind == FieldKind.NULLABLE_FLOAT64:
             return self._read_var_sized_field_non_none(field, self._inp.read_double)
         else:
-            DefaultCompactReader._raise_mismatched_field_kind_error(
+            raise DefaultCompactReader._create_mismatched_field_kind_error(
                 field_name, kind, FieldKind.FLOAT64
             )
 
@@ -867,7 +867,7 @@ class DefaultCompactReader(CompactReader):
         elif kind == FieldKind.NULLABLE_FLOAT64:
             return self._read_var_sized_field(field, self._inp.read_double)
         else:
-            DefaultCompactReader._raise_mismatched_field_kind_error(
+            raise DefaultCompactReader._create_mismatched_field_kind_error(
                 field_name, kind, FieldKind.NULLABLE_FLOAT64
             )
 
@@ -973,7 +973,7 @@ class DefaultCompactReader(CompactReader):
                 field, self._inp.read_boolean_array
             )
         else:
-            DefaultCompactReader._raise_mismatched_field_kind_error(
+            raise DefaultCompactReader._create_mismatched_field_kind_error(
                 field_name, kind, FieldKind.ARRAY_OF_BOOLEAN
             )
 
@@ -991,11 +991,12 @@ class DefaultCompactReader(CompactReader):
         field = self._get_field(field_name)
         kind = field.kind
         if kind == FieldKind.ARRAY_OF_BOOLEAN:
-            return self._read_var_sized_field(field, self._read_boolean_bits)
+            # Optional[List[bool]] is compatible with Optional[List[Optional[bool]]]
+            return self._read_var_sized_field(field, self._read_boolean_bits)  # type: ignore[return-value]
         elif kind == FieldKind.ARRAY_OF_NULLABLE_BOOLEAN:
             return self._read_var_sized_item_array(field, self._inp.read_boolean)
         else:
-            DefaultCompactReader._raise_mismatched_field_kind_error(
+            raise DefaultCompactReader._create_mismatched_field_kind_error(
                 field_name, kind, FieldKind.ARRAY_OF_NULLABLE_BOOLEAN
             )
 
@@ -1337,7 +1338,7 @@ class DefaultCompactReader(CompactReader):
     ) -> "FieldDescriptor":
         field = self._get_field(field_name)
         if field.kind != field_kind:
-            DefaultCompactReader._raise_mismatched_field_kind_error(
+            raise DefaultCompactReader._create_mismatched_field_kind_error(
                 field_name, field.kind, field_kind
             )
 
@@ -1350,9 +1351,9 @@ class DefaultCompactReader(CompactReader):
         return ((packed_byte >> bit_position) & 0x01) != 0
 
     @staticmethod
-    def _raise_mismatched_field_kind_error(
+    def _create_mismatched_field_kind_error(
         field_name: str, field_kind: "FieldKind", expected_field_kind: "FieldKind"
-    ) -> typing.NoReturn:
+    ) -> HazelcastSerializationError:
         raise HazelcastSerializationError(
             f"Mismatched field types. "
             f"Expected: {expected_field_kind}, found: {field_kind} for the '{field_name}'."
@@ -1404,7 +1405,7 @@ class DefaultCompactReader(CompactReader):
     def _read_boolean_bits(self) -> typing.List[bool]:
         inp = self._inp
         n = inp.read_int()
-        values = []
+        values: typing.List[bool] = []
         if n == 0:
             return values
 
@@ -1454,7 +1455,7 @@ class DefaultCompactReader(CompactReader):
 
     def _read_var_sized_item_array(
         self, field: "FieldDescriptor", item_reader: typing.Callable[[], T]
-    ) -> typing.Optional[typing.List[T]]:
+    ) -> typing.Optional[typing.List[typing.Optional[T]]]:
         inp = self._inp
         current_position = inp.position()
         try:
@@ -1468,7 +1469,7 @@ class DefaultCompactReader(CompactReader):
             item_count = inp.read_int()
             data_start_position = inp.position()
 
-            values = [None] * item_count
+            values: typing.List[typing.Optional[T]] = [None] * item_count
             position_reader = PositionReader.reader_for(data_length)
             item_positions_position = data_start_position + data_length
             for i in range(item_count):
@@ -1495,7 +1496,7 @@ class DefaultCompactReader(CompactReader):
         elif kind == nullable_fix_sized_item_array_field_kind:
             return self._read_nullable_item_array_as_fix_sized_item_array(field, reader)
         else:
-            DefaultCompactReader._raise_mismatched_field_kind_error(
+            raise DefaultCompactReader._create_mismatched_field_kind_error(
                 field_name, kind, fix_sized_item_array_field_kind
             )
 
@@ -1510,11 +1511,12 @@ class DefaultCompactReader(CompactReader):
         field = self._get_field(field_name)
         kind = field.kind
         if kind == fix_sized_item_array_field_kind:
-            return self._read_var_sized_field(field, fix_sized_item_array_reader)
+            # Optional[List[T]] is compatible with Optional[List[Optional[T]]]
+            return self._read_var_sized_field(field, fix_sized_item_array_reader)  # type: ignore[return-value]
         elif kind == nullable_fix_sized_item_array_field_kind:
             return self._read_var_sized_item_array(field, item_reader)
         else:
-            DefaultCompactReader._raise_mismatched_field_kind_error(
+            raise DefaultCompactReader._create_mismatched_field_kind_error(
                 field_name, kind, fix_sized_item_array_field_kind
             )
 
@@ -1632,7 +1634,9 @@ class SchemaWriter(CompactWriter):
     ) -> None:
         self._add_field(field_name, FieldKind.ARRAY_OF_NULLABLE_BOOLEAN)
 
-    def write_array_of_int8(self, field_name: str, value: typing.Optional[bytearray]) -> None:
+    def write_array_of_int8(
+        self, field_name: str, value: typing.Optional[typing.List[int]]
+    ) -> None:
         self._add_field(field_name, FieldKind.ARRAY_OF_INT8)
 
     def write_array_of_nullable_int8(
@@ -1736,11 +1740,13 @@ class SchemaWriter(CompactWriter):
 class Schema:
     def __init__(self, type_name: str, fields_list: typing.List["FieldDescriptor"]):
         self.type_name = type_name
-        self.fields = Schema._dict_to_key_ordered_dict({f.name: f for f in fields_list})
+        self.fields: typing.Dict[str, "FieldDescriptor"] = Schema._dict_to_key_ordered_dict(
+            {f.name: f for f in fields_list}
+        )
         self.fields_list = list(self.fields.values())
-        self.schema_id = 0
-        self.var_sized_field_count = 0
-        self.fix_sized_fields_length = 0
+        self.schema_id: int = 0
+        self.var_sized_field_count: int = 0
+        self.fix_sized_fields_length: int = 0
         self._init()
 
     def _init(self):
@@ -2221,7 +2227,7 @@ class ArrayOfNullableFloat64Operations(FieldKindOperations):
     pass
 
 
-FIELD_OPERATIONS: typing.List[FieldKindOperations] = [
+FIELD_OPERATIONS: typing.List[typing.Optional[FieldKindOperations]] = [
     BooleanOperations(),
     ArrayOfBooleanOperations(),
     Int8Operations(),

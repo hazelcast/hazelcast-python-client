@@ -162,7 +162,7 @@ class EndpointQualifier:
 
     __slots__ = ("_protocol_type", "_identifier")
 
-    def __init__(self, protocol_type: int, identifier: str):
+    def __init__(self, protocol_type: int, identifier: typing.Optional[str]):
         self._protocol_type = protocol_type
         self._identifier = identifier
 
@@ -172,7 +172,7 @@ class EndpointQualifier:
         return self._protocol_type
 
     @property
-    def identifier(self) -> str:
+    def identifier(self) -> typing.Optional[str]:
         """Unique identifier for same-protocol-type endpoints."""
         return self._identifier
 
@@ -492,9 +492,15 @@ class MapEntry(typing.Generic[KeyType, ValueType]):
     @property
     def key(self) -> KeyType:
         """Key of the entry."""
-        return self._key
+        # This has the correct type, but due to structure of the identified
+        # data serialization, the constructor must have ``None`` default
+        # values, which upsets the type checker.
+        return self._key  # type: ignore[return-value]
 
     @property
     def value(self) -> ValueType:
         """Value of the entry."""
-        return self._value
+        # This has the correct type, but due to structure of the identified
+        # data serialization, the constructor must have ``None`` default
+        # values, which upsets the type checker.
+        return self._value  # type: ignore[return-value]

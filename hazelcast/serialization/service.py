@@ -490,7 +490,7 @@ class SerializerRegistry:
                 self._id_dict[serializer_type_id] = stream_serializer
             return current is None
 
-    def register_from_super_type(self, obj_type, super_type) -> StreamSerializer:
+    def register_from_super_type(self, obj_type, super_type) -> typing.Optional[StreamSerializer]:
         serializer = self._type_dict.get(super_type, None)
         if serializer is not None:
             self.safe_register_serializer(serializer, obj_type)

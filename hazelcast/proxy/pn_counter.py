@@ -54,8 +54,6 @@ class PNCounter(Proxy["BlockingPNCounter"]):
         fail with an NoDataMemberInClusterError.
     """
 
-    _EMPTY_ADDRESS_LIST = []
-
     def __init__(self, service_name, name, context):
         super(PNCounter, self).__init__(service_name, name, context)
         self._observed_clock = VectorClock()
@@ -220,9 +218,7 @@ class PNCounter(Proxy["BlockingPNCounter"]):
 
     def _invoke_internal(self, codec, **kwargs):
         delegated_future = Future()
-        self._set_result_or_error(
-            delegated_future, PNCounter._EMPTY_ADDRESS_LIST, None, codec, **kwargs
-        )
+        self._set_result_or_error(delegated_future, [], None, codec, **kwargs)
         return delegated_future
 
     def _set_result_or_error(
@@ -272,9 +268,6 @@ class PNCounter(Proxy["BlockingPNCounter"]):
                 "choosing different target",
                 target,
             )
-            if excluded_addresses == PNCounter._EMPTY_ADDRESS_LIST:
-                excluded_addresses = []
-
             excluded_addresses.append(target)
             self._set_result_or_error(delegated_future, excluded_addresses, ex, codec, **kwargs)
 

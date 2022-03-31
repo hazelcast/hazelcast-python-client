@@ -61,7 +61,10 @@ class Future(typing.Generic[ResultType]):
         self._event.wait()
         if self._exception:
             re_raise(self._exception, self._traceback)
-        return self._result
+
+        # Result will be set to the correct type before we
+        # return from here
+        return self._result  # type: ignore[return-value]
 
     def _reactor_check(self):
         if not self.done() and hasattr(self._threading_locals, "is_reactor_thread"):
@@ -144,7 +147,7 @@ class Future(typing.Generic[ResultType]):
         Returns:
             A new Future which will be completed when the continuation is done.
         """
-        future = Future()
+        future: Future[typing.Any] = Future()
 
         def callback(f):
             try:
@@ -281,8 +284,8 @@ def combine_futures(futures: typing.Sequence[Future]) -> Future:
         return ImmediateFuture(results)
 
     completed = AtomicInteger()
-    combined = Future()
-    errors = []
+    combined: Future[typing.List[typing.Any]] = Future()
+    errors: typing.List[typing.Tuple[Exception, types.TracebackType]] = []
 
     def done(future, index):
         if future.is_success():
@@ -304,9 +307,10 @@ def combine_futures(futures: typing.Sequence[Future]) -> Future:
             else:
                 combined.set_result(results)
 
-    for index, future in enumerate(futures):
-        # Capture the index in the closure or else we
-        # will only update the last element.
-        future.add_done_callback(lambda f, captured_index=index: done(f, captured_index))
+    def make_callback(index):
+        return lambda f: done(f, index)
+
+    for i, future in enumerate(futures):
+        future.add_done_callback(make_callback(i))
 
     return combined

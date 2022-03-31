@@ -587,6 +587,8 @@ class ReliableTopic(Proxy["BlockingReliableTopic"], typing.Generic[MessageType])
             return self._add_or_overwrite(topic_message)
         elif overload_policy == TopicOverloadPolicy.DISCARD_NEWEST:
             return self._add_or_discard(topic_message)
+        else:
+            raise ValueError(f"Unexpected overload policy is passed {overload_policy}")
 
     def publish_all(self, messages: typing.Sequence[MessageType]) -> Future[None]:
         """Publishes all messages to all subscribers of this topic.
@@ -613,6 +615,8 @@ class ReliableTopic(Proxy["BlockingReliableTopic"], typing.Generic[MessageType])
             return self._add_messages_or_overwrite(topic_messages)
         elif overload_policy == TopicOverloadPolicy.DISCARD_NEWEST:
             return self._add_messages_or_discard(topic_messages)
+        else:
+            raise ValueError(f"Unexpected overload policy is passed {overload_policy}")
 
     def add_listener(
         self,

@@ -57,9 +57,9 @@ class ListenerService:
         self._invocation_service = invocation_service
         self._compact_schema_service = compact_schema_service
         self._is_smart = config.smart_routing
-        self._active_registrations = {}  # Dict of user_registration_id, ListenerRegistration
+        self._active_registrations: typing.Dict[str, _ListenerRegistration] = {}
         self._registration_lock = threading.RLock()
-        self._event_handlers = {}
+        self._event_handlers: typing.Dict[int, typing.Callable] = {}
 
     def start(self):
         self._connection_manager.add_listener(self._connection_added, self._connection_removed)

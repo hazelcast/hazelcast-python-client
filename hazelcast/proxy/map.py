@@ -78,7 +78,8 @@ from hazelcast.proxy.base import (
     get_entry_listener_flags,
     MAX_SIZE,
 )
-from hazelcast.predicate import PagingPredicate, Predicate
+from hazelcast.predicate import Predicate, _PagingPredicate
+from hazelcast.serialization.data import Data
 from hazelcast.types import AggregatorResultType, KeyType, ValueType, ProjectionType
 from hazelcast.serialization.compact import SchemaNotReplicatedError
 from hazelcast.util import (
@@ -186,7 +187,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             LOADED=loaded_func,
         )
 
-        if key and predicate:
+        if key is not None and predicate:
             try:
                 key_data = self._to_data(key)
                 predicate_data = self._to_data(predicate)
@@ -208,11 +209,13 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
                     loaded_func,
                 )
 
-            codec = map_add_entry_listener_to_key_with_predicate_codec
-            request = codec.encode_request(
+            with_key_and_predicate_codec = map_add_entry_listener_to_key_with_predicate_codec
+            request = with_key_and_predicate_codec.encode_request(
                 self.name, key_data, predicate_data, include_value, flags, self._is_smart
             )
-        elif key and not predicate:
+            response_decoder = with_key_and_predicate_codec.decode_response
+            event_message_handler = with_key_and_predicate_codec.handle
+        elif key is not None and not predicate:
             try:
                 key_data = self._to_data(key)
             except SchemaNotReplicatedError as e:
@@ -232,11 +235,14 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
                     expired_func,
                     loaded_func,
                 )
-            codec = map_add_entry_listener_to_key_codec
-            request = codec.encode_request(
+
+            with_key_codec = map_add_entry_listener_to_key_codec
+            request = with_key_codec.encode_request(
                 self.name, key_data, include_value, flags, self._is_smart
             )
-        elif not key and predicate:
+            response_decoder = with_key_codec.decode_response
+            event_message_handler = with_key_codec.handle
+        elif key is None and predicate:
             try:
                 predicate = self._to_data(predicate)
             except SchemaNotReplicatedError as e:
@@ -256,13 +262,18 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
                     expired_func,
                     loaded_func,
                 )
-            codec = map_add_entry_listener_with_predicate_codec
-            request = codec.encode_request(
+
+            with_predicate_codec = map_add_entry_listener_with_predicate_codec
+            request = with_predicate_codec.encode_request(
                 self.name, predicate, include_value, flags, self._is_smart
             )
+            response_decoder = with_predicate_codec.decode_response
+            event_message_handler = with_predicate_codec.handle
         else:
             codec = map_add_entry_listener_codec
             request = codec.encode_request(self.name, include_value, flags, self._is_smart)
+            response_decoder = codec.decode_response
+            event_message_handler = codec.handle
 
         def handle_event_entry(
             key_data,
@@ -304,9 +315,9 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
 
         return self._register_listener(
             request,
-            lambda r: codec.decode_response(r),
+            lambda r: response_decoder(r),
             lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name, reg_id),
-            lambda m: codec.handle(m, handle_event_entry),
+            lambda m: event_message_handler(m, handle_event_entry),
         )
 
     def add_index(
@@ -414,7 +425,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         check_not_none(aggregator, "aggregator can't be none")
 
         if predicate:
-            if isinstance(predicate, PagingPredicate):
+            if isinstance(predicate, _PagingPredicate):
                 raise AssertionError("Paging predicate is not supported.")
 
             try:
@@ -423,19 +434,22 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             except SchemaNotReplicatedError as e:
                 return self._send_schema_and_retry(e, self.aggregate, aggregator, predicate)
 
-            codec = map_aggregate_with_predicate_codec
-            request = codec.encode_request(self.name, aggregator_data, predicate_data)
+            def handler(message):
+                return self._to_object(map_aggregate_with_predicate_codec.decode_response(message))
+
+            request = map_aggregate_with_predicate_codec.encode_request(
+                self.name, aggregator_data, predicate_data
+            )
         else:
             try:
                 aggregator_data = self._to_data(aggregator)
             except SchemaNotReplicatedError as e:
                 return self._send_schema_and_retry(e, self.aggregate, aggregator, predicate)
 
-            codec = map_aggregate_codec
-            request = map_aggregate_codec.encode_request(self.name, aggregator_data)
+            def handler(message):
+                return self._to_object(map_aggregate_codec.decode_response(message))
 
-        def handler(message):
-            return self._to_object(codec.decode_response(message))
+            request = map_aggregate_codec.encode_request(self.name, aggregator_data)
 
         return self._invoke(request, handler)
 
@@ -536,42 +550,41 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             The list of key-value tuples in the map.
         """
         if predicate:
-            if isinstance(predicate, PagingPredicate):
+            if isinstance(predicate, _PagingPredicate):
                 predicate.iteration_type = IterationType.ENTRY
                 try:
                     holder = PagingPredicateHolder.of(predicate, self._to_data)
                 except SchemaNotReplicatedError as e:
                     return self._send_schema_and_retry(e, self.entry_set, predicate)
 
-                codec = map_entries_with_paging_predicate_codec
-
                 def handler(message):
-                    response = codec.decode_response(message)
+                    response = map_entries_with_paging_predicate_codec.decode_response(message)
                     predicate.anchor_list = response["anchor_data_list"].as_anchor_list(
                         self._to_object
                     )
                     return ImmutableLazyDataList(response["response"], self._to_object)
 
-                request = codec.encode_request(self.name, holder)
+                request = map_entries_with_paging_predicate_codec.encode_request(self.name, holder)
             else:
                 try:
                     predicate_data = self._to_data(predicate)
                 except SchemaNotReplicatedError as e:
                     return self._send_schema_and_retry(e, self.entry_set, predicate)
 
-                codec = map_entries_with_predicate_codec
-
                 def handler(message):
-                    return ImmutableLazyDataList(codec.decode_response(message), self._to_object)
+                    return ImmutableLazyDataList(
+                        map_entries_with_predicate_codec.decode_response(message), self._to_object
+                    )
 
-                request = codec.encode_request(self.name, predicate_data)
+                request = map_entries_with_predicate_codec.encode_request(self.name, predicate_data)
         else:
-            codec = map_entry_set_codec
 
             def handler(message):
-                return ImmutableLazyDataList(codec.decode_response(message), self._to_object)
+                return ImmutableLazyDataList(
+                    map_entry_set_codec.decode_response(message), self._to_object
+                )
 
-            request = codec.encode_request(self.name)
+            request = map_entry_set_codec.encode_request(self.name)
 
         return self._invoke(request, handler)
 
@@ -812,7 +825,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             return ImmediateFuture({})
 
         partition_service = self._context.partition_service
-        partition_to_keys = {}
+        partition_to_keys: typing.Dict[int, typing.Dict[KeyType, Data]] = {}
 
         for key in keys:
             check_not_none(key, "key can't be None")
@@ -916,7 +929,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             A list of the clone of the keys.
         """
         if predicate:
-            if isinstance(predicate, PagingPredicate):
+            if isinstance(predicate, _PagingPredicate):
                 predicate.iteration_type = IterationType.KEY
 
                 try:
@@ -924,35 +937,34 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
                 except SchemaNotReplicatedError as e:
                     return self._send_schema_and_retry(e, self.key_set, predicate)
 
-                codec = map_key_set_with_paging_predicate_codec
-
                 def handler(message):
-                    response = codec.decode_response(message)
+                    response = map_key_set_with_paging_predicate_codec.decode_response(message)
                     predicate.anchor_list = response["anchor_data_list"].as_anchor_list(
                         self._to_object
                     )
                     return ImmutableLazyDataList(response["response"], self._to_object)
 
-                request = codec.encode_request(self.name, holder)
+                request = map_key_set_with_paging_predicate_codec.encode_request(self.name, holder)
             else:
                 try:
                     predicate_data = self._to_data(predicate)
                 except SchemaNotReplicatedError as e:
                     return self._send_schema_and_retry(e, self.key_set, predicate)
 
-                codec = map_key_set_with_predicate_codec
-
                 def handler(message):
-                    return ImmutableLazyDataList(codec.decode_response(message), self._to_object)
+                    return ImmutableLazyDataList(
+                        map_key_set_with_predicate_codec.decode_response(message), self._to_object
+                    )
 
-                request = codec.encode_request(self.name, predicate_data)
+                request = map_key_set_with_predicate_codec.encode_request(self.name, predicate_data)
         else:
-            codec = map_key_set_codec
 
             def handler(message):
-                return ImmutableLazyDataList(codec.decode_response(message), self._to_object)
+                return ImmutableLazyDataList(
+                    map_key_set_codec.decode_response(message), self._to_object
+                )
 
-            request = codec.encode_request(self.name)
+            request = map_key_set_codec.encode_request(self.name)
 
         return self._invoke(request, handler)
 
@@ -1044,7 +1056,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         check_not_none(projection, "Projection can't be none")
 
         if predicate:
-            if isinstance(predicate, PagingPredicate):
+            if isinstance(predicate, _PagingPredicate):
                 raise AssertionError("Paging predicate is not supported.")
 
             try:
@@ -1134,7 +1146,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             return ImmediateFuture(None)
 
         partition_service = self._context.partition_service
-        partition_map = {}
+        partition_map: typing.Dict[int, typing.List[typing.Tuple[Data, Data]]] = {}
 
         for key, value in map.items():
             check_not_none(key, "key can't be None")
@@ -1612,7 +1624,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             A list of clone of the values contained in this map.
         """
         if predicate:
-            if isinstance(predicate, PagingPredicate):
+            if isinstance(predicate, _PagingPredicate):
                 predicate.iteration_type = IterationType.VALUE
 
                 try:
@@ -1620,35 +1632,34 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
                 except SchemaNotReplicatedError as e:
                     return self._send_schema_and_retry(e, self.values, predicate)
 
-                codec = map_values_with_paging_predicate_codec
-
                 def handler(message):
-                    response = codec.decode_response(message)
+                    response = map_values_with_paging_predicate_codec.decode_response(message)
                     predicate.anchor_list = response["anchor_data_list"].as_anchor_list(
                         self._to_object
                     )
                     return ImmutableLazyDataList(response["response"], self._to_object)
 
-                request = codec.encode_request(self.name, holder)
+                request = map_values_with_paging_predicate_codec.encode_request(self.name, holder)
             else:
                 try:
                     predicate_data = self._to_data(predicate)
                 except SchemaNotReplicatedError as e:
                     return self._send_schema_and_retry(e, self.values, predicate)
 
-                codec = map_values_with_predicate_codec
-
                 def handler(message):
-                    return ImmutableLazyDataList(codec.decode_response(message), self._to_object)
+                    return ImmutableLazyDataList(
+                        map_values_with_predicate_codec.decode_response(message), self._to_object
+                    )
 
-                request = codec.encode_request(self.name, predicate_data)
+                request = map_values_with_predicate_codec.encode_request(self.name, predicate_data)
         else:
-            codec = map_values_codec
 
             def handler(message):
-                return ImmutableLazyDataList(codec.decode_response(message), self._to_object)
+                return ImmutableLazyDataList(
+                    map_values_codec.decode_response(message), self._to_object
+                )
 
-            request = codec.encode_request(self.name)
+            request = map_values_codec.encode_request(self.name)
 
         return self._invoke(request, handler)
 

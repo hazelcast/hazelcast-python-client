@@ -278,7 +278,7 @@ class _InternalClusterService:
         for dead_member in dead_members:
             connection = self._connection_manager.get_connection(dead_member.uuid)
             if connection:
-                connection.close(
+                connection.close_connection(
                     None,
                     TargetDisconnectedError(
                         "The client has closed the connection to this member, "
