@@ -1,16 +1,36 @@
 import copy
+import enum
+import typing
+import unittest
 
 from hazelcast.aggregator import Aggregator
 from hazelcast.errors import NullPointerError, IllegalMonitorStateError
 from hazelcast.predicate import Predicate, paging
-from hazelcast.serialization.api import (
-    CompactSerializer,
-    CompactWriter,
-    CompactReader,
-    CompactSerializableClass,
-)
 from tests.base import HazelcastTestCase
-from tests.util import random_string
+from tests.util import random_string, compare_client_version, compare_server_version_with_rc
+
+try:
+    from hazelcast.serialization.api import (
+        CompactSerializer,
+        CompactWriter,
+        CompactReader,
+    )
+except ImportError:
+    # For backward compatibility tests
+
+    T = typing.TypeVar("T")
+
+    class CompactSerializer(typing.Generic[T]):
+        pass
+
+    class CompactReader:
+        pass
+
+    class CompactWriter:
+        pass
+
+    class FieldKind(enum.Enum):
+        pass
 
 
 class InnerCompact:
@@ -86,10 +106,10 @@ class CompactReturningFunction:
 
 
 class CompactReturningFunctionSerializer(CompactSerializer[CompactReturningFunction]):
-    def read(self, reader: CompactReader) -> CompactSerializableClass:
+    def read(self, reader: CompactReader) -> CompactReturningFunction:
         return CompactReturningFunction()
 
-    def write(self, writer: CompactWriter, obj: CompactSerializableClass) -> None:
+    def write(self, writer: CompactWriter, obj: CompactReturningFunction) -> None:
         pass
 
     def get_type_name(self) -> str:
@@ -101,10 +121,10 @@ class CompactReturningCallable:
 
 
 class CompactReturningCallableSerializer(CompactSerializer[CompactReturningCallable]):
-    def read(self, reader: CompactReader) -> CompactSerializableClass:
+    def read(self, reader: CompactReader) -> CompactReturningCallable:
         return CompactReturningCallable()
 
-    def write(self, writer: CompactWriter, obj: CompactSerializableClass) -> None:
+    def write(self, writer: CompactWriter, obj: CompactReturningCallable) -> None:
         pass
 
     def get_type_name(self) -> str:
@@ -131,10 +151,10 @@ class CompactReturningMapInterceptor:
 
 
 class CompactReturningMapInterceptorSerializer(CompactSerializer[CompactReturningMapInterceptor]):
-    def read(self, reader: CompactReader) -> CompactSerializableClass:
+    def read(self, reader: CompactReader) -> CompactReturningMapInterceptor:
         return CompactReturningMapInterceptor()
 
-    def write(self, writer: CompactWriter, obj: CompactSerializableClass) -> None:
+    def write(self, writer: CompactWriter, obj: CompactReturningMapInterceptor) -> None:
         pass
 
     def get_type_name(self) -> str:
@@ -146,10 +166,10 @@ class CompactReturningAggregator(Aggregator):
 
 
 class CompactReturningAggregatorSerializer(CompactSerializer[CompactReturningAggregator]):
-    def read(self, reader: CompactReader) -> CompactSerializableClass:
+    def read(self, reader: CompactReader) -> CompactReturningAggregator:
         return CompactReturningAggregator()
 
-    def write(self, writer: CompactWriter, obj: CompactSerializableClass) -> None:
+    def write(self, writer: CompactWriter, obj: CompactReturningAggregator) -> None:
         pass
 
     def get_type_name(self) -> str:
@@ -205,6 +225,9 @@ INNER_COMPACT_INSTANCE = InnerCompact("42")
 OUTER_COMPACT_INSTANCE = OuterCompact(42, INNER_COMPACT_INSTANCE)
 
 
+@unittest.skipIf(
+    compare_client_version("5.1") < 0, "Tests the features added in 5.1 version of the client"
+)
 class CompactCompatibilityBase(HazelcastTestCase):
     rc = None
     cluster = None
@@ -213,6 +236,9 @@ class CompactCompatibilityBase(HazelcastTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.rc = cls.create_rc()
+        if compare_server_version_with_rc(cls.rc, "5.1") < 0:
+            cls.rc.exit()
+            raise unittest.SkipTest("Compact serialization requires 5.1 server")
 
         config = f"""
 <hazelcast xmlns="http://www.hazelcast.com/schema/config"
