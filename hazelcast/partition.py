@@ -60,7 +60,7 @@ class PartitionService:
         try:
             key_data = self._serialization_service.to_data(key)
         except SchemaNotReplicatedError as e:
-            self._send_schema_and_retry_fn(e, lambda: ...).result()
+            self._send_schema_and_retry_fn(e, lambda: None).result()
             return self.get_partition_id(key)
 
         return self._service.get_partition_id(key_data)

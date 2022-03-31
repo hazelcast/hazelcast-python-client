@@ -56,7 +56,7 @@ class CompactStreamSerializer(BaseSerializer):
             # No need to raise the not replicated error, as we just
             # fetched it from the cluster. Let's register it to our
             # local and continue
-            self.register_sent_schema(schema, clazz)
+            self.register_schema_to_type(schema, clazz)
 
         out.write_long(schema.schema_id)
         writer = DefaultCompactWriter(self, out, schema)  # type: ignore
@@ -81,14 +81,9 @@ class CompactStreamSerializer(BaseSerializer):
     def get_type_id(self) -> int:
         return TYPE_COMPACT
 
-    def register_fetched_schema(self, schema: "Schema") -> None:
+    def register_schema_to_id(self, schema: "Schema") -> None:
         # This method is only called in the reactor thread,
         # as a callback/continuation.
-        if not schema:
-            raise HazelcastSerializationError(
-                f"No schema with id '{schema.schema_id}' can be found on the cluster."
-            )
-
         schema_id = schema.schema_id
         existing_schema = self._id_to_schema.get(schema_id)
         if not existing_schema:
@@ -102,12 +97,12 @@ class CompactStreamSerializer(BaseSerializer):
                 f"new schema: {schema}."
             )
 
-    def register_sent_schema(self, schema: "Schema", clazz: typing.Type) -> None:
+    def register_schema_to_type(self, schema: "Schema", clazz: typing.Type) -> None:
         # This method is only called in the reactor thread,
         # as a callback/continuation.
         # Put it to local registry to avoid need to fetch it once
         # we read a data with the same schema id
-        self.register_fetched_schema(schema)
+        self.register_schema_to_id(schema)
 
         existing_schema = self._type_to_schema.get(clazz)
         if not existing_schema:
@@ -121,7 +116,7 @@ class CompactStreamSerializer(BaseSerializer):
                 f"new schema: {schema}."
             )
 
-    def get_sent_schemas(self) -> typing.List["Schema"]:
+    def get_schemas(self) -> typing.List["Schema"]:
         return list(self._id_to_schema.values())
 
     @staticmethod

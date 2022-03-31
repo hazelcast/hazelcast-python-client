@@ -55,14 +55,14 @@ class CompactSchemaService:
 
         def continuation(future):
             future.result()
-            self._compact_serializer.register_sent_schema(schema, clazz)
+            self._compact_serializer.register_schema_to_type(schema, clazz)
             return func(*args, **kwargs)
 
         self._invocation_service.invoke(invocation)
         return invocation.future.continue_with(continuation)
 
     def send_all_schemas(self) -> Future:
-        schemas = self._compact_serializer.get_sent_schemas()
+        schemas = self._compact_serializer.get_schemas()
         if not schemas:
             _logger.debug("There is no schema to send to the cluster.")
             return ImmediateFuture(None)
@@ -80,4 +80,4 @@ class CompactSchemaService:
                 f"The schema with the id {schema_id} can not be found in the cluster."
             )
 
-        self._compact_serializer.register_fetched_schema(schema)
+        self._compact_serializer.register_schema_to_id(schema)

@@ -220,43 +220,7 @@ class CompactCompatibilityBase(HazelcastTestCase):
            xsi:schemaLocation="http://www.hazelcast.com/schema/config
            http://www.hazelcast.com/schema/config/hazelcast-config-5.1.xsd">
     <serialization>
-        <compact-serialization enabled="true">
-            <registered-classes>
-                <class>
-                    com.hazelcast.serialization.compact.InnerCompact
-                </class>
-                <class>
-                    com.hazelcast.serialization.compact.OuterCompact
-                </class>
-                <class>
-                    com.hazelcast.serialization.compact.CompactIncrementFunction
-                </class>
-                <class>
-                    com.hazelcast.serialization.compact.CompactReturningFunction
-                </class>
-                <class>
-                    com.hazelcast.serialization.compact.CompactReturningCallable
-                </class>
-                <class>
-                    com.hazelcast.serialization.compact.CompactPredicate
-                </class>
-                <class>
-                    com.hazelcast.serialization.compact.CompactReturningMapInterceptor
-                </class>
-                <class>
-                    com.hazelcast.serialization.compact.CompactReturningAggregator
-                </class>
-                <class>
-                    com.hazelcast.serialization.compact.CompactReturningEntryProcessor
-                </class>
-                <class>
-                    com.hazelcast.serialization.compact.CompactReturningProjection
-                </class>
-                <class>
-                    com.hazelcast.serialization.compact.CompactFilter
-                </class>
-            </registered-classes>
-        </compact-serialization>
+        <compact-serialization enabled="true" />
     </serialization>
     <jet enabled="true" />
 </hazelcast>
@@ -536,7 +500,7 @@ class MapCompatibilityTest(CompactCompatibilityBase):
 
         self._assert_entry_event(events)
 
-    def test_add_entry_listener_with_key(self):
+    def test_add_entry_listener_with_predicate(self):
         events = []
 
         def listener(event):
@@ -550,7 +514,7 @@ class MapCompatibilityTest(CompactCompatibilityBase):
 
         self._assert_entry_event(events)
 
-    def test_add_entry_listener_with_predicate(self):
+    def test_add_entry_listener_with_key(self):
         events = []
 
         def listener(event):
@@ -658,6 +622,8 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         self.assertEqual(INNER_COMPACT_INSTANCE, self.map.get(OUTER_COMPACT_INSTANCE))
 
     def test_get_all(self):
+        # Put an entry from the same client to register these schemas
+        # to its local registry, so that the lazy-deserialization works.
         self.map.put(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
         self.assertEqual(
             {OUTER_COMPACT_INSTANCE: INNER_COMPACT_INSTANCE},
@@ -676,6 +642,8 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         self.assertTrue(self.map.is_locked(OUTER_COMPACT_INSTANCE))
 
     def test_key_set_with_predicate(self):
+        # Put an entry from the same client to register these schemas
+        # to its local registry, so that the lazy-deserialization works.
         self.map.put(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
         self.assertEqual(
             [OUTER_COMPACT_INSTANCE],
@@ -683,6 +651,8 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         )
 
     def test_key_set_with_paging_predicate(self):
+        # Put an entry from the same client to register these schemas
+        # to its local registry, so that the lazy-deserialization works.
         self.map.put(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
         self.assertEqual(
             [OUTER_COMPACT_INSTANCE],
@@ -707,6 +677,8 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         self.assertTrue(self.map.is_locked(OUTER_COMPACT_INSTANCE))
 
     def test_project(self):
+        # Put an entry from the same client to register these schemas
+        # to its local registry, so that the lazy-deserialization works.
         self.map.put(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
         self.assertEqual(
             [OUTER_COMPACT_INSTANCE],
@@ -714,6 +686,8 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         )
 
     def test_project_with_predicate(self):
+        # Put an entry from the same client to register these schemas
+        # to its local registry, so that the lazy-deserialization works.
         self.map.put(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
         self.assertEqual(
             [OUTER_COMPACT_INSTANCE],
@@ -799,10 +773,14 @@ class MapCompatibilityTest(CompactCompatibilityBase):
             pass
 
     def test_values_with_predicate(self):
+        # Put an entry from the same client to register these schemas
+        # to its local registry, so that the lazy-deserialization works.
         self.map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
         self.assertEqual([OUTER_COMPACT_INSTANCE], self.map.values(CompactPredicate()))
 
     def test_values_with_paging_predicate(self):
+        # Put an entry from the same client to register these schemas
+        # to its local registry, so that the lazy-deserialization works.
         self.map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
         self.assertEqual([OUTER_COMPACT_INSTANCE], self.map.values(paging(CompactPredicate(), 1)))
 
@@ -836,9 +814,9 @@ class NearCachedMapCompactCompatibilityTest(MapCompatibilityTest):
     def test_get_for_near_cache(self):
         # Another variant of the test in the superclass, where we lookup a key
         # which has a value whose schema is not fully sent to the
-        # cluster. The near cache will try to serialize it, but it should
-        # not attempt to send this schema to the cluster, as it is just fetched
-        # from there.
+        # cluster from this client. The near cache will try to serialize it,
+        # but it should not attempt to send this schema to the cluster, as it
+        # is just fetched from there.
         self._put_from_another_client(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
         self.assertEqual(OUTER_COMPACT_INSTANCE, self.map.get(INNER_COMPACT_INSTANCE))
 
@@ -1242,6 +1220,8 @@ class RingbufferCompactCompatibilityTest(CompactCompatibilityBase):
         self.assertEqual(OUTER_COMPACT_INSTANCE, self.ringbuffer.read_one(0))
 
     def test_read_many_with_filter(self):
+        # Add an item from the same client to register these schemas
+        # to its local registry, so that the lazy-deserialization works.
         self.ringbuffer.add(OUTER_COMPACT_INSTANCE)
         self.assertEqual(
             [OUTER_COMPACT_INSTANCE],
@@ -1530,6 +1510,8 @@ class TransactionalMultiMapCompactCompatibilityTest(CompactCompatibilityBase):
             )
 
     def test_get(self):
+        # Put an entry from the same client to register these schemas
+        # to its local registry, so that the lazy-deserialization works.
         self.multi_map.put(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
         with self.transaction:
             transactional_multi_map = self._get_transactional_multi_map()

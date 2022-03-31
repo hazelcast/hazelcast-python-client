@@ -107,10 +107,9 @@ class TransactionalProxy:
         self._to_object = serialization_service.to_object
         self._to_data = serialization_service.to_data
         self._send_schema_and_retry = context.compact_schema_service.send_schema_and_retry
-        self._no_op_func = lambda: None
 
     def _send_schema(self, error):
-        return self._send_schema_and_retry(error, self._no_op_func).result()
+        return self._send_schema_and_retry(error, lambda: None).result()
 
     def _invoke(self, request, response_handler=_no_op_response_handler):
         invocation = Invocation(

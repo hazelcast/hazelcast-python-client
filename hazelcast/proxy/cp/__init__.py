@@ -14,7 +14,6 @@ def _no_op_response_handler(_):
 
 class BaseCPProxy(typing.Generic[BlockingProxyType], abc.ABC):
     def __init__(self, context, group_id, service_name, proxy_name, object_name):
-        self._context = context
         self._group_id = group_id
         self._service_name = service_name
         self._proxy_name = proxy_name
