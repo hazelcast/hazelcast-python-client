@@ -49,7 +49,7 @@ images <https://hub.docker.com/r/hazelcast/hazelcast/>`__.
 
 .. code:: bash
 
-   docker run -p 5701:5701 hazelcast/hazelcast:5.0
+   docker run -p 5701:5701 hazelcast/hazelcast:5.1
 
 You can also use our ZIP or TAR
 `distributions <https://hazelcast.com/open-source-projects/downloads/>`__.
@@ -204,7 +204,9 @@ If you are planning to contribute:
    dependencies.
 2. Use `black <https://pypi.org/project/black/>`__ to reformat the code
    by running the ``black --config black.toml .`` command.
-3. Make sure that tests are passing by following the steps described
+3. Use `mypy <https://pypi.org/project/mypy/>`__ to check type annotations
+   by running the ``mypy hazelcast`` command.
+4. Make sure that tests are passing by following the steps described
    in the next section.
 
 Testing

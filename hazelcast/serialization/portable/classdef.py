@@ -79,7 +79,9 @@ class ClassDefinition:
     def add_field_def(self, field_def):
         self.field_defs[field_def.field_name] = field_def
 
-    def get_field(self, field_name_or_index: typing.Union[int, str]) -> FieldDefinition:
+    def get_field(
+        self, field_name_or_index: typing.Union[int, str]
+    ) -> typing.Optional[FieldDefinition]:
         if isinstance(field_name_or_index, int):
             index = field_name_or_index
             count = self.get_field_count()
@@ -158,8 +160,8 @@ class ClassDefinitionBuilder:
 
         self._index = 0
         self._done = False
-        self._field_defs = list()
-        self._field_names = set()
+        self._field_defs: typing.List[FieldDefinition] = []
+        self._field_names: typing.Set[str] = set()
 
     def add_portable_field(
         self, field_name: str, class_def: ClassDefinition

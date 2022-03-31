@@ -78,7 +78,7 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
         Returns:
             A registration id which is used as a key to remove the listener.
         """
-        if key and predicate:
+        if key is not None and predicate:
             try:
                 key_data = self._to_data(key)
                 predicate_data = self._to_data(predicate)
@@ -94,9 +94,16 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
                     evicted_func,
                     clear_all_func,
                 )
-            codec = replicated_map_add_entry_listener_to_key_with_predicate_codec
-            request = codec.encode_request(self.name, key_data, predicate_data, self._is_smart)
-        elif key and not predicate:
+
+            with_key_and_predicate_codec = (
+                replicated_map_add_entry_listener_to_key_with_predicate_codec
+            )
+            request = with_key_and_predicate_codec.encode_request(
+                self.name, key_data, predicate_data, self._is_smart
+            )
+            response_decoder = with_key_and_predicate_codec.decode_response
+            event_message_handler = with_key_and_predicate_codec.handle
+        elif key is not None and not predicate:
             try:
                 key_data = self._to_data(key)
             except SchemaNotReplicatedError as e:
@@ -111,9 +118,12 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
                     evicted_func,
                     clear_all_func,
                 )
-            codec = replicated_map_add_entry_listener_to_key_codec
-            request = codec.encode_request(self.name, key_data, self._is_smart)
-        elif not key and predicate:
+
+            with_key_codec = replicated_map_add_entry_listener_to_key_codec
+            request = with_key_codec.encode_request(self.name, key_data, self._is_smart)
+            response_decoder = with_key_codec.decode_response
+            event_message_handler = with_key_codec.handle
+        elif key is None and predicate:
             try:
                 predicate = self._to_data(predicate)
             except SchemaNotReplicatedError as e:
@@ -128,11 +138,16 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
                     evicted_func,
                     clear_all_func,
                 )
-            codec = replicated_map_add_entry_listener_with_predicate_codec
-            request = codec.encode_request(self.name, predicate, self._is_smart)
+
+            with_predicate_codec = replicated_map_add_entry_listener_with_predicate_codec
+            request = with_predicate_codec.encode_request(self.name, predicate, self._is_smart)
+            response_decoder = with_predicate_codec.decode_response
+            event_message_handler = with_predicate_codec.handle
         else:
             codec = replicated_map_add_entry_listener_codec
             request = codec.encode_request(self.name, self._is_smart)
+            response_decoder = codec.decode_response
+            event_message_handler = codec.handle
 
         def handle_event_entry(
             key_data,
@@ -165,11 +180,11 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
 
         return self._register_listener(
             request,
-            lambda r: codec.decode_response(r),
+            lambda r: response_decoder(r),
             lambda reg_id: replicated_map_remove_entry_listener_codec.encode_request(
                 self.name, reg_id
             ),
-            lambda m: codec.handle(m, handle_event_entry),
+            lambda m: event_message_handler(m, handle_event_entry),
         )
 
     def clear(self) -> Future[None]:

@@ -66,7 +66,7 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
         Returns:
             A registration id which is used as a key to remove the listener.
         """
-        if key:
+        if key is not None:
             try:
                 key_data = self._to_data(key)
             except SchemaNotReplicatedError as e:
@@ -80,11 +80,15 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
                     clear_all_func,
                 )
 
-            codec = multi_map_add_entry_listener_to_key_codec
-            request = codec.encode_request(self.name, key_data, include_value, False)
+            with_key_codec = multi_map_add_entry_listener_to_key_codec
+            request = with_key_codec.encode_request(self.name, key_data, include_value, False)
+            response_decoder = with_key_codec.decode_response
+            event_message_handler = with_key_codec.handle
         else:
             codec = multi_map_add_entry_listener_codec
             request = codec.encode_request(self.name, include_value, False)
+            response_decoder = codec.decode_response
+            event_message_handler = codec.handle
 
         def handle_event_entry(
             key_data,
@@ -113,9 +117,9 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
 
         return self._register_listener(
             request,
-            lambda r: codec.decode_response(r),
+            lambda r: response_decoder(r),
             lambda reg_id: multi_map_remove_entry_listener_codec.encode_request(self.name, reg_id),
-            lambda m: codec.handle(m, handle_event_entry),
+            lambda m: event_message_handler(m, handle_event_entry),
         )
 
     def contains_key(self, key: KeyType) -> Future[bool]:

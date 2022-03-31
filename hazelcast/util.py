@@ -254,7 +254,6 @@ def try_to_get_enum_value(value, enum_class):
 
 
 number_types = (int, float)
-none_type = type(None)
 
 
 class LoadBalancer:

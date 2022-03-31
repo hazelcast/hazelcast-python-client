@@ -54,7 +54,9 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
     server-side setting.
     """
 
-    def compare_and_set(self, expect: ElementType, update: ElementType) -> Future[bool]:
+    def compare_and_set(
+        self, expect: typing.Optional[ElementType], update: typing.Optional[ElementType]
+    ) -> Future[bool]:
         """Atomically sets the value to the given updated value
         only if the current value is equal to the expected value.
 
@@ -76,7 +78,7 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
         request = codec.encode_request(self._group_id, self._object_name, expected_data, new_data)
         return self._invoke(request, codec.decode_response)
 
-    def get(self) -> Future[ElementType]:
+    def get(self) -> Future[typing.Optional[ElementType]]:
         """Gets the current value.
 
         Returns:
@@ -90,7 +92,7 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
 
         return self._invoke(request, handler)
 
-    def set(self, new_value: ElementType) -> Future[None]:
+    def set(self, new_value: typing.Optional[ElementType]) -> Future[None]:
         """Atomically sets the given value.
 
         Args:
@@ -105,7 +107,9 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
         request = codec.encode_request(self._group_id, self._object_name, new_value_data, False)
         return self._invoke(request)
 
-    def get_and_set(self, new_value: ElementType) -> Future[ElementType]:
+    def get_and_set(
+        self, new_value: typing.Optional[ElementType]
+    ) -> Future[typing.Optional[ElementType]]:
         """Gets the old value and sets the new value.
 
         Args:
@@ -180,7 +184,7 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
         request = codec.encode_request(self._group_id, self._object_name, function_data, 0, True)
         return self._invoke(request)
 
-    def alter_and_get(self, function: typing.Any) -> Future[ElementType]:
+    def alter_and_get(self, function: typing.Any) -> Future[typing.Optional[ElementType]]:
         """Alters the currently stored reference by applying a function on it
         and gets the result.
 
@@ -211,7 +215,7 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
 
         return self._invoke(request, handler)
 
-    def get_and_alter(self, function: typing.Any) -> Future[ElementType]:
+    def get_and_alter(self, function: typing.Any) -> Future[typing.Optional[ElementType]]:
         """Alters the currently stored reference by applying a function on it
         on and gets the old value.
 
@@ -242,7 +246,7 @@ class AtomicReference(BaseCPProxy["BlockingAtomicReference"], typing.Generic[Ele
 
         return self._invoke(request, handler)
 
-    def apply(self, function: typing.Any) -> Future[ElementType]:
+    def apply(self, function: typing.Any) -> Future[typing.Optional[ElementType]]:
         """Applies a function on the value, the actual stored value will not
         change.
 
@@ -285,26 +289,26 @@ class BlockingAtomicReference(AtomicReference[ElementType]):
 
     def compare_and_set(  # type: ignore[override]
         self,
-        expect: ElementType,
-        update: ElementType,
+        expect: typing.Optional[ElementType],
+        update: typing.Optional[ElementType],
     ) -> bool:
         return self._wrapped.compare_and_set(expect, update).result()
 
     def get(  # type: ignore[override]
         self,
-    ) -> ElementType:
+    ) -> typing.Optional[ElementType]:
         return self._wrapped.get().result()
 
     def set(  # type: ignore[override]
         self,
-        new_value: ElementType,
+        new_value: typing.Optional[ElementType],
     ) -> None:
         return self._wrapped.set(new_value).result()
 
     def get_and_set(  # type: ignore[override]
         self,
-        new_value: ElementType,
-    ) -> ElementType:
+        new_value: typing.Optional[ElementType],
+    ) -> typing.Optional[ElementType]:
         return self._wrapped.get_and_set(new_value).result()
 
     def is_none(  # type: ignore[override]
@@ -332,19 +336,19 @@ class BlockingAtomicReference(AtomicReference[ElementType]):
     def alter_and_get(  # type: ignore[override]
         self,
         function: typing.Any,
-    ) -> ElementType:
+    ) -> typing.Optional[ElementType]:
         return self._wrapped.alter_and_get(function).result()
 
     def get_and_alter(  # type: ignore[override]
         self,
         function: typing.Any,
-    ) -> ElementType:
+    ) -> typing.Optional[ElementType]:
         return self._wrapped.get_and_alter(function).result()
 
     def apply(  # type: ignore[override]
         self,
         function: typing.Any,
-    ) -> ElementType:
+    ) -> typing.Optional[ElementType]:
         return self._wrapped.apply(function).result()
 
     def destroy(  # type: ignore[override]

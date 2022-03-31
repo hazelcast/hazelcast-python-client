@@ -1,5 +1,8 @@
+import typing
+
 from hazelcast.invocation import Invocation
 from hazelcast.protocol.codec import client_create_proxy_codec, client_destroy_proxy_codec
+from hazelcast.proxy.base import Proxy
 from hazelcast.proxy.executor import Executor
 from hazelcast.proxy.list import List
 from hazelcast.proxy.map import create_map_proxy
@@ -27,7 +30,7 @@ TOPIC_SERVICE = "hz:impl:topicService"
 PN_COUNTER_SERVICE = "hz:impl:PNCounterService"
 FLAKE_ID_GENERATOR_SERVICE = "hz:impl:flakeIdGeneratorService"
 
-_proxy_init = {
+_proxy_init: typing.Dict[str, typing.Callable[[str, str, typing.Any], Proxy]] = {
     EXECUTOR_SERVICE: Executor,
     LIST_SERVICE: List,
     MAP_SERVICE: create_map_proxy,

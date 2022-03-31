@@ -15,7 +15,6 @@ from hazelcast.util import (
     check_not_none,
     number_types,
     LoadBalancer,
-    none_type,
     try_to_get_enum_value,
 )
 
@@ -333,7 +332,7 @@ class IndexConfig:
 
     @name.setter
     def name(self, value):
-        if isinstance(value, (str, none_type)):
+        if isinstance(value, str) or value is None:
             self._name = value
         else:
             raise TypeError("name must be a string or None")

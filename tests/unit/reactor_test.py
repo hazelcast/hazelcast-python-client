@@ -364,7 +364,7 @@ class AsyncoreConnectionTest(unittest.TestCase):
             # before connection timeout
             self.assertLess(get_current_timestamp() - start, config.connection_timeout)
         finally:
-            conn.close(None, None)
+            conn.close_connection(None, None)
 
     def test_resources_cleaned_up_after_immediate_failure(self):
         addr = Address("invalid-address", 5701)
@@ -372,7 +372,7 @@ class AsyncoreConnectionTest(unittest.TestCase):
         mock_reactor = MagicMock(map={})
         try:
             conn = AsyncoreConnection(mock_reactor, MagicMock(), None, addr, config, None)
-            conn.close(None, None)
+            conn.close_connection(None, None)
             self.fail("Connection attempt to an invalid address should fail immediately")
         except socket.error:
             # Constructor of the connection should remove itself from the
