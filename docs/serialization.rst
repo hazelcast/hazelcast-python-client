@@ -46,22 +46,25 @@ When Hazelcast Python client serializes an object:
 
 1. It first checks whether the object is ``None``.
 
-2. If the above check fails, then it checks if it is an instance of
-   ``IdentifiedDataSerializable``.
+2. If the above check fails, then it checks if there is a
+   ``CompactSerializer`` registered for the class of the object.
 
 3. If the above check fails, then it checks if it is an instance of
+   ``IdentifiedDataSerializable``.
+
+4. If the above check fails, then it checks if it is an instance of
    ``Portable``.
 
-4. If the above check fails, then it checks if it is an instance of one
+5. If the above check fails, then it checks if it is an instance of one
    of the default types (see the default types above).
 
-5. If the above check fails, then it looks for a user-specified
+6. If the above check fails, then it looks for a user-specified
    :ref:`serialization:custom serialization`.
 
-6. If the above check fails, it will use the registered
+7. If the above check fails, it will use the registered
    :ref:`serialization:global serialization` if one exists.
 
-7. If the above check fails, then the Python client uses ``pickle``
+8. If the above check fails, then the Python client uses ``pickle``
    by default.
 
 However, ``cPickle/pickle Serialization`` is not the best way of
@@ -69,11 +72,229 @@ serialization in terms of performance and interoperability between the
 clients in different languages. If you want the serialization to work
 faster or you use the clients in different languages, Hazelcast offers
 its own native serialization types, such as
-:ref:`serialization:identifieddataserializable serialization`
-and :ref:`serialization:portable serialization`.
+:ref:`serialization:compact serialization`,
+:ref:`serialization:identifieddataserializable serialization`, and
+:ref:`serialization:portable serialization`.
 
 On top of all, if you want to use your own serialization type, you can
 use a :ref:`serialization:custom serialization`.
+
+Compact Serialization
+---------------------
+
+.. warning::
+    Compact Serialization feature is in the BETA status and any part of it
+    might be changed without a prior notice, until it is promoted to the
+    stable status.
+
+As an enhancement to existing serialization methods, Hazelcast offers a beta
+version of the compact serialization, with the following main features:
+
+- Separates the schema from the data and stores it per type, not per object
+  which results in less memory and bandwidth usage compared to other formats
+- Does not require a class to extend another class or change the source code
+  of the class in any way
+- Supports schema evolution which permits adding or removing fields, or
+  changing the types of fields
+- Platform and language independent
+- Supports partial deserialization of fields, without deserializing the whole
+  objects during queries or indexing
+
+Hazelcast achieves these features by having a well-known schema of objects and
+replicating them across the cluster which enables members and clients to fetch
+schemas they don’t have in their local registries. Each serialized object
+carries just a schema identifier and relies on the schema distribution service
+or configuration to match identifiers with the actual schema. Once the schemas
+are fetched, they are cached locally on the members and clients so that the
+next operations that use the schema do not incur extra costs.
+
+Schemas help Hazelcast to identify the locations of the fields on the
+serialized binary data. With this information, Hazelcast can deserialize
+individual fields of the data, without reading the whole binary. This results
+in a better query and indexing performance.
+
+Schemas can evolve freely by adding or removing fields. Even, the types of the
+fields can be changed. Multiple versions of the schema may live in the same
+cluster and both the old and new readers may read the compatible parts of the
+data. This feature is especially useful in rolling upgrade scenarios.
+
+The Compact serialization does not require any changes in the user classes as
+it doesn’t need a class to extend another class. Serializers might be
+implemented and registered separately from the classes.
+
+The underlying format of the compact serialized objects is platform and
+language independent.
+
+Using Compact Serialization
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Compact serialization can be used by writing a serializer that extends the
+:class:`CompactSerializer <hazelcast.serialization.api.CompactSerializer>`
+for a class and registering it in the client configuration.
+
+For example, assume that you have the following ``Employee`` class:
+
+.. code:: python
+
+    class Employee:
+        def __init__(self, name: str, age: int):
+            self.name = name
+            self.age = age
+
+
+Then, a serializer for it can be implemented as below:
+
+.. code:: python
+
+    from hazelcast.serialization.api import CompactSerializer, CompactWriter, CompactReader
+
+    class EmployeeSerializer(CompactSerializer[Employee]):
+        def read(self, reader: CompactReader) -> Employee:
+            name = reader.read_string("name")
+            age = reader.read_int32("age")
+            return Employee(name, age)
+
+        def write(self, writer: CompactWriter, obj: Employee) -> None:
+            writer.write_string("name", obj.name)
+            writer.write_int32("age", obj.age)
+
+        def get_type_name(self) -> str:
+            return "employee"
+
+The last step is to register the serializer in the client configuration.
+
+.. code:: python
+
+    client = HazelcastClient(
+        compact_serializers={
+            Employee: EmployeeSerializer(),
+        }
+    )
+
+A schema will be created from the serializer, and a unique schema identifier
+will be assigned to it automatically.
+
+From now on, Hazelcast will serialize instances of the ``Employee`` class
+using the ``EmployeeSerializer``.
+
+Schema Evolution
+~~~~~~~~~~~~~~~~
+
+Compact serialization permits schemas and classes to evolve by adding or
+removing fields, or by changing the types of fields. More than one version of
+a class may live in the same cluster and different clients or members might
+use different versions of the class.
+
+Hazelcast handles the versioning internally. So, you don’t have to change
+anything in the classes or serializers apart from the added, removed, or
+changed fields.
+
+Hazelcast achieves this by identifying each version of the class by a unique
+fingerprint. Any change in a class results in a different fingerprint.
+Hazelcast uses a 64-bit
+`Rabin Fingerprint <https://en.wikipedia.org/wiki/Rabin_fingerprint>`__ to
+assign identifiers to schemas, which has an extremely low collision rate.
+
+Different versions of the schema with different identifiers are replicated in
+the cluster and can be fetched by clients or members internally. That allows
+old readers to read fields of the classes they know when they try to read data
+serialized by a new writer. Similarly, new readers might read fields of the
+classes available in the data, when they try to read data serialized by an old
+writer.
+
+Assume that the two versions of the following ``Employee`` class lives in the
+cluster.
+
+.. code:: python
+
+    class Employee:
+        def __init__(self, name: str, age: int):
+            self.name = name
+            self.age = age
+
+.. code:: python
+
+    class Employee:
+        def __init__(self, name: str, age: int, is_active: bool):
+            self.name = name
+            self.age = age
+            self.is_active = is_active  # Newly added field
+
+Then, when faced with binary data serialized by the new writer, old readers
+will be able to read the following fields.
+
+.. code:: python
+
+    class EmployeeSerializer(CompactSerializer[Employee]):
+        def read(self, reader: CompactReader) -> Employee:
+            name = reader.read_string("name")
+            age = reader.read_int32("age")
+            # The new "is_active" field is there, but the old reader does not
+            # know anything about it. Hence, it will simply ignore that field.
+            return Employee(name, age)
+
+        ...
+
+Then, when faced with binary data serialized by the old writer, new readers
+will be able to read the following fields. Also, Hazelcast provides convenient
+APIs to read default values when there is no such field in the data.
+
+.. code:: python
+
+    class EmployeeSerializer(CompactSerializer[Employee]):
+        def read(self, reader: CompactReader) -> Employee:
+            name = reader.read_string("name")
+            age = reader.read_int32("age")
+            # Read the "is_active" if it exists, or the default value `False`.
+            # reader.read_boolean("is_active") would throw if the "is_active"
+            #field does not exist in data.
+            is_active = reader.read_boolean_or("is_active", False)
+            return Employee(name, age, is_active)
+
+        ...
+
+Note that, when an old reader reads data written by an old writer, or a new
+reader reads a data written by a new writer, they will be able to read all
+fields.
+
+Limitations
+~~~~~~~~~~~
+
+Currently, the following APIs are not fully supported with the Compact
+serialization format. They may or may not work, depending on whether the
+schema is available on the client or not.
+
+All of these APIs will work with the Compact serialization format, once it is
+promoted to the stable status.
+
+- Reading OBJECT columns of the SQL results
+- Listening for :class:`hazelcast.proxy.reliable_topic.ReliableTopic` messages
+- :func:`hazelcast.proxy.list.List.iterator`
+- :func:`hazelcast.proxy.list.List.list_iterator`
+- :func:`hazelcast.proxy.list.List.get_all`
+- :func:`hazelcast.proxy.list.List.sub_list`
+- :func:`hazelcast.proxy.map.Map.values`
+- :func:`hazelcast.proxy.map.Map.entry_set`
+- :func:`hazelcast.proxy.map.Map.execute_on_keys`
+- :func:`hazelcast.proxy.map.Map.key_set`
+- :func:`hazelcast.proxy.map.Map.project`
+- :func:`hazelcast.proxy.map.Map.execute_on_entries`
+- :func:`hazelcast.proxy.map.Map.get_all`
+- :func:`hazelcast.proxy.multi_map.MultiMap.remove_all`
+- :func:`hazelcast.proxy.multi_map.MultiMap.key_set`
+- :func:`hazelcast.proxy.multi_map.MultiMap.values`
+- :func:`hazelcast.proxy.multi_map.MultiMap.entry_set`
+- :func:`hazelcast.proxy.multi_map.MultiMap.get`
+- :func:`hazelcast.proxy.queue.Queue.iterator`
+- :func:`hazelcast.proxy.replicated_map.ReplicatedMap.values`
+- :func:`hazelcast.proxy.replicated_map.ReplicatedMap.entry_set`
+- :func:`hazelcast.proxy.replicated_map.ReplicatedMap.key_set`
+- :func:`hazelcast.proxy.set.Set.get_all`
+- :func:`hazelcast.proxy.ringbuffer.Ringbuffer.read_many`
+- :func:`hazelcast.proxy.transactional_map.TransactionalMap.values`
+- :func:`hazelcast.proxy.transactional_map.TransactionalMap.key_set`
+- :func:`hazelcast.proxy.transactional_multi_map.TransactionalMultiMap.get`
+- :func:`hazelcast.proxy.transactional_multi_map.TransactionalMultiMap.remove_all`
 
 IdentifiedDataSerializable Serialization
 ----------------------------------------

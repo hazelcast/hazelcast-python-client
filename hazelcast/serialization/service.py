@@ -408,6 +408,9 @@ class SerializerRegistry:
         return serializer
 
     def lookup_default_serializer(self, obj_type, obj):
+        if obj_type in self._compact_types:
+            return self._compact_stream_serializer
+
         if isinstance(obj, IdentifiedDataSerializable):
             return self._data_serializer
 
@@ -416,9 +419,6 @@ class SerializerRegistry:
 
         if isinstance(obj, str):
             return self.serializer_by_type_id(CONSTANT_TYPE_STRING)
-
-        if obj_type in self._compact_types:
-            return self._compact_stream_serializer
 
         # LOCATE NUMERIC TYPES
         if obj_type is int:
