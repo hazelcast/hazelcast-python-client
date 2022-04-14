@@ -166,7 +166,6 @@ try:
     class CompactReturningAggregator(Aggregator):
         pass
 
-
 except ImportError:
 
     class CompactReturningAggregator:
