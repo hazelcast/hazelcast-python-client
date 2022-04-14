@@ -294,17 +294,25 @@ class AtomicLongCompactCompatibilityTest(CompactCompatibilityBase):
         super().tearDown()
 
     def test_alter(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         self.atomic_long.alter(CompactIncrementFunction())
         self.assertEqual(42, self.atomic_long.get())
 
     def test_alter_and_get(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         self.assertEqual(42, self.atomic_long.alter_and_get(CompactIncrementFunction()))
 
     def test_get_and_alter(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         self.assertEqual(41, self.atomic_long.get_and_alter(CompactIncrementFunction()))
         self.assertEqual(42, self.atomic_long.get())
 
     def test_apply(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         self.assertEqual(OUTER_COMPACT_INSTANCE, self.atomic_long.apply(CompactReturningFunction()))
 
 
@@ -321,33 +329,47 @@ class AtomicReferenceCompactCompatibilityTest(CompactCompatibilityBase):
         super().tearDown()
 
     def test_compare_and_set(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         self.assertTrue(self.atomic_reference.compare_and_set(None, OUTER_COMPACT_INSTANCE))
         self.assertEqual(OUTER_COMPACT_INSTANCE, self.atomic_reference.get())
 
     def test_set(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         self.atomic_reference.set(OUTER_COMPACT_INSTANCE)
         self.assertEqual(OUTER_COMPACT_INSTANCE, self.atomic_reference.get())
 
     def test_get_and_set(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         self.assertEqual(None, self.atomic_reference.get_and_set(OUTER_COMPACT_INSTANCE))
         self.assertEqual(OUTER_COMPACT_INSTANCE, self.atomic_reference.get_and_set(None))
 
     def test_contains(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         self.assertFalse(self.atomic_reference.contains(OUTER_COMPACT_INSTANCE))
         self.atomic_reference.set(OUTER_COMPACT_INSTANCE)
         self.assertTrue(self.atomic_reference.contains(OUTER_COMPACT_INSTANCE))
 
     def test_alter(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         self.atomic_reference.alter(CompactReturningFunction())
         self.assertEqual(OUTER_COMPACT_INSTANCE, self.atomic_reference.get())
 
     def test_alter_and_get(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         self.assertEqual(
             OUTER_COMPACT_INSTANCE,
             self.atomic_reference.alter_and_get(CompactReturningFunction()),
         )
 
     def test_get_and_alter(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         self.assertEqual(None, self.atomic_reference.get_and_alter(CompactReturningFunction()))
         self.assertEqual(
             OUTER_COMPACT_INSTANCE,
@@ -355,12 +377,16 @@ class AtomicReferenceCompactCompatibilityTest(CompactCompatibilityBase):
         )
 
     def test_apply(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         self.assertEqual(
             OUTER_COMPACT_INSTANCE,
             self.atomic_reference.apply(CompactReturningFunction()),
         )
 
     def test_get(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         self.atomic_reference.set(OUTER_COMPACT_INSTANCE)
         self.assertEqual(OUTER_COMPACT_INSTANCE, self.atomic_reference.get())
 
@@ -375,12 +401,16 @@ class ExecutorCompactCompatibilityTest(CompactCompatibilityBase):
         super().tearDown()
 
     def test_execute_on_key_owner(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         self.assertEqual(
             OUTER_COMPACT_INSTANCE,
             self.executor.execute_on_key_owner(OUTER_COMPACT_INSTANCE, CompactReturningCallable()),
         )
 
     def test_execute_on_member(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         member = self.client.cluster_service.get_members()[0]
         self.assertEqual(
             OUTER_COMPACT_INSTANCE,
@@ -388,6 +418,8 @@ class ExecutorCompactCompatibilityTest(CompactCompatibilityBase):
         )
 
     def test_execute_on_members(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         member = self.client.cluster_service.get_members()[0]
         self.assertEqual(
             OUTER_COMPACT_INSTANCE,
@@ -395,6 +427,8 @@ class ExecutorCompactCompatibilityTest(CompactCompatibilityBase):
         )
 
     def test_execute_on_all_members(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         self.assertEqual(
             OUTER_COMPACT_INSTANCE,
             self.executor.execute_on_all_members(CompactReturningCallable())[0],
@@ -512,6 +546,8 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         super().tearDown()
 
     def test_add_entry_listener_with_key_and_predicate(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         events = []
 
         def listener(event):
@@ -527,6 +563,8 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         self._assert_entry_event(events)
 
     def test_add_entry_listener_with_predicate(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         events = []
 
         def listener(event):
@@ -555,16 +593,22 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         self._assert_entry_event(events)
 
     def test_add_interceptor(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         self.map.add_interceptor(CompactReturningMapInterceptor())
         self.assertEqual(OUTER_COMPACT_INSTANCE, self.map.get("non-existent-key"))
 
     def test_aggregate(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         self.assertEqual(
             OUTER_COMPACT_INSTANCE,
             self.map.aggregate(CompactReturningAggregator()),
         )
 
     def test_aggregate_with_predicate(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         self.assertEqual(
             OUTER_COMPACT_INSTANCE,
             self.map.aggregate(CompactReturningAggregator(), predicate=CompactPredicate()),
@@ -587,6 +631,8 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         self.assertIsNone(self.map.get(OUTER_COMPACT_INSTANCE))
 
     def test_entry_set_with_predicate(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         # Put an entry from the same client to register these schemas
         # to its local registry, so that the lazy-deserialization works.
         self.map.put(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
@@ -596,6 +642,8 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         )
 
     def test_entry_set_with_paging_predicate(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         # Put an entry from the same client to register these schemas
         # to its local registry, so that the lazy-deserialization works.
         self.map.put(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
@@ -610,6 +658,8 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         self.assertTrue(self.map.evict(OUTER_COMPACT_INSTANCE))
 
     def test_execute_on_entries(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         self.map.put(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
         self.assertEqual(
             [(OUTER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)],
@@ -617,6 +667,8 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         )
 
     def test_execute_on_entries_predicate(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         self.map.put(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
         self.assertEqual(
             [(OUTER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)],
@@ -624,6 +676,8 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         )
 
     def test_execute_on_key(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         self.map.put(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
         self.assertEqual(
             OUTER_COMPACT_INSTANCE,
@@ -631,6 +685,8 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         )
 
     def test_execute_on_keys(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         self.map.put(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
         self.assertEqual(
             [(OUTER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)],
@@ -668,6 +724,8 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         self.assertTrue(self.map.is_locked(OUTER_COMPACT_INSTANCE))
 
     def test_key_set_with_predicate(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         # Put an entry from the same client to register these schemas
         # to its local registry, so that the lazy-deserialization works.
         self.map.put(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
@@ -677,6 +735,8 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         )
 
     def test_key_set_with_paging_predicate(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         # Put an entry from the same client to register these schemas
         # to its local registry, so that the lazy-deserialization works.
         self.map.put(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
@@ -703,6 +763,8 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         self.assertTrue(self.map.is_locked(OUTER_COMPACT_INSTANCE))
 
     def test_project(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         # Put an entry from the same client to register these schemas
         # to its local registry, so that the lazy-deserialization works.
         self.map.put(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
@@ -712,6 +774,8 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         )
 
     def test_project_with_predicate(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         # Put an entry from the same client to register these schemas
         # to its local registry, so that the lazy-deserialization works.
         self.map.put(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
@@ -799,12 +863,16 @@ class MapCompatibilityTest(CompactCompatibilityBase):
             pass
 
     def test_values_with_predicate(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         # Put an entry from the same client to register these schemas
         # to its local registry, so that the lazy-deserialization works.
         self.map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
         self.assertEqual([OUTER_COMPACT_INSTANCE], self.map.values(CompactPredicate()))
 
     def test_values_with_paging_predicate(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         # Put an entry from the same client to register these schemas
         # to its local registry, so that the lazy-deserialization works.
         self.map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
@@ -1136,6 +1204,9 @@ class ReplicatedMapCompactCompatibilityTest(CompactCompatibilityBase):
         self._assert_entry_event(events)
 
     def test_add_entry_listener_with_key(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
+
         events = []
 
         def listener(event):
@@ -1149,6 +1220,9 @@ class ReplicatedMapCompactCompatibilityTest(CompactCompatibilityBase):
         self._assert_entry_event(events)
 
     def test_add_entry_listener_with_key_and_predicate(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
+
         events = []
 
         def listener(event):
@@ -1246,6 +1320,8 @@ class RingbufferCompactCompatibilityTest(CompactCompatibilityBase):
         self.assertEqual(OUTER_COMPACT_INSTANCE, self.ringbuffer.read_one(0))
 
     def test_read_many_with_filter(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         # Add an item from the same client to register these schemas
         # to its local registry, so that the lazy-deserialization works.
         self.ringbuffer.add(OUTER_COMPACT_INSTANCE)
@@ -1495,6 +1571,8 @@ class TransactionalMapCompactCompatibilityTest(CompactCompatibilityBase):
         self.assertTrue(self.map.is_empty())
 
     def test_key_set_with_predicate(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         self.map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
         with self.transaction:
             transactional_map = self._get_transactional_map()
@@ -1503,6 +1581,8 @@ class TransactionalMapCompactCompatibilityTest(CompactCompatibilityBase):
             )
 
     def test_values_with_predicate(self):
+        if compare_client_version("5.0") > 0:
+            self.skipTest("Test requires Hazelcast 5.0 or above")
         self.map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
         with self.transaction:
             transactional_map = self._get_transactional_map()
