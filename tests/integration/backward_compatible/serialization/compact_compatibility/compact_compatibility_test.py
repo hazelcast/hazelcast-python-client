@@ -6,11 +6,7 @@ import unittest
 from hazelcast.errors import NullPointerError, IllegalMonitorStateError
 from hazelcast.predicate import Predicate, paging
 from tests.base import HazelcastTestCase
-from tests.util import (
-    random_string,
-    compare_client_version,
-    compare_server_version_with_rc,
-)
+from tests.util import random_string, compare_client_version, compare_server_version_with_rc
 
 try:
     from hazelcast.serialization.api import (
@@ -238,8 +234,7 @@ OUTER_COMPACT_INSTANCE = OuterCompact(42, INNER_COMPACT_INSTANCE)
 
 
 @unittest.skipIf(
-    compare_client_version("5.1") < 0,
-    "Tests the features added in 5.1 version of the client",
+    compare_client_version("5.1") < 0, "Tests the features added in 5.1 version of the client"
 )
 class CompactCompatibilityBase(HazelcastTestCase):
     rc = None
@@ -766,8 +761,7 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         self.assertIsNone(self.map.replace(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE))
         self.map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
         self.assertEqual(
-            OUTER_COMPACT_INSTANCE,
-            self.map.replace(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE),
+            OUTER_COMPACT_INSTANCE, self.map.replace(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
         )
 
     def test_replace_if_same(self):
@@ -1435,8 +1429,7 @@ class TransactionalMapCompactCompatibilityTest(CompactCompatibilityBase):
         with self.transaction:
             transactional_map = self._get_transactional_map()
             self.assertEqual(
-                OUTER_COMPACT_INSTANCE,
-                transactional_map.get_for_update(INNER_COMPACT_INSTANCE),
+                OUTER_COMPACT_INSTANCE, transactional_map.get_for_update(INNER_COMPACT_INSTANCE)
             )
 
     def test_put(self):
@@ -1479,9 +1472,7 @@ class TransactionalMapCompactCompatibilityTest(CompactCompatibilityBase):
             transactional_map = self._get_transactional_map()
             self.assertTrue(
                 transactional_map.replace_if_same(
-                    INNER_COMPACT_INSTANCE,
-                    INNER_COMPACT_INSTANCE,
-                    OUTER_COMPACT_INSTANCE,
+                    INNER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE
                 )
             )
 
@@ -1559,8 +1550,7 @@ class TransactionalMultiMapCompactCompatibilityTest(CompactCompatibilityBase):
         with self.transaction:
             transactional_multi_map = self._get_transactional_multi_map()
             self.assertEqual(
-                [INNER_COMPACT_INSTANCE],
-                transactional_multi_map.get(OUTER_COMPACT_INSTANCE),
+                [INNER_COMPACT_INSTANCE], transactional_multi_map.get(OUTER_COMPACT_INSTANCE)
             )
 
     def test_remove(self):
@@ -1576,8 +1566,7 @@ class TransactionalMultiMapCompactCompatibilityTest(CompactCompatibilityBase):
         with self.transaction:
             transactional_multi_map = self._get_transactional_multi_map()
             self.assertEqual(
-                [INNER_COMPACT_INSTANCE],
-                transactional_multi_map.remove_all(OUTER_COMPACT_INSTANCE),
+                [INNER_COMPACT_INSTANCE], transactional_multi_map.remove_all(OUTER_COMPACT_INSTANCE)
             )
 
     def test_value_count(self):
