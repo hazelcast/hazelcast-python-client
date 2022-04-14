@@ -6,7 +6,11 @@ import unittest
 from hazelcast.errors import NullPointerError, IllegalMonitorStateError
 from hazelcast.predicate import Predicate, paging
 from tests.base import HazelcastTestCase
-from tests.util import random_string, compare_client_version, compare_server_version_with_rc
+from tests.util import (
+    random_string,
+    compare_client_version,
+    compare_server_version_with_rc,
+)
 
 try:
     from hazelcast.serialization.api import (
@@ -149,7 +153,9 @@ class CompactReturningMapInterceptor:
     pass
 
 
-class CompactReturningMapInterceptorSerializer(CompactSerializer[CompactReturningMapInterceptor]):
+class CompactReturningMapInterceptorSerializer(
+    CompactSerializer[CompactReturningMapInterceptor]
+):
     def read(self, reader: CompactReader) -> CompactReturningMapInterceptor:
         return CompactReturningMapInterceptor()
 
@@ -159,16 +165,23 @@ class CompactReturningMapInterceptorSerializer(CompactSerializer[CompactReturnin
     def get_type_name(self) -> str:
         return "com.hazelcast.serialization.compact.CompactReturningMapInterceptor"
 
+
 try:
     from hazelcast.aggregator import Aggregator
+
     class CompactReturningAggregator(Aggregator):
         pass
+
+
 except ImportError:
+
     class CompactReturningAggregator:
         pass
 
 
-class CompactReturningAggregatorSerializer(CompactSerializer[CompactReturningAggregator]):
+class CompactReturningAggregatorSerializer(
+    CompactSerializer[CompactReturningAggregator]
+):
     def read(self, reader: CompactReader) -> CompactReturningAggregator:
         return CompactReturningAggregator()
 
@@ -183,7 +196,9 @@ class CompactReturningEntryProcessor:
     pass
 
 
-class CompactReturningEntryProcessorSerializer(CompactSerializer[CompactReturningEntryProcessor]):
+class CompactReturningEntryProcessorSerializer(
+    CompactSerializer[CompactReturningEntryProcessor]
+):
     def read(self, reader: CompactReader) -> CompactReturningEntryProcessor:
         return CompactReturningEntryProcessor()
 
@@ -198,7 +213,9 @@ class CompactReturningProjection:
     pass
 
 
-class CompactReturningProjectionSerializer(CompactSerializer[CompactReturningProjection]):
+class CompactReturningProjectionSerializer(
+    CompactSerializer[CompactReturningProjection]
+):
     def read(self, reader: CompactReader) -> CompactReturningProjection:
         return CompactReturningProjection()
 
@@ -229,7 +246,8 @@ OUTER_COMPACT_INSTANCE = OuterCompact(42, INNER_COMPACT_INSTANCE)
 
 
 @unittest.skipIf(
-    compare_client_version("5.1") < 0, "Tests the features added in 5.1 version of the client"
+    compare_client_version("5.1") < 0,
+    "Tests the features added in 5.1 version of the client",
 )
 class CompactCompatibilityBase(HazelcastTestCase):
     rc = None
@@ -289,7 +307,9 @@ class CompactCompatibilityBase(HazelcastTestCase):
 class AtomicLongCompactCompatibilityTest(CompactCompatibilityBase):
     def setUp(self) -> None:
         super().setUp()
-        self.atomic_long = self.client.cp_subsystem.get_atomic_long(random_string()).blocking()
+        self.atomic_long = self.client.cp_subsystem.get_atomic_long(
+            random_string()
+        ).blocking()
         self.atomic_long.set(41)
 
     def tearDown(self) -> None:
@@ -308,7 +328,9 @@ class AtomicLongCompactCompatibilityTest(CompactCompatibilityBase):
         self.assertEqual(42, self.atomic_long.get())
 
     def test_apply(self):
-        self.assertEqual(OUTER_COMPACT_INSTANCE, self.atomic_long.apply(CompactReturningFunction()))
+        self.assertEqual(
+            OUTER_COMPACT_INSTANCE, self.atomic_long.apply(CompactReturningFunction())
+        )
 
 
 class AtomicReferenceCompactCompatibilityTest(CompactCompatibilityBase):
@@ -324,7 +346,9 @@ class AtomicReferenceCompactCompatibilityTest(CompactCompatibilityBase):
         super().tearDown()
 
     def test_compare_and_set(self):
-        self.assertTrue(self.atomic_reference.compare_and_set(None, OUTER_COMPACT_INSTANCE))
+        self.assertTrue(
+            self.atomic_reference.compare_and_set(None, OUTER_COMPACT_INSTANCE)
+        )
         self.assertEqual(OUTER_COMPACT_INSTANCE, self.atomic_reference.get())
 
     def test_set(self):
@@ -332,8 +356,12 @@ class AtomicReferenceCompactCompatibilityTest(CompactCompatibilityBase):
         self.assertEqual(OUTER_COMPACT_INSTANCE, self.atomic_reference.get())
 
     def test_get_and_set(self):
-        self.assertEqual(None, self.atomic_reference.get_and_set(OUTER_COMPACT_INSTANCE))
-        self.assertEqual(OUTER_COMPACT_INSTANCE, self.atomic_reference.get_and_set(None))
+        self.assertEqual(
+            None, self.atomic_reference.get_and_set(OUTER_COMPACT_INSTANCE)
+        )
+        self.assertEqual(
+            OUTER_COMPACT_INSTANCE, self.atomic_reference.get_and_set(None)
+        )
 
     def test_contains(self):
         self.assertFalse(self.atomic_reference.contains(OUTER_COMPACT_INSTANCE))
@@ -351,7 +379,9 @@ class AtomicReferenceCompactCompatibilityTest(CompactCompatibilityBase):
         )
 
     def test_get_and_alter(self):
-        self.assertEqual(None, self.atomic_reference.get_and_alter(CompactReturningFunction()))
+        self.assertEqual(
+            None, self.atomic_reference.get_and_alter(CompactReturningFunction())
+        )
         self.assertEqual(
             OUTER_COMPACT_INSTANCE,
             self.atomic_reference.get_and_alter(CompactReturningFunction()),
@@ -380,7 +410,9 @@ class ExecutorCompactCompatibilityTest(CompactCompatibilityBase):
     def test_execute_on_key_owner(self):
         self.assertEqual(
             OUTER_COMPACT_INSTANCE,
-            self.executor.execute_on_key_owner(OUTER_COMPACT_INSTANCE, CompactReturningCallable()),
+            self.executor.execute_on_key_owner(
+                OUTER_COMPACT_INSTANCE, CompactReturningCallable()
+            ),
         )
 
     def test_execute_on_member(self):
@@ -422,12 +454,16 @@ class ListCompactCompatibilityTest(CompactCompatibilityBase):
         self.assertEqual(OUTER_COMPACT_INSTANCE, self.list.get(0))
 
     def test_add_all(self):
-        self.assertTrue(self.list.add_all([INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE]))
+        self.assertTrue(
+            self.list.add_all([INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE])
+        )
         self.assertEqual(INNER_COMPACT_INSTANCE, self.list.get(0))
         self.assertEqual(OUTER_COMPACT_INSTANCE, self.list.get(1))
 
     def test_add_all_at(self):
-        self.assertTrue(self.list.add_all_at(0, [INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE]))
+        self.assertTrue(
+            self.list.add_all_at(0, [INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE])
+        )
         self.assertEqual(INNER_COMPACT_INSTANCE, self.list.get(0))
         self.assertEqual(OUTER_COMPACT_INSTANCE, self.list.get(1))
 
@@ -497,7 +533,9 @@ class ListCompactCompatibilityTest(CompactCompatibilityBase):
     def test_set_at(self):
         self.list.add(42)
         self.assertEqual(42, self.list.set_at(0, OUTER_COMPACT_INSTANCE))
-        self.assertEqual(OUTER_COMPACT_INSTANCE, self.list.set_at(0, INNER_COMPACT_INSTANCE))
+        self.assertEqual(
+            OUTER_COMPACT_INSTANCE, self.list.set_at(0, INNER_COMPACT_INSTANCE)
+        )
 
     def _add_from_another_client(self, value):
         other_client = self.create_client(self.client_config)
@@ -570,7 +608,9 @@ class MapCompatibilityTest(CompactCompatibilityBase):
     def test_aggregate_with_predicate(self):
         self.assertEqual(
             OUTER_COMPACT_INSTANCE,
-            self.map.aggregate(CompactReturningAggregator(), predicate=CompactPredicate()),
+            self.map.aggregate(
+                CompactReturningAggregator(), predicate=CompactPredicate()
+            ),
         )
 
     def test_contains_key(self):
@@ -623,21 +663,27 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         self.map.put(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
         self.assertEqual(
             [(OUTER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)],
-            self.map.execute_on_entries(CompactReturningEntryProcessor(), CompactPredicate()),
+            self.map.execute_on_entries(
+                CompactReturningEntryProcessor(), CompactPredicate()
+            ),
         )
 
     def test_execute_on_key(self):
         self.map.put(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
         self.assertEqual(
             OUTER_COMPACT_INSTANCE,
-            self.map.execute_on_key(OUTER_COMPACT_INSTANCE, CompactReturningEntryProcessor()),
+            self.map.execute_on_key(
+                OUTER_COMPACT_INSTANCE, CompactReturningEntryProcessor()
+            ),
         )
 
     def test_execute_on_keys(self):
         self.map.put(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
         self.assertEqual(
             [(OUTER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)],
-            self.map.execute_on_keys([OUTER_COMPACT_INSTANCE], CompactReturningEntryProcessor()),
+            self.map.execute_on_keys(
+                [OUTER_COMPACT_INSTANCE], CompactReturningEntryProcessor()
+            ),
         )
 
     def test_force_unlock(self):
@@ -732,7 +778,9 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         self.assertEqual(INNER_COMPACT_INSTANCE, self.map.get(OUTER_COMPACT_INSTANCE))
 
     def test_put_if_absent(self):
-        self.assertIsNone(self.map.put_if_absent(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE))
+        self.assertIsNone(
+            self.map.put_if_absent(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
+        )
         self.assertEqual(
             OUTER_COMPACT_INSTANCE,
             self.map.put_if_absent(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE),
@@ -745,18 +793,27 @@ class MapCompatibilityTest(CompactCompatibilityBase):
     def test_remove(self):
         self.assertIsNone(self.map.remove(OUTER_COMPACT_INSTANCE))
         self._put_from_another_client(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
-        self.assertEqual(INNER_COMPACT_INSTANCE, self.map.remove(OUTER_COMPACT_INSTANCE))
+        self.assertEqual(
+            INNER_COMPACT_INSTANCE, self.map.remove(OUTER_COMPACT_INSTANCE)
+        )
 
     def test_remove_if_same(self):
-        self.assertFalse(self.map.remove_if_same(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE))
+        self.assertFalse(
+            self.map.remove_if_same(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
+        )
         self._put_from_another_client(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
-        self.assertTrue(self.map.remove_if_same(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE))
+        self.assertTrue(
+            self.map.remove_if_same(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
+        )
 
     def test_replace(self):
-        self.assertIsNone(self.map.replace(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE))
+        self.assertIsNone(
+            self.map.replace(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
+        )
         self.map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
         self.assertEqual(
-            OUTER_COMPACT_INSTANCE, self.map.replace(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
+            OUTER_COMPACT_INSTANCE,
+            self.map.replace(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE),
         )
 
     def test_replace_if_same(self):
@@ -784,7 +841,9 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         self.assertTrue(self.map.try_lock(OUTER_COMPACT_INSTANCE))
 
     def test_try_put(self):
-        self.assertTrue(self.map.try_put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE))
+        self.assertTrue(
+            self.map.try_put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
+        )
 
     def test_try_remove(self):
         self.assertFalse(self.map.try_remove(OUTER_COMPACT_INSTANCE))
@@ -811,7 +870,9 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         # Put an entry from the same client to register these schemas
         # to its local registry, so that the lazy-deserialization works.
         self.map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
-        self.assertEqual([OUTER_COMPACT_INSTANCE], self.map.values(paging(CompactPredicate(), 1)))
+        self.assertEqual(
+            [OUTER_COMPACT_INSTANCE], self.map.values(paging(CompactPredicate(), 1))
+        )
 
     def _put_from_another_client(self, key, value):
         other_client = self.create_client(self.client_config)
@@ -835,7 +896,9 @@ class MapCompatibilityTest(CompactCompatibilityBase):
 class NearCachedMapCompactCompatibilityTest(MapCompatibilityTest):
     def setUp(self) -> None:
         map_name = random_string()
-        self.client_config = copy.deepcopy(NearCachedMapCompactCompatibilityTest.client_config)
+        self.client_config = copy.deepcopy(
+            NearCachedMapCompactCompatibilityTest.client_config
+        )
         self.client_config["near_caches"] = {map_name: {}}
         super().setUp()
         self.map = self.client.get_map(map_name).blocking()
@@ -898,17 +961,23 @@ class MultiMapCompactCompatibilityTest(CompactCompatibilityBase):
 
     def test_contains_entry(self):
         self.assertFalse(
-            self.multi_map.contains_entry(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
+            self.multi_map.contains_entry(
+                INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE
+            )
         )
         self.multi_map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
         self.assertTrue(
-            self.multi_map.contains_entry(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
+            self.multi_map.contains_entry(
+                INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE
+            )
         )
 
     def test_get(self):
         self.assertEqual([], self.multi_map.get(OUTER_COMPACT_INSTANCE))
         self.multi_map.put(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
-        self.assertEqual([INNER_COMPACT_INSTANCE], self.multi_map.get(OUTER_COMPACT_INSTANCE))
+        self.assertEqual(
+            [INNER_COMPACT_INSTANCE], self.multi_map.get(OUTER_COMPACT_INSTANCE)
+        )
 
     def test_is_locked(self):
         self.assertFalse(self.multi_map.is_locked(OUTER_COMPACT_INSTANCE))
@@ -926,9 +995,13 @@ class MultiMapCompactCompatibilityTest(CompactCompatibilityBase):
         self.assertTrue(self.multi_map.is_locked(OUTER_COMPACT_INSTANCE))
 
     def test_remove(self):
-        self.assertFalse(self.multi_map.remove(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE))
+        self.assertFalse(
+            self.multi_map.remove(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
+        )
         self.multi_map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
-        self.assertTrue(self.multi_map.remove(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE))
+        self.assertTrue(
+            self.multi_map.remove(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
+        )
 
     def test_remove_all(self):
         self.assertEqual([], self.multi_map.remove_all(OUTER_COMPACT_INSTANCE))
@@ -938,8 +1011,12 @@ class MultiMapCompactCompatibilityTest(CompactCompatibilityBase):
         )
 
     def test_put(self):
-        self.assertTrue(self.multi_map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE))
-        self.assertEqual([OUTER_COMPACT_INSTANCE], self.multi_map.get(INNER_COMPACT_INSTANCE))
+        self.assertTrue(
+            self.multi_map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
+        )
+        self.assertEqual(
+            [OUTER_COMPACT_INSTANCE], self.multi_map.get(INNER_COMPACT_INSTANCE)
+        )
 
     def test_value_count(self):
         self.assertEqual(0, self.multi_map.value_count(OUTER_COMPACT_INSTANCE))
@@ -974,7 +1051,9 @@ class MultiMapCompactCompatibilityTest(CompactCompatibilityBase):
 
     def _put_from_another_client(self, key, value):
         other_client = self.create_client(self.client_config)
-        other_client_multi_map = other_client.get_multi_map(self.multi_map.name).blocking()
+        other_client_multi_map = other_client.get_multi_map(
+            self.multi_map.name
+        ).blocking()
         other_client_multi_map.put(key, value)
 
 
@@ -991,7 +1070,9 @@ class QueueCompactCompatibilityTest(CompactCompatibilityBase):
         self.assertTrue(self.queue.add(OUTER_COMPACT_INSTANCE))
 
     def test_add_all(self):
-        self.assertTrue(self.queue.add_all([INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE]))
+        self.assertTrue(
+            self.queue.add_all([INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE])
+        )
 
     def test_add_listener(self):
         events = []
@@ -1107,7 +1188,9 @@ class ReliableTopicCompactCompatibilityTest(CompactCompatibilityBase):
 
         self.reliable_topic.add_listener(listener)
 
-        self.reliable_topic.publish_all([INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE])
+        self.reliable_topic.publish_all(
+            [INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE]
+        )
 
         def assertion():
             self.assertEqual(2, len(messages))
@@ -1178,11 +1261,17 @@ class ReplicatedMapCompactCompatibilityTest(CompactCompatibilityBase):
     def test_get(self):
         self.assertIsNone(self.replicated_map.get(OUTER_COMPACT_INSTANCE))
         self.replicated_map.put(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
-        self.assertEqual(INNER_COMPACT_INSTANCE, self.replicated_map.get(OUTER_COMPACT_INSTANCE))
+        self.assertEqual(
+            INNER_COMPACT_INSTANCE, self.replicated_map.get(OUTER_COMPACT_INSTANCE)
+        )
 
     def test_put(self):
-        self.assertIsNone(self.replicated_map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE))
-        self.assertEqual(OUTER_COMPACT_INSTANCE, self.replicated_map.get(INNER_COMPACT_INSTANCE))
+        self.assertIsNone(
+            self.replicated_map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
+        )
+        self.assertEqual(
+            OUTER_COMPACT_INSTANCE, self.replicated_map.get(INNER_COMPACT_INSTANCE)
+        )
         self.assertEqual(
             OUTER_COMPACT_INSTANCE,
             self.replicated_map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE),
@@ -1195,13 +1284,19 @@ class ReplicatedMapCompactCompatibilityTest(CompactCompatibilityBase):
                 OUTER_COMPACT_INSTANCE: INNER_COMPACT_INSTANCE,
             }
         )
-        self.assertEqual(OUTER_COMPACT_INSTANCE, self.replicated_map.get(INNER_COMPACT_INSTANCE))
-        self.assertEqual(INNER_COMPACT_INSTANCE, self.replicated_map.get(OUTER_COMPACT_INSTANCE))
+        self.assertEqual(
+            OUTER_COMPACT_INSTANCE, self.replicated_map.get(INNER_COMPACT_INSTANCE)
+        )
+        self.assertEqual(
+            INNER_COMPACT_INSTANCE, self.replicated_map.get(OUTER_COMPACT_INSTANCE)
+        )
 
     def test_remove(self):
         self.assertIsNone(self.replicated_map.remove(OUTER_COMPACT_INSTANCE))
         self.replicated_map.put(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
-        self.assertEqual(INNER_COMPACT_INSTANCE, self.replicated_map.remove(OUTER_COMPACT_INSTANCE))
+        self.assertEqual(
+            INNER_COMPACT_INSTANCE, self.replicated_map.remove(OUTER_COMPACT_INSTANCE)
+        )
 
     def _assert_entry_event(self, events):
         self._put_from_another_client(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
@@ -1259,7 +1354,9 @@ class RingbufferCompactCompatibilityTest(CompactCompatibilityBase):
 
     def _add_from_another_client(self, item):
         other_client = self.create_client(self.client_config)
-        other_client_ringbuffer = other_client.get_ringbuffer(self.ringbuffer.name).blocking()
+        other_client_ringbuffer = other_client.get_ringbuffer(
+            self.ringbuffer.name
+        ).blocking()
         other_client_ringbuffer.add(item)
 
 
@@ -1276,7 +1373,9 @@ class SetCompactCompatibilityTest(CompactCompatibilityBase):
         self.assertTrue(self.set.add(OUTER_COMPACT_INSTANCE))
 
     def test_add_all(self):
-        self.assertTrue(self.set.add_all([INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE]))
+        self.assertTrue(
+            self.set.add_all([INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE])
+        )
 
     def test_add_listener(self):
         events = []
@@ -1304,9 +1403,13 @@ class SetCompactCompatibilityTest(CompactCompatibilityBase):
         self.assertTrue(self.set.contains(OUTER_COMPACT_INSTANCE))
 
     def test_contains_all(self):
-        self.assertFalse(self.set.contains_all([INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE]))
+        self.assertFalse(
+            self.set.contains_all([INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE])
+        )
         self.set.add_all([INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE])
-        self.assertTrue(self.set.contains_all([INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE]))
+        self.assertTrue(
+            self.set.contains_all([INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE])
+        )
 
     def test_remove(self):
         self.assertFalse(self.set.remove(OUTER_COMPACT_INSTANCE))
@@ -1314,9 +1417,13 @@ class SetCompactCompatibilityTest(CompactCompatibilityBase):
         self.assertTrue(self.set.remove(OUTER_COMPACT_INSTANCE))
 
     def test_remove_all(self):
-        self.assertFalse(self.set.remove_all([INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE]))
+        self.assertFalse(
+            self.set.remove_all([INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE])
+        )
         self.set.add_all([INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE])
-        self.assertTrue(self.set.remove_all([INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE]))
+        self.assertTrue(
+            self.set.remove_all([INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE])
+        )
 
     def test_retain_all(self):
         items = [INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE]
@@ -1417,20 +1524,25 @@ class TransactionalMapCompactCompatibilityTest(CompactCompatibilityBase):
         self._put_from_another_client(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
         with self.transaction:
             transactional_map = self._get_transactional_map()
-            self.assertEqual(OUTER_COMPACT_INSTANCE, transactional_map.get(INNER_COMPACT_INSTANCE))
+            self.assertEqual(
+                OUTER_COMPACT_INSTANCE, transactional_map.get(INNER_COMPACT_INSTANCE)
+            )
 
     def test_get_for_update(self):
         self._put_from_another_client(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
         with self.transaction:
             transactional_map = self._get_transactional_map()
             self.assertEqual(
-                OUTER_COMPACT_INSTANCE, transactional_map.get_for_update(INNER_COMPACT_INSTANCE)
+                OUTER_COMPACT_INSTANCE,
+                transactional_map.get_for_update(INNER_COMPACT_INSTANCE),
             )
 
     def test_put(self):
         with self.transaction:
             transactional_map = self._get_transactional_map()
-            self.assertIsNone(transactional_map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE))
+            self.assertIsNone(
+                transactional_map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
+            )
 
         self.assertEqual(OUTER_COMPACT_INSTANCE, self.map.get(INNER_COMPACT_INSTANCE))
 
@@ -1438,7 +1550,9 @@ class TransactionalMapCompactCompatibilityTest(CompactCompatibilityBase):
         with self.transaction:
             transactional_map = self._get_transactional_map()
             self.assertIsNone(
-                transactional_map.put_if_absent(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
+                transactional_map.put_if_absent(
+                    INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE
+                )
             )
 
         self.assertEqual(OUTER_COMPACT_INSTANCE, self.map.get(INNER_COMPACT_INSTANCE))
@@ -1446,7 +1560,9 @@ class TransactionalMapCompactCompatibilityTest(CompactCompatibilityBase):
     def test_set(self):
         with self.transaction:
             transactional_map = self._get_transactional_map()
-            self.assertIsNone(transactional_map.set(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE))
+            self.assertIsNone(
+                transactional_map.set(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
+            )
 
         self.assertEqual(OUTER_COMPACT_INSTANCE, self.map.get(INNER_COMPACT_INSTANCE))
 
@@ -1456,7 +1572,9 @@ class TransactionalMapCompactCompatibilityTest(CompactCompatibilityBase):
             transactional_map = self._get_transactional_map()
             self.assertEqual(
                 INNER_COMPACT_INSTANCE,
-                transactional_map.replace(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE),
+                transactional_map.replace(
+                    INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE
+                ),
             )
 
         self.assertEqual(OUTER_COMPACT_INSTANCE, self.map.get(INNER_COMPACT_INSTANCE))
@@ -1467,7 +1585,9 @@ class TransactionalMapCompactCompatibilityTest(CompactCompatibilityBase):
             transactional_map = self._get_transactional_map()
             self.assertTrue(
                 transactional_map.replace_if_same(
-                    INNER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE
+                    INNER_COMPACT_INSTANCE,
+                    INNER_COMPACT_INSTANCE,
+                    OUTER_COMPACT_INSTANCE,
                 )
             )
 
@@ -1486,7 +1606,9 @@ class TransactionalMapCompactCompatibilityTest(CompactCompatibilityBase):
         with self.transaction:
             transactional_map = self._get_transactional_map()
             self.assertTrue(
-                transactional_map.remove_if_same(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
+                transactional_map.remove_if_same(
+                    INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE
+                )
             )
 
     def test_delete(self):
@@ -1509,7 +1631,9 @@ class TransactionalMapCompactCompatibilityTest(CompactCompatibilityBase):
         self.map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
         with self.transaction:
             transactional_map = self._get_transactional_map()
-            self.assertEqual([OUTER_COMPACT_INSTANCE], transactional_map.values(CompactPredicate()))
+            self.assertEqual(
+                [OUTER_COMPACT_INSTANCE], transactional_map.values(CompactPredicate())
+            )
 
     def _get_transactional_map(self):
         return self.transaction.get_map(self.map_name)
@@ -1535,7 +1659,9 @@ class TransactionalMultiMapCompactCompatibilityTest(CompactCompatibilityBase):
         with self.transaction:
             transactional_multi_map = self._get_transactional_multi_map()
             self.assertTrue(
-                transactional_multi_map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
+                transactional_multi_map.put(
+                    INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE
+                )
             )
 
     def test_get(self):
@@ -1545,7 +1671,8 @@ class TransactionalMultiMapCompactCompatibilityTest(CompactCompatibilityBase):
         with self.transaction:
             transactional_multi_map = self._get_transactional_multi_map()
             self.assertEqual(
-                [INNER_COMPACT_INSTANCE], transactional_multi_map.get(OUTER_COMPACT_INSTANCE)
+                [INNER_COMPACT_INSTANCE],
+                transactional_multi_map.get(OUTER_COMPACT_INSTANCE),
             )
 
     def test_remove(self):
@@ -1553,7 +1680,9 @@ class TransactionalMultiMapCompactCompatibilityTest(CompactCompatibilityBase):
         with self.transaction:
             transactional_multi_map = self._get_transactional_multi_map()
             self.assertTrue(
-                transactional_multi_map.remove(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
+                transactional_multi_map.remove(
+                    INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE
+                )
             )
 
     def test_remove_all(self):
@@ -1561,21 +1690,26 @@ class TransactionalMultiMapCompactCompatibilityTest(CompactCompatibilityBase):
         with self.transaction:
             transactional_multi_map = self._get_transactional_multi_map()
             self.assertEqual(
-                [INNER_COMPACT_INSTANCE], transactional_multi_map.remove_all(OUTER_COMPACT_INSTANCE)
+                [INNER_COMPACT_INSTANCE],
+                transactional_multi_map.remove_all(OUTER_COMPACT_INSTANCE),
             )
 
     def test_value_count(self):
         self._put_from_another_client(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
         with self.transaction:
             transactional_multi_map = self._get_transactional_multi_map()
-            self.assertEqual(1, transactional_multi_map.value_count(OUTER_COMPACT_INSTANCE))
+            self.assertEqual(
+                1, transactional_multi_map.value_count(OUTER_COMPACT_INSTANCE)
+            )
 
     def _get_transactional_multi_map(self):
         return self.transaction.get_multi_map(self.multi_map_name)
 
     def _put_from_another_client(self, key, value):
         other_client = self.create_client(self.client_config)
-        other_client_multi_map = other_client.get_multi_map(self.multi_map_name).blocking()
+        other_client_multi_map = other_client.get_multi_map(
+            self.multi_map_name
+        ).blocking()
         other_client_multi_map.put(key, value)
 
 
