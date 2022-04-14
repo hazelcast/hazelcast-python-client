@@ -3,7 +3,6 @@ import enum
 import typing
 import unittest
 
-from hazelcast.aggregator import Aggregator
 from hazelcast.errors import NullPointerError, IllegalMonitorStateError
 from hazelcast.predicate import Predicate, paging
 from tests.base import HazelcastTestCase
@@ -161,8 +160,16 @@ class CompactReturningMapInterceptorSerializer(CompactSerializer[CompactReturnin
         return "com.hazelcast.serialization.compact.CompactReturningMapInterceptor"
 
 
-class CompactReturningAggregator(Aggregator):
-    pass
+try:
+    from hazelcast.aggregator import Aggregator
+
+    class CompactReturningAggregator(Aggregator):
+        pass
+
+except ImportError:
+
+    class CompactReturningAggregator:
+        pass
 
 
 class CompactReturningAggregatorSerializer(CompactSerializer[CompactReturningAggregator]):
