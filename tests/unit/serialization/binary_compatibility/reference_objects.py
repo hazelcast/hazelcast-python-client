@@ -4,7 +4,7 @@ import decimal
 import re
 import uuid
 
-from hazelcast import predicate, projection
+from hazelcast import predicate, aggregator, projection
 from hazelcast.serialization.api import Portable, IdentifiedDataSerializable
 from hazelcast.serialization.data import Data
 from hazelcast.util import to_signed
@@ -741,74 +741,69 @@ _non_null_list = [
     REFERENCE_OBJECTS["OffsetDateTime"],
 ]
 
-try:
-    from hazelcast import aggregator
-
-    REFERENCE_OBJECTS.update(
-        {
-            "AnInnerPortable": _inner_portable,
-            "CustomStreamSerializable": _custom_serializable,
-            "CustomByteArraySerializable": _custom_byte_array_serializable,
-            "AnIdentifiedDataSerializable": _identified,
-            "APortable": _portable,
-            "ArrayList": [None, _non_null_list],
-            "LinkedList": [None, _non_null_list],
-            "TruePredicate": predicate.true(),
-            "FalsePredicate": predicate.false(),
-            "SqlPredicate": predicate.sql(_sql_string),
-            "EqualPredicate": predicate.equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
-            "NotEqualPredicate": predicate.not_equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
-            "GreaterLessPredicate": predicate.greater(_sql_string, REFERENCE_OBJECTS["Integer"]),
-            "BetweenPredicate": predicate.between(
-                _sql_string, REFERENCE_OBJECTS["Integer"], REFERENCE_OBJECTS["Integer"]
-            ),
-            "LikePredicate": predicate.like(_sql_string, _sql_string),
-            "ILikePredicate": predicate.ilike(_sql_string, _sql_string),
-            "InPredicate": predicate.in_(
-                _sql_string, REFERENCE_OBJECTS["Integer"], REFERENCE_OBJECTS["Integer"]
-            ),
-            "RegexPredicate": predicate.regex(_sql_string, _sql_string),
-            "AndPredicate": predicate.and_(
-                predicate.sql(_sql_string),
-                predicate.equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
-                predicate.not_equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
-                predicate.greater(_sql_string, REFERENCE_OBJECTS["Integer"]),
-                predicate.greater_or_equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
-            ),
-            "OrPredicate": predicate.or_(
-                predicate.sql(_sql_string),
-                predicate.equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
-                predicate.not_equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
-                predicate.greater(_sql_string, REFERENCE_OBJECTS["Integer"]),
-                predicate.greater_or_equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
-            ),
-            "InstanceOfPredicate": predicate.instance_of(
-                "com.hazelcast.nio.serialization.compatibility.CustomStreamSerializable"
-            ),
-            "DistinctValuesAggregator": aggregator.distinct(_sql_string),
-            "MaxAggregator": aggregator.max_(_sql_string),
-            "MaxByAggregator": aggregator.max_by(_sql_string),
-            "MinAggregator": aggregator.min_(_sql_string),
-            "MinByAggregator": aggregator.min_by(_sql_string),
-            "CountAggregator": aggregator.count(_sql_string),
-            "NumberAverageAggregator": aggregator.number_avg(_sql_string),
-            "IntegerAverageAggregator": aggregator.int_avg(_sql_string),
-            "LongAverageAggregator": aggregator.long_avg(_sql_string),
-            "DoubleAverageAggregator": aggregator.double_avg(_sql_string),
-            "IntegerSumAggregator": aggregator.int_sum(_sql_string),
-            "LongSumAggregator": aggregator.long_sum(_sql_string),
-            "DoubleSumAggregator": aggregator.double_sum(_sql_string),
-            "FixedSumAggregator": aggregator.fixed_point_sum(_sql_string),
-            "FloatingPointSumAggregator": aggregator.floating_point_sum(_sql_string),
-            "SingleAttributeProjection": projection.single_attribute(_sql_string),
-            "MultiAttributeProjection": projection.multi_attribute(
-                _sql_string, _sql_string, _sql_string
-            ),
-            "IdentityProjection": projection.identity(),
-        }
-    )
-except ImportError:
-    pass
+REFERENCE_OBJECTS.update(
+    {
+        "AnInnerPortable": _inner_portable,
+        "CustomStreamSerializable": _custom_serializable,
+        "CustomByteArraySerializable": _custom_byte_array_serializable,
+        "AnIdentifiedDataSerializable": _identified,
+        "APortable": _portable,
+        "ArrayList": [None, _non_null_list],
+        "LinkedList": [None, _non_null_list],
+        "TruePredicate": predicate.true(),
+        "FalsePredicate": predicate.false(),
+        "SqlPredicate": predicate.sql(_sql_string),
+        "EqualPredicate": predicate.equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
+        "NotEqualPredicate": predicate.not_equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
+        "GreaterLessPredicate": predicate.greater(_sql_string, REFERENCE_OBJECTS["Integer"]),
+        "BetweenPredicate": predicate.between(
+            _sql_string, REFERENCE_OBJECTS["Integer"], REFERENCE_OBJECTS["Integer"]
+        ),
+        "LikePredicate": predicate.like(_sql_string, _sql_string),
+        "ILikePredicate": predicate.ilike(_sql_string, _sql_string),
+        "InPredicate": predicate.in_(
+            _sql_string, REFERENCE_OBJECTS["Integer"], REFERENCE_OBJECTS["Integer"]
+        ),
+        "RegexPredicate": predicate.regex(_sql_string, _sql_string),
+        "AndPredicate": predicate.and_(
+            predicate.sql(_sql_string),
+            predicate.equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
+            predicate.not_equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
+            predicate.greater(_sql_string, REFERENCE_OBJECTS["Integer"]),
+            predicate.greater_or_equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
+        ),
+        "OrPredicate": predicate.or_(
+            predicate.sql(_sql_string),
+            predicate.equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
+            predicate.not_equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
+            predicate.greater(_sql_string, REFERENCE_OBJECTS["Integer"]),
+            predicate.greater_or_equal(_sql_string, REFERENCE_OBJECTS["Integer"]),
+        ),
+        "InstanceOfPredicate": predicate.instance_of(
+            "com.hazelcast.nio.serialization.compatibility.CustomStreamSerializable"
+        ),
+        "DistinctValuesAggregator": aggregator.distinct(_sql_string),
+        "MaxAggregator": aggregator.max_(_sql_string),
+        "MaxByAggregator": aggregator.max_by(_sql_string),
+        "MinAggregator": aggregator.min_(_sql_string),
+        "MinByAggregator": aggregator.min_by(_sql_string),
+        "CountAggregator": aggregator.count(_sql_string),
+        "NumberAverageAggregator": aggregator.number_avg(_sql_string),
+        "IntegerAverageAggregator": aggregator.int_avg(_sql_string),
+        "LongAverageAggregator": aggregator.long_avg(_sql_string),
+        "DoubleAverageAggregator": aggregator.double_avg(_sql_string),
+        "IntegerSumAggregator": aggregator.int_sum(_sql_string),
+        "LongSumAggregator": aggregator.long_sum(_sql_string),
+        "DoubleSumAggregator": aggregator.double_sum(_sql_string),
+        "FixedSumAggregator": aggregator.fixed_point_sum(_sql_string),
+        "FloatingPointSumAggregator": aggregator.floating_point_sum(_sql_string),
+        "SingleAttributeProjection": projection.single_attribute(_sql_string),
+        "MultiAttributeProjection": projection.multi_attribute(
+            _sql_string, _sql_string, _sql_string
+        ),
+        "IdentityProjection": projection.identity(),
+    }
+)
 
 _SKIP_ON_SERIALIZE = {
     "Character",
