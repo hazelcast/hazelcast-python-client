@@ -638,7 +638,7 @@ class _Config:
         self._creds_password = None
         self._token_provider = None
         self._use_public_ip = False
-        self._compact_serializers: typing.Dict[typing.Type, CompactSerializer] = {}
+        self._compact_serializers: typing.List[CompactSerializer] = []
 
     @property
     def cluster_members(self):
@@ -1369,19 +1369,15 @@ class _Config:
             raise TypeError("use_public_ip must be a boolean")
 
     @property
-    def compact_serializers(self) -> typing.Dict[typing.Type, CompactSerializer]:
+    def compact_serializers(self) -> typing.List[CompactSerializer]:
         return self._compact_serializers
 
     @compact_serializers.setter
-    def compact_serializers(self, value: typing.Dict[typing.Type, CompactSerializer]) -> None:
-        if isinstance(value, dict):
-            for clazz, serializer in value.items():
-                if not isinstance(clazz, type):
-                    raise TypeError("Keys of compact_serializers must be classes")
-
+    def compact_serializers(self, value: typing.List[CompactSerializer]) -> None:
+        if isinstance(value, list):
+            for serializer in value:
                 if not isinstance(serializer, CompactSerializer):
                     raise TypeError("Values of compact_serializers must be CompactSerializer")
-
             self._compact_serializers = value
         else:
             raise TypeError("compact_serializers must be a dict")

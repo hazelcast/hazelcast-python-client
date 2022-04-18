@@ -344,7 +344,7 @@ class SerializerRegistry:
         self._registration_lock = threading.RLock()
         self._int_type_id = _int_type_to_type_id.get(config.default_int_type, None)
 
-        self._compact_types = set(config.compact_serializers.keys())
+        self._compact_types = [c.get_class() for c in config.compact_serializers]
 
     def serializer_by_type_id(self, type_id):
         """Find and return the serializer for the type-id

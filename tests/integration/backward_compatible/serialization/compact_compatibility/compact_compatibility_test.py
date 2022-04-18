@@ -69,6 +69,9 @@ class InnerSerializer(CompactSerializer[InnerCompact]):
     def get_type_name(self) -> str:
         return "com.hazelcast.serialization.compact.InnerCompact"
 
+    def get_class(self):
+        return InnerCompact
+
 
 class OuterSerializer(CompactSerializer[OuterCompact]):
     def read(self, reader: CompactReader) -> OuterCompact:
@@ -83,6 +86,9 @@ class OuterSerializer(CompactSerializer[OuterCompact]):
 
     def get_type_name(self) -> str:
         return "com.hazelcast.serialization.compact.OuterCompact"
+
+    def get_class(self):
+        return OuterCompact
 
 
 class CompactIncrementFunction:
@@ -99,6 +105,9 @@ class CompactIncrementFunctionSerializer(CompactSerializer[CompactIncrementFunct
     def get_type_name(self) -> str:
         return "com.hazelcast.serialization.compact.CompactIncrementFunction"
 
+    def get_class(self):
+        return CompactIncrementFunction
+
 
 class CompactReturningFunction:
     pass
@@ -113,6 +122,9 @@ class CompactReturningFunctionSerializer(CompactSerializer[CompactReturningFunct
 
     def get_type_name(self) -> str:
         return "com.hazelcast.serialization.compact.CompactReturningFunction"
+
+    def get_class(self):
+        return CompactReturningFunction
 
 
 class CompactReturningCallable:
@@ -129,6 +141,9 @@ class CompactReturningCallableSerializer(CompactSerializer[CompactReturningCalla
     def get_type_name(self) -> str:
         return "com.hazelcast.serialization.compact.CompactReturningCallable"
 
+    def get_class(self):
+        return CompactReturningCallable
+
 
 class CompactPredicate(Predicate):
     pass
@@ -144,6 +159,9 @@ class CompactPredicateSerializer(CompactSerializer[CompactPredicate]):
     def get_type_name(self) -> str:
         return "com.hazelcast.serialization.compact.CompactPredicate"
 
+    def get_class(self):
+        return CompactPredicate
+
 
 class CompactReturningMapInterceptor:
     pass
@@ -158,6 +176,9 @@ class CompactReturningMapInterceptorSerializer(CompactSerializer[CompactReturnin
 
     def get_type_name(self) -> str:
         return "com.hazelcast.serialization.compact.CompactReturningMapInterceptor"
+
+    def get_class(self):
+        return CompactReturningMapInterceptor
 
 
 try:
@@ -182,6 +203,9 @@ class CompactReturningAggregatorSerializer(CompactSerializer[CompactReturningAgg
     def get_type_name(self) -> str:
         return "com.hazelcast.serialization.compact.CompactReturningAggregator"
 
+    def get_class(self):
+        return CompactReturningAggregator
+
 
 class CompactReturningEntryProcessor:
     pass
@@ -196,6 +220,9 @@ class CompactReturningEntryProcessorSerializer(CompactSerializer[CompactReturnin
 
     def get_type_name(self) -> str:
         return "com.hazelcast.serialization.compact.CompactReturningEntryProcessor"
+
+    def get_class(self):
+        return CompactReturningEntryProcessor
 
 
 class CompactReturningProjection:
@@ -212,6 +239,9 @@ class CompactReturningProjectionSerializer(CompactSerializer[CompactReturningPro
     def get_type_name(self) -> str:
         return "com.hazelcast.serialization.compact.CompactReturningProjection"
 
+    def get_class(self):
+        return CompactReturningProjection
+
 
 class CompactFilter:
     pass
@@ -226,6 +256,9 @@ class CompactFilterSerializer(CompactSerializer[CompactFilter]):
 
     def get_type_name(self) -> str:
         return "com.hazelcast.serialization.compact.CompactFilter"
+
+    def get_class(self):
+        return CompactFilter
 
 
 INNER_COMPACT_INSTANCE = InnerCompact("42")
@@ -263,19 +296,19 @@ class CompactCompatibilityBase(HazelcastTestCase):
         cls.cluster.start_member()
         cls.client_config = {
             "cluster_name": cls.cluster.id,
-            "compact_serializers": {
-                InnerCompact: InnerSerializer(),
-                OuterCompact: OuterSerializer(),
-                CompactIncrementFunction: CompactIncrementFunctionSerializer(),
-                CompactReturningFunction: CompactReturningFunctionSerializer(),
-                CompactReturningCallable: CompactReturningCallableSerializer(),
-                CompactPredicate: CompactPredicateSerializer(),
-                CompactReturningMapInterceptor: CompactReturningMapInterceptorSerializer(),
-                CompactReturningAggregator: CompactReturningAggregatorSerializer(),
-                CompactReturningEntryProcessor: CompactReturningEntryProcessorSerializer(),
-                CompactReturningProjection: CompactReturningProjectionSerializer(),
-                CompactFilter: CompactFilterSerializer(),
-            },
+            "compact_serializers": [
+                InnerSerializer(),
+                OuterSerializer(),
+                CompactIncrementFunctionSerializer(),
+                CompactReturningFunctionSerializer(),
+                CompactReturningCallableSerializer(),
+                CompactPredicateSerializer(),
+                CompactReturningMapInterceptorSerializer(),
+                CompactReturningAggregatorSerializer(),
+                CompactReturningEntryProcessorSerializer(),
+                CompactReturningProjectionSerializer(),
+                CompactFilterSerializer(),
+            ],
         }
 
     @classmethod
