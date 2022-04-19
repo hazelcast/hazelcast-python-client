@@ -1,4 +1,5 @@
 name: Run tests, measure coverage and upload results to codecov
+
 on:
   workflow_dispatch:
     inputs:
@@ -15,6 +16,7 @@ on:
       - '[45].*.z'
     types:
       [opened]
+      
 jobs:
   check_for_membership:
     runs-on: ubuntu-latest
@@ -40,20 +42,18 @@ jobs:
         python-version: [ '3.6', '3.10' ]
         os: [ ubuntu-latest, windows-latest ]
       fail-fast: false
+      
     steps:
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install JDK
+      
         uses: actions/setup-java@v2
         with:
           distribution: 'adopt'
           java-version: '8'
-          
-      - name: Checkout code for push event
-        if: github.event_name == 'push'
-        uses: actions/checkout@v2
 
       - name: Checkout code for PR
         if: github.event_name == 'pull_request_target'
@@ -61,15 +61,16 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           
-      - name: Checkout repository to fetch PR coming from community
-        if: github.event_name == 'workflow_dispatch'
+      - name: Checkout repository for push event and PR coming from community
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event_name == 'push' }}
         uses: actions/checkout@v2
         
-      - name: Fetch PR coming from community
+      # pull/$pr_number/head:$branch_name is creating a new branch which has head of the PR       
+      - name: Fetch PR coming from community.
         if: github.event_name == 'workflow_dispatch'
         run: |
-          git fetch origin pull/${{github.event.inputs.pr_number }}/head:temp_branch
-          git checkout temp_branch
+          git fetch origin pull/${{github.event.inputs.pr_number }}/head:pr_head
+          git checkout pr_head
           
       - name: Install dependencies
         run: |
@@ -107,3 +108,4 @@ jobs:
           path: |
             rc_stderr.log
             rc_stdout.log
+            
