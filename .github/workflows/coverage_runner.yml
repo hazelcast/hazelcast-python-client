@@ -48,8 +48,8 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install JDK
-      
+          
+      - name: Install JDK      
         uses: actions/setup-java@v2
         with:
           distribution: 'adopt'
@@ -75,6 +75,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements-test.txt
+          
       - name: Run tests
         env:
           HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
