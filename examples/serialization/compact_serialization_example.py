@@ -1,5 +1,10 @@
 from hazelcast import HazelcastClient
-from hazelcast.serialization.api import CompactSerializer, CompactWriter, CompactReader, CompactSerializableClass
+from hazelcast.serialization.api import (
+    CompactSerializer,
+    CompactWriter,
+    CompactReader,
+    CompactSerializableClass,
+)
 
 
 class Address:
@@ -57,9 +62,7 @@ class EmployeeSerializer(CompactSerializer[Employee]):
         return Employee
 
 
-client = HazelcastClient(
-    compact_serializers=[AddressSerializer(), EmployeeSerializer()]
-)
+client = HazelcastClient(compact_serializers=[AddressSerializer(), EmployeeSerializer()])
 
 employees = client.get_map("employees").blocking()
 
