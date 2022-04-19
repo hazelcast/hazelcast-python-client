@@ -146,7 +146,7 @@ Then, a serializer for it can be implemented as below:
 
 .. code:: python
 
-    from hazelcast.serialization.api import CompactSerializer, CompactWriter, CompactReader
+    from hazelcast.serialization.api import CompactSerializer, CompactWriter, CompactReader, CompactSerializableClass
 
     class EmployeeSerializer(CompactSerializer[Employee]):
         def read(self, reader: CompactReader) -> Employee:
@@ -161,14 +161,17 @@ Then, a serializer for it can be implemented as below:
         def get_type_name(self) -> str:
             return "employee"
 
+        def get_class(self) -> CompactSerializableClass:
+            return Employee
+
 The last step is to register the serializer in the client configuration.
 
 .. code:: python
 
     client = HazelcastClient(
-        compact_serializers={
-            Employee: EmployeeSerializer(),
-        }
+        compact_serializers=[
+            EmployeeSerializer(),
+        ]
     )
 
 A schema will be created from the serializer, and a unique schema identifier

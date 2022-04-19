@@ -1,5 +1,5 @@
 from hazelcast import HazelcastClient
-from hazelcast.serialization.api import CompactSerializer, CompactWriter, CompactReader
+from hazelcast.serialization.api import CompactSerializer, CompactWriter, CompactReader, CompactSerializableClass
 
 
 class Address:
@@ -8,7 +8,7 @@ class Address:
         self.street = street
 
     def __repr__(self):
-        return f"Address(city='{self.city}', street='{self.street}'"
+        return f"Address(city='{self.city}', street='{self.street}')"
 
 
 class Employee:
@@ -18,7 +18,7 @@ class Employee:
         self.address = address
 
     def __repr__(self):
-        return f"Employee(name='{self.name}', age={self.age}, address={self.address}"
+        return f"Employee(name='{self.name}', age={self.age}, address={self.address})"
 
 
 class AddressSerializer(CompactSerializer[Address]):
@@ -33,6 +33,9 @@ class AddressSerializer(CompactSerializer[Address]):
 
     def get_type_name(self) -> str:
         return "Address"
+
+    def get_class(self) -> CompactSerializableClass:
+        return Address
 
 
 class EmployeeSerializer(CompactSerializer[Employee]):
@@ -50,12 +53,12 @@ class EmployeeSerializer(CompactSerializer[Employee]):
     def get_type_name(self) -> str:
         return "Employee"
 
+    def get_class(self) -> CompactSerializableClass:
+        return Employee
+
 
 client = HazelcastClient(
-    compact_serializers={
-        Address: AddressSerializer(),
-        Employee: EmployeeSerializer(),
-    }
+    compact_serializers=[AddressSerializer(), EmployeeSerializer()]
 )
 
 employees = client.get_map("employees").blocking()

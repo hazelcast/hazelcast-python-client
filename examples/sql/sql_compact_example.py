@@ -1,7 +1,7 @@
 import dataclasses
 
 from hazelcast import HazelcastClient
-from hazelcast.serialization.api import CompactSerializer, CompactWriter, CompactReader
+from hazelcast.serialization.api import CompactSerializer, CompactWriter, CompactReader, CompactSerializableClass
 
 
 @dataclasses.dataclass
@@ -23,11 +23,12 @@ class PersonSerializer(CompactSerializer[Person]):
     def get_type_name(self) -> str:
         return "Person"
 
+    def get_class(self) -> CompactSerializableClass:
+        return Person
+
 
 client = HazelcastClient(
-    compact_serializers={
-        Person: PersonSerializer(),
-    }
+    compact_serializers=[PersonSerializer()]
 )
 
 client.sql.execute(
