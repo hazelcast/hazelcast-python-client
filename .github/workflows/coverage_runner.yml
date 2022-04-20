@@ -62,7 +62,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           
       - name: Checkout repository for push event and PR coming from community
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event_name == 'push' }}
+        if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' }}
         uses: actions/checkout@v2
         
       # pull/$pr_number/head:$branch_name is creating a new branch which has head of the PR       
