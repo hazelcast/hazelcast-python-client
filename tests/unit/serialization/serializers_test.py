@@ -123,7 +123,7 @@ class SerializersTest(unittest.TestCase):
     def validate_predicate(self, predicate):
         serialized = self.service.to_data(predicate)
         self.assertEqual(-2, serialized.get_type())  # Identified
-        b = serialized.to_bytes()
+        b = serialized.buffer
         # 4(partition hash) + 4(serializer type) + 1(is_identified) + 4(factory id) + 4(class id) + payload(if any)
         self.assertTrue(len(b) >= 17)
         self.assertEqual(predicate.get_factory_id(), BE_INT.unpack_from(b, 9)[0])

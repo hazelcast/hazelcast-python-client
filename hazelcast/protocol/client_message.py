@@ -188,6 +188,9 @@ class InboundMessage:
         self.start_frame = self.start_frame.next
         self._next_frame = self.start_frame
 
+    def reset_next_frame(self) -> None:
+        self._next_frame = self.start_frame
+
     def __repr__(self):
         message_type = self.get_message_type()
         correlation_id = self.get_correlation_id()

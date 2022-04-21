@@ -9,7 +9,8 @@ from hazelcast.util import current_time_in_millis, to_millis, to_nanos, current_
 from hazelcast import __version__
 
 try:
-    import psutil
+    # psutil does not support type hints
+    import psutil  # type: ignore[import]
 
     _PSUTIL_ENABLED = True
 except ImportError:

@@ -10,6 +10,7 @@ from hazelcast.protocol.codec import (
 )
 from hazelcast.proxy.base import TransactionalProxy
 from hazelcast.types import KeyType, ValueType
+from hazelcast.serialization.compact import SchemaNotReplicatedError
 from hazelcast.util import check_not_none, thread_id, ImmutableLazyDataList
 
 
@@ -33,9 +34,13 @@ class TransactionalMultiMap(TransactionalProxy, typing.Generic[KeyType, ValueTyp
         """
         check_not_none(key, "key can't be none")
         check_not_none(value, "value can't be none")
+        try:
+            key_data = self._to_data(key)
+            value_data = self._to_data(value)
+        except SchemaNotReplicatedError as e:
+            self._send_schema(e)
+            return self.put(key, value)
 
-        key_data = self._to_data(key)
-        value_data = self._to_data(value)
         request = transactional_multi_map_put_codec.encode_request(
             self.name, self.transaction.id, thread_id(), key_data, value_data
         )
@@ -52,13 +57,17 @@ class TransactionalMultiMap(TransactionalProxy, typing.Generic[KeyType, ValueTyp
             The collection of the values associated with the key.
         """
         check_not_none(key, "key can't be none")
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            self._send_schema(e)
+            return self.get(key)
 
         def handler(message):
             return ImmutableLazyDataList(
                 transactional_multi_map_get_codec.decode_response(message), self._to_object
             )
 
-        key_data = self._to_data(key)
         request = transactional_multi_map_get_codec.encode_request(
             self.name, self.transaction.id, thread_id(), key_data
         )
@@ -77,9 +86,13 @@ class TransactionalMultiMap(TransactionalProxy, typing.Generic[KeyType, ValueTyp
         """
         check_not_none(key, "key can't be none")
         check_not_none(value, "value can't be none")
+        try:
+            key_data = self._to_data(key)
+            value_data = self._to_data(value)
+        except SchemaNotReplicatedError as e:
+            self._send_schema(e)
+            return self.remove(key, value)
 
-        key_data = self._to_data(key)
-        value_data = self._to_data(value)
         request = transactional_multi_map_remove_entry_codec.encode_request(
             self.name, self.transaction.id, thread_id(), key_data, value_data
         )
@@ -96,13 +109,17 @@ class TransactionalMultiMap(TransactionalProxy, typing.Generic[KeyType, ValueTyp
             The collection of the values associated with the key.
         """
         check_not_none(key, "key can't be none")
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            self._send_schema(e)
+            return self.remove_all(key)
 
         def handler(message):
             return ImmutableLazyDataList(
                 transactional_multi_map_remove_codec.decode_response(message), self._to_object
             )
 
-        key_data = self._to_data(key)
         request = transactional_multi_map_remove_codec.encode_request(
             self.name, self.transaction.id, thread_id(), key_data
         )
@@ -119,8 +136,12 @@ class TransactionalMultiMap(TransactionalProxy, typing.Generic[KeyType, ValueTyp
             The number of values matching the given key in the multimap.
         """
         check_not_none(key, "key can't be none")
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            self._send_schema(e)
+            return self.value_count(key)
 
-        key_data = self._to_data(key)
         request = transactional_multi_map_value_count_codec.encode_request(
             self.name, self.transaction.id, thread_id(), key_data
         )

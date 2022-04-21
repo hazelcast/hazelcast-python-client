@@ -4,6 +4,7 @@ import threading
 import typing
 
 from hazelcast.cluster import ClusterService, _InternalClusterService
+from hazelcast.compact import CompactSchemaService
 from hazelcast.config import _Config
 from hazelcast.connection import ConnectionManager, DefaultAddressProvider
 from hazelcast.core import DistributedObjectEvent, DistributedObjectInfo
@@ -11,7 +12,7 @@ from hazelcast.cp import CPSubsystem, ProxySessionManager
 from hazelcast.discovery import HazelcastCloudAddressProvider
 from hazelcast.errors import IllegalStateError
 from hazelcast.future import Future
-from hazelcast.invocation import Invocation, InvocationService
+from hazelcast.invocation import InvocationService, Invocation
 from hazelcast.lifecycle import LifecycleService, LifecycleState, _InternalLifecycleService
 from hazelcast.listener import ClusterViewListenerService, ListenerService
 from hazelcast.near_cache import NearCacheManager
@@ -195,6 +196,24 @@ class HazelcastClient:
                     }
                 })
 
+        compact_serializers (dict[typing.Type, hazelcast.serialization.api.CompactSerializer]):
+            Dictionary of classes to be serialized with Compact serialization
+            to Compact serializers.
+
+            .. code-block:: python
+
+                class Foo:
+                    pass
+
+                class FooSerializer(CompactSerializer[Foo]):
+                    pass
+
+                client = HazelcastClient(
+                    compact_serializers={
+                        Foo: FooSerializer(),
+                    },
+                )
+
         class_definitions (`list[hazelcast.serialization.portable.classdef.ClassDefinition]`):
             List of all portable class definitions.
         check_class_definition_errors (bool): When enabled, serialization system
@@ -371,10 +390,16 @@ class HazelcastClient:
         self._internal_lifecycle_service = _InternalLifecycleService(config)
         self._lifecycle_service = LifecycleService(self._internal_lifecycle_service)
         self._invocation_service = InvocationService(self, config, self._reactor)
+        self._compact_schema_service = CompactSchemaService(
+            self._serialization_service.compact_stream_serializer,
+            self._invocation_service,
+        )
         self._address_provider = self._create_address_provider()
         self._internal_partition_service = _InternalPartitionService(self)
         self._partition_service = PartitionService(
-            self._internal_partition_service, self._serialization_service
+            self._internal_partition_service,
+            self._serialization_service,
+            self._compact_schema_service.send_schema_and_retry,
         )
         self._internal_cluster_service = _InternalClusterService(self, config)
         self._cluster_service = ClusterService(self._internal_cluster_service)
@@ -388,10 +413,15 @@ class HazelcastClient:
             self._internal_cluster_service,
             self._invocation_service,
             self._near_cache_manager,
+            self._send_state_to_cluster,
         )
         self._load_balancer = self._init_load_balancer(config)
         self._listener_service = ListenerService(
-            self, config, self._connection_manager, self._invocation_service
+            self,
+            config,
+            self._connection_manager,
+            self._invocation_service,
+            self._compact_schema_service,
         )
         self._proxy_manager = ProxyManager(self._context)
         self._cp_subsystem = CPSubsystem(self._context)
@@ -415,10 +445,16 @@ class HazelcastClient:
         )
         self._shutdown_lock = threading.RLock()
         self._invocation_service.init(
-            self._internal_partition_service, self._connection_manager, self._listener_service
+            self._internal_partition_service,
+            self._connection_manager,
+            self._listener_service,
+            self._compact_schema_service,
         )
         self._internal_sql_service = _InternalSqlService(
-            self._connection_manager, self._serialization_service, self._invocation_service
+            self._connection_manager,
+            self._serialization_service,
+            self._invocation_service,
+            self._compact_schema_service.send_schema_and_retry,
         )
         self._sql_service = SqlService(self._internal_sql_service)
         self._init_context()
@@ -440,6 +476,7 @@ class HazelcastClient:
             self._name,
             self._proxy_session_manager,
             self._reactor,
+            self._compact_schema_service,
         )
 
     def _start(self):
@@ -772,6 +809,9 @@ class HazelcastClient:
             return client_name
         return "hz.client_%s" % client_id
 
+    def _send_state_to_cluster(self) -> Future:
+        return self._compact_schema_service.send_all_schemas()
+
     @staticmethod
     def _get_connection_timeout(config):
         timeout = config.connection_timeout
@@ -806,6 +846,7 @@ class _ClientContext:
         self.name = None
         self.proxy_session_manager = None
         self.reactor = None
+        self.compact_schema_service = None
 
     def init_context(
         self,
@@ -823,6 +864,7 @@ class _ClientContext:
         name,
         proxy_session_manager,
         reactor,
+        compact_schema_service,
     ):
         self.client = client
         self.config = config
@@ -838,3 +880,4 @@ class _ClientContext:
         self.name = name
         self.proxy_session_manager = proxy_session_manager
         self.reactor = reactor
+        self.compact_schema_service = compact_schema_service

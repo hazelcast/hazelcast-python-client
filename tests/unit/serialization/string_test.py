@@ -35,7 +35,7 @@ class StringSerializationTestCase(unittest.TestCase):
         data_byte = to_data_byte(TEST_DATA_ASCII)
         expected = binascii.hexlify(data_byte)
         data = self.service.to_data(TEST_DATA_ASCII)
-        actual = binascii.hexlify(data._buffer)
+        actual = binascii.hexlify(data.buffer)
         self.assertEqual(expected, actual)
 
     def test_ascii_decode(self):
@@ -48,7 +48,7 @@ class StringSerializationTestCase(unittest.TestCase):
         data_byte = to_data_byte(TEST_DATA_ALL)
         expected = binascii.hexlify(data_byte)
         data = self.service.to_data(TEST_DATA_ALL)
-        actual = binascii.hexlify(data._buffer)
+        actual = binascii.hexlify(data.buffer)
         self.assertEqual(expected, actual)
 
     def test_utf8_decode(self):

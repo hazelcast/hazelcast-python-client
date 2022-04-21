@@ -11,6 +11,7 @@ from hazelcast.protocol.codec import (
     atomic_long_apply_codec,
 )
 from hazelcast.proxy.cp import BaseCPProxy
+from hazelcast.serialization.compact import SchemaNotReplicatedError
 from hazelcast.util import check_not_none, check_is_int
 
 
@@ -157,7 +158,11 @@ class AtomicLong(BaseCPProxy["BlockingAtomicLong"]):
             function: The function that alters the currently stored value.
         """
         check_not_none(function, "Function cannot be None")
-        function_data = self._to_data(function)
+        try:
+            function_data = self._to_data(function)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.alter, function)
+
         codec = atomic_long_alter_codec
         # 1 means return the new value.
         # There is no way to tell server to return nothing as of now (30.09.2020)
@@ -183,7 +188,11 @@ class AtomicLong(BaseCPProxy["BlockingAtomicLong"]):
             The new value.
         """
         check_not_none(function, "Function cannot be None")
-        function_data = self._to_data(function)
+        try:
+            function_data = self._to_data(function)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.alter_and_get, function)
+
         codec = atomic_long_alter_codec
         # 1 means return the new value.
         request = codec.encode_request(self._group_id, self._object_name, function_data, 1)
@@ -206,7 +215,11 @@ class AtomicLong(BaseCPProxy["BlockingAtomicLong"]):
             The old value.
         """
         check_not_none(function, "Function cannot be None")
-        function_data = self._to_data(function)
+        try:
+            function_data = self._to_data(function)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.get_and_alter, function)
+
         codec = atomic_long_alter_codec
         # 0 means return the old value.
         request = codec.encode_request(self._group_id, self._object_name, function_data, 0)
@@ -229,7 +242,11 @@ class AtomicLong(BaseCPProxy["BlockingAtomicLong"]):
             The result of the function application.
         """
         check_not_none(function, "Function cannot be None")
-        function_data = self._to_data(function)
+        try:
+            function_data = self._to_data(function)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.apply, function)
+
         codec = atomic_long_apply_codec
         request = codec.encode_request(self._group_id, self._object_name, function_data)
 

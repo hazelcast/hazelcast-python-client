@@ -22,9 +22,14 @@ from hazelcast.errors import HazelcastError
 from hazelcast.future import Future
 
 try:
+    # Available in UNIX.
+    # It is used to make pipes used to wake the event
+    # loop non-blocking.
     import fcntl
+
+    _FCNTL_EXISTS = True
 except ImportError:
-    fcntl = None
+    _FCNTL_EXISTS = False
 
 _logger = logging.getLogger(__name__)
 
@@ -40,14 +45,19 @@ _logger = logging.getLogger(__name__)
 _RETRYABLE_ERROR_CODES = (
     errno.EAGAIN,
     errno.EWOULDBLOCK,
-    errno.EDEADLK,
+    # Missing in the stub, but present in the implementation.
+    # https://docs.python.org/3/library/errno.html#errno.EDEADLK
+    # Added to the stub in
+    # https://github.com/python/typeshed/pull/7397
+    # For now, we will ignore the mypy error.
+    errno.EDEADLK,  # type: ignore[attr-defined]
     ssl.SSL_ERROR_WANT_WRITE,
     ssl.SSL_ERROR_WANT_READ,
 )
 
 
 def _set_nonblocking(fd):
-    if not fcntl:
+    if not _FCNTL_EXISTS:
         return
 
     flags = fcntl.fcntl(fd, fcntl.F_GETFL)
@@ -279,7 +289,7 @@ class _WakeableLoop(_AbstractLoop):
                 continue
 
             try:
-                connection.close(None, HazelcastError("Client is shutting down"))
+                connection.close_connection(None, HazelcastError("Client is shutting down"))
             except OSError as connection:
                 if connection.args[0] == socket.EBADF:
                     pass
@@ -311,7 +321,7 @@ class _BasicLoop(_AbstractLoop):
 
         for connection in list(self._map.values()):
             try:
-                connection.close(None, HazelcastError("Client is shutting down"))
+                connection.close_connection(None, HazelcastError("Client is shutting down"))
             except OSError as connection:
                 if connection.args[0] == socket.EBADF:
                     pass
@@ -428,7 +438,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
         except socket.error as err:
             if err.args[0] not in _RETRYABLE_ERROR_CODES:
                 # Other error codes are fatal, should close the connection
-                self.close(None, err)
+                self.close_connection(None, err)
 
         if reader.length:
             reader.process()
@@ -469,7 +479,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
                 self._write_queue.appendleft(bytes_)
             else:
                 # Other error codes are fatal, should close the connection
-                self.close(None, err)
+                self.close_connection(None, err)
         else:
             # No exception is thrown during the send
             self.last_write_time = time.time()
@@ -480,14 +490,14 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
     def handle_close(self):
         _logger.warning("Connection closed by server")
-        self.close(None, IOError("Connection closed by server"))
+        self.close_connection(None, IOError("Connection closed by server"))
 
     def handle_error(self):
         # We handle retryable error codes inside the
         # handle_read/write. Anything else should be fatal.
         error = sys.exc_info()[1]
         _logger.debug("Received error", exc_info=True)
-        self.close(str(error), None)
+        self.close_connection(str(error), None)
 
     def readable(self):
         return self.live and self.sent_protocol_bytes
@@ -507,12 +517,12 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
             # no effects.
             self._close_timer.cancel()
 
-        asyncore.dispatcher.close(self)
+        self.close()
         self._write_buf.close()
 
     def _close_timer_cb(self):
         if not self.connected:
-            self.close(None, IOError("Connection timed out"))
+            self.close_connection(None, IOError("Connection timed out"))
 
     def _set_socket_options(self, config):
         # set tcp no delay
@@ -571,7 +581,13 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
             ssl_context.check_hostname = True
             server_hostname = hostname
 
-        self.socket = ssl_context.wrap_socket(self.socket, server_hostname=server_hostname)
+        # self.socket is initialized with self.create_socket call, which
+        # made before this. So, mypy error regarding possible None
+        # value of the self.socket is not valid.
+        self.socket = ssl_context.wrap_socket(
+            self.socket,  # type: ignore[arg-type]
+            server_hostname=server_hostname,
+        )
 
     def __repr__(self):
         return "Connection(id=%s, live=%s, remote_address=%s)" % (

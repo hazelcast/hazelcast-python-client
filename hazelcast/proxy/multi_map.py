@@ -26,6 +26,7 @@ from hazelcast.protocol.codec import (
 )
 from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType
 from hazelcast.types import ValueType, KeyType
+from hazelcast.serialization.compact import SchemaNotReplicatedError
 from hazelcast.util import check_not_none, thread_id, to_millis, ImmutableLazyDataList
 
 
@@ -65,23 +66,44 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
         Returns:
             A registration id which is used as a key to remove the listener.
         """
-        if key:
-            codec = multi_map_add_entry_listener_to_key_codec
-            key_data = self._to_data(key)
-            request = codec.encode_request(self.name, key_data, include_value, False)
+        if key is not None:
+            try:
+                key_data = self._to_data(key)
+            except SchemaNotReplicatedError as e:
+                return self._send_schema_and_retry(
+                    e,
+                    self.add_entry_listener,
+                    include_value,
+                    key,
+                    added_func,
+                    removed_func,
+                    clear_all_func,
+                )
+
+            with_key_codec = multi_map_add_entry_listener_to_key_codec
+            request = with_key_codec.encode_request(self.name, key_data, include_value, False)
+            response_decoder = with_key_codec.decode_response
+            event_message_handler = with_key_codec.handle
         else:
             codec = multi_map_add_entry_listener_codec
             request = codec.encode_request(self.name, include_value, False)
+            response_decoder = codec.decode_response
+            event_message_handler = codec.handle
 
         def handle_event_entry(
-            key, value, old_value, merging_value, event_type, uuid, number_of_affected_entries
+            key_data,
+            value_data,
+            old_value_data,
+            merging_value_data,
+            event_type,
+            uuid,
+            number_of_affected_entries,
         ):
             event = EntryEvent(
-                self._to_object,
-                key,
-                value,
-                old_value,
-                merging_value,
+                self._to_object(key_data),
+                self._to_object(value_data),
+                self._to_object(old_value_data),
+                self._to_object(merging_value_data),
                 event_type,
                 uuid,
                 number_of_affected_entries,
@@ -95,9 +117,9 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
 
         return self._register_listener(
             request,
-            lambda r: codec.decode_response(r),
+            lambda r: response_decoder(r),
             lambda reg_id: multi_map_remove_entry_listener_codec.encode_request(self.name, reg_id),
-            lambda m: codec.handle(m, handle_event_entry),
+            lambda m: event_message_handler(m, handle_event_entry),
         )
 
     def contains_key(self, key: KeyType) -> Future[bool]:
@@ -116,7 +138,10 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
-        key_data = self._to_data(key)
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.contains_key, key)
 
         request = multi_map_contains_key_codec.encode_request(self.name, key_data, thread_id())
         return self._invoke_on_key(request, key_data, multi_map_contains_key_codec.decode_response)
@@ -133,7 +158,11 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             value, ``False`` otherwise.
         """
         check_not_none(value, "value can't be None")
-        value_data = self._to_data(value)
+        try:
+            value_data = self._to_data(value)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.contains_value, value)
+
         request = multi_map_contains_value_codec.encode_request(self.name, value_data)
         return self._invoke(request, multi_map_contains_value_codec.decode_response)
 
@@ -150,8 +179,11 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
-        key_data = self._to_data(key)
-        value_data = self._to_data(value)
+        try:
+            key_data = self._to_data(key)
+            value_data = self._to_data(value)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.contains_entry, key, value)
 
         request = multi_map_contains_entry_codec.encode_request(
             self.name, key_data, value_data, thread_id()
@@ -204,13 +236,16 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             The list of the values associated with the specified key.
         """
         check_not_none(key, "key can't be None")
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.get, key)
 
         def handler(message):
             return ImmutableLazyDataList(
                 multi_map_get_codec.decode_response(message), self._to_object
             )
 
-        key_data = self._to_data(key)
         request = multi_map_get_codec.encode_request(self.name, key_data, thread_id())
         return self._invoke_on_key(request, key_data, handler)
 
@@ -229,7 +264,10 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             ``True`` if lock is acquired, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
-        key_data = self._to_data(key)
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.is_locked, key)
 
         request = multi_map_is_locked_codec.encode_request(self.name, key_data)
         return self._invoke_on_key(request, key_data, multi_map_is_locked_codec.decode_response)
@@ -250,7 +288,11 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             key: The key to lock.
         """
         check_not_none(key, "key can't be None")
-        key_data = self._to_data(key)
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.force_unlock, key)
+
         request = multi_map_force_unlock_codec.encode_request(
             self.name, key_data, self._reference_id_generator.get_and_increment()
         )
@@ -299,7 +341,11 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             lease_time: Time in seconds to wait before releasing the lock.
         """
         check_not_none(key, "key can't be None")
-        key_data = self._to_data(key)
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.lock, key, lease_time)
+
         request = multi_map_lock_codec.encode_request(
             self.name,
             key_data,
@@ -327,8 +373,12 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
         """
         check_not_none(key, "key can't be None")
         check_not_none(key, "value can't be None")
-        key_data = self._to_data(key)
-        value_data = self._to_data(value)
+        try:
+            key_data = self._to_data(key)
+            value_data = self._to_data(value)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.remove, key, value)
+
         request = multi_map_remove_entry_codec.encode_request(
             self.name, key_data, value_data, thread_id()
         )
@@ -360,7 +410,11 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
                 multi_map_remove_codec.decode_response(message), self._to_object
             )
 
-        key_data = self._to_data(key)
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.remove_all, key)
+
         request = multi_map_remove_codec.encode_request(self.name, key_data, thread_id())
         return self._invoke_on_key(request, key_data, handler)
 
@@ -382,8 +436,12 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
-        key_data = self._to_data(key)
-        value_data = self._to_data(value)
+        try:
+            key_data = self._to_data(key)
+            value_data = self._to_data(value)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.put, key, value)
+
         request = multi_map_put_codec.encode_request(self.name, key_data, value_data, thread_id())
         return self._invoke_on_key(request, key_data, multi_map_put_codec.decode_response)
 
@@ -425,7 +483,11 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             The number of values that match the given key in the multimap.
         """
         check_not_none(key, "key can't be None")
-        key_data = self._to_data(key)
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.value_count, key)
+
         request = multi_map_value_count_codec.encode_request(self.name, key_data, thread_id())
         return self._invoke_on_key(request, key_data, multi_map_value_count_codec.decode_response)
 
@@ -474,7 +536,11 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             ``True`` if the lock was acquired, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
-        key_data = self._to_data(key)
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.try_lock, key, lease_time, timeout)
+
         request = multi_map_try_lock_codec.encode_request(
             self.name,
             key_data,
@@ -498,7 +564,11 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             key: The key to lock.
         """
         check_not_none(key, "key can't be None")
-        key_data = self._to_data(key)
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.unlock, key)
+
         request = multi_map_unlock_codec.encode_request(
             self.name, key_data, thread_id(), self._reference_id_generator.get_and_increment()
         )

@@ -123,4 +123,4 @@ def _read_data_from(inp):
 
 
 def _write_data_to(out, data):
-    out.write_byte_array(data.to_bytes())
+    out.write_byte_array(data.buffer)

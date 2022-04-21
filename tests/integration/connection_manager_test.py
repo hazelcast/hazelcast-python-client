@@ -5,7 +5,10 @@ from mock import patch
 from hazelcast import HazelcastClient
 from hazelcast.core import Address, MemberInfo, MemberVersion, EndpointQualifier, ProtocolType
 from hazelcast.errors import IllegalStateError, TargetDisconnectedError
-from tests.base import HazelcastTestCase
+from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
+from hazelcast.util import AtomicInteger
+from tests.base import HazelcastTestCase, SingleMemberTestCase
+from tests.util import random_string
 
 _UNREACHABLE_ADDRESS = Address("192.168.0.1", 5701)
 _MEMBER_VERSION = MemberVersion(5, 0, 0)
@@ -114,6 +117,75 @@ class ConnectionManagerTranslateTest(HazelcastTestCase):
 
         with self.assertRaises(TargetDisconnectedError):
             conn_manager._get_or_connect_to_member(member).result()
+
+
+class ConnectionManagerOnClusterRestartTest(SingleMemberTestCase):
+    @classmethod
+    def configure_client(cls, config):
+        config["cluster_name"] = cls.cluster.id
+        return config
+
+    def test_client_state_is_sent_once_if_send_operation_is_successful(self):
+        conn_manager = self.client._connection_manager
+
+        counter = AtomicInteger()
+
+        def send_state_to_cluster_fn():
+            counter.add(1)
+            return ImmediateFuture(None)
+
+        conn_manager._send_state_to_cluster_fn = send_state_to_cluster_fn
+
+        self._restart_cluster()
+
+        self.assertEqual(1, counter.get())
+
+    def test_sending_client_state_is_retried_if_send_operation_is_failed(self):
+        conn_manager = self.client._connection_manager
+
+        counter = AtomicInteger()
+
+        def send_state_to_cluster_fn():
+            counter.add(1)
+            if counter.get() == 5:
+                # Let's pretend it succeeds at some point
+                return ImmediateFuture(None)
+
+            return ImmediateExceptionFuture(RuntimeError("expected"))
+
+        conn_manager._send_state_to_cluster_fn = send_state_to_cluster_fn
+
+        self._restart_cluster()
+
+        self.assertEqual(5, counter.get())
+
+    def test_sending_client_state_is_retried_if_send_operation_is_failed_synchronously(self):
+        conn_manager = self.client._connection_manager
+
+        counter = AtomicInteger()
+
+        def send_state_to_cluster_fn():
+            counter.add(1)
+            if counter.get() == 5:
+                # Let's pretend it succeeds at some point
+                return ImmediateFuture(None)
+
+            raise RuntimeError("expected")
+
+        conn_manager._send_state_to_cluster_fn = send_state_to_cluster_fn
+
+        self._restart_cluster()
+
+        self.assertEqual(5, counter.get())
+
+    def _restart_cluster(self):
+        self.rc.terminateMember(self.cluster.id, self.member.uuid)
+        ConnectionManagerOnClusterRestartTest.member = self.cluster.start_member()
+
+        # Perform an invocation to wait until the client state is sent
+        m = self.client.get_map(random_string()).blocking()
+        m.set(1, 1)
+        self.assertEqual(1, m.get(1))
 
 
 class StaticAddressProvider:

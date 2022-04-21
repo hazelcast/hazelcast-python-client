@@ -1,3 +1,4 @@
+import math
 import os
 import time
 
@@ -155,3 +156,24 @@ class LoggingContext:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.logger.setLevel(self.old_level)
+
+
+def is_equal(a, b):
+    if type(a) != type(b):
+        return False
+
+    if isinstance(a, float):
+        return math.isclose(a, b, rel_tol=1e-04)
+
+    if isinstance(a, list):
+        n = len(a)
+        if n != len(b):
+            return False
+
+        for i in range(n):
+            if not is_equal(a[i], b[i]):
+                return False
+
+        return True
+
+    return a == b

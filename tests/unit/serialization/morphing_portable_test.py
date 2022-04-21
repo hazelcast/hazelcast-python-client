@@ -2,6 +2,8 @@ import unittest
 
 from hazelcast.config import _Config
 from hazelcast.serialization import SerializationServiceV1
+from hazelcast.serialization.data import DATA_OFFSET
+from hazelcast.serialization.input import _ObjectDataInput
 from tests.unit.serialization.portable_test import (
     create_portable,
     SerializationV1Portable,
@@ -65,7 +67,9 @@ class MorphingPortableTestCase(unittest.TestCase):
         base_portable = create_portable()
         data = self.service1.to_data(base_portable)
 
-        inp = self.service2._create_data_input(data)
+        inp = _ObjectDataInput(
+            data.buffer, DATA_OFFSET, self.service2, self.service2._is_big_endian
+        )
         portable_serializer = self.service2._registry._portable_serializer
         self.reader = portable_serializer.create_morphing_reader(inp)
 

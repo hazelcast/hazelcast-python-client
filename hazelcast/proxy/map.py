@@ -78,8 +78,10 @@ from hazelcast.proxy.base import (
     get_entry_listener_flags,
     MAX_SIZE,
 )
-from hazelcast.predicate import PagingPredicate, Predicate
+from hazelcast.predicate import Predicate, _PagingPredicate
+from hazelcast.serialization.data import Data
 from hazelcast.types import AggregatorResultType, KeyType, ValueType, ProjectionType
+from hazelcast.serialization.compact import SchemaNotReplicatedError
 from hazelcast.util import (
     check_not_none,
     thread_id,
@@ -185,38 +187,108 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             LOADED=loaded_func,
         )
 
-        if key and predicate:
-            codec = map_add_entry_listener_to_key_with_predicate_codec
-            key_data = self._to_data(key)
-            predicate_data = self._to_data(predicate)
-            request = codec.encode_request(
+        if key is not None and predicate:
+            try:
+                key_data = self._to_data(key)
+                predicate_data = self._to_data(predicate)
+            except SchemaNotReplicatedError as e:
+                return self._send_schema_and_retry(
+                    e,
+                    self.add_entry_listener,
+                    include_value,
+                    key,
+                    predicate,
+                    added_func,
+                    removed_func,
+                    updated_func,
+                    evicted_func,
+                    evict_all_func,
+                    clear_all_func,
+                    merged_func,
+                    expired_func,
+                    loaded_func,
+                )
+
+            with_key_and_predicate_codec = map_add_entry_listener_to_key_with_predicate_codec
+            request = with_key_and_predicate_codec.encode_request(
                 self.name, key_data, predicate_data, include_value, flags, self._is_smart
             )
-        elif key and not predicate:
-            codec = map_add_entry_listener_to_key_codec
-            key_data = self._to_data(key)
-            request = codec.encode_request(
+            response_decoder = with_key_and_predicate_codec.decode_response
+            event_message_handler = with_key_and_predicate_codec.handle
+        elif key is not None and not predicate:
+            try:
+                key_data = self._to_data(key)
+            except SchemaNotReplicatedError as e:
+                return self._send_schema_and_retry(
+                    e,
+                    self.add_entry_listener,
+                    include_value,
+                    key,
+                    predicate,
+                    added_func,
+                    removed_func,
+                    updated_func,
+                    evicted_func,
+                    evict_all_func,
+                    clear_all_func,
+                    merged_func,
+                    expired_func,
+                    loaded_func,
+                )
+
+            with_key_codec = map_add_entry_listener_to_key_codec
+            request = with_key_codec.encode_request(
                 self.name, key_data, include_value, flags, self._is_smart
             )
-        elif not key and predicate:
-            codec = map_add_entry_listener_with_predicate_codec
-            predicate = self._to_data(predicate)
-            request = codec.encode_request(
+            response_decoder = with_key_codec.decode_response
+            event_message_handler = with_key_codec.handle
+        elif key is None and predicate:
+            try:
+                predicate = self._to_data(predicate)
+            except SchemaNotReplicatedError as e:
+                return self._send_schema_and_retry(
+                    e,
+                    self.add_entry_listener,
+                    include_value,
+                    key,
+                    predicate,
+                    added_func,
+                    removed_func,
+                    updated_func,
+                    evicted_func,
+                    evict_all_func,
+                    clear_all_func,
+                    merged_func,
+                    expired_func,
+                    loaded_func,
+                )
+
+            with_predicate_codec = map_add_entry_listener_with_predicate_codec
+            request = with_predicate_codec.encode_request(
                 self.name, predicate, include_value, flags, self._is_smart
             )
+            response_decoder = with_predicate_codec.decode_response
+            event_message_handler = with_predicate_codec.handle
         else:
             codec = map_add_entry_listener_codec
             request = codec.encode_request(self.name, include_value, flags, self._is_smart)
+            response_decoder = codec.decode_response
+            event_message_handler = codec.handle
 
         def handle_event_entry(
-            key_, value, old_value, merging_value, event_type, uuid, number_of_affected_entries
+            key_data,
+            value_data,
+            old_value_data,
+            merging_value_data,
+            event_type,
+            uuid,
+            number_of_affected_entries,
         ):
             event = EntryEvent(
-                self._to_object,
-                key_,
-                value,
-                old_value,
-                merging_value,
+                self._to_object(key_data),
+                self._to_object(value_data),
+                self._to_object(old_value_data),
+                self._to_object(merging_value_data),
                 event_type,
                 uuid,
                 number_of_affected_entries,
@@ -243,9 +315,9 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
 
         return self._register_listener(
             request,
-            lambda r: codec.decode_response(r),
+            lambda r: response_decoder(r),
             lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name, reg_id),
-            lambda m: codec.handle(m, handle_event_entry),
+            lambda m: event_message_handler(m, handle_event_entry),
         )
 
     def add_index(
@@ -329,7 +401,10 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         Returns:
             Id of registered interceptor.
         """
-        interceptor_data = self._to_data(interceptor)
+        try:
+            interceptor_data = self._to_data(interceptor)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.add_interceptor, interceptor)
 
         request = map_add_interceptor_codec.encode_request(self.name, interceptor_data)
         return self._invoke(request, map_add_interceptor_codec.decode_response)
@@ -348,25 +423,34 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             The result of the aggregation.
         """
         check_not_none(aggregator, "aggregator can't be none")
-        aggregator_data = self._to_data(aggregator)
 
         if predicate:
-            if isinstance(predicate, PagingPredicate):
+            if isinstance(predicate, _PagingPredicate):
                 raise AssertionError("Paging predicate is not supported.")
+
+            try:
+                aggregator_data = self._to_data(aggregator)
+                predicate_data = self._to_data(predicate)
+            except SchemaNotReplicatedError as e:
+                return self._send_schema_and_retry(e, self.aggregate, aggregator, predicate)
 
             def handler(message):
                 return self._to_object(map_aggregate_with_predicate_codec.decode_response(message))
 
-            predicate_data = self._to_data(predicate)
             request = map_aggregate_with_predicate_codec.encode_request(
                 self.name, aggregator_data, predicate_data
             )
-            return self._invoke(request, handler)
+        else:
+            try:
+                aggregator_data = self._to_data(aggregator)
+            except SchemaNotReplicatedError as e:
+                return self._send_schema_and_retry(e, self.aggregate, aggregator, predicate)
 
-        def handler(message):
-            return self._to_object(map_aggregate_codec.decode_response(message))
+            def handler(message):
+                return self._to_object(map_aggregate_codec.decode_response(message))
 
-        request = map_aggregate_codec.encode_request(self.name, aggregator_data)
+            request = map_aggregate_codec.encode_request(self.name, aggregator_data)
+
         return self._invoke(request, handler)
 
     def clear(self) -> Future[None]:
@@ -393,7 +477,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
-        key_data = self._to_data(key)
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.contains_key, key)
+
         return self._contains_key_internal(key_data)
 
     def contains_value(self, value: ValueType) -> Future[bool]:
@@ -408,7 +496,10 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             ``False`` otherwise.
         """
         check_not_none(value, "value can't be None")
-        value_data = self._to_data(value)
+        try:
+            value_data = self._to_data(value)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.contains_value, value)
 
         request = map_contains_value_codec.encode_request(self.name, value_data)
         return self._invoke(request, map_contains_value_codec.decode_response)
@@ -436,7 +527,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             key: Key of the mapping to be deleted.
         """
         check_not_none(key, "key can't be None")
-        key_data = self._to_data(key)
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.delete, key)
+
         return self._delete_internal(key_data)
 
     def entry_set(
@@ -455,34 +550,41 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             The list of key-value tuples in the map.
         """
         if predicate:
-            if isinstance(predicate, PagingPredicate):
-                codec = map_entries_with_paging_predicate_codec
+            if isinstance(predicate, _PagingPredicate):
+                predicate.iteration_type = IterationType.ENTRY
+                try:
+                    holder = PagingPredicateHolder.of(predicate, self._to_data)
+                except SchemaNotReplicatedError as e:
+                    return self._send_schema_and_retry(e, self.entry_set, predicate)
 
                 def handler(message):
-                    response = codec.decode_response(message)
+                    response = map_entries_with_paging_predicate_codec.decode_response(message)
                     predicate.anchor_list = response["anchor_data_list"].as_anchor_list(
                         self._to_object
                     )
                     return ImmutableLazyDataList(response["response"], self._to_object)
 
-                predicate.iteration_type = IterationType.ENTRY
-                holder = PagingPredicateHolder.of(predicate, self._to_data)
-                request = codec.encode_request(self.name, holder)
+                request = map_entries_with_paging_predicate_codec.encode_request(self.name, holder)
             else:
-                codec = map_entries_with_predicate_codec
+                try:
+                    predicate_data = self._to_data(predicate)
+                except SchemaNotReplicatedError as e:
+                    return self._send_schema_and_retry(e, self.entry_set, predicate)
 
                 def handler(message):
-                    return ImmutableLazyDataList(codec.decode_response(message), self._to_object)
+                    return ImmutableLazyDataList(
+                        map_entries_with_predicate_codec.decode_response(message), self._to_object
+                    )
 
-                predicate_data = self._to_data(predicate)
-                request = codec.encode_request(self.name, predicate_data)
+                request = map_entries_with_predicate_codec.encode_request(self.name, predicate_data)
         else:
-            codec = map_entry_set_codec
 
             def handler(message):
-                return ImmutableLazyDataList(codec.decode_response(message), self._to_object)
+                return ImmutableLazyDataList(
+                    map_entry_set_codec.decode_response(message), self._to_object
+                )
 
-            request = codec.encode_request(self.name)
+            request = map_entry_set_codec.encode_request(self.name)
 
         return self._invoke(request, handler)
 
@@ -501,7 +603,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             ``True`` if the key is evicted, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
-        key_data = self._to_data(key)
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.evict, key)
+
         return self._evict_internal(key_data)
 
     def evict_all(self) -> Future[None]:
@@ -532,25 +638,35 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             entry process.
         """
         if predicate:
+            try:
+                entry_processor_data = self._to_data(entry_processor)
+                predicate_data = self._to_data(predicate)
+            except SchemaNotReplicatedError as e:
+                return self._send_schema_and_retry(
+                    e, self.execute_on_entries, entry_processor, predicate
+                )
 
             def handler(message):
                 return ImmutableLazyDataList(
                     map_execute_with_predicate_codec.decode_response(message), self._to_object
                 )
 
-            entry_processor_data = self._to_data(entry_processor)
-            predicate_data = self._to_data(predicate)
             request = map_execute_with_predicate_codec.encode_request(
                 self.name, entry_processor_data, predicate_data
             )
         else:
+            try:
+                entry_processor_data = self._to_data(entry_processor)
+            except SchemaNotReplicatedError as e:
+                return self._send_schema_and_retry(
+                    e, self.execute_on_entries, entry_processor, predicate
+                )
 
             def handler(message):
                 return ImmutableLazyDataList(
                     map_execute_on_all_keys_codec.decode_response(message), self._to_object
                 )
 
-            entry_processor_data = self._to_data(entry_processor)
             request = map_execute_on_all_keys_codec.encode_request(self.name, entry_processor_data)
 
         return self._invoke(request, handler)
@@ -572,8 +688,13 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             Result of entry process.
         """
         check_not_none(key, "key can't be None")
-        key_data = self._to_data(key)
-        return self._execute_on_key_internal(key_data, entry_processor)
+        try:
+            key_data = self._to_data(key)
+            entry_processor_data = self._to_data(entry_processor)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.execute_on_key, key, entry_processor)
+
+        return self._execute_on_key_internal(key_data, entry_processor_data)
 
     def execute_on_keys(
         self, keys: typing.Sequence[KeyType], entry_processor: typing.Any
@@ -594,20 +715,24 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             List of map entries which includes the keys and the results of the
             entry process.
         """
-        key_list = []
-        for key in keys:
-            check_not_none(key, "key can't be None")
-            key_list.append(self._to_data(key))
-
         if len(keys) == 0:
             return ImmediateFuture([])
+
+        try:
+            key_list = []
+            for key in keys:
+                check_not_none(key, "key can't be None")
+                key_list.append(self._to_data(key))
+
+            entry_processor_data = self._to_data(entry_processor)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.execute_on_keys, keys, entry_processor)
 
         def handler(message):
             return ImmutableLazyDataList(
                 map_execute_on_keys_codec.decode_response(message), self._to_object
             )
 
-        entry_processor_data = self._to_data(entry_processor)
         request = map_execute_on_keys_codec.encode_request(
             self.name, entry_processor_data, key_list
         )
@@ -634,7 +759,10 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             key: The key to lock.
         """
         check_not_none(key, "key can't be None")
-        key_data = self._to_data(key)
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.force_unlock, key)
 
         request = map_force_unlock_codec.encode_request(
             self.name, key_data, self._reference_id_generator.get_and_increment()
@@ -666,7 +794,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             The value for the specified key.
         """
         check_not_none(key, "key can't be None")
-        key_data = self._to_data(key)
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.get, key)
+
         return self._get_internal(key_data)
 
     def get_all(self, keys: typing.Sequence[KeyType]) -> Future[typing.Dict[KeyType, ValueType]]:
@@ -693,11 +825,15 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             return ImmediateFuture({})
 
         partition_service = self._context.partition_service
-        partition_to_keys = {}
+        partition_to_keys: typing.Dict[int, typing.Dict[KeyType, Data]] = {}
 
         for key in keys:
             check_not_none(key, "key can't be None")
-            key_data = self._to_data(key)
+            try:
+                key_data = self._to_data(key)
+            except SchemaNotReplicatedError as e:
+                return self._send_schema_and_retry(e, self.get_all, keys)
+
             partition_id = partition_service.get_partition_id(key_data)
             try:
                 partition_to_keys[partition_id][key] = key_data
@@ -727,6 +863,10 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             EntryView of the specified key.
         """
         check_not_none(key, "key can't be None")
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.get_entry_view, key)
 
         def handler(message):
             response = map_get_entry_view_codec.decode_response(message)
@@ -738,7 +878,6 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             entry_view.value = self._to_object(entry_view.value)
             return entry_view
 
-        key_data = self._to_data(key)
         request = map_get_entry_view_codec.encode_request(self.name, key_data, thread_id())
         return self._invoke_on_key(request, key_data, handler)
 
@@ -767,7 +906,10 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             ``True`` if lock is acquired, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
-        key_data = self._to_data(key)
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.is_locked, key)
 
         request = map_is_locked_codec.encode_request(self.name, key_data)
         return self._invoke_on_key(request, key_data, map_is_locked_codec.decode_response)
@@ -787,34 +929,42 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             A list of the clone of the keys.
         """
         if predicate:
-            if isinstance(predicate, PagingPredicate):
-                codec = map_key_set_with_paging_predicate_codec
+            if isinstance(predicate, _PagingPredicate):
+                predicate.iteration_type = IterationType.KEY
+
+                try:
+                    holder = PagingPredicateHolder.of(predicate, self._to_data)
+                except SchemaNotReplicatedError as e:
+                    return self._send_schema_and_retry(e, self.key_set, predicate)
 
                 def handler(message):
-                    response = codec.decode_response(message)
+                    response = map_key_set_with_paging_predicate_codec.decode_response(message)
                     predicate.anchor_list = response["anchor_data_list"].as_anchor_list(
                         self._to_object
                     )
                     return ImmutableLazyDataList(response["response"], self._to_object)
 
-                predicate.iteration_type = IterationType.KEY
-                holder = PagingPredicateHolder.of(predicate, self._to_data)
-                request = codec.encode_request(self.name, holder)
+                request = map_key_set_with_paging_predicate_codec.encode_request(self.name, holder)
             else:
-                codec = map_key_set_with_predicate_codec
+                try:
+                    predicate_data = self._to_data(predicate)
+                except SchemaNotReplicatedError as e:
+                    return self._send_schema_and_retry(e, self.key_set, predicate)
 
                 def handler(message):
-                    return ImmutableLazyDataList(codec.decode_response(message), self._to_object)
+                    return ImmutableLazyDataList(
+                        map_key_set_with_predicate_codec.decode_response(message), self._to_object
+                    )
 
-                predicate_data = self._to_data(predicate)
-                request = codec.encode_request(self.name, predicate_data)
+                request = map_key_set_with_predicate_codec.encode_request(self.name, predicate_data)
         else:
-            codec = map_key_set_codec
 
             def handler(message):
-                return ImmutableLazyDataList(codec.decode_response(message), self._to_object)
+                return ImmutableLazyDataList(
+                    map_key_set_codec.decode_response(message), self._to_object
+                )
 
-            request = codec.encode_request(self.name)
+            request = map_key_set_codec.encode_request(self.name)
 
         return self._invoke(request, handler)
 
@@ -831,11 +981,15 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
                 MapLoader.
         """
         if keys:
-            key_data_list = list(map(self._to_data, keys))
+            try:
+                key_data_list = [self._to_data(key) for key in keys]
+            except SchemaNotReplicatedError as e:
+                return self._send_schema_and_retry(e, self.load_all, keys, replace_existing_values)
+
             return self._load_all_internal(key_data_list, replace_existing_values)
-        else:
-            request = map_load_all_codec.encode_request(self.name, replace_existing_values)
-            return self._invoke(request)
+
+        request = map_load_all_codec.encode_request(self.name, replace_existing_values)
+        return self._invoke(request)
 
     def lock(self, key: KeyType, lease_time: float = None) -> Future[None]:
         """Acquires the lock for the specified key infinitely or for the
@@ -869,7 +1023,10 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             lease_time: Time in seconds to wait before releasing the lock.
         """
         check_not_none(key, "key can't be None")
-        key_data = self._to_data(key)
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.lock, key, lease_time)
 
         request = map_lock_codec.encode_request(
             self.name,
@@ -897,29 +1054,38 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             The result of the projection.
         """
         check_not_none(projection, "Projection can't be none")
-        projection_data = self._to_data(projection)
 
         if predicate:
-            if isinstance(predicate, PagingPredicate):
+            if isinstance(predicate, _PagingPredicate):
                 raise AssertionError("Paging predicate is not supported.")
+
+            try:
+                projection_data = self._to_data(projection)
+                predicate_data = self._to_data(predicate)
+            except SchemaNotReplicatedError as e:
+                return self._send_schema_and_retry(e, self.project, projection, predicate)
 
             def handler(message):
                 return ImmutableLazyDataList(
                     map_project_with_predicate_codec.decode_response(message), self._to_object
                 )
 
-            predicate_data = self._to_data(predicate)
             request = map_project_with_predicate_codec.encode_request(
                 self.name, projection_data, predicate_data
             )
-            return self._invoke(request, handler)
+        else:
+            try:
+                projection_data = self._to_data(projection)
+            except SchemaNotReplicatedError as e:
+                return self._send_schema_and_retry(e, self.project, projection, predicate)
 
-        def handler(message):
-            return ImmutableLazyDataList(
-                map_project_codec.decode_response(message), self._to_object
-            )
+            def handler(message):
+                return ImmutableLazyDataList(
+                    map_project_codec.decode_response(message), self._to_object
+                )
 
-        request = map_project_codec.encode_request(self.name, projection_data)
+            request = map_project_codec.encode_request(self.name, projection_data)
+
         return self._invoke(request, handler)
 
     def put(
@@ -958,8 +1124,12 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
-        key_data = self._to_data(key)
-        value_data = self._to_data(value)
+        try:
+            key_data = self._to_data(key)
+            value_data = self._to_data(value)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.put, key, value, ttl, max_idle)
+
         return self._put_internal(key_data, value_data, ttl, max_idle)
 
     def put_all(self, map: typing.Dict[KeyType, ValueType]) -> Future[None]:
@@ -976,12 +1146,16 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             return ImmediateFuture(None)
 
         partition_service = self._context.partition_service
-        partition_map = {}
+        partition_map: typing.Dict[int, typing.List[typing.Tuple[Data, Data]]] = {}
 
         for key, value in map.items():
             check_not_none(key, "key can't be None")
             check_not_none(value, "value can't be None")
-            entry = (self._to_data(key), self._to_data(value))
+            try:
+                entry = (self._to_data(key), self._to_data(value))
+            except SchemaNotReplicatedError as e:
+                return self._send_schema_and_retry(e, self.put_all, map)
+
             partition_id = partition_service.get_partition_id(entry[0])
             try:
                 partition_map[partition_id].append(entry)
@@ -1041,8 +1215,12 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
 
-        key_data = self._to_data(key)
-        value_data = self._to_data(value)
+        try:
+            key_data = self._to_data(key)
+            value_data = self._to_data(value)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.put_if_absent, key, value, ttl, max_idle)
+
         return self._put_if_absent_internal(key_data, value_data, ttl, max_idle)
 
     def put_transient(
@@ -1071,8 +1249,12 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
 
-        key_data = self._to_data(key)
-        value_data = self._to_data(value)
+        try:
+            key_data = self._to_data(key)
+            value_data = self._to_data(value)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.put_transient, key, value, ttl, max_idle)
+
         return self._put_transient_internal(key_data, value_data, ttl, max_idle)
 
     def remove(self, key: KeyType) -> Future[typing.Optional[ValueType]]:
@@ -1094,7 +1276,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             no mapping for key.
         """
         check_not_none(key, "key can't be None")
-        key_data = self._to_data(key)
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.remove, key)
+
         return self._remove_internal(key_data)
 
     def remove_if_same(self, key: KeyType, value: ValueType) -> Future[bool]:
@@ -1124,9 +1310,12 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
+        try:
+            key_data = self._to_data(key)
+            value_data = self._to_data(value)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.remove_if_same, key, value)
 
-        key_data = self._to_data(key)
-        value_data = self._to_data(value)
         return self._remove_if_same_internal_(key_data, value_data)
 
     def remove_entry_listener(self, registration_id: str) -> Future[bool]:
@@ -1187,9 +1376,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
-
-        key_data = self._to_data(key)
-        value_data = self._to_data(value)
+        try:
+            key_data = self._to_data(key)
+            value_data = self._to_data(value)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.replace, key, value)
 
         return self._replace_internal(key_data, value_data)
 
@@ -1225,9 +1416,12 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         check_not_none(old_value, "old_value can't be None")
         check_not_none(new_value, "new_value can't be None")
 
-        key_data = self._to_data(key)
-        old_value_data = self._to_data(old_value)
-        new_value_data = self._to_data(new_value)
+        try:
+            key_data = self._to_data(key)
+            old_value_data = self._to_data(old_value)
+            new_value_data = self._to_data(new_value)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.replace_if_same, key, old_value, new_value)
 
         return self._replace_if_same_internal(key_data, old_value_data, new_value_data)
 
@@ -1259,8 +1453,12 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
-        key_data = self._to_data(key)
-        value_data = self._to_data(value)
+        try:
+            key_data = self._to_data(key)
+            value_data = self._to_data(value)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.set, key, value, ttl, max_idle)
+
         return self._set_internal(key_data, value_data, ttl, max_idle)
 
     def set_ttl(self, key: KeyType, ttl: float) -> Future[None]:
@@ -1278,7 +1476,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         """
         check_not_none(key, "key can't be None")
         check_not_none(ttl, "ttl can't be None")
-        key_data = self._to_data(key)
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.set_ttl, key, ttl)
+
         return self._set_ttl_internal(key_data, ttl)
 
     def size(self) -> Future[int]:
@@ -1316,8 +1518,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             ``True`` if the lock was acquired, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.try_lock, key, lease_time, timeout)
 
-        key_data = self._to_data(key)
         request = map_try_lock_codec.encode_request(
             self.name,
             key_data,
@@ -1353,9 +1558,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
-
-        key_data = self._to_data(key)
-        value_data = self._to_data(value)
+        try:
+            key_data = self._to_data(key)
+            value_data = self._to_data(value)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.try_put, key, value, timeout)
 
         return self._try_put_internal(key_data, value_data, timeout)
 
@@ -1374,8 +1581,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             ``True`` if the remove is successful, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.try_remove, key, timeout)
 
-        key_data = self._to_data(key)
         return self._try_remove_internal(key_data, timeout)
 
     def unlock(self, key: KeyType) -> Future[None]:
@@ -1389,8 +1599,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             key: The key to lock.
         """
         check_not_none(key, "key can't be None")
+        try:
+            key_data = self._to_data(key)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.unlock, key)
 
-        key_data = self._to_data(key)
         request = map_unlock_codec.encode_request(
             self.name, key_data, thread_id(), self._reference_id_generator.get_and_increment()
         )
@@ -1411,34 +1624,42 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             A list of clone of the values contained in this map.
         """
         if predicate:
-            if isinstance(predicate, PagingPredicate):
-                codec = map_values_with_paging_predicate_codec
+            if isinstance(predicate, _PagingPredicate):
+                predicate.iteration_type = IterationType.VALUE
+
+                try:
+                    holder = PagingPredicateHolder.of(predicate, self._to_data)
+                except SchemaNotReplicatedError as e:
+                    return self._send_schema_and_retry(e, self.values, predicate)
 
                 def handler(message):
-                    response = codec.decode_response(message)
+                    response = map_values_with_paging_predicate_codec.decode_response(message)
                     predicate.anchor_list = response["anchor_data_list"].as_anchor_list(
                         self._to_object
                     )
                     return ImmutableLazyDataList(response["response"], self._to_object)
 
-                predicate.iteration_type = IterationType.VALUE
-                holder = PagingPredicateHolder.of(predicate, self._to_data)
-                request = codec.encode_request(self.name, holder)
+                request = map_values_with_paging_predicate_codec.encode_request(self.name, holder)
             else:
-                codec = map_values_with_predicate_codec
+                try:
+                    predicate_data = self._to_data(predicate)
+                except SchemaNotReplicatedError as e:
+                    return self._send_schema_and_retry(e, self.values, predicate)
 
                 def handler(message):
-                    return ImmutableLazyDataList(codec.decode_response(message), self._to_object)
+                    return ImmutableLazyDataList(
+                        map_values_with_predicate_codec.decode_response(message), self._to_object
+                    )
 
-                predicate_data = self._to_data(predicate)
-                request = codec.encode_request(self.name, predicate_data)
+                request = map_values_with_predicate_codec.encode_request(self.name, predicate_data)
         else:
-            codec = map_values_codec
 
             def handler(message):
-                return ImmutableLazyDataList(codec.decode_response(message), self._to_object)
+                return ImmutableLazyDataList(
+                    map_values_codec.decode_response(message), self._to_object
+                )
 
-            request = codec.encode_request(self.name)
+            request = map_values_codec.encode_request(self.name)
 
         return self._invoke(request, handler)
 
@@ -1584,11 +1805,10 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         )
         return self._invoke(request)
 
-    def _execute_on_key_internal(self, key_data, entry_processor):
+    def _execute_on_key_internal(self, key_data, entry_processor_data):
         def handler(message):
             return self._to_object(map_execute_on_key_codec.decode_response(message))
 
-        entry_processor_data = self._to_data(entry_processor)
         request = map_execute_on_key_codec.encode_request(
             self.name, entry_processor_data, key_data, thread_id()
         )
@@ -1751,9 +1971,11 @@ class MapFeatNearCache(Map[KeyType, ValueType]):
             key_data_list, replace_existing_values
         )
 
-    def _execute_on_key_internal(self, key_data, entry_processor):
+    def _execute_on_key_internal(self, key_data, entry_processor_data):
         self._invalidate_cache(key_data)
-        return super(MapFeatNearCache, self)._execute_on_key_internal(key_data, entry_processor)
+        return super(MapFeatNearCache, self)._execute_on_key_internal(
+            key_data, entry_processor_data
+        )
 
     def _evict_internal(self, key_data):
         self._invalidate_cache(key_data)

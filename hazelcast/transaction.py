@@ -1,6 +1,7 @@
 import logging
 import threading
 import time
+import typing
 import uuid
 
 from hazelcast.errors import TransactionError, IllegalStateError
@@ -96,10 +97,10 @@ class Transaction:
     """
 
     state = _STATE_NOT_STARTED
-    id: uuid.UUID = None
-    start_time: float = None
+    id: typing.Optional[uuid.UUID] = None
+    start_time: typing.Optional[float] = None
     _locals = threading.local()
-    thread_id: int = None
+    thread_id: typing.Optional[int] = None
 
     def __init__(self, context, connection, timeout, durability, transaction_type):
         self._context = context

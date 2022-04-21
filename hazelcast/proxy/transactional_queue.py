@@ -9,6 +9,7 @@ from hazelcast.protocol.codec import (
 )
 from hazelcast.proxy.base import TransactionalProxy
 from hazelcast.types import ItemType
+from hazelcast.serialization.compact import SchemaNotReplicatedError
 from hazelcast.util import check_not_none, to_millis, thread_id
 
 
@@ -28,8 +29,12 @@ class TransactionalQueue(TransactionalProxy, typing.Generic[ItemType]):
             otherwise.
         """
         check_not_none(item, "item can't be none")
+        try:
+            item_data = self._to_data(item)
+        except SchemaNotReplicatedError as e:
+            self._send_schema(e)
+            return self.offer(item, timeout)
 
-        item_data = self._to_data(item)
         request = transactional_queue_offer_codec.encode_request(
             self.name, self.transaction.id, thread_id(), item_data, to_millis(timeout)
         )

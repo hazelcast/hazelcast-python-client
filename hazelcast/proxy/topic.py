@@ -8,6 +8,7 @@ from hazelcast.protocol.codec import (
 )
 from hazelcast.proxy.base import PartitionSpecificProxy, TopicMessage
 from hazelcast.types import MessageType
+from hazelcast.serialization.compact import SchemaNotReplicatedError
 
 
 class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]):
@@ -41,10 +42,10 @@ class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]
         codec = topic_add_message_listener_codec
         request = codec.encode_request(self.name, self._is_smart)
 
-        def handle(item, publish_time, uuid):
+        def handle(item_data, publish_time, uuid):
             member = self._context.cluster_service.get_member(uuid)
             item_event = TopicMessage(
-                self.name, item, publish_time / 1000.0, member, self._to_object
+                self.name, self._to_object(item_data), publish_time / 1000.0, member
             )
             on_message(item_event)
 
@@ -61,7 +62,11 @@ class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]
         Args:
             message: The message to be published.
         """
-        message_data = self._to_data(message)
+        try:
+            message_data = self._to_data(message)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.publish, message)
+
         request = topic_publish_codec.encode_request(self.name, message_data)
         return self._invoke(request)
 

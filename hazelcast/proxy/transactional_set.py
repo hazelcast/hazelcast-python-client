@@ -7,6 +7,7 @@ from hazelcast.protocol.codec import (
 )
 from hazelcast.proxy.base import TransactionalProxy
 from hazelcast.types import ItemType
+from hazelcast.serialization.compact import SchemaNotReplicatedError
 from hazelcast.util import check_not_none, thread_id
 
 
@@ -24,7 +25,12 @@ class TransactionalSet(TransactionalProxy, typing.Generic[ItemType]):
             ``True`` if item is added successfully, ``False`` otherwise.
         """
         check_not_none(item, "item can't be none")
-        item_data = self._to_data(item)
+        try:
+            item_data = self._to_data(item)
+        except SchemaNotReplicatedError as e:
+            self._send_schema(e)
+            return self.add(item)
+
         request = transactional_set_add_codec.encode_request(
             self.name, self.transaction.id, thread_id(), item_data
         )
@@ -41,7 +47,12 @@ class TransactionalSet(TransactionalProxy, typing.Generic[ItemType]):
             ``True`` if item is remove successfully, ``False`` otherwise.
         """
         check_not_none(item, "item can't be none")
-        item_data = self._to_data(item)
+        try:
+            item_data = self._to_data(item)
+        except SchemaNotReplicatedError as e:
+            self._send_schema(e)
+            return self.remove(item)
+
         request = transactional_set_remove_codec.encode_request(
             self.name, self.transaction.id, thread_id(), item_data
         )
