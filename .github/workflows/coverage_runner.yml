@@ -59,18 +59,16 @@ jobs:
         if: github.event_name == 'pull_request_target'
         uses: actions/checkout@v2
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
           
-      - name: Checkout repository for push event and PR coming from community
-        if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' }}
+      - name: Checkout repository for push event
+        if: github.event_name == 'push'
         uses: actions/checkout@v2
-        
-      # pull/$pr_number/head:$branch_name is creating a new branch which has head of the PR       
-      - name: Fetch PR coming from community.
+              
+      - name: Checkout PR coming from community.
         if: github.event_name == 'workflow_dispatch'
-        run: |
-          git fetch origin pull/${{github.event.inputs.pr_number }}/head:pr_head
-          git checkout pr_head
+        with:
+          ref: refs/pull/${{ github.event.inputs.pr_number }}/merge
           
       - name: Install dependencies
         run: |
