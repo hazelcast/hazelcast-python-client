@@ -825,7 +825,7 @@ Semaphore data structure has two variations:
   they will not be automatically released. You can use the sessionless
   CP Semaphore implementation by enabling JDK compatibility
   ``jdk-compatible`` server-side setting. Refer to `Semaphore configuration
-  <https://docs.hazelcast.com/hazelcast/latest/cp-subsystem/configuration#semaphore-configuration>`__
+  <https://docs.hazelcast.com/hazelcast/latest/cp-subsystem/configuration#semaphore-config>`__
   documentation for more details.
 
 Using CountDownLatch
