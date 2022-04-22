@@ -31,7 +31,7 @@ Hazelcast
 ~~~~~~~~~
 
 Hazelcast Python client requires a working Hazelcast cluster to run.
-This cluster handles the storage and manipulation of the user data.
+This cluster handles the storage and manipulation of the user data..
 
 A Hazelcast cluster consists of one or more cluster members. These
 members generally run on multiple virtual or physical machines and are
