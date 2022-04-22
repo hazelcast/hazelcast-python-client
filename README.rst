@@ -1,4 +1,4 @@
-Hazelcast Python Client
+Hazelcast Python Client.
 =======================
 
 .. image:: https://img.shields.io/pypi/v/hazelcast-python-client
