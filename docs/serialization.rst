@@ -1,3 +1,4 @@
+
 Serialization
 =============
 
@@ -149,19 +150,19 @@ Then, a serializer for it can be implemented as below:
     from hazelcast.serialization.api import CompactSerializer, CompactWriter, CompactReader, CompactSerializableClass
 
     class EmployeeSerializer(CompactSerializer[Employee]):
-        def read(self, reader: CompactReader) -> Employee:
+        def read(self, reader: CompactReader):
             name = reader.read_string("name")
             age = reader.read_int32("age")
             return Employee(name, age)
 
-        def write(self, writer: CompactWriter, obj: Employee) -> None:
+        def write(self, writer: CompactWriter, obj: Employee):
             writer.write_string("name", obj.name)
             writer.write_int32("age", obj.age)
 
-        def get_type_name(self) -> str:
+        def get_type_name(self):
             return "employee"
 
-        def get_class(self) -> CompactSerializableClass:
+        def get_class(self):
             return Employee
 
 The last step is to register the serializer in the client configuration.
