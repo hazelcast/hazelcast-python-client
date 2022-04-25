@@ -146,7 +146,7 @@ Then, a serializer for it can be implemented as below:
 
 .. code:: python
 
-    from hazelcast.serialization.api import CompactSerializer, CompactWriter, CompactReader, CompactSerializableClass
+    from hazelcast.serialization.api import CompactSerializer, CompactWriter, CompactReader
 
     class EmployeeSerializer(CompactSerializer[Employee]):
         def read(self, reader: CompactReader):
