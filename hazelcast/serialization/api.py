@@ -3060,11 +3060,11 @@ class CompactSerializer(typing.Generic[CompactSerializableClass], abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_class(self) -> CompactSerializableClass:
-        """Returns the class for this serializer.
+    def get_class(self) -> typing.Type[CompactSerializableClass]:
+        """Returns the class that this serializer reads or writes.
 
         Returns:
-            The class for this serializer.
+            The class that this serializer reads or writes.
         """
 
     @abc.abstractmethod
