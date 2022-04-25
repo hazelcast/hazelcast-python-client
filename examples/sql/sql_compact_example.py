@@ -5,7 +5,6 @@ from hazelcast.serialization.api import (
     CompactSerializer,
     CompactWriter,
     CompactReader,
-    CompactSerializableClass,
 )
 
 
@@ -16,19 +15,19 @@ class Person:
 
 
 class PersonSerializer(CompactSerializer[Person]):
-    def read(self, reader: CompactReader) -> Person:
+    def read(self, reader: CompactReader):
         name = reader.read_string("name")
         age = reader.read_int32("age")
         return Person(name, age)
 
-    def write(self, writer: CompactWriter, obj: Person) -> None:
+    def write(self, writer: CompactWriter, obj: Person):
         writer.write_string("name", obj.name)
         writer.write_int32("age", obj.age)
 
-    def get_type_name(self) -> str:
+    def get_type_name(self):
         return "Person"
 
-    def get_class(self) -> CompactSerializableClass:
+    def get_class(self):
         return Person
 
 
