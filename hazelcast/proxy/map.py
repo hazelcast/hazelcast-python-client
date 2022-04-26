@@ -215,7 +215,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             )
             response_decoder = with_key_and_predicate_codec.decode_response
             event_message_handler = with_key_and_predicate_codec.handle
-        elif key is not None and not predicate:
+        elif key is not None and predicate is not None:
             try:
                 key_data = self._to_data(key)
             except SchemaNotReplicatedError as e:
@@ -242,7 +242,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             )
             response_decoder = with_key_codec.decode_response
             event_message_handler = with_key_codec.handle
-        elif key is None and predicate:
+        elif key is None and predicate is not None:
             try:
                 predicate = self._to_data(predicate)
             except SchemaNotReplicatedError as e:

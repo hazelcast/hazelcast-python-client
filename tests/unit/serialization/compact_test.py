@@ -132,7 +132,10 @@ class SchemaTest(unittest.TestCase):
         var_sized_fields = []
         fix_sized_fields = []
         for field in fields:
-            if FIELD_OPERATIONS[field.kind].is_var_sized():
+            op = FIELD_OPERATIONS[field.kind]
+            if op is None:
+                continue
+            if op.is_var_sized():
                 var_sized_fields.append(field)
             else:
                 fix_sized_fields.append(field)
@@ -176,7 +179,10 @@ class SchemaWriterTest(unittest.TestCase):
         fields = []
         for kind in FieldKind:
             name = str(uuid.uuid4())
-            getattr(writer, f"write_{kind.name.lower()}")(name, None)
+            fun = getattr(writer, f"write_{kind.name.lower()}", None)
+            if fun is None:
+                continue
+            fun(name, None)
             fields.append((name, kind))
 
         schema = writer.build()
