@@ -611,6 +611,12 @@ class DefaultCompactReader(CompactReader):
         # from inp can start from the correct position
         inp.set_position(end_position)
 
+    def get_field_kind(self, field_name) -> "FieldKind":
+        field = self._schema.fields.get(field_name)
+        if not field:
+            return FieldKind.NOT_AVAILABLE
+        return field.kind
+
     def read_boolean(self, field_name: str) -> bool:
         field = self._get_field(field_name)
         kind = field.kind
@@ -1754,13 +1760,14 @@ class Schema:
 
         for field in self.fields_list:
             kind = field.kind
-            if FIELD_OPERATIONS[kind].is_var_sized():
+            if kind < 0 or kind >= FieldKind.NOT_AVAILABLE:
+                raise HazelcastSerializationError(f"Invalid field kind: {kind}")
+            if FIELD_OPERATIONS[field.kind].is_var_sized():
                 var_sized_fields.append(field)
+            elif FieldKind.BOOLEAN == kind:
+                bool_fields.append(field)
             else:
-                if FieldKind.BOOLEAN == kind:
-                    bool_fields.append(field)
-                else:
-                    fix_sized_fields.append(field)
+                fix_sized_fields.append(field)
 
         fix_sized_fields.sort(
             key=lambda f: FIELD_OPERATIONS[f.kind].size_in_bytes(),
@@ -2038,6 +2045,7 @@ class FieldKind(enum.IntEnum):
     ARRAY_OF_NULLABLE_FLOAT32 = 43
     NULLABLE_FLOAT64 = 44
     ARRAY_OF_NULLABLE_FLOAT64 = 45
+    NOT_AVAILABLE = 46
 
 
 class FieldKindOperations(abc.ABC):
@@ -2272,4 +2280,5 @@ FIELD_OPERATIONS: typing.List[typing.Optional[FieldKindOperations]] = [
     ArrayOfNullableFloat32Operations(),
     NullableFloat64Operations(),
     ArrayOfNullableFloat64Operations(),
+    None,
 ]

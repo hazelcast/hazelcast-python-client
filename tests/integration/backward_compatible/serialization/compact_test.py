@@ -50,7 +50,7 @@ except ImportError:
 
 
 if _COMPACT_AVAILABLE:
-    FIELD_KINDS = [kind for kind in FieldKind]
+    FIELD_KINDS = [kind for kind in FieldKind if FIELD_OPERATIONS[kind] is not None]
     FIX_SIZED_FIELD_KINDS = [
         kind for kind in FIELD_KINDS if not FIELD_OPERATIONS[kind].is_var_sized()
     ]

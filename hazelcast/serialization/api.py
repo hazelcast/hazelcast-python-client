@@ -1175,6 +1175,17 @@ class CompactReader(abc.ABC):
     """
 
     @abc.abstractmethod
+    def get_field_kind(self, field_name):
+        """Returns the FieldKind for the given field.
+
+        Args:
+            field_name: Name of the field.
+
+        Returns:
+              Field kind for the given field. or FieldKind.NOT_AVAILABLE if the field does not exist.
+        """
+
+    @abc.abstractmethod
     def read_boolean(self, field_name: str) -> bool:
         """Reads a boolean.
 
@@ -1188,20 +1199,6 @@ class CompactReader(abc.ABC):
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
                 defined in the schema.
-        """
-
-    @abc.abstractmethod
-    def read_boolean_or_default(self, field_name: str, default: bool) -> bool:
-        """Reads a boolean or returns the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
         """
 
     @abc.abstractmethod
@@ -1221,22 +1218,6 @@ class CompactReader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def read_nullable_boolean_or_default(
-        self, field_name: str, default: typing.Optional[bool]
-    ) -> typing.Optional[bool]:
-        """Reads a nullable boolean or returns the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
-        """
-
-    @abc.abstractmethod
     def read_int8(self, field_name: str) -> int:
         """Reads an 8-bit two's complement signed integer.
 
@@ -1250,21 +1231,6 @@ class CompactReader(abc.ABC):
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
                 defined in the schema.
-        """
-
-    @abc.abstractmethod
-    def read_int8_or_default(self, field_name: str, default: int) -> int:
-        """Reads an 8-bit two's complement signed integer or returns the
-        default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
         """
 
     @abc.abstractmethod
@@ -1284,23 +1250,6 @@ class CompactReader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def read_nullable_int8_or_default(
-        self, field_name: str, default: typing.Optional[int]
-    ) -> typing.Optional[int]:
-        """Reads a nullable 8-bit two's complement signed integer or returns
-        the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
-        """
-
-    @abc.abstractmethod
     def read_int16(self, field_name: str) -> int:
         """Reads a 16-bit two's complement signed integer.
 
@@ -1314,21 +1263,6 @@ class CompactReader(abc.ABC):
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
                 defined in the schema.
-        """
-
-    @abc.abstractmethod
-    def read_int16_or_default(self, field_name: str, default: int) -> int:
-        """Reads a 16-bit two's complement signed integer or returns the
-        default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
         """
 
     @abc.abstractmethod
@@ -1348,23 +1282,6 @@ class CompactReader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def read_nullable_int16_or_default(
-        self, field_name: str, default: typing.Optional[int]
-    ) -> typing.Optional[int]:
-        """Reads a nullable 16-bit two's complement signed integer or returns
-        the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
-        """
-
-    @abc.abstractmethod
     def read_int32(self, field_name: str) -> int:
         """Reads a 32-bit two's complement signed integer.
 
@@ -1378,21 +1295,6 @@ class CompactReader(abc.ABC):
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
                 defined in the schema.
-        """
-
-    @abc.abstractmethod
-    def read_int32_or_default(self, field_name: str, default: int) -> int:
-        """Reads a 32-bit two's complement signed integer or returns the
-        default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
         """
 
     @abc.abstractmethod
@@ -1412,23 +1314,6 @@ class CompactReader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def read_nullable_int32_or_default(
-        self, field_name: str, default: typing.Optional[int]
-    ) -> typing.Optional[int]:
-        """Reads a nullable 32-bit two's complement signed integer or returns
-        the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
-        """
-
-    @abc.abstractmethod
     def read_int64(self, field_name: str) -> int:
         """Reads a 64-bit two's complement signed integer.
 
@@ -1442,21 +1327,6 @@ class CompactReader(abc.ABC):
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
                 defined in the schema.
-        """
-
-    @abc.abstractmethod
-    def read_int64_or_default(self, field_name: str, default: int) -> int:
-        """Reads a 64-bit two's complement signed integer or returns the
-        default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
         """
 
     @abc.abstractmethod
@@ -1476,23 +1346,6 @@ class CompactReader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def read_nullable_int64_or_default(
-        self, field_name: str, default: typing.Optional[int]
-    ) -> typing.Optional[int]:
-        """Reads a nullable 64-bit two's complement signed integer or returns
-        the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
-        """
-
-    @abc.abstractmethod
     def read_float32(self, field_name: str) -> float:
         """Reads a 32-bit IEEE 754 floating point number.
 
@@ -1506,21 +1359,6 @@ class CompactReader(abc.ABC):
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
                 defined in the schema.
-        """
-
-    @abc.abstractmethod
-    def read_float32_or_default(self, field_name: str, default: float) -> float:
-        """Reads a 32-bit IEEE 754 floating point number or returns the
-        default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
         """
 
     @abc.abstractmethod
@@ -1540,23 +1378,6 @@ class CompactReader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def read_nullable_float32_or_default(
-        self, field_name: str, default: typing.Optional[float]
-    ) -> typing.Optional[float]:
-        """Reads a nullable 32-bit IEEE 754 floating point number or returns
-        the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
-        """
-
-    @abc.abstractmethod
     def read_float64(self, field_name: str) -> float:
         """Reads a 64-bit IEEE 754 floating point number.
 
@@ -1570,21 +1391,6 @@ class CompactReader(abc.ABC):
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
                 defined in the schema.
-        """
-
-    @abc.abstractmethod
-    def read_float64_or_default(self, field_name: str, default: float) -> float:
-        """Reads a 64-bit IEEE 754 floating point number or returns the
-        default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
         """
 
     @abc.abstractmethod
@@ -1604,23 +1410,6 @@ class CompactReader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def read_nullable_float64_or_default(
-        self, field_name: str, default: typing.Optional[float]
-    ) -> typing.Optional[float]:
-        """Reads a nullable 64-bit IEEE 754 floating point number or returns
-        the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
-        """
-
-    @abc.abstractmethod
     def read_string(self, field_name: str) -> typing.Optional[str]:
         """Reads an UTF-8 encoded string.
 
@@ -1634,22 +1423,6 @@ class CompactReader(abc.ABC):
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
                 defined in the schema.
-        """
-
-    @abc.abstractmethod
-    def read_string_or_default(
-        self, field_name: str, default: typing.Optional[str]
-    ) -> typing.Optional[str]:
-        """Reads an UTF-8 encoded string or returns the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
         """
 
     @abc.abstractmethod
@@ -1669,23 +1442,6 @@ class CompactReader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def read_decimal_or_default(
-        self, field_name: str, default: typing.Optional[decimal.Decimal]
-    ) -> typing.Optional[decimal.Decimal]:
-        """Reads an arbitrary precision and scale floating point number or
-        returns the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
-        """
-
-    @abc.abstractmethod
     def read_time(self, field_name: str) -> typing.Optional[datetime.time]:
         """Reads a time consisting of hour, minute, second, and nanoseconds.
 
@@ -1699,23 +1455,6 @@ class CompactReader(abc.ABC):
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
                 defined in the schema.
-        """
-
-    @abc.abstractmethod
-    def read_time_or_default(
-        self, field_name: str, default: typing.Optional[datetime.time]
-    ) -> typing.Optional[datetime.time]:
-        """Reads a time consisting of hour, minute, second, and nanoseconds or
-        returns the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
         """
 
     @abc.abstractmethod
@@ -1735,23 +1474,6 @@ class CompactReader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def read_date_or_default(
-        self, field_name: str, default: typing.Optional[datetime.date]
-    ) -> typing.Optional[datetime.date]:
-        """Reads a date consisting of year, month, and day or returns the
-        default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
-        """
-
-    @abc.abstractmethod
     def read_timestamp(self, field_name: str) -> typing.Optional[datetime.datetime]:
         """Reads a timestamp consisting of date and time.
 
@@ -1765,23 +1487,6 @@ class CompactReader(abc.ABC):
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
                 defined in the schema.
-        """
-
-    @abc.abstractmethod
-    def read_timestamp_or_default(
-        self, field_name: str, default: typing.Optional[datetime.datetime]
-    ) -> typing.Optional[datetime.datetime]:
-        """Reads a timestamp consisting of date and time or returns the
-        default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
         """
 
     @abc.abstractmethod
@@ -1802,23 +1507,6 @@ class CompactReader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def read_timestamp_with_timezone_or_default(
-        self, field_name: str, default: typing.Optional[datetime.datetime]
-    ) -> typing.Optional[datetime.datetime]:
-        """Reads a timestamp with timezone consisting of date, time and
-        timezone offset or returns the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
-        """
-
-    @abc.abstractmethod
     def read_compact(self, field_name: str) -> typing.Optional[typing.Any]:
         """Reads a compact object.
 
@@ -1835,22 +1523,6 @@ class CompactReader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def read_compact_or_default(
-        self, field_name: str, default: typing.Optional[typing.Any]
-    ) -> typing.Optional[typing.Any]:
-        """Reads a compact object or returns the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
-        """
-
-    @abc.abstractmethod
     def read_array_of_boolean(self, field_name: str) -> typing.Optional[typing.List[bool]]:
         """Reads an array of booleans.
 
@@ -1864,22 +1536,6 @@ class CompactReader(abc.ABC):
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
                 defined in the schema.
-        """
-
-    @abc.abstractmethod
-    def read_array_of_boolean_or_default(
-        self, field_name: str, default: typing.Optional[typing.List[bool]]
-    ) -> typing.Optional[typing.List[bool]]:
-        """Reads an array of booleans or returns the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
         """
 
     @abc.abstractmethod
@@ -1901,22 +1557,6 @@ class CompactReader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def read_array_of_nullable_boolean_or_default(
-        self, field_name: str, default: typing.Optional[typing.List[typing.Optional[bool]]]
-    ) -> typing.Optional[typing.List[typing.Optional[bool]]]:
-        """Reads an array of nullable booleans or returns the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
-        """
-
-    @abc.abstractmethod
     def read_array_of_int8(self, field_name: str) -> typing.Optional[typing.List[int]]:
         """Reads an array of 8-bit two's complement signed integers.
 
@@ -1930,23 +1570,6 @@ class CompactReader(abc.ABC):
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
                 defined in the schema.
-        """
-
-    @abc.abstractmethod
-    def read_array_of_int8_or_default(
-        self, field_name: str, default: typing.Optional[typing.List[int]]
-    ) -> typing.Optional[typing.List[int]]:
-        """Reads an array of 8-bit two's complement signed integers or returns
-        the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
         """
 
     @abc.abstractmethod
@@ -1968,23 +1591,6 @@ class CompactReader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def read_array_of_nullable_int8_or_default(
-        self, field_name: str, default: typing.Optional[typing.List[typing.Optional[int]]]
-    ) -> typing.Optional[typing.List[typing.Optional[int]]]:
-        """Reads an array of nullable 8-bit two's complement signed integers
-        or returns the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
-        """
-
-    @abc.abstractmethod
     def read_array_of_int16(self, field_name: str) -> typing.Optional[typing.List[int]]:
         """Reads an array of 16-bit two's complement signed integers.
 
@@ -1998,23 +1604,6 @@ class CompactReader(abc.ABC):
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
                 defined in the schema.
-        """
-
-    @abc.abstractmethod
-    def read_array_of_int16_or_default(
-        self, field_name: str, default: typing.Optional[typing.List[int]]
-    ) -> typing.Optional[typing.List[int]]:
-        """Reads an array of 16-bit two's complement signed integers or
-        returns the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
         """
 
     @abc.abstractmethod
@@ -2036,23 +1625,6 @@ class CompactReader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def read_array_of_nullable_int16_or_default(
-        self, field_name: str, default: typing.Optional[typing.List[typing.Optional[int]]]
-    ) -> typing.Optional[typing.List[typing.Optional[int]]]:
-        """Reads an array of nullable 16-bit two's complement signed integers
-        or returns the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
-        """
-
-    @abc.abstractmethod
     def read_array_of_int32(self, field_name: str) -> typing.Optional[typing.List[int]]:
         """Reads an array of 32-bit two's complement signed integers.
 
@@ -2066,23 +1638,6 @@ class CompactReader(abc.ABC):
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
                 defined in the schema.
-        """
-
-    @abc.abstractmethod
-    def read_array_of_int32_or_default(
-        self, field_name: str, default: typing.Optional[typing.List[int]]
-    ) -> typing.Optional[typing.List[int]]:
-        """Reads an array of 32-bit two's complement signed integers or
-        returns the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
         """
 
     @abc.abstractmethod
@@ -2104,23 +1659,6 @@ class CompactReader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def read_array_of_nullable_int32_or_default(
-        self, field_name: str, default: typing.Optional[typing.List[typing.Optional[int]]]
-    ) -> typing.Optional[typing.List[typing.Optional[int]]]:
-        """Reads an array of nullable 32-bit two's complement signed integers
-        or returns the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
-        """
-
-    @abc.abstractmethod
     def read_array_of_int64(self, field_name: str) -> typing.Optional[typing.List[int]]:
         """Reads an array of 64-bit two's complement signed integers.
 
@@ -2134,23 +1672,6 @@ class CompactReader(abc.ABC):
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
                 defined in the schema.
-        """
-
-    @abc.abstractmethod
-    def read_array_of_int64_or_default(
-        self, field_name: str, default: typing.Optional[typing.List[int]]
-    ) -> typing.Optional[typing.List[int]]:
-        """Reads an array of 64-bit two's complement signed integers or
-        returns the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
         """
 
     @abc.abstractmethod
@@ -2172,23 +1693,6 @@ class CompactReader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def read_array_of_nullable_int64_or_default(
-        self, field_name: str, default: typing.Optional[typing.List[typing.Optional[int]]]
-    ) -> typing.Optional[typing.List[typing.Optional[int]]]:
-        """Reads an array of nullable 64-bit two's complement signed integers
-        or returns the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
-        """
-
-    @abc.abstractmethod
     def read_array_of_float32(self, field_name: str) -> typing.Optional[typing.List[float]]:
         """Reads an array of 32-bit IEEE 754 floating point numbers.
 
@@ -2202,23 +1706,6 @@ class CompactReader(abc.ABC):
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
                 defined in the schema.
-        """
-
-    @abc.abstractmethod
-    def read_array_of_float32_or_default(
-        self, field_name: str, default: typing.Optional[typing.List[float]]
-    ) -> typing.Optional[typing.List[float]]:
-        """Reads an array of 32-bit IEEE 754 floating point numbers or returns
-        the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
         """
 
     @abc.abstractmethod
@@ -2240,23 +1727,6 @@ class CompactReader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def read_array_of_nullable_float32_or_default(
-        self, field_name: str, default: typing.Optional[typing.List[typing.Optional[float]]]
-    ) -> typing.Optional[typing.List[typing.Optional[float]]]:
-        """Reads an array of nullable 32-bit IEEE 754 floating point numbers
-        or returns the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
-        """
-
-    @abc.abstractmethod
     def read_array_of_float64(self, field_name: str) -> typing.Optional[typing.List[float]]:
         """Reads an array of 64-bit IEEE 754 floating point numbers.
 
@@ -2270,23 +1740,6 @@ class CompactReader(abc.ABC):
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
                 defined in the schema.
-        """
-
-    @abc.abstractmethod
-    def read_array_of_float64_or_default(
-        self, field_name: str, default: typing.Optional[typing.List[float]]
-    ) -> typing.Optional[typing.List[float]]:
-        """Reads an array of 64-bit IEEE 754 floating point numbers or returns
-        the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
         """
 
     @abc.abstractmethod
@@ -2308,23 +1761,6 @@ class CompactReader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def read_array_of_nullable_float64_or_default(
-        self, field_name: str, default: typing.Optional[typing.List[typing.Optional[float]]]
-    ) -> typing.Optional[typing.List[typing.Optional[float]]]:
-        """Reads an array of nullable 64-bit IEEE 754 floating point numbers
-        or returns the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
-        """
-
-    @abc.abstractmethod
     def read_array_of_string(
         self, field_name: str
     ) -> typing.Optional[typing.List[typing.Optional[str]]]:
@@ -2340,23 +1776,6 @@ class CompactReader(abc.ABC):
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
                 defined in the schema.
-        """
-
-    @abc.abstractmethod
-    def read_array_of_string_or_default(
-        self, field_name: str, default: typing.Optional[typing.List[typing.Optional[str]]]
-    ) -> typing.Optional[typing.List[typing.Optional[str]]]:
-        """Reads an array of UTF-8 encoded strings or returns the default
-        value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
         """
 
     @abc.abstractmethod
@@ -2379,25 +1798,6 @@ class CompactReader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def read_array_of_decimal_or_default(
-        self,
-        field_name: str,
-        default: typing.Optional[typing.List[typing.Optional[decimal.Decimal]]],
-    ) -> typing.Optional[typing.List[typing.Optional[decimal.Decimal]]]:
-        """Reads an array of arbitrary precision and scale floating point
-        numbers or returns the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
-        """
-
-    @abc.abstractmethod
     def read_array_of_time(
         self, field_name: str
     ) -> typing.Optional[typing.List[typing.Optional[datetime.time]]]:
@@ -2414,23 +1814,6 @@ class CompactReader(abc.ABC):
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
                 defined in the schema.
-        """
-
-    @abc.abstractmethod
-    def read_array_of_time_or_default(
-        self, field_name: str, default: typing.Optional[typing.List[typing.Optional[datetime.time]]]
-    ) -> typing.Optional[typing.List[typing.Optional[datetime.time]]]:
-        """Reads an array of times consisting of hour, minute, second, and
-        nanoseconds or returns the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
         """
 
     @abc.abstractmethod
@@ -2452,23 +1835,6 @@ class CompactReader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def read_array_of_date_or_default(
-        self, field_name: str, default: typing.Optional[typing.List[typing.Optional[datetime.date]]]
-    ) -> typing.Optional[typing.List[typing.Optional[datetime.date]]]:
-        """Reads an array of dates consisting of year, month, and day or
-        returns the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
-        """
-
-    @abc.abstractmethod
     def read_array_of_timestamp(
         self, field_name: str
     ) -> typing.Optional[typing.List[typing.Optional[datetime.datetime]]]:
@@ -2484,25 +1850,6 @@ class CompactReader(abc.ABC):
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
                 defined in the schema.
-        """
-
-    @abc.abstractmethod
-    def read_array_of_timestamp_or_default(
-        self,
-        field_name: str,
-        default: typing.Optional[typing.List[typing.Optional[datetime.datetime]]],
-    ) -> typing.Optional[typing.List[typing.Optional[datetime.datetime]]]:
-        """Reads an array of timestamps consisting of date and time or returns
-        the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
         """
 
     @abc.abstractmethod
@@ -2525,25 +1872,6 @@ class CompactReader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def read_array_of_timestamp_with_timezone_or_default(
-        self,
-        field_name: str,
-        default: typing.Optional[typing.List[typing.Optional[datetime.datetime]]],
-    ) -> typing.Optional[typing.List[typing.Optional[datetime.datetime]]]:
-        """Reads an array of timestamp with timezones consisting of date, time
-        and timezone offset or returns the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
-        """
-
-    @abc.abstractmethod
     def read_array_of_compact(
         self, field_name: str
     ) -> typing.Optional[typing.List[typing.Optional[typing.Any]]]:
@@ -2559,22 +1887,6 @@ class CompactReader(abc.ABC):
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
                 defined in the schema.
-        """
-
-    @abc.abstractmethod
-    def read_array_of_compact_or_default(
-        self, field_name: str, default: typing.Optional[typing.List[typing.Optional[typing.Any]]]
-    ) -> typing.Optional[typing.List[typing.Optional[typing.Any]]]:
-        """Reads an array of compact objects or returns the default value.
-
-        Args:
-            field_name: Name of the field.
-            default: Default value to return if the field with the given name
-                does not exist in the schema or the type of the field does not
-                match with the one defined in the schema.
-
-        Returns:
-            The value or the default value of the field.
         """
 
 

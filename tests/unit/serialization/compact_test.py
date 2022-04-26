@@ -5,6 +5,7 @@ import uuid
 
 from parameterized import parameterized
 
+from hazelcast.errors import HazelcastSerializationError
 from hazelcast.serialization.compact import (
     RabinFingerprint,
     SchemaWriter,
@@ -80,9 +81,19 @@ class RabinFingerprintTest(unittest.TestCase):
 
 class SchemaTest(unittest.TestCase):
     def test_constructor(self):
-        fields = [FieldDescriptor(kind.name, kind) for kind in FieldKind]
+        fields = [
+            FieldDescriptor(kind.name, kind)
+            for kind in FieldKind
+            if kind is not FieldKind.NOT_AVAILABLE
+        ]
         schema = Schema("something", fields)
         self._verify_schema(schema, fields)
+
+    def test_constructor_with_invalid_field_kind(self):
+        fd = FieldDescriptor("foo", FieldKind.NOT_AVAILABLE)
+        self.assertRaises(HazelcastSerializationError, lambda: Schema("foo", [fd]))
+        fd.kind = -1
+        self.assertRaises(HazelcastSerializationError, lambda: Schema("foo", [fd]))
 
     def test_with_no_fields(self):
         schema = Schema("something", [])
@@ -132,7 +143,10 @@ class SchemaTest(unittest.TestCase):
         var_sized_fields = []
         fix_sized_fields = []
         for field in fields:
-            if FIELD_OPERATIONS[field.kind].is_var_sized():
+            op = FIELD_OPERATIONS[field.kind]
+            if op is None:
+                continue
+            if op.is_var_sized():
                 var_sized_fields.append(field)
             else:
                 fix_sized_fields.append(field)
@@ -176,7 +190,10 @@ class SchemaWriterTest(unittest.TestCase):
         fields = []
         for kind in FieldKind:
             name = str(uuid.uuid4())
-            getattr(writer, f"write_{kind.name.lower()}")(name, None)
+            fun = getattr(writer, f"write_{kind.name.lower()}", None)
+            if fun is None:
+                continue
+            fun(name, None)
             fields.append((name, kind))
 
         schema = writer.build()

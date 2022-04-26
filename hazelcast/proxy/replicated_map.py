@@ -78,7 +78,7 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
         Returns:
             A registration id which is used as a key to remove the listener.
         """
-        if key is not None and predicate:
+        if key is not None and predicate is not None:
             try:
                 key_data = self._to_data(key)
                 predicate_data = self._to_data(predicate)
@@ -103,7 +103,7 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
             )
             response_decoder = with_key_and_predicate_codec.decode_response
             event_message_handler = with_key_and_predicate_codec.handle
-        elif key is not None and not predicate:
+        elif key is not None and predicate is None:
             try:
                 key_data = self._to_data(key)
             except SchemaNotReplicatedError as e:
@@ -123,7 +123,7 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
             request = with_key_codec.encode_request(self.name, key_data, self._is_smart)
             response_decoder = with_key_codec.decode_response
             event_message_handler = with_key_codec.handle
-        elif key is None and predicate:
+        elif key is None and predicate is not None:
             try:
                 predicate = self._to_data(predicate)
             except SchemaNotReplicatedError as e:
