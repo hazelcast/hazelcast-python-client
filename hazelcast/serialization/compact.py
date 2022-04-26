@@ -1765,7 +1765,7 @@ class Schema:
             if FIELD_OPERATIONS[field.kind].is_var_sized():
                 var_sized_fields.append(field)
             elif FieldKind.BOOLEAN == kind:
-                    bool_fields.append(field)
+                bool_fields.append(field)
             else:
                 fix_sized_fields.append(field)
 

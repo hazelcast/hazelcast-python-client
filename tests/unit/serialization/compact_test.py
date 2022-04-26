@@ -95,7 +95,6 @@ class SchemaTest(unittest.TestCase):
         fd.kind = -1
         self.assertRaises(HazelcastSerializationError, lambda: Schema("foo", [fd]))
 
-
     def test_with_no_fields(self):
         schema = Schema("something", [])
         self.assertEqual({}, schema.fields)
