@@ -1759,12 +1759,10 @@ class Schema:
         bool_fields = []
 
         for field in self.fields_list:
-            kind = field.kind
-            op = FIELD_OPERATIONS[kind]
-            if op.is_var_sized():
+            if FIELD_OPERATIONS[field.kind].is_var_sized():
                 var_sized_fields.append(field)
             else:
-                if FieldKind.BOOLEAN == kind:
+                if FieldKind.BOOLEAN == field.kind:
                     bool_fields.append(field)
                 else:
                     fix_sized_fields.append(field)

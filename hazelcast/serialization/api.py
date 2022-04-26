@@ -1176,7 +1176,7 @@ class CompactReader(abc.ABC):
 
     @abc.abstractmethod
     def get_field_kind(self, field_name):
-        """Returns the Fieldkind for the given field.
+        """Returns the FieldKind for the given field.
 
         Args:
             field_name: Name of the field.
