@@ -1,4 +1,4 @@
-name: Run tests
+name: Run linter, generate docs, run mypy
 on:
   push:
     branches:
@@ -9,45 +9,6 @@ on:
       - master
       - '[45].*.z'
 jobs:
-  run-tests:
-    runs-on: ${{ matrix.os }}
-    name: Run tests with Python ${{ matrix.python-version }} on ${{ matrix.os }}
-    strategy:
-      matrix:
-        python-version: [ '3.6', '3.10' ]
-        os: [ ubuntu-latest, windows-latest ]
-      fail-fast: false
-    steps:
-      - name: Setup Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install JDK
-        uses: actions/setup-java@v2
-        with:
-          distribution: 'adopt'
-          java-version: '8'
-      - name: Checkout to code
-        uses: actions/checkout@v2
-      - name: Install dependencies
-        run: |
-          pip install -r requirements-test.txt
-      - name: Run tests
-        env:
-          HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
-        run: python run_tests.py
-      - name: Upload remote controller logs on test failure
-        uses: actions/upload-artifact@v2
-        if: failure()
-        with:
-          name: rc-logs-${{ matrix.python-version }}-${{ matrix.os }}
-          path: |
-            rc_stderr.log
-            rc_stdout.log
-      - name: Publish results to Codecov
-        uses: codecov/codecov-action@v1
-        with:
-          files: ./coverage.xml
   run-linter:
     runs-on: ubuntu-latest
     name: Run black to check the code style
@@ -56,14 +17,18 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: '3.10'
+          
       - name: Checkout to code
         uses: actions/checkout@v2
+        
       - name: Install dependencies
         run: |
           pip install -r requirements-dev.txt
+          
       - name: Run black
         run: |
           black --check --config black.toml .
+          
   generate_docs:
     runs-on: ubuntu-latest
     name: Generate documentation
@@ -72,15 +37,19 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: '3.10'
+          
       - name: Checkout to code
         uses: actions/checkout@v2
+        
       - name: Install dependencies
         run: |
           pip install -r requirements-dev.txt
+          
       - name: Generate documentation
         working-directory: docs
         run: |
           make html SPHINXOPTS="-W --keep-going -b linkcheck"
+          
   run-mypy:
     runs-on: ubuntu-latest
     name: Run mypy to check type annotations
@@ -89,11 +58,14 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: '3.10'
+          
       - name: Checkout to code
         uses: actions/checkout@v2
+        
       - name: Install dependencies
         run: |
           pip install -r requirements-dev.txt
+          
       - name: Run mypy
         run: |
           mypy --show-error-codes hazelcast
