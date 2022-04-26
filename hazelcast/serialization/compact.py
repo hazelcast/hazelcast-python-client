@@ -1761,7 +1761,9 @@ class Schema:
         for field in self.fields_list:
             kind = field.kind
             op = FIELD_OPERATIONS[kind]
-            if op is not None and op.is_var_sized():
+            if op is None:
+                continue
+            if op.is_var_sized():
                 var_sized_fields.append(field)
             else:
                 if FieldKind.BOOLEAN == kind:
