@@ -212,6 +212,9 @@ class CompactTest(CompactTestBase):
             def get_type_name(self) -> str:
                 return SomeFields.__name__
 
+            def get_class(self):
+                return SomeFields
+
         self._write_then_read0(all_fields, Serializer(list(all_fields.keys())))
 
     @parameterized.expand(
@@ -273,8 +276,8 @@ class CompactTest(CompactTestBase):
         client = self.create_client(
             {
                 "cluster_name": self.cluster.id,
-                "compact_serializers": {
-                    SomeFieldsSerializer: SomeFieldsSerializer(
+                "compact_serializers": [
+                    SomeFieldsSerializer(
                         [
                             FieldDefinition(
                                 name=field_name,
@@ -283,8 +286,8 @@ class CompactTest(CompactTestBase):
                             )
                         ]
                     ),
-                    Nested: NestedSerializer(),
-                },
+                    NestedSerializer(),
+                ],
             }
         )
 
@@ -310,10 +313,10 @@ class CompactTest(CompactTestBase):
         client = self.create_client(
             {
                 "cluster_name": self.cluster.id,
-                "compact_serializers": {
-                    SomeFieldsSerializer: SomeFieldsSerializer([FieldDefinition(name=field_name)]),
-                    Nested: NestedSerializer(),
-                },
+                "compact_serializers": [
+                    SomeFieldsSerializer([FieldDefinition(name=field_name)]),
+                    NestedSerializer(),
+                ],
             }
         )
 
@@ -343,8 +346,8 @@ class CompactTest(CompactTestBase):
         client = self.create_client(
             {
                 "cluster_name": self.cluster.id,
-                "compact_serializers": {
-                    SomeFieldsSerializer: SomeFieldsSerializer(
+                "compact_serializers": [
+                    SomeFieldsSerializer(
                         [
                             FieldDefinition(
                                 name=field_name,
@@ -352,7 +355,7 @@ class CompactTest(CompactTestBase):
                             )
                         ]
                     ),
-                },
+                ],
             }
         )
 
@@ -383,9 +386,9 @@ class CompactTest(CompactTestBase):
         client = self.create_client(
             {
                 "cluster_name": self.cluster.id,
-                "compact_serializers": {
-                    SomeFields: SomeFieldsSerializer([FieldDefinition(name=field_name)]),
-                },
+                "compact_serializers": [
+                    SomeFieldsSerializer([FieldDefinition(name=field_name)]),
+                ],
             }
         )
 
@@ -415,9 +418,9 @@ class CompactTest(CompactTestBase):
         client = self.create_client(
             {
                 "cluster_name": self.cluster.id,
-                "compact_serializers": {
-                    SomeFields: SomeFieldsSerializer([FieldDefinition(name=field_name)]),
-                },
+                "compact_serializers": [
+                    SomeFieldsSerializer([FieldDefinition(name=field_name)]),
+                ],
             }
         )
 
@@ -447,9 +450,9 @@ class CompactTest(CompactTestBase):
         client = self.create_client(
             {
                 "cluster_name": self.cluster.id,
-                "compact_serializers": {
-                    SomeFields: SomeFieldsSerializer([FieldDefinition(name=field_name)]),
-                },
+                "compact_serializers": [
+                    SomeFieldsSerializer([FieldDefinition(name=field_name)]),
+                ],
             }
         )
 
@@ -532,10 +535,10 @@ class CompactTest(CompactTestBase):
         client = self.create_client(
             {
                 "cluster_name": self.cluster.id,
-                "compact_serializers": {
-                    SomeFields: SomeFieldsSerializer([field_definition]),
-                    Nested: NestedSerializer(),
-                },
+                "compact_serializers": [
+                    SomeFieldsSerializer([field_definition]),
+                    NestedSerializer(),
+                ],
             }
         )
 
@@ -558,10 +561,7 @@ class CompactTest(CompactTestBase):
         client = self.create_client(
             {
                 "cluster_name": self.cluster.id,
-                "compact_serializers": {
-                    SomeFields: serializer,
-                    Nested: NestedSerializer(),
-                },
+                "compact_serializers": [serializer, NestedSerializer()],
             }
         )
 
@@ -611,9 +611,7 @@ class CompactSchemaEvolutionTest(CompactTestBase):
         return self.create_client(
             {
                 "cluster_name": self.cluster.id,
-                "compact_serializers": {
-                    SomeFields: serializer,
-                },
+                "compact_serializers": [serializer],
             }
         )
 
@@ -734,9 +732,7 @@ class CompactOnClusterRestartTest(CompactTestBase):
         client = self.create_client(
             {
                 "cluster_name": self.cluster.id,
-                "compact_serializers": {
-                    SomeFields: SomeFieldsSerializer([FieldDefinition(name="int32")])
-                },
+                "compact_serializers": [SomeFieldsSerializer([FieldDefinition(name="int32")])],
             }
         )
 
@@ -758,9 +754,7 @@ class CompactWithListenerTest(CompactTestBase):
     def test_map_listener(self):
         config = {
             "cluster_name": self.cluster.id,
-            "compact_serializers": {
-                SomeFields: SomeFieldsSerializer([FieldDefinition(name="int32")])
-            },
+            "compact_serializers": [SomeFieldsSerializer([FieldDefinition(name="int32")])],
         }
         client = self.create_client(config)
 
@@ -819,6 +813,9 @@ class NestedSerializer(CompactSerializer[Nested]):
     def get_type_name(self) -> str:
         return Nested.__name__
 
+    def get_class(self) -> Nested:
+        return Nested
+
 
 class FieldDefinition:
     def __init__(
@@ -863,6 +860,9 @@ class SomeFieldsSerializer(CompactSerializer[SomeFields]):
 
     def get_type_name(self) -> str:
         return SomeFields.__name__
+
+    def get_class(self) -> SomeFields:
+        return SomeFields
 
     @staticmethod
     def from_kinds(kinds: typing.List[FieldKind]) -> "SomeFieldsSerializer":

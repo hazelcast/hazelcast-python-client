@@ -149,26 +149,29 @@ Then, a serializer for it can be implemented as below:
     from hazelcast.serialization.api import CompactSerializer, CompactWriter, CompactReader
 
     class EmployeeSerializer(CompactSerializer[Employee]):
-        def read(self, reader: CompactReader) -> Employee:
+        def read(self, reader: CompactReader):
             name = reader.read_string("name")
             age = reader.read_int32("age")
             return Employee(name, age)
 
-        def write(self, writer: CompactWriter, obj: Employee) -> None:
+        def write(self, writer: CompactWriter, obj: Employee):
             writer.write_string("name", obj.name)
             writer.write_int32("age", obj.age)
 
-        def get_type_name(self) -> str:
+        def get_type_name(self):
             return "employee"
+
+        def get_class(self):
+            return Employee
 
 The last step is to register the serializer in the client configuration.
 
 .. code:: python
 
     client = HazelcastClient(
-        compact_serializers={
-            Employee: EmployeeSerializer(),
-        }
+        compact_serializers=[
+            EmployeeSerializer(),
+        ]
     )
 
 A schema will be created from the serializer, and a unique schema identifier

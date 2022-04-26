@@ -3060,6 +3060,14 @@ class CompactSerializer(typing.Generic[CompactSerializableClass], abc.ABC):
         """
 
     @abc.abstractmethod
+    def get_class(self) -> typing.Type[CompactSerializableClass]:
+        """Returns the class that this serializer reads or writes.
+
+        Returns:
+            The class that this serializer reads or writes.
+        """
+
+    @abc.abstractmethod
     def get_type_name(self) -> str:
         """Returns the unique type name associated with
         :const`CompactSerializableClass`.

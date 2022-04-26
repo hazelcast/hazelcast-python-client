@@ -35,11 +35,9 @@ _BOOLEANS_PER_BYTE = 8
 
 
 class CompactStreamSerializer(BaseSerializer):
-    def __init__(self, compact_serializers: typing.Dict[typing.Type, CompactSerializer]):
-        self._type_to_serializer = compact_serializers
-        self._type_name_to_serializer: typing.Dict[str, CompactSerializer] = {
-            serializer.get_type_name(): serializer for serializer in compact_serializers.values()
-        }
+    def __init__(self, compact_serializers: typing.List[CompactSerializer]):
+        self._type_to_serializer = {s.get_class(): s for s in compact_serializers}
+        self._type_name_to_serializer = {s.get_type_name(): s for s in compact_serializers}
         self._type_to_schema: typing.Dict[typing.Type, Schema] = {}
         self._id_to_schema: typing.Dict[int, Schema] = {}
 
