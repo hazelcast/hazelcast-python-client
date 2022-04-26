@@ -80,7 +80,7 @@ class RabinFingerprintTest(unittest.TestCase):
 
 class SchemaTest(unittest.TestCase):
     def test_constructor(self):
-        fields = [FieldDescriptor(kind.name, kind) for kind in FieldKind if kind is not None]
+        fields = [FieldDescriptor(kind.name, kind) for kind in FieldKind if kind is not FieldKind.NOT_AVAILABLE]
         schema = Schema("something", fields)
         self._verify_schema(schema, fields)
 
