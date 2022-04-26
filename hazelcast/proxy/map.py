@@ -187,7 +187,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             LOADED=loaded_func,
         )
 
-        if key is not None and predicate:
+        if key is not None and predicate is not None:
             try:
                 key_data = self._to_data(key)
                 predicate_data = self._to_data(predicate)
@@ -215,7 +215,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             )
             response_decoder = with_key_and_predicate_codec.decode_response
             event_message_handler = with_key_and_predicate_codec.handle
-        elif key is not None and predicate is not None:
+        elif key is not None and predicate is None:
             try:
                 key_data = self._to_data(key)
             except SchemaNotReplicatedError as e:
