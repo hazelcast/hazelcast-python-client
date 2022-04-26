@@ -196,7 +196,7 @@ class HazelcastClient:
                     }
                 })
 
-        compact_serializers (dict[typing.Type, hazelcast.serialization.api.CompactSerializer]):
+        compact_serializers (list[hazelcast.serialization.api.CompactSerializer]):
             Dictionary of classes to be serialized with Compact serialization
             to Compact serializers.
 
@@ -209,9 +209,9 @@ class HazelcastClient:
                     pass
 
                 client = HazelcastClient(
-                    compact_serializers={
-                        Foo: FooSerializer(),
-                    },
+                    compact_serializers=[
+                        FooSerializer(),
+                    ],
                 )
 
         class_definitions (`list[hazelcast.serialization.portable.classdef.ClassDefinition]`):
