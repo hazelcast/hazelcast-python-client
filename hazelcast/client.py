@@ -197,8 +197,7 @@ class HazelcastClient:
                 })
 
         compact_serializers (list[hazelcast.serialization.api.CompactSerializer]):
-            Dictionary of classes to be serialized with Compact serialization
-            to Compact serializers.
+            List of Compact serializers.
 
             .. code-block:: python
 
