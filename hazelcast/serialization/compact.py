@@ -1759,13 +1759,15 @@ class Schema:
         bool_fields = []
 
         for field in self.fields_list:
+            kind = field.kind
+            if kind < 0 or kind >= FieldKind.NOT_AVAILABLE:
+                raise HazelcastSerializationError(f"Invalid field kind: {kind}")
             if FIELD_OPERATIONS[field.kind].is_var_sized():
                 var_sized_fields.append(field)
-            else:
-                if FieldKind.BOOLEAN == field.kind:
+            elif FieldKind.BOOLEAN == kind:
                     bool_fields.append(field)
-                else:
-                    fix_sized_fields.append(field)
+            else:
+                fix_sized_fields.append(field)
 
         fix_sized_fields.sort(
             key=lambda f: FIELD_OPERATIONS[f.kind].size_in_bytes(),

@@ -5,6 +5,7 @@ import uuid
 
 from parameterized import parameterized
 
+from hazelcast.errors import HazelcastSerializationError
 from hazelcast.serialization.compact import (
     RabinFingerprint,
     SchemaWriter,
@@ -87,6 +88,13 @@ class SchemaTest(unittest.TestCase):
         ]
         schema = Schema("something", fields)
         self._verify_schema(schema, fields)
+
+    def test_constructor_with_invalid_field_kind(self):
+        fd = FieldDescriptor("foo", FieldKind.NOT_AVAILABLE)
+        self.assertRaises(HazelcastSerializationError, lambda: Schema("foo", [fd]))
+        fd.kind = -1
+        self.assertRaises(HazelcastSerializationError, lambda: Schema("foo", [fd]))
+
 
     def test_with_no_fields(self):
         schema = Schema("something", [])
