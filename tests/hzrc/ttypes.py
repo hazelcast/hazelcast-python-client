@@ -13,6 +13,7 @@ from thrift.TRecursive import fix_spec
 import sys
 
 from thrift.transport import TTransport
+
 all_structs = []
 
 
@@ -44,12 +45,18 @@ class Cluster(object):
 
     """
 
-
-    def __init__(self, id=None,):
+    def __init__(
+        self,
+        id=None,
+    ):
         self.id = id
 
     def read(self, iprot):
-        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+        if (
+            iprot._fast_decode is not None
+            and isinstance(iprot.trans, TTransport.CReadableTransport)
+            and self.thrift_spec is not None
+        ):
             iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
             return
         iprot.readStructBegin()
@@ -59,7 +66,11 @@ class Cluster(object):
                 break
             if fid == 1:
                 if ftype == TType.STRING:
-                    self.id = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                    self.id = (
+                        iprot.readString().decode("utf-8", errors="replace")
+                        if sys.version_info[0] == 2
+                        else iprot.readString()
+                    )
                 else:
                     iprot.skip(ftype)
             else:
@@ -71,10 +82,10 @@ class Cluster(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('Cluster')
+        oprot.writeStructBegin("Cluster")
         if self.id is not None:
-            oprot.writeFieldBegin('id', TType.STRING, 1)
-            oprot.writeString(self.id.encode('utf-8') if sys.version_info[0] == 2 else self.id)
+            oprot.writeFieldBegin("id", TType.STRING, 1)
+            oprot.writeString(self.id.encode("utf-8") if sys.version_info[0] == 2 else self.id)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -83,9 +94,8 @@ class Cluster(object):
         return
 
     def __repr__(self):
-        L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+        L = ["%s=%r" % (key, value) for key, value in self.__dict__.items()]
+        return "%s(%s)" % (self.__class__.__name__, ", ".join(L))
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
@@ -109,8 +119,18 @@ class CloudCluster(object):
 
     """
 
-
-    def __init__(self, id=None, name=None, nameForConnect=None, hazelcastVersion=None, isTlsEnabled=None, state=None, token=None, certificatePath=None, tlsPassword=None,):
+    def __init__(
+        self,
+        id=None,
+        name=None,
+        nameForConnect=None,
+        hazelcastVersion=None,
+        isTlsEnabled=None,
+        state=None,
+        token=None,
+        certificatePath=None,
+        tlsPassword=None,
+    ):
         self.id = id
         self.name = name
         self.nameForConnect = nameForConnect
@@ -122,7 +142,11 @@ class CloudCluster(object):
         self.tlsPassword = tlsPassword
 
     def read(self, iprot):
-        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+        if (
+            iprot._fast_decode is not None
+            and isinstance(iprot.trans, TTransport.CReadableTransport)
+            and self.thrift_spec is not None
+        ):
             iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
             return
         iprot.readStructBegin()
@@ -132,22 +156,38 @@ class CloudCluster(object):
                 break
             if fid == 1:
                 if ftype == TType.STRING:
-                    self.id = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                    self.id = (
+                        iprot.readString().decode("utf-8", errors="replace")
+                        if sys.version_info[0] == 2
+                        else iprot.readString()
+                    )
                 else:
                     iprot.skip(ftype)
             elif fid == 2:
                 if ftype == TType.STRING:
-                    self.name = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                    self.name = (
+                        iprot.readString().decode("utf-8", errors="replace")
+                        if sys.version_info[0] == 2
+                        else iprot.readString()
+                    )
                 else:
                     iprot.skip(ftype)
             elif fid == 3:
                 if ftype == TType.STRING:
-                    self.nameForConnect = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                    self.nameForConnect = (
+                        iprot.readString().decode("utf-8", errors="replace")
+                        if sys.version_info[0] == 2
+                        else iprot.readString()
+                    )
                 else:
                     iprot.skip(ftype)
             elif fid == 4:
                 if ftype == TType.STRING:
-                    self.hazelcastVersion = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                    self.hazelcastVersion = (
+                        iprot.readString().decode("utf-8", errors="replace")
+                        if sys.version_info[0] == 2
+                        else iprot.readString()
+                    )
                 else:
                     iprot.skip(ftype)
             elif fid == 5:
@@ -157,22 +197,38 @@ class CloudCluster(object):
                     iprot.skip(ftype)
             elif fid == 6:
                 if ftype == TType.STRING:
-                    self.state = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                    self.state = (
+                        iprot.readString().decode("utf-8", errors="replace")
+                        if sys.version_info[0] == 2
+                        else iprot.readString()
+                    )
                 else:
                     iprot.skip(ftype)
             elif fid == 7:
                 if ftype == TType.STRING:
-                    self.token = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                    self.token = (
+                        iprot.readString().decode("utf-8", errors="replace")
+                        if sys.version_info[0] == 2
+                        else iprot.readString()
+                    )
                 else:
                     iprot.skip(ftype)
             elif fid == 8:
                 if ftype == TType.STRING:
-                    self.certificatePath = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                    self.certificatePath = (
+                        iprot.readString().decode("utf-8", errors="replace")
+                        if sys.version_info[0] == 2
+                        else iprot.readString()
+                    )
                 else:
                     iprot.skip(ftype)
             elif fid == 9:
                 if ftype == TType.STRING:
-                    self.tlsPassword = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                    self.tlsPassword = (
+                        iprot.readString().decode("utf-8", errors="replace")
+                        if sys.version_info[0] == 2
+                        else iprot.readString()
+                    )
                 else:
                     iprot.skip(ftype)
             else:
@@ -184,42 +240,60 @@ class CloudCluster(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('CloudCluster')
+        oprot.writeStructBegin("CloudCluster")
         if self.id is not None:
-            oprot.writeFieldBegin('id', TType.STRING, 1)
-            oprot.writeString(self.id.encode('utf-8') if sys.version_info[0] == 2 else self.id)
+            oprot.writeFieldBegin("id", TType.STRING, 1)
+            oprot.writeString(self.id.encode("utf-8") if sys.version_info[0] == 2 else self.id)
             oprot.writeFieldEnd()
         if self.name is not None:
-            oprot.writeFieldBegin('name', TType.STRING, 2)
-            oprot.writeString(self.name.encode('utf-8') if sys.version_info[0] == 2 else self.name)
+            oprot.writeFieldBegin("name", TType.STRING, 2)
+            oprot.writeString(self.name.encode("utf-8") if sys.version_info[0] == 2 else self.name)
             oprot.writeFieldEnd()
         if self.nameForConnect is not None:
-            oprot.writeFieldBegin('nameForConnect', TType.STRING, 3)
-            oprot.writeString(self.nameForConnect.encode('utf-8') if sys.version_info[0] == 2 else self.nameForConnect)
+            oprot.writeFieldBegin("nameForConnect", TType.STRING, 3)
+            oprot.writeString(
+                self.nameForConnect.encode("utf-8")
+                if sys.version_info[0] == 2
+                else self.nameForConnect
+            )
             oprot.writeFieldEnd()
         if self.hazelcastVersion is not None:
-            oprot.writeFieldBegin('hazelcastVersion', TType.STRING, 4)
-            oprot.writeString(self.hazelcastVersion.encode('utf-8') if sys.version_info[0] == 2 else self.hazelcastVersion)
+            oprot.writeFieldBegin("hazelcastVersion", TType.STRING, 4)
+            oprot.writeString(
+                self.hazelcastVersion.encode("utf-8")
+                if sys.version_info[0] == 2
+                else self.hazelcastVersion
+            )
             oprot.writeFieldEnd()
         if self.isTlsEnabled is not None:
-            oprot.writeFieldBegin('isTlsEnabled', TType.BOOL, 5)
+            oprot.writeFieldBegin("isTlsEnabled", TType.BOOL, 5)
             oprot.writeBool(self.isTlsEnabled)
             oprot.writeFieldEnd()
         if self.state is not None:
-            oprot.writeFieldBegin('state', TType.STRING, 6)
-            oprot.writeString(self.state.encode('utf-8') if sys.version_info[0] == 2 else self.state)
+            oprot.writeFieldBegin("state", TType.STRING, 6)
+            oprot.writeString(
+                self.state.encode("utf-8") if sys.version_info[0] == 2 else self.state
+            )
             oprot.writeFieldEnd()
         if self.token is not None:
-            oprot.writeFieldBegin('token', TType.STRING, 7)
-            oprot.writeString(self.token.encode('utf-8') if sys.version_info[0] == 2 else self.token)
+            oprot.writeFieldBegin("token", TType.STRING, 7)
+            oprot.writeString(
+                self.token.encode("utf-8") if sys.version_info[0] == 2 else self.token
+            )
             oprot.writeFieldEnd()
         if self.certificatePath is not None:
-            oprot.writeFieldBegin('certificatePath', TType.STRING, 8)
-            oprot.writeString(self.certificatePath.encode('utf-8') if sys.version_info[0] == 2 else self.certificatePath)
+            oprot.writeFieldBegin("certificatePath", TType.STRING, 8)
+            oprot.writeString(
+                self.certificatePath.encode("utf-8")
+                if sys.version_info[0] == 2
+                else self.certificatePath
+            )
             oprot.writeFieldEnd()
         if self.tlsPassword is not None:
-            oprot.writeFieldBegin('tlsPassword', TType.STRING, 9)
-            oprot.writeString(self.tlsPassword.encode('utf-8') if sys.version_info[0] == 2 else self.tlsPassword)
+            oprot.writeFieldBegin("tlsPassword", TType.STRING, 9)
+            oprot.writeString(
+                self.tlsPassword.encode("utf-8") if sys.version_info[0] == 2 else self.tlsPassword
+            )
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -228,9 +302,8 @@ class CloudCluster(object):
         return
 
     def __repr__(self):
-        L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+        L = ["%s=%r" % (key, value) for key, value in self.__dict__.items()]
+        return "%s(%s)" % (self.__class__.__name__, ", ".join(L))
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
@@ -248,14 +321,22 @@ class Member(object):
 
     """
 
-
-    def __init__(self, uuid=None, host=None, port=None,):
+    def __init__(
+        self,
+        uuid=None,
+        host=None,
+        port=None,
+    ):
         self.uuid = uuid
         self.host = host
         self.port = port
 
     def read(self, iprot):
-        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+        if (
+            iprot._fast_decode is not None
+            and isinstance(iprot.trans, TTransport.CReadableTransport)
+            and self.thrift_spec is not None
+        ):
             iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
             return
         iprot.readStructBegin()
@@ -265,12 +346,20 @@ class Member(object):
                 break
             if fid == 1:
                 if ftype == TType.STRING:
-                    self.uuid = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                    self.uuid = (
+                        iprot.readString().decode("utf-8", errors="replace")
+                        if sys.version_info[0] == 2
+                        else iprot.readString()
+                    )
                 else:
                     iprot.skip(ftype)
             elif fid == 2:
                 if ftype == TType.STRING:
-                    self.host = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                    self.host = (
+                        iprot.readString().decode("utf-8", errors="replace")
+                        if sys.version_info[0] == 2
+                        else iprot.readString()
+                    )
                 else:
                     iprot.skip(ftype)
             elif fid == 3:
@@ -287,17 +376,17 @@ class Member(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('Member')
+        oprot.writeStructBegin("Member")
         if self.uuid is not None:
-            oprot.writeFieldBegin('uuid', TType.STRING, 1)
-            oprot.writeString(self.uuid.encode('utf-8') if sys.version_info[0] == 2 else self.uuid)
+            oprot.writeFieldBegin("uuid", TType.STRING, 1)
+            oprot.writeString(self.uuid.encode("utf-8") if sys.version_info[0] == 2 else self.uuid)
             oprot.writeFieldEnd()
         if self.host is not None:
-            oprot.writeFieldBegin('host', TType.STRING, 2)
-            oprot.writeString(self.host.encode('utf-8') if sys.version_info[0] == 2 else self.host)
+            oprot.writeFieldBegin("host", TType.STRING, 2)
+            oprot.writeString(self.host.encode("utf-8") if sys.version_info[0] == 2 else self.host)
             oprot.writeFieldEnd()
         if self.port is not None:
-            oprot.writeFieldBegin('port', TType.I32, 3)
+            oprot.writeFieldBegin("port", TType.I32, 3)
             oprot.writeI32(self.port)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -307,9 +396,8 @@ class Member(object):
         return
 
     def __repr__(self):
-        L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+        L = ["%s=%r" % (key, value) for key, value in self.__dict__.items()]
+        return "%s(%s)" % (self.__class__.__name__, ", ".join(L))
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
@@ -327,14 +415,22 @@ class Response(object):
 
     """
 
-
-    def __init__(self, success=None, message=None, result=None,):
+    def __init__(
+        self,
+        success=None,
+        message=None,
+        result=None,
+    ):
         self.success = success
         self.message = message
         self.result = result
 
     def read(self, iprot):
-        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+        if (
+            iprot._fast_decode is not None
+            and isinstance(iprot.trans, TTransport.CReadableTransport)
+            and self.thrift_spec is not None
+        ):
             iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
             return
         iprot.readStructBegin()
@@ -349,7 +445,11 @@ class Response(object):
                     iprot.skip(ftype)
             elif fid == 2:
                 if ftype == TType.STRING:
-                    self.message = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                    self.message = (
+                        iprot.readString().decode("utf-8", errors="replace")
+                        if sys.version_info[0] == 2
+                        else iprot.readString()
+                    )
                 else:
                     iprot.skip(ftype)
             elif fid == 3:
@@ -366,17 +466,19 @@ class Response(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('Response')
+        oprot.writeStructBegin("Response")
         if self.success is not None:
-            oprot.writeFieldBegin('success', TType.BOOL, 1)
+            oprot.writeFieldBegin("success", TType.BOOL, 1)
             oprot.writeBool(self.success)
             oprot.writeFieldEnd()
         if self.message is not None:
-            oprot.writeFieldBegin('message', TType.STRING, 2)
-            oprot.writeString(self.message.encode('utf-8') if sys.version_info[0] == 2 else self.message)
+            oprot.writeFieldBegin("message", TType.STRING, 2)
+            oprot.writeString(
+                self.message.encode("utf-8") if sys.version_info[0] == 2 else self.message
+            )
             oprot.writeFieldEnd()
         if self.result is not None:
-            oprot.writeFieldBegin('result', TType.STRING, 3)
+            oprot.writeFieldBegin("result", TType.STRING, 3)
             oprot.writeBinary(self.result)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -386,9 +488,8 @@ class Response(object):
         return
 
     def __repr__(self):
-        L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+        L = ["%s=%r" % (key, value) for key, value in self.__dict__.items()]
+        return "%s(%s)" % (self.__class__.__name__, ", ".join(L))
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
@@ -404,9 +505,11 @@ class ServerException(TException):
 
     """
 
-
-    def __init__(self, message=None,):
-        super(ServerException, self).__setattr__('message', message)
+    def __init__(
+        self,
+        message=None,
+    ):
+        super(ServerException, self).__setattr__("message", message)
 
     def __setattr__(self, *args):
         raise TypeError("can't modify immutable instance")
@@ -415,11 +518,15 @@ class ServerException(TException):
         raise TypeError("can't modify immutable instance")
 
     def __hash__(self):
-        return hash(self.__class__) ^ hash((self.message, ))
+        return hash(self.__class__) ^ hash((self.message,))
 
     @classmethod
     def read(cls, iprot):
-        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and cls.thrift_spec is not None:
+        if (
+            iprot._fast_decode is not None
+            and isinstance(iprot.trans, TTransport.CReadableTransport)
+            and cls.thrift_spec is not None
+        ):
             return iprot._fast_decode(None, iprot, [cls, cls.thrift_spec])
         iprot.readStructBegin()
         message = None
@@ -429,7 +536,11 @@ class ServerException(TException):
                 break
             if fid == 1:
                 if ftype == TType.STRING:
-                    message = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                    message = (
+                        iprot.readString().decode("utf-8", errors="replace")
+                        if sys.version_info[0] == 2
+                        else iprot.readString()
+                    )
                 else:
                     iprot.skip(ftype)
             else:
@@ -444,10 +555,12 @@ class ServerException(TException):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('ServerException')
+        oprot.writeStructBegin("ServerException")
         if self.message is not None:
-            oprot.writeFieldBegin('message', TType.STRING, 1)
-            oprot.writeString(self.message.encode('utf-8') if sys.version_info[0] == 2 else self.message)
+            oprot.writeFieldBegin("message", TType.STRING, 1)
+            oprot.writeString(
+                self.message.encode("utf-8") if sys.version_info[0] == 2 else self.message
+            )
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -459,9 +572,8 @@ class ServerException(TException):
         return repr(self)
 
     def __repr__(self):
-        L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+        L = ["%s=%r" % (key, value) for key, value in self.__dict__.items()]
+        return "%s(%s)" % (self.__class__.__name__, ", ".join(L))
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
@@ -477,9 +589,11 @@ class CloudException(TException):
 
     """
 
-
-    def __init__(self, message=None,):
-        super(CloudException, self).__setattr__('message', message)
+    def __init__(
+        self,
+        message=None,
+    ):
+        super(CloudException, self).__setattr__("message", message)
 
     def __setattr__(self, *args):
         raise TypeError("can't modify immutable instance")
@@ -488,11 +602,15 @@ class CloudException(TException):
         raise TypeError("can't modify immutable instance")
 
     def __hash__(self):
-        return hash(self.__class__) ^ hash((self.message, ))
+        return hash(self.__class__) ^ hash((self.message,))
 
     @classmethod
     def read(cls, iprot):
-        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and cls.thrift_spec is not None:
+        if (
+            iprot._fast_decode is not None
+            and isinstance(iprot.trans, TTransport.CReadableTransport)
+            and cls.thrift_spec is not None
+        ):
             return iprot._fast_decode(None, iprot, [cls, cls.thrift_spec])
         iprot.readStructBegin()
         message = None
@@ -502,7 +620,11 @@ class CloudException(TException):
                 break
             if fid == 1:
                 if ftype == TType.STRING:
-                    message = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                    message = (
+                        iprot.readString().decode("utf-8", errors="replace")
+                        if sys.version_info[0] == 2
+                        else iprot.readString()
+                    )
                 else:
                     iprot.skip(ftype)
             else:
@@ -517,10 +639,12 @@ class CloudException(TException):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('CloudException')
+        oprot.writeStructBegin("CloudException")
         if self.message is not None:
-            oprot.writeFieldBegin('message', TType.STRING, 1)
-            oprot.writeString(self.message.encode('utf-8') if sys.version_info[0] == 2 else self.message)
+            oprot.writeFieldBegin("message", TType.STRING, 1)
+            oprot.writeString(
+                self.message.encode("utf-8") if sys.version_info[0] == 2 else self.message
+            )
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -532,56 +656,165 @@ class CloudException(TException):
         return repr(self)
 
     def __repr__(self):
-        L = ['%s=%r' % (key, value)
-             for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+        L = ["%s=%r" % (key, value) for key, value in self.__dict__.items()]
+        return "%s(%s)" % (self.__class__.__name__, ", ".join(L))
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
 
     def __ne__(self, other):
         return not (self == other)
+
+
 all_structs.append(Cluster)
 Cluster.thrift_spec = (
     None,  # 0
-    (1, TType.STRING, 'id', 'UTF8', None, ),  # 1
+    (
+        1,
+        TType.STRING,
+        "id",
+        "UTF8",
+        None,
+    ),  # 1
 )
 all_structs.append(CloudCluster)
 CloudCluster.thrift_spec = (
     None,  # 0
-    (1, TType.STRING, 'id', 'UTF8', None, ),  # 1
-    (2, TType.STRING, 'name', 'UTF8', None, ),  # 2
-    (3, TType.STRING, 'nameForConnect', 'UTF8', None, ),  # 3
-    (4, TType.STRING, 'hazelcastVersion', 'UTF8', None, ),  # 4
-    (5, TType.BOOL, 'isTlsEnabled', None, None, ),  # 5
-    (6, TType.STRING, 'state', 'UTF8', None, ),  # 6
-    (7, TType.STRING, 'token', 'UTF8', None, ),  # 7
-    (8, TType.STRING, 'certificatePath', 'UTF8', None, ),  # 8
-    (9, TType.STRING, 'tlsPassword', 'UTF8', None, ),  # 9
+    (
+        1,
+        TType.STRING,
+        "id",
+        "UTF8",
+        None,
+    ),  # 1
+    (
+        2,
+        TType.STRING,
+        "name",
+        "UTF8",
+        None,
+    ),  # 2
+    (
+        3,
+        TType.STRING,
+        "nameForConnect",
+        "UTF8",
+        None,
+    ),  # 3
+    (
+        4,
+        TType.STRING,
+        "hazelcastVersion",
+        "UTF8",
+        None,
+    ),  # 4
+    (
+        5,
+        TType.BOOL,
+        "isTlsEnabled",
+        None,
+        None,
+    ),  # 5
+    (
+        6,
+        TType.STRING,
+        "state",
+        "UTF8",
+        None,
+    ),  # 6
+    (
+        7,
+        TType.STRING,
+        "token",
+        "UTF8",
+        None,
+    ),  # 7
+    (
+        8,
+        TType.STRING,
+        "certificatePath",
+        "UTF8",
+        None,
+    ),  # 8
+    (
+        9,
+        TType.STRING,
+        "tlsPassword",
+        "UTF8",
+        None,
+    ),  # 9
 )
 all_structs.append(Member)
 Member.thrift_spec = (
     None,  # 0
-    (1, TType.STRING, 'uuid', 'UTF8', None, ),  # 1
-    (2, TType.STRING, 'host', 'UTF8', None, ),  # 2
-    (3, TType.I32, 'port', None, None, ),  # 3
+    (
+        1,
+        TType.STRING,
+        "uuid",
+        "UTF8",
+        None,
+    ),  # 1
+    (
+        2,
+        TType.STRING,
+        "host",
+        "UTF8",
+        None,
+    ),  # 2
+    (
+        3,
+        TType.I32,
+        "port",
+        None,
+        None,
+    ),  # 3
 )
 all_structs.append(Response)
 Response.thrift_spec = (
     None,  # 0
-    (1, TType.BOOL, 'success', None, None, ),  # 1
-    (2, TType.STRING, 'message', 'UTF8', None, ),  # 2
-    (3, TType.STRING, 'result', 'BINARY', None, ),  # 3
+    (
+        1,
+        TType.BOOL,
+        "success",
+        None,
+        None,
+    ),  # 1
+    (
+        2,
+        TType.STRING,
+        "message",
+        "UTF8",
+        None,
+    ),  # 2
+    (
+        3,
+        TType.STRING,
+        "result",
+        "BINARY",
+        None,
+    ),  # 3
 )
 all_structs.append(ServerException)
 ServerException.thrift_spec = (
     None,  # 0
-    (1, TType.STRING, 'message', 'UTF8', None, ),  # 1
+    (
+        1,
+        TType.STRING,
+        "message",
+        "UTF8",
+        None,
+    ),  # 1
 )
 all_structs.append(CloudException)
 CloudException.thrift_spec = (
     None,  # 0
-    (1, TType.STRING, 'message', 'UTF8', None, ),  # 1
+    (
+        1,
+        TType.STRING,
+        "message",
+        "UTF8",
+        None,
+    ),  # 1
 )
 fix_spec(all_structs)
 del all_structs

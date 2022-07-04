@@ -79,13 +79,17 @@ class HzRemoteController(RemoteController.Iface):
         return self.remote_controller.loginToHazelcastCloud(uri, api_key, api_secret)
 
     def createHazelcastCloudStandardCluster(self, hz_version, is_tls_enabled):
-        return self.remote_controller.createHazelcastCloudStandardCluster(hz_version, is_tls_enabled)
+        return self.remote_controller.createHazelcastCloudStandardCluster(
+            hz_version, is_tls_enabled
+        )
 
     def getHazelcastCloudCluster(self, cloud_cluster_id):
         return self.remote_controller.getHazelcastCloudCluster(cloud_cluster_id)
 
     def setHazelcastCloudClusterMemberCount(self, cloud_cluster_id, total_member_count):
-        return self.remote_controller.setHazelcastCloudClusterMemberCount(cloud_cluster_id, total_member_count)
+        return self.remote_controller.setHazelcastCloudClusterMemberCount(
+            cloud_cluster_id, total_member_count
+        )
 
     def stopHazelcastCloudCluster(self, cloud_cluster_id):
         return self.remote_controller.stopHazelcastCloudCluster(cloud_cluster_id)
@@ -95,4 +99,3 @@ class HzRemoteController(RemoteController.Iface):
 
     def deleteHazelcastCloudCluster(self, cloud_cluster_id):
         return self.remote_controller.deleteHazelcastCloudCluster(cloud_cluster_id)
-
