@@ -69,7 +69,8 @@ from hazelcast.protocol.codec import (
     map_put_if_absent_with_max_idle_codec,
     map_put_transient_with_max_idle_codec,
     map_set_with_max_idle_codec,
-    map_remove_interceptor_codec, map_remove_all_codec,
+    map_remove_interceptor_codec,
+    map_remove_all_codec,
 )
 from hazelcast.proxy.base import (
     Proxy,
@@ -1286,11 +1287,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
     def remove_all(self, predicate: Predicate) -> Future[None]:
         """Removes all entries which match with the supplied predicate
 
-            Args:
-                predicate: Used to select entries to be removed from map.
+        Args:
+            predicate: Used to select entries to be removed from map.
 
-            Returns:
-                None
+        Returns:
+            None
         """
 
         check_not_none(predicate, "predicate can't be None")
@@ -2237,10 +2238,7 @@ class BlockingMap(Map[KeyType, ValueType]):
     ) -> typing.Optional[ValueType]:
         return self._wrapped.remove(key).result()
 
-    def remove_all(  # type: ignore[override]
-        self,
-        predicate: Predicate
-    ) -> None:
+    def remove_all(self, predicate: Predicate) -> None:  # type: ignore[override]
         return self._wrapped.remove_all(predicate).result()
 
     def remove_if_same(  # type: ignore[override]
