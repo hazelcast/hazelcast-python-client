@@ -495,6 +495,15 @@ class MapTest(SingleMemberTestCase):
         self.assertEqual(0, self.map.size())
         self.assertFalse(self.map.contains_key("key"))
 
+    def test_remove_all_with_none_predicate(self):
+        with self.assertRaises(AssertionError):
+            self.map.remove_all(None)
+
+    def test_remove_all(self):
+        self.fill_map()
+        self.map.remove_all(predicate=sql("__key > 'key-7'"))
+        self.assertEqual(self.map.size(), 8)
+
     def test_remove_if_same_when_same(self):
         self.map.put("key", "value")
 
