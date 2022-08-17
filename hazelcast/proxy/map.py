@@ -2237,7 +2237,7 @@ class BlockingMap(Map[KeyType, ValueType]):
     ) -> typing.Optional[ValueType]:
         return self._wrapped.remove(key).result()
 
-    def remove_all(
+    def remove_all(  # type: ignore[override]
         self,
         predicate: Predicate
     ) -> None:
