@@ -2,7 +2,7 @@
 from collections import namedtuple
 from datetime import date, datetime, time
 from time import localtime
-from typing import Any, Iterator, List, Sequence, Union
+from typing import Any, Dict, Iterator, List, Sequence, Union
 
 from hazelcast import HazelcastClient
 from hazelcast.sql import SqlResult, SqlRow, SqlRowMetadata
@@ -64,7 +64,7 @@ class Cursor:
         return self._description
 
     @property
-    def rowcount(self):
+    def rowcount(self) -> int:
         return -1
 
     def close(self):
@@ -87,13 +87,13 @@ class Cursor:
         for fut in futures:
             fut.result()
 
-    def fetchone(self):
+    def fetchone(self) -> SqlRow:
         pass
 
-    def fetchmany(self, size=None):
+    def fetchmany(self, size=None) -> List[SqlRow]:
         pass
 
-    def fetchall(self):
+    def fetchall(self) -> List[SqlRow]:
         pass
 
     def setinputsizes(self, sizes):
@@ -116,7 +116,7 @@ class Cursor:
 
 class Connection:
 
-    def __init__(self, config):
+    def __init__(self, config: Dict[str, Any]):
         self._client = HazelcastClient(**config)
 
     def close(self):
@@ -132,7 +132,7 @@ class Connection:
         return Cursor(self)
 
 
-def connect(config=None, *, user: str=None, password: str=None, host="localhost", port: int=None) -> Connection:
+def connect(config=None, *, dsn="", user: str=None, password: str=None, host="localhost", port: int=None) -> Connection:
     if config is not None:
         return Connection(config)
     if port:
@@ -143,3 +143,41 @@ def connect(config=None, *, user: str=None, password: str=None, host="localhost"
         "creds_password": password,
     }
     return Connection(config)
+
+class Error(Exception):
+    pass
+
+class Warning(Exception):
+    pass
+
+
+class InterfaceError(Error):
+    pass
+
+
+class DatabaseError(Error):
+    pass
+
+
+class InternalError(DatabaseError):
+    pass
+
+
+class OperationalError(DatabaseError):
+    pass
+
+
+class ProgrammingError(DatabaseError):
+    pass
+
+
+class IntegrityError(DatabaseError):
+    pass
+
+
+class DataError(DatabaseError):
+    pass
+
+
+class NotSupportedError(DatabaseError):
+    pass
