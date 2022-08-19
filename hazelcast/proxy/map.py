@@ -1285,26 +1285,18 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         return self._remove_internal(key_data)
 
     def remove_all(self, predicate: Predicate) -> Future[None]:
-        """Removes all entries which match with the supplied predicate
+        """Removes all entries which match with the supplied predicate.
 
         Args:
             predicate: Used to select entries to be removed from map.
-
-        Returns:
-            None
         """
-
         check_not_none(predicate, "predicate can't be None")
-
         try:
             predicate_data = self._to_data(predicate)
-
         except SchemaNotReplicatedError as e:
             return self._send_schema_and_retry(e, self.remove_all, predicate)
 
-        request = map_remove_all_codec.encode_request(self.name, predicate_data)
-
-        return self._invoke(request)
+        return self._remove_all_internal(predicate_data)
 
     def remove_if_same(self, key: KeyType, value: ValueType) -> Future[bool]:
         """Removes the entry for a key only if it is currently mapped to a
@@ -1367,6 +1359,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         check_not_none(registration_id, "Interceptor registration id should not be None")
         request = map_remove_interceptor_codec.encode_request(self.name, registration_id)
         return self._invoke(request, map_remove_interceptor_codec.decode_response)
+        return self._remove_internal
 
     def replace(self, key: KeyType, value: ValueType) -> Future[typing.Optional[ValueType]]:
         """Replaces the entry for a key only if it is currently mapped to some
@@ -1727,6 +1720,10 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         request = map_remove_codec.encode_request(self.name, key_data, thread_id())
         return self._invoke_on_key(request, key_data, handler)
 
+    def _remove_all_internal(self, predicate_data):
+        request = map_remove_all_codec.encode_request(self.name, predicate_data)
+        return self._invoke(request)
+
     def _remove_if_same_internal_(self, key_data, value_data):
         request = map_remove_if_same_codec.encode_request(
             self.name, key_data, value_data, thread_id()
@@ -1967,6 +1964,10 @@ class MapFeatNearCache(Map[KeyType, ValueType]):
     def _remove_internal(self, key_data):
         self._invalidate_cache(key_data)
         return super(MapFeatNearCache, self)._remove_internal(key_data)
+
+    def _remove_all_internal(self, predicate_data):
+        self._near_cache.clear()
+        return super(MapFeatNearCache, self)._remove_all_internal(predicate_data)
 
     def _remove_if_same_internal_(self, key_data, value_data):
         self._invalidate_cache(key_data)
