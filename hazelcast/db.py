@@ -2,10 +2,10 @@
 from collections import namedtuple
 from datetime import date, datetime, time
 from time import localtime
-from typing import Any, Dict, Iterator, List, Sequence, Union
+from typing import Any, Dict, Callable, Iterator, List, Sequence, Union
 
 from hazelcast import HazelcastClient
-from hazelcast.sql import SqlResult, SqlRow, SqlRowMetadata
+from hazelcast.sql import HazelcastSqlError, SqlResult, SqlRow, SqlRowMetadata
 
 apilevel = "0.2"
 # Threads may share the module and connections.
@@ -181,3 +181,13 @@ class DataError(DatabaseError):
 
 class NotSupportedError(DatabaseError):
     pass
+
+
+def wrap_error(f: Callable) -> Any:
+    try:
+        return f()
+    except HazelcastSqlError as e:
+        msg = f"{e.args}"
+        raise DatabaseError from e
+    except Exception as e:
+        raise Error from e
