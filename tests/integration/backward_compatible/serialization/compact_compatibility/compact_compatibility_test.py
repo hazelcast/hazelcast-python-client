@@ -280,6 +280,12 @@ class CompactCompatibilityBase(HazelcastTestCase):
             cls.rc.exit()
             raise unittest.SkipTest("Compact serialization requires 5.1 server")
 
+        if compare_server_version_with_rc(cls.rc, "5.2") >= 0 and compare_client_version("5.2") < 0:
+            cls.rc.exit()
+            raise unittest.SkipTest(
+                "Compact serialization 5.2 server is not compatible with clients older than 5.2"
+            )
+
         config = f"""
 <hazelcast xmlns="http://www.hazelcast.com/schema/config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
