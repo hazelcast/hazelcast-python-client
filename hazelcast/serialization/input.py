@@ -152,6 +152,26 @@ class _ObjectDataInput(ObjectDataInput):
             self.read_into(result, 0, length)
         return result.decode("utf-8")
 
+    def read_decimal(self) -> decimal.Decimal:
+        """TODO: Implement read_decimal"""
+        pass
+
+    def read_time(self) -> datetime.time:
+        """TODO: Implement read_time"""
+        pass
+
+    def read_date(self) -> datetime.date:
+        """TODO: Implement read_date"""
+        pass
+
+    def read_timestamp(self) -> datetime.datetime:
+        """TODO: Implement read_timestamp"""
+        pass
+
+    def read_timestamp_with_timezone(self) -> datetime.datetime:
+        """TODO: Implement read_timestamp_with_timezone"""
+        pass
+
     def read_byte_array(self):
         length = self.read_int()
         if length == NULL_ARRAY_LENGTH:
@@ -188,6 +208,26 @@ class _ObjectDataInput(ObjectDataInput):
 
     def read_string_array(self):
         return self._read_array_fnc(self.read_string)
+
+    def read_decimal_array(self):
+        """TODO: Implement read_decimal"""
+        pass
+
+    def read_time_array(self):
+        """TODO: Implement read_time"""
+        pass
+
+    def read_date_array(self):
+        """TODO: Implement read_date"""
+        pass
+
+    def read_timestamp_array(self):
+        """TODO: Implement read_timestamp_array"""
+        pass
+
+    def read_timestamp_with_timezone_array(self):
+        """TODO: Implement read_timestamp_with_timezone_array"""
+        pass
 
     def read_object(self):
         return self._service.read_object(self)

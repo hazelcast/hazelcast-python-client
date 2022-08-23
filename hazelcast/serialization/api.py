@@ -126,6 +126,26 @@ class ObjectDataOutput:
         """
         raise NotImplementedError()
 
+    def write_decimal(self, val: decimal.Decimal) -> None:
+
+        raise NotImplementedError()
+
+    def write_time(self, val: datetime.time) -> None:
+
+        raise NotImplementedError()
+
+    def write_date(self, val: datetime.date) -> None:
+
+        raise NotImplementedError()
+
+    def write_timestamp(self, val: datetime.datetime) -> None:
+
+        raise NotImplementedError()
+
+    def write_timestamp_with_timezone(self, val: datetime.time) -> None:
+
+        raise NotImplementedError()
+
     def write_byte_array(self, val: bytearray) -> None:
         """Writes a byte array to this output stream.
 
@@ -208,6 +228,21 @@ class ObjectDataOutput:
         Args:
             val: The UTF-8 String array to be written.
         """
+        raise NotImplementedError()
+
+    def write_decimal_array(self, val: typing.Sequence[decimal.Decimal]) -> None:
+        raise NotImplementedError()
+
+    def write_time_array(self, val: typing.Sequence[datetime.time]) -> None:
+        raise NotImplementedError()
+
+    def write_date_array(self, val: typing.Sequence[datetime.date]) -> None:
+        raise NotImplementedError()
+
+    def write_timestamp_array(self, val: typing.Sequence[datetime.datetime]) -> None:
+        raise NotImplementedError()
+
+    def write_timestamp_with_timezone_array(self, val: typing.Sequence[datetime.datetime]) -> None:
         raise NotImplementedError()
 
     def write_object(self, val: typing.Any) -> None:
@@ -360,6 +395,21 @@ class ObjectDataInput:
         """
         raise NotImplementedError()
 
+    def read_decimal(self) -> decimal.Decimal:
+        raise NotImplementedError()
+
+    def read_time(self) -> datetime.time:
+        raise NotImplementedError()
+
+    def read_date(self) -> datetime.date:
+        raise NotImplementedError()
+
+    def read_timestamp(self) -> datetime.datetime:
+        raise NotImplementedError()
+
+    def read_timestamp_with_timezone(self) -> datetime.datetime:
+        raise NotImplementedError()
+
     def read_byte_array(self) -> bytearray:
         """Reads a byte array from input stream and returns it.
 
@@ -442,6 +492,21 @@ class ObjectDataInput:
         Returns:
             The UTF-8 string array read.
         """
+        raise NotImplementedError()
+
+    def read_decimal_array(self) -> typing.List[decimal.Decimal]:
+        raise NotImplementedError()
+
+    def read_time_array(self) -> typing.List[datetime.time]:
+        raise NotImplementedError()
+
+    def read_date_array(self) -> typing.List[datetime.date]:
+        raise NotImplementedError()
+
+    def read_timestamp_array(self) -> typing.List[datetime.datetime]:
+        raise NotImplementedError()
+
+    def read_timestamp_with_timezone_array(self) -> typing.List[datetime.datetime]:
         raise NotImplementedError()
 
     def read_object(self) -> typing.Any:
@@ -788,6 +853,26 @@ class PortableReader:
         """
         raise NotImplementedError()
 
+    def read_decimal(self, field_name: str) -> decimal.Decimal:
+
+        raise NotImplementedError()
+
+    def read_time(self, field_name: str) -> datetime.time:
+
+        raise NotImplementedError()
+
+    def read_date(self, field_name: str) -> datetime.date:
+
+        raise NotImplementedError()
+
+    def read_timestamp(self, field_name: str) -> datetime.datetime:
+
+        raise NotImplementedError()
+
+    def read_timestamp_with_timezone(self, field_name: str) -> datetime.datetime:
+
+        raise NotImplementedError()
+
     def read_byte_array(self, field_name: str) -> bytearray:
         """Reads a primitive byte array.
 
@@ -900,6 +985,26 @@ class PortableReader:
         Returns:
             The UTF-8 String array read.
         """
+        raise NotImplementedError()
+
+    def read_decimal_array(self, field_name: str) -> typing.List[decimal.Decimal]:
+
+        raise NotImplementedError()
+
+    def read_time_array(self, field_name: str) -> typing.List[datetime.time]:
+
+        raise NotImplementedError()
+
+    def read_date_array(self, field_name: str) -> typing.List[datetime.date]:
+
+        raise NotImplementedError()
+
+    def read_timestamp_array(self, field_name: str) -> typing.List[datetime.datetime]:
+
+        raise NotImplementedError()
+
+    def read_timestamp_with_timezone_array(self, field_name: str) -> typing.List[datetime.datetime]:
+
         raise NotImplementedError()
 
     def read_portable_array(self, field_name: str) -> typing.List[Portable]:
@@ -1044,6 +1149,26 @@ class PortableWriter:
         """
         raise NotImplementedError()
 
+    def write_decimal(self, field_name: str, value: decimal.Decimal) -> None:
+
+        raise NotImplementedError()
+
+    def write_time(self, field_name: str, value: datetime.time) -> None:
+
+        raise NotImplementedError()
+
+    def write_date(self, field_name: str, value: datetime.date) -> None:
+
+        raise NotImplementedError()
+
+    def write_timestamp(self, field_name: str, value: datetime.datetime) -> None:
+
+        raise NotImplementedError()
+
+    def write_timestamp_with_timezone(self, field_name: str, value: datetime.time) -> None:
+
+        raise NotImplementedError()
+
     def write_byte_array(self, field_name: str, values: bytearray) -> None:
         """Writes a primitive byte array.
 
@@ -1137,6 +1262,22 @@ class PortableWriter:
             values: UTF-8 String array to be written.
         """
         raise NotImplementedError()
+
+    def write_decimal_array(self, field_name: str, values: typing.Sequence[decimal.Decimal]) -> None:
+        raise NotImplementedError()
+
+    def write_time_array(self, field_name: str, values: typing.Sequence[datetime.time]) -> None:
+        raise NotImplementedError()
+
+    def write_date_array(self, field_name: str, values: typing.Sequence[datetime.date]) -> None:
+        raise NotImplementedError()
+
+    def write_timestamp_array(self, field_name: str, values: typing.Sequence[datetime.datetime]) -> None:
+        raise NotImplementedError()
+
+    def write_timestamp_with_timezone_array(self, field_name: str, values: typing.Sequence[datetime.datetime]) -> None:
+        raise NotImplementedError()
+
 
     def write_portable_array(self, field_name: str, values: typing.Sequence[Portable]) -> None:
         """Writes a portable array.

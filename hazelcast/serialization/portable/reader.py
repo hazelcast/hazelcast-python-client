@@ -103,6 +103,26 @@ class DefaultPortableReader(PortableReader):
         finally:
             self._in.set_position(cur_pos)
 
+    def read_decimal(self, field_name):
+        """TODO: Implement read_decimal"""
+        pass
+
+    def read_time(self, field_name):
+        """TODO: Implement read_time"""
+        pass
+
+    def read_date(self, field_name):
+        """TODO: Implement read_date"""
+        pass
+
+    def read_timestamp(self, field_name):
+        """TODO: Implement read_timestamp"""
+        pass
+
+    def read_timestamp_with_timezone(self, field_name):
+        """TODO: Implement read_timestamp_with_timezone"""
+        pass
+
     def read_boolean_array(self, field_name):
         current_pos = self._in.position()
         try:
@@ -217,6 +237,26 @@ class DefaultPortableReader(PortableReader):
             return portables
         finally:
             self._in.set_position(current_pos)
+
+    def read_decimal_array(self, field_name):
+        """TODO: Implement read_decimal_array"""
+        pass
+
+    def read_time_array(self, field_name):
+        """TODO: Implement read_time_array"""
+        pass
+
+    def read_date_array(self, field_name):
+        """TODO: Implement read_date_array"""
+        pass
+
+    def read_timestamp_array(self, field_name):
+        """TODO: Implement read_timestamp_array"""
+        pass
+
+    def read_timestamp_with_timezone_array(self, field_name):
+        """TODO: Implement read_timestamp_with_timezone_array"""
+        pass
 
     def read_utf(self, field_name):
         return self.read_string(field_name)
@@ -406,6 +446,26 @@ class MorphingPortableReader(DefaultPortableReader):
         self.validate_type_compatibility(fd, FieldType.STRING)
         return super(MorphingPortableReader, self).read_string(field_name)
 
+    def read_decimal(self, field_name):
+        """TODO: Implement MorphingPortableReader#read_decimal"""
+        pass
+
+    def read_time(self, field_name):
+        """TODO: Implement MorphingPortableReader#read_time"""
+        pass
+
+    def read_date(self, field_name):
+        """TODO: Implement MorphingPortableReader#read_date"""
+        pass
+
+    def read_timestamp(self, field_name):
+        """TODO: Implement MorphingPortableReader#read_timestamp"""
+        pass
+
+    def read_timestamp_with_timezone(self, field_name):
+        """TODO: Implement MorphingPortableReader#read_timestamp_with_timezone"""
+        pass
+
     def read_string_array(self, field_name):
         fd = self._class_def.get_field(field_name)
         if fd is None:
@@ -488,6 +548,26 @@ class MorphingPortableReader(DefaultPortableReader):
 
     def read_utf_array(self, field_name):
         return self.read_string_array(field_name)
+
+    def read_decimal_array(self, field_name):
+        """TODO: Implement MorphingPortableReader#read_decimal_array"""
+        pass
+
+    def read_time_array(self, field_name):
+        """TODO: Implement MorphingPortableReader#read_time_array"""
+        pass
+
+    def read_date_array(self, field_name):
+        """TODO: Implement MorphingPortableReader#read_date_array"""
+        pass
+
+    def read_timestamp_array(self, field_name):
+        """TODO: Implement MorphingPortableReader#read_timestamp_array"""
+        pass
+
+    def read_timestamp_with_timezone_array(self, field_name):
+        """TODO: Implement MorphingPortableReader#read_timestamp_with_timezone_array"""
+        pass
 
     def validate_type_compatibility(self, field_def, expected_type):
         if field_def.field_type != expected_type:

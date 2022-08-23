@@ -60,6 +60,26 @@ class DefaultPortableWriter(PortableWriter):
         self._set_position(field_name, FieldType.STRING)
         self._out.write_string(value)
 
+    def write_decimal(self, field_name, value):
+        self._set_position(field_name, FieldType.DECIMAL)
+        self._out.write_decimal(value)
+
+    def write_time(self, field_name, value):
+        self._set_position(field_name, FieldType.TIME)
+        self._out.write_time(value)
+
+    def write_date(self, field_name, value):
+        self._set_position(field_name, FieldType.DATE)
+        self._out.write_date(value)
+
+    def write_timestamp(self, field_name, value):
+        self._set_position(field_name, FieldType.TIMESTAMP)
+        self._out.write_timestamp(value)
+
+    def write_timestamp_with_timezone(self, field_name, value):
+        self._set_position(field_name, FieldType.TIMESTAMP_TIMEZONE)
+        self._out.write_timestamp_timezone(value)
+
     def write_byte_array(self, field_name, values):
         self._set_position(field_name, FieldType.BYTE_ARRAY)
         self._out.write_byte_array(values)
@@ -95,6 +115,26 @@ class DefaultPortableWriter(PortableWriter):
     def write_string_array(self, field_name, values):
         self._set_position(field_name, FieldType.STRING_ARRAY)
         self._out.write_string_array(values)
+
+    def write_decimal_array(self, field_name, values):
+        self._set_position(field_name, FieldType.DECIMAL_ARRAY)
+        self._out.write_decimal_array(values)
+
+    def write_time_array(self, field_name, values):
+        self._set_position(field_name, FieldType.TIME_ARRAY)
+        self._out.write_time_array(values)
+
+    def write_date_array(self, field_name, values):
+        self._set_position(field_name, FieldType.DATE_ARRAY)
+        self._out.write_date_array(values)
+
+    def write_timestamp_array(self, field_name, values):
+        self._set_position(field_name, FieldType.TIMESTAMP_ARRAY)
+        self._out.write_timestamp_array(values)
+
+    def write_timestamp_with_timezone_array(self, field_name, values):
+        self._set_position(field_name, FieldType.TIMESTAMP_TIMEZONE_ARRAY)
+        self._out.write_timestamp_timezone_array(values)
 
     def write_portable(self, field_name, portable):
         fd = self._set_position(field_name, FieldType.PORTABLE)
@@ -230,6 +270,21 @@ class ClassDefinitionWriter(PortableWriter):
     def write_string(self, field_name, value):
         self._builder.add_string_field(field_name)
 
+    def write_decimal(self, field_name, value):
+        self._builder.add_decimal_field(field_name)
+
+    def write_time(self, field_name, value):
+        self._builder.add_time_field(field_name)
+
+    def write_date(self, field_name, value):
+        self._builder.add_date_field(field_name)
+
+    def write_timestamp(self, field_name, value):
+        self._builder.add_timestamp_field(field_name)
+
+    def write_timestamp_with_timezone(self, field_name, value):
+        self._builder.add_timestamp_timezone_field(field_name)
+
     def write_byte_array(self, field_name, values):
         self._builder.add_byte_array_field(field_name)
 
@@ -256,6 +311,21 @@ class ClassDefinitionWriter(PortableWriter):
 
     def write_string_array(self, field_name, values):
         self._builder.add_string_array_field(field_name)
+
+    def write_decimal_array(self, field_name, values):
+        self._builder.add_decimal_array_field(field_name)
+
+    def write_time_array(self, field_name, values):
+        self._builder.add_time_array_field(field_name)
+
+    def write_date_array(self, field_name, values):
+        self._builder.add_date_array_field(field_name)
+
+    def write_timestamp_array(self, field_name, values):
+        self._builder.add_timestamp_array_field(field_name)
+
+    def write_timestamp_with_timezone_array(self, field_name, values):
+        self._builder.add_timestamp_timezone_array_field(field_name)
 
     def write_portable(self, field_name, portable):
         if portable is None:
