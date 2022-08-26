@@ -1,6 +1,6 @@
-import hazelcast
+import hazelcast.db
 
-conn = hazelcast.connect()
+conn = hazelcast.db.connect()
 cur = conn.cursor()
 cur.execute(
     """
@@ -27,8 +27,9 @@ data = [
 ]
 cur.executemany('SINK INTO stocks VALUES(?, CAST(? AS DATE), ?, ?, ?, ?)', data)
 
-for row in cur.execute('SELECT * FROM stocks ORDER BY price'):
-    print(row)
+cur.execute('SELECT * FROM stocks ORDER BY price')
+for row in cur.fetchmany(2):
+    print(row["symbol"], row["quantity"], row["price"])
 
 print(cur.description)
 

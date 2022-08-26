@@ -2,12 +2,13 @@
 from collections import namedtuple
 from datetime import date, datetime, time
 from time import localtime
-from typing import Any, Dict, Callable, Iterator, List, Sequence, Union
+from typing import Any, Dict, Callable, Iterator, List, Optional, Sequence, Union
+import itertools
 
 from hazelcast import HazelcastClient
 from hazelcast.sql import HazelcastSqlError, SqlResult, SqlRow, SqlRowMetadata
 
-apilevel = "0.2"
+apilevel = "2.0"
 # Threads may share the module and connections.
 threadsafety = 2
 paramstyle = "qmark"
@@ -58,6 +59,7 @@ class Cursor:
         self.arraysize = 1
         self._res: Union[SqlResult, None] = None
         self._description: Union[List[ResultColumn], None] = None
+        self._iter: Optional[Iterator[SqlRow]] = None
 
     @property
     def description(self) -> Union[List[ResultColumn], None]:
@@ -72,12 +74,12 @@ class Cursor:
             self._res.close()
             self._res = None
 
-    def execute(self, operation: str, *args) -> Union[Iterator[SqlRow], None]:
+    def execute(self, operation: str, *args) -> None:
         res = self._conn._client.sql.execute(operation, *args).result()
         if res.is_row_set():
             self._res = res
             self._description = self._make_description(res.get_row_metadata())
-            return res.__iter__()
+            self._iter = res.__iter__()
 
     def executemany(self, operation: str, seq_of_params: Sequence[Any]) -> None:
         futures = []
@@ -86,15 +88,22 @@ class Cursor:
             futures.append(svc.execute(operation, *params))
         for fut in futures:
             fut.result()
+        self._iter = None
 
-    def fetchone(self) -> SqlRow:
-        pass
+    def fetchone(self) -> Optional[SqlRow]:
+        if self._iter is None:
+            return None
+        return next(self._iter)
 
     def fetchmany(self, size=None) -> List[SqlRow]:
-        pass
+        if self._iter is None:
+            return []
+        return list(itertools.islice(self._iter, size))
 
     def fetchall(self) -> List[SqlRow]:
-        pass
+        if self._iter is None:
+            return []
+        return list(self._iter)
 
     def setinputsizes(self, sizes):
         pass
