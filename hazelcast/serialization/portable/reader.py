@@ -1,7 +1,11 @@
+import datetime
+import time
+
 from hazelcast.errors import HazelcastSerializationError
-from hazelcast.serialization import bits
-from hazelcast.serialization.api import PortableReader
+from hazelcast.serialization import bits, NULL_ARRAY_LENGTH
+from hazelcast.serialization.api import PortableReader, ObjectDataInput
 from hazelcast.serialization.portable.classdef import FieldType
+from hazelcast.serialization.util import IOUtil
 
 
 class DefaultPortableReader(PortableReader):
@@ -104,24 +108,20 @@ class DefaultPortableReader(PortableReader):
             self._in.set_position(cur_pos)
 
     def read_decimal(self, field_name):
-        """TODO: Implement read_decimal"""
-        pass
+        return self.read_nullable_field(field_name, FieldType.DECIMAL, IOUtil.read_big_decimal)
 
     def read_time(self, field_name):
-        """TODO: Implement read_time"""
-        pass
+        return self.read_nullable_field(field_name, FieldType.TIME, read_portable_time)
 
     def read_date(self, field_name):
-        """TODO: Implement read_date"""
-        pass
+        return self.read_nullable_field(field_name, FieldType.DATE, read_portable_date)
 
     def read_timestamp(self, field_name):
-        """TODO: Implement read_timestamp"""
-        pass
+        return self.read_nullable_field(field_name, FieldType.TIMESTAMP, read_portable_timestamp)
 
     def read_timestamp_with_timezone(self, field_name):
-        """TODO: Implement read_timestamp_with_timezone"""
-        pass
+        return self.read_nullable_field(field_name, FieldType.TIMESTAMP_WITH_TIMEZONE,
+                                        read_portable_timestamp_with_timezone)
 
     def read_boolean_array(self, field_name):
         current_pos = self._in.position()
@@ -239,30 +239,52 @@ class DefaultPortableReader(PortableReader):
             self._in.set_position(current_pos)
 
     def read_decimal_array(self, field_name):
-        """TODO: Implement read_decimal_array"""
-        pass
+        return self.read_object_array_field(field_name, FieldType.DECIMAL_ARRAY, IOUtil.read_big_decimal)
 
     def read_time_array(self, field_name):
-        """TODO: Implement read_time_array"""
-        pass
+        return self.read_object_array_field(field_name, FieldType.TIME_ARRAY, read_portable_time)
 
     def read_date_array(self, field_name):
-        """TODO: Implement read_date_array"""
-        pass
+        return self.read_object_array_field(field_name, FieldType.DATE_ARRAY, read_portable_date)
 
     def read_timestamp_array(self, field_name):
-        """TODO: Implement read_timestamp_array"""
-        pass
+        return self.read_object_array_field(field_name, FieldType.TIMESTAMP_ARRAY, read_portable_timestamp)
 
     def read_timestamp_with_timezone_array(self, field_name):
-        """TODO: Implement read_timestamp_with_timezone_array"""
-        pass
+        return self.read_object_array_field(field_name, FieldType.TIMESTAMP_WITH_TIMEZONE_ARRAY, read_portable_timestamp_with_timezone)
 
     def read_utf(self, field_name):
         return self.read_string(field_name)
 
     def read_utf_array(self, field_name):
         return self.read_string_array(field_name)
+
+    def read_nullable_field(self, field_name, field_type, func):
+        current_pos = self._in.position()
+        try:
+            pos = self._read_position(field_name, field_type)
+            self._in.set_position(pos)
+            is_null = self._in.read_boolean()
+            if is_null:
+                return None
+            return func(self._in)
+        finally:
+            self._in.set_position(current_pos)
+
+    def read_object_array_field(self, field_name, field_type: FieldType, func):
+        current_pos = self._in.position()
+        try:
+            pos = self._read_position(field_name, field_type)
+            self._in.set_position(pos)
+            length = self._in.read_int()
+            if length == NULL_ARRAY_LENGTH:
+                return None
+            values = []
+            for i in range(length):
+                values.append(func(self._in))
+            return values
+        finally:
+            self._in.set_position(current_pos)
 
     def get_raw_data_input(self):
         if not self._raw:
@@ -334,6 +356,43 @@ def _check_factory_and_class(field_def, factory_id, class_id):
         raise ValueError(
             "Invalid classId! Expected: %s, Current: %s" % (class_id, field_def.class_id)
         )
+
+def read_portable_date(inp: ObjectDataInput):
+    y, m, d = _read_portable_date(inp)
+    return datetime.date(y, m, d)
+
+
+def _read_portable_date(inp: ObjectDataInput):
+    y = inp.read_short()
+    m = inp.read_byte()
+    d = inp.read_byte()
+    return y, m, d
+
+
+def read_portable_time(inp: ObjectDataInput):
+    h, m, s, nanos = _read_portable_time(inp)
+    return datetime.time(h, m, s, nanos)
+
+
+def _read_portable_time(inp: ObjectDataInput):
+    h = int(inp.read_byte())
+    m = int(inp.read_byte())
+    s = int(inp.read_byte())
+    nanos = int(inp.read_int())
+    return h, m, s, nanos
+
+
+def read_portable_timestamp(inp: ObjectDataInput):
+    y, m, d = _read_portable_date(inp)
+    h, mn, s, nanos = _read_portable_time(inp)
+    return datetime.datetime(y, m, d, h, mn, s, nanos, datetime.datetime.now().tzinfo)
+
+
+def read_portable_timestamp_with_timezone(inp: ObjectDataInput):
+    y, m, d = _read_portable_date(inp)
+    h, mn, s, nanos = _read_portable_time(inp)
+    offset = inp.read_int()
+    return datetime.datetime(y, m, d, h, mn, s, nanos, datetime.timezone(datetime.timedelta(seconds=offset), ""))
 
 
 class MorphingPortableReader(DefaultPortableReader):
@@ -451,20 +510,32 @@ class MorphingPortableReader(DefaultPortableReader):
         pass
 
     def read_time(self, field_name):
-        """TODO: Implement MorphingPortableReader#read_time"""
-        pass
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return 0
+        self.validate_type_compatibility(fd, FieldType.TIME)
+        return super(MorphingPortableReader, self).read_time(field_name)
 
     def read_date(self, field_name):
-        """TODO: Implement MorphingPortableReader#read_date"""
-        pass
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return 0
+        self.validate_type_compatibility(fd, FieldType.DATE)
+        return super(MorphingPortableReader, self).read_date(field_name)
 
     def read_timestamp(self, field_name):
-        """TODO: Implement MorphingPortableReader#read_timestamp"""
-        pass
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return 0
+        self.validate_type_compatibility(fd, FieldType.TIMESTAMP)
+        return super(MorphingPortableReader, self).read_timestamp(field_name)
 
     def read_timestamp_with_timezone(self, field_name):
-        """TODO: Implement MorphingPortableReader#read_timestamp_with_timezone"""
-        pass
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return 0
+        self.validate_type_compatibility(fd, FieldType.TIMESTAMP_WITH_TIMEZONE)
+        return super(MorphingPortableReader, self).read_timestamp_with_timezone(field_name)
 
     def read_string_array(self, field_name):
         fd = self._class_def.get_field(field_name)
@@ -550,24 +621,35 @@ class MorphingPortableReader(DefaultPortableReader):
         return self.read_string_array(field_name)
 
     def read_decimal_array(self, field_name):
-        """TODO: Implement MorphingPortableReader#read_decimal_array"""
-        pass
+        return self.read_nullable_field(field_name, FieldType.DECIMAL_ARRAY, read_decimal_array)
 
     def read_time_array(self, field_name):
-        """TODO: Implement MorphingPortableReader#read_time_array"""
-        pass
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return None
+        self.validate_type_compatibility(fd, FieldType.TIME_ARRAY)
+        return super(MorphingPortableReader, self).read_time_array(field_name)
 
     def read_date_array(self, field_name):
-        """TODO: Implement MorphingPortableReader#read_date_array"""
-        pass
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return None
+        self.validate_type_compatibility(fd, FieldType.DATE_ARRAY)
+        return super(MorphingPortableReader, self).read_date_array(field_name)
 
     def read_timestamp_array(self, field_name):
-        """TODO: Implement MorphingPortableReader#read_timestamp_array"""
-        pass
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return None
+        self.validate_type_compatibility(fd, FieldType.TIMESTAMP_ARRAY)
+        return super(MorphingPortableReader, self).read_timestamp_array(field_name)
 
     def read_timestamp_with_timezone_array(self, field_name):
-        """TODO: Implement MorphingPortableReader#read_timestamp_with_timezone_array"""
-        pass
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return None
+        self.validate_type_compatibility(fd, FieldType.TIMESTAMP_WITH_TIMEZONE_ARRAY)
+        return super(MorphingPortableReader, self).read_timestamp_with_timezone_array(field_name)
 
     def validate_type_compatibility(self, field_def, expected_type):
         if field_def.field_type != expected_type:

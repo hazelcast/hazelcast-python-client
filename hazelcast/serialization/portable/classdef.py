@@ -15,11 +15,6 @@ class FieldType:
     DOUBLE = 8
     UTF = 9  # Defined for backward compatibility.
     STRING = 9
-    DECIMAL = 0
-    TIME = 0
-    DATE = 0
-    TIMESTAMP = 0
-    TIMESTAMP_TIMEZONE = 0
     PORTABLE_ARRAY = 10
     BYTE_ARRAY = 11
     BOOLEAN_ARRAY = 12
@@ -31,11 +26,16 @@ class FieldType:
     DOUBLE_ARRAY = 18
     UTF_ARRAY = 19  # Defined for backward compatibility.
     STRING_ARRAY = 19
-    DECIMAL_ARRAY = 0
-    TIME_ARRAY = 0
-    DATE_ARRAY = 0
-    TIMESTAMP_ARRAY = 0
-    TIMESTAMP_TIMEZONE_ARRAY = 0
+    DECIMAL = 20
+    TIME = 21
+    DATE = 22
+    TIMESTAMP = 23
+    TIMESTAMP_WITH_TIMEZONE = 24
+    DECIMAL_ARRAY = 25
+    TIME_ARRAY = 26
+    DATE_ARRAY = 27
+    TIMESTAMP_ARRAY = 28
+    TIMESTAMP_WITH_TIMEZONE_ARRAY = 29
 
 
 class FieldDefinition:
@@ -422,7 +422,7 @@ class ClassDefinitionBuilder:
         return self
 
     def add_date_field(self, field_name: str) -> "ClassDefinitionBuilder":
-        """Adds the field with the data type to the
+        """Adds the field with the date type to the
         class definition.
 
         Args:
@@ -472,7 +472,7 @@ class ClassDefinitionBuilder:
                 after :func:`build` or a field with the same
                 name is already registered.
         """
-        self._add_field_by_type(field_name, FieldType.TIMESTAMP_TIMEZONE, self.version)
+        self._add_field_by_type(field_name, FieldType.TIMESTAMP_WITH_TIMEZONE, self.version)
         return self
 
     def add_portable_array_field(
@@ -688,7 +688,7 @@ class ClassDefinitionBuilder:
         return self.add_string_array_field(field_name)
 
     def add_decimal_array_field(self, field_name: str) -> "ClassDefinitionBuilder":
-        """Adds the field with the decimal type to the
+        """Adds the field with the decimal array type to the
         class definition.
 
         Args:
@@ -702,11 +702,11 @@ class ClassDefinitionBuilder:
                 after :func:`build` or a field with the same
                 name is already registered.
         """
-        self._add_field_by_type(field_name, FieldType.DECIMAL, self.version)
+        self._add_field_by_type(field_name, FieldType.DECIMAL_ARRAY, self.version)
         return self
 
     def add_time_array_field(self, field_name: str) -> "ClassDefinitionBuilder":
-        """Adds the field with the time type to the
+        """Adds the field with the time array type to the
         class definition.
 
         Args:
@@ -720,11 +720,11 @@ class ClassDefinitionBuilder:
                 after :func:`build` or a field with the same
                 name is already registered.
         """
-        self._add_field_by_type(field_name, FieldType.TIME, self.version)
+        self._add_field_by_type(field_name, FieldType.TIME_ARRAY, self.version)
         return self
 
     def add_date_array_field(self, field_name: str) -> "ClassDefinitionBuilder":
-        """Adds the field with the data type to the
+        """Adds the field with the date array type to the
         class definition.
 
         Args:
@@ -738,11 +738,11 @@ class ClassDefinitionBuilder:
                 after :func:`build` or a field with the same
                 name is already registered.
         """
-        self._add_field_by_type(field_name, FieldType.DATE, self.version)
+        self._add_field_by_type(field_name, FieldType.DATE_ARRAY, self.version)
         return self
 
     def add_timestamp_array_field(self, field_name: str) -> "ClassDefinitionBuilder":
-        """Adds the field with the timestamp type to the
+        """Adds the field with the timestamp array type to the
         class definition.
 
         Args:
@@ -756,11 +756,11 @@ class ClassDefinitionBuilder:
                 after :func:`build` or a field with the same
                 name is already registered.
         """
-        self._add_field_by_type(field_name, FieldType.TIMESTAMP, self.version)
+        self._add_field_by_type(field_name, FieldType.TIMESTAMP_ARRAY, self.version)
         return self
 
     def add_timestamp_with_timezone_array_field(self, field_name: str) -> "ClassDefinitionBuilder":
-        """Adds the field with the timestamp with timezone type to the
+        """Adds the field with the timestamp with timezone array type to the
         class definition.
 
         Args:
@@ -774,7 +774,7 @@ class ClassDefinitionBuilder:
                 after :func:`build` or a field with the same
                 name is already registered.
         """
-        self._add_field_by_type(field_name, FieldType.TIMESTAMP_TIMEZONE, self.version)
+        self._add_field_by_type(field_name, FieldType.TIMESTAMP_WITH_TIMEZONE_ARRAY, self.version)
         return self
 
     def add_field_def(self, field_def):
