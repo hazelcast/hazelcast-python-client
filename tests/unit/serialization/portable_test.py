@@ -1,3 +1,6 @@
+import datetime
+import decimal
+import typing
 import unittest
 
 from hazelcast.config import _Config
@@ -24,6 +27,11 @@ class SerializationV1Portable(Portable):
         a_long=0,
         a_float=0.0,
         a_double=0.0,
+        a_decimal=None,
+        a_time=None,
+        a_date=None,
+        a_timestamp=None,
+        a_timestamp_with_timezone=None,
         bytes_=None,
         booleans=None,
         chars=None,
@@ -32,6 +40,11 @@ class SerializationV1Portable(Portable):
         longs=None,
         floats=None,
         doubles=None,
+        decimals=None,
+        times=None,
+        dates=None,
+        timestamps=None,
+        timestamp_with_timezones=None,
         string=None,
         strings=None,
         inner_portable=None,
@@ -46,6 +59,11 @@ class SerializationV1Portable(Portable):
         self.a_long = a_long
         self.a_float = a_float
         self.a_double = a_double
+        self.a_decimal = a_decimal
+        self.a_time = a_time
+        self.a_date = a_date
+        self.a_timestamp = a_timestamp
+        self.a_timestamp_with_timezone = a_timestamp_with_timezone
         self.bytes = bytes_
         self.booleans = booleans
         self.chars = chars
@@ -54,6 +72,11 @@ class SerializationV1Portable(Portable):
         self.longs = longs
         self.floats = floats
         self.doubles = doubles
+        self.decimals = decimals
+        self.times = times
+        self.dates = dates
+        self.timestamps = timestamps
+        self.timestamp_with_timezones = timestamp_with_timezones
         self.a_string = string
         self.strings = strings
         self.inner_portable = inner_portable
@@ -71,6 +94,11 @@ class SerializationV1Portable(Portable):
         out.write_float("7", self.a_float)
         out.write_double("8", self.a_double)
         out.write_string("9", self.a_string)
+        out.write_decimal("10", self.a_decimal)
+        out.write_time("11", self.a_time)
+        out.write_date("12", self.a_date)
+        out.write_timestamp("13", self.a_timestamp)
+        out.write_timestamp_with_timezone("14", self.a_timestamp_with_timezone)
 
         out.write_byte_array("a1", self.bytes)
         out.write_boolean_array("a2", self.booleans)
@@ -81,6 +109,11 @@ class SerializationV1Portable(Portable):
         out.write_float_array("a7", self.floats)
         out.write_double_array("a8", self.doubles)
         out.write_string_array("a9", self.strings)
+        out.write_decimal_array("a10", self.decimals)
+        out.write_time_array("a11", self.times)
+        out.write_date_array("a12", self.dates)
+        out.write_timestamp_array("a13", self.timestamps)
+        out.write_timestamp_with_timezone_array("a14", self.timestamp_with_timezones)
 
         if self.inner_portable is None:
             out.write_null_portable("p", FACTORY_ID, InnerPortable.CLASS_ID)
@@ -106,6 +139,11 @@ class SerializationV1Portable(Portable):
         self.a_float = inp.read_float("7")
         self.a_double = inp.read_double("8")
         self.a_string = inp.read_string("9")
+        self.a_decimal = inp.read_decimal("10")
+        self.a_time = inp.read_time("11")
+        self.a_date = inp.read_date("12")
+        self.a_timestamp = inp.read_timestamp("13")
+        self.a_timestamp_with_timezone = inp.read_timestamp_with_timezone("14")
 
         self.bytes = inp.read_byte_array("a1")
         self.booleans = inp.read_boolean_array("a2")
@@ -116,6 +154,11 @@ class SerializationV1Portable(Portable):
         self.floats = inp.read_float_array("a7")
         self.doubles = inp.read_double_array("a8")
         self.strings = inp.read_string_array("a9")
+        self.decimals = inp.read_decimal_array("a10")
+        self.times = inp.read_time_array("a11")
+        self.dates = inp.read_date_array("a12")
+        self.timestamps = inp.read_timestamp_array("a13")
+        self.timestamp_with_timezones = inp.read_timestamp_with_timezone_array("a14")
 
         self.inner_portable = inp.read_portable("p")
 
@@ -146,6 +189,11 @@ class SerializationV1Portable(Portable):
         long_ = self.a_long == other.a_long
         float_ = self.a_float == other.a_float
         double = self.a_double == other.a_double
+        decimal = self.a_decimal == other.a_decimal
+        time = self.a_time == other.a_time
+        date = self.a_date == other.a_date
+        timestamp = self.a_timestamp == other.a_timestamp
+        timestamp_with_timezone = self.a_timestamp_with_timezone == other.a_timestamp_with_timezone
         bytes_ = self.bytes == other.bytes
         booleans = self.booleans == other.booleans
         chars = self.chars == other.chars
@@ -154,6 +202,11 @@ class SerializationV1Portable(Portable):
         longs = self.longs == other.longs
         floats = self.floats == other.floats
         doubles = self.doubles == other.doubles
+        decimals = self.decimals == other.decimals
+        times = self.times == other.times
+        dates = self.dates == other.dates
+        timestamps = self.timestamps == other.timestamps
+        timestamp_with_timezones = self.timestamp_with_timezones == other.timestamp_with_timezones
         string = self.a_string == other.a_string
         strings = self.strings == other.strings
         inner_portable = self.inner_portable == other.inner_portable
@@ -168,6 +221,11 @@ class SerializationV1Portable(Portable):
             and long_
             and float_
             and double
+            and decimal
+            and time
+            and date
+            and timestamp
+            and timestamp_with_timezone
             and bytes_
             and booleans
             and chars
@@ -176,6 +234,11 @@ class SerializationV1Portable(Portable):
             and longs
             and floats
             and doubles
+            and decimals
+            and times
+            and dates
+            and timestamps
+            and timestamp_with_timezones
             and string
             and strings
             and inner_portable
@@ -264,6 +327,11 @@ def create_portable():
         1341431221,
         1.0,
         2.0,
+        decimal.Decimal(0.00005),
+        datetime.time(23, 59, 59),
+        datetime.date(1923, 4, 23),
+        datetime.datetime(1938, 11, 10, 9, 5, 59, 59),
+        datetime.datetime(1919, 5, 19, 13, 30, 45, 59, datetime.timezone(datetime.timedelta(seconds=12345))),
         bytearray([1, 2, 3]),
         [True, False, True],
         ["a", "b", "c"],
@@ -272,6 +340,13 @@ def create_portable():
         [11, 2, 3],
         [1.0, 2.0, 3.0],
         [11.0, 22.0, 33.0],
+        [decimal.Decimal(12.34), decimal.Decimal(0.5678), decimal.Decimal(0.00000005)],
+        [datetime.time(9, 5, 59), datetime.time(15, 45, 30), datetime.time(23, 59, 59)],
+        [datetime.date(1923, 4, 23), datetime.date(1919, 5, 19), datetime.date(1922, 8, 30)],
+        [datetime.datetime(2005, 5, 5, 10, 30, 45, 345), datetime.datetime(2005, 5, 5, 15, 30, 45, 345), datetime.datetime(1860, 4, 1, 23, 12, 32, 345)],
+        [datetime.datetime(1919, 5, 19, 19, 35, 45, 59, datetime.timezone(datetime.timedelta(seconds=3600))),
+         datetime.datetime(2000, 1, 3, 18, 26, 23, 12, datetime.timezone(datetime.timedelta(minutes=240))),
+         datetime.datetime(2013, 12, 20, 7, 29, 54, 45, datetime.timezone(datetime.timedelta(hours=3)))],
         "the string text",
         ["item1", "item2", "item3"],
         inner_portable,
@@ -401,6 +476,11 @@ class PortableSerializationTestCase(unittest.TestCase):
         builder.add_float_field("7")
         builder.add_double_field("8")
         builder.add_string_field("9")
+        builder.add_decimal_field("10")
+        builder.add_time_field("11")
+        builder.add_date_field("12")
+        builder.add_timestamp_field("13")
+        builder.add_timestamp_with_timezone_field("14")
         builder.add_byte_array_field("a1")
         builder.add_boolean_array_field("a2")
         builder.add_char_array_field("a3")
@@ -410,6 +490,11 @@ class PortableSerializationTestCase(unittest.TestCase):
         builder.add_float_array_field("a7")
         builder.add_double_array_field("a8")
         builder.add_string_array_field("a9")
+        builder.add_decimal_array_field("a10")
+        builder.add_time_array_field("a11")
+        builder.add_date_array_field("a12")
+        builder.add_timestamp_array_field("a13")
+        builder.add_timestamp_with_timezone_array_field("a14")
         builder.add_portable_field("p", class_def_inner)
         builder.add_portable_array_field("ap", class_def_inner)
         class_def = builder.build()

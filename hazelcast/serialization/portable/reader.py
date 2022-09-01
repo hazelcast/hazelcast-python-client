@@ -370,15 +370,15 @@ def _read_portable_date(inp: ObjectDataInput):
 
 
 def read_portable_time(inp: ObjectDataInput):
-    h, m, s, nanos = _read_portable_time(inp)
-    return datetime.time(h, m, s, nanos)
+    h, m, s, ms = _read_portable_time(inp)
+    return datetime.time(h, m, s, ms)
 
 
 def _read_portable_time(inp: ObjectDataInput):
     h = int(inp.read_byte())
     m = int(inp.read_byte())
     s = int(inp.read_byte())
-    nanos = int(inp.read_int())
+    nanos = int(inp.read_int()/1000)
     return h, m, s, nanos
 
 
@@ -506,8 +506,11 @@ class MorphingPortableReader(DefaultPortableReader):
         return super(MorphingPortableReader, self).read_string(field_name)
 
     def read_decimal(self, field_name):
-        """TODO: Implement MorphingPortableReader#read_decimal"""
-        pass
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return None
+        self.validate_type_compatibility(fd, FieldType.DECIMAL)
+        return super(MorphingPortableReader, self).read_decimal(field_name)
 
     def read_time(self, field_name):
         fd = self._class_def.get_field(field_name)

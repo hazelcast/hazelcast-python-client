@@ -191,8 +191,8 @@ class DefaultPortableWriter(PortableWriter):
 
     def write_object_array_field(self, field_name, field_type, values, func):
         self._set_position(field_name, field_type)
-        length = len(values)
-        if length == 0:
+        length = NULL_ARRAY_LENGTH if values is None else len(values)
+        if length < 0:
             self._out.write_int(NULL_ARRAY_LENGTH)
             return
         self._out.write_int(length)
