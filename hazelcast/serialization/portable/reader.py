@@ -621,7 +621,11 @@ class MorphingPortableReader(DefaultPortableReader):
         return self.read_string_array(field_name)
 
     def read_decimal_array(self, field_name):
-        return self.read_nullable_field(field_name, FieldType.DECIMAL_ARRAY, read_decimal_array)
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return None
+        self.validate_type_compatibility(fd, FieldType.DECIMAL_ARRAY)
+        return super(MorphingPortableReader, self).read_decimal_array(field_name)
 
     def read_time_array(self, field_name):
         fd = self._class_def.get_field(field_name)

@@ -135,6 +135,7 @@ class _ObjectDataOutput(ObjectDataOutput):
         else:
             encoded_data = val.encode("utf-8")
             self.write_byte_array(encoded_data)
+
     def write_bytes(self, val):
         n = len(val)
         self._ensure_available(n)
@@ -211,6 +212,7 @@ class _ObjectDataOutput(ObjectDataOutput):
 
     def write_utf_array(self, val):
         self.write_string_array(val)
+
     # HELPERS
     def _write_array_fnc(self, val, item_write_fnc):
         _len = len(val) if val is not None else NULL_ARRAY_LENGTH
@@ -291,6 +293,7 @@ class EmptyObjectDataOutput(ObjectDataOutput):
 
     def write_byte(self, val):
         pass
+
     def write_boolean_array(self, val):
         pass
 
