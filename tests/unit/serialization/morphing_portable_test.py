@@ -189,7 +189,7 @@ class MorphingPortableTestCase(unittest.TestCase):
         a_timestamp_with_timezone = self.reader.read_timestamp_with_timezone("14")
         self.assertEqual(
             datetime.datetime(
-                1919, 5, 19, 13, 30, 45, 59, datetime.timezone(datetime.timedelta(seconds=12345))
+                1919, 5, 19, 13, 30, 45, 59, datetime.timezone(datetime.timedelta(seconds=21600))
             ),
             a_timestamp_with_timezone,
         )

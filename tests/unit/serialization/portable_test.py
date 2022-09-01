@@ -332,7 +332,7 @@ def create_portable():
         datetime.date(1923, 4, 23),
         datetime.datetime(1938, 11, 10, 9, 5, 59, 59),
         datetime.datetime(
-            1919, 5, 19, 13, 30, 45, 59, datetime.timezone(datetime.timedelta(seconds=12345))
+            1919, 5, 19, 13, 30, 45, 59, datetime.timezone(datetime.timedelta(seconds=21600))
         ),
         bytearray([1, 2, 3]),
         [True, False, True],
