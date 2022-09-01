@@ -1359,7 +1359,6 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         check_not_none(registration_id, "Interceptor registration id should not be None")
         request = map_remove_interceptor_codec.encode_request(self.name, registration_id)
         return self._invoke(request, map_remove_interceptor_codec.decode_response)
-        return self._remove_internal
 
     def replace(self, key: KeyType, value: ValueType) -> Future[typing.Optional[ValueType]]:
         """Replaces the entry for a key only if it is currently mapped to some
