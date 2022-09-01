@@ -187,7 +187,12 @@ class MorphingPortableTestCase(unittest.TestCase):
 
     def test_read_timestamp_with_timezone(self):
         a_timestamp_with_timezone = self.reader.read_timestamp_with_timezone("14")
-        self.assertEqual(datetime.datetime(1919, 5, 19, 13, 30, 45, 59, datetime.timezone(datetime.timedelta(seconds=12345))), a_timestamp_with_timezone)
+        self.assertEqual(
+            datetime.datetime(
+                1919, 5, 19, 13, 30, 45, 59, datetime.timezone(datetime.timedelta(seconds=12345))
+            ),
+            a_timestamp_with_timezone,
+        )
         self.assertFalse(self.reader.read_timestamp_with_timezone("NO SUCH FIELD"))
 
     def test_encode_decode_with_parent_default_reader(self):

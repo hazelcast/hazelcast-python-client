@@ -120,8 +120,9 @@ class DefaultPortableReader(PortableReader):
         return self.read_nullable_field(field_name, FieldType.TIMESTAMP, read_portable_timestamp)
 
     def read_timestamp_with_timezone(self, field_name):
-        return self.read_nullable_field(field_name, FieldType.TIMESTAMP_WITH_TIMEZONE,
-                                        read_portable_timestamp_with_timezone)
+        return self.read_nullable_field(
+            field_name, FieldType.TIMESTAMP_WITH_TIMEZONE, read_portable_timestamp_with_timezone
+        )
 
     def read_boolean_array(self, field_name):
         current_pos = self._in.position()
@@ -239,7 +240,9 @@ class DefaultPortableReader(PortableReader):
             self._in.set_position(current_pos)
 
     def read_decimal_array(self, field_name):
-        return self.read_object_array_field(field_name, FieldType.DECIMAL_ARRAY, IOUtil.read_big_decimal)
+        return self.read_object_array_field(
+            field_name, FieldType.DECIMAL_ARRAY, IOUtil.read_big_decimal
+        )
 
     def read_time_array(self, field_name):
         return self.read_object_array_field(field_name, FieldType.TIME_ARRAY, read_portable_time)
@@ -248,10 +251,16 @@ class DefaultPortableReader(PortableReader):
         return self.read_object_array_field(field_name, FieldType.DATE_ARRAY, read_portable_date)
 
     def read_timestamp_array(self, field_name):
-        return self.read_object_array_field(field_name, FieldType.TIMESTAMP_ARRAY, read_portable_timestamp)
+        return self.read_object_array_field(
+            field_name, FieldType.TIMESTAMP_ARRAY, read_portable_timestamp
+        )
 
     def read_timestamp_with_timezone_array(self, field_name):
-        return self.read_object_array_field(field_name, FieldType.TIMESTAMP_WITH_TIMEZONE_ARRAY, read_portable_timestamp_with_timezone)
+        return self.read_object_array_field(
+            field_name,
+            FieldType.TIMESTAMP_WITH_TIMEZONE_ARRAY,
+            read_portable_timestamp_with_timezone,
+        )
 
     def read_utf(self, field_name):
         return self.read_string(field_name)
@@ -357,6 +366,7 @@ def _check_factory_and_class(field_def, factory_id, class_id):
             "Invalid classId! Expected: %s, Current: %s" % (class_id, field_def.class_id)
         )
 
+
 def read_portable_date(inp: ObjectDataInput):
     y, m, d = _read_portable_date(inp)
     return datetime.date(y, m, d)
@@ -378,7 +388,7 @@ def _read_portable_time(inp: ObjectDataInput):
     h = int(inp.read_byte())
     m = int(inp.read_byte())
     s = int(inp.read_byte())
-    nanos = int(inp.read_int()/1000)
+    nanos = int(inp.read_int() / 1000)
     return h, m, s, nanos
 
 
@@ -392,7 +402,9 @@ def read_portable_timestamp_with_timezone(inp: ObjectDataInput):
     y, m, d = _read_portable_date(inp)
     h, mn, s, nanos = _read_portable_time(inp)
     offset = inp.read_int()
-    return datetime.datetime(y, m, d, h, mn, s, nanos, datetime.timezone(datetime.timedelta(seconds=offset), ""))
+    return datetime.datetime(
+        y, m, d, h, mn, s, nanos, datetime.timezone(datetime.timedelta(seconds=offset), "")
+    )
 
 
 class MorphingPortableReader(DefaultPortableReader):

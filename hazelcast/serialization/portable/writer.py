@@ -78,8 +78,12 @@ class DefaultPortableWriter(PortableWriter):
         self.write_nullable_field(field_name, FieldType.TIMESTAMP, value, write_portable_timestamp)
 
     def write_timestamp_with_timezone(self, field_name, value):
-        self.write_nullable_field(field_name, FieldType.TIMESTAMP_WITH_TIMEZONE, value,
-                                  write_portable_timestamp_with_timezone)
+        self.write_nullable_field(
+            field_name,
+            FieldType.TIMESTAMP_WITH_TIMEZONE,
+            value,
+            write_portable_timestamp_with_timezone,
+        )
 
     def write_byte_array(self, field_name, values):
         self._set_position(field_name, FieldType.BYTE_ARRAY)
@@ -118,7 +122,9 @@ class DefaultPortableWriter(PortableWriter):
         self._out.write_string_array(values)
 
     def write_decimal_array(self, field_name, values):
-        self.write_object_array_field(field_name, FieldType.DECIMAL_ARRAY, values, IOUtil.write_big_decimal)
+        self.write_object_array_field(
+            field_name, FieldType.DECIMAL_ARRAY, values, IOUtil.write_big_decimal
+        )
 
     def write_time_array(self, field_name, values):
         self.write_object_array_field(field_name, FieldType.TIME_ARRAY, values, write_portable_time)
@@ -127,11 +133,17 @@ class DefaultPortableWriter(PortableWriter):
         self.write_object_array_field(field_name, FieldType.DATE_ARRAY, values, write_portable_date)
 
     def write_timestamp_array(self, field_name, values):
-        self.write_object_array_field(field_name, FieldType.TIMESTAMP_ARRAY, values, write_portable_timestamp)
+        self.write_object_array_field(
+            field_name, FieldType.TIMESTAMP_ARRAY, values, write_portable_timestamp
+        )
 
     def write_timestamp_with_timezone_array(self, field_name, values):
-        self.write_object_array_field(field_name, FieldType.TIMESTAMP_WITH_TIMEZONE_ARRAY, values,
-                                      write_portable_timestamp_with_timezone)
+        self.write_object_array_field(
+            field_name,
+            FieldType.TIMESTAMP_WITH_TIMEZONE_ARRAY,
+            values,
+            write_portable_timestamp_with_timezone,
+        )
 
     def write_portable(self, field_name, portable):
         fd = self._set_position(field_name, FieldType.PORTABLE)
@@ -280,7 +292,7 @@ def write_portable_timestamp_with_timezone(out: ObjectDataOutput, value: datetim
 
 class ClassDefinitionWriter(PortableWriter):
     def __init__(
-            self, portable_context, factory_id=None, class_id=None, version=None, class_def_builder=None
+        self, portable_context, factory_id=None, class_id=None, version=None, class_def_builder=None
     ):
         self.portable_context = portable_context
         if class_def_builder is None:

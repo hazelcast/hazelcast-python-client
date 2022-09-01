@@ -1293,7 +1293,9 @@ class PortableWriter:
         """
         raise NotImplementedError()
 
-    def write_decimal_array(self, field_name: str, values: typing.Sequence[decimal.Decimal]) -> None:
+    def write_decimal_array(
+        self, field_name: str, values: typing.Sequence[decimal.Decimal]
+    ) -> None:
         """Writes a decimal array.
 
         Args:
@@ -1320,7 +1322,9 @@ class PortableWriter:
         """
         raise NotImplementedError()
 
-    def write_timestamp_array(self, field_name: str, values: typing.Sequence[datetime.datetime]) -> None:
+    def write_timestamp_array(
+        self, field_name: str, values: typing.Sequence[datetime.datetime]
+    ) -> None:
         """Writes a timestamp array.
 
         Args:
@@ -1329,7 +1333,9 @@ class PortableWriter:
         """
         raise NotImplementedError()
 
-    def write_timestamp_with_timezone_array(self, field_name: str, values: typing.Sequence[datetime.datetime]) -> None:
+    def write_timestamp_with_timezone_array(
+        self, field_name: str, values: typing.Sequence[datetime.datetime]
+    ) -> None:
         """Writes a timestamp with timezone array.
 
         Args:

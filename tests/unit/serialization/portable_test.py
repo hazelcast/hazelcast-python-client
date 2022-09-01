@@ -331,7 +331,9 @@ def create_portable():
         datetime.time(23, 59, 59),
         datetime.date(1923, 4, 23),
         datetime.datetime(1938, 11, 10, 9, 5, 59, 59),
-        datetime.datetime(1919, 5, 19, 13, 30, 45, 59, datetime.timezone(datetime.timedelta(seconds=12345))),
+        datetime.datetime(
+            1919, 5, 19, 13, 30, 45, 59, datetime.timezone(datetime.timedelta(seconds=12345))
+        ),
         bytearray([1, 2, 3]),
         [True, False, True],
         ["a", "b", "c"],
@@ -343,10 +345,22 @@ def create_portable():
         [decimal.Decimal(12.34), decimal.Decimal(0.5678), decimal.Decimal(0.00000005)],
         [datetime.time(9, 5, 59), datetime.time(15, 45, 30), datetime.time(23, 59, 59)],
         [datetime.date(1923, 4, 23), datetime.date(1919, 5, 19), datetime.date(1922, 8, 30)],
-        [datetime.datetime(2005, 5, 5, 10, 30, 45, 345), datetime.datetime(2005, 5, 5, 15, 30, 45, 345), datetime.datetime(1860, 4, 1, 23, 12, 32, 345)],
-        [datetime.datetime(1919, 5, 19, 19, 35, 45, 59, datetime.timezone(datetime.timedelta(seconds=3600))),
-         datetime.datetime(2000, 1, 3, 18, 26, 23, 12, datetime.timezone(datetime.timedelta(minutes=240))),
-         datetime.datetime(2013, 12, 20, 7, 29, 54, 45, datetime.timezone(datetime.timedelta(hours=3)))],
+        [
+            datetime.datetime(2005, 5, 5, 10, 30, 45, 345),
+            datetime.datetime(2005, 5, 5, 15, 30, 45, 345),
+            datetime.datetime(1860, 4, 1, 23, 12, 32, 345),
+        ],
+        [
+            datetime.datetime(
+                1919, 5, 19, 19, 35, 45, 59, datetime.timezone(datetime.timedelta(seconds=3600))
+            ),
+            datetime.datetime(
+                2000, 1, 3, 18, 26, 23, 12, datetime.timezone(datetime.timedelta(minutes=240))
+            ),
+            datetime.datetime(
+                2013, 12, 20, 7, 29, 54, 45, datetime.timezone(datetime.timedelta(hours=3))
+            ),
+        ],
         "the string text",
         ["item1", "item2", "item3"],
         inner_portable,
