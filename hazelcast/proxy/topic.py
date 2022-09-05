@@ -4,6 +4,7 @@ from hazelcast.future import Future
 from hazelcast.protocol.codec import (
     topic_add_message_listener_codec,
     topic_publish_codec,
+    topic_publish_all_codec,
     topic_remove_message_listener_codec,
 )
 from hazelcast.proxy.base import PartitionSpecificProxy, TopicMessage
@@ -70,6 +71,22 @@ class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]
         request = topic_publish_codec.encode_request(self.name, message_data)
         return self._invoke(request)
 
+    def publish_all(self, messages: typing.Sequence[MessageType]) -> Future[None]:
+        """Publishes a list of messages to all subscribers of this topic
+
+        Args:
+            messages: The message list to be published
+        """
+        try:
+            data_list = []
+            for m in messages:
+                data_list.append(self._to_data(m))
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.publish, messages)
+
+        request = topic_publish_all_codec.encode_request(self.name, data_list)
+        return self._invoke(request)
+
     def remove_listener(self, registration_id: str) -> Future[bool]:
         """Stops receiving messages for the given message listener.
 
@@ -106,6 +123,9 @@ class BlockingTopic(Topic[MessageType]):
         message: MessageType,
     ) -> None:
         return self._wrapped.publish(message).result()
+
+    def publish_all(self, messages: typing.Sequence[MessageType]) -> None:  # type: ignore[override]
+        return self._wrapped.publish_all(messages).result()
 
     def remove_listener(  # type: ignore[override]
         self,

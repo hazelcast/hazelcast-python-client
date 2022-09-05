@@ -16,4 +16,7 @@ for i in range(10):
     topic.publish("Message " + str(i))
     time.sleep(0.1)
 
+topic.publish_all(["m1", "m2", "m3", "m4", "m5"])
+time.sleep(1)
+
 client.shutdown()
