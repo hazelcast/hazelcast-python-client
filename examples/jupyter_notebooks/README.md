@@ -14,7 +14,9 @@ maps. To run this notebook file:
 - Use Google Colaboratory environment. It will install all the packages, including Hazelcast Client,
 into a virtual environment,  and you will not have to do any local installation. It requires connecting to Hazelcast 
 Viridian for the Hazelcast instance, so you do not have to run a local cluster. Open the following link and create 
-a copy for yourself. You can start to run cells once connected to a virtual machine. 
+a copy for yourself. You can start to run cells once connected to a virtual machine.
+https://colab.research.google.com/drive/1ujUt_XJI2moWSWMcF5_MPiWPg4LCJuot?usp=sharing
+
 
 - You need to have Jupyter Notebook on your machine to run this notebook on your local. If you already have, 
 download the `Hazelcast Python Client SQL Support with Viridian.ipyb` file from this folder and open 
