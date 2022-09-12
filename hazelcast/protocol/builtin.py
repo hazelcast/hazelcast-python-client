@@ -446,6 +446,16 @@ class ListMultiFrameCodec:
             return ListMultiFrameCodec.decode(msg, decoder)
 
 
+class ListDataCodec:
+    @staticmethod
+    def encode(buf, arr):
+        ListMultiFrameCodec.encode(buf, arr, DataCodec.encode)
+
+    @staticmethod
+    def decode(msg):
+        return ListMultiFrameCodec.decode(msg, DataCodec.decode)
+
+
 class ListUUIDCodec:
     @staticmethod
     def encode(buf, arr, is_final=False):

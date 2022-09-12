@@ -1,6 +1,6 @@
 import typing
 
-from hazelcast.future import Future
+from hazelcast.future import combine_futures, Future, ImmediateFuture
 from hazelcast.protocol.codec import (
     multi_map_add_entry_listener_codec,
     multi_map_add_entry_listener_to_key_codec,
@@ -15,6 +15,7 @@ from hazelcast.protocol.codec import (
     multi_map_key_set_codec,
     multi_map_lock_codec,
     multi_map_put_codec,
+    multi_map_put_all_codec,
     multi_map_remove_codec,
     multi_map_remove_entry_codec,
     multi_map_remove_entry_listener_codec,
@@ -26,6 +27,7 @@ from hazelcast.protocol.codec import (
 )
 from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType
 from hazelcast.types import ValueType, KeyType
+from hazelcast.serialization.data import Data
 from hazelcast.serialization.compact import SchemaNotReplicatedError
 from hazelcast.util import check_not_none, thread_id, to_millis, ImmutableLazyDataList
 
@@ -445,6 +447,54 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
         request = multi_map_put_codec.encode_request(self.name, key_data, value_data, thread_id())
         return self._invoke_on_key(request, key_data, multi_map_put_codec.decode_response)
 
+    def put_all(self, map: typing.Dict[KeyType, typing.Sequence[ValueType]]) -> Future[bool]:
+        """Stores given values by associating with corresponding keys in dictionary format.
+
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form
+            of the key, not the actual implementations of ``__hash__`` and
+            ``__eq__`` defined in key's class.
+
+        Args:
+            map: the map corresponds to multimap entries.
+
+        Returns:
+            ``True`` if size of the multimap is increased, ``False`` if the
+            multimap already contains the key-value tuple.
+        """
+        check_not_none(map, "map can't be None")
+        if not map:
+            return ImmediateFuture(None)
+
+        partition_service = self._context.partition_service
+        partition_map: typing.Dict[int, typing.List[typing.Tuple[Data,  typing.List[Data]]]] = {}
+
+        for key, values in map.items():
+            try:
+                check_not_none(key, "key can't be None")
+                check_not_none(values, "values can't be None")
+                serialized_key = self._to_data(key)
+                serialized_values = []
+                for value in values:
+                    check_not_none(value, "value can't be None")
+                    serialized_values.append(self._to_data(value))
+                partition_id = partition_service.get_partition_id(serialized_key)
+                try:
+                    partition_map[partition_id].append((serialized_key, serialized_values))
+                except KeyError:
+                    partition_map[partition_id] = [(self._to_data(key), serialized_values)]
+            except SchemaNotReplicatedError as e:
+                return self._send_schema_and_retry(e, self.put_all, map)
+
+        futures = []
+        for partition_id, entry_list in partition_map.items():
+            request = multi_map_put_all_codec.encode_request(
+                self.name, entry_list
+            )
+            future = self._invoke_on_partition(request, partition_id)
+            futures.append(future)
+        return combine_futures(futures)
+
     def remove_entry_listener(self, registration_id: str) -> Future[bool]:
         """Removes the specified entry listener.
 
@@ -676,6 +726,12 @@ class BlockingMultiMap(MultiMap[KeyType, ValueType]):
         value: ValueType,
     ) -> bool:
         return self._wrapped.put(key, value).result()
+
+    def put_all(  # type: ignore[override]
+        self,
+        map: typing.Dict[KeyType, typing.Sequence[ValueType]]
+    ) -> bool:
+        return self._wrapped.put_all(map).result()
 
     def remove_entry_listener(  # type: ignore[override]
         self,
