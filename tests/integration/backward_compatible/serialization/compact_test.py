@@ -784,6 +784,26 @@ class CompactWithListenerTest(CompactTestBase):
         self.assertTrueEventually(lambda: self.assertEqual(1, counter.get()))
 
 
+class CompactWithNestedFieldTest(CompactTestBase):
+
+    def test_missing_nested_serializer(self):
+        serializer = SomeFieldsSerializer.from_kinds(FIELD_KINDS)
+        fields = {kind.name.lower(): REFERENCE_OBJECTS[kind] for kind in FIELD_KINDS}
+
+        config = {
+            "cluster_name": self.cluster.id,
+            "compact_serializers": [serializer]
+        }
+
+        client = self.create_client(config)
+
+        map_name = random_string()
+        m = client.get_map(map_name).blocking()
+
+        with self.assertRaisesRegex(HazelcastSerializationError, "No serializer is registered for class Nested."):
+            m.put("key", SomeFields(**fields))
+
+
 class SomeFields:
     def __init__(self, **fields):
         self._fields = fields
