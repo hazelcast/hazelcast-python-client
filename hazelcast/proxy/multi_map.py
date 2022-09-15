@@ -467,7 +467,7 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             return ImmediateFuture(None)
 
         partition_service = self._context.partition_service
-        partition_map: typing.Dict[int, typing.List[typing.Tuple[Data,  typing.List[Data]]]] = {}
+        partition_map: typing.Dict[int, typing.List[typing.Tuple[Data, typing.List[Data]]]] = {}
 
         for key, values in map.items():
             try:
@@ -488,9 +488,7 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
 
         futures = []
         for partition_id, entry_list in partition_map.items():
-            request = multi_map_put_all_codec.encode_request(
-                self.name, entry_list
-            )
+            request = multi_map_put_all_codec.encode_request(self.name, entry_list)
             future = self._invoke_on_partition(request, partition_id)
             futures.append(future)
         return combine_futures(futures)
@@ -728,8 +726,7 @@ class BlockingMultiMap(MultiMap[KeyType, ValueType]):
         return self._wrapped.put(key, value).result()
 
     def put_all(  # type: ignore[override]
-        self,
-        map: typing.Dict[KeyType, typing.Sequence[ValueType]]
+        self, map: typing.Dict[KeyType, typing.Sequence[ValueType]]
     ) -> bool:
         return self._wrapped.put_all(map).result()
 

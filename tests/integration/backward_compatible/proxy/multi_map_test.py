@@ -151,10 +151,11 @@ class MultiMapTest(SingleMemberTestCase):
         self.assertCountEqual(self.multi_map.get("key"), ["value1", "value2"])
 
     def test_put_all_get(self):
-        self.assertTrue(self.multi_map.put_all({
-                "key1": ["value1", "value2", "value3"],
-                "key2": ["value4", "value5", "value6"]
-        }))
+        self.assertTrue(
+            self.multi_map.put_all(
+                {"key1": ["value1", "value2", "value3"], "key2": ["value4", "value5", "value6"]}
+            )
+        )
         self.assertCountEqual(self.multi_map.get("key1"), ["value1", "value2", "value3"])
         self.assertCountEqual(self.multi_map.get("key2"), ["value4", "value5", "value6"])
 
