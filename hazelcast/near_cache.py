@@ -132,7 +132,7 @@ class NearCache(dict):
             "invalidations": self._invalidations,
             "invalidation_requests": self._invalidation_requests,
             "owned_entry_count": self.__len__(),
-            "owned_entry_memory_cost": getsizeof(self),
+            "owned_entry_memory_cost": self.__sizeof__(),
         }
 
         return stats
