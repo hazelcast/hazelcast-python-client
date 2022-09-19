@@ -1,4 +1,5 @@
 import random
+import sys
 
 from hazelcast.config import InMemoryFormat, EvictionPolicy
 from hazelcast.util import current_time
@@ -170,6 +171,12 @@ class NearCache(dict):
             if self.in_memory_format == InMemoryFormat.BINARY
             else value_record.value
         )
+
+    def __sizeof__(self):
+        if "PyPy" in sys.version:
+            return 0
+        else:
+            return sys.getsizeof(self)
 
     def _do_eviction_if_required(self):
         if not self._is_eviction_required():
