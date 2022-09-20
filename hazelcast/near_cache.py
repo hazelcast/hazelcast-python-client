@@ -133,7 +133,7 @@ class NearCache(dict):
             "invalidations": self._invalidations,
             "invalidation_requests": self._invalidation_requests,
             "owned_entry_count": self.__len__(),
-            "owned_entry_memory_cost": self._get_size_of_near_cache(),
+            "owned_entry_memory_cost": getsizeof(self, 0),
         }
 
         return stats
@@ -171,12 +171,6 @@ class NearCache(dict):
             if self.in_memory_format == InMemoryFormat.BINARY
             else value_record.value
         )
-
-    def _get_size_of_near_cache(self):
-        if "PyPy" in sys.version:
-            return 0
-        else:
-            return getsizeof(self)
 
     def _do_eviction_if_required(self):
         if not self._is_eviction_required():
