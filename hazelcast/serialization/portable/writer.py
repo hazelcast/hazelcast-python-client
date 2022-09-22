@@ -196,20 +196,25 @@ class DefaultPortableWriter(PortableWriter):
 
     def write_nullable_field(self, field_name: str, field_type: FieldType, value, func):
         self._set_position(field_name, field_type)
-        is_nil = value is None
-        self._out.write_boolean(is_nil)
-        if not is_nil:
+        is_none = value is None
+        self._out.write_boolean(is_none)
+        if not is_none:
             func(self._out, value)
 
     def write_object_array_field(self, field_name, field_type, values, func):
         self._set_position(field_name, field_type)
         length = NULL_ARRAY_LENGTH if values is None else len(values)
-        if length < 0:
-            self._out.write_int(NULL_ARRAY_LENGTH)
-            return
         self._out.write_int(length)
-        for i in values:
-            func(self._out, i)
+        if length > 0:
+            offset = self._out.position()
+            self._out.write_zero_bytes(length * INT_SIZE_IN_BYTES)
+            for i in range(length):
+                position = self._out.position()
+                if values[i] is None:
+                    raise HazelcastSerializationError("Array items can not be null")
+                else:
+                    self._out.write_int_positional(position, offset + i * INT_SIZE_IN_BYTES)
+                    func(self._out, values[i])
 
     # internal
     def _set_position(self, field_name, field_type):

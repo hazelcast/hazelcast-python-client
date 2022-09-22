@@ -289,7 +289,10 @@ class DefaultPortableReader(PortableReader):
             if length == NULL_ARRAY_LENGTH:
                 return None
             values = []
+            offset = self._in.position()
             for i in range(length):
+                pos = self._in.read_int_positional(offset + i * bits.INT_SIZE_IN_BYTES)
+                self._in.set_position(pos)
                 values.append(func(self._in))
             return values
         finally:
@@ -385,17 +388,17 @@ def read_portable_time(inp: ObjectDataInput):
 
 
 def _read_portable_time(inp: ObjectDataInput):
-    h = int(inp.read_byte())
-    m = int(inp.read_byte())
-    s = int(inp.read_byte())
-    nanos = int(inp.read_int() / 1000)
-    return h, m, s, nanos
+    h = inp.read_byte()
+    m = inp.read_byte()
+    s = inp.read_byte()
+    ms = inp.read_int() // 1000
+    return h, m, s, ms
 
 
 def read_portable_timestamp(inp: ObjectDataInput):
     y, m, d = _read_portable_date(inp)
-    h, mn, s, nanos = _read_portable_time(inp)
-    return datetime.datetime(y, m, d, h, mn, s, nanos, datetime.datetime.now().tzinfo)
+    h, mn, s, ms = _read_portable_time(inp)
+    return datetime.datetime(y, m, d, h, mn, s, ms)
 
 
 def read_portable_timestamp_with_timezone(inp: ObjectDataInput):
@@ -403,7 +406,7 @@ def read_portable_timestamp_with_timezone(inp: ObjectDataInput):
     h, mn, s, nanos = _read_portable_time(inp)
     offset = inp.read_int()
     return datetime.datetime(
-        y, m, d, h, mn, s, nanos, datetime.timezone(datetime.timedelta(seconds=offset), "")
+        y, m, d, h, mn, s, nanos, datetime.timezone(datetime.timedelta(seconds=offset))
     )
 
 
