@@ -28,6 +28,7 @@ BINARY = bytes
 NUMBER = float
 DATETIME = datetime
 
+
 class Type(enum.Enum):
     STRING = 1
     NUMBER = 2
