@@ -1,4 +1,5 @@
 import random
+import sys
 
 from hazelcast.config import InMemoryFormat, EvictionPolicy
 from hazelcast.util import current_time
@@ -132,7 +133,7 @@ class NearCache(dict):
             "invalidations": self._invalidations,
             "invalidation_requests": self._invalidation_requests,
             "owned_entry_count": self.__len__(),
-            "owned_entry_memory_cost": getsizeof(self),
+            "owned_entry_memory_cost": getsizeof(self, 0),
         }
 
         return stats
