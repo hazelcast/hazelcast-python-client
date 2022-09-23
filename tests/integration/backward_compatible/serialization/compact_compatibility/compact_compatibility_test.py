@@ -6,7 +6,12 @@ import unittest
 from hazelcast.errors import NullPointerError, IllegalMonitorStateError
 from hazelcast.predicate import Predicate, paging
 from tests.base import HazelcastTestCase
-from tests.util import random_string, compare_client_version, compare_server_version_with_rc
+from tests.util import (
+    random_string,
+    compare_client_version,
+    compare_server_version_with_rc,
+    skip_if_client_version_older_than,
+)
 
 try:
     from hazelcast.serialization.api import (
@@ -789,6 +794,13 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         self.assertIsNone(self.map.remove(OUTER_COMPACT_INSTANCE))
         self._put_from_another_client(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
         self.assertEqual(INNER_COMPACT_INSTANCE, self.map.remove(OUTER_COMPACT_INSTANCE))
+
+    def test_remove_all(self):
+        skip_if_client_version_older_than(self, "5.2")
+
+        self._put_from_another_client(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
+        self.assertIsNone(self.map.remove_all(CompactPredicate()))
+        self.assertEqual(0, self.map.size())
 
     def test_remove_if_same(self):
         self.assertFalse(self.map.remove_if_same(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE))
