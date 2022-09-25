@@ -3,6 +3,7 @@ import os
 from hazelcast.config import ReconnectMode
 from hazelcast.errors import ClientOfflineError
 from hazelcast.lifecycle import LifecycleState
+from hazelcast.predicate import true
 from tests.hzrc.ttypes import Lang
 
 from tests.base import SingleMemberTestCase, HazelcastTestCase
@@ -53,6 +54,11 @@ class MapTest(SingleMemberTestCase):
         self.assertEqual(value, value3)
         self.assertEqual(1, self.map._wrapped._near_cache._hits)
         self.assertEqual(1, self.map._wrapped._near_cache._misses)
+        self.assertEqual(0, len(self.map._wrapped._near_cache))
+
+    def test_remove_all(self):
+        self.fill_map_and_near_cache(10)
+        self.map.remove_all(predicate=true())
         self.assertEqual(0, len(self.map._wrapped._near_cache))
 
     def test_invalidate_single_key(self):
