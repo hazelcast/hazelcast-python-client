@@ -35,7 +35,7 @@ class NearCacheTestCase(unittest.TestCase):
 
     def test_put_get(self):
         near_cache = self.create_near_cache(
-            self.service, InMemoryFormat.OBJECT, 100, 100, EvictionPolicy.LRU, 100
+            self.service, InMemoryFormat.OBJECT, 100, 100, EvictionPolicy.LFU, 100
         )
         for i in range(0, 120):
             key = "key-{}".format(i)
