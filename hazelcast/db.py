@@ -124,7 +124,7 @@ class Cursor:
         cbs = _DEFAULT_CURSOR_BUFFER_SIZE
         if self.arraysize > 0:
             cbs = self.arraysize
-        res = self._conn._client.sql.execute(operation, cursor_buffer_size=cbs).result()
+        res = self._conn._client.sql.execute(operation, *args, cursor_buffer_size=cbs).result()
         if res.is_row_set():
             self._rownumber = 0
             self._res = res
