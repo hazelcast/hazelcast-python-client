@@ -10,7 +10,9 @@ from hazelcast.util import AtomicInteger
 from tests.base import HazelcastTestCase, SingleMemberTestCase
 from tests.util import random_string
 
-_UNREACHABLE_ADDRESS = Address("192.168.0.1", 5701)
+# 198.51.100.0/24 is assigned as TEST-NET-2 and should be unreachable
+# See: https://en.wikipedia.org/wiki/Reserved_IP_addresses
+_UNREACHABLE_ADDRESS = Address("198.51.100.1", 5701)
 _MEMBER_VERSION = MemberVersion(5, 0, 0)
 _CLIENT_PUBLIC_ENDPOINT_QUALIFIER = EndpointQualifier(ProtocolType.CLIENT, "public")
 
