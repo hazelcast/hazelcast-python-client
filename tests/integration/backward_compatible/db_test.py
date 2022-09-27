@@ -1,8 +1,13 @@
 from hazelcast import HazelcastClient
 from hazelcast.db import connect, Connection
-from .sql_test import SqlTestBase, \
-    compare_server_version_with_rc, compare_client_version, \
-    SERVER_CONFIG, JET_ENABLED_CONFIG, Student
+from .sql_test import (
+    SqlTestBase,
+    compare_server_version_with_rc,
+    compare_client_version,
+    SERVER_CONFIG,
+    JET_ENABLED_CONFIG,
+    Student,
+)
 
 
 class DbapiTestBase(SqlTestBase):
@@ -25,10 +30,12 @@ class DbapiTestBase(SqlTestBase):
         cls.client = HazelcastClient(
             cluster_name=cls.cluster.id, portable_factories={666: {6: Student}}
         )
-        cls.conn = connect(config={
-            "cluster_name": cls.cluster.id,
-            "portable_factories": {666: {6: Student}},
-        })
+        cls.conn = connect(
+            config={
+                "cluster_name": cls.cluster.id,
+                "portable_factories": {666: {6: Student}},
+            }
+        )
 
     @classmethod
     def tearDownClass(cls):
@@ -62,7 +69,6 @@ class DbapiTestBase(SqlTestBase):
 
 
 class DbapiTest(DbapiTestBase):
-
     def test_fetchone(self):
         self._create_mapping()
         entry_count = 11

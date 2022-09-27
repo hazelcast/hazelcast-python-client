@@ -1,4 +1,8 @@
-.PHONY: test test-cover
+.PHONY: check test test-cover
+
+check:
+	mypy --show-error-codes hazelcast
+	black --check --config black.toml .
 
 test:
 	pytest
