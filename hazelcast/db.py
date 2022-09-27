@@ -5,9 +5,11 @@ from time import localtime
 from typing import Any, Dict, Callable, Iterator, List, Optional, Sequence, Union
 import enum
 import itertools
+import threading
 
 from hazelcast import HazelcastClient
 from hazelcast.sql import HazelcastSqlError, SqlColumnType, SqlResult, SqlRow, SqlRowMetadata, SqlExpectedResultType
+import hazelcast.errors as _err
 
 apilevel = "2.0"
 # Threads may share the module and connections.
@@ -175,6 +177,7 @@ class Cursor:
 class Connection:
 
     def __init__(self, config: Dict[str, Any]):
+        self._mu = threading.RLock()
         self._client = HazelcastClient(**config)
 
     def __enter__(self):
@@ -185,15 +188,20 @@ class Connection:
 
     def close(self):
         if self._client:
-            self._client.shutdown()
-            self._client = None
+            with self._mu:
+                if self._client:
+                    self._client.shutdown()
+                    self._client = None
 
     def commit(self):
         # transactions are not supported
         pass
 
     def cursor(self) -> Cursor:
-        return Cursor(self)
+        with self._mu:
+            if self._client is not None:
+                return Cursor(self)
+        raise ProgrammingError("connection is already closed")
 
     @property
     def Error(self):
@@ -248,8 +256,10 @@ def connect(config=None, *, dsn="", user: str=None, password: str=None, host="lo
     }
     return Connection(config)
 
+
 class Error(Exception):
     pass
+
 
 class Warning(Exception):
     pass
@@ -296,11 +306,13 @@ def wrap_error(f: Callable) -> Any:
     except Exception as e:
         raise Error from e
 
+
 def map_type(code: int) -> Type:
     type = _type_map.get(code)
     if type is None:
         raise NotSupportedError(f"unknown type code: {code}")
     return type
+
 
 _type_map = {
     SqlColumnType.VARCHAR: Type.STRING,
@@ -321,7 +333,6 @@ _type_map = {
     # SqlColumnType.JSON:
 }
 
-import hazelcast.errors as _err
 
 _error_map = {}
 
