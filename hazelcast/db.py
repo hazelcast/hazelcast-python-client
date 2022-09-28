@@ -132,7 +132,7 @@ class Cursor:
             self._iter = res.__iter__()
 
     def executemany(self, operation: str, seq_of_params: Sequence[Any]) -> None:
-        self._rownumber = None
+        self._rownumber = -1
         self._iter = None
         self._res = None
         futures = []
