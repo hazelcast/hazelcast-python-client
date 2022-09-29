@@ -1,0 +1,52 @@
+{% set name = "hazelcast" %}
+{% set version = "5.1" %}
+
+package:
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
+
+source:
+  url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
+  sha256: e68b3207d8f86614f6da821d28c7e0145a6143254f5110824c508d4b6f224659
+
+build:
+  number: 0
+  script: "{{ PYTHON }} -m pip install . -vv"
+
+requirements:
+  host:
+    - pip
+    - python
+  run:
+    - python
+
+test:
+  imports:
+    - hazelcast
+    - hazelcast.protocol
+    - hazelcast.protocol.codec
+    - hazelcast.protocol.codec.custom
+    - hazelcast.proxy
+    - hazelcast.proxy.cp
+    - hazelcast.serialization
+    - hazelcast.serialization.portable
+  requires:
+    - mock
+    - parameterized
+    - psutil
+    - pytest
+    - pytest-cov
+    - thrift
+
+about:
+  home: "https://hazelcast.com/clients/python"
+  license: Apache Software
+  license_family: APACHE
+  license_file: 
+  summary: "Hazelcast Python Client"
+  doc_url: "https://hazelcast.readthedocs.io/en/{{ version }}"
+  dev_url: "https://github.com/hazelcast/hazelcast-python-client"
+
+extra:
+  recipe-maintainers:
+    - yuce.hazelcast
