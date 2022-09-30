@@ -5,7 +5,7 @@ import itertools
 from hazelcast.errors import HazelcastError
 from hazelcast.proxy.map import EntryEventType
 from tests.base import SingleMemberTestCase
-from tests.util import random_string, event_collector
+from tests.util import random_string, event_collector, skip_if_client_version_older_than
 
 
 class MultiMapTest(SingleMemberTestCase):
@@ -151,10 +151,9 @@ class MultiMapTest(SingleMemberTestCase):
         self.assertCountEqual(self.multi_map.get("key"), ["value1", "value2"])
 
     def test_put_all_get(self):
-        self.assertTrue(
-            self.multi_map.put_all(
-                {"key1": ["value1", "value2", "value3"], "key2": ["value4", "value5", "value6"]}
-            )
+        skip_if_client_version_older_than(self, "5.0")
+        self.multi_map.put_all(
+            {"key1": ["value1", "value2", "value3"], "key2": ["value4", "value5", "value6"]}
         )
         self.assertCountEqual(self.multi_map.get("key1"), ["value1", "value2", "value3"])
         self.assertCountEqual(self.multi_map.get("key2"), ["value4", "value5", "value6"])

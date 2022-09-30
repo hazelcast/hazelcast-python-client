@@ -6,7 +6,7 @@ import unittest
 from hazelcast.errors import NullPointerError, IllegalMonitorStateError
 from hazelcast.predicate import Predicate, paging
 from tests.base import HazelcastTestCase
-from tests.util import random_string, compare_client_version, compare_server_version_with_rc
+from tests.util import random_string, compare_client_version, compare_server_version_with_rc, skip_if_client_version_older_than
 
 try:
     from hazelcast.serialization.api import (
@@ -983,6 +983,14 @@ class MultiMapCompactCompatibilityTest(CompactCompatibilityBase):
     def test_put(self):
         self.assertTrue(self.multi_map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE))
         self.assertEqual([OUTER_COMPACT_INSTANCE], self.multi_map.get(INNER_COMPACT_INSTANCE))
+
+    def test_put_all_get(self):
+        skip_if_client_version_older_than(self, "5.0")
+        self.multi_map.put_all(
+            {"key1": ["value1", "value2", "value3"], "key2": ["value4", "value5", "value6"]}
+        )
+        self.assertCountEqual(self.multi_map.get("key1"), ["value1", "value2", "value3"])
+        self.assertCountEqual(self.multi_map.get("key2"), ["value4", "value5", "value6"])
 
     def test_value_count(self):
         self.assertEqual(0, self.multi_map.value_count(OUTER_COMPACT_INSTANCE))
