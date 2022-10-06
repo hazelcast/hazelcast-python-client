@@ -1,6 +1,4 @@
 import datetime
-import decimal
-import typing
 
 import hazelcast.util as util
 from hazelcast.errors import HazelcastSerializationError
@@ -69,20 +67,22 @@ class DefaultPortableWriter(PortableWriter):
         self._write_nullable_field(field_name, FieldType.DECIMAL, value, IOUtil.write_big_decimal)
 
     def write_time(self, field_name, value):
-        self._write_nullable_field(field_name, FieldType.TIME, value, write_portable_time)
+        self._write_nullable_field(field_name, FieldType.TIME, value, _write_portable_time)
 
     def write_date(self, field_name, value):
-        self._write_nullable_field(field_name, FieldType.DATE, value, write_portable_date)
+        self._write_nullable_field(field_name, FieldType.DATE, value, _write_portable_date)
 
     def write_timestamp(self, field_name, value):
-        self._write_nullable_field(field_name, FieldType.TIMESTAMP, value, write_portable_timestamp)
+        self._write_nullable_field(
+            field_name, FieldType.TIMESTAMP, value, _write_portable_timestamp
+        )
 
     def write_timestamp_with_timezone(self, field_name, value):
         self._write_nullable_field(
             field_name,
             FieldType.TIMESTAMP_WITH_TIMEZONE,
             value,
-            write_portable_timestamp_with_timezone,
+            _write_portable_timestamp_with_timezone,
         )
 
     def write_byte_array(self, field_name, values):
@@ -128,17 +128,17 @@ class DefaultPortableWriter(PortableWriter):
 
     def write_time_array(self, field_name, values):
         self._write_object_array_field(
-            field_name, FieldType.TIME_ARRAY, values, write_portable_time
+            field_name, FieldType.TIME_ARRAY, values, _write_portable_time
         )
 
     def write_date_array(self, field_name, values):
         self._write_object_array_field(
-            field_name, FieldType.DATE_ARRAY, values, write_portable_date
+            field_name, FieldType.DATE_ARRAY, values, _write_portable_date
         )
 
     def write_timestamp_array(self, field_name, values):
         self._write_object_array_field(
-            field_name, FieldType.TIMESTAMP_ARRAY, values, write_portable_timestamp
+            field_name, FieldType.TIMESTAMP_ARRAY, values, _write_portable_timestamp
         )
 
     def write_timestamp_with_timezone_array(self, field_name, values):
@@ -146,7 +146,7 @@ class DefaultPortableWriter(PortableWriter):
             field_name,
             FieldType.TIMESTAMP_WITH_TIMEZONE_ARRAY,
             values,
-            write_portable_timestamp_with_timezone,
+            _write_portable_timestamp_with_timezone,
         )
 
     def write_portable(self, field_name, portable):
@@ -268,26 +268,26 @@ def _check_portable_attributes(field_def, portable):
         )
 
 
-def write_portable_date(out: ObjectDataOutput, value: datetime.date):
+def _write_portable_date(out: ObjectDataOutput, value: datetime.date):
     out.write_short(value.year)
     out.write_byte(value.month)
     out.write_byte(value.day)
 
 
-def write_portable_time(out: ObjectDataOutput, value: datetime.datetime):
+def _write_portable_time(out: ObjectDataOutput, value: datetime.datetime):
     out.write_byte(value.hour)
     out.write_byte(value.minute)
     out.write_byte(value.second)
     out.write_int(value.microsecond * 1000)
 
 
-def write_portable_timestamp(out: ObjectDataOutput, value: datetime.datetime):
-    write_portable_date(out, value)
-    write_portable_time(out, value)
+def _write_portable_timestamp(out: ObjectDataOutput, value: datetime.datetime):
+    _write_portable_date(out, value)
+    _write_portable_time(out, value)
 
 
-def write_portable_timestamp_with_timezone(out: ObjectDataOutput, value: datetime.datetime):
-    write_portable_timestamp(out, value)
+def _write_portable_timestamp_with_timezone(out: ObjectDataOutput, value: datetime.datetime):
+    _write_portable_timestamp(out, value)
     timezone_info = value.tzinfo
     if not timezone_info:
         out.write_int(0)
