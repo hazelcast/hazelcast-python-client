@@ -66,19 +66,19 @@ class DefaultPortableWriter(PortableWriter):
         self._out.write_string(value)
 
     def write_decimal(self, field_name, value):
-        self.write_nullable_field(field_name, FieldType.DECIMAL, value, IOUtil.write_big_decimal)
+        self._write_nullable_field(field_name, FieldType.DECIMAL, value, IOUtil.write_big_decimal)
 
     def write_time(self, field_name, value):
-        self.write_nullable_field(field_name, FieldType.TIME, value, write_portable_time)
+        self._write_nullable_field(field_name, FieldType.TIME, value, write_portable_time)
 
     def write_date(self, field_name, value):
-        self.write_nullable_field(field_name, FieldType.DATE, value, write_portable_date)
+        self._write_nullable_field(field_name, FieldType.DATE, value, write_portable_date)
 
     def write_timestamp(self, field_name, value):
-        self.write_nullable_field(field_name, FieldType.TIMESTAMP, value, write_portable_timestamp)
+        self._write_nullable_field(field_name, FieldType.TIMESTAMP, value, write_portable_timestamp)
 
     def write_timestamp_with_timezone(self, field_name, value):
-        self.write_nullable_field(
+        self._write_nullable_field(
             field_name,
             FieldType.TIMESTAMP_WITH_TIMEZONE,
             value,
@@ -122,23 +122,23 @@ class DefaultPortableWriter(PortableWriter):
         self._out.write_string_array(values)
 
     def write_decimal_array(self, field_name, values):
-        self.write_object_array_field(
+        self._write_object_array_field(
             field_name, FieldType.DECIMAL_ARRAY, values, IOUtil.write_big_decimal
         )
 
     def write_time_array(self, field_name, values):
-        self.write_object_array_field(field_name, FieldType.TIME_ARRAY, values, write_portable_time)
+        self._write_object_array_field(field_name, FieldType.TIME_ARRAY, values, write_portable_time)
 
     def write_date_array(self, field_name, values):
-        self.write_object_array_field(field_name, FieldType.DATE_ARRAY, values, write_portable_date)
+        self._write_object_array_field(field_name, FieldType.DATE_ARRAY, values, write_portable_date)
 
     def write_timestamp_array(self, field_name, values):
-        self.write_object_array_field(
+        self._write_object_array_field(
             field_name, FieldType.TIMESTAMP_ARRAY, values, write_portable_timestamp
         )
 
     def write_timestamp_with_timezone_array(self, field_name, values):
-        self.write_object_array_field(
+        self._write_object_array_field(
             field_name,
             FieldType.TIMESTAMP_WITH_TIMEZONE_ARRAY,
             values,
@@ -194,14 +194,14 @@ class DefaultPortableWriter(PortableWriter):
     def write_utf_array(self, field_name, values):
         self.write_string_array(field_name, values)
 
-    def write_nullable_field(self, field_name: str, field_type: FieldType, value, func):
+    def _write_nullable_field(self, field_name: str, field_type: FieldType, value, func):
         self._set_position(field_name, field_type)
         is_none = value is None
         self._out.write_boolean(is_none)
         if not is_none:
             func(self._out, value)
 
-    def write_object_array_field(self, field_name, field_type, values, func):
+    def _write_object_array_field(self, field_name, field_type, values, func):
         self._set_position(field_name, field_type)
         length = NULL_ARRAY_LENGTH if values is None else len(values)
         self._out.write_int(length)
@@ -211,7 +211,7 @@ class DefaultPortableWriter(PortableWriter):
             for i in range(length):
                 position = self._out.position()
                 if values[i] is None:
-                    raise HazelcastSerializationError("Array items can not be null")
+                    raise HazelcastSerializationError("Array items can not be None")
                 else:
                     self._out.write_int_positional(position, offset + i * INT_SIZE_IN_BYTES)
                     func(self._out, values[i])

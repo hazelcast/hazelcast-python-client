@@ -108,20 +108,20 @@ class DefaultPortableReader(PortableReader):
             self._in.set_position(cur_pos)
 
     def read_decimal(self, field_name):
-        return self.read_nullable_field(field_name, FieldType.DECIMAL, IOUtil.read_big_decimal)
+        return self._read_nullable_field(field_name, FieldType.DECIMAL, IOUtil.read_big_decimal)
 
     def read_time(self, field_name):
-        return self.read_nullable_field(field_name, FieldType.TIME, read_portable_time)
+        return self._read_nullable_field(field_name, FieldType.TIME, _read_portable_time)
 
     def read_date(self, field_name):
-        return self.read_nullable_field(field_name, FieldType.DATE, read_portable_date)
+        return self._read_nullable_field(field_name, FieldType.DATE, _read_portable_date)
 
     def read_timestamp(self, field_name):
-        return self.read_nullable_field(field_name, FieldType.TIMESTAMP, read_portable_timestamp)
+        return self._read_nullable_field(field_name, FieldType.TIMESTAMP, _read_portable_timestamp)
 
     def read_timestamp_with_timezone(self, field_name):
-        return self.read_nullable_field(
-            field_name, FieldType.TIMESTAMP_WITH_TIMEZONE, read_portable_timestamp_with_timezone
+        return self._read_nullable_field(
+            field_name, FieldType.TIMESTAMP_WITH_TIMEZONE, _read_portable_timestamp_with_timezone
         )
 
     def read_boolean_array(self, field_name):
@@ -240,26 +240,26 @@ class DefaultPortableReader(PortableReader):
             self._in.set_position(current_pos)
 
     def read_decimal_array(self, field_name):
-        return self.read_object_array_field(
+        return self._read_object_array_field(
             field_name, FieldType.DECIMAL_ARRAY, IOUtil.read_big_decimal
         )
 
     def read_time_array(self, field_name):
-        return self.read_object_array_field(field_name, FieldType.TIME_ARRAY, read_portable_time)
+        return self._read_object_array_field(field_name, FieldType.TIME_ARRAY, _read_portable_time)
 
     def read_date_array(self, field_name):
-        return self.read_object_array_field(field_name, FieldType.DATE_ARRAY, read_portable_date)
+        return self._read_object_array_field(field_name, FieldType.DATE_ARRAY, _read_portable_date)
 
     def read_timestamp_array(self, field_name):
-        return self.read_object_array_field(
-            field_name, FieldType.TIMESTAMP_ARRAY, read_portable_timestamp
+        return self._read_object_array_field(
+            field_name, FieldType.TIMESTAMP_ARRAY, _read_portable_timestamp
         )
 
     def read_timestamp_with_timezone_array(self, field_name):
-        return self.read_object_array_field(
+        return self._read_object_array_field(
             field_name,
             FieldType.TIMESTAMP_WITH_TIMEZONE_ARRAY,
-            read_portable_timestamp_with_timezone,
+            _read_portable_timestamp_with_timezone,
         )
 
     def read_utf(self, field_name):
@@ -268,19 +268,19 @@ class DefaultPortableReader(PortableReader):
     def read_utf_array(self, field_name):
         return self.read_string_array(field_name)
 
-    def read_nullable_field(self, field_name, field_type, func):
+    def _read_nullable_field(self, field_name, field_type, func):
         current_pos = self._in.position()
         try:
             pos = self._read_position(field_name, field_type)
             self._in.set_position(pos)
-            is_null = self._in.read_boolean()
-            if is_null:
+            is_none = self._in.read_boolean()
+            if is_none:
                 return None
             return func(self._in)
         finally:
             self._in.set_position(current_pos)
 
-    def read_object_array_field(self, field_name, field_type: FieldType, func):
+    def _read_object_array_field(self, field_name, field_type: FieldType, func):
         current_pos = self._in.position()
         try:
             pos = self._read_position(field_name, field_type)
@@ -288,12 +288,13 @@ class DefaultPortableReader(PortableReader):
             length = self._in.read_int()
             if length == NULL_ARRAY_LENGTH:
                 return None
-            values = []
-            offset = self._in.position()
-            for i in range(length):
-                pos = self._in.read_int_positional(offset + i * bits.INT_SIZE_IN_BYTES)
-                self._in.set_position(pos)
-                values.append(func(self._in))
+            values = [None] * length
+            if length > 0:
+                offset = self._in.position()
+                for i in range(length):
+                    pos = self._in.read_int_positional(offset + i * bits.INT_SIZE_IN_BYTES)
+                    self._in.set_position(pos)
+                    values[i] = func(self._in)
             return values
         finally:
             self._in.set_position(current_pos)
@@ -370,43 +371,43 @@ def _check_factory_and_class(field_def, factory_id, class_id):
         )
 
 
-def read_portable_date(inp: ObjectDataInput):
-    y, m, d = _read_portable_date(inp)
-    return datetime.date(y, m, d)
-
-
 def _read_portable_date(inp: ObjectDataInput):
-    y = inp.read_short()
-    m = inp.read_byte()
-    d = inp.read_byte()
-    return y, m, d
+    year, month, day = _read_portable_date_helper(inp)
+    return datetime.date(year, month, day)
 
 
-def read_portable_time(inp: ObjectDataInput):
-    h, m, s, ms = _read_portable_time(inp)
-    return datetime.time(h, m, s, ms)
+def _read_portable_date_helper(inp: ObjectDataInput):
+    year = inp.read_short()
+    month = inp.read_byte()
+    day = inp.read_byte()
+    return year, month, day
 
 
 def _read_portable_time(inp: ObjectDataInput):
-    h = inp.read_byte()
-    m = inp.read_byte()
-    s = inp.read_byte()
-    ms = inp.read_int() // 1000
-    return h, m, s, ms
+    hour, minute, second, microsecond = _read_portable_time_helper(inp)
+    return datetime.time(hour, minute, second, microsecond)
 
 
-def read_portable_timestamp(inp: ObjectDataInput):
-    y, m, d = _read_portable_date(inp)
-    h, mn, s, ms = _read_portable_time(inp)
-    return datetime.datetime(y, m, d, h, mn, s, ms)
+def _read_portable_time_helper(inp: ObjectDataInput):
+    hour = inp.read_byte()
+    minute = inp.read_byte()
+    second = inp.read_byte()
+    microsecond = inp.read_int() // 1000
+    return hour, minute, second, microsecond
 
 
-def read_portable_timestamp_with_timezone(inp: ObjectDataInput):
-    y, m, d = _read_portable_date(inp)
-    h, mn, s, nanos = _read_portable_time(inp)
+def _read_portable_timestamp(inp: ObjectDataInput):
+    year, month, day = _read_portable_date_helper(inp)
+    hour, minute, second, microsecond = _read_portable_time_helper(inp)
+    return datetime.datetime(year, month, day, hour, minute, second, microsecond)
+
+
+def _read_portable_timestamp_with_timezone(inp: ObjectDataInput):
+    year, month, day = _read_portable_date_helper(inp)
+    hour, minute, second, microsecond = _read_portable_time_helper(inp)
     offset = inp.read_int()
     return datetime.datetime(
-        y, m, d, h, mn, s, nanos, datetime.timezone(datetime.timedelta(seconds=offset))
+        year, month, day, hour, minute, second, microsecond, datetime.timezone(datetime.timedelta(seconds=offset))
     )
 
 
@@ -514,123 +515,72 @@ class MorphingPortableReader(DefaultPortableReader):
         return super(MorphingPortableReader, self).read_char(field_name)
 
     def read_string(self, field_name):
-        fd = self._class_def.get_field(field_name)
-        if fd is None:
-            return None
-        self.validate_type_compatibility(fd, FieldType.STRING)
-        return super(MorphingPortableReader, self).read_string(field_name)
+        return self._validate_type_compatibility_and_read(field_name, FieldType.STRING,
+                                                          super(MorphingPortableReader, self).read_string)
 
     def read_decimal(self, field_name):
-        fd = self._class_def.get_field(field_name)
-        if fd is None:
-            return None
-        self.validate_type_compatibility(fd, FieldType.DECIMAL)
-        return super(MorphingPortableReader, self).read_decimal(field_name)
+        return self._validate_type_compatibility_and_read(field_name, FieldType.DECIMAL,
+                                                          super(MorphingPortableReader, self).read_decimal)
 
     def read_time(self, field_name):
-        fd = self._class_def.get_field(field_name)
-        if fd is None:
-            return 0
-        self.validate_type_compatibility(fd, FieldType.TIME)
-        return super(MorphingPortableReader, self).read_time(field_name)
+        return self._validate_type_compatibility_and_read(field_name, FieldType.TIME,
+                                                          super(MorphingPortableReader, self).read_time)
 
     def read_date(self, field_name):
-        fd = self._class_def.get_field(field_name)
-        if fd is None:
-            return 0
-        self.validate_type_compatibility(fd, FieldType.DATE)
-        return super(MorphingPortableReader, self).read_date(field_name)
+        return self._validate_type_compatibility_and_read(field_name, FieldType.DATE,
+                                                          super(MorphingPortableReader, self).read_date)
 
     def read_timestamp(self, field_name):
-        fd = self._class_def.get_field(field_name)
-        if fd is None:
-            return 0
-        self.validate_type_compatibility(fd, FieldType.TIMESTAMP)
-        return super(MorphingPortableReader, self).read_timestamp(field_name)
+        return self._validate_type_compatibility_and_read(field_name, FieldType.TIMESTAMP,
+                                                          super(MorphingPortableReader, self).read_timestamp)
 
     def read_timestamp_with_timezone(self, field_name):
-        fd = self._class_def.get_field(field_name)
-        if fd is None:
-            return 0
-        self.validate_type_compatibility(fd, FieldType.TIMESTAMP_WITH_TIMEZONE)
-        return super(MorphingPortableReader, self).read_timestamp_with_timezone(field_name)
+        return self._validate_type_compatibility_and_read(field_name, FieldType.TIMESTAMP_WITH_TIMEZONE,
+                                                          super(MorphingPortableReader, self).read_timestamp_with_timezone)
 
     def read_string_array(self, field_name):
-        fd = self._class_def.get_field(field_name)
-        if fd is None:
-            return None
-        self.validate_type_compatibility(fd, FieldType.STRING_ARRAY)
-        return super(MorphingPortableReader, self).read_string_array(field_name)
+        return self._validate_type_compatibility_and_read(field_name, FieldType.STRING_ARRAY,
+                                                          super(MorphingPortableReader, self).read_string_array)
 
     def read_short_array(self, field_name):
-        fd = self._class_def.get_field(field_name)
-        if fd is None:
-            return None
-        self.validate_type_compatibility(fd, FieldType.SHORT_ARRAY)
-        return super(MorphingPortableReader, self).read_short_array(field_name)
+        return self._validate_type_compatibility_and_read(field_name, FieldType.SHORT_ARRAY,
+                                                          super(MorphingPortableReader, self).read_short_array)
 
     def read_int_array(self, field_name):
-        fd = self._class_def.get_field(field_name)
-        if fd is None:
-            return None
-        self.validate_type_compatibility(fd, FieldType.INT_ARRAY)
-        return super(MorphingPortableReader, self).read_int_array(field_name)
+        return self._validate_type_compatibility_and_read(field_name, FieldType.INT_ARRAY,
+                                                          super(MorphingPortableReader, self).read_int_array)
 
     def read_long_array(self, field_name):
-        fd = self._class_def.get_field(field_name)
-        if fd is None:
-            return None
-        self.validate_type_compatibility(fd, FieldType.LONG_ARRAY)
-        return super(MorphingPortableReader, self).read_long_array(field_name)
+        return self._validate_type_compatibility_and_read(field_name, FieldType.LONG_ARRAY,
+                                                          super(MorphingPortableReader, self).read_long_array)
 
     def read_float_array(self, field_name):
-        fd = self._class_def.get_field(field_name)
-        if fd is None:
-            return None
-        self.validate_type_compatibility(fd, FieldType.FLOAT_ARRAY)
-        return super(MorphingPortableReader, self).read_float_array(field_name)
+        return self._validate_type_compatibility_and_read(field_name, FieldType.FLOAT_ARRAY,
+                                                          super(MorphingPortableReader, self).read_float_array)
 
     def read_double_array(self, field_name):
-        fd = self._class_def.get_field(field_name)
-        if fd is None:
-            return None
-        self.validate_type_compatibility(fd, FieldType.DOUBLE_ARRAY)
-        return super(MorphingPortableReader, self).read_double_array(field_name)
+        return self._validate_type_compatibility_and_read(field_name, FieldType.DOUBLE_ARRAY,
+                                                          super(MorphingPortableReader, self).read_double_array)
 
     def read_char_array(self, field_name):
-        fd = self._class_def.get_field(field_name)
-        if fd is None:
-            return None
-        self.validate_type_compatibility(fd, FieldType.CHAR_ARRAY)
-        return super(MorphingPortableReader, self).read_char_array(field_name)
+        return self._validate_type_compatibility_and_read(field_name, FieldType.CHAR_ARRAY,
+                                                          super(MorphingPortableReader, self).read_char_array)
 
     def read_byte_array(self, field_name):
-        fd = self._class_def.get_field(field_name)
-        if fd is None:
-            return None
-        self.validate_type_compatibility(fd, FieldType.BYTE_ARRAY)
-        return super(MorphingPortableReader, self).read_byte_array(field_name)
+        return self._validate_type_compatibility_and_read(field_name, FieldType.BYTE_ARRAY,
+                                                          super(MorphingPortableReader, self).read_byte_array)
 
     def read_boolean_array(self, field_name):
-        fd = self._class_def.get_field(field_name)
-        if fd is None:
-            return None
-        self.validate_type_compatibility(fd, FieldType.BOOLEAN_ARRAY)
-        return super(MorphingPortableReader, self).read_boolean_array(field_name)
+        return self._validate_type_compatibility_and_read(field_name, FieldType.BOOLEAN_ARRAY,
+                                                          super(MorphingPortableReader, self).read_boolean_array)
 
     def read_portable(self, field_name):
-        fd = self._class_def.get_field(field_name)
-        if fd is None:
-            return None
-        self.validate_type_compatibility(fd, FieldType.PORTABLE)
-        return super(MorphingPortableReader, self).read_portable(field_name)
+        return self._validate_type_compatibility_and_read(field_name, FieldType.PORTABLE,
+                                                          super(MorphingPortableReader, self).read_portable)
 
     def read_portable_array(self, field_name):
-        fd = self._class_def.get_field(field_name)
-        if fd is None:
-            return None
-        self.validate_type_compatibility(fd, FieldType.PORTABLE_ARRAY)
-        return super(MorphingPortableReader, self).read_portable_array(field_name)
+        return self._validate_type_compatibility_and_read(field_name, FieldType.PORTABLE_ARRAY,
+                                                          super(MorphingPortableReader, self).read_portable_array)
 
     def read_utf(self, field_name):
         return self.read_string(field_name)
@@ -639,39 +589,22 @@ class MorphingPortableReader(DefaultPortableReader):
         return self.read_string_array(field_name)
 
     def read_decimal_array(self, field_name):
-        fd = self._class_def.get_field(field_name)
-        if fd is None:
-            return None
-        self.validate_type_compatibility(fd, FieldType.DECIMAL_ARRAY)
-        return super(MorphingPortableReader, self).read_decimal_array(field_name)
+        return self._validate_type_compatibility_and_read(field_name, FieldType.DECIMAL_ARRAY,
+                                                          super().read_decimal_array)
 
     def read_time_array(self, field_name):
-        fd = self._class_def.get_field(field_name)
-        if fd is None:
-            return None
-        self.validate_type_compatibility(fd, FieldType.TIME_ARRAY)
-        return super(MorphingPortableReader, self).read_time_array(field_name)
+        return self._validate_type_compatibility_and_read(field_name, FieldType.TIME_ARRAY, super().read_time_array)
 
     def read_date_array(self, field_name):
-        fd = self._class_def.get_field(field_name)
-        if fd is None:
-            return None
-        self.validate_type_compatibility(fd, FieldType.DATE_ARRAY)
-        return super(MorphingPortableReader, self).read_date_array(field_name)
+        return self._validate_type_compatibility_and_read(field_name, FieldType.DATE_ARRAY, super().read_date_array)
 
     def read_timestamp_array(self, field_name):
-        fd = self._class_def.get_field(field_name)
-        if fd is None:
-            return None
-        self.validate_type_compatibility(fd, FieldType.TIMESTAMP_ARRAY)
-        return super(MorphingPortableReader, self).read_timestamp_array(field_name)
+        return self._validate_type_compatibility_and_read(field_name, FieldType.TIMESTAMP_ARRAY,
+                                                          super().read_timestamp_array)
 
     def read_timestamp_with_timezone_array(self, field_name):
-        fd = self._class_def.get_field(field_name)
-        if fd is None:
-            return None
-        self.validate_type_compatibility(fd, FieldType.TIMESTAMP_WITH_TIMEZONE_ARRAY)
-        return super(MorphingPortableReader, self).read_timestamp_with_timezone_array(field_name)
+        return self._validate_type_compatibility_and_read(field_name, FieldType.TIMESTAMP_WITH_TIMEZONE_ARRAY,
+                                                          super().read_timestamp_with_timezone_array)
 
     def validate_type_compatibility(self, field_def, expected_type):
         if field_def.field_type != expected_type:
@@ -682,3 +615,10 @@ class MorphingPortableReader(DefaultPortableReader):
             "Incompatible to read %s from %s while reading field: %s on %s"
             % (expected_type, field_def.field_type, field_def.field_name, self._class_def)
         )
+
+    def _validate_type_compatibility_and_read(self, field_name, field_type, reader):
+        fd = self._class_def.get_field(field_name)
+        if fd is None:
+            return None
+        self.validate_type_compatibility(fd, field_type)
+        return reader(field_name)
