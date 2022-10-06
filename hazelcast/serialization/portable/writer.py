@@ -127,10 +127,14 @@ class DefaultPortableWriter(PortableWriter):
         )
 
     def write_time_array(self, field_name, values):
-        self._write_object_array_field(field_name, FieldType.TIME_ARRAY, values, write_portable_time)
+        self._write_object_array_field(
+            field_name, FieldType.TIME_ARRAY, values, write_portable_time
+        )
 
     def write_date_array(self, field_name, values):
-        self._write_object_array_field(field_name, FieldType.DATE_ARRAY, values, write_portable_date)
+        self._write_object_array_field(
+            field_name, FieldType.DATE_ARRAY, values, write_portable_date
+        )
 
     def write_timestamp_array(self, field_name, values):
         self._write_object_array_field(
