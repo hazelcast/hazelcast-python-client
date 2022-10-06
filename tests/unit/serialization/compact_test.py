@@ -5,7 +5,9 @@ import uuid
 
 from parameterized import parameterized
 
+from hazelcast.config import _Config
 from hazelcast.errors import HazelcastSerializationError
+from hazelcast.serialization import SerializationServiceV1
 from hazelcast.serialization.compact import (
     RabinFingerprint,
     SchemaWriter,
@@ -14,6 +16,13 @@ from hazelcast.serialization.compact import (
     FIELD_OPERATIONS,
     _BOOLEANS_PER_BYTE,
     FieldKind,
+    SchemaNotReplicatedError,
+)
+from tests.integration.backward_compatible.serialization.compact_test import (
+    SomeFieldsSerializer,
+    FIELD_KINDS,
+    REFERENCE_OBJECTS,
+    SomeFields,
 )
 
 
@@ -200,3 +209,41 @@ class SchemaWriterTest(unittest.TestCase):
 
         for name, kind in fields:
             self.assertEqual(kind, schema.fields.get(name).kind)
+
+
+class NestedSerializerTest(unittest.TestCase):
+    def _register_schema(self, service, obj):
+        writer = SchemaWriter(type(obj).__name__)
+        fields = []
+        for kind in FIELD_KINDS:
+            name = kind.name.lower()
+            fun = getattr(writer, f"write_{kind.name.lower()}", None)
+            if fun is None:
+                continue
+            fun(name, None)
+            fields.append((name, kind))
+        schema = writer.build()
+        service.compact_stream_serializer.register_schema_to_type(schema, type(obj))
+
+    def _serialize(self, serializationService, obj):
+        try:
+            return serializationService.to_data(obj)
+        except SchemaNotReplicatedError:
+            self._register_schema(serializationService, obj)
+            return self._serialize(serializationService, obj)
+        except:
+            raise
+
+    def test_missing_serializer(self):
+        serializer = SomeFieldsSerializer.from_kinds(FIELD_KINDS)
+        fields = {kind.name.lower(): REFERENCE_OBJECTS[kind] for kind in FIELD_KINDS}
+        obj = SomeFields(**fields)
+
+        config = _Config()
+        config.compact_serializers = [serializer]
+        service = SerializationServiceV1(config)
+
+        with self.assertRaisesRegex(
+            HazelcastSerializationError, "No serializer is registered for class/constructor"
+        ):
+            self._serialize(service, obj)
