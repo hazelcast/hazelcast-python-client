@@ -1,5 +1,6 @@
 import typing
 
+from hazelcast.errors import NullPointerError
 from hazelcast.future import Future
 from hazelcast.protocol.codec import (
     topic_add_message_listener_codec,
@@ -79,12 +80,12 @@ class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]
         """
         try:
             if messages is None:
-                raise TypeError("Null message is not allowed!")
+                raise NullPointerError("Null message is not allowed!")
             data_list = []
             for m in messages:
                 data = self._to_data(m)
                 if data is None:
-                    raise TypeError("Null message is not allowed!")
+                    raise NullPointerError("Null message is not allowed!")
                 data_list.append(data)
         except SchemaNotReplicatedError as e:
             return self._send_schema_and_retry(e, self.publish_all, messages)
@@ -129,10 +130,7 @@ class BlockingTopic(Topic[MessageType]):
     ) -> None:
         return self._wrapped.publish(message).result()
 
-    def publish_all(  # type: ignore[override]
-            self,
-            messages: typing.Sequence[MessageType]
-    ) -> None:
+    def publish_all(self, messages: typing.Sequence[MessageType]) -> None:  # type: ignore[override]
         return self._wrapped.publish_all(messages).result()
 
     def remove_listener(  # type: ignore[override]
