@@ -58,7 +58,7 @@ class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]
         )
 
     def publish(self, message: MessageType) -> Future[None]:
-        """Publishes the message to all subscribers of this topic
+        """Publishes the message to all subscribers of this topic.
 
         Args:
             message: The message to be published.
@@ -72,17 +72,22 @@ class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]
         return self._invoke(request)
 
     def publish_all(self, messages: typing.Sequence[MessageType]) -> Future[None]:
-        """Publishes a list of messages to all subscribers of this topic
+        """Publishes a list of messages to all subscribers of this topic.
 
         Args:
-            messages: The message list to be published
+            messages: The messages to be published.
         """
         try:
+            if messages is None:
+                raise TypeError("Null message is not allowed!")
             data_list = []
             for m in messages:
-                data_list.append(self._to_data(m))
+                data = self._to_data(m)
+                if data is None:
+                    raise TypeError("Null message is not allowed!")
+                data_list.append(data)
         except SchemaNotReplicatedError as e:
-            return self._send_schema_and_retry(e, self.publish, messages)
+            return self._send_schema_and_retry(e, self.publish_all, messages)
 
         request = topic_publish_all_codec.encode_request(self.name, data_list)
         return self._invoke(request)
@@ -124,7 +129,10 @@ class BlockingTopic(Topic[MessageType]):
     ) -> None:
         return self._wrapped.publish(message).result()
 
-    def publish_all(self, messages: typing.Sequence[MessageType]) -> None:  # type: ignore[override]
+    def publish_all(  # type: ignore[override]
+            self,
+            messages: typing.Sequence[MessageType]
+    ) -> None:
         return self._wrapped.publish_all(messages).result()
 
     def remove_listener(  # type: ignore[override]
