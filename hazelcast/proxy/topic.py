@@ -73,7 +73,7 @@ class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]
         return self._invoke(request)
 
     def publish_all(self, messages: typing.Sequence[MessageType]) -> Future[None]:
-        """Publishes a list of messages to all subscribers of this topic.
+        """Publishes the messages to all subscribers of this topic.
 
         Args:
             messages: The messages to be published.
@@ -130,9 +130,9 @@ class BlockingTopic(Topic[MessageType]):
     ) -> None:
         return self._wrapped.publish(message).result()
 
-    def publish_all(   # type: ignore[override]
-            self,
-            messages: typing.Sequence[MessageType]
+    def publish_all(  # type: ignore[override]
+        self,
+        messages: typing.Sequence[MessageType]
     ) -> None:
         return self._wrapped.publish_all(messages).result()
 
