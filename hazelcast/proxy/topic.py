@@ -130,7 +130,10 @@ class BlockingTopic(Topic[MessageType]):
     ) -> None:
         return self._wrapped.publish(message).result()
 
-    def publish_all(self, messages: typing.Sequence[MessageType]) -> None:  # type: ignore[override]
+    def publish_all(   # type: ignore[override]
+            self,
+            messages: typing.Sequence[MessageType]
+    ) -> None:
         return self._wrapped.publish_all(messages).result()
 
     def remove_listener(  # type: ignore[override]
