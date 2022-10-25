@@ -19,12 +19,6 @@ from hazelcast.serialization.compact import (
     FieldKind,
     SchemaNotReplicatedError,
 )
-from tests.integration.backward_compatible.serialization.compact_test import (
-    SomeFieldsSerializer,
-    FIELD_KINDS,
-    REFERENCE_OBJECTS,
-    SomeFields,
-)
 
 
 class RabinFingerprintTest(unittest.TestCase):
@@ -268,7 +262,7 @@ class NestedSerializerTest(unittest.TestCase):
         service = SerializationServiceV1(config)
 
         with self.assertRaisesRegex(
-            HazelcastSerializationError, "No serializer is registered for class/constructor"
+            HazelcastSerializationError, "No serializer is registered for class"
         ):
             obj = Parent(Child("test"))
             self._serialize(service, obj)
