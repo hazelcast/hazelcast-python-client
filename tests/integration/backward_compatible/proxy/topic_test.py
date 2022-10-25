@@ -1,4 +1,3 @@
-from hazelcast.errors import NullPointerError
 from tests.base import SingleMemberTestCase
 from tests.util import random_string, event_collector, skip_if_client_version_older_than
 
@@ -59,11 +58,13 @@ class TopicTest(SingleMemberTestCase):
 
         self.assertTrueEventually(assert_event, 5)
 
-    def test_publish_all_none_argument(self):
+    def test_publish_all_none_messages(self):
+        skip_if_client_version_older_than(self, "5.2")
         with self.assertRaises(AssertionError):
             self.topic.publish_all(None)
 
     def test_publish_all_none_message(self):
+        skip_if_client_version_older_than(self, "5.2")
         messages = ["message1", None, "message3"]
         with self.assertRaises(AssertionError):
             self.topic.publish_all(messages)

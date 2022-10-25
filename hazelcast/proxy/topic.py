@@ -1,6 +1,5 @@
 import typing
 
-from hazelcast.errors import NullPointerError
 from hazelcast.future import Future
 from hazelcast.protocol.codec import (
     topic_add_message_listener_codec,
@@ -9,8 +8,8 @@ from hazelcast.protocol.codec import (
     topic_remove_message_listener_codec,
 )
 from hazelcast.proxy.base import PartitionSpecificProxy, TopicMessage
-from hazelcast.types import MessageType
 from hazelcast.serialization.compact import SchemaNotReplicatedError
+from hazelcast.types import MessageType
 from hazelcast.util import check_not_none
 
 
@@ -129,7 +128,10 @@ class BlockingTopic(Topic[MessageType]):
     ) -> None:
         return self._wrapped.publish(message).result()
 
-    def publish_all(self, messages: typing.Sequence[MessageType]) -> None:  # type: ignore[override]
+    def publish_all(  # type: ignore[override]
+        self,
+        messages: typing.Sequence[MessageType],
+    ) -> None:
         return self._wrapped.publish_all(messages).result()
 
     def remove_listener(  # type: ignore[override]

@@ -6,7 +6,12 @@ import unittest
 from hazelcast.errors import NullPointerError, IllegalMonitorStateError
 from hazelcast.predicate import Predicate, paging
 from tests.base import HazelcastTestCase
-from tests.util import random_string, compare_client_version, compare_server_version_with_rc
+from tests.util import (
+    random_string,
+    compare_client_version,
+    compare_server_version_with_rc,
+    skip_if_client_version_older_than,
+)
 
 try:
     from hazelcast.serialization.api import (
@@ -1403,6 +1408,7 @@ class TopicCompactCompatibilityTest(CompactCompatibilityBase):
         self.topic.publish(OUTER_COMPACT_INSTANCE)
 
     def test_publish_all(self):
+        skip_if_client_version_older_than(self, "5.2")
         messages = []
 
         def listener(message):
