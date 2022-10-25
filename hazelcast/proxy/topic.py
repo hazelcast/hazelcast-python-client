@@ -11,6 +11,7 @@ from hazelcast.protocol.codec import (
 from hazelcast.proxy.base import PartitionSpecificProxy, TopicMessage
 from hazelcast.types import MessageType
 from hazelcast.serialization.compact import SchemaNotReplicatedError
+from hazelcast.util import check_not_none
 
 
 class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]):
@@ -78,19 +79,17 @@ class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]
         Args:
             messages: The messages to be published.
         """
+        check_not_none(messages, "Messages cannot be None")
         try:
-            if messages is None:
-                raise NullPointerError("Null message is not allowed!")
-            data_list = []
+            topic_messages = []
             for m in messages:
+                check_not_none(m, "Message cannot be None")
                 data = self._to_data(m)
-                if data is None:
-                    raise NullPointerError("Null message is not allowed!")
-                data_list.append(data)
+                topic_messages.append(data)
         except SchemaNotReplicatedError as e:
             return self._send_schema_and_retry(e, self.publish_all, messages)
 
-        request = topic_publish_all_codec.encode_request(self.name, data_list)
+        request = topic_publish_all_codec.encode_request(self.name, topic_messages)
         return self._invoke(request)
 
     def remove_listener(self, registration_id: str) -> Future[bool]:
@@ -130,10 +129,7 @@ class BlockingTopic(Topic[MessageType]):
     ) -> None:
         return self._wrapped.publish(message).result()
 
-    def publish_all(  # type: ignore[override]
-        self,
-        messages: typing.Sequence[MessageType]
-    ) -> None:
+    def publish_all(self, messages: typing.Sequence[MessageType]) -> None:  # type: ignore[override]
         return self._wrapped.publish_all(messages).result()
 
     def remove_listener(  # type: ignore[override]

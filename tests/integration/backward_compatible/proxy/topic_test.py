@@ -1,6 +1,6 @@
 from hazelcast.errors import NullPointerError
 from tests.base import SingleMemberTestCase
-from tests.util import random_string, event_collector
+from tests.util import random_string, event_collector, skip_if_client_version_older_than
 
 
 class TopicTest(SingleMemberTestCase):
@@ -47,6 +47,7 @@ class TopicTest(SingleMemberTestCase):
         self.assertTrue(str(self.topic).startswith("Topic"))
 
     def test_publish_all(self):
+        skip_if_client_version_older_than(self, "5.2")
         collector = event_collector()
         self.topic.add_listener(on_message=collector)
 
