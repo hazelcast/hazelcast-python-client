@@ -45,9 +45,7 @@ class CompactStreamSerializer(BaseSerializer):
         clazz = type(obj)
         serializer = self._type_to_serializer.get(clazz)
         if serializer is None:
-            raise HazelcastSerializationError(
-                f"No serializer is registered for class {clazz}."
-            )
+            raise HazelcastSerializationError(f"No serializer is registered for class {clazz}.")
         schema = self._type_to_schema.get(clazz)
         if not schema:
             schema = CompactStreamSerializer._build_schema(serializer, obj)
