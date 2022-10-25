@@ -5,7 +5,10 @@ import uuid
 
 from parameterized import parameterized
 
+from hazelcast.config import _Config
 from hazelcast.errors import HazelcastSerializationError
+from hazelcast.serialization import SerializationServiceV1
+from hazelcast.serialization.api import CompactSerializer, CompactReader, CompactWriter
 from hazelcast.serialization.compact import (
     RabinFingerprint,
     SchemaWriter,
@@ -14,6 +17,7 @@ from hazelcast.serialization.compact import (
     FIELD_OPERATIONS,
     _BOOLEANS_PER_BYTE,
     FieldKind,
+    SchemaNotReplicatedError,
 )
 
 
@@ -200,3 +204,65 @@ class SchemaWriterTest(unittest.TestCase):
 
         for name, kind in fields:
             self.assertEqual(kind, schema.fields.get(name).kind)
+
+
+class Child:
+    def __init__(self, name: str):
+        self.name = name
+
+
+class Parent:
+    def __init__(self, child: Child):
+        self.child = child
+
+
+class ChildSerializer(CompactSerializer[Child]):
+    def read(self, reader: CompactReader):
+        name = reader.read_string("name")
+        return Child(name)
+
+    def write(self, writer: CompactWriter, obj: Parent):
+        writer.write_string("name", obj.name)
+
+    def get_type_name(self):
+        return "Child"
+
+    def get_class(self):
+        return Child
+
+
+class ParentSerializer(CompactSerializer[Parent]):
+    def read(self, reader: CompactReader):
+        child = reader.read_compact("child")
+        return Parent(child)
+
+    def write(self, writer: CompactWriter, obj: Parent):
+        writer.write_compact("child", obj.child)
+
+    def get_type_name(self):
+        return "Parent"
+
+    def get_class(self):
+        return Parent
+
+
+class NestedSerializerTest(unittest.TestCase):
+    def _serialize(self, serialization_service, obj):
+        try:
+            return serialization_service.to_data(obj)
+        except SchemaNotReplicatedError as e:
+            serialization_service.compact_stream_serializer.register_schema_to_type(
+                e.schema, e.clazz
+            )
+            return self._serialize(serialization_service, obj)
+
+    def test_missing_serializer(self):
+        config = _Config()
+        config.compact_serializers = [ParentSerializer()]
+        service = SerializationServiceV1(config)
+
+        with self.assertRaisesRegex(
+            HazelcastSerializationError, "No serializer is registered for class"
+        ):
+            obj = Parent(Child("test"))
+            self._serialize(service, obj)
