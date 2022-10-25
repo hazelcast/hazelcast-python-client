@@ -60,10 +60,10 @@ class TopicTest(SingleMemberTestCase):
         self.assertTrueEventually(assert_event, 5)
 
     def test_publish_all_none_argument(self):
-        with self.assertRaises(NullPointerError):
+        with self.assertRaises(AssertionError):
             self.topic.publish_all(None)
 
     def test_publish_all_none_message(self):
         messages = ["message1", None, "message3"]
-        with self.assertRaises(NullPointerError):
+        with self.assertRaises(AssertionError):
             self.topic.publish_all(messages)
