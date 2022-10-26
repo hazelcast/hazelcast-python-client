@@ -1,5 +1,5 @@
 from tests.base import SingleMemberTestCase
-from tests.util import random_string, event_collector
+from tests.util import random_string, event_collector, skip_if_client_version_older_than
 
 
 class TopicTest(SingleMemberTestCase):
@@ -44,3 +44,27 @@ class TopicTest(SingleMemberTestCase):
 
     def test_str(self):
         self.assertTrue(str(self.topic).startswith("Topic"))
+
+    def test_publish_all(self):
+        skip_if_client_version_older_than(self, "5.2")
+        collector = event_collector()
+        self.topic.add_listener(on_message=collector)
+
+        messages = ["message1", "message2", "message3"]
+        self.topic.publish_all(messages)
+
+        def assert_event():
+            self.assertEqual(len(collector.events), 3)
+
+        self.assertTrueEventually(assert_event, 5)
+
+    def test_publish_all_none_messages(self):
+        skip_if_client_version_older_than(self, "5.2")
+        with self.assertRaises(AssertionError):
+            self.topic.publish_all(None)
+
+    def test_publish_all_none_message(self):
+        skip_if_client_version_older_than(self, "5.2")
+        messages = ["message1", None, "message3"]
+        with self.assertRaises(AssertionError):
+            self.topic.publish_all(messages)

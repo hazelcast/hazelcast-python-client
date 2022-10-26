@@ -1414,6 +1414,24 @@ class TopicCompactCompatibilityTest(CompactCompatibilityBase):
     def test_publish(self):
         self.topic.publish(OUTER_COMPACT_INSTANCE)
 
+    def test_publish_all(self):
+        skip_if_client_version_older_than(self, "5.2")
+        messages = []
+
+        def listener(message):
+            messages.append(message)
+
+        self.topic.add_listener(listener)
+
+        self.topic.publish_all([INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE])
+
+        def assertion():
+            self.assertEqual(2, len(messages))
+            self.assertEqual(INNER_COMPACT_INSTANCE, messages[0].message)
+            self.assertEqual(OUTER_COMPACT_INSTANCE, messages[1].message)
+
+        self.assertTrueEventually(assertion)
+
     def _publish_from_another_client(self, item):
         other_client = self.create_client(self.client_config)
         other_client_topic = other_client.get_topic(self.topic.name).blocking()

@@ -4,11 +4,13 @@ from hazelcast.future import Future
 from hazelcast.protocol.codec import (
     topic_add_message_listener_codec,
     topic_publish_codec,
+    topic_publish_all_codec,
     topic_remove_message_listener_codec,
 )
 from hazelcast.proxy.base import PartitionSpecificProxy, TopicMessage
-from hazelcast.types import MessageType
 from hazelcast.serialization.compact import SchemaNotReplicatedError
+from hazelcast.types import MessageType
+from hazelcast.util import check_not_none
 
 
 class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]):
@@ -57,7 +59,7 @@ class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]
         )
 
     def publish(self, message: MessageType) -> Future[None]:
-        """Publishes the message to all subscribers of this topic
+        """Publishes the message to all subscribers of this topic.
 
         Args:
             message: The message to be published.
@@ -68,6 +70,25 @@ class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]
             return self._send_schema_and_retry(e, self.publish, message)
 
         request = topic_publish_codec.encode_request(self.name, message_data)
+        return self._invoke(request)
+
+    def publish_all(self, messages: typing.Sequence[MessageType]) -> Future[None]:
+        """Publishes the messages to all subscribers of this topic.
+
+        Args:
+            messages: The messages to be published.
+        """
+        check_not_none(messages, "Messages cannot be None")
+        try:
+            topic_messages = []
+            for m in messages:
+                check_not_none(m, "Message cannot be None")
+                data = self._to_data(m)
+                topic_messages.append(data)
+        except SchemaNotReplicatedError as e:
+            return self._send_schema_and_retry(e, self.publish_all, messages)
+
+        request = topic_publish_all_codec.encode_request(self.name, topic_messages)
         return self._invoke(request)
 
     def remove_listener(self, registration_id: str) -> Future[bool]:
@@ -106,6 +127,12 @@ class BlockingTopic(Topic[MessageType]):
         message: MessageType,
     ) -> None:
         return self._wrapped.publish(message).result()
+
+    def publish_all(  # type: ignore[override]
+        self,
+        messages: typing.Sequence[MessageType],
+    ) -> None:
+        return self._wrapped.publish_all(messages).result()
 
     def remove_listener(  # type: ignore[override]
         self,
