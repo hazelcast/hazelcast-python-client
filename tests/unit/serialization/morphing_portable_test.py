@@ -1,3 +1,5 @@
+import datetime
+import decimal
 import unittest
 
 from hazelcast.config import _Config
@@ -24,6 +26,11 @@ class MorphingPortable(SerializationV1Portable):
             base.a_long,
             base.a_float,
             base.a_double,
+            base.a_decimal,
+            base.a_time,
+            base.a_date,
+            base.a_timestamp,
+            base.a_timestamp_with_timezone,
             base.bytes,
             base.booleans,
             base.chars,
@@ -32,6 +39,11 @@ class MorphingPortable(SerializationV1Portable):
             base.longs,
             base.floats,
             base.doubles,
+            base.decimals,
+            base.times,
+            base.dates,
+            base.timestamps,
+            base.timestamp_with_timezones,
             base.a_string,
             base.strings,
             base.inner_portable,
@@ -153,6 +165,36 @@ class MorphingPortableTestCase(unittest.TestCase):
         self.assertEqual("c", a_character)
         self.assertEqual(0, self.reader.read_char("NO SUCH FIELD"))
 
+    def test_read_decimal(self):
+        a_decimal = self.reader.read_decimal("10")
+        self.assertEqual(decimal.Decimal(0.00005), a_decimal)
+        self.assertFalse(self.reader.read_decimal("NO SUCH FIELD"))
+
+    def test_read_time(self):
+        a_time = self.reader.read_time("11")
+        self.assertEqual(datetime.time(23, 59, 59), a_time)
+        self.assertFalse(self.reader.read_time("NO SUCH FIELD"))
+
+    def test_read_date(self):
+        a_date = self.reader.read_date("12")
+        self.assertEqual(datetime.date(1923, 4, 23), a_date)
+        self.assertFalse(self.reader.read_date("NO SUCH FIELD"))
+
+    def test_read_timestamp(self):
+        a_timestamp = self.reader.read_timestamp("13")
+        self.assertEqual(datetime.datetime(1938, 11, 10, 9, 5, 59, 59), a_timestamp)
+        self.assertFalse(self.reader.read_timestamp("NO SUCH FIELD"))
+
+    def test_read_timestamp_with_timezone(self):
+        a_timestamp_with_timezone = self.reader.read_timestamp_with_timezone("14")
+        self.assertEqual(
+            datetime.datetime(
+                1919, 5, 19, 13, 30, 45, 59, datetime.timezone(datetime.timedelta(seconds=21600))
+            ),
+            a_timestamp_with_timezone,
+        )
+        self.assertFalse(self.reader.read_timestamp_with_timezone("NO SUCH FIELD"))
+
     def test_encode_decode_with_parent_default_reader(self):
         obj = MorphingPortable.clone(create_portable())
         self.assertTrue(obj.inner_portable)
@@ -225,6 +267,11 @@ class MorphingPortableTestCase(unittest.TestCase):
             "7",
             "8",
             "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
             "a1",
             "a2",
             "a3",
@@ -234,6 +281,11 @@ class MorphingPortableTestCase(unittest.TestCase):
             "a7",
             "a8",
             "a9",
+            "a10",
+            "a11",
+            "a12",
+            "a13",
+            "a14",
             "p",
             "ap",
         }

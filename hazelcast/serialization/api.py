@@ -788,6 +788,61 @@ class PortableReader:
         """
         raise NotImplementedError()
 
+    def read_decimal(self, field_name: str) -> decimal.Decimal:
+        """Reads a decimal.
+
+        Args:
+            field_name: Name of the field.
+
+        Returns:
+            The decimal read.
+        """
+        raise NotImplementedError()
+
+    def read_time(self, field_name: str) -> datetime.time:
+        """Reads a time.
+
+        Args:
+            field_name: Name of the field.
+
+        Returns:
+            The time read.
+        """
+        raise NotImplementedError()
+
+    def read_date(self, field_name: str) -> datetime.date:
+        """Reads a date.
+
+        Args:
+            field_name: Name of the field.
+
+        Returns:
+            The date read.
+        """
+        raise NotImplementedError()
+
+    def read_timestamp(self, field_name: str) -> datetime.datetime:
+        """Reads a timestamp.
+
+        Args:
+            field_name: Name of the field.
+
+        Returns:
+            The timestamp read.
+        """
+        raise NotImplementedError()
+
+    def read_timestamp_with_timezone(self, field_name: str) -> datetime.datetime:
+        """Reads a timestamp with timezone.
+
+        Args:
+            field_name: Name of the field.
+
+        Returns:
+            The timestamp with timezone read.
+        """
+        raise NotImplementedError()
+
     def read_byte_array(self, field_name: str) -> bytearray:
         """Reads a primitive byte array.
 
@@ -899,6 +954,61 @@ class PortableReader:
 
         Returns:
             The UTF-8 String array read.
+        """
+        raise NotImplementedError()
+
+    def read_decimal_array(self, field_name: str) -> typing.List[decimal.Decimal]:
+        """Reads a decimal array.
+
+        Args:
+            field_name: Name of the field.
+
+        Returns:
+            The decimal array read.
+        """
+        raise NotImplementedError()
+
+    def read_time_array(self, field_name: str) -> typing.List[datetime.time]:
+        """Reads a time array.
+
+        Args:
+            field_name: Name of the field.
+
+        Returns:
+            The time array read.
+        """
+        raise NotImplementedError()
+
+    def read_date_array(self, field_name: str) -> typing.List[datetime.date]:
+        """Reads a date array.
+
+        Args:
+            field_name: Name of the field.
+
+        Returns:
+            The date array read.
+        """
+        raise NotImplementedError()
+
+    def read_timestamp_array(self, field_name: str) -> typing.List[datetime.datetime]:
+        """Reads a timestamp array.
+
+        Args:
+            field_name: Name of the field.
+
+        Returns:
+            The timestamp array read.
+        """
+        raise NotImplementedError()
+
+    def read_timestamp_with_timezone_array(self, field_name: str) -> typing.List[datetime.datetime]:
+        """Reads a timestamp with timezone array.
+
+        Args:
+            field_name: Name of the field.
+
+        Returns:
+            The timestamp with timezone array read.
         """
         raise NotImplementedError()
 
@@ -1044,6 +1154,51 @@ class PortableWriter:
         """
         raise NotImplementedError()
 
+    def write_decimal(self, field_name: str, value: decimal.Decimal) -> None:
+        """Writes a decimal.
+
+        Args:
+            field_name: Name of the field.
+            value: Decimal to be written.
+        """
+        raise NotImplementedError()
+
+    def write_time(self, field_name: str, value: datetime.time) -> None:
+        """Writes a time.
+
+        Args:
+            field_name: Name of the field.
+            value: Time to be written.
+        """
+        raise NotImplementedError()
+
+    def write_date(self, field_name: str, value: datetime.date) -> None:
+        """Writes a date.
+
+        Args:
+            field_name: Name of the field.
+            value: Date to be written.
+        """
+        raise NotImplementedError()
+
+    def write_timestamp(self, field_name: str, value: datetime.datetime) -> None:
+        """Writes a timestamp.
+
+        Args:
+            field_name: Name of the field.
+            value: Timestamp to be written.
+        """
+        raise NotImplementedError()
+
+    def write_timestamp_with_timezone(self, field_name: str, value: datetime.datetime) -> None:
+        """Writes a timestamp with timezone.
+
+        Args:
+            field_name: Name of the field.
+            value: Timestamp with timezone to be written.
+        """
+        raise NotImplementedError()
+
     def write_byte_array(self, field_name: str, values: bytearray) -> None:
         """Writes a primitive byte array.
 
@@ -1135,6 +1290,57 @@ class PortableWriter:
         Args:
             field_name: Name of the field.
             values: UTF-8 String array to be written.
+        """
+        raise NotImplementedError()
+
+    def write_decimal_array(
+        self, field_name: str, values: typing.Sequence[decimal.Decimal]
+    ) -> None:
+        """Writes a decimal array.
+
+        Args:
+            field_name: Name of the field.
+            values: Decimal array to be written.
+        """
+        raise NotImplementedError()
+
+    def write_time_array(self, field_name: str, values: typing.Sequence[datetime.time]) -> None:
+        """Writes a time array.
+
+        Args:
+            field_name: Name of the field.
+            values: Time array to be written.
+        """
+        raise NotImplementedError()
+
+    def write_date_array(self, field_name: str, values: typing.Sequence[datetime.date]) -> None:
+        """Writes a date array.
+
+        Args:
+            field_name: Name of the field.
+            values: Date array to be written.
+        """
+        raise NotImplementedError()
+
+    def write_timestamp_array(
+        self, field_name: str, values: typing.Sequence[datetime.datetime]
+    ) -> None:
+        """Writes a timestamp array.
+
+        Args:
+            field_name: Name of the field.
+            values: Timestamp array to be written.
+        """
+        raise NotImplementedError()
+
+    def write_timestamp_with_timezone_array(
+        self, field_name: str, values: typing.Sequence[datetime.datetime]
+    ) -> None:
+        """Writes a timestamp with timezone array.
+
+        Args:
+            field_name: Name of the field.
+            values: Timestamp with timezone array to be written.
         """
         raise NotImplementedError()
 
