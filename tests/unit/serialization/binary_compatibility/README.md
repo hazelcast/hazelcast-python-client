@@ -167,17 +167,13 @@ class ReferenceObjects {
             anInnerPortable, null,
             aCustomStreamSerializable,
             aCustomByteArraySerializable, aData);
-    static APortable aPortable = new APortable(
-            aBoolean, aByte, aChar, aDouble, aShort, aFloat, anInt, aLong, anSqlString, anInnerPortable,
-            booleans, bytes, chars, doubles, shorts, floats, ints, longs, strings, portables,
-            anIdentifiedDataSerializable,
-            aCustomStreamSerializable,
-            aCustomByteArraySerializable, aData);
-
     static LocalDate aLocalDate;
     static LocalTime aLocalTime;
     static LocalDateTime aLocalDateTime;
     static OffsetDateTime anOffsetDateTime;
+
+    static BigDecimal aBigDecimal = new BigDecimal("31231.12331");
+    static BigDecimal[] bigDecimals = {aBigDecimal, aBigDecimal, aBigDecimal};
 
     static {
         Calendar calendar = Calendar.getInstance();
@@ -189,9 +185,21 @@ class ReferenceObjects {
         aLocalDateTime = LocalDateTime.of(aLocalDate, aLocalTime);
         anOffsetDateTime = OffsetDateTime.of(aLocalDateTime, ZoneOffset.ofHours(18));
     }
+    static LocalDate[] localDates = {aLocalDate, aLocalDate, aLocalDate};
+    static LocalTime[] localTimes = {aLocalTime, aLocalTime, aLocalTime};
+    static LocalDateTime[] localDateTimes = {aLocalDateTime, aLocalDateTime, aLocalDateTime};
+    static OffsetDateTime[] offsetDateTimes = {anOffsetDateTime, anOffsetDateTime, anOffsetDateTime};
+
+    static APortable aPortable = new APortable(
+            aBoolean, aByte, aChar, aDouble, aShort, aFloat, anInt, aLong, anSqlString, aBigDecimal,
+            aLocalDate, aLocalTime, aLocalDateTime, anOffsetDateTime, anInnerPortable,
+            booleans, bytes, chars, doubles, shorts, floats, ints, longs, strings, bigDecimals,
+            localDates, localTimes, localDateTimes, offsetDateTimes, portables,
+            anIdentifiedDataSerializable,
+            aCustomStreamSerializable,
+            aCustomByteArraySerializable, aData);
 
     static BigInteger aBigInteger = new BigInteger("1314432323232411");
-    static BigDecimal aBigDecimal = new BigDecimal("31231.12331");
     static Class aClass = BigDecimal.class;
 
     static ArrayList nonNullList = new ArrayList(asList(

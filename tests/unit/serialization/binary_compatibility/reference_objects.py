@@ -50,7 +50,7 @@ class AnInnerPortable(Portable):
 
     def __eq__(self, other):
         return (
-            isinstance(other, AnInnerPortable) and self.i == other.i and is_equal(self.f, other.f)
+                isinstance(other, AnInnerPortable) and self.i == other.i and is_equal(self.f, other.f)
         )
 
     def __ne__(self, other):
@@ -64,9 +64,9 @@ class CustomStreamSerializable:
 
     def __eq__(self, other):
         return (
-            isinstance(other, CustomStreamSerializable)
-            and self.i == other.i
-            and is_equal(self.f, other.f)
+                isinstance(other, CustomStreamSerializable)
+                and self.i == other.i
+                and is_equal(self.f, other.f)
         )
 
     def __ne__(self, other):
@@ -80,9 +80,9 @@ class CustomByteArraySerializable:
 
     def __eq__(self, other):
         return (
-            isinstance(other, CustomByteArraySerializable)
-            and self.i == other.i
-            and is_equal(self.f, other.f)
+                isinstance(other, CustomByteArraySerializable)
+                and self.i == other.i
+                and is_equal(self.f, other.f)
         )
 
     def __ne__(self, other):
@@ -101,30 +101,30 @@ def _read_data_from_inp(inp):
 
 class AnIdentifiedDataSerializable(IdentifiedDataSerializable):
     def __init__(
-        self,
-        boolean=None,
-        b=None,
-        c=None,
-        d=None,
-        s=None,
-        f=None,
-        i=None,
-        l=None,
-        string=None,
-        booleans=None,
-        bytes_=None,
-        chars=None,
-        doubles=None,
-        shorts=None,
-        floats=None,
-        ints=None,
-        longs=None,
-        strings=None,
-        portable=None,
-        identified=None,
-        custom_serializable=None,
-        custom_byte_array_serializable=None,
-        data=None,
+            self,
+            boolean=None,
+            b=None,
+            c=None,
+            d=None,
+            s=None,
+            f=None,
+            i=None,
+            l=None,
+            string=None,
+            booleans=None,
+            bytes_=None,
+            chars=None,
+            doubles=None,
+            shorts=None,
+            floats=None,
+            ints=None,
+            longs=None,
+            strings=None,
+            portable=None,
+            identified=None,
+            custom_serializable=None,
+            custom_byte_array_serializable=None,
+            data=None,
     ):
         self.boolean = boolean
         self.b = b
@@ -279,76 +279,86 @@ class AnIdentifiedDataSerializable(IdentifiedDataSerializable):
 
     def __eq__(self, other):
         return (
-            isinstance(other, AnIdentifiedDataSerializable)
-            and self.boolean == other.boolean
-            and self.b == other.b
-            and self.c == other.c
-            and self.d == other.d
-            and self.s == other.s
-            and is_equal(self.f, other.f)
-            and self.i == other.i
-            and self.l == other.l
-            and self.bytes_size == other.bytes_size
-            and self.unsigned_byte == other.unsigned_byte
-            and self.unsigned_short == other.unsigned_short
-            and self.string == other.string
-            and self.booleans == other.booleans
-            and self.bytes_ == other.bytes_
-            and self.chars == other.chars
-            and self.doubles == other.doubles
-            and self.shorts == other.shorts
-            and is_equal(self.floats, other.floats)
-            and self.ints == other.ints
-            and self.longs == other.longs
-            and self.strings == other.strings
-            and self.booleans_none == other.booleans_none
-            and self.bytes_none == other.bytes_none
-            and self.chars_none == other.chars_none
-            and self.doubles_none == other.doubles_none
-            and self.shorts_none == other.shorts_none
-            and self.floats_none == other.floats_none
-            and self.ints_none == other.ints_none
-            and self.longs_none == other.longs_none
-            and self.strings_none == other.strings_none
-            and self.bytes_fully == other.bytes_fully
-            and self.bytes_offset == other.bytes_offset
-            and self.str_chars == other.str_chars
-            and self.str_bytes == other.str_bytes
-            and self.portable == other.portable
-            and self.identified == other.identified
-            and self.custom_serializable == other.custom_serializable
-            and self.custom_byte_array_serializable == other.custom_byte_array_serializable
-            and self.data == other.data
+                isinstance(other, AnIdentifiedDataSerializable)
+                and self.boolean == other.boolean
+                and self.b == other.b
+                and self.c == other.c
+                and self.d == other.d
+                and self.s == other.s
+                and is_equal(self.f, other.f)
+                and self.i == other.i
+                and self.l == other.l
+                and self.bytes_size == other.bytes_size
+                and self.unsigned_byte == other.unsigned_byte
+                and self.unsigned_short == other.unsigned_short
+                and self.string == other.string
+                and self.booleans == other.booleans
+                and self.bytes_ == other.bytes_
+                and self.chars == other.chars
+                and self.doubles == other.doubles
+                and self.shorts == other.shorts
+                and is_equal(self.floats, other.floats)
+                and self.ints == other.ints
+                and self.longs == other.longs
+                and self.strings == other.strings
+                and self.booleans_none == other.booleans_none
+                and self.bytes_none == other.bytes_none
+                and self.chars_none == other.chars_none
+                and self.doubles_none == other.doubles_none
+                and self.shorts_none == other.shorts_none
+                and self.floats_none == other.floats_none
+                and self.ints_none == other.ints_none
+                and self.longs_none == other.longs_none
+                and self.strings_none == other.strings_none
+                and self.bytes_fully == other.bytes_fully
+                and self.bytes_offset == other.bytes_offset
+                and self.str_chars == other.str_chars
+                and self.str_bytes == other.str_bytes
+                and self.portable == other.portable
+                and self.identified == other.identified
+                and self.custom_serializable == other.custom_serializable
+                and self.custom_byte_array_serializable == other.custom_byte_array_serializable
+                and self.data == other.data
         )
 
 
 class APortable(Portable):
     def __init__(
-        self,
-        boolean=None,
-        b=None,
-        c=None,
-        d=None,
-        s=None,
-        f=None,
-        i=None,
-        l=None,
-        string=None,
-        p=None,
-        booleans=None,
-        bytes_=None,
-        chars=None,
-        doubles=None,
-        shorts=None,
-        floats=None,
-        ints=None,
-        longs=None,
-        strings=None,
-        portables=None,
-        identified=None,
-        custom_serializable=None,
-        custom_byte_array_serializable=None,
-        data=None,
+            self,
+            boolean=None,
+            b=None,
+            c=None,
+            d=None,
+            s=None,
+            f=None,
+            i=None,
+            l=None,
+            string=None,
+            bd=None,
+            ld=None,
+            lt=None,
+            ldt=None,
+            odt=None,
+            p=None,
+            booleans=None,
+            bytes_=None,
+            chars=None,
+            doubles=None,
+            shorts=None,
+            floats=None,
+            ints=None,
+            longs=None,
+            strings=None,
+            decimals=None,
+            dates=None,
+            times=None,
+            dateTimes=None,
+            offsetDateTimes=None,
+            portables=None,
+            identified=None,
+            custom_serializable=None,
+            custom_byte_array_serializable=None,
+            data=None,
     ):
         self.boolean = boolean
         self.b = b
@@ -359,6 +369,11 @@ class APortable(Portable):
         self.i = i
         self.l = l
         self.string = string
+        self.bd = bd
+        self.ld = ld
+        self.lt = lt
+        self.ldt = ldt
+        self.odt = odt
         self.p = p
 
         self.booleans = booleans
@@ -370,6 +385,11 @@ class APortable(Portable):
         self.ints = ints
         self.longs = longs
         self.strings = strings
+        self.decimals = decimals
+        self.dates = dates
+        self.times = times
+        self.dateTimes = dateTimes
+        self.offsetDateTimes = offsetDateTimes
         self.portables = portables
 
         self.booleans_none = None
@@ -405,6 +425,11 @@ class APortable(Portable):
         writer.write_int("i", self.i)
         writer.write_long("l", self.l)
         writer.write_string("str", self.string)
+        writer.write_decimal("bd", self.bd)
+        writer.write_date("ld", self.ld)
+        writer.write_time("lt", self.lt)
+        writer.write_timestamp("ldt", self.ldt)
+        writer.write_timestamp_with_timezone("odt", self.odt)
         if self.p:
             writer.write_portable("p", self.p)
         else:
@@ -419,6 +444,11 @@ class APortable(Portable):
         writer.write_int_array("is", self.ints)
         writer.write_long_array("ls", self.longs)
         writer.write_string_array("strs", self.strings)
+        writer.write_decimal_array("decimals", self.decimals)
+        writer.write_date_array("dates", self.dates)
+        writer.write_time_array("times", self.times)
+        writer.write_timestamp_array("dateTimes", self.dateTimes)
+        writer.write_timestamp_with_timezone_array("offsetDateTimes", self.offsetDateTimes)
         writer.write_portable_array("ps", self.portables)
 
         writer.write_boolean_array("booleansNull", self.booleans_none)
@@ -491,6 +521,11 @@ class APortable(Portable):
         self.i = reader.read_int("i")
         self.l = reader.read_long("l")
         self.string = reader.read_string("str")
+        self.bd = reader.read_decimal("bd")
+        self.ld = reader.read_date("ld")
+        self.lt = reader.read_time("lt")
+        self.ldt = reader.read_timestamp("ldt")
+        self.odt = reader.read_timestamp_with_timezone("odt")
         self.p = reader.read_portable("p")
 
         self.booleans = reader.read_boolean_array("booleans")
@@ -502,6 +537,11 @@ class APortable(Portable):
         self.ints = reader.read_int_array("is")
         self.longs = reader.read_long_array("ls")
         self.strings = reader.read_string_array("strs")
+        self.decimals = reader.read_decimal_array("decimals")
+        self.dates = reader.read_date_array("dates")
+        self.times = reader.read_time_array("times")
+        self.dateTimes = reader.read_timestamp_array("dateTimes")
+        self.offsetDateTimes = reader.read_timestamp_with_timezone_array("offsetDateTimes")
         self.portables = reader.read_portable_array("ps")
 
         self.booleans_none = reader.read_boolean_array("booleansNull")
@@ -575,47 +615,57 @@ class APortable(Portable):
 
     def __eq__(self, other):
         return (
-            isinstance(other, APortable)
-            and self.boolean == other.boolean
-            and self.b == other.b
-            and self.c == other.c
-            and self.d == other.d
-            and self.s == other.s
-            and is_equal(self.f, other.f)
-            and self.i == other.i
-            and self.l == other.l
-            and self.bytes_size == other.bytes_size
-            and self.unsigned_byte == other.unsigned_byte
-            and self.unsigned_short == other.unsigned_short
-            and self.string == other.string
-            and self.p == other.p
-            and self.booleans == other.booleans
-            and self.bytes_ == other.bytes_
-            and self.chars == other.chars
-            and self.doubles == other.doubles
-            and self.shorts == other.shorts
-            and is_equal(self.floats, other.floats)
-            and self.ints == other.ints
-            and self.longs == other.longs
-            and self.strings == other.strings
-            and self.portables == other.portables
-            and self.booleans_none == other.booleans_none
-            and self.bytes_none == other.bytes_none
-            and self.chars_none == other.chars_none
-            and self.doubles_none == other.doubles_none
-            and self.shorts_none == other.shorts_none
-            and self.floats_none == other.floats_none
-            and self.ints_none == other.ints_none
-            and self.longs_none == other.longs_none
-            and self.strings_none == other.strings_none
-            and self.bytes_fully == other.bytes_fully
-            and self.bytes_offset == other.bytes_offset
-            and self.str_chars == other.str_chars
-            and self.str_bytes == other.str_bytes
-            and self.identified == other.identified
-            and self.custom_serializable == other.custom_serializable
-            and self.custom_byte_array_serializable == other.custom_byte_array_serializable
-            and self.data == other.data
+                isinstance(other, APortable)
+                and self.boolean == other.boolean
+                and self.b == other.b
+                and self.c == other.c
+                and self.d == other.d
+                and self.s == other.s
+                and is_equal(self.f, other.f)
+                and self.i == other.i
+                and self.l == other.l
+                and self.bytes_size == other.bytes_size
+                and self.unsigned_byte == other.unsigned_byte
+                and self.unsigned_short == other.unsigned_short
+                and self.string == other.string
+                and self.bd == other.bd
+                and self.ld == other.ld
+                and self.lt == other.lt
+                and self.ldt == other.ldt
+                and self.odt == other.odt
+                and self.p == other.p
+                and self.booleans == other.booleans
+                and self.bytes_ == other.bytes_
+                and self.chars == other.chars
+                and self.doubles == other.doubles
+                and self.shorts == other.shorts
+                and is_equal(self.floats, other.floats)
+                and self.ints == other.ints
+                and self.longs == other.longs
+                and self.strings == other.strings
+                and self.decimals == other.decimals
+                and self.dates == other.dates
+                and self.times == other.times
+                and self.dateTimes == other.dateTimes
+                and self.offsetDateTimes == other.offsetDateTimes
+                and self.portables == other.portables
+                and self.booleans_none == other.booleans_none
+                and self.bytes_none == other.bytes_none
+                and self.chars_none == other.chars_none
+                and self.doubles_none == other.doubles_none
+                and self.shorts_none == other.shorts_none
+                and self.floats_none == other.floats_none
+                and self.ints_none == other.ints_none
+                and self.longs_none == other.longs_none
+                and self.strings_none == other.strings_none
+                and self.bytes_fully == other.bytes_fully
+                and self.bytes_offset == other.bytes_offset
+                and self.str_chars == other.str_chars
+                and self.str_bytes == other.str_bytes
+                and self.identified == other.identified
+                and self.custom_serializable == other.custom_serializable
+                and self.custom_byte_array_serializable == other.custom_byte_array_serializable
+                and self.data == other.data
         )
 
 
@@ -654,6 +704,37 @@ REFERENCE_OBJECTS = {
     ),
     "BigInteger": 1314432323232411,
     "BigDecimal": decimal.Decimal("31231.12331"),
+    "BigDecimal[]": [
+        decimal.Decimal("31231.12331"),
+        decimal.Decimal("31231.12331"),
+        decimal.Decimal("31231.12331"),
+    ],
+    "LocalDate[]": [
+        datetime.date(2021, 6, 28),
+        datetime.date(2021, 6, 28),
+        datetime.date(2021, 6, 28),
+    ],
+    "LocalTime[]": [
+        datetime.time(11, 22, 41, 123456),
+        datetime.time(11, 22, 41, 123456),
+        datetime.time(11, 22, 41, 123456),
+    ],
+    "LocalDateTime[]": [
+        datetime.datetime(2021, 6, 28, 11, 22, 41, 123456),
+        datetime.datetime(2021, 6, 28, 11, 22, 41, 123456),
+        datetime.datetime(2021, 6, 28, 11, 22, 41, 123456),
+    ],
+    "OffsetDateTime[]": [
+        datetime.datetime(
+            2021, 6, 28, 11, 22, 41, 123456, datetime.timezone(datetime.timedelta(hours=18))
+        ),
+        datetime.datetime(
+            2021, 6, 28, 11, 22, 41, 123456, datetime.timezone(datetime.timedelta(hours=18))
+        ),
+        datetime.datetime(
+            2021, 6, 28, 11, 22, 41, 123456, datetime.timezone(datetime.timedelta(hours=18))
+        ),
+    ],
     "Class": "java.math.BigDecimal",
 }
 
@@ -707,6 +788,11 @@ _portable = APortable(
     REFERENCE_OBJECTS["Integer"],
     REFERENCE_OBJECTS["Long"],
     _sql_string,
+    REFERENCE_OBJECTS["BigDecimal"],
+    REFERENCE_OBJECTS["LocalDate"],
+    REFERENCE_OBJECTS["LocalTime"],
+    REFERENCE_OBJECTS["LocalDateTime"],
+    REFERENCE_OBJECTS["OffsetDateTime"],
     _inner_portable,
     REFERENCE_OBJECTS["boolean[]"],
     REFERENCE_OBJECTS["byte[]"],
@@ -717,6 +803,11 @@ _portable = APortable(
     REFERENCE_OBJECTS["int[]"],
     REFERENCE_OBJECTS["long[]"],
     REFERENCE_OBJECTS["String[]"],
+    REFERENCE_OBJECTS["BigDecimal[]"],
+    REFERENCE_OBJECTS["LocalDate[]"],
+    REFERENCE_OBJECTS["LocalTime[]"],
+    REFERENCE_OBJECTS["LocalDateTime[]"],
+    REFERENCE_OBJECTS["OffsetDateTime[]"],
     _portables,
     _identified,
     _custom_serializable,
@@ -816,6 +907,11 @@ _SKIP_ON_SERIALIZE = {
     "int[]",
     "long[]",
     "String[]",
+    "BigDecimal[]",
+    "LocalDate[]",
+    "LocalTime[]",
+    "LocalDateTime[]",
+    "OffsetDateTime[]",
     "Class",
     "LocalDateTime",
     "LinkedList",
@@ -826,8 +922,16 @@ def skip_on_serialize(object_type):
     return object_type in _SKIP_ON_SERIALIZE
 
 
+_SKIP_ON_DESERIALIZE = {
+    "BigDecimal[]",
+    "LocalDate[]",
+    "LocalTime[]",
+    "LocalDateTime[]",
+    "OffsetDateTime[]"
+}
+
 _SKIP_ON_DESERIALIZE_PATTERN = re.compile(r"^.*(Predicate|Aggregator|Projection)$")
 
 
 def skip_on_deserialize(object_type):
-    return _SKIP_ON_DESERIALIZE_PATTERN.match(object_type) is not None
+    return (_SKIP_ON_DESERIALIZE_PATTERN.match(object_type) is not None) or (object_type in _SKIP_ON_DESERIALIZE)
