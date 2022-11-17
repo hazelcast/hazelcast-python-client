@@ -11,7 +11,7 @@ _logger = logging.getLogger(__name__)
 
 class HazelcastCloudAddressProvider:
     """Provides initial addresses for client to find and connect to a node
-    and resolves private IP addresses of Hazelcast Viridian service.
+    and resolves private IP addresses of Hazelcast Cloud service.
     """
 
     def __init__(self, token, connection_timeout):
