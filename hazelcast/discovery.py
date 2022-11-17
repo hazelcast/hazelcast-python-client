@@ -63,10 +63,10 @@ class HazelcastCloudAddressProvider:
 
 class HazelcastCloudDiscovery:
     """Discovery service that discover nodes via Hazelcast.cloud
-    https://coordinator.hazelcast.cloud/cluster/discovery?token=<TOKEN>
+    https://api.viridian.hazelcast.com/cluster/discovery?token=<TOKEN>
     """
 
-    _CLOUD_URL_BASE = "coordinator.hazelcast.cloud"
+    _CLOUD_URL_BASE = "api.viridian.hazelcast.com"
     _CLOUD_URL_PATH = "/cluster/discovery?token="
     _PRIVATE_ADDRESS_PROPERTY = "private-address"
     _PUBLIC_ADDRESS_PROPERTY = "public-address"
