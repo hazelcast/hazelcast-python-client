@@ -19,7 +19,7 @@ class HazelcastCloudAddressProvider:
         self._private_to_public = dict()
 
     def load_addresses(self):
-        """Loads member addresses from Hazelcast Viridian endpoint.
+        """Loads member addresses from Hazelcast Cloud endpoint.
 
         Returns:
             tuple[list[hazelcast.core.Address], list[hazelcast.core.Address]]: The possible member addresses
@@ -30,7 +30,7 @@ class HazelcastCloudAddressProvider:
             # Every private address is primary
             return list(nodes.keys()), []
         except Exception as e:
-            _logger.warning("Failed to load addresses from Hazelcast Viridian: %s", e)
+            _logger.warning("Failed to load addresses from Hazelcast Cloud: %s", e)
         return [], []
 
     def translate(self, address):
@@ -58,11 +58,11 @@ class HazelcastCloudAddressProvider:
         try:
             self._private_to_public = self.cloud_discovery.discover_nodes()
         except Exception as e:
-            _logger.warning("Failed to load addresses from Hazelcast Viridian: %s", e)
+            _logger.warning("Failed to load addresses from Hazelcast.cloud: %s", e)
 
 
 class HazelcastCloudDiscovery:
-    """Discovery service that discover nodes via Hazelcast Viridian
+    """Discovery service that discover nodes via Hazelcast.cloud
     https://api.viridian.hazelcast.com/cluster/discovery?token=<TOKEN>
     """
 
@@ -78,7 +78,7 @@ class HazelcastCloudDiscovery:
         self._ctx = ssl.create_default_context()
 
     def discover_nodes(self):
-        """Discovers nodes from Hazelcast Viridian.
+        """Discovers nodes from Hazelcast.cloud.
 
         Returns:
             dict[hazelcast.core.Address, hazelcast.core.Address]: Dictionary that maps private
