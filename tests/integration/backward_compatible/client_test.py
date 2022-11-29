@@ -155,8 +155,8 @@ class ClientTcpMetricsTest(SingleMemberTestCase):
 
 
 @unittest.skipIf(
-    compare_client_version("5.1") < 0,
-    "Tests the features added in 5.1 version of the client",
+    compare_client_version("5.2") < 0,
+    "Tests the features added in 5.2 version of the client",
 )
 class ClientConfigurationTest(HazelcastTestCase):
     rc = None
