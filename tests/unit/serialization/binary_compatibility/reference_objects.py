@@ -713,7 +713,7 @@ _big_decimal_array = [
     decimal.Decimal("31231.12331"),
 ]
 
-_local_date_array =  [
+_local_date_array = [
     datetime.date(2021, 6, 28),
     datetime.date(1923, 4, 23),
     datetime.date(1938, 11, 10),
