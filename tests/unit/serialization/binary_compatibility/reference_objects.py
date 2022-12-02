@@ -704,39 +704,44 @@ REFERENCE_OBJECTS = {
     ),
     "BigInteger": 1314432323232411,
     "BigDecimal": decimal.Decimal("31231.12331"),
-    "BigDecimal[]": [
-        decimal.Decimal("31231.12331"),
-        decimal.Decimal("31231.12331"),
-        decimal.Decimal("31231.12331"),
-    ],
-    "LocalDate[]": [
-        datetime.date(2021, 6, 28),
-        datetime.date(1923, 4, 23),
-        datetime.date(1938, 11, 10),
-    ],
-    "LocalTime[]": [
-        datetime.time(9, 5, 10, 123456),
-        datetime.time(18, 30, 55, 567891),
-        datetime.time(15, 44, 39, 192837),
-    ],
-    "LocalDateTime[]": [
-        datetime.datetime(1938, 11, 10, 9, 5, 10, 123456),
-        datetime.datetime(1923, 4, 23, 15, 44, 39, 192837),
-        datetime.datetime(2021, 6, 28, 18, 30, 55, 567891),
-    ],
-    "OffsetDateTime[]": [
-        datetime.datetime(
-            1938, 11, 10, 9, 5, 10, 123456, datetime.timezone(datetime.timedelta(hours=18))
-        ),
-        datetime.datetime(
-            1923, 4, 23, 15, 44, 39, 192837, datetime.timezone(datetime.timedelta(hours=5))
-        ),
-        datetime.datetime(
-            2021, 6, 28, 18, 30, 55, 567891, datetime.timezone(datetime.timedelta(hours=-10))
-        ),
-    ],
     "Class": "java.math.BigDecimal",
 }
+
+_big_decimal_array = [
+    decimal.Decimal("31231.12331"),
+    decimal.Decimal("31231.12331"),
+    decimal.Decimal("31231.12331"),
+]
+
+_local_date_array =  [
+    datetime.date(2021, 6, 28),
+    datetime.date(1923, 4, 23),
+    datetime.date(1938, 11, 10),
+]
+
+_local_time_array = [
+    datetime.time(9, 5, 10, 123456),
+    datetime.time(18, 30, 55, 567891),
+    datetime.time(15, 44, 39, 192837),
+]
+
+_local_date_time_array = [
+    datetime.datetime(1938, 11, 10, 9, 5, 10, 123456),
+    datetime.datetime(1923, 4, 23, 15, 44, 39, 192837),
+    datetime.datetime(2021, 6, 28, 18, 30, 55, 567891),
+]
+
+_offset_date_time_array = [
+    datetime.datetime(
+        1938, 11, 10, 9, 5, 10, 123456, datetime.timezone(datetime.timedelta(hours=18))
+    ),
+    datetime.datetime(
+        1923, 4, 23, 15, 44, 39, 192837, datetime.timezone(datetime.timedelta(hours=5))
+    ),
+    datetime.datetime(
+        2021, 6, 28, 18, 30, 55, 567891, datetime.timezone(datetime.timedelta(hours=-10))
+    ),
+]
 
 _data = Data(bytearray([49, 49, 49, 51, 49, 51, 49, 50, 51, 49, 51, 49, 51, 49, 51, 49, 51, 49]))
 
@@ -803,11 +808,11 @@ _portable = APortable(
     REFERENCE_OBJECTS["int[]"],
     REFERENCE_OBJECTS["long[]"],
     REFERENCE_OBJECTS["String[]"],
-    REFERENCE_OBJECTS["BigDecimal[]"],
-    REFERENCE_OBJECTS["LocalDate[]"],
-    REFERENCE_OBJECTS["LocalTime[]"],
-    REFERENCE_OBJECTS["LocalDateTime[]"],
-    REFERENCE_OBJECTS["OffsetDateTime[]"],
+    _big_decimal_array,
+    _local_date_array,
+    _local_time_array,
+    _local_date_time_array,
+    _offset_date_time_array,
     _portables,
     _identified,
     _custom_serializable,
@@ -907,11 +912,6 @@ _SKIP_ON_SERIALIZE = {
     "int[]",
     "long[]",
     "String[]",
-    "BigDecimal[]",
-    "LocalDate[]",
-    "LocalTime[]",
-    "LocalDateTime[]",
-    "OffsetDateTime[]",
     "Class",
     "LocalDateTime",
     "LinkedList",
@@ -922,18 +922,8 @@ def skip_on_serialize(object_type):
     return object_type in _SKIP_ON_SERIALIZE
 
 
-_SKIP_ON_DESERIALIZE = {
-    "BigDecimal[]",
-    "LocalDate[]",
-    "LocalTime[]",
-    "LocalDateTime[]",
-    "OffsetDateTime[]",
-}
-
 _SKIP_ON_DESERIALIZE_PATTERN = re.compile(r"^.*(Predicate|Aggregator|Projection)$")
 
 
 def skip_on_deserialize(object_type):
-    return (_SKIP_ON_DESERIALIZE_PATTERN.match(object_type) is not None) or (
-        object_type in _SKIP_ON_DESERIALIZE
-    )
+    return _SKIP_ON_DESERIALIZE_PATTERN.match(object_type) is not None
