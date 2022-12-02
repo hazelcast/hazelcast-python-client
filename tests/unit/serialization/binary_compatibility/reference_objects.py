@@ -711,28 +711,28 @@ REFERENCE_OBJECTS = {
     ],
     "LocalDate[]": [
         datetime.date(2021, 6, 28),
-        datetime.date(2021, 6, 28),
-        datetime.date(2021, 6, 28),
+        datetime.date(1923, 4, 23),
+        datetime.date(1938, 11, 10),
     ],
     "LocalTime[]": [
-        datetime.time(11, 22, 41, 123456),
-        datetime.time(11, 22, 41, 123456),
-        datetime.time(11, 22, 41, 123456),
+        datetime.time(9, 5, 10,   123456),
+        datetime.time(18, 30, 55, 567891),
+        datetime.time(15, 44, 39, 192837),
     ],
     "LocalDateTime[]": [
-        datetime.datetime(2021, 6, 28, 11, 22, 41, 123456),
-        datetime.datetime(2021, 6, 28, 11, 22, 41, 123456),
-        datetime.datetime(2021, 6, 28, 11, 22, 41, 123456),
+        datetime.datetime(1938, 11, 10, 9, 5, 10,  123456),
+        datetime.datetime(1923, 4, 23, 15, 44, 39, 192837),
+        datetime.datetime(2021, 6, 28, 18, 30, 55, 567891),
     ],
     "OffsetDateTime[]": [
         datetime.datetime(
-            2021, 6, 28, 11, 22, 41, 123456, datetime.timezone(datetime.timedelta(hours=18))
+            1938, 11, 10, 9, 5, 10, 123456, datetime.timezone(datetime.timedelta(hours=18))
         ),
         datetime.datetime(
-            2021, 6, 28, 11, 22, 41, 123456, datetime.timezone(datetime.timedelta(hours=18))
+            1923, 4, 23, 15, 44, 39, 192837, datetime.timezone(datetime.timedelta(hours=5))
         ),
         datetime.datetime(
-            2021, 6, 28, 11, 22, 41, 123456, datetime.timezone(datetime.timedelta(hours=18))
+            2021, 6, 28, 18, 30, 55, 567891, datetime.timezone(datetime.timedelta(hours=-10))
         ),
     ],
     "Class": "java.math.BigDecimal",
