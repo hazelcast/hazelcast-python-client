@@ -85,10 +85,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.LinkedList;
-import java.util.UUID;
+import java.util.*;
 
 import static java.util.Arrays.asList;
 
@@ -167,31 +164,58 @@ class ReferenceObjects {
             anInnerPortable, null,
             aCustomStreamSerializable,
             aCustomByteArraySerializable, aData);
-    static APortable aPortable = new APortable(
-            aBoolean, aByte, aChar, aDouble, aShort, aFloat, anInt, aLong, anSqlString, anInnerPortable,
-            booleans, bytes, chars, doubles, shorts, floats, ints, longs, strings, portables,
-            anIdentifiedDataSerializable,
-            aCustomStreamSerializable,
-            aCustomByteArraySerializable, aData);
-
     static LocalDate aLocalDate;
     static LocalTime aLocalTime;
     static LocalDateTime aLocalDateTime;
     static OffsetDateTime anOffsetDateTime;
+    static LocalDate[] localDates;
+    static LocalTime[] localTimes;
+    static LocalDateTime[] localDateTimes;
+    static OffsetDateTime[] offsetDateTimes;
 
     static {
         Calendar calendar = Calendar.getInstance();
         calendar.set(1990, Calendar.FEBRUARY, 1, 0, 0, 0);
         calendar.set(Calendar.MILLISECOND, 0);
         calendar.set(Calendar.ZONE_OFFSET, 0);
+        calendar.set(Calendar.DST_OFFSET, 0);
+
         aLocalDate = LocalDate.of(2021, 6, 28);
         aLocalTime = LocalTime.of(11, 22, 41, 123456000);
         aLocalDateTime = LocalDateTime.of(aLocalDate, aLocalTime);
         anOffsetDateTime = OffsetDateTime.of(aLocalDateTime, ZoneOffset.ofHours(18));
+        localDates= new LocalDate[]{
+                LocalDate.of(2021, 6, 28),
+                LocalDate.of(1923, 4, 23),
+                LocalDate.of(1938, 11, 10)};
+        localTimes = new LocalTime[]{
+                LocalTime.of(9, 5, 10, 123456000),
+                LocalTime.of(18, 30, 55, 567891000),
+                LocalTime.of(15, 44, 39, 192837000)};
+        localDateTimes= new LocalDateTime[]{
+                LocalDateTime.of(LocalDate.of(1938, 11, 10), LocalTime.of(9, 5, 10, 123456000)),
+                LocalDateTime.of(LocalDate.of(1923, 4, 23), LocalTime.of(15, 44, 39, 192837000)),
+                LocalDateTime.of(LocalDate.of(2021, 6, 28), LocalTime.of(18, 30, 55, 567891000))};
+        offsetDateTimes= new OffsetDateTime[]{
+                OffsetDateTime.of(LocalDate.of(1938, 11, 10), LocalTime.of(9, 5, 10, 123456000),
+                        ZoneOffset.ofHours(18)),
+                OffsetDateTime.of(LocalDateTime.of(LocalDate.of(1923, 4, 23), LocalTime.of(15, 44, 39, 192837000)),
+                        ZoneOffset.ofHours(5)),
+                OffsetDateTime.of(LocalDateTime.of(LocalDate.of(2021, 6, 28), LocalTime.of(18, 30, 55, 567891000)),
+                        ZoneOffset.ofHours(-10))};
     }
+    static BigDecimal aBigDecimal = new BigDecimal("31231.12331");
+    static BigDecimal[] decimals = {aBigDecimal, aBigDecimal ,aBigDecimal};
+    static APortable aPortable = new APortable(
+            aBoolean, aByte, aChar, aDouble, aShort, aFloat, anInt, aLong, anSqlString, aBigDecimal,
+            aLocalDate, aLocalTime, aLocalDateTime, anOffsetDateTime, anInnerPortable,
+            booleans, bytes, chars, doubles, shorts, floats, ints, longs, strings, decimals,
+            localDates, localTimes, localDateTimes, offsetDateTimes, portables,
+            anIdentifiedDataSerializable,
+            aCustomStreamSerializable,
+            aCustomByteArraySerializable, aData);
 
     static BigInteger aBigInteger = new BigInteger("1314432323232411");
-    static BigDecimal aBigDecimal = new BigDecimal("31231.12331");
     static Class aClass = BigDecimal.class;
 
     static ArrayList nonNullList = new ArrayList(asList(
