@@ -1,5 +1,7 @@
 import typing
 
+from collections import defaultdict
+
 from hazelcast.future import combine_futures, Future, ImmediateFuture
 from hazelcast.protocol.codec import (
     multi_map_add_entry_listener_codec,
@@ -460,21 +462,16 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
 
         Args:
             multimap: the map corresponds to multimap entries.
-
-        Returns:
-            ``True`` if size of the multimap is increased, ``False`` if the
-            multimap already contains the key-value tuple.
         """
         check_not_none(multimap, "multimap can't be None")
         if not multimap:
             return ImmediateFuture(None)
 
         partition_service = self._context.partition_service
-        defaultdict: typing.Dict[int, typing.List[typing.Tuple[Data, typing.List[Data]]]] = {}
+        partition_map: typing.DefaultDict[int, typing.List[typing.Tuple[Data, typing.List[Data]]]] = defaultdict(list)
 
         for key, values in multimap.items():
             try:
-                check_not_none(key, "key can't be None")
                 check_not_none(values, "values can't be None")
                 serialized_key = self._to_data(key)
                 serialized_values = []
@@ -482,19 +479,16 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
                     check_not_none(value, "value can't be None")
                     serialized_values.append(self._to_data(value))
                 partition_id = partition_service.get_partition_id(serialized_key)
-                try:
-                    defaultdict[partition_id].append((serialized_key, serialized_values))
-                except KeyError:
-                    defaultdict[partition_id] = [(self._to_data(key), serialized_values)]
+                partition_map[partition_id].append((serialized_key, serialized_values))
             except SchemaNotReplicatedError as e:
                 return self._send_schema_and_retry(e, self.put_all, multimap)
 
         futures = []
-        for partition_id, entry_list in defaultdict.items():
+        for partition_id, entry_list in partition_map.items():
             request = multi_map_put_all_codec.encode_request(self.name, entry_list)
             future = self._invoke_on_partition(request, partition_id)
             futures.append(future)
-        return combine_futures(futures)
+        return combine_futures(futures).continue_with(lambda *args: None)
 
     def remove_entry_listener(self, registration_id: str) -> Future[bool]:
         """Removes the specified entry listener.

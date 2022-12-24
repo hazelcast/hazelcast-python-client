@@ -151,7 +151,7 @@ class MultiMapTest(SingleMemberTestCase):
         self.assertCountEqual(self.multi_map.get("key"), ["value1", "value2"])
 
     def test_put_all_get(self):
-        skip_if_client_version_older_than(self, "5.0")
+        skip_if_client_version_older_than(self, "5.2")
         self.multi_map.put_all(
             {"key1": ["value1", "value2", "value3"], "key2": ["value4", "value5", "value6"]}
         )
