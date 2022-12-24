@@ -996,6 +996,13 @@ class MultiMapCompactCompatibilityTest(CompactCompatibilityBase):
         self.assertTrue(self.multi_map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE))
         self.assertEqual([OUTER_COMPACT_INSTANCE], self.multi_map.get(INNER_COMPACT_INSTANCE))
 
+    # def test_put_all_get(self):
+    #     self.multi_map.put_all(
+    #         {"key1": ["value1", "value2", "value3"], "key2": ["value4", "value5", "value6"]}
+    #     )
+    #     self.assertCountEqual(self.multi_map.get("key1"), ["value1", "value2", "value3"])
+    #     self.assertCountEqual(self.multi_map.get("key2"), ["value4", "value5", "value6"])
+
     def test_value_count(self):
         self.assertEqual(0, self.multi_map.value_count(OUTER_COMPACT_INSTANCE))
         self.multi_map.put(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
