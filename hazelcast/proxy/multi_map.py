@@ -468,7 +468,9 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             return ImmediateFuture(None)
 
         partition_service = self._context.partition_service
-        partition_map: typing.DefaultDict[int, typing.List[typing.Tuple[Data, typing.List[Data]]]] = defaultdict(list)
+        partition_map: typing.DefaultDict[
+            int, typing.List[typing.Tuple[Data, typing.List[Data]]]
+        ] = defaultdict(list)
 
         for key, values in multimap.items():
             try:
