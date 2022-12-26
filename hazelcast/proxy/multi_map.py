@@ -472,6 +472,7 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
 
         for key, values in multimap.items():
             try:
+                check_not_none(key, "key can't be None")
                 check_not_none(values, "values can't be None")
                 serialized_key = self._to_data(key)
                 serialized_values = []
@@ -488,7 +489,7 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             request = multi_map_put_all_codec.encode_request(self.name, entry_list)
             future = self._invoke_on_partition(request, partition_id)
             futures.append(future)
-        return combine_futures(futures).continue_with(lambda *args: None)
+        return combine_futures(futures).continue_with(lambda _: None)
 
     def remove_entry_listener(self, registration_id: str) -> Future[bool]:
         """Removes the specified entry listener.
