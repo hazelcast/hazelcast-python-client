@@ -11,6 +11,7 @@ from tests.util import (
     compare_client_version,
     compare_server_version_with_rc,
     skip_if_client_version_older_than,
+    skip_if_server_version_older_than,
 )
 
 try:
@@ -995,6 +996,12 @@ class MultiMapCompactCompatibilityTest(CompactCompatibilityBase):
     def test_put(self):
         self.assertTrue(self.multi_map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE))
         self.assertEqual([OUTER_COMPACT_INSTANCE], self.multi_map.get(INNER_COMPACT_INSTANCE))
+
+    def test_put_all(self):
+        skip_if_server_version_older_than(self, self.client, "4.1")
+        skip_if_client_version_older_than(self, "5.2")
+        self.multi_map.put_all({INNER_COMPACT_INSTANCE: [OUTER_COMPACT_INSTANCE]})
+        self.assertCountEqual(self.multi_map.get(INNER_COMPACT_INSTANCE), [OUTER_COMPACT_INSTANCE])
 
     def test_value_count(self):
         self.assertEqual(0, self.multi_map.value_count(OUTER_COMPACT_INSTANCE))
