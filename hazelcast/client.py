@@ -107,7 +107,7 @@ class HazelcastClient:
             if kwargs:
                 raise InvalidConfigurationError(
                     "Ambiguous client configuration is found. Either provide "
-                    "the ``config`` object as the only parameter, or do not "
+                    "the config object as the only parameter, or do not "
                     "pass it and use keyword arguments to configure the "
                     "client."
                 )

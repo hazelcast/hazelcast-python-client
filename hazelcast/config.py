@@ -272,6 +272,7 @@ _DEFAULT_STATISTICS_PERIOD = 3.0
 _DEFAULT_OPERATION_BACKUP_TIMEOUT = 5.0
 
 _MembershipListenerType = typing.Optional[typing.Callable[[MemberInfo], None]]
+_Numeric = typing.Union[int, float]
 
 
 class Config:
@@ -338,7 +339,7 @@ class Config:
         self._cluster_members: typing.List[str] = []
         self._cluster_name: str = _DEFAULT_CLUSTER_NAME
         self._client_name: typing.Optional[str] = None
-        self._connection_timeout: float = _DEFAULT_CONNECTION_TIMEOUT
+        self._connection_timeout: _Numeric = _DEFAULT_CONNECTION_TIMEOUT
         self._socket_options: typing.List[typing.Tuple[int, int, typing.Union[int, bytes]]] = []
         self._redo_operation: bool = False
         self._smart_routing: bool = True
@@ -355,11 +356,11 @@ class Config:
         self._cloud_discovery_token: typing.Optional[str] = None
         self._async_start: bool = False
         self._reconnect_mode: int = ReconnectMode.ON
-        self._retry_initial_backoff: float = _DEFAULT_RETRY_INITIAL_BACKOFF
-        self._retry_max_backoff: float = _DEFAULT_RETRY_MAX_BACKOFF
-        self._retry_jitter: float = _DEFAULT_RETRY_JITTER
-        self._retry_multiplier: float = _DEFAULT_RETRY_MULTIPLIER
-        self._cluster_connect_timeout: float = _DEFAULT_CLUSTER_CONNECT_TIMEOUT
+        self._retry_initial_backoff: _Numeric = _DEFAULT_RETRY_INITIAL_BACKOFF
+        self._retry_max_backoff: _Numeric = _DEFAULT_RETRY_MAX_BACKOFF
+        self._retry_jitter: _Numeric = _DEFAULT_RETRY_JITTER
+        self._retry_multiplier: _Numeric = _DEFAULT_RETRY_MULTIPLIER
+        self._cluster_connect_timeout: _Numeric = _DEFAULT_CLUSTER_CONNECT_TIMEOUT
         self._portable_version: int = _DEFAULT_PORTABLE_VERSION
         self._data_serializable_factories: typing.Dict[
             int, typing.Dict[int, typing.Type[IdentifiedDataSerializable]]
@@ -383,15 +384,15 @@ class Config:
         self._flake_id_generators: typing.Dict[str, "FlakeIdGeneratorConfig"] = {}
         self._reliable_topics: typing.Dict[str, "ReliableTopicConfig"] = {}
         self._labels: typing.List[str] = []
-        self._heartbeat_interval: float = _DEFAULT_HEARTBEAT_INTERVAL
-        self._heartbeat_timeout: float = _DEFAULT_HEARTBEAT_TIMEOUT
-        self._invocation_timeout: float = _DEFAULT_INVOCATION_TIMEOUT
-        self._invocation_retry_pause: float = _DEFAULT_INVOCATION_RETRY_PAUSE
+        self._heartbeat_interval: _Numeric = _DEFAULT_HEARTBEAT_INTERVAL
+        self._heartbeat_timeout: _Numeric = _DEFAULT_HEARTBEAT_TIMEOUT
+        self._invocation_timeout: _Numeric = _DEFAULT_INVOCATION_TIMEOUT
+        self._invocation_retry_pause: _Numeric = _DEFAULT_INVOCATION_RETRY_PAUSE
         self._statistics_enabled: bool = False
-        self._statistics_period: float = _DEFAULT_STATISTICS_PERIOD
+        self._statistics_period: _Numeric = _DEFAULT_STATISTICS_PERIOD
         self._shuffle_member_list: bool = True
         self._backup_ack_to_client_enabled: bool = True
-        self._operation_backup_timeout: float = _DEFAULT_OPERATION_BACKUP_TIMEOUT
+        self._operation_backup_timeout: _Numeric = _DEFAULT_OPERATION_BACKUP_TIMEOUT
         self._fail_on_indeterminate_operation_state: bool = False
         self._creds_username: typing.Optional[str] = None
         self._creds_password: typing.Optional[str] = None
@@ -451,7 +452,7 @@ class Config:
         self._client_name = value
 
     @property
-    def connection_timeout(self) -> float:
+    def connection_timeout(self) -> _Numeric:
         """Socket timeout value in seconds for the client to connect member
         nodes.
 
@@ -461,7 +462,7 @@ class Config:
         return self._connection_timeout
 
     @connection_timeout.setter
-    def connection_timeout(self, value: float):
+    def connection_timeout(self, value: _Numeric):
         if not isinstance(value, number_types):
             raise TypeError("connection_timeout must be a number")
 
@@ -661,9 +662,9 @@ class Config:
 
     @property
     def cloud_discovery_token(self) -> typing.Optional[str]:
-        """Discovery token of the Hazelcast Cloud cluster.
+        """Discovery token of the Hazelcast Viridian cluster.
 
-        When this value is set, Hazelcast Cloud discovery is enabled.
+        When this value is set, Hazelcast Viridian discovery is enabled.
         """
         return self._cloud_discovery_token
 
@@ -707,7 +708,7 @@ class Config:
         self._reconnect_mode = try_to_get_enum_value(value, ReconnectMode)
 
     @property
-    def retry_initial_backoff(self) -> float:
+    def retry_initial_backoff(self) -> _Numeric:
         """Wait period in seconds after the first failure before retrying.
 
         Must be non-negative. By default, set to ``1.0``.
@@ -715,7 +716,7 @@ class Config:
         return self._retry_initial_backoff
 
     @retry_initial_backoff.setter
-    def retry_initial_backoff(self, value: float) -> None:
+    def retry_initial_backoff(self, value: _Numeric) -> None:
         if not isinstance(value, number_types):
             raise TypeError("retry_initial_backoff must be a number")
 
@@ -725,7 +726,7 @@ class Config:
         self._retry_initial_backoff = value
 
     @property
-    def retry_max_backoff(self) -> float:
+    def retry_max_backoff(self) -> _Numeric:
         """Upper bound for the backoff interval in seconds.
 
         Must be non-negative. By default, set to ``30.0``.
@@ -733,7 +734,7 @@ class Config:
         return self._retry_max_backoff
 
     @retry_max_backoff.setter
-    def retry_max_backoff(self, value: float) -> None:
+    def retry_max_backoff(self, value: _Numeric) -> None:
         if not isinstance(value, number_types):
             raise TypeError("retry_max_backoff must be a number")
 
@@ -743,7 +744,7 @@ class Config:
         self._retry_max_backoff = value
 
     @property
-    def retry_jitter(self) -> float:
+    def retry_jitter(self) -> _Numeric:
         """Defines how much to randomize backoffs.
 
         At each iteration the calculated back-off is randomized via following
@@ -757,7 +758,7 @@ class Config:
         return self._retry_jitter
 
     @retry_jitter.setter
-    def retry_jitter(self, value: float) -> None:
+    def retry_jitter(self, value: _Numeric) -> None:
         if not isinstance(value, number_types):
             raise TypeError("retry_jitter must be a number")
 
@@ -767,7 +768,7 @@ class Config:
         self._retry_jitter = value
 
     @property
-    def retry_multiplier(self) -> float:
+    def retry_multiplier(self) -> _Numeric:
         """The factor with which to multiply backoff after a failed retry.
 
         Must be greater than or equal to ``1``. By default, set to ``1.05``.
@@ -775,7 +776,7 @@ class Config:
         return self._retry_multiplier
 
     @retry_multiplier.setter
-    def retry_multiplier(self, value: float) -> None:
+    def retry_multiplier(self, value: _Numeric) -> None:
         if not isinstance(value, number_types):
             raise TypeError("retry_multiplier must be a number")
 
@@ -785,7 +786,7 @@ class Config:
         self._retry_multiplier = value
 
     @property
-    def cluster_connect_timeout(self) -> float:
+    def cluster_connect_timeout(self) -> _Numeric:
         """Timeout value in seconds for the client to give up connecting to
         the cluster.
 
@@ -796,7 +797,7 @@ class Config:
         return self._cluster_connect_timeout
 
     @cluster_connect_timeout.setter
-    def cluster_connect_timeout(self, value: float) -> None:
+    def cluster_connect_timeout(self, value: _Numeric) -> None:
         if not isinstance(value, number_types):
             raise TypeError("cluster_connect_timeout must be a number")
 
@@ -1277,7 +1278,7 @@ class Config:
         self._labels = value
 
     @property
-    def heartbeat_interval(self) -> float:
+    def heartbeat_interval(self) -> _Numeric:
         """Time interval between the heartbeats sent by the client to the
         member nodes in seconds.
 
@@ -1286,7 +1287,7 @@ class Config:
         return self._heartbeat_interval
 
     @heartbeat_interval.setter
-    def heartbeat_interval(self, value: float) -> None:
+    def heartbeat_interval(self, value: _Numeric) -> None:
         if not isinstance(value, number_types):
             raise TypeError("heartbeat_interval must be a number")
 
@@ -1296,7 +1297,7 @@ class Config:
         self._heartbeat_interval = value
 
     @property
-    def heartbeat_timeout(self) -> float:
+    def heartbeat_timeout(self) -> _Numeric:
         """If there is no message passing between the client and a member
         within the given time via this property in seconds, the connection
         will be closed.
@@ -1306,7 +1307,7 @@ class Config:
         return self._heartbeat_timeout
 
     @heartbeat_timeout.setter
-    def heartbeat_timeout(self, value: float) -> None:
+    def heartbeat_timeout(self, value: _Numeric) -> None:
         if not isinstance(value, number_types):
             raise TypeError("heartbeat_timeout must be a number")
 
@@ -1316,7 +1317,7 @@ class Config:
         self._heartbeat_timeout = value
 
     @property
-    def invocation_timeout(self) -> float:
+    def invocation_timeout(self) -> _Numeric:
         """When an invocation gets an exception because
 
         - Member throws an exception.
@@ -1335,7 +1336,7 @@ class Config:
         return self._invocation_timeout
 
     @invocation_timeout.setter
-    def invocation_timeout(self, value: float) -> None:
+    def invocation_timeout(self, value: _Numeric) -> None:
         if not isinstance(value, number_types):
             raise TypeError("invocation_timeout must be a number")
 
@@ -1345,7 +1346,7 @@ class Config:
         self._invocation_timeout = value
 
     @property
-    def invocation_retry_pause(self) -> float:
+    def invocation_retry_pause(self) -> _Numeric:
         """Pause time between each retry cycle of an invocation in seconds.
 
         By default, set to ``1.0``.
@@ -1353,7 +1354,7 @@ class Config:
         return self._invocation_retry_pause
 
     @invocation_retry_pause.setter
-    def invocation_retry_pause(self, value: float) -> None:
+    def invocation_retry_pause(self, value: _Numeric) -> None:
         if not isinstance(value, number_types):
             raise TypeError("invocation_retry_pause must be a number")
 
@@ -1378,12 +1379,12 @@ class Config:
         self._statistics_enabled = value
 
     @property
-    def statistics_period(self) -> float:
+    def statistics_period(self) -> _Numeric:
         """The period in seconds the statistics run."""
         return self._statistics_period
 
     @statistics_period.setter
-    def statistics_period(self, value: float) -> None:
+    def statistics_period(self, value: _Numeric) -> None:
         if not isinstance(value, number_types):
             raise TypeError("statistics_period must be a number")
 
@@ -1431,7 +1432,7 @@ class Config:
         self._backup_ack_to_client_enabled = value
 
     @property
-    def operation_backup_timeout(self) -> float:
+    def operation_backup_timeout(self) -> _Numeric:
         """If an operation has backups, defines how long the invocation will
         wait for acks from the backup replicas in seconds.
 
@@ -1443,7 +1444,7 @@ class Config:
         return self._operation_backup_timeout
 
     @operation_backup_timeout.setter
-    def operation_backup_timeout(self, value: float) -> None:
+    def operation_backup_timeout(self, value: _Numeric) -> None:
         if not isinstance(value, number_types):
             raise TypeError("operation_backup_timeout must be a number")
 
@@ -1572,12 +1573,12 @@ class NearCacheConfig:
     def __init__(self):
         self._invalidate_on_change: bool = True
         self._in_memory_format: int = InMemoryFormat.BINARY
-        self._time_to_live: typing.Optional[float] = None
-        self._max_idle: typing.Optional[float] = None
+        self._time_to_live: typing.Optional[_Numeric] = None
+        self._max_idle: typing.Optional[_Numeric] = None
         self._eviction_policy: int = EvictionPolicy.LRU
-        self._eviction_max_size: float = 10000
-        self._eviction_sampling_count: float = 8
-        self._eviction_sampling_pool_size: float = 16
+        self._eviction_max_size: int = 10000
+        self._eviction_sampling_count: int = 8
+        self._eviction_sampling_pool_size: int = 16
 
     @property
     def invalidate_on_change(self) -> bool:
@@ -1612,7 +1613,7 @@ class NearCacheConfig:
         self._in_memory_format = try_to_get_enum_value(value, InMemoryFormat)
 
     @property
-    def time_to_live(self) -> typing.Optional[float]:
+    def time_to_live(self) -> typing.Optional[_Numeric]:
         """Maximum number of seconds that an entry can stay in cache.
 
         When not set, entries won't be evicted due to expiration.
@@ -1620,7 +1621,7 @@ class NearCacheConfig:
         return self._time_to_live
 
     @time_to_live.setter
-    def time_to_live(self, value: float) -> None:
+    def time_to_live(self, value: _Numeric) -> None:
         if not isinstance(value, number_types):
             raise TypeError("time_to_live must be a number")
 
@@ -1630,7 +1631,7 @@ class NearCacheConfig:
         self._time_to_live = value
 
     @property
-    def max_idle(self) -> typing.Optional[float]:
+    def max_idle(self) -> typing.Optional[_Numeric]:
         """Maximum number of seconds that an entry can stay in the Near Cache
         until it is accessed.
 
@@ -1639,7 +1640,7 @@ class NearCacheConfig:
         return self._max_idle
 
     @max_idle.setter
-    def max_idle(self, value: float) -> None:
+    def max_idle(self, value: _Numeric) -> None:
         if not isinstance(value, number_types):
             raise TypeError("max_idle must be a number")
 
@@ -1663,7 +1664,7 @@ class NearCacheConfig:
         self._eviction_policy = try_to_get_enum_value(value, EvictionPolicy)
 
     @property
-    def eviction_max_size(self) -> float:
+    def eviction_max_size(self) -> int:
         """Defines maximum number of entries kept in the memory before
         eviction kicks in.
 
@@ -1672,9 +1673,9 @@ class NearCacheConfig:
         return self._eviction_max_size
 
     @eviction_max_size.setter
-    def eviction_max_size(self, value: float):
-        if not isinstance(value, number_types):
-            raise TypeError("eviction_max_size must be a number")
+    def eviction_max_size(self, value: int):
+        if not isinstance(value, int):
+            raise TypeError("eviction_max_size must be an int")
 
         if value < 1:
             raise ValueError("eviction_max_size must be greater than 1")
@@ -1682,7 +1683,7 @@ class NearCacheConfig:
         self._eviction_max_size = value
 
     @property
-    def eviction_sampling_count(self) -> float:
+    def eviction_sampling_count(self) -> int:
         """Number of random entries that are evaluated to see if some of them
         are already expired.
 
@@ -1691,9 +1692,9 @@ class NearCacheConfig:
         return self._eviction_sampling_count
 
     @eviction_sampling_count.setter
-    def eviction_sampling_count(self, value: float) -> None:
-        if not isinstance(value, number_types):
-            raise TypeError("eviction_sampling_count must be a number")
+    def eviction_sampling_count(self, value: int) -> None:
+        if not isinstance(value, int):
+            raise TypeError("eviction_sampling_count must be an int")
 
         if value < 1:
             raise ValueError("eviction_sampling_count must be greater than 1")
@@ -1701,7 +1702,7 @@ class NearCacheConfig:
         self._eviction_sampling_count = value
 
     @property
-    def eviction_sampling_pool_size(self) -> float:
+    def eviction_sampling_pool_size(self) -> int:
         """Size of the pool for eviction candidates.
 
         The pool is kept sorted  according to the eviction policy. By default,
@@ -1710,9 +1711,9 @@ class NearCacheConfig:
         return self._eviction_sampling_pool_size
 
     @eviction_sampling_pool_size.setter
-    def eviction_sampling_pool_size(self, value: float) -> None:
-        if not isinstance(value, number_types):
-            raise TypeError("eviction_sampling_pool_size must be a number")
+    def eviction_sampling_pool_size(self, value: int) -> None:
+        if not isinstance(value, int):
+            raise TypeError("eviction_sampling_pool_size must be an int")
 
         if value < 1:
             raise ValueError("eviction_sampling_pool_size must be greater than 1")
@@ -1754,7 +1755,7 @@ class FlakeIdGeneratorConfig:
         self._prefetch_validity = 600
 
     @property
-    def prefetch_count(self) -> float:
+    def prefetch_count(self) -> int:
         """Defines how many IDs are pre-fetched on the background when a new
         flake id is requested from the cluster.
 
@@ -1763,9 +1764,9 @@ class FlakeIdGeneratorConfig:
         return self._prefetch_count
 
     @prefetch_count.setter
-    def prefetch_count(self, value: float) -> None:
-        if not isinstance(value, number_types):
-            raise TypeError("prefetch_count must be a number")
+    def prefetch_count(self, value: int) -> None:
+        if not isinstance(value, int):
+            raise TypeError("prefetch_count must be an int")
 
         if not (0 < value <= 100000):
             raise ValueError("prefetch_count must be in range 1 to 100000")
@@ -1773,7 +1774,7 @@ class FlakeIdGeneratorConfig:
         self._prefetch_count = value
 
     @property
-    def prefetch_validity(self) -> float:
+    def prefetch_validity(self) -> _Numeric:
         """Defines for how long the pre-fetched IDs can be used.
 
         If this time elapsed, a new batch of IDs will be fetched. Time unit is
@@ -1787,7 +1788,7 @@ class FlakeIdGeneratorConfig:
         return self._prefetch_validity
 
     @prefetch_validity.setter
-    def prefetch_validity(self, value):
+    def prefetch_validity(self, value: _Numeric):
         if not isinstance(value, number_types):
             raise TypeError("prefetch_validity must be a number")
 
@@ -1827,11 +1828,11 @@ class ReliableTopicConfig:
     __slots__ = ("_read_batch_size", "_overload_policy")
 
     def __init__(self):
-        self._read_batch_size: float = 10
+        self._read_batch_size: int = 10
         self._overload_policy: int = TopicOverloadPolicy.BLOCK
 
     @property
-    def read_batch_size(self) -> float:
+    def read_batch_size(self) -> int:
         """Number of messages the reliable topic will try to read in batch.
 
         It will get at least one, but if there are more available, then it
@@ -1840,9 +1841,9 @@ class ReliableTopicConfig:
         return self._read_batch_size
 
     @read_batch_size.setter
-    def read_batch_size(self, value: float) -> None:
-        if not isinstance(value, number_types):
-            raise TypeError("read_batch_size must be a number")
+    def read_batch_size(self, value: int) -> None:
+        if not isinstance(value, int):
+            raise TypeError("read_batch_size must be an int")
 
         if value <= 0:
             raise ValueError("read_batch_size must be positive")

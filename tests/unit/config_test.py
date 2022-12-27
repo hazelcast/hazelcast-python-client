@@ -31,7 +31,6 @@ from hazelcast.serialization.api import (
     PortableWriter,
     PortableReader,
     CompactSerializer,
-    CompactSerializableClass,
     CompactWriter,
     CompactReader,
 )

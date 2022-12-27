@@ -173,29 +173,26 @@ class ClientConfigurationTest(HazelcastTestCase):
         cls.rc.terminateCluster(cls.cluster.id)
         cls.rc.exit()
 
-    def tearDown(self) -> None:
-        self.shutdown_all_clients()
-
     def test_keyword_args_configuration(self):
         client = HazelcastClient(
             cluster_name=self.cluster.id,
         )
-        self.clients.append(client)
         self.assertTrue(client.lifecycle_service.is_running())
+        client.shutdown()
 
     def test_configuration_object(self):
         config = Config()
         config.cluster_name = self.cluster.id
         client = HazelcastClient(config)
-        self.clients.append(client)
         self.assertTrue(client.lifecycle_service.is_running())
+        client.shutdown()
 
     def test_configuration_object_as_keyword_argument(self):
         config = Config()
         config.cluster_name = self.cluster.id
         client = HazelcastClient(config=config)
-        self.clients.append(client)
         self.assertTrue(client.lifecycle_service.is_running())
+        client.shutdown()
 
     def test_ambiguous_configuration(self):
         config = Config()
