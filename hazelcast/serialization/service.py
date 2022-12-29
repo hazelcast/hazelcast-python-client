@@ -389,6 +389,9 @@ class SerializerRegistry:
         # primitives, arrays, String, UUID and some helper types(BigInteger etc)
         serializer = self.lookup_default_serializer(obj_type, obj)
 
+        if serializer is None and obj_type is type:
+            serializer = self._python_serializer
+
         # 3-Custom registered types by user
         if serializer is None:
             serializer = self.lookup_custom_serializer(obj_type)
