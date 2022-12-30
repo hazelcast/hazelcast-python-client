@@ -3,7 +3,7 @@ import time
 import typing
 from uuid import uuid4
 
-from hazelcast.config import _ReliableTopicConfig, TopicOverloadPolicy
+from hazelcast.config import ReliableTopicConfig, TopicOverloadPolicy
 from hazelcast.core import MemberInfo, MemberVersion, EndpointQualifier, ProtocolType
 from hazelcast.errors import (
     OperationTimeoutError,
@@ -557,7 +557,7 @@ class ReliableTopic(Proxy["BlockingReliableTopic"], typing.Generic[MessageType])
 
         config = context.config.reliable_topics.get(name, None)
         if config is None:
-            config = _ReliableTopicConfig()
+            config = ReliableTopicConfig()
 
         self._config = config
         self._context = context

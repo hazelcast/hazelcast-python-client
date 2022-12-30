@@ -15,7 +15,7 @@ from functools import total_ordering
 from heapq import heappush, heappop
 from threading import get_ident
 
-from hazelcast.config import SSLProtocol, _Config
+from hazelcast.config import SSLProtocol, Config
 from hazelcast.connection import Connection
 from hazelcast.core import Address
 from hazelcast.errors import HazelcastError
@@ -539,7 +539,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
 
             self.socket.setsockopt(level, option_name, value)
 
-    def _wrap_as_ssl_socket(self, config: _Config, hostname: str):
+    def _wrap_as_ssl_socket(self, config: Config, hostname: str):
         ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
 
         protocol = config.ssl_protocol

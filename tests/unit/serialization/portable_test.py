@@ -3,7 +3,7 @@ import decimal
 import typing
 import unittest
 
-from hazelcast.config import _Config
+from hazelcast.config import Config
 from hazelcast.errors import HazelcastSerializationError
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.serialization.api import Portable
@@ -423,7 +423,7 @@ class MyPortable2(Portable):
 
 class PortableSerializationTestCase(unittest.TestCase):
     def test_encode_decode(self):
-        config = _Config()
+        config = Config()
         config.portable_factories = {FACTORY_ID: the_factory}
         service = SerializationServiceV1(config)
         obj = create_portable()
@@ -435,7 +435,7 @@ class PortableSerializationTestCase(unittest.TestCase):
         self.assertEqual(obj.inner_portable.param_int, obj2.nested_field)
 
     def test_encode_decode_2(self):
-        config = _Config()
+        config = Config()
         config.portable_factories = {FACTORY_ID: the_factory}
         service = SerializationServiceV1(config)
         service2 = SerializationServiceV1(config)
@@ -447,7 +447,7 @@ class PortableSerializationTestCase(unittest.TestCase):
         self.assertTrue(obj == obj2)
 
     def test_portable_context(self):
-        config = _Config()
+        config = Config()
         config.portable_factories = {FACTORY_ID: the_factory}
         service = SerializationServiceV1(config)
         obj = create_portable()
@@ -461,7 +461,7 @@ class PortableSerializationTestCase(unittest.TestCase):
         self.assertTrue(class_definition is not None)
 
     def test_portable_null_fields(self):
-        config = _Config()
+        config = Config()
         config.portable_factories = {FACTORY_ID: the_factory}
         service = SerializationServiceV1(config)
         service.to_data(create_portable())
@@ -513,7 +513,7 @@ class PortableSerializationTestCase(unittest.TestCase):
         builder.add_portable_array_field("ap", class_def_inner)
         class_def = builder.build()
 
-        config = _Config()
+        config = Config()
         config.portable_factories = {FACTORY_ID: the_factory}
         config.class_definitions = [
             class_def,
@@ -529,10 +529,10 @@ class PortableSerializationTestCase(unittest.TestCase):
         self.assertTrue(obj == obj2)
 
     def test_portable_read_without_factory(self):
-        config = _Config()
+        config = Config()
         config.portable_factories = {FACTORY_ID: the_factory}
         service = SerializationServiceV1(config)
-        service2 = SerializationServiceV1(_Config())
+        service2 = SerializationServiceV1(Config())
         obj = create_portable()
         self.assertTrue(obj.inner_portable)
 
@@ -541,7 +541,7 @@ class PortableSerializationTestCase(unittest.TestCase):
             service2.to_object(data)
 
     def test_nested_portable_serialization(self):
-        config = _Config()
+        config = Config()
         config.portable_version = 6
         config.portable_factories = {
             1: {
@@ -562,7 +562,7 @@ class PortableSerializationTestCase(unittest.TestCase):
         self.assertEqual(p, ss2.to_object(data))
 
     def test_nested_null_portable_serialization(self):
-        config = _Config()
+        config = Config()
 
         config.portable_factories = {1: {1: Parent, 2: Child}}
 
@@ -583,7 +583,7 @@ class PortableSerializationTestCase(unittest.TestCase):
         self.assertEqual(p, ss.to_object(data))
 
     def test_duplicate_class_definition(self):
-        config = _Config()
+        config = Config()
 
         class_def1 = ClassDefinitionBuilder(1, 1).add_string_field("str_field").build()
         class_def2 = ClassDefinitionBuilder(1, 1).add_int_field("int_field").build()
@@ -594,7 +594,7 @@ class PortableSerializationTestCase(unittest.TestCase):
             SerializationServiceV1(config)
 
     def test_classes_with_same_class_id_in_different_factories(self):
-        config = _Config()
+        config = Config()
         config.portable_factories = {1: {1: MyPortable1}, 2: {1: MyPortable2}}
 
         class_def1 = ClassDefinitionBuilder(1, 1).add_string_field("str_field").build()

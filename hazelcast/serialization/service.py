@@ -6,7 +6,7 @@ import uuid
 
 import typing
 
-from hazelcast.config import IntType, _Config
+from hazelcast.config import IntType, Config
 from hazelcast.errors import HazelcastInstanceNotActiveError
 from hazelcast.serialization.api import IdentifiedDataSerializable, Portable
 from hazelcast.serialization.compact import (
@@ -320,7 +320,7 @@ class SerializationServiceV1:
 class SerializerRegistry:
     def __init__(
         self,
-        config: _Config,
+        config: Config,
         portable_serializer: PortableSerializer,
         data_serializer: IdentifiedDataSerializer,
         compact_serializer: CompactStreamSerializer,

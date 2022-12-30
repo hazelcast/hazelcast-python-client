@@ -5,7 +5,7 @@ import unittest
 import uuid
 
 from hazelcast.core import HazelcastJsonValue
-from hazelcast.config import _Config
+from hazelcast.config import Config
 from hazelcast.errors import HazelcastSerializationError
 from hazelcast.serialization import BE_INT
 from hazelcast.predicate import *
@@ -25,7 +25,7 @@ class A:
 
 class SerializersTest(unittest.TestCase):
     def setUp(self):
-        self.service = SerializationServiceV1(_Config())
+        self.service = SerializationServiceV1(Config())
 
     def tearDown(self):
         self.service.destroy()

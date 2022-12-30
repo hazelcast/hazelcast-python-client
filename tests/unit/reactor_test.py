@@ -7,7 +7,7 @@ from collections import OrderedDict
 from mock import MagicMock
 from parameterized import parameterized
 
-from hazelcast.config import _Config
+from hazelcast.config import Config
 from hazelcast.core import Address
 from hazelcast.reactor import (
     AsyncoreReactor,
@@ -307,7 +307,7 @@ class AsyncoreConnectionTest(unittest.TestCase):
 
     def test_socket_options(self):
         self.server = MockServer()
-        config = _Config()
+        config = Config()
         config.socket_options = [(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)]
 
         conn = AsyncoreConnection(
@@ -324,7 +324,7 @@ class AsyncoreConnectionTest(unittest.TestCase):
         # When the SO_RCVBUF option is set, we should try
         # to use that value while trying to read something.
         self.server = MockServer()
-        config = _Config()
+        config = Config()
         size = 64 * 1024
         config.socket_options = [(socket.SOL_SOCKET, socket.SO_RCVBUF, size)]
         conn = AsyncoreConnection(
@@ -341,7 +341,7 @@ class AsyncoreConnectionTest(unittest.TestCase):
         # When the SO_SNDBUF option is set, we should try
         # to use that value while trying to write something.
         self.server = MockServer()
-        config = _Config()
+        config = Config()
         size = 64 * 1024
         config.socket_options = [(socket.SOL_SOCKET, socket.SO_SNDBUF, size)]
         conn = AsyncoreConnection(
@@ -356,7 +356,7 @@ class AsyncoreConnectionTest(unittest.TestCase):
 
     def test_constructor_with_unreachable_addresses(self):
         addr = Address("192.168.0.1", 5701)
-        config = _Config()
+        config = Config()
         start = get_current_timestamp()
         conn = AsyncoreConnection(MagicMock(map=dict()), MagicMock(), None, addr, config, None)
         try:
@@ -368,7 +368,7 @@ class AsyncoreConnectionTest(unittest.TestCase):
 
     def test_resources_cleaned_up_after_immediate_failure(self):
         addr = Address("invalid-address", 5701)
-        config = _Config()
+        config = Config()
         mock_reactor = MagicMock(map={})
         try:
             conn = AsyncoreConnection(mock_reactor, MagicMock(), None, addr, config, None)
