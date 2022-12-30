@@ -168,31 +168,35 @@ class ClientConfigurationTest(HazelcastTestCase):
         cls.cluster = cls.create_cluster(cls.rc, None)
         cls.cluster.start_member()
 
+    def setUp(self):
+        self.client = None
+
+    def tearDown(self):
+        if self.client:
+            self.client.shutdown()
+
     @classmethod
     def tearDownClass(cls):
         cls.rc.terminateCluster(cls.cluster.id)
         cls.rc.exit()
 
     def test_keyword_args_configuration(self):
-        client = HazelcastClient(
+        self.client = HazelcastClient(
             cluster_name=self.cluster.id,
         )
-        self.assertTrue(client.lifecycle_service.is_running())
-        client.shutdown()
+        self.assertTrue(self.client.lifecycle_service.is_running())
 
     def test_configuration_object(self):
         config = Config()
         config.cluster_name = self.cluster.id
-        client = HazelcastClient(config)
-        self.assertTrue(client.lifecycle_service.is_running())
-        client.shutdown()
+        self.client = HazelcastClient(config)
+        self.assertTrue(self.client.lifecycle_service.is_running())
 
     def test_configuration_object_as_keyword_argument(self):
         config = Config()
         config.cluster_name = self.cluster.id
-        client = HazelcastClient(config=config)
-        self.assertTrue(client.lifecycle_service.is_running())
-        client.shutdown()
+        self.client = HazelcastClient(config=config)
+        self.assertTrue(self.client.lifecycle_service.is_running())
 
     def test_ambiguous_configuration(self):
         config = Config()
@@ -200,4 +204,4 @@ class ClientConfigurationTest(HazelcastTestCase):
             InvalidConfigurationError,
             "Ambiguous client configuration is found",
         ):
-            HazelcastClient(config, cluster_name="a-cluster")
+            self.client = HazelcastClient(config, cluster_name="a-cluster")
