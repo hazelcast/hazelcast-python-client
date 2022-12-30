@@ -2,7 +2,7 @@ import datetime
 import decimal
 import unittest
 
-from hazelcast.config import _Config
+from hazelcast.config import Config
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.serialization.data import DATA_OFFSET
 from hazelcast.serialization.input import _ObjectDataInput
@@ -67,10 +67,10 @@ the_factory_2 = {
 
 class MorphingPortableTestCase(unittest.TestCase):
     def setUp(self):
-        config1 = _Config()
+        config1 = Config()
         config1.portable_factories = {FACTORY_ID: the_factory_1}
 
-        config2 = _Config()
+        config2 = Config()
         config2.portable_factories = {FACTORY_ID: the_factory_2}
 
         self.service1 = SerializationServiceV1(config1)

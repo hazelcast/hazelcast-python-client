@@ -2,7 +2,7 @@ import unittest
 
 from mock import MagicMock
 
-from hazelcast.config import _Config
+from hazelcast.config import Config
 from hazelcast.errors import IndeterminateOperationStateError
 from hazelcast.invocation import Invocation, InvocationService
 
@@ -22,7 +22,7 @@ class InvocationTest(unittest.TestCase):
         listener_service.register_listener.assert_called_once()
 
     def test_smart_mode_and_disabled_backups(self):
-        config = _Config()
+        config = Config()
         config.backup_ack_to_client_enabled = False
         client, service = self._start_service(config)
         self.assertIsNotNone(service._clean_resources_timer)
@@ -30,7 +30,7 @@ class InvocationTest(unittest.TestCase):
         listener_service.register_listener.assert_not_called()
 
     def test_unisocket_mode_and_enabled_backups(self):
-        config = _Config()
+        config = Config()
         config.smart_routing = False
         client, service = self._start_service(config)
         self.assertIsNotNone(service._clean_resources_timer)
@@ -38,7 +38,7 @@ class InvocationTest(unittest.TestCase):
         listener_service.register_listener.assert_not_called()
 
     def test_unisocket_mode_and_disabled_backups(self):
-        config = _Config()
+        config = Config()
         config.smart_routing = False
         config.backup_ack_to_client_enabled = False
         client, service = self._start_service(config)
@@ -149,7 +149,7 @@ class InvocationTest(unittest.TestCase):
         invocation = Invocation(None, timeout=42)
         self.assertEqual(42, invocation.timeout)
 
-    def _start_service(self, config=_Config()):
+    def _start_service(self, config=Config()):
         c = MagicMock()
         invocation_service = InvocationService(c, config, c._reactor)
         self.service = invocation_service

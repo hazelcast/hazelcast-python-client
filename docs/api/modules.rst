@@ -5,7 +5,6 @@ API Documentation
 
     aggregator
     cluster
-    config
     core
     cp
     errors
