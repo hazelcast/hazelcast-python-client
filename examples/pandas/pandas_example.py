@@ -27,7 +27,7 @@ Pyton client serialization methods, see https://hazelcast.readthedocs.io/en/stab
 import hazelcast
 from hazelcast.core import HazelcastJsonValue
 from matplotlib import pyplot as plt
-import np as np
+import numpy as np
 import pandas as pd
 
 # Create Hazelcast client
