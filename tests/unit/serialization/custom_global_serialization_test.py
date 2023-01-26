@@ -42,6 +42,17 @@ class CustomClass:
         return False
 
 
+class TheOtherCustomClass(CustomClass):
+    
+    def __init__(self):
+        super().__init__(self)
+
+    def __eq__(self, other):
+        super().__eq__(self)
+
+    def func(self):
+        pass
+
 class CustomSerializer(StreamSerializer):
     def write(self, out, obj):
         if isinstance(obj, CustomClass):
@@ -128,3 +139,21 @@ class CustomSerializationTestCase(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             service._registry.safe_register_serializer(TheOtherCustomSerializer, CustomClass)
+
+
+    def test_class(self):
+
+        config = _Config()
+
+        config.custom_serializers = {CustomClass: CustomSerializer, TheOtherCustomClass: CustomSerializer}
+
+        service = SerializationServiceV1(config)
+
+        data1 = service.to_data(CustomClass)
+        deserialized1 = service.to_object(data1)
+
+        data2 = service.to_data(TheOtherCustomClass)
+        deserialized2 = service.to_object(data2)
+
+        self.assertEqual(CustomClass, deserialized1)
+        self.assertEqual(TheOtherCustomClass, deserialized2)
