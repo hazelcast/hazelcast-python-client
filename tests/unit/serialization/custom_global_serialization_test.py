@@ -53,6 +53,7 @@ class TheOtherCustomClass(CustomClass):
     def func(self):
         pass
 
+
 class CustomSerializer(StreamSerializer):
     def write(self, out, obj):
         if isinstance(obj, CustomClass):
