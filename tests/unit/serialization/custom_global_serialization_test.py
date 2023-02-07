@@ -155,3 +155,4 @@ class CustomSerializationTestCase(unittest.TestCase):
         deserialized2 = service.to_object(data2)
 
         self.assertEqual(obj, deserialized2)
+
