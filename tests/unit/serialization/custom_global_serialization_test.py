@@ -44,8 +44,8 @@ class CustomClass:
 
 class TheOtherCustomClass(CustomClass):
     
-    def __init__(self, uid, name, text):
-        super(TheOtherCustomClass, self).__init__(uid, name, text)
+    def __init__(self, uid, name, text, source=None):
+        super(TheOtherCustomClass, self).__init__(uid, name, text, source)
 
     def __eq__(self, other):
         super(TheOtherCustomClass, self).__eq__(other)
@@ -151,7 +151,22 @@ class CustomSerializationTestCase(unittest.TestCase):
 
         self.assertEqual(CustomClass, deserialized1)
 
-        obj = TheOtherCustomClass("uid", "some name", "description text")
+        data2 = service.to_data(TheOtherCustomClass)
+        deserialized2 = service.to_object(data2)
+
+        self.assertEqual(TheOtherCustomClass, deserialized2)
+
+    def test_serializing_class_and_object_instances(self):
+        config = Config()
+        config.custom_serializers = {CustomClass: CustomSerializer}
+        service = SerializationServiceV1(config)
+
+        data1 = service.to_data(CustomClass)
+        deserialized1 = service.to_object(data1)
+
+        self.assertEqual(CustomClass, deserialized1)
+
+        obj = TheOtherCustomClass("uid", "some name", "description text", "CUSTOM")
         data2 = service.to_data(obj)
         deserialized2 = service.to_object(data2)
 
