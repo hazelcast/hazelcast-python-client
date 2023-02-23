@@ -19,7 +19,6 @@ NANOSECONDS_IN_SECONDS = 1e9
 
 EnvMemberCount = "MEMBER_COUNT"
 
-
 def check_not_none(val, message):
     if val is None:
         raise AssertionError(message)
