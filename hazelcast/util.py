@@ -495,7 +495,6 @@ def is_port_open(port):
         s.close()
 
 portLock = threading.Lock()
-
 def next_port(nextPort=0):
     maxStep = 10
     step = member_count()
