@@ -3,7 +3,7 @@ import subprocess
 import sys
 from os.path import isfile
 
-SERVER_VERSION = "5.1"
+SERVER_VERSION = "5.2.2"
 RC_VERSION = "0.8-SNAPSHOT"
 
 RELEASE_REPO = "https://repo1.maven.apache.org/maven2"
@@ -74,15 +74,10 @@ def start_rc(stdout=None, stderr=None):
 
     if enterprise_key:
         server = download_if_necessary(ENTERPRISE_REPO, "hazelcast-enterprise", SERVER_VERSION)
-        ep_tests = download_if_necessary(
-            ENTERPRISE_REPO, "hazelcast-enterprise", SERVER_VERSION, True
-        )
-
-        artifacts.append(server)
-        artifacts.append(ep_tests)
     else:
         server = download_if_necessary(REPO, "hazelcast", SERVER_VERSION)
-        artifacts.append(server)
+
+    artifacts.append(server)
 
     class_path = CLASS_PATH_SEPARATOR.join(artifacts)
 

@@ -23,7 +23,7 @@ class MutualAuthenticationTest(HazelcastTestCase):
         self.rc.exit()
 
     def test_ma_required_client_and_server_authenticated(self):
-        cluster = self.create_cluster(self.rc, self.configure_cluster(True))
+        cluster = self.create_cluster(self.rc, self.read_config(True))
         cluster.start_member()
         client = HazelcastClient(
             **get_ssl_config(
@@ -38,7 +38,7 @@ class MutualAuthenticationTest(HazelcastTestCase):
         client.shutdown()
 
     def test_ma_required_server_not_authenticated(self):
-        cluster = self.create_cluster(self.rc, self.configure_cluster(True))
+        cluster = self.create_cluster(self.rc, self.read_config(True))
         cluster.start_member()
 
         with self.assertRaises(HazelcastError):
@@ -53,7 +53,7 @@ class MutualAuthenticationTest(HazelcastTestCase):
             )
 
     def test_ma_required_client_not_authenticated(self):
-        cluster = self.create_cluster(self.rc, self.configure_cluster(True))
+        cluster = self.create_cluster(self.rc, self.read_config(True))
         cluster.start_member()
 
         with self.assertRaises(HazelcastError):
@@ -68,7 +68,7 @@ class MutualAuthenticationTest(HazelcastTestCase):
             )
 
     def test_ma_required_client_and_server_not_authenticated(self):
-        cluster = self.create_cluster(self.rc, self.configure_cluster(True))
+        cluster = self.create_cluster(self.rc, self.read_config(True))
         cluster.start_member()
 
         with self.assertRaises(HazelcastError):
@@ -83,7 +83,7 @@ class MutualAuthenticationTest(HazelcastTestCase):
             )
 
     def test_ma_optional_client_and_server_authenticated(self):
-        cluster = self.create_cluster(self.rc, self.configure_cluster(False))
+        cluster = self.create_cluster(self.rc, self.read_config(False))
         cluster.start_member()
         client = HazelcastClient(
             **get_ssl_config(
@@ -98,7 +98,7 @@ class MutualAuthenticationTest(HazelcastTestCase):
         client.shutdown()
 
     def test_ma_optional_server_not_authenticated(self):
-        cluster = self.create_cluster(self.rc, self.configure_cluster(False))
+        cluster = self.create_cluster(self.rc, self.read_config(False))
         cluster.start_member()
 
         with self.assertRaises(HazelcastError):
@@ -113,7 +113,7 @@ class MutualAuthenticationTest(HazelcastTestCase):
             )
 
     def test_ma_optional_client_not_authenticated(self):
-        cluster = self.create_cluster(self.rc, self.configure_cluster(False))
+        cluster = self.create_cluster(self.rc, self.read_config(False))
         cluster.start_member()
 
         with self.assertRaises(HazelcastError):
@@ -128,7 +128,7 @@ class MutualAuthenticationTest(HazelcastTestCase):
             )
 
     def test_ma_optional_client_and_server_not_authenticated(self):
-        cluster = self.create_cluster(self.rc, self.configure_cluster(False))
+        cluster = self.create_cluster(self.rc, self.read_config(False))
         cluster.start_member()
 
         with self.assertRaises(HazelcastError):
@@ -143,7 +143,7 @@ class MutualAuthenticationTest(HazelcastTestCase):
             )
 
     def test_ma_required_with_no_cert_file(self):
-        cluster = self.create_cluster(self.rc, self.configure_cluster(True))
+        cluster = self.create_cluster(self.rc, self.read_config(True))
         cluster.start_member()
 
         with self.assertRaises(HazelcastError):
@@ -154,7 +154,7 @@ class MutualAuthenticationTest(HazelcastTestCase):
             )
 
     def test_ma_optional_with_no_cert_file(self):
-        cluster = self.create_cluster(self.rc, self.configure_cluster(False))
+        cluster = self.create_cluster(self.rc, self.read_config(False))
         cluster.start_member()
         client = HazelcastClient(
             **get_ssl_config(
@@ -164,7 +164,12 @@ class MutualAuthenticationTest(HazelcastTestCase):
         self.assertTrue(client.lifecycle_service.is_running())
         client.shutdown()
 
-    def configure_cluster(self, is_ma_required):
+    def read_config(self, is_ma_required):
         file_path = self.ma_req_xml if is_ma_required else self.ma_opt_xml
         with open(file_path, "r") as f:
-            return f.read()
+            xml_config = f.read()
+
+        curr_dir = os.path.dirname(__file__)
+        keystore_path = get_abs_path(curr_dir, "server1.keystore")
+        truststore_path = get_abs_path(curr_dir, "server1.truststore")
+        return xml_config % (keystore_path, truststore_path)
