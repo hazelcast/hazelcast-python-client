@@ -198,6 +198,12 @@ class SchemaWriterTest(unittest.TestCase):
         for name, kind in fields:
             self.assertEqual(kind, schema.fields.get(name).kind)
 
+    def test_schema_writer_with_duplicate_field_names(self):
+        writer = SchemaWriter("foo")
+        writer.write_int32("bar", 42)
+        with self.assertRaisesRegex(HazelcastSerializationError, "already exists"):
+            writer.write_string("bar", "42")
+
 
 class Child:
     def __init__(self, name: str):
@@ -214,7 +220,7 @@ class ChildSerializer(CompactSerializer[Child]):
         name = reader.read_string("name")
         return Child(name)
 
-    def write(self, writer: CompactWriter, obj: Parent):
+    def write(self, writer: CompactWriter, obj: Child):
         writer.write_string("name", obj.name)
 
     def get_type_name(self):
@@ -259,3 +265,51 @@ class NestedSerializerTest(unittest.TestCase):
         ):
             obj = Parent(Child("test"))
             self._serialize(service, obj)
+
+
+class CompactSerializationTest(unittest.TestCase):
+    def test_overriding_default_serializers(self):
+        config = Config()
+        config.compact_serializers = [StringCompactSerializer()]
+
+        with self.assertRaisesRegex(
+            HazelcastSerializationError, "can not be registered as it overrides"
+        ):
+            SerializationServiceV1(config)
+
+    def test_serializer_with_duplicate_field_names(self):
+        config = Config()
+        config.compact_serializers = [SerializerWithDuplicateFieldsNames()]
+
+        service = SerializationServiceV1(config)
+        with self.assertRaisesRegex(HazelcastSerializationError, "already exists"):
+            service.to_data(Child("foo"))
+
+
+class StringCompactSerializer(CompactSerializer[str]):
+    def read(self, reader: CompactReader) -> str:
+        pass
+
+    def write(self, writer: CompactWriter, obj: str) -> None:
+        pass
+
+    def get_class(self) -> typing.Type[str]:
+        return str
+
+    def get_type_name(self) -> str:
+        return "str"
+
+
+class SerializerWithDuplicateFieldsNames(CompactSerializer[Child]):
+    def read(self, reader: CompactReader) -> Child:
+        pass
+
+    def write(self, writer: CompactWriter, obj: Child) -> None:
+        writer.write_string("name", obj.name)
+        writer.write_string("name", obj.name)
+
+    def get_class(self) -> typing.Type[Child]:
+        return Child
+
+    def get_type_name(self) -> str:
+        return "child"
