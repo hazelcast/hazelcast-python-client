@@ -2610,6 +2610,8 @@ class FieldKind(enum.IntEnum):
     ARRAY_OF_BOOLEAN = 2
     INT8 = 3
     ARRAY_OF_INT8 = 4
+    CHAR = 5
+    ARRAY_OF_CHAR = 6
     INT16 = 7
     ARRAY_OF_INT16 = 8
     INT32 = 9
@@ -2634,6 +2636,8 @@ class FieldKind(enum.IntEnum):
     ARRAY_OF_TIMESTAMP_WITH_TIMEZONE = 28
     COMPACT = 29
     ARRAY_OF_COMPACT = 30
+    PORTABLE = 31
+    ARRAY_OF_PORTABLE = 32
     NULLABLE_BOOLEAN = 33
     ARRAY_OF_NULLABLE_BOOLEAN = 34
     NULLABLE_INT8 = 35
