@@ -87,7 +87,7 @@ class SchemaTest(unittest.TestCase):
         fields = [
             FieldDescriptor(kind.name, kind)
             for kind in FieldKind
-            if kind is not FieldKind.NOT_AVAILABLE
+            if FIELD_OPERATIONS[kind] is not None
         ]
         schema = Schema("something", fields)
         self._verify_schema(schema, fields)
