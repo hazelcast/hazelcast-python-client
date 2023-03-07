@@ -4,6 +4,7 @@ User API for Serialization.
 import abc
 import datetime
 import decimal
+import enum
 import typing
 
 from hazelcast.serialization.portable.classdef import FieldType
@@ -1381,7 +1382,7 @@ class CompactReader(abc.ABC):
     """
 
     @abc.abstractmethod
-    def get_field_kind(self, field_name):
+    def get_field_kind(self, field_name: str) -> "FieldKind":
         """Returns the FieldKind for the given field.
 
         Args:
@@ -2593,3 +2594,61 @@ class CompactSerializer(typing.Generic[CompactSerializableClass], abc.ABC):
         Returns:
             The type name.
         """
+
+
+class FieldKind(enum.IntEnum):
+    """
+    Represents the types of the fields used in the Compact serialization.
+    """
+
+    NOT_AVAILABLE = 0
+    """
+    Represents fields that do not exist.
+    """
+
+    BOOLEAN = 1
+    ARRAY_OF_BOOLEAN = 2
+    INT8 = 3
+    ARRAY_OF_INT8 = 4
+    CHAR = 5
+    ARRAY_OF_CHAR = 6
+    INT16 = 7
+    ARRAY_OF_INT16 = 8
+    INT32 = 9
+    ARRAY_OF_INT32 = 10
+    INT64 = 11
+    ARRAY_OF_INT64 = 12
+    FLOAT32 = 13
+    ARRAY_OF_FLOAT32 = 14
+    FLOAT64 = 15
+    ARRAY_OF_FLOAT64 = 16
+    STRING = 17
+    ARRAY_OF_STRING = 18
+    DECIMAL = 19
+    ARRAY_OF_DECIMAL = 20
+    TIME = 21
+    ARRAY_OF_TIME = 22
+    DATE = 23
+    ARRAY_OF_DATE = 24
+    TIMESTAMP = 25
+    ARRAY_OF_TIMESTAMP = 26
+    TIMESTAMP_WITH_TIMEZONE = 27
+    ARRAY_OF_TIMESTAMP_WITH_TIMEZONE = 28
+    COMPACT = 29
+    ARRAY_OF_COMPACT = 30
+    PORTABLE = 31
+    ARRAY_OF_PORTABLE = 32
+    NULLABLE_BOOLEAN = 33
+    ARRAY_OF_NULLABLE_BOOLEAN = 34
+    NULLABLE_INT8 = 35
+    ARRAY_OF_NULLABLE_INT8 = 36
+    NULLABLE_INT16 = 37
+    ARRAY_OF_NULLABLE_INT16 = 38
+    NULLABLE_INT32 = 39
+    ARRAY_OF_NULLABLE_INT32 = 40
+    NULLABLE_INT64 = 41
+    ARRAY_OF_NULLABLE_INT64 = 42
+    NULLABLE_FLOAT32 = 43
+    ARRAY_OF_NULLABLE_FLOAT32 = 44
+    NULLABLE_FLOAT64 = 45
+    ARRAY_OF_NULLABLE_FLOAT64 = 46

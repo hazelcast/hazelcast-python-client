@@ -48,6 +48,9 @@ class InnerCompact:
     def __hash__(self) -> int:
         return hash(self.string_field)
 
+    def __repr__(self):
+        return f"InnerCompact(string_field={self.string_field})"
+
 
 class OuterCompact:
     def __init__(self, int_field: int, inner_field: InnerCompact):
@@ -63,6 +66,9 @@ class OuterCompact:
 
     def __hash__(self) -> int:
         return hash((self.int_field, self.inner_field))
+
+    def __repr__(self):
+        return f"OuterCompact(int_field={self.int_field}, inner_field={self.inner_field})"
 
 
 class InnerSerializer(CompactSerializer[InnerCompact]):
@@ -272,7 +278,7 @@ OUTER_COMPACT_INSTANCE = OuterCompact(42, INNER_COMPACT_INSTANCE)
 
 
 @unittest.skipIf(
-    compare_client_version("5.1") < 0, "Tests the features added in 5.1 version of the client"
+    compare_client_version("5.2") < 0, "Tests the features added in 5.2 version of the client"
 )
 class CompactCompatibilityBase(HazelcastTestCase):
     rc = None
@@ -282,24 +288,15 @@ class CompactCompatibilityBase(HazelcastTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.rc = cls.create_rc()
-        if compare_server_version_with_rc(cls.rc, "5.1") < 0:
+        if compare_server_version_with_rc(cls.rc, "5.2") < 0:
             cls.rc.exit()
-            raise unittest.SkipTest("Compact serialization requires 5.1 server")
-
-        if compare_server_version_with_rc(cls.rc, "5.2") >= 0 and compare_client_version("5.2") < 0:
-            cls.rc.exit()
-            raise unittest.SkipTest(
-                "Compact serialization 5.2 server is not compatible with clients older than 5.2"
-            )
+            raise unittest.SkipTest("Compact serialization requires 5.2 server")
 
         config = f"""
 <hazelcast xmlns="http://www.hazelcast.com/schema/config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:schemaLocation="http://www.hazelcast.com/schema/config
-           http://www.hazelcast.com/schema/config/hazelcast-config-5.1.xsd">
-    <serialization>
-        <compact-serialization enabled="true" />
-    </serialization>
+           http://www.hazelcast.com/schema/config/hazelcast-config-5.2.xsd">
     <jet enabled="true" />
 </hazelcast>
         """
@@ -1777,6 +1774,6 @@ class SqlCompactCompatibilityTest(CompactCompatibilityBase):
 class PartitionServiceCompactCompatibilityTest(CompactCompatibilityBase):
     def test_partition_service(self):
         self.assertEqual(
-            268,
+            267,
             self.client.partition_service.get_partition_id(OUTER_COMPACT_INSTANCE),
         )

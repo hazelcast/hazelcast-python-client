@@ -1,4 +1,5 @@
 import os
+import select
 import socket
 import threading
 import unittest
@@ -182,6 +183,8 @@ class SocketedWakerTest(unittest.TestCase):
         self.assertFalse(waker.awake)
         waker.wake()
         self.assertTrue(waker.awake)
+        # Wait until the reader becomes readable
+        select.select([waker._reader], [], [], 10)
         self.assertEqual(b"x", waker._reader.recv(1))
 
     def test_wake_while_awake(self):
@@ -189,17 +192,20 @@ class SocketedWakerTest(unittest.TestCase):
         waker.wake()
         waker.wake()
         self.assertTrue(waker.awake)
+        # Wait until the reader becomes readable
+        select.select([waker._reader], [], [], 10)
         self.assertEqual(b"x", waker._reader.recv(2))  # only the first one should write
 
     def test_handle_read(self):
         waker = self.waker
         waker.wake()
         self.assertTrue(waker.awake)
+        # Wait until the reader becomes readable
+        select.select([waker._reader], [], [], 10)
         waker.handle_read()
         self.assertFalse(waker.awake)
 
-        # BlockingIOError on Py3, socket.error on Py2
-        with self.assertRaises((IOError, socket.error)):
+        with self.assertRaises(IOError):
             # handle_read should consume the socket, there should be nothing
             waker._reader.recv(1)
 
@@ -316,7 +322,7 @@ class AsyncoreConnectionTest(unittest.TestCase):
 
         try:
             # By default this is set to 0
-            self.assertEqual(1, conn.socket.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR))
+            self.assertNotEqual(0, conn.socket.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR))
         finally:
             conn._inner_close()
 

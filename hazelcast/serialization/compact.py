@@ -2,7 +2,6 @@ import abc
 import collections
 import datetime
 import decimal
-import enum
 import typing
 
 from hazelcast.errors import HazelcastError, HazelcastSerializationError, IllegalStateError
@@ -24,6 +23,7 @@ from hazelcast.serialization.api import (
     CompactWriter,
     CompactReader,
     ObjectDataInput,
+    FieldKind,
 )
 from hazelcast.serialization.input import _ObjectDataInput
 from hazelcast.serialization.output import _ObjectDataOutput
@@ -1762,8 +1762,6 @@ class Schema:
 
         for field in self.fields_list:
             kind = field.kind
-            if kind < 0 or kind >= FieldKind.NOT_AVAILABLE:
-                raise HazelcastSerializationError(f"Invalid field kind: {kind}")
             if FIELD_OPERATIONS[field.kind].is_var_sized():
                 var_sized_fields.append(field)
             elif FieldKind.BOOLEAN == kind:
@@ -2004,52 +2002,6 @@ class Int32PositionReader(PositionReader):
 _INT32_POSITION_READER_INSTANCE = Int32PositionReader()
 
 
-class FieldKind(enum.IntEnum):
-    BOOLEAN = 0
-    ARRAY_OF_BOOLEAN = 1
-    INT8 = 2
-    ARRAY_OF_INT8 = 3
-    INT16 = 6
-    ARRAY_OF_INT16 = 7
-    INT32 = 8
-    ARRAY_OF_INT32 = 9
-    INT64 = 10
-    ARRAY_OF_INT64 = 11
-    FLOAT32 = 12
-    ARRAY_OF_FLOAT32 = 13
-    FLOAT64 = 14
-    ARRAY_OF_FLOAT64 = 15
-    STRING = 16
-    ARRAY_OF_STRING = 17
-    DECIMAL = 18
-    ARRAY_OF_DECIMAL = 19
-    TIME = 20
-    ARRAY_OF_TIME = 21
-    DATE = 22
-    ARRAY_OF_DATE = 23
-    TIMESTAMP = 24
-    ARRAY_OF_TIMESTAMP = 25
-    TIMESTAMP_WITH_TIMEZONE = 26
-    ARRAY_OF_TIMESTAMP_WITH_TIMEZONE = 27
-    COMPACT = 28
-    ARRAY_OF_COMPACT = 29
-    NULLABLE_BOOLEAN = 32
-    ARRAY_OF_NULLABLE_BOOLEAN = 33
-    NULLABLE_INT8 = 34
-    ARRAY_OF_NULLABLE_INT8 = 35
-    NULLABLE_INT16 = 36
-    ARRAY_OF_NULLABLE_INT16 = 37
-    NULLABLE_INT32 = 38
-    ARRAY_OF_NULLABLE_INT32 = 39
-    NULLABLE_INT64 = 40
-    ARRAY_OF_NULLABLE_INT64 = 41
-    NULLABLE_FLOAT32 = 42
-    ARRAY_OF_NULLABLE_FLOAT32 = 43
-    NULLABLE_FLOAT64 = 44
-    ARRAY_OF_NULLABLE_FLOAT64 = 45
-    NOT_AVAILABLE = 46
-
-
 class FieldKindOperations(abc.ABC):
     _VAR_SIZE = -1
 
@@ -2236,6 +2188,7 @@ class ArrayOfNullableFloat64Operations(FieldKindOperations):
 
 
 FIELD_OPERATIONS: typing.List[typing.Optional[FieldKindOperations]] = [
+    None,
     BooleanOperations(),
     ArrayOfBooleanOperations(),
     Int8Operations(),
@@ -2282,5 +2235,4 @@ FIELD_OPERATIONS: typing.List[typing.Optional[FieldKindOperations]] = [
     ArrayOfNullableFloat32Operations(),
     NullableFloat64Operations(),
     ArrayOfNullableFloat64Operations(),
-    None,
 ]

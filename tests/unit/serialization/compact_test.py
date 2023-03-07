@@ -8,7 +8,7 @@ from parameterized import parameterized
 from hazelcast.config import Config
 from hazelcast.errors import HazelcastSerializationError
 from hazelcast.serialization import SerializationServiceV1
-from hazelcast.serialization.api import CompactSerializer, CompactReader, CompactWriter
+from hazelcast.serialization.api import CompactSerializer, CompactReader, CompactWriter, FieldKind
 from hazelcast.serialization.compact import (
     RabinFingerprint,
     SchemaWriter,
@@ -16,7 +16,6 @@ from hazelcast.serialization.compact import (
     Schema,
     FIELD_OPERATIONS,
     _BOOLEANS_PER_BYTE,
-    FieldKind,
     SchemaNotReplicatedError,
 )
 
@@ -80,7 +79,7 @@ class RabinFingerprintTest(unittest.TestCase):
         writer.write_int8("age", 0)
         writer.write_array_of_timestamp("times", [])
         schema = writer.build()
-        self.assertEqual(-5445839760245891300, schema.schema_id)
+        self.assertEqual(3662264393229655598, schema.schema_id)
 
 
 class SchemaTest(unittest.TestCase):
@@ -88,16 +87,10 @@ class SchemaTest(unittest.TestCase):
         fields = [
             FieldDescriptor(kind.name, kind)
             for kind in FieldKind
-            if kind is not FieldKind.NOT_AVAILABLE
+            if FIELD_OPERATIONS[kind] is not None
         ]
         schema = Schema("something", fields)
         self._verify_schema(schema, fields)
-
-    def test_constructor_with_invalid_field_kind(self):
-        fd = FieldDescriptor("foo", FieldKind.NOT_AVAILABLE)
-        self.assertRaises(HazelcastSerializationError, lambda: Schema("foo", [fd]))
-        fd.kind = -1
-        self.assertRaises(HazelcastSerializationError, lambda: Schema("foo", [fd]))
 
     def test_with_no_fields(self):
         schema = Schema("something", [])
