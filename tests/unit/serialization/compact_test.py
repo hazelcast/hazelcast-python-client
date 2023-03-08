@@ -3,6 +3,7 @@ import typing
 import unittest
 import uuid
 
+from mock import MagicMock
 from parameterized import parameterized
 
 from hazelcast.config import Config
@@ -209,6 +210,9 @@ class Child:
     def __init__(self, name: str):
         self.name = name
 
+    def __eq__(self, other):
+        return isinstance(other, Child) and self.name == other.name
+
 
 class Parent:
     def __init__(self, child: Child):
@@ -283,6 +287,37 @@ class CompactSerializationTest(unittest.TestCase):
         with self.assertRaisesRegex(HazelcastSerializationError, "already exists"):
             service.to_data(Child("foo"))
 
+    def test_writing_array_of_compact_with_same_item_types(self):
+        service = self._get_service_with_schemas(ChildSerializer(), ChildrenSerializer())
+
+        children = Children([Child("Joe"), Child("Jane"), Child("James")])
+        serialized = service.to_data(children)
+        self.assertEqual(children, service.to_object(serialized))
+
+    def test_writing_array_of_compact_with_different_item_types(self):
+        service = self._get_service_with_schemas(
+            ChildSerializer(), ChildrenSerializer(), ParentSerializer()
+        )
+
+        children = Children([Child("Joe"), Child("Jane"), Parent(Child("James"))])
+        with self.assertRaisesRegex(HazelcastSerializationError, "different item types"):
+            service.to_data(children)
+
+    @staticmethod
+    def _get_service_with_schemas(*serializers):
+        config = Config()
+        config.compact_serializers = list(serializers)
+        service = SerializationServiceV1(config)
+
+        for serializer in serializers:
+            writer = SchemaWriter(serializer.get_type_name())
+            serializer.write(writer, MagicMock())
+            service.compact_stream_serializer.register_schema_to_type(
+                writer.build(), serializer.get_class()
+            )
+
+        return service
+
 
 class StringCompactSerializer(CompactSerializer[str]):
     def read(self, reader: CompactReader) -> str:
@@ -311,3 +346,25 @@ class SerializerWithDuplicateFieldsNames(CompactSerializer[Child]):
 
     def get_type_name(self) -> str:
         return "child"
+
+
+class Children:
+    def __init__(self, children):
+        self.children = children
+
+    def __eq__(self, other):
+        return isinstance(other, Children) and self.children == other.children
+
+
+class ChildrenSerializer(CompactSerializer[Children]):
+    def read(self, reader: CompactReader) -> Children:
+        return Children(reader.read_array_of_compact("children"))
+
+    def write(self, writer: CompactWriter, obj: Children) -> None:
+        writer.write_array_of_compact("children", obj.children)
+
+    def get_class(self) -> typing.Type[Children]:
+        return Children
+
+    def get_type_name(self) -> str:
+        return "Children"
