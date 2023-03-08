@@ -82,13 +82,8 @@ use a :ref:`serialization:custom serialization`.
 Compact Serialization
 ---------------------
 
-.. warning::
-    Compact Serialization feature is in the BETA status and any part of it
-    might be changed without a prior notice, until it is promoted to the
-    stable status.
-
-As an enhancement to existing serialization methods, Hazelcast offers a beta
-version of the compact serialization, with the following main features:
+As an enhancement to existing serialization methods, Hazelcast offers
+Compact serialization with the following main features:
 
 - Separates the schema from the data and stores it per type, not per object
   which results in less memory and bandwidth usage compared to other formats
@@ -97,10 +92,9 @@ version of the compact serialization, with the following main features:
 - Supports schema evolution which permits adding or removing fields, or
   changing the types of fields
 - Platform and language independent
-- Supports partial deserialization of fields, without deserializing the whole
-  objects during queries or indexing
+- Supports partial deserialization of fields during queries or indexing
 
-Hazelcast achieves these features by having a well-known schema of objects and
+Hazelcast achieves these features by having a well-known schemas of objects and
 replicating them across the cluster which enables members and clients to fetch
 schemas they don’t have in their local registries. Each serialized object
 carries just a schema identifier and relies on the schema distribution service
@@ -119,10 +113,10 @@ cluster and both the old and new readers may read the compatible parts of the
 data. This feature is especially useful in rolling upgrade scenarios.
 
 The Compact serialization does not require any changes in the user classes as
-it doesn’t need a class to extend another class. Serializers might be
+it does not need a class to extend another class. Serializers might be
 implemented and registered separately from the classes.
 
-The underlying format of the compact serialized objects is platform and
+The underlying format of the Compact serialized objects is platform and
 language independent.
 
 Using Compact Serialization
@@ -149,19 +143,19 @@ Then, a serializer for it can be implemented as below:
     from hazelcast.serialization.api import CompactSerializer, CompactWriter, CompactReader
 
     class EmployeeSerializer(CompactSerializer[Employee]):
-        def read(self, reader: CompactReader):
+        def read(self, reader: CompactReader) -> Employee:
             name = reader.read_string("name")
             age = reader.read_int32("age")
             return Employee(name, age)
 
-        def write(self, writer: CompactWriter, obj: Employee):
+        def write(self, writer: CompactWriter, obj: Employee) -> None:
             writer.write_string("name", obj.name)
             writer.write_int32("age", obj.age)
 
-        def get_type_name(self):
+        def get_type_name(self) -> str:
             return "employee"
 
-        def get_class(self):
+        def get_class(self) -> typing.Type[Employee]:
             return Employee
 
 The last step is to register the serializer in the client configuration.
@@ -248,10 +242,13 @@ APIs to read default values when there is no such field in the data.
         def read(self, reader: CompactReader) -> Employee:
             name = reader.read_string("name")
             age = reader.read_int32("age")
-            # Read the "is_active" if it exists, or the default value `False`.
+            # Read the "is_active" if it exists, or use the default value `False`.
             # reader.read_boolean("is_active") would throw if the "is_active"
-            #field does not exist in data.
-            is_active = reader.read_boolean_or("is_active", False)
+            # field does not exist in data.
+            if reader.get_field_kind("is_active") == FieldKind.BOOLEAN:
+                is_active = reader.read_boolean("is_active)
+            else:
+                is_active = False
             return Employee(name, age, is_active)
 
         ...
@@ -259,6 +256,13 @@ APIs to read default values when there is no such field in the data.
 Note that, when an old reader reads data written by an old writer, or a new
 reader reads a data written by a new writer, they will be able to read all
 fields.
+
+One thing to be careful while evolving the class is to not have any conditional
+code in the ``write`` method. That method must write all the fields available
+in the current version of the class to the writer, with appropriate field names
+and types. Hazelcast uses the write method of the serializer to extract a
+schema out of the object, hence any conditional code that may or may not run
+depending on the object in that method might result in an undefined behavior.
 
 Limitations
 ~~~~~~~~~~~
