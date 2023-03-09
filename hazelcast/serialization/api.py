@@ -2646,7 +2646,7 @@ class CompactSerializer(typing.Generic[CompactSerializableClass], abc.ABC):
         :const`CompactSerializableClass`.
 
         If the class is ever evolved by adding or removing fields,
-        the type  name for the evolved serializers must be the same
+        the type name for the evolved serializers must be the same
         with the initial version.
 
         Returns:

@@ -264,6 +264,9 @@ and types. Hazelcast uses the write method of the serializer to extract a
 schema out of the object, hence any conditional code that may or may not run
 depending on the object in that method might result in an undefined behavior.
 
+Additionally, evolved serializers must have the same type name with the
+initial version of the serializer.
+
 Limitations
 ~~~~~~~~~~~
 
