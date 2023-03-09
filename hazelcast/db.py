@@ -84,6 +84,7 @@ class Cursor:
         self._description: Union[List[ResultColumn], None] = None
         self._iter: Optional[Iterator[SqlRow]] = None
         self._rownumber = -1
+        self._closed = False
 
     def __enter__(self):
         return self
@@ -113,18 +114,22 @@ class Cursor:
         return self._rownumber
 
     def close(self):
-        if self._res:
-            self._res.close()
-            self._res = None
+        if not self._closed:
+            self._closed = True
+            self._conn._close_cursor(self)
+            if self._res:
+                self._res.close()
+                self._res = None
 
     def execute(self, operation: str, *args) -> None:
+        self._ensure_open()
         self._rownumber = -1
         self._iter = None
         self._res = None
         cbs = _DEFAULT_CURSOR_BUFFER_SIZE
         if self.arraysize > 0:
             cbs = self.arraysize
-        res = self._conn._client.sql.execute(operation, *args, cursor_buffer_size=cbs).result()
+        res = self._conn._get_client().sql.execute(operation, *args, cursor_buffer_size=cbs).result()
         if res.is_row_set():
             self._rownumber = 0
             self._res = res
@@ -132,11 +137,12 @@ class Cursor:
             self._iter = res.__iter__()
 
     def executemany(self, operation: str, seq_of_params: Sequence[Any]) -> None:
+        self._ensure_open()
         self._rownumber = -1
         self._iter = None
         self._res = None
         futures = []
-        svc = self._conn._client.sql
+        svc = self._conn._get_client().sql
         for params in seq_of_params:
             futures.append(
                 svc.execute(
@@ -201,11 +207,16 @@ class Cursor:
             )
         return r
 
+    def _ensure_open(self):
+        if self._closed:
+            raise self.connection.ProgrammingError("connection is closed")
+
 
 class Connection:
     def __init__(self, config: Dict[str, Any]):
-        self._mu = threading.RLock()
-        self._client = HazelcastClient(**config)
+        self.__mu = threading.RLock()
+        self.__client = HazelcastClient(**config)
+        self.__cursors = set()
 
     def __enter__(self):
         return self
@@ -214,21 +225,35 @@ class Connection:
         self.close()
 
     def close(self):
-        if self._client:
-            with self._mu:
-                if self._client:
-                    self._client.shutdown()
-                    self._client = None
+        if self.__client:
+            with self.__mu:
+                if self.__client:
+                    self.__client.shutdown()
+                    self.__client = None
 
     def commit(self):
         # transactions are not supported
-        pass
+        # ensure an exception is thrown if there is no client
+        self._get_client()
 
     def cursor(self) -> Cursor:
-        with self._mu:
-            if self._client is not None:
-                return Cursor(self)
-        raise ProgrammingError("connection is already closed")
+        with self.__mu:
+            if self.__client is not None:
+                cursor = Cursor(self)
+                self.__cursors.add(cursor)
+                return cursor
+        raise ProgrammingError("connection is closed")
+
+    def _get_client(self) -> HazelcastClient:
+        with self.__mu:
+            if self.__client is not None:
+                return self.__client
+        raise ProgrammingError("connection is closed")
+
+    def _close_cursor(self, cursor: Cursor):
+        with self.__mu:
+            if cursor in self.__cursors:
+                   self.__cursors.remove(cursor)
 
     @property
     def Error(self):
