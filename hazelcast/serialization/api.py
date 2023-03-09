@@ -1366,35 +1366,53 @@ class PortableWriter:
 
 
 class CompactReader(abc.ABC):
-    """Provides means of reading compact serialized fields from the binary
+    """Provides means of reading Compact serialized fields from the binary
     data.
 
-    Read operations might throw :class:`HazelcastSerializationError` when a
-    field with the given name is not found or there is a type mismatch. On
-    such occasions, one might provide default values to the read methods to
-    return it in case of the failure scenarios described above. Providing
-    default values might be especially useful, if the class might evolve in
-    future, either by adding or removing fields.
+    Read operations might throw
+    :class:`hazelcast.errors.HazelcastSerializationError` when a field with
+    the given name is not found or there is a type mismatch.
 
-    Warnings:
-        This API is in the BETA status and any part of it might be changed
-        without a prior notice, until it is promoted to the stable status.
+    The way to use CompactReader for class evolution is to check for the
+    existence of a field with its name and kind, with the
+    :func:`get_field_kind` method. One should read the field if it exists
+    with the given name and kind, and use some other logic, like using a
+    default value, if it does not exist.
+
+    .. code:: python
+
+        def read(self, reader: CompactReader) -> Foo:
+            bar = reader.read_int32("bar") # A field that is always present
+            if reader.get_field_kind("baz") == FieldKind.STRING:
+                baz = reader.read_string("baz")
+            else:
+                baz = "" # Use a default value, if the field is not present
+            return Foo(bar, baz)
     """
 
     @abc.abstractmethod
     def get_field_kind(self, field_name: str) -> "FieldKind":
-        """Returns the FieldKind for the given field.
+        """Returns the kind of the field for the given name.
+
+        If the field with the given name does not exist,
+        :const:`FieldKind.NOT_AVAILABLE` is returned.
+
+        This method can be used to check the existence of a field,
+        which can be useful when the class is evolved.
 
         Args:
             field_name: Name of the field.
 
         Returns:
-              Field kind for the given field. or FieldKind.NOT_AVAILABLE if the field does not exist.
+            Kind of the field.
         """
 
     @abc.abstractmethod
     def read_boolean(self, field_name: str) -> bool:
         """Reads a boolean.
+
+        This method can also read a nullable boolean, as long as it is not
+        ``None``.
 
         Args:
             field_name: Name of the field.
@@ -1405,12 +1423,15 @@ class CompactReader(abc.ABC):
         Raises:
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
-                defined in the schema.
+                defined in the schema, or a ``None`` nullable boolean value
+                is read.
         """
 
     @abc.abstractmethod
     def read_nullable_boolean(self, field_name: str) -> typing.Optional[bool]:
         """Reads a nullable boolean.
+
+        This method can also read a non-nullable boolean.
 
         Args:
             field_name: Name of the field.
@@ -1428,6 +1449,9 @@ class CompactReader(abc.ABC):
     def read_int8(self, field_name: str) -> int:
         """Reads an 8-bit two's complement signed integer.
 
+        This method can also read a nullable int8, as long as it is not
+        ``None``.
+
         Args:
             field_name: Name of the field.
 
@@ -1437,12 +1461,15 @@ class CompactReader(abc.ABC):
         Raises:
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
-                defined in the schema.
+                defined in the schema, or a ``None`` nullable int8 value
+                is read.
         """
 
     @abc.abstractmethod
     def read_nullable_int8(self, field_name: str) -> typing.Optional[int]:
         """Reads a nullable 8-bit two's complement signed integer.
+
+        This method can also read a non-nullable int8.
 
         Args:
             field_name: Name of the field.
@@ -1460,6 +1487,9 @@ class CompactReader(abc.ABC):
     def read_int16(self, field_name: str) -> int:
         """Reads a 16-bit two's complement signed integer.
 
+        This method can also read a nullable int16, as long as it is not
+        ``None``.
+
         Args:
             field_name: Name of the field.
 
@@ -1469,12 +1499,15 @@ class CompactReader(abc.ABC):
         Raises:
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
-                defined in the schema.
+                defined in the schema, or a ``None`` nullable int16 value
+                is read.
         """
 
     @abc.abstractmethod
     def read_nullable_int16(self, field_name: str) -> typing.Optional[int]:
         """Reads a nullable 16-bit two's complement signed integer.
+
+        This method can also read a non-nullable int16.
 
         Args:
             field_name: Name of the field.
@@ -1492,6 +1525,9 @@ class CompactReader(abc.ABC):
     def read_int32(self, field_name: str) -> int:
         """Reads a 32-bit two's complement signed integer.
 
+        This method can also read a nullable int32, as long as it is not
+        ``None``.
+
         Args:
             field_name: Name of the field.
 
@@ -1501,12 +1537,15 @@ class CompactReader(abc.ABC):
         Raises:
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
-                defined in the schema.
+                defined in the schema, or a ``None`` nullable int32 value
+                is read.
         """
 
     @abc.abstractmethod
     def read_nullable_int32(self, field_name: str) -> typing.Optional[int]:
         """Reads a nullable 32-bit two's complement signed integer.
+
+        This method can also read a non-nullable int32.
 
         Args:
             field_name: Name of the field.
@@ -1524,6 +1563,9 @@ class CompactReader(abc.ABC):
     def read_int64(self, field_name: str) -> int:
         """Reads a 64-bit two's complement signed integer.
 
+        This method can also read a nullable int64, as long as it is not
+        ``None``.
+
         Args:
             field_name: Name of the field.
 
@@ -1533,12 +1575,15 @@ class CompactReader(abc.ABC):
         Raises:
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
-                defined in the schema.
+                defined in the schema, or a ``None`` nullable int64 value
+                is read.
         """
 
     @abc.abstractmethod
     def read_nullable_int64(self, field_name: str) -> typing.Optional[int]:
         """Reads a nullable 64-bit two's complement signed integer.
+
+        This method can also read a non-nullable int64.
 
         Args:
             field_name: Name of the field.
@@ -1556,6 +1601,9 @@ class CompactReader(abc.ABC):
     def read_float32(self, field_name: str) -> float:
         """Reads a 32-bit IEEE 754 floating point number.
 
+        This method can also read a nullable float32, as long as it is not
+        ``None``.
+
         Args:
             field_name: Name of the field.
 
@@ -1565,12 +1613,15 @@ class CompactReader(abc.ABC):
         Raises:
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
-                defined in the schema.
+                defined in the schema, or a ``None`` nullable float32 value
+                is read.
         """
 
     @abc.abstractmethod
     def read_nullable_float32(self, field_name: str) -> typing.Optional[float]:
         """Reads a nullable 32-bit IEEE 754 floating point number.
+
+        This method can also read a non-nullable float32.
 
         Args:
             field_name: Name of the field.
@@ -1588,6 +1639,9 @@ class CompactReader(abc.ABC):
     def read_float64(self, field_name: str) -> float:
         """Reads a 64-bit IEEE 754 floating point number.
 
+        This method can also read a nullable float64, as long as it is not
+        ``None``.
+
         Args:
             field_name: Name of the field.
 
@@ -1597,12 +1651,15 @@ class CompactReader(abc.ABC):
         Raises:
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
-                defined in the schema.
+                defined in the schema, or a ``None`` nullable float64 value
+                is read.
         """
 
     @abc.abstractmethod
     def read_nullable_float64(self, field_name: str) -> typing.Optional[float]:
         """Reads a nullable 64-bit IEEE 754 floating point number.
+
+        This method can also read a non-nullable float64.
 
         Args:
             field_name: Name of the field.
@@ -1618,7 +1675,7 @@ class CompactReader(abc.ABC):
 
     @abc.abstractmethod
     def read_string(self, field_name: str) -> typing.Optional[str]:
-        """Reads an UTF-8 encoded string.
+        """Reads a UTF-8 encoded string.
 
         Args:
             field_name: Name of the field.
@@ -2100,10 +2157,6 @@ class CompactReader(abc.ABC):
 class CompactWriter(abc.ABC):
     """Provides means of writing compact serialized fields to the binary
     data.
-
-    Warnings:
-        This API is in the BETA status and any part of it might be changed
-        without a prior notice, until it is promoted to the stable status.
     """
 
     @abc.abstractmethod
@@ -2538,16 +2591,17 @@ class CompactWriter(abc.ABC):
 
 
 CompactSerializableClass = typing.TypeVar("CompactSerializableClass")
+"""Type of the Compact serializable classes."""
 
 
 class CompactSerializer(typing.Generic[CompactSerializableClass], abc.ABC):
     """Defines the contract of the serializers used for Compact serialization.
 
-    :func:`write` and :func:`read` methods must be consistent with each other.
+    After defining a serializer for the objects of the class
+    :const:`CompactSerializableClass`, the serializer can be registered to the
+    :attr:`hazelcast.config.Config.compact_serializers`.
 
-    Warnings:
-        This API is in the BETA status and any part of it might be changed
-        without a prior notice, until it is promoted to the stable status.
+    :func:`write` and :func:`read` methods must be consistent with each other.
     """
 
     @abc.abstractmethod
@@ -2590,6 +2644,10 @@ class CompactSerializer(typing.Generic[CompactSerializableClass], abc.ABC):
     def get_type_name(self) -> str:
         """Returns the unique type name associated with
         :const`CompactSerializableClass`.
+
+        If the class is ever evolved by adding or removing fields,
+        the type name for the evolved serializers must be the same
+        with the initial version.
 
         Returns:
             The type name.
