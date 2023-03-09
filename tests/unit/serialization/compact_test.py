@@ -6,7 +6,7 @@ import uuid
 from parameterized import parameterized
 
 from hazelcast.config import Config
-from hazelcast.errors import HazelcastSerializationError
+from hazelcast.errors import HazelcastSerializationError, IllegalArgumentError
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.serialization.api import CompactSerializer, CompactReader, CompactWriter, FieldKind
 from hazelcast.serialization.compact import (
@@ -272,9 +272,7 @@ class CompactSerializationTest(unittest.TestCase):
         config = Config()
         config.compact_serializers = [StringCompactSerializer()]
 
-        with self.assertRaisesRegex(
-            HazelcastSerializationError, "can not be registered as it overrides"
-        ):
+        with self.assertRaisesRegex(IllegalArgumentError, "can not be registered as it overrides"):
             SerializationServiceV1(config)
 
     def test_serializer_with_duplicate_field_names(self):

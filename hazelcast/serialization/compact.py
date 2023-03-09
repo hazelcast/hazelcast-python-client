@@ -1559,11 +1559,10 @@ class DefaultCompactReader(CompactReader):
 class SchemaWriter(CompactWriter):
     def __init__(self, type_name: str):
         self._type_name = type_name
-        self._fields: typing.List[FieldDescriptor] = []
-        self._field_names: typing.Set[str] = set()
+        self._fields: typing.Dict[str, FieldDescriptor] = {}
 
     def build(self) -> "Schema":
-        return Schema(self._type_name, self._fields)
+        return Schema(self._type_name, list(self._fields.values()))
 
     def write_boolean(self, field_name: str, value: bool) -> None:
         self._add_field(field_name, FieldKind.BOOLEAN)
@@ -1740,11 +1739,10 @@ class SchemaWriter(CompactWriter):
         self._add_field(field_name, FieldKind.ARRAY_OF_COMPACT)
 
     def _add_field(self, name: str, kind: "FieldKind"):
-        if name in self._field_names:
+        if name in self._fields:
             raise HazelcastSerializationError(f"Field with the name '{name}' already exists")
 
-        self._field_names.add(name)
-        self._fields.append(FieldDescriptor(name, kind))
+        self._fields[name] = FieldDescriptor(name, kind)
 
 
 class Schema:

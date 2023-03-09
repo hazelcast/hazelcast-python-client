@@ -7,7 +7,7 @@ import uuid
 import typing
 
 from hazelcast.config import IntType, Config
-from hazelcast.errors import HazelcastInstanceNotActiveError
+from hazelcast.errors import HazelcastInstanceNotActiveError, IllegalArgumentError
 from hazelcast.serialization.api import IdentifiedDataSerializable, Portable
 from hazelcast.serialization.compact import (
     SchemaNotFoundError,
@@ -511,7 +511,7 @@ class SerializerRegistry:
         """
         for compact_type in self._compact_types:
             if compact_type in self._constant_type_dict:
-                raise HazelcastSerializationError(
+                raise IllegalArgumentError(
                     f"Compact serializer for the class {compact_type}' can not be "
                     f"registered as it overrides the default serializer for that "
                     f"class provided by Hazelcast."
