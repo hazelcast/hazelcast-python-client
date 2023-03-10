@@ -202,7 +202,7 @@ class CompactTest(CompactTestBase):
             def get_type_name(self) -> str:
                 return SomeFields.__name__
 
-            def get_class(self):
+            def get_class(self) -> typing.Type[SomeFields]:
                 return SomeFields
 
         self._write_then_read0(all_fields, Serializer(list(all_fields.keys())))
@@ -803,7 +803,7 @@ class NestedSerializer(CompactSerializer[Nested]):
     def get_type_name(self) -> str:
         return Nested.__name__
 
-    def get_class(self) -> Nested:
+    def get_class(self) -> typing.Type[Nested]:
         return Nested
 
 
@@ -851,7 +851,7 @@ class SomeFieldsSerializer(CompactSerializer[SomeFields]):
     def get_type_name(self) -> str:
         return SomeFields.__name__
 
-    def get_class(self) -> SomeFields:
+    def get_class(self) -> typing.Type[SomeFields]:
         return SomeFields
 
     @staticmethod
