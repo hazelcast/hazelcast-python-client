@@ -441,8 +441,7 @@ class DefaultCompactWriter(CompactWriter):
             item_type = type(value)
             if not expected_type:
                 expected_type = item_type
-
-            if expected_type != item_type:
+            elif expected_type != item_type:
                 raise HazelcastSerializationError(
                     f"It is not allowed to serialize an array of Compact serializable "
                     f"objects containing different item types. Expected array "
