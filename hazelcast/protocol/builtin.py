@@ -481,6 +481,31 @@ class ListUUIDCodec:
         return result
 
 
+class SetUUIDCodec:
+    @staticmethod
+    def encode(buf, s, is_final=False):
+        n = len(s)
+        size = SIZE_OF_FRAME_LENGTH_AND_FLAGS + n * UUID_SIZE_IN_BYTES
+        b = bytearray(size)
+        LE_INT.pack_into(b, 0, size)
+        if is_final:
+            LE_UINT16.pack_into(b, INT_SIZE_IN_BYTES, _IS_FINAL_FLAG)
+        for i, u in enumerate(s):
+            FixSizedTypesCodec.encode_uuid(
+                b, SIZE_OF_FRAME_LENGTH_AND_FLAGS + i * UUID_SIZE_IN_BYTES, u
+            )
+        buf.extend(b)
+
+    @staticmethod
+    def decode(msg):
+        b = msg.next_frame().buf
+        n = len(b) // UUID_SIZE_IN_BYTES
+        result = set()
+        for i in range(n):
+            result.add(FixSizedTypesCodec.decode_uuid(b, i * UUID_SIZE_IN_BYTES))
+        return result
+
+
 class LongArrayCodec:
     @staticmethod
     def encode(buf, arr, is_final=False):
