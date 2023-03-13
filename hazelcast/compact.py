@@ -110,7 +110,7 @@ class CompactSchemaService:
                     f"the schema after some time, when the cluster is healed."
                 )
 
-            delayed_future = Future()
+            delayed_future: Future = Future()
             self._reactor.add_timer(
                 self._invocation_retry_pause,
                 lambda: delayed_future.set_result(None),
