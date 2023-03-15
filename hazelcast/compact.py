@@ -41,6 +41,7 @@ class CompactSchemaService:
         self._cluster_service = cluster_service
         self._reactor = reactor
         self._invocation_retry_pause = config.invocation_retry_pause
+        self._has_replicated_schemas = False
 
     def fetch_schema(self, schema_id: int) -> Future:
         _logger.debug(
@@ -68,6 +69,7 @@ class CompactSchemaService:
         request = client_send_schema_codec.encode_request(schema)
 
         def callback():
+            self._has_replicated_schemas = True
             self._compact_serializer.register_schema_to_type(schema, clazz)
             return func(*args, **kwargs)
 
@@ -150,3 +152,10 @@ class CompactSchemaService:
             )
 
         self._compact_serializer.register_schema_to_id(schema)
+
+    def has_replicated_schemas(self):
+        """
+        Returns ``True`` is the client has replicated
+        any Compact schemas to the cluster.
+        """
+        return self._has_replicated_schemas

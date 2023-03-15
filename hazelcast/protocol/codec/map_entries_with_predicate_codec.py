@@ -15,7 +15,7 @@ def encode_request(name, predicate):
     buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
     StringCodec.encode(buf, name)
     DataCodec.encode(buf, predicate, True)
-    return OutboundMessage(buf, True)
+    return OutboundMessage(buf, True, True)
 
 
 def decode_response(msg):

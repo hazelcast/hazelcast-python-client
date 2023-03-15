@@ -30,7 +30,7 @@ def encode_request(name, key, predicate, include_value, listener_flags, local_on
     StringCodec.encode(buf, name)
     DataCodec.encode(buf, key)
     DataCodec.encode(buf, predicate, True)
-    return OutboundMessage(buf, False)
+    return OutboundMessage(buf, False, True)
 
 
 def decode_response(msg):

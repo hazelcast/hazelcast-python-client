@@ -19,7 +19,7 @@ def encode_request(name, overflow_policy, value):
     FixSizedTypesCodec.encode_int(buf, _REQUEST_OVERFLOW_POLICY_OFFSET, overflow_policy)
     StringCodec.encode(buf, name)
     DataCodec.encode(buf, value, True)
-    return OutboundMessage(buf, False)
+    return OutboundMessage(buf, False, True)
 
 
 def decode_response(msg):

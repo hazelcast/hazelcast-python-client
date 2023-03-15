@@ -33,7 +33,7 @@ def encode_request(sql, parameters, timeout_millis, cursor_buffer_size, schema, 
     ListMultiFrameCodec.encode_contains_nullable(buf, parameters, DataCodec.encode)
     CodecUtil.encode_nullable(buf, schema, StringCodec.encode)
     SqlQueryIdCodec.encode(buf, query_id, True)
-    return OutboundMessage(buf, False)
+    return OutboundMessage(buf, False, True)
 
 
 def decode_response(msg):

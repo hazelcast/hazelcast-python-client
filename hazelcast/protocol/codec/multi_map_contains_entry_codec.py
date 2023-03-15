@@ -20,7 +20,7 @@ def encode_request(name, key, value, thread_id):
     StringCodec.encode(buf, name)
     DataCodec.encode(buf, key)
     DataCodec.encode(buf, value, True)
-    return OutboundMessage(buf, True)
+    return OutboundMessage(buf, True, True)
 
 
 def decode_response(msg):

@@ -19,4 +19,4 @@ def encode_request(name, keys, replace_existing_values):
     FixSizedTypesCodec.encode_boolean(buf, _REQUEST_REPLACE_EXISTING_VALUES_OFFSET, replace_existing_values)
     StringCodec.encode(buf, name)
     ListMultiFrameCodec.encode(buf, keys, DataCodec.encode, True)
-    return OutboundMessage(buf, False)
+    return OutboundMessage(buf, False, True)

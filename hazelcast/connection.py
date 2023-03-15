@@ -366,6 +366,13 @@ class ConnectionManager:
         else:
             raise IOError("No connection found to cluster")
 
+    def initialized_on_cluster(self) -> bool:
+        """
+        Returns ``True`` if the client is initialized on the cluster, by
+        sending its local state, if necessary.
+        """
+        return self._client_state == _ClientState.INITIALIZED_ON_CLUSTER
+
     def _get_or_connect_to_address(self, address):
         for connection in list(self.active_connections.values()):
             if connection.remote_address == address:

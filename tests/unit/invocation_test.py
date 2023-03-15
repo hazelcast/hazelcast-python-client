@@ -1,10 +1,17 @@
+import itertools
 import unittest
 
-from mock import MagicMock
+from mock import MagicMock, patch
+from parameterized import parameterized
 
 from hazelcast.config import Config
 from hazelcast.errors import IndeterminateOperationStateError
 from hazelcast.invocation import Invocation, InvocationService
+from hazelcast.protocol.codec import set_add_codec, client_ping_codec
+from hazelcast.serialization.data import Data
+
+# Tri-tuples of (smart_routing, initialized_on_cluster, has_replicated_schemas)
+URGENT_INVOCATION_TEST_CASES = list(itertools.product((True, False), repeat=3))
 
 
 class InvocationTest(unittest.TestCase):
@@ -18,7 +25,7 @@ class InvocationTest(unittest.TestCase):
     def test_smart_mode_and_enabled_backups(self):
         client, service = self._start_service()
         self.assertIsNotNone(service._clean_resources_timer)
-        listener_service = client._listener_service
+        listener_service = client.listener_service
         listener_service.register_listener.assert_called_once()
 
     def test_smart_mode_and_disabled_backups(self):
@@ -26,7 +33,7 @@ class InvocationTest(unittest.TestCase):
         config.backup_ack_to_client_enabled = False
         client, service = self._start_service(config)
         self.assertIsNotNone(service._clean_resources_timer)
-        listener_service = client._listener_service
+        listener_service = client.listener_service
         listener_service.register_listener.assert_not_called()
 
     def test_unisocket_mode_and_enabled_backups(self):
@@ -34,7 +41,7 @@ class InvocationTest(unittest.TestCase):
         config.smart_routing = False
         client, service = self._start_service(config)
         self.assertIsNotNone(service._clean_resources_timer)
-        listener_service = client._listener_service
+        listener_service = client.listener_service
         listener_service.register_listener.assert_not_called()
 
     def test_unisocket_mode_and_disabled_backups(self):
@@ -43,7 +50,7 @@ class InvocationTest(unittest.TestCase):
         config.backup_ack_to_client_enabled = False
         client, service = self._start_service(config)
         self.assertIsNotNone(service._clean_resources_timer)
-        listener_service = client._listener_service
+        listener_service = client.listener_service
         listener_service.register_listener.assert_not_called()
 
     def test_notify_with_no_expected_backups(self):
@@ -149,14 +156,60 @@ class InvocationTest(unittest.TestCase):
         invocation = Invocation(None, timeout=42)
         self.assertEqual(42, invocation.timeout)
 
+    @parameterized.expand(URGENT_INVOCATION_TEST_CASES)
+    def test_urgent_invocation(self, smart_routing, initialized_on_cluster, has_replicated_schemas):
+        config = Config()
+        config.smart_routing = smart_routing
+        client, service = self._start_service(config)
+
+        with patch.object(
+            client.connection_manager,
+            "initialized_on_cluster",
+            return_value=initialized_on_cluster,
+        ):
+            with patch.object(
+                client.compact_schema_service,
+                "has_replicated_schemas",
+                return_value=has_replicated_schemas,
+            ):
+                with_data = self._send_urgent_invocation_with_data(service)
+                without_data = self._send_urgent_invocation_without_data(service)
+
+                # Urgent invocations with data should only be sent
+                # when client is initialized on cluster or there is
+                # no compact schemas replicated
+                if initialized_on_cluster or not has_replicated_schemas:
+                    self.assertIsNotNone(with_data.sent_connection)
+                else:
+                    self.assertIsNone(with_data.sent_connection)
+
+                # Urgent invocations without data should always be sent
+                self.assertIsNotNone(without_data.sent_connection)
+
+    def _send_urgent_invocation_with_data(self, service):
+        request = set_add_codec.encode_request("foo", Data(bytearray(25)))
+        self.assertTrue(request.contains_data)
+        invocation = Invocation(request, urgent=True)
+        self.assertIsNone(invocation.sent_connection)
+        service.invoke(invocation)
+        return invocation
+
+    def _send_urgent_invocation_without_data(self, service):
+        request = client_ping_codec.encode_request()
+        self.assertFalse(request.contains_data)
+        invocation = Invocation(request, urgent=True)
+        self.assertIsNone(invocation.sent_connection)
+        service.invoke(invocation)
+        return invocation
+
     def _start_service(self, config=Config()):
         c = MagicMock()
-        invocation_service = InvocationService(c, config, c._reactor)
+        invocation_service = InvocationService(c, config, c.reactor)
         self.service = invocation_service
         invocation_service.init(
-            c._internal_partition_service,
-            c._connection_manager,
-            c._listener_service,
+            c.internal_partition_service,
+            c.connection_manager,
+            c.listener_service,
             c.compact_schema_service,
         )
         invocation_service.start()

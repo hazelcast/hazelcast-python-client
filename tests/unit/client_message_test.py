@@ -44,13 +44,15 @@ class OutboundMessageTest(unittest.TestCase):
 
     def test_copy(self):
         buf = bytearray(range(20))
-        message = OutboundMessage(buf, True)
+        message = OutboundMessage(buf, True, True)
 
         copy = message.copy()
         self.assertTrue(copy.retryable)
         buf[0] = 99
         self.assertEqual(99, message.buf[0])
         self.assertEqual(0, copy.buf[0])  # should be a deep copy
+        self.assertTrue(copy.retryable)
+        self.assertTrue(copy.contains_data)
 
     def test_encode(self):
         msg = client_authentication_codec.encode_request(
