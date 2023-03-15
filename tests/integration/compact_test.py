@@ -5,7 +5,7 @@ from mock.mock import patch
 import hazelcast
 from hazelcast.compact import CompactSchemaService
 from hazelcast.errors import IllegalStateError
-from hazelcast.future import ImmediateFuture
+from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
 from hazelcast.serialization.api import CompactSerializer, CompactWriter, CompactReader
 from tests.base import HazelcastTestCase
 from tests.util import random_string
@@ -99,6 +99,27 @@ class CompactSchemaReplicationRetryTest(HazelcastTestCase):
         ) as wrapped_send:
             self.map.put(1, Foo(1))
             self.assertEqual(3, wrapped_send.call_count)
+
+    def test_compact_schema_replication_when_invocation_fails(self):
+        schema_service = self.client._compact_schema_service
+        members = self.client.cluster_service.get_members()
+        self.assertEqual(2, len(members))
+
+        with patch.object(
+            schema_service,
+            "_send_schema_replication_request",
+            side_effect=[
+                # Return a single member uuid for first times
+                ImmediateFuture({members[0].uuid}),
+                # Return an exception for the second time
+                ImmediateExceptionFuture(RuntimeError("expected")),
+            ],
+        ) as wrapped_send:
+            with self.assertRaisesRegex(RuntimeError, "expected"):
+                # Error should bubble up to the user
+                self.map.put(1, Foo(1))
+
+            self.assertEqual(2, wrapped_send.call_count)
 
 
 class Foo:
