@@ -4,11 +4,13 @@ from time import sleep
 from hazelcast.config import Config
 from hazelcast.near_cache import *
 from hazelcast.serialization import SerializationServiceV1
+from hazelcast.util import next_port
 
 
 class NearCacheTestCase(unittest.TestCase):
     def setUp(self):
-        self.service = SerializationServiceV1(Config())
+        config = Config.from_dict({"cluster_port": next_port()})
+        self.service = SerializationServiceV1(config)
 
     def tearDown(self):
         self.service.destroy()

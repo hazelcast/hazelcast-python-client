@@ -257,6 +257,7 @@ class TopicOverloadPolicy:
 
 
 _DEFAULT_CLUSTER_NAME = "dev"
+_DEFAULT_CLUSTER_PORT = 0
 _DEFAULT_CONNECTION_TIMEOUT = 5.0
 _DEFAULT_RETRY_INITIAL_BACKOFF = 1.0
 _DEFAULT_RETRY_MAX_BACKOFF = 30.0
@@ -281,6 +282,7 @@ class Config:
     __slots__ = (
         "_cluster_members",
         "_cluster_name",
+        "_cluster_port",
         "_client_name",
         "_connection_timeout",
         "_socket_options",
@@ -338,6 +340,7 @@ class Config:
     def __init__(self):
         self._cluster_members: typing.List[str] = []
         self._cluster_name: str = _DEFAULT_CLUSTER_NAME
+        self._cluster_port: int = _DEFAULT_CLUSTER_PORT
         self._client_name: typing.Optional[str] = None
         self._connection_timeout: _Numeric = _DEFAULT_CONNECTION_TIMEOUT
         self._socket_options: typing.List[typing.Tuple[int, int, typing.Union[int, bytes]]] = []
@@ -434,6 +437,21 @@ class Config:
             raise TypeError("cluster_name must be a string")
 
         self._cluster_name = value
+
+    @property
+    def cluster_port(self) -> int:
+        """Port of the cluster to connect to.
+
+        By default, set to ``0``.
+        """
+        return self._cluster_port
+
+    @cluster_port.setter
+    def cluster_port(self, port_number) -> None:
+        if not isinstance(port_number, int):
+            raise TypeError("cluster_port must be an int")
+
+        self._cluster_port = port_number
 
     @property
     def client_name(self) -> typing.Optional[str]:
