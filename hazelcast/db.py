@@ -1,12 +1,13 @@
 from collections import namedtuple
 from datetime import date, datetime, time
 from time import localtime
-from typing import Any, Dict, Callable, Iterator, List, Optional, Sequence, Union
+from typing import Any, Dict, Callable, Iterator, List, Optional, Sequence, Union, Tuple
 import enum
 import itertools
 import threading
 
 from hazelcast import HazelcastClient
+from hazelcast.config import Config
 from hazelcast.sql import (
     HazelcastSqlError,
     SqlColumnType,
@@ -23,8 +24,8 @@ apilevel = "2.0"
 threadsafety = 2
 paramstyle = "qmark"
 
-ResultColumn = namedtuple(
-    "ResultColumn",
+DescriptiontColumn = namedtuple(
+    "DescriptiontColumn",
     [
         "name",
         "type",
@@ -36,21 +37,22 @@ ResultColumn = namedtuple(
     ],
 )
 
-Date = date
-Time = time
-Timestamp = datetime
-Binary = bytes
-STRING = str
-BINARY = bytes
-NUMBER = float
-DATETIME = datetime
-
-
 class Type(enum.Enum):
     STRING = 1
     NUMBER = 2
     BOOLEAN = 3
     DATETIME = 4
+
+
+Date = date
+Time = time
+Timestamp = datetime
+Binary = bytes
+STRING = Type.STRING
+BINARY = Type.STRING
+NUMBER = Type.NUMBER
+DATETIME = Type.DATETIME
+ROWID = Type.NUMBER
 
 
 def DateFromTicks(ticks):
@@ -78,10 +80,10 @@ class RowResult:
 
 class Cursor:
     def __init__(self, conn: "Connection"):
-        self.arraysize = 0
+        self.arraysize = 1
         self._conn = conn
         self._res: Union[SqlResult, None] = None
-        self._description: Union[List[ResultColumn], None] = None
+        self._description: Union[List[DescriptiontColumn], None] = None
         self._iter: Optional[Iterator[SqlRow]] = None
         self._rownumber = -1
         self._closed = False
@@ -100,7 +102,7 @@ class Cursor:
         return self._conn
 
     @property
-    def description(self) -> Union[List[ResultColumn], None]:
+    def description(self) -> Union[List[DescriptiontColumn], None]:
         return self._description
 
     @property
@@ -121,7 +123,10 @@ class Cursor:
                 self._res.close()
                 self._res = None
 
-    def execute(self, operation: str, *args) -> None:
+    def execute(self, operation: str, params: Optional[Tuple]=None) -> None:
+        if params is not None and not isinstance(params, tuple):
+            raise InterfaceError("params must be a tuple or None")
+        params = params or ()
         self._ensure_open()
         self._rownumber = -1
         self._iter = None
@@ -129,7 +134,8 @@ class Cursor:
         cbs = _DEFAULT_CURSOR_BUFFER_SIZE
         if self.arraysize > 0:
             cbs = self.arraysize
-        res = self._conn._get_client().sql.execute(operation, *args, cursor_buffer_size=cbs).result()
+        self._description = None
+        res = self._conn._get_client().sql.execute(operation, *params, cursor_buffer_size=cbs).result()
         if res.is_row_set():
             self._rownumber = 0
             self._res = res
@@ -154,27 +160,32 @@ class Cursor:
 
     def fetchone(self) -> Optional[SqlRow]:
         if self._iter is None:
+            raise InterfaceError("fetch can only be called after row returning queries")
+        if self._rownumber is None:
+            self._rownumber = 0
+        try:
+            row = next(self._iter)
+            self._rownumber += 1
+            return row
+        except StopIteration:
             return None
-        if self._rownumber is None:
-            self._rownumber = 0
-        row = next(self._iter)
-        self._rownumber += 1
-        return row
 
-    def fetchmany(self, size=None) -> List[SqlRow]:
+    def fetchmany(self, size: Optional[int]=None) -> List[SqlRow]:
         if self._iter is None:
-            return []
+            raise InterfaceError("fetchmany can only be called after row returning queries")
         if self._rownumber is None:
             self._rownumber = 0
+        if size is None:
+            size = self.arraysize
         rows = list(itertools.islice(self._iter, size))
         self._rownumber += len(rows)
         return rows
 
     def fetchall(self) -> List[SqlRow]:
+        if self._iter is None:
+            raise InterfaceError("fetchall can only be called after row returning queries")
         if self._rownumber is None:
             self._rownumber = 0
-        if self._iter is None:
-            return []
         rows = list(self._iter)
         self._rownumber += len(rows)
         return rows
@@ -187,15 +198,15 @@ class Cursor:
     def setinputsizes(self, sizes):
         pass
 
-    def setoutputsize(self, column=None):
+    def setoutputsize(self, size=None, column=None):
         pass
 
     @classmethod
-    def _make_description(cls, metadata: SqlRowMetadata) -> List[ResultColumn]:
+    def _make_description(cls, metadata: SqlRowMetadata) -> List[DescriptiontColumn]:
         r = []
         for col in metadata.columns:
             r.append(
-                ResultColumn(
+                DescriptiontColumn(
                     name=col.name,
                     type=map_type(col.type),
                     display_size=None,
@@ -213,25 +224,27 @@ class Cursor:
 
 
 class Connection:
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: Config):
         self.__mu = threading.RLock()
-        self.__client = HazelcastClient(**config)
+        self.__client = HazelcastClient(config)
         self.__cursors = set()
 
-    def __enter__(self):
+    def __enter__(self) -> "Connection":
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         self.close()
 
-    def close(self):
+    def close(self) -> None:
         if self.__client:
             with self.__mu:
                 if self.__client:
                     self.__client.shutdown()
                     self.__client = None
+                    return
+        raise InterfaceError("connection was already closed")
 
-    def commit(self):
+    def commit(self) -> None:
         # transactions are not supported
         # ensure an exception is thrown if there is no client
         self._get_client()
@@ -242,15 +255,15 @@ class Connection:
                 cursor = Cursor(self)
                 self.__cursors.add(cursor)
                 return cursor
-        raise ProgrammingError("connection is closed")
+        raise InterfaceError("connection is already closed")
 
     def _get_client(self) -> HazelcastClient:
         with self.__mu:
             if self.__client is not None:
                 return self.__client
-        raise ProgrammingError("connection is closed")
+        raise InterfaceError("connection is closed")
 
-    def _close_cursor(self, cursor: Cursor):
+    def _close_cursor(self, cursor: Cursor) -> None:
         with self.__mu:
             if cursor in self.__cursors:
                    self.__cursors.remove(cursor)

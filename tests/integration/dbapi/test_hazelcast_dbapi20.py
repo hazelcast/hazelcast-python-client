@@ -1,9 +1,14 @@
+from hazelcast.config import Config
 from .dbapi20 import DatabaseAPI20Test
 from hazelcast import db, HazelcastClient
+from ..backward_compatible.sql_test import SqlTestBase
 
 
-class test_HazelcastDBAPI20(DatabaseAPI20Test):
+class test_HazelcastDBAPI20(SqlTestBase, DatabaseAPI20Test):
 
+    rc = None
+    cluster = None
+    member = None
     driver = db
     connect_kw_args = {}
     table_prefix = "dbapi20test_"
@@ -28,10 +33,33 @@ class test_HazelcastDBAPI20(DatabaseAPI20Test):
     # xddl1 = 'drop table %sbooze' % table_prefix
     # xddl2 = 'drop table %sbarflys' % table_prefix
 
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cfg = Config()
+        cfg.cluster_name = cls.cluster.id
+        cls.connect_kw_args = {
+            "config": cfg,
+        }
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.rc.terminateCluster(cls.cluster.id)
+        cls.rc.exit()
+
     def setUp(self):
-        client = HazelcastClient()
-        booze = client.get_map(f"{test_HazelcastDBAPI20.table_prefix}booze").blocking()
-        booze.destroy()
-        barflys = client.get_map(f"{test_HazelcastDBAPI20.table_prefix}barflys").blocking()
-        barflys.destroy()
-        client.shutdown()
+        pass
+
+    def tearDown(self):
+        for name in ["booze", "barflys"]:
+            m = self.client.get_map(f"{self.table_prefix}{name}").blocking()
+            m.destroy()
+
+    def test_nextset(self):
+        # we don't support this.
+        pass
+
+    def test_setoutputsize(self):
+        # we don't support this.
+        pass
+
