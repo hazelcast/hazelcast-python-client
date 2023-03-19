@@ -4,6 +4,7 @@ User API for Serialization.
 import abc
 import datetime
 import decimal
+import enum
 import typing
 
 from hazelcast.serialization.portable.classdef import FieldType
@@ -788,6 +789,61 @@ class PortableReader:
         """
         raise NotImplementedError()
 
+    def read_decimal(self, field_name: str) -> decimal.Decimal:
+        """Reads a decimal.
+
+        Args:
+            field_name: Name of the field.
+
+        Returns:
+            The decimal read.
+        """
+        raise NotImplementedError()
+
+    def read_time(self, field_name: str) -> datetime.time:
+        """Reads a time.
+
+        Args:
+            field_name: Name of the field.
+
+        Returns:
+            The time read.
+        """
+        raise NotImplementedError()
+
+    def read_date(self, field_name: str) -> datetime.date:
+        """Reads a date.
+
+        Args:
+            field_name: Name of the field.
+
+        Returns:
+            The date read.
+        """
+        raise NotImplementedError()
+
+    def read_timestamp(self, field_name: str) -> datetime.datetime:
+        """Reads a timestamp.
+
+        Args:
+            field_name: Name of the field.
+
+        Returns:
+            The timestamp read.
+        """
+        raise NotImplementedError()
+
+    def read_timestamp_with_timezone(self, field_name: str) -> datetime.datetime:
+        """Reads a timestamp with timezone.
+
+        Args:
+            field_name: Name of the field.
+
+        Returns:
+            The timestamp with timezone read.
+        """
+        raise NotImplementedError()
+
     def read_byte_array(self, field_name: str) -> bytearray:
         """Reads a primitive byte array.
 
@@ -899,6 +955,61 @@ class PortableReader:
 
         Returns:
             The UTF-8 String array read.
+        """
+        raise NotImplementedError()
+
+    def read_decimal_array(self, field_name: str) -> typing.List[decimal.Decimal]:
+        """Reads a decimal array.
+
+        Args:
+            field_name: Name of the field.
+
+        Returns:
+            The decimal array read.
+        """
+        raise NotImplementedError()
+
+    def read_time_array(self, field_name: str) -> typing.List[datetime.time]:
+        """Reads a time array.
+
+        Args:
+            field_name: Name of the field.
+
+        Returns:
+            The time array read.
+        """
+        raise NotImplementedError()
+
+    def read_date_array(self, field_name: str) -> typing.List[datetime.date]:
+        """Reads a date array.
+
+        Args:
+            field_name: Name of the field.
+
+        Returns:
+            The date array read.
+        """
+        raise NotImplementedError()
+
+    def read_timestamp_array(self, field_name: str) -> typing.List[datetime.datetime]:
+        """Reads a timestamp array.
+
+        Args:
+            field_name: Name of the field.
+
+        Returns:
+            The timestamp array read.
+        """
+        raise NotImplementedError()
+
+    def read_timestamp_with_timezone_array(self, field_name: str) -> typing.List[datetime.datetime]:
+        """Reads a timestamp with timezone array.
+
+        Args:
+            field_name: Name of the field.
+
+        Returns:
+            The timestamp with timezone array read.
         """
         raise NotImplementedError()
 
@@ -1044,6 +1155,51 @@ class PortableWriter:
         """
         raise NotImplementedError()
 
+    def write_decimal(self, field_name: str, value: decimal.Decimal) -> None:
+        """Writes a decimal.
+
+        Args:
+            field_name: Name of the field.
+            value: Decimal to be written.
+        """
+        raise NotImplementedError()
+
+    def write_time(self, field_name: str, value: datetime.time) -> None:
+        """Writes a time.
+
+        Args:
+            field_name: Name of the field.
+            value: Time to be written.
+        """
+        raise NotImplementedError()
+
+    def write_date(self, field_name: str, value: datetime.date) -> None:
+        """Writes a date.
+
+        Args:
+            field_name: Name of the field.
+            value: Date to be written.
+        """
+        raise NotImplementedError()
+
+    def write_timestamp(self, field_name: str, value: datetime.datetime) -> None:
+        """Writes a timestamp.
+
+        Args:
+            field_name: Name of the field.
+            value: Timestamp to be written.
+        """
+        raise NotImplementedError()
+
+    def write_timestamp_with_timezone(self, field_name: str, value: datetime.datetime) -> None:
+        """Writes a timestamp with timezone.
+
+        Args:
+            field_name: Name of the field.
+            value: Timestamp with timezone to be written.
+        """
+        raise NotImplementedError()
+
     def write_byte_array(self, field_name: str, values: bytearray) -> None:
         """Writes a primitive byte array.
 
@@ -1138,6 +1294,57 @@ class PortableWriter:
         """
         raise NotImplementedError()
 
+    def write_decimal_array(
+        self, field_name: str, values: typing.Sequence[decimal.Decimal]
+    ) -> None:
+        """Writes a decimal array.
+
+        Args:
+            field_name: Name of the field.
+            values: Decimal array to be written.
+        """
+        raise NotImplementedError()
+
+    def write_time_array(self, field_name: str, values: typing.Sequence[datetime.time]) -> None:
+        """Writes a time array.
+
+        Args:
+            field_name: Name of the field.
+            values: Time array to be written.
+        """
+        raise NotImplementedError()
+
+    def write_date_array(self, field_name: str, values: typing.Sequence[datetime.date]) -> None:
+        """Writes a date array.
+
+        Args:
+            field_name: Name of the field.
+            values: Date array to be written.
+        """
+        raise NotImplementedError()
+
+    def write_timestamp_array(
+        self, field_name: str, values: typing.Sequence[datetime.datetime]
+    ) -> None:
+        """Writes a timestamp array.
+
+        Args:
+            field_name: Name of the field.
+            values: Timestamp array to be written.
+        """
+        raise NotImplementedError()
+
+    def write_timestamp_with_timezone_array(
+        self, field_name: str, values: typing.Sequence[datetime.datetime]
+    ) -> None:
+        """Writes a timestamp with timezone array.
+
+        Args:
+            field_name: Name of the field.
+            values: Timestamp with timezone array to be written.
+        """
+        raise NotImplementedError()
+
     def write_portable_array(self, field_name: str, values: typing.Sequence[Portable]) -> None:
         """Writes a portable array.
 
@@ -1159,35 +1366,53 @@ class PortableWriter:
 
 
 class CompactReader(abc.ABC):
-    """Provides means of reading compact serialized fields from the binary
+    """Provides means of reading Compact serialized fields from the binary
     data.
 
-    Read operations might throw :class:`HazelcastSerializationError` when a
-    field with the given name is not found or there is a type mismatch. On
-    such occasions, one might provide default values to the read methods to
-    return it in case of the failure scenarios described above. Providing
-    default values might be especially useful, if the class might evolve in
-    future, either by adding or removing fields.
+    Read operations might throw
+    :class:`hazelcast.errors.HazelcastSerializationError` when a field with
+    the given name is not found or there is a type mismatch.
 
-    Warnings:
-        This API is in the BETA status and any part of it might be changed
-        without a prior notice, until it is promoted to the stable status.
+    The way to use CompactReader for class evolution is to check for the
+    existence of a field with its name and kind, with the
+    :func:`get_field_kind` method. One should read the field if it exists
+    with the given name and kind, and use some other logic, like using a
+    default value, if it does not exist.
+
+    .. code:: python
+
+        def read(self, reader: CompactReader) -> Foo:
+            bar = reader.read_int32("bar") # A field that is always present
+            if reader.get_field_kind("baz") == FieldKind.STRING:
+                baz = reader.read_string("baz")
+            else:
+                baz = "" # Use a default value, if the field is not present
+            return Foo(bar, baz)
     """
 
     @abc.abstractmethod
-    def get_field_kind(self, field_name):
-        """Returns the FieldKind for the given field.
+    def get_field_kind(self, field_name: str) -> "FieldKind":
+        """Returns the kind of the field for the given name.
+
+        If the field with the given name does not exist,
+        :const:`FieldKind.NOT_AVAILABLE` is returned.
+
+        This method can be used to check the existence of a field,
+        which can be useful when the class is evolved.
 
         Args:
             field_name: Name of the field.
 
         Returns:
-              Field kind for the given field. or FieldKind.NOT_AVAILABLE if the field does not exist.
+            Kind of the field.
         """
 
     @abc.abstractmethod
     def read_boolean(self, field_name: str) -> bool:
         """Reads a boolean.
+
+        This method can also read a nullable boolean, as long as it is not
+        ``None``.
 
         Args:
             field_name: Name of the field.
@@ -1198,12 +1423,15 @@ class CompactReader(abc.ABC):
         Raises:
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
-                defined in the schema.
+                defined in the schema, or a ``None`` nullable boolean value
+                is read.
         """
 
     @abc.abstractmethod
     def read_nullable_boolean(self, field_name: str) -> typing.Optional[bool]:
         """Reads a nullable boolean.
+
+        This method can also read a non-nullable boolean.
 
         Args:
             field_name: Name of the field.
@@ -1221,6 +1449,9 @@ class CompactReader(abc.ABC):
     def read_int8(self, field_name: str) -> int:
         """Reads an 8-bit two's complement signed integer.
 
+        This method can also read a nullable int8, as long as it is not
+        ``None``.
+
         Args:
             field_name: Name of the field.
 
@@ -1230,12 +1461,15 @@ class CompactReader(abc.ABC):
         Raises:
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
-                defined in the schema.
+                defined in the schema, or a ``None`` nullable int8 value
+                is read.
         """
 
     @abc.abstractmethod
     def read_nullable_int8(self, field_name: str) -> typing.Optional[int]:
         """Reads a nullable 8-bit two's complement signed integer.
+
+        This method can also read a non-nullable int8.
 
         Args:
             field_name: Name of the field.
@@ -1253,6 +1487,9 @@ class CompactReader(abc.ABC):
     def read_int16(self, field_name: str) -> int:
         """Reads a 16-bit two's complement signed integer.
 
+        This method can also read a nullable int16, as long as it is not
+        ``None``.
+
         Args:
             field_name: Name of the field.
 
@@ -1262,12 +1499,15 @@ class CompactReader(abc.ABC):
         Raises:
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
-                defined in the schema.
+                defined in the schema, or a ``None`` nullable int16 value
+                is read.
         """
 
     @abc.abstractmethod
     def read_nullable_int16(self, field_name: str) -> typing.Optional[int]:
         """Reads a nullable 16-bit two's complement signed integer.
+
+        This method can also read a non-nullable int16.
 
         Args:
             field_name: Name of the field.
@@ -1285,6 +1525,9 @@ class CompactReader(abc.ABC):
     def read_int32(self, field_name: str) -> int:
         """Reads a 32-bit two's complement signed integer.
 
+        This method can also read a nullable int32, as long as it is not
+        ``None``.
+
         Args:
             field_name: Name of the field.
 
@@ -1294,12 +1537,15 @@ class CompactReader(abc.ABC):
         Raises:
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
-                defined in the schema.
+                defined in the schema, or a ``None`` nullable int32 value
+                is read.
         """
 
     @abc.abstractmethod
     def read_nullable_int32(self, field_name: str) -> typing.Optional[int]:
         """Reads a nullable 32-bit two's complement signed integer.
+
+        This method can also read a non-nullable int32.
 
         Args:
             field_name: Name of the field.
@@ -1317,6 +1563,9 @@ class CompactReader(abc.ABC):
     def read_int64(self, field_name: str) -> int:
         """Reads a 64-bit two's complement signed integer.
 
+        This method can also read a nullable int64, as long as it is not
+        ``None``.
+
         Args:
             field_name: Name of the field.
 
@@ -1326,12 +1575,15 @@ class CompactReader(abc.ABC):
         Raises:
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
-                defined in the schema.
+                defined in the schema, or a ``None`` nullable int64 value
+                is read.
         """
 
     @abc.abstractmethod
     def read_nullable_int64(self, field_name: str) -> typing.Optional[int]:
         """Reads a nullable 64-bit two's complement signed integer.
+
+        This method can also read a non-nullable int64.
 
         Args:
             field_name: Name of the field.
@@ -1349,6 +1601,9 @@ class CompactReader(abc.ABC):
     def read_float32(self, field_name: str) -> float:
         """Reads a 32-bit IEEE 754 floating point number.
 
+        This method can also read a nullable float32, as long as it is not
+        ``None``.
+
         Args:
             field_name: Name of the field.
 
@@ -1358,12 +1613,15 @@ class CompactReader(abc.ABC):
         Raises:
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
-                defined in the schema.
+                defined in the schema, or a ``None`` nullable float32 value
+                is read.
         """
 
     @abc.abstractmethod
     def read_nullable_float32(self, field_name: str) -> typing.Optional[float]:
         """Reads a nullable 32-bit IEEE 754 floating point number.
+
+        This method can also read a non-nullable float32.
 
         Args:
             field_name: Name of the field.
@@ -1381,6 +1639,9 @@ class CompactReader(abc.ABC):
     def read_float64(self, field_name: str) -> float:
         """Reads a 64-bit IEEE 754 floating point number.
 
+        This method can also read a nullable float64, as long as it is not
+        ``None``.
+
         Args:
             field_name: Name of the field.
 
@@ -1390,12 +1651,15 @@ class CompactReader(abc.ABC):
         Raises:
             HazelcastSerializationError: If the field does not exist in the
                 schema or the type of the field does not match with the one
-                defined in the schema.
+                defined in the schema, or a ``None`` nullable float64 value
+                is read.
         """
 
     @abc.abstractmethod
     def read_nullable_float64(self, field_name: str) -> typing.Optional[float]:
         """Reads a nullable 64-bit IEEE 754 floating point number.
+
+        This method can also read a non-nullable float64.
 
         Args:
             field_name: Name of the field.
@@ -1411,7 +1675,7 @@ class CompactReader(abc.ABC):
 
     @abc.abstractmethod
     def read_string(self, field_name: str) -> typing.Optional[str]:
-        """Reads an UTF-8 encoded string.
+        """Reads a UTF-8 encoded string.
 
         Args:
             field_name: Name of the field.
@@ -1893,10 +2157,6 @@ class CompactReader(abc.ABC):
 class CompactWriter(abc.ABC):
     """Provides means of writing compact serialized fields to the binary
     data.
-
-    Warnings:
-        This API is in the BETA status and any part of it might be changed
-        without a prior notice, until it is promoted to the stable status.
     """
 
     @abc.abstractmethod
@@ -2331,16 +2591,17 @@ class CompactWriter(abc.ABC):
 
 
 CompactSerializableClass = typing.TypeVar("CompactSerializableClass")
+"""Type of the Compact serializable classes."""
 
 
 class CompactSerializer(typing.Generic[CompactSerializableClass], abc.ABC):
     """Defines the contract of the serializers used for Compact serialization.
 
-    :func:`write` and :func:`read` methods must be consistent with each other.
+    After defining a serializer for the objects of the class
+    :const:`CompactSerializableClass`, the serializer can be registered to the
+    :attr:`hazelcast.config.Config.compact_serializers`.
 
-    Warnings:
-        This API is in the BETA status and any part of it might be changed
-        without a prior notice, until it is promoted to the stable status.
+    :func:`write` and :func:`read` methods must be consistent with each other.
     """
 
     @abc.abstractmethod
@@ -2384,6 +2645,68 @@ class CompactSerializer(typing.Generic[CompactSerializableClass], abc.ABC):
         """Returns the unique type name associated with
         :const`CompactSerializableClass`.
 
+        If the class is ever evolved by adding or removing fields,
+        the type name for the evolved serializers must be the same
+        with the initial version.
+
         Returns:
             The type name.
         """
+
+
+class FieldKind(enum.IntEnum):
+    """
+    Represents the types of the fields used in the Compact serialization.
+    """
+
+    NOT_AVAILABLE = 0
+    """
+    Represents fields that do not exist.
+    """
+
+    BOOLEAN = 1
+    ARRAY_OF_BOOLEAN = 2
+    INT8 = 3
+    ARRAY_OF_INT8 = 4
+    CHAR = 5
+    ARRAY_OF_CHAR = 6
+    INT16 = 7
+    ARRAY_OF_INT16 = 8
+    INT32 = 9
+    ARRAY_OF_INT32 = 10
+    INT64 = 11
+    ARRAY_OF_INT64 = 12
+    FLOAT32 = 13
+    ARRAY_OF_FLOAT32 = 14
+    FLOAT64 = 15
+    ARRAY_OF_FLOAT64 = 16
+    STRING = 17
+    ARRAY_OF_STRING = 18
+    DECIMAL = 19
+    ARRAY_OF_DECIMAL = 20
+    TIME = 21
+    ARRAY_OF_TIME = 22
+    DATE = 23
+    ARRAY_OF_DATE = 24
+    TIMESTAMP = 25
+    ARRAY_OF_TIMESTAMP = 26
+    TIMESTAMP_WITH_TIMEZONE = 27
+    ARRAY_OF_TIMESTAMP_WITH_TIMEZONE = 28
+    COMPACT = 29
+    ARRAY_OF_COMPACT = 30
+    PORTABLE = 31
+    ARRAY_OF_PORTABLE = 32
+    NULLABLE_BOOLEAN = 33
+    ARRAY_OF_NULLABLE_BOOLEAN = 34
+    NULLABLE_INT8 = 35
+    ARRAY_OF_NULLABLE_INT8 = 36
+    NULLABLE_INT16 = 37
+    ARRAY_OF_NULLABLE_INT16 = 38
+    NULLABLE_INT32 = 39
+    ARRAY_OF_NULLABLE_INT32 = 40
+    NULLABLE_INT64 = 41
+    ARRAY_OF_NULLABLE_INT64 = 42
+    NULLABLE_FLOAT32 = 43
+    ARRAY_OF_NULLABLE_FLOAT32 = 44
+    NULLABLE_FLOAT64 = 45
+    ARRAY_OF_NULLABLE_FLOAT64 = 46

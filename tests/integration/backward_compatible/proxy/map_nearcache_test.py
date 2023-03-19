@@ -7,7 +7,7 @@ from hazelcast.predicate import true
 from tests.hzrc.ttypes import Lang
 
 from tests.base import SingleMemberTestCase, HazelcastTestCase
-from tests.util import random_string
+from tests.util import random_string, skip_if_client_version_older_than
 from hazelcast import HazelcastClient
 
 
@@ -57,6 +57,8 @@ class MapTest(SingleMemberTestCase):
         self.assertEqual(0, len(self.map._wrapped._near_cache))
 
     def test_remove_all(self):
+        skip_if_client_version_older_than(self, "5.2.0")
+
         self.fill_map_and_near_cache(10)
         self.map.remove_all(predicate=true())
         self.assertEqual(0, len(self.map._wrapped._near_cache))

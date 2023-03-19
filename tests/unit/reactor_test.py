@@ -1,4 +1,5 @@
 import os
+import select
 import socket
 import threading
 import unittest
@@ -7,7 +8,7 @@ from collections import OrderedDict
 from mock import MagicMock
 from parameterized import parameterized
 
-from hazelcast.config import _Config
+from hazelcast.config import Config
 from hazelcast.core import Address
 from hazelcast.reactor import (
     AsyncoreReactor,
@@ -182,6 +183,8 @@ class SocketedWakerTest(unittest.TestCase):
         self.assertFalse(waker.awake)
         waker.wake()
         self.assertTrue(waker.awake)
+        # Wait until the reader becomes readable
+        select.select([waker._reader], [], [], 10)
         self.assertEqual(b"x", waker._reader.recv(1))
 
     def test_wake_while_awake(self):
@@ -189,17 +192,20 @@ class SocketedWakerTest(unittest.TestCase):
         waker.wake()
         waker.wake()
         self.assertTrue(waker.awake)
+        # Wait until the reader becomes readable
+        select.select([waker._reader], [], [], 10)
         self.assertEqual(b"x", waker._reader.recv(2))  # only the first one should write
 
     def test_handle_read(self):
         waker = self.waker
         waker.wake()
         self.assertTrue(waker.awake)
+        # Wait until the reader becomes readable
+        select.select([waker._reader], [], [], 10)
         waker.handle_read()
         self.assertFalse(waker.awake)
 
-        # BlockingIOError on Py3, socket.error on Py2
-        with self.assertRaises((IOError, socket.error)):
+        with self.assertRaises(IOError):
             # handle_read should consume the socket, there should be nothing
             waker._reader.recv(1)
 
@@ -307,7 +313,7 @@ class AsyncoreConnectionTest(unittest.TestCase):
 
     def test_socket_options(self):
         self.server = MockServer()
-        config = _Config()
+        config = Config()
         config.socket_options = [(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)]
 
         conn = AsyncoreConnection(
@@ -316,7 +322,7 @@ class AsyncoreConnectionTest(unittest.TestCase):
 
         try:
             # By default this is set to 0
-            self.assertEqual(1, conn.socket.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR))
+            self.assertNotEqual(0, conn.socket.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR))
         finally:
             conn._inner_close()
 
@@ -324,7 +330,7 @@ class AsyncoreConnectionTest(unittest.TestCase):
         # When the SO_RCVBUF option is set, we should try
         # to use that value while trying to read something.
         self.server = MockServer()
-        config = _Config()
+        config = Config()
         size = 64 * 1024
         config.socket_options = [(socket.SOL_SOCKET, socket.SO_RCVBUF, size)]
         conn = AsyncoreConnection(
@@ -341,7 +347,7 @@ class AsyncoreConnectionTest(unittest.TestCase):
         # When the SO_SNDBUF option is set, we should try
         # to use that value while trying to write something.
         self.server = MockServer()
-        config = _Config()
+        config = Config()
         size = 64 * 1024
         config.socket_options = [(socket.SOL_SOCKET, socket.SO_SNDBUF, size)]
         conn = AsyncoreConnection(
@@ -356,7 +362,7 @@ class AsyncoreConnectionTest(unittest.TestCase):
 
     def test_constructor_with_unreachable_addresses(self):
         addr = Address("192.168.0.1", 5701)
-        config = _Config()
+        config = Config()
         start = get_current_timestamp()
         conn = AsyncoreConnection(MagicMock(map=dict()), MagicMock(), None, addr, config, None)
         try:
@@ -368,7 +374,7 @@ class AsyncoreConnectionTest(unittest.TestCase):
 
     def test_resources_cleaned_up_after_immediate_failure(self):
         addr = Address("invalid-address", 5701)
-        config = _Config()
+        config = Config()
         mock_reactor = MagicMock(map={})
         try:
             conn = AsyncoreConnection(mock_reactor, MagicMock(), None, addr, config, None)

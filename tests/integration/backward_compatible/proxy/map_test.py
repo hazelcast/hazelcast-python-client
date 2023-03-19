@@ -496,10 +496,14 @@ class MapTest(SingleMemberTestCase):
         self.assertFalse(self.map.contains_key("key"))
 
     def test_remove_all_with_none_predicate(self):
+        skip_if_client_version_older_than(self, "5.2.0")
+
         with self.assertRaises(AssertionError):
             self.map.remove_all(None)
 
     def test_remove_all(self):
+        skip_if_client_version_older_than(self, "5.2.0")
+
         self.fill_map()
         self.map.remove_all(predicate=sql("__key > 'key-7'"))
         self.assertEqual(self.map.size(), 8)

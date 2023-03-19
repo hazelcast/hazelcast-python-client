@@ -165,6 +165,7 @@ class ConnectionManager:
         self._near_cache_manager = near_cache_manager
         self._send_state_to_cluster_fn = send_state_to_cluster_fn
         self._client_state = _ClientState.INITIAL  # must be modified under the _lock
+        self._established_initial_cluster_connection = False  # must be modified under the _lock
         self._smart_routing_enabled = config.smart_routing
         self._wait_strategy = self._init_wait_strategy(config)
         self._reconnect_mode = config.reconnect_mode
@@ -667,15 +668,30 @@ class ConnectionManager:
 
             is_initial_connection = not self.active_connections
             self.active_connections[remote_uuid] = connection
+            fire_connected_lifecycle_event = False
             if is_initial_connection:
                 self._cluster_id = new_cluster_id
-                if changed_cluster:
+                # In split brain, the client might connect to the one half
+                # of the cluster, and then later might reconnect to the
+                # other half, after the half it was connected to is
+                # completely dead. Since the cluster id is preserved in
+                # split brain scenarios, it is impossible to distinguish
+                # reconnection to the same cluster vs reconnection to the
+                # other half of the split brain. However, in the latter,
+                # we might need to send some state to the other half of
+                # the split brain (like Compact schemas). That forces us
+                # to send the client state to the cluster after the first
+                # cluster connection, regardless the cluster id is
+                # changed or not.
+                if self._established_initial_cluster_connection:
                     self._client_state = _ClientState.CONNECTED_TO_CLUSTER
                     self._initialize_on_cluster(new_cluster_id)
                 else:
+                    fire_connected_lifecycle_event = True
+                    self._established_initial_cluster_connection = True
                     self._client_state = _ClientState.INITIALIZED_ON_CLUSTER
 
-        if is_initial_connection and not changed_cluster:
+        if fire_connected_lifecycle_event:
             self._lifecycle_service.fire_lifecycle_event(LifecycleState.CONNECTED)
 
         _logger.info(

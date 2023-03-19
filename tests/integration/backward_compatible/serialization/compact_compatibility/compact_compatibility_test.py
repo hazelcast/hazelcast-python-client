@@ -6,7 +6,13 @@ import unittest
 from hazelcast.errors import NullPointerError, IllegalMonitorStateError
 from hazelcast.predicate import Predicate, paging
 from tests.base import HazelcastTestCase
-from tests.util import random_string, compare_client_version, compare_server_version_with_rc
+from tests.util import (
+    random_string,
+    compare_client_version,
+    compare_server_version_with_rc,
+    skip_if_client_version_older_than,
+    skip_if_server_version_older_than,
+)
 
 try:
     from hazelcast.serialization.api import (
@@ -42,6 +48,9 @@ class InnerCompact:
     def __hash__(self) -> int:
         return hash(self.string_field)
 
+    def __repr__(self):
+        return f"InnerCompact(string_field={self.string_field})"
+
 
 class OuterCompact:
     def __init__(self, int_field: int, inner_field: InnerCompact):
@@ -57,6 +66,9 @@ class OuterCompact:
 
     def __hash__(self) -> int:
         return hash((self.int_field, self.inner_field))
+
+    def __repr__(self):
+        return f"OuterCompact(int_field={self.int_field}, inner_field={self.inner_field})"
 
 
 class InnerSerializer(CompactSerializer[InnerCompact]):
@@ -266,7 +278,7 @@ OUTER_COMPACT_INSTANCE = OuterCompact(42, INNER_COMPACT_INSTANCE)
 
 
 @unittest.skipIf(
-    compare_client_version("5.1") < 0, "Tests the features added in 5.1 version of the client"
+    compare_client_version("5.2") < 0, "Tests the features added in 5.2 version of the client"
 )
 class CompactCompatibilityBase(HazelcastTestCase):
     rc = None
@@ -276,24 +288,15 @@ class CompactCompatibilityBase(HazelcastTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.rc = cls.create_rc()
-        if compare_server_version_with_rc(cls.rc, "5.1") < 0:
+        if compare_server_version_with_rc(cls.rc, "5.2") < 0:
             cls.rc.exit()
-            raise unittest.SkipTest("Compact serialization requires 5.1 server")
-
-        if compare_server_version_with_rc(cls.rc, "5.2") >= 0 and compare_client_version("5.2") < 0:
-            cls.rc.exit()
-            raise unittest.SkipTest(
-                "Compact serialization 5.2 server is not compatible with clients older than 5.2"
-            )
+            raise unittest.SkipTest("Compact serialization requires 5.2 server")
 
         config = f"""
 <hazelcast xmlns="http://www.hazelcast.com/schema/config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:schemaLocation="http://www.hazelcast.com/schema/config
-           http://www.hazelcast.com/schema/config/hazelcast-config-5.1.xsd">
-    <serialization>
-        <compact-serialization enabled="true" />
-    </serialization>
+           http://www.hazelcast.com/schema/config/hazelcast-config-5.2.xsd">
     <jet enabled="true" />
 </hazelcast>
         """
@@ -790,6 +793,13 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         self._put_from_another_client(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
         self.assertEqual(INNER_COMPACT_INSTANCE, self.map.remove(OUTER_COMPACT_INSTANCE))
 
+    def test_remove_all(self):
+        skip_if_client_version_older_than(self, "5.2")
+
+        self._put_from_another_client(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
+        self.assertIsNone(self.map.remove_all(CompactPredicate()))
+        self.assertEqual(0, self.map.size())
+
     def test_remove_if_same(self):
         self.assertFalse(self.map.remove_if_same(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE))
         self._put_from_another_client(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
@@ -983,6 +993,12 @@ class MultiMapCompactCompatibilityTest(CompactCompatibilityBase):
     def test_put(self):
         self.assertTrue(self.multi_map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE))
         self.assertEqual([OUTER_COMPACT_INSTANCE], self.multi_map.get(INNER_COMPACT_INSTANCE))
+
+    def test_put_all(self):
+        skip_if_server_version_older_than(self, self.client, "4.1")
+        skip_if_client_version_older_than(self, "5.2")
+        self.multi_map.put_all({INNER_COMPACT_INSTANCE: [OUTER_COMPACT_INSTANCE]})
+        self.assertCountEqual(self.multi_map.get(INNER_COMPACT_INSTANCE), [OUTER_COMPACT_INSTANCE])
 
     def test_value_count(self):
         self.assertEqual(0, self.multi_map.value_count(OUTER_COMPACT_INSTANCE))
@@ -1402,6 +1418,24 @@ class TopicCompactCompatibilityTest(CompactCompatibilityBase):
     def test_publish(self):
         self.topic.publish(OUTER_COMPACT_INSTANCE)
 
+    def test_publish_all(self):
+        skip_if_client_version_older_than(self, "5.2")
+        messages = []
+
+        def listener(message):
+            messages.append(message)
+
+        self.topic.add_listener(listener)
+
+        self.topic.publish_all([INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE])
+
+        def assertion():
+            self.assertEqual(2, len(messages))
+            self.assertEqual(INNER_COMPACT_INSTANCE, messages[0].message)
+            self.assertEqual(OUTER_COMPACT_INSTANCE, messages[1].message)
+
+        self.assertTrueEventually(assertion)
+
     def _publish_from_another_client(self, item):
         other_client = self.create_client(self.client_config)
         other_client_topic = other_client.get_topic(self.topic.name).blocking()
@@ -1740,6 +1774,6 @@ class SqlCompactCompatibilityTest(CompactCompatibilityBase):
 class PartitionServiceCompactCompatibilityTest(CompactCompatibilityBase):
     def test_partition_service(self):
         self.assertEqual(
-            268,
+            267,
             self.client.partition_service.get_partition_id(OUTER_COMPACT_INSTANCE),
         )

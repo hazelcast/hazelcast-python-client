@@ -25,8 +25,9 @@ try:
         CompactSerializer,
         CompactReader,
         CompactWriter,
+        FieldKind,
     )
-    from hazelcast.serialization.compact import FIELD_OPERATIONS, FieldKind
+    from hazelcast.serialization.compact import FIELD_OPERATIONS
 
     _COMPACT_AVAILABLE = True
 except ImportError:
@@ -91,7 +92,7 @@ else:
 
 
 @unittest.skipIf(
-    compare_client_version("5.1") < 0, "Tests the features added in 5.1 version of the client"
+    compare_client_version("5.2") < 0, "Tests the features added in 5.2 version of the client"
 )
 class CompactTestBase(HazelcastTestCase):
     rc = None
@@ -101,28 +102,11 @@ class CompactTestBase(HazelcastTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.rc = cls.create_rc()
-        if compare_server_version_with_rc(cls.rc, "5.1") < 0:
+        if compare_server_version_with_rc(cls.rc, "5.2") < 0:
             cls.rc.exit()
-            raise unittest.SkipTest("Compact serialization requires 5.1 server")
+            raise unittest.SkipTest("Compact serialization requires 5.2 server")
 
-        if compare_server_version_with_rc(cls.rc, "5.2") >= 0 and compare_client_version("5.2") < 0:
-            cls.rc.exit()
-            raise unittest.SkipTest(
-                "Compact serialization 5.2 server is not compatible with clients older than 5.2"
-            )
-
-        config = """
-        <hazelcast xmlns="http://www.hazelcast.com/schema/config"
-           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-           xsi:schemaLocation="http://www.hazelcast.com/schema/config
-           http://www.hazelcast.com/schema/config/hazelcast-config-5.1.xsd">
-            <serialization>
-                    <compact-serialization enabled="true" />
-            </serialization>
-        </hazelcast>
-        """
-
-        cls.cluster = cls.create_cluster(cls.rc, config)
+        cls.cluster = cls.create_cluster(cls.rc, None)
         cls.member = cls.cluster.start_member()
 
     @classmethod
@@ -218,7 +202,7 @@ class CompactTest(CompactTestBase):
             def get_type_name(self) -> str:
                 return SomeFields.__name__
 
-            def get_class(self):
+            def get_class(self) -> typing.Type[SomeFields]:
                 return SomeFields
 
         self._write_then_read0(all_fields, Serializer(list(all_fields.keys())))
@@ -819,7 +803,7 @@ class NestedSerializer(CompactSerializer[Nested]):
     def get_type_name(self) -> str:
         return Nested.__name__
 
-    def get_class(self) -> Nested:
+    def get_class(self) -> typing.Type[Nested]:
         return Nested
 
 
@@ -867,7 +851,7 @@ class SomeFieldsSerializer(CompactSerializer[SomeFields]):
     def get_type_name(self) -> str:
         return SomeFields.__name__
 
-    def get_class(self) -> SomeFields:
+    def get_class(self) -> typing.Type[SomeFields]:
         return SomeFields
 
     @staticmethod

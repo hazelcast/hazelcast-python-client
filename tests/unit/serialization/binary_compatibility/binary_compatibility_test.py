@@ -4,7 +4,7 @@ import unittest
 from os import path
 from parameterized import parameterized
 
-from hazelcast.config import IntType, _Config
+from hazelcast.config import IntType, Config
 from hazelcast.serialization import BE_INT, BE_FLOAT, SerializationServiceV1
 from hazelcast.serialization.api import StreamSerializer
 from hazelcast.serialization.input import _ObjectDataInput
@@ -103,7 +103,7 @@ class BinaryCompatibilityTest(unittest.TestCase):
 
     @staticmethod
     def _create_serialization_service(is_big_endian, int_type):
-        config = _Config()
+        config = Config()
         config.custom_serializers = {
             CustomStreamSerializable: CustomStreamSerializer,
             CustomByteArraySerializable: CustomByteArraySerializer,

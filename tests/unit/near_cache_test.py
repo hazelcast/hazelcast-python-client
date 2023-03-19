@@ -1,14 +1,14 @@
 import unittest
 from time import sleep
 
-from hazelcast.config import _Config
+from hazelcast.config import Config
 from hazelcast.near_cache import *
 from hazelcast.serialization import SerializationServiceV1
 
 
 class NearCacheTestCase(unittest.TestCase):
     def setUp(self):
-        self.service = SerializationServiceV1(_Config())
+        self.service = SerializationServiceV1(Config())
 
     def tearDown(self):
         self.service.destroy()
@@ -35,7 +35,7 @@ class NearCacheTestCase(unittest.TestCase):
 
     def test_put_get(self):
         near_cache = self.create_near_cache(
-            self.service, InMemoryFormat.OBJECT, 100, 100, EvictionPolicy.LRU, 100
+            self.service, InMemoryFormat.OBJECT, 100, 100, EvictionPolicy.LFU, 100
         )
         for i in range(0, 120):
             key = "key-{}".format(i)

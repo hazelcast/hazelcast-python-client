@@ -117,6 +117,7 @@ Features
     :hidden:
 
     client
+    config
     api/modules
     getting_started
     features

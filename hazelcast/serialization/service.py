@@ -6,8 +6,8 @@ import uuid
 
 import typing
 
-from hazelcast.config import IntType, _Config
-from hazelcast.errors import HazelcastInstanceNotActiveError
+from hazelcast.config import IntType, Config
+from hazelcast.errors import HazelcastInstanceNotActiveError, IllegalArgumentError
 from hazelcast.serialization.api import IdentifiedDataSerializable, Portable
 from hazelcast.serialization.compact import (
     SchemaNotFoundError,
@@ -110,6 +110,11 @@ class SerializationServiceV1:
         # Register Custom Serializers
         for _type, custom_serializer in config.custom_serializers.items():
             self._registry.safe_register_serializer(custom_serializer(), _type)
+
+        # Called here so that we can make sure that we are not overriding
+        # any of the default serializers registered above with the Compact
+        # serialization.
+        self._registry.validate()
 
     def to_data(self, obj, partitioning_strategy=None):
         """Serialize the input object into byte array representation
@@ -241,12 +246,12 @@ class SerializationServiceV1:
         self._registry.register_constant_serializer(BooleanSerializer(), bool)
         self._registry.register_constant_serializer(CharSerializer())
         self._registry.register_constant_serializer(ShortSerializer())
-        self._registry.register_constant_serializer(IntegerSerializer())
+        self._registry.register_constant_serializer(IntegerSerializer(), int)
         self._registry.register_constant_serializer(LongSerializer())
         self._registry.register_constant_serializer(FloatSerializer())
         self._registry.register_constant_serializer(DoubleSerializer(), float)
         self._registry.register_constant_serializer(UuidSerializer(), uuid.UUID)
-        self._registry.register_constant_serializer(StringSerializer())
+        self._registry.register_constant_serializer(StringSerializer(), str)
         # Arrays of primitives and String
         self._registry.register_constant_serializer(ByteArraySerializer(), bytearray)
         self._registry.register_constant_serializer(BooleanArraySerializer())
@@ -320,7 +325,7 @@ class SerializationServiceV1:
 class SerializerRegistry:
     def __init__(
         self,
-        config: _Config,
+        config: Config,
         portable_serializer: PortableSerializer,
         data_serializer: IdentifiedDataSerializer,
         compact_serializer: CompactStreamSerializer,
@@ -495,6 +500,22 @@ class SerializerRegistry:
         if serializer is not None:
             self.safe_register_serializer(serializer, obj_type)
         return serializer
+
+    def validate(self):
+        """
+        Makes sure that the classes registered as Compact serializable are not
+        overriding the default serializers.
+
+        Must be called in the constructor of the serialization service after it
+        completes registering default serializers.
+        """
+        for compact_type in self._compact_types:
+            if compact_type in self._constant_type_dict:
+                raise IllegalArgumentError(
+                    f"Compact serializer for the class {compact_type}' can not be "
+                    f"registered as it overrides the default serializer for that "
+                    f"class provided by Hazelcast."
+                )
 
     def destroy(self):
         for serializer in list(self._type_dict.values()):

@@ -7,6 +7,13 @@ from hazelcast.lifecycle import LifecycleState
 from tests.hzrc.ttypes import Lang
 from tests.util import get_current_timestamp, compare_client_version, random_string
 
+try:
+    from hazelcast.config import Config
+    from hazelcast.errors import InvalidConfigurationError
+except ImportError:
+    # For backward compatibility tests
+    pass
+
 
 class ClientTest(HazelcastTestCase):
     def test_client_only_listens(self):
@@ -145,3 +152,56 @@ class ClientTcpMetricsTest(SingleMemberTestCase):
         m.set(random_string(), random_string())
 
         self.assertGreater(reactor.bytes_sent, bytes_sent)
+
+
+@unittest.skipIf(
+    compare_client_version("5.2") < 0,
+    "Tests the features added in 5.2 version of the client",
+)
+class ClientConfigurationTest(HazelcastTestCase):
+    rc = None
+    cluster = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.rc = cls.create_rc()
+        cls.cluster = cls.create_cluster(cls.rc, None)
+        cls.cluster.start_member()
+
+    def setUp(self):
+        self.client = None
+
+    def tearDown(self):
+        if self.client:
+            self.client.shutdown()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.rc.terminateCluster(cls.cluster.id)
+        cls.rc.exit()
+
+    def test_keyword_args_configuration(self):
+        self.client = HazelcastClient(
+            cluster_name=self.cluster.id,
+        )
+        self.assertTrue(self.client.lifecycle_service.is_running())
+
+    def test_configuration_object(self):
+        config = Config()
+        config.cluster_name = self.cluster.id
+        self.client = HazelcastClient(config)
+        self.assertTrue(self.client.lifecycle_service.is_running())
+
+    def test_configuration_object_as_keyword_argument(self):
+        config = Config()
+        config.cluster_name = self.cluster.id
+        self.client = HazelcastClient(config=config)
+        self.assertTrue(self.client.lifecycle_service.is_running())
+
+    def test_ambiguous_configuration(self):
+        config = Config()
+        with self.assertRaisesRegex(
+            InvalidConfigurationError,
+            "Ambiguous client configuration is found",
+        ):
+            self.client = HazelcastClient(config, cluster_name="a-cluster")

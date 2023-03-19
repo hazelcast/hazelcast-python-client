@@ -1,3 +1,4 @@
+import threading
 import uuid
 
 from mock import patch
@@ -6,11 +7,14 @@ from hazelcast import HazelcastClient
 from hazelcast.core import Address, MemberInfo, MemberVersion, EndpointQualifier, ProtocolType
 from hazelcast.errors import IllegalStateError, TargetDisconnectedError
 from hazelcast.future import ImmediateFuture, ImmediateExceptionFuture
+from hazelcast.lifecycle import LifecycleState
 from hazelcast.util import AtomicInteger
 from tests.base import HazelcastTestCase, SingleMemberTestCase
 from tests.util import random_string
 
-_UNREACHABLE_ADDRESS = Address("192.168.0.1", 5701)
+# 198.51.100.0/24 is assigned as TEST-NET-2 and should be unreachable
+# See: https://en.wikipedia.org/wiki/Reserved_IP_addresses
+_UNREACHABLE_ADDRESS = Address("198.51.100.1", 5701)
 _MEMBER_VERSION = MemberVersion(5, 0, 0)
 _CLIENT_PUBLIC_ENDPOINT_QUALIFIER = EndpointQualifier(ProtocolType.CLIENT, "public")
 
@@ -178,10 +182,46 @@ class ConnectionManagerOnClusterRestartTest(SingleMemberTestCase):
 
         self.assertEqual(5, counter.get())
 
+    def test_client_state_is_sent_on_reconnection_when_the_cluster_id_is_same(self):
+        disconnected = threading.Event()
+        reconnected = threading.Event()
+
+        def listener(state):
+            if state == LifecycleState.DISCONNECTED:
+                disconnected.set()
+            elif disconnected.is_set() and state == LifecycleState.CONNECTED:
+                reconnected.set()
+
+        self.client.lifecycle_service.add_listener(listener)
+
+        conn_manager = self.client._connection_manager
+        counter = AtomicInteger()
+
+        def send_state_to_cluster_fn():
+            counter.add(1)
+            return ImmediateFuture(None)
+
+        conn_manager._send_state_to_cluster_fn = send_state_to_cluster_fn
+
+        # Keep the cluster alive, but close the connection
+        # to simulate re-connection to a cluster with
+        # the same cluster id.
+        connection = conn_manager.get_random_connection()
+        connection.close_connection("expected", None)
+
+        disconnected.wait()
+        reconnected.wait()
+
+        self._wait_until_state_is_sent()
+
+        self.assertEqual(1, counter.get())
+
     def _restart_cluster(self):
         self.rc.terminateMember(self.cluster.id, self.member.uuid)
         ConnectionManagerOnClusterRestartTest.member = self.cluster.start_member()
+        self._wait_until_state_is_sent()
 
+    def _wait_until_state_is_sent(self):
         # Perform an invocation to wait until the client state is sent
         m = self.client.get_map(random_string()).blocking()
         m.set(1, 1)

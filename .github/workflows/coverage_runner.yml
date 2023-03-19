@@ -38,7 +38,7 @@ jobs:
     strategy:
       matrix:
         python-version: [ '3.6', '3.10' ]
-        os: [ ubuntu-latest, windows-latest ]
+        os: [ ubuntu-20.04, windows-latest ]
       fail-fast: false
       
     steps:
@@ -79,20 +79,20 @@ jobs:
         run: python run_tests.py
             
       - name: Publish results to Codecov for PR coming from hazelcast organization
-        if: ${{ matrix.python-version == '3.10' && matrix.os == 'ubuntu-latest' &&  github.event_name == 'pull_request_target' }}
+        if: ${{ matrix.python-version == '3.10' && matrix.os == 'ubuntu-20.04' &&  github.event_name == 'pull_request_target' }}
         uses: codecov/codecov-action@v1
         with:
           files: ./coverage.xml
           override_pr: ${{ github.event.pull_request.number }}
           
       - name: Publish results to Codecov for Push
-        if: ${{ matrix.python-version == '3.10' && matrix.os == 'ubuntu-latest' &&  github.event_name == 'push' }}
+        if: ${{ matrix.python-version == '3.10' && matrix.os == 'ubuntu-20.04' &&  github.event_name == 'push' }}
         uses: codecov/codecov-action@v1
         with:
           files: ./coverage.xml
           
       - name: Publish result to Codecov for PR coming from community
-        if: ${{ matrix.python-version == '3.10' && matrix.os == 'ubuntu-latest' && github.event_name == 'workflow_dispatch' }}
+        if: ${{ matrix.python-version == '3.10' && matrix.os == 'ubuntu-20.04' && github.event_name == 'workflow_dispatch' }}
         uses: codecov/codecov-action@v1
         with:
           files: ./coverage.xml

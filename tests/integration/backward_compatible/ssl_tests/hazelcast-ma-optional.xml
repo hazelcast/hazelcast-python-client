@@ -5,13 +5,12 @@
     <network>
         <ssl enabled="true">
             <factory-class-name>
-                com.hazelcast.nio.ssl.ClasspathSSLContextFactory
+                com.hazelcast.nio.ssl.BasicSSLContextFactory
             </factory-class-name>
             <properties>
-                <property name="keyStore">com/hazelcast/nio/ssl-mutual-auth/server1.keystore</property>
+                <property name="keyStore">%s</property>
                 <property name="keyStorePassword">password</property>
-                <property name="trustStore">com/hazelcast/nio/ssl-mutual-auth/server1_knows_client1/server1.truststore
-                </property>
+                <property name="trustStore">%s</property>
                 <property name="trustStorePassword">password</property>
                 <property name="trustManagerAlgorithm">SunX509</property>
                 <property name="javax.net.ssl.mutualAuthentication">OPTIONAL</property>

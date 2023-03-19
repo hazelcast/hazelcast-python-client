@@ -1,8 +1,6 @@
 import abc
-import collections
 import datetime
 import decimal
-import enum
 import typing
 
 from hazelcast.errors import HazelcastError, HazelcastSerializationError, IllegalStateError
@@ -24,6 +22,7 @@ from hazelcast.serialization.api import (
     CompactWriter,
     CompactReader,
     ObjectDataInput,
+    FieldKind,
 )
 from hazelcast.serialization.input import _ObjectDataInput
 from hazelcast.serialization.output import _ObjectDataOutput
@@ -43,7 +42,9 @@ class CompactStreamSerializer(BaseSerializer):
 
     def write(self, out: ObjectDataOutput, obj: typing.Any) -> None:
         clazz = type(obj)
-        serializer = self._type_to_serializer[clazz]
+        serializer = self._type_to_serializer.get(clazz)
+        if serializer is None:
+            raise HazelcastSerializationError(f"No serializer is registered for class {clazz}.")
         schema = self._type_to_schema.get(clazz)
         if not schema:
             schema = CompactStreamSerializer._build_schema(serializer, obj)
@@ -1558,10 +1559,10 @@ class DefaultCompactReader(CompactReader):
 class SchemaWriter(CompactWriter):
     def __init__(self, type_name: str):
         self._type_name = type_name
-        self._fields: typing.List[FieldDescriptor] = []
+        self._fields: typing.Dict[str, FieldDescriptor] = {}
 
     def build(self) -> "Schema":
-        return Schema(self._type_name, self._fields)
+        return Schema(self._type_name, list(self._fields.values()))
 
     def write_boolean(self, field_name: str, value: bool) -> None:
         self._add_field(field_name, FieldKind.BOOLEAN)
@@ -1738,16 +1739,20 @@ class SchemaWriter(CompactWriter):
         self._add_field(field_name, FieldKind.ARRAY_OF_COMPACT)
 
     def _add_field(self, name: str, kind: "FieldKind"):
-        self._fields.append(FieldDescriptor(name, kind))
+        if name in self._fields:
+            raise HazelcastSerializationError(f"Field with the name '{name}' already exists")
+
+        self._fields[name] = FieldDescriptor(name, kind)
 
 
 class Schema:
     def __init__(self, type_name: str, fields_list: typing.List["FieldDescriptor"]):
         self.type_name = type_name
-        self.fields: typing.Dict[str, "FieldDescriptor"] = Schema._dict_to_key_ordered_dict(
-            {f.name: f for f in fields_list}
-        )
-        self.fields_list = list(self.fields.values())
+        self.fields: typing.Dict[str, "FieldDescriptor"] = {f.name: f for f in fields_list}
+        # Sort the fields by the field name so that the field offsets/indexes
+        # can be set correctly.
+        fields_list.sort(key=lambda f: f.name)
+        self.fields_list = fields_list
         self.schema_id: int = 0
         self.var_sized_field_count: int = 0
         self.fix_sized_fields_length: int = 0
@@ -1760,8 +1765,6 @@ class Schema:
 
         for field in self.fields_list:
             kind = field.kind
-            if kind < 0 or kind >= FieldKind.NOT_AVAILABLE:
-                raise HazelcastSerializationError(f"Invalid field kind: {kind}")
             if FIELD_OPERATIONS[field.kind].is_var_sized():
                 var_sized_fields.append(field)
             elif FieldKind.BOOLEAN == kind:
@@ -1769,6 +1772,11 @@ class Schema:
             else:
                 fix_sized_fields.append(field)
 
+        # Fix sized fields should be in descending order of size in bytes.
+        # For ties, the alphabetical order(ascending) of the field name will
+        # be used. Since, `fields_list` is sorted at this point, and the `sort`
+        # method is stable, only sorting by the size in bytes is enough for
+        # this invariant to hold.
         fix_sized_fields.sort(
             key=lambda f: FIELD_OPERATIONS[f.kind].size_in_bytes(),
             reverse=True,
@@ -1792,6 +1800,8 @@ class Schema:
 
         self.fix_sized_fields_length = position
 
+        # Variable sized fields should be in ascending alphabetical ordering
+        # of the field names
         index = 0
         for field in var_sized_fields:
             field.index = index
@@ -1799,15 +1809,6 @@ class Schema:
 
         self.var_sized_field_count = index
         self.schema_id = RabinFingerprint.of(self)
-
-    @staticmethod
-    def _dict_to_key_ordered_dict(
-        d: typing.Dict[str, "FieldDescriptor"]
-    ) -> typing.Dict[str, "FieldDescriptor"]:
-        od = collections.OrderedDict()
-        for key in sorted(d):
-            od[key] = d[key]
-        return od
 
     def __eq__(self, other: typing.Any) -> bool:
         return (
@@ -2002,52 +2003,6 @@ class Int32PositionReader(PositionReader):
 _INT32_POSITION_READER_INSTANCE = Int32PositionReader()
 
 
-class FieldKind(enum.IntEnum):
-    BOOLEAN = 0
-    ARRAY_OF_BOOLEAN = 1
-    INT8 = 2
-    ARRAY_OF_INT8 = 3
-    INT16 = 6
-    ARRAY_OF_INT16 = 7
-    INT32 = 8
-    ARRAY_OF_INT32 = 9
-    INT64 = 10
-    ARRAY_OF_INT64 = 11
-    FLOAT32 = 12
-    ARRAY_OF_FLOAT32 = 13
-    FLOAT64 = 14
-    ARRAY_OF_FLOAT64 = 15
-    STRING = 16
-    ARRAY_OF_STRING = 17
-    DECIMAL = 18
-    ARRAY_OF_DECIMAL = 19
-    TIME = 20
-    ARRAY_OF_TIME = 21
-    DATE = 22
-    ARRAY_OF_DATE = 23
-    TIMESTAMP = 24
-    ARRAY_OF_TIMESTAMP = 25
-    TIMESTAMP_WITH_TIMEZONE = 26
-    ARRAY_OF_TIMESTAMP_WITH_TIMEZONE = 27
-    COMPACT = 28
-    ARRAY_OF_COMPACT = 29
-    NULLABLE_BOOLEAN = 32
-    ARRAY_OF_NULLABLE_BOOLEAN = 33
-    NULLABLE_INT8 = 34
-    ARRAY_OF_NULLABLE_INT8 = 35
-    NULLABLE_INT16 = 36
-    ARRAY_OF_NULLABLE_INT16 = 37
-    NULLABLE_INT32 = 38
-    ARRAY_OF_NULLABLE_INT32 = 39
-    NULLABLE_INT64 = 40
-    ARRAY_OF_NULLABLE_INT64 = 41
-    NULLABLE_FLOAT32 = 42
-    ARRAY_OF_NULLABLE_FLOAT32 = 43
-    NULLABLE_FLOAT64 = 44
-    ARRAY_OF_NULLABLE_FLOAT64 = 45
-    NOT_AVAILABLE = 46
-
-
 class FieldKindOperations(abc.ABC):
     _VAR_SIZE = -1
 
@@ -2234,6 +2189,7 @@ class ArrayOfNullableFloat64Operations(FieldKindOperations):
 
 
 FIELD_OPERATIONS: typing.List[typing.Optional[FieldKindOperations]] = [
+    None,
     BooleanOperations(),
     ArrayOfBooleanOperations(),
     Int8Operations(),
@@ -2280,5 +2236,4 @@ FIELD_OPERATIONS: typing.List[typing.Optional[FieldKindOperations]] = [
     ArrayOfNullableFloat32Operations(),
     NullableFloat64Operations(),
     ArrayOfNullableFloat64Operations(),
-    None,
 ]

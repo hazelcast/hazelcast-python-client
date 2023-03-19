@@ -5,7 +5,10 @@ import uuid
 
 from parameterized import parameterized
 
-from hazelcast.errors import HazelcastSerializationError
+from hazelcast.config import Config
+from hazelcast.errors import HazelcastSerializationError, IllegalArgumentError
+from hazelcast.serialization import SerializationServiceV1
+from hazelcast.serialization.api import CompactSerializer, CompactReader, CompactWriter, FieldKind
 from hazelcast.serialization.compact import (
     RabinFingerprint,
     SchemaWriter,
@@ -13,7 +16,7 @@ from hazelcast.serialization.compact import (
     Schema,
     FIELD_OPERATIONS,
     _BOOLEANS_PER_BYTE,
-    FieldKind,
+    SchemaNotReplicatedError,
 )
 
 
@@ -76,7 +79,7 @@ class RabinFingerprintTest(unittest.TestCase):
         writer.write_int8("age", 0)
         writer.write_array_of_timestamp("times", [])
         schema = writer.build()
-        self.assertEqual(-5445839760245891300, schema.schema_id)
+        self.assertEqual(3662264393229655598, schema.schema_id)
 
 
 class SchemaTest(unittest.TestCase):
@@ -84,16 +87,10 @@ class SchemaTest(unittest.TestCase):
         fields = [
             FieldDescriptor(kind.name, kind)
             for kind in FieldKind
-            if kind is not FieldKind.NOT_AVAILABLE
+            if FIELD_OPERATIONS[kind] is not None
         ]
         schema = Schema("something", fields)
         self._verify_schema(schema, fields)
-
-    def test_constructor_with_invalid_field_kind(self):
-        fd = FieldDescriptor("foo", FieldKind.NOT_AVAILABLE)
-        self.assertRaises(HazelcastSerializationError, lambda: Schema("foo", [fd]))
-        fd.kind = -1
-        self.assertRaises(HazelcastSerializationError, lambda: Schema("foo", [fd]))
 
     def test_with_no_fields(self):
         schema = Schema("something", [])
@@ -200,3 +197,117 @@ class SchemaWriterTest(unittest.TestCase):
 
         for name, kind in fields:
             self.assertEqual(kind, schema.fields.get(name).kind)
+
+    def test_schema_writer_with_duplicate_field_names(self):
+        writer = SchemaWriter("foo")
+        writer.write_int32("bar", 42)
+        with self.assertRaisesRegex(HazelcastSerializationError, "already exists"):
+            writer.write_string("bar", "42")
+
+
+class Child:
+    def __init__(self, name: str):
+        self.name = name
+
+
+class Parent:
+    def __init__(self, child: Child):
+        self.child = child
+
+
+class ChildSerializer(CompactSerializer[Child]):
+    def read(self, reader: CompactReader):
+        name = reader.read_string("name")
+        return Child(name)
+
+    def write(self, writer: CompactWriter, obj: Child):
+        writer.write_string("name", obj.name)
+
+    def get_type_name(self):
+        return "Child"
+
+    def get_class(self):
+        return Child
+
+
+class ParentSerializer(CompactSerializer[Parent]):
+    def read(self, reader: CompactReader):
+        child = reader.read_compact("child")
+        return Parent(child)
+
+    def write(self, writer: CompactWriter, obj: Parent):
+        writer.write_compact("child", obj.child)
+
+    def get_type_name(self):
+        return "Parent"
+
+    def get_class(self):
+        return Parent
+
+
+class NestedSerializerTest(unittest.TestCase):
+    def _serialize(self, serialization_service, obj):
+        try:
+            return serialization_service.to_data(obj)
+        except SchemaNotReplicatedError as e:
+            serialization_service.compact_stream_serializer.register_schema_to_type(
+                e.schema, e.clazz
+            )
+            return self._serialize(serialization_service, obj)
+
+    def test_missing_serializer(self):
+        config = Config()
+        config.compact_serializers = [ParentSerializer()]
+        service = SerializationServiceV1(config)
+
+        with self.assertRaisesRegex(
+            HazelcastSerializationError, "No serializer is registered for class"
+        ):
+            obj = Parent(Child("test"))
+            self._serialize(service, obj)
+
+
+class CompactSerializationTest(unittest.TestCase):
+    def test_overriding_default_serializers(self):
+        config = Config()
+        config.compact_serializers = [StringCompactSerializer()]
+
+        with self.assertRaisesRegex(IllegalArgumentError, "can not be registered as it overrides"):
+            SerializationServiceV1(config)
+
+    def test_serializer_with_duplicate_field_names(self):
+        config = Config()
+        config.compact_serializers = [SerializerWithDuplicateFieldsNames()]
+
+        service = SerializationServiceV1(config)
+        with self.assertRaisesRegex(HazelcastSerializationError, "already exists"):
+            service.to_data(Child("foo"))
+
+
+class StringCompactSerializer(CompactSerializer[str]):
+    def read(self, reader: CompactReader) -> str:
+        pass
+
+    def write(self, writer: CompactWriter, obj: str) -> None:
+        pass
+
+    def get_class(self) -> typing.Type[str]:
+        return str
+
+    def get_type_name(self) -> str:
+        return "str"
+
+
+class SerializerWithDuplicateFieldsNames(CompactSerializer[Child]):
+    def read(self, reader: CompactReader) -> Child:
+        pass
+
+    def write(self, writer: CompactWriter, obj: Child) -> None:
+        writer.write_string("name", obj.name)
+        writer.write_string("name", obj.name)
+
+    def get_class(self) -> typing.Type[Child]:
+        return Child
+
+    def get_type_name(self) -> str:
+        return "child"
