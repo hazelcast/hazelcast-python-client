@@ -68,7 +68,6 @@ class DbapiTestBase(SqlTestBase):
 
 
 class DbapiTest(DbapiTestBase):
-
     def test_fetchone(self):
         self._create_mapping()
         entry_count = 11
