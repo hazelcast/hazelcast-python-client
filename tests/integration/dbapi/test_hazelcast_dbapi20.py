@@ -12,15 +12,15 @@ class test_HazelcastDBAPI20(SqlTestBase, DatabaseAPI20Test):
     driver = db
     connect_kw_args = {}
     table_prefix = "dbapi20test_"
-    ddl1 = f'''
+    ddl1 = f"""
         CREATE OR REPLACE MAPPING {table_prefix}booze (
             name varchar external name "__key.name"
         ) TYPE IMAP OPTIONS (
             'keyFormat'='json-flat',
             'valueFormat'='json-flat'
         )    
-    '''
-    ddl2 = f'''
+    """
+    ddl2 = f"""
         CREATE OR REPLACE MAPPING {table_prefix}barflys (
             name varchar external name "__key.name",
             drink varchar external name "this.drink"
@@ -28,7 +28,7 @@ class test_HazelcastDBAPI20(SqlTestBase, DatabaseAPI20Test):
             'keyFormat'='json-flat',
             'valueFormat'='json-flat'
         )    
-    '''
+    """
     # ddl2 = 'create table %sbarflys (name varchar(20), drink varchar(30))' % table_prefix
     # xddl1 = 'drop table %sbooze' % table_prefix
     # xddl2 = 'drop table %sbarflys' % table_prefix
@@ -62,4 +62,3 @@ class test_HazelcastDBAPI20(SqlTestBase, DatabaseAPI20Test):
     def test_setoutputsize(self):
         # we don't support this.
         pass
-

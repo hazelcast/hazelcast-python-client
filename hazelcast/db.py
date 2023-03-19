@@ -1,7 +1,7 @@
 from collections import namedtuple
 from datetime import date, datetime, time
 from time import localtime
-from typing import Any, Dict, Callable, Iterator, List, Optional, Sequence, Union, Tuple
+from typing import Any, Callable, Iterator, List, Optional, Sequence, Union, Tuple, Set
 import enum
 import itertools
 import threading
@@ -36,6 +36,7 @@ DescriptiontColumn = namedtuple(
         "null_ok",
     ],
 )
+
 
 class Type(enum.Enum):
     STRING = 1
@@ -123,7 +124,7 @@ class Cursor:
                 self._res.close()
                 self._res = None
 
-    def execute(self, operation: str, params: Optional[Tuple]=None) -> None:
+    def execute(self, operation: str, params: Optional[Tuple] = None) -> None:
         if params is not None and not isinstance(params, tuple):
             raise InterfaceError("params must be a tuple or None")
         params = params or ()
@@ -135,7 +136,11 @@ class Cursor:
         if self.arraysize > 0:
             cbs = self.arraysize
         self._description = None
-        res = self._conn._get_client().sql.execute(operation, *params, cursor_buffer_size=cbs).result()
+        res = (
+            self._conn._get_client()
+            .sql.execute(operation, *params, cursor_buffer_size=cbs)
+            .result()
+        )
         if res.is_row_set():
             self._rownumber = 0
             self._res = res
@@ -170,7 +175,7 @@ class Cursor:
         except StopIteration:
             return None
 
-    def fetchmany(self, size: Optional[int]=None) -> List[SqlRow]:
+    def fetchmany(self, size: Optional[int] = None) -> List[SqlRow]:
         if self._iter is None:
             raise InterfaceError("fetchmany can only be called after row returning queries")
         if self._rownumber is None:
@@ -226,8 +231,8 @@ class Cursor:
 class Connection:
     def __init__(self, config: Config):
         self.__mu = threading.RLock()
-        self.__client = HazelcastClient(config)
-        self.__cursors = set()
+        self.__client: Optional[HazelcastClient] = HazelcastClient(config)
+        self.__cursors: Set[Cursor] = set()
 
     def __enter__(self) -> "Connection":
         return self
@@ -266,7 +271,7 @@ class Connection:
     def _close_cursor(self, cursor: Cursor) -> None:
         with self.__mu:
             if cursor in self.__cursors:
-                   self.__cursors.remove(cursor)
+                self.__cursors.remove(cursor)
 
     @property
     def Error(self):
