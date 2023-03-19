@@ -1,4 +1,5 @@
 from hazelcast import HazelcastClient
+from hazelcast.config import Config
 from hazelcast.db import connect, Connection
 from .sql_test import (
     SqlTestBase,
@@ -30,12 +31,10 @@ class DbapiTestBase(SqlTestBase):
         cls.client = HazelcastClient(
             cluster_name=cls.cluster.id, portable_factories={666: {6: Student}}
         )
-        cls.conn = connect(
-            config={
-                "cluster_name": cls.cluster.id,
-                "portable_factories": {666: {6: Student}},
-            }
-        )
+        cfg = Config()
+        cfg.cluster_name = cls.cluster.id
+        cfg.portable_factories = {666: {6: Student}}
+        cls.conn = connect(cfg)
 
     @classmethod
     def tearDownClass(cls):
@@ -69,12 +68,13 @@ class DbapiTestBase(SqlTestBase):
 
 
 class DbapiTest(DbapiTestBase):
+
     def test_fetchone(self):
         self._create_mapping()
         entry_count = 11
         self._populate_map(entry_count)
         c = self.conn.cursor()
-        c.execute(f'SELECT * FROM "{self.map_name}" where __key < ? order by __key', 5)
+        c.execute(f'SELECT * FROM "{self.map_name}" where __key < ? order by __key', (5,))
         self.assertEqual(0, c.rownumber)
         row = c.fetchone()
         self.assertEqual((0, 0), (row.get_object("__key"), row.get_object("this")))
@@ -88,7 +88,7 @@ class DbapiTest(DbapiTestBase):
         entry_count = 11
         self._populate_map(entry_count)
         c = self.conn.cursor()
-        c.execute(f'SELECT * FROM "{self.map_name}" where __key < ? order by __key', 5)
+        c.execute(f'SELECT * FROM "{self.map_name}" where __key < ? order by __key', (5,))
         self.assertEqual(0, c.rownumber)
         result = list(c.fetchmany(3))
         self.assertCountEqual(
@@ -108,7 +108,7 @@ class DbapiTest(DbapiTestBase):
         entry_count = 11
         self._populate_map(entry_count)
         c = self.conn.cursor()
-        c.execute(f'SELECT * FROM "{self.map_name}" where __key < ? order by __key', 5)
+        c.execute(f'SELECT * FROM "{self.map_name}" where __key < ? order by __key', (5,))
         self.assertEqual(0, c.rownumber)
         result = list(c.fetchall())
         self.assertCountEqual(
