@@ -7,7 +7,7 @@ from threading import RLock
 from hazelcast.errors import HazelcastError
 from hazelcast.future import Future, ImmediateFuture, ImmediateExceptionFuture
 from hazelcast.invocation import Invocation
-from hazelcast.serialization.compact import SchemaNotReplicatedError
+from hazelcast.serialization.compact import SchemaNotReplicatedError, SchemaNotFoundError
 from hazelcast.util import (
     UUIDUtil,
     to_millis,
@@ -544,18 +544,17 @@ class SqlRow:
     If an integer value is passed to the ``[]`` operator, it will implicitly
     call the :func:`get_object_with_index` and return the result.
 
-    For any other type passed into the the ``[]`` operator, :func:`get_object`
+    For any other type passed into the ``[]`` operator, :func:`get_object`
     will be called. Note that, :func:`get_object` expects ``str`` values.
     Hence, the ``[]`` operator will raise error for any type other than integer
     and string.
     """
 
-    __slots__ = ("_row_metadata", "_row", "_deserialize_fn")
+    __slots__ = ("_row_metadata", "_row")
 
-    def __init__(self, row_metadata, row, deserialize_fn):
+    def __init__(self, row_metadata, row):
         self._row_metadata = row_metadata
         self._row = row
-        self._deserialize_fn = deserialize_fn
 
     def get_object(self, column_name: str) -> typing.Any:
         """Gets the value in the column indicated by the column name.
@@ -567,13 +566,6 @@ class SqlRow:
         The type of the returned value depends on the SQL type of the column.
         No implicit conversions are performed on the value.
 
-        Warnings:
-
-            Each call to this method might result in a deserialization if the
-            column type for this object is :const:`SqlColumnType.OBJECT`.
-            It is advised to assign the result of this method call to some
-            variable and reuse it.
-
         Args:
             column_name: The column name.
 
@@ -583,7 +575,6 @@ class SqlRow:
         Raises:
             ValueError: If a column with the given name does not exist.
             AssertionError: If the column name is not a string.
-            HazelcastSqlError: If the object cannot be deserialized.
 
         See Also:
             :attr:`metadata`
@@ -597,20 +588,13 @@ class SqlRow:
         index = self._row_metadata.find_column(column_name)
         if index == SqlRowMetadata.COLUMN_NOT_FOUND:
             raise ValueError("Column '%s' doesn't exist" % column_name)
-        return self._deserialize_fn(self._row[index])
+        return self._row[index]
 
     def get_object_with_index(self, column_index: int) -> typing.Any:
         """Gets the value of the column by index.
 
         The class of the returned value depends on the SQL type of the column.
         No implicit conversions are performed on the value.
-
-        Warnings:
-
-            Each call to this method might result in a deserialization if the
-            column type for this object is :const:`SqlColumnType.OBJECT`.
-            It is advised to assign the result of this method call to some
-            variable and reuse it.
 
         Args:
             column_index: Zero-based column index.
@@ -621,7 +605,6 @@ class SqlRow:
         Raises:
             IndexError: If the column index is out of bounds.
             AssertionError: If the column index is not an integer.
-            HazelcastSqlError: If the object cannot be deserialized.
 
         See Also:
             :attr:`metadata`
@@ -629,7 +612,7 @@ class SqlRow:
             :attr:`SqlColumnMetadata.type`
         """
         check_is_int(column_index, "Column index must be an integer")
-        return self._deserialize_fn(self._row[column_index])
+        return self._row[column_index]
 
     @property
     def metadata(self) -> SqlRowMetadata:
@@ -680,22 +663,18 @@ class _IteratorBase:
     __slots__ = (
         "row_metadata",
         "fetch_fn",
-        "deserialize_fn",
         "page",
         "row_count",
         "position",
         "is_last",
     )
 
-    def __init__(self, row_metadata, fetch_fn, deserialize_fn):
+    def __init__(self, row_metadata, fetch_fn):
         self.row_metadata = row_metadata
         """SqlRowMetadata: Row metadata."""
 
         self.fetch_fn = fetch_fn
         """function: Fetches the next page. It produces a Future[_SqlPage]."""
-
-        self.deserialize_fn = deserialize_fn
-        """function: Deserializes the value."""
 
         self.page = None
         """_SqlPage: Current page."""
@@ -729,7 +708,6 @@ class _IteratorBase:
             list: The row pointed by the current position.
         """
 
-        # Deserialization happens lazily while getting the object.
         return [self.page.get_value(i, self.position) for i in range(self.page.column_count)]
 
 
@@ -766,7 +744,7 @@ class _FutureProducingIterator(_IteratorBase):
 
         row = self._get_current_row()
         self.position += 1
-        return SqlRow(self.row_metadata, row, self.deserialize_fn)
+        return SqlRow(self.row_metadata, row)
 
     def _has_next(self):
         """Returns a Future indicating whether there are more rows
@@ -826,7 +804,7 @@ class _BlockingIterator(_IteratorBase):
 
         row = self._get_current_row()
         self.position += 1
-        return SqlRow(self.row_metadata, row, self.deserialize_fn)
+        return SqlRow(self.row_metadata, row)
 
     def _has_next(self):
         while self.position == self.row_count:
@@ -1065,13 +1043,11 @@ class SqlResult(typing.Iterable[SqlRow]):
             iterator = _BlockingIterator(
                 response.row_metadata,
                 self._fetch_next_page,
-                self._sql_service.deserialize_object,
             )
         else:
             iterator = _FutureProducingIterator(
                 response.row_metadata,
                 self._fetch_next_page,
-                self._sql_service.deserialize_object,
             )
 
         # Pass the first page information to the iterator
@@ -1275,7 +1251,9 @@ class _InternalSqlService:
             )
 
             invocation = Invocation(
-                request, connection=connection, response_handler=sql_execute_codec.decode_response
+                request,
+                connection=connection,
+                response_handler=lambda m: sql_execute_codec.decode_response(m, self._to_object),
             )
             self._invocation_service.invoke(invocation)
             return invocation.future.continue_with(
@@ -1289,17 +1267,6 @@ class _InternalSqlService:
             )
         except Exception as e:
             return ImmediateExceptionFuture(self.re_raise(e, connection))
-
-    def deserialize_object(self, obj):
-        try:
-            return self._serialization_service.to_object(obj)
-        except Exception as e:
-            raise HazelcastSqlError(
-                self.get_client_id(),
-                _SqlErrorCode.GENERIC,
-                "Failed to deserialize query result value: %s" % try_to_get_error_message(e),
-                e,
-            )
 
     def fetch(self, connection, query_id, cursor_buffer_size):
         """Fetches the next page of the query execution.
@@ -1317,7 +1284,9 @@ class _InternalSqlService:
         """
         request = sql_fetch_codec.encode_request(query_id, cursor_buffer_size)
         invocation = Invocation(
-            request, connection=connection, response_handler=sql_fetch_codec.decode_response
+            request,
+            connection=connection,
+            response_handler=lambda m: sql_fetch_codec.decode_response(m, self._to_object),
         )
         self._invocation_service.invoke(invocation)
         return invocation.future
@@ -1375,6 +1344,19 @@ class _InternalSqlService:
         invocation = Invocation(request, connection=connection)
         self._invocation_service.invoke(invocation)
         return invocation.future
+
+    def _to_object(self, data):
+        try:
+            return self._serialization_service.to_object(data)
+        except SchemaNotFoundError as e:
+            raise e
+        except Exception as e:
+            raise HazelcastSqlError(
+                self.get_client_id(),
+                _SqlErrorCode.GENERIC,
+                "Failed to deserialize query result value: %s" % try_to_get_error_message(e),
+                e,
+            )
 
     def _get_query_connection(self):
         try:
