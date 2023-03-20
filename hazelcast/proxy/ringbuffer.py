@@ -131,13 +131,13 @@ class ReadResult(Sequence):
         """
         return self._item_seqs[index]
 
-    def __getitem__(self, index: int):
+    def __getitem__(self, index: typing.Union[int, slice]) -> typing.Any:
         return self._items[index]
 
     def __len__(self) -> int:
         return len(self._items)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         # This implementation is copied from the
         # now removed super class. It is implemented
         # to maintain backward compatibility.
