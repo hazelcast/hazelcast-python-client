@@ -29,9 +29,6 @@ class test_HazelcastDBAPI20(SqlTestBase, dbapi20.DatabaseAPI20Test):
             'valueFormat'='json-flat'
         )    
     """
-    # ddl2 = 'create table %sbarflys (name varchar(20), drink varchar(30))' % table_prefix
-    # xddl1 = 'drop table %sbooze' % table_prefix
-    # xddl2 = 'drop table %sbarflys' % table_prefix
 
     @classmethod
     def setUpClass(cls):
