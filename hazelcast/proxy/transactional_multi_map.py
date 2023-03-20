@@ -11,7 +11,7 @@ from hazelcast.protocol.codec import (
 from hazelcast.proxy.base import TransactionalProxy
 from hazelcast.types import KeyType, ValueType
 from hazelcast.serialization.compact import SchemaNotReplicatedError
-from hazelcast.util import check_not_none, thread_id, ImmutableLazyDataList
+from hazelcast.util import check_not_none, thread_id, deserialize_list_in_place
 
 
 class TransactionalMultiMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
@@ -64,9 +64,8 @@ class TransactionalMultiMap(TransactionalProxy, typing.Generic[KeyType, ValueTyp
             return self.get(key)
 
         def handler(message):
-            return ImmutableLazyDataList(
-                transactional_multi_map_get_codec.decode_response(message), self._to_object
-            )
+            data_list = transactional_multi_map_get_codec.decode_response(message)
+            return deserialize_list_in_place(data_list, self._to_object)
 
         request = transactional_multi_map_get_codec.encode_request(
             self.name, self.transaction.id, thread_id(), key_data
@@ -116,9 +115,8 @@ class TransactionalMultiMap(TransactionalProxy, typing.Generic[KeyType, ValueTyp
             return self.remove_all(key)
 
         def handler(message):
-            return ImmutableLazyDataList(
-                transactional_multi_map_remove_codec.decode_response(message), self._to_object
-            )
+            data_list = transactional_multi_map_remove_codec.decode_response(message)
+            return deserialize_list_in_place(data_list, self._to_object)
 
         request = transactional_multi_map_remove_codec.encode_request(
             self.name, self.transaction.id, thread_id(), key_data

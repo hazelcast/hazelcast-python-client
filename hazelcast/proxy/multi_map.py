@@ -31,8 +31,13 @@ from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType
 from hazelcast.types import ValueType, KeyType
 from hazelcast.serialization.data import Data
 from hazelcast.serialization.compact import SchemaNotReplicatedError
-from hazelcast.util import check_not_none, thread_id, to_millis, ImmutableLazyDataList
-
+from hazelcast.util import (
+    check_not_none,
+    thread_id,
+    to_millis,
+    deserialize_list_in_place,
+    deserialize_entry_list_in_place,
+)
 
 EntryEventCallable = typing.Callable[[EntryEvent[KeyType, ValueType]], None]
 
@@ -213,9 +218,8 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
         """
 
         def handler(message):
-            return ImmutableLazyDataList(
-                multi_map_entry_set_codec.decode_response(message), self._to_object
-            )
+            entry_data_list = multi_map_entry_set_codec.decode_response(message)
+            return deserialize_entry_list_in_place(entry_data_list, self._to_object)
 
         request = multi_map_entry_set_codec.encode_request(self.name)
         return self._invoke(request, handler)
@@ -246,9 +250,8 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             return self._send_schema_and_retry(e, self.get, key)
 
         def handler(message):
-            return ImmutableLazyDataList(
-                multi_map_get_codec.decode_response(message), self._to_object
-            )
+            data_list = multi_map_get_codec.decode_response(message)
+            return deserialize_list_in_place(data_list, self._to_object)
 
         request = multi_map_get_codec.encode_request(self.name, key_data, thread_id())
         return self._invoke_on_key(request, key_data, handler)
@@ -314,9 +317,8 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
         """
 
         def handler(message):
-            return ImmutableLazyDataList(
-                multi_map_key_set_codec.decode_response(message), self._to_object
-            )
+            data_list = multi_map_key_set_codec.decode_response(message)
+            return deserialize_list_in_place(data_list, self._to_object)
 
         request = multi_map_key_set_codec.encode_request(self.name)
         return self._invoke(request, handler)
@@ -410,9 +412,8 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
         check_not_none(key, "key can't be None")
 
         def handler(message):
-            return ImmutableLazyDataList(
-                multi_map_remove_codec.decode_response(message), self._to_object
-            )
+            data_list = multi_map_remove_codec.decode_response(message)
+            return deserialize_list_in_place(data_list, self._to_object)
 
         try:
             key_data = self._to_data(key)
@@ -551,9 +552,8 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
         """
 
         def handler(message):
-            return ImmutableLazyDataList(
-                multi_map_values_codec.decode_response(message), self._to_object
-            )
+            data_list = multi_map_values_codec.decode_response(message)
+            return deserialize_list_in_place(data_list, self._to_object)
 
         request = multi_map_values_codec.encode_request(self.name)
         return self._invoke(request, handler)

@@ -124,46 +124,6 @@ class AtomicInteger:
             self._counter += count
 
 
-class ImmutableLazyDataList(Sequence):
-    def __init__(self, list_data, to_object):
-        super(ImmutableLazyDataList, self).__init__()
-        self._list_data = list_data
-        self._list_obj = [None] * len(self._list_data)
-        self.to_object = to_object
-
-    def __contains__(self, value):
-        return super(ImmutableLazyDataList, self).__contains__(value)
-
-    def __len__(self):
-        return self._list_data.__len__()
-
-    def __getitem__(self, index):
-        val = self._list_obj[index]
-        if not val:
-            data = self._list_data[index]
-            if isinstance(data, tuple):
-                (key, value) = data
-                self._list_obj[index] = (self.to_object(key), self.to_object(value))
-            else:
-                self._list_obj[index] = self.to_object(data)
-        return self._list_obj[index]
-
-    def __eq__(self, other):
-        if not isinstance(other, Iterable):
-            return False
-        self._populate()
-        return self._list_obj == other
-
-    def _populate(self):
-        for index, data in enumerate(self._list_data):
-            if not self._list_obj[index]:
-                self.__getitem__(index)
-
-    def __repr__(self):
-        self._populate()
-        return str(self._list_obj)
-
-
 # Serialization Utilities
 
 
@@ -173,6 +133,21 @@ def get_portable_version(portable, default_version):
     except AttributeError:
         version = default_version
     return version
+
+
+def deserialize_list_in_place(data_list, to_object_fn):
+    for i in range(len(data_list)):
+        data_list[i] = to_object_fn(data_list[i])
+
+    return data_list
+
+
+def deserialize_entry_list_in_place(entry_data_list, to_object_fn):
+    for i in range(len(entry_data_list)):
+        item = entry_data_list[i]
+        entry_data_list[i] = (to_object_fn(item[0]), to_object_fn(item[1]))
+
+    return entry_data_list
 
 
 # Version utilities

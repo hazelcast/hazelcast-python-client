@@ -26,7 +26,7 @@ from hazelcast.protocol.codec import (
 from hazelcast.proxy.base import PartitionSpecificProxy, ItemEvent, ItemEventType
 from hazelcast.types import ItemType
 from hazelcast.serialization.compact import SchemaNotReplicatedError
-from hazelcast.util import check_not_none, to_millis, ImmutableLazyDataList
+from hazelcast.util import check_not_none, to_millis, deserialize_list_in_place
 
 
 class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
@@ -202,9 +202,8 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
         """
 
         def handler(message):
-            return ImmutableLazyDataList(
-                queue_iterator_codec.decode_response(message), self._to_object
-            )
+            data_list = queue_iterator_codec.decode_response(message)
+            return deserialize_list_in_place(data_list, self._to_object)
 
         request = queue_iterator_codec.encode_request(self.name)
         return self._invoke(request, handler)

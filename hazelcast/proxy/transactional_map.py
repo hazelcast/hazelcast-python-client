@@ -23,7 +23,7 @@ from hazelcast.protocol.codec import (
 from hazelcast.proxy.base import TransactionalProxy
 from hazelcast.types import ValueType, KeyType
 from hazelcast.serialization.compact import SchemaNotReplicatedError
-from hazelcast.util import check_not_none, to_millis, thread_id, ImmutableLazyDataList
+from hazelcast.util import check_not_none, to_millis, thread_id, deserialize_list_in_place
 
 
 class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
@@ -383,10 +383,8 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
                 return self.key_set(predicate)
 
             def handler(message):
-                return ImmutableLazyDataList(
-                    transactional_map_key_set_with_predicate_codec.decode_response(message),
-                    self._to_object,
-                )
+                data_list = transactional_map_key_set_with_predicate_codec.decode_response(message)
+                return deserialize_list_in_place(data_list, self._to_object)
 
             request = transactional_map_key_set_with_predicate_codec.encode_request(
                 self.name, self.transaction.id, thread_id(), predicate_data
@@ -394,9 +392,8 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
         else:
 
             def handler(message):
-                return ImmutableLazyDataList(
-                    transactional_map_key_set_codec.decode_response(message), self._to_object
-                )
+                data_list = transactional_map_key_set_codec.decode_response(message)
+                return deserialize_list_in_place(data_list, self._to_object)
 
             request = transactional_map_key_set_codec.encode_request(
                 self.name, self.transaction.id, thread_id()
@@ -422,10 +419,8 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
                 return self.values(predicate)
 
             def handler(message):
-                return ImmutableLazyDataList(
-                    transactional_map_values_with_predicate_codec.decode_response(message),
-                    self._to_object,
-                )
+                data_list = transactional_map_values_with_predicate_codec.decode_response(message)
+                return deserialize_list_in_place(data_list, self._to_object)
 
             request = transactional_map_values_with_predicate_codec.encode_request(
                 self.name, self.transaction.id, thread_id(), predicate_data
@@ -433,9 +428,8 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
         else:
 
             def handler(message):
-                return ImmutableLazyDataList(
-                    transactional_map_values_codec.decode_response(message), self._to_object
-                )
+                data_list = transactional_map_values_codec.decode_response(message)
+                return deserialize_list_in_place(data_list, self._to_object)
 
             request = transactional_map_values_codec.encode_request(
                 self.name, self.transaction.id, thread_id()
