@@ -320,19 +320,14 @@ def connect(
     dsn="",
     user: str = None,
     password: str = None,
-    host="localhost",
+    host: str = None,
     port: int = None,
+    cluster: str = None,
 ) -> Connection:
-    if config is not None:
-        return Connection(config)
-    if port:
-        host = f"{host}:{port}"
-    config = {
-        "cluster_members": [host],
-        "creds_username": user,
-        "creds_password": password,
-    }
-    return Connection(config)
+    c = make_config(
+        config, dsn=dsn, user=user, password=password, host=host, port=port, cluster=cluster
+    )
+    return Connection(c)
 
 
 class Error(Exception):
@@ -379,10 +374,9 @@ def wrap_error(f: Callable) -> Any:
     try:
         return f()
     except HazelcastSqlError as e:
-        msg = f"{e.args}"
-        raise DatabaseError from e
+        raise DatabaseError(f"{e.args}") from e
     except Exception as e:
-        raise Error from e
+        raise DatabaseError from e
 
 
 def map_type(code: int) -> Type:
@@ -412,125 +406,31 @@ _type_map = {
 }
 
 
-_error_map: dict = {}
-
-for e in [
-    _err._ARRAY_INDEX_OUT_OF_BOUNDS,
-    _err._ARRAY_STORE,
-    _err._CLASS_CAST,
-    _err._CLASS_NOT_FOUND,
-    _err._ILLEGAL_ACCESS_EXCEPTION,
-    _err._ILLEGAL_ACCESS_ERROR,
-    _err._ILLEGAL_MONITOR_STATE,
-    _err._ILLEGAL_STATE,
-    _err._ILLEGAL_THREAD_STATE,
-    _err._INDEX_OUT_OF_BOUNDS,
-    _err._INTERRUPTED,
-    _err._INVALID_ADDRESS,
-    _err._NEGATIVE_ARRAY_SIZE,
-    _err._NULL_POINTER,
-    _err._REACHED_MAX_SIZE,
-    _err._RUNTIME,
-    _err._XA,
-    _err._ASSERTION_ERROR,
-    _err._SERVICE_NOT_FOUND,
-    _err._LOCAL_MEMBER_RESET,
-    _err._INDETERMINATE_OPERATION_STATE,
-]:
-    _error_map[e] = InternalError
-
-for e in [
-    _err._AUTHENTICATION,
-    _err._CACHE_NOT_EXISTS,
-    _err._CONFIG_MISMATCH,
-    _err._DISTRIBUTED_OBJECT_DESTROYED,
-    _err._ILLEGAL_ARGUMENT,
-    _err._INVALID_CONFIGURATION,
-    _err._NO_SUCH_ELEMENT,
-    _err._QUERY,
-    _err._QUERY_RESULT_SIZE_EXCEEDED,
-    _err._SPLIT_BRAIN_PROTECTION,
-    _err._RESPONSE_ALREADY_SENT,
-    _err._SECURITY,
-    _err._STALE_SEQUENCE,
-    _err._ACCESS_CONTROL,
-    _err._LOGIN,
-]:
-    _error_map[e] = ProgrammingError
-
-for e in [
-    _err._CALLER_NOT_MEMBER,
-    _err._CANCELLATION,
-    _err._CONCURRENT_MODIFICATION,
-    _err._EOF,
-    _err._EXECUTION,
-    _err._HAZELCAST_OVERLOAD,
-    _err._IO,
-    _err._MEMBER_LEFT,
-    _err._OPERATION_TIMEOUT,
-    _err._PARTITION_MIGRATING,
-    _err._RETRYABLE_HAZELCAST,
-    _err._RETRYABLE_IO,
-    _err._TARGET_DISCONNECTED,
-    _err._TARGET_NOT_MEMBER,
-    _err._TIMEOUT,
-    _err._NO_DATA_MEMBER,
-    _err._WAN_REPLICATION_QUEUE_FULL,
-    _err._OUT_OF_MEMORY_ERROR,
-    _err._STACK_OVERFLOW_ERROR,
-    _err._NATIVE_OUT_OF_MEMORY_ERROR,
-    _err._MUTATION_DISALLOWED_EXCEPTION,
-    _err._CONSISTENCY_LOST_EXCEPTION,
-    _err._WAIT_KEY_CANCELLED_EXCEPTION,
-    _err._LOCK_OWNERSHIP_LOST_EXCEPTION,
-    _err._CP_GROUP_DESTROYED_EXCEPTION,
-    _err._STALE_APPEND_REQUEST_EXCEPTION,
-    _err._NOT_LEADER_EXCEPTION,
-]:
-    _error_map[e] = OperationalError
-
-for e in [
-    _err._HAZELCAST,
-    _err._REJECTED_EXECUTION,
-    _err._TOPIC_OVERLOAD,
-    _err._TRANSACTION,
-    _err._TRANSACTION_NOT_ACTIVE,
-    _err._TRANSACTION_TIMED_OUT,
-    _err._REPLICATED_MAP_CANT_BE_CREATED,
-    _err._STALE_TASK_ID,
-    _err._DUPLICATE_TASK,
-    _err._STALE_TASK,
-    _err._LOCK_ACQUIRE_LIMIT_REACHED_EXCEPTION,
-    _err._CANNOT_REPLICATE_EXCEPTION,
-    _err._LEADER_DEMOTED_EXCEPTION,
-]:
-    _error_map[e] = DatabaseError
-
-for e in [
-    _err._HAZELCAST_INSTANCE_NOT_ACTIVE,
-    _err._SOCKET,
-    _err._WRONG_TARGET,
-    _err._MAX_MESSAGE_SIZE_EXCEEDED,
-    _err._TARGET_NOT_REPLICA_EXCEPTION,
-    _err._VERSION_MISMATCH_EXCEPTION,
-]:
-    _error_map[e] = InterfaceError
-
-for e in [
-    _err._HAZELCAST_SERIALIZATION,
-    _err._NOT_SERIALIZABLE,
-    _err._URI_SYNTAX,
-    _err._UTF_DATA_FORMAT,
-]:
-    _error_map[e] = DataError
-
-for e in [
-    _err._UNSUPPORTED_OPERATION,
-    _err._UNSUPPORTED_CALLBACK,
-    _err._NO_SUCH_METHOD_ERROR,
-    _err._NO_SUCH_METHOD_EXCEPTION,
-    _err._NO_SUCH_FIELD_ERROR,
-    _err._NO_SUCH_FIELD_EXCEPTION,
-    _err._NO_CLASS_DEF_FOUND_ERROR,
-]:
-    _error_map[e] = NotSupportedError
+def make_config(
+    config: Config = None,
+    *,
+    dsn="",
+    user: str = None,
+    password: str = None,
+    host: str = None,
+    port: int = None,
+    cluster: str = None,
+) -> Config:
+    if config is not None:
+        if not isinstance(config, Config):
+            raise InterfaceError("config must be a Hazelcast.Config object")
+        return config
+    config = Config()
+    if not host:
+        host = "localhost"
+    if not port:
+        port = 5701
+    host = f"{host}:{port}"
+    config.cluster_members = [host]
+    if user is not None:
+        config.creds_username = user
+    if password is not None:
+        config.creds_password = password
+    if cluster is not None:
+        config.cluster_name = cluster
+    return config

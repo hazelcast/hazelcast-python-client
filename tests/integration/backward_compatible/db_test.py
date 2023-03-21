@@ -116,6 +116,6 @@ class DbapiTest(DbapiTestBase):
         )
         self.assertEqual(5, c.rownumber)
 
-    def test_cursor_connectio(self):
+    def test_cursor_connection(self):
         c = self.conn.cursor()
         self.assertEqual(self.conn, c.connection)
