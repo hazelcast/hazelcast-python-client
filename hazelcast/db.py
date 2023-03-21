@@ -325,7 +325,13 @@ def connect(
     cluster_name: str = None,
 ) -> Connection:
     c = _make_config(
-        config, dsn=dsn, user=user, password=password, host=host, port=port, cluster_name=cluster_name
+        config,
+        dsn=dsn,
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        cluster_name=cluster_name,
     )
     return Connection(c)
 
@@ -472,6 +478,7 @@ def _parse_dsn(dsn: str) -> Config:
         else:
             raise InterfaceError(f"Unknown DSN attribute: {k}")
     return cfg
+
 
 def _make_bool(v: str) -> bool:
     if v == "true":

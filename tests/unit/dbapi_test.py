@@ -9,7 +9,7 @@ class DbApiTestCase(unittest.TestCase):
         test_cases = [
             (Config(), {"dsn": "hz://"}),
             (Config(), {"user": "some-user"}),
-            (None, {"dsn": "hz://", "password": "some-pass"})
+            (None, {"dsn": "hz://", "password": "some-pass"}),
         ]
         for c, kwargs in test_cases:
             self.assertRaises(InterfaceError, lambda: _make_config(c, **kwargs))
@@ -17,12 +17,12 @@ class DbApiTestCase(unittest.TestCase):
     def test_make_config_default(self):
         cfg = _make_config()
         target = config_with_values(cluster_members=["localhost:5701"])
-        self.assertEqual(target.__dict__, cfg.__dict__)
+        self.assertEqualConfig(target, cfg)
 
     def test_make_config_config_object(self):
         cfg = config_with_values(creds_username="joe")
         target = config_with_values(creds_username="joe")
-        self.assertEqual(target.__dict__, cfg.__dict__)
+        self.assertEqualConfig(target, cfg)
 
     def test_make_config_cluster(self):
         cfg = _make_config(cluster_name="foo")
@@ -30,7 +30,7 @@ class DbApiTestCase(unittest.TestCase):
             cluster_members=["localhost:5701"],
             cluster_name="foo",
         )
-        self.assertEqual(target.__dict__, cfg.__dict__)
+        self.assertEqualConfig(target, cfg)
 
     def test_make_config_user_password(self):
         cfg = _make_config(user="joe", password="jane")
@@ -39,69 +39,74 @@ class DbApiTestCase(unittest.TestCase):
             creds_username="joe",
             creds_password="jane",
         )
-        self.assertEqual(target.__dict__, cfg.__dict__)
+        self.assertEqualConfig(target, cfg)
 
     def test_make_config_host(self):
         cfg = _make_config(host="foo.com")
         target = config_with_values(cluster_members=["foo.com:5701"])
-        self.assertEqual(target.__dict__, cfg.__dict__)
+        self.assertEqualConfig(target, cfg)
 
     def test_make_config_port(self):
         cfg = _make_config(port=1234)
         target = config_with_values(cluster_members=["localhost:1234"])
-        self.assertEqual(target.__dict__, cfg.__dict__)
+        self.assertEqualConfig(target, cfg)
 
     def test_make_config_host_port(self):
         cfg = _make_config(host="foo.com", port=1234)
         target = config_with_values(cluster_members=["foo.com:1234"])
-        self.assertEqual(target.__dict__, cfg.__dict__)
+        self.assertEqualConfig(target, cfg)
 
     def test_make_config_dsn(self):
         test_cases = [
-            ("hz://", config_with_values(
-                cluster_members=["localhost:5701"]
-            )),
-            ("hz://foo.com", config_with_values(
-                cluster_members=["foo.com:5701"]
-            )),
-            ("hz://:1234", config_with_values(
-                cluster_members=["localhost:1234"]
-            )),
-            ("hz://foo.com:1234", config_with_values(
-                cluster_members=["foo.com:1234"]
-            )),
-            ("hz://user:pass@foo.com:1234", config_with_values(
-                cluster_members=["foo.com:1234"],
-                creds_username="user",
-                creds_password="pass",
-            )),
-            ("hz://foo.com:1234?cluster.name=prod", config_with_values(
-                cluster_members=["foo.com:1234"],
-                cluster_name="prod",
-            )),
-            ("hz://foo.com:1234?cluster.name=prod&cloud.token=token1", config_with_values(
-                cluster_members=["foo.com:1234"],
-                cluster_name="prod",
-                cloud_discovery_token="token1",
-            )),
-            ("hz://foo.com?smart=false", config_with_values(
-                cluster_members=["foo.com:5701"],
-                smart_routing=False,
-            )),
-            ("hz://foo.com?ssl=true&ssl.ca.path=ca.pem&ssl.cert.path=cert.pem&ssl.key.path=key.pem&ssl.key.password=123",
-                 config_with_values(
+            ("hz://", config_with_values(cluster_members=["localhost:5701"])),
+            ("hz://foo.com", config_with_values(cluster_members=["foo.com:5701"])),
+            ("hz://:1234", config_with_values(cluster_members=["localhost:1234"])),
+            ("hz://foo.com:1234", config_with_values(cluster_members=["foo.com:1234"])),
+            (
+                "hz://user:pass@foo.com:1234",
+                config_with_values(
+                    cluster_members=["foo.com:1234"],
+                    creds_username="user",
+                    creds_password="pass",
+                ),
+            ),
+            (
+                "hz://foo.com:1234?cluster.name=prod",
+                config_with_values(
+                    cluster_members=["foo.com:1234"],
+                    cluster_name="prod",
+                ),
+            ),
+            (
+                "hz://foo.com:1234?cluster.name=prod&cloud.token=token1",
+                config_with_values(
+                    cluster_members=["foo.com:1234"],
+                    cluster_name="prod",
+                    cloud_discovery_token="token1",
+                ),
+            ),
+            (
+                "hz://foo.com?smart=false",
+                config_with_values(
+                    cluster_members=["foo.com:5701"],
+                    smart_routing=False,
+                ),
+            ),
+            (
+                "hz://foo.com?ssl=true&ssl.ca.path=ca.pem&ssl.cert.path=cert.pem&ssl.key.path=key.pem&ssl.key.password=123",
+                config_with_values(
                     cluster_members=["foo.com:5701"],
                     ssl_enabled=True,
                     ssl_cafile="ca.pem",
                     ssl_certfile="cert.pem",
                     ssl_keyfile="key.pem",
                     ssl_password="123",
-                )
-             ),
+                ),
+            ),
         ]
         for dsn, target in test_cases:
             cfg = _make_config(dsn=dsn)
-            self.assertEqual(target.__dict__, cfg.__dict__, f"Config for {dsn}")
+            self.assertEqualConfig(target, cfg)
 
     def test_make_config_invalid_dsn(self):
         test_cases = [
@@ -113,9 +118,19 @@ class DbApiTestCase(unittest.TestCase):
         for dsn in test_cases:
             self.assertRaises(InterfaceError, lambda: _make_config(dsn=dsn))
 
+    def assertEqualConfig(self, a: Config, b: Config):
+        self.assertEqual(config_to_dict(a), config_to_dict(b))
+
 
 def config_with_values(**kwargs) -> Config:
     cfg = Config()
     for k, v in kwargs.items():
         setattr(cfg, k, v)
     return cfg
+
+
+def config_to_dict(cfg: Config) -> dict:
+    d = {}
+    for k in cfg.__slots__:
+        d[k] = getattr(cfg, k)
+    return d
