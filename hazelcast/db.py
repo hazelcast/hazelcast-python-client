@@ -25,7 +25,7 @@ threadsafety = 2
 paramstyle = "qmark"
 
 DescriptionColumn = namedtuple(
-    "DescriptiontColumn",
+    "DescriptionColumn",
     [
         "name",
         "type",
@@ -147,7 +147,7 @@ class Cursor:
             self._description = self._make_description(res.get_row_metadata())
             self._iter = res.__iter__()
 
-    def executemany(self, operation: str, seq_of_params: Sequence[Any]) -> None:
+    def executemany(self, operation: str, seq_of_params: Sequence[Tuple]) -> None:
         self._ensure_open()
         self._rownumber = -1
         self._iter = None
@@ -460,14 +460,15 @@ def _parse_dsn(dsn: str) -> Config:
     if r.password:
         cfg.creds_password = r.password
     for k, v in urllib.parse.parse_qsl(r.query):
+        value: Any = v
         if k in _parse_dsn_map:
             attr_name, transform = _parse_dsn_map[k]
             if transform:
                 try:
-                    v = transform(v)
+                    value = transform(value)
                 except ValueError as e:
                     raise InterfaceError from e
-            setattr(cfg, attr_name, v)
+            setattr(cfg, attr_name, value)
         else:
             raise InterfaceError(f"Unknown DSN attribute: {k}")
     return cfg
