@@ -53,7 +53,7 @@ STRING = Type.STRING
 BINARY = Type.STRING
 NUMBER = Type.NUMBER
 DATETIME = Type.DATETIME
-ROWID = Type.NUMBER
+ROWID = None
 
 
 def DateFromTicks(ticks):
