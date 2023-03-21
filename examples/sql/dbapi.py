@@ -28,22 +28,18 @@ data = [
 cur.executemany("SINK INTO stocks VALUES(?, CAST(? AS DATE), ?, ?, ?, ?)", data)
 
 cur.execute("SELECT * FROM stocks ORDER BY price")
-print("rownum", cur.rownumber)
+
 for row in cur.fetchmany(1):
     print(row["__key"], row["symbol"], row["quantity"], row["price"])
 
-print("rownum", cur.rownumber)
-# print(cur.description)
 for row in cur.fetchmany(1):
     print(row["__key"], row["symbol"], row["quantity"], row["price"])
 
-print("rownum", cur.rownumber)
 for row in cur.fetchmany(1):
     print(row["__key"], row["symbol"], row["quantity"], row["price"])
-print("rownum", cur.rownumber)
+
 conn.close()
 
-print("----")
 with hazelcast.db.connect() as conn:
     try:
         with conn.cursor() as cur:
