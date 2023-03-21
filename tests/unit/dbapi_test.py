@@ -1,12 +1,21 @@
 import unittest
 
 from hazelcast.config import Config
-from hazelcast.db import make_config
+from hazelcast.db import _make_config, InterfaceError
 
 
 class DbApiTestCase(unittest.TestCase):
+    def test_make_config_invalid(self):
+        test_cases = [
+            (Config(), {"dsn": "hz://"}),
+            (Config(), {"user": "some-user"}),
+            (None, {"dsn": "hz://", "password": "some-pass"})
+        ]
+        for c, kwargs in test_cases:
+            self.assertRaises(InterfaceError, lambda: _make_config(c, **kwargs))
+
     def test_make_config_default(self):
-        cfg = make_config()
+        cfg = _make_config()
         target = config_with_values(cluster_members=["localhost:5701"])
         self.assertEqual(target.__dict__, cfg.__dict__)
 
@@ -16,7 +25,7 @@ class DbApiTestCase(unittest.TestCase):
         self.assertEqual(target.__dict__, cfg.__dict__)
 
     def test_make_config_cluster(self):
-        cfg = make_config(cluster="foo")
+        cfg = _make_config(cluster_name="foo")
         target = config_with_values(
             cluster_members=["localhost:5701"],
             cluster_name="foo",
@@ -24,7 +33,7 @@ class DbApiTestCase(unittest.TestCase):
         self.assertEqual(target.__dict__, cfg.__dict__)
 
     def test_make_config_user_password(self):
-        cfg = make_config(user="joe", password="jane")
+        cfg = _make_config(user="joe", password="jane")
         target = config_with_values(
             cluster_members=["localhost:5701"],
             creds_username="joe",
@@ -33,19 +42,76 @@ class DbApiTestCase(unittest.TestCase):
         self.assertEqual(target.__dict__, cfg.__dict__)
 
     def test_make_config_host(self):
-        cfg = make_config(host="foo.com")
+        cfg = _make_config(host="foo.com")
         target = config_with_values(cluster_members=["foo.com:5701"])
         self.assertEqual(target.__dict__, cfg.__dict__)
 
     def test_make_config_port(self):
-        cfg = make_config(port=1234)
+        cfg = _make_config(port=1234)
         target = config_with_values(cluster_members=["localhost:1234"])
         self.assertEqual(target.__dict__, cfg.__dict__)
 
     def test_make_config_host_port(self):
-        cfg = make_config(host="foo.com", port=1234)
+        cfg = _make_config(host="foo.com", port=1234)
         target = config_with_values(cluster_members=["foo.com:1234"])
         self.assertEqual(target.__dict__, cfg.__dict__)
+
+    def test_make_config_dsn(self):
+        test_cases = [
+            ("hz://", config_with_values(
+                cluster_members=["localhost:5701"]
+            )),
+            ("hz://foo.com", config_with_values(
+                cluster_members=["foo.com:5701"]
+            )),
+            ("hz://:1234", config_with_values(
+                cluster_members=["localhost:1234"]
+            )),
+            ("hz://foo.com:1234", config_with_values(
+                cluster_members=["foo.com:1234"]
+            )),
+            ("hz://user:pass@foo.com:1234", config_with_values(
+                cluster_members=["foo.com:1234"],
+                creds_username="user",
+                creds_password="pass",
+            )),
+            ("hz://foo.com:1234?cluster.name=prod", config_with_values(
+                cluster_members=["foo.com:1234"],
+                cluster_name="prod",
+            )),
+            ("hz://foo.com:1234?cluster.name=prod&cloud.token=token1", config_with_values(
+                cluster_members=["foo.com:1234"],
+                cluster_name="prod",
+                cloud_discovery_token="token1",
+            )),
+            ("hz://foo.com?smart=false", config_with_values(
+                cluster_members=["foo.com:5701"],
+                smart_routing=False,
+            )),
+            ("hz://foo.com?ssl=true&ssl.ca.path=ca.pem&ssl.cert.path=cert.pem&ssl.key.path=key.pem&ssl.key.password=123",
+                 config_with_values(
+                    cluster_members=["foo.com:5701"],
+                    ssl_enabled=True,
+                    ssl_cafile="ca.pem",
+                    ssl_certfile="cert.pem",
+                    ssl_keyfile="key.pem",
+                    ssl_password="123",
+                )
+             ),
+        ]
+        for dsn, target in test_cases:
+            cfg = _make_config(dsn=dsn)
+            self.assertEqual(target.__dict__, cfg.__dict__, f"Config for {dsn}")
+
+    def test_make_config_invalid_dsn(self):
+        test_cases = [
+            "http://",
+            "://",
+            "hz://foo.com?smart=False",
+            "hz://foo.com?non.existing=value",
+        ]
+        for dsn in test_cases:
+            self.assertRaises(InterfaceError, lambda: _make_config(dsn=dsn))
 
 
 def config_with_values(**kwargs) -> Config:

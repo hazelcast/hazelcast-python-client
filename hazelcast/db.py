@@ -5,6 +5,7 @@ from typing import Any, Callable, Iterator, List, Optional, Sequence, Union, Tup
 import enum
 import itertools
 import threading
+import urllib.parse
 
 from hazelcast import HazelcastClient
 from hazelcast.config import Config
@@ -17,14 +18,13 @@ from hazelcast.sql import (
     SqlExpectedResultType,
     _DEFAULT_CURSOR_BUFFER_SIZE,
 )
-import hazelcast.errors as _err
 
 apilevel = "2.0"
 # Threads may share the module and connections.
 threadsafety = 2
 paramstyle = "qmark"
 
-DescriptiontColumn = namedtuple(
+DescriptionColumn = namedtuple(
     "DescriptiontColumn",
     [
         "name",
@@ -84,7 +84,7 @@ class Cursor:
         self.arraysize = 1
         self._conn = conn
         self._res: Union[SqlResult, None] = None
-        self._description: Union[List[DescriptiontColumn], None] = None
+        self._description: Union[List[DescriptionColumn], None] = None
         self._iter: Optional[Iterator[SqlRow]] = None
         self._rownumber = -1
         self._closed = False
@@ -103,7 +103,7 @@ class Cursor:
         return self._conn
 
     @property
-    def description(self) -> Union[List[DescriptiontColumn], None]:
+    def description(self) -> Union[List[DescriptionColumn], None]:
         return self._description
 
     @property
@@ -207,13 +207,13 @@ class Cursor:
         pass
 
     @classmethod
-    def _make_description(cls, metadata: SqlRowMetadata) -> List[DescriptiontColumn]:
+    def _make_description(cls, metadata: SqlRowMetadata) -> List[DescriptionColumn]:
         r = []
         for col in metadata.columns:
             r.append(
-                DescriptiontColumn(
+                DescriptionColumn(
                     name=col.name,
-                    type=map_type(col.type),
+                    type=_map_type(col.type),
                     display_size=None,
                     internal_size=None,
                     precision=None,
@@ -322,10 +322,10 @@ def connect(
     password: str = None,
     host: str = None,
     port: int = None,
-    cluster: str = None,
+    cluster_name: str = None,
 ) -> Connection:
-    c = make_config(
-        config, dsn=dsn, user=user, password=password, host=host, port=port, cluster=cluster
+    c = _make_config(
+        config, dsn=dsn, user=user, password=password, host=host, port=port, cluster_name=cluster_name
     )
     return Connection(c)
 
@@ -370,7 +370,7 @@ class NotSupportedError(DatabaseError):
     pass
 
 
-def wrap_error(f: Callable) -> Any:
+def _wrap_error(f: Callable) -> Any:
     try:
         return f()
     except HazelcastSqlError as e:
@@ -379,10 +379,10 @@ def wrap_error(f: Callable) -> Any:
         raise DatabaseError from e
 
 
-def map_type(code: int) -> Type:
+def _map_type(code: int) -> Type:
     type = _type_map.get(code)
     if type is None:
-        raise NotSupportedError(f"unknown type code: {code}")
+        raise NotSupportedError(f"Unknown type code: {code}")
     return type
 
 
@@ -406,7 +406,7 @@ _type_map = {
 }
 
 
-def make_config(
+def _make_config(
     config: Config = None,
     *,
     dsn="",
@@ -414,12 +414,19 @@ def make_config(
     password: str = None,
     host: str = None,
     port: int = None,
-    cluster: str = None,
+    cluster_name: str = None,
 ) -> Config:
+    kwargs_used = user or password or host or port or cluster_name
     if config is not None:
         if not isinstance(config, Config):
-            raise InterfaceError("config must be a Hazelcast.Config object")
+            raise InterfaceError("config must be a hazelcast.Config object")
+        if dsn or kwargs_used:
+            raise InterfaceError("config argument cannot be used with keyword arguments")
         return config
+    if dsn:
+        if kwargs_used:
+            raise InterfaceError("dsn argument cannot be used with other keyword arguments")
+        return _parse_dsn(dsn)
     config = Config()
     if not host:
         host = "localhost"
@@ -431,6 +438,55 @@ def make_config(
         config.creds_username = user
     if password is not None:
         config.creds_password = password
-    if cluster is not None:
-        config.cluster_name = cluster
+    if cluster_name is not None:
+        config.cluster_name = cluster_name
     return config
+
+
+def _parse_dsn(dsn: str) -> Config:
+    r = urllib.parse.urlparse(dsn)
+    if r.scheme != "hz":
+        raise InterfaceError(f"Scheme must be hz, but it is: {r.scheme}")
+    cfg = Config()
+    host = "localhost"
+    port = 5701
+    if r.hostname:
+        host = r.hostname
+    if r.port:
+        port = r.port
+    cfg.cluster_members = [f"{host}:{port}"]
+    if r.username:
+        cfg.creds_username = r.username
+    if r.password:
+        cfg.creds_password = r.password
+    for k, v in urllib.parse.parse_qsl(r.query):
+        if k in _parse_dsn_map:
+            attr_name, transform = _parse_dsn_map[k]
+            if transform:
+                try:
+                    v = transform(v)
+                except ValueError as e:
+                    raise InterfaceError from e
+            setattr(cfg, attr_name, v)
+        else:
+            raise InterfaceError(f"Unknown DSN attribute: {k}")
+    return cfg
+
+def _make_bool(v: str) -> bool:
+    if v == "true":
+        return True
+    if v == "false":
+        return False
+    raise ValueError(f"Invalid boolean: {v}")
+
+
+_parse_dsn_map = {
+    "cluster.name": ("cluster_name", None),
+    "cloud.token": ("cloud_discovery_token", None),
+    "smart": ("smart_routing", _make_bool),
+    "ssl": ("ssl_enabled", _make_bool),
+    "ssl.ca.path": ("ssl_cafile", None),
+    "ssl.cert.path": ("ssl_certfile", None),
+    "ssl.key.path": ("ssl_keyfile", None),
+    "ssl.key.password": ("ssl_password", None),
+}
