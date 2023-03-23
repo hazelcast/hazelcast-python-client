@@ -278,33 +278,6 @@ All of these APIs will work with the Compact serialization format, once it is
 promoted to the stable status.
 
 - Reading OBJECT columns of the SQL results
-- Listening for :class:`hazelcast.proxy.reliable_topic.ReliableTopic` messages
-- :func:`hazelcast.proxy.list.List.iterator`
-- :func:`hazelcast.proxy.list.List.list_iterator`
-- :func:`hazelcast.proxy.list.List.get_all`
-- :func:`hazelcast.proxy.list.List.sub_list`
-- :func:`hazelcast.proxy.map.Map.values`
-- :func:`hazelcast.proxy.map.Map.entry_set`
-- :func:`hazelcast.proxy.map.Map.execute_on_keys`
-- :func:`hazelcast.proxy.map.Map.key_set`
-- :func:`hazelcast.proxy.map.Map.project`
-- :func:`hazelcast.proxy.map.Map.execute_on_entries`
-- :func:`hazelcast.proxy.map.Map.get_all`
-- :func:`hazelcast.proxy.multi_map.MultiMap.remove_all`
-- :func:`hazelcast.proxy.multi_map.MultiMap.key_set`
-- :func:`hazelcast.proxy.multi_map.MultiMap.values`
-- :func:`hazelcast.proxy.multi_map.MultiMap.entry_set`
-- :func:`hazelcast.proxy.multi_map.MultiMap.get`
-- :func:`hazelcast.proxy.queue.Queue.iterator`
-- :func:`hazelcast.proxy.replicated_map.ReplicatedMap.values`
-- :func:`hazelcast.proxy.replicated_map.ReplicatedMap.entry_set`
-- :func:`hazelcast.proxy.replicated_map.ReplicatedMap.key_set`
-- :func:`hazelcast.proxy.set.Set.get_all`
-- :func:`hazelcast.proxy.ringbuffer.Ringbuffer.read_many`
-- :func:`hazelcast.proxy.transactional_map.TransactionalMap.values`
-- :func:`hazelcast.proxy.transactional_map.TransactionalMap.key_set`
-- :func:`hazelcast.proxy.transactional_multi_map.TransactionalMultiMap.get`
-- :func:`hazelcast.proxy.transactional_multi_map.TransactionalMultiMap.remove_all`
 
 IdentifiedDataSerializable Serialization
 ----------------------------------------

@@ -1,4 +1,5 @@
 import typing
+from collections.abc import Sequence, Iterable
 
 from hazelcast.future import ImmediateFuture, Future
 from hazelcast.protocol.codec import (
@@ -20,7 +21,7 @@ from hazelcast.util import (
     check_not_none,
     check_not_empty,
     check_true,
-    ImmutableLazyDataList,
+    deserialize_list_in_place,
 )
 
 OVERFLOW_POLICY_OVERWRITE = 0
@@ -52,7 +53,7 @@ The maximum number of items to be added to RingBuffer or read from RingBuffer at
 """
 
 
-class ReadResult(ImmutableLazyDataList):
+class ReadResult(Sequence):
     """Defines the result of a :func:`Ringbuffer.read_many` operation."""
 
     SEQUENCE_UNAVAILABLE = -1
@@ -61,11 +62,12 @@ class ReadResult(ImmutableLazyDataList):
     members not returning the sequence).
     """
 
-    def __init__(self, read_count, next_seq, items, item_seqs, to_object):
-        super(ReadResult, self).__init__(items, to_object)
+    def __init__(self, read_count, next_seq, item_seqs, items):
+        super(ReadResult, self).__init__()
         self._read_count = read_count
         self._next_seq = next_seq
         self._item_seqs = item_seqs
+        self._items = items
 
     @property
     def read_count(self) -> int:
@@ -90,7 +92,7 @@ class ReadResult(ImmutableLazyDataList):
         See Also:
             :attr:`read_count`
         """
-        return len(self._list_data)
+        return len(self._items)
 
     @property
     def next_sequence_to_read_from(self) -> int:
@@ -128,6 +130,21 @@ class ReadResult(ImmutableLazyDataList):
             The sequence number for the ringbuffer item.
         """
         return self._item_seqs[index]
+
+    def __getitem__(self, index: typing.Union[int, slice]) -> typing.Any:
+        return self._items[index]
+
+    def __len__(self) -> int:
+        return len(self._items)
+
+    def __eq__(self, other) -> bool:
+        # This implementation is copied from the
+        # now removed super class. It is implemented
+        # to maintain backward compatibility.
+        if not isinstance(other, Iterable):
+            return False
+
+        return self._items == other
 
 
 class Ringbuffer(PartitionSpecificProxy["BlockingRingbuffer"], typing.Generic[ItemType]):
@@ -379,12 +396,12 @@ class Ringbuffer(PartitionSpecificProxy["BlockingRingbuffer"], typing.Generic[It
 
         def handler(message):
             response = ringbuffer_read_many_codec.decode_response(message)
+            items = deserialize_list_in_place(response["items"], self._to_object)
             read_count = response["read_count"]
             next_seq = response["next_seq"]
-            items = response["items"]
             item_seqs = response["item_seqs"]
 
-            return ReadResult(read_count, next_seq, items, item_seqs, self._to_object)
+            return ReadResult(read_count, next_seq, item_seqs, items)
 
         def continuation(future):
             # Since the first call to capacity

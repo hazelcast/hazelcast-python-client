@@ -226,7 +226,7 @@ class _MessageRunner:
             result = future.result()
 
             # Check if there are any messages lost since the last read
-            # and whether or not the listener can tolerate that.
+            # and whether the listener can tolerate that.
             lost_count = (result.next_sequence_to_read_from - result.read_count) - self._sequence
             if lost_count != 0 and not self._is_loss_tolerable(lost_count):
                 self.cancel()
@@ -254,7 +254,7 @@ class _MessageRunner:
 
                     topic_message = TopicMessage(
                         self._topic_name,
-                        self._to_object(message.payload),
+                        message.payload,
                         message.publish_time,
                         member,
                     )
