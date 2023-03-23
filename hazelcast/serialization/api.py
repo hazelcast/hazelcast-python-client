@@ -2587,6 +2587,10 @@ class CompactWriter(abc.ABC):
         Args:
             field_name: Name of the field.
             value: Value to be written.
+
+        Raises:
+            hazelcast.errors.HazelcastSerializationError: If the list contains
+                different item types.
         """
 
 

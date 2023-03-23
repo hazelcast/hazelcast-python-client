@@ -426,8 +426,31 @@ class DefaultCompactWriter(CompactWriter):
         self, field_name: str, value: typing.Optional[typing.List[typing.Optional[typing.Any]]]
     ) -> None:
         self._write_array_of_var_sized_fields(
-            field_name, FieldKind.ARRAY_OF_COMPACT, value, self._write_compact_helper
+            field_name,
+            FieldKind.ARRAY_OF_COMPACT,
+            value,
+            self._single_type_compact_item_writer(),
         )
+
+    def _single_type_compact_item_writer(self):
+        expected_type = None
+
+        def writer(value: typing.Any):
+            nonlocal expected_type
+
+            item_type = type(value)
+            if not expected_type:
+                expected_type = item_type
+            elif expected_type != item_type:
+                raise HazelcastSerializationError(
+                    f"It is not allowed to serialize an array of Compact serializable "
+                    f"objects containing different item types. Expected array "
+                    f"item type: {expected_type}, current item type: {item_type}"
+                )
+
+            self._write_compact_helper(value)
+
+        return writer
 
     def _write_compact_helper(self, value: typing.Any) -> None:
         self._compact_serializer.write(self._out, value)
