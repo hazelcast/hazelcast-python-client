@@ -482,7 +482,7 @@ class DefaultCompactWriter(CompactWriter):
                 self._out.write_int(position)
 
     def _get_field(self, field_name: str, field_kind: "FieldKind") -> "FieldDescriptor":
-        field = self._schema.fields.get(field_name, None)
+        field = self._schema.fields_dict.get(field_name, None)
         if not field:
             raise HazelcastSerializationError(
                 f"No field with the name '{field_name}' can found in the {self._schema}"
@@ -636,7 +636,7 @@ class DefaultCompactReader(CompactReader):
         inp.set_position(end_position)
 
     def get_field_kind(self, field_name) -> "FieldKind":
-        field = self._schema.fields.get(field_name)
+        field = self._schema.fields_dict.get(field_name)
         if not field:
             return FieldKind.NOT_AVAILABLE
         return field.kind
@@ -1353,7 +1353,7 @@ class DefaultCompactReader(CompactReader):
         return self.read_array_of_compact(field_name)
 
     def _get_field(self, field_name: str) -> "FieldDescriptor":
-        field = self._schema.fields.get(field_name)
+        field = self._schema.fields_dict.get(field_name)
         if not field:
             raise HazelcastSerializationError(
                 f"No field with the name '{field_name}' can be found in the {self._schema}"
@@ -1424,7 +1424,7 @@ class DefaultCompactReader(CompactReader):
         return position + self._data_start_position
 
     def _is_field_exists(self, field_name: str, field_kind: "FieldKind") -> bool:
-        field = self._schema.fields.get(field_name)
+        field = self._schema.fields_dict.get(field_name)
         if not field:
             return False
 
@@ -1769,13 +1769,13 @@ class SchemaWriter(CompactWriter):
 
 
 class Schema:
-    def __init__(self, type_name: str, fields_list: typing.List["FieldDescriptor"]):
+    def __init__(self, type_name: str, fields: typing.List["FieldDescriptor"]):
         self.type_name = type_name
-        self.fields: typing.Dict[str, "FieldDescriptor"] = {f.name: f for f in fields_list}
+        self.fields_dict: typing.Dict[str, "FieldDescriptor"] = {f.name: f for f in fields}
         # Sort the fields by the field name so that the field offsets/indexes
         # can be set correctly.
-        fields_list.sort(key=lambda f: f.name)
-        self.fields_list = fields_list
+        fields.sort(key=lambda f: f.name)
+        self.fields = fields
         self.schema_id: int = 0
         self.var_sized_field_count: int = 0
         self.fix_sized_fields_length: int = 0
@@ -1786,7 +1786,7 @@ class Schema:
         var_sized_fields = []
         bool_fields = []
 
-        for field in self.fields_list:
+        for field in self.fields:
             kind = field.kind
             if FIELD_OPERATIONS[field.kind].is_var_sized():
                 var_sized_fields.append(field)
@@ -1837,17 +1837,15 @@ class Schema:
         return (
             isinstance(other, Schema)
             and self.type_name == other.type_name
+            and self.fields_dict == other.fields_dict
             and self.fields == other.fields
-            and self.fields_list == other.fields_list
             and self.schema_id == other.schema_id
             and self.var_sized_field_count == other.var_sized_field_count
             and self.fix_sized_fields_length == other.fix_sized_fields_length
         )
 
     def __repr__(self) -> str:
-        return (
-            f"Schema(schema_id={self.schema_id}, type_name={self.type_name}, fields={self.fields})"
-        )
+        return f"Schema(schema_id={self.schema_id}, type_name={self.type_name}, fields={self.fields_dict})"
 
 
 class FieldDescriptor:
@@ -1859,6 +1857,11 @@ class FieldDescriptor:
         self.index = -1
         self.position = -1
         self.bit_position = -1
+
+    @property
+    def field_name(self) -> str:
+        # Needed for protocol
+        return self.name
 
     def __eq__(self, other: typing.Any) -> bool:
         return (
@@ -1893,8 +1896,8 @@ class RabinFingerprint:
     @staticmethod
     def of(schema: Schema) -> int:
         fp = RabinFingerprint._of_str(RabinFingerprint._EMPTY, schema.type_name)
-        fp = RabinFingerprint._of_i32(fp, len(schema.fields))
-        for field in schema.fields_list:
+        fp = RabinFingerprint._of_i32(fp, len(schema.fields_dict))
+        for field in schema.fields:
             fp = RabinFingerprint._of_str(fp, field.name)
             fp = RabinFingerprint._of_i32(fp, field.kind)
         return fp

@@ -1,3 +1,4 @@
+import typing
 import uuid
 from datetime import date, time, datetime, timedelta, timezone
 from decimal import Decimal
@@ -33,6 +34,9 @@ from hazelcast.serialization.bits import (
 )
 from hazelcast.serialization.data import Data
 from hazelcast.util import int_from_bytes
+
+if typing.TYPE_CHECKING:
+    from hazelcast.protocol.client_message import InboundMessage
 
 _LOCAL_DATE_SIZE_IN_BYTES = INT_SIZE_IN_BYTES + BYTE_SIZE_IN_BYTES * 2
 _LOCAL_TIME_SIZE_IN_BYTES = BYTE_SIZE_IN_BYTES * 3 + INT_SIZE_IN_BYTES
@@ -478,6 +482,31 @@ class ListUUIDCodec:
         result = []
         for i in range(n):
             result.append(FixSizedTypesCodec.decode_uuid(b, i * UUID_SIZE_IN_BYTES))
+        return result
+
+
+class SetUUIDCodec:
+    @staticmethod
+    def encode(buf: bytearray, s: typing.Set[uuid.UUID], is_final=False):
+        n = len(s)
+        size = SIZE_OF_FRAME_LENGTH_AND_FLAGS + n * UUID_SIZE_IN_BYTES
+        b = bytearray(size)
+        LE_INT.pack_into(b, 0, size)
+        if is_final:
+            LE_UINT16.pack_into(b, INT_SIZE_IN_BYTES, _IS_FINAL_FLAG)
+        for i, u in enumerate(s):
+            FixSizedTypesCodec.encode_uuid(
+                b, SIZE_OF_FRAME_LENGTH_AND_FLAGS + i * UUID_SIZE_IN_BYTES, u
+            )
+        buf.extend(b)
+
+    @staticmethod
+    def decode(msg: "InboundMessage") -> typing.Set[uuid.UUID]:
+        b = msg.next_frame().buf
+        n = len(b) // UUID_SIZE_IN_BYTES
+        result = set()
+        for i in range(n):
+            result.add(FixSizedTypesCodec.decode_uuid(b, i * UUID_SIZE_IN_BYTES))
         return result
 
 

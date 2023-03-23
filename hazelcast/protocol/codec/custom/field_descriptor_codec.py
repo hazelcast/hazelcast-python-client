@@ -15,7 +15,7 @@ class FieldDescriptorCodec:
         initial_frame_buf = create_initial_buffer_custom(_INITIAL_FRAME_SIZE)
         FixSizedTypesCodec.encode_int(initial_frame_buf, _KIND_ENCODE_OFFSET, field_descriptor.kind)
         buf.extend(initial_frame_buf)
-        StringCodec.encode(buf, field_descriptor.name)
+        StringCodec.encode(buf, field_descriptor.field_name)
         if is_final:
             buf.extend(END_FINAL_FRAME_BUF)
         else:
@@ -26,6 +26,6 @@ class FieldDescriptorCodec:
         msg.next_frame()
         initial_frame = msg.next_frame()
         kind = FixSizedTypesCodec.decode_int(initial_frame.buf, _KIND_DECODE_OFFSET)
-        name = StringCodec.decode(msg)
+        field_name = StringCodec.decode(msg)
         CodecUtil.fast_forward_to_end_frame(msg)
-        return FieldDescriptor(name, kind)
+        return FieldDescriptor(field_name, kind)
