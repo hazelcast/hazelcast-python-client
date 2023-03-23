@@ -1,12 +1,13 @@
 import random
 import threading
 import time
+import typing
 import uuid
-
-from collections.abc import Sequence, Iterable
 
 from hazelcast.serialization import UUID_MSB_SHIFT, UUID_LSB_MASK, UUID_MSB_MASK
 
+if typing.TYPE_CHECKING:
+    from hazelcast.serialization.data import Data
 
 DEFAULT_ADDRESS = "127.0.0.1"
 DEFAULT_PORT = 5701
@@ -135,14 +136,19 @@ def get_portable_version(portable, default_version):
     return version
 
 
-def deserialize_list_in_place(data_list, to_object_fn):
+def deserialize_list_in_place(
+    data_list: typing.List["Data"], to_object_fn: typing.Callable[["Data"], typing.Any]
+) -> typing.List:
     for i in range(len(data_list)):
         data_list[i] = to_object_fn(data_list[i])
 
     return data_list
 
 
-def deserialize_entry_list_in_place(entry_data_list, to_object_fn):
+def deserialize_entry_list_in_place(
+    entry_data_list: typing.List[typing.Tuple["Data", "Data"]],
+    to_object_fn: typing.Callable[["Data"], typing.Any],
+) -> typing.List[typing.Tuple[typing.Any, typing.Any]]:
     for i in range(len(entry_data_list)):
         item = entry_data_list[i]
         entry_data_list[i] = (to_object_fn(item[0]), to_object_fn(item[1]))
