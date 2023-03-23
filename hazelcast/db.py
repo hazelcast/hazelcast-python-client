@@ -39,10 +39,12 @@ DescriptionColumn = namedtuple(
 
 
 class Type(enum.Enum):
+    NONE = 0
     STRING = 1
     NUMBER = 2
     BOOLEAN = 3
     DATETIME = 4
+    BINARY = 5
 
 
 Date = date
@@ -397,7 +399,7 @@ _type_map = {
     SqlColumnType.BOOLEAN: Type.BOOLEAN,
     SqlColumnType.TINYINT: Type.NUMBER,
     SqlColumnType.SMALLINT: Type.NUMBER,
-    SqlColumnType.INTEGER: Type.STRING,
+    SqlColumnType.INTEGER: Type.NUMBER,
     SqlColumnType.BIGINT: Type.NUMBER,
     SqlColumnType.DECIMAL: Type.NUMBER,
     SqlColumnType.REAL: Type.NUMBER,
@@ -406,9 +408,9 @@ _type_map = {
     SqlColumnType.TIME: Type.DATETIME,
     SqlColumnType.TIMESTAMP: Type.DATETIME,
     SqlColumnType.TIMESTAMP_WITH_TIME_ZONE: Type.DATETIME,
-    # SqlColumnType.OBJECT:
-    # SqlColumnType.NULL:
-    # SqlColumnType.JSON:
+    SqlColumnType.OBJECT: Type.BINARY,
+    SqlColumnType.NULL: Type.NONE,
+    SqlColumnType.JSON: Type.STRING,
 }
 
 

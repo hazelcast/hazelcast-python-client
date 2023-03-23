@@ -123,10 +123,7 @@ class DbApiTestCase(unittest.TestCase):
 
 
 def config_with_values(**kwargs) -> Config:
-    cfg = Config()
-    for k, v in kwargs.items():
-        setattr(cfg, k, v)
-    return cfg
+    return Config.from_dict(kwargs)
 
 
 def config_to_dict(cfg: Config) -> dict:

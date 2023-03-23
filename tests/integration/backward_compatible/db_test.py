@@ -1,13 +1,16 @@
+from typing import List
+
 from hazelcast import HazelcastClient
 from hazelcast.config import Config
 from hazelcast.db import connect, Connection
+from hazelcast.sql import SqlRow
 from .sql_test import (
     SqlTestBase,
     compare_server_version_with_rc,
     compare_client_version,
     SERVER_CONFIG,
     JET_ENABLED_CONFIG,
-    Student,
+    Student, SqlColumnTypesReadTest,
 )
 
 
@@ -119,3 +122,32 @@ class DbapiTest(DbapiTestBase):
     def test_cursor_connection(self):
         c = self.conn.cursor()
         self.assertEqual(self.conn, c.connection)
+
+
+class DbApiTypestest(SqlColumnTypesReadTest):
+
+    def setUp(self):
+        super().setUp()
+        cfg = Config()
+        cfg.cluster_name = self.cluster.id
+        self.conn = connect(cfg)
+
+    def _populate_map(self, entry_count=10, value_factory=lambda v: v):
+        cursor = self.conn.cursor()
+        for i in range(entry_count):
+            cursor.execute(f"INSERT INTO {self.map_name}(__key, this) VALUES (?, ?)", (i, i))
+
+    def _validate_rows(self, expected_type, value_factory=lambda key: key):
+        cursor = self.conn.cursor()
+        cursor.execute(f'SELECT __key, this FROM "{self.map_name}"')
+        result = cursor.fetchall()
+        self._validate_result(result, expected_type, value_factory)
+
+    def _validate_result(self, result: List[SqlRow], expected_type, factory):
+        for row in result:
+            key = row["__key"]
+            expected_value = factory(key)
+            self.assertEqual(2, len(row))
+            column_metadata = row_metadata.get_column(1)
+            self.assertEqual(expected_type, column_metadata.type)
+            self.assertEqual(expected_value, row.get_object("this"))
