@@ -22,7 +22,7 @@ from tests.util import random_string
 class CompactSchemaReplicationRetryTest(HazelcastTestCase):
     rc = None
     cluster = None
-    retry_count = None
+    backup_retry_count = None
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -30,7 +30,10 @@ class CompactSchemaReplicationRetryTest(HazelcastTestCase):
         cls.cluster = cls.create_cluster(cls.rc, None)
         cls.cluster.start_member()
         cls.cluster.start_member()
-        cls.retry_count = CompactSchemaService._SEND_SCHEMA_RETRY_COUNT
+        # Backup the original value so that the monkey-patched
+        # value below does not change the behavior of other tests
+        # that would run after this.
+        cls.backup_retry_count = CompactSchemaService._SEND_SCHEMA_RETRY_COUNT
         CompactSchemaService._SEND_SCHEMA_RETRY_COUNT = 10
 
     def setUp(self) -> None:
@@ -46,7 +49,7 @@ class CompactSchemaReplicationRetryTest(HazelcastTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        CompactSchemaService._SEND_SCHEMA_RETRY_COUNT = cls.retry_count
+        CompactSchemaService._SEND_SCHEMA_RETRY_COUNT = cls.backup_retry_count
         cls.rc.terminateCluster(cls.cluster.id)
         cls.rc.exit()
 
