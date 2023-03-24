@@ -47,7 +47,7 @@ class TheOtherCustomClass(CustomClass):
         super(TheOtherCustomClass, self).__init__(uid, name, text, source)
 
     def __eq__(self, other):
-        super(TheOtherCustomClass, self).__eq__(other)
+        return super(TheOtherCustomClass, self).__eq__(other)
 
 
 class CustomSerializer(StreamSerializer):
@@ -162,3 +162,4 @@ class CustomSerializationTestCase(unittest.TestCase):
         deserialized = service.to_object(data)
 
         self.assertTrue(isinstance(deserialized, CustomClass))
+        self.assertEqual(obj, deserialized)
