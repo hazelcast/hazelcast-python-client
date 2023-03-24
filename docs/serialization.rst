@@ -267,18 +267,6 @@ depending on the object in that method might result in an undefined behavior.
 Additionally, evolved serializers must have the same type name with the
 initial version of the serializer.
 
-Limitations
-~~~~~~~~~~~
-
-Currently, the following APIs are not fully supported with the Compact
-serialization format. They may or may not work, depending on whether the
-schema is available on the client or not.
-
-All of these APIs will work with the Compact serialization format, once it is
-promoted to the stable status.
-
-- Reading OBJECT columns of the SQL results
-
 IdentifiedDataSerializable Serialization
 ----------------------------------------
 

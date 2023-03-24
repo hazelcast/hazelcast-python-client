@@ -53,18 +53,18 @@ class PortableSerializer(StreamSerializer):
         return current_version
 
     def create_new_portable_instance(self, factory_id, class_id):
-        try:
-            portable_factory = self._portable_factories[factory_id]
-        except KeyError:
+        portable_factory = self._portable_factories.get(factory_id)
+        if portable_factory is None:
             raise HazelcastSerializationError(
                 "Could not find portable_factory for factory-id: %s" % factory_id
             )
 
-        portable = portable_factory[class_id]
+        portable = portable_factory.get(class_id)
         if portable is None:
             raise HazelcastSerializationError(
                 "Could not create Portable for class-id: %s" % class_id
             )
+
         return portable()
 
     def create_reader(self, inp, factory_id, class_id, version, portable_version):

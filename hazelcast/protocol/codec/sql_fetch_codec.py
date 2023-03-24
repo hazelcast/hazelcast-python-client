@@ -22,9 +22,9 @@ def encode_request(query_id, cursor_buffer_size):
     return OutboundMessage(buf, False)
 
 
-def decode_response(msg):
+def decode_response(msg, to_object_fn):
     msg.next_frame()
     response = dict()
-    response["row_page"] = CodecUtil.decode_nullable(msg, SqlPageCodec.decode)
+    response["row_page"] = CodecUtil.decode_nullable(msg, lambda m: SqlPageCodec.decode(m, to_object_fn))
     response["error"] = CodecUtil.decode_nullable(msg, SqlErrorCodec.decode)
     return response

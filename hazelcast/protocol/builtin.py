@@ -730,7 +730,7 @@ class BigDecimalCodec:
 
 class SqlPageCodec:
     @staticmethod
-    def decode(msg):
+    def decode(msg, to_object_fn):
         from hazelcast.sql import SqlColumnType, _SqlPage
 
         # begin frame
@@ -744,7 +744,7 @@ class SqlPageCodec:
         column_count = len(column_type_ids)
 
         # read columns
-        columns = [None] * column_count
+        columns: typing.List = [None] * column_count
 
         for i in range(column_count):
             column_type_id = column_type_ids[i]
@@ -783,7 +783,11 @@ class SqlPageCodec:
                 column = [None for _ in range(size)]
                 columns[i] = column
             elif column_type_id == SqlColumnType.OBJECT:
-                columns[i] = ListMultiFrameCodec.decode_contains_nullable(msg, DataCodec.decode)
+
+                def decode(m):
+                    return to_object_fn(DataCodec.decode(m))
+
+                columns[i] = ListMultiFrameCodec.decode_contains_nullable(msg, decode)
             elif column_type_id == SqlColumnType.JSON:
                 columns[i] = ListMultiFrameCodec.decode_contains_nullable(
                     msg, HazelcastJsonValueCodec.decode
