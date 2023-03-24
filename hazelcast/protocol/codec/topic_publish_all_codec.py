@@ -15,4 +15,4 @@ def encode_request(name, messages):
     buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
     StringCodec.encode(buf, name)
     ListMultiFrameCodec.encode(buf, messages, DataCodec.encode, True)
-    return OutboundMessage(buf, False)
+    return OutboundMessage(buf, False, True)

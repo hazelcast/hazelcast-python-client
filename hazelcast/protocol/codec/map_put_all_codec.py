@@ -19,4 +19,4 @@ def encode_request(name, entries, trigger_map_loader):
     FixSizedTypesCodec.encode_boolean(buf, _REQUEST_TRIGGER_MAP_LOADER_OFFSET, trigger_map_loader)
     StringCodec.encode(buf, name)
     EntryListCodec.encode(buf, entries, DataCodec.encode, DataCodec.encode, True)
-    return OutboundMessage(buf, False)
+    return OutboundMessage(buf, False, True)

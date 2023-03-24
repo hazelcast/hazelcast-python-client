@@ -12,6 +12,7 @@ from hazelcast.errors import (
     EXCEPTION_MESSAGE_TYPE,
     IndeterminateOperationStateError,
     OperationTimeoutError,
+    InvocationMightContainCompactDataError,
 )
 from hazelcast.future import Future
 from hazelcast.protocol.client_message import InboundMessage
@@ -175,7 +176,9 @@ class InvocationService:
 
     def _invoke_smart(self, invocation):
         try:
-            if not invocation.urgent:
+            if invocation.urgent:
+                self._check_urgent_invocation_allowed(invocation)
+            else:
                 self._check_invocation_allowed_fn()
 
             connection = invocation.connection
@@ -204,7 +207,9 @@ class InvocationService:
 
     def _invoke_non_smart(self, invocation):
         try:
-            if not invocation.urgent:
+            if invocation.urgent:
+                self._check_urgent_invocation_allowed(invocation)
+            else:
                 self._check_invocation_allowed_fn()
 
             connection = invocation.connection
@@ -309,6 +314,9 @@ class InvocationService:
             self._do_invoke(invocation)
 
     def _should_retry(self, invocation, error):
+        if isinstance(error, InvocationMightContainCompactDataError):
+            return True
+
         if invocation.connection and isinstance(error, (IOError, TargetDisconnectedError)):
             return False
 
@@ -324,6 +332,32 @@ class InvocationService:
             return invocation.request.retryable or self._is_redo_operation
 
         return False
+
+    def _check_urgent_invocation_allowed(self, invocation: Invocation):
+        if self._connection_manager.initialized_on_cluster():
+            # If the client is initialized on the cluster, that means we
+            # have sent all the schemas to the cluster, even if we are
+            # reconnected to it
+            return
+
+        if not self._compact_schema_service.has_replicated_schemas():
+            # If there were no Compact schemas to begin with, we don't need
+            # to perform the check below. If the client didn't send a Compact
+            # schema up until this point, the retries or listener registrations
+            # could not send a schema, because if they were, we wouldn't hit
+            # this line.
+            return
+
+        # We are not yet initialized on cluster, so the Compact schemas might
+        # not be sent yet. This message contains some serialized data,
+        # and it is possible that it can also contain Compact serialized data.
+        # In that case, allowing this invocation to go through now could
+        # violate the invariant that the schema must come to cluster before
+        # the data. We will retry this invocation and wait until the client
+        # is initialized on the cluster, which means schemas are replicated
+        # in the cluster.
+        if invocation.request.contains_data:
+            raise InvocationMightContainCompactDataError()
 
     def _register_backup_listener(self):
         codec = client_local_backup_listener_codec

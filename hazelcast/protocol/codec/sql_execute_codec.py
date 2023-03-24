@@ -33,14 +33,14 @@ def encode_request(sql, parameters, timeout_millis, cursor_buffer_size, schema, 
     ListMultiFrameCodec.encode_contains_nullable(buf, parameters, DataCodec.encode)
     CodecUtil.encode_nullable(buf, schema, StringCodec.encode)
     SqlQueryIdCodec.encode(buf, query_id, True)
-    return OutboundMessage(buf, False)
+    return OutboundMessage(buf, False, True)
 
 
-def decode_response(msg):
+def decode_response(msg, to_object_fn):
     initial_frame = msg.next_frame()
     response = dict()
     response["update_count"] = FixSizedTypesCodec.decode_long(initial_frame.buf, _RESPONSE_UPDATE_COUNT_OFFSET)
     response["row_metadata"] = ListMultiFrameCodec.decode_nullable(msg, SqlColumnMetadataCodec.decode)
-    response["row_page"] = CodecUtil.decode_nullable(msg, SqlPageCodec.decode)
+    response["row_page"] = CodecUtil.decode_nullable(msg, lambda m: SqlPageCodec.decode(m, to_object_fn))
     response["error"] = CodecUtil.decode_nullable(msg, SqlErrorCodec.decode)
     return response

@@ -19,7 +19,7 @@ def encode_request(name, key, ttl):
     FixSizedTypesCodec.encode_long(buf, _REQUEST_TTL_OFFSET, ttl)
     StringCodec.encode(buf, name)
     DataCodec.encode(buf, key, True)
-    return OutboundMessage(buf, False)
+    return OutboundMessage(buf, False, True)
 
 
 def decode_response(msg):

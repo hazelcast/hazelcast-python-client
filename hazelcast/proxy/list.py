@@ -29,7 +29,7 @@ from hazelcast.protocol.codec import (
 from hazelcast.proxy.base import PartitionSpecificProxy, ItemEvent, ItemEventType
 from hazelcast.types import ItemType
 from hazelcast.serialization.compact import SchemaNotReplicatedError
-from hazelcast.util import check_not_none, ImmutableLazyDataList
+from hazelcast.util import check_not_none, deserialize_list_in_place
 
 
 class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
@@ -247,9 +247,8 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
         """
 
         def handler(message):
-            return ImmutableLazyDataList(
-                list_get_all_codec.decode_response(message), self._to_object
-            )
+            data_list = list_get_all_codec.decode_response(message)
+            return deserialize_list_in_place(data_list, self._to_object)
 
         request = list_get_all_codec.encode_request(self.name)
         return self._invoke(request, handler)
@@ -263,9 +262,8 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
         """
 
         def handler(message):
-            return ImmutableLazyDataList(
-                list_iterator_codec.decode_response(message), self._to_object
-            )
+            data_list = list_iterator_codec.decode_response(message)
+            return deserialize_list_in_place(data_list, self._to_object)
 
         request = list_iterator_codec.encode_request(self.name)
         return self._invoke(request, handler)
@@ -337,9 +335,8 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
         """
 
         def handler(message):
-            return ImmutableLazyDataList(
-                list_list_iterator_codec.decode_response(message), self._to_object
-            )
+            data_list = list_list_iterator_codec.decode_response(message)
+            return deserialize_list_in_place(data_list, self._to_object)
 
         request = list_list_iterator_codec.encode_request(self.name, index)
         return self._invoke(request, handler)
@@ -494,7 +491,8 @@ class List(PartitionSpecificProxy["BlockingList"], typing.Generic[ItemType]):
         """
 
         def handler(message):
-            return ImmutableLazyDataList(list_sub_codec.decode_response(message), self._to_object)
+            data_list = list_sub_codec.decode_response(message)
+            return deserialize_list_in_place(data_list, self._to_object)
 
         request = list_sub_codec.encode_request(self.name, from_index, to_index)
         return self._invoke(request, handler)

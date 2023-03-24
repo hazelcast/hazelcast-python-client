@@ -25,8 +25,12 @@ from hazelcast.protocol.codec import (
 from hazelcast.proxy.base import Proxy, EntryEvent, EntryEventType
 from hazelcast.types import KeyType, ValueType
 from hazelcast.serialization.compact import SchemaNotReplicatedError
-from hazelcast.util import to_millis, check_not_none, ImmutableLazyDataList
-
+from hazelcast.util import (
+    to_millis,
+    check_not_none,
+    deserialize_list_in_place,
+    deserialize_entry_list_in_place,
+)
 
 EntryEventCallable = typing.Callable[[EntryEvent[KeyType, ValueType]], None]
 
@@ -252,9 +256,8 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
         """
 
         def handler(message):
-            return ImmutableLazyDataList(
-                replicated_map_entry_set_codec.decode_response(message), self._to_object
-            )
+            entry_data_list = replicated_map_entry_set_codec.decode_response(message)
+            return deserialize_entry_list_in_place(entry_data_list, self._to_object)
 
         request = replicated_map_entry_set_codec.encode_request(self.name)
         return self._invoke_on_partition(request, self._partition_id, handler)
@@ -309,9 +312,8 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
         """
 
         def handler(message):
-            return ImmutableLazyDataList(
-                replicated_map_key_set_codec.decode_response(message), self._to_object
-            )
+            data_list = replicated_map_key_set_codec.decode_response(message)
+            return deserialize_list_in_place(data_list, self._to_object)
 
         request = replicated_map_key_set_codec.encode_request(self.name)
         return self._invoke_on_partition(request, self._partition_id, handler)
@@ -439,9 +441,8 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
         """
 
         def handler(message):
-            return ImmutableLazyDataList(
-                replicated_map_values_codec.decode_response(message), self._to_object
-            )
+            data_list = replicated_map_values_codec.decode_response(message)
+            return deserialize_list_in_place(data_list, self._to_object)
 
         request = replicated_map_values_codec.encode_request(self.name)
         return self._invoke_on_partition(request, self._partition_id, handler)

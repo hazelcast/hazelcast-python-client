@@ -20,7 +20,7 @@ def encode_request(group_id, name, old_value, new_value):
     StringCodec.encode(buf, name)
     CodecUtil.encode_nullable(buf, old_value, DataCodec.encode)
     CodecUtil.encode_nullable(buf, new_value, DataCodec.encode, True)
-    return OutboundMessage(buf, False)
+    return OutboundMessage(buf, False, True)
 
 
 def decode_response(msg):

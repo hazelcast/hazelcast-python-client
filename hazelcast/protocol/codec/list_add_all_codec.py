@@ -17,7 +17,7 @@ def encode_request(name, value_list):
     buf = create_initial_buffer(_REQUEST_INITIAL_FRAME_SIZE, _REQUEST_MESSAGE_TYPE)
     StringCodec.encode(buf, name)
     ListMultiFrameCodec.encode(buf, value_list, DataCodec.encode, True)
-    return OutboundMessage(buf, False)
+    return OutboundMessage(buf, False, True)
 
 
 def decode_response(msg):

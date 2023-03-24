@@ -19,6 +19,7 @@ from hazelcast.protocol.builtin import (
     ListLongCodec,
     ListUUIDCodec,
     MapCodec,
+    SetUUIDCodec,
 )
 from hazelcast.protocol.client_message import *
 from hazelcast.protocol.codec import client_authentication_codec
@@ -43,13 +44,15 @@ class OutboundMessageTest(unittest.TestCase):
 
     def test_copy(self):
         buf = bytearray(range(20))
-        message = OutboundMessage(buf, True)
+        message = OutboundMessage(buf, True, True)
 
         copy = message.copy()
         self.assertTrue(copy.retryable)
         buf[0] = 99
         self.assertEqual(99, message.buf[0])
         self.assertEqual(0, copy.buf[0])  # should be a deep copy
+        self.assertTrue(copy.retryable)
+        self.assertTrue(copy.contains_data)
 
     def test_encode(self):
         msg = client_authentication_codec.encode_request(
@@ -302,6 +305,14 @@ class EncodeDecodeTest(unittest.TestCase):
         message = self.write_and_decode()
         message.next_frame()  # initial frame
         self.assertEqual(l, ListUUIDCodec.decode(message))
+
+    def test_uuid_set(self):
+        self.mark_initial_frame_as_non_final()
+        s = {uuid.uuid4(), uuid.uuid4(), uuid.uuid4()}
+        SetUUIDCodec.encode(self.buf, s, True)
+        message = self.write_and_decode()
+        message.next_frame()  # initial frame
+        self.assertEqual(s, SetUUIDCodec.decode(message))
 
     def test_map(self):
         self.mark_initial_frame_as_non_final()

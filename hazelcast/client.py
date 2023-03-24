@@ -123,10 +123,15 @@ class HazelcastClient:
         self._near_cache_manager = NearCacheManager(config, self._serialization_service)
         self._internal_lifecycle_service = _InternalLifecycleService(config)
         self._lifecycle_service = LifecycleService(self._internal_lifecycle_service)
+        self._internal_cluster_service = _InternalClusterService(self, config)
+        self._cluster_service = ClusterService(self._internal_cluster_service)
         self._invocation_service = InvocationService(self, config, self._reactor)
         self._compact_schema_service = CompactSchemaService(
             self._serialization_service.compact_stream_serializer,
             self._invocation_service,
+            self._cluster_service,
+            self._reactor,
+            self._config,
         )
         self._address_provider = self._create_address_provider()
         self._internal_partition_service = _InternalPartitionService(self)
@@ -135,8 +140,6 @@ class HazelcastClient:
             self._serialization_service,
             self._compact_schema_service.send_schema_and_retry,
         )
-        self._internal_cluster_service = _InternalClusterService(self, config)
-        self._cluster_service = ClusterService(self._internal_cluster_service)
         self._connection_manager = ConnectionManager(
             self,
             config,

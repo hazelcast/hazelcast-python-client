@@ -436,6 +436,22 @@ class NotLeaderError(HazelcastError):
     pass
 
 
+class InvocationMightContainCompactDataError(HazelcastError):
+    """
+    Signals that the invocation might contain Compact serialized data,
+    and it would not be safe to send that invocation now to make sure
+    that the invariant regarding not sending the data before the schemas
+    are hold while the client reconnects or retries urgent invocations.
+    """
+
+    def __init__(self):
+        super(InvocationMightContainCompactDataError, self).__init__(
+            "The invocation might contain Compact serialized "
+            "data and it is not safe to invoke it when the client "
+            "is not yet initialized on the cluster."
+        )
+
+
 # Error Codes
 _UNDEFINED = 0
 _ARRAY_INDEX_OUT_OF_BOUNDS = 1

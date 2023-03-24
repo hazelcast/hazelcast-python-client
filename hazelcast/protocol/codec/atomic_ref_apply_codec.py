@@ -23,7 +23,7 @@ def encode_request(group_id, name, function, return_value_type, alter):
     RaftGroupIdCodec.encode(buf, group_id)
     StringCodec.encode(buf, name)
     DataCodec.encode(buf, function, True)
-    return OutboundMessage(buf, False)
+    return OutboundMessage(buf, False, True)
 
 
 def decode_response(msg):

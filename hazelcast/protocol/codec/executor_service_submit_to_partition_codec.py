@@ -19,7 +19,7 @@ def encode_request(name, uuid, callable):
     FixSizedTypesCodec.encode_uuid(buf, _REQUEST_UUID_OFFSET, uuid)
     StringCodec.encode(buf, name)
     DataCodec.encode(buf, callable, True)
-    return OutboundMessage(buf, False)
+    return OutboundMessage(buf, False, True)
 
 
 def decode_response(msg):

@@ -20,7 +20,7 @@ from hazelcast.protocol.codec import (
 from hazelcast.proxy.base import PartitionSpecificProxy, ItemEvent, ItemEventType
 from hazelcast.types import ItemType
 from hazelcast.serialization.compact import SchemaNotReplicatedError
-from hazelcast.util import check_not_none, ImmutableLazyDataList
+from hazelcast.util import check_not_none, deserialize_list_in_place
 
 
 class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
@@ -164,9 +164,8 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
         """
 
         def handler(message):
-            return ImmutableLazyDataList(
-                set_get_all_codec.decode_response(message), self._to_object
-            )
+            data_list = set_get_all_codec.decode_response(message)
+            return deserialize_list_in_place(data_list, self._to_object)
 
         request = set_get_all_codec.encode_request(self.name)
         return self._invoke(request, handler)

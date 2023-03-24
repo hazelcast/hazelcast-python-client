@@ -87,8 +87,9 @@ from hazelcast.util import (
     check_not_none,
     thread_id,
     to_millis,
-    ImmutableLazyDataList,
     IterationType,
+    deserialize_entry_list_in_place,
+    deserialize_list_in_place,
 )
 
 
@@ -563,7 +564,8 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
                     predicate.anchor_list = response["anchor_data_list"].as_anchor_list(
                         self._to_object
                     )
-                    return ImmutableLazyDataList(response["response"], self._to_object)
+                    entry_data_list = response["response"]
+                    return deserialize_entry_list_in_place(entry_data_list, self._to_object)
 
                 request = map_entries_with_paging_predicate_codec.encode_request(self.name, holder)
             else:
@@ -573,17 +575,15 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
                     return self._send_schema_and_retry(e, self.entry_set, predicate)
 
                 def handler(message):
-                    return ImmutableLazyDataList(
-                        map_entries_with_predicate_codec.decode_response(message), self._to_object
-                    )
+                    entry_data_list = map_entries_with_predicate_codec.decode_response(message)
+                    return deserialize_entry_list_in_place(entry_data_list, self._to_object)
 
                 request = map_entries_with_predicate_codec.encode_request(self.name, predicate_data)
         else:
 
             def handler(message):
-                return ImmutableLazyDataList(
-                    map_entry_set_codec.decode_response(message), self._to_object
-                )
+                entry_data_list = map_entry_set_codec.decode_response(message)
+                return deserialize_entry_list_in_place(entry_data_list, self._to_object)
 
             request = map_entry_set_codec.encode_request(self.name)
 
@@ -648,9 +648,8 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
                 )
 
             def handler(message):
-                return ImmutableLazyDataList(
-                    map_execute_with_predicate_codec.decode_response(message), self._to_object
-                )
+                entry_data_list = map_execute_with_predicate_codec.decode_response(message)
+                return deserialize_entry_list_in_place(entry_data_list, self._to_object)
 
             request = map_execute_with_predicate_codec.encode_request(
                 self.name, entry_processor_data, predicate_data
@@ -664,9 +663,8 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
                 )
 
             def handler(message):
-                return ImmutableLazyDataList(
-                    map_execute_on_all_keys_codec.decode_response(message), self._to_object
-                )
+                entry_data_list = map_execute_on_all_keys_codec.decode_response(message)
+                return deserialize_entry_list_in_place(entry_data_list, self._to_object)
 
             request = map_execute_on_all_keys_codec.encode_request(self.name, entry_processor_data)
 
@@ -730,9 +728,8 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             return self._send_schema_and_retry(e, self.execute_on_keys, keys, entry_processor)
 
         def handler(message):
-            return ImmutableLazyDataList(
-                map_execute_on_keys_codec.decode_response(message), self._to_object
-            )
+            entry_data_list = map_execute_on_keys_codec.decode_response(message)
+            return deserialize_entry_list_in_place(entry_data_list, self._to_object)
 
         request = map_execute_on_keys_codec.encode_request(
             self.name, entry_processor_data, key_list
@@ -943,7 +940,8 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
                     predicate.anchor_list = response["anchor_data_list"].as_anchor_list(
                         self._to_object
                     )
-                    return ImmutableLazyDataList(response["response"], self._to_object)
+                    data_list = response["response"]
+                    return deserialize_list_in_place(data_list, self._to_object)
 
                 request = map_key_set_with_paging_predicate_codec.encode_request(self.name, holder)
             else:
@@ -953,17 +951,15 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
                     return self._send_schema_and_retry(e, self.key_set, predicate)
 
                 def handler(message):
-                    return ImmutableLazyDataList(
-                        map_key_set_with_predicate_codec.decode_response(message), self._to_object
-                    )
+                    data_list = map_key_set_with_predicate_codec.decode_response(message)
+                    return deserialize_list_in_place(data_list, self._to_object)
 
                 request = map_key_set_with_predicate_codec.encode_request(self.name, predicate_data)
         else:
 
             def handler(message):
-                return ImmutableLazyDataList(
-                    map_key_set_codec.decode_response(message), self._to_object
-                )
+                data_list = map_key_set_codec.decode_response(message)
+                return deserialize_list_in_place(data_list, self._to_object)
 
             request = map_key_set_codec.encode_request(self.name)
 
@@ -1067,9 +1063,8 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
                 return self._send_schema_and_retry(e, self.project, projection, predicate)
 
             def handler(message):
-                return ImmutableLazyDataList(
-                    map_project_with_predicate_codec.decode_response(message), self._to_object
-                )
+                data_list = map_project_with_predicate_codec.decode_response(message)
+                return deserialize_list_in_place(data_list, self._to_object)
 
             request = map_project_with_predicate_codec.encode_request(
                 self.name, projection_data, predicate_data
@@ -1081,9 +1076,8 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
                 return self._send_schema_and_retry(e, self.project, projection, predicate)
 
             def handler(message):
-                return ImmutableLazyDataList(
-                    map_project_codec.decode_response(message), self._to_object
-                )
+                data_list = map_project_codec.decode_response(message)
+                return deserialize_list_in_place(data_list, self._to_object)
 
             request = map_project_codec.encode_request(self.name, projection_data)
 
@@ -1652,7 +1646,8 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
                     predicate.anchor_list = response["anchor_data_list"].as_anchor_list(
                         self._to_object
                     )
-                    return ImmutableLazyDataList(response["response"], self._to_object)
+                    data_list = response["response"]
+                    return deserialize_list_in_place(data_list, self._to_object)
 
                 request = map_values_with_paging_predicate_codec.encode_request(self.name, holder)
             else:
@@ -1662,17 +1657,15 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
                     return self._send_schema_and_retry(e, self.values, predicate)
 
                 def handler(message):
-                    return ImmutableLazyDataList(
-                        map_values_with_predicate_codec.decode_response(message), self._to_object
-                    )
+                    data_list = map_values_with_predicate_codec.decode_response(message)
+                    return deserialize_list_in_place(data_list, self._to_object)
 
                 request = map_values_with_predicate_codec.encode_request(self.name, predicate_data)
         else:
 
             def handler(message):
-                return ImmutableLazyDataList(
-                    map_values_codec.decode_response(message), self._to_object
-                )
+                data_list = map_values_codec.decode_response(message)
+                return deserialize_list_in_place(data_list, self._to_object)
 
             request = map_values_codec.encode_request(self.name)
 
@@ -1698,9 +1691,8 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             futures = []
 
         def handler(message):
-            return ImmutableLazyDataList(
-                map_get_all_codec.decode_response(message), self._to_object
-            )
+            entry_data_list = map_get_all_codec.decode_response(message)
+            return deserialize_entry_list_in_place(entry_data_list, self._to_object)
 
         for partition_id, key_dict in partition_to_keys.items():
             request = map_get_all_codec.encode_request(self.name, key_dict.values())

@@ -19,6 +19,7 @@ from tests.util import (
     skip_if_server_version_older_than,
     skip_if_server_version_newer_than_or_equal,
     skip_if_client_version_older_than,
+    skip_if_client_version_newer_than_or_equal,
 )
 
 try:
@@ -582,6 +583,9 @@ class SqlResultTest(SqlTestBase):
 
     def test_lazy_deserialization(self):
         skip_if_client_version_older_than(self, "5.0")
+        # client no longer performs lazy deserialization starting from 5.2
+        # to be compatible with Compact serialization
+        skip_if_client_version_newer_than_or_equal(self, "5.2")
 
         # Using a Portable that is not defined on the client-side.
         self._create_mapping_for_portable(666, 1, {})
@@ -608,6 +612,26 @@ class SqlResultTest(SqlTestBase):
             # that are not deserializable
             with self.assertRaises(HazelcastSqlError):
                 row.get_object("this")
+
+    def test_deserialization_error(self):
+        skip_if_client_version_older_than(self, "5.2")
+
+        # Using a Portable that is not defined on the client-side.
+        self._create_mapping_for_portable(666, 1, {})
+
+        script = (
+            """
+        var m = instance_0.getMap("%s");
+        m.put(1, new com.hazelcast.client.test.Employee(1, "Joe"));
+        """
+            % self.map_name
+        )
+
+        res = self.rc.executeOnController(self.cluster.id, script, Lang.JAVASCRIPT)
+        self.assertTrue(res.success)
+
+        with self.assertRaisesRegex(HazelcastSqlError, "Failed to deserialize query result value"):
+            self.execute('SELECT __key, this FROM "%s"' % self.map_name)
 
     def test_rows_as_dict_or_list(self):
         skip_if_client_version_older_than(self, "5.0")

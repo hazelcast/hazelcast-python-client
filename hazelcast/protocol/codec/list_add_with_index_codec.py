@@ -18,4 +18,4 @@ def encode_request(name, index, value):
     FixSizedTypesCodec.encode_int(buf, _REQUEST_INDEX_OFFSET, index)
     StringCodec.encode(buf, name)
     DataCodec.encode(buf, value, True)
-    return OutboundMessage(buf, False)
+    return OutboundMessage(buf, False, True)

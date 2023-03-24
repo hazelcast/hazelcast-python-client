@@ -220,11 +220,12 @@ class SerializationServiceV1:
     def compact_stream_serializer(self) -> CompactStreamSerializer:
         return self._compact_stream_serializer
 
-    @staticmethod
-    def _get_builtin_identified_factories():
+    def _get_builtin_identified_factories(self):
         return {
             ReliableTopicMessage.FACTORY_ID: {
-                ReliableTopicMessage.CLASS_ID: ReliableTopicMessage,
+                ReliableTopicMessage.CLASS_ID: lambda: ReliableTopicMessage(
+                    serialization_service=self
+                ),
             },
             CanonicalizingHashSet.FACTORY_ID: {
                 CanonicalizingHashSet.CLASS_ID: CanonicalizingHashSet,

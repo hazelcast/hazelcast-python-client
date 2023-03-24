@@ -21,7 +21,7 @@ def encode_request(name, txn_id, thread_id, predicate):
     FixSizedTypesCodec.encode_long(buf, _REQUEST_THREAD_ID_OFFSET, thread_id)
     StringCodec.encode(buf, name)
     DataCodec.encode(buf, predicate, True)
-    return OutboundMessage(buf, False)
+    return OutboundMessage(buf, False, True)
 
 
 def decode_response(msg):

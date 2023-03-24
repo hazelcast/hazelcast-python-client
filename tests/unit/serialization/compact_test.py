@@ -3,6 +3,7 @@ import typing
 import unittest
 import uuid
 
+from mock import MagicMock
 from parameterized import parameterized
 
 from hazelcast.config import Config
@@ -94,8 +95,8 @@ class SchemaTest(unittest.TestCase):
 
     def test_with_no_fields(self):
         schema = Schema("something", [])
-        self.assertEqual({}, schema.fields)
-        self.assertEqual([], schema.fields_list)
+        self.assertEqual({}, schema.fields_dict)
+        self.assertEqual([], schema.fields)
         self.assertEqual(0, schema.fix_sized_fields_length)
         self.assertEqual(0, schema.var_sized_field_count)
 
@@ -114,8 +115,8 @@ class SchemaTest(unittest.TestCase):
         expected_length = math.ceil(boolean_count / 8) + 4
         self.assertEqual(expected_length, schema.fix_sized_fields_length)
 
-        self.assertEqual(0, schema.fields["fix_sized"].position)
-        self.assertEqual(0, schema.fields["var_sized"].index)
+        self.assertEqual(0, schema.fields_dict["fix_sized"].position)
+        self.assertEqual(0, schema.fields_dict["var_sized"].index)
 
         position_so_far = 4
         bit_position_so_far = 0
@@ -124,7 +125,7 @@ class SchemaTest(unittest.TestCase):
                 position_so_far += 1
                 bit_position_so_far = 0
 
-            schema_field = schema.fields[field.name]
+            schema_field = schema.fields_dict[field.name]
             self.assertEqual(position_so_far, schema_field.position)
             self.assertEqual(bit_position_so_far, schema_field.bit_position)
 
@@ -132,8 +133,8 @@ class SchemaTest(unittest.TestCase):
 
     def _verify_schema(self, schema: Schema, fields: typing.List[FieldDescriptor]):
         self.assertEqual("something", schema.type_name)
-        self.assertEqual({f.name: f for f in fields}, schema.fields)
-        self.assertCountEqual(fields, schema.fields_list)
+        self.assertEqual({f.name: f for f in fields}, schema.fields_dict)
+        self.assertCountEqual(fields, schema.fields)
 
         fields.sort(key=lambda f: f.name)
 
@@ -159,7 +160,7 @@ class SchemaTest(unittest.TestCase):
         self.assertEqual(fix_sized_fields_length, schema.fix_sized_fields_length)
 
         for i, field in enumerate(var_sized_fields):
-            schema_field = schema.fields[field.name]
+            schema_field = schema.fields_dict[field.name]
             self.assertEqual(i, schema_field.index)
 
             self.assertEqual(-1, schema_field.position)
@@ -167,7 +168,7 @@ class SchemaTest(unittest.TestCase):
 
         position_so_far = 0
         for field in fix_sized_fields:
-            schema_field = schema.fields[field.name]
+            schema_field = schema.fields_dict[field.name]
             self.assertEqual(position_so_far, schema_field.position)
 
             if field.kind == FieldKind.BOOLEAN:
@@ -196,7 +197,7 @@ class SchemaWriterTest(unittest.TestCase):
         schema = writer.build()
 
         for name, kind in fields:
-            self.assertEqual(kind, schema.fields.get(name).kind)
+            self.assertEqual(kind, schema.fields_dict.get(name).kind)
 
     def test_schema_writer_with_duplicate_field_names(self):
         writer = SchemaWriter("foo")
@@ -208,6 +209,9 @@ class SchemaWriterTest(unittest.TestCase):
 class Child:
     def __init__(self, name: str):
         self.name = name
+
+    def __eq__(self, other):
+        return isinstance(other, Child) and self.name == other.name
 
 
 class Parent:
@@ -283,6 +287,37 @@ class CompactSerializationTest(unittest.TestCase):
         with self.assertRaisesRegex(HazelcastSerializationError, "already exists"):
             service.to_data(Child("foo"))
 
+    def test_writing_array_of_compact_with_same_item_types(self):
+        service = self._get_service_with_schemas(ChildSerializer(), ChildrenSerializer())
+
+        children = Children([Child("Joe"), Child("Jane"), Child("James")])
+        serialized = service.to_data(children)
+        self.assertEqual(children, service.to_object(serialized))
+
+    def test_writing_array_of_compact_with_different_item_types(self):
+        service = self._get_service_with_schemas(
+            ChildSerializer(), ChildrenSerializer(), ParentSerializer()
+        )
+
+        children = Children([Child("Joe"), Child("Jane"), Parent(Child("James"))])
+        with self.assertRaisesRegex(HazelcastSerializationError, "different item types"):
+            service.to_data(children)
+
+    @staticmethod
+    def _get_service_with_schemas(*serializers):
+        config = Config()
+        config.compact_serializers = list(serializers)
+        service = SerializationServiceV1(config)
+
+        for serializer in serializers:
+            writer = SchemaWriter(serializer.get_type_name())
+            serializer.write(writer, MagicMock())
+            service.compact_stream_serializer.register_schema_to_type(
+                writer.build(), serializer.get_class()
+            )
+
+        return service
+
 
 class StringCompactSerializer(CompactSerializer[str]):
     def read(self, reader: CompactReader) -> str:
@@ -311,3 +346,25 @@ class SerializerWithDuplicateFieldsNames(CompactSerializer[Child]):
 
     def get_type_name(self) -> str:
         return "child"
+
+
+class Children:
+    def __init__(self, children):
+        self.children = children
+
+    def __eq__(self, other):
+        return isinstance(other, Children) and self.children == other.children
+
+
+class ChildrenSerializer(CompactSerializer[Children]):
+    def read(self, reader: CompactReader) -> Children:
+        return Children(reader.read_array_of_compact("children"))
+
+    def write(self, writer: CompactWriter, obj: Children) -> None:
+        writer.write_array_of_compact("children", obj.children)
+
+    def get_class(self) -> typing.Type[Children]:
+        return Children
+
+    def get_type_name(self) -> str:
+        return "Children"

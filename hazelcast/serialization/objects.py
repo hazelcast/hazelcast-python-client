@@ -20,17 +20,25 @@ class ReliableTopicMessage(IdentifiedDataSerializable):
     FACTORY_ID = -9
     CLASS_ID = 2
 
-    def __init__(self, publish_time=None, publisher_address=None, payload=None):
+    def __init__(
+        self,
+        publish_time=None,
+        publisher_address=None,
+        payload=None,
+        serialization_service=None,
+    ):
         # publish_time is in seconds but server sends/expects to receive
         # it in milliseconds.
         self.publish_time = publish_time
         self.publisher_address = publisher_address
         self.payload = payload
+        self._serialization_service = serialization_service
 
     def read_data(self, object_data_input):
         self.publish_time = object_data_input.read_long() / 1000.0
         self.publisher_address = object_data_input.read_object()
-        self.payload = _read_data_from(object_data_input)
+        # Eagerly deserialize the payload on reads
+        self.payload = self._serialization_service.to_object(_read_data_from(object_data_input))
 
     def write_data(self, object_data_output):
         object_data_output.write_long(to_millis(self.publish_time))
