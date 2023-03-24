@@ -39,12 +39,17 @@ DescriptionColumn = namedtuple(
 
 
 class Type(enum.Enum):
-    NONE = 0
+    NULL = 0
     STRING = 1
-    NUMBER = 2
-    BOOLEAN = 3
-    DATETIME = 4
-    BINARY = 5
+    BOOLEAN = 2
+    DATE = 3
+    TIME = 4
+    DATETIME = 5
+    INTEGER = 6
+    FLOAT = 7
+    DECIMAL = 8
+    JSON = 9
+    OBJECT = 10
 
 
 Date = date
@@ -52,9 +57,11 @@ Time = time
 Timestamp = datetime
 Binary = bytes
 STRING = Type.STRING
-BINARY = Type.STRING
-NUMBER = Type.NUMBER
 DATETIME = Type.DATETIME
+# The following identifiers exist just to satisfy the DBAPI 2 interface.
+# They are not actually used.
+BINARY = None
+NUMBER = None
 ROWID = None
 
 
@@ -397,20 +404,20 @@ def _map_type(code: int) -> Type:
 _type_map = {
     SqlColumnType.VARCHAR: Type.STRING,
     SqlColumnType.BOOLEAN: Type.BOOLEAN,
-    SqlColumnType.TINYINT: Type.NUMBER,
-    SqlColumnType.SMALLINT: Type.NUMBER,
-    SqlColumnType.INTEGER: Type.NUMBER,
-    SqlColumnType.BIGINT: Type.NUMBER,
-    SqlColumnType.DECIMAL: Type.NUMBER,
-    SqlColumnType.REAL: Type.NUMBER,
-    SqlColumnType.DOUBLE: Type.NUMBER,
-    SqlColumnType.DATE: Type.DATETIME,
-    SqlColumnType.TIME: Type.DATETIME,
+    SqlColumnType.TINYINT: Type.INTEGER,
+    SqlColumnType.SMALLINT: Type.INTEGER,
+    SqlColumnType.INTEGER: Type.INTEGER,
+    SqlColumnType.BIGINT: Type.INTEGER,
+    SqlColumnType.DECIMAL: Type.DECIMAL,
+    SqlColumnType.REAL: Type.FLOAT,
+    SqlColumnType.DOUBLE: Type.FLOAT,
+    SqlColumnType.DATE: Type.DATE,
+    SqlColumnType.TIME: Type.TIME,
     SqlColumnType.TIMESTAMP: Type.DATETIME,
     SqlColumnType.TIMESTAMP_WITH_TIME_ZONE: Type.DATETIME,
-    SqlColumnType.OBJECT: Type.BINARY,
-    SqlColumnType.NULL: Type.NONE,
-    SqlColumnType.JSON: Type.STRING,
+    SqlColumnType.OBJECT: Type.OBJECT,
+    SqlColumnType.NULL: Type.NULL,
+    SqlColumnType.JSON: Type.JSON,
 }
 
 
