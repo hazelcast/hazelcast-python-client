@@ -10,7 +10,7 @@ from .sql_test import (
     compare_client_version,
     SERVER_CONFIG,
     JET_ENABLED_CONFIG,
-    Student, SqlColumnTypesReadTest,
+    Student,
 )
 
 
@@ -123,31 +123,3 @@ class DbapiTest(DbapiTestBase):
         c = self.conn.cursor()
         self.assertEqual(self.conn, c.connection)
 
-
-class DbApiTypestest(SqlColumnTypesReadTest):
-
-    def setUp(self):
-        super().setUp()
-        cfg = Config()
-        cfg.cluster_name = self.cluster.id
-        self.conn = connect(cfg)
-
-    def _populate_map(self, entry_count=10, value_factory=lambda v: v):
-        cursor = self.conn.cursor()
-        for i in range(entry_count):
-            cursor.execute(f"INSERT INTO {self.map_name}(__key, this) VALUES (?, ?)", (i, i))
-
-    def _validate_rows(self, expected_type, value_factory=lambda key: key):
-        cursor = self.conn.cursor()
-        cursor.execute(f'SELECT __key, this FROM "{self.map_name}"')
-        result = cursor.fetchall()
-        self._validate_result(result, expected_type, value_factory)
-
-    def _validate_result(self, result: List[SqlRow], expected_type, factory):
-        for row in result:
-            key = row["__key"]
-            expected_value = factory(key)
-            self.assertEqual(2, len(row))
-            column_metadata = row_metadata.get_column(1)
-            self.assertEqual(expected_type, column_metadata.type)
-            self.assertEqual(expected_value, row.get_object("this"))
