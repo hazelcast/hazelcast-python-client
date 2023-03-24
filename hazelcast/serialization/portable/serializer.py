@@ -54,13 +54,13 @@ class PortableSerializer(StreamSerializer):
 
     def create_new_portable_instance(self, factory_id, class_id):
         portable_factory = self._portable_factories.get(factory_id)
-        if not portable_factory:
+        if portable_factory is None:
             raise HazelcastSerializationError(
                 "Could not find portable_factory for factory-id: %s" % factory_id
             )
 
         portable = portable_factory.get(class_id)
-        if not portable:
+        if portable is None:
             raise HazelcastSerializationError(
                 "Could not create Portable for class-id: %s" % class_id
             )
