@@ -64,11 +64,12 @@ def create_initial_buffer_custom(size, is_begin_frame=False):
 
 
 class OutboundMessage:
-    __slots__ = ("buf", "retryable")
+    __slots__ = ("buf", "retryable", "contains_data")
 
-    def __init__(self, buf, retryable):
+    def __init__(self, buf, retryable, contains_data=False):
         self.buf = buf
         self.retryable = retryable
+        self.contains_data = contains_data
 
     def set_correlation_id(self, correlation_id):
         LE_LONG.pack_into(self.buf, _OUTBOUND_MESSAGE_CORRELATION_ID_OFFSET, correlation_id)
@@ -80,7 +81,7 @@ class OutboundMessage:
         LE_INT.pack_into(self.buf, _OUTBOUND_MESSAGE_PARTITION_ID_OFFSET, partition_id)
 
     def copy(self):
-        return OutboundMessage(bytearray(self.buf), self.retryable)
+        return OutboundMessage(bytearray(self.buf), self.retryable, self.contains_data)
 
     def set_backup_aware_flag(self):
         flags = LE_UINT16.unpack_from(self.buf, INT_SIZE_IN_BYTES)[0]

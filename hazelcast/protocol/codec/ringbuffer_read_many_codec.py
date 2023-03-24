@@ -27,7 +27,7 @@ def encode_request(name, start_sequence, min_count, max_count, filter):
     FixSizedTypesCodec.encode_int(buf, _REQUEST_MAX_COUNT_OFFSET, max_count)
     StringCodec.encode(buf, name)
     CodecUtil.encode_nullable(buf, filter, DataCodec.encode, True)
-    return OutboundMessage(buf, True)
+    return OutboundMessage(buf, True, True)
 
 
 def decode_response(msg):

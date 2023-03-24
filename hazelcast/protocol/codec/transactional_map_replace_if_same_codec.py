@@ -23,7 +23,7 @@ def encode_request(name, txn_id, thread_id, key, old_value, new_value):
     DataCodec.encode(buf, key)
     DataCodec.encode(buf, old_value)
     DataCodec.encode(buf, new_value, True)
-    return OutboundMessage(buf, False)
+    return OutboundMessage(buf, False, True)
 
 
 def decode_response(msg):

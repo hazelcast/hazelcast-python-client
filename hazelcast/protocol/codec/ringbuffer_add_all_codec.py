@@ -20,7 +20,7 @@ def encode_request(name, value_list, overflow_policy):
     FixSizedTypesCodec.encode_int(buf, _REQUEST_OVERFLOW_POLICY_OFFSET, overflow_policy)
     StringCodec.encode(buf, name)
     ListMultiFrameCodec.encode(buf, value_list, DataCodec.encode, True)
-    return OutboundMessage(buf, False)
+    return OutboundMessage(buf, False, True)
 
 
 def decode_response(msg):

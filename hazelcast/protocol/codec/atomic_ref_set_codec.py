@@ -21,7 +21,7 @@ def encode_request(group_id, name, new_value, return_old_value):
     RaftGroupIdCodec.encode(buf, group_id)
     StringCodec.encode(buf, name)
     CodecUtil.encode_nullable(buf, new_value, DataCodec.encode, True)
-    return OutboundMessage(buf, False)
+    return OutboundMessage(buf, False, True)
 
 
 def decode_response(msg):

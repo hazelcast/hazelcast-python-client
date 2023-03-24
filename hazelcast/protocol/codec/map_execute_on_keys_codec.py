@@ -17,7 +17,7 @@ def encode_request(name, entry_processor, keys):
     StringCodec.encode(buf, name)
     DataCodec.encode(buf, entry_processor)
     ListMultiFrameCodec.encode(buf, keys, DataCodec.encode, True)
-    return OutboundMessage(buf, False)
+    return OutboundMessage(buf, False, True)
 
 
 def decode_response(msg):

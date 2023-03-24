@@ -16,7 +16,7 @@ def encode_request(name, entry_processor, predicate):
     StringCodec.encode(buf, name)
     DataCodec.encode(buf, entry_processor)
     DataCodec.encode(buf, predicate, True)
-    return OutboundMessage(buf, False)
+    return OutboundMessage(buf, False, True)
 
 
 def decode_response(msg):

@@ -22,4 +22,4 @@ def encode_request(name, key, thread_id, ttl, reference_id):
     FixSizedTypesCodec.encode_long(buf, _REQUEST_REFERENCE_ID_OFFSET, reference_id)
     StringCodec.encode(buf, name)
     DataCodec.encode(buf, key, True)
-    return OutboundMessage(buf, True)
+    return OutboundMessage(buf, True, True)

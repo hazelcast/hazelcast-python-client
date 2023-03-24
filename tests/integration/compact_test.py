@@ -55,6 +55,7 @@ class CompactSchemaReplicationRetryTest(HazelcastTestCase):
 
     def test_compact_schemas_replicated(self):
         schema_service = self.client._compact_schema_service
+        self.assertFalse(schema_service.has_replicated_schemas())
         with patch.object(
             schema_service,
             "_send_schema_replication_request",
@@ -62,6 +63,8 @@ class CompactSchemaReplicationRetryTest(HazelcastTestCase):
         ) as wrapped_send:
             self.map.put(1, Foo(1))
             wrapped_send.assert_called_once()
+
+        self.assertTrue(schema_service.has_replicated_schemas())
 
     def test_compact_schema_replication_retried_when_a_schema_is_not_replicated_to_all_members(
         self,
