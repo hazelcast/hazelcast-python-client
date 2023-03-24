@@ -35,16 +35,17 @@ from hazelcast.serialization.api import (
     CompactReader,
 )
 from hazelcast.serialization.portable.classdef import ClassDefinition, ClassDefinitionBuilder
-from hazelcast.util import RandomLB
+from hazelcast.util import RandomLB, next_port
 
 
 class ConfigTest(unittest.TestCase):
     def setUp(self):
         self.config = Config()
+        self.port = next_port()
 
     def test_from_dict(self):
         config_dict = {
-            "cluster_members": ["192.168.1.1:5704"],
+            "cluster_members": ["192.168.1.1:" + str(self.port)],
             "cluster_name": "not-dev",
             "client_name": "client0",
             "connection_timeout": 1.0,
@@ -121,7 +122,7 @@ class ConfigTest(unittest.TestCase):
         }
 
         config = Config.from_dict(config_dict)
-        self.assertEqual(["192.168.1.1:5704"], config.cluster_members)
+        self.assertEqual(["192.168.1.1:" + self.port], config.cluster_members)
         self.assertEqual("not-dev", config.cluster_name)
         self.assertEqual("client0", config.client_name)
         self.assertEqual(1.0, config.connection_timeout)
@@ -234,7 +235,7 @@ class ConfigTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             config.cluster_members = 1
 
-        addresses = ["localhost", "10.162.1.1:5701"]
+        addresses = ["localhost", "10.162.1.1:" + str(self.port)]
         config.cluster_members = addresses
         self.assertEqual(addresses, config.cluster_members)
 
