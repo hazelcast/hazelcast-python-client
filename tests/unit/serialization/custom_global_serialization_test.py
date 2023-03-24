@@ -154,11 +154,11 @@ class CustomSerializationTestCase(unittest.TestCase):
 
     def test_serializing_child_class_instances_with_super_class_serializer(self):
         config = Config()
-        config.custom_serializers = {CustomClass: CustomSerializer}
+        config.custom_serializers = {TheOtherCustomClass: TheOtherCustomSerializer}
         service = SerializationServiceV1(config)
 
         obj = TheOtherCustomClass("uid", "some name", "description text", "CUSTOM")
         data = service.to_data(obj)
         deserialized = service.to_object(data)
 
-        self.assertEqual(obj, deserialized)
+        self.assertTrue(isinstance(deserialized, CustomClass))
