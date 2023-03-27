@@ -1,3 +1,5 @@
+import threading
+import time
 from typing import List
 
 from hazelcast import HazelcastClient
@@ -136,3 +138,17 @@ class DbapiTest(DbapiTestBase):
             ("this", Type.INTEGER, None, None, None, None, True),
         ]
         self.assertEqual(target, c.description)
+
+    def test_connection_share(self):
+        def f():
+            c = self.conn.cursor()
+            c.execute("show mappings;")
+            c.fetchall()
+        threads = []
+        for i in range(100):
+            t = threading.Thread(target=f)
+            t.start()
+            threads.append(t)
+        for t in threads:
+            t.join()
+        self.assertEqual(len(threads), len(self.conn._cursors))

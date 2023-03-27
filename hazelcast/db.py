@@ -233,7 +233,7 @@ class Connection:
     def __init__(self, config: Config):
         self.__mu = threading.RLock()
         self.__client: Optional[HazelcastClient] = HazelcastClient(config)
-        self.__cursors: Set[Cursor] = set()
+        self._cursors: Set[Cursor] = set()
 
     def __enter__(self) -> "Connection":
         return self
@@ -259,7 +259,7 @@ class Connection:
         with self.__mu:
             if self.__client is not None:
                 cursor = Cursor(self)
-                self.__cursors.add(cursor)
+                self._cursors.add(cursor)
                 return cursor
         raise InterfaceError("connection is already closed")
 
@@ -271,8 +271,8 @@ class Connection:
 
     def _close_cursor(self, cursor: Cursor) -> None:
         with self.__mu:
-            if cursor in self.__cursors:
-                self.__cursors.remove(cursor)
+            if cursor in self._cursors:
+                self._cursors.remove(cursor)
 
     @property
     def Error(self):
