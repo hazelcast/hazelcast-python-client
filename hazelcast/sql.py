@@ -636,6 +636,10 @@ class SqlRow:
             for i in range(self._row_metadata.column_count)
         )
 
+    def __len__(self):
+        """Returns number of columns of the row."""
+        return self._row_metadata.column_count
+
 
 class _ExecuteResponse:
     """Represent the response of the first execute request."""
