@@ -1,9 +1,8 @@
 import threading
-import time
-from typing import List
 
 from hazelcast import HazelcastClient
 from hazelcast.config import Config
+from hazelcast.db import connect, Connection, Type
 from tests.integration.backward_compatible.sql_test import (
     SqlTestBase,
     compare_server_version_with_rc,
@@ -13,11 +12,6 @@ from tests.integration.backward_compatible.sql_test import (
     Student,
 )
 
-try:
-    from hazelcast.db import connect, Connection, Type
-except ImportError:
-    pass
-
 
 class DbapiTestBase(SqlTestBase):
 
@@ -25,7 +19,7 @@ class DbapiTestBase(SqlTestBase):
     cluster = None
     is_v5_or_newer_server = None
     is_v5_or_newer_client = None
-    conn: "Connection" = None
+    conn: Connection = None
 
     @classmethod
     def setUpClass(cls):
