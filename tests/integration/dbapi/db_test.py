@@ -144,6 +144,7 @@ class DbapiTest(DbapiTestBase):
             c = self.conn.cursor()
             c.execute("show mappings;")
             c.fetchall()
+
         threads = []
         for i in range(100):
             t = threading.Thread(target=f)
