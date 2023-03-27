@@ -128,7 +128,7 @@ class DbapiTest(DbapiTestBase):
         c = self.conn.cursor()
         c.execute(f'SELECT * FROM "{self.map_name}"')
         target = [
-            ('__key', Type.INTEGER, None, None, None, None, True),
-            ('this', Type.INTEGER, None, None, None, None, True),
+            ("__key", Type.INTEGER, None, None, None, None, True),
+            ("this", Type.INTEGER, None, None, None, None, True),
         ]
         self.assertEqual(target, c.description)
