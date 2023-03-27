@@ -2,8 +2,8 @@ from typing import List
 
 from hazelcast import HazelcastClient
 from hazelcast.config import Config
-from hazelcast.db import connect, Connection
-from .sql_test import (
+from hazelcast.db import connect, Connection, Type
+from tests.integration.backward_compatible.sql_test import (
     SqlTestBase,
     compare_server_version_with_rc,
     compare_client_version,
@@ -121,3 +121,14 @@ class DbapiTest(DbapiTestBase):
     def test_cursor_connection(self):
         c = self.conn.cursor()
         self.assertEqual(self.conn, c.connection)
+
+    def test_description(self):
+        self._create_mapping()
+        self._populate_map(1)
+        c = self.conn.cursor()
+        c.execute(f'SELECT * FROM "{self.map_name}"')
+        target = [
+            ('__key', Type.INTEGER, None, None, None, None, True),
+            ('this', Type.INTEGER, None, None, None, None, True),
+        ]
+        self.assertEqual(target, c.description)

@@ -4,7 +4,7 @@ from hazelcast.config import Config
 from hazelcast.db import _make_config, InterfaceError
 
 
-class DbApiTestCase(unittest.TestCase):
+class DbApiTest(unittest.TestCase):
     def test_make_config_invalid(self):
         test_cases = [
             (Config(), {"dsn": "hz://"}),

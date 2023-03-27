@@ -1,10 +1,10 @@
 from hazelcast.config import Config
-import tests.integration.backward_compatible.dbapi20 as dbapi20
+import tests.integration.dbapi.dbapi20 as dbapi20
 from hazelcast import db
-from .sql_test import SqlTestBase
+from tests.integration.backward_compatible.sql_test import SqlTestBase
 
 
-class test_HazelcastDBAPI20(SqlTestBase, dbapi20.DatabaseAPI20Test):
+class HazelcastDBAPI20Test(SqlTestBase, dbapi20.DatabaseAPI20Test):
 
     rc = None
     cluster = None

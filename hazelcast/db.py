@@ -77,17 +77,6 @@ def TimestampFromTicks(ticks):
     return datetime(*localtime(ticks)[:6])
 
 
-class RowResult:
-    def __init__(self, result):
-        self._result = result
-
-    def __enter__(self):
-        pass
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
-
-
 class Cursor:
     def __init__(self, conn: "Connection"):
         self.arraysize = 1
@@ -175,8 +164,6 @@ class Cursor:
     def fetchone(self) -> Optional[SqlRow]:
         if self._iter is None:
             raise InterfaceError("fetch can only be called after row returning queries")
-        if self._rownumber is None:
-            self._rownumber = 0
         try:
             row = next(self._iter)
             self._rownumber += 1
@@ -187,8 +174,6 @@ class Cursor:
     def fetchmany(self, size: Optional[int] = None) -> List[SqlRow]:
         if self._iter is None:
             raise InterfaceError("fetchmany can only be called after row returning queries")
-        if self._rownumber is None:
-            self._rownumber = 0
         if size is None:
             size = self.arraysize
         rows = list(itertools.islice(self._iter, size))
@@ -198,8 +183,6 @@ class Cursor:
     def fetchall(self) -> List[SqlRow]:
         if self._iter is None:
             raise InterfaceError("fetchall can only be called after row returning queries")
-        if self._rownumber is None:
-            self._rownumber = 0
         rows = list(self._iter)
         self._rownumber += len(rows)
         return rows
