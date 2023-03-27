@@ -52,17 +52,26 @@ class Type(enum.Enum):
     OBJECT = 10
 
 
+class _DBAPIType:
+    def __init__(self, *values: Type):
+        self._values = values
+
+    def __eq__(self, other: object) -> bool:
+        return other in self._values
+
+    def __ne__(self, other: object) -> bool:
+        return other not in self._values
+
+
 Date = date
 Time = time
 Timestamp = datetime
 Binary = bytes
-STRING = Type.STRING
-DATETIME = Type.DATETIME
-# The following identifiers exist just to satisfy the DBAPI 2 interface.
-# They are not actually used.
-BINARY = None
-NUMBER = None
-ROWID = None
+STRING = _DBAPIType(Type.STRING)
+DATETIME = _DBAPIType(Type.DATE, Type.TIME, Type.DATETIME)
+BINARY = _DBAPIType()
+NUMBER = _DBAPIType(Type.INTEGER, Type.FLOAT, Type.DECIMAL)
+ROWID = _DBAPIType()
 
 
 def DateFromTicks(ticks):
