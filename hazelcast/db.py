@@ -24,8 +24,8 @@ apilevel = "2.0"
 threadsafety = 2
 paramstyle = "qmark"
 
-DescriptionColumn = namedtuple(
-    "DescriptionColumn",
+ColumnDescription = namedtuple(
+    "ColumnDescription",
     [
         "name",
         "type",
@@ -91,7 +91,7 @@ class Cursor:
         self.arraysize = 1
         self._conn = conn
         self._res: Union[SqlResult, None] = None
-        self._description: Union[List[DescriptionColumn], None] = None
+        self._description: Union[List[ColumnDescription], None] = None
         self._iter: Optional[Iterator[SqlRow]] = None
         self._rownumber = -1
         self._closed = False
@@ -110,7 +110,7 @@ class Cursor:
         return self._conn
 
     @property
-    def description(self) -> Union[List[DescriptionColumn], None]:
+    def description(self) -> Union[List[ColumnDescription], None]:
         return self._description
 
     @property
@@ -208,11 +208,11 @@ class Cursor:
         pass
 
     @classmethod
-    def _make_description(cls, metadata: SqlRowMetadata) -> List[DescriptionColumn]:
+    def _make_description(cls, metadata: SqlRowMetadata) -> List[ColumnDescription]:
         r = []
         for col in metadata.columns:
             r.append(
-                DescriptionColumn(
+                ColumnDescription(
                     name=col.name,
                     type=_map_type(col.type),
                     display_size=None,

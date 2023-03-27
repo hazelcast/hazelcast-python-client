@@ -7,4 +7,4 @@ import logging
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 from hazelcast.client import HazelcastClient
-from hazelcast.db import connect
+

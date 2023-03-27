@@ -7,12 +7,13 @@ from hazelcast.db import _make_config, InterfaceError
 class DbApiTest(unittest.TestCase):
     def test_make_config_invalid(self):
         test_cases = [
-            (Config(), {"dsn": "hz://"}),
-            (Config(), {"user": "some-user"}),
-            (None, {"dsn": "hz://", "password": "some-pass"}),
+            ("Invalid dsn", Config(), {"dsn": "hz://"}),
+            ("Both config and kwarg", Config(), {"user": "some-user"}),
+            ("Both DSN and kwarg", None, {"dsn": "hz://", "password": "some-pass"}),
         ]
-        for c, kwargs in test_cases:
-            self.assertRaises(InterfaceError, lambda: _make_config(c, **kwargs))
+        for name, c, kwargs in test_cases:
+            with self.assertRaises(InterfaceError, msg=f"Test case '{name}' failed"):
+                _make_config(c, **kwargs)
 
     def test_make_config_default(self):
         cfg = _make_config()
@@ -106,7 +107,7 @@ class DbApiTest(unittest.TestCase):
         ]
         for dsn, target in test_cases:
             cfg = _make_config(dsn=dsn)
-            self.assertEqualConfig(target, cfg)
+            self.assertEqualConfig(target, cfg, f"Test case with DSN '{dsn}' failed")
 
     def test_make_config_invalid_dsn(self):
         test_cases = [
@@ -116,10 +117,11 @@ class DbApiTest(unittest.TestCase):
             "hz://foo.com?non.existing=value",
         ]
         for dsn in test_cases:
-            self.assertRaises(InterfaceError, lambda: _make_config(dsn=dsn))
+            with self.assertRaises(InterfaceError, msg=f"Test case with DSN '{dsn}' failed"):
+                _make_config(dsn=dsn)
 
-    def assertEqualConfig(self, a: Config, b: Config):
-        self.assertEqual(config_to_dict(a), config_to_dict(b))
+    def assertEqualConfig(self, a: Config, b: Config, msg=""):
+        self.assertEqual(config_to_dict(a), config_to_dict(b), msg)
 
 
 def config_with_values(**kwargs) -> Config:
