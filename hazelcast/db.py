@@ -1,7 +1,6 @@
-from collections import namedtuple
 from datetime import date, datetime, time
 from time import localtime
-from typing import Any, Callable, Iterator, List, Optional, Sequence, Union, Tuple, Set
+from typing import Any, Callable, Iterator, List, Optional, Sequence, Union, Tuple, Set, NamedTuple
 import enum
 import itertools
 import threading
@@ -24,19 +23,6 @@ apilevel = "2.0"
 threadsafety = 2
 paramstyle = "qmark"
 
-ColumnDescription = namedtuple(
-    "ColumnDescription",
-    [
-        "name",
-        "type",
-        "display_size",
-        "internal_size",
-        "precision",
-        "scale",
-        "null_ok",
-    ],
-)
-
 
 class Type(enum.Enum):
     NULL = 0
@@ -50,6 +36,20 @@ class Type(enum.Enum):
     DECIMAL = 8
     JSON = 9
     OBJECT = 10
+
+
+ColumnDescription = NamedTuple(
+    "ColumnDescription",
+    [
+        ("name", str),
+        ("type", Type),
+        ("display_size", None),
+        ("internal_size", None),
+        ("precision", None),
+        ("scale", None),
+        ("null_ok", bool),
+    ],
+)
 
 
 class _DBAPIType:
