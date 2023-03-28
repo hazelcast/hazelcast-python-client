@@ -11,6 +11,9 @@ jobs:
       matrix:
         python-version: [ '3.6', '3.7', '3.8', '3.9', '3.10', 'pypy-3.9']
         os: [ ubuntu-20.04, windows-latest ]
+        exclude:
+          - os: windows-latest
+            python-version: pypy-3.9
       fail-fast: false
     steps:
       - name: Setup Python
