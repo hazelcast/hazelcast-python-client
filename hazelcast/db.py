@@ -143,16 +143,20 @@ class Cursor:
         if self.arraysize > 0:
             cbs = self.arraysize
         self._description = None
-        res = (
-            self._conn._get_client()
-            .sql.execute(operation, *params, cursor_buffer_size=cbs)
-            .result()
-        )
+        res = _wrap_error(lambda: self._execute(operation, cbs, params))
         if res.is_row_set():
             self._rownumber = 0
             self._res = res
             self._description = self._make_description(res.get_row_metadata())
-            self._iter = res.__iter__()
+            self._iter = _IteratorWrapper(res)
+
+    def _execute(self, operation, cbs, params):
+        params = params or []
+        return (
+            self._conn._get_client()
+            .sql.execute(operation, *params, cursor_buffer_size=cbs)
+            .result()
+        )
 
     def executemany(self, operation: str, seq_of_params: Sequence[Tuple]) -> None:
         self._ensure_open()
@@ -168,13 +172,13 @@ class Cursor:
                 )
             )
         for fut in futures:
-            fut.result()
+            _wrap_error(fut.result)
 
     def fetchone(self) -> Optional[SqlRow]:
         if self._iter is None:
             raise InterfaceError("fetch can only be called after row returning queries")
         try:
-            row = next(self._iter)
+            row = self.next()
             self._rownumber += 1
             return row
         except StopIteration:
@@ -382,6 +386,8 @@ def _wrap_error(f: Callable) -> Any:
         return f()
     except HazelcastSqlError as e:
         raise DatabaseError(f"{e.args}") from e
+    except StopIteration as e:
+        raise e
     except Exception as e:
         raise DatabaseError from e
 
@@ -499,3 +505,14 @@ _parse_dsn_map = {
     "ssl.key.path": ("ssl_keyfile", None),
     "ssl.key.password": ("ssl_password", None),
 }
+
+
+class _IteratorWrapper:
+    def __init__(self, it: Iterator):
+        self.it = it.__iter__()
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        return _wrap_error(lambda: next(self.it))
