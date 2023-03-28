@@ -53,7 +53,12 @@ with connect(dsn="hz://localhost:5701") as conn:
     try:
         # the cursor is automatically closed
         with conn.cursor() as cur:
-            cur.execute("SELECT symbol, quantity * price AS total_price FROM stocks ORDER BY price")
+            cur.execute("""
+                SELECT symbol, quantity * price AS total_price
+                FROM stocks
+                WHERE 
+                ORDER BY price
+            """)
             for row in cur:
                 print(row["symbol"], row["total_price"])
     except conn.Error as ex:
