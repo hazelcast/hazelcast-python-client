@@ -11,7 +11,7 @@ _logger = logging.getLogger(__name__)
 
 class HazelcastCloudAddressProvider:
     """Provides initial addresses for client to find and connect to a node
-    and resolves private IP addresses of Hazelcast Cloud service.
+    and resolves private IP addresses of Hazelcast Viridian service.
     """
 
     def __init__(self, token, connection_timeout):
@@ -19,7 +19,7 @@ class HazelcastCloudAddressProvider:
         self._private_to_public = dict()
 
     def load_addresses(self):
-        """Loads member addresses from Hazelcast Cloud endpoint.
+        """Loads member addresses from Hazelcast Viridian endpoint.
 
         Returns:
             tuple[list[hazelcast.core.Address], list[hazelcast.core.Address]]: The possible member addresses
@@ -30,7 +30,7 @@ class HazelcastCloudAddressProvider:
             # Every private address is primary
             return list(nodes.keys()), []
         except Exception as e:
-            _logger.warning("Failed to load addresses from Hazelcast Cloud: %s", e)
+            _logger.warning("Failed to load addresses from Hazelcast Viridian: %s", e)
         return [], []
 
     def translate(self, address):
@@ -58,11 +58,11 @@ class HazelcastCloudAddressProvider:
         try:
             self._private_to_public = self.cloud_discovery.discover_nodes()
         except Exception as e:
-            _logger.warning("Failed to load addresses from Hazelcast.cloud: %s", e)
+            _logger.warning("Failed to load addresses from Hazelcast Viridian: %s", e)
 
 
 class HazelcastCloudDiscovery:
-    """Discovery service that discover nodes via Hazelcast.cloud
+    """Service that discovers nodes via Hazelcast Viridian.
     https://api.viridian.hazelcast.com/cluster/discovery?token=<TOKEN>
     """
 
@@ -78,7 +78,7 @@ class HazelcastCloudDiscovery:
         self._ctx = ssl.create_default_context()
 
     def discover_nodes(self):
-        """Discovers nodes from Hazelcast.cloud.
+        """Discovers nodes from Hazelcast Viridian.
 
         Returns:
             dict[hazelcast.core.Address, hazelcast.core.Address]: Dictionary that maps private
