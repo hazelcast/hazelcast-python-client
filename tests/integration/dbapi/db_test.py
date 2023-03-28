@@ -37,6 +37,7 @@ class DbapiTestBase(SqlTestBase):
         cfg = Config()
         cfg.cluster_name = cls.cluster.id
         cls.conn = connect(cfg)
+        cls.cfg = cfg
 
     @classmethod
     def tearDownClass(cls):
@@ -187,6 +188,33 @@ class DbapiTest(DbapiTestBase):
         c._iter.it = MockIter(lambda: HazelcastSqlError("UUID", "CODE", "MSG", None))
         with self.assertRaises(DatabaseError):
             c.fetchmany(2)
+
+    def test_fetchall_error(self):
+        self._create_mapping()
+        self._populate_map(1)
+        c = self.conn.cursor()
+        c.execute(f'SELECT * FROM "{self.map_name}"')
+        c._iter.it = MockIter(lambda: HazelcastSqlError("UUID", "CODE", "MSG", None))
+        with self.assertRaises(DatabaseError):
+            c.fetchall()
+
+    def test_cursor_iterator_error(self):
+        self._create_mapping()
+        self._populate_map(1)
+        c = self.conn.cursor()
+        c.execute(f'SELECT * FROM "{self.map_name}"')
+        c._iter.it = MockIter(lambda: HazelcastSqlError("UUID", "CODE", "MSG", None))
+        with self.assertRaises(DatabaseError):
+            for row in c:
+                print(row)
+
+    def test_with(self):
+        self._create_mapping()
+        self._populate_map(1)
+        with connect(self.cfg) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(f'SELECT * FROM "{self.map_name}"')
+                self.assertEqual(1, len(cursor.fetchall()))
 
 
 class MockIter:
