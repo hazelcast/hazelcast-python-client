@@ -1,5 +1,10 @@
 from tests.base import SingleMemberTestCase
-from tests.util import random_string, event_collector, skip_if_client_version_older_than
+from tests.util import (
+    random_string,
+    event_collector,
+    skip_if_client_version_older_than,
+    skip_if_server_version_older_than,
+)
 
 
 class TopicTest(SingleMemberTestCase):
@@ -47,6 +52,8 @@ class TopicTest(SingleMemberTestCase):
 
     def test_publish_all(self):
         skip_if_client_version_older_than(self, "5.2")
+        skip_if_server_version_older_than(self, self.client, "4.1")
+
         collector = event_collector()
         self.topic.add_listener(on_message=collector)
 
@@ -60,11 +67,15 @@ class TopicTest(SingleMemberTestCase):
 
     def test_publish_all_none_messages(self):
         skip_if_client_version_older_than(self, "5.2")
+        skip_if_server_version_older_than(self, self.client, "4.1")
+
         with self.assertRaises(AssertionError):
             self.topic.publish_all(None)
 
     def test_publish_all_none_message(self):
         skip_if_client_version_older_than(self, "5.2")
+        skip_if_server_version_older_than(self, self.client, "4.1")
+
         messages = ["message1", None, "message3"]
         with self.assertRaises(AssertionError):
             self.topic.publish_all(messages)
