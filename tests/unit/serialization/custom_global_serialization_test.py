@@ -42,12 +42,8 @@ class CustomClass:
         return False
 
 
-class TheOtherCustomClass(CustomClass):
-    def __init__(self, uid, name, text, source=None):
-        super(TheOtherCustomClass, self).__init__(uid, name, text, source)
-
-    def __eq__(self, other):
-        return super(TheOtherCustomClass, self).__eq__(other)
+class ChildCustomClass(CustomClass):
+    pass
 
 
 class CustomSerializer(StreamSerializer):
@@ -142,24 +138,19 @@ class CustomSerializationTestCase(unittest.TestCase):
         config.custom_serializers = {CustomClass: CustomSerializer}
         service = SerializationServiceV1(config)
 
-        data1 = service.to_data(CustomClass)
-        deserialized1 = service.to_object(data1)
-
-        self.assertEqual(CustomClass, deserialized1)
-
-        data2 = service.to_data(TheOtherCustomClass)
-        deserialized2 = service.to_object(data2)
-
-        self.assertEqual(TheOtherCustomClass, deserialized2)
+        for clazz in (CustomClass, ChildCustomClass):
+            data = service.to_data(clazz)
+            deserialized = service.to_object(data)
+            self.assertEqual(clazz, deserialized)
 
     def test_serializing_child_class_instances_with_super_class_serializer(self):
         config = Config()
-        config.custom_serializers = {TheOtherCustomClass: TheOtherCustomSerializer}
+        config.custom_serializers = {CustomClass: CustomSerializer}
         service = SerializationServiceV1(config)
 
-        obj = TheOtherCustomClass("uid", "some name", "description text", "CUSTOM")
+        obj = ChildCustomClass("uid", "some name", "description text", "CUSTOM")
         data = service.to_data(obj)
         deserialized = service.to_object(data)
 
-        self.assertTrue(isinstance(deserialized, CustomClass))
+        self.assertIsInstance(deserialized, CustomClass)
         self.assertEqual(obj, deserialized)
