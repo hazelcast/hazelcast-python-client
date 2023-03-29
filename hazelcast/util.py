@@ -19,6 +19,7 @@ NANOSECONDS_IN_SECONDS = 1e9
 
 EnvMemberCount = "MEMBER_COUNT"
 
+
 def check_not_none(val, message):
     if val is None:
         raise AssertionError(message)
@@ -483,6 +484,7 @@ def member_count():
             sys.exit(err)
     return 1
 
+
 def is_port_open(port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(0.01)
@@ -494,7 +496,10 @@ def is_port_open(port):
     finally:
         s.close()
 
+
 portLock = threading.Lock()
+
+
 def next_port(nextPort=0):
     maxStep = 10
     step = member_count()
@@ -507,6 +512,9 @@ def next_port(nextPort=0):
             nextPort += step
         for port in range(start, start + step):
             if not is_port_open(port):
-                sys.stderr.write("it.NextPort: %d is not open, skipping the block: [%d:%d]\n" % (port, start, start + step))
+                sys.stderr.write(
+                    "it.NextPort: %d is not open, skipping the block: [%d:%d]\n"
+                    % (port, start, start + step)
+                )
                 continue
         return start

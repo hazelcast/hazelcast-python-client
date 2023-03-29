@@ -13,6 +13,7 @@ class _TestClient(HazelcastClient):
 
 class AddressProviderTest(TestCase):
     port = next_port()
+
     def test_default_config(self):
         client = _TestClient()
         self.assertTrue(isinstance(client._address_provider, DefaultAddressProvider))
