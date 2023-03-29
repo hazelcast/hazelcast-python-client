@@ -37,6 +37,8 @@ cur.executemany("SINK INTO stocks VALUES(?, CAST(? AS DATE), ?, ?, ?, ?)", data)
 # execute a SQL query and get rows
 print("This is the first query...")
 cur.execute("SELECT * FROM stocks ORDER BY price")
+# print column types
+print(cur.description)
 for row in cur.fetchmany(2):
     print(row["__key"], row["symbol"], row["quantity"], row["price"])
 # close the cursors to release resources when the cursor
@@ -56,9 +58,9 @@ with connect(dsn="hz://localhost:5701") as conn:
             cur.execute("""
                 SELECT symbol, quantity * price AS total_price
                 FROM stocks
-                WHERE 
+                WHERE price > ?
                 ORDER BY price
-            """)
+            """, (50,))
             for row in cur:
                 print(row["symbol"], row["total_price"])
     except conn.Error as ex:

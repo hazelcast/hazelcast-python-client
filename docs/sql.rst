@@ -597,25 +597,93 @@ You can use this method to run all kinds of queries.
 
 .. code:: python
 
-    conn.execute("SELECT * FROM stocks ORDER BY price")
+    cursor.execute("SELECT * FROM stocks ORDER BY price")
 
 Use the question mark (`?)` as a placeholder if you are passing arguments
 in the query. The actual arguments should be passed in a tuple.
 
 .. code:: python
 
-    conn.execute("SELECT * FROM stocks WHERE  ORDER BY price")
+    cursor.execute("SELECT * FROM stocks WHERE price > ? ORDER BY price", (50,))
 
 :meth:`hazelcast.db.Cursor.executemany` is also available, which enables running the same query
-with different kinds of value sets. This method should not be used for row-returning queries
-such as `SELECT`.
-
-**Row Returning Queries**
-
-Queries such as `SELECT` and `SHOW` return rows.
+with different kinds of value sets. This method should only be used my mutating queries, such as `INSERT`.
 
 .. code:: python
 
-    #
-    cursor.execute('SELECT *
+    data = [
+        (1, "2006-03-28", "BUY", "IBM", 1000, 45.0),
+        (2, "2006-04-05", "BUY", "MSFT", 1000, 72.0),
+        (3, "2006-04-06", "SELL", "IBM", 500, 53.0),
+    ]
+    cursor.executemany("INSERT INTO stocks VALUES(?, CAST(? AS DATE), ?, ?, ?, ?)", data)
+
+**Mutating Queries**
+
+Mutating queries such as `UPDATE`, `DELETE` and `INSERT` updates, deletes
+data or adds new rows. You can use `execue` or `executemany` for those
+queries.
+
+.. code:: python
+
+    cursor.execute("INSERT INTO stocks(__key, price) VALUES(10, 40)")
+
+
+**Row Returning Queries**
+
+Queries such as `SELECT` and `SHOW` return rows. Once you run `execute`
+with the query, call one of :meth:`hazelcast.db.Cursor.fetchone`,
+:meth:`hazelcast.db.Cursor.fetchmany` or :meth:`hazelcast.db.Cursor.fetchall`
+to get one, some or all rows in the result. The rows are of the
+:class:`hazelcast.db.SqlRow` type. Note that, `fetchall` should only be used
+for small, finite set of rows.
+
+.. code:: python
+
+    cursor.execute("SELECT * FROM stocks")
+    one_row = cursor.fetchone()
+    three_more_rows = cursor.fetchmany(3)
+    rest_of_rows = cursor.fetchall()
+
+Alternatively, you can iterate on the cursor itself.
+
+.. code:: python
+
+    cursor.execute("SELECT * FROM stocks")
+    for row in cursor:
+        # handle the row
+
+You can access columns in a:class:`hazelcast.db.SqlRow` by using the subscription
+notation, treating the row as a dictionary.
+
+.. code:: python
+
+    for row in cursor:
+        print(row["__key"], row["symbol"], row["price"])
+
+Alternatively, you can treat the row as an array and use indexes
+to access column values.
+
+.. code:: python
+
+    for row in cursor:
+        print(row[0], row[1], row[2])
+
+
+Once you are done with the cursor, you can use its
+:method:`hazelcast.db.Cursor.close` method to release its resources.
+
+.. code:: python
+
+    cursor.close()
+
+Using the `with` statement, `close` is called automatically:
+
+.. code:: python
+
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT * FROM stocks")
+        for row in cursor:
+            # handle the row
+    # cursor is automatically closed here.
 

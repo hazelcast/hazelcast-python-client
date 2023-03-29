@@ -25,6 +25,8 @@ paramstyle = "qmark"
 
 
 class Type(enum.Enum):
+    """Type is the column type"""
+
     NULL = 0
     STRING = 1
     BOOLEAN = 2
@@ -50,6 +52,8 @@ ColumnDescription = NamedTuple(
         ("null_ok", bool),
     ],
 )
+ColumnDescription.__doc__ = \
+    "ColumnDescription provides name, type and nullability information"
 
 
 class _DBAPIType:
@@ -87,6 +91,12 @@ def TimestampFromTicks(ticks):
 
 
 class Cursor:
+    """Cursor is a database cursor object
+
+    This class should not be initiated directly.
+    Use connection.cursor() method to create one.
+    """
+
     def __init__(self, conn: "Connection"):
         self.arraysize = 1
         self._conn = conn
@@ -106,24 +116,50 @@ class Cursor:
         return self._iter
 
     @property
-    def connection(self):
+    def connection(self) -> "Connection":
+        """Returns the Connection object that created this cursor
+
+        Returns:
+            The Connection of this cursor
+
+        """
         return self._conn
 
     @property
     def description(self) -> Union[List[ColumnDescription], None]:
+        """Returns the descriptions of the columns
+
+        Get the descriptions after calling execute.
+
+        Returns:
+            The list of column descriptions.
+        """
         return self._description
 
     @property
     def rowcount(self) -> int:
+        """Returns the number of rows in the result.
+
+        This is not supported by this driver and always -1 is returned.
+
+        Returns:
+            -1
+        """
         return -1
 
     @property
     def rownumber(self) -> Optional[int]:
+        """Returns the index of the cursor in the result set
+
+        Returns:
+            0-based index of the cursor in the result set.
+        """
         if self._rownumber < 0:
             return None
         return self._rownumber
 
     def close(self):
+        """Closes the cursor and releases the resources"""
         if not self._closed:
             self._closed = True
             self._conn._close_cursor(self)
@@ -132,6 +168,15 @@ class Cursor:
                 self._res = None
 
     def execute(self, operation: str, params: Optional[Tuple] = None) -> None:
+        """Executes the given query with optional parameters
+
+        Args:
+            operation: A SQL string. Use question mark (`?`) as the
+            placeholder if necessary.
+            params: Optional tuple that contains the actual parameters
+            to replace the placeholders in the query.
+
+        """
         if params is not None and not isinstance(params, tuple):
             raise InterfaceError("params must be a tuple or None")
         params = params or ()
@@ -159,6 +204,17 @@ class Cursor:
         )
 
     def executemany(self, operation: str, seq_of_params: Sequence[Tuple]) -> None:
+        """Runs the given query with the list of parameters
+
+        Calling `executemany(sql, [params1, params2, ...]` is equivalent to
+        execute(sql, params1), execute(sql, params2), ...
+
+        Args:
+            operation: A SQL string. Use question mark (`?`) as the
+            placeholder if necessary.
+            seq_of_params: Optional list of tuples that contains the actual parameters
+            to replace the placeholders in the query.
+        """
         self._ensure_open()
         self._rownumber = -1
         self._iter = None
@@ -175,6 +231,12 @@ class Cursor:
             _wrap_error(fut.result)
 
     def fetchone(self) -> Optional[SqlRow]:
+        """Fetches a single row from the result
+
+        Returns:
+            A single row if there are rows in the result or None.
+
+        """
         if self._iter is None:
             raise InterfaceError("fetch can only be called after row returning queries")
         try:
@@ -185,6 +247,14 @@ class Cursor:
             return None
 
     def fetchmany(self, size: Optional[int] = None) -> List[SqlRow]:
+        """Fetches the given number of rows from the result
+
+        Args:
+            size: Optional number of rows to return.
+
+        Returns:
+            List of rows. The list will have at most `size` items.
+        """
         if self._iter is None:
             raise InterfaceError("fetchmany can only be called after row returning queries")
         if size is None:
@@ -194,6 +264,13 @@ class Cursor:
         return rows
 
     def fetchall(self) -> List[SqlRow]:
+        """Fetches all rows from the result
+
+        This function should be called only with small and finite result sets.
+
+        Returns:
+            List of rows.
+        """
         if self._iter is None:
             raise InterfaceError("fetchall can only be called after row returning queries")
         rows = list(self._iter)
@@ -234,6 +311,12 @@ class Cursor:
 
 
 class Connection:
+    """Connection object provides connection to the Hazelcast cluster
+
+    This class should not be initiated directly.
+    Use `connect` method to create an instance.
+    """
+
     def __init__(self, config: Config):
         self.__mu = threading.RLock()
         self.__client: Optional[HazelcastClient] = HazelcastClient(config)
@@ -246,6 +329,8 @@ class Connection:
         self.close()
 
     def close(self) -> None:
+        """Closes the connection and releases its resources"""
+
         if self.__client:
             with self.__mu:
                 if self.__client:
@@ -260,6 +345,12 @@ class Connection:
         self._get_client()
 
     def cursor(self) -> Cursor:
+        """Creates and returns a new cursor object
+
+        Returns:
+            Cursor object that uses this connection.
+
+        """
         with self.__mu:
             if self.__client is not None:
                 cursor = Cursor(self)
@@ -329,6 +420,21 @@ def connect(
     port: int = None,
     cluster_name: str = None,
 ) -> Connection:
+    """Creates a new Connection to the cluster
+
+    Args:
+         config: A Config object
+         dsn: Dota Source Name in the following formaT:
+         `hz://[user:password]@addr1:port1[?opt1=value1[&opt2=value2 ...]]`
+         user: Optional user name for authenticating to the cluster.
+         password: Optional password for authenticating to the cluster.
+         host: Hostname or IP address of the cluster. By default `localhost`.
+         port: Port of the cluster. By default `5701`.
+         cluster_name: Name of the cluster. By default `dev`.
+
+    Returns:
+        Connection pbject.
+    """
     c = _make_config(
         config,
         dsn=dsn,
