@@ -3,6 +3,7 @@ from hazelcast.connection import DefaultAddressProvider
 from hazelcast.discovery import HazelcastCloudAddressProvider
 from hazelcast import HazelcastClient
 from hazelcast.errors import IllegalStateError
+from hazelcast.util import next_port
 
 
 class _TestClient(HazelcastClient):
@@ -11,12 +12,13 @@ class _TestClient(HazelcastClient):
 
 
 class AddressProviderTest(TestCase):
+    port = next_port()
     def test_default_config(self):
         client = _TestClient()
         self.assertTrue(isinstance(client._address_provider, DefaultAddressProvider))
 
     def test_with_nonempty_network_config_addresses(self):
-        client = _TestClient(cluster_members=["127.0.0.1:5701"])
+        client = _TestClient(cluster_members=["127.0.0.1:" + str(self.port)])
         self.assertTrue(isinstance(client._address_provider, DefaultAddressProvider))
 
     def test_enabled_cloud_config(self):

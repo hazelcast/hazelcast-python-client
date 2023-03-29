@@ -3,6 +3,7 @@ import sys
 import unittest
 
 import pytest
+from hazelcast.util import next_port
 
 from hazelcast import HazelcastClient
 from hazelcast.config import SSLProtocol
@@ -47,6 +48,7 @@ class SslHostnameVerificationTest(HazelcastTestCase):
     def setUp(self):
         self.rc = self.create_rc()
         self.cluster = None
+        self.port = next_port()
 
     def tearDown(self):
         self.shutdown_all_clients()
@@ -66,10 +68,10 @@ class SslHostnameVerificationTest(HazelcastTestCase):
         file_name = "tls-host-loopback-san-dns"
         self.start_member_with(f"{file_name}.p12")
 
-        self.start_client_with(f"{file_name}.pem", "localhost:5701")
+        self.start_client_with(f"{file_name}.pem", "localhost:" + str(self.port))
 
         with self.assertRaisesRegex(IllegalStateError, "Unable to connect to any cluster"):
-            self.start_client_with(f"{file_name}.pem", "127.0.0.1:5701")
+            self.start_client_with(f"{file_name}.pem", "127.0.0.1:" + str(self.port))
 
     def test_hostname_verification_with_different_san(self):
         # There is a valid entry, but it does not match with the address of the member.

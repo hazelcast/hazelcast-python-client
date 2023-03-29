@@ -1,3 +1,5 @@
+from hazelcast.util import next_port
+
 from hazelcast import HazelcastClient
 from hazelcast.config import ReconnectMode
 from hazelcast.errors import ClientOfflineError, HazelcastClientNotActiveError
@@ -57,9 +59,10 @@ class ConnectionStrategyTest(HazelcastTestCase):
 
         event_collector = collector()
 
+        cluster_port = next_port()
         self.client = HazelcastClient(
             cluster_name=self.cluster.id,
-            cluster_members=["localhost:5701"],
+            cluster_members=["localhost:" + str(cluster_port)],
             async_start=True,
             lifecycle_listeners=[event_collector],
         )
@@ -83,8 +86,9 @@ class ConnectionStrategyTest(HazelcastTestCase):
 
         event_collector = collector()
 
+        cluster_port = next_port()
         self.client = HazelcastClient(
-            cluster_members=["localhost:5701"],
+            cluster_members=["localhost:" + str(cluster_port)],
             cluster_name=self.cluster.id,
             reconnect_mode=ReconnectMode.OFF,
             lifecycle_listeners=[event_collector],
@@ -114,8 +118,9 @@ class ConnectionStrategyTest(HazelcastTestCase):
 
         disconnected_collector = collector(LifecycleState.DISCONNECTED)
 
+        cluster_port = next_port()
         self.client = HazelcastClient(
-            cluster_members=["localhost:5701"],
+            cluster_members=["localhost:" + str(cluster_port)],
             cluster_name=self.cluster.id,
             reconnect_mode=ReconnectMode.ASYNC,
             lifecycle_listeners=[disconnected_collector],
