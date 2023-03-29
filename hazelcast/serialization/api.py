@@ -2594,22 +2594,22 @@ class CompactWriter(abc.ABC):
         """
 
 
-CompactSerializableClass = typing.TypeVar("CompactSerializableClass")
+CompactSerializableType = typing.TypeVar("CompactSerializableType")
 """Type of the Compact serializable classes."""
 
 
-class CompactSerializer(typing.Generic[CompactSerializableClass], abc.ABC):
+class CompactSerializer(typing.Generic[CompactSerializableType], abc.ABC):
     """Defines the contract of the serializers used for Compact serialization.
 
     After defining a serializer for the objects of the class
-    :const:`CompactSerializableClass`, the serializer can be registered to the
+    :const:`CompactSerializableType`, the serializer can be registered to the
     :attr:`hazelcast.config.Config.compact_serializers`.
 
     :func:`write` and :func:`read` methods must be consistent with each other.
     """
 
     @abc.abstractmethod
-    def read(self, reader: CompactReader) -> CompactSerializableClass:
+    def read(self, reader: CompactReader) -> CompactSerializableType:
         """Deserializes the object from the reader.
 
         Args:
@@ -2624,7 +2624,7 @@ class CompactSerializer(typing.Generic[CompactSerializableClass], abc.ABC):
         """
 
     @abc.abstractmethod
-    def write(self, writer: CompactWriter, obj: CompactSerializableClass) -> None:
+    def write(self, writer: CompactWriter, obj: CompactSerializableType) -> None:
         """Serializes the object to writer.
 
         Args:
@@ -2637,7 +2637,7 @@ class CompactSerializer(typing.Generic[CompactSerializableClass], abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_class(self) -> typing.Type[CompactSerializableClass]:
+    def get_class(self) -> typing.Type[CompactSerializableType]:
         """Returns the class that this serializer reads or writes.
 
         Returns:
@@ -2647,7 +2647,7 @@ class CompactSerializer(typing.Generic[CompactSerializableClass], abc.ABC):
     @abc.abstractmethod
     def get_type_name(self) -> str:
         """Returns the unique type name associated with
-        :const`CompactSerializableClass`.
+        :const`CompactSerializableType`.
 
         If the class is ever evolved by adding or removing fields,
         the type name for the evolved serializers must be the same

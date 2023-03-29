@@ -2,7 +2,8 @@ import threading
 
 from hazelcast import HazelcastClient
 from hazelcast.config import Config
-from hazelcast.db import connect, Connection, Type
+from hazelcast.db import connect, Connection, Type, DatabaseError, InterfaceError
+from hazelcast.sql import HazelcastSqlError
 from tests.integration.backward_compatible.sql_test import (
     SqlTestBase,
     compare_server_version_with_rc,
@@ -35,8 +36,8 @@ class DbapiTestBase(SqlTestBase):
         )
         cfg = Config()
         cfg.cluster_name = cls.cluster.id
-        cfg.portable_factories = {666: {6: Student}}
         cls.conn = connect(cfg)
+        cls.cfg = cfg
 
     @classmethod
     def tearDownClass(cls):
@@ -118,6 +119,18 @@ class DbapiTest(DbapiTestBase):
         )
         self.assertEqual(5, c.rownumber)
 
+    def test_cursor_iteration(self):
+        self._create_mapping()
+        entry_count = 5
+        self._populate_map(entry_count)
+        c = self.conn.cursor()
+        c.execute(f'SELECT * FROM "{self.map_name}" order by __key LIMIT 3')
+        items = []
+        for row in c:
+            items.append((row["__key"], row["this"]))
+        target = [(0, 0), (1, 1), (2, 2)]
+        self.assertEqual(target, items)
+
     def test_cursor_connection(self):
         c = self.conn.cursor()
         self.assertEqual(self.conn, c.connection)
@@ -147,3 +160,69 @@ class DbapiTest(DbapiTestBase):
         for t in threads:
             t.join()
         self.assertEqual(len(threads), len(self.conn._cursors))
+
+    def test_execute_error(self):
+        c = self.conn.cursor()
+        with self.assertRaises(DatabaseError):
+            c.execute(f'SELECT * FROM "{self.map_name}"')
+
+    def test_executemany_error(self):
+        c = self.conn.cursor()
+        with self.assertRaises(DatabaseError):
+            c.executemany(f"INVALID SQL", [("foo", 1)])
+
+    def test_fetchone_error(self):
+        self._create_mapping()
+        self._populate_map(1)
+        c = self.conn.cursor()
+        c.execute(f'SELECT * FROM "{self.map_name}"')
+        c._iter.it = MockIter(lambda: HazelcastSqlError("UUID", "CODE", "MSG", None))
+        with self.assertRaises(DatabaseError):
+            c.fetchone()
+
+    def test_fetchmany_error(self):
+        self._create_mapping()
+        self._populate_map(1)
+        c = self.conn.cursor()
+        c.execute(f'SELECT * FROM "{self.map_name}"')
+        c._iter.it = MockIter(lambda: HazelcastSqlError("UUID", "CODE", "MSG", None))
+        with self.assertRaises(DatabaseError):
+            c.fetchmany(2)
+
+    def test_fetchall_error(self):
+        self._create_mapping()
+        self._populate_map(1)
+        c = self.conn.cursor()
+        c.execute(f'SELECT * FROM "{self.map_name}"')
+        c._iter.it = MockIter(lambda: HazelcastSqlError("UUID", "CODE", "MSG", None))
+        with self.assertRaises(DatabaseError):
+            c.fetchall()
+
+    def test_cursor_iterator_error(self):
+        self._create_mapping()
+        self._populate_map(1)
+        c = self.conn.cursor()
+        c.execute(f'SELECT * FROM "{self.map_name}"')
+        c._iter.it = MockIter(lambda: HazelcastSqlError("UUID", "CODE", "MSG", None))
+        with self.assertRaises(DatabaseError):
+            for row in c:
+                print(row)
+
+    def test_with(self):
+        self._create_mapping()
+        self._populate_map(1)
+        with connect(self.cfg) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(f'SELECT * FROM "{self.map_name}"')
+                self.assertEqual(1, len(cursor.fetchall()))
+
+
+class MockIter:
+    def __init__(self, fn):
+        self.fn = fn
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        raise self.fn()

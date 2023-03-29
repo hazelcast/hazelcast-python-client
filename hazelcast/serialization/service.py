@@ -450,7 +450,8 @@ class SerializerRegistry:
         serializer = self._type_dict.get(obj_type, None)
         if serializer is not None:
             return serializer
-        for super_type in obj_type.__subclasses__():
+
+        for super_type in obj_type.__mro__:
             serializer = self.register_from_super_type(obj_type, super_type)
             if serializer is not None:
                 return serializer

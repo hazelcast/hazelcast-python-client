@@ -42,6 +42,10 @@ class CustomClass:
         return False
 
 
+class ChildCustomClass(CustomClass):
+    pass
+
+
 class CustomSerializer(StreamSerializer):
     def write(self, out, obj):
         if isinstance(obj, CustomClass):
@@ -128,3 +132,25 @@ class CustomSerializationTestCase(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             service._registry.safe_register_serializer(TheOtherCustomSerializer, CustomClass)
+
+    def test_serializing_class_instances(self):
+        config = Config()
+        config.custom_serializers = {CustomClass: CustomSerializer}
+        service = SerializationServiceV1(config)
+
+        for clazz in (CustomClass, ChildCustomClass):
+            data = service.to_data(clazz)
+            deserialized = service.to_object(data)
+            self.assertEqual(clazz, deserialized)
+
+    def test_serializing_child_class_instances_with_super_class_serializer(self):
+        config = Config()
+        config.custom_serializers = {CustomClass: CustomSerializer}
+        service = SerializationServiceV1(config)
+
+        obj = ChildCustomClass("uid", "some name", "description text", "CUSTOM")
+        data = service.to_data(obj)
+        deserialized = service.to_object(data)
+
+        self.assertIsInstance(deserialized, CustomClass)
+        self.assertEqual(obj, deserialized)

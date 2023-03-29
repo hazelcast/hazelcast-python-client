@@ -49,7 +49,7 @@ images <https://hub.docker.com/r/hazelcast/hazelcast/>`__.
 
 .. code:: bash
 
-   docker run -p 5701:5701 hazelcast/hazelcast:5.1
+   docker run -p 5701:5701 hazelcast/hazelcast:5.2
 
 You can also use our ZIP or TAR
 `distributions <https://hazelcast.com/open-source-projects/downloads/>`__.
@@ -143,7 +143,7 @@ Features
 -  Distributed, CRDT based counter, called **PNCounter**
 -  Distributed concurrency primitives from CP Subsystem such as
    **FencedLock**, **Semaphore**, **AtomicLong**
--  Integration with `Hazelcast Cloud <https://cloud.hazelcast.com/>`__
+-  Integration with `Hazelcast Viridian <https://viridian.hazelcast.com/>`__
 -  Support for serverless and traditional web service architectures with
    **Unisocket** and **Smart** operation modes
 -  Ability to listen to client lifecycle, cluster state, and distributed
@@ -235,7 +235,7 @@ License
 Copyright
 ---------
 
-Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 
 Visit `hazelcast.com <https://hazelcast.com>`__ for more
 information.

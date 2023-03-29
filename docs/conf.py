@@ -64,7 +64,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "Hazelcast Python Client"
-copyright = "2022, Hazelcast Inc."
+copyright = "2023, Hazelcast Inc."
 author = "Hazelcast Inc. Developers"
 
 # The version info for the project you're documenting, acts as replacement for
