@@ -60,13 +60,14 @@ for reference.
 
 Query different datasets such as Kafka topics and Hazelcast maps, using a
 single query. Normally, querying in SQL is database or dataset-specific.
-However, with :ref:`mappings
-<using_python_client_with_hazelcast:mappings>`, you can pull information
+However, with :ref:`mappings`, you can pull information
 from different sources to present a more complete picture.
 
 See the `Get Started with SQL Over Files
 <https://docs.hazelcast.com/hazelcast/latest/sql/get-started-sql-files.html>`__
 tutorial for reference.
+
+.. _    mappings:
 
 Mappings
 ~~~~~~~~
@@ -671,7 +672,7 @@ to access column values.
 
 
 Once you are done with the cursor, you can use its
-:method:`hazelcast.db.Cursor.close` method to release its resources.
+:meth:`hazelcast.db.Cursor.close` method to release its resources.
 
 .. code:: python
 
