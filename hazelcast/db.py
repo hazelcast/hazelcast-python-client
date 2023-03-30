@@ -52,8 +52,7 @@ ColumnDescription = NamedTuple(
         ("null_ok", bool),
     ],
 )
-ColumnDescription.__doc__ = \
-    "ColumnDescription provides name, type and nullability information"
+ColumnDescription.__doc__ = "ColumnDescription provides name, type and nullability information"
 
 
 class _DBAPIType:

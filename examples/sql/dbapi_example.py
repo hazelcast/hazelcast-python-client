@@ -1,4 +1,3 @@
-
 from hazelcast.db import connect
 
 # create a connection to the cluster
@@ -55,14 +54,16 @@ with connect(dsn="hz://localhost:5701") as conn:
     try:
         # the cursor is automatically closed
         with conn.cursor() as cur:
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT symbol, quantity * price AS total_price
                 FROM stocks
                 WHERE price > ?
                 ORDER BY price
-            """, (50,))
+            """,
+                (50,),
+            )
             for row in cur:
                 print(row["symbol"], row["total_price"])
     except conn.Error as ex:
         print(ex)
-
