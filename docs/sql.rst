@@ -67,7 +67,7 @@ See the `Get Started with SQL Over Files
 <https://docs.hazelcast.com/hazelcast/latest/sql/get-started-sql-files.html>`__
 tutorial for reference.
 
-.. _    mappings:
+.. _mappings:
 
 Mappings
 ~~~~~~~~
