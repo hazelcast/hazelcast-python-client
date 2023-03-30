@@ -1,4 +1,4 @@
-from hazelcast.db import connect
+from hazelcast.db import connect, SqlRow
 
 # create a connection to the cluster
 # this example assumes Hazelcast is running locally at the default host and port

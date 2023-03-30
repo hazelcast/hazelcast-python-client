@@ -139,10 +139,10 @@ class Cursor:
     def rowcount(self) -> int:
         """Returns the number of rows in the result.
 
-        This is not supported by this driver and always -1 is returned.
+        This is not supported by this driver and always ``-1`` is returned.
 
         Returns:
-            -1
+            ``-1``
         """
         return -1
 
@@ -170,10 +170,10 @@ class Cursor:
         """Executes the given query with optional parameters
 
         Args:
-            operation: A SQL string. Use question mark (`?`) as the
-            placeholder if necessary.
+            operation: A SQL string. Use question mark (``?``) as the
+                placeholder if necessary.
             params: Optional tuple that contains the actual parameters
-            to replace the placeholders in the query.
+                to replace the placeholders in the query.
 
         """
         if params is not None and not isinstance(params, tuple):
@@ -205,14 +205,14 @@ class Cursor:
     def executemany(self, operation: str, seq_of_params: Sequence[Tuple]) -> None:
         """Runs the given query with the list of parameters
 
-        Calling `executemany(sql, [params1, params2, ...]` is equivalent to
-        execute(sql, params1), execute(sql, params2), ...
+        Calling ``executemany(sql, [params1, params2, ...]`` is equivalent to
+        ``execute(sql, params1), execute(sql, params2), ...``
 
         Args:
-            operation: A SQL string. Use question mark (`?`) as the
-            placeholder if necessary.
+            operation: A SQL string. Use question mark (``?``) as the
+                placeholder if necessary.
             seq_of_params: Optional list of tuples that contains the actual parameters
-            to replace the placeholders in the query.
+                to replace the placeholders in the query.
         """
         self._ensure_open()
         self._rownumber = -1
@@ -233,7 +233,7 @@ class Cursor:
         """Fetches a single row from the result
 
         Returns:
-            A single row if there are rows in the result or None.
+            A single row if there are rows in the result or ``None``.
 
         """
         if self._iter is None:
@@ -313,7 +313,7 @@ class Connection:
     """Connection object provides connection to the Hazelcast cluster
 
     This class should not be initiated directly.
-    Use `connect` method to create an instance.
+    Use ``connect`` method to create an instance.
     """
 
     def __init__(self, config: Config):
@@ -423,16 +423,16 @@ def connect(
 
     Args:
          config: A Config object
-         dsn: Dota Source Name in the following formaT:
-         `hz://[user:password]@addr1:port1[?opt1=value1[&opt2=value2 ...]]`
+         dsn: Dota Source Name in the following format:
+            ``hz://[user:password]@addr1:port1[?opt1=value1[&opt2=value2 ...]]``
          user: Optional user name for authenticating to the cluster.
          password: Optional password for authenticating to the cluster.
-         host: Hostname or IP address of the cluster. By default `localhost`.
-         port: Port of the cluster. By default `5701`.
-         cluster_name: Name of the cluster. By default `dev`.
+         host: Hostname or IP address of the cluster. By default ``localhost``.
+         port: Port of the cluster. By default ``5701``.
+         cluster_name: Name of the cluster. By default ``dev``.
 
     Returns:
-        Connection pbject.
+        Connection object.
     """
     c = _make_config(
         config,

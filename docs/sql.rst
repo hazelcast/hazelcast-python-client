@@ -508,7 +508,7 @@ future releases.
 DBAPI-2 Interface
 -----------------
 
-`hazelcast.db` package supports the Python standard `DBAPI-2 Specification <https://peps.python.org/pep-0249/>`__.
+`hazelcast.db` module supports the Python standard `DBAPI-2 Specification <https://peps.python.org/pep-0249/>`__.
 
 Connection
 ~~~~~~~~~~
@@ -526,11 +526,11 @@ There are a few ways to pass the connection parameters.
 
 You can use the following keyword arguments:
 
-- `host`: Host part of the cluster address, by default: `localhost`.
-- `port`: Port part of the cluster address, by default: `5701`.
-- `cluster_name`: Cluster name, by default: `dev`.
-- `user`: Username for the cluster. Requires Hazelcast EE.
-- `password`: Password for the cluster. Requires Hazelcast EE.
+- ``host``: Host part of the cluster address, by default: ``localhost``.
+- ``port``: Port part of the cluster address, by default: ```5701``.
+- ``cluster_name``: Cluster name, by default: ``dev``.
+- ``user``: Username for the cluster. Requires Hazelcast EE.
+- ``password``: Password for the cluster. Requires Hazelcast EE.
 
 .. code:: python
 
@@ -538,18 +538,17 @@ You can use the following keyword arguments:
     conn = connect(user="localhost", port=5701)
 
 You can also provide a DSN (Data Source Name) string to configure the connection.
-The format of the DSN is `hz://[user:password]@address1:port1[,address2:port2, ...][?option1=value1[&option2=value2 ...]]`
+The format of the DSN is ``hz://[user:password]@address1:port1[,address2:port2, ...][?option1=value1[&option2=value2 ...]]``
 The following options are supported:
 
-- `cluster.name`: Hazelcast cluster name.
-- `cloud.token`: Viridian discovery token.
-- `smart`: Enables smart routing when true. Defaults to Python client default.
-- `ssl`: Enables SSL for client connection.
-- `ssl.ca.path`: Path to the CA file.
-- `ssl.cert.path`: Path to the certificate file.
-- `ssl.key.path`: Path to the private key file.
-- `ssl.key.password`: Password to the key file.
-
+- ``cluster.name``: Hazelcast cluster name.
+- ``cloud.token``: Viridian discovery token.
+- ``smart``: Enables smart routing when true. Defaults to Python client default.
+- ``ssl``: Enables SSL for client connection.
+- ``ssl.ca.path``: Path to the CA file.
+- ``ssl.cert.path``: Path to the certificate file.
+- ``ssl.key.path``: Path to the private key file.
+- ``ssl.key.password``: Password to the key file.
 
 .. code:: python
 
@@ -557,7 +556,7 @@ The following options are supported:
     conn = connect(dsn="hz://admin:ssap@demo.hazelcast.com?cluster.name=demo1")
 
 In case you have to pass some options which are not supported by the methods above,
-you can also pass a :class:`hazelcast.config.Config` object as the first argument to `connect`.
+you can also pass a :class:`hazelcast.config.Config` object as the first argument to ``connect``.
 
 .. code:: python
 
@@ -569,13 +568,13 @@ you can also pass a :class:`hazelcast.config.Config` object as the first argumen
 
 Once the connection is created, you can create a :class:`hazelcast.db.Cursor` object from it
 to execute queries. This is explained in the next section.
-Finally, you can close the `Connection` object to release its resources if you are done with it.
+Finally, you can close the ``Connection`` object to release its resources if you are done with it.
 
 .. code:: python
 
     conn.close()
 
-You can use a `with` statement to automatically close a `Connection`.
+You can use a ``with`` statement to automatically close a ``Connection``.
 
 .. code:: python
 
@@ -600,7 +599,7 @@ You can use this method to run all kinds of queries.
 
     cursor.execute("SELECT * FROM stocks ORDER BY price")
 
-Use the question mark (`?)` as a placeholder if you are passing arguments
+Use the question mark (``?``) as a placeholder if you are passing arguments
 in the query. The actual arguments should be passed in a tuple.
 
 .. code:: python
@@ -608,7 +607,7 @@ in the query. The actual arguments should be passed in a tuple.
     cursor.execute("SELECT * FROM stocks WHERE price > ? ORDER BY price", (50,))
 
 :meth:`hazelcast.db.Cursor.executemany` is also available, which enables running the same query
-with different kinds of value sets. This method should only be used my mutating queries, such as `INSERT`.
+with different kinds of value sets. This method should only be used my mutating queries, such as ``INSERT``.
 
 .. code:: python
 
@@ -621,8 +620,8 @@ with different kinds of value sets. This method should only be used my mutating 
 
 **Mutating Queries**
 
-Mutating queries such as `UPDATE`, `DELETE` and `INSERT` updates, deletes
-data or adds new rows. You can use `execue` or `executemany` for those
+Mutating queries such as ``UPDATE``, ``DELETE`` and ``INSERT`` updates, deletes
+data or adds new rows. You can use ``execue`` or ``executemany`` for those
 queries.
 
 .. code:: python
@@ -632,11 +631,11 @@ queries.
 
 **Row Returning Queries**
 
-Queries such as `SELECT` and `SHOW` return rows. Once you run `execute`
+Queries such as ``SELECT`` and ``SHOW`` return rows. Once you run ``execute``
 with the query, call one of :meth:`hazelcast.db.Cursor.fetchone`,
 :meth:`hazelcast.db.Cursor.fetchmany` or :meth:`hazelcast.db.Cursor.fetchall`
 to get one, some or all rows in the result. The rows are of the
-:class:`hazelcast.db.SqlRow` type. Note that, `fetchall` should only be used
+:class:`hazelcast.db.SqlRow` type. Note that, ``fetchall`` should only be used
 for small, finite set of rows.
 
 .. code:: python
@@ -654,7 +653,7 @@ Alternatively, you can iterate on the cursor itself.
     for row in cursor:
         # handle the row
 
-You can access columns in a:class:`hazelcast.db.SqlRow` by using the subscription
+You can access columns in a :class:`hazelcast.db.SqlRow` by using the subscription
 notation, treating the row as a dictionary.
 
 .. code:: python
@@ -678,7 +677,7 @@ Once you are done with the cursor, you can use its
 
     cursor.close()
 
-Using the `with` statement, `close` is called automatically:
+Using the ``with`` statement, ``close`` is called automatically:
 
 .. code:: python
 

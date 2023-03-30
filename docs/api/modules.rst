@@ -7,6 +7,7 @@ API Documentation
     cluster
     core
     cp
+    db
     errors
     future
     lifecycle
