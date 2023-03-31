@@ -126,6 +126,7 @@ Features
     setting_up_client_network
     client_connection_strategy
     using_python_client_with_hazelcast
+    sql
     securing_client_connection
     development_and_testing
     getting_help
