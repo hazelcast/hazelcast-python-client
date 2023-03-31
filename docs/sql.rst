@@ -527,7 +527,7 @@ There are a few ways to pass the connection parameters.
 You can use the following keyword arguments:
 
 - ``host``: Host part of the cluster address, by default: ``localhost``.
-- ``port``: Port part of the cluster address, by default: ```5701``.
+- ``port``: Port part of the cluster address, by default: ``5701``.
 - ``cluster_name``: Cluster name, by default: ``dev``.
 - ``user``: Username for the cluster. Requires Hazelcast EE.
 - ``password``: Password for the cluster. Requires Hazelcast EE.
@@ -635,7 +635,7 @@ Queries such as ``SELECT`` and ``SHOW`` return rows. Once you run ``execute``
 with the query, call one of :meth:`hazelcast.db.Cursor.fetchone`,
 :meth:`hazelcast.db.Cursor.fetchmany` or :meth:`hazelcast.db.Cursor.fetchall`
 to get one, some or all rows in the result. The rows are of the
-:class:`hazelcast.db.SqlRow` type. Note that, ``fetchall`` should only be used
+:class:`hazelcast.sql.SqlRow` type. Note that, ``fetchall`` should only be used
 for small, finite set of rows.
 
 .. code:: python
@@ -653,7 +653,7 @@ Alternatively, you can iterate on the cursor itself.
     for row in cursor:
         # handle the row
 
-You can access columns in a :class:`hazelcast.db.SqlRow` by using the subscription
+You can access columns in a :class:`hazelcast.sql.SqlRow` by using the subscription
 notation, treating the row as a dictionary.
 
 .. code:: python

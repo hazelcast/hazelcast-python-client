@@ -120,7 +120,6 @@ class Cursor:
 
         Returns:
             The Connection of this cursor
-
         """
         return self._conn
 
@@ -174,7 +173,6 @@ class Cursor:
                 placeholder if necessary.
             params: Optional tuple that contains the actual parameters
                 to replace the placeholders in the query.
-
         """
         if params is not None and not isinstance(params, tuple):
             raise InterfaceError("params must be a tuple or None")
@@ -234,7 +232,6 @@ class Cursor:
 
         Returns:
             A single row if there are rows in the result or ``None``.
-
         """
         if self._iter is None:
             raise InterfaceError("fetch can only be called after row returning queries")
@@ -348,7 +345,6 @@ class Connection:
 
         Returns:
             Cursor object that uses this connection.
-
         """
         with self.__mu:
             if self.__client is not None:
