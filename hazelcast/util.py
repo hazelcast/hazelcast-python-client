@@ -501,10 +501,10 @@ portLock = threading.Lock()
 
 
 def next_port(nextPort=0):
-    maxStep = 10
+    max_step = 10
     step = member_count()
-    if step < maxStep:
-        step = maxStep
+    if step < max_step:
+        step = max_step
 
     while True:
         with portLock:
