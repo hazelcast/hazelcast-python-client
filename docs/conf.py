@@ -72,9 +72,9 @@ author = "Hazelcast Inc. Developers"
 # built documents.
 #
 # The short X.Y version.
-version = "5.2.0"
+version = "5.3.0"
 # The full version, including alpha/beta/rc tags.
-release = "5.2.0"
+release = "5.3.0"
 
 autodoc_member_order = "bysource"
 autoclass_content = "both"
