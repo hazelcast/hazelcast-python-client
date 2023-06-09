@@ -48,7 +48,7 @@ There are following options to start a Hazelcast cluster easily:
 
   .. code:: bash
 
-      docker run -p 5701:5701 hazelcast/hazelcast:5.2
+      docker run -p 5701:5701 hazelcast/hazelcast:5.3.0
 
 - You can use `Hazelcast CLI
   <https://docs.hazelcast.com/hazelcast/latest/getting-started/install-hazelcast#using-a-package-manager>`__.
