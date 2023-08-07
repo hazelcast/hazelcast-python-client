@@ -73,11 +73,9 @@ def start_rc(stdout=None, stderr=None):
     enterprise_key = os.environ.get("HAZELCAST_ENTERPRISE_KEY", None)
 
     if enterprise_key:
-        server = download_if_necessary(
-            ENTERPRISE_REPO, "hazelcast-enterprise", SERVER_VERSION
-        )
-    else:
-        server = download_if_necessary(REPO, "hazelcast", SERVER_VERSION)
+            server = download_if_necessary(ENTERPRISE_REPO, "hazelcast-enterprise", SERVER_VERSION)
+        else:
+            server = download_if_necessary(REPO, "hazelcast", SERVER_VERSION)
 
     artifacts.append(server)
 
@@ -92,11 +90,9 @@ def start_rc(stdout=None, stderr=None):
     ]
 
     if enterprise_key:
-        args.insert(1, "-Dhazelcast.enterprise.license.key=" + enterprise_key)
+            args.insert(1, "-Dhazelcast.enterprise.license.key=" + enterprise_key)
 
-    return subprocess.Popen(
-        args=args, stdout=stdout, stderr=stderr, shell=IS_ON_WINDOWS
-    )
+        return subprocess.Popen(args=args, stdout=stdout, stderr=stderr, shell=IS_ON_WINDOWS)
 
 
 if __name__ == "__main__":
