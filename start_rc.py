@@ -48,7 +48,7 @@ def download_if_necessary(repo, artifact_id, version, is_test_artifact=False):
         "-q",
         "dependency:get",
         "-Dtransitive=false",
-        "-DrepoUrl=" + repo,
+        "-DremoteRepositories=" + repo,
         "-Dartifact=" + artifact,
         "-Ddest=" + dest_file_name,
     ]
@@ -73,7 +73,9 @@ def start_rc(stdout=None, stderr=None):
     enterprise_key = os.environ.get("HAZELCAST_ENTERPRISE_KEY", None)
 
     if enterprise_key:
-        server = download_if_necessary(ENTERPRISE_REPO, "hazelcast-enterprise", SERVER_VERSION)
+        server = download_if_necessary(
+            ENTERPRISE_REPO, "hazelcast-enterprise", SERVER_VERSION
+        )
     else:
         server = download_if_necessary(REPO, "hazelcast", SERVER_VERSION)
 
@@ -92,7 +94,9 @@ def start_rc(stdout=None, stderr=None):
     if enterprise_key:
         args.insert(1, "-Dhazelcast.enterprise.license.key=" + enterprise_key)
 
-    return subprocess.Popen(args=args, stdout=stdout, stderr=stderr, shell=IS_ON_WINDOWS)
+    return subprocess.Popen(
+        args=args, stdout=stdout, stderr=stderr, shell=IS_ON_WINDOWS
+    )
 
 
 if __name__ == "__main__":
