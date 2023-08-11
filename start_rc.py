@@ -50,7 +50,6 @@ def download_if_necessary(repo, artifact_id, version, is_test_artifact=False):
         "-Dtransitive=false",
         "-DremoteRepositories=" + repo,
         "-Dartifact=" + artifact,
-        "-Dartifact=" + artifact,
         "-Ddest=" + dest_file_name,
     ]
 
