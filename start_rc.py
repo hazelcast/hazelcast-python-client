@@ -46,9 +46,9 @@ def download_if_necessary(repo, artifact_id, version, is_test_artifact=False):
     args = [
         "mvn",
         "-q",
-        "dependency:get",
+        "org.apache.maven.plugins:maven-dependency-plugin:2.10:get",
         "-Dtransitive=false",
-        "-DrepoUrl=" + repo,
+        "-DremoteRepositories=" + repo,
         "-Dartifact=" + artifact,
         "-Ddest=" + dest_file_name,
     ]
