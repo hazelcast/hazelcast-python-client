@@ -226,8 +226,14 @@ class CPProxyManager:
                     return proxy
 
             proxy = FencedLock(self._context, group_id, LOCK_SERVICE, proxy_name, object_name)
+            proxy._proxy_removal = lambda: self._remove_lock_proxy(proxy_name)
             self._lock_proxies[proxy_name] = proxy
             return proxy
+
+    def _remove_lock_proxy(self, proxy_name):
+        with self._mux:
+            if proxy_name in self._lock_proxies:
+                self._lock_proxies.pop(proxy_name)
 
     def _create_semaphore(self, group_id, proxy_name, object_name):
         codec = semaphore_get_semaphore_type_codec

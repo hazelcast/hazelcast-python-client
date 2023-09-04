@@ -65,6 +65,7 @@ class FencedLock(SessionAwareCPProxy["BlockingFencedLock"]):
     def __init__(self, context, group_id, service_name, proxy_name, object_name):
         super(FencedLock, self).__init__(context, group_id, service_name, proxy_name, object_name)
         self._lock_session_ids = dict()  # thread-id to session id that has acquired the lock
+        self._proxy_removal = None
 
     def lock(self) -> Future[int]:
         """Acquires the lock and returns the fencing token assigned to the
@@ -308,6 +309,8 @@ class FencedLock(SessionAwareCPProxy["BlockingFencedLock"]):
 
     def destroy(self) -> Future[None]:
         self._lock_session_ids.clear()
+        if self._proxy_removal is not None:
+            self._proxy_removal()
         return super(FencedLock, self).destroy()
 
     def blocking(self) -> "BlockingFencedLock":
