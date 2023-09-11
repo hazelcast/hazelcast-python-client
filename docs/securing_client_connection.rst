@@ -63,6 +63,7 @@ configuration and then go over the configuration options one by one:
     On macOS, you may get an ``certificate verify failed: unable to get local issuer certificate`` exception
     if Python doesn't use the installed trust certificates. To remedy that, check your Python version
     using the ``python3 --version``, and run the following command after adapting it to your Python version:
+
     ``open /Applications/Python\ 3.9/Install\ Certificates.command``
 
     See this `StackOverflow answer <https://stackoverflow.com/a/62374703>`__ for more information.
