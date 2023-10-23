@@ -25,7 +25,6 @@ jobs:
           repository: hazelcast/hazelcast-python-client
           path: client
           ref: master
-          token: ${{ secrets.GH_TOKEN }}
       - name: Copy updated certificate
         run: |
           cp $GITHUB_WORKSPACE/certs/com/hazelcast/nio/ssl/letsencrypt.jks $GITHUB_WORKSPACE/client/tests/integration/backward_compatible/ssl_tests/keystore.jks
