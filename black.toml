@@ -18,3 +18,5 @@ exclude = '''
   | hazelcast/protocol/codec
 )/
 '''
+
+force_exclude = "hazelcast/asyncore\\.py"
