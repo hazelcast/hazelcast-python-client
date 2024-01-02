@@ -25,16 +25,23 @@ class MyListener(ReliableMessageListener):
         print("Second listener:", message)
 
     def retrieve_initial_sequence(self):
+        print("Listener function retrieve_initial_sequence is called")
         return 0
 
     def store_sequence(self, sequence):
+        print("Listener function store_sequence is called with sequence: ", sequence)
         pass
 
-    def is_loss_tolerant(self):
+    def is_loss_tolerant(self) -> bool:
+        print("Listener function is_loss_tolerant is called")
         return True
 
     def is_terminal(self, error):
+        print("Listener function is_terminal is called with error: ", error)
         return False
+
+    def on_cancel(self):
+        print("Listener function on_cancel is called")
 
 
 # Add a custom ReliableMessageListener

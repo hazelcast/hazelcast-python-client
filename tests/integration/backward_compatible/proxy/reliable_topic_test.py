@@ -1,6 +1,9 @@
 import os
 import unittest
 
+from hazelcast.proxy.base import TopicMessage
+from hazelcast.types import MessageType
+
 from tests.hzrc.ttypes import Lang
 
 try:
@@ -85,6 +88,8 @@ class ReliableTopicTest(SingleMemberTestCase):
 
         messages = []
 
+        on_cancel_call_count = [0]
+
         class Listener(ReliableMessageListener):
             def on_message(self, message):
                 messages.append(message.message)
@@ -101,6 +106,9 @@ class ReliableTopicTest(SingleMemberTestCase):
             def is_terminal(self, error):
                 return False
 
+            def on_cancel(self):
+                on_cancel_call_count[0] = on_cancel_call_count[0] + 1
+
         registration_id = topic.add_listener(Listener())
         self.assertIsNotNone(registration_id)
 
@@ -108,6 +116,8 @@ class ReliableTopicTest(SingleMemberTestCase):
         topic.publish("b")
 
         self.assertTrueEventually(lambda: self.assertEqual(["a", "b"], messages))
+
+        self.assertEquals(0, on_cancel_call_count[0])
 
     def test_add_listener_with_retrieve_initial_sequence(self):
         topic = self.get_topic(random_string())
@@ -233,6 +243,8 @@ class ReliableTopicTest(SingleMemberTestCase):
 
         messages = []
 
+        on_cancel_call_count = [0]
+
         class Listener(ReliableMessageListener):
             def on_message(self, message):
                 message = message.message
@@ -253,6 +265,9 @@ class ReliableTopicTest(SingleMemberTestCase):
             def is_terminal(self, error):
                 return isinstance(error, ValueError)
 
+            def on_cancel(self) -> None:
+                on_cancel_call_count[0] = on_cancel_call_count[0] + 1
+
         registration_id = topic.add_listener(Listener())
         self.assertIsNotNone(registration_id)
 
@@ -263,10 +278,14 @@ class ReliableTopicTest(SingleMemberTestCase):
         # Should be cancelled since on_message raised error
         self.assertTrueEventually(lambda: self.assertEqual(0, len(topic._wrapped._runners)))
 
+        self.assertEquals(1, on_cancel_call_count[0])
+
     def test_add_listener_when_on_message_and_is_terminal_raises_error(self):
         topic = self.get_topic(random_string())
 
         messages = []
+
+        on_cancel_call_count = [0]
 
         class Listener(ReliableMessageListener):
             def on_message(self, message):
@@ -288,6 +307,9 @@ class ReliableTopicTest(SingleMemberTestCase):
             def is_terminal(self, error):
                 raise error
 
+            def on_cancel(self) -> None:
+                on_cancel_call_count[0] = on_cancel_call_count[0] + 1
+
         registration_id = topic.add_listener(Listener())
         self.assertIsNotNone(registration_id)
 
@@ -298,6 +320,8 @@ class ReliableTopicTest(SingleMemberTestCase):
         # Should be cancelled since on_message raised error
         self.assertTrueEventually(lambda: self.assertEqual(0, len(topic._wrapped._runners)))
 
+        self.assertEquals(1, on_cancel_call_count[0])
+
     def test_add_listener_with_non_callable(self):
         topic = self.get_topic(random_string())
         with self.assertRaises(TypeError):
@@ -306,8 +330,31 @@ class ReliableTopicTest(SingleMemberTestCase):
     def test_remove_listener(self):
         topic = self.get_topic(random_string())
 
-        registration_id = topic.add_listener(lambda m: m)
+        on_cancel_call_count = [0]
+
+        class Listener(ReliableMessageListener):
+
+            def on_message(self, message: TopicMessage[MessageType]) -> None:
+                pass
+
+            def retrieve_initial_sequence(self) -> int:
+                return -1
+
+            def store_sequence(self, sequence: int) -> None:
+                pass
+
+            def is_loss_tolerant(self) -> bool:
+                pass
+
+            def is_terminal(self, error: Exception) -> bool:
+                pass
+
+            def on_cancel(self) -> None:
+                on_cancel_call_count[0] = on_cancel_call_count[0] + 1
+
+        registration_id = topic.add_listener(Listener())
         self.assertTrue(topic.remove_listener(registration_id))
+        self.assertEquals(1, on_cancel_call_count[0])
 
     def test_remove_listener_does_not_receive_messages_after_removal(self):
         topic = self.get_topic(random_string())
