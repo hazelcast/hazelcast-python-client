@@ -416,34 +416,34 @@ The following is an example Reliable Message Listener class.
             print("Listener function on_cancel is called")
 
 Durable Subscription
-********************
+''''''''''''''''''''
 
 The ReliableMessageListener allows you to control where you want to start processing a message when the listener is registered. This makes it possible to create a durable subscription by storing the sequence of the last message and using this sequenceId as the sequenceId to start from.
 
 Exception Handling
-******************
+''''''''''''''''''
 
 The ReliableMessageListener also gives the ability to deal with exceptions using the `is_terminal(error)` method. This method allows you to control which exceptions should terminate the execution of the listener and cancel it. If a plain MessageListener is used, it won't terminate on exceptions and it will keep on running. But in some cases it is better to stop running.
 
 Global Order
-************
+''''''''''''
 
 The ReliableMessageListener will always get all events in order (global order). It will not get duplicates and there will only be gaps (loss of messages) if it is too slow. For more information see `is_loss_tolerant()`.
 
 Delivery Guarantees
-*******************
+'''''''''''''''''''
 
 Because the ReliableMessageListener controls which item it wants to continue from upon restart, it is very easy to provide an at-least-once or at-most-once delivery guarantee. The `store_sequence(self, sequence)` is always called before a message is processed; so it can be persisted on some non-volatile storage. When the `retrieve_initial_sequence()` returns the stored sequence, then an at-least-once delivery is implemented since the same item is now being processed twice. To implement an at-most-once delivery guarantee, add 1 to the stored sequence when the `retrieve_initial_sequence()` is called.
 
 Loss Tolerance
-**************
+''''''''''''''
 
 You can provide the `is_loss_tolerant(self) -> bool` method return true if this ReliableMessageListener is able to deal with message loss. Even though the reliable topic promises to be reliable, it can be that a MessageListener is too slow. Eventually the message won't be available anymore.
 
 If the ReliableMessageListener is not loss tolerant and the topic detects that there are missing messages, it will terminate the ReliableMessageListener.
 
 onCancel Callback
-*****************
+'''''''''''''''''
 
 This method is called by Hazelcast when the ReliableMessageListener is cancelled. This can happen when the listener is unregistered or cancelled due to an exception or during shutdown.
 
