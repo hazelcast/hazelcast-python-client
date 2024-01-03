@@ -333,7 +333,6 @@ class ReliableTopicTest(SingleMemberTestCase):
         on_cancel_call_count = [0]
 
         class Listener(ReliableMessageListener):
-
             def on_message(self, message: TopicMessage[MessageType]) -> None:
                 pass
 
