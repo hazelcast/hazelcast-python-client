@@ -73,10 +73,12 @@ class Server:
 
     def __init__(self):
         self.server = HTTPServer((HOST, 0), CloudHTTPHandler)
-        self.server.socket = ssl.wrap_socket(
+        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ssl_context.load_cert_chain(
+            get_abs_path(self.cur_dir, "cert.pem"), get_abs_path(self.cur_dir, "key.pem")
+        )
+        self.server.socket = ssl_context.wrap_socket(
             self.server.socket,
-            get_abs_path(self.cur_dir, "key.pem"),
-            get_abs_path(self.cur_dir, "cert.pem"),
             server_side=True,
         )
         self.port = self.server.socket.getsockname()[1]
