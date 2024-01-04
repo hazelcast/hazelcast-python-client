@@ -150,6 +150,13 @@ class ReliableMessageListener(typing.Generic[MessageType]):
         """
         raise NotImplementedError("is_terminal")
 
+    def on_cancel(self) -> None:
+        """
+        Called when the ReliableMessageListener is cancelled. This can happen
+        when the listener is unregistered or cancelled due to an exception or during shutdown.
+        """
+        pass
+
 
 class _MessageRunner:
     def __init__(
@@ -211,6 +218,7 @@ class _MessageRunner:
         """
         self._cancelled = True
         self._runners.pop(self._registration_id, None)
+        self._listener.on_cancel()
 
     def _handle_next_batch(self, future):
         """Handles the result of the read_many request from
