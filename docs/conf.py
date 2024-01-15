@@ -84,7 +84,7 @@ autoclass_content = "both"
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -276,7 +276,13 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, "hazelcast-python-client", "Hazelcast Python Client Documentation", [author], 1)
+    (
+        master_doc,
+        "hazelcast-python-client",
+        "Hazelcast Python Client Documentation",
+        [author],
+        1,
+    )
 ]
 
 # If true, show URL addresses after external links.
