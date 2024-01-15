@@ -11,8 +11,8 @@ Requirements
 
 - Windows, Linux/UNIX or Mac OS X
 - Python 3.6 or newer
-- Java 8 or newer
 - Hazelcast 4.0 or newer
+- `Supported Java virtual machine <https://docs.hazelcast.com/hazelcast/latest/deploy/versioning-compatibility#supported-java-virtual-machines>`
 - Latest Hazelcast Python client
 
 Working with Hazelcast Clusters
