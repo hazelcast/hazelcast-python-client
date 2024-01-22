@@ -215,8 +215,8 @@ Testing
 In order to test Hazelcast Python client locally, you will need the
 following:
 
--  Java 8 or newer
--  Maven
+-  `Supported Java virtual machine <https://docs.hazelcast.com/hazelcast/latest/deploy/versioning-compatibility#supported-java-virtual-machines>`
+-  `Apache Maven <https://maven.apache.org/>`
 
 Following commands starts the tests:
 
