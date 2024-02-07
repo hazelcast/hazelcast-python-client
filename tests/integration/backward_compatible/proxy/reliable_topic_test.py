@@ -1,8 +1,6 @@
 import os
 import unittest
 
-from hazelcast.proxy.base import TopicMessage
-from hazelcast.types import MessageType
 from hazelcast.util import AtomicInteger
 
 from tests.hzrc.ttypes import Lang
@@ -334,7 +332,7 @@ class ReliableTopicTest(SingleMemberTestCase):
         on_cancel_call_count = AtomicInteger()
 
         class Listener(ReliableMessageListener):
-            def on_message(self, message: TopicMessage[MessageType]) -> None:
+            def on_message(self, message) -> None:
                 pass
 
             def retrieve_initial_sequence(self) -> int:
