@@ -28,7 +28,7 @@ from tests.integration.backward_compatible.util import (
     write_string_to_writer,
     read_string_from_reader,
 )
-from tests.util import random_string, get_abs_path
+from tests.util import random_string, get_abs_path, skip_if_server_version_newer_than_or_equal
 from hazelcast import HazelcastClient
 
 
@@ -171,6 +171,8 @@ class PredicateTest(SingleMemberTestCase):
         self.assertCountEqual(self.map.key_set(predicate), [])
 
     def test_paging(self):
+        # https://github.com/hazelcast/hazelcast-python-client/issues/666
+        skip_if_server_version_newer_than_or_equal(self, self.client, "5.4")
         self.fill_map_numeric()
         predicate = paging(less("this", 4), 2)
         self.assertCountEqual([0, 1], self.map.key_set(predicate))
@@ -339,6 +341,8 @@ class PagingPredicateTest(HazelcastTestCase):
         cls.map = cls.client.get_map(random_string()).blocking()
 
     def setUp(self):
+        # https://github.com/hazelcast/hazelcast-python-client/issues/666
+        skip_if_server_version_newer_than_or_equal(self, self.client, "5.4")
         self.map.clear()
 
     @classmethod

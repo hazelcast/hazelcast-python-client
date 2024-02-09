@@ -277,7 +277,8 @@ class ReliableTopicTest(SingleMemberTestCase):
         # Should be cancelled since on_message raised error
         self.assertTrueEventually(lambda: self.assertEqual(0, len(topic._wrapped._runners)))
 
-        self.assertEqual(1, on_cancel_call_count.get())
+        if compare_client_version("5.4") >= 0:
+            self.assertEqual(1, on_cancel_call_count.get())
 
     def test_add_listener_when_on_message_and_is_terminal_raises_error(self):
         topic = self.get_topic(random_string())
@@ -319,7 +320,8 @@ class ReliableTopicTest(SingleMemberTestCase):
         # Should be cancelled since on_message raised error
         self.assertTrueEventually(lambda: self.assertEqual(0, len(topic._wrapped._runners)))
 
-        self.assertEqual(1, on_cancel_call_count.get())
+        if compare_client_version("5.4") >= 0:
+            self.assertEqual(1, on_cancel_call_count.get())
 
     def test_add_listener_with_non_callable(self):
         topic = self.get_topic(random_string())
@@ -352,7 +354,8 @@ class ReliableTopicTest(SingleMemberTestCase):
 
         registration_id = topic.add_listener(Listener())
         self.assertTrue(topic.remove_listener(registration_id))
-        self.assertEqual(1, on_cancel_call_count.get())
+        if compare_client_version("5.4") >= 0:
+            self.assertEqual(1, on_cancel_call_count.get())
 
     def test_remove_listener_does_not_receive_messages_after_removal(self):
         topic = self.get_topic(random_string())

@@ -12,6 +12,7 @@ from tests.util import (
     compare_server_version_with_rc,
     skip_if_client_version_older_than,
     skip_if_server_version_older_than,
+    skip_if_server_version_newer_than_or_equal,
 )
 
 try:
@@ -672,6 +673,8 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         )
 
     def test_entry_set_with_paging_predicate(self):
+        # https://github.com/hazelcast/hazelcast-python-client/issues/666
+        skip_if_server_version_newer_than_or_equal(self, self.client, "5.4")
         self._put_from_another_client(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
         self.assertEqual(
             [(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)],
@@ -751,6 +754,8 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         )
 
     def test_key_set_with_paging_predicate(self):
+        # https://github.com/hazelcast/hazelcast-python-client/issues/666
+        skip_if_server_version_newer_than_or_equal(self, self.client, "5.4")
         self._put_from_another_client(OUTER_COMPACT_INSTANCE, INNER_COMPACT_INSTANCE)
         self.assertEqual(
             [OUTER_COMPACT_INSTANCE],
@@ -882,6 +887,8 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         self.assertEqual([OUTER_COMPACT_INSTANCE], self.map.values(CompactPredicate()))
 
     def test_values_with_paging_predicate(self):
+        # https://github.com/hazelcast/hazelcast-python-client/issues/666
+        skip_if_server_version_newer_than_or_equal(self, self.client, "5.4")
         self._put_from_another_client(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
         self.assertEqual([OUTER_COMPACT_INSTANCE], self.map.values(paging(CompactPredicate(), 1)))
 
