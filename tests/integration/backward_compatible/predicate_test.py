@@ -171,7 +171,7 @@ class PredicateTest(SingleMemberTestCase):
         self.assertCountEqual(self.map.key_set(predicate), [])
 
     def test_paging(self):
-        # https://hazelcast.atlassian.net/browse/API-2187
+        # https://github.com/hazelcast/hazelcast-python-client/issues/666
         skip_if_server_version_newer_than_or_equal(self, self.client, "5.4")
         self.fill_map_numeric()
         predicate = paging(less("this", 4), 2)
@@ -338,7 +338,7 @@ class PagingPredicateTest(HazelcastTestCase):
         cls.cluster.start_member()
         cls.cluster.start_member()
         cls.client = HazelcastClient(cluster_name=cls.cluster.id)
-        # https://hazelcast.atlassian.net/browse/API-2187
+        # https://github.com/hazelcast/hazelcast-python-client/issues/666
         skip_if_server_version_newer_than_or_equal(cls, cls.client, "5.4")
         cls.map = cls.client.get_map(random_string()).blocking()
 
