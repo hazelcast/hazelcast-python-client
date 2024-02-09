@@ -11,7 +11,8 @@ from tests.util import (
     compare_client_version,
     compare_server_version_with_rc,
     skip_if_client_version_older_than,
-    skip_if_server_version_older_than, skip_if_server_version_newer_than_or_equal,
+    skip_if_server_version_older_than,
+    skip_if_server_version_newer_than_or_equal,
 )
 
 try:
