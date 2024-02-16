@@ -64,6 +64,9 @@ target/
 .idea
 *.iml
 
+# VSCode
+.vscode
+
 #MAC
 .DS_Store
 .directory
