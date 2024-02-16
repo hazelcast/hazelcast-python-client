@@ -72,3 +72,4 @@ target/
 .directory
 
 *.jar
+*.dylib
