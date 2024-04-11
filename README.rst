@@ -161,9 +161,6 @@ development/usage issues:
    repository <https://github.com/hazelcast/hazelcast-python-client/issues/new>`__
 -  `Documentation <https://hazelcast.readthedocs.io>`__
 -  `Slack <https://slack.hazelcast.com>`__
--  `Google Groups <https://groups.google.com/g/hazelcast>`__
--  `Stack
-   Overflow <https://stackoverflow.com/questions/tagged/hazelcast>`__
 
 Contributing
 ------------
