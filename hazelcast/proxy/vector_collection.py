@@ -1,5 +1,5 @@
 import copy
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Tuple
 
 from hazelcast.future import Future, ImmediateFuture, combine_futures
 from hazelcast.protocol.codec import (
@@ -14,6 +14,7 @@ from hazelcast.protocol.codec import (
 )
 from hazelcast.proxy import Proxy
 from hazelcast.serialization.compact import SchemaNotReplicatedError
+from hazelcast.serialization.data import Data
 from hazelcast.util import check_not_none
 from hazelcast.vector import (
     Document,
@@ -33,7 +34,7 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
     def blocking(self) -> "BlockingVectorCollection":
         return BlockingVectorCollection(self)
 
-    def get(self, key: Any) -> Optional[Future[Document]]:
+    def get(self, key: Any) -> Future[Optional[Document]]:
         check_not_none(key, "key can't be None")
         return self._get_internal(key)
 
@@ -54,7 +55,7 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         if not map:
             return ImmediateFuture(None)
         partition_service = self._context.partition_service
-        partition_map: Dict[str, Document] = {}
+        partition_map: Dict[str, List[Tuple[Data, Document]]] = {}
 
         for key, doc in map.items():
             check_not_none(key, "key can't be None")
@@ -165,7 +166,7 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
             vectors=[vector],
             include_value=include_value,
             include_vectors=include_vectors,
-            limit=limit,
+            limit=limit or 0,
         )
         request = vector_collection_search_near_vector_codec.encode_request(
             self.name,
@@ -240,7 +241,7 @@ class BlockingVectorCollection:
     def __init__(self, wrapped: VectorCollection):
         self._wrapped = wrapped
 
-    def get(self, key: Any) -> Document:
+    def get(self, key: Any) -> Optional[Document]:
         return self._wrapped.get(key).result()
 
     def set(self, key: Any, document: Document) -> None:

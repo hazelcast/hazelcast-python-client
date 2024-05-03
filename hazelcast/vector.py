@@ -85,4 +85,3 @@ class VectorSearchOptions:
     include_vectors: bool
     limit: int
     hints: Dict[str, str] = dataclasses.field(default_factory=lambda: {})
-
