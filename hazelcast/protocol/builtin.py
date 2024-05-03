@@ -296,6 +296,10 @@ class FixSizedTypesCodec:
         return LE_INT16.unpack_from(buf, offset)[0]
 
     @staticmethod
+    def encode_float(buf, offset, value):
+        LE_FLOAT.pack_into(buf, offset, value)
+
+    @staticmethod
     def decode_float(buf, offset):
         return LE_FLOAT.unpack_from(buf, offset)[0]
 
@@ -532,6 +536,31 @@ class LongArrayCodec:
         result = []
         for i in range(n):
             result.append(FixSizedTypesCodec.decode_long(b, i * LONG_SIZE_IN_BYTES))
+        return result
+
+
+class FloatArrayCodec:
+    @staticmethod
+    def encode(buf, arr, is_final=False):
+        n = len(arr)
+        size = SIZE_OF_FRAME_LENGTH_AND_FLAGS + n * FLOAT_SIZE_IN_BYTES
+        b = bytearray(size)
+        LE_INT.pack_into(b, 0, size)
+        if is_final:
+            LE_UINT16.pack_into(b, INT_SIZE_IN_BYTES, _IS_FINAL_FLAG)
+        for i in range(n):
+            FixSizedTypesCodec.encode_float(
+                b, SIZE_OF_FRAME_LENGTH_AND_FLAGS + i * FLOAT_SIZE_IN_BYTES, arr[i]
+            )
+        buf.extend(b)
+
+    @staticmethod
+    def decode(msg):
+        b = msg.next_frame().buf
+        n = len(b) // FLOAT_SIZE_IN_BYTES
+        result = []
+        for i in range(n):
+            result.append(FixSizedTypesCodec.decode_float(b, i * FLOAT_SIZE_IN_BYTES))
         return result
 
 
