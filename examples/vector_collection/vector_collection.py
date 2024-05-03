@@ -16,39 +16,45 @@ def main():
     cfg.cluster_members = ["localhost:5701"]
     client = HazelcastClient(cfg)
 
-    vc_name = "my-vc6"
+    vc_name = "my-vector-collection"
 
     # Create the VectorCollection
     indexes = [
-        vector.IndexConfig(name="vector-name1", metric=vector.Metric.COSINE, dimension=2),
-        vector.IndexConfig(name="vector-name2", metric=vector.Metric.COSINE, dimension=2),
+        vector.IndexConfig(name="default-vector", metric=vector.Metric.COSINE, dimension=2),
     ]
     client.create_vector_collection(vc_name, indexes=indexes)
 
     # Use the VecotorCollection
     vc = client.get_vector_collection(vc_name).blocking()
-    doc = Document(
-        "some-value",
+    doc1 = Document(
+        "value1",
         [
-            Vector("vector-name1", Type.DENSE, [1.0, 0.5]),
-            Vector("vector-name2", Type.DENSE, [1.0, 0.5]),
+            Vector("default-vector", Type.DENSE, [0.1, 0.5]),
         ],
     )
 
     # Add the Document
-    key = "some-key"
-    vc.set(key, doc)
+    key = "key-1"
+    vc.set(key, doc1)
 
-    # Retrieve the Document
-    doc = vc.get(key)
-    print("Document:", doc)
+    # Add another Document
+    doc2 = Document(
+        "value2",
+        [
+            Vector("default-vector", Type.DENSE, [0.5, 0.7]),
+        ],
+    )
+
+    # Add the Document
+    key = "key-2"
+    vc.set(key, doc2)
 
     # Search for a vector
     results = vc.search_near_vector(
-        [0.9, 0.4],
+        Vector("default-vector", Type.DENSE, [0.2, 0.3]),
         include_value=True,
         include_vectors=True,
-        target_vector="vector-name1",
+        limit=2
     )
     for i, result in enumerate(results):
         print(
@@ -62,21 +68,6 @@ def main():
             "Vector:",
             result.vectors,
         )
-
-    doc = vc.put(
-        key,
-        Document(
-            "bar",
-            [
-                Vector("vector-name1", Type.DENSE, [0.5, -0.5]),
-                Vector("vector-name2", Type.DENSE, [0.6, -0.6]),
-            ],
-        ),
-    )
-    print("Document:", doc)
-
-    vc.delete(key)
-
 
 if __name__ == "__main__":
     main()

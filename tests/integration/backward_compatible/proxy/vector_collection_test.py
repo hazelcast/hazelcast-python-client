@@ -89,18 +89,40 @@ class VectorCollectionTest(SingleMemberTestCase):
         k2 = self.vector_collection.get("k2")
         self.assert_document_equal(k2, doc2)
 
-    def test_search_near_vector(self):
+    def test_search_near_vector_include_all(self):
+        target_doc = self.doc1("v1", [0.3, 0.4, 0.5])
         self.vector_collection.put_all(
             {
                 "k1": self.doc1("v1", [0.1, 0.2, 0.3]),
                 "k2": self.doc1("v1", [0.2, 0.3, 0.4]),
-                "k3": self.doc1("v1", [0.3, 0.4, 0.5]),
+                "k3": target_doc,
             }
         )
         result = self.vector_collection.search_near_vector(
             self.vec1([0.2, 0.2, 0.3]), limit=1, include_vectors=True, include_value=True
         )
-        print("result:", result)
+        self.assertEqual(1, len(result))
+        self.assert_document_equal(target_doc, result[0])
+        self.assertAlmostEqual(0.9973459243774414,  result[0].score)
+
+    def test_search_near_vector_include_none(self):
+        target_doc = self.doc1("v1", [0.3, 0.4, 0.5])
+        self.vector_collection.put_all(
+            {
+                "k1": self.doc1("v1", [0.1, 0.2, 0.3]),
+                "k2": self.doc1("v1", [0.2, 0.3, 0.4]),
+                "k3": target_doc,
+            }
+        )
+        result = self.vector_collection.search_near_vector(
+            self.vec1([0.2, 0.2, 0.3]), limit=1, include_vectors=False, include_value=False
+        )
+        self.assertEqual(1, len(result))
+        result1 = result[0]
+        self.assertAlmostEqual(0.9973459243774414,  result1.score)
+        self.assertIsNone(result1.value)
+        self.assertIsNone(result1.vectors)
+
 
     def assert_document_equal(self, doc1: Document, doc2: Document) -> None:
         self.assertEqual(doc1.value, doc2.value)
