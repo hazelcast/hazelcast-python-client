@@ -54,7 +54,7 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         if not map:
             return ImmediateFuture(None)
         partition_service = self._context.partition_service
-        partition_map = {}
+        partition_map: Dict[str, Document] = {}
 
         for key, doc in map.items():
             check_not_none(key, "key can't be None")
@@ -88,11 +88,10 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
 
     def search_near_vector(
         self,
-        vector: Union[Vector, Dict[str, Vector]],
+        vector: Vector,
         *,
         include_value: bool = False,
         include_vectors: bool = False,
-        target_vector="",
         limit: Optional[int] = None
     ) -> Future[List[SearchResult]]:
         check_not_none(vector, "vector can't be None")
@@ -102,11 +101,10 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
             vector,
             include_value=include_value,
             include_vectors=include_vectors,
-            target_vector=target_vector,
             limit=limit,
         )
 
-    def remove(self, key: Any) -> Future[Document]:
+    def remove(self, key: Any) -> Future[Optional[Document]]:
         check_not_none(key, "key can't be None")
         return self._remove_internal(key)
 
@@ -150,7 +148,6 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         *,
         include_value: bool = False,
         include_vectors: bool = False,
-        target_vector="",
         limit: Optional[int] = None
     ) -> Future[List[SearchResult]]:
         def handler(message):
@@ -165,10 +162,10 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
             return results
 
         options = VectorSearchOptions(
+            vectors=[vector],
             include_value=include_value,
             include_vectors=include_vectors,
             limit=limit,
-            vectors=[VectorPair(target_vector, VectorType.DENSE, vector)],
         )
         request = vector_collection_search_near_vector_codec.encode_request(
             self.name,
@@ -255,14 +252,12 @@ class BlockingVectorCollection:
         *,
         include_value: bool = False,
         include_vectors: bool = False,
-        target_vector="",
         limit: Optional[int] = None
     ) -> List[SearchResult]:
         future = self._wrapped.search_near_vector(
             vector,
             include_value=include_value,
             include_vectors=include_vectors,
-            target_vector=target_vector,
             limit=limit,
         )
         return future.result()

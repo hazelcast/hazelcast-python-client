@@ -3,7 +3,7 @@ import enum
 from typing import Any, Dict, List, Optional, Union
 
 
-__all__ = "Document", "Vector", "IndexConfig", "SearchResult", "SearchOptions"
+__all__ = "Document", "Vector", "IndexConfig", "SearchResult"
 
 
 class Type(enum.IntEnum):
@@ -78,13 +78,11 @@ VectorIndexConfig = IndexConfig
 
 
 @dataclasses.dataclass
-class SearchOptions:
+class VectorSearchOptions:
 
-    vectors: List[VectorPair]
+    vectors: List[Vector]
     include_value: bool
     include_vectors: bool
     limit: int
     hints: Dict[str, str] = dataclasses.field(default_factory=lambda: {})
 
-
-VectorSearchOptions = SearchOptions

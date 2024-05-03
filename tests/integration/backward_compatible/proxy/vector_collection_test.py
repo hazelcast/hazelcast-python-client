@@ -98,7 +98,7 @@ class VectorCollectionTest(SingleMemberTestCase):
             }
         )
         result = self.vector_collection.search_near_vector(
-            [0.2, 0.2, 0.3], limit=1, include_vectors=True, include_value=True
+            self.vec1([0.2, 0.2, 0.3]), limit=1, include_vectors=True, include_value=True
         )
         print("result:", result)
 
