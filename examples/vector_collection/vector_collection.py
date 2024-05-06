@@ -53,7 +53,7 @@ def main():
         Vector("default-vector", Type.DENSE, [0.2, 0.3]),
         include_value=True,
         include_vectors=True,
-        limit=2
+        limit=2,
     )
     for i, result in enumerate(results):
         print(
@@ -67,6 +67,7 @@ def main():
             "Vector:",
             result.vectors,
         )
+
 
 if __name__ == "__main__":
     main()

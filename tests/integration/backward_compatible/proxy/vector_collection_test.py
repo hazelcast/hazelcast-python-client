@@ -103,7 +103,7 @@ class VectorCollectionTest(SingleMemberTestCase):
         )
         self.assertEqual(1, len(result))
         self.assert_document_equal(target_doc, result[0])
-        self.assertAlmostEqual(0.9973459243774414,  result[0].score)
+        self.assertAlmostEqual(0.9973459243774414, result[0].score)
 
     def test_search_near_vector_include_none(self):
         target_doc = self.doc1("v1", [0.3, 0.4, 0.5])
@@ -119,10 +119,9 @@ class VectorCollectionTest(SingleMemberTestCase):
         )
         self.assertEqual(1, len(result))
         result1 = result[0]
-        self.assertAlmostEqual(0.9973459243774414,  result1.score)
+        self.assertAlmostEqual(0.9973459243774414, result1.score)
         self.assertIsNone(result1.value)
         self.assertIsNone(result1.vectors)
-
 
     def assert_document_equal(self, doc1: Document, doc2: Document) -> None:
         self.assertEqual(doc1.value, doc2.value)
