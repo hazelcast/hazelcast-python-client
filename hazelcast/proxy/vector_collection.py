@@ -29,7 +29,6 @@ from hazelcast.vector import (
 class VectorCollection(Proxy["BlockingVectorCollection"]):
     def __init__(self, service_name, name, context):
         super(VectorCollection, self).__init__(service_name, name, context)
-        self._reference_id_generator = context.lock_reference_id_generator
 
     def blocking(self) -> "BlockingVectorCollection":
         return BlockingVectorCollection(self)
@@ -55,23 +54,20 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         if not map:
             return ImmediateFuture(None)
         partition_service = self._context.partition_service
-        partition_map: Dict[str, List[Tuple[Data, Document]]] = {}
+        partition_map: Dict[int, List[Tuple[Data, Document]]] = {}
 
         for key, doc in map.items():
             check_not_none(key, "key can't be None")
             check_not_none(doc, "value can't be None")
             doc = copy.copy(doc)
-            doc.value = self._to_data(doc.value)
             try:
                 entry = (self._to_data(key), doc)
+                doc.value = self._to_data(doc.value)
             except SchemaNotReplicatedError as e:
                 return self._send_schema_and_retry(e, self.put_all, map)
 
             partition_id = partition_service.get_partition_id(entry[0])
-            try:
-                partition_map[partition_id].append(entry)
-            except KeyError:
-                partition_map[partition_id] = [entry]
+            partition_map.setdefault(partition_id, []).append(entry)
 
         futures = []
         for partition_id, entry_list in partition_map.items():
