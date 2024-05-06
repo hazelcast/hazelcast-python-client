@@ -378,7 +378,7 @@ class HazelcastClient:
         """
         return self._proxy_manager.get_or_create(TOPIC_SERVICE, name)
 
-    def create_vector_collection(self, name: str, indexes: typing.List[IndexConfig]) -> None:
+    def create_vector_collection_config(self, name: str, indexes: typing.List[IndexConfig]) -> None:
         # check that indexes have different names
         if indexes:
             index_names = set(index.name for index in indexes)

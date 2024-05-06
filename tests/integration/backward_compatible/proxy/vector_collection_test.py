@@ -32,7 +32,7 @@ class VectorCollectionTest(SingleMemberTestCase):
 
     def setUp(self):
         name = random_string()
-        self.client.create_vector_collection(name, [IndexConfig("vector", Metric.COSINE, 3)])
+        self.client.create_vector_collection_config(name, [IndexConfig("vector", Metric.COSINE, 3)])
         self.vector_collection = self.client.get_vector_collection(name).blocking()
 
     def tearDown(self):

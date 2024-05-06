@@ -1,8 +1,7 @@
 import logging
 
 from hazelcast import vector
-from hazelcast.core import HazelcastJsonValue
-from hazelcast.vector import Type, Vector
+from hazelcast.vector import Type, Vector, Metric, IndexConfig
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -20,11 +19,11 @@ def main():
 
     # Create the VectorCollection
     indexes = [
-        vector.IndexConfig(name="default-vector", metric=vector.Metric.COSINE, dimension=2),
+        IndexConfig(name="default-vector", metric=Metric.COSINE, dimension=2),
     ]
-    client.create_vector_collection(vc_name, indexes=indexes)
+    client.create_vector_collection_config(vc_name, indexes=indexes)
 
-    # Use the VecotorCollection
+    # Use the VectorCollection
     vc = client.get_vector_collection(vc_name).blocking()
     doc1 = Document(
         "value1",
