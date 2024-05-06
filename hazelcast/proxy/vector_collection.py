@@ -1,5 +1,5 @@
 import copy
-from typing import Any, Dict, List, Optional, Union, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from hazelcast.future import Future, ImmediateFuture, combine_futures
 from hazelcast.protocol.codec import (
@@ -20,7 +20,6 @@ from hazelcast.vector import (
     Document,
     SearchResult,
     Vector,
-    VectorPair,
     VectorType,
     VectorSearchOptions,
 )
@@ -89,11 +88,9 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         *,
         include_value: bool = False,
         include_vectors: bool = False,
-        limit: Optional[int] = None
+        limit: int = -1
     ) -> Future[List[SearchResult]]:
         check_not_none(vector, "vector can't be None")
-        if limit is None:
-            limit = 2147483629
         return self._search_near_vector_internal(
             vector,
             include_value=include_value,
