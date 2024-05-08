@@ -142,7 +142,7 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         *,
         include_value: bool = False,
         include_vectors: bool = False,
-        limit: Optional[int] = None
+        limit: int = -1
     ) -> Future[List[SearchResult]]:
         def handler(message):
             results: List[
@@ -153,13 +153,16 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
                     result.key = self._to_object(result.key)
                 if result.value is not None:
                     result.value = self._to_object(result.value)
+                if result.vectors:
+                    for vec in result.vectors:
+                        vec.type = VectorType(vec.type)
             return results
 
         options = VectorSearchOptions(
             vectors=[vector],
             include_value=include_value,
             include_vectors=include_vectors,
-            limit=limit or 0,
+            limit=limit,
         )
         request = vector_collection_search_near_vector_codec.encode_request(
             self.name,
