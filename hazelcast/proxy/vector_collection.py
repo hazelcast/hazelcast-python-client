@@ -26,6 +26,25 @@ from hazelcast.vector import (
 
 
 class VectorCollection(Proxy["BlockingVectorCollection"]):
+    """VectorCollection contains documents with vectors.
+
+    Concurrent, distributed, observable and searchable vector collection.
+    The vector collection can work both async(non-blocking) or sync(blocking).
+    Blocking calls return the value of the call and block the execution until return value is calculated.
+    However, async calls return ``Future`` and do not block execution.
+    Result of the ``Future`` can be used whenever ready.
+    A ``Future``'s result can be obtained with blocking the execution by calling ``future.result()``.
+
+    The configuration of the vector collection must exist before it can be used.
+
+    Example:
+        #
+        client.create_vector_collection_config("my_vc", [
+            IndexConfig(name="default-vector", metric=Metric.COSINE, dimension=2)
+        ]
+        my_vc = client.get_vector_collection("my_vc")
+        my_
+    """
     def __init__(self, service_name, name, context):
         super(VectorCollection, self).__init__(service_name, name, context)
 
