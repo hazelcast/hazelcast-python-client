@@ -2119,7 +2119,7 @@ Near Cache Invalidation
 Invalidation is the process of removing an entry from the Near Cache
 when its value is updated or it is removed from the original map (to
 prevent stale reads). See the `Near Cache Invalidation section
-<https://docs.hazelcast.com/hazelcast/latest/performance/near-cache.html#near-cache-invalidation>`__
+<https://docs.hazelcast.com/hazelcast/latest/cluster-performance/best-practices#near-cache-invalidation>`__
 in the Hazelcast Reference Manual.
 
 Monitoring and Logging
