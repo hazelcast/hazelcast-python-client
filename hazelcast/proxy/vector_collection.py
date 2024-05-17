@@ -42,13 +42,14 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         client.create_vector_collection_config("my_vc", [
             IndexConfig(name="default-vector", metric=Metric.COSINE, dimension=2)
         ]
-        my_vc = client.get_vector_collection("my_vc")
-        my_
+        my_vc = client.get_vector_collection("my_vc").blocking()
+        my_vc.set("key1", Vector("default-vector", Type.DENSE, [0.1, 0.2])
     """
     def __init__(self, service_name, name, context):
         super(VectorCollection, self).__init__(service_name, name, context)
 
     def blocking(self) -> "BlockingVectorCollection":
+        """Returns a blocking variant of VectorCollection"""
         return BlockingVectorCollection(self)
 
     def get(self, key: Any) -> Future[Optional[Document]]:
