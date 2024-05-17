@@ -108,13 +108,13 @@ their certificate authorities so that the members can know which
 clients they can trust. See the
 :ref:`securing_client_connection:mutual authentication` section.
 
-Enabling Hazelcast Viridian Discovery
+Enabling Hazelcast Cloud Discovery
 -------------------------------------
 
 Hazelcast Python client can discover and connect to Hazelcast clusters
-running on `Hazelcast Viridian <https://viridian.hazelcast.com/>`__. For this,
-provide authentication information as ``cluster_name`` and enable Viridian
-discovery by setting your ``cloud_discovery_token`` as shown below.
+running on `Hazelcast Cloud <https://cloud.hazelcast.com/>`__. For this,
+provide authentication information as ``cluster_name`` and enable Hazelcast
+Cloud discovery by setting your ``cloud_discovery_token`` as shown below.
 
 .. code:: python
 

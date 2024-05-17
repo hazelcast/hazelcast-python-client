@@ -530,7 +530,7 @@ class HazelcastClient:
         if address_list_provided and cloud_enabled:
             raise IllegalStateError(
                 "Only one discovery method can be enabled at a time. "
-                "Cluster members given explicitly: %s, Hazelcast Viridian enabled: %s"
+                "Cluster members given explicitly: %s, Hazelcast Cloud enabled: %s"
                 % (address_list_provided, cloud_enabled)
             )
 
