@@ -45,6 +45,7 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         my_vc = client.get_vector_collection("my_vc").blocking()
         my_vc.set("key1", Vector("default-vector", Type.DENSE, [0.1, 0.2])
     """
+
     def __init__(self, service_name, name, context):
         super(VectorCollection, self).__init__(service_name, name, context)
 
@@ -402,7 +403,7 @@ class BlockingVectorCollection:
         *,
         include_value: bool = False,
         include_vectors: bool = False,
-        limit: Optional[int] = None
+        limit: int = -1
     ) -> List[SearchResult]:
         future = self._wrapped.search_near_vector(
             vector,
