@@ -40,7 +40,7 @@ features:
 - Client Near Cache Stats
 - Client Runtime Stats
 - Client Operating Systems Stats
-- Hazelcast Viridian Discovery
+- Hazelcast Cloud Discovery
 - Smart Client
 - Unisocket Client
 - Lifecycle Service

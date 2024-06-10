@@ -11,7 +11,7 @@ _logger = logging.getLogger(__name__)
 
 class HazelcastCloudAddressProvider:
     """Provides initial addresses for client to find and connect to a node
-    and resolves private IP addresses of Hazelcast Viridian service.
+    and resolves private IP addresses of Hazelcast Cloud service.
     """
 
     def __init__(self, token, connection_timeout):
@@ -19,7 +19,7 @@ class HazelcastCloudAddressProvider:
         self._private_to_public = dict()
 
     def load_addresses(self):
-        """Loads member addresses from Hazelcast Viridian endpoint.
+        """Loads member addresses from Hazelcast Cloud endpoint.
 
         Returns:
             tuple[list[hazelcast.core.Address], list[hazelcast.core.Address]]: The possible member addresses
@@ -30,7 +30,7 @@ class HazelcastCloudAddressProvider:
             # Every private address is primary
             return list(nodes.keys()), []
         except Exception as e:
-            _logger.warning("Failed to load addresses from Hazelcast Viridian: %s", e)
+            _logger.warning("Failed to load addresses from Hazelcast Cloud: %s", e)
         return [], []
 
     def translate(self, address):
@@ -58,15 +58,15 @@ class HazelcastCloudAddressProvider:
         try:
             self._private_to_public = self.cloud_discovery.discover_nodes()
         except Exception as e:
-            _logger.warning("Failed to load addresses from Hazelcast Viridian: %s", e)
+            _logger.warning("Failed to load addresses from Hazelcast Cloud: %s", e)
 
 
 class HazelcastCloudDiscovery:
-    """Service that discovers nodes via Hazelcast Viridian.
-    https://api.viridian.hazelcast.com/cluster/discovery?token=<TOKEN>
+    """Service that discovers nodes via Hazelcast Cloud.
+    https://api.cloud.hazelcast.com/cluster/discovery?token=<TOKEN>
     """
 
-    _CLOUD_URL_BASE = "api.viridian.hazelcast.com"
+    _CLOUD_URL_BASE = "api.cloud.hazelcast.com"
     _CLOUD_URL_PATH = "/cluster/discovery?token="
     _PRIVATE_ADDRESS_PROPERTY = "private-address"
     _PUBLIC_ADDRESS_PROPERTY = "public-address"
@@ -78,7 +78,7 @@ class HazelcastCloudDiscovery:
         self._ctx = ssl.create_default_context()
 
     def discover_nodes(self):
-        """Discovers nodes from Hazelcast Viridian.
+        """Discovers nodes from Hazelcast Cloud.
 
         Returns:
             dict[hazelcast.core.Address, hazelcast.core.Address]: Dictionary that maps private

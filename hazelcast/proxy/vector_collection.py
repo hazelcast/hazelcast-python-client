@@ -53,22 +53,89 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         return BlockingVectorCollection(self)
 
     def get(self, key: Any) -> Future[Optional[Document]]:
+        """Returns the value for the specified key, or ``None`` if this VectorCollection
+        does not contain this key.
+
+        Warning:
+            This method returns a clone of original value, modifying the
+            returned value does not change the actual value in the VectorCollection. One
+            should put modified value back to make changes visible to all nodes.
+
+                >>> value = my_vc.get(key)
+                >>> value.update_some_property()
+                >>> my_vc.set(key,value)
+
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form
+            of the key, not the actual implementations of ``__hash__`` and
+            ``__eq__`` defined in key's class.
+
+        Args:
+            key: The specified key.
+
+        Returns:
+            The value for the specified key.
+        """
         check_not_none(key, "key can't be None")
         return self._get_internal(key)
 
     def set(self, key: Any, document: Document) -> Future[None]:
+        """Sets a document for the given key in the VectorCollection.
+
+        Similar to the put operation except that set doesn't return the old
+        document, which is more efficient.
+
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form
+            of the key, not the actual implementations of ``__hash__`` and
+            ``__eq__`` defined in key's class.
+
+        Args:
+            key: Key of the entry.
+            document: Document of the entry.
+        """
         check_not_none(key, "key can't be None")
         check_not_none(document, "document can't be None")
         check_not_none(document.value, "document value can't be None")
         return self._set_internal(key, document)
 
     def put(self, key: Any, document: Document) -> Future[Optional[Document]]:
+        """Associates the specified Document with the specified key in this VectorCollection.
+
+        If the VectorCollection previously contained a mapping for the key, the old Document is
+        replaced by the specified Document.
+
+        Warning:
+            This method returns a clone of the previous Document, not the original
+            (identically equal) Document previously put into the VectorCollection.
+
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form
+            of the key, not the actual implementations of ``__hash__`` and
+            ``__eq__`` defined in key's class.
+
+        Args:
+            key: Key of the entry.
+            document: Document of the entry.
+
+        Returns:
+            Previous Document associated with key or ``None`` if there was no
+            mapping for key.
+        """
         check_not_none(key, "key can't be None")
         check_not_none(document, "document can't be None")
         check_not_none(document.value, "document value can't be None")
         return self._put_internal(key, document)
 
     def put_all(self, map: Dict[Any, Document]) -> Future[None]:
+        """Copies all the mappings from the specified dictionary to this VectorCollection.
+
+        No atomicity guarantees are given. In the case of a failure, some
+        key-document tuples may get written, while others are not.
+
+        Args:
+            map: Dictionary which includes mappings to be stored in this VectorCollection.
+        """
         check_not_none(map, "map can't be None")
         if not map:
             return ImmediateFuture(None)
@@ -97,6 +164,25 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         return combine_futures(futures)
 
     def put_if_absent(self, key: Any, document: Document) -> Future[Optional[Document]]:
+        """Associates the specified key with the given Document if it is not
+        already associated.
+
+        Warning:
+            This method returns a clone of the previous Document, not the original
+            (identically equal) Document previously put into the VectorCollection.
+
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form
+            of the key, not the actual implementations of ``__hash__`` and
+            ``__eq__`` defined in key's class.
+
+        Args:
+            key: Key of the entry.
+            document: Document of the entry.
+
+        Returns:
+            Old Document for the given key.
+        """
         check_not_none(key, "key can't be None")
         check_not_none(document, "document can't be None")
         check_not_none(document.value, "document value can't be None")
@@ -110,6 +196,22 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         include_vectors: bool = False,
         limit: int = -1
     ) -> Future[List[SearchResult]]:
+        """Returns the Documents closest to the given vector.
+
+        The search is performed using distance metric set when
+        creating the vector index.
+
+        Args:
+            vector: The vector to be used as the reference.
+                It must have the same dimension as specified when creating the vector index.
+            include_value: Return value attached to the Document.
+            include_vectors: Return vectors attached to the Document.
+            limit: Limit the maximum number of Documents returned.
+                If not set, the server default is used.
+
+        Returns:
+            List of search results.
+        """
         check_not_none(vector, "vector can't be None")
         return self._search_near_vector_internal(
             vector,
@@ -119,10 +221,41 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         )
 
     def remove(self, key: Any) -> Future[Optional[Document]]:
+        """Removes the mapping for a key from this VectorCollection if it is present.
+
+        The VectorCollection will not contain a mapping for the specified key once the call
+        returns.
+
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form
+            of the key, not the actual implementations of ``__hash__`` and
+            ``__eq__`` defined in key's class.
+
+        Args:
+            key: Key of the mapping to be deleted.
+
+        Returns:
+            The Document associated with key, or ``None`` if there was
+            no mapping for key.
+        """
         check_not_none(key, "key can't be None")
         return self._remove_internal(key)
 
     def delete(self, key: Any) -> Future[None]:
+        """Removes the mapping for a key from this VectorCollection if it is present
+        (optional operation).
+
+        Unlike remove(object), this operation does not return the removed
+        Document, which avoids the serialization cost of the returned Document.
+        If the removed Document will not be used, a delete operation is preferred
+        over a remove operation for better performance.
+
+        The VectorCollection will not contain a mapping for the specified key once the call
+        returns.
+
+        Args:
+            key: Key of the mapping to be deleted.
+        """
         check_not_none(key, "key can't be None")
         return self._delete_internal(key)
 
