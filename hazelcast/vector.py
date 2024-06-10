@@ -15,6 +15,16 @@ VectorType = Type
 
 @dataclasses.dataclass
 class Vector:
+    """Vector represents a named vector of floats.
+
+    Args:
+        name: Name of the vector.
+            To use the default vector index, name must be set
+            to the blank string (``""``)
+        type: Type of the vector.
+            Currently only ``Type.DENSE`` is supported.
+        vector: The vector of floats specified as a list of floats.
+    """
     name: str
     type: Type
     vector: List[float]
@@ -24,6 +34,12 @@ VectorPair = Vector
 
 
 class Document:
+    """Document represents a value and associated vectors.
+
+    Args:
+        value: The value to associate with this Document.
+        vectors: Either one ``Vector`` instance of a list of ``Vector`` instances to associate with this Document.
+    """
     def __init__(self, value: Any, vectors: Union[Vector, List[Vector]]) -> None:
         self.value = value
         if isinstance(vectors, Vector):
@@ -33,6 +49,11 @@ class Document:
 
     @property
     def vector(self) -> Optional[Vector]:
+        """Returns the vector associated with this Document
+
+        It returns ``None`` if no vector is associated.
+        It returns the first vector if one or more vectors were associated.
+        """
         if len(self.vectors) == 0:
             return None
         return self.vectors[0]
@@ -46,6 +67,16 @@ VectorDocument = Document
 
 @dataclasses.dataclass
 class SearchResult:
+    """SearchResult contains one of the results from a vector search.
+
+    Args:
+      key: The ``key`` set for the found Document.
+      value: The value of the found Document.
+      score: A numeric value that shows the similarity of the found Document
+        to the reference vector. The score will be in the [0, 1] range.
+        The score gets higher when the found Document is more similar to the
+        reference vector.
+    """
 
     key: Any
     value: Any
@@ -57,6 +88,7 @@ VectorSearchResult = SearchResult
 
 
 class Metric(enum.IntEnum):
+    """Metric is the similarity metric to use for indexing a vector index."""
 
     EUCLIDEAN = 0
     COSINE = 1
@@ -65,13 +97,24 @@ class Metric(enum.IntEnum):
 
 @dataclasses.dataclass
 class IndexConfig:
+    """The IndexConfig contains configuration for a vector index.
+
+    Args:
+        name: Name of the vector index.
+        metric: The metric to be used for the index configuration.
+        dimension: The dimension of vectors to be used in the vector index.
+            All vectors that use this index configuration must have
+            the same dimension.
+        max_degree: The maximum number of connections allowed per node.
+        ef_construction: The size of the dynamic list for search.
+    """
 
     name: str
     metric: Metric
     dimension: int
-    max_degree: int = 200
-    ef_construction: int = 300
-    use_deduplication: bool = False
+    max_degree: int = 16
+    ef_construction: int = 100
+    use_deduplication: bool = True
 
 
 VectorIndexConfig = IndexConfig
@@ -79,6 +122,10 @@ VectorIndexConfig = IndexConfig
 
 @dataclasses.dataclass
 class VectorSearchOptions:
+    """VectorSearchOptions contains search configuration options.
+
+    This class is not meant to be utilized by the user code.
+    """
 
     vectors: List[Vector]
     include_value: bool
