@@ -77,14 +77,6 @@ def start_rc(stdout=None, stderr=None):
         server = download_if_necessary(
             ENTERPRISE_REPO, HAZELCAST_GROUP, "hazelcast-enterprise", SERVER_VERSION
         )
-        vector = download_if_necessary(
-            ENTERPRISE_REPO, HAZELCAST_GROUP, "hazelcast-enterprise-vector", SERVER_VERSION
-        )
-        artifacts.append(vector)
-        jvector = download_if_necessary(RELEASE_REPO, "io.github.jbellis", "jvector", "2.0.5")
-        artifacts.append(jvector)
-        math3 = download_if_necessary(RELEASE_REPO, "org.apache.commons", "commons-math3", "3.6.1")
-        artifacts.append(math3)
     else:
         server = download_if_necessary(REPO, HAZELCAST_GROUP, "hazelcast", SERVER_VERSION)
 

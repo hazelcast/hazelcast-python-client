@@ -89,6 +89,27 @@ class VectorCollectionTest(SingleMemberTestCase):
         k2 = self.vector_collection.get("k2")
         self.assert_document_equal(k2, doc2)
 
+    def test_clear(self):
+        doc = self.vector_collection.get("k1")
+        self.assertIsNone(doc)
+        doc = Document("v1", self.vec1([0.1, 0.2, 0.3]))
+        self.vector_collection.set("k1", doc)
+        self.vector_collection.clear()
+        doc = self.vector_collection.get("k1")
+        self.assertIsNone(doc)
+
+    def test_optimize(self):
+        doc = Document("v1", self.vec1([0.1, 0.2, 0.3]))
+        self.vector_collection.set("k1", doc)
+        # it is hard to observe results of optimize, so just test that the invocation works
+        self.vector_collection.optimize()
+
+    def test_optimize_with_name(self):
+        doc = Document("v1", self.vec1([0.1, 0.2, 0.3]))
+        self.vector_collection.set("k1", doc)
+        # it is hard to observe results of optimize, so just test that the invocation works
+        self.vector_collection.optimize("vector")
+
     def test_search_near_vector_include_all(self):
         target_doc = self.doc1("v1", [0.3, 0.4, 0.5])
         self.vector_collection.put_all(

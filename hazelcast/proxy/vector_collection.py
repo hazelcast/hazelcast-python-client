@@ -287,8 +287,8 @@ class BlockingVectorCollection:
     def clear(self) -> None:
         return self._wrapped.clear().result()
 
-    def optimize(self) -> None:
-        return self._wrapped.optimize().result()
+    def optimize(self, index_name: str = None) -> None:
+        return self._wrapped.optimize(index_name).result()
 
     def destroy(self) -> bool:
         return self._wrapped.destroy()
