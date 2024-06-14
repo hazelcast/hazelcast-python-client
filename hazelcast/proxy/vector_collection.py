@@ -11,6 +11,8 @@ from hazelcast.protocol.codec import (
     vector_collection_put_if_absent_codec,
     vector_collection_remove_codec,
     vector_collection_put_all_codec,
+    vector_collection_clear_codec,
+    vector_collection_optimize_codec,
 )
 from hazelcast.proxy import Proxy
 from hazelcast.serialization.compact import SchemaNotReplicatedError
@@ -106,6 +108,14 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         check_not_none(key, "key can't be None")
         return self._delete_internal(key)
 
+    def optimize(self, index_name: str = None) -> Future[None]:
+        request = vector_collection_optimize_codec.encode_request(self.name, index_name)
+        return self._invoke(request)
+
+    def clear(self) -> Future[None]:
+        request = vector_collection_clear_codec.encode_request(self.name)
+        return self._invoke(request)
+
     def _set_internal(self, key: Any, document: Document) -> Future[None]:
         try:
             key_data = self._to_data(key)
@@ -159,13 +169,13 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
             return results
 
         options = VectorSearchOptions(
-            vectors=[vector],
             include_value=include_value,
             include_vectors=include_vectors,
             limit=limit,
         )
         request = vector_collection_search_near_vector_codec.encode_request(
             self.name,
+            [vector],
             options,
         )
         return self._invoke(request, response_handler=handler)
@@ -273,6 +283,12 @@ class BlockingVectorCollection:
 
     def put_if_absent(self, key: Any, document: Document) -> Optional[Document]:
         return self._wrapped.put_if_absent(key, document).result()
+
+    def clear(self) -> None:
+        return self._wrapped.clear().result()
+
+    def optimize(self) -> None:
+        return self._wrapped.optimize().result()
 
     def destroy(self) -> bool:
         return self._wrapped.destroy()

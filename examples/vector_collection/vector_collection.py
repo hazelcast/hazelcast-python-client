@@ -1,6 +1,5 @@
 import logging
 
-from hazelcast import vector
 from hazelcast.vector import Type, Vector, Metric, IndexConfig
 
 logging.basicConfig(level=logging.DEBUG)
@@ -48,6 +47,9 @@ def main():
     key = "key-2"
     vc.set(key, doc2)
 
+    # Optimize collection
+    vc.optimize()
+
     # Search for a vector
     results = vc.search_near_vector(
         Vector("default-vector", Type.DENSE, [0.2, 0.3]),
@@ -68,6 +70,29 @@ def main():
             result.vectors,
         )
 
+    # Delete all entries
+    vc.clear()
+    print("cleared collection")
+
+    # Search for a vector
+    results = vc.search_near_vector(
+        Vector("default-vector", Type.DENSE, [0.2, 0.3]),
+        include_value=True,
+        include_vectors=True,
+        limit=2,
+    )
+    for i, result in enumerate(results):
+        print(
+            f"{i+1}.",
+            "Key:",
+            result.key,
+            "Value:",
+            result.value,
+            "Score:",
+            result.score,
+            "Vector:",
+            result.vectors,
+        )
 
 if __name__ == "__main__":
     main()

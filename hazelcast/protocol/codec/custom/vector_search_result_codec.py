@@ -18,7 +18,7 @@ class VectorSearchResultCodec:
         FixSizedTypesCodec.encode_float(initial_frame_buf, _SCORE_ENCODE_OFFSET, vector_search_result.score)
         buf.extend(initial_frame_buf)
         DataCodec.encode(buf, vector_search_result.key)
-        CodecUtil.encode_nullable(buf, vector_search_result.document, DataCodec.encode)
+        CodecUtil.encode_nullable(buf, vector_search_result.value, DataCodec.encode)
         ListMultiFrameCodec.encode_nullable(buf, vector_search_result.vectors, VectorPairCodec.encode)
         if is_final:
             buf.extend(END_FINAL_FRAME_BUF)
@@ -31,7 +31,7 @@ class VectorSearchResultCodec:
         initial_frame = msg.next_frame()
         score = FixSizedTypesCodec.decode_float(initial_frame.buf, _SCORE_DECODE_OFFSET)
         key = DataCodec.decode(msg)
-        document = CodecUtil.decode_nullable(msg, DataCodec.decode)
+        value = CodecUtil.decode_nullable(msg, DataCodec.decode)
         vectors = ListMultiFrameCodec.decode_nullable(msg, VectorPairCodec.decode)
         CodecUtil.fast_forward_to_end_frame(msg)
-        return VectorSearchResult(key, document, score, vectors)
+        return VectorSearchResult(key, value, score, vectors)

@@ -80,7 +80,6 @@ VectorIndexConfig = IndexConfig
 @dataclasses.dataclass
 class VectorSearchOptions:
 
-    vectors: List[Vector]
     include_value: bool
     include_vectors: bool
     limit: int

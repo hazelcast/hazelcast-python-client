@@ -1,5 +1,7 @@
 from hazelcast.protocol.client_message import OutboundMessage, REQUEST_HEADER_SIZE, create_initial_buffer
-from hazelcast.protocol.builtin import StringCodec, EntryListCodec, DataCodec
+from hazelcast.protocol.builtin import StringCodec
+from hazelcast.protocol.builtin import EntryListCodec
+from hazelcast.protocol.builtin import DataCodec
 from hazelcast.protocol.codec.custom.vector_document_codec import VectorDocumentCodec
 
 # hex: 0x240300
