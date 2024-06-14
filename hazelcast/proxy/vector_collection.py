@@ -90,7 +90,7 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         *,
         include_value: bool = False,
         include_vectors: bool = False,
-        limit: int = -1
+        limit: int
     ) -> Future[List[SearchResult]]:
         check_not_none(vector, "vector can't be None")
         return self._search_near_vector_internal(
@@ -152,7 +152,7 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         *,
         include_value: bool = False,
         include_vectors: bool = False,
-        limit: int = -1
+        limit: int
     ) -> Future[List[SearchResult]]:
         def handler(message):
             results: List[
@@ -259,7 +259,7 @@ class BlockingVectorCollection:
         *,
         include_value: bool = False,
         include_vectors: bool = False,
-        limit: Optional[int] = None
+        limit: int
     ) -> List[SearchResult]:
         future = self._wrapped.search_near_vector(
             vector,

@@ -53,9 +53,9 @@ def main():
     # Search for a vector
     results = vc.search_near_vector(
         Vector("default-vector", Type.DENSE, [0.2, 0.3]),
+        limit=2,
         include_value=True,
         include_vectors=True,
-        limit=2,
     )
     for i, result in enumerate(results):
         print(
@@ -77,9 +77,9 @@ def main():
     # Search for a vector
     results = vc.search_near_vector(
         Vector("default-vector", Type.DENSE, [0.2, 0.3]),
+        limit=2,
         include_value=True,
         include_vectors=True,
-        limit=2,
     )
     for i, result in enumerate(results):
         print(
