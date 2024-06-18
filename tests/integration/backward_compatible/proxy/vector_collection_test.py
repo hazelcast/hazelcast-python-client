@@ -3,6 +3,7 @@ import unittest
 
 import pytest
 
+import hazelcast.errors
 from tests.base import SingleMemberTestCase
 from tests.util import random_string, compare_client_version
 
@@ -143,6 +144,21 @@ class VectorCollectionTest(SingleMemberTestCase):
         self.assertAlmostEqual(0.9973459243774414, result1.score)
         self.assertIsNone(result1.value)
         self.assertIsNone(result1.vectors)
+
+    def test_search_near_vector_hint(self):
+        # not empty collection is needed for search to do something
+        doc = Document("v1", self.vec1([0.1, 0.2, 0.3]))
+        self.vector_collection.set("k1", doc)
+
+        # trigger validation error to check if hint was sent
+        with self.assertRaises(hazelcast.errors.IllegalArgumentError):
+            self.vector_collection.search_near_vector(
+                self.vec1([0.2, 0.2, 0.3]),
+                limit=1,
+                include_vectors=False,
+                include_value=False,
+                hints={"partitionLimit": "-1"},
+            )
 
     def test_size(self):
         self.assertEqual(self.vector_collection.size(), 0)

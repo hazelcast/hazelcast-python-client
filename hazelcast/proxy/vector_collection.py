@@ -91,7 +91,8 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         *,
         include_value: bool = False,
         include_vectors: bool = False,
-        limit: int
+        limit: int,
+        hints: Dict[str, str] = None
     ) -> Future[List[SearchResult]]:
         check_not_none(vector, "vector can't be None")
         return self._search_near_vector_internal(
@@ -99,6 +100,7 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
             include_value=include_value,
             include_vectors=include_vectors,
             limit=limit,
+            hints=hints,
         )
 
     def remove(self, key: Any) -> Future[Optional[Document]]:
@@ -157,7 +159,8 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         *,
         include_value: bool = False,
         include_vectors: bool = False,
-        limit: int
+        limit: int,
+        hints: Dict[str, str] = None
     ) -> Future[List[SearchResult]]:
         def handler(message):
             results: List[
@@ -177,6 +180,7 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
             include_value=include_value,
             include_vectors=include_vectors,
             limit=limit,
+            hints=hints or {},
         )
         request = vector_collection_search_near_vector_codec.encode_request(
             self.name,
@@ -264,13 +268,15 @@ class BlockingVectorCollection:
         *,
         include_value: bool = False,
         include_vectors: bool = False,
-        limit: int
+        limit: int,
+        hints: Dict[str, str] = None
     ) -> List[SearchResult]:
         future = self._wrapped.search_near_vector(
             vector,
             include_value=include_value,
             include_vectors=include_vectors,
             limit=limit,
+            hints=hints,
         )
         return future.result()
 
