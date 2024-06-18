@@ -70,9 +70,12 @@ def main():
             result.vectors,
         )
 
+    print("size:", vc.size())
+
     # Delete all entries
     vc.clear()
     print("cleared collection")
+    print("size:", vc.size())
 
     # Search for a vector
     results = vc.search_near_vector(

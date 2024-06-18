@@ -144,6 +144,14 @@ class VectorCollectionTest(SingleMemberTestCase):
         self.assertIsNone(result1.value)
         self.assertIsNone(result1.vectors)
 
+    def test_size(self):
+        self.assertEqual(self.vector_collection.size(), 0)
+        doc = Document("v1", Vector("vector", Type.DENSE, [0.1, 0.2, 0.3]))
+        self.vector_collection.put("k1", doc)
+        self.assertEqual(self.vector_collection.size(), 1)
+        self.vector_collection.clear()
+        self.assertEqual(self.vector_collection.size(), 0)
+
     def assert_document_equal(self, doc1: Document, doc2: Document) -> None:
         self.assertEqual(doc1.value, doc2.value)
         self.assertEqual(len(doc1.vectors), len(doc2.vectors))

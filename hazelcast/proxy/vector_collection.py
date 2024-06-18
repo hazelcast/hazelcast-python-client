@@ -13,6 +13,7 @@ from hazelcast.protocol.codec import (
     vector_collection_put_all_codec,
     vector_collection_clear_codec,
     vector_collection_optimize_codec,
+    vector_collection_size_codec,
 )
 from hazelcast.proxy import Proxy
 from hazelcast.serialization.compact import SchemaNotReplicatedError
@@ -115,6 +116,10 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
     def clear(self) -> Future[None]:
         request = vector_collection_clear_codec.encode_request(self.name)
         return self._invoke(request)
+
+    def size(self) -> Future[int]:
+        request = vector_collection_size_codec.encode_request(self.name)
+        return self._invoke(request, vector_collection_size_codec.decode_response)
 
     def _set_internal(self, key: Any, document: Document) -> Future[None]:
         try:
@@ -289,6 +294,9 @@ class BlockingVectorCollection:
 
     def optimize(self, index_name: str = None) -> None:
         return self._wrapped.optimize(index_name).result()
+
+    def size(self) -> int:
+        return self._wrapped.size().result()
 
     def destroy(self) -> bool:
         return self._wrapped.destroy()
