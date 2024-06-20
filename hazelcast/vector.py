@@ -40,8 +40,8 @@ class Document:
     def __copy__(self):
         return Document(self.value, self.vectors)
 
-    def __str__(self):
-        return self.value + " " + str(self.vectors)
+    def __repr__(self):
+        return f"Vector<value={self.value}, vectors=self.vectors}>"
 
 
 VectorDocument = Document
