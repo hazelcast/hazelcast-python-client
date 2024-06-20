@@ -107,6 +107,7 @@ class IndexConfig:
             the same dimension.
         max_degree: The maximum number of connections allowed per node.
         ef_construction: The size of the dynamic list for search.
+        use_deduplication: Enable deduplication in the index.
     """
 
     name: str

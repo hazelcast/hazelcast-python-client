@@ -38,7 +38,7 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
     The configuration of the vector collection must exist before it can be used.
 
     Example:
-        #
+
         client.create_vector_collection_config("my_vc", [
             IndexConfig(name="default-vector", metric=Metric.COSINE, dimension=2)
         ]
