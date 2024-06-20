@@ -112,14 +112,31 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         return self._delete_internal(key)
 
     def optimize(self, index_name: str = None) -> Future[None]:
+        """Optimize index by fully removing nodes marked for deletion, trimming neighbor sets
+        to the advertised degree, and updating the entry node as necessary.
+
+        Warning:
+            This operation can take long time to execute and consume a lot of server resources.
+
+        Args:
+            index_name: Name of the index to optimize. If not specified, the only index defined
+                for the collection will be used. Must be specified if the collection has more than
+                one index.
+        """
         request = vector_collection_optimize_codec.encode_request(self.name, index_name)
         return self._invoke(request)
 
     def clear(self) -> Future[None]:
+        """Clears the VectorCollection."""
         request = vector_collection_clear_codec.encode_request(self.name)
         return self._invoke(request)
 
     def size(self) -> Future[int]:
+        """Returns the number of Documents in this VectorCollection.
+
+        Returns:
+            Number of Documents in this VectorCollection.
+        """
         request = vector_collection_size_codec.encode_request(self.name)
         return self._invoke(request, vector_collection_size_codec.decode_response)
 

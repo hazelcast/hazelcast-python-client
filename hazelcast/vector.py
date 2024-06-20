@@ -41,7 +41,7 @@ class Document:
         return Document(self.value, self.vectors)
 
     def __repr__(self):
-        return f"Vector<value={self.value}, vectors=self.vectors}>"
+        return f"Document<value={self.value}, vectors={self.vectors}>"
 
 
 VectorDocument = Document
