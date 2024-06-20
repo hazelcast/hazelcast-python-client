@@ -25,6 +25,7 @@ class Vector:
             Currently only ``Type.DENSE`` is supported.
         vector: The vector of floats specified as a list of floats.
     """
+
     name: str
     type: Type
     vector: List[float]
@@ -40,6 +41,7 @@ class Document:
         value: The value to associate with this Document.
         vectors: Either one ``Vector`` instance of a list of ``Vector`` instances to associate with this Document.
     """
+
     def __init__(self, value: Any, vectors: Union[Vector, List[Vector]]) -> None:
         self.value = value
         if isinstance(vectors, Vector):
