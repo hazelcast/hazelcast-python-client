@@ -195,7 +195,7 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         *,
         include_value: bool = False,
         include_vectors: bool = False,
-        limit: int = -1
+        limit: int = 10
     ) -> Future[List[SearchResult]]:
         """Returns the Documents closest to the given vector.
 
@@ -214,6 +214,8 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
             List of search results.
         """
         check_not_none(vector, "vector can't be None")
+        if limit <= 0:
+            raise AssertionError("limit must be positive")
         return self._search_near_vector_internal(
             vector,
             include_value=include_value,
