@@ -3,6 +3,7 @@ import unittest
 
 import pytest
 
+import hazelcast.errors
 from tests.base import SingleMemberTestCase
 from tests.util import random_string, compare_client_version
 
@@ -89,6 +90,27 @@ class VectorCollectionTest(SingleMemberTestCase):
         k2 = self.vector_collection.get("k2")
         self.assert_document_equal(k2, doc2)
 
+    def test_clear(self):
+        doc = self.vector_collection.get("k1")
+        self.assertIsNone(doc)
+        doc = Document("v1", self.vec1([0.1, 0.2, 0.3]))
+        self.vector_collection.set("k1", doc)
+        self.vector_collection.clear()
+        doc = self.vector_collection.get("k1")
+        self.assertIsNone(doc)
+
+    def test_optimize(self):
+        doc = Document("v1", self.vec1([0.1, 0.2, 0.3]))
+        self.vector_collection.set("k1", doc)
+        # it is hard to observe results of optimize, so just test that the invocation works
+        self.vector_collection.optimize()
+
+    def test_optimize_with_name(self):
+        doc = Document("v1", self.vec1([0.1, 0.2, 0.3]))
+        self.vector_collection.set("k1", doc)
+        # it is hard to observe results of optimize, so just test that the invocation works
+        self.vector_collection.optimize("vector")
+
     def test_search_near_vector_include_all(self):
         target_doc = self.doc1("v1", [0.3, 0.4, 0.5])
         self.vector_collection.put_all(
@@ -122,6 +144,29 @@ class VectorCollectionTest(SingleMemberTestCase):
         self.assertAlmostEqual(0.9973459243774414, result1.score)
         self.assertIsNone(result1.value)
         self.assertIsNone(result1.vectors)
+
+    def test_search_near_vector_hint(self):
+        # not empty collection is needed for search to do something
+        doc = Document("v1", self.vec1([0.1, 0.2, 0.3]))
+        self.vector_collection.set("k1", doc)
+
+        # trigger validation error to check if hint was sent
+        with self.assertRaises(hazelcast.errors.IllegalArgumentError):
+            self.vector_collection.search_near_vector(
+                self.vec1([0.2, 0.2, 0.3]),
+                limit=1,
+                include_vectors=False,
+                include_value=False,
+                hints={"partitionLimit": "-1"},
+            )
+
+    def test_size(self):
+        self.assertEqual(self.vector_collection.size(), 0)
+        doc = Document("v1", Vector("vector", Type.DENSE, [0.1, 0.2, 0.3]))
+        self.vector_collection.put("k1", doc)
+        self.assertEqual(self.vector_collection.size(), 1)
+        self.vector_collection.clear()
+        self.assertEqual(self.vector_collection.size(), 0)
 
     def assert_document_equal(self, doc1: Document, doc2: Document) -> None:
         self.assertEqual(doc1.value, doc2.value)

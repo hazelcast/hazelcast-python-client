@@ -2,8 +2,6 @@ from hazelcast.protocol.builtin import FixSizedTypesCodec, CodecUtil
 from hazelcast.serialization.bits import *
 from hazelcast.protocol.client_message import END_FRAME_BUF, END_FINAL_FRAME_BUF, SIZE_OF_FRAME_LENGTH_AND_FLAGS, create_initial_buffer_custom
 from hazelcast.vector import VectorSearchOptions
-from hazelcast.protocol.builtin import ListMultiFrameCodec
-from hazelcast.protocol.codec.custom.vector_pair_codec import VectorPairCodec
 from hazelcast.protocol.builtin import MapCodec
 from hazelcast.protocol.builtin import StringCodec
 
@@ -24,7 +22,6 @@ class VectorSearchOptionsCodec:
         FixSizedTypesCodec.encode_boolean(initial_frame_buf, _INCLUDE_VECTORS_ENCODE_OFFSET, vector_search_options.include_vectors)
         FixSizedTypesCodec.encode_int(initial_frame_buf, _LIMIT_ENCODE_OFFSET, vector_search_options.limit)
         buf.extend(initial_frame_buf)
-        ListMultiFrameCodec.encode(buf, vector_search_options.vectors, VectorPairCodec.encode)
         MapCodec.encode_nullable(buf, vector_search_options.hints, StringCodec.encode, StringCodec.encode)
         if is_final:
             buf.extend(END_FINAL_FRAME_BUF)
@@ -38,7 +35,6 @@ class VectorSearchOptionsCodec:
         include_value = FixSizedTypesCodec.decode_boolean(initial_frame.buf, _INCLUDE_VALUE_DECODE_OFFSET)
         include_vectors = FixSizedTypesCodec.decode_boolean(initial_frame.buf, _INCLUDE_VECTORS_DECODE_OFFSET)
         limit = FixSizedTypesCodec.decode_int(initial_frame.buf, _LIMIT_DECODE_OFFSET)
-        vectors = ListMultiFrameCodec.decode(msg, VectorPairCodec.decode)
         hints = MapCodec.decode_nullable(msg, StringCodec.decode, StringCodec.decode)
         CodecUtil.fast_forward_to_end_frame(msg)
-        return VectorSearchOptions(include_value, include_vectors, limit, vectors, hints)
+        return VectorSearchOptions(include_value, include_vectors, limit, hints)

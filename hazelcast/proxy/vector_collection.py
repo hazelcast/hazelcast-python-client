@@ -11,6 +11,9 @@ from hazelcast.protocol.codec import (
     vector_collection_put_if_absent_codec,
     vector_collection_remove_codec,
     vector_collection_put_all_codec,
+    vector_collection_clear_codec,
+    vector_collection_optimize_codec,
+    vector_collection_size_codec,
 )
 from hazelcast.proxy import Proxy
 from hazelcast.serialization.compact import SchemaNotReplicatedError
@@ -88,7 +91,8 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         *,
         include_value: bool = False,
         include_vectors: bool = False,
-        limit: int = -1
+        limit: int,
+        hints: Dict[str, str] = None
     ) -> Future[List[SearchResult]]:
         check_not_none(vector, "vector can't be None")
         return self._search_near_vector_internal(
@@ -96,6 +100,7 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
             include_value=include_value,
             include_vectors=include_vectors,
             limit=limit,
+            hints=hints,
         )
 
     def remove(self, key: Any) -> Future[Optional[Document]]:
@@ -105,6 +110,35 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
     def delete(self, key: Any) -> Future[None]:
         check_not_none(key, "key can't be None")
         return self._delete_internal(key)
+
+    def optimize(self, index_name: str = None) -> Future[None]:
+        """Optimize index by fully removing nodes marked for deletion, trimming neighbor sets
+        to the advertised degree, and updating the entry node as necessary.
+
+        Warning:
+            This operation can take long time to execute and consume a lot of server resources.
+
+        Args:
+            index_name: Name of the index to optimize. If not specified, the only index defined
+                for the collection will be used. Must be specified if the collection has more than
+                one index.
+        """
+        request = vector_collection_optimize_codec.encode_request(self.name, index_name)
+        return self._invoke(request)
+
+    def clear(self) -> Future[None]:
+        """Clears the VectorCollection."""
+        request = vector_collection_clear_codec.encode_request(self.name)
+        return self._invoke(request)
+
+    def size(self) -> Future[int]:
+        """Returns the number of Documents in this VectorCollection.
+
+        Returns:
+            Number of Documents in this VectorCollection.
+        """
+        request = vector_collection_size_codec.encode_request(self.name)
+        return self._invoke(request, vector_collection_size_codec.decode_response)
 
     def _set_internal(self, key: Any, document: Document) -> Future[None]:
         try:
@@ -142,7 +176,8 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         *,
         include_value: bool = False,
         include_vectors: bool = False,
-        limit: int = -1
+        limit: int,
+        hints: Dict[str, str] = None
     ) -> Future[List[SearchResult]]:
         def handler(message):
             results: List[
@@ -159,13 +194,14 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
             return results
 
         options = VectorSearchOptions(
-            vectors=[vector],
             include_value=include_value,
             include_vectors=include_vectors,
             limit=limit,
+            hints=hints or {},
         )
         request = vector_collection_search_near_vector_codec.encode_request(
             self.name,
+            [vector],
             options,
         )
         return self._invoke(request, response_handler=handler)
@@ -249,13 +285,15 @@ class BlockingVectorCollection:
         *,
         include_value: bool = False,
         include_vectors: bool = False,
-        limit: Optional[int] = None
+        limit: int,
+        hints: Dict[str, str] = None
     ) -> List[SearchResult]:
         future = self._wrapped.search_near_vector(
             vector,
             include_value=include_value,
             include_vectors=include_vectors,
             limit=limit,
+            hints=hints,
         )
         return future.result()
 
@@ -273,6 +311,15 @@ class BlockingVectorCollection:
 
     def put_if_absent(self, key: Any, document: Document) -> Optional[Document]:
         return self._wrapped.put_if_absent(key, document).result()
+
+    def clear(self) -> None:
+        return self._wrapped.clear().result()
+
+    def optimize(self, index_name: str = None) -> None:
+        return self._wrapped.optimize(index_name).result()
+
+    def size(self) -> int:
+        return self._wrapped.size().result()
 
     def destroy(self) -> bool:
         return self._wrapped.destroy()
