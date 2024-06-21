@@ -75,7 +75,7 @@ jobs:
           
       - name: Run tests
         env:
-          HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
+          HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY_V7 }}
         run: python run_tests.py
             
       - name: Publish results to Codecov for PR coming from hazelcast organization
