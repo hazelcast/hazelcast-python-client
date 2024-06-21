@@ -63,6 +63,9 @@ class Document:
     def __copy__(self):
         return Document(self.value, self.vectors)
 
+    def __repr__(self):
+        return f"Document<value={self.value}, vectors={self.vectors}>"
+
 
 VectorDocument = Document
 
@@ -130,7 +133,6 @@ class VectorSearchOptions:
     This class is not meant to be utilized by the user code.
     """
 
-    vectors: List[Vector]
     include_value: bool
     include_vectors: bool
     limit: int

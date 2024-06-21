@@ -143,6 +143,7 @@ Features
 -  Distributed, CRDT based counter, called **PNCounter**
 -  Distributed concurrency primitives from CP Subsystem such as
    **FencedLock**, **Semaphore**, **AtomicLong**
+-  Similarity search using **VectorCollection** (Beta)
 -  Integration with `Hazelcast Cloud <https://cloud.hazelcast.com/>`__
 -  Support for serverless and traditional web service architectures with
    **Unisocket** and **Smart** operation modes
