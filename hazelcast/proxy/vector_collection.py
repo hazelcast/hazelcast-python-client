@@ -78,7 +78,8 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
             key: The specified key.
 
         Returns:
-            The Document for the specified key.
+            The Document for the specified key or ``None`` if there was no
+            mapping for key.
         """
         check_not_none(key, "key can't be None")
         return self._get_internal(key)
