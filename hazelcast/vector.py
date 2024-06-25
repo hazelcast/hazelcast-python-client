@@ -8,6 +8,9 @@ __all__ = "Document", "Vector", "IndexConfig", "SearchResult"
 
 class Type(enum.IntEnum):
     DENSE = 0
+    """
+    Represents a vector defined by a list of floats.
+    """
 
 
 VectorType = Type
@@ -38,8 +41,8 @@ class Document:
     """Document represents a value and associated vectors.
 
     Args:
-        value: The value to associate with this Document.
-        vectors: Either one ``Vector`` instance of a list of ``Vector`` instances to associate with this Document.
+        value: The value associated with this Document.
+        vectors: Either one ``Vector`` instance or a list of ``Vector`` instances associated with this Document.
     """
 
     def __init__(self, value: Any, vectors: Union[Vector, List[Vector]]) -> None:

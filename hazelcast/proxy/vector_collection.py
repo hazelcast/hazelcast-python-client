@@ -57,17 +57,17 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         return BlockingVectorCollection(self)
 
     def get(self, key: Any) -> Future[Optional[Document]]:
-        """Returns the value for the specified key, or ``None`` if this VectorCollection
+        """Returns the Document for the specified key, or ``None`` if this VectorCollection
         does not contain this key.
 
         Warning:
-            This method returns a clone of original value, modifying the
-            returned value does not change the actual value in the VectorCollection. One
-            should put modified value back to make changes visible to all nodes.
+            This method returns a clone of original Document, modifying the
+            returned Document does not change the actual Document in the VectorCollection. One
+            should put modified Document back to make changes visible to all nodes.
 
-                >>> value = my_vc.get(key)
-                >>> value.update_some_property()
-                >>> my_vc.set(key,value)
+                >>> doc = my_vc.get(key)
+                >>> doc.value.update_some_property()
+                >>> my_vc.set(key, doc)
 
         Warning:
             This method uses ``__hash__`` and ``__eq__`` methods of binary form
@@ -78,7 +78,7 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
             key: The specified key.
 
         Returns:
-            The value for the specified key.
+            The Document for the specified key.
         """
         check_not_none(key, "key can't be None")
         return self._get_internal(key)
@@ -185,7 +185,7 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
             document: Document of the entry.
 
         Returns:
-            Old Document for the given key.
+            Old Document for the given key or ``None`` if there is not one.
         """
         check_not_none(key, "key can't be None")
         check_not_none(document, "document can't be None")
@@ -212,7 +212,7 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
             include_value: Return value attached to the Document.
             include_vectors: Return vectors attached to the Document.
             limit: Limit the maximum number of Documents returned.
-                If not set, the server default is used.
+                If not set, ``10`` is used as the default limit.
 
         Returns:
             List of search results.
@@ -229,7 +229,8 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         )
 
     def remove(self, key: Any) -> Future[Optional[Document]]:
-        """Removes the mapping for a key from this VectorCollection if it is present.
+        """Removes the mapping for a key from this VectorCollection if it is present
+        (optional operation).
 
         The VectorCollection will not contain a mapping for the specified key once the call
         returns.
