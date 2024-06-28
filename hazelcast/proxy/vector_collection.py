@@ -108,7 +108,8 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         """Associates the specified Document with the specified key in this VectorCollection.
 
         If the VectorCollection previously contained a mapping for the key, the old Document is
-        replaced by the specified Document.
+        replaced by the specified Document. In case the previous value is not needed, using
+        the ``set`` method is more efficient.
 
         Warning:
             This method returns a clone of the previous Document, not the original
