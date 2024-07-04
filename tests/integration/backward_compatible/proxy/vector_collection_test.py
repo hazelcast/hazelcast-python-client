@@ -168,7 +168,7 @@ class VectorCollectionTest(SingleMemberTestCase):
         self.vector_collection.clear()
         self.assertEqual(self.vector_collection.size(), 0)
 
-    def assert_document_equal(self, doc1: Document, doc2: Document) -> None:
+    def assert_document_equal(self, doc1, doc2) -> None:
         self.assertEqual(doc1.value, doc2.value)
         self.assertEqual(len(doc1.vectors), len(doc2.vectors))
         # currently there's a bug on the server-side about vector names.
@@ -179,7 +179,7 @@ class VectorCollectionTest(SingleMemberTestCase):
         for i in range(len(doc1.vectors)):
             self.assert_vector_equal(doc1.vectors[i], doc2.vectors[i], skip_check_name)
 
-    def assert_vector_equal(self, vec1: Vector, vec2: Vector, skip_check_name=False):
+    def assert_vector_equal(self, vec1, vec2, skip_check_name=False):
         if not skip_check_name:
             self.assertEqual(vec1.name, vec2.name)
         self.assertEqual(vec1.type, vec2.type)
@@ -188,9 +188,9 @@ class VectorCollectionTest(SingleMemberTestCase):
             self.assertAlmostEqual(vec1.vector[i], vec2.vector[i])
 
     @classmethod
-    def vec1(cls, elems) -> Vector:
+    def vec1(cls, elems):
         return Vector("vector", Type.DENSE, elems)
 
     @classmethod
-    def doc1(cls, value, vector_elems) -> Document:
+    def doc1(cls, value, vector_elems):
         return Document(value, cls.vec1(vector_elems))

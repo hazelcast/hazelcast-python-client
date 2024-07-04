@@ -5,6 +5,9 @@ check:
 	black --check --config black.toml .
 
 test:
+	pytest -m "not enterprise"
+
+test-enterprise:
 	pytest
 
 test-cover:
