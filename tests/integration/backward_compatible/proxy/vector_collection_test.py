@@ -5,7 +5,7 @@ import pytest
 
 import hazelcast.errors
 from tests.base import SingleMemberTestCase
-from tests.util import random_string, compare_client_version
+from tests.util import random_string, compare_client_version, skip_if_server_version_older_than
 
 try:
     from hazelcast.vector import IndexConfig, Metric, Document, Vector, Type
@@ -32,6 +32,7 @@ class VectorCollectionTest(SingleMemberTestCase):
         return config
 
     def setUp(self):
+        skip_if_server_version_older_than(self, self.client, "5.5")
         name = random_string()
         self.client.create_vector_collection_config(name, [IndexConfig("vector", Metric.COSINE, 3)])
         self.vector_collection = self.client.get_vector_collection(name).blocking()
