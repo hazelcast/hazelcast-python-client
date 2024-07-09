@@ -216,11 +216,18 @@ following:
 -  `Supported Java virtual machine <https://docs.hazelcast.com/hazelcast/latest/deploy/versioning-compatibility#supported-java-virtual-machines>`
 -  `Apache Maven <https://maven.apache.org/>`
 
-Following commands starts the tests:
+Set the environment variables for credentials:
 
 .. code:: bash
 
-    python run_tests.py
+    export HZ_SNAPSHOT_INTERNAL_USERNAME=YOUR_MAVEN_USERNAME
+    export HZ_SNAPSHOT_INTERNAL_PASSWORD=YOUR_MAVEN_PASSWORD
+
+Following command starts the tests:
+
+.. code:: bash
+
+    python3 run_tests.py
 
 Test script automatically downloads ``hazelcast-remote-controller`` and
 Hazelcast. The script uses Maven to download those.
@@ -233,7 +240,7 @@ License
 Copyright
 ---------
 
-Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
+Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 
 Visit `hazelcast.com <https://hazelcast.com>`__ for more
 information.

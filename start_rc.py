@@ -8,8 +8,9 @@ RC_VERSION = "0.8-SNAPSHOT"
 
 RELEASE_REPO = "https://repo1.maven.apache.org/maven2"
 ENTERPRISE_RELEASE_REPO = "https://repository.hazelcast.com/release/"
-SNAPSHOT_REPO = "https://oss.sonatype.org/content/repositories/snapshots"
+SNAPSHOT_REPO = "https://repository.hazelcast.com/snapshot-internal/"
 ENTERPRISE_SNAPSHOT_REPO = "https://repository.hazelcast.com/snapshot/"
+RC_REPO = "https://oss.sonatype.org/content/repositories/snapshots"
 HAZELCAST_GROUP = "com.hazelcast"
 
 if SERVER_VERSION.endswith("-SNAPSHOT"):
@@ -18,11 +19,6 @@ if SERVER_VERSION.endswith("-SNAPSHOT"):
 else:
     REPO = RELEASE_REPO
     ENTERPRISE_REPO = ENTERPRISE_RELEASE_REPO
-
-if RC_VERSION.endswith("-SNAPSHOT"):
-    RC_REPO = SNAPSHOT_REPO
-else:
-    RC_REPO = RELEASE_REPO
 
 IS_ON_WINDOWS = os.name == "nt"
 CLASS_PATH_SEPARATOR = ";" if IS_ON_WINDOWS else ":"
@@ -46,13 +42,16 @@ def download_if_necessary(repo, group, artifact_id, version, is_test_artifact=Fa
 
     args = [
         "mvn",
-        "-q",
+        "-X",
         "org.apache.maven.plugins:maven-dependency-plugin:2.10:get",
         "-Dtransitive=false",
         "-DremoteRepositories=" + repo,
         "-Dartifact=" + artifact,
         "-Ddest=" + dest_file_name,
+        "--settings=settings.xml",
     ]
+
+    print("Maven Args:", args)
 
     process = subprocess.run(args, shell=IS_ON_WINDOWS)
     if process.returncode != 0:

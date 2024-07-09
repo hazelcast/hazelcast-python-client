@@ -1,5 +1,7 @@
 import time
 
+import pytest
+
 from hazelcast import HazelcastClient
 from hazelcast.errors import (
     DistributedObjectDestroyedError,
@@ -10,6 +12,7 @@ from tests.integration.backward_compatible.proxy.cp import CPTestCase
 from tests.util import random_string
 
 
+@pytest.mark.enterprise
 class FencedLockTest(CPTestCase):
     def setUp(self):
         self.lock = self.client.cp_subsystem.get_lock(random_string()).blocking()
