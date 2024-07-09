@@ -1,0 +1,9 @@
+<settings>
+  <servers>
+    <server>
+      <id>temp</id>
+      <username>${env.MAVEN_USERNAME}</username>
+      <password>${env.MAVEN_PASSWORD}</password>
+    </server>
+  </servers>
+</settings>
