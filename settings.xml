@@ -2,8 +2,8 @@
   <servers>
     <server>
       <id>temp</id>
-      <username>${env.MAVEN_USERNAME}</username>
-      <password>${env.MAVEN_PASSWORD}</password>
+      <username>${env.HZ_SNAPSHOT_INTERNAL_USERNAME}</username>
+      <password>${env.HZ_SNAPSHOT_INTERNAL_PASSWORD}</password>
     </server>
   </servers>
 </settings>

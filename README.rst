@@ -220,8 +220,8 @@ Set the environment variables for credentials:
 
 .. code:: bash
 
-    export MAVEN_USERNAME=YOUR_MAVEN_USERNAME
-    export MAVEN_PASSWORD=YOUR_MAVEN_PASSWORD
+    export HZ_SNAPSHOT_INTERNAL_USERNAME=YOUR_MAVEN_USERNAME
+    export HZ_SNAPSHOT_INTERNAL_PASSWORD=YOUR_MAVEN_PASSWORD
 
 Following command starts the tests:
 
