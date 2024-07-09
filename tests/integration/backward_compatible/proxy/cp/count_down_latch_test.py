@@ -1,6 +1,8 @@
 import os
 from threading import Thread
 
+import pytest
+
 from hazelcast.errors import DistributedObjectDestroyedError, OperationTimeoutError
 from hazelcast.future import ImmediateExceptionFuture
 from hazelcast.util import AtomicInteger
@@ -11,6 +13,7 @@ from tests.util import get_current_timestamp, random_string
 inf = 2**31 - 1
 
 
+@pytest.mark.enterprise
 class CountDownLatchTest(CPTestCase):
     def test_latch_in_another_group(self):
         latch = self.get_latch()
