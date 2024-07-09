@@ -10,6 +10,7 @@ RELEASE_REPO = "https://repo1.maven.apache.org/maven2"
 ENTERPRISE_RELEASE_REPO = "https://repository.hazelcast.com/release/"
 SNAPSHOT_REPO = "https://repository.hazelcast.com/snapshot-internal/"
 ENTERPRISE_SNAPSHOT_REPO = "https://repository.hazelcast.com/snapshot/"
+RC_REPO = "https://oss.sonatype.org/content/repositories/snapshots"
 HAZELCAST_GROUP = "com.hazelcast"
 
 if SERVER_VERSION.endswith("-SNAPSHOT"):
@@ -18,11 +19,6 @@ if SERVER_VERSION.endswith("-SNAPSHOT"):
 else:
     REPO = RELEASE_REPO
     ENTERPRISE_REPO = ENTERPRISE_RELEASE_REPO
-
-if RC_VERSION.endswith("-SNAPSHOT"):
-    RC_REPO = SNAPSHOT_REPO
-else:
-    RC_REPO = RELEASE_REPO
 
 IS_ON_WINDOWS = os.name == "nt"
 CLASS_PATH_SEPARATOR = ";" if IS_ON_WINDOWS else ":"
