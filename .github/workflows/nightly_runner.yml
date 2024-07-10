@@ -33,6 +33,8 @@ jobs:
       - name: Run tests
         env:
           HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY_V7 }}
+          HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
+          HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
         run: python run_tests.py
       - name: Upload remote controller logs on test failure
         uses: actions/upload-artifact@v2
