@@ -1,7 +1,5 @@
 import uuid
 
-import pytest
-
 from hazelcast.errors import OperationTimeoutError
 from hazelcast.future import Future
 from hazelcast.protocol.codec import (
