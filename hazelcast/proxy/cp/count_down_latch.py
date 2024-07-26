@@ -1,7 +1,5 @@
 import uuid
 
-import pytest
-
 from hazelcast.errors import OperationTimeoutError
 from hazelcast.future import Future
 from hazelcast.protocol.codec import (
@@ -15,7 +13,6 @@ from hazelcast.proxy.cp import BaseCPProxy
 from hazelcast.util import to_millis, check_true, check_is_number, check_is_int
 
 
-@pytest.mark.enterprise
 class CountDownLatch(BaseCPProxy["BlockingCountDownLatch"]):
     """A distributed, concurrent countdown latch data structure.
 
