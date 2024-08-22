@@ -1,7 +1,14 @@
-try:
-    import asyncore
-except ImportError:
+import sys
+
+# use the provided asyncore on Python 3.11
+if sys.version_info.major == 3 and sys.version_info.minor == 11:
     import hazelcast.asyncore as asyncore  # type: ignore
+else:
+    try:
+        import asyncore
+    except ImportError:
+        import hazelcast.asyncore as asyncore  # type: ignore
+
 import errno
 import io
 import logging
@@ -9,7 +16,6 @@ import os
 import select
 import socket
 import ssl
-import sys
 import threading
 import time
 
