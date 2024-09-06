@@ -88,7 +88,6 @@ def start_rc(stdout=None, stderr=None):
         "-cp",
         class_path,
         "com.hazelcast.remotecontroller.Main",
-        "--add-modules jdk.incubator.vector",
         "--use-simple-server",
     ]
 
