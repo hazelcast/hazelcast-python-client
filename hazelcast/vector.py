@@ -121,7 +121,7 @@ class IndexConfig:
     name: str
     metric: Metric
     dimension: int
-    max_degree: int = 16
+    max_degree: int = 32
     ef_construction: int = 100
     use_deduplication: bool = True
 
