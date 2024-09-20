@@ -37,7 +37,7 @@ jobs:
           HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
         run: python run_tests.py
       - name: Upload remote controller logs on test failure
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: rc-logs-${{ matrix.python-version }}-${{ matrix.os }}
