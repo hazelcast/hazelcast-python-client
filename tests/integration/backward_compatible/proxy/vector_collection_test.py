@@ -169,6 +169,38 @@ class VectorCollectionTest(SingleMemberTestCase):
         self.vector_collection.clear()
         self.assertEqual(self.vector_collection.size(), 0)
 
+    def test_backupCount_valid_values_pass(self):
+        name = random_string()
+        self.client.create_vector_collection_config(
+            name, [IndexConfig("vector", Metric.COSINE, 3)], backup_count=2, async_backup_count=2
+        )
+
+    def test_backupCount(self):
+        skip_if_server_version_older_than(self, self.client, "6.0")
+        name = random_string()
+        # check that the parameter is used by ensuring that it is validated on server side
+        # there is no simple way to check number of backups
+        with self.assertRaises(hazelcast.errors.IllegalArgumentError):
+            self.client.create_vector_collection_config(
+                name,
+                [IndexConfig("vector", Metric.COSINE, 3)],
+                backup_count=7,
+                async_backup_count=0,
+            )
+
+    def test_asyncBackupCount(self):
+        skip_if_server_version_older_than(self, self.client, "6.0")
+        name = random_string()
+        # check that the parameter is used by ensuring that it is validated on server side
+        # there is no simple way to check number of backups
+        with self.assertRaises(hazelcast.errors.IllegalArgumentError):
+            self.client.create_vector_collection_config(
+                name,
+                [IndexConfig("vector", Metric.COSINE, 3)],
+                backup_count=0,
+                async_backup_count=7,
+            )
+
     def assert_document_equal(self, doc1, doc2) -> None:
         self.assertEqual(doc1.value, doc2.value)
         self.assertEqual(len(doc1.vectors), len(doc2.vectors))

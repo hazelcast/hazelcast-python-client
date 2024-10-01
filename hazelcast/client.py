@@ -378,14 +378,22 @@ class HazelcastClient:
         """
         return self._proxy_manager.get_or_create(TOPIC_SERVICE, name)
 
-    def create_vector_collection_config(self, name: str, indexes: typing.List[IndexConfig]) -> None:
+    def create_vector_collection_config(
+        self,
+        name: str,
+        indexes: typing.List[IndexConfig],
+        backup_count: int = 1,
+        async_backup_count: int = 0,
+    ) -> None:
         # check that indexes have different names
         if indexes:
             index_names = set(index.name for index in indexes)
             if len(index_names) != len(indexes):
                 raise AssertionError("index names must be unique")
 
-        request = dynamic_config_add_vector_collection_config_codec.encode_request(name, indexes)
+        request = dynamic_config_add_vector_collection_config_codec.encode_request(
+            name, indexes, backup_count, async_backup_count
+        )
         invocation = Invocation(request, response_handler=lambda m: m)
         self._invocation_service.invoke(invocation)
         invocation.future.result()
