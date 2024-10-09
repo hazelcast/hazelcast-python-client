@@ -5,7 +5,7 @@ import pytest
 
 import hazelcast.errors
 from tests.base import SingleMemberTestCase
-from tests.util import random_string, compare_client_version, skip_if_server_version_older_than
+from tests.util import random_string, compare_client_version, skip_if_server_version_older_than, skip_if_client_version_older_than
 
 try:
     from hazelcast.vector import IndexConfig, Metric, Document, Vector, Type
@@ -170,6 +170,7 @@ class VectorCollectionTest(SingleMemberTestCase):
         self.assertEqual(self.vector_collection.size(), 0)
 
     def test_backupCount_valid_values_pass(self):
+        skip_if_client_version_older_than(self, "6.0")
         name = random_string()
         self.client.create_vector_collection_config(
             name, [IndexConfig("vector", Metric.COSINE, 3)], backup_count=2, async_backup_count=2
