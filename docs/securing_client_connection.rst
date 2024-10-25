@@ -323,7 +323,7 @@ Then, on the client-side, set ``creds_username`` and ``creds_password`` in the c
         creds_password="MY-PASSWORD"
     )
 
-Check out the documentation on `Password Credentials
+Check out the documentation on `Identity
 <https://docs.hazelcast.com/hazelcast/latest/security/authentication-overview#identity>`__
 of the Hazelcast Documentation.
 
