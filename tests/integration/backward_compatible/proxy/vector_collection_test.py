@@ -5,7 +5,12 @@ import pytest
 
 import hazelcast.errors
 from tests.base import SingleMemberTestCase
-from tests.util import random_string, compare_client_version, skip_if_server_version_older_than, skip_if_client_version_older_than
+from tests.util import (
+    random_string,
+    compare_client_version,
+    skip_if_server_version_older_than,
+    skip_if_client_version_older_than,
+)
 
 try:
     from hazelcast.vector import IndexConfig, Metric, Document, Vector, Type

@@ -33,7 +33,7 @@ TLS/SSL for Hazelcast Members
 Hazelcast allows you to encrypt socket level communication between
 Hazelcast members and between Hazelcast clients and members, for end to
 end encryption. To use it, see the `TLS/SSL for Hazelcast Members section
-<https://docs.hazelcast.com/hazelcast/latest/security/tls-ssl.html#tlsssl-for-hazelcast-members>`__.
+<https://docs.hazelcast.com/hazelcast/latest/security/tls-ssl.html#tls-for-hazelcast-members>`__.
 
 TLS/SSL for Hazelcast Python Clients
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -323,8 +323,8 @@ Then, on the client-side, set ``creds_username`` and ``creds_password`` in the c
         creds_password="MY-PASSWORD"
     )
 
-Check out the documentation on `Password Credentials
-<https://docs.hazelcast.com/hazelcast/latest/security/security-realms.html#password-credentials>`__
+Check out the documentation on `Identity
+<https://docs.hazelcast.com/hazelcast/latest/security/authentication-overview#identity>`__
 of the Hazelcast Documentation.
 
 Token-Based Authentication
