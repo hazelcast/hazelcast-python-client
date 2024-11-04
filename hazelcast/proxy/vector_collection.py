@@ -1,4 +1,5 @@
 import copy
+import uuid
 from typing import Any, Dict, List, Optional, Tuple
 
 from hazelcast.future import Future, ImmediateFuture, combine_futures
@@ -282,7 +283,9 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
                 for the collection will be used. Must be specified if the collection has more than
                 one index.
         """
-        request = vector_collection_optimize_codec.encode_request(self.name, index_name)
+        request = vector_collection_optimize_codec.encode_request(
+            self.name, index_name, uuid.uuid4()
+        )
         return self._invoke(request)
 
     def clear(self) -> Future[None]:
