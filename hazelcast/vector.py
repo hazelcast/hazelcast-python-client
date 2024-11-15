@@ -3,7 +3,7 @@ import enum
 from typing import Any, Dict, List, Optional, Union
 
 
-__all__ = "Document", "Vector", "IndexConfig", "SearchResult"
+__all__ = "Document", "Vector", "IndexConfig", "SearchResult", "Metric", "Type"
 
 
 class Type(enum.IntEnum):
