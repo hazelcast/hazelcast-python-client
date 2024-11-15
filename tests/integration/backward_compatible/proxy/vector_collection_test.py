@@ -174,28 +174,31 @@ class VectorCollectionTest(SingleMemberTestCase):
         self.vector_collection.clear()
         self.assertEqual(self.vector_collection.size(), 0)
 
-    def test_backupCount_valid_values_pass(self):
+    def test_backup_count_valid_values_pass(self):
         skip_if_client_version_older_than(self, "6.0")
         name = random_string()
         self.client.create_vector_collection_config(
             name, [IndexConfig("vector", Metric.COSINE, 3)], backup_count=2, async_backup_count=2
         )
+        self.client.get_vector_collection(name).blocking()
 
-    def test_backupCount_max_value_pass(self):
+    def test_backup_count_max_value_pass(self):
         skip_if_client_version_older_than(self, "6.0")
         name = random_string()
         self.client.create_vector_collection_config(
             name, [IndexConfig("vector", Metric.COSINE, 3)], backup_count=6
         )
+        self.client.get_vector_collection(name).blocking()
 
-    def test_backupCount_min_value_pass(self):
+    def test_backup_count_min_value_pass(self):
         skip_if_client_version_older_than(self, "6.0")
         name = random_string()
         self.client.create_vector_collection_config(
             name, [IndexConfig("vector", Metric.COSINE, 3)], backup_count=0
         )
+        self.client.get_vector_collection(name).blocking()
 
-    def test_backupCount_more_than_max_value_fail(self):
+    def test_backup_count_more_than_max_value_fail(self):
         skip_if_server_version_older_than(self, self.client, "6.0")
         name = random_string()
         # check that the parameter is used by ensuring that it is validated on server side
@@ -208,7 +211,7 @@ class VectorCollectionTest(SingleMemberTestCase):
                 async_backup_count=0,
             )
 
-    def test_backupCount_less_than_min_value_fail(self):
+    def test_backup_count_less_than_min_value_fail(self):
         skip_if_server_version_older_than(self, self.client, "6.0")
         name = random_string()
         with self.assertRaises(hazelcast.errors.IllegalArgumentError):
@@ -216,7 +219,7 @@ class VectorCollectionTest(SingleMemberTestCase):
                 name, [IndexConfig("vector", Metric.COSINE, 3)], backup_count=-1
             )
 
-    def test_asyncBackupCount_max_value_pass(self):
+    def test_async_backup_count_max_value_pass(self):
         skip_if_client_version_older_than(self, "6.0")
         name = random_string()
         self.client.create_vector_collection_config(
@@ -225,15 +228,17 @@ class VectorCollectionTest(SingleMemberTestCase):
             backup_count=0,
             async_backup_count=6,
         )
+        self.client.get_vector_collection(name).blocking()
 
-    def test_asyncBackupCount_min_value_pass(self):
+    def test_async_backup_count_min_value_pass(self):
         skip_if_client_version_older_than(self, "6.0")
         name = random_string()
         self.client.create_vector_collection_config(
             name, [IndexConfig("vector", Metric.COSINE, 3)], async_backup_count=0
         )
+        self.client.get_vector_collection(name).blocking()
 
-    def test_asyncBackupCount_more_than_max_value_fail(self):
+    def test_async_backup_count_more_than_max_value_fail(self):
         skip_if_server_version_older_than(self, self.client, "6.0")
         name = random_string()
         # check that the parameter is used by ensuring that it is validated on server side
@@ -246,7 +251,7 @@ class VectorCollectionTest(SingleMemberTestCase):
                 async_backup_count=7,
             )
 
-    def test_asyncBackupCount_less_than_min_value_fail(self):
+    def test_async_backup_count_less_than_min_value_fail(self):
         skip_if_server_version_older_than(self, self.client, "6.0")
         name = random_string()
         with self.assertRaises(hazelcast.errors.IllegalArgumentError):
@@ -256,7 +261,7 @@ class VectorCollectionTest(SingleMemberTestCase):
                 async_backup_count=-1,
             )
 
-    def test_sync_and_asyncBackupCount_more_than_max_value_fail(self):
+    def test_sync_and_async_backup_count_more_than_max_value_fail(self):
         skip_if_server_version_older_than(self, self.client, "6.0")
         name = random_string()
         with self.assertRaises(hazelcast.errors.IllegalArgumentError):
