@@ -272,6 +272,41 @@ class VectorCollectionTest(SingleMemberTestCase):
                 async_backup_count=3,
             )
 
+    def test_merge_policy_can_be_sent(self):
+        skip_if_client_version_older_than(self, "6.0")
+        name = random_string()
+        self.client.create_vector_collection_config(
+            name,
+            [IndexConfig("vector", Metric.COSINE, 3)],
+            merge_policy="DiscardMergePolicy",
+            merge_batch_size=1000,
+        )
+        # validation happens when the collection proxy is created
+        self.client.get_vector_collection(name)
+
+    def test_wrong_merge_policy_fails(self):
+        skip_if_client_version_older_than(self, "6.0")
+        name = random_string()
+        with self.assertRaises(hazelcast.errors.InvalidConfigurationError):
+            self.client.create_vector_collection_config(
+                name, [IndexConfig("vector", Metric.COSINE, 3)], merge_policy="non-existent"
+            )
+            # validation happens when the collection proxy is created
+            self.client.get_vector_collection(name)
+
+    def test_split_brain_name_can_be_sent(self):
+        skip_if_client_version_older_than(self, "6.0")
+        name = random_string()
+        self.client.create_vector_collection_config(
+            name,
+            [IndexConfig("vector", Metric.COSINE, 3)],
+            # wrong name will be ignored
+            split_brain_protection_name="non-existent",
+        )
+        col = self.client.get_vector_collection(name)
+        doc = Document("v1", Vector("vector", Type.DENSE, [0.1, 0.2, 0.3]))
+        col.set("k1", doc)
+
     def assert_document_equal(self, doc1, doc2) -> None:
         self.assertEqual(doc1.value, doc2.value)
         self.assertEqual(len(doc1.vectors), len(doc2.vectors))
