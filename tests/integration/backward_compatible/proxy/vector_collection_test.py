@@ -286,6 +286,7 @@ class VectorCollectionTest(SingleMemberTestCase):
 
     def test_wrong_merge_policy_fails(self):
         skip_if_client_version_older_than(self, "6.0")
+        skip_if_server_version_older_than(self, self.client, "6.0")
         name = random_string()
         with self.assertRaises(hazelcast.errors.InvalidConfigurationError):
             self.client.create_vector_collection_config(
