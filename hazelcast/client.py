@@ -384,6 +384,9 @@ class HazelcastClient:
         indexes: typing.List[IndexConfig],
         backup_count: int = 1,
         async_backup_count: int = 0,
+        split_brain_protection_name: typing.Optional[str] = None,
+        merge_policy: str = "PutIfAbsentMergePolicy",
+        merge_batch_size: int = 100,
     ) -> None:
         # check that indexes have different names
         if indexes:
@@ -392,7 +395,13 @@ class HazelcastClient:
                 raise AssertionError("index names must be unique")
 
         request = dynamic_config_add_vector_collection_config_codec.encode_request(
-            name, indexes, backup_count, async_backup_count
+            name,
+            indexes,
+            backup_count,
+            async_backup_count,
+            split_brain_protection_name,
+            merge_policy,
+            merge_batch_size,
         )
         invocation = Invocation(request, response_handler=lambda m: m)
         self._invocation_service.invoke(invocation)
