@@ -43,11 +43,11 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
 
     Example:
 
-        client.create_vector_collection_config("my_vc", [
-            IndexConfig(name="default-vector", metric=Metric.COSINE, dimension=2)
-        ]
-        my_vc = client.get_vector_collection("my_vc").blocking()
-        my_vc.set("key1", Vector("default-vector", Type.DENSE, [0.1, 0.2])
+        >>> client.create_vector_collection_config("my_vc", [
+        >>>    IndexConfig(name="default-vector", metric=Metric.COSINE, dimension=2)
+        >>> ]
+        >>> my_vc = client.get_vector_collection("my_vc").blocking()
+        >>> my_vc.set("key1", Vector("default-vector", Type.DENSE, [0.1, 0.2])
     """
 
     def __init__(self, service_name, name, context):
@@ -66,9 +66,9 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
             returned Document does not change the actual Document in the VectorCollection. One
             should put modified Document back to make changes visible to all nodes.
 
-                >>> doc = my_vc.get(key)
-                >>> doc.value.update_some_property()
-                >>> my_vc.set(key, doc)
+        >>> doc = my_vc.get(key)
+        >>> doc.value.update_some_property()
+        >>> my_vc.set(key, doc)
 
         Warning:
             This method uses ``__hash__`` and ``__eq__`` methods of binary form
