@@ -36,6 +36,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "sphinx.ext.autosectionlabel",
+    "sphinx_rtd_theme",
 ]
 
 autodoc_default_options = {
@@ -66,7 +67,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "Hazelcast Python Client"
-copyright = "2023, Hazelcast Inc."
+copyright = "2024, Hazelcast Inc."
 author = "Hazelcast Inc. Developers"
 
 # The version info for the project you're documenting, acts as replacement for
@@ -130,7 +131,7 @@ todo_include_todos = False
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = "default"
+html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -313,11 +314,3 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 # texinfo_no_detailmenu = False
-
-on_rtd = os.environ.get("READTHEDOCS") == "True"
-
-if not on_rtd:
-    # If we are building locally, import the RTD theme
-    # and use it
-    extensions.append("sphinx_rtd_theme")
-    html_theme = "sphinx_rtd_theme"
