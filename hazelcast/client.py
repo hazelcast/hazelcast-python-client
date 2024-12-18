@@ -384,7 +384,7 @@ class HazelcastClient:
         indexes: typing.List[IndexConfig],
         backup_count: int = 1,
         async_backup_count: int = 0,
-        split_brain_protection_name: str = None,
+        split_brain_protection_name: Optional[str] = None,
         merge_policy: str = "PutIfAbsentMergePolicy",
         merge_batch_size: int = 100,
     ) -> None:
