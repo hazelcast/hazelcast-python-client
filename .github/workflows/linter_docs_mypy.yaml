@@ -63,7 +63,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: $${{ needs.python-versions.outputs.latest-python-version }}
+          python-version: ${{ needs.python-versions.outputs.latest-python-version }}
           
       - name: Checkout to code
         uses: actions/checkout@v4
