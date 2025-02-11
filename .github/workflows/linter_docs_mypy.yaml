@@ -20,7 +20,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ fromJSON(needs.python-versions.outputs.python-versions)[-1] }}
+          python-version: ${{ needs.python-versions.outputs.latest-python-version }}
           
       - name: Checkout to code
         uses: actions/checkout@v4
@@ -41,7 +41,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ fromJSON(needs.python-versions.outputs.python-versions)[-1] }}
+          python-version: ${{ needs.python-versions.outputs.latest-python-version }}
           
       - name: Checkout to code
         uses: actions/checkout@v4
@@ -63,7 +63,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: $${{ fromJSON(needs.python-versions.outputs.python-versions)[-1] }}
+          python-version: $${{ needs.python-versions.outputs.latest-python-version }}
           
       - name: Checkout to code
         uses: actions/checkout@v4
