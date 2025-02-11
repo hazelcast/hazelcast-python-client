@@ -29,21 +29,25 @@ jobs:
           organization-name: 'hazelcast'
           member-name: ${{ github.event.pull_request.head.repo.owner.login }}
           token: ${{ secrets.PAT }}
-          
+
+  python-versions:
+    uses: ./.github/workflows/get-python-versions.yml
+
   run-tests:
     runs-on: ${{ matrix.os }}
-    needs: [check_for_membership]
+    needs: [check_for_membership, python-versions]
     if: github.event_name == 'push' || needs.check_for_membership.outputs.check-result == 'true' || github.event_name == 'workflow_dispatch'
     name: Run tests with Python ${{ matrix.python-version }} on ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [ '3.7', '3.12' ]
+        # Use newest and oldest version of Python
+        python-version: ${{ fromJSON(needs.python-versions.outputs.python-versions)[0] }}, ${{ fromJSON(needs.python-versions.outputs.python-versions)[-1] }}
         os: [ ubuntu-latest, windows-latest ]
       fail-fast: false
       
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           
@@ -81,20 +85,20 @@ jobs:
         run: python run_tests.py
             
       - name: Publish results to Codecov for PR coming from hazelcast organization
-        if: ${{ matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest' &&  github.event_name == 'pull_request_target' }}
+        if: ${{ matrix.python-version == fromJSON(needs.python-versions.outputs.python-versions)[-1] && matrix.os == 'ubuntu-latest' &&  github.event_name == 'pull_request_target' }}
         uses: codecov/codecov-action@v1
         with:
           files: ./coverage.xml
           override_pr: ${{ github.event.pull_request.number }}
           
       - name: Publish results to Codecov for Push
-        if: ${{ matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest' &&  github.event_name == 'push' }}
+        if: ${{ matrix.python-version == fromJSON(needs.python-versions.outputs.python-versions)[-1] && matrix.os == 'ubuntu-latest' &&  github.event_name == 'push' }}
         uses: codecov/codecov-action@v1
         with:
           files: ./coverage.xml
           
       - name: Publish result to Codecov for PR coming from community
-        if: ${{ matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest' && github.event_name == 'workflow_dispatch' }}
+        if: ${{ matrix.python-version == fromJSON(needs.python-versions.outputs.python-versions)[-1] && matrix.os == 'ubuntu-latest' && github.event_name == 'workflow_dispatch' }}
         uses: codecov/codecov-action@v1
         with:
           files: ./coverage.xml
