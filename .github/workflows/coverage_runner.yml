@@ -37,13 +37,13 @@ jobs:
     name: Run tests with Python ${{ matrix.python-version }} on ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [ '3.7', '3.12' ]
+        python-version: [ '3.8', '3.12' ]
         os: [ ubuntu-latest, windows-latest ]
       fail-fast: false
       
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           
