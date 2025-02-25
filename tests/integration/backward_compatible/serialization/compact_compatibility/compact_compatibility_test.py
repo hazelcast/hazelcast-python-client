@@ -3,6 +3,8 @@ import enum
 import typing
 import unittest
 
+import pytest
+
 from hazelcast.errors import NullPointerError, IllegalMonitorStateError
 from hazelcast.predicate import Predicate, paging
 from tests.base import HazelcastTestCase
@@ -333,6 +335,7 @@ class CompactCompatibilityBase(HazelcastTestCase):
         self.shutdown_all_clients()
 
 
+@pytest.mark.enterprise
 class AtomicLongCompactCompatibilityTest(CompactCompatibilityBase):
     def setUp(self) -> None:
         super().setUp()
@@ -358,6 +361,7 @@ class AtomicLongCompactCompatibilityTest(CompactCompatibilityBase):
         self.assertEqual(OUTER_COMPACT_INSTANCE, self.atomic_long.apply(CompactReturningFunction()))
 
 
+@pytest.mark.enterprise
 class AtomicReferenceCompactCompatibilityTest(CompactCompatibilityBase):
     def setUp(self) -> None:
         super().setUp()

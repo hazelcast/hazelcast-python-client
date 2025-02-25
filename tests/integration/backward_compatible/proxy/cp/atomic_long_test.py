@@ -1,3 +1,5 @@
+import pytest
+
 from hazelcast.errors import DistributedObjectDestroyedError
 from hazelcast.serialization.api import IdentifiedDataSerializable
 from tests.integration.backward_compatible.proxy.cp import CPTestCase
@@ -21,6 +23,7 @@ class Multiplication(IdentifiedDataSerializable):
         return 16
 
 
+@pytest.mark.enterprise
 class AtomicLongTest(CPTestCase):
     def setUp(self):
         self.atomic_long = self.client.cp_subsystem.get_atomic_long("long").blocking()

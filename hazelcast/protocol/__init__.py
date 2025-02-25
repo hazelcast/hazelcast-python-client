@@ -130,7 +130,7 @@ class PagingPredicateHolder:
             anchor_data_list.append((key, value))
 
         anchor_data_list_holder = AnchorDataListHolder(page_list, anchor_data_list)
-        predicate_data = to_data(predicate)
+        predicate_data = to_data(predicate._internal_predicate)
         comparator_data = to_data(predicate.comparator)
         iteration_type = predicate.iteration_type
 

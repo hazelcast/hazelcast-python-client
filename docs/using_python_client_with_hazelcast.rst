@@ -1401,7 +1401,7 @@ The code that runs on the entries is implemented in Java on the server
 side. The client side entry processor is used to specify which entry
 processor should be called. For more details about the Java
 implementation of the entry processor, see the `Entry Processor section
-<https://docs.hazelcast.com/hazelcast/latest/computing/entry-processor>`__
+<https://docs.hazelcast.com/hazelcast/latest/data-structures/entry-processor>`__
 in the Hazelcast Reference Manual.
 
 After the above implementations and configuration are done and you start
@@ -2119,7 +2119,7 @@ Near Cache Invalidation
 Invalidation is the process of removing an entry from the Near Cache
 when its value is updated or it is removed from the original map (to
 prevent stale reads). See the `Near Cache Invalidation section
-<https://docs.hazelcast.com/hazelcast/latest/performance/near-cache.html#near-cache-invalidation>`__
+<https://docs.hazelcast.com/hazelcast/latest/cluster-performance/near-cache>`__
 in the Hazelcast Reference Manual.
 
 Monitoring and Logging

@@ -1,4 +1,4 @@
-__version__ = "5.4.0"
+__version__ = "6.0.0"
 
 # Set the default handler to "hazelcast" loggers
 # to avoid "No handlers could be found" warnings.

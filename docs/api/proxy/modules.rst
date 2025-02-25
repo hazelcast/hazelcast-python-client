@@ -22,4 +22,5 @@ Hazelcast Proxies
    transactional_multi_map
    transactional_queue
    transactional_set
+   vector_collection
 
