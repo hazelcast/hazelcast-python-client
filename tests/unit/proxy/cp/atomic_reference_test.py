@@ -1,10 +1,12 @@
 import unittest
 
+import pytest
 from mock import MagicMock
 
 from hazelcast.proxy.cp.atomic_reference import AtomicReference
 
 
+@pytest.mark.enterprise
 class AtomicReferenceInvalidInputTest(unittest.TestCase):
     def setUp(self):
         self.atomic_ref = AtomicReference(MagicMock(), None, None, None, None)

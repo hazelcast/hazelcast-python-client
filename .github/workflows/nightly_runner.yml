@@ -4,20 +4,21 @@ on:
   schedule:
     - cron: '0 2 * * *'
 jobs:
+  python-versions:
+    uses: ./.github/workflows/get-python-versions.yml
+
   run-tests:
+    needs: python-versions
     runs-on: ${{ matrix.os }}
     name: Run tests with Python ${{ matrix.python-version }} on ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [ '3.6', '3.7', '3.8', '3.9', '3.10', '3.11', 'pypy-3.9']
-        os: [ ubuntu-20.04, windows-latest ]
-        exclude:
-          - os: windows-latest
-            python-version: pypy-3.9
+        python-version: ${{ fromJSON(needs.python-versions.outputs.python-versions) }}
+        os: [ ubuntu-latest, windows-latest ]
       fail-fast: false
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install JDK
@@ -26,16 +27,18 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - name: Checkout to code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Install dependencies
         run: |
           pip install -r requirements-test.txt
       - name: Run tests
         env:
-          HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
+          HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY_V7 }}
+          HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
+          HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
         run: python run_tests.py
       - name: Upload remote controller logs on test failure
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: rc-logs-${{ matrix.python-version }}-${{ matrix.os }}

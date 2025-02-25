@@ -542,7 +542,7 @@ The format of the DSN is ``hz://[user:password]@address1:port1[,address2:port2, 
 The following options are supported:
 
 - ``cluster.name``: Hazelcast cluster name.
-- ``cloud.token``: Viridian discovery token.
+- ``cloud.token``: Cloud discovery token.
 - ``smart``: Enables smart routing when true. Defaults to Python client default.
 - ``ssl``: Enables SSL for client connection.
 - ``ssl.ca.path``: Path to the CA file.

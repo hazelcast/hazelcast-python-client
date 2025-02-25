@@ -143,7 +143,8 @@ Features
 -  Distributed, CRDT based counter, called **PNCounter**
 -  Distributed concurrency primitives from CP Subsystem such as
    **FencedLock**, **Semaphore**, **AtomicLong**
--  Integration with `Hazelcast Viridian <https://viridian.hazelcast.com/>`__
+-  Similarity search using **VectorCollection** (Beta)
+-  Integration with `Hazelcast Cloud <https://cloud.hazelcast.com/>`__
 -  Support for serverless and traditional web service architectures with
    **Unisocket** and **Smart** operation modes
 -  Ability to listen to client lifecycle, cluster state, and distributed
@@ -161,9 +162,6 @@ development/usage issues:
    repository <https://github.com/hazelcast/hazelcast-python-client/issues/new>`__
 -  `Documentation <https://hazelcast.readthedocs.io>`__
 -  `Slack <https://slack.hazelcast.com>`__
--  `Google Groups <https://groups.google.com/g/hazelcast>`__
--  `Stack
-   Overflow <https://stackoverflow.com/questions/tagged/hazelcast>`__
 
 Contributing
 ------------
@@ -218,11 +216,18 @@ following:
 -  `Supported Java virtual machine <https://docs.hazelcast.com/hazelcast/latest/deploy/versioning-compatibility#supported-java-virtual-machines>`
 -  `Apache Maven <https://maven.apache.org/>`
 
-Following commands starts the tests:
+Set the environment variables for credentials:
 
 .. code:: bash
 
-    python run_tests.py
+    export HZ_SNAPSHOT_INTERNAL_USERNAME=YOUR_MAVEN_USERNAME
+    export HZ_SNAPSHOT_INTERNAL_PASSWORD=YOUR_MAVEN_PASSWORD
+
+Following command starts the tests:
+
+.. code:: bash
+
+    python3 run_tests.py
 
 Test script automatically downloads ``hazelcast-remote-controller`` and
 Hazelcast. The script uses Maven to download those.
@@ -235,7 +240,7 @@ License
 Copyright
 ---------
 
-Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
+Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 
 Visit `hazelcast.com <https://hazelcast.com>`__ for more
 information.

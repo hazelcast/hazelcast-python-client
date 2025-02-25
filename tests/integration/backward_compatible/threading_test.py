@@ -43,7 +43,7 @@ class ThreadingTest(SingleMemberTestCase):
                     self.map.unlock(key)
                 except:
                     self.logger.exception("Exception in thread")
-                    exceptions.append((threading.currentThread().getName(), sys.exc_info()))
+                    exceptions.append((threading.current_thread().name, sys.exc_info()))
 
         threads = [self.start_new_thread(put_get_remove) for _ in range(0, num_threads)]
 

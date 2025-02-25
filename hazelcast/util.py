@@ -55,7 +55,7 @@ def current_time_in_millis():
 
 
 def thread_id():
-    return threading.currentThread().ident
+    return threading.current_thread().ident
 
 
 def to_millis(seconds):

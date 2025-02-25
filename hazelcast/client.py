@@ -21,6 +21,7 @@ from hazelcast.protocol.codec import (
     client_add_distributed_object_listener_codec,
     client_get_distributed_objects_codec,
     client_remove_distributed_object_listener_codec,
+    dynamic_config_add_vector_collection_config_codec,
 )
 from hazelcast.proxy import (
     EXECUTOR_SERVICE,
@@ -35,6 +36,7 @@ from hazelcast.proxy import (
     RINGBUFFER_SERVICE,
     SET_SERVICE,
     TOPIC_SERVICE,
+    VECTOR_SERVICE,
     Executor,
     FlakeIdGenerator,
     List,
@@ -50,6 +52,7 @@ from hazelcast.proxy import (
 )
 from hazelcast.proxy.base import Proxy
 from hazelcast.proxy.map import Map
+from hazelcast.proxy.vector_collection import VectorCollection
 from hazelcast.reactor import AsyncoreReactor
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.sql import SqlService, _InternalSqlService
@@ -59,6 +62,8 @@ from hazelcast.types import KeyType, ValueType, ItemType, MessageType
 from hazelcast.util import AtomicInteger, RoundRobinLB
 
 __all__ = ("HazelcastClient",)
+
+from hazelcast.vector import IndexConfig
 
 _logger = logging.getLogger(__name__)
 
@@ -373,6 +378,38 @@ class HazelcastClient:
         """
         return self._proxy_manager.get_or_create(TOPIC_SERVICE, name)
 
+    def create_vector_collection_config(
+        self,
+        name: str,
+        indexes: typing.List[IndexConfig],
+        backup_count: int = 1,
+        async_backup_count: int = 0,
+        split_brain_protection_name: typing.Optional[str] = None,
+        merge_policy: str = "PutIfAbsentMergePolicy",
+        merge_batch_size: int = 100,
+    ) -> None:
+        # check that indexes have different names
+        if indexes:
+            index_names = set(index.name for index in indexes)
+            if len(index_names) != len(indexes):
+                raise AssertionError("index names must be unique")
+
+        request = dynamic_config_add_vector_collection_config_codec.encode_request(
+            name,
+            indexes,
+            backup_count,
+            async_backup_count,
+            split_brain_protection_name,
+            merge_policy,
+            merge_batch_size,
+        )
+        invocation = Invocation(request, response_handler=lambda m: m)
+        self._invocation_service.invoke(invocation)
+        invocation.future.result()
+
+    def get_vector_collection(self, name: str) -> VectorCollection:
+        return self._proxy_manager.get_or_create(VECTOR_SERVICE, name)
+
     def new_transaction(
         self, timeout: float = 120, durability: int = 1, type: int = TWO_PHASE
     ) -> Transaction:
@@ -530,7 +567,7 @@ class HazelcastClient:
         if address_list_provided and cloud_enabled:
             raise IllegalStateError(
                 "Only one discovery method can be enabled at a time. "
-                "Cluster members given explicitly: %s, Hazelcast Viridian enabled: %s"
+                "Cluster members given explicitly: %s, Hazelcast Cloud enabled: %s"
                 % (address_list_provided, cloud_enabled)
             )
 

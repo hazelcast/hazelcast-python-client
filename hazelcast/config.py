@@ -662,9 +662,9 @@ class Config:
 
     @property
     def cloud_discovery_token(self) -> typing.Optional[str]:
-        """Discovery token of the Hazelcast Viridian cluster.
+        """Discovery token of the Hazelcast Cloud cluster.
 
-        When this value is set, Hazelcast Viridian discovery is enabled.
+        When this value is set, Hazelcast Cloud discovery is enabled.
         """
         return self._cloud_discovery_token
 

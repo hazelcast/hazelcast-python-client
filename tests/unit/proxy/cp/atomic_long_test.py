@@ -1,10 +1,12 @@
 import unittest
 
+import pytest
 from mock import MagicMock
 
 from hazelcast.proxy.cp.atomic_long import AtomicLong
 
 
+@pytest.mark.enterprise
 class AtomicLongInvalidInputTest(unittest.TestCase):
     def setUp(self):
         self.atomic_long = AtomicLong(MagicMock(), None, None, None, None)

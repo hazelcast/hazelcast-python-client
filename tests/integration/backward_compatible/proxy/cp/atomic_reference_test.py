@@ -1,3 +1,5 @@
+import pytest
+
 from hazelcast.errors import DistributedObjectDestroyedError, ClassCastError
 from hazelcast.serialization.api import IdentifiedDataSerializable
 
@@ -23,6 +25,7 @@ class AppendString(IdentifiedDataSerializable):
         return 17
 
 
+@pytest.mark.enterprise
 class AtomicReferenceTest(CPTestCase):
     def setUp(self):
         self.ref = self.client.cp_subsystem.get_atomic_reference("ref").blocking()

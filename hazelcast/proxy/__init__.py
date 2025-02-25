@@ -15,6 +15,7 @@ from hazelcast.proxy.set import Set
 from hazelcast.proxy.topic import Topic
 from hazelcast.proxy.pn_counter import PNCounter
 from hazelcast.proxy.flake_id_generator import FlakeIdGenerator
+from hazelcast.proxy.vector_collection import VectorCollection
 from hazelcast.util import to_list
 
 EXECUTOR_SERVICE = "hz:impl:executorService"
@@ -29,6 +30,7 @@ QUEUE_SERVICE = "hz:impl:queueService"
 TOPIC_SERVICE = "hz:impl:topicService"
 PN_COUNTER_SERVICE = "hz:impl:PNCounterService"
 FLAKE_ID_GENERATOR_SERVICE = "hz:impl:flakeIdGeneratorService"
+VECTOR_SERVICE = "hz:service:vector"
 
 _proxy_init: typing.Dict[str, typing.Callable[[str, str, typing.Any], Proxy]] = {
     EXECUTOR_SERVICE: Executor,
@@ -43,6 +45,7 @@ _proxy_init: typing.Dict[str, typing.Callable[[str, str, typing.Any], Proxy]] = 
     TOPIC_SERVICE: Topic,
     PN_COUNTER_SERVICE: PNCounter,
     FLAKE_ID_GENERATOR_SERVICE: FlakeIdGenerator,
+    VECTOR_SERVICE: VectorCollection,
 }
 
 

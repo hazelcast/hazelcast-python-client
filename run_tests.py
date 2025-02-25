@@ -30,6 +30,7 @@ with open("rc_stdout.log", "w") as rc_stdout:
 
             args = [
                 "pytest",
+                "-rsx",
                 "--cov=hazelcast",
                 "--cov-report=xml",
             ]

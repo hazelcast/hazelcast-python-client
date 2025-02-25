@@ -1,6 +1,7 @@
 import threading
 import time
 
+import pytest
 from parameterized import parameterized
 
 from hazelcast import HazelcastClient
@@ -17,6 +18,7 @@ SEMAPHORE_TYPES = [
 ]
 
 
+@pytest.mark.enterprise
 class SemaphoreTest(CPTestCase):
     def setUp(self):
         self.semaphore = None
