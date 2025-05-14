@@ -37,6 +37,7 @@ jobs:
       - name: Commit changes
         working-directory: client
         run: |
+          gh api user | jq -r '.login'
           git config --global user.name 'devOpsHazelcast'
           git config --global user.email 'devops@hazelcast.com'
           git add tests/integration/backward_compatible/ssl_tests/keystore.jks
