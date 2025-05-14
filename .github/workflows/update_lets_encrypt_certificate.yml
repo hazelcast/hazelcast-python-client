@@ -32,7 +32,7 @@ jobs:
         working-directory: client
         run: |
           # TODO REMOVE
-          git config user.name
+          gh api user | jq -r '.login'
           # git config user.email "github-actions@hazelcast.com"
           # git config user.name "GitHub Actions"
           git add tests/integration/backward_compatible/ssl_tests/keystore.jks
