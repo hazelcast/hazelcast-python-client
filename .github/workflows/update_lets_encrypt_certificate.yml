@@ -2,7 +2,12 @@ name: Update Let's Encrypt certificate
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 1 * *'
+    - cron: '0 0 1 * *' # monthly
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/update_lets_encrypt_certificate.yml'
 jobs:
   update_certificate:
     runs-on: ubuntu-latest
