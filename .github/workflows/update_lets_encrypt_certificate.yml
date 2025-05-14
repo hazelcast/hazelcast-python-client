@@ -31,8 +31,12 @@ jobs:
       - name: Commit changes
         working-directory: client
         run: |
-          git config user.email "github-actions@hazelcast.com"
-          git config user.name "GitHub Actions"
+          # TODO REMOVE
+          git config user.name
+          # git config user.email "github-actions@hazelcast.com"
+          # git config user.name "GitHub Actions"
           git add tests/integration/backward_compatible/ssl_tests/keystore.jks
           git commit -m "Update Let's Encrypt Certificate"
           git push
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
