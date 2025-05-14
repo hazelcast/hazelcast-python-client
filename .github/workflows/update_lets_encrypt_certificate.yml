@@ -21,7 +21,6 @@ jobs:
           repository: hazelcast/private-test-artifacts
           path: certs
           ref: data
-          token: ${{ secrets.GH_TOKEN }}
       - name: Extract the certificate
         working-directory: certs
         run: |
