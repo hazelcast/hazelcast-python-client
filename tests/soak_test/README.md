@@ -33,7 +33,7 @@ calls during the duration of the test.
 - Put the `hazelcast-${VERSION}.jar` and `hazelcast-${VERSION}-tests.jar`
 to this folder for the member machines. 
   - You can upload those JARs from your computer using `scp` or download
-  JARs from `https://repo1.maven.org/maven2/com/hazelcast/hazelcast/${VERSION}/`.
+  JARs from `https://repo.maven.apache.org/maven2/com/hazelcast/hazelcast/${VERSION}/`.
 - Make sure the versions of the JARs and the version written in 
 `start_members.sh` are the same.
 - Run `start_members.sh` on 2 member machines. The script will start
