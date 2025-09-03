@@ -475,7 +475,7 @@ class HazelcastClient:
         """
         return self._listener_service.deregister_listener(registration_id)
 
-    def get_distributed_objects(self) -> Future[typing.List[Proxy]]:
+    def get_distributed_objects(self) -> typing.List[Proxy]:
         """Returns all distributed objects such as; queue, map, set, list,
         topic, lock, multimap.
 
