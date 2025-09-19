@@ -84,7 +84,7 @@ class ClientTcpMetricsTest(SingleMemberTestCase):
         bytes_sent = reactor._bytes_sent
         self.assertGreater(bytes_sent, 0)
         m = await self.client.get_map(random_string())
-        m.set(random_string(), random_string())
+        await m.set(random_string(), random_string())
         self.assertGreater(reactor._bytes_sent, bytes_sent)
 
 

@@ -598,10 +598,10 @@ class MapStoreTest(SingleMemberTestCase):
         self.assertCountEqual(entry_set, {"key0": "val0", "key1": "val1"})
 
     async def test_load_all_overrides_entries_in_memory_by_default(self):
-        self.map.evict_all()
-        self.map.put_transient("key0", "new0")
-        self.map.put_transient("key1", "new1")
-        self.map.load_all(["key0", "key1"])
+        await self.map.evict_all()
+        await self.map.put_transient("key0", "new0")
+        await self.map.put_transient("key1", "new1")
+        await self.map.load_all(["key0", "key1"])
         entry_set = await self.map.get_all(["key0", "key1"])
         self.assertCountEqual(entry_set, {"key0": "val0", "key1": "val1"})
 
@@ -773,7 +773,7 @@ class MapAggregatorsIntTest(SingleMemberTestCase):
         self.map = await self.client.get_map(random_string())
         await self.map.put_all({"key-%d" % i: i for i in range(50)})
 
-    async def tearDown(self):
+    async def asyncTearDown(self):
         await self.map.destroy()
         await super().asyncTearDown()
 
