@@ -36,8 +36,6 @@ from hazelcast.util import AtomicInteger, RoundRobinLB
 
 __all__ = ("HazelcastClient",)
 
-from hazelcast.vector import IndexConfig
-
 _logger = logging.getLogger(__name__)
 
 
@@ -358,11 +356,6 @@ class HazelcastClient:
     def cp_subsystem(self) -> CPSubsystem:
         """CP Subsystem offers set of in-memory linearizable data structures."""
         return self._cp_subsystem
-
-    @property
-    def sql(self) -> SqlService:
-        """Returns a service to execute distributed SQL queries."""
-        return self._sql_service
 
     def _create_address_provider(self):
         config = self._config
