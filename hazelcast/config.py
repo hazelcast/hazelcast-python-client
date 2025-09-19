@@ -963,7 +963,7 @@ class Config:
     @compact_serializers.setter
     def compact_serializers(self, value: typing.List[CompactSerializer]) -> None:
         if not isinstance(value, list):
-            raise TypeError("compact_serializers must be a dict")
+            raise TypeError("compact_serializers must be a list")
 
         for serializer in value:
             if not isinstance(serializer, CompactSerializer):
