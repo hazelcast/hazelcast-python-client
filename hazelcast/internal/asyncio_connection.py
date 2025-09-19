@@ -3,10 +3,9 @@ import io
 import logging
 import random
 import struct
-import threading
 import time
 import uuid
-from typing import override, Coroutine
+from typing import Coroutine
 
 from hazelcast import __version__
 from hazelcast.config import ReconnectMode

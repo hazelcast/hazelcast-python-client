@@ -157,14 +157,14 @@ class HazelcastProtocol(asyncio.BufferedProtocol):
         self._update_write_time = update_write_time
         self._update_sent = update_sent
         self._update_received = update_received
-        self._transport = None
-        self.start_time = None
+        self._transport: transports.BaseTransport | None = None
+        self.start_time: float | None = None
         self._write_buf = io.BytesIO()
         self._write_buf_size = 0
         self._recv_buf = None
         self._alive = True
 
-    def connection_made(self, transport: transports.Transport):
+    def connection_made(self, transport: transports.BaseTransport):
         self._transport = transport
         self.start_time = time.time()
         self.write(self.PROTOCOL_STARTER)

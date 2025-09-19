@@ -11,9 +11,9 @@ from hazelcast.protocol.codec import (
 )
 
 if typing.TYPE_CHECKING:
-    from hazelcast.cluster import ClusterService
     from hazelcast.config import Config
     from hazelcast.protocol.client_message import OutboundMessage
+    from hazelcast.internal.asyncio_cluster import ClusterService
     from hazelcast.internal.asyncio_invocation import InvocationService
     from hazelcast.internal.asyncio_reactor import AsyncioReactor
     from hazelcast.serialization.compact import (
