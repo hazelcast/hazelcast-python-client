@@ -55,12 +55,16 @@ class Proxy(typing.Generic[BlockingProxyType], abc.ABC):
         self._invocation_service.invoke(invocation)
         return invocation.future
 
-    def _invoke_on_target(self, request, uuid, response_handler=_no_op_response_handler) -> asyncio.Future:
+    def _invoke_on_target(
+        self, request, uuid, response_handler=_no_op_response_handler
+    ) -> asyncio.Future:
         invocation = Invocation(request, uuid=uuid, response_handler=response_handler)
         self._invocation_service.invoke(invocation)
         return invocation.future
 
-    def _invoke_on_key(self, request, key_data, response_handler=_no_op_response_handler) -> asyncio.Future:
+    def _invoke_on_key(
+        self, request, key_data, response_handler=_no_op_response_handler
+    ) -> asyncio.Future:
         partition_id = self._partition_service.get_partition_id(key_data)
         invocation = Invocation(
             request, partition_id=partition_id, response_handler=response_handler
@@ -68,14 +72,18 @@ class Proxy(typing.Generic[BlockingProxyType], abc.ABC):
         self._invocation_service.invoke(invocation)
         return invocation.future
 
-    def _invoke_on_partition(self, request, partition_id, response_handler=_no_op_response_handler) -> asyncio.Future:
+    def _invoke_on_partition(
+        self, request, partition_id, response_handler=_no_op_response_handler
+    ) -> asyncio.Future:
         invocation = Invocation(
             request, partition_id=partition_id, response_handler=response_handler
         )
         self._invocation_service.invoke(invocation)
         return invocation.future
 
-    async def _ainvoke_on_partition(self, request, partition_id, response_handler=_no_op_response_handler) -> typing.Any:
+    async def _ainvoke_on_partition(
+        self, request, partition_id, response_handler=_no_op_response_handler
+    ) -> typing.Any:
         fut = self._invoke_on_partition(request, partition_id, response_handler)
         return await fut
 

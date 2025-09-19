@@ -4,7 +4,7 @@ import logging
 import time
 from asyncio import AbstractEventLoop, transports
 
-from hazelcast.internal.asyncio_connection import  Connection
+from hazelcast.internal.asyncio_connection import Connection
 from hazelcast.core import Address
 
 _BUFFER_SIZE = 128000
@@ -14,7 +14,6 @@ _logger = logging.getLogger(__name__)
 
 
 class AsyncioReactor:
-
     def __init__(self, loop: AbstractEventLoop | None = None):
         self._is_live = False
         self._loop = loop or asyncio.get_running_loop()
@@ -37,7 +36,13 @@ class AsyncioReactor:
         self, connection_manager, connection_id, address: Address, network_config, message_callback
     ):
         return await AsyncioConnection.create_and_connect(
-            self._loop, self, connection_manager, connection_id, address, network_config, message_callback,
+            self._loop,
+            self,
+            connection_manager,
+            connection_id,
+            address,
+            network_config,
+            message_callback,
         )
 
     def update_bytes_sent(self, sent: int):
@@ -54,8 +59,16 @@ class AsyncioReactor:
 
 
 class AsyncioConnection(Connection):
-
-    def __init__(self, loop, reactor: AsyncioReactor, connection_manager, connection_id, address, config, message_callback):
+    def __init__(
+        self,
+        loop,
+        reactor: AsyncioReactor,
+        connection_manager,
+        connection_id,
+        address,
+        config,
+        message_callback,
+    ):
         super().__init__(connection_manager, connection_id, message_callback)
         self._loop = loop
         self._reactor = reactor
@@ -64,8 +77,19 @@ class AsyncioConnection(Connection):
         self._proto = None
 
     @classmethod
-    async def create_and_connect(cls, loop, reactor: AsyncioReactor, connection_manager, connection_id, address, config, message_callback):
-        this = cls(loop, reactor, connection_manager, connection_id, address, config, message_callback)
+    async def create_and_connect(
+        cls,
+        loop,
+        reactor: AsyncioReactor,
+        connection_manager,
+        connection_id,
+        address,
+        config,
+        message_callback,
+    ):
+        this = cls(
+            loop, reactor, connection_manager, connection_id, address, config, message_callback
+        )
         if this._config.ssl_enabled:
             await this._create_ssl_connection()
         else:
@@ -73,12 +97,21 @@ class AsyncioConnection(Connection):
         return this
 
     def _create_protocol(self):
-        return HazelcastProtocol(self._loop, self._reader, self._address, self._update_read_time,
-                                 self._update_write_time, self._update_sent, self._update_received)
+        return HazelcastProtocol(
+            self._loop,
+            self._reader,
+            self._address,
+            self._update_read_time,
+            self._update_write_time,
+            self._update_sent,
+            self._update_received,
+        )
 
     async def _create_connection(self):
         loop = self._loop
-        res = await loop.create_connection(self._create_protocol, host=self._address.host, port=self._address.port)
+        res = await loop.create_connection(
+            self._create_protocol, host=self._address.host, port=self._address.port
+        )
         _sock, self._proto = res
 
     async def _create_ssl_connection(self):
@@ -107,7 +140,16 @@ class HazelcastProtocol(asyncio.BufferedProtocol):
 
     PROTOCOL_STARTER = b"CP2"
 
-    def __init__(self, loop: AbstractEventLoop, reader, address, update_read_time, update_write_time, update_sent, update_received):
+    def __init__(
+        self,
+        loop: AbstractEventLoop,
+        reader,
+        address,
+        update_read_time,
+        update_write_time,
+        update_sent,
+        update_received,
+    ):
         self._loop = loop
         self._reader = reader
         self._address = address
@@ -161,7 +203,7 @@ class HazelcastProtocol(asyncio.BufferedProtocol):
         if not self._write_buf_size:
             return
         buf_bytes = self._write_buf.getvalue()
-        self._transport.write(buf_bytes[:self._write_buf_size])
+        self._transport.write(buf_bytes[: self._write_buf_size])
         self._update_write_time(time.time())
         self._update_sent(self._write_buf_size)
         self._write_buf.seek(0)

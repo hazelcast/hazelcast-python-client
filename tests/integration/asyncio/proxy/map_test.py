@@ -55,7 +55,8 @@ from tests.util import (
     compare_client_version,
     compare_server_version,
     skip_if_client_version_older_than,
-    random_string, afill_map,
+    random_string,
+    afill_map,
 )
 
 
@@ -306,7 +307,9 @@ class MapTest(SingleMemberTestCase):
         m = await self.fill_map()
         expected_entry_set = [(key, "processed") if key < "key-5" else (key, m[key]) for key in m]
         expected_values = [(key, "processed") for key in m if key < "key-5"]
-        values = await self.map.execute_on_entries(EntryProcessor("processed"), sql("__key < 'key-5'"))
+        values = await self.map.execute_on_entries(
+            EntryProcessor("processed"), sql("__key < 'key-5'")
+        )
         self.assertCountEqual(expected_entry_set, await self.map.entry_set())
         self.assertCountEqual(expected_values, values)
 
@@ -559,7 +562,6 @@ class MapTest(SingleMemberTestCase):
 
 
 class MapStoreTest(SingleMemberTestCase):
-
     @classmethod
     def configure_client(cls, config):
         config["cluster_name"] = cls.cluster.id
@@ -569,7 +571,9 @@ class MapStoreTest(SingleMemberTestCase):
     def configure_cluster(cls):
         path = os.path.abspath(__file__)
         dir_path = os.path.dirname(path)
-        with open(os.path.join(dir_path, "../../backward_compatible/proxy/hazelcast_mapstore.xml")) as f:
+        with open(
+            os.path.join(dir_path, "../../backward_compatible/proxy/hazelcast_mapstore.xml")
+        ) as f:
             return f.read()
 
     async def asyncSetUp(self):
@@ -637,7 +641,6 @@ class MapStoreTest(SingleMemberTestCase):
 
 
 class MapTTLTest(SingleMemberTestCase):
-
     @classmethod
     def configure_client(cls, config):
         config["cluster_name"] = cls.cluster.id
@@ -701,7 +704,6 @@ class MapTTLTest(SingleMemberTestCase):
 
 
 class MapMaxIdleTest(SingleMemberTestCase):
-
     @classmethod
     def configure_client(cls, config):
         config["cluster_name"] = cls.cluster.id
@@ -760,7 +762,6 @@ class MapMaxIdleTest(SingleMemberTestCase):
     compare_client_version("4.2.1") < 0, "Tests the features added in 4.2.1 version of the client"
 )
 class MapAggregatorsIntTest(SingleMemberTestCase):
-
     @classmethod
     def configure_client(cls, config):
         config["cluster_name"] = cls.cluster.id
@@ -866,7 +867,6 @@ class MapAggregatorsIntTest(SingleMemberTestCase):
     compare_client_version("4.2.1") < 0, "Tests the features added in 4.2.1 version of the client"
 )
 class MapAggregatorsLongTest(SingleMemberTestCase):
-
     @classmethod
     def configure_client(cls, config):
         config["cluster_name"] = cls.cluster.id

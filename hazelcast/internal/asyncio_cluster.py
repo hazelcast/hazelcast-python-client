@@ -203,7 +203,9 @@ class _InternalClusterService:
             IllegalStateError: If the member list could not be fetched
         """
         try:
-            await asyncio.wait_for(self._initial_list_fetched.wait(), _INITIAL_MEMBERS_TIMEOUT_SECONDS)
+            await asyncio.wait_for(
+                self._initial_list_fetched.wait(), _INITIAL_MEMBERS_TIMEOUT_SECONDS
+            )
         except TimeoutError:
             raise IllegalStateError("Could not get initial member list from cluster!")
 

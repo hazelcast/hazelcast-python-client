@@ -90,7 +90,6 @@ EntryEventCallable = typing.Callable[[EntryEvent[KeyType, ValueType]], None]
 
 
 class Map(Proxy, typing.Generic[KeyType, ValueType]):
-
     def __init__(self, service_name, name, context):
         super(Map, self).__init__(service_name, name, context)
         self._reference_id_generator = context.lock_reference_id_generator
@@ -243,6 +242,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
                 expired_func(event)
             elif event.event_type == EntryEventType.LOADED:
                 loaded_func(event)
+
         return await self._register_listener(
             request,
             lambda r: response_decoder(r),
@@ -372,6 +372,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
 
                 request = map_entries_with_predicate_codec.encode_request(self.name, predicate_data)
         else:
+
             def handler(message):
                 entry_data_list = map_entry_set_codec.decode_response(message)
                 return deserialize_entry_list_in_place(entry_data_list, self._to_object)
@@ -548,6 +549,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
 
                 request = map_key_set_with_predicate_codec.encode_request(self.name, predicate_data)
         else:
+
             def handler(message):
                 data_list = map_key_set_codec.decode_response(message)
                 return deserialize_list_in_place(data_list, self._to_object)
@@ -563,7 +565,9 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
             try:
                 key_data_list = [self._to_data(key) for key in keys]
             except SchemaNotReplicatedError as e:
-                return await self._send_schema_and_retry(e, self.load_all, keys, replace_existing_values)
+                return await self._send_schema_and_retry(
+                    e, self.load_all, keys, replace_existing_values
+                )
 
             return await self._load_all_internal(key_data_list, replace_existing_values)
 
@@ -653,7 +657,9 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
             key_data = self._to_data(key)
             value_data = self._to_data(value)
         except SchemaNotReplicatedError as e:
-            return await self._send_schema_and_retry(e, self.put_if_absent, key, value, ttl, max_idle)
+            return await self._send_schema_and_retry(
+                e, self.put_if_absent, key, value, ttl, max_idle
+            )
 
         return await self._put_if_absent_internal(key_data, value_data, ttl, max_idle)
 
@@ -666,7 +672,9 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
             key_data = self._to_data(key)
             value_data = self._to_data(value)
         except SchemaNotReplicatedError as e:
-            return await self._send_schema_and_retry(e, self.put_transient, key, value, ttl, max_idle)
+            return await self._send_schema_and_retry(
+                e, self.put_transient, key, value, ttl, max_idle
+            )
 
         return await self._put_transient_internal(key_data, value_data, ttl, max_idle)
 
@@ -727,7 +735,9 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
             old_value_data = self._to_data(old_value)
             new_value_data = self._to_data(new_value)
         except SchemaNotReplicatedError as e:
-            return await self._send_schema_and_retry(e, self.replace_if_same, key, old_value, new_value)
+            return await self._send_schema_and_retry(
+                e, self.replace_if_same, key, old_value, new_value
+            )
 
         return await self._replace_if_same_internal(key_data, old_value_data, new_value_data)
 
@@ -805,6 +815,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
 
                 request = map_values_with_predicate_codec.encode_request(self.name, predicate_data)
         else:
+
             def handler(message):
                 data_list = map_values_codec.decode_response(message)
                 return deserialize_list_in_place(data_list, self._to_object)

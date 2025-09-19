@@ -14,7 +14,6 @@ except ImportError:
 
 
 class ClientLabelsTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.rc = cls.create_rc()

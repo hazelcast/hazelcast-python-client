@@ -284,7 +284,9 @@ class ConnectionManager:
         # Need to create copy of connection values to avoid modification errors on runtime
         async with asyncio.TaskGroup() as tg:
             for connection in list(self.active_connections.values()):
-                tg.create_task(connection.close_connection("Hazelcast client is shutting down", None))
+                tg.create_task(
+                    connection.close_connection("Hazelcast client is shutting down", None)
+                )
 
         self.active_connections.clear()
         del self._connection_listeners[:]
@@ -395,7 +397,7 @@ class ConnectionManager:
 
         translated = self._translate_member_address(member)
         connection = await self._create_connection(translated)
-        response = await self._authenticate(connection)  #.continue_with(self._on_auth, connection)
+        response = await self._authenticate(connection)  # .continue_with(self._on_auth, connection)
         await self._on_auth(response, connection)
         return connection
 
@@ -479,9 +481,13 @@ class ConnectionManager:
             for item in member_uuids:
                 connecting_uuids.discard(item)
 
-            self._connect_all_members_timer = self._reactor.add_timer(1, lambda: asyncio.create_task(run()))
+            self._connect_all_members_timer = self._reactor.add_timer(
+                1, lambda: asyncio.create_task(run())
+            )
 
-        self._connect_all_members_timer = self._reactor.add_timer(1, lambda: asyncio.create_task(run()))
+        self._connect_all_members_timer = self._reactor.add_timer(
+            1, lambda: asyncio.create_task(run())
+        )
 
     async def _connect_to_cluster(self):
         await self._sync_connect_to_cluster()
@@ -805,7 +811,6 @@ class ConnectionManager:
 
 
 class HeartbeatManager:
-
     def __init__(self, connection_manager, client, config, reactor, invocation_service):
         self._connection_manager = connection_manager
         self._client = client
@@ -827,9 +832,13 @@ class HeartbeatManager:
             async with asyncio.TaskGroup() as tg:
                 for connection in list(conn_manager.active_connections.values()):
                     tg.create_task(self._check_connection(now, connection))
-            self._heartbeat_timer = self._reactor.add_timer(self._heartbeat_interval, lambda: asyncio.create_task(_heartbeat()))
+            self._heartbeat_timer = self._reactor.add_timer(
+                self._heartbeat_interval, lambda: asyncio.create_task(_heartbeat())
+            )
 
-        self._heartbeat_timer = self._reactor.add_timer(self._heartbeat_interval, lambda: asyncio.create_task(_heartbeat()))
+        self._heartbeat_timer = self._reactor.add_timer(
+            self._heartbeat_interval, lambda: asyncio.create_task(_heartbeat())
+        )
 
     def shutdown(self):
         """Stops HeartBeat operations."""

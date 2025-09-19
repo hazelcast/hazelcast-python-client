@@ -27,7 +27,7 @@ from hazelcast.internal.asyncio_proxy.manager import (
 )
 from hazelcast.internal.asyncio_proxy.base import Proxy
 from hazelcast.internal.asyncio_proxy.map import Map
-from hazelcast.internal.asyncio_reactor import  AsyncioReactor
+from hazelcast.internal.asyncio_reactor import AsyncioReactor
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.sql import SqlService, _InternalSqlService
 from hazelcast.statistics import Statistics
@@ -231,7 +231,6 @@ class HazelcastClient:
         """
         return await self._proxy_manager.get_or_create(MAP_SERVICE, name)
 
-
     async def add_distributed_object_listener(
         self, listener_func: typing.Callable[[DistributedObjectEvent], None]
     ) -> str:
@@ -299,15 +298,19 @@ class HazelcastClient:
         async with asyncio.TaskGroup() as tg:
             for dist_obj_info in response:
                 local_distributed_object_infos.discard(dist_obj_info)
-                tg.create_task(self._proxy_manager.get_or_create(
-                    dist_obj_info.service_name, dist_obj_info.name, create_on_remote=False
-                ))
+                tg.create_task(
+                    self._proxy_manager.get_or_create(
+                        dist_obj_info.service_name, dist_obj_info.name, create_on_remote=False
+                    )
+                )
 
         async with asyncio.TaskGroup() as tg:
             for dist_obj_info in local_distributed_object_infos:
-                tg.create_task(self._proxy_manager.destroy_proxy(
-                    dist_obj_info.service_name, dist_obj_info.name, destroy_on_remote=False
-                ))
+                tg.create_task(
+                    self._proxy_manager.destroy_proxy(
+                        dist_obj_info.service_name, dist_obj_info.name, destroy_on_remote=False
+                    )
+                )
 
         return self._proxy_manager.get_distributed_objects()
 

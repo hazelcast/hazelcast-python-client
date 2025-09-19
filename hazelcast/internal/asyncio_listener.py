@@ -76,13 +76,14 @@ class ListenerService:
             try:
                 async with asyncio.TaskGroup() as tg:
                     for connection in list(self._connection_manager.active_connections.values()):
-                        task = self._register_on_connection(registration_id, registration, connection)
+                        task = self._register_on_connection(
+                            registration_id, registration, connection
+                        )
                         tg.create_task(task)
                 return registration_id
             except Exception:
                 await self.deregister_listener(registration_id)
                 raise HazelcastError("Listener cannot be added")
-
 
     async def deregister_listener(self, user_registration_id):
         check_not_none(user_registration_id, "None user_registration_id is not allowed!")
@@ -96,7 +97,7 @@ class ListenerService:
                     await inv.future
                 except Exception as e:
                     if not isinstance(
-                            e, (HazelcastClientNotActiveError, IOError, TargetDisconnectedError)
+                        e, (HazelcastClientNotActiveError, IOError, TargetDisconnectedError)
                     ):
                         _logger.warning(
                             "Deregistration of listener with ID %s has failed for address %s: %s",
@@ -170,7 +171,9 @@ class ListenerService:
     def remove_event_handler(self, correlation_id):
         self._event_handlers.pop(correlation_id, None)
 
-    async def _register_on_connection(self, user_registration_id, listener_registration, connection):
+    async def _register_on_connection(
+        self, user_registration_id, listener_registration, connection
+    ):
         registration_map = listener_registration.connection_registrations
 
         if connection in registration_map:
@@ -209,7 +212,9 @@ class ListenerService:
         async with self._registration_lock:
             async with asyncio.TaskGroup() as tg:
                 for user_reg_id, listener_registration in self._active_registrations.items():
-                    task = self._register_on_connection(user_reg_id, listener_registration, connection)
+                    task = self._register_on_connection(
+                        user_reg_id, listener_registration, connection
+                    )
                     tg.create_task(task)
 
     async def _connection_removed(self, connection):

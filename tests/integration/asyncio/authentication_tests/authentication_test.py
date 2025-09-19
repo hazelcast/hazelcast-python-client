@@ -21,8 +21,12 @@ except ImportError:
 class AuthenticationTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
     current_directory = os.path.dirname(__file__)
     rc = None
-    hazelcast_token_xml = get_abs_path(current_directory, "../../backward_compatible/authentication_tests/hazelcast-token.xml")
-    hazelcast_userpass_xml = get_abs_path(current_directory, "../../backward_compatible/authentication_tests/hazelcast-user-pass.xml")
+    hazelcast_token_xml = get_abs_path(
+        current_directory, "../../backward_compatible/authentication_tests/hazelcast-token.xml"
+    )
+    hazelcast_userpass_xml = get_abs_path(
+        current_directory, "../../backward_compatible/authentication_tests/hazelcast-user-pass.xml"
+    )
 
     def setUp(self):
         self.rc = self.create_rc()
@@ -35,14 +39,18 @@ class AuthenticationTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
         cluster.start_member()
 
         with self.assertRaises(HazelcastError):
-            await HazelcastClient.create_and_start(cluster_name=cluster.id, cluster_connect_timeout=2)
+            await HazelcastClient.create_and_start(
+                cluster_name=cluster.id, cluster_connect_timeout=2
+            )
 
     async def test_token_auth(self):
         cluster = self.create_cluster(self.rc, self.configure_cluster(self.hazelcast_token_xml))
         cluster.start_member()
 
         token_provider = BasicTokenProvider("Hazelcast")
-        client = await HazelcastClient.create_and_start(cluster_name=cluster.id, token_provider=token_provider)
+        client = await HazelcastClient.create_and_start(
+            cluster_name=cluster.id, token_provider=token_provider
+        )
         self.assertTrue(client.lifecycle_service.is_running())
         await client.shutdown()
 
