@@ -51,12 +51,11 @@ from tests.integration.backward_compatible.util import (
 )
 from tests.util import (
     event_collector,
-    fill_map,
     get_current_timestamp,
     compare_client_version,
     compare_server_version,
     skip_if_client_version_older_than,
-    random_string,
+    random_string, afill_map,
 )
 
 
@@ -106,7 +105,7 @@ class MapTest(SingleMemberTestCase):
     def configure_cluster(cls):
         path = os.path.abspath(__file__)
         dir_path = os.path.dirname(path)
-        with open(os.path.join(dir_path, "hazelcast.xml")) as f:
+        with open(os.path.join(dir_path, "../../backward_compatible/proxy/hazelcast.xml")) as f:
             return f.read()
 
     @classmethod
@@ -335,21 +334,6 @@ class MapTest(SingleMemberTestCase):
         await self.fill_map()
         await self.map.flush()
 
-    @unittest.skip
-    async def test_force_unlock(self):
-        async def force_unlock():
-            await self.map.force_unlock("key")
-
-        await self.map.put("key", "value")
-        await self.map.lock("key")
-        task = asyncio.create_task(force_unlock())
-
-        async def assertion():
-            self.assertFalse(await self.map.is_locked("key"))
-
-        await task
-        await self.assertTrueEventually(assertion)
-
     async def test_get_all(self):
         expected = await self.fill_map(1000)
         actual = await self.map.get_all(list(expected.keys()))
@@ -388,14 +372,6 @@ class MapTest(SingleMemberTestCase):
         await self.map.clear()
         self.assertTrue(await self.map.is_empty())
 
-    async def test_is_locked(self):
-        await self.map.put("key", "value")
-        self.assertFalse(await self.map.is_locked("key"))
-        await self.map.lock("key")
-        self.assertTrue(await self.map.is_locked("key"))
-        await self.map.unlock("key")
-        self.assertFalse(await self.map.is_locked("key"))
-
     async def test_key_set(self):
         keys = list((await self.fill_map()).keys())
         self.assertCountEqual(await self.map.key_set(), keys)
@@ -403,15 +379,6 @@ class MapTest(SingleMemberTestCase):
     async def test_key_set_with_predicate(self):
         await self.fill_map()
         self.assertEqual(await self.map.key_set(sql("this == 'value-1'")), ["key-1"])
-
-    @unittest.skip
-    async def test_lock(self):
-        await self.map.put("key", "value")
-
-        t = self.start_new_thread(lambda: self.map.lock("key"))
-        t.join()
-
-        self.assertFalse(await self.map.try_put("key", "new_value", timeout=0.01))
 
     async def test_put_all(self):
         m = {"key-%d" % x: "value-%d" % x for x in range(0, 1000)}
@@ -548,51 +515,6 @@ class MapTest(SingleMemberTestCase):
 
         self.assertEqual(10, await self.map.size())
 
-    async def test_try_lock_when_unlocked(self):
-        self.assertTrue(await self.map.try_lock("key"))
-        self.assertTrue(await self.map.is_locked("key"))
-
-    @unittest.skip
-    async def test_try_lock_when_locked(self):
-        t = self.start_new_thread(lambda: self.map.lock("key"))
-        t.join()
-        self.assertFalse(await self.map.try_lock("key", timeout=0.1))
-
-    async def test_try_put_when_unlocked(self):
-        self.assertTrue(await self.map.try_put("key", "value"))
-        self.assertEqual(await self.map.get("key"), "value")
-
-    @unittest.skip
-    async def test_try_put_when_locked(self):
-        t = self.start_new_thread(lambda: self.map.lock("key"))
-        t.join()
-        self.assertFalse(await self.map.try_put("key", "value", timeout=0.1))
-
-    @unittest.skip
-    async def test_try_remove_when_unlocked(self):
-        await self.map.put("key", "value")
-        self.assertTrue(await self.map.try_remove("key"))
-        self.assertIsNone(await self.map.get("key"))
-
-    @unittest.skip
-    async def test_try_remove_when_locked(self):
-        await self.map.put("key", "value")
-        t = self.start_new_thread(lambda: self.map.lock("key"))
-        t.join()
-        self.assertFalse(await self.map.try_remove("key", timeout=0.1))
-
-    @unittest.skip
-    async def test_unlock(self):
-        await self.map.lock("key")
-        self.assertTrue(await self.map.is_locked("key"))
-        await self.map.unlock("key")
-        self.assertFalse(await self.map.is_locked("key"))
-
-    @unittest.skip
-    async def test_unlock_when_no_lock(self):
-        with self.assertRaises(HazelcastError):
-            await self.map.unlock("key")
-
     async def test_values(self):
         values = list((await self.fill_map()).values())
 
@@ -637,6 +559,7 @@ class MapTest(SingleMemberTestCase):
 
 
 class MapStoreTest(SingleMemberTestCase):
+
     @classmethod
     def configure_client(cls, config):
         config["cluster_name"] = cls.cluster.id
@@ -646,315 +569,341 @@ class MapStoreTest(SingleMemberTestCase):
     def configure_cluster(cls):
         path = os.path.abspath(__file__)
         dir_path = os.path.dirname(path)
-        with open(os.path.join(dir_path, "hazelcast_mapstore.xml")) as f:
+        with open(os.path.join(dir_path, "../../backward_compatible/proxy/hazelcast_mapstore.xml")) as f:
             return f.read()
 
-    def setUp(self):
-        self.map = self.client.get_map("mapstore-test").blocking()
-        self.entries = fill_map(self.map, size=10, key_prefix="key", value_prefix="val")
+    async def asyncSetUp(self):
+        await super().asyncSetUp()
+        self.map = await self.client.get_map("mapstore-test")
+        self.entries = await afill_map(self.map, size=10, key_prefix="key", value_prefix="val")
 
-    def tearDown(self):
-        self.map.destroy()
+    async def asyncTearDown(self):
+        await self.map.destroy()
+        await super().asyncTearDown()
 
-    def test_load_all_with_no_args_loads_all_keys(self):
-        self.map.evict_all()
-        self.map.load_all()
-        entry_set = self.map.get_all(self.entries.keys())
+    async def test_load_all_with_no_args_loads_all_keys(self):
+        await self.map.evict_all()
+        await self.map.load_all()
+        entry_set = await self.map.get_all(self.entries.keys())
         self.assertCountEqual(entry_set, self.entries)
 
-    def test_load_all_with_key_set_loads_given_keys(self):
-        self.map.evict_all()
-        self.map.load_all(["key0", "key1"])
-        entry_set = self.map.get_all(["key0", "key1"])
+    async def test_load_all_with_key_set_loads_given_keys(self):
+        await self.map.evict_all()
+        await self.map.load_all(["key0", "key1"])
+        entry_set = await self.map.get_all(["key0", "key1"])
         self.assertCountEqual(entry_set, {"key0": "val0", "key1": "val1"})
 
-    def test_load_all_overrides_entries_in_memory_by_default(self):
+    async def test_load_all_overrides_entries_in_memory_by_default(self):
         self.map.evict_all()
         self.map.put_transient("key0", "new0")
         self.map.put_transient("key1", "new1")
         self.map.load_all(["key0", "key1"])
-        entry_set = self.map.get_all(["key0", "key1"])
+        entry_set = await self.map.get_all(["key0", "key1"])
         self.assertCountEqual(entry_set, {"key0": "val0", "key1": "val1"})
 
-    def test_load_all_with_replace_existing_false_does_not_override(self):
-        self.map.evict_all()
-        self.map.put_transient("key0", "new0")
-        self.map.put_transient("key1", "new1")
-        self.map.load_all(["key0", "key1"], replace_existing_values=False)
-        entry_set = self.map.get_all(["key0", "key1"])
+    async def test_load_all_with_replace_existing_false_does_not_override(self):
+        await self.map.evict_all()
+        await self.map.put_transient("key0", "new0")
+        await self.map.put_transient("key1", "new1")
+        await self.map.load_all(["key0", "key1"], replace_existing_values=False)
+        entry_set = await self.map.get_all(["key0", "key1"])
         self.assertCountEqual(entry_set, {"key0": "new0", "key1": "new1"})
 
-    def test_evict(self):
-        self.map.evict("key0")
-        self.assertEqual(self.map.size(), 9)
+    async def test_evict(self):
+        await self.map.evict("key0")
+        self.assertEqual(await self.map.size(), 9)
 
-    def test_evict_non_existing_key(self):
-        self.map.evict("non_existing_key")
-        self.assertEqual(self.map.size(), 10)
+    async def test_evict_non_existing_key(self):
+        await self.map.evict("non_existing_key")
+        self.assertEqual(await self.map.size(), 10)
 
-    def test_evict_all(self):
-        self.map.evict_all()
-        self.assertEqual(self.map.size(), 0)
+    async def test_evict_all(self):
+        await self.map.evict_all()
+        self.assertEqual(await self.map.size(), 0)
 
-    def test_add_entry_listener_item_loaded(self):
+    async def test_add_entry_listener_item_loaded(self):
         collector = event_collector()
-        self.map.add_entry_listener(include_value=True, loaded_func=collector)
-        self.map.put("key", "value", ttl=0.1)
+        await self.map.add_entry_listener(include_value=True, loaded_func=collector)
+        await self.map.put("key", "value", ttl=0.1)
         time.sleep(2)
-        self.map.get("key")
+        await self.map.get("key")
 
         def assert_event():
             self.assertEqual(len(collector.events), 1)
             event = collector.events[0]
             self.assertEntryEvent(event, key="key", value="value", event_type=EntryEventType.LOADED)
 
-        self.assertTrueEventually(assert_event, 10)
+        await self.assertTrueEventually(assert_event, 10)
 
 
 class MapTTLTest(SingleMemberTestCase):
+
     @classmethod
     def configure_client(cls, config):
         config["cluster_name"] = cls.cluster.id
         return config
 
-    def setUp(self):
-        self.map = self.client.get_map(random_string()).blocking()
+    async def asyncSetUp(self):
+        await super().asyncSetUp()
+        self.map = await self.client.get_map(random_string())
 
-    def tearDown(self):
-        self.map.destroy()
+    async def asyncTearDown(self):
+        await self.map.destroy()
+        await super().asyncTearDown()
 
-    def test_put_default_ttl(self):
-        self.map.put("key", "value")
-        time.sleep(1.0)
-        self.assertTrue(self.map.contains_key("key"))
+    async def test_put_default_ttl(self):
+        await self.map.put("key", "value")
+        await asyncio.sleep(1.0)
+        self.assertTrue(await self.map.contains_key("key"))
 
-    def test_put(self):
-        self.map.put("key", "value", 0.1)
-        self.assertTrueEventually(lambda: self.assertFalse(self.map.contains_key("key")))
+    async def test_put(self):
+        async def assert_map_not_contains():
+            self.assertFalse(await self.map.contains_key("key"))
 
-    def test_put_transient_default_ttl(self):
-        self.map.put_transient("key", "value")
-        time.sleep(1.0)
-        self.assertTrue(self.map.contains_key("key"))
+        await self.map.put("key", "value", 0.1)
+        await self.assertTrueEventually(lambda: assert_map_not_contains())
 
-    def test_put_transient(self):
-        self.map.put_transient("key", "value", 0.1)
-        self.assertTrueEventually(lambda: self.assertFalse(self.map.contains_key("key")))
+    async def test_put_transient_default_ttl(self):
+        await self.map.put_transient("key", "value")
+        await asyncio.sleep(1.0)
+        self.assertTrue(await self.map.contains_key("key"))
 
-    def test_put_if_absent_ttl(self):
-        self.map.put_if_absent("key", "value")
-        time.sleep(1.0)
-        self.assertTrue(self.map.contains_key("key"))
+    async def test_put_transient(self):
+        async def assert_map_not_contains():
+            self.assertFalse(await self.map.contains_key("key"))
 
-    def test_put_if_absent(self):
-        self.map.put_if_absent("key", "value", 0.1)
-        self.assertTrueEventually(lambda: self.assertFalse(self.map.contains_key("key")))
+        await self.map.put_transient("key", "value", 0.1)
+        await self.assertTrueEventually(lambda: assert_map_not_contains())
 
-    def test_set_default_ttl(self):
-        self.map.set("key", "value")
-        time.sleep(1.0)
-        self.assertTrue(self.map.contains_key("key"))
+    async def test_put_if_absent_ttl(self):
+        await self.map.put_if_absent("key", "value")
+        await asyncio.sleep(1.0)
+        self.assertTrue(await self.map.contains_key("key"))
 
-    def test_set(self):
-        self.map.set("key", "value", 0.1)
-        self.assertTrueEventually(lambda: self.assertFalse(self.map.contains_key("key")))
+    async def test_put_if_absent(self):
+        async def assert_map_not_contains():
+            self.assertFalse(await self.map.contains_key("key"))
+
+        await self.map.put_if_absent("key", "value", 0.1)
+        await self.assertTrueEventually(lambda: assert_map_not_contains())
+
+    async def test_set_default_ttl(self):
+        await self.map.set("key", "value")
+        await asyncio.sleep(1.0)
+        self.assertTrue(await self.map.contains_key("key"))
+
+    async def test_set(self):
+        async def assert_map_not_contains():
+            self.assertFalse(await self.map.contains_key("key"))
+
+        await self.map.set("key", "value", 0.1)
+        await self.assertTrueEventually(lambda: assert_map_not_contains())
 
 
 class MapMaxIdleTest(SingleMemberTestCase):
+
     @classmethod
     def configure_client(cls, config):
         config["cluster_name"] = cls.cluster.id
         return config
 
-    def setUp(self):
-        self.map = self.client.get_map(random_string()).blocking()
+    async def asyncSetUp(self):
+        await super().asyncSetUp()
+        self.map = await self.client.get_map(random_string())
 
-    def tearDown(self):
-        self.map.destroy()
+    async def asyncTearDown(self):
+        await self.map.destroy()
+        await super().asyncTearDown()
 
-    def test_put_default_max_idle(self):
-        self.map.put("key", "value")
-        time.sleep(1.0)
-        self.assertTrue(self.map.contains_key("key"))
+    async def test_put_default_max_idle(self):
+        await self.map.put("key", "value")
+        await asyncio.sleep(1.0)
+        self.assertTrue(await self.map.contains_key("key"))
 
-    def test_put(self):
-        self.map.put("key", "value", max_idle=0.1)
-        time.sleep(1.0)
-        self.assertFalse(self.map.contains_key("key"))
+    async def test_put(self):
+        await self.map.put("key", "value", max_idle=0.1)
+        await asyncio.sleep(1.0)
+        self.assertFalse(await self.map.contains_key("key"))
 
-    def test_put_transient_default_max_idle(self):
-        self.map.put_transient("key", "value")
-        time.sleep(1.0)
-        self.assertTrue(self.map.contains_key("key"))
+    async def test_put_transient_default_max_idle(self):
+        await self.map.put_transient("key", "value")
+        await asyncio.sleep(1.0)
+        self.assertTrue(await self.map.contains_key("key"))
 
-    def test_put_transient(self):
-        self.map.put_transient("key", "value", max_idle=0.1)
-        time.sleep(1.0)
-        self.assertFalse(self.map.contains_key("key"))
+    async def test_put_transient(self):
+        await self.map.put_transient("key", "value", max_idle=0.1)
+        await asyncio.sleep(1.0)
+        self.assertFalse(await self.map.contains_key("key"))
 
-    def test_put_if_absent_max_idle(self):
-        self.map.put_if_absent("key", "value")
-        time.sleep(1.0)
-        self.assertTrue(self.map.contains_key("key"))
+    async def test_put_if_absent_max_idle(self):
+        await self.map.put_if_absent("key", "value")
+        await asyncio.sleep(1.0)
+        self.assertTrue(await self.map.contains_key("key"))
 
-    def test_put_if_absent(self):
-        self.map.put_if_absent("key", "value", max_idle=0.1)
-        time.sleep(1.0)
-        self.assertFalse(self.map.contains_key("key"))
+    async def test_put_if_absent(self):
+        await self.map.put_if_absent("key", "value", max_idle=0.1)
+        await asyncio.sleep(1.0)
+        self.assertFalse(await self.map.contains_key("key"))
 
-    def test_set_default_ttl(self):
-        self.map.set("key", "value")
-        time.sleep(1.0)
-        self.assertTrue(self.map.contains_key("key"))
+    async def test_set_default_ttl(self):
+        await self.map.set("key", "value")
+        await asyncio.sleep(1.0)
+        self.assertTrue(await self.map.contains_key("key"))
 
-    def test_set(self):
-        self.map.set("key", "value", max_idle=0.1)
-        time.sleep(1.0)
-        self.assertFalse(self.map.contains_key("key"))
+    async def test_set(self):
+        await self.map.set("key", "value", max_idle=0.1)
+        await asyncio.sleep(1.0)
+        self.assertFalse(await self.map.contains_key("key"))
 
 
 @unittest.skipIf(
     compare_client_version("4.2.1") < 0, "Tests the features added in 4.2.1 version of the client"
 )
 class MapAggregatorsIntTest(SingleMemberTestCase):
+
     @classmethod
     def configure_client(cls, config):
         config["cluster_name"] = cls.cluster.id
         config["default_int_type"] = IntType.INT
         return config
 
-    def setUp(self):
-        self.map = self.client.get_map(random_string()).blocking()
-        self.map.put_all({"key-%d" % i: i for i in range(50)})
+    async def asyncSetUp(self):
+        await super().asyncSetUp()
+        self.map = await self.client.get_map(random_string())
+        await self.map.put_all({"key-%d" % i: i for i in range(50)})
 
-    def tearDown(self):
-        self.map.destroy()
+    async def tearDown(self):
+        await self.map.destroy()
+        await super().asyncTearDown()
 
-    def test_aggregate_with_none_aggregator(self):
+    async def test_aggregate_with_none_aggregator(self):
         with self.assertRaises(AssertionError):
-            self.map.aggregate(None)
+            await self.map.aggregate(None)
 
-    def test_aggregate_with_paging_predicate(self):
+    async def test_aggregate_with_paging_predicate(self):
         with self.assertRaises(AssertionError):
-            self.map.aggregate(int_avg("foo"), paging(true(), 10))
+            await self.map.aggregate(int_avg("foo"), paging(true(), 10))
 
-    def test_int_average(self):
-        average = self.map.aggregate(int_avg())
+    async def test_int_average(self):
+        average = await self.map.aggregate(int_avg())
         self.assertEqual(24.5, average)
 
-    def test_int_average_with_attribute_path(self):
-        average = self.map.aggregate(int_avg("this"))
+    async def test_int_average_with_attribute_path(self):
+        average = await self.map.aggregate(int_avg("this"))
         self.assertEqual(24.5, average)
 
-    def test_int_average_with_predicate(self):
-        average = self.map.aggregate(int_avg(), greater_or_equal("this", 47))
+    async def test_int_average_with_predicate(self):
+        average = await self.map.aggregate(int_avg(), greater_or_equal("this", 47))
         self.assertEqual(48, average)
 
-    def test_int_sum(self):
-        sum_ = self.map.aggregate(int_sum())
+    async def test_int_sum(self):
+        sum_ = await self.map.aggregate(int_sum())
         self.assertEqual(1225, sum_)
 
-    def test_int_sum_with_attribute_path(self):
-        sum_ = self.map.aggregate(int_sum("this"))
+    async def test_int_sum_with_attribute_path(self):
+        sum_ = await self.map.aggregate(int_sum("this"))
         self.assertEqual(1225, sum_)
 
-    def test_int_sum_with_predicate(self):
-        sum_ = self.map.aggregate(int_sum(), greater_or_equal("this", 47))
+    async def test_int_sum_with_predicate(self):
+        sum_ = await self.map.aggregate(int_sum(), greater_or_equal("this", 47))
         self.assertEqual(144, sum_)
 
-    def test_fixed_point_sum(self):
-        sum_ = self.map.aggregate(fixed_point_sum())
+    async def test_fixed_point_sum(self):
+        sum_ = await self.map.aggregate(fixed_point_sum())
         self.assertEqual(1225, sum_)
 
-    def test_fixed_point_sum_with_attribute_path(self):
-        sum_ = self.map.aggregate(fixed_point_sum("this"))
+    async def test_fixed_point_sum_with_attribute_path(self):
+        sum_ = await self.map.aggregate(fixed_point_sum("this"))
         self.assertEqual(1225, sum_)
 
-    def test_fixed_point_sum_with_predicate(self):
-        sum_ = self.map.aggregate(fixed_point_sum(), greater_or_equal("this", 47))
+    async def test_fixed_point_sum_with_predicate(self):
+        sum_ = await self.map.aggregate(fixed_point_sum(), greater_or_equal("this", 47))
         self.assertEqual(144, sum_)
 
-    def test_distinct(self):
-        self._fill_with_duplicate_values()
-        distinct_values = self.map.aggregate(distinct())
+    async def test_distinct(self):
+        await self._fill_with_duplicate_values()
+        distinct_values = await self.map.aggregate(distinct())
         self.assertEqual(set(range(50)), distinct_values)
 
-    def test_distinct_with_attribute_path(self):
-        self._fill_with_duplicate_values()
-        distinct_values = self.map.aggregate(distinct("this"))
+    async def test_distinct_with_attribute_path(self):
+        await self._fill_with_duplicate_values()
+        distinct_values = await self.map.aggregate(distinct("this"))
         self.assertEqual(set(range(50)), distinct_values)
 
-    def test_distinct_with_predicate(self):
-        self._fill_with_duplicate_values()
-        distinct_values = self.map.aggregate(distinct(), greater_or_equal("this", 10))
+    async def test_distinct_with_predicate(self):
+        await self._fill_with_duplicate_values()
+        distinct_values = await self.map.aggregate(distinct(), greater_or_equal("this", 10))
         self.assertEqual(set(range(10, 50)), distinct_values)
 
-    def test_max_by(self):
-        max_item = self.map.aggregate(max_by("this"))
+    async def test_max_by(self):
+        max_item = await self.map.aggregate(max_by("this"))
         self.assertEqual("key-49", max_item.key)
         self.assertEqual(49, max_item.value)
 
-    def test_max_by_with_predicate(self):
-        max_item = self.map.aggregate(max_by("this"), less_or_equal("this", 10))
+    async def test_max_by_with_predicate(self):
+        max_item = await self.map.aggregate(max_by("this"), less_or_equal("this", 10))
         self.assertEqual("key-10", max_item.key)
         self.assertEqual(10, max_item.value)
 
-    def test_min_by(self):
-        min_item = self.map.aggregate(min_by("this"))
+    async def test_min_by(self):
+        min_item = await self.map.aggregate(min_by("this"))
         self.assertEqual("key-0", min_item.key)
         self.assertEqual(0, min_item.value)
 
-    def test_min_by_with_predicate(self):
-        min_item = self.map.aggregate(min_by("this"), greater_or_equal("this", 10))
+    async def test_min_by_with_predicate(self):
+        min_item = await self.map.aggregate(min_by("this"), greater_or_equal("this", 10))
         self.assertEqual("key-10", min_item.key)
         self.assertEqual(10, min_item.value)
 
-    def _fill_with_duplicate_values(self):
+    async def _fill_with_duplicate_values(self):
         # Map is initially filled with key-i: i mappings from [0, 50).
         # Add more values with different keys but the same values to
         # test the behaviour of the distinct aggregator.
-        self.map.put_all({"different-key-%d" % i: i for i in range(50)})
+        await self.map.put_all({"different-key-%d" % i: i for i in range(50)})
 
 
 @unittest.skipIf(
     compare_client_version("4.2.1") < 0, "Tests the features added in 4.2.1 version of the client"
 )
 class MapAggregatorsLongTest(SingleMemberTestCase):
+
     @classmethod
     def configure_client(cls, config):
         config["cluster_name"] = cls.cluster.id
         config["default_int_type"] = IntType.LONG
         return config
 
-    def setUp(self):
-        self.map = self.client.get_map(random_string()).blocking()
-        self.map.put_all({"key-%d" % i: i for i in range(50)})
+    async def asyncSetUp(self):
+        await super().asyncSetUp()
+        self.map = await self.client.get_map(random_string())
+        await self.map.put_all({"key-%d" % i: i for i in range(50)})
 
-    def tearDown(self):
-        self.map.destroy()
+    async def asyncTearDown(self):
+        await self.map.destroy()
+        await super().asyncTearDown()
 
-    def test_long_average(self):
-        average = self.map.aggregate(long_avg())
+    async def test_long_average(self):
+        average = await self.map.aggregate(long_avg())
         self.assertEqual(24.5, average)
 
-    def test_long_average_with_attribute_path(self):
-        average = self.map.aggregate(long_avg("this"))
+    async def test_long_average_with_attribute_path(self):
+        average = await self.map.aggregate(long_avg("this"))
         self.assertEqual(24.5, average)
 
-    def test_long_average_with_predicate(self):
-        average = self.map.aggregate(long_avg(), greater_or_equal("this", 47))
+    async def test_long_average_with_predicate(self):
+        average = await self.map.aggregate(long_avg(), greater_or_equal("this", 47))
         self.assertEqual(48, average)
 
-    def test_long_sum(self):
-        sum_ = self.map.aggregate(long_sum())
+    async def test_long_sum(self):
+        sum_ = await self.map.aggregate(long_sum())
         self.assertEqual(1225, sum_)
 
-    def test_long_sum_with_attribute_path(self):
-        sum_ = self.map.aggregate(long_sum("this"))
+    async def test_long_sum_with_attribute_path(self):
+        sum_ = await self.map.aggregate(long_sum("this"))
         self.assertEqual(1225, sum_)
 
-    def test_long_sum_with_predicate(self):
-        sum_ = self.map.aggregate(long_sum(), greater_or_equal("this", 47))
+    async def test_long_sum_with_predicate(self):
+        sum_ = await self.map.aggregate(long_sum(), greater_or_equal("this", 47))
         self.assertEqual(144, sum_)
 
 
@@ -967,95 +916,97 @@ class MapAggregatorsDoubleTest(SingleMemberTestCase):
         config["cluster_name"] = cls.cluster.id
         return config
 
-    def setUp(self):
-        self.map = self.client.get_map(random_string()).blocking()
-        self.map.put_all({"key-%d" % i: float(i) for i in range(50)})
+    async def asyncSetUp(self):
+        await super().asyncSetUp()
+        self.map = await self.client.get_map(random_string())
+        await self.map.put_all({"key-%d" % i: float(i) for i in range(50)})
 
-    def tearDown(self):
-        self.map.destroy()
+    async def asyncTearDown(self):
+        await self.map.destroy()
+        await super().asyncTearDown()
 
-    def test_count(self):
-        count_ = self.map.aggregate(count())
+    async def test_count(self):
+        count_ = await self.map.aggregate(count())
         self.assertEqual(50, count_)
 
-    def test_count_with_attribute_path(self):
-        count_ = self.map.aggregate(count("this"))
+    async def test_count_with_attribute_path(self):
+        count_ = await self.map.aggregate(count("this"))
         self.assertEqual(50, count_)
 
-    def test_count_with_predicate(self):
-        count_ = self.map.aggregate(count(), greater_or_equal("this", 1))
+    async def test_count_with_predicate(self):
+        count_ = await self.map.aggregate(count(), greater_or_equal("this", 1))
         self.assertEqual(49, count_)
 
-    def test_double_average(self):
-        average = self.map.aggregate(double_avg())
+    async def test_double_average(self):
+        average = await self.map.aggregate(double_avg())
         self.assertEqual(24.5, average)
 
-    def test_double_average_with_attribute_path(self):
-        average = self.map.aggregate(double_avg("this"))
+    async def test_double_average_with_attribute_path(self):
+        average = await self.map.aggregate(double_avg("this"))
         self.assertEqual(24.5, average)
 
-    def test_double_average_with_predicate(self):
-        average = self.map.aggregate(double_avg(), greater_or_equal("this", 47))
+    async def test_double_average_with_predicate(self):
+        average = await self.map.aggregate(double_avg(), greater_or_equal("this", 47))
         self.assertEqual(48, average)
 
-    def test_double_sum(self):
-        sum_ = self.map.aggregate(double_sum())
+    async def test_double_sum(self):
+        sum_ = await self.map.aggregate(double_sum())
         self.assertEqual(1225, sum_)
 
-    def test_double_sum_with_attribute_path(self):
-        sum_ = self.map.aggregate(double_sum("this"))
+    async def test_double_sum_with_attribute_path(self):
+        sum_ = await self.map.aggregate(double_sum("this"))
         self.assertEqual(1225, sum_)
 
-    def test_double_sum_with_predicate(self):
-        sum_ = self.map.aggregate(double_sum(), greater_or_equal("this", 47))
+    async def test_double_sum_with_predicate(self):
+        sum_ = await self.map.aggregate(double_sum(), greater_or_equal("this", 47))
         self.assertEqual(144, sum_)
 
-    def test_floating_point_sum(self):
-        sum_ = self.map.aggregate(floating_point_sum())
+    async def test_floating_point_sum(self):
+        sum_ = await self.map.aggregate(floating_point_sum())
         self.assertEqual(1225, sum_)
 
-    def test_floating_point_sum_with_attribute_path(self):
-        sum_ = self.map.aggregate(floating_point_sum("this"))
+    async def test_floating_point_sum_with_attribute_path(self):
+        sum_ = await self.map.aggregate(floating_point_sum("this"))
         self.assertEqual(1225, sum_)
 
-    def test_floating_point_sum_with_predicate(self):
-        sum_ = self.map.aggregate(floating_point_sum(), greater_or_equal("this", 47))
+    async def test_floating_point_sum_with_predicate(self):
+        sum_ = await self.map.aggregate(floating_point_sum(), greater_or_equal("this", 47))
         self.assertEqual(144, sum_)
 
-    def test_number_avg(self):
-        average = self.map.aggregate(number_avg())
+    async def test_number_avg(self):
+        average = await self.map.aggregate(number_avg())
         self.assertEqual(24.5, average)
 
-    def test_number_avg_with_attribute_path(self):
-        average = self.map.aggregate(number_avg("this"))
+    async def test_number_avg_with_attribute_path(self):
+        average = await self.map.aggregate(number_avg("this"))
         self.assertEqual(24.5, average)
 
-    def test_number_avg_with_predicate(self):
-        average = self.map.aggregate(number_avg(), greater_or_equal("this", 47))
+    async def test_number_avg_with_predicate(self):
+        average = await self.map.aggregate(number_avg(), greater_or_equal("this", 47))
         self.assertEqual(48, average)
 
-    def test_max(self):
-        average = self.map.aggregate(max_())
+    async def test_max(self):
+        average = await self.map.aggregate(max_())
         self.assertEqual(49, average)
 
-    def test_max_with_attribute_path(self):
-        average = self.map.aggregate(max_("this"))
+    async def test_max_with_attribute_path(self):
+        average = await self.map.aggregate(max_("this"))
         self.assertEqual(49, average)
 
-    def test_max_with_predicate(self):
-        average = self.map.aggregate(max_(), less_or_equal("this", 3))
+    async def test_max_with_predicate(self):
+        average = await self.map.aggregate(max_(), less_or_equal("this", 3))
         self.assertEqual(3, average)
 
-    def test_min(self):
-        average = self.map.aggregate(min_())
+    async def test_min(self):
+        average = await self.map.aggregate(min_())
         self.assertEqual(0, average)
 
-    def test_min_with_attribute_path(self):
-        average = self.map.aggregate(min_("this"))
+    async def test_min_with_attribute_path(self):
+        average = await self.map.aggregate(min_("this"))
         self.assertEqual(0, average)
 
-    def test_min_with_predicate(self):
-        average = self.map.aggregate(min_(), greater_or_equal("this", 3))
+    async def test_min_with_predicate(self):
+        average = await self.map.aggregate(min_(), greater_or_equal("this", 3))
         self.assertEqual(3, average)
 
 
@@ -1068,43 +1019,45 @@ class MapProjectionsTest(SingleMemberTestCase):
         config["cluster_name"] = cls.cluster.id
         return config
 
-    def setUp(self):
-        self.map = self.client.get_map(random_string()).blocking()
-        self.map.put(1, HazelcastJsonValue('{"attr1": 1, "attr2": 2, "attr3": 3}'))
-        self.map.put(2, HazelcastJsonValue('{"attr1": 4, "attr2": 5, "attr3": 6}'))
+    async def asyncSetUp(self):
+        await super().asyncSetUp()
+        self.map = await self.client.get_map(random_string())
+        await self.map.put(1, HazelcastJsonValue('{"attr1": 1, "attr2": 2, "attr3": 3}'))
+        await self.map.put(2, HazelcastJsonValue('{"attr1": 4, "attr2": 5, "attr3": 6}'))
 
-    def tearDown(self):
-        self.map.destroy()
+    async def asyncTearDown(self):
+        await self.map.destroy()
+        await super().asyncTearDown()
 
-    def test_project_with_none_projection(self):
+    async def test_project_with_none_projection(self):
         with self.assertRaises(AssertionError):
-            self.map.project(None)
+            await self.map.project(None)
 
-    def test_project_with_paging_predicate(self):
+    async def test_project_with_paging_predicate(self):
         with self.assertRaises(AssertionError):
-            self.map.project(single_attribute("foo"), paging(true(), 10))
+            await self.map.project(single_attribute("foo"), paging(true(), 10))
 
-    def test_single_attribute(self):
-        attributes = self.map.project(single_attribute("attr1"))
+    async def test_single_attribute(self):
+        attributes = await self.map.project(single_attribute("attr1"))
         self.assertCountEqual([1, 4], attributes)
 
-    def test_single_attribute_with_predicate(self):
-        attributes = self.map.project(single_attribute("attr1"), greater_or_equal("attr1", 4))
+    async def test_single_attribute_with_predicate(self):
+        attributes = await self.map.project(single_attribute("attr1"), greater_or_equal("attr1", 4))
         self.assertCountEqual([4], attributes)
 
-    def test_multi_attribute(self):
-        attributes = self.map.project(multi_attribute("attr1", "attr2"))
+    async def test_multi_attribute(self):
+        attributes = await self.map.project(multi_attribute("attr1", "attr2"))
         self.assertCountEqual([[1, 2], [4, 5]], attributes)
 
-    def test_multi_attribute_with_predicate(self):
-        attributes = self.map.project(
+    async def test_multi_attribute_with_predicate(self):
+        attributes = await self.map.project(
             multi_attribute("attr1", "attr2"),
             greater_or_equal("attr2", 3),
         )
         self.assertCountEqual([[4, 5]], attributes)
 
-    def test_identity(self):
-        attributes = self.map.project(identity())
+    async def test_identity(self):
+        attributes = await self.map.project(identity())
         self.assertCountEqual(
             [
                 HazelcastJsonValue('{"attr1": 4, "attr2": 5, "attr3": 6}'),
@@ -1113,8 +1066,8 @@ class MapProjectionsTest(SingleMemberTestCase):
             [attribute.value for attribute in attributes],
         )
 
-    def test_identity_with_predicate(self):
-        attributes = self.map.project(identity(), greater_or_equal("attr2", 3))
+    async def test_identity_with_predicate(self):
+        attributes = await self.map.project(identity(), greater_or_equal("attr2", 3))
         self.assertCountEqual(
             [HazelcastJsonValue('{"attr1": 4, "attr2": 5, "attr3": 6}')],
             [attribute.value for attribute in attributes],

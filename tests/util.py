@@ -37,6 +37,13 @@ def fill_map(map, size=10, key_prefix="key", value_prefix="val"):
     map.put_all(entries)
     return entries
 
+async def afill_map(map, size=10, key_prefix="key", value_prefix="val"):
+    import asyncio
+    entries = dict()
+    for i in range(size):
+        entries[key_prefix + str(i)] = value_prefix + str(i)
+    await map.put_all(entries)
+    return entries
 
 def get_ssl_config(
     cluster_name,

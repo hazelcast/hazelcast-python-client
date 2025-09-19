@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import unittest
+from typing import Awaitable
 
 from hazelcast.asyncio.client import HazelcastClient
 
@@ -36,7 +37,7 @@ class HazelcastTestCase(unittest.TestCase):
     async def shutdown_all_clients(self):
         async with asyncio.TaskGroup() as tg:
             for c in self.clients:
-                await c.shutdown()
+                tg.create_task(c.shutdown())
         self.clients = []
 
     async def assertTrueEventually(self, assertion, timeout=30):
@@ -44,7 +45,9 @@ class HazelcastTestCase(unittest.TestCase):
         last_exception = None
         while get_current_timestamp() < timeout_time:
             try:
-                assertion()
+                maybe_awaitable = assertion()
+                if isinstance(maybe_awaitable, Awaitable):
+                    await maybe_awaitable
                 return
             except AssertionError as e:
                 last_exception = e

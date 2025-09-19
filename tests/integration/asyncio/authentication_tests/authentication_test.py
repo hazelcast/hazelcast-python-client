@@ -21,8 +21,8 @@ except ImportError:
 class AuthenticationTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
     current_directory = os.path.dirname(__file__)
     rc = None
-    hazelcast_token_xml = get_abs_path(current_directory, "hazelcast-token.xml")
-    hazelcast_userpass_xml = get_abs_path(current_directory, "hazelcast-user-pass.xml")
+    hazelcast_token_xml = get_abs_path(current_directory, "../../backward_compatible/authentication_tests/hazelcast-token.xml")
+    hazelcast_userpass_xml = get_abs_path(current_directory, "../../backward_compatible/authentication_tests/hazelcast-user-pass.xml")
 
     def setUp(self):
         self.rc = self.create_rc()
