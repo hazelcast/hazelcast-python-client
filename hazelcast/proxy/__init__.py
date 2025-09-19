@@ -54,26 +54,23 @@ class ProxyManager:
         self._context = context
         self._proxies = {}
 
-    def get_or_create(self, service_name, name, create_on_remote=True):
+    async def get_or_create(self, service_name, name, create_on_remote=True):
         ns = (service_name, name)
         if ns in self._proxies:
             return self._proxies[ns]
-
-        proxy = self._create_proxy(service_name, name, create_on_remote)
+        proxy = await self._create_proxy(service_name, name, create_on_remote)
         self._proxies[ns] = proxy
         return proxy
 
-    def _create_proxy(self, service_name, name, create_on_remote):
+    async def _create_proxy(self, service_name, name, create_on_remote):
         if create_on_remote:
             request = client_create_proxy_codec.encode_request(name, service_name)
             invocation = Invocation(request)
             invocation_service = self._context.invocation_service
-            invocation_service.invoke(invocation)
-            invocation.future.result()
-
+            await invocation_service.ainvoke(invocation)
         return _proxy_init[service_name](service_name, name, self._context)
 
-    def destroy_proxy(self, service_name, name, destroy_on_remote=True):
+    async def destroy_proxy(self, service_name, name, destroy_on_remote=True):
         ns = (service_name, name)
         try:
             self._proxies.pop(ns)
@@ -81,8 +78,7 @@ class ProxyManager:
                 request = client_destroy_proxy_codec.encode_request(name, service_name)
                 invocation = Invocation(request)
                 invocation_service = self._context.invocation_service
-                invocation_service.invoke(invocation)
-                invocation.future.result()
+                await invocation_service.ainvoke(invocation)
             return True
         except KeyError:
             return False
