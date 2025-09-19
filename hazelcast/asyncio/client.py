@@ -40,9 +40,6 @@ _logger = logging.getLogger(__name__)
 
 
 class HazelcastClient:
-    """Hazelcast client instance to access and manipulate distributed data
-    structures on the Hazelcast clusters.
-    """
 
     _CLIENT_ID = AtomicInteger()
 
@@ -53,38 +50,6 @@ class HazelcastClient:
         return client
 
     def __init__(self, config: Config = None, **kwargs):
-        """The client can be configured either by:
-
-        - providing a configuration object as the first parameter of the
-          constructor
-
-        .. code:: python
-
-            from hazelcast import HazelcastClient
-            from hazelcast.config import Config
-
-            config = Config()
-            config.cluster_name = "a-cluster"
-            client = HazelcastClient(config)
-
-        - passing configuration options as keyword arguments
-
-        .. code:: python
-
-            from hazelcast import HazelcastClient
-
-            client = HazelcastClient(
-                cluster_name="a-cluster",
-            )
-
-
-        See the :class:`hazelcast.config.Config` documentation for the possible
-        configuration options.
-
-        Args:
-            config: Optional configuration object.
-            **kwargs: Optional keyword arguments of the client configuration.
-        """
         if config:
             if kwargs:
                 raise InvalidConfigurationError(
@@ -219,29 +184,11 @@ class HazelcastClient:
         _logger.info("Client started")
 
     async def get_map(self, name: str) -> Map[KeyType, ValueType]:
-        """Returns the distributed map instance with the specified name.
-
-        Args:
-            name: Name of the distributed map.
-
-        Returns:
-            Distributed map instance with the specified name.
-        """
         return await self._proxy_manager.get_or_create(MAP_SERVICE, name)
 
     async def add_distributed_object_listener(
         self, listener_func: typing.Callable[[DistributedObjectEvent], None]
     ) -> str:
-        """Adds a listener which will be notified when a new distributed object
-        is created or destroyed.
-
-        Args:
-            listener_func: Function to be called when a distributed object is
-                created or destroyed.
-
-        Returns:
-            A registration id which is used as a key to remove the listener.
-        """
         is_smart = self._config.smart_routing
         codec = client_add_distributed_object_listener_codec
         request = codec.encode_request(is_smart)
@@ -261,28 +208,9 @@ class HazelcastClient:
         )
 
     async def remove_distributed_object_listener(self, registration_id: str) -> bool:
-        """Removes the specified distributed object listener.
-
-        Returns silently if there is no such listener added before.
-
-        Args:
-            registration_id: The id of registered listener.
-
-        Returns:
-            ``True`` if registration is removed, ``False`` otherwise.
-        """
         return await self._listener_service.deregister_listener(registration_id)
 
     async def get_distributed_objects(self) -> typing.List[Proxy]:
-        """Returns all distributed objects such as; queue, map, set, list,
-        topic, lock, multimap.
-
-        Also, as a side effect, it clears the local instances of the destroyed
-        proxies.
-
-        Returns:
-            List of instances created by Hazelcast.
-        """
         request = client_get_distributed_objects_codec.encode_request()
         invocation = Invocation(request, response_handler=lambda m: m)
         await self._invocation_service.ainvoke(invocation)
@@ -313,7 +241,6 @@ class HazelcastClient:
         return self._proxy_manager.get_distributed_objects()
 
     async def shutdown(self) -> None:
-        """Shuts down this HazelcastClient."""
         async with self._shutdown_lock:
             if self._internal_lifecycle_service.running:
                 self._internal_lifecycle_service.fire_lifecycle_event(LifecycleState.SHUTTING_DOWN)
@@ -328,33 +255,22 @@ class HazelcastClient:
 
     @property
     def name(self) -> str:
-        """Name of the client."""
         return self._name
 
     @property
     def lifecycle_service(self) -> LifecycleService:
-        """Lifecycle service allows you to check if the client is running and
-        add and remove lifecycle listeners.
-        """
         return self._lifecycle_service
 
     @property
     def partition_service(self) -> PartitionService:
-        """Partition service allows you to get partition count, introspect
-        the partition owners, and partition ids of keys.
-        """
         return self._partition_service
 
     @property
     def cluster_service(self) -> ClusterService:
-        """ClusterService: Cluster service allows you to get the list of
-        the cluster members and add and remove membership listeners.
-        """
         return self._cluster_service
 
     @property
     def cp_subsystem(self) -> CPSubsystem:
-        """CP Subsystem offers set of in-memory linearizable data structures."""
         return self._cp_subsystem
 
     def _create_address_provider(self):
@@ -399,10 +315,6 @@ class HazelcastClient:
 
 
 class _ClientContext:
-    """
-    Context holding all the required services, managers and the configuration
-    for a Hazelcast client.
-    """
 
     def __init__(self):
         self.client = None
