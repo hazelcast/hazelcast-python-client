@@ -221,7 +221,7 @@ class HazelcastClient:
         }
 
         response = client_get_distributed_objects_codec.decode_response(invocation.future.result())
-        async with asyncio.TaskGroup() as tg:
+        async with asyncio.TaskGroup() as tg:  # type: ignore[attr-defined]
             for dist_obj_info in response:
                 local_distributed_object_infos.discard(dist_obj_info)
                 tg.create_task(
@@ -230,7 +230,7 @@ class HazelcastClient:
                     )
                 )
 
-        async with asyncio.TaskGroup() as tg:
+        async with asyncio.TaskGroup() as tg:  # type: ignore[attr-defined]
             for dist_obj_info in local_distributed_object_infos:
                 tg.create_task(
                     self._proxy_manager.destroy_proxy(

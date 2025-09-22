@@ -640,7 +640,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
             except KeyError:
                 partition_map[partition_id] = [entry]
 
-        async with asyncio.TaskGroup() as tg:
+        async with asyncio.TaskGroup() as tg:  # type: ignore[attr-defined]
             for partition_id, entry_list in partition_map.items():
                 request = map_put_all_codec.encode_request(
                     self.name, entry_list, False
