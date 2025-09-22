@@ -63,7 +63,9 @@ def download_if_necessary(repo, group, artifact_id, version, is_test_artifact=Fa
 def start_rc(stdout=None, stderr=None):
     artifacts = []
 
-    rc = download_if_necessary(ENTERPRISE_SNAPSHOT_REPO, HAZELCAST_GROUP, "hazelcast-remote-controller", RC_VERSION)
+    rc = download_if_necessary(
+        ENTERPRISE_SNAPSHOT_REPO, HAZELCAST_GROUP, "hazelcast-remote-controller", RC_VERSION
+    )
     tests = download_if_necessary(REPO, HAZELCAST_GROUP, "hazelcast", SERVER_VERSION, True)
     sql = download_if_necessary(REPO, HAZELCAST_GROUP, "hazelcast-sql", SERVER_VERSION)
 
