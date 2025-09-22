@@ -315,7 +315,6 @@ class HazelcastClient:
 
 
 class _ClientContext:
-
     def __init__(self):
         self.client = None
         self.config = None
