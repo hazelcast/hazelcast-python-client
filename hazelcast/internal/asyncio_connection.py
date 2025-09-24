@@ -173,7 +173,7 @@ class ConnectionManager:
             self, self._client, config, reactor, invocation_service
         )
         self._connection_listeners = []
-        self._connect_all_members_timer = None
+        self._connect_all_members_task: asyncio.Task | None = None
         self._async_start = config.async_start
         self._connect_to_cluster_thread_running = False
         self._shuffle_member_list = config.shuffle_member_list
@@ -274,8 +274,8 @@ class ConnectionManager:
             return
 
         self.live = False
-        if self._connect_all_members_timer:
-            self._connect_all_members_timer.cancel()
+        if self._connect_all_members_task:
+            self._connect_all_members_task.cancel()
 
         self._heartbeat_manager.shutdown()
 
@@ -458,6 +458,7 @@ class ConnectionManager:
         connecting_uuids = set()
 
         async def run():
+            await asyncio.sleep(1)
             if not self._lifecycle_service.running:
                 return
 
@@ -479,13 +480,9 @@ class ConnectionManager:
             for item in member_uuids:
                 connecting_uuids.discard(item)
 
-            self._connect_all_members_timer = self._reactor.add_timer(
-                1, lambda: asyncio.create_task(run())
-            )
+            self._connect_all_members_task = asyncio.create_task(run())
 
-        self._connect_all_members_timer = self._reactor.add_timer(
-            1, lambda: asyncio.create_task(run())
-        )
+        self._connect_all_members_task = asyncio.create_task(run())
 
     async def _connect_to_cluster(self):
         await self._sync_connect_to_cluster()
@@ -816,12 +813,14 @@ class HeartbeatManager:
         self._invocation_service = invocation_service
         self._heartbeat_timeout = config.heartbeat_timeout
         self._heartbeat_interval = config.heartbeat_interval
-        self._heartbeat_timer = None
+        self._heartbeat_task: asyncio.Task | None = None
 
     def start(self):
         """Starts sending periodic HeartBeat operations."""
 
         async def _heartbeat():
+            await asyncio.sleep(self._heartbeat_interval)
+            _logger.debug("heartbeat")
             conn_manager = self._connection_manager
             if not conn_manager.live:
                 return
@@ -830,18 +829,14 @@ class HeartbeatManager:
             async with asyncio.TaskGroup() as tg:
                 for connection in list(conn_manager.active_connections.values()):
                     tg.create_task(self._check_connection(now, connection))
-            self._heartbeat_timer = self._reactor.add_timer(
-                self._heartbeat_interval, lambda: asyncio.create_task(_heartbeat())
-            )
+            self._heartbeat_task = asyncio.create_task(_heartbeat())
 
-        self._heartbeat_timer = self._reactor.add_timer(
-            self._heartbeat_interval, lambda: asyncio.create_task(_heartbeat())
-        )
+        self._heartbeat_task = asyncio.create_task(_heartbeat())
 
     def shutdown(self):
         """Stops HeartBeat operations."""
-        if self._heartbeat_timer:
-            self._heartbeat_timer.cancel()
+        if self._heartbeat_task:
+            self._heartbeat_task.cancel()
 
     async def _check_connection(self, now, connection):
         if not connection.live:
@@ -858,7 +853,7 @@ class HeartbeatManager:
         if (now - connection.last_write_time) > self._heartbeat_interval:
             request = client_ping_codec.encode_request()
             invocation = Invocation(request, connection=connection, urgent=True)
-            self._invocation_service.invoke(invocation)
+            asyncio.create_task(self._invocation_service.ainvoke(invocation))
 
 
 _frame_header = struct.Struct("<iH")

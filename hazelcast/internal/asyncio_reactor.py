@@ -17,7 +17,6 @@ class AsyncioReactor:
     def __init__(self, loop: AbstractEventLoop | None = None):
         self._is_live = False
         self._loop = loop or asyncio.get_running_loop()
-        self._bytes_lock = asyncio.Lock()
         self._bytes_sent = 0
         self._bytes_received = 0
 
@@ -46,16 +45,10 @@ class AsyncioReactor:
         )
 
     def update_bytes_sent(self, sent: int):
-        # with self._bytes_lock:
         self._bytes_sent += sent
 
     def update_bytes_received(self, received: int):
-        # with self._bytes_lock:
         self._bytes_received += received
-
-    # def _asyncio_loop(self):
-    #     asyncio.set_event_loop(self._loop)
-    #     self._loop.run_forever()
 
 
 class AsyncioConnection(Connection):
