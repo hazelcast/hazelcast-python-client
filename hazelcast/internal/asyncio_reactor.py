@@ -90,15 +90,7 @@ class AsyncioConnection(Connection):
         return this
 
     def _create_protocol(self):
-        return HazelcastProtocol(
-            self._loop,
-            self._reader,
-            self._address,
-            self._update_read_time,
-            self._update_write_time,
-            self._update_sent,
-            self._update_received,
-        )
+        return HazelcastProtocol(self)
 
     async def _create_connection(self):
         loop = self._loop
@@ -133,23 +125,8 @@ class HazelcastProtocol(asyncio.BufferedProtocol):
 
     PROTOCOL_STARTER = b"CP2"
 
-    def __init__(
-        self,
-        loop: AbstractEventLoop,
-        reader,
-        address,
-        update_read_time,
-        update_write_time,
-        update_sent,
-        update_received,
-    ):
-        self._loop = loop
-        self._reader = reader
-        self._address = address
-        self._update_read_time = update_read_time
-        self._update_write_time = update_write_time
-        self._update_sent = update_sent
-        self._update_received = update_received
+    def __init__(self, conn: AsyncioConnection):
+        self._conn = conn
         self._transport: transports.BaseTransport | None = None
         self.start_time: float | None = None
         self._write_buf = io.BytesIO()
@@ -161,11 +138,12 @@ class HazelcastProtocol(asyncio.BufferedProtocol):
         self._transport = transport
         self.start_time = time.time()
         self.write(self.PROTOCOL_STARTER)
-        _logger.debug("Connected to %s", self._address)
-        self._loop.call_soon(self._write_loop)
+        _logger.debug("Connected to %s", self._conn._address)
+        self._conn._loop.call_soon(self._write_loop)
 
     def connection_lost(self, exc):
         self._alive = False
+        self._conn._loop.create_task(self._conn.close_connection(str(exc), None))
         return False
 
     def close(self):
@@ -183,11 +161,11 @@ class HazelcastProtocol(asyncio.BufferedProtocol):
 
     def buffer_updated(self, nbytes):
         recv_bytes = self._recv_buf[:nbytes]
-        self._update_read_time(time.time())
-        self._update_received(nbytes)
-        self._reader.read(recv_bytes)
-        if self._reader.length:
-            self._reader.process()
+        self._conn._update_read_time(time.time())
+        self._conn._update_received(nbytes)
+        self._conn._reader.read(recv_bytes)
+        if self._conn._reader.length:
+            self._conn._reader.process()
 
     def eof_received(self):
         self._alive = False
@@ -197,11 +175,11 @@ class HazelcastProtocol(asyncio.BufferedProtocol):
             return
         buf_bytes = self._write_buf.getvalue()
         self._transport.write(buf_bytes[: self._write_buf_size])
-        self._update_write_time(time.time())
-        self._update_sent(self._write_buf_size)
+        self._conn._update_write_time(time.time())
+        self._conn._update_sent(self._write_buf_size)
         self._write_buf.seek(0)
         self._write_buf_size = 0
 
     def _write_loop(self):
         self._do_write()
-        return self._loop.call_later(0.01, self._write_loop)
+        return self._conn._loop.call_later(0.01, self._write_loop)
