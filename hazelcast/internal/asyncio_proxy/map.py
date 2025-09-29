@@ -395,7 +395,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._invoke(request)
 
     async def execute_on_entries(
-        self, entry_processor: typing.Any, predicate: Predicate = None
+        self, entry_processor: typing.Any, predicate: Predicate|None = None
     ) -> typing.List[typing.Any]:
         if predicate:
             try:
@@ -518,7 +518,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         request = map_is_empty_codec.encode_request(self.name)
         return await self._invoke(request, map_is_empty_codec.decode_response)
 
-    async def key_set(self, predicate: Predicate = None) -> typing.List[ValueType]:
+    async def key_set(self, predicate: Predicate|None = None) -> typing.List[ValueType]:
         if predicate:
             if isinstance(predicate, _PagingPredicate):
                 predicate.iteration_type = IterationType.KEY
