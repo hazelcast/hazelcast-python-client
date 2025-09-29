@@ -44,12 +44,12 @@ class HazelcastClient:
     _CLIENT_ID = AtomicInteger()
 
     @classmethod
-    async def create_and_start(cls, config: Config|None = None, **kwargs) -> "HazelcastClient":
+    async def create_and_start(cls, config: Config | None = None, **kwargs) -> "HazelcastClient":
         client = HazelcastClient(config, **kwargs)
         await client._start()
         return client
 
-    def __init__(self, config: Config|None = None, **kwargs):
+    def __init__(self, config: Config | None = None, **kwargs):
         if config:
             if kwargs:
                 raise InvalidConfigurationError(
