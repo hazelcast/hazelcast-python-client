@@ -56,8 +56,10 @@ from tests.util import (
     compare_server_version,
     skip_if_client_version_older_than,
     random_string,
-    afill_map,
 )
+
+from tests.integration.asyncio.util import fill_map
+
 
 
 class EntryProcessor(IdentifiedDataSerializable):
@@ -579,7 +581,7 @@ class MapStoreTest(SingleMemberTestCase):
     async def asyncSetUp(self):
         await super().asyncSetUp()
         self.map = await self.client.get_map("mapstore-test")
-        self.entries = await afill_map(self.map, size=10, key_prefix="key", value_prefix="val")
+        self.entries = await fill_map(self.map, size=10, key_prefix="key", value_prefix="val")
 
     async def asyncTearDown(self):
         await self.map.destroy()
