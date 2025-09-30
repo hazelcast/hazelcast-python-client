@@ -61,7 +61,6 @@ from tests.util import (
 from tests.integration.asyncio.util import fill_map
 
 
-
 class EntryProcessor(IdentifiedDataSerializable):
     FACTORY_ID = 66
     CLASS_ID = 1
