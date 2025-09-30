@@ -395,13 +395,12 @@ class ConnectionManager:
 
         translated = self._translate_member_address(member)
         connection = await self._create_connection(translated)
-        response = await self._authenticate(connection)  # .continue_with(self._on_auth, connection)
+        response = await self._authenticate(connection)
         await self._on_auth(response, connection)
         return connection
 
     async def _create_connection(self, address):
-        factory = self._reactor.connection_factory
-        return await factory(
+        return await self._reactor.connection_factory(
             self,
             self._connection_id_generator.get_and_increment(),
             address,
