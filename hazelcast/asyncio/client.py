@@ -162,7 +162,6 @@ class HazelcastClient:
         )
 
     async def _start(self):
-        self._reactor.start()
         try:
             self._internal_lifecycle_service.start()
             self._invocation_service.start()
@@ -250,7 +249,6 @@ class HazelcastClient:
                 await self._connection_manager.shutdown()
                 self._invocation_service.shutdown()
                 self._statistics.shutdown()
-                self._reactor.shutdown()
                 self._internal_lifecycle_service.fire_lifecycle_event(LifecycleState.SHUTDOWN)
 
     @property

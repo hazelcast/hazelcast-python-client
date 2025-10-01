@@ -17,21 +17,12 @@ _logger = logging.getLogger(__name__)
 
 class AsyncioReactor:
     def __init__(self, loop: AbstractEventLoop | None = None):
-        self._is_live = False
         self._loop = loop or asyncio.get_running_loop()
         self._bytes_sent = 0
         self._bytes_received = 0
 
     def add_timer(self, delay, callback):
         return self._loop.call_later(delay, callback)
-
-    def start(self):
-        self._is_live = True
-
-    def shutdown(self):
-        if not self._is_live:
-            return
-        # TODO: cancel tasks
 
     async def connection_factory(
         self, connection_manager, connection_id, address: Address, network_config, message_callback
@@ -174,6 +165,9 @@ class HazelcastProtocol(asyncio.BufferedProtocol):
         self._write_buf_size = 0
         self._recv_buf = None
         self._alive = True
+        # asyncio tasks are weakly referenced
+        # storing tasks here in order not to lose them midway
+        self._tasks: set = set()
 
     def connection_made(self, transport: transports.BaseTransport):
         self._transport = transport
@@ -184,7 +178,9 @@ class HazelcastProtocol(asyncio.BufferedProtocol):
 
     def connection_lost(self, exc):
         self._alive = False
-        self._conn._loop.create_task(self._conn.close_connection(str(exc), None))
+        task = self._conn._loop.create_task(self._conn.close_connection(str(exc), None))
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.discard)
         return False
 
     def close(self):
