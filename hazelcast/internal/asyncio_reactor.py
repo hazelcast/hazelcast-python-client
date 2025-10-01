@@ -85,21 +85,25 @@ class AsyncioConnection(Connection):
         this = cls(
             loop, reactor, connection_manager, connection_id, address, config, message_callback
         )
-        await this._create_connection(config)
+        await this._create_connection(config, address)
         return this
 
     def _create_protocol(self):
         return HazelcastProtocol(self)
 
-    async def _create_connection(self, config):
+    async def _create_connection(self, config, address):
         ssl_context = None
         if config.ssl_enabled:
             ssl_context = self._create_ssl_context(config)
+        server_hostname = None
+        if config.ssl_check_hostname:
+            server_hostname = address.host
         res = await self._loop.create_connection(
             self._create_protocol,
             host=self._address.host,
             port=self._address.port,
             ssl=ssl_context,
+            server_hostname=server_hostname,
         )
         _sock, self._proto = res
 
