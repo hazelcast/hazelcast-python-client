@@ -11,7 +11,9 @@ from tests.integration.asyncio.base import HazelcastTestCase
 from tests.util import compare_client_version, get_abs_path
 
 current_directory = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "../../../backward_compatible/ssl_tests/hostname_verification")
+    os.path.join(
+        os.path.dirname(__file__), "../../../backward_compatible/ssl_tests/hostname_verification"
+    )
 )
 
 MEMBER_CONFIG = """
