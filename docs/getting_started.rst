@@ -48,10 +48,10 @@ There are following options to start a Hazelcast cluster easily:
 
   .. code:: bash
 
-      docker run -p 5701:5701 hazelcast/hazelcast:5.3.0
+      docker run -p 5701:5701 hazelcast/hazelcast:5.5.0
 
 - You can use `Hazelcast CLI
-  <https://docs.hazelcast.com/hazelcast/latest/getting-started/install-hazelcast#using-a-package-manager>`__.
+  <https://docs.hazelcast.com/hazelcast/latest/getting-started/install-hazelcast#use-a-package-manager>`__.
 - You can run standalone members by downloading and running distribution
   files from the website.
 - You can embed members to your Java projects.
