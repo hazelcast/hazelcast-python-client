@@ -49,6 +49,7 @@ from hazelcast.proxy import (
     Ringbuffer,
     Set,
     Topic,
+    _proxy_init,
 )
 from hazelcast.proxy.base import Proxy
 from hazelcast.proxy.map import Map
@@ -66,6 +67,8 @@ __all__ = ("HazelcastClient",)
 from hazelcast.vector import IndexConfig
 
 _logger = logging.getLogger(__name__)
+
+_SUPPORTED_DDS_NAMES = set(_proxy_init.keys())
 
 
 class HazelcastClient:
@@ -495,8 +498,13 @@ class HazelcastClient:
         }
 
         response = client_get_distributed_objects_codec.decode_response(invocation.future.result())
+
         for dist_obj_info in response:
             local_distributed_object_infos.discard(dist_obj_info)
+
+            # skip unsupported proxies, e.g., hz:impl:cacheService
+            if dist_obj_info.service_name not in _SUPPORTED_DDS_NAMES:
+                continue
             self._proxy_manager.get_or_create(
                 dist_obj_info.service_name, dist_obj_info.name, create_on_remote=False
             )
