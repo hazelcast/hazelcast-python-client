@@ -34,6 +34,8 @@ class HeartbeatTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
 
     async def test_heartbeat_stopped_and_restored(self):
         member2 = self.rc.startMember(self.cluster.id)
+        # TODO: remove this
+        await asyncio.sleep(1)
         addr = Address(member2.host, member2.port)
         await wait_for_partition_table(self.client)
         await open_connection_to_address(self.client, member2.uuid)
@@ -67,7 +69,7 @@ class HeartbeatTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
                     # We have successfully simulated heartbeat loss
                     return
 
-                for connection in self.client._connection_manager.active_connections.values():
+                for connection in list(self.client._connection_manager.active_connections.values()):
                     if connection.remote_address == addr:
                         connection.last_read_time -= 2
                         break

@@ -61,6 +61,7 @@ class AsyncioConnection(Connection):
         self._address = address
         self._config = config
         self._proto = None
+        self.connected_address = address
 
     @classmethod
     async def create_and_connect(
