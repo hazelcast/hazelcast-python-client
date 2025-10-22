@@ -25,7 +25,9 @@ class InvocationTimeoutTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase)
         cls.rc.exit()
 
     async def asyncSetUp(self):
-        self.client = await HazelcastClient.create_and_start(cluster_name=self.cluster.id, invocation_timeout=1)
+        self.client = await HazelcastClient.create_and_start(
+            cluster_name=self.cluster.id, invocation_timeout=1
+        )
 
     async def asyncTearDown(self):
         await self.client.shutdown()

@@ -10,11 +10,13 @@ async def fill_map(map, size=10, key_prefix="key", value_prefix="val"):
     await map.put_all(entries)
     return entries
 
+
 async def open_connection_to_address(client, uuid):
     key = generate_key_owned_by_instance(client, uuid)
     m = await client.get_map(str(uuid4()))
     await m.put(key, 0)
     await m.destroy()
+
 
 def generate_key_owned_by_instance(client, uuid):
     while True:
@@ -23,6 +25,7 @@ def generate_key_owned_by_instance(client, uuid):
         owner = str(client.partition_service.get_partition_owner(partition_id))
         if owner == uuid:
             return key
+
 
 async def wait_for_partition_table(client):
     m = await client.get_map(str(uuid4()))
