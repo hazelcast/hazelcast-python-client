@@ -160,7 +160,7 @@ class HazelcastProtocol(asyncio.BufferedProtocol):
 
     def __init__(self, conn: AsyncioConnection):
         self._conn = conn
-        self._transport: transports.Transport | None = None
+        self._transport: transports.BaseTransport | None = None
         self.start_time: float | None = None
         self._write_buf = io.BytesIO()
         self._write_buf_size = 0
@@ -170,7 +170,7 @@ class HazelcastProtocol(asyncio.BufferedProtocol):
         # storing tasks here in order not to lose them midway
         self._tasks: set = set()
 
-    def connection_made(self, transport: transports.Transport):
+    def connection_made(self, transport: transports.BaseTransport):
         self._transport = transport
         self.start_time = time.time()
         self.write(self.PROTOCOL_STARTER)
