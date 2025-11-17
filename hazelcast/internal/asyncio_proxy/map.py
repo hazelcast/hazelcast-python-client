@@ -64,7 +64,8 @@ from hazelcast.protocol.codec import (
     map_put_transient_with_max_idle_codec,
     map_set_with_max_idle_codec,
     map_remove_interceptor_codec,
-    map_remove_all_codec, map_add_near_cache_invalidation_listener_codec,
+    map_remove_all_codec,
+    map_add_near_cache_invalidation_listener_codec,
 )
 from hazelcast.internal.asyncio_proxy.base import (
     Proxy,
