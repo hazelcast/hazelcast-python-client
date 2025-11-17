@@ -97,7 +97,8 @@ class AsyncioConnection(Connection):
             ssl=ssl_context,
             server_hostname=server_hostname,
         )
-        _sock, self._proto = res
+        sock, self._proto = res
+        self.local_address = Address(*sock._sock.getsockname())
 
     def _write(self, buf):
         self._proto.write(buf)
