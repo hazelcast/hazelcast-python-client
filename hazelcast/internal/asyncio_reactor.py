@@ -98,7 +98,9 @@ class AsyncioConnection(Connection):
             server_hostname=server_hostname,
         )
         sock, self._proto = res
-        self.local_address = Address(*sock._sock.getsockname())
+        sockname = sock._sock.getsockname()
+        host, port = sockname[0], sockname[1]
+        self.local_address = Address(host, port)
 
     def _write(self, buf):
         self._proto.write(buf)
