@@ -1140,8 +1140,11 @@ class MapFeatNearCache(Map[KeyType, ValueType]):
         return super(MapFeatNearCache, self)._delete_internal(key_data)
 
 
-def create_map_proxy(service_name, name, context):
+async def create_map_proxy(service_name, name, context):
     near_cache_config = context.config.near_caches.get(name, None)
     if near_cache_config is None:
         return Map(service_name, name, context)
-    return MapFeatNearCache(service_name, name, context)
+    nc = MapFeatNearCache(service_name, name, context)
+    if nc._near_cache.invalidate_on_change:
+        await nc._add_near_cache_invalidation_listener()
+    return nc

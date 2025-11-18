@@ -8,7 +8,10 @@ from hazelcast.util import to_list
 
 MAP_SERVICE = "hz:impl:mapService"
 
-_proxy_init: typing.Dict[str, typing.Callable[[str, str, typing.Any], Proxy]] = {
+_proxy_init: typing.Dict[
+    str,
+    typing.Callable[[str, str, typing.Any], typing.Coroutine[typing.Any, typing.Any, typing.Any]],
+] = {
     MAP_SERVICE: create_map_proxy,
 }
 
@@ -34,7 +37,7 @@ class ProxyManager:
             invocation_service = self._context.invocation_service
             await invocation_service.ainvoke(invocation)
 
-        return _proxy_init[service_name](service_name, name, self._context)
+        return await _proxy_init[service_name](service_name, name, self._context)
 
     async def destroy_proxy(self, service_name, name, destroy_on_remote=True):
         ns = (service_name, name)
