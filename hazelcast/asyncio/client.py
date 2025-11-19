@@ -20,11 +20,13 @@ from hazelcast.partition import PartitionService, _InternalPartitionService
 from hazelcast.protocol.codec import (
     client_add_distributed_object_listener_codec,
     client_get_distributed_objects_codec,
-    client_remove_distributed_object_listener_codec, dynamic_config_add_vector_collection_config_codec,
+    client_remove_distributed_object_listener_codec,
+    dynamic_config_add_vector_collection_config_codec,
 )
 from hazelcast.internal.asyncio_proxy.manager import (
     MAP_SERVICE,
-    ProxyManager, VECTOR_SERVICE,
+    ProxyManager,
+    VECTOR_SERVICE,
 )
 from hazelcast.internal.asyncio_proxy.base import Proxy
 from hazelcast.internal.asyncio_proxy.map import Map

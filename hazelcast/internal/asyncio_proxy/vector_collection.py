@@ -32,12 +32,10 @@ from hazelcast.vector import (
 
 
 class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
-
     def __init__(self, service_name, name, context):
         super(VectorCollection, self).__init__(service_name, name, context)
 
-
-    async def get(self, key: Any) -> Document|None:
+    async def get(self, key: Any) -> Document | None:
         check_not_none(key, "key can't be None")
         return await self._get_internal(key)
 
@@ -47,7 +45,7 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
         check_not_none(document.value, "document value can't be None")
         return await self._set_internal(key, document)
 
-    async def put(self, key: Any, document: Document) -> Document|None:
+    async def put(self, key: Any, document: Document) -> Document | None:
         check_not_none(key, "key can't be None")
         check_not_none(document, "document can't be None")
         check_not_none(document.value, "document value can't be None")
@@ -72,14 +70,14 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
             partition_id = partition_service.get_partition_id(entry[0])
             partition_map.setdefault(partition_id, []).append(entry)
 
-        async with asyncio.TaskGroup() as tg:
+        async with asyncio.TaskGroup() as tg:  # type: ignore[attr-defined]
             for partition_id, entry_list in partition_map.items():
                 request = vector_collection_put_all_codec.encode_request(self.name, entry_list)
                 tg.create_task(self._ainvoke_on_partition(request, partition_id))
 
         return None
 
-    async def put_if_absent(self, key: Any, document: Document) -> Document|None:
+    async def put_if_absent(self, key: Any, document: Document) -> Document | None:
         check_not_none(key, "key can't be None")
         check_not_none(document, "document can't be None")
         check_not_none(document.value, "document value can't be None")
@@ -105,7 +103,7 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
             hints=hints,
         )
 
-    async def remove(self, key: Any) -> Document|None:
+    async def remove(self, key: Any) -> Document | None:
         check_not_none(key, "key can't be None")
         return await self._remove_internal(key)
 
@@ -198,7 +196,7 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
         request = vector_collection_delete_codec.encode_request(self.name, key_data)
         return self._invoke_on_key(request, key_data)
 
-    def _remove_internal(self, key: Any) -> asyncio.Future[Document|None]:
+    def _remove_internal(self, key: Any) -> asyncio.Future[Document | None]:
         def handler(message):
             doc = vector_collection_remove_codec.decode_response(message)
             return self._transform_document(doc)
@@ -207,7 +205,7 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
         request = vector_collection_remove_codec.encode_request(self.name, key_data)
         return self._invoke_on_key(request, key_data, response_handler=handler)
 
-    def _put_internal(self, key: Any, document: Document) -> asyncio.Future[Document|None]:
+    def _put_internal(self, key: Any, document: Document) -> asyncio.Future[Document | None]:
         def handler(message):
             doc = vector_collection_put_codec.decode_response(message)
             return self._transform_document(doc)
@@ -226,7 +224,9 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
         )
         return self._invoke_on_key(request, key_data, response_handler=handler)
 
-    def _put_if_absent_internal(self, key: Any, document: Document) -> asyncio.Future[Document|None]:
+    def _put_if_absent_internal(
+        self, key: Any, document: Document
+    ) -> asyncio.Future[Document | None]:
         def handler(message):
             doc = vector_collection_put_if_absent_codec.decode_response(message)
             return self._transform_document(doc)
@@ -251,6 +251,7 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
             for vec in doc.vectors:
                 vec.type = VectorType(vec.type)
         return doc
+
 
 async def create_vector_collection_proxy(service_name, name, context):
     return VectorCollection(service_name, name, context)

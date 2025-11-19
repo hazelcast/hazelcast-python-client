@@ -40,7 +40,9 @@ class VectorCollectionTest(SingleMemberTestCase):
         await super().asyncSetUp()
         skip_if_server_version_older_than(self, self.client, "5.5")
         name = random_string()
-        await self.client.create_vector_collection_config(name, [IndexConfig("vector", Metric.COSINE, 3)])
+        await self.client.create_vector_collection_config(
+            name, [IndexConfig("vector", Metric.COSINE, 3)]
+        )
         self.vector_collection = await self.client.get_vector_collection(name)
 
     async def asyncTearDown(self):

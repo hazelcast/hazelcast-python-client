@@ -1,6 +1,9 @@
 import typing
 
-from hazelcast.internal.asyncio_proxy.vector_collection import VectorCollection, create_vector_collection_proxy
+from hazelcast.internal.asyncio_proxy.vector_collection import (
+    VectorCollection,
+    create_vector_collection_proxy,
+)
 from hazelcast.protocol.codec import client_create_proxy_codec, client_destroy_proxy_codec
 from hazelcast.internal.asyncio_invocation import Invocation
 from hazelcast.internal.asyncio_proxy.base import Proxy
