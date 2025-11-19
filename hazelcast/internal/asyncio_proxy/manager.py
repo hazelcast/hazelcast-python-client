@@ -1,5 +1,6 @@
 import typing
 
+from hazelcast.internal.asyncio_proxy.vector_collection import VectorCollection, create_vector_collection_proxy
 from hazelcast.protocol.codec import client_create_proxy_codec, client_destroy_proxy_codec
 from hazelcast.internal.asyncio_invocation import Invocation
 from hazelcast.internal.asyncio_proxy.base import Proxy
@@ -7,12 +8,14 @@ from hazelcast.internal.asyncio_proxy.map import create_map_proxy
 from hazelcast.util import to_list
 
 MAP_SERVICE = "hz:impl:mapService"
+VECTOR_SERVICE = "hz:service:vector"
 
 _proxy_init: typing.Dict[
     str,
     typing.Callable[[str, str, typing.Any], typing.Coroutine[typing.Any, typing.Any, typing.Any]],
 ] = {
     MAP_SERVICE: create_map_proxy,
+    VECTOR_SERVICE: create_vector_collection_proxy,
 }
 
 

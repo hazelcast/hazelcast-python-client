@@ -5,13 +5,14 @@ import typing
 
 from hazelcast.internal.asyncio_cluster import ClusterService, _InternalClusterService
 from hazelcast.internal.asyncio_compact import CompactSchemaService
-from hazelcast.config import Config
+from hazelcast.config import Config, IndexConfig
 from hazelcast.internal.asyncio_connection import ConnectionManager, DefaultAddressProvider
 from hazelcast.core import DistributedObjectEvent, DistributedObjectInfo
 from hazelcast.cp import CPSubsystem, ProxySessionManager
 from hazelcast.discovery import HazelcastCloudAddressProvider
 from hazelcast.errors import IllegalStateError, InvalidConfigurationError
 from hazelcast.internal.asyncio_invocation import InvocationService, Invocation
+from hazelcast.internal.asyncio_proxy.vector_collection import VectorCollection
 from hazelcast.lifecycle import LifecycleService, LifecycleState, _InternalLifecycleService
 from hazelcast.internal.asyncio_listener import ClusterViewListenerService, ListenerService
 from hazelcast.near_cache import NearCacheManager
@@ -19,11 +20,11 @@ from hazelcast.partition import PartitionService, _InternalPartitionService
 from hazelcast.protocol.codec import (
     client_add_distributed_object_listener_codec,
     client_get_distributed_objects_codec,
-    client_remove_distributed_object_listener_codec,
+    client_remove_distributed_object_listener_codec, dynamic_config_add_vector_collection_config_codec,
 )
 from hazelcast.internal.asyncio_proxy.manager import (
     MAP_SERVICE,
-    ProxyManager,
+    ProxyManager, VECTOR_SERVICE,
 )
 from hazelcast.internal.asyncio_proxy.base import Proxy
 from hazelcast.internal.asyncio_proxy.map import Map
@@ -184,6 +185,37 @@ class HazelcastClient:
 
     async def get_map(self, name: str) -> Map[KeyType, ValueType]:
         return await self._proxy_manager.get_or_create(MAP_SERVICE, name)
+
+    async def create_vector_collection_config(
+        self,
+        name: str,
+        indexes: typing.List[IndexConfig],
+        backup_count: int = 1,
+        async_backup_count: int = 0,
+        split_brain_protection_name: typing.Optional[str] = None,
+        merge_policy: str = "PutIfAbsentMergePolicy",
+        merge_batch_size: int = 100,
+    ) -> None:
+        # check that indexes have different names
+        if indexes:
+            index_names = set(index.name for index in indexes)
+            if len(index_names) != len(indexes):
+                raise AssertionError("index names must be unique")
+
+        request = dynamic_config_add_vector_collection_config_codec.encode_request(
+            name,
+            indexes,
+            backup_count,
+            async_backup_count,
+            split_brain_protection_name,
+            merge_policy,
+            merge_batch_size,
+        )
+        invocation = Invocation(request, response_handler=lambda m: m)
+        await self._invocation_service.ainvoke(invocation)
+
+    async def get_vector_collection(self, name: str) -> VectorCollection:
+        return await self._proxy_manager.get_or_create(VECTOR_SERVICE, name)
 
     async def add_distributed_object_listener(
         self, listener_func: typing.Callable[[DistributedObjectEvent], None]
