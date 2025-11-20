@@ -33,9 +33,7 @@ class HeartbeatTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
         self.rc.shutdownCluster(self.cluster.id)
 
     async def test_heartbeat_stopped_and_restored(self):
-        member2 = self.rc.startMember(self.cluster.id)
-        # TODO: remove this
-        await asyncio.sleep(1)
+        member2 = await asyncio.to_thread(self.rc.startMember, self.cluster.id)
         addr = Address(member2.host, member2.port)
         await wait_for_partition_table(self.client)
         await open_connection_to_address(self.client, member2.uuid)

@@ -125,12 +125,12 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
         request = vector_collection_size_codec.encode_request(self.name)
         return await self._invoke(request, vector_collection_size_codec.decode_response)
 
-    def _set_internal(self, key: Any, document: Document) -> asyncio.Future[None]:
+    async def _set_internal(self, key: Any, document: Document) -> None:
         try:
             key_data = self._to_data(key)
             value_data = self._to_data(document.value)
         except SchemaNotReplicatedError as e:
-            return self._send_schema_and_retry(e, self.set, key, document)
+            return await self._send_schema_and_retry(e, self.set, key, document)
         document = copy.copy(document)
         document.value = value_data
         request = vector_collection_set_codec.encode_request(
@@ -138,9 +138,9 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
             key_data,
             document,
         )
-        return self._invoke_on_key(request, key_data)
+        return await self._invoke_on_key(request, key_data)
 
-    def _get_internal(self, key: Any) -> asyncio.Future[Any]:
+    async def _get_internal(self, key: Any) -> Any:
         def handler(message):
             doc = vector_collection_get_codec.decode_response(message)
             return self._transform_document(doc)
@@ -148,12 +148,12 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
         try:
             key_data = self._to_data(key)
         except SchemaNotReplicatedError as e:
-            return self._send_schema_and_retry(e, self.get, key)
+            return await self._send_schema_and_retry(e, self.get, key)
         request = vector_collection_get_codec.encode_request(
             self.name,
             key_data,
         )
-        return self._invoke_on_key(request, key_data, response_handler=handler)
+        return await self._invoke_on_key(request, key_data, response_handler=handler)
 
     def _search_near_vector_internal(
         self,
@@ -191,21 +191,21 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
         )
         return self._invoke(request, response_handler=handler)
 
-    def _delete_internal(self, key: Any) -> asyncio.Future[None]:
+    async def _delete_internal(self, key: Any) -> None:
         key_data = self._to_data(key)
         request = vector_collection_delete_codec.encode_request(self.name, key_data)
-        return self._invoke_on_key(request, key_data)
+        return await self._invoke_on_key(request, key_data)
 
-    def _remove_internal(self, key: Any) -> asyncio.Future[Document | None]:
+    async def _remove_internal(self, key: Any) -> Document | None:
         def handler(message):
             doc = vector_collection_remove_codec.decode_response(message)
             return self._transform_document(doc)
 
         key_data = self._to_data(key)
         request = vector_collection_remove_codec.encode_request(self.name, key_data)
-        return self._invoke_on_key(request, key_data, response_handler=handler)
+        return await self._invoke_on_key(request, key_data, response_handler=handler)
 
-    def _put_internal(self, key: Any, document: Document) -> asyncio.Future[Document | None]:
+    async def _put_internal(self, key: Any, document: Document) -> Document | None:
         def handler(message):
             doc = vector_collection_put_codec.decode_response(message)
             return self._transform_document(doc)
@@ -214,7 +214,7 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
             key_data = self._to_data(key)
             value_data = self._to_data(document.value)
         except SchemaNotReplicatedError as e:
-            return self._send_schema_and_retry(e, self.set, key, document)
+            return await self._send_schema_and_retry(e, self.set, key, document)
         document = copy.copy(document)
         document.value = value_data
         request = vector_collection_put_codec.encode_request(
@@ -222,11 +222,9 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
             key_data,
             document,
         )
-        return self._invoke_on_key(request, key_data, response_handler=handler)
+        return await self._invoke_on_key(request, key_data, response_handler=handler)
 
-    def _put_if_absent_internal(
-        self, key: Any, document: Document
-    ) -> asyncio.Future[Document | None]:
+    async def _put_if_absent_internal(self, key: Any, document: Document) -> Document | None:
         def handler(message):
             doc = vector_collection_put_if_absent_codec.decode_response(message)
             return self._transform_document(doc)
@@ -235,14 +233,14 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
             key_data = self._to_data(key)
             value_data = self._to_data(document.value)
         except SchemaNotReplicatedError as e:
-            return self._send_schema_and_retry(e, self.set, key, document)
+            return await self._send_schema_and_retry(e, self.set, key, document)
         document.value = value_data
         request = vector_collection_put_if_absent_codec.encode_request(
             self.name,
             key_data,
             document,
         )
-        return self._invoke_on_key(request, key_data, response_handler=handler)
+        return await self._invoke_on_key(request, key_data, response_handler=handler)
 
     def _transform_document(self, doc: Optional[Document]) -> Optional[Document]:
         if doc is not None:

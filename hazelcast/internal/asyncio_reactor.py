@@ -172,7 +172,6 @@ class HazelcastProtocol(asyncio.BufferedProtocol):
         self._write_buf = io.BytesIO()
         self._write_buf_size = 0
         self._recv_buf = None
-        self._alive = True
         # asyncio tasks are weakly referenced
         # storing tasks here in order not to lose them midway
         self._tasks: set = set()
@@ -185,8 +184,10 @@ class HazelcastProtocol(asyncio.BufferedProtocol):
         self._conn._loop.call_soon(self._write_loop)
 
     def connection_lost(self, exc):
-        self._alive = False
-        task = self._conn._loop.create_task(self._conn.close_connection(str(exc), None))
+        _logger.warning("Connection closed by server")
+        task = self._conn._loop.create_task(
+            self._conn.close_connection(None, IOError("Connection closed by server"))
+        )
         self._tasks.add(task)
         task.add_done_callback(self._tasks.discard)
         return False
@@ -211,9 +212,6 @@ class HazelcastProtocol(asyncio.BufferedProtocol):
         self._conn._reader.read(recv_bytes)
         if self._conn._reader.length:
             self._conn._reader.process()
-
-    def eof_received(self):
-        self._alive = False
 
     def _do_write(self):
         if not self._write_buf_size:

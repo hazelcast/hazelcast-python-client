@@ -167,7 +167,7 @@ class HazelcastClient:
     async def _start(self):
         try:
             self._internal_lifecycle_service.start()
-            self._invocation_service.start()
+            await self._invocation_service.start()
             membership_listeners = self._config.membership_listeners
             self._internal_cluster_service.start(self._connection_manager, membership_listeners)
             self._cluster_view_listener.start()

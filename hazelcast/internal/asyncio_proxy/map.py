@@ -272,7 +272,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         try:
             interceptor_data = self._to_data(interceptor)
         except SchemaNotReplicatedError as e:
-            return self._send_schema_and_retry(e, self.add_interceptor, interceptor)
+            return await self._send_schema_and_retry(e, self.add_interceptor, interceptor)
 
         request = map_add_interceptor_codec.encode_request(self.name, interceptor_data)
         return await self._invoke(request, map_add_interceptor_codec.decode_response)
@@ -872,7 +872,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         request = map_delete_codec.encode_request(self.name, key_data, thread_id())
         return self._invoke_on_key(request, key_data)
 
-    def _put_internal(self, key_data, value_data, ttl, max_idle):
+    async def _put_internal(self, key_data, value_data, ttl, max_idle):
         def handler(message):
             return self._to_object(map_put_codec.decode_response(message))
 
@@ -884,7 +884,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
             request = map_put_codec.encode_request(
                 self.name, key_data, value_data, thread_id(), to_millis(ttl)
             )
-        return self._invoke_on_key(request, key_data, handler)
+        return await self._invoke_on_key(request, key_data, handler)
 
     def _set_internal(self, key_data, value_data, ttl, max_idle):
         if max_idle is not None:
@@ -1108,9 +1108,11 @@ class MapFeatNearCache(Map[KeyType, ValueType]):
             key_data, value_data, ttl, max_idle
         )
 
-    def _put_internal(self, key_data, value_data, ttl, max_idle):
+    async def _put_internal(self, key_data, value_data, ttl, max_idle):
         self._invalidate_cache(key_data)
-        return super(MapFeatNearCache, self)._put_internal(key_data, value_data, ttl, max_idle)
+        return await super(MapFeatNearCache, self)._put_internal(
+            key_data, value_data, ttl, max_idle
+        )
 
     def _put_if_absent_internal(self, key_data, value_data, ttl, max_idle):
         self._invalidate_cache(key_data)
