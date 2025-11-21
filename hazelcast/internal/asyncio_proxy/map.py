@@ -978,8 +978,6 @@ class MapFeatNearCache(Map[KeyType, ValueType]):
         super(MapFeatNearCache, self).__init__(service_name, name, context)
         self._invalidation_listener_id = None
         self._near_cache = context.near_cache_manager.get_or_create_near_cache(name)
-        if self._near_cache.invalidate_on_change:
-            self._add_near_cache_invalidation_listener()
 
     async def clear(self):
         self._near_cache._clear()
