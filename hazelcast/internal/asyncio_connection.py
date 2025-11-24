@@ -70,12 +70,12 @@ class WaitStrategy:
 
     def reset(self):
         self._attempt = 0
-        self._cluster_connect_attempt_begin = time.time()
+        self._cluster_connect_attempt_begin = asyncio.get_running_loop().time()
         self._current_backoff = min(self._max_backoff, self._initial_backoff)
 
-    def sleep(self):
+    async def sleep(self):
         self._attempt += 1
-        time_passed = time.time() - self._cluster_connect_attempt_begin
+        time_passed = asyncio.get_running_loop().time() - self._cluster_connect_attempt_begin
         if time_passed > self._cluster_connect_timeout:
             _logger.warning(
                 "Unable to get live cluster connection, cluster connect timeout (%s) is reached. "
@@ -98,7 +98,7 @@ class WaitStrategy:
             self._cluster_connect_timeout_text,
             self._max_backoff,
         )
-        time.sleep(sleep_time)
+        await asyncio.sleep(sleep_time)
         self._current_backoff = min(self._current_backoff * self._multiplier, self._max_backoff)
         return True
 
@@ -548,7 +548,7 @@ class ConnectionManager:
                 if not tried_addresses_per_attempt:
                     self._check_client_active()
 
-                if not self._wait_strategy.sleep():
+                if not await self._wait_strategy.sleep():
                     break
         except (ClientNotAllowedInClusterError, InvalidConfigurationError):
             cluster_name = self._config.cluster_name
