@@ -104,32 +104,6 @@ class PartitionSpecificProxy(Proxy[BlockingProxyType], abc.ABC):
         return invocation.future
 
 
-class TransactionalProxy:
-    """Provides an interface for all transactional distributed objects."""
-
-    def __init__(self, name, transaction, context):
-        self.name = name
-        self.transaction = transaction
-        self._invocation_service = context.invocation_service
-        serialization_service = context.serialization_service
-        self._to_object = serialization_service.to_object
-        self._to_data = serialization_service.to_data
-        self._send_schema_and_retry = context.compact_schema_service.send_schema_and_retry
-
-    def _send_schema(self, error):
-        return self._send_schema_and_retry(error, lambda: None).result()
-
-    def _invoke(self, request, response_handler=_no_op_response_handler):
-        invocation = Invocation(
-            request, connection=self.transaction.connection, response_handler=response_handler
-        )
-        self._invocation_service.invoke(invocation)
-        return invocation.future.result()
-
-    def __repr__(self):
-        return '%s(name="%s")' % (type(self).__name__, self.name)
-
-
 class ItemEventType:
     """Type of item events."""
 
@@ -259,33 +233,6 @@ class EntryEvent(typing.Generic[KeyType, ValueType]):
                 self.uuid,
                 self.number_of_affected_entries,
             )
-        )
-
-
-class TopicMessage(typing.Generic[MessageType]):
-    """Topic message.
-
-    Attributes:
-        name: Name of the proxy that fired the event.
-        message: The message sent to Topic.
-        publish_time: UNIX time that the event is published as seconds.
-        member: Member that fired the event.
-    """
-
-    __slots__ = ("name", "message", "publish_time", "member")
-
-    def __init__(self, name: str, message: MessageType, publish_time: int, member: MemberInfo):
-        self.name = name
-        self.message = message
-        self.publish_time = publish_time
-        self.member = member
-
-    def __repr__(self):
-        return "TopicMessage(message=%s, publish_time=%s, topic_name=%s, publishing_member=%s)" % (
-            self.message,
-            self.publish_time,
-            self.name,
-            self.member,
         )
 
 
