@@ -41,9 +41,11 @@ class Proxy(typing.Generic[BlockingProxyType], abc.ABC):
             ``True`` if this proxy is destroyed successfully, ``False``
             otherwise.
         """
-        async with asyncio.TaskGroup() as tg:
+        async with asyncio.TaskGroup() as tg:  # type: ignore[attr-defined]
             tg.create_task(self._on_destroy())
-            return await tg.create_task(self._context.proxy_manager.destroy_proxy(self.service_name, self.name))
+            return await tg.create_task(
+                self._context.proxy_manager.destroy_proxy(self.service_name, self.name)
+            )
 
     async def _on_destroy(self):
         pass
