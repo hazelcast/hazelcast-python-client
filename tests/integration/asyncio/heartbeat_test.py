@@ -33,9 +33,7 @@ class HeartbeatTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
         self.rc.shutdownCluster(self.cluster.id)
 
     async def test_heartbeat_stopped_and_restored(self):
-        member2 = self.rc.startMember(self.cluster.id)
-        # TODO: remove this
-        await asyncio.sleep(1)
+        member2 = await asyncio.to_thread(self.rc.startMember, self.cluster.id)
         addr = Address(member2.host, member2.port)
         await wait_for_partition_table(self.client)
         await open_connection_to_address(self.client, member2.uuid)
@@ -56,7 +54,7 @@ class HeartbeatTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
         )
         assertion_succeeded = False
 
-        def run():
+        async def run():
             nonlocal assertion_succeeded
             # It is possible for client to override the set last_read_time
             # of the connection, in case of the periodically sent heartbeat
@@ -74,10 +72,9 @@ class HeartbeatTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
                         connection.last_read_time -= 2
                         break
 
-                asyncio.sleep((i + 1) * 0.1)
+                await asyncio.sleep((i + 1) * 0.1)
 
-        simulation_thread = threading.Thread(target=run)
-        simulation_thread.start()
+        asyncio.create_task(run())
 
         async def assert_heartbeat_stopped_and_restored():
             nonlocal assertion_succeeded
@@ -98,4 +95,3 @@ class HeartbeatTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
             assertion_succeeded = True
 
         await self.assertTrueEventually(assert_heartbeat_stopped_and_restored)
-        simulation_thread.join()
