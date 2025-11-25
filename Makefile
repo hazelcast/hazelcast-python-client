@@ -5,10 +5,10 @@ check:
 	black --check --config black.toml .
 
 test:
-	pytest -m "not enterprise"
+	pytest --verbose -m "not enterprise"
 
 test-enterprise:
-	pytest
+	pytest --verbose
 
 test-cover:
 	pytest --cov=hazelcast --cov-report=xml
