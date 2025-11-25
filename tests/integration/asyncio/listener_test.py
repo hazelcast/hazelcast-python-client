@@ -42,16 +42,21 @@ class ListenerRemoveMemberTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCa
         self.rc.terminateCluster(self.cluster.id)
         self.rc.exit()
 
-    @parameterized.expand(LISTENER_TYPES)
-    async def test_remove_member(self, _, is_smart):
+    async def test_remove_member_smart(self):
+        await self._remove_member_test(True)
+
+    async def test_remove_member_unisocket(self):
+        await self._remove_member_test(False)
+
+    async def _remove_member_test(self, is_smart):
         self.client_config["smart_routing"] = is_smart
         client = await self.create_client(self.client_config)
         await wait_for_partition_table(client)
         key_m1 = generate_key_owned_by_instance(client, self.m1.uuid)
-        random_map = await client.get_map(random_string()).blocking()
-        random_map.add_entry_listener(added_func=self.collector)
-        self.m1.shutdown()
-        random_map.put(key_m1, "value2")
+        random_map = await client.get_map(random_string())
+        await random_map.add_entry_listener(added_func=self.collector)
+        await asyncio.to_thread(self.m1.shutdown)
+        await random_map.put(key_m1, "value2")
 
         def assert_event():
             self.assertEqual(1, len(self.collector.events))
@@ -74,16 +79,20 @@ class ListenerAddMemberTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase)
         self.rc.terminateCluster(self.cluster.id)
         self.rc.exit()
 
-    @parameterized.expand(LISTENER_TYPES)
-    async def test_add_member(self, _, is_smart):
+    async def test_add_member_smart(self):
+        await self._add_member_test(True)
+
+    async def test_add_member_unisocket(self):
+        await self._add_member_test(True)
+
+    async def _add_member_test(self, is_smart):
         self.client_config["smart_routing"] = is_smart
         client = await self.create_client(self.client_config)
-        random_map = await client.get_map(random_string()).blocking()
-        random_map.add_entry_listener(added_func=self.collector, updated_func=self.collector)
-        m2 = self.cluster.start_member()
+        random_map = await client.get_map(random_string())
+        await random_map.add_entry_listener(added_func=self.collector, updated_func=self.collector)
+        m2 = await asyncio.to_thread(self.cluster.start_member)
         await wait_for_partition_table(client)
         key_m2 = generate_key_owned_by_instance(client, m2.uuid)
-
         assertion_succeeded = False
 
         async def run():
