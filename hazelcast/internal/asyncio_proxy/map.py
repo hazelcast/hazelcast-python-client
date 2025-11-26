@@ -978,8 +978,6 @@ class MapFeatNearCache(Map[KeyType, ValueType]):
         super(MapFeatNearCache, self).__init__(service_name, name, context)
         self._invalidation_listener_id = None
         self._near_cache = context.near_cache_manager.get_or_create_near_cache(name)
-        if self._near_cache.invalidate_on_change:
-            self._add_near_cache_invalidation_listener()
 
     async def clear(self):
         self._near_cache._clear()
@@ -994,10 +992,10 @@ class MapFeatNearCache(Map[KeyType, ValueType]):
             self._near_cache.clear()
         return await super(MapFeatNearCache, self).load_all(keys, replace_existing_values)
 
-    def _on_destroy(self):
-        self._remove_near_cache_invalidation_listener()
+    async def _on_destroy(self):
+        await self._remove_near_cache_invalidation_listener()
         self._near_cache.clear()
-        super(MapFeatNearCache, self)._on_destroy()
+        await super(MapFeatNearCache, self)._on_destroy()
 
     async def _add_near_cache_invalidation_listener(self):
         codec = map_add_near_cache_invalidation_listener_codec
