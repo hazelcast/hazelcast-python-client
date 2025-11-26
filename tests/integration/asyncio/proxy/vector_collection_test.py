@@ -285,7 +285,7 @@ class VectorCollectionTest(SingleMemberTestCase):
             merge_batch_size=1000,
         )
         # validation happens when the collection proxy is created
-        self.client.get_vector_collection(name)
+        await self.client.get_vector_collection(name)
 
     async def test_wrong_merge_policy_fails(self):
         skip_if_client_version_older_than(self, "6.0")
