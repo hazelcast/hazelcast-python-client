@@ -37,7 +37,7 @@ class ReconnectTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
     async def test_start_client_before_member(self):
         async def run():
             await asyncio.sleep(1.0)
-            self.cluster.start_member()
+            await asyncio.to_thread(self.cluster.start_member)
 
         asyncio.create_task(run())
         await self.create_client(
@@ -48,7 +48,7 @@ class ReconnectTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
         )
 
     async def test_restart_member(self):
-        member = self.cluster.start_member()
+        member = await asyncio.to_thread(self.cluster.start_member)
         client = await self.create_client(
             {
                 "cluster_name": self.cluster.id,
@@ -63,30 +63,29 @@ class ReconnectTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
 
         client.lifecycle_service.add_listener(listener)
 
-        member.shutdown()
+        await asyncio.to_thread(member.shutdown)
         await self.assertTrueEventually(
             lambda: self.assertEqual(state[0], LifecycleState.DISCONNECTED)
         )
-        self.cluster.start_member()
+        await asyncio.to_thread(self.cluster.start_member)
         await self.assertTrueEventually(
             lambda: self.assertEqual(state[0], LifecycleState.CONNECTED)
         )
 
     async def test_listener_re_register(self):
-        member = self.cluster.start_member()
+        member = await asyncio.to_thread(self.cluster.start_member)
         client = await self.create_client(
             {
                 "cluster_name": self.cluster.id,
                 "cluster_connect_timeout": 5.0,
             }
         )
-
         map = await client.get_map("map")
         collector = event_collector()
         reg_id = await map.add_entry_listener(added_func=collector)
         self.logger.info("Registered listener with id %s", reg_id)
-        member.shutdown()
-        self.cluster.start_member()
+        await asyncio.to_thread(member.shutdown)
+        await asyncio.to_thread(self.cluster.start_member)
         count = AtomicInteger()
 
         async def assert_events():
@@ -104,15 +103,15 @@ class ReconnectTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
         await self.assertTrueEventually(assert_events)
 
     async def test_member_list_after_reconnect(self):
-        old_member = self.cluster.start_member()
+        old_member = await asyncio.to_thread(self.cluster.start_member)
         client = await self.create_client(
             {
                 "cluster_name": self.cluster.id,
                 "cluster_connect_timeout": 5.0,
             }
         )
-        old_member.shutdown()
-        new_member = self.cluster.start_member()
+        await asyncio.to_thread(old_member.shutdown)
+        new_member = await asyncio.to_thread(self.cluster.start_member)
 
         def assert_member_list():
             members = client.cluster_service.get_members()
@@ -122,7 +121,7 @@ class ReconnectTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
         await self.assertTrueEventually(assert_member_list)
 
     async def test_reconnect_toNewNode_ViaLastMemberList(self):
-        old_member = self.cluster.start_member()
+        old_member = await asyncio.to_thread(self.cluster.start_member)
         client = await self.create_client(
             {
                 "cluster_name": self.cluster.id,
@@ -133,8 +132,8 @@ class ReconnectTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
                 "cluster_connect_timeout": 10.0,
             }
         )
-        new_member = self.cluster.start_member()
-        old_member.shutdown()
+        new_member = await asyncio.to_thread(self.cluster.start_member)
+        await asyncio.to_thread(old_member.shutdown)
 
         def assert_member_list():
             members = client.cluster_service.get_members()
@@ -201,8 +200,10 @@ class ReconnectWithDifferentInterfacesTest(unittest.IsolatedAsyncioTestCase, Haz
         await self._verify_listeners_after_client_disconnected("127.0.0.1", "localhost")
 
     async def _verify_connection_count_after_reconnect(self, member_address, client_address):
-        cluster = self.create_cluster(self.rc, self._create_cluster_config(member_address))
-        member = cluster.start_member()
+        cluster = await asyncio.to_thread(
+            self.create_cluster, self.rc, self._create_cluster_config(member_address)
+        )
+        member = await asyncio.to_thread(cluster.start_member)
 
         disconnected = asyncio.Event()
         reconnected = asyncio.Event()
@@ -225,13 +226,13 @@ class ReconnectWithDifferentInterfacesTest(unittest.IsolatedAsyncioTestCase, Haz
         await self.assertTrueEventually(
             lambda: self.assertEqual(1, len(client._connection_manager.active_connections))
         )
-        member.shutdown()
+        await asyncio.to_thread(member.shutdown)
         await self.assertTrueEventually(lambda: self.assertTrue(disconnected.is_set()))
-        cluster.start_member()
+        await asyncio.to_thread(cluster.start_member)
         await self.assertTrueEventually(lambda: self.assertTrue(reconnected.is_set()))
         self.assertEqual(1, len(client._connection_manager.active_connections))
         await client.shutdown()
-        self.rc.terminateCluster(cluster.id)
+        await asyncio.to_thread(self.rc.terminateCluster, cluster.id)
 
     async def _verify_listeners_after_client_disconnected(self, member_address, client_address):
         heartbeat_seconds = 2

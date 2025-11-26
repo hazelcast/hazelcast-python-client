@@ -200,7 +200,7 @@ class PredicatePortableTest(SingleMemberTestCase):
         await super().asyncSetUp()
         self.map = await self.client.get_map(random_string())
 
-    async def tearDown(self):
+    async def asyncTearDown(self):
         await self.map.destroy()
         await super().asyncTearDown()
 

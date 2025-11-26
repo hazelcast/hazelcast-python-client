@@ -992,10 +992,10 @@ class MapFeatNearCache(Map[KeyType, ValueType]):
             self._near_cache.clear()
         return await super(MapFeatNearCache, self).load_all(keys, replace_existing_values)
 
-    def _on_destroy(self):
-        self._remove_near_cache_invalidation_listener()
+    async def _on_destroy(self):
+        await self._remove_near_cache_invalidation_listener()
         self._near_cache.clear()
-        super(MapFeatNearCache, self)._on_destroy()
+        await super(MapFeatNearCache, self)._on_destroy()
 
     async def _add_near_cache_invalidation_listener(self):
         codec = map_add_near_cache_invalidation_listener_codec

@@ -170,7 +170,7 @@ class NonStopNearCacheTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
         self.client = client
         self.map = map
 
-    async def tearDown(self):
+    async def asyncTearDown(self):
         await self.client.shutdown()
 
     async def test_get_existing_key_from_cache_when_the_cluster_is_down(self):

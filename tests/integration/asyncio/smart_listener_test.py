@@ -38,8 +38,8 @@ class SmartListenerTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
         map = await self.client.get_map(random_string())
         await map.add_entry_listener(added_func=self.collector)
         await map.put("key", "value")
-        self.assert_event_received_once()
+        await self.assert_event_received_once()
 
-    def assert_event_received_once(self):
-        asyncio.sleep(2)
+    async def assert_event_received_once(self):
+        await asyncio.sleep(2)
         self.assertEqual(1, len(self.collector.events))
