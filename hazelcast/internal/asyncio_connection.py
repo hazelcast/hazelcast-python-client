@@ -342,7 +342,6 @@ class ConnectionManager:
 
         if removed:
             async with asyncio.TaskGroup() as tg:
-                # TODO: see on_connection_open
                 for _, on_connection_closed in self._connection_listeners:
                     if on_connection_closed:
                         try:
@@ -474,7 +473,6 @@ class ConnectionManager:
                     connecting_uuids.add(member_uuid)
                     if not self._lifecycle_service.running:
                         break
-                    # TODO: ERROR:asyncio:Task was destroyed but it is pending!
                     tg.create_task(self._get_or_connect_to_member(member))
                     member_uuids.append(member_uuid)
 
@@ -708,8 +706,6 @@ class ConnectionManager:
             for on_connection_opened, _ in self._connection_listeners:
                 if on_connection_opened:
                     try:
-                        # TODO: creating the task may not throw the exception
-                        # TODO: protect the loop against exceptions, so all handlers run
                         maybe_coro = on_connection_opened(connection)
                         if isinstance(maybe_coro, Coroutine):
                             tg.create_task(maybe_coro)
