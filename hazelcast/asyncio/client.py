@@ -30,7 +30,7 @@ from hazelcast.internal.asyncio_proxy.map import Map
 from hazelcast.internal.asyncio_reactor import AsyncioReactor
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.sql import SqlService, _InternalSqlService
-from hazelcast.statistics import Statistics
+from hazelcast.internal.asyncio_statistics import Statistics
 from hazelcast.types import KeyType, ValueType, ItemType, MessageType
 from hazelcast.util import AtomicInteger, RoundRobinLB
 
@@ -162,7 +162,6 @@ class HazelcastClient:
         )
 
     async def _start(self):
-        self._reactor.start()
         try:
             self._internal_lifecycle_service.start()
             self._invocation_service.start()
@@ -177,7 +176,7 @@ class HazelcastClient:
             self._listener_service.start()
             await self._invocation_service.add_backup_listener()
             self._load_balancer.init(self._cluster_service)
-            self._statistics.start()
+            await self._statistics.start()
         except Exception:
             await self.shutdown()
             raise
@@ -250,7 +249,6 @@ class HazelcastClient:
                 await self._connection_manager.shutdown()
                 self._invocation_service.shutdown()
                 self._statistics.shutdown()
-                self._reactor.shutdown()
                 self._internal_lifecycle_service.fire_lifecycle_event(LifecycleState.SHUTDOWN)
 
     @property

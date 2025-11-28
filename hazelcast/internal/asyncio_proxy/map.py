@@ -65,6 +65,7 @@ from hazelcast.protocol.codec import (
     map_set_with_max_idle_codec,
     map_remove_interceptor_codec,
     map_remove_all_codec,
+    map_add_near_cache_invalidation_listener_codec,
 )
 from hazelcast.internal.asyncio_proxy.base import (
     Proxy,
@@ -971,8 +972,177 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return self._invoke_on_key(request, key_data, handler)
 
 
-def create_map_proxy(service_name, name, context):
+class MapFeatNearCache(Map[KeyType, ValueType]):
+    """Map proxy implementation featuring Near Cache"""
+
+    def __init__(self, service_name, name, context):
+        super(MapFeatNearCache, self).__init__(service_name, name, context)
+        self._invalidation_listener_id = None
+        self._near_cache = context.near_cache_manager.get_or_create_near_cache(name)
+
+    async def clear(self):
+        self._near_cache._clear()
+        return await super(MapFeatNearCache, self).clear()
+
+    async def evict_all(self):
+        self._near_cache.clear()
+        return await super(MapFeatNearCache, self).evict_all()
+
+    async def load_all(self, keys=None, replace_existing_values=True):
+        if keys is None and replace_existing_values:
+            self._near_cache.clear()
+        return await super(MapFeatNearCache, self).load_all(keys, replace_existing_values)
+
+    async def _on_destroy(self):
+        await self._remove_near_cache_invalidation_listener()
+        self._near_cache.clear()
+        await super(MapFeatNearCache, self)._on_destroy()
+
+    async def _add_near_cache_invalidation_listener(self):
+        codec = map_add_near_cache_invalidation_listener_codec
+        request = codec.encode_request(self.name, EntryEventType.INVALIDATION, self._is_smart)
+        self._invalidation_listener_id = await self._register_listener(
+            request,
+            lambda r: codec.decode_response(r),
+            lambda reg_id: map_remove_entry_listener_codec.encode_request(self.name, reg_id),
+            lambda m: codec.handle(m, self._handle_invalidation, self._handle_batch_invalidation),
+        )
+
+    async def _remove_near_cache_invalidation_listener(self):
+        if self._invalidation_listener_id:
+            await self.remove_entry_listener(self._invalidation_listener_id)
+
+    def _handle_invalidation(self, key, source_uuid, partition_uuid, sequence):
+        # key is always ``Data``
+        # null key means near cache has to remove all entries in it.
+        # see MapAddNearCacheEntryListenerMessageTask.
+        if key is None:
+            self._near_cache._clear()
+        else:
+            self._invalidate_cache(key)
+
+    def _handle_batch_invalidation(self, keys, source_uuids, partition_uuids, sequences):
+        # key_list is always list of ``Data``
+        for key_data in keys:
+            self._invalidate_cache(key_data)
+
+    def _invalidate_cache(self, key_data):
+        self._near_cache._invalidate(key_data)
+
+    def _invalidate_cache_batch(self, key_data_list):
+        for key_data in key_data_list:
+            self._near_cache._invalidate(key_data)
+
+    # internals
+    async def _contains_key_internal(self, key_data):
+        try:
+            return self._near_cache[key_data]
+        except KeyError:
+            return await super(MapFeatNearCache, self)._contains_key_internal(key_data)
+
+    async def _get_internal(self, key_data):
+        try:
+            return self._near_cache[key_data]
+        except KeyError:
+            value = await super(MapFeatNearCache, self)._get_internal(key_data)
+            self._near_cache.__setitem__(key_data, value)
+            return value
+
+    async def _get_all_internal(self, partition_to_keys, tasks=None):
+        tasks = tasks or []
+        for key_dic in partition_to_keys.values():
+            for key in list(key_dic.keys()):
+                try:
+                    key_data = key_dic[key]
+                    value = self._near_cache[key_data]
+                    future = asyncio.Future()
+                    future.set_result((key, value))
+                    tasks.append(future)
+                    del key_dic[key]
+                except KeyError:
+                    pass
+        return await super(MapFeatNearCache, self)._get_all_internal(partition_to_keys, tasks)
+
+    def _try_remove_internal(self, key_data, timeout):
+        self._invalidate_cache(key_data)
+        return super(MapFeatNearCache, self)._try_remove_internal(key_data, timeout)
+
+    def _try_put_internal(self, key_data, value_data, timeout):
+        self._invalidate_cache(key_data)
+        return super(MapFeatNearCache, self)._try_put_internal(key_data, value_data, timeout)
+
+    def _set_internal(self, key_data, value_data, ttl, max_idle):
+        self._invalidate_cache(key_data)
+        return super(MapFeatNearCache, self)._set_internal(key_data, value_data, ttl, max_idle)
+
+    def _set_ttl_internal(self, key_data, ttl):
+        self._invalidate_cache(key_data)
+        return super(MapFeatNearCache, self)._set_ttl_internal(key_data, ttl)
+
+    def _replace_internal(self, key_data, value_data):
+        self._invalidate_cache(key_data)
+        return super(MapFeatNearCache, self)._replace_internal(key_data, value_data)
+
+    def _replace_if_same_internal(self, key_data, old_value_data, new_value_data):
+        self._invalidate_cache(key_data)
+        return super(MapFeatNearCache, self)._replace_if_same_internal(
+            key_data, old_value_data, new_value_data
+        )
+
+    def _remove_internal(self, key_data):
+        self._invalidate_cache(key_data)
+        return super(MapFeatNearCache, self)._remove_internal(key_data)
+
+    def _remove_all_internal(self, predicate_data):
+        self._near_cache.clear()
+        return super(MapFeatNearCache, self)._remove_all_internal(predicate_data)
+
+    def _remove_if_same_internal_(self, key_data, value_data):
+        self._invalidate_cache(key_data)
+        return super(MapFeatNearCache, self)._remove_if_same_internal_(key_data, value_data)
+
+    def _put_transient_internal(self, key_data, value_data, ttl, max_idle):
+        self._invalidate_cache(key_data)
+        return super(MapFeatNearCache, self)._put_transient_internal(
+            key_data, value_data, ttl, max_idle
+        )
+
+    def _put_internal(self, key_data, value_data, ttl, max_idle):
+        self._invalidate_cache(key_data)
+        return super(MapFeatNearCache, self)._put_internal(key_data, value_data, ttl, max_idle)
+
+    def _put_if_absent_internal(self, key_data, value_data, ttl, max_idle):
+        self._invalidate_cache(key_data)
+        return super(MapFeatNearCache, self)._put_if_absent_internal(
+            key_data, value_data, ttl, max_idle
+        )
+
+    def _load_all_internal(self, key_data_list, replace_existing_values):
+        self._invalidate_cache_batch(key_data_list)
+        return super(MapFeatNearCache, self)._load_all_internal(
+            key_data_list, replace_existing_values
+        )
+
+    def _execute_on_key_internal(self, key_data, entry_processor_data):
+        self._invalidate_cache(key_data)
+        return super(MapFeatNearCache, self)._execute_on_key_internal(
+            key_data, entry_processor_data
+        )
+
+    def _evict_internal(self, key_data):
+        self._invalidate_cache(key_data)
+        return super(MapFeatNearCache, self)._evict_internal(key_data)
+
+    def _delete_internal(self, key_data):
+        self._invalidate_cache(key_data)
+        return super(MapFeatNearCache, self)._delete_internal(key_data)
+
+
+async def create_map_proxy(service_name, name, context):
     near_cache_config = context.config.near_caches.get(name, None)
     if near_cache_config is None:
         return Map(service_name, name, context)
-    raise InvalidConfigurationError("near cache is not supported")
+    nc = MapFeatNearCache(service_name, name, context)
+    if nc._near_cache.invalidate_on_change:
+        await nc._add_near_cache_invalidation_listener()
+    return nc
