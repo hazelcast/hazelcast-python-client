@@ -96,7 +96,7 @@ class InvocationService:
         self._backup_ack_to_client_enabled = smart_routing and config.backup_ack_to_client_enabled
         self._fail_on_indeterminate_state = config.fail_on_indeterminate_operation_state
         self._backup_timeout = config.operation_backup_timeout
-        self._clean_resources_timer = None
+        self._clean_resources_task = None
         self._shutdown = False
         self._compact_schema_service = None
 
@@ -107,8 +107,8 @@ class InvocationService:
         self._check_invocation_allowed_fn = connection_manager.check_invocation_allowed
         self._compact_schema_service = compact_schema_service
 
-    def start(self):
-        self._start_clean_resources_timer()
+    async def start(self):
+        await self._start_clean_resources_timer()
 
     async def add_backup_listener(self):
         if self._backup_ack_to_client_enabled:
@@ -152,8 +152,8 @@ class InvocationService:
             return
 
         self._shutdown = True
-        if self._clean_resources_timer:
-            self._clean_resources_timer.cancel()
+        if self._clean_resources_task:
+            self._clean_resources_task.cancel()
         for invocation in list(self._pending.values()):
             self._notify_error(invocation, HazelcastClientNotActiveError())
 
@@ -400,8 +400,9 @@ class InvocationService:
 
         self._complete(invocation, invocation.pending_response)
 
-    def _start_clean_resources_timer(self):
-        def run():
+    async def _start_clean_resources_timer(self):
+        async def run():
+            await asyncio.sleep(self._CLEAN_RESOURCES_PERIOD)
             if self._shutdown:
                 return
 
@@ -419,9 +420,9 @@ class InvocationService:
                 if self._backup_ack_to_client_enabled:
                     self._detect_and_handle_backup_timeout(invocation, now)
 
-            self._clean_resources_timer = self._reactor.add_timer(self._CLEAN_RESOURCES_PERIOD, run)
+            self._clean_resources_task = asyncio.create_task(run())
 
-        self._clean_resources_timer = self._reactor.add_timer(self._CLEAN_RESOURCES_PERIOD, run)
+        self._clean_resources_task = asyncio.create_task(run())
 
     def _detect_and_handle_backup_timeout(self, invocation, now):
         if not invocation.pending_response:

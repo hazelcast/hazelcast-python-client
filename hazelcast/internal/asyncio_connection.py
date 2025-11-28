@@ -185,6 +185,9 @@ class ConnectionManager:
         self._use_public_ip = (
             isinstance(address_provider, DefaultAddressProvider) and config.use_public_ip
         )
+        # asyncio tasks are weakly referenced
+        # storing tasks here in order not to lose them midway
+        self._tasks = set()
 
     def add_listener(self, on_connection_opened=None, on_connection_closed=None):
         """Registers a ConnectionListener.
@@ -315,22 +318,21 @@ class ConnectionManager:
         disconnected = False
         removed = False
         trigger_reconnection = False
-        async with self._lock:
-            connection = self.active_connections.get(remote_uuid, None)
-            if connection == closed_connection:
-                self.active_connections.pop(remote_uuid, None)
-                removed = True
-                _logger.info(
-                    "Removed connection to %s:%s, connection: %s",
-                    remote_address,
-                    remote_uuid,
-                    connection,
-                )
+        connection = self.active_connections.get(remote_uuid, None)
+        if connection == closed_connection:
+            self.active_connections.pop(remote_uuid, None)
+            removed = True
+            _logger.info(
+                "Removed connection to %s:%s, connection: %s",
+                remote_address,
+                remote_uuid,
+                connection,
+            )
 
-                if not self.active_connections:
-                    trigger_reconnection = True
-                    if self._client_state == ClientState.INITIALIZED_ON_CLUSTER:
-                        disconnected = True
+            if not self.active_connections:
+                trigger_reconnection = True
+                if self._client_state == ClientState.INITIALIZED_ON_CLUSTER:
+                    disconnected = True
 
         if disconnected:
             self._lifecycle_service.fire_lifecycle_event(LifecycleState.DISCONNECTED)
@@ -340,7 +342,6 @@ class ConnectionManager:
 
         if removed:
             async with asyncio.TaskGroup() as tg:
-                # TODO: see on_connection_open
                 for _, on_connection_closed in self._connection_listeners:
                     if on_connection_closed:
                         try:
@@ -395,13 +396,12 @@ class ConnectionManager:
 
         translated = self._translate_member_address(member)
         connection = await self._create_connection(translated)
-        response = await self._authenticate(connection)  # .continue_with(self._on_auth, connection)
+        response = await self._authenticate(connection)
         await self._on_auth(response, connection)
         return connection
 
     async def _create_connection(self, address):
-        factory = self._reactor.connection_factory
-        return await factory(
+        return await self._reactor.connection_factory(
             self,
             self._connection_id_generator.get_and_increment(),
             address,
@@ -473,7 +473,6 @@ class ConnectionManager:
                     connecting_uuids.add(member_uuid)
                     if not self._lifecycle_service.running:
                         break
-                    # TODO: ERROR:asyncio:Task was destroyed but it is pending!
                     tg.create_task(self._get_or_connect_to_member(member))
                     member_uuids.append(member_uuid)
 
@@ -706,8 +705,6 @@ class ConnectionManager:
             for on_connection_opened, _ in self._connection_listeners:
                 if on_connection_opened:
                     try:
-                        # TODO: creating the task may not throw the exception
-                        # TODO: protect the loop against exceptions, so all handlers run
                         maybe_coro = on_connection_opened(connection)
                         if isinstance(maybe_coro, Coroutine):
                             tg.create_task(maybe_coro)
@@ -814,6 +811,9 @@ class HeartbeatManager:
         self._heartbeat_timeout = config.heartbeat_timeout
         self._heartbeat_interval = config.heartbeat_interval
         self._heartbeat_task: asyncio.Task | None = None
+        # asyncio tasks are weakly referenced
+        # storing tasks here in order not to lose them midway
+        self._tasks = set()
 
     def start(self):
         """Starts sending periodic HeartBeat operations."""
@@ -853,7 +853,9 @@ class HeartbeatManager:
         if (now - connection.last_write_time) > self._heartbeat_interval:
             request = client_ping_codec.encode_request()
             invocation = Invocation(request, connection=connection, urgent=True)
-            asyncio.create_task(self._invocation_service.ainvoke(invocation))
+            task = asyncio.create_task(self._invocation_service.ainvoke(invocation))
+            self._tasks.add(task)
+            task.add_done_callback(self._tasks.discard)
 
 
 _frame_header = struct.Struct("<iH")

@@ -1,9 +1,11 @@
 import asyncio
 import io
 import logging
+import ssl
 import time
 from asyncio import AbstractEventLoop, transports
 
+from hazelcast.config import Config, SSLProtocol
 from hazelcast.internal.asyncio_connection import Connection
 from hazelcast.core import Address
 
@@ -15,21 +17,12 @@ _logger = logging.getLogger(__name__)
 
 class AsyncioReactor:
     def __init__(self, loop: AbstractEventLoop | None = None):
-        self._is_live = False
         self._loop = loop or asyncio.get_running_loop()
         self._bytes_sent = 0
         self._bytes_received = 0
 
     def add_timer(self, delay, callback):
         return self._loop.call_later(delay, callback)
-
-    def start(self):
-        self._is_live = True
-
-    def shutdown(self):
-        if not self._is_live:
-            return
-        # TODO: cancel tasks
 
     async def connection_factory(
         self, connection_manager, connection_id, address: Address, network_config, message_callback
@@ -68,6 +61,7 @@ class AsyncioConnection(Connection):
         self._address = address
         self._config = config
         self._proto = None
+        self.connected_address = address
 
     @classmethod
     async def create_and_connect(
@@ -83,24 +77,34 @@ class AsyncioConnection(Connection):
         this = cls(
             loop, reactor, connection_manager, connection_id, address, config, message_callback
         )
-        if this._config.ssl_enabled:
-            await this._create_ssl_connection()
-        else:
-            await this._create_connection()
+        await this._create_connection(config, address)
         return this
 
     def _create_protocol(self):
         return HazelcastProtocol(self)
 
-    async def _create_connection(self):
-        loop = self._loop
-        res = await loop.create_connection(
-            self._create_protocol, host=self._address.host, port=self._address.port
+    async def _create_connection(self, config, address):
+        ssl_context = None
+        if config.ssl_enabled:
+            ssl_context = self._create_ssl_context(config)
+        server_hostname = None
+        if config.ssl_check_hostname:
+            server_hostname = address.host
+        res = await self._loop.create_connection(
+            self._create_protocol,
+            host=self._address.host,
+            port=self._address.port,
+            ssl=ssl_context,
+            server_hostname=server_hostname,
         )
-        _sock, self._proto = res
-
-    async def _create_ssl_connection(self):
-        raise NotImplementedError
+        sock, self._proto = res
+        if hasattr(sock, "_ssl_protocol"):
+            sock = sock._ssl_protocol._transport._sock
+        else:
+            sock = sock._sock
+        sockname = sock.getsockname()
+        host, port = sockname[0], sockname[1]
+        self.local_address = Address(host, port)
 
     def _write(self, buf):
         self._proto.write(buf)
@@ -120,6 +124,42 @@ class AsyncioConnection(Connection):
     def _update_received(self, received):
         self._reactor.update_bytes_received(received)
 
+    def _create_ssl_context(self, config: Config):
+        ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+        protocol = config.ssl_protocol
+        # Use only the configured protocol
+        try:
+            if protocol != SSLProtocol.SSLv2:
+                ssl_context.options |= ssl.OP_NO_SSLv2
+            if protocol != SSLProtocol.SSLv3:
+                ssl_context.options |= ssl.OP_NO_SSLv3
+            if protocol != SSLProtocol.TLSv1:
+                ssl_context.options |= ssl.OP_NO_TLSv1
+            if protocol != SSLProtocol.TLSv1_1:
+                ssl_context.options |= ssl.OP_NO_TLSv1_1
+            if protocol != SSLProtocol.TLSv1_2:
+                ssl_context.options |= ssl.OP_NO_TLSv1_2
+            if protocol != SSLProtocol.TLSv1_3:
+                ssl_context.options |= ssl.OP_NO_TLSv1_3
+        except AttributeError:
+            pass
+
+        ssl_context.verify_mode = ssl.CERT_REQUIRED
+        if config.ssl_cafile:
+            ssl_context.load_verify_locations(config.ssl_cafile)
+        else:
+            ssl_context.load_default_certs()
+        if config.ssl_certfile:
+            ssl_context.load_cert_chain(
+                config.ssl_certfile, config.ssl_keyfile, config.ssl_password
+            )
+        if config.ssl_ciphers:
+            ssl_context.set_ciphers(config.ssl_ciphers)
+        if config.ssl_check_hostname:
+            ssl_context.check_hostname = True
+
+        return ssl_context
+
 
 class HazelcastProtocol(asyncio.BufferedProtocol):
 
@@ -132,7 +172,9 @@ class HazelcastProtocol(asyncio.BufferedProtocol):
         self._write_buf = io.BytesIO()
         self._write_buf_size = 0
         self._recv_buf = None
-        self._alive = True
+        # asyncio tasks are weakly referenced
+        # storing tasks here in order not to lose them midway
+        self._tasks: set = set()
 
     def connection_made(self, transport: transports.BaseTransport):
         self._transport = transport
@@ -142,8 +184,12 @@ class HazelcastProtocol(asyncio.BufferedProtocol):
         self._conn._loop.call_soon(self._write_loop)
 
     def connection_lost(self, exc):
-        self._alive = False
-        self._conn._loop.create_task(self._conn.close_connection(str(exc), None))
+        _logger.warning("Connection closed by server")
+        task = self._conn._loop.create_task(
+            self._conn.close_connection(None, IOError("Connection closed by server"))
+        )
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.discard)
         return False
 
     def close(self):
@@ -166,9 +212,6 @@ class HazelcastProtocol(asyncio.BufferedProtocol):
         self._conn._reader.read(recv_bytes)
         if self._conn._reader.length:
             self._conn._reader.process()
-
-    def eof_received(self):
-        self._alive = False
 
     def _do_write(self):
         if not self._write_buf_size:
