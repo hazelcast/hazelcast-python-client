@@ -24,10 +24,10 @@ class AsyncioReactor:
     def add_timer(self, delay, callback):
         return self._loop.call_later(delay, callback)
 
-    async def connection_factory(
+    def connection_factory(
         self, connection_manager, connection_id, address: Address, network_config, message_callback
     ):
-        return await AsyncioConnection.create_and_connect(
+        return AsyncioConnection.create_and_connect(
             self._loop,
             self,
             connection_manager,
@@ -62,9 +62,13 @@ class AsyncioConnection(Connection):
         self._config = config
         self._proto = None
         self.connected_address = address
+        self._preconn_buffers = []
+        self._create_task = None
+        self._close_task = None
+        self._connected = False
 
     @classmethod
-    async def create_and_connect(
+    def create_and_connect(
         cls,
         loop,
         reactor: AsyncioReactor,
@@ -77,7 +81,9 @@ class AsyncioConnection(Connection):
         this = cls(
             loop, reactor, connection_manager, connection_id, address, config, message_callback
         )
-        await this._create_connection(config, address)
+        this._create_task = asyncio.create_task(this._create_connection(config, address))
+        if config.connection_timeout > 0:
+            this._close_task = asyncio.create_task(this._close_timer_cb(config.connection_timeout))
         return this
 
     def _create_protocol(self):
@@ -105,11 +111,30 @@ class AsyncioConnection(Connection):
         sockname = sock.getsockname()
         host, port = sockname[0], sockname[1]
         self.local_address = Address(host, port)
+        self._connected = True
+        if self._close_task:
+            self._close_task.cancel()
+        # write any data that were buffered before the socket is available
+        if self._preconn_buffers:
+            for b in self._preconn_buffers:
+                self._proto.write(b)
+            self._preconn_buffers.clear()
+
+    async def _close_timer_cb(self, timeout):
+        await asyncio.sleep(timeout)
+        if not self._connected:
+            await self.close_connection(None, IOError("Connection timed out"))
+
 
     def _write(self, buf):
+        if not self._proto:
+            self._preconn_buffers.append(buf)
+            return
         self._proto.write(buf)
 
     def _inner_close(self):
+        if self._close_task:
+            self._close_task.cancel()
         self._proto.close()
 
     def _update_read_time(self, time):

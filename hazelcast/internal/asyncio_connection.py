@@ -384,8 +384,8 @@ class ConnectionManager:
             if connection.remote_address == address:
                 return connection
         translated = await self._translate(address)
-        connection = await self._create_connection(translated)
-        response = await self._authenticate(connection)
+        connection = self._create_connection(translated)
+        response = self._authenticate(connection)
         await self._on_auth(response, connection)
         return connection
 
@@ -395,13 +395,13 @@ class ConnectionManager:
             return connection
 
         translated = await self._translate_member_address(member)
-        connection = await self._create_connection(translated)
-        response = await self._authenticate(connection)
+        connection = self._create_connection(translated)
+        response = self._authenticate(connection)
         await self._on_auth(response, connection)
         return connection
 
-    async def _create_connection(self, address):
-        return await self._reactor.connection_factory(
+    def _create_connection(self, address):
+        return self._reactor.connection_factory(
             self,
             self._connection_id_generator.get_and_increment(),
             address,
@@ -613,6 +613,7 @@ class ConnectionManager:
 
     async def _on_auth(self, response, connection):
         try:
+            response = await response
             response = client_authentication_codec.decode_response(response)
         except Exception as e:
             await connection.close_connection("Failed to authenticate connection", e)
