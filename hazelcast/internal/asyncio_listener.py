@@ -175,10 +175,8 @@ class ListenerService:
         self, user_registration_id, listener_registration, connection
     ):
         registration_map = listener_registration.connection_registrations
-
         if connection in registration_map:
             return
-
         registration_request = listener_registration.registration_request.copy()
         invocation = Invocation(
             registration_request,
@@ -187,26 +185,20 @@ class ListenerService:
             response_handler=lambda m: m,
             urgent=True,
         )
-        self._invocation_service.invoke(invocation)
-
-        def callback(f):
-            try:
-                response = f.result()
-                server_registration_id = listener_registration.decode_register_response(response)
-                correlation_id = registration_request.get_correlation_id()
-                registration = _EventRegistration(server_registration_id, correlation_id)
-                registration_map[connection] = registration
-            except Exception as e:
-                if connection.live:
-                    _logger.exception(
-                        "Listener %s can not be added to a new connection: %s",
-                        user_registration_id,
-                        connection,
-                    )
-                raise e
-
-        invocation.future.add_done_callback(callback)
-        return await invocation.future
+        response = await self._invocation_service.ainvoke(invocation)
+        try:
+            server_registration_id = listener_registration.decode_register_response(response)
+            correlation_id = registration_request.get_correlation_id()
+            registration = _EventRegistration(server_registration_id, correlation_id)
+            registration_map[connection] = registration
+        except Exception as e:
+            if connection.live:
+                _logger.exception(
+                    "Listener %s can not be added to a new connection: %s",
+                    user_registration_id,
+                    connection,
+                )
+            raise e
 
     async def _connection_added(self, connection):
         async with self._registration_lock:

@@ -40,7 +40,6 @@ except ImportError:
 
 from hazelcast.core import HazelcastJsonValue
 from hazelcast.config import IndexType, IntType
-from hazelcast.errors import HazelcastError
 from hazelcast.predicate import greater_or_equal, less_or_equal, sql, paging, true
 from hazelcast.internal.asyncio_proxy.map import EntryEventType
 from hazelcast.serialization.api import IdentifiedDataSerializable

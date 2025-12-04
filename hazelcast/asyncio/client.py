@@ -30,7 +30,7 @@ from hazelcast.internal.asyncio_proxy.map import Map
 from hazelcast.internal.asyncio_reactor import AsyncioReactor
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.sql import SqlService, _InternalSqlService
-from hazelcast.statistics import Statistics
+from hazelcast.internal.asyncio_statistics import Statistics
 from hazelcast.types import KeyType, ValueType, ItemType, MessageType
 from hazelcast.util import AtomicInteger, RoundRobinLB
 
@@ -176,7 +176,7 @@ class HazelcastClient:
             self._listener_service.start()
             await self._invocation_service.add_backup_listener()
             self._load_balancer.init(self._cluster_service)
-            self._statistics.start()
+            await self._statistics.start()
         except Exception:
             await self.shutdown()
             raise
