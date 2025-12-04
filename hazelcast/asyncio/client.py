@@ -8,7 +8,6 @@ from hazelcast.internal.asyncio_compact import CompactSchemaService
 from hazelcast.config import Config, IndexConfig
 from hazelcast.internal.asyncio_connection import ConnectionManager, DefaultAsyncioAddressProvider
 from hazelcast.core import DistributedObjectEvent, DistributedObjectInfo
-from hazelcast.cp import CPSubsystem, ProxySessionManager
 from hazelcast.discovery import HazelcastCloudAddressProvider
 from hazelcast.errors import IllegalStateError, InvalidConfigurationError
 from hazelcast.internal.asyncio_invocation import InvocationService, Invocation
@@ -111,8 +110,6 @@ class HazelcastClient:
             self._compact_schema_service,
         )
         self._proxy_manager = ProxyManager(self._context)
-        self._cp_subsystem = CPSubsystem(self._context)
-        self._proxy_session_manager = ProxySessionManager(self._context)
         self._lock_reference_id_generator = AtomicInteger(1)
         self._statistics = Statistics(
             self,
@@ -159,7 +156,6 @@ class HazelcastClient:
             self._near_cache_manager,
             self._lock_reference_id_generator,
             self._name,
-            self._proxy_session_manager,
             self._reactor,
             self._compact_schema_service,
         )
@@ -278,7 +274,6 @@ class HazelcastClient:
             if self._internal_lifecycle_service.running:
                 self._internal_lifecycle_service.fire_lifecycle_event(LifecycleState.SHUTTING_DOWN)
                 self._internal_lifecycle_service.shutdown()
-                self._proxy_session_manager.shutdown().result()
                 self._near_cache_manager.destroy_near_caches()
                 await self._connection_manager.shutdown()
                 self._invocation_service.shutdown()
@@ -300,10 +295,6 @@ class HazelcastClient:
     @property
     def cluster_service(self) -> ClusterService:
         return self._cluster_service
-
-    @property
-    def cp_subsystem(self) -> CPSubsystem:
-        return self._cp_subsystem
 
     def _create_address_provider(self):
         config = self._config
@@ -378,7 +369,6 @@ class _ClientContext:
         near_cache_manager,
         lock_reference_id_generator,
         name,
-        proxy_session_manager,
         reactor,
         compact_schema_service,
     ):
@@ -394,6 +384,5 @@ class _ClientContext:
         self.near_cache_manager = near_cache_manager
         self.lock_reference_id_generator = lock_reference_id_generator
         self.name = name
-        self.proxy_session_manager = proxy_session_manager
         self.reactor = reactor
         self.compact_schema_service = compact_schema_service

@@ -83,7 +83,7 @@ class ListenerAddMemberTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase)
         await self._add_member_test(True)
 
     async def test_add_member_unisocket(self):
-        await self._add_member_test(True)
+        await self._add_member_test(False)
 
     async def _add_member_test(self, is_smart):
         self.client_config["smart_routing"] = is_smart
