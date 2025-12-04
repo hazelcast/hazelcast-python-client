@@ -135,7 +135,8 @@ class AsyncioConnection(Connection):
     def _inner_close(self):
         if self._close_task:
             self._close_task.cancel()
-        self._proto.close()
+        if self._proto:
+            self._proto.close()
 
     def _update_read_time(self, time):
         self.last_read_time = time
