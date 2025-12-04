@@ -650,47 +650,50 @@ class ConnectionManager:
             connection.remote_uuid = remote_uuid
 
             existing = self.active_connections.get(remote_uuid, None)
-            if existing:
-                await connection.close_connection(
-                    "Duplicate connection to same member with UUID: %s" % remote_uuid, None
-                )
-                return existing
 
-            new_cluster_id = response["cluster_id"]
-            changed_cluster = self._cluster_id is not None and self._cluster_id != new_cluster_id
-            if changed_cluster:
-                await self._check_client_state_on_cluster_change(connection)
-                _logger.warning(
-                    "Switching from current cluster: %s to new cluster: %s",
-                    self._cluster_id,
-                    new_cluster_id,
-                )
-                self._on_cluster_restart()
+        if existing:
+            await connection.close_connection(
+                "Duplicate connection to same member with UUID: %s" % remote_uuid, None
+            )
+            return existing
 
+        new_cluster_id = response["cluster_id"]
+        changed_cluster = self._cluster_id is not None and self._cluster_id != new_cluster_id
+        if changed_cluster:
+            await self._check_client_state_on_cluster_change(connection)
+            _logger.warning(
+                "Switching from current cluster: %s to new cluster: %s",
+                self._cluster_id,
+                new_cluster_id,
+            )
+            self._on_cluster_restart()
+
+        async with self._lock:
             is_initial_connection = not self.active_connections
             self.active_connections[remote_uuid] = connection
             fire_connected_lifecycle_event = False
-            if is_initial_connection:
-                self._cluster_id = new_cluster_id
-                # In split brain, the client might connect to the one half
-                # of the cluster, and then later might reconnect to the
-                # other half, after the half it was connected to is
-                # completely dead. Since the cluster id is preserved in
-                # split brain scenarios, it is impossible to distinguish
-                # reconnection to the same cluster vs reconnection to the
-                # other half of the split brain. However, in the latter,
-                # we might need to send some state to the other half of
-                # the split brain (like Compact schemas). That forces us
-                # to send the client state to the cluster after the first
-                # cluster connection, regardless the cluster id is
-                # changed or not.
-                if self._established_initial_cluster_connection:
-                    self._client_state = ClientState.CONNECTED_TO_CLUSTER
-                    await self._initialize_on_cluster(new_cluster_id)
-                else:
-                    fire_connected_lifecycle_event = True
-                    self._established_initial_cluster_connection = True
-                    self._client_state = ClientState.INITIALIZED_ON_CLUSTER
+
+        if is_initial_connection:
+            self._cluster_id = new_cluster_id
+            # In split brain, the client might connect to the one half
+            # of the cluster, and then later might reconnect to the
+            # other half, after the half it was connected to is
+            # completely dead. Since the cluster id is preserved in
+            # split brain scenarios, it is impossible to distinguish
+            # reconnection to the same cluster vs reconnection to the
+            # other half of the split brain. However, in the latter,
+            # we might need to send some state to the other half of
+            # the split brain (like Compact schemas). That forces us
+            # to send the client state to the cluster after the first
+            # cluster connection, regardless the cluster id is
+            # changed or not.
+            if self._established_initial_cluster_connection:
+                self._client_state = ClientState.CONNECTED_TO_CLUSTER
+                await self._initialize_on_cluster(new_cluster_id)
+            else:
+                fire_connected_lifecycle_event = True
+                self._established_initial_cluster_connection = True
+                self._client_state = ClientState.INITIALIZED_ON_CLUSTER
 
         if fire_connected_lifecycle_event:
             self._lifecycle_service.fire_lifecycle_event(LifecycleState.CONNECTED)
