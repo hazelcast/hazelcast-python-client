@@ -185,6 +185,10 @@ class ConnectionManager:
         self._use_public_ip = (
             isinstance(address_provider, DefaultAddressProvider) and config.use_public_ip
         )
+        # asyncio tasks are weakly referenced
+        # storing tasks here in order not to lose them midway
+        # see: https: // docs.python.org / 3 / library / asyncio - task.html  # creating-tasks
+        self._tasks = set()
 
     def add_listener(self, on_connection_opened=None, on_connection_closed=None):
         """Registers a ConnectionListener.
@@ -809,6 +813,10 @@ class HeartbeatManager:
         self._heartbeat_timeout = config.heartbeat_timeout
         self._heartbeat_interval = config.heartbeat_interval
         self._heartbeat_task: asyncio.Task | None = None
+        # asyncio tasks are weakly referenced
+        # storing tasks here in order not to lose them midway
+        # see: https: // docs.python.org / 3 / library / asyncio - task.html  # creating-tasks
+        self._tasks = set()
 
     def start(self):
         """Starts sending periodic HeartBeat operations."""
@@ -848,7 +856,9 @@ class HeartbeatManager:
         if (now - connection.last_write_time) > self._heartbeat_interval:
             request = client_ping_codec.encode_request()
             invocation = Invocation(request, connection=connection, urgent=True)
-            asyncio.create_task(self._invocation_service.ainvoke(invocation))
+            task = asyncio.create_task(self._invocation_service.ainvoke(invocation))
+            self._tasks.add(task)
+            task.add_done_callback(self._tasks.discard)
 
 
 _frame_header = struct.Struct("<iH")
