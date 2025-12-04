@@ -187,6 +187,7 @@ class ConnectionManager:
         )
         # asyncio tasks are weakly referenced
         # storing tasks here in order not to lose them midway
+        # see: https: // docs.python.org / 3 / library / asyncio - task.html  # creating-tasks
         self._tasks = set()
 
     def add_listener(self, on_connection_opened=None, on_connection_closed=None):
@@ -814,6 +815,7 @@ class HeartbeatManager:
         self._heartbeat_task: asyncio.Task | None = None
         # asyncio tasks are weakly referenced
         # storing tasks here in order not to lose them midway
+        # see: https: // docs.python.org / 3 / library / asyncio - task.html  # creating-tasks
         self._tasks = set()
 
     def start(self):

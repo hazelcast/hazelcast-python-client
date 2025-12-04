@@ -630,7 +630,7 @@ class MapStoreTest(SingleMemberTestCase):
         collector = event_collector()
         await self.map.add_entry_listener(include_value=True, loaded_func=collector)
         await self.map.put("key", "value", ttl=0.1)
-        time.sleep(2)
+        await asyncio.sleep(2)
         await self.map.get("key")
 
         def assert_event():
