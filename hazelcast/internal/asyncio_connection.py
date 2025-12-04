@@ -187,6 +187,7 @@ class ConnectionManager:
         )
         # asyncio tasks are weakly referenced
         # storing tasks here in order not to lose them midway
+        # see: https: // docs.python.org / 3 / library / asyncio - task.html  # creating-tasks
         self._tasks = set()
 
     def add_listener(self, on_connection_opened=None, on_connection_closed=None):
@@ -318,21 +319,22 @@ class ConnectionManager:
         disconnected = False
         removed = False
         trigger_reconnection = False
-        connection = self.active_connections.get(remote_uuid, None)
-        if connection == closed_connection:
-            self.active_connections.pop(remote_uuid, None)
-            removed = True
-            _logger.info(
-                "Removed connection to %s:%s, connection: %s",
-                remote_address,
-                remote_uuid,
-                connection,
-            )
+        async with self._lock:
+            connection = self.active_connections.get(remote_uuid, None)
+            if connection == closed_connection:
+                self.active_connections.pop(remote_uuid, None)
+                removed = True
+                _logger.info(
+                    "Removed connection to %s:%s, connection: %s",
+                    remote_address,
+                    remote_uuid,
+                    connection,
+                )
 
-            if not self.active_connections:
-                trigger_reconnection = True
-                if self._client_state == ClientState.INITIALIZED_ON_CLUSTER:
-                    disconnected = True
+                if not self.active_connections:
+                    trigger_reconnection = True
+                    if self._client_state == ClientState.INITIALIZED_ON_CLUSTER:
+                        disconnected = True
 
         if disconnected:
             self._lifecycle_service.fire_lifecycle_event(LifecycleState.DISCONNECTED)
@@ -813,6 +815,7 @@ class HeartbeatManager:
         self._heartbeat_task: asyncio.Task | None = None
         # asyncio tasks are weakly referenced
         # storing tasks here in order not to lose them midway
+        # see: https: // docs.python.org / 3 / library / asyncio - task.html  # creating-tasks
         self._tasks = set()
 
     def start(self):
