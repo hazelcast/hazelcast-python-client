@@ -5,7 +5,6 @@ import typing
 from hazelcast.aggregator import Aggregator
 from hazelcast.config import IndexUtil, IndexType, IndexConfig
 from hazelcast.core import SimpleEntryView
-from hazelcast.errors import InvalidConfigurationError
 from hazelcast.projection import Projection
 from hazelcast.protocol import PagingPredicateHolder
 from hazelcast.protocol.codec import (
