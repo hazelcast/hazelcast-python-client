@@ -15,7 +15,7 @@ from hazelcast.internal.asyncio_proxy.vector_collection import VectorCollection
 from hazelcast.lifecycle import LifecycleService, LifecycleState, _InternalLifecycleService
 from hazelcast.internal.asyncio_listener import ClusterViewListenerService, ListenerService
 from hazelcast.near_cache import NearCacheManager
-from hazelcast.partition import PartitionService, _InternalPartitionService
+from hazelcast.internal.asyncio_partition import PartitionService, InternalPartitionService
 from hazelcast.protocol.codec import (
     client_add_distributed_object_listener_codec,
     client_get_distributed_objects_codec,
@@ -33,7 +33,7 @@ from hazelcast.internal.asyncio_reactor import AsyncioReactor
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.sql import SqlService, _InternalSqlService
 from hazelcast.internal.asyncio_statistics import Statistics
-from hazelcast.types import KeyType, ValueType, ItemType, MessageType
+from hazelcast.types import KeyType, ValueType
 from hazelcast.util import AtomicInteger, RoundRobinLB
 
 __all__ = ("HazelcastClient",)
@@ -83,7 +83,7 @@ class HazelcastClient:
             self._config,
         )
         self._address_provider = self._create_address_provider()
-        self._internal_partition_service = _InternalPartitionService(self)
+        self._internal_partition_service = InternalPartitionService(self)
         self._partition_service = PartitionService(
             self._internal_partition_service,
             self._serialization_service,
@@ -351,7 +351,6 @@ class _ClientContext:
         self.near_cache_manager = None
         self.lock_reference_id_generator = None
         self.name = None
-        self.proxy_session_manager = None
         self.reactor = None
         self.compact_schema_service = None
 

@@ -71,7 +71,10 @@ class CompactSchemaService:
         async def callback():
             self._has_replicated_schemas = True
             self._compact_serializer.register_schema_to_type(schema, clazz)
-            return await func(*args, **kwargs)
+            maybe_coro = func(*args, **kwargs)
+            # maybe_coro maybe a coroutine or None
+            if maybe_coro:
+                return await maybe_coro
 
         return await self._replicate_schema(
             schema, request, CompactSchemaService._SEND_SCHEMA_RETRY_COUNT, callback()
