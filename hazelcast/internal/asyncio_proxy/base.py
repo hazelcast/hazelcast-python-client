@@ -6,7 +6,6 @@ import uuid
 from hazelcast.core import MemberInfo
 from hazelcast.types import KeyType, ValueType, ItemType, MessageType, BlockingProxyType
 from hazelcast.internal.asyncio_invocation import Invocation
-from hazelcast.partition import string_partition_strategy
 from hazelcast.util import get_attr_name
 
 MAX_SIZE = float("inf")
@@ -67,15 +66,14 @@ class Proxy(typing.Generic[BlockingProxyType], abc.ABC):
         self._invocation_service.invoke(invocation)
         return invocation.future
 
-    def _invoke_on_key(
+    async def _invoke_on_key(
         self, request, key_data, response_handler=_no_op_response_handler
-    ) -> asyncio.Future:
+    ) -> typing.Any:
         partition_id = self._partition_service.get_partition_id(key_data)
         invocation = Invocation(
             request, partition_id=partition_id, response_handler=response_handler
         )
-        self._invocation_service.invoke(invocation)
-        return invocation.future
+        return await self._invocation_service.ainvoke(invocation)
 
     def _invoke_on_partition(
         self, request, partition_id, response_handler=_no_op_response_handler
@@ -91,22 +89,6 @@ class Proxy(typing.Generic[BlockingProxyType], abc.ABC):
     ) -> typing.Any:
         fut = self._invoke_on_partition(request, partition_id, response_handler)
         return await fut
-
-
-class PartitionSpecificProxy(Proxy[BlockingProxyType], abc.ABC):
-    """Provides basic functionality for Partition Specific Proxies."""
-
-    def __init__(self, service_name, name, context):
-        super(PartitionSpecificProxy, self).__init__(service_name, name, context)
-        partition_key = context.serialization_service.to_data(string_partition_strategy(self.name))
-        self._partition_id = context.partition_service.get_partition_id(partition_key)
-
-    def _invoke(self, request, response_handler=_no_op_response_handler):
-        invocation = Invocation(
-            request, partition_id=self._partition_id, response_handler=response_handler
-        )
-        self._invocation_service.invoke(invocation)
-        return invocation.future
 
 
 class ItemEventType:

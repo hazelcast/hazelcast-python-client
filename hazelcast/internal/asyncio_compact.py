@@ -57,35 +57,38 @@ class CompactSchemaService:
         self._invocation_service.invoke(fetch_schema_invocation)
         return fetch_schema_invocation.future
 
-    def send_schema_and_retry(
+    async def send_schema_and_retry(
         self,
         error: "SchemaNotReplicatedError",
         func: typing.Callable[..., asyncio.Future],
         *args: typing.Any,
         **kwargs: typing.Any,
-    ) -> asyncio.Future:
+    ) -> None:
         schema = error.schema
         clazz = error.clazz
         request = client_send_schema_codec.encode_request(schema)
 
-        def callback():
+        async def callback():
             self._has_replicated_schemas = True
             self._compact_serializer.register_schema_to_type(schema, clazz)
-            return func(*args, **kwargs)
+            maybe_coro = func(*args, **kwargs)
+            # maybe_coro maybe a coroutine or None
+            if maybe_coro:
+                return await maybe_coro
 
-        return self._replicate_schema(
-            schema, request, CompactSchemaService._SEND_SCHEMA_RETRY_COUNT, callback
+        return await self._replicate_schema(
+            schema, request, CompactSchemaService._SEND_SCHEMA_RETRY_COUNT, callback()
         )
 
-    def _replicate_schema(
+    async def _replicate_schema(
         self,
         schema: "Schema",
         request: "OutboundMessage",
         remaining_retries: int,
-        callback: typing.Callable[..., asyncio.Future],
-    ) -> asyncio.Future:
-        def continuation(future: asyncio.Future):
-            replicated_members = future.result()
+        callback: typing.Coroutine[typing.Any, typing.Any, typing.Any],
+    ) -> None:
+        while remaining_retries >= 2:
+            replicated_members = await self._send_schema_replication_request(request)
             members = self._cluster_service.get_members()
             for member in members:
                 if member.uuid not in replicated_members:
@@ -93,41 +96,25 @@ class CompactSchemaService:
             else:
                 # Loop completed normally.
                 # All members in our member list all known to have the schema
-                return callback()
+                return await callback
 
             # There is a member in our member list that the schema
             # is not known to be replicated yet. We should retry
             # sending it in a random member.
-            if remaining_retries <= 1:
-                # We tried to send it a couple of times, but the member list
-                # in our local and the member list returned by the initiator
-                # nodes did not match.
-                raise IllegalStateError(
-                    f"The schema {schema} cannot be replicated in the cluster, "
-                    f"after {CompactSchemaService._SEND_SCHEMA_RETRY_COUNT} retries. "
-                    f"It might be the case that the client is connected to the two "
-                    f"halves of the cluster that is experiencing a split-brain, "
-                    f"and continue putting the data associated with that schema "
-                    f"might result in data loss. It might be possible to replicate "
-                    f"the schema after some time, when the cluster is healed."
-                )
+            await asyncio.sleep(self._invocation_retry_pause)
 
-            delayed_future: asyncio.Future = asyncio.get_running_loop().create_future()
-            self._reactor.add_timer(
-                self._invocation_retry_pause,
-                lambda: delayed_future.set_result(None),
-            )
-
-            def retry(_):
-                return self._replicate_schema(
-                    schema, request.copy(), remaining_retries - 1, callback
-                )
-
-            return delayed_future.add_done_callback(retry)
-
-        fut = self._send_schema_replication_request(request)
-        fut.add_done_callback(continuation)
-        return fut
+        # We tried to send it a couple of times, but the member list
+        # in our local and the member list returned by the initiator
+        # nodes did not match.
+        raise IllegalStateError(
+            f"The schema {schema} cannot be replicated in the cluster, "
+            f"after {CompactSchemaService._SEND_SCHEMA_RETRY_COUNT} retries. "
+            f"It might be the case that the client is connected to the two "
+            f"halves of the cluster that is experiencing a split-brain, "
+            f"and continue putting the data associated with that schema "
+            f"might result in data loss. It might be possible to replicate "
+            f"the schema after some time, when the cluster is healed."
+        )
 
     def _send_schema_replication_request(self, request: "OutboundMessage") -> asyncio.Future:
         invocation = Invocation(request, response_handler=client_send_schema_codec.decode_response)
