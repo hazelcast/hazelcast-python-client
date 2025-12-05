@@ -52,7 +52,7 @@ class ListenerRemoveMemberTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCa
         self.client_config["smart_routing"] = is_smart
         client = await self.create_client(self.client_config)
         await wait_for_partition_table(client)
-        key_m1 = generate_key_owned_by_instance(client, self.m1.uuid)
+        key_m1 = await generate_key_owned_by_instance(client, self.m1.uuid)
         random_map = await client.get_map(random_string())
         await random_map.add_entry_listener(added_func=self.collector)
         await asyncio.to_thread(self.m1.shutdown)
@@ -92,7 +92,7 @@ class ListenerAddMemberTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase)
         await random_map.add_entry_listener(added_func=self.collector, updated_func=self.collector)
         m2 = await asyncio.to_thread(self.cluster.start_member)
         await wait_for_partition_table(client)
-        key_m2 = generate_key_owned_by_instance(client, m2.uuid)
+        key_m2 = await generate_key_owned_by_instance(client, m2.uuid)
         assertion_succeeded = False
 
         async def run():

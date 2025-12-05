@@ -8,7 +8,6 @@ from hazelcast.internal.asyncio_compact import CompactSchemaService
 from hazelcast.config import Config, IndexConfig
 from hazelcast.internal.asyncio_connection import ConnectionManager, DefaultAddressProvider
 from hazelcast.core import DistributedObjectEvent, DistributedObjectInfo
-from hazelcast.cp import CPSubsystem, ProxySessionManager
 from hazelcast.discovery import HazelcastCloudAddressProvider
 from hazelcast.errors import IllegalStateError, InvalidConfigurationError
 from hazelcast.internal.asyncio_invocation import InvocationService, Invocation
@@ -16,7 +15,7 @@ from hazelcast.internal.asyncio_proxy.vector_collection import VectorCollection
 from hazelcast.lifecycle import LifecycleService, LifecycleState, _InternalLifecycleService
 from hazelcast.internal.asyncio_listener import ClusterViewListenerService, ListenerService
 from hazelcast.near_cache import NearCacheManager
-from hazelcast.partition import PartitionService, _InternalPartitionService
+from hazelcast.internal.asyncio_partition import PartitionService, InternalPartitionService
 from hazelcast.protocol.codec import (
     client_add_distributed_object_listener_codec,
     client_get_distributed_objects_codec,
@@ -34,7 +33,7 @@ from hazelcast.internal.asyncio_reactor import AsyncioReactor
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.sql import SqlService, _InternalSqlService
 from hazelcast.internal.asyncio_statistics import Statistics
-from hazelcast.types import KeyType, ValueType, ItemType, MessageType
+from hazelcast.types import KeyType, ValueType
 from hazelcast.util import AtomicInteger, RoundRobinLB
 
 __all__ = ("HazelcastClient",)
@@ -84,7 +83,7 @@ class HazelcastClient:
             self._config,
         )
         self._address_provider = self._create_address_provider()
-        self._internal_partition_service = _InternalPartitionService(self)
+        self._internal_partition_service = InternalPartitionService(self)
         self._partition_service = PartitionService(
             self._internal_partition_service,
             self._serialization_service,
@@ -111,8 +110,6 @@ class HazelcastClient:
             self._compact_schema_service,
         )
         self._proxy_manager = ProxyManager(self._context)
-        self._cp_subsystem = CPSubsystem(self._context)
-        self._proxy_session_manager = ProxySessionManager(self._context)
         self._lock_reference_id_generator = AtomicInteger(1)
         self._statistics = Statistics(
             self,
@@ -159,7 +156,6 @@ class HazelcastClient:
             self._near_cache_manager,
             self._lock_reference_id_generator,
             self._name,
-            self._proxy_session_manager,
             self._reactor,
             self._compact_schema_service,
         )
@@ -278,7 +274,6 @@ class HazelcastClient:
             if self._internal_lifecycle_service.running:
                 self._internal_lifecycle_service.fire_lifecycle_event(LifecycleState.SHUTTING_DOWN)
                 self._internal_lifecycle_service.shutdown()
-                self._proxy_session_manager.shutdown().result()
                 self._near_cache_manager.destroy_near_caches()
                 await self._connection_manager.shutdown()
                 self._invocation_service.shutdown()
@@ -300,10 +295,6 @@ class HazelcastClient:
     @property
     def cluster_service(self) -> ClusterService:
         return self._cluster_service
-
-    @property
-    def cp_subsystem(self) -> CPSubsystem:
-        return self._cp_subsystem
 
     def _create_address_provider(self):
         config = self._config
@@ -360,7 +351,6 @@ class _ClientContext:
         self.near_cache_manager = None
         self.lock_reference_id_generator = None
         self.name = None
-        self.proxy_session_manager = None
         self.reactor = None
         self.compact_schema_service = None
 
@@ -378,7 +368,6 @@ class _ClientContext:
         near_cache_manager,
         lock_reference_id_generator,
         name,
-        proxy_session_manager,
         reactor,
         compact_schema_service,
     ):
@@ -394,6 +383,5 @@ class _ClientContext:
         self.near_cache_manager = near_cache_manager
         self.lock_reference_id_generator = lock_reference_id_generator
         self.name = name
-        self.proxy_session_manager = proxy_session_manager
         self.reactor = reactor
         self.compact_schema_service = compact_schema_service

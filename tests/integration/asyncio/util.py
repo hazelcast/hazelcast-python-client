@@ -12,16 +12,16 @@ async def fill_map(map, size=10, key_prefix="key", value_prefix="val"):
 
 
 async def open_connection_to_address(client, uuid):
-    key = generate_key_owned_by_instance(client, uuid)
+    key = await generate_key_owned_by_instance(client, uuid)
     m = await client.get_map(str(uuid4()))
     await m.put(key, 0)
     await m.destroy()
 
 
-def generate_key_owned_by_instance(client, uuid):
+async def generate_key_owned_by_instance(client, uuid) -> str:
     while True:
         key = str(uuid4())
-        partition_id = client.partition_service.get_partition_id(key)
+        partition_id = await client.partition_service.get_partition_id(key)
         owner = str(client.partition_service.get_partition_owner(partition_id))
         if owner == uuid:
             return key
