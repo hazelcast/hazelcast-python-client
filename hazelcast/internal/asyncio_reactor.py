@@ -174,6 +174,7 @@ class HazelcastProtocol(asyncio.BufferedProtocol):
         self._recv_buf = None
         # asyncio tasks are weakly referenced
         # storing tasks here in order not to lose them midway
+        # see: https: // docs.python.org / 3 / library / asyncio - task.html  # creating-tasks
         self._tasks: set = set()
 
     def connection_made(self, transport: transports.BaseTransport):
