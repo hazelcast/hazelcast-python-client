@@ -417,7 +417,9 @@ class MapCompatibilityTest(CompactCompatibilityBase):
 
     async def test_entry_set(self):
         await self._put_from_another_client(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
-        self.assertEqual([(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)], await self.map.entry_set())
+        self.assertEqual(
+            [(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)], await self.map.entry_set()
+        )
 
     async def test_entry_set_with_predicate(self):
         await self._put_from_another_client(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
@@ -456,7 +458,9 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         await self._put_from_another_client(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
         self.assertEqual(
             [(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)],
-            await self.map.execute_on_keys([INNER_COMPACT_INSTANCE], CompactReturningEntryProcessor()),
+            await self.map.execute_on_keys(
+                [INNER_COMPACT_INSTANCE], CompactReturningEntryProcessor()
+            ),
         )
 
     async def test_get(self):
@@ -523,7 +527,9 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         self.assertEqual(INNER_COMPACT_INSTANCE, await self.map.get(OUTER_COMPACT_INSTANCE))
 
     async def test_put_if_absent(self):
-        self.assertIsNone(await self.map.put_if_absent(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE))
+        self.assertIsNone(
+            await self.map.put_if_absent(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
+        )
         self.assertEqual(
             OUTER_COMPACT_INSTANCE,
             await self.map.put_if_absent(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE),
@@ -546,15 +552,20 @@ class MapCompatibilityTest(CompactCompatibilityBase):
         self.assertEqual(0, await self.map.size())
 
     async def test_remove_if_same(self):
-        self.assertFalse(await self.map.remove_if_same(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE))
+        self.assertFalse(
+            await self.map.remove_if_same(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
+        )
         await self._put_from_another_client(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
-        self.assertTrue(await self.map.remove_if_same(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE))
+        self.assertTrue(
+            await self.map.remove_if_same(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
+        )
 
     async def test_replace(self):
         self.assertIsNone(await self.map.replace(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE))
         await self.map.put(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
         self.assertEqual(
-            OUTER_COMPACT_INSTANCE, await self.map.replace(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE)
+            OUTER_COMPACT_INSTANCE,
+            await self.map.replace(INNER_COMPACT_INSTANCE, OUTER_COMPACT_INSTANCE),
         )
 
     async def test_replace_if_same(self):
