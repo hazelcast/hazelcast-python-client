@@ -66,9 +66,9 @@ class AsyncioConnection(Connection):
         self._config = config
         self._proto = None
         self.connected_address = address
-        self._preconn_buffers = []
-        self._create_task = None
-        self._close_task = None
+        self._preconn_buffers: list = []
+        self._create_task: asyncio.Task | None = None
+        self._close_task: asyncio.Task | None = None
         self._connected = False
         self._receive_buffer_size = _BUFFER_SIZE
 
@@ -138,8 +138,11 @@ class AsyncioConnection(Connection):
     def connect(self, sock, address):
         self._connected = False
         err = sock.connect_ex(address)
-        if err in (errno.EINPROGRESS, errno.EALREADY, errno.EWOULDBLOCK) \
-        or err == errno.EINVAL and os.name == 'nt':
+        if (
+            err in (errno.EINPROGRESS, errno.EALREADY, errno.EWOULDBLOCK)
+            or err == errno.EINVAL
+            and os.name == "nt"
+        ):
             return
         if err in (0, errno.EISCONN):
             self.handle_connect_event(sock)
@@ -160,12 +163,10 @@ class AsyncioConnection(Connection):
         self.handle_connect()
         self._connected = True
 
-
     async def _close_timer_cb(self, timeout):
         await asyncio.sleep(timeout)
         if not self._connected:
             await self.close_connection(None, IOError("Connection timed out"))
-
 
     def _write(self, buf):
         if not self._proto:
@@ -307,11 +308,10 @@ class HazelcastProtocol(asyncio.BufferedProtocol):
         return self._conn._loop.call_later(0.01, self._write_loop)
 
 
-
 def _strerror(err):
     try:
         return os.strerror(err)
     except (ValueError, OverflowError, NameError):
         if err in errorcode:
             return errorcode[err]
-        return "Unknown error %s" %err
+        return "Unknown error %s" % err
