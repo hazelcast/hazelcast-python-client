@@ -210,7 +210,9 @@ class HotRestartEventTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
         )
         await asyncio.to_thread(self.rc.shutdownCluster, self.cluster.id)
         # now stop cluster, restart it with the same name and then start member with port 5702
-        self.cluster = await asyncio.to_thread(self.create_cluster_keep_cluster_name, self.rc, self.get_config(5702))
+        self.cluster = await asyncio.to_thread(
+            self.create_cluster_keep_cluster_name, self.rc, self.get_config(5702)
+        )
         await asyncio.to_thread(self.cluster.start_member)
 
         def assertion():
