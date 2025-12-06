@@ -6,7 +6,7 @@ import typing
 from hazelcast.internal.asyncio_cluster import ClusterService, _InternalClusterService
 from hazelcast.internal.asyncio_compact import CompactSchemaService
 from hazelcast.config import Config, IndexConfig
-from hazelcast.internal.asyncio_connection import ConnectionManager, DefaultAddressProvider
+from hazelcast.internal.asyncio_connection import ConnectionManager, DefaultAsyncioAddressProvider
 from hazelcast.core import DistributedObjectEvent, DistributedObjectInfo
 from hazelcast.discovery import HazelcastCloudAddressProvider
 from hazelcast.errors import IllegalStateError, InvalidConfigurationError
@@ -313,7 +313,7 @@ class HazelcastClient:
             connection_timeout = self._get_connection_timeout(config)
             return HazelcastCloudAddressProvider(cloud_discovery_token, connection_timeout)
 
-        return DefaultAddressProvider(cluster_members)
+        return DefaultAsyncioAddressProvider(cluster_members)
 
     def _create_client_name(self, client_id):
         client_name = self._config.client_name

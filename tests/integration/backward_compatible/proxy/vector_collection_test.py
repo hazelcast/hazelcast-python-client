@@ -175,7 +175,7 @@ class VectorCollectionTest(SingleMemberTestCase):
         self.assertEqual(self.vector_collection.size(), 0)
 
     def test_backup_count_valid_values_pass(self):
-        skip_if_client_version_older_than(self, "6.0")
+        skip_if_client_version_older_than(self, "5.6.0")
         name = random_string()
         self.client.create_vector_collection_config(
             name, [IndexConfig("vector", Metric.COSINE, 3)], backup_count=2, async_backup_count=2
@@ -183,7 +183,7 @@ class VectorCollectionTest(SingleMemberTestCase):
         self.client.get_vector_collection(name).blocking()
 
     def test_backup_count_max_value_pass(self):
-        skip_if_client_version_older_than(self, "6.0")
+        skip_if_client_version_older_than(self, "5.6.0")
         name = random_string()
         self.client.create_vector_collection_config(
             name, [IndexConfig("vector", Metric.COSINE, 3)], backup_count=6
@@ -191,7 +191,7 @@ class VectorCollectionTest(SingleMemberTestCase):
         self.client.get_vector_collection(name).blocking()
 
     def test_backup_count_min_value_pass(self):
-        skip_if_client_version_older_than(self, "6.0")
+        skip_if_client_version_older_than(self, "5.6.0")
         name = random_string()
         self.client.create_vector_collection_config(
             name, [IndexConfig("vector", Metric.COSINE, 3)], backup_count=0
@@ -199,7 +199,7 @@ class VectorCollectionTest(SingleMemberTestCase):
         self.client.get_vector_collection(name).blocking()
 
     def test_backup_count_more_than_max_value_fail(self):
-        skip_if_server_version_older_than(self, self.client, "6.0")
+        skip_if_server_version_older_than(self, self.client, "5.6.0")
         name = random_string()
         # check that the parameter is used by ensuring that it is validated on server side
         # there is no simple way to check number of backups
@@ -212,7 +212,7 @@ class VectorCollectionTest(SingleMemberTestCase):
             )
 
     def test_backup_count_less_than_min_value_fail(self):
-        skip_if_server_version_older_than(self, self.client, "6.0")
+        skip_if_server_version_older_than(self, self.client, "5.6.0")
         name = random_string()
         with self.assertRaises(hazelcast.errors.IllegalArgumentError):
             self.client.create_vector_collection_config(
@@ -220,7 +220,7 @@ class VectorCollectionTest(SingleMemberTestCase):
             )
 
     def test_async_backup_count_max_value_pass(self):
-        skip_if_client_version_older_than(self, "6.0")
+        skip_if_client_version_older_than(self, "5.6.0")
         name = random_string()
         self.client.create_vector_collection_config(
             name,
@@ -231,7 +231,7 @@ class VectorCollectionTest(SingleMemberTestCase):
         self.client.get_vector_collection(name).blocking()
 
     def test_async_backup_count_min_value_pass(self):
-        skip_if_client_version_older_than(self, "6.0")
+        skip_if_client_version_older_than(self, "5.6.0")
         name = random_string()
         self.client.create_vector_collection_config(
             name, [IndexConfig("vector", Metric.COSINE, 3)], async_backup_count=0
@@ -239,7 +239,7 @@ class VectorCollectionTest(SingleMemberTestCase):
         self.client.get_vector_collection(name).blocking()
 
     def test_async_backup_count_more_than_max_value_fail(self):
-        skip_if_server_version_older_than(self, self.client, "6.0")
+        skip_if_server_version_older_than(self, self.client, "5.6.0")
         name = random_string()
         # check that the parameter is used by ensuring that it is validated on server side
         # there is no simple way to check number of backups
@@ -252,7 +252,7 @@ class VectorCollectionTest(SingleMemberTestCase):
             )
 
     def test_async_backup_count_less_than_min_value_fail(self):
-        skip_if_server_version_older_than(self, self.client, "6.0")
+        skip_if_server_version_older_than(self, self.client, "5.6.0")
         name = random_string()
         with self.assertRaises(hazelcast.errors.IllegalArgumentError):
             self.client.create_vector_collection_config(
@@ -262,7 +262,7 @@ class VectorCollectionTest(SingleMemberTestCase):
             )
 
     def test_sync_and_async_backup_count_more_than_max_value_fail(self):
-        skip_if_server_version_older_than(self, self.client, "6.0")
+        skip_if_server_version_older_than(self, self.client, "5.6.0")
         name = random_string()
         with self.assertRaises(hazelcast.errors.IllegalArgumentError):
             self.client.create_vector_collection_config(
@@ -273,7 +273,7 @@ class VectorCollectionTest(SingleMemberTestCase):
             )
 
     def test_merge_policy_can_be_sent(self):
-        skip_if_client_version_older_than(self, "6.0")
+        skip_if_client_version_older_than(self, "5.6.0")
         name = random_string()
         self.client.create_vector_collection_config(
             name,
@@ -285,8 +285,8 @@ class VectorCollectionTest(SingleMemberTestCase):
         self.client.get_vector_collection(name)
 
     def test_wrong_merge_policy_fails(self):
-        skip_if_client_version_older_than(self, "6.0")
-        skip_if_server_version_older_than(self, self.client, "6.0")
+        skip_if_client_version_older_than(self, "5.6.0")
+        skip_if_server_version_older_than(self, self.client, "5.6.0")
         name = random_string()
         with self.assertRaises(hazelcast.errors.InvalidConfigurationError):
             self.client.create_vector_collection_config(
@@ -296,7 +296,7 @@ class VectorCollectionTest(SingleMemberTestCase):
             self.client.get_vector_collection(name)
 
     def test_split_brain_name_can_be_sent(self):
-        skip_if_client_version_older_than(self, "6.0")
+        skip_if_client_version_older_than(self, "5.6.0")
         name = random_string()
         self.client.create_vector_collection_config(
             name,
