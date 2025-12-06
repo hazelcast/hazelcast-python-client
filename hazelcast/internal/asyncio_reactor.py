@@ -71,6 +71,7 @@ class AsyncioConnection(Connection):
         self._close_task: asyncio.Task | None = None
         self._connected = False
         self._receive_buffer_size = _BUFFER_SIZE
+        self._sock = None
 
     @classmethod
     def create_and_connect(
@@ -110,6 +111,8 @@ class AsyncioConnection(Connection):
         except socket.error as e:
             self._inner_close()
             raise e
+
+        self._sock = sock
 
         res = await self._loop.create_connection(
             self._create_protocol,
@@ -185,6 +188,12 @@ class AsyncioConnection(Connection):
         if self._proto:
             self._proto.close()
         self._connected = False
+        if self._sock:
+            try:
+                self._sock.close()
+            except OSError as why:
+                if why.errno not in (errno.ENOTCONN, errno.EBADF):
+                    raise
 
     def _update_read_time(self, time):
         self.last_read_time = time
