@@ -108,9 +108,6 @@ class AsyncioConnection(Connection):
         try:
             self.connect(sock, (address.host, address.port))
         except socket.error as e:
-            # If the connection attempt failed
-            # immediately, remove the connection from
-            # the dispatchers map and clean resources.
             self._inner_close()
             raise e
 
@@ -125,8 +122,6 @@ class AsyncioConnection(Connection):
         except OSError as err:
             if err.errno not in (errno.ENOTCONN, errno.EINVAL):
                 raise
-            # To handle the case where we got an unconnected
-            # socket.
             self._connected = False
         else:
             self._connected = True
@@ -161,6 +156,7 @@ class AsyncioConnection(Connection):
         self.handle_connect()
 
     def handle_connect(self):
+        self._connected = True
         # write any data that were buffered before the socket is available
         if self._preconn_buffers:
             for b in self._preconn_buffers:
