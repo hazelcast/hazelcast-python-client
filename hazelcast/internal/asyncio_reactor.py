@@ -120,6 +120,17 @@ class AsyncioConnection(Connection):
             server_hostname=server_hostname,
             sock=sock,
         )
+        try:
+            sock.getpeername()
+        except OSError as err:
+            if err.errno not in (errno.ENOTCONN, errno.EINVAL):
+                raise
+            # To handle the case where we got an unconnected
+            # socket.
+            self._connected = False
+        else:
+            self._connected = True
+
         sock, self._proto = res
         if hasattr(sock, "_ssl_protocol"):
             sock = sock._ssl_protocol._transport._sock
@@ -128,12 +139,6 @@ class AsyncioConnection(Connection):
         sockname = sock.getsockname()
         host, port = sockname[0], sockname[1]
         self.local_address = Address(host, port)
-        self._connected = True
-        # write any data that were buffered before the socket is available
-        if self._preconn_buffers:
-            for b in self._preconn_buffers:
-                self._proto.write(b)
-            self._preconn_buffers.clear()
 
     def connect(self, sock, address):
         self._connected = False
@@ -149,19 +154,23 @@ class AsyncioConnection(Connection):
         else:
             raise OSError(err, errorcode[err])
 
-    def handle_connect(self):
-        if self._close_task:
-            self._close_task.cancel()
-
-        self.start_time = time.time()
-        _logger.debug("Connected to %s", self.connected_address)
-
     def handle_connect_event(self, sock):
         err = sock.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
         if err != 0:
             raise OSError(err, _strerror(err))
         self.handle_connect()
-        self._connected = True
+
+    def handle_connect(self):
+        # write any data that were buffered before the socket is available
+        if self._preconn_buffers:
+            for b in self._preconn_buffers:
+                self._proto.write(b)
+            self._preconn_buffers.clear()
+        if self._close_task:
+            self._close_task.cancel()
+
+        self.start_time = time.time()
+        _logger.debug("Connected to %s", self.connected_address)
 
     async def _close_timer_cb(self, timeout):
         await asyncio.sleep(timeout)

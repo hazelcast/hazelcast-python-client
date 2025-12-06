@@ -111,7 +111,7 @@ class ListenerAddMemberTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase)
                 await random_map.put(key_m2, f"value-{i}")
                 await asyncio.sleep((i + 1) * 0.1)
 
-        asyncio.create_task(run())
+        task = asyncio.create_task(run())
 
         def assert_event():
             nonlocal assertion_succeeded
@@ -119,3 +119,4 @@ class ListenerAddMemberTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase)
             assertion_succeeded = True
 
         await self.assertTrueEventually(assert_event)
+        await task

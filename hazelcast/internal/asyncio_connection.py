@@ -387,6 +387,7 @@ class ConnectionManager:
                 return connection
         translated = await self._translate(address)
         connection = self._create_connection(translated)
+        await connection._create_task
         response = self._authenticate(connection)
         await self._on_auth(response, connection)
         return connection
@@ -398,6 +399,7 @@ class ConnectionManager:
 
         translated = await self._translate_member_address(member)
         connection = self._create_connection(translated)
+        await connection._create_task
         response = self._authenticate(connection)
         await self._on_auth(response, connection)
         return connection
