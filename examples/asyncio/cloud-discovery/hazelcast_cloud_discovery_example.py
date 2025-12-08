@@ -9,15 +9,12 @@ async def amain():
         cluster_name="asyncio",
         # Set the token of your cloud cluster
         cloud_discovery_token="wE1w1USF6zOnaLVjLZwbZHxEoZJhw43yyViTbe6UBTvz4tZniA",
-        # If you have enabled encryption for your cluster, also configure TLS/SSL for the client.
-        # Otherwise, skip options below.
         ssl_enabled=True,
-        ssl_cafile="/home/yuce/.hazelcast/configs/asyncio/ca.pem",
-        ssl_certfile="/home/yuce/.hazelcast/configs/asyncio/cert.pem",
-        ssl_keyfile="/home/yuce/.hazelcast/configs/asyncio/key.pem",
+        ssl_cafile="/path/to/ca.pem",
+        ssl_certfile="/path/to/cert.pem",
+        ssl_keyfile="/path/to/key.pem",
         ssl_password="05dd4498c3f",
     )
-
     my_map = await client.get_map("map-on-the-cloud")
     await my_map.put("key", "value")
 
