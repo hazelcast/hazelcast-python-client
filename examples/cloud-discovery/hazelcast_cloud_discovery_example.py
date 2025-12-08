@@ -5,8 +5,6 @@ client = hazelcast.HazelcastClient(
     cluster_name="YOUR_CLUSTER_NAME",
     # Set the token of your cloud cluster
     cloud_discovery_token="YOUR_CLUSTER_DISCOVERY_TOKEN",
-    # If you have enabled encryption for your cluster, also configure TLS/SSL for the client.
-    # Otherwise, skip options below.
     ssl_enabled=True,
     ssl_cafile="/path/to/ca.pem",
     ssl_certfile="/path/to/cert.pem",
