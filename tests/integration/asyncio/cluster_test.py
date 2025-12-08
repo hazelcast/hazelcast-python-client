@@ -1,3 +1,4 @@
+import asyncio
 import os
 import tempfile
 import unittest
@@ -200,17 +201,19 @@ class HotRestartEventTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
         self.rc.exit()
 
     async def test_when_member_started_with_another_port_and_the_same_uuid(self):
-        member = self.cluster.start_member()
+        member = await asyncio.to_thread(self.cluster.start_member)
         self.client = await HazelcastClient.create_and_start(cluster_name=self.cluster.id)
         added_listener = event_collector()
         removed_listener = event_collector()
         self.client.cluster_service.add_listener(
             member_added=added_listener, member_removed=removed_listener
         )
-        self.rc.shutdownCluster(self.cluster.id)
+        await asyncio.to_thread(self.rc.shutdownCluster, self.cluster.id)
         # now stop cluster, restart it with the same name and then start member with port 5702
-        self.cluster = self.create_cluster_keep_cluster_name(self.rc, self.get_config(5702))
-        self.cluster.start_member()
+        self.cluster = await asyncio.to_thread(
+            self.create_cluster_keep_cluster_name, self.rc, self.get_config(5702)
+        )
+        await asyncio.to_thread(self.cluster.start_member)
 
         def assertion():
             self.assertEqual(1, len(added_listener.events))
@@ -223,15 +226,15 @@ class HotRestartEventTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
 
     async def test_when_member_started_with_the_same_address(self):
         skip_if_client_version_older_than(self, "4.2")
-        old_member = self.cluster.start_member()
+        old_member = await asyncio.to_thread(self.cluster.start_member)
         self.client = await HazelcastClient.create_and_start(cluster_name=self.cluster.id)
         members_added = []
         members_removed = []
         self.client.cluster_service.add_listener(
             lambda m: members_added.append(m), lambda m: members_removed.append(m)
         )
-        self.rc.shutdownMember(self.cluster.id, old_member.uuid)
-        new_member = self.cluster.start_member()
+        await asyncio.to_thread(self.rc.shutdownMember, self.cluster.id, old_member.uuid)
+        new_member = await asyncio.to_thread(self.cluster.start_member)
 
         def assertion():
             self.assertEqual(1, len(members_added))

@@ -74,7 +74,7 @@ class HeartbeatTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
 
                 await asyncio.sleep((i + 1) * 0.1)
 
-        asyncio.create_task(run())
+        task = asyncio.create_task(run())
 
         async def assert_heartbeat_stopped_and_restored():
             nonlocal assertion_succeeded
@@ -95,3 +95,4 @@ class HeartbeatTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
             assertion_succeeded = True
 
         await self.assertTrueEventually(assert_heartbeat_stopped_and_restored)
+        await task

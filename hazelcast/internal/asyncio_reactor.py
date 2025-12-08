@@ -1,8 +1,12 @@
 import asyncio
+import errno
 import io
 import logging
+import os
+import socket
 import ssl
 import time
+from errno import errorcode
 from asyncio import AbstractEventLoop, transports
 
 from hazelcast.config import Config, SSLProtocol
@@ -24,10 +28,10 @@ class AsyncioReactor:
     def add_timer(self, delay, callback):
         return self._loop.call_later(delay, callback)
 
-    async def connection_factory(
+    def connection_factory(
         self, connection_manager, connection_id, address: Address, network_config, message_callback
     ):
-        return await AsyncioConnection.create_and_connect(
+        return AsyncioConnection.create_and_connect(
             self._loop,
             self,
             connection_manager,
@@ -62,9 +66,15 @@ class AsyncioConnection(Connection):
         self._config = config
         self._proto = None
         self.connected_address = address
+        self._preconn_buffers: list = []
+        self._create_task: asyncio.Task | None = None
+        self._close_task: asyncio.Task | None = None
+        self._connected = False
+        self._receive_buffer_size = _BUFFER_SIZE
+        self._sock = None
 
     @classmethod
-    async def create_and_connect(
+    def create_and_connect(
         cls,
         loop,
         reactor: AsyncioReactor,
@@ -77,26 +87,48 @@ class AsyncioConnection(Connection):
         this = cls(
             loop, reactor, connection_manager, connection_id, address, config, message_callback
         )
-        await this._create_connection(config, address)
+        this._create_task = asyncio.create_task(this._create_connection(config, address))
+        if config.connection_timeout > 0:
+            this._close_task = asyncio.create_task(this._close_timer_cb(config.connection_timeout))
         return this
 
     def _create_protocol(self):
         return HazelcastProtocol(self)
 
     async def _create_connection(self, config, address):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.setblocking(False)
+        sock.settimeout(0)
+        self._set_socket_options(sock, config)
+        server_hostname = None
         ssl_context = None
         if config.ssl_enabled:
-            ssl_context = self._create_ssl_context(config)
-        server_hostname = None
-        if config.ssl_check_hostname:
             server_hostname = address.host
+            ssl_context = self._create_ssl_context(config)
+
+        try:
+            self.connect(sock, (address.host, address.port))
+        except socket.error as e:
+            self._inner_close()
+            raise e
+
+        self._sock = sock
+
         res = await self._loop.create_connection(
             self._create_protocol,
-            host=self._address.host,
-            port=self._address.port,
             ssl=ssl_context,
             server_hostname=server_hostname,
+            sock=sock,
         )
+        try:
+            sock.getpeername()
+        except OSError as err:
+            if err.errno not in (errno.ENOTCONN, errno.EINVAL):
+                raise
+            self._connected = False
+        else:
+            self._connected = True
+
         sock, self._proto = res
         if hasattr(sock, "_ssl_protocol"):
             sock = sock._ssl_protocol._transport._sock
@@ -106,11 +138,62 @@ class AsyncioConnection(Connection):
         host, port = sockname[0], sockname[1]
         self.local_address = Address(host, port)
 
+    def connect(self, sock, address):
+        self._connected = False
+        err = sock.connect_ex(address)
+        if (
+            err in (errno.EINPROGRESS, errno.EALREADY, errno.EWOULDBLOCK)
+            or err == errno.EINVAL
+            and os.name == "nt"
+        ):
+            return
+        if err in (0, errno.EISCONN):
+            self.handle_connect_event(sock)
+        else:
+            raise OSError(err, errorcode[err])
+
+    def handle_connect_event(self, sock):
+        err = sock.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
+        if err != 0:
+            raise OSError(err, _strerror(err))
+        self.handle_connect()
+
+    def handle_connect(self):
+        self._connected = True
+        # write any data that were buffered before the socket is available
+        if self._preconn_buffers:
+            for b in self._preconn_buffers:
+                self._proto.write(b)
+            self._preconn_buffers.clear()
+        if self._close_task:
+            self._close_task.cancel()
+
+        self.start_time = time.time()
+        _logger.debug("Connected to %s", self.connected_address)
+
+    async def _close_timer_cb(self, timeout):
+        await asyncio.sleep(timeout)
+        if not self._connected:
+            await self.close_connection(None, IOError("Connection timed out"))
+
     def _write(self, buf):
+        if not self._proto:
+            self._preconn_buffers.append(buf)
+            return
         self._proto.write(buf)
 
     def _inner_close(self):
-        self._proto.close()
+        if self._close_task:
+            self._close_task.cancel()
+        if self._proto:
+            self._proto.close()
+        self._connected = False
+        if self._sock:
+            try:
+                self._sock.close()
+            except OSError as why:
+                if why.errno not in (errno.ENOTCONN, errno.EBADF):
+                    raise
 
     def _update_read_time(self, time):
         self.last_read_time = time
@@ -123,6 +206,16 @@ class AsyncioConnection(Connection):
 
     def _update_received(self, received):
         self._reactor.update_bytes_received(received)
+
+    def _set_socket_options(self, sock, config):
+        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, _BUFFER_SIZE)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, _BUFFER_SIZE)
+        for level, option_name, value in config.socket_options:
+            if option_name is socket.SO_RCVBUF:
+                self._receive_buffer_size = value
+
+            sock.setsockopt(level, option_name, value)
 
     def _create_ssl_context(self, config: Config):
         ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
@@ -202,7 +295,7 @@ class HazelcastProtocol(asyncio.BufferedProtocol):
 
     def get_buffer(self, sizehint):
         if self._recv_buf is None:
-            buf_size = max(sizehint, _BUFFER_SIZE)
+            buf_size = max(sizehint, self._conn._receive_buffer_size)
             self._recv_buf = memoryview(bytearray(buf_size))
         return self._recv_buf
 
@@ -227,3 +320,12 @@ class HazelcastProtocol(asyncio.BufferedProtocol):
     def _write_loop(self):
         self._do_write()
         return self._conn._loop.call_later(0.01, self._write_loop)
+
+
+def _strerror(err):
+    try:
+        return os.strerror(err)
+    except (ValueError, OverflowError, NameError):
+        if err in errorcode:
+            return errorcode[err]
+        return "Unknown error %s" % err

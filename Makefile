@@ -10,5 +10,8 @@ test:
 test-enterprise:
 	pytest --verbose
 
+test-asyncio:
+	pytest --verbose -k asyncio
+
 test-cover:
 	pytest --cov=hazelcast --cov-report=xml

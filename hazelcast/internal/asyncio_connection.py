@@ -183,7 +183,7 @@ class ConnectionManager:
         self._cluster_id = None
         self._load_balancer = None
         self._use_public_ip = (
-            isinstance(address_provider, DefaultAddressProvider) and config.use_public_ip
+            isinstance(address_provider, DefaultAsyncioAddressProvider) and config.use_public_ip
         )
         # asyncio tasks are weakly referenced
         # storing tasks here in order not to lose them midway
@@ -385,9 +385,10 @@ class ConnectionManager:
         for connection in list(self.active_connections.values()):
             if connection.remote_address == address:
                 return connection
-        translated = self._translate(address)
-        connection = await self._create_connection(translated)
-        response = await self._authenticate(connection)
+        translated = await self._translate(address)
+        connection = self._create_connection(translated)
+        await connection._create_task
+        response = self._authenticate(connection)
         await self._on_auth(response, connection)
         return connection
 
@@ -396,14 +397,15 @@ class ConnectionManager:
         if connection:
             return connection
 
-        translated = self._translate_member_address(member)
-        connection = await self._create_connection(translated)
-        response = await self._authenticate(connection)
+        translated = await self._translate_member_address(member)
+        connection = self._create_connection(translated)
+        await connection._create_task
+        response = self._authenticate(connection)
         await self._on_auth(response, connection)
         return connection
 
-    async def _create_connection(self, address):
-        return await self._reactor.connection_factory(
+    def _create_connection(self, address):
+        return self._reactor.connection_factory(
             self,
             self._connection_id_generator.get_and_increment(),
             address,
@@ -411,8 +413,8 @@ class ConnectionManager:
             self._invocation_service.handle_client_message,
         )
 
-    def _translate(self, address):
-        translated = self._address_provider.translate(address)
+    async def _translate(self, address):
+        translated = await self._address_provider.translate(address)
         if not translated:
             raise ValueError(
                 "Address provider %s could not translate address %s"
@@ -421,7 +423,7 @@ class ConnectionManager:
 
         return translated
 
-    def _translate_member_address(self, member):
+    async def _translate_member_address(self, member):
         if self._use_public_ip:
             public_address = member.address_map.get(_CLIENT_PUBLIC_ENDPOINT_QUALIFIER, None)
             if public_address:
@@ -429,7 +431,7 @@ class ConnectionManager:
 
             return member.address
 
-        return self._translate(member.address)
+        return await self._translate(member.address)
 
     async def _trigger_cluster_reconnection(self):
         if self._reconnect_mode == ReconnectMode.OFF:
@@ -529,7 +531,8 @@ class ConnectionManager:
                     if connection:
                         return
 
-                for address in self._get_possible_addresses():
+                addresses = await self._get_possible_addresses()
+                for address in addresses:
                     self._check_client_active()
                     if address in tried_addresses_per_attempt:
                         # We already tried this address on from the member list
@@ -614,6 +617,7 @@ class ConnectionManager:
 
     async def _on_auth(self, response, connection):
         try:
+            response = await response
             response = client_authentication_codec.decode_response(response)
         except Exception as e:
             await connection.close_connection("Failed to authenticate connection", e)
@@ -790,8 +794,8 @@ class ConnectionManager:
         if not self._lifecycle_service.running:
             raise HazelcastClientNotActiveError()
 
-    def _get_possible_addresses(self):
-        primaries, secondaries = self._address_provider.load_addresses()
+    async def _get_possible_addresses(self):
+        primaries, secondaries = await self._address_provider.load_addresses()
         if self._shuffle_member_list:
             # The relative order between primary and secondary addresses should
             # not be changed. So we shuffle the lists separately and then add
@@ -1028,17 +1032,13 @@ class Connection:
         return self._id
 
 
-class DefaultAddressProvider:
-    """Provides initial addresses for client to find and connect to a node.
-
-    It also provides a no-op translator.
-    """
-
+class DefaultAsyncioAddressProvider:
     def __init__(self, addresses):
         self._addresses = addresses
 
-    def load_addresses(self):
+    async def load_addresses(self):
         """Returns the possible primary and secondary member addresses to connect to."""
+        # NOTE: This method is marked with async since the caller assumes that.
         configured_addresses = self._addresses
 
         if not configured_addresses:
@@ -1053,9 +1053,10 @@ class DefaultAddressProvider:
 
         return primaries, secondaries
 
-    def translate(self, address):
+    async def translate(self, address):
         """No-op address translator.
 
         It is there to provide the same API with other address providers.
         """
+        # NOTE: This method is marked with async since the caller assumes that.
         return address

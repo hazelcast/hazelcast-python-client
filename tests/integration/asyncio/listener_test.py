@@ -83,7 +83,7 @@ class ListenerAddMemberTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase)
         await self._add_member_test(True)
 
     async def test_add_member_unisocket(self):
-        await self._add_member_test(True)
+        await self._add_member_test(False)
 
     async def _add_member_test(self, is_smart):
         self.client_config["smart_routing"] = is_smart
@@ -111,7 +111,7 @@ class ListenerAddMemberTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase)
                 await random_map.put(key_m2, f"value-{i}")
                 await asyncio.sleep((i + 1) * 0.1)
 
-        asyncio.create_task(run())
+        task = asyncio.create_task(run())
 
         def assert_event():
             nonlocal assertion_succeeded
@@ -119,3 +119,4 @@ class ListenerAddMemberTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase)
             assertion_succeeded = True
 
         await self.assertTrueEventually(assert_event)
+        await task
