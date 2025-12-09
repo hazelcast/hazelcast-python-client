@@ -19,6 +19,29 @@ _BUFFER_SIZE = 128000
 _logger = logging.getLogger(__name__)
 
 
+# We should retry receiving/sending the message in case of these errors
+# EAGAIN: Resource temporarily unavailable
+# EWOULDBLOCK: The read/write would block
+# EDEADLK: Was added before, retrying it just to make sure that
+#   client behaves the same on some edge cases.
+# SSL_ERROR_WANT_READ/WRITE: The socket could not satisfy the
+#   needs of the SSL_read/write. During the negotiation process
+#   SSL_read/write may also want to write/read data, hence may also
+#   raise SSL_ERROR_WANT_WRITE/READ.
+RETRYABLE_ERROR_CODES = (
+    errno.EAGAIN,
+    errno.EWOULDBLOCK,
+    # Missing in the stub, but present in the implementation.
+    # https://docs.python.org/3/library/errno.html#errno.EDEADLK
+    # Added to the stub in
+    # https://github.com/python/typeshed/pull/7397
+    # For now, we will ignore the mypy error.
+    errno.EDEADLK,  # type: ignore[attr-defined]
+    ssl.SSL_ERROR_WANT_WRITE,
+    ssl.SSL_ERROR_WANT_READ,
+)
+
+
 class AsyncioReactor:
     def __init__(self, loop: AbstractEventLoop | None = None):
         self._loop = loop or asyncio.get_running_loop()
@@ -308,7 +331,16 @@ class HazelcastProtocol(asyncio.BufferedProtocol):
         if not self._write_buf_size:
             return
         buf_bytes = self._write_buf.getvalue()
-        self._transport.write(buf_bytes[: self._write_buf_size])
+        try:
+            self._transport.write(buf_bytes[: self._write_buf_size])
+        except socket.error as err:
+            if err.args[0] in RETRYABLE_ERROR_CODES:
+                # Couldn't write but we should retry it.
+                return
+            else:
+                # Other error codes are fatal, should close the connection
+                self._conn.close_connection(None, err)
+
         self._conn._update_write_time(time.time())
         self._conn._update_sent(self._write_buf_size)
         self._write_buf.seek(0)
