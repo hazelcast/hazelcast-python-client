@@ -130,10 +130,7 @@ class AsyncioConnection(Connection):
             self._connected = True
 
         sock, self._proto = res
-        if hasattr(sock, "_ssl_protocol"):
-            sock = sock._ssl_protocol._transport._sock
-        else:
-            sock = sock._sock
+        sock = sock.get_extra_info("socket")
         sockname = sock.getsockname()
         host, port = sockname[0], sockname[1]
         self.local_address = Address(host, port)

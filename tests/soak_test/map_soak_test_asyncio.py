@@ -4,7 +4,6 @@ import logging
 import os
 import random
 import sys
-import threading
 import time
 import typing
 from collections import defaultdict
@@ -22,7 +21,7 @@ else:
     get_current_timestamp = time.time
 
 
-THREAD_COUNT = 32
+TASK_COUNT = 256
 ENTRY_COUNT = 10000
 OBSERVATION_INTERVAL = 10.0
 
@@ -30,120 +29,65 @@ OBSERVATION_INTERVAL = 10.0
 class SoakTestCoordinator:
     def __init__(self, test_duration, address):
         self.address = address
-        self._thread_count_before = threading.active_count()
+        self._task_count_before = len(asyncio.all_tasks())
         self._deadline = get_current_timestamp() + test_duration * 60 * 60
-        self._observer = OperationCountObserver(self)
-        self._test_runners = []
-        self._lock = threading.RLock()
+        self._lock = asyncio.Lock()
         # the following are protected by the lock above
         self._reached_deadline = False
         self._tests_failed = False
 
-    def start_tests(self):
-        self._test_runners = self._init_test_runners()
-        observer = self._observer
-
+    async def start_tests(self):
+        client, test_map = await self._init_client_map()
         logging.info("Soak test operations are starting!")
         logging.info("* " * 20 + "\n")
+        test_runners = [TestRunner(i, self) for i in range(TASK_COUNT)]
+        observer = OperationCountObserver(self, test_runners)
+        async with asyncio.TaskGroup() as tg:
+            observer_task = tg.create_task(observer.run())
+            for runner in test_runners:
+                tg.create_task(runner.run(test_map))
 
-        for test_runner in self._test_runners:
-            test_runner.start()
-
-        observer.start()
-        observer.join()
-
-        for test_runner in self._test_runners:
-            test_runner.join()
+            await observer_task
 
         logging.info("* " * 20)
         logging.info("Soak test has finished!")
         logging.info("-" * 40)
 
-        if self.tests_failed():
+        if await self.tests_failed():
             logging.info("Soak test failed!")
             return
 
-        hang_counts = observer.hang_counts
+        hang_counts = await observer.hang_counts()
         if not hang_counts:
             logging.info("All threads worked without hanging")
         else:
-            for test_runner, hang_count in hang_counts:
-                logging.info("Thread %s hanged %s times.", test_runner, hang_count)
+            for runner, hang_count in hang_counts:
+                logging.info("Thread %s hanged %s times.", runner.id, hang_count)
 
-        thread_count_after = threading.active_count()
+        await client.shutdown()
+        # wait for canceled tasks to expire
+        await asyncio.sleep(1)
+        task_count_after = len(asyncio.all_tasks())
         logging.info(
-            "Thread count before: %s, after: %s", self._thread_count_before, thread_count_after
+            "Task count before: %s, after: %s", self._task_count_before, task_count_after
         )
 
-    def notify_error(self):
-        with self._lock:
+    async def notify_error(self):
+        async with self._lock:
             self._tests_failed = True
 
-    def should_continue_tests(self):
-        with self._lock:
+    async def should_continue_tests(self):
+        async with self._lock:
             return not (self._reached_deadline or self._tests_failed)
 
-    def check_deadline(self):
-        with self._lock:
+    async def check_deadline(self):
+        async with self._lock:
             now = get_current_timestamp()
             self._reached_deadline = now >= self._deadline
 
-    def tests_failed(self) -> bool:
-        with self._lock:
+    async def tests_failed(self) -> bool:
+        async with self._lock:
             return self._tests_failed
-
-    def _init_test_runners(self):
-        test_runners = []
-
-        for _ in range(THREAD_COUNT):
-            test_runner = TestRunner(self)
-            test_runners.append(test_runner)
-
-        return test_runners
-
-
-class TestRunner(threading.Thread):
-    def __init__(self, coordinator: SoakTestCoordinator):
-        super().__init__()
-        self._coordinator = coordinator
-        self._counter = None
-
-    @property
-    def counter(self):
-        return self._counter
-
-    def run(self):
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        self._counter = OperationCounter()
-        loop.run_until_complete(self._start())
-
-    async def _start(self):
-        coordinator = self._coordinator
-        client, test_map = await self._init_client_map()
-        counter = self._counter
-        processor = SimpleEntryProcessor("test")
-        while coordinator.should_continue_tests():
-            key = str(random.randint(0, ENTRY_COUNT))
-            value = str(random.randint(0, ENTRY_COUNT))
-            operation = random.randint(0, 100)
-            try:
-                if operation < 30:
-                    await test_map.get(key)
-                elif operation < 60:
-                    await test_map.put(key, value)
-                elif operation < 80:
-                    await test_map.values(between("this", 0, 10))
-                else:
-                    await test_map.execute_on_key(key, processor)
-
-                counter.increment()
-            except Exception:
-                coordinator.notify_error()
-                logging.exception("Unexpected error occurred in thread %s", self)
-                return
-
-        await client.shutdown()
 
     async def _init_client_map(self) -> typing.Tuple[HazelcastClient, Map]:
         def no_op_listener(_):
@@ -151,7 +95,7 @@ class TestRunner(threading.Thread):
 
         try:
             client = await HazelcastClient.create_and_start(
-                cluster_members=[self._coordinator.address],
+                cluster_members=[self.address],
                 data_serializable_factories={
                     SimpleEntryProcessor.FACTORY_ID: {
                         SimpleEntryProcessor.CLASS_ID: SimpleEntryProcessor
@@ -172,40 +116,65 @@ class TestRunner(threading.Thread):
             raise e
 
 
-class OperationCountObserver(threading.Thread):
-    def __init__(self, coordinator):
-        super().__init__()
-        self._coordinator = coordinator
-        self._lock = threading.RLock()
+class TestRunner:
+    def __init__(self, id, coordinator: SoakTestCoordinator):
+        self.id = id
+        self.coordinator = coordinator
+        self.counter = OperationCounter()
+
+    async def run(self, test_map):
+        coordinator = self.coordinator
+        processor = SimpleEntryProcessor("test")
+        while await coordinator.should_continue_tests():
+            key = str(random.randint(0, ENTRY_COUNT))
+            value = str(random.randint(0, ENTRY_COUNT))
+            operation = random.randint(0, 100)
+            try:
+                if operation < 30:
+                    await test_map.get(key)
+                elif operation < 60:
+                    await test_map.put(key, value)
+                elif operation < 80:
+                    await test_map.values(between("this", 0, 10))
+                else:
+                    await test_map.execute_on_key(key, processor)
+
+                await self.counter.increment()
+            except Exception:
+                await coordinator.notify_error()
+                logging.exception("Unexpected error occurred in thread %s", self)
+                return
+
+
+class OperationCountObserver:
+    def __init__(self, coordinator, test_runners):
+        self.coordinator = coordinator
+        self.test_runners = test_runners
+        self._lock = asyncio.Lock()
         # the lock above protects the fields below
         self._hang_counts = defaultdict(int)
 
-    @property
-    def hang_counts(self):
-        with self._lock:
+    async def hang_counts(self):
+        async with self._lock:
             return self._hang_counts
 
-    def _incr_hang_count(self, runner):
-        with self._lock:
+    async def _increment_hang_count(self, runner):
+        async with self._lock:
             self._hang_counts[runner] += 1
 
-    def run(self):
-        coordinator = self._coordinator
-        test_runners = coordinator._test_runners
-
+    async def run(self):
         while True:
-            time.sleep(OBSERVATION_INTERVAL)
-            coordinator.check_deadline()
-            if not coordinator.should_continue_tests():
+            await asyncio.sleep(OBSERVATION_INTERVAL)
+            await self.coordinator.check_deadline()
+            if not await self.coordinator.should_continue_tests():
                 break
 
             logging.info("-" * 40)
-
             op_count = 0
             hanged_runners = []
 
-            for test_runner in test_runners:
-                op_count_per_runner = test_runner.counter.get_and_reset()
+            for test_runner in self.test_runners:
+                op_count_per_runner = await test_runner.counter.get_and_reset()
                 op_count += op_count_per_runner
                 if op_count == 0:
                     hanged_runners.append(test_runner)
@@ -215,7 +184,7 @@ class OperationCountObserver(threading.Thread):
             else:
                 logging.info("%s threads hanged: %s", len(hanged_runners), hanged_runners)
                 for hanged_runner in hanged_runners:
-                    self._incr_hang_count(hanged_runner)
+                    await self._increment_hang_count(hanged_runner)
 
             logging.info("-" * 40)
             logging.info("Operations Per Second: %s\n", op_count / OBSERVATION_INTERVAL)
@@ -224,16 +193,16 @@ class OperationCountObserver(threading.Thread):
 class OperationCounter:
     def __init__(self):
         self._count = 0
-        self._lock = threading.Lock()
+        self._lock = asyncio.Lock()
 
-    def get_and_reset(self):
-        with self._lock:
+    async def get_and_reset(self):
+        async with self._lock:
             total = self._count
             self._count = 0
             return total
 
-    def increment(self):
-        with self._lock:
+    async def increment(self):
+        async with self._lock:
             self._count += 1
 
 
@@ -290,12 +259,12 @@ def setup_logging(log_file):
     )
 
 
-def main():
+async def amain():
     arguments = parse_arguments()
     setup_logging(arguments.log_file)
     coordinator = SoakTestCoordinator(arguments.duration, arguments.address)
-    coordinator.start_tests()
+    await coordinator.start_tests()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(amain())
