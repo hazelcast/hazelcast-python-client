@@ -68,9 +68,7 @@ class SoakTestCoordinator:
         # wait for canceled tasks to expire
         await asyncio.sleep(1)
         task_count_after = len(asyncio.all_tasks())
-        logging.info(
-            "Task count before: %s, after: %s", self._task_count_before, task_count_after
-        )
+        logging.info("Task count before: %s, after: %s", self._task_count_before, task_count_after)
 
     async def notify_error(self):
         async with self._lock:
