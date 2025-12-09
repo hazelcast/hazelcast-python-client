@@ -998,7 +998,7 @@ class Connection:
         self._log_close(reason, cause)
         try:
             self._inner_close()
-        except Exception as e:
+        except Exception:
             _logger.exception("Error while closing the the connection %s", self)
         await self._connection_manager.on_connection_close(self)
 
