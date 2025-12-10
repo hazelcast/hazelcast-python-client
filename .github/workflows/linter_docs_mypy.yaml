@@ -28,8 +28,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements-dev.txt
-          pip install typed-ast
-          
+
       - name: Run black
         run: |
           black --check --config black.toml .
@@ -75,4 +74,4 @@ jobs:
           
       - name: Run mypy
         run: |
-          mypy --show-error-codes hazelcast
+          mypy --show-error-codes --python-version 3.14 hazelcast
