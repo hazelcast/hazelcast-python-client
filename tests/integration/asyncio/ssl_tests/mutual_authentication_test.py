@@ -4,7 +4,7 @@ import unittest
 import pytest
 
 from tests.integration.asyncio.base import HazelcastTestCase
-from hazelcast.asyncio.client import HazelcastClient
+from hazelcast.internal.asyncio_client import HazelcastClient
 from hazelcast.errors import HazelcastError
 from tests.util import get_ssl_config, get_abs_path
 

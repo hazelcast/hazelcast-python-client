@@ -2,7 +2,7 @@ import unittest
 
 from mock import MagicMock
 
-from hazelcast.asyncio.client import HazelcastClient
+from hazelcast.internal.asyncio_client import HazelcastClient
 from hazelcast.errors import IndeterminateOperationStateError
 from tests.base import HazelcastTestCase
 

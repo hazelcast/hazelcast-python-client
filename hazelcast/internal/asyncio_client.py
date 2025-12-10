@@ -31,7 +31,6 @@ from hazelcast.internal.asyncio_proxy.base import Proxy
 from hazelcast.internal.asyncio_proxy.map import Map
 from hazelcast.internal.asyncio_reactor import AsyncioReactor
 from hazelcast.serialization import SerializationServiceV1
-from hazelcast.sql import SqlService, _InternalSqlService
 from hazelcast.internal.asyncio_statistics import Statistics
 from hazelcast.types import KeyType, ValueType
 from hazelcast.util import AtomicInteger, RoundRobinLB
@@ -133,13 +132,6 @@ class HazelcastClient:
             self._listener_service,
             self._compact_schema_service,
         )
-        self._internal_sql_service = _InternalSqlService(
-            self._connection_manager,
-            self._serialization_service,
-            self._invocation_service,
-            self._compact_schema_service.send_schema_and_retry,
-        )
-        self._sql_service = SqlService(self._internal_sql_service)
         self._init_context()
 
     def _init_context(self):
@@ -238,36 +230,6 @@ class HazelcastClient:
 
     async def remove_distributed_object_listener(self, registration_id: str) -> bool:
         return await self._listener_service.deregister_listener(registration_id)
-
-    async def get_distributed_objects(self) -> typing.List[Proxy]:
-        request = client_get_distributed_objects_codec.encode_request()
-        invocation = Invocation(request, response_handler=lambda m: m)
-        await self._invocation_service.ainvoke(invocation)
-
-        local_distributed_object_infos = {
-            DistributedObjectInfo(dist_obj.service_name, dist_obj.name)
-            for dist_obj in self._proxy_manager.get_distributed_objects()
-        }
-
-        response = client_get_distributed_objects_codec.decode_response(invocation.future.result())
-        async with asyncio.TaskGroup() as tg:  # type: ignore[attr-defined]
-            for dist_obj_info in response:
-                local_distributed_object_infos.discard(dist_obj_info)
-                tg.create_task(
-                    self._proxy_manager.get_or_create(
-                        dist_obj_info.service_name, dist_obj_info.name, create_on_remote=False
-                    )
-                )
-
-        async with asyncio.TaskGroup() as tg:  # type: ignore[attr-defined]
-            for dist_obj_info in local_distributed_object_infos:
-                tg.create_task(
-                    self._proxy_manager.destroy_proxy(
-                        dist_obj_info.service_name, dist_obj_info.name, destroy_on_remote=False
-                    )
-                )
-
-        return self._proxy_manager.get_distributed_objects()
 
     async def shutdown(self) -> None:
         async with self._shutdown_lock:
