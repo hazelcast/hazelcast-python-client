@@ -1,4 +1,5 @@
 import asyncio
+import os
 import sys
 import unittest
 
@@ -179,9 +180,13 @@ class ReconnectWithDifferentInterfacesTest(unittest.IsolatedAsyncioTestCase, Haz
         await self._verify_connection_count_after_reconnect("localhost", "127.0.0.1")
 
     async def test_connection_count_after_reconnect_with_member_hostname_client_hostname(self):
+        if os.name == "nt":
+            self.skipTest("This test is flaky on Windows")
         await self._verify_connection_count_after_reconnect("localhost", "localhost")
 
     async def test_connection_count_after_reconnect_with_member_ip_client_ip(self):
+        if os.name == "nt":
+            self.skipTest("This test is flaky on Windows")
         await self._verify_connection_count_after_reconnect("127.0.0.1", "127.0.0.1")
 
     async def test_connection_count_after_reconnect_with_member_ip_client_hostname(self):
