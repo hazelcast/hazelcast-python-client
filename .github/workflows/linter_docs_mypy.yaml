@@ -28,6 +28,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements-dev.txt
+          pip install typed-ast
           
       - name: Run black
         run: |
