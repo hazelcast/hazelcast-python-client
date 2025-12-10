@@ -20,7 +20,7 @@ jobs:
     steps:
       - id: extract-versions
         run: |
-          python_versions='[ "3.11", "3.12", "3.13" ]'
+          python_versions='[ "3.11", "3.12", "3.13", "3.14" ]'
 
           echo "python-versions=${python_versions}" >> $GITHUB_OUTPUT
           echo "earliest-python-version=$(echo "${python_versions}" | jq --raw-output '.[0]')" >> $GITHUB_OUTPUT

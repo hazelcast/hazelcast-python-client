@@ -1,6 +1,7 @@
 """
 Serialization type ids
 """
+
 # Serialization Constants
 CONSTANT_TYPE_NULL = 0
 CONSTANT_TYPE_PORTABLE = -1
