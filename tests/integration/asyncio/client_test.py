@@ -1,7 +1,7 @@
 import unittest
 
 from tests.integration.asyncio.base import HazelcastTestCase, SingleMemberTestCase
-from hazelcast.asyncio.client import HazelcastClient
+from hazelcast.internal.asyncio_client import HazelcastClient
 from tests.hzrc.ttypes import Lang
 from tests.util import compare_client_version, random_string
 

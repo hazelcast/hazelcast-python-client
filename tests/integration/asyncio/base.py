@@ -3,7 +3,7 @@ import logging
 import unittest
 from typing import Awaitable
 
-from hazelcast.asyncio.client import HazelcastClient
+from hazelcast.internal.asyncio_client import HazelcastClient
 
 from tests.base import _Cluster
 from tests.hzrc.client import HzRemoteController

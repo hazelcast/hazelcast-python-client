@@ -6,7 +6,7 @@ import pytest
 from hazelcast.errors import HazelcastError
 from tests.integration.asyncio.base import HazelcastTestCase
 from tests.util import get_abs_path, compare_client_version
-from hazelcast.asyncio.client import HazelcastClient
+from hazelcast.internal.asyncio_client import HazelcastClient
 
 try:
     from hazelcast.security import BasicTokenProvider

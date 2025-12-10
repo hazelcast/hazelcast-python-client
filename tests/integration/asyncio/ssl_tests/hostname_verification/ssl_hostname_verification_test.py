@@ -4,7 +4,7 @@ import unittest
 
 import pytest
 
-from hazelcast.asyncio.client import HazelcastClient
+from hazelcast.internal.asyncio_client import HazelcastClient
 from hazelcast.config import SSLProtocol
 from hazelcast.errors import IllegalStateError
 from tests.integration.asyncio.base import HazelcastTestCase
