@@ -96,7 +96,8 @@ jobs:
           ref: data
           token: ${{ secrets.GH_TOKEN }}
 
-      - name: Create the test jar with certificates
+      - name: Create the test jar with certificates (Linux)
+        if: matrix.os == 'ubuntu-latest'
         working-directory: certs
         run: |
           echo "HERE: $(pwd)"
@@ -106,14 +107,16 @@ jobs:
           zip -r -j certs.jar $GITHUB_WORKSPACE/tests/integration/backward_compatible/ssl_tests/hostname_verification
           cp certs.jar ../hazelcast-enterprise-${{ matrix.hz_version }}-tests.jar            
 
-      - name: Download RCD Linux
+      - name: Download RCD Linux (Linux)
+        if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: |
           echo "HERE: $PWD"          
           echo "ROOT_FOLDER: ${{ steps.get-root-folder.outputs.ROOT_FOLDER }}"
           wget -q https://client-rcd-download.s3.us-east-2.amazonaws.com/rcd-ubuntu-latest
 
-      - name: Start Hazelcast Remote Controller Linux
+      - name: Start Hazelcast Remote Controller (Linux)
+        if: matrix.os == 'ubuntu-latest'
         env:
           HZ_VERSION: ${{ matrix.hz_version }}
           HAZELCAST_ENTERPRISE_KEY: secrets[HAZELCAST_ENTERPRISE_KEY]
