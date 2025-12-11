@@ -163,7 +163,4 @@ class MutualAuthenticationTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCa
     def read_config(self, is_ma_required):
         file_path = self.ma_req_xml if is_ma_required else self.ma_opt_xml
         with open(file_path, "r") as f:
-            xml_config = f.read()
-        keystore_path = get_abs_path(self.current_directory, "server1.keystore")
-        truststore_path = get_abs_path(self.current_directory, "server1.truststore")
-        return xml_config % (keystore_path, truststore_path)
+            return f.read()

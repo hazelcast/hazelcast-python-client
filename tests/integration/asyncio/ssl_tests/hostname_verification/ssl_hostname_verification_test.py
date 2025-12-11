@@ -24,7 +24,7 @@ MEMBER_CONFIG = """
     <network>
         <ssl enabled="true">
             <factory-class-name>
-                com.hazelcast.nio.ssl.BasicSSLContextFactory
+                com.hazelcast.nio.ssl.ClasspathSSLContextFactory
             </factory-class-name>
             <properties>
                 <property name="keyStore">%s</property>
@@ -130,6 +130,6 @@ class SslHostnameVerificationTest(unittest.IsolatedAsyncioTestCase, HazelcastTes
         )
 
     def start_member_with(self, keystore_name: str) -> None:
-        config = MEMBER_CONFIG % get_abs_path(current_directory, keystore_name)
+        config = MEMBER_CONFIG % keystore_name
         self.cluster = self.create_cluster(self.rc, config)
         self.cluster.start_member()
