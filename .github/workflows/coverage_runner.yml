@@ -168,7 +168,8 @@ jobs:
           pip install -r requirements-test.txt
 
       - name: Run tests
-        run: pytest --verbose tests
+        run: |
+          pytest --cov=hazelcast --cov-report=xml
 
       - name: Publish results to Codecov for PR coming from hazelcast organization
         if: ${{ matrix.python-version == needs.python-versions.outputs.latest-python-version && matrix.os == 'ubuntu-latest' &&  github.event_name == 'pull_request_target' }}
