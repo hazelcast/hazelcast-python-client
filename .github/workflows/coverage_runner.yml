@@ -104,12 +104,12 @@ jobs:
           echo "GITHUB_WORKSPACE"
           ls $GITHUB_WORKSPACE
           zip -r -j certs.jar $GITHUB_WORKSPACE/tests/integration/backward_compatible/ssl_tests/hostname_verification
-          cp certs.jar hazelcast-enterprise-${{ matrix.hz_version }}-tests.jar            
+          cp certs.jar ../hazelcast-enterprise-${{ matrix.hz_version }}-tests.jar            
 
       - name: Download RCD Linux
         shell: bash
         run: |
-          echo "PWD: $PWD"
+          echo "HERE: $PWD"          
           echo "ROOT_FOLDER: ${{ steps.get-root-folder.outputs.ROOT_FOLDER }}"
           wget -q https://client-rcd-download.s3.us-east-2.amazonaws.com/rcd-ubuntu-latest
 
