@@ -116,12 +116,11 @@ jobs:
           echo "GITHUB_WORKSPACE"
           ls $GITHUB_WORKSPACE
           $compress = @{
-            Path = "$GITHUB_WORKSPACE/tests/integration/backward_compatible/ssl_tests/hostname_verification/*.p12"
+            Path = "../tests/integration/backward_compatible/ssl_tests/hostname_verification/*.p12"
             CompressionLevel = "Fastest"
-            DestinationPath = "$GITHUB_WORKSPACE/tests/integration/backward_compatible/ssl_tests/hostname_verification"
+            DestinationPath = "certs.jar"
           }
           Compress-Archive -Update @compress
-          zip -r -j certs.jar $GITHUB_WORKSPACE/tests/integration/backward_compatible/ssl_tests/hostname_verification
           cp certs.jar ./hazelcast-enterprise-${{ matrix.hz_version }}-tests.jar            
 
       - name: Download RCD (Linux)
