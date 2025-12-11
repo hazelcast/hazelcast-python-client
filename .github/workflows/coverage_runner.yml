@@ -152,25 +152,11 @@ jobs:
           ./rcd-ubuntu-latest -version $HZ_VERSION &
           sleep 10
 
-      - name: Start Hazelcast Remote Controller (Linux)
-        if: matrix.os == 'ubuntu-latest'
-        env:
-          HZ_VERSION: ${{ matrix.hz_version }}
-          HAZELCAST_ENTERPRISE_KEY: secrets[HAZELCAST_ENTERPRISE_KEY]
-        shell: bash
-        run: |
-          echo "HERE: $(pwd)"
-          ls
-          chmod +x rcd-ubuntu-latest 
-          ./rcd-ubuntu-latest -version $HZ_VERSION &
-          sleep 10
-
       - name: Start Hazelcast Remote Controller (Windows)
         if: matrix.os == 'windows-latest'
         env:
           HZ_VERSION: ${{ matrix.hz_version }}
           HAZELCAST_ENTERPRISE_KEY: secrets[HAZELCAST_ENTERPRISE_KEY]
-        shell: bash
         run: |
           echo "HERE: $(pwd)"
           ls
