@@ -104,16 +104,54 @@ jobs:
           ls
           echo "GITHUB_WORKSPACE"
           ls $GITHUB_WORKSPACE
-          zip -r -j certs.jar $GITHUB_WORKSPACE/tests/integration/backward_compatible/ssl_tests/hostname_verification
+          zip -r -j certs.jar $GITHUB_WORKSPACE/tests/integration/backward_compatible/ssl_tests/hostname_verification/*.p12
           cp certs.jar ../hazelcast-enterprise-${{ matrix.hz_version }}-tests.jar            
 
-      - name: Download RCD Linux (Linux)
+      - name: Create the test jar with certificates (Windows)
+        if: matrix.os == 'windows-latest'
+        working-directory: certs
+        run: |
+          echo "HERE: $(pwd)"
+          ls
+          echo "GITHUB_WORKSPACE"
+          ls $GITHUB_WORKSPACE
+          $compress = @{
+            Path = "$GITHUB_WORKSPACE/tests/integration/backward_compatible/ssl_tests/hostname_verification/*.p12"
+            CompressionLevel = "Fastest"
+            DestinationPath = $GITHUB_WORKSPACE/tests/integration/backward_compatible/ssl_tests/hostname_verification
+          }
+          Compress-Archive -Update @compress
+          zip -r -j certs.jar $GITHUB_WORKSPACE/tests/integration/backward_compatible/ssl_tests/hostname_verification
+          cp certs.jar ./hazelcast-enterprise-${{ matrix.hz_version }}-tests.jar            
+
+      - name: Download RCD (Linux)
         if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: |
           echo "HERE: $PWD"          
           echo "ROOT_FOLDER: ${{ steps.get-root-folder.outputs.ROOT_FOLDER }}"
           wget -q https://client-rcd-download.s3.us-east-2.amazonaws.com/rcd-ubuntu-latest
+
+      - name: Start Hazelcast Remote Controller (Linux)
+        if: matrix.os == 'windows-latest'
+        env:
+          HZ_VERSION: ${{ matrix.hz_version }}
+          HAZELCAST_ENTERPRISE_KEY: secrets[HAZELCAST_ENTERPRISE_KEY]
+        shell: bash
+        run: |
+          echo "HERE: $(pwd)"
+          ls
+          chmod +x rcd-ubuntu-latest 
+          ./rcd-ubuntu-latest -version $HZ_VERSION &
+          sleep 10
+
+      - name: Download RCD (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          echo "HERE: $PWD"          
+          echo "ROOT_FOLDER: ${{ steps.get-root-folder.outputs.ROOT_FOLDER }}"
+          $ProgressPreference = 'SilentlyContinue'
+          Invoke-WebRequest https://client-rcd-download.s3.us-east-2.amazonaws.com/rcd-windows-latest.exe -OutFile rcd-windows-latest.exe
 
       - name: Start Hazelcast Remote Controller (Linux)
         if: matrix.os == 'ubuntu-latest'
@@ -126,6 +164,18 @@ jobs:
           ls
           chmod +x rcd-ubuntu-latest 
           ./rcd-ubuntu-latest -version $HZ_VERSION &
+          sleep 10
+
+      - name: Start Hazelcast Remote Controller (Windows)
+        if: matrix.os == 'windows-latest'
+        env:
+          HZ_VERSION: ${{ matrix.hz_version }}
+          HAZELCAST_ENTERPRISE_KEY: secrets[HAZELCAST_ENTERPRISE_KEY]
+        shell: bash
+        run: |
+          echo "HERE: $(pwd)"
+          ls
+          rcd-windows-latest -version $HZ_VERSION &
           sleep 10
 
 #      - name: Install dependencies
