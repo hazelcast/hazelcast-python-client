@@ -131,8 +131,16 @@ jobs:
           echo "ROOT_FOLDER: ${{ steps.get-root-folder.outputs.ROOT_FOLDER }}"
           wget -q https://client-rcd-download.s3.us-east-2.amazonaws.com/rcd-ubuntu-latest
 
-      - name: Start Hazelcast Remote Controller (Linux)
+      - name: Download RCD (Windows)
         if: matrix.os == 'windows-latest'
+        run: |
+          echo "HERE: $PWD"          
+          echo "ROOT_FOLDER: ${{ steps.get-root-folder.outputs.ROOT_FOLDER }}"
+          $ProgressPreference = 'SilentlyContinue'
+          Invoke-WebRequest https://client-rcd-download.s3.us-east-2.amazonaws.com/rcd-windows-latest.exe -OutFile rcd-windows-latest.exe
+
+      - name: Start Hazelcast Remote Controller (Linux)
+        if: matrix.os == 'ubuntu-latest'
         env:
           HZ_VERSION: ${{ matrix.hz_version }}
           HAZELCAST_ENTERPRISE_KEY: secrets[HAZELCAST_ENTERPRISE_KEY]
@@ -143,14 +151,6 @@ jobs:
           chmod +x rcd-ubuntu-latest 
           ./rcd-ubuntu-latest -version $HZ_VERSION &
           sleep 10
-
-      - name: Download RCD (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          echo "HERE: $PWD"          
-          echo "ROOT_FOLDER: ${{ steps.get-root-folder.outputs.ROOT_FOLDER }}"
-          $ProgressPreference = 'SilentlyContinue'
-          Invoke-WebRequest https://client-rcd-download.s3.us-east-2.amazonaws.com/rcd-windows-latest.exe -OutFile rcd-windows-latest.exe
 
       - name: Start Hazelcast Remote Controller (Linux)
         if: matrix.os == 'ubuntu-latest'
