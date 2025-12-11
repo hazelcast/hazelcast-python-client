@@ -75,10 +75,6 @@ jobs:
         with:
           ref: refs/pull/${{ github.event.inputs.pr_number }}/merge
           
-      - name: Install dependencies
-        run: |
-          pip install -r requirements-test.txt
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -105,7 +101,9 @@ jobs:
         run: |
           echo "HERE: $(pwd)"
           ls
-          zip -r -j certs.jar $GITHUB_WORKSPACE/hazelcast-python-client/tests/integration/backward_compatible/ssl_tests/hostname_verification
+          echo "GITHUB_WORKSPACE"
+          ls $GITHUB_WORKSPACE
+          zip -r -j certs.jar $GITHUB_WORKSPACE/tests/integration/backward_compatible/ssl_tests/hostname_verification
           cp certs.jar hazelcast-enterprise-${{ matrix.hz_version }}-tests.jar            
 
       - name: Download RCD Linux
@@ -126,6 +124,12 @@ jobs:
           chmod +x rcd-ubuntu-latest 
           ./rcd-ubuntu-latest -version $HZ_VERSION &
           sleep 10
+
+#      - name: Install dependencies
+#        run: |
+#          pip install -r requirements-test.txt
+#
+
 
 #      - name: Run tests
 #        env:
