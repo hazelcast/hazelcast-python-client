@@ -116,7 +116,7 @@ jobs:
       - name: Start Hazelcast Remote Controller Linux
         env:
           HZ_VERSION: ${{ matrix.hz_version }}
-          HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY_SECRET }}
+          HAZELCAST_ENTERPRISE_KEY: "XXX"
         shell: bash
         run: |
           echo "HERE: $(pwd)"
