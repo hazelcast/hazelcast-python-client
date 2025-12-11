@@ -100,12 +100,12 @@ jobs:
           ref: data
           token: ${{ secrets.GH_TOKEN }}
 
-      - name: Extract the certificate
+      - name: Create the test jar with certificates
         working-directory: certs
         run: |
           echo "HERE: $(pwd)"
           ls
-          zip -r -j certs.jar
+          zip -r -j certs.jar $GITHUB_WORKSPACE/hazelcast-python-client/tests/integration/backward_compatible/ssl_tests/hostname_verification
           cp certs.jar hazelcast-enterprise-${{ matrix.hz_version }}-tests.jar            
 
       - name: Download RCD Linux
