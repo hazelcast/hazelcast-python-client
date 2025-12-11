@@ -111,12 +111,12 @@ jobs:
         run: |
           echo "PWD: $PWD"
           echo "ROOT_FOLDER: ${{ steps.get-root-folder.outputs.ROOT_FOLDER }}"
-          wget https://client-rcd-download.s3.us-east-2.amazonaws.com/rcd-ubuntu-latest
+          wget -q https://client-rcd-download.s3.us-east-2.amazonaws.com/rcd-ubuntu-latest
 
       - name: Start Hazelcast Remote Controller Linux
         env:
           HZ_VERSION: ${{ matrix.hz_version }}
-          HAZELCAST_ENTERPRISE_KEY: ${{ secrets[steps.get-enterprise-license.outputs.HAZELCAST_ENTERPRISE_KEY_SECRET] }}
+          HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY_SECRET }}
         shell: bash
         run: |
           echo "HERE: $(pwd)"
