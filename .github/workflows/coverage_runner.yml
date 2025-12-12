@@ -86,7 +86,7 @@ jobs:
         uses: aws-actions/aws-secretsmanager-get-secrets@v2
         with:
           secret-ids: |
-            HAZELCAST_ENTERPRISE_KEY_V7,CN/HZ_LICENSE_KEY
+            HAZELCAST_ENTERPRISE_KEY,CN/HZ_LICENSE_KEY
             
       - name: Checkout to certificates
         uses: actions/checkout@v3
@@ -190,7 +190,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         env:
           HZ_VERSION: ${{ matrix.hz_version }}
-          HAZELCAST_ENTERPRISE_KEY: secrets[HAZELCAST_ENTERPRISE_KEY_V7]
+#          HAZELCAST_ENTERPRISE_KEY: secrets[HAZELCAST_ENTERPRISE_KEY]
         run: |
           echo "HERE: $(pwd)"
           ls
