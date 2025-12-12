@@ -190,7 +190,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         env:
           HZ_VERSION: ${{ matrix.hz_version }}
-          HAZELCAST_ENTERPRISE_KEY: secrets[HAZELCAST_ENTERPRISE_KEY]
+          HAZELCAST_ENTERPRISE_KEY: secrets[HAZELCAST_ENTERPRISE_KEY_V7]
         run: |
           echo "HERE: $(pwd)"
           ls
