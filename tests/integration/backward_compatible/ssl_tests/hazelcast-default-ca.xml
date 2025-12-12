@@ -5,13 +5,15 @@
     <network>
         <ssl enabled="true">
             <factory-class-name>
-                com.hazelcast.nio.ssl.BasicSSLContextFactory
+                com.hazelcast.nio.ssl.ClasspathSSLContextFactory
             </factory-class-name>
             <properties>
-                <property name="keyStore">%s</property>
+                <property name="keyStore">com/hazelcast/nio/ssl/letsencrypt.jks
+</property>
                 <property name="keyStorePassword">123456</property>
                 <property name="keyManagerAlgorithm">SunX509</property>
-                <property name="trustStore">%s</property>
+                <property name="trustStore">com/hazelcast/nio/ssl/letsencrypt.jks
+</property>
                 <property name="truestStorePassword">123456</property>
                 <property name="trustManagerAlgorithm">SunX509</property>
                 <property name="protocol">TLSv1.2</property>
