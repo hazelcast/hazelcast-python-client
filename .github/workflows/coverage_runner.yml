@@ -150,7 +150,6 @@ jobs:
           Start-Process -FilePath .\rcd-windows-latest -ArgumentList '-version', $Env:HZ_VERSION  -RedirectStandardOutput rcd-stdout.log  -RedirectStandardError rcd-stderr.log
           # wait for a bit for RCD to download artifacts
           sleep 10
-          dir
           echo "RCD Log:"
           cat rcd-stdout.log
           cat rcd-stderr.log
