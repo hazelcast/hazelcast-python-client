@@ -359,9 +359,7 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual([3123.0, -123.0], self.map.get("key"))
 
     def test_string_array_from_server(self):
-        self.assertTrue(
-            self.set_on_server('Java.to(["hey", "1⚐中💦2😭‍🙆😔5"], "java.lang.String[]")')
-        )
+        self.assertTrue(self.set_on_server('Java.to(["hey", "1⚐中💦2😭‍🙆😔5"], "java.lang.String[]")'))
         self.assertEqual(["hey", "1⚐中💦2😭‍🙆😔5"], self.map.get("key"))
 
     def test_date_from_server(self):
