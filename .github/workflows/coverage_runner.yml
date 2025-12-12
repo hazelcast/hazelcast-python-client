@@ -160,7 +160,7 @@ jobs:
         run: |
           echo "HERE: $(pwd)"
           ls
-          .\rcd-windows-latest -version $HZ_VERSION
+          .\rcd-windows-latest -version 5.6.0
           sleep 10
 
       - name: Install dependencies
