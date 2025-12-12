@@ -121,7 +121,7 @@ jobs:
             DestinationPath = "certs.jar"
           }
           Compress-Archive -Update @compress
-          cp certs.jar ./hazelcast-enterprise-${{ matrix.hz_version }}-tests.jar            
+          cp certs.jar ../hazelcast-enterprise-${{ matrix.hz_version }}-tests.jar            
 
       - name: Download RCD (Linux)
         if: matrix.os == 'ubuntu-latest'
