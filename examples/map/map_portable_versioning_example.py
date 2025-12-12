@@ -91,7 +91,6 @@ class Employee2(Portable):
 # However, having a version that changes across incompatible field types such as int and String will cause
 # a type error as members with older versions of the class tries to access it. We will demonstrate this below.
 
-
 # Version3: Changed age field type from int to String. (Incompatible type change)
 class Employee3(Portable):
     FACTORY_ID = 666

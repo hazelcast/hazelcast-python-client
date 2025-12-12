@@ -51,7 +51,7 @@ class SerializersTest(unittest.TestCase):
         self.validate("client")
         self.validate("1⚐中💦2😭‍🙆😔5")
         self.validate("Iñtërnâtiônàlizætiøn")
-        self.validate("\u0040\u0041\u01df\u06a0\u12e0\u1d30")
+        self.validate("\u0040\u0041\u01DF\u06A0\u12E0\u1D30")
 
     def test_bytearray(self):
         self.validate(bytearray("abc".encode()))

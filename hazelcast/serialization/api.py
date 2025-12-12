@@ -1,7 +1,6 @@
 """
 User API for Serialization.
 """
-
 import abc
 import datetime
 import decimal

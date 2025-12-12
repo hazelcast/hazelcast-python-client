@@ -132,7 +132,7 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(value, response)
 
     def test_utf_chars(self):
-        value = "\u0040\u0041\u01df\u06a0\u12e0\u1d306"
+        value = "\u0040\u0041\u01DF\u06A0\u12E0\u1D306"
         self.map.set("key", value)
         self.assertEqual(value, self.map.get("key"))
         response = self.get_from_server()
