@@ -139,33 +139,6 @@ jobs:
           $ProgressPreference = 'SilentlyContinue'
           Invoke-WebRequest https://client-rcd-download.s3.us-east-2.amazonaws.com/rcd-windows-latest.exe -OutFile rcd-windows-latest.exe
 
-#      - name: Start Hazelcast Remote Controller (Linux)
-#        if: matrix.os == 'ubuntu-latest'
-#        env:
-#          HZ_VERSION: ${{ matrix.hz_version }}
-#          HAZELCAST_ENTERPRISE_KEY: secrets[HAZELCAST_ENTERPRISE_KEY]
-#        shell: bash
-#        run: |
-#          echo "HERE: $(pwd)"
-#          ls
-#          chmod +x rcd-ubuntu-latest
-#          ./rcd-ubuntu-latest -version $HZ_VERSION &
-#          sleep 10
-
-#      - name: Start Hazelcast Remote Controller (Windows)
-#        if: matrix.os == 'windows-latest'
-#        env:
-#          HZ_VERSION: ${{ matrix.hz_version }}
-#          HAZELCAST_ENTERPRISE_KEY: secrets[HAZELCAST_ENTERPRISE_KEY]
-#        run: |
-#          echo "HERE: $(pwd)"
-#          Start-Process -FilePath .\rcd-windows-latest -ArgumentList '-version', '5.6.0'  -RedirectStandardOutput rcd-stdout.log  -RedirectStandardError rcd-stderr.log
-#          sleep 10
-#          dir
-#          echo "RCD Log:"
-#          cat rcd-stdout.log
-#          cat rcd-stderr.log
-
       - name: Install dependencies
         run: |
           pip install -r requirements-test.txt
@@ -188,7 +161,7 @@ jobs:
           HZ_VERSION: ${{ matrix.hz_version }}
         run: |
           echo "HERE: $(pwd)"
-          Start-Process -FilePath .\rcd-windows-latest -ArgumentList '-version', '5.6.0'  -RedirectStandardOutput rcd-stdout.log  -RedirectStandardError rcd-stderr.log
+          Start-Process -FilePath .\rcd-windows-latest -ArgumentList '-version', $Env:HZ_VERSION  -RedirectStandardOutput rcd-stdout.log  -RedirectStandardError rcd-stderr.log
           sleep 10
           dir
           echo "RCD Log:"
@@ -196,38 +169,28 @@ jobs:
           cat rcd-stderr.log
           pytest --verbose --cov=hazelcast --cov-report=xml
 
-#      - name: Publish results to Codecov for PR coming from hazelcast organization
-#        if: ${{ matrix.python-version == needs.python-versions.outputs.latest-python-version && matrix.os == 'ubuntu-latest' &&  github.event_name == 'pull_request_target' }}
-#        uses: codecov/codecov-action@v5
-#        with:
-#          token: ${{ secrets.CODECOV_TOKEN }}
-#          files: ./coverage.xml
-#          override_pr: ${{ github.event.pull_request.number }}
-#          fail_ci_if_error: true
-#
-#      - name: Publish results to Codecov for Push
-#        if: ${{ matrix.python-version == needs.python-versions.outputs.latest-python-version && matrix.os == 'ubuntu-latest' &&  github.event_name == 'push' }}
-#        uses: codecov/codecov-action@v5
-#        with:
-#          token: ${{ secrets.CODECOV_TOKEN }}
-#          files: ./coverage.xml
-#          fail_ci_if_error: true
-#
-#      - name: Publish result to Codecov for PR coming from community
-#        if: ${{ matrix.python-version == needs.python-versions.outputs.latest-python-version && matrix.os == 'ubuntu-latest' && github.event_name == 'workflow_dispatch' }}
-#        uses: codecov/codecov-action@v5
-#        with:
-#          token: ${{ secrets.CODECOV_TOKEN }}
-#          files: ./coverage.xml
-#          override_pr: ${{ github.event.inputs.pr_number }}
-#          fail_ci_if_error: true
-#
-#      - name: Upload remote controller logs if test run fails
-#        uses: actions/upload-artifact@v4
-#        if: failure()
-#        with:
-#          name: rc-logs-${{ matrix.python-version }}-${{ matrix.os }}
-#          path: |
-#            rc_stderr.log
-#            rc_stdout.log
-#
+      - name: Publish results to Codecov for PR coming from hazelcast organization
+        if: ${{ matrix.python-version == needs.python-versions.outputs.latest-python-version && matrix.os == 'ubuntu-latest' &&  github.event_name == 'pull_request_target' }}
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          override_pr: ${{ github.event.pull_request.number }}
+          fail_ci_if_error: true
+
+      - name: Publish results to Codecov for Push
+        if: ${{ matrix.python-version == needs.python-versions.outputs.latest-python-version && matrix.os == 'ubuntu-latest' &&  github.event_name == 'push' }}
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          fail_ci_if_error: true
+
+      - name: Publish result to Codecov for PR coming from community
+        if: ${{ matrix.python-version == needs.python-versions.outputs.latest-python-version && matrix.os == 'ubuntu-latest' && github.event_name == 'workflow_dispatch' }}
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          override_pr: ${{ github.event.inputs.pr_number }}
+          fail_ci_if_error: true
