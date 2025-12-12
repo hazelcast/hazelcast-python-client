@@ -138,6 +138,7 @@ jobs:
         run: |
           chmod +x rcd-ubuntu-latest 
           ./rcd-ubuntu-latest -version $HZ_VERSION &
+          # wait for a bit for RCD to download artifacts
           sleep 10
           pytest --verbose --cov=hazelcast --cov-report=xml
 
@@ -147,6 +148,7 @@ jobs:
           HZ_VERSION: ${{ matrix.hz_version }}
         run: |
           Start-Process -FilePath .\rcd-windows-latest -ArgumentList '-version', $Env:HZ_VERSION  -RedirectStandardOutput rcd-stdout.log  -RedirectStandardError rcd-stderr.log
+          # wait for a bit for RCD to download artifacts
           sleep 10
           dir
           echo "RCD Log:"
