@@ -190,7 +190,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         env:
           HZ_VERSION: ${{ matrix.hz_version }}
-          HAZELCAST_ENTERPRISE_KEY: secrets[HAZELCAST_ENTERPRISE_KEY]
+#          HAZELCAST_ENTERPRISE_KEY: secrets[HAZELCAST_ENTERPRISE_KEY]
         run: |
           echo "HERE: $(pwd)"
           ls
@@ -198,7 +198,7 @@ jobs:
           ./rcd-ubuntu-latest -version $HZ_VERSION &
           sleep 10
           #pytest --verbose --cov=hazelcast --cov-report=xml --log-cli-level debug
-          pytest -k test_ssl_enabled_trust_default_certificates
+          pytest -k test_contains_value
 
 #      - name: Publish results to Codecov for PR coming from hazelcast organization
 #        if: ${{ matrix.python-version == needs.python-versions.outputs.latest-python-version && matrix.os == 'ubuntu-latest' &&  github.event_name == 'pull_request_target' }}
