@@ -163,7 +163,7 @@ jobs:
           .\rcd-windows-latest -version 5.6.0 > rcd.log &
           sleep 10
           echo "RCD Log:"
-          ls -l
+          dir
           cat rcd.log
 
       - name: Install dependencies
