@@ -100,10 +100,6 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         working-directory: certs
         run: |
-          echo "HERE: $(pwd)"
-          ls
-          echo "GITHUB_WORKSPACE"
-          ls $GITHUB_WORKSPACE
           zip -r -j certs.jar $GITHUB_WORKSPACE/tests/integration/backward_compatible/ssl_tests/hostname_verification/*.p12
           cp certs.jar ../hazelcast-enterprise-${{ matrix.hz_version }}-tests.jar            
 
@@ -111,10 +107,6 @@ jobs:
         if: matrix.os == 'windows-latest'
         working-directory: certs
         run: |
-          echo "HERE: $(pwd)"
-          ls
-          echo "GITHUB_WORKSPACE"
-          ls $GITHUB_WORKSPACE
           $compress = @{
             Path = "../tests/integration/backward_compatible/ssl_tests/hostname_verification/*.p12"
             CompressionLevel = "Fastest"
@@ -127,15 +119,11 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: |
-          echo "HERE: $PWD"          
-          echo "ROOT_FOLDER: ${{ steps.get-root-folder.outputs.ROOT_FOLDER }}"
           wget -q https://client-rcd-download.s3.us-east-2.amazonaws.com/rcd-ubuntu-latest
 
       - name: Download RCD (Windows)
         if: matrix.os == 'windows-latest'
         run: |
-          echo "HERE: $PWD"          
-          echo "ROOT_FOLDER: ${{ steps.get-root-folder.outputs.ROOT_FOLDER }}"
           $ProgressPreference = 'SilentlyContinue'
           Invoke-WebRequest https://client-rcd-download.s3.us-east-2.amazonaws.com/rcd-windows-latest.exe -OutFile rcd-windows-latest.exe
 
@@ -148,8 +136,6 @@ jobs:
         env:
           HZ_VERSION: ${{ matrix.hz_version }}
         run: |
-          echo "HERE: $(pwd)"
-          ls
           chmod +x rcd-ubuntu-latest 
           ./rcd-ubuntu-latest -version $HZ_VERSION &
           sleep 10
@@ -160,7 +146,6 @@ jobs:
         env:
           HZ_VERSION: ${{ matrix.hz_version }}
         run: |
-          echo "HERE: $(pwd)"
           Start-Process -FilePath .\rcd-windows-latest -ArgumentList '-version', $Env:HZ_VERSION  -RedirectStandardOutput rcd-stdout.log  -RedirectStandardError rcd-stderr.log
           sleep 10
           dir
