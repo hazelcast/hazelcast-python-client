@@ -152,27 +152,36 @@ jobs:
           ./rcd-ubuntu-latest -version $HZ_VERSION &
           sleep 10
 
-      - name: Start Hazelcast Remote Controller (Windows)
-        if: matrix.os == 'windows-latest'
-        env:
-          HZ_VERSION: ${{ matrix.hz_version }}
-          HAZELCAST_ENTERPRISE_KEY: secrets[HAZELCAST_ENTERPRISE_KEY]
-        run: |
-          echo "HERE: $(pwd)"
-          ls
-          Start-Process -FilePath .\rcd-windows-latest -ArgumentList '-version', '5.6.0'  -RedirectStandardOutput rcd-stdout.log  -RedirectStandardError rcd-stderr.log
-          sleep 10
-          dir
-          echo "RCD Log:"
-          cat rcd-stdout.log
-          cat rcd-stderr.log
+#      - name: Start Hazelcast Remote Controller (Windows)
+#        if: matrix.os == 'windows-latest'
+#        env:
+#          HZ_VERSION: ${{ matrix.hz_version }}
+#          HAZELCAST_ENTERPRISE_KEY: secrets[HAZELCAST_ENTERPRISE_KEY]
+#        run: |
+#          echo "HERE: $(pwd)"
+#          Start-Process -FilePath .\rcd-windows-latest -ArgumentList '-version', '5.6.0'  -RedirectStandardOutput rcd-stdout.log  -RedirectStandardError rcd-stderr.log
+#          sleep 10
+#          dir
+#          echo "RCD Log:"
+#          cat rcd-stdout.log
+#          cat rcd-stderr.log
 
       - name: Install dependencies
         run: |
           pip install -r requirements-test.txt
 
       - name: Run tests
+        env:
+          HZ_VERSION: ${{ matrix.hz_version }}
+          HAZELCAST_ENTERPRISE_KEY: secrets[HAZELCAST_ENTERPRISE_KEY]
         run: |
+          echo "HERE: $(pwd)"
+          Start-Process -FilePath .\rcd-windows-latest -ArgumentList '-version', '5.6.0'  -RedirectStandardOutput rcd-stdout.log  -RedirectStandardError rcd-stderr.log
+          sleep 10
+          dir
+          echo "RCD Log:"
+          cat rcd-stdout.log
+          cat rcd-stderr.log
           #pytest --verbose --cov=hazelcast --cov-report=xml --log-cli-level debug
           pytest -k test_ssl_enabled_trust_default_certificates
 
