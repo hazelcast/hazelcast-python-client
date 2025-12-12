@@ -391,6 +391,15 @@ class HazelcastClient:
         merge_policy: str = "PutIfAbsentMergePolicy",
         merge_batch_size: int = 100,
     ) -> None:
+        """Creates a vector collection with the given configuration.
+
+        Args:
+            name: Name of the distributed map.
+            indexes: One or more index configurations. The index names must be unique.
+            backup_count: Number of backups to keep for the vector collection.
+            split_brain_protection_name: Name of the split brain protection configuration. See https://docs.hazelcast.com/hazelcast/5.6/data-structures/vector-collections#split-brain-protection
+            merge_policy: The merge policy to use while recovering in a split brain situation. See https://docs.hazelcast.com/hazelcast/5.6/data-structures/vector-collections#merge-policy
+        """
         # check that indexes have different names
         if indexes:
             index_names = set(index.name for index in indexes)
@@ -411,6 +420,14 @@ class HazelcastClient:
         invocation.future.result()
 
     def get_vector_collection(self, name: str) -> VectorCollection:
+        """Returns the vector collection instance with the specified name.
+
+        Args:
+            name: Name of the vector collection.
+
+        Returns:
+            Vector collection instance with the specified name.
+        """
         return self._proxy_manager.get_or_create(VECTOR_SERVICE, name)
 
     def new_transaction(

@@ -90,6 +90,28 @@ EntryEventCallable = typing.Callable[[EntryEvent[KeyType, ValueType]], None]
 
 
 class Map(Proxy, typing.Generic[KeyType, ValueType]):
+    """Hazelcast Map client proxy to access the map on the cluster.
+
+    Concurrent, distributed, observable and queryable map.
+
+    Example:
+        >>> my_map = await client.get_map("my_map")
+        >>> print("map.put", await my_map.put("key", "value"))
+        >>> print("map.contains_key", await my_map.contains_key("key"))
+        >>> print("map.get", await my_map.get("key"))
+        >>> print("map.size", await my_map.size())
+
+    This class does not allow ``None`` to be used as a key or value.
+
+    Warning:
+        Asyncio client map proxy is not thread-safe, do not access it from other threads.
+
+    Warning:
+        Asyncio client is BETA.
+        Its public API may change until General Availability release.
+
+    """
+
     def __init__(self, service_name, name, context):
         super(Map, self).__init__(service_name, name, context)
         self._reference_id_generator = context.lock_reference_id_generator
@@ -109,6 +131,38 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         expired_func: EntryEventCallable = None,
         loaded_func: EntryEventCallable = None,
     ) -> str:
+        """Adds a continuous entry listener for this map.
+
+        Listener will get notified for map events filtered with given
+        parameters.
+
+        The listener functions must not block.
+
+        Args:
+            include_value: Whether received event should include the value or
+                not.
+            key: Key for filtering the events.
+            predicate: Predicate for filtering the events.
+            added_func: Function to be called when an entry is added to map.
+            removed_func: Function to be called when an entry is removed from
+                map.
+            updated_func: Function to be called when an entry is updated.
+            evicted_func: Function to be called when an entry is evicted from
+                map.
+            evict_all_func: Function to be called when entries are evicted
+                from map.
+            clear_all_func: Function to be called when entries are cleared
+                from map.
+            merged_func: Function to be called when WAN replicated entry is
+                merged.
+            expired_func: Function to be called when an entry's live time is
+                expired.
+            loaded_func: Function to be called when an entry is loaded from a
+                map loader.
+
+        Returns:
+            A registration id which is used as a key to remove the listener.
+        """
         flags = get_entry_listener_flags(
             ADDED=added_func,
             REMOVED=removed_func,
@@ -257,6 +311,56 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         name: str = None,
         bitmap_index_options: typing.Dict[str, typing.Any] = None,
     ) -> None:
+        """Adds an index to this map for the specified entries so that queries
+        can run faster.
+
+        Example:
+            Let's say your map values are Employee objects.
+
+                >>> class Employee(IdentifiedDataSerializable):
+                >>>     active = false
+                >>>     age = None
+                >>>     name = None
+                >>>     #other fields
+                >>>
+                >>>     #methods
+
+            If you query your values mostly based on age and active fields,
+            you should consider indexing these.
+
+                >>> employees = await client.get_map("employees")
+                >>> await employees.add_index(attributes=["age"]) # Sorted index for range queries
+                >>> await employees.add_index(attributes=["active"], index_type=IndexType.HASH)) # Hash index for equality predicates
+
+        Index attribute should either have a getter method or be public.
+        You should also make sure to add the indexes before adding
+        entries to this map.
+
+        Indexing time is executed in parallel on each partition by operation
+        threads. The Map is not blocked during this operation. The time taken
+        in proportional to the size of the Map and the number Members.
+
+        Until the index finishes being created, any searches for the attribute
+        will use a full Map scan, thus avoiding using a partially built index
+        and returning incorrect results.
+
+        Args:
+            attributes: List of indexed attributes.
+            index_type: Type of the index. By default, set to ``SORTED``.
+            name: Name of the index.
+            bitmap_index_options: Bitmap index options.
+
+                - **unique_key:** (str): The unique key attribute is used as a
+                  source of values which uniquely identify each entry being
+                  inserted into an index. Defaults to ``KEY_ATTRIBUTE_NAME``.
+                  See the :class:`hazelcast.config.QueryConstants` for
+                  possible values.
+                - **unique_key_transformation** (int|str): The transformation
+                  is applied to every value extracted from the unique key
+                  attribue. Defaults to ``OBJECT``. See the
+                  :class:`hazelcast.config.UniqueKeyTransformation` for
+                  possible values.
+        """
         d = {
             "name": name,
             "type": index_type,
@@ -269,6 +373,18 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._invoke(request)
 
     async def add_interceptor(self, interceptor: typing.Any) -> str:
+        """Adds an interceptor for this map.
+
+        Added interceptor will intercept operations and execute user defined
+        methods.
+
+        Args:
+            interceptor: Interceptor for the map which includes user defined
+                methods.
+
+        Returns:
+            Id of registered interceptor.
+        """
         try:
             interceptor_data = self._to_data(interceptor)
         except SchemaNotReplicatedError as e:
@@ -280,6 +396,16 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
     async def aggregate(
         self, aggregator: Aggregator[AggregatorResultType], predicate: Predicate = None
     ) -> AggregatorResultType:
+        """Applies the aggregation logic on map entries and filter the result
+        with the predicate, if given.
+
+        Args:
+            aggregator: Aggregator to aggregate the entries with.
+            predicate: Predicate to filter the entries with.
+
+        Returns:
+            The result of the aggregation.
+        """
         check_not_none(aggregator, "aggregator can't be none")
         if predicate:
             if isinstance(predicate, _PagingPredicate):
@@ -311,10 +437,28 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._invoke(request, handler)
 
     async def clear(self) -> None:
+        """Clears the map.
+
+        The ``MAP_CLEARED`` event is fired for any registered listeners.
+        """
         request = map_clear_codec.encode_request(self.name)
         return await self._invoke(request)
 
     async def contains_key(self, key: KeyType) -> bool:
+        """Determines whether this map contains an entry with the key.
+
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form
+            of the key, not the actual implementations of ``__hash__`` and
+            ``__eq__`` defined in key's class.
+
+        Args:
+            key: The specified key.
+
+        Returns:
+            ``True`` if this map contains an entry for the specified key,
+            ``False`` otherwise.
+        """
         check_not_none(key, "key can't be None")
         try:
             key_data = self._to_data(key)
@@ -324,6 +468,16 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._contains_key_internal(key_data)
 
     async def contains_value(self, value: ValueType) -> bool:
+        """Determines whether this map contains one or more keys for the
+        specified value.
+
+        Args:
+            value: The specified value.
+
+        Returns:
+            ``True`` if this map contains an entry for the specified value,
+            ``False`` otherwise.
+        """
         check_not_none(value, "value can't be None")
         try:
             value_data = self._to_data(value)
@@ -333,6 +487,27 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._invoke(request, map_contains_value_codec.decode_response)
 
     async def delete(self, key: KeyType) -> None:
+        """Removes the mapping for a key from this map if it is present
+        (optional operation).
+
+        Unlike remove(object), this operation does not return the removed
+        value, which avoids the serialization cost of the returned value.
+        If the removed value will not be used, a delete operation is preferred
+        over a remove operation for better performance.
+
+        The map will not contain a mapping for the specified key once the call
+        returns.
+
+        Warning:
+            This method breaks the contract of EntryListener.
+            When an entry is removed by delete(), it fires an ``EntryEvent``
+            with a ``None`` ``old_value``. Also, a listener with predicates
+            will have ``None`` values, so only the keys can be queried
+            via predicates.
+
+        Args:
+            key: Key of the mapping to be deleted.
+        """
         check_not_none(key, "key can't be None")
         try:
             key_data = self._to_data(key)
@@ -343,6 +518,18 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
     async def entry_set(
         self, predicate: Predicate = None
     ) -> typing.List[typing.Tuple[KeyType, ValueType]]:
+        """Returns a list clone of the mappings contained in this map.
+
+        Warning:
+            The list is NOT backed by the map, so changes to the map are NOT
+            reflected in the list, and vice-versa.
+
+        Args:
+            predicate: Predicate for the map to filter entries.
+
+        Returns:
+            The list of key-value tuples in the map.
+        """
         if predicate:
             if isinstance(predicate, _PagingPredicate):
                 predicate.iteration_type = IterationType.ENTRY
@@ -382,6 +569,19 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._invoke(request, handler)
 
     async def evict(self, key: KeyType) -> bool:
+        """Evicts the specified key from this map.
+
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form
+            of the key, not the actual implementations of ``__hash__`` and
+            ``__eq__`` defined in key's class.
+
+        Args:
+            key: Key to evict.
+
+        Returns:
+            ``True`` if the key is evicted, ``False`` otherwise.
+        """
         check_not_none(key, "key can't be None")
         try:
             key_data = self._to_data(key)
@@ -391,12 +591,32 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._evict_internal(key_data)
 
     async def evict_all(self) -> None:
+        """Evicts all keys from this map except the locked ones.
+
+        The ``EVICT_ALL`` event is fired for any registered listeners.
+        """
         request = map_evict_all_codec.encode_request(self.name)
         return await self._invoke(request)
 
     async def execute_on_entries(
         self, entry_processor: typing.Any, predicate: Predicate | None = None
     ) -> typing.List[typing.Any]:
+        """Applies the user defined EntryProcessor to all the entries in the
+        map or entries in the map which satisfies the predicate if provided.
+        Returns the results mapped by each key in the map.
+
+        Args:
+            entry_processor: A stateful serializable object which represents
+                the EntryProcessor defined on server side. This object must
+                have a serializable EntryProcessor counter part registered
+                on server side with the actual
+                ``com.hazelcast.map.EntryProcessor`` implementation.
+            predicate: Predicate for filtering the entries.
+
+        Returns:
+            List of map entries which includes the keys and the results of the
+            entry process.
+        """
         if predicate:
             try:
                 entry_processor_data = self._to_data(entry_processor)
@@ -430,6 +650,21 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._invoke(request, handler)
 
     async def execute_on_key(self, key: KeyType, entry_processor: typing.Any) -> typing.Any:
+        """Applies the user defined EntryProcessor to the entry mapped by the
+        key. Returns the object which is the result of EntryProcessor's
+        process method.
+
+        Args:
+            key: Specified key for the entry to be processed.
+            entry_processor: A stateful serializable object which represents
+                the EntryProcessor defined on server side. This object must
+                have a serializable EntryProcessor counter part registered on
+                server side with the actual
+                ``com.hazelcast.map.EntryProcessor`` implementation.
+
+        Returns:
+            Result of entry process.
+        """
         check_not_none(key, "key can't be None")
         try:
             key_data = self._to_data(key)
@@ -442,6 +677,22 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
     async def execute_on_keys(
         self, keys: typing.Sequence[KeyType], entry_processor: typing.Any
     ) -> typing.List[typing.Any]:
+        """Applies the user defined EntryProcessor to the entries mapped by the
+        collection of keys. Returns the results mapped by each key in the
+        collection.
+
+        Args:
+            keys: Collection of the keys for the entries to be processed.
+            entry_processor: A stateful serializable object which represents
+                the EntryProcessor defined on server side. This object must
+                have a serializable EntryProcessor counter part registered on
+                server side with the actual
+                ``com.hazelcast.map.EntryProcessor`` implementation.
+
+        Returns:
+            List of map entries which includes the keys and the results of the
+            entry process.
+        """
         if len(keys) == 0:
             return []
         try:
@@ -464,10 +715,34 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._invoke(request, handler)
 
     async def flush(self) -> None:
+        """Flushes all the local dirty entries."""
         request = map_flush_codec.encode_request(self.name)
         return await self._invoke(request)
 
     async def get(self, key: KeyType) -> typing.Optional[ValueType]:
+        """Returns the value for the specified key, or ``None`` if this map
+        does not contain this key.
+
+        Warning:
+            This method returns a clone of original value, modifying the
+            returned value does not change the actual value in the map. One
+            should put modified value back to make changes visible to all nodes.
+
+                >>> value = await my_map.get(key)
+                >>> value.update_some_property()
+                >>> await my_map.put(key,value)
+
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form
+            of the key, not the actual implementations of ``__hash__`` and
+            ``__eq__`` defined in key's class.
+
+        Args:
+            key: The specified key.
+
+        Returns:
+            The value for the specified key.
+        """
         check_not_none(key, "key can't be None")
         try:
             key_data = self._to_data(key)
@@ -476,6 +751,24 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._get_internal(key_data)
 
     async def get_all(self, keys: typing.Sequence[KeyType]) -> typing.Dict[KeyType, ValueType]:
+        """Returns the entries for the given keys.
+
+        Warning:
+            The returned map is NOT backed by the original map, so changes to
+            the original map are NOT reflected in the returned map, and
+            vice-versa.
+
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form
+            of the key, not the actual implementations of ``__hash__`` and
+            ``__eq__`` defined in key's class.
+
+        Args:
+            keys: Keys to get.
+
+        Returns:
+            Dictionary of map entries.
+        """
         check_not_none(keys, "keys can't be None")
         if not keys:
             return {}
@@ -496,6 +789,25 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._get_all_internal(partition_to_keys)
 
     async def get_entry_view(self, key: KeyType) -> SimpleEntryView[KeyType, ValueType]:
+        """Returns the EntryView for the specified key.
+
+        Warning:
+            This method returns a clone of original mapping, modifying the
+            returned value does not change the actual value in the map. One
+            should put modified value back to make changes visible to all
+            nodes.
+
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form
+            of the key, not the actual implementations of ``__hash__`` and
+            ``__eq__`` defined in key's class.
+
+        Args:
+            key: The key of the entry.
+
+        Returns:
+            EntryView of the specified key.
+        """
         check_not_none(key, "key can't be None")
         try:
             key_data = self._to_data(key)
@@ -515,10 +827,29 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._invoke_on_key(request, key_data, handler)
 
     async def is_empty(self) -> bool:
+        """Returns whether this map contains no key-value mappings or not.
+
+        Returns:
+            ``True`` if this map contains no key-value mappings, ``False``
+            otherwise.
+        """
         request = map_is_empty_codec.encode_request(self.name)
         return await self._invoke(request, map_is_empty_codec.decode_response)
 
     async def key_set(self, predicate: Predicate | None = None) -> typing.List[ValueType]:
+        """Returns a List clone of the keys contained in this map or the keys
+        of the entries filtered with the predicate if provided.
+
+        Warning:
+            The list is NOT backed by the map, so changes to the map are NOT
+            reflected in the list, and vice-versa.
+
+        Args:
+            predicate: Predicate to filter the entries.
+
+        Returns:
+            A list of the clone of the keys.
+        """
         if predicate:
             if isinstance(predicate, _PagingPredicate):
                 predicate.iteration_type = IterationType.KEY
@@ -561,6 +892,15 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
     async def load_all(
         self, keys: typing.Sequence[KeyType] = None, replace_existing_values: bool = True
     ) -> None:
+        """Loads all keys from the store at server side or loads the given
+        keys if provided.
+
+        Args:
+            keys: Keys of the entry values to load.
+            replace_existing_values: Whether the existing values will be
+                replaced or not with those loaded from the server side
+                MapLoader.
+        """
         if keys:
             try:
                 key_data_list = [self._to_data(key) for key in keys]
@@ -577,6 +917,16 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
     async def project(
         self, projection: Projection[ProjectionType], predicate: Predicate = None
     ) -> ProjectionType:
+        """Applies the projection logic on map entries and filter the result
+        with the predicate, if given.
+
+        Args:
+            projection: Projection to project the entries with.
+            predicate: Predicate to filter the entries with.
+
+        Returns:
+            The result of the projection.
+        """
         check_not_none(projection, "Projection can't be none")
         if predicate:
             if isinstance(predicate, _PagingPredicate):
@@ -611,6 +961,37 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
     async def put(
         self, key: KeyType, value: ValueType, ttl: float = None, max_idle: float = None
     ) -> typing.Optional[ValueType]:
+        """Associates the specified value with the specified key in this map.
+
+        If the map previously contained a mapping for the key, the old value is
+        replaced by the specified value. If ttl is provided, entry will expire
+        and get evicted after the ttl.
+
+        Warning:
+            This method returns a clone of the previous value, not the original
+            (identically equal) value previously put into the map.
+
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form
+            of the key, not the actual implementations of ``__hash__`` and
+            ``__eq__`` defined in key's class.
+
+        Args:
+            key: The specified key.
+            value: The value to associate with the key.
+            ttl: Maximum time in seconds for this entry to stay in the map. If
+                not provided, the value configured on the server side
+                configuration will be used. Setting this to ``0`` means
+                infinite time-to-live.
+            max_idle: Maximum time in seconds for this entry to stay idle in
+                the map. If not provided, the value configured on the server
+                side configuration will be used. Setting this to ``0`` means
+                infinite max idle time.
+
+        Returns:
+            Previous value associated with key or ``None`` if there was no
+            mapping for key.
+        """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
         try:
@@ -622,6 +1003,14 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._put_internal(key_data, value_data, ttl, max_idle)
 
     async def put_all(self, map: typing.Dict[KeyType, ValueType]) -> None:
+        """Copies all the mappings from the specified map to this map.
+
+        No atomicity guarantees are given. In the case of a failure, some
+        key-value tuples may get written, while others are not.
+
+        Args:
+            map: Dictionary which includes mappings to be stored in this map.
+        """
         check_not_none(map, "map can't be None")
         if not map:
             return None
@@ -651,6 +1040,43 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
     async def put_if_absent(
         self, key: KeyType, value: ValueType, ttl: float = None, max_idle: float = None
     ) -> typing.Optional[ValueType]:
+        """Associates the specified key with the given value if it is not
+        already associated.
+
+        If ttl is provided, entry will expire and get evicted after the ttl.
+
+        This is equivalent to below, except that the action is performed
+        atomically:
+
+            >>> if not (await my_map.contains_key(key)):
+            >>>     return await my_map.put(key,value)
+            >>> else:
+            >>>     return await my_map.get(key)
+
+        Warning:
+            This method returns a clone of the previous value, not the original
+            (identically equal) value previously put into the map.
+
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form
+            of the key, not the actual implementations of ``__hash__`` and
+            ``__eq__`` defined in key's class.
+
+        Args:
+            key: Key of the entry.
+            value: Value of the entry.
+            ttl: Maximum time in seconds for this entry to stay in the map. If
+                not provided, the value configured on the server side
+                configuration will be used. Setting this to ``0`` means
+                infinite time-to-live.
+            max_idle: Maximum time in seconds for this entry to stay idle in
+                the map. If not provided, the value configured on the server
+                side configuration will be used. Setting this to ``0`` means
+                infinite max idle time.
+
+        Returns:
+            Old value of the entry.
+        """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
         try:
@@ -666,6 +1092,26 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
     async def put_transient(
         self, key: KeyType, value: ValueType, ttl: float = None, max_idle: float = None
     ) -> None:
+        """Same as ``put``, but MapStore defined at the server side will not
+        be called.
+
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form
+            of the key, not the actual implementations of ``__hash__`` and
+            ``__eq__`` defined in key's class.
+
+        Args:
+            key: Key of the entry.
+            value: Value of the entry.
+            ttl: Maximum time in seconds for this entry to stay in the map. If
+                not provided, the value configured on the server side
+                configuration will be used. Setting this to ``0`` means
+                infinite time-to-live.
+            max_idle: Maximum time in seconds for this entry to stay idle in
+                the map. If not provided, the value configured on the server
+                side configuration will be used. Setting this to ``0`` means
+                infinite max idle time.
+        """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
         try:
@@ -679,6 +1125,23 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._put_transient_internal(key_data, value_data, ttl, max_idle)
 
     async def remove(self, key: KeyType) -> typing.Optional[ValueType]:
+        """Removes the mapping for a key from this map if it is present.
+
+        The map will not contain a mapping for the specified key once the call
+        returns.
+
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form
+            of the key, not the actual implementations of ``__hash__`` and
+            ``__eq__`` defined in key's class.
+
+        Args:
+            key: Key of the mapping to be deleted.
+
+        Returns:
+            The previous value associated with key, or ``None`` if there was
+            no mapping for key.
+        """
         check_not_none(key, "key can't be None")
         try:
             key_data = self._to_data(key)
@@ -688,6 +1151,11 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._remove_internal(key_data)
 
     async def remove_all(self, predicate: Predicate) -> None:
+        """Removes all entries which match with the supplied predicate.
+
+        Args:
+            predicate: Used to select entries to be removed from map.
+        """
         check_not_none(predicate, "predicate can't be None")
         try:
             predicate_data = self._to_data(predicate)
@@ -697,6 +1165,30 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._remove_all_internal(predicate_data)
 
     async def remove_if_same(self, key: KeyType, value: ValueType) -> bool:
+        """Removes the entry for a key only if it is currently mapped to a
+        given value.
+
+        This is equivalent to below, except that the action is performed
+        atomically:
+
+            >>> if (await my_map.contains_key(key)) and (await my_map.get(key) == value):
+            >>>     await my_map.remove(key)
+            >>>     return True
+            >>> else:
+            >>>     return False
+
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form
+            of the key, not the actual implementations of ``__hash__`` and
+            ``__eq__`` defined in key's class.
+
+        Args:
+            key: The specified key.
+            value: Remove the key if it has this value.
+
+        Returns:
+            ``True`` if the value was removed, ``False`` otherwise.
+        """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
         try:
@@ -707,14 +1199,61 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._remove_if_same_internal_(key_data, value_data)
 
     async def remove_entry_listener(self, registration_id: str) -> bool:
+        """Removes the specified entry listener.
+
+        Returns silently if there is no such listener added before.
+
+        Args:
+            registration_id: Id of registered listener.
+
+        Returns:
+            ``True`` if registration is removed, ``False`` otherwise.
+        """
         return await self._deregister_listener(registration_id)
 
     async def remove_interceptor(self, registration_id: str) -> bool:
+        """Removes the given interceptor for this map, so it will not intercept
+        operations anymore.
+
+        Args:
+            registration_id: Registration ID of the map interceptor.
+
+        Returns:
+            ``True`` if the interceptor is removed, ``False`` otherwise.
+        """
         check_not_none(registration_id, "Interceptor registration id should not be None")
         request = map_remove_interceptor_codec.encode_request(self.name, registration_id)
         return await self._invoke(request, map_remove_interceptor_codec.decode_response)
 
     async def replace(self, key: KeyType, value: ValueType) -> typing.Optional[ValueType]:
+        """Replaces the entry for a key only if it is currently mapped to some
+        value.
+
+        This is equivalent to below, except that the action is performed
+        atomically:
+
+            >>> if await my_map.contains_key(key):
+            >>>     return await my_map.put(key,value)
+            >>> else:
+            >>>     return None
+
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form
+            of the key, not the actual implementations of ``__hash__`` and
+            ``__eq__`` defined in key's class.
+
+        Warning:
+            This method returns a clone of the previous value, not the original
+            (identically equal) value previously put into the map.
+
+        Args:
+            key: The specified key.
+            value: The value to replace the previous value.
+
+        Returns:
+            Previous value associated with key, or ``None`` if there was no
+            mapping for key.
+        """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
         try:
@@ -727,6 +1266,31 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
     async def replace_if_same(
         self, key: ValueType, old_value: ValueType, new_value: ValueType
     ) -> bool:
+        """Replaces the entry for a key only if it is currently mapped to a
+        given value.
+
+        This is equivalent to below, except that the action is performed
+        atomically:
+
+            >>> if (await my_map.contains_key(key)) and (await my_map.get(key) == old_value):
+            >>>     await my_map.put(key, new_value)
+            >>>     return True
+            >>> else:
+            >>>     return False
+
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form
+            of the key, not the actual implementations of ``__hash__`` and
+            ``__eq__`` defined in key's class.
+
+        Args:
+            key: The specified key.
+            old_value: Replace the key value if it is the old value.
+            new_value: The new value to replace the old value.
+
+        Returns:
+            ``True`` if the value was replaced, ``False`` otherwise.
+        """
         check_not_none(key, "key can't be None")
         check_not_none(old_value, "old_value can't be None")
         check_not_none(new_value, "new_value can't be None")
@@ -744,6 +1308,29 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
     async def set(
         self, key: KeyType, value: ValueType, ttl: float = None, max_idle: float = None
     ) -> None:
+        """Puts an entry into this map.
+
+        Similar to the put operation except that set doesn't return the old
+        value, which is more efficient. If ttl is provided, entry will expire
+        and get evicted after the ttl.
+
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form
+            of the key, not the actual implementations of ``__hash__`` and
+            ``__eq__`` defined in key's class.
+
+        Args:
+            key: Key of the entry.
+            value: Value of the entry.
+            ttl: Maximum time in seconds for this entry to stay in the map. If
+                not provided, the value configured on the server side
+                configuration will be used. Setting this to ``0`` means
+                infinite time-to-live.
+            max_idle: Maximum time in seconds for this entry to stay idle in
+                the map. If not provided, the value configured on the server
+                side configuration will be used. Setting this to ``0`` means
+                infinite max idle time.
+        """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
         try:
@@ -754,6 +1341,18 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._set_internal(key_data, value_data, ttl, max_idle)
 
     async def set_ttl(self, key: KeyType, ttl: float) -> None:
+        """Updates the TTL (time to live) value of the entry specified by the
+        given key with a new TTL value.
+
+        New TTL value is valid starting from the time this operation is
+        invoked, not since the time the entry was created. If the entry does
+        not exist or is already expired, this call has no effect.
+
+        Args:
+            key: The key of the map entry.
+            ttl: Maximum time in seconds for this entry to stay in the map.
+                Setting this to ``0`` means infinite time-to-live.
+        """
         check_not_none(key, "key can't be None")
         check_not_none(ttl, "ttl can't be None")
         try:
@@ -763,10 +1362,29 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._set_ttl_internal(key_data, ttl)
 
     async def size(self) -> int:
+        """Returns the number of entries in this map.
+
+        Returns:
+            Number of entries in this map.
+        """
         request = map_size_codec.encode_request(self.name)
         return await self._invoke(request, map_size_codec.decode_response)
 
     async def try_put(self, key: KeyType, value: ValueType, timeout: float = 0) -> bool:
+        """Tries to put the given key and value into this map and returns
+        immediately if timeout is not provided.
+
+        If timeout is provided, operation waits until it is completed or
+        timeout is reached.
+
+        Args:
+            key: Key of the entry.
+            value: Value of the entry.
+            timeout: Maximum time in seconds to wait.
+
+        Returns:
+            ``True`` if the put is successful, ``False`` otherwise.
+        """
         check_not_none(key, "key can't be None")
         check_not_none(value, "value can't be None")
         try:
@@ -777,6 +1395,19 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._try_put_internal(key_data, value_data, timeout)
 
     async def try_remove(self, key: KeyType, timeout: float = 0) -> bool:
+        """Tries to remove the given key from this map and returns immediately
+        if timeout is not provided.
+
+        If timeout is provided, operation waits until it is completed or
+        timeout is reached.
+
+        Args:
+            key: Key of the entry to be deleted.
+            timeout: Maximum time in seconds to wait.
+
+        Returns:
+            ``True`` if the remove is successful, ``False`` otherwise.
+        """
         check_not_none(key, "key can't be None")
         try:
             key_data = self._to_data(key)
@@ -785,6 +1416,19 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._try_remove_internal(key_data, timeout)
 
     async def values(self, predicate: Predicate = None) -> typing.List[ValueType]:
+        """Returns a list clone of the values contained in this map or values
+        of the entries which are filtered with the predicate if provided.
+
+        Warning:
+            The list is NOT backed by the map, so changes to the map are NOT
+            reflected in the list, and vice-versa.
+
+        Args:
+            predicate: Predicate to filter the entries.
+
+        Returns:
+            A list of clone of the values contained in this map.
+        """
         if predicate:
             if isinstance(predicate, _PagingPredicate):
                 predicate.iteration_type = IterationType.VALUE
