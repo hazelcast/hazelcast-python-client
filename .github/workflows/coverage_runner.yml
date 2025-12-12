@@ -160,11 +160,13 @@ jobs:
         run: |
           echo "HERE: $(pwd)"
           ls
-          .\rcd-windows-latest -version 5.6.0
+          .\rcd-windows-latest
+          Start-Process -FilePath .\rcd-windows-latest -ArgumentList '-version', '$Env:HZ_VERSION'  -RedirectStandardOutput rcd-stdout.log  -RedirectStandardError rcd-stderr.log
           sleep 10
-          echo "RCD Log:"
           dir
-          cat rcd.log
+          echo "RCD Log:"
+          cat rcd-stdout.log
+          cat rcd-stderr.log
 
       - name: Install dependencies
         run: |
