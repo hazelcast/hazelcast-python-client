@@ -160,7 +160,6 @@ jobs:
         run: |
           echo "HERE: $(pwd)"
           ls
-          .\rcd-windows-latest
           Start-Process -FilePath .\rcd-windows-latest -ArgumentList '-version', '$Env:HZ_VERSION'  -RedirectStandardOutput rcd-stdout.log  -RedirectStandardError rcd-stderr.log
           sleep 10
           dir
