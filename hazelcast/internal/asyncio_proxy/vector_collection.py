@@ -63,9 +63,9 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
         does not contain this key.
 
         Warning:
-            This method returns a clone of original Document, modifying the
-            returned Document does not change the actual Document in the VectorCollection. One
-            should put modified Document back to make changes visible to all nodes.
+            This method returns a clone of the original Document. Modifying the
+            returned Document does not change the actual Document in the VectorCollection.
+            Put the modified Document back to make changes visible to all nodes.
 
         >>> doc = await my_vc.get(key)
         >>> doc.value.update_some_property()
@@ -74,7 +74,7 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
         Warning:
             This method uses ``__hash__`` and ``__eq__`` methods of binary form
             of the key, not the actual implementations of ``__hash__`` and
-            ``__eq__`` defined in key's class.
+            ``__eq__`` defined in the key's class.
 
         Args:
             key: The specified key.
@@ -110,7 +110,7 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
         """Associates the specified Document with the specified key in this VectorCollection.
 
         If the VectorCollection previously contained a mapping for the key, the old Document is
-        replaced by the specified Document. In case the previous value is not needed, using
+        replaced by the specified Document. If the previous value is not needed, using
         the ``set`` method is more efficient.
 
         Warning:
@@ -120,15 +120,15 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
         Warning:
             This method uses ``__hash__`` and ``__eq__`` methods of binary form
             of the key, not the actual implementations of ``__hash__`` and
-            ``__eq__`` defined in key's class.
+            ``__eq__`` defined in the key's class.
 
         Args:
             key: Key of the entry.
             document: Document of the entry.
 
         Returns:
-            Previous Document associated with key or ``None`` if there was no
-            mapping for key.
+            Previous Document associated with the key or ``None`` if there was no
+            mapping for the key.
         """
         check_not_none(key, "key can't be None")
         check_not_none(document, "document can't be None")
@@ -205,7 +205,7 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
     ) -> List[SearchResult]:
         """Returns the Documents closest to the given vector.
 
-        The search is performed using distance metric set when
+        The search is performed using the distance metric set when
         creating the vector index.
 
         Args:
@@ -240,7 +240,7 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
         Warning:
             This method uses ``__hash__`` and ``__eq__`` methods of binary form
             of the key, not the actual implementations of ``__hash__`` and
-            ``__eq__`` defined in key's class.
+            ``__eq__`` defined in the key's class.
 
         Args:
             key: Key of the mapping to be deleted.
@@ -275,7 +275,7 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
         to the advertised degree, and updating the entry node as necessary.
 
         Warning:
-            This operation can take long time to execute and consume a lot of server resources.
+            This operation can take a long time to execute and consume a lot of server resources.
 
         Args:
             index_name: Name of the index to optimize. If not specified, the only index defined

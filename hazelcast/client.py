@@ -488,7 +488,7 @@ class HazelcastClient:
         Returns silently if there is no such listener added before.
 
         Args:
-            registration_id: The id of registered listener.
+            registration_id: The id of the registered listener.
 
         Returns:
             ``True`` if registration is removed, ``False`` otherwise.
