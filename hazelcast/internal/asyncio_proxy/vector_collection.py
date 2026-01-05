@@ -341,9 +341,9 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
         hints: Dict[str, str] = None
     ) -> asyncio.Future[List[SearchResult]]:
         def handler(message):
-            results: List[
-                SearchResult
-            ] = vector_collection_search_near_vector_codec.decode_response(message)
+            results: List[SearchResult] = (
+                vector_collection_search_near_vector_codec.decode_response(message)
+            )
             for result in results:
                 if result.key is not None:
                     result.key = self._to_object(result.key)

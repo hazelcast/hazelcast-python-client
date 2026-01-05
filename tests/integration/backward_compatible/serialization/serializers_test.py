@@ -132,7 +132,7 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(value, response)
 
     def test_utf_chars(self):
-        value = "\u0040\u0041\u01DF\u06A0\u12E0\u1D306"
+        value = "\u0040\u0041\u01df\u06a0\u12e0\u1d306"
         self.map.set("key", value)
         self.assertEqual(value, self.map.get("key"))
         response = self.get_from_server()
@@ -359,7 +359,9 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual([3123.0, -123.0], self.map.get("key"))
 
     def test_string_array_from_server(self):
-        self.assertTrue(self.set_on_server('Java.to(["hey", "1⚐中💦2😭‍🙆😔5"], "java.lang.String[]")'))
+        self.assertTrue(
+            self.set_on_server('Java.to(["hey", "1⚐中💦2😭‍🙆😔5"], "java.lang.String[]")')
+        )
         self.assertEqual(["hey", "1⚐中💦2😭‍🙆😔5"], self.map.get("key"))
 
     def test_date_from_server(self):

@@ -1,7 +1,7 @@
 .PHONY: check test test-cover
 
 check:
-	mypy --show-error-codes hazelcast
+	mypy --show-error-codes --python-version 3.14 hazelcast
 	black --check --config black.toml .
 
 test:

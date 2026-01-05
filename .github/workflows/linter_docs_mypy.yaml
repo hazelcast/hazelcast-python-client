@@ -74,4 +74,4 @@ jobs:
           
       - name: Run mypy
         run: |
-          mypy --show-error-codes hazelcast
+          mypy --show-error-codes --python-version 3.14 hazelcast
