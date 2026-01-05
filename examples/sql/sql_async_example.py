@@ -3,6 +3,8 @@
 # for the capabilities of the SQL service. The code sample here is just to
 # demonstrate the concept of async usage of the SQL service. When in doubt,
 # use the blocking iterator method in `sql_example.py`.
+import time
+
 import hazelcast
 
 client = hazelcast.HazelcastClient()
@@ -15,7 +17,7 @@ for i in range(100):
 # Create mapping for the integers. This needs to be done only once per map.
 client.sql.execute(
     """
-CREATE MAPPING integers
+CREATE OR REPLACE MAPPING integers
 TYPE IMap
 OPTIONS (
   'keyFormat' = 'int',
@@ -49,3 +51,4 @@ def on_response(sql_result_future):
 # Request the iterator over rows and add a callback to
 # run, when the response comes
 result_future.add_done_callback(on_response)
+time.sleep(1)
