@@ -32,26 +32,118 @@ from hazelcast.vector import (
 
 
 class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
+    """VectorCollection contains documents with vectors.
+
+    Concurrent, distributed, observable and searchable vector collection.
+
+    The configuration of the vector collection must exist before it can be used.
+
+    Example:
+
+        >>> await client.create_vector_collection_config("my_vc", [
+        >>>    IndexConfig(name="default-vector", metric=Metric.COSINE, dimension=2)
+        >>> ]
+        >>> my_vc = await client.get_vector_collection("my_vc")
+        >>> await my_vc.set("key1", Vector("default-vector", Type.DENSE, [0.1, 0.2])
+
+    Warning:
+        Asyncio client vector collection proxy is not thread-safe, do not access it from other threads.
+
+    Warning:
+        Asyncio client is BETA.
+        Its public API may change until General Availability release.
+
+    """
+
     def __init__(self, service_name, name, context):
         super(VectorCollection, self).__init__(service_name, name, context)
 
     async def get(self, key: Any) -> Document | None:
+        """Returns the Document for the specified key, or ``None`` if this VectorCollection
+        does not contain this key.
+
+        Warning:
+            This method returns a clone of the original Document. Modifying the
+            returned Document does not change the actual Document in the VectorCollection.
+            Put the modified Document back to make changes visible to all nodes.
+
+        >>> doc = await my_vc.get(key)
+        >>> doc.value.update_some_property()
+        >>> await my_vc.set(key, doc)
+
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form
+            of the key, not the actual implementations of ``__hash__`` and
+            ``__eq__`` defined in the key's class.
+
+        Args:
+            key: The specified key.
+
+        Returns:
+            The Document for the specified key or ``None`` if there was no
+            mapping for key.
+        """
         check_not_none(key, "key can't be None")
         return await self._get_internal(key)
 
     async def set(self, key: Any, document: Document) -> None:
+        """Sets a document for the given key in the VectorCollection.
+
+        Similar to the put operation except that set doesn't return the old
+        document, which is more efficient.
+
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form
+            of the key, not the actual implementations of ``__hash__`` and
+            ``__eq__`` defined in key's class.
+
+        Args:
+            key: Key of the entry.
+            document: Document of the entry.
+        """
         check_not_none(key, "key can't be None")
         check_not_none(document, "document can't be None")
         check_not_none(document.value, "document value can't be None")
         return await self._set_internal(key, document)
 
     async def put(self, key: Any, document: Document) -> Document | None:
+        """Associates the specified Document with the specified key in this VectorCollection.
+
+        If the VectorCollection previously contained a mapping for the key, the old Document is
+        replaced by the specified Document. If the previous value is not needed, using
+        the ``set`` method is more efficient.
+
+        Warning:
+            This method returns a clone of the previous Document, not the original
+            (identically equal) Document previously put into the VectorCollection.
+
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form
+            of the key, not the actual implementations of ``__hash__`` and
+            ``__eq__`` defined in the key's class.
+
+        Args:
+            key: Key of the entry.
+            document: Document of the entry.
+
+        Returns:
+            Previous Document associated with the key or ``None`` if there was no
+            mapping for the key.
+        """
         check_not_none(key, "key can't be None")
         check_not_none(document, "document can't be None")
         check_not_none(document.value, "document value can't be None")
         return await self._put_internal(key, document)
 
     async def put_all(self, map: Dict[Any, Document]) -> None:
+        """Copies all the mappings from the specified dictionary to this VectorCollection.
+
+        No atomicity guarantees are given. In the case of a failure, some
+        key-document tuples may get written, while others are not.
+
+        Args:
+            map: Dictionary which includes mappings to be stored in this VectorCollection.
+        """
         check_not_none(map, "map can't be None")
         if not map:
             return None
@@ -78,6 +170,25 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
         return None
 
     async def put_if_absent(self, key: Any, document: Document) -> Document | None:
+        """Associates the specified key with the given Document if it is not
+        already associated.
+
+        Warning:
+            This method returns a clone of the previous Document, not the original
+            (identically equal) Document previously put into the VectorCollection.
+
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form
+            of the key, not the actual implementations of ``__hash__`` and
+            ``__eq__`` defined in key's class.
+
+        Args:
+            key: Key of the entry.
+            document: Document of the entry.
+
+        Returns:
+            Old Document for the given key or ``None`` if there is not one.
+        """
         check_not_none(key, "key can't be None")
         check_not_none(document, "document can't be None")
         check_not_none(document.value, "document value can't be None")
@@ -92,6 +203,22 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
         limit: int = 10,
         hints: Dict[str, str] = None
     ) -> List[SearchResult]:
+        """Returns the Documents closest to the given vector.
+
+        The search is performed using the distance metric set when
+        creating the vector index.
+
+        Args:
+            vector: The vector to be used as the reference.
+                It must have the same dimension as specified when creating the vector index.
+            include_value: Return value attached to the Document.
+            include_vectors: Return vectors attached to the Document.
+            limit: Limit the maximum number of Documents returned.
+                If not set, ``10`` is used as the default limit.
+
+        Returns:
+            List of search results.
+        """
         check_not_none(vector, "vector can't be None")
         if limit <= 0:
             raise AssertionError("limit must be positive")
@@ -104,24 +231,73 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
         )
 
     async def remove(self, key: Any) -> Document | None:
+        """Removes the mapping for a key from this VectorCollection if it is present
+        (optional operation).
+
+        The VectorCollection will not contain a mapping for the specified key once the call
+        returns.
+
+        Warning:
+            This method uses ``__hash__`` and ``__eq__`` methods of binary form
+            of the key, not the actual implementations of ``__hash__`` and
+            ``__eq__`` defined in the key's class.
+
+        Args:
+            key: Key of the mapping to be deleted.
+
+        Returns:
+            The Document associated with key, or ``None`` if there was
+            no mapping for key.
+        """
         check_not_none(key, "key can't be None")
         return await self._remove_internal(key)
 
     async def delete(self, key: Any) -> None:
+        """Removes the mapping for a key from this VectorCollection if it is present
+        (optional operation).
+
+        Unlike remove(object), this operation does not return the removed
+        Document, which avoids the serialization cost of the returned Document.
+        If the removed Document will not be used, a delete operation is preferred
+        over a remove operation for better performance.
+
+        The VectorCollection will not contain a mapping for the specified key once the call
+        returns.
+
+        Args:
+            key: Key of the mapping to be deleted.
+        """
         check_not_none(key, "key can't be None")
         return await self._delete_internal(key)
 
     async def optimize(self, index_name: str = None) -> None:
+        """Optimize index by fully removing nodes marked for deletion, trimming neighbor sets
+        to the advertised degree, and updating the entry node as necessary.
+
+        Warning:
+            This operation can take a long time to execute and consume a lot of server resources.
+
+        Args:
+            index_name: Name of the index to optimize. If not specified, the only index defined
+                for the collection will be used. Must be specified if the collection has more than
+                one index.
+        """
         request = vector_collection_optimize_codec.encode_request(
             self.name, index_name, uuid.uuid4()
         )
         return await self._invoke(request)
 
     async def clear(self) -> None:
+        """Clears the VectorCollection."""
         request = vector_collection_clear_codec.encode_request(self.name)
         return await self._invoke(request)
 
     async def size(self) -> int:
+        """Returns the number of Documents in this VectorCollection.
+
+        Returns:
+            Number of Documents in this VectorCollection.
+        """
         request = vector_collection_size_codec.encode_request(self.name)
         return await self._invoke(request, vector_collection_size_codec.decode_response)
 

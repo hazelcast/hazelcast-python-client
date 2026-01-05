@@ -117,6 +117,7 @@ Features
     :hidden:
 
     client
+    asyncio_client
     config
     api/modules
     getting_started

@@ -41,16 +41,91 @@ _logger = logging.getLogger(__name__)
 
 
 class HazelcastClient:
+    """Hazelcast client instance to access and manipulate distributed data
+    structures on the Hazelcast clusters.
+
+    The client can be configured either by:
+
+    - providing a configuration object as the first parameter of the
+      constructor
+
+    .. code:: python
+
+        from hazelcast.asyncio import HazelcastClient
+        from hazelcast.config import Config
+
+        config = Config()
+        config.cluster_name = "a-cluster"
+        client = await HazelcastClient.create_and_start(config)
+
+    - passing configuration options as keyword arguments
+
+    .. code:: python
+
+        from hazelcast.asyncio import HazelcastClient
+
+        client = await HazelcastClient.crate_and_start(
+            cluster_name="a-cluster",
+        )
+
+    Warning:
+        Asyncio client is not thread-safe, do not access it from other threads.
+
+    Warning:
+        Asyncio client is BETA.
+        Its public API may change until General Availability release.
+
+    See the :class:`hazelcast.config.Config` documentation for the possible
+    configuration options.
+    """
 
     _CLIENT_ID = AtomicInteger()
 
     @classmethod
     async def create_and_start(cls, config: Config | None = None, **kwargs) -> "HazelcastClient":
+        """Creates a HazelcastClient instance, and starts it.
+
+        .. code:: python
+
+            from hazelcast.asyncio import HazelcastClient
+
+            client = await HazelcastClient.create_and_start()
+
+        See the :class:`hazelcast.config.Config` documentation for the possible
+        configuration options.
+
+        Args:
+            config: Optional configuration object.
+            **kwargs: Optional keyword arguments of the client configuration.
+
+        """
+
         client = HazelcastClient(config, **kwargs)
         await client._start()
         return client
 
     def __init__(self, config: Config | None = None, **kwargs):
+        """Creates a HazelcastClient instance.
+
+        This call just creates the instance, without starting it.
+
+        The preferred way of creating and starting the client instance is using the ``create_and_start`` method:
+
+        .. code:: python
+
+            from hazelcast.asyncio import HazelcastClient
+
+            client = await HazelcastClient.create_and_start()
+
+        See the :class:`hazelcast.config.Config` documentation for the possible
+        configuration options.
+
+        Args:
+            config: Optional configuration object.
+            **kwargs: Optional keyword arguments of the client configuration.
+
+        """
+
         if config:
             if kwargs:
                 raise InvalidConfigurationError(
@@ -174,6 +249,14 @@ class HazelcastClient:
         _logger.info("Client started")
 
     async def get_map(self, name: str) -> Map[KeyType, ValueType]:
+        """Returns the distributed map instance with the specified name.
+
+        Args:
+            name: Name of the distributed map.
+
+        Returns:
+            Distributed map instance with the specified name.
+        """
         return await self._proxy_manager.get_or_create(MAP_SERVICE, name)
 
     async def create_vector_collection_config(
@@ -186,6 +269,15 @@ class HazelcastClient:
         merge_policy: str = "PutIfAbsentMergePolicy",
         merge_batch_size: int = 100,
     ) -> None:
+        """Creates a vector collection with the given configuration.
+
+        Args:
+            name: Name of the distributed map.
+            indexes: One or more index configurations. The index names must be unique.
+            backup_count: Number of backups to keep for the vector collection.
+            split_brain_protection_name: Name of the split brain protection configuration. See https://docs.hazelcast.com/hazelcast/5.6/data-structures/vector-collections#split-brain-protection
+            merge_policy: The merge policy to use while recovering in a split brain situation. See https://docs.hazelcast.com/hazelcast/5.6/data-structures/vector-collections#merge-policy
+        """
         # check that indexes have different names
         if indexes:
             index_names = set(index.name for index in indexes)
@@ -205,11 +297,29 @@ class HazelcastClient:
         await self._invocation_service.ainvoke(invocation)
 
     async def get_vector_collection(self, name: str) -> VectorCollection:
+        """Returns the vector collection instance with the specified name.
+
+        Args:
+            name: Name of the vector collection.
+
+        Returns:
+            Vector collection instance with the specified name.
+        """
         return await self._proxy_manager.get_or_create(VECTOR_SERVICE, name)
 
     async def add_distributed_object_listener(
         self, listener_func: typing.Callable[[DistributedObjectEvent], None]
     ) -> str:
+        """Adds a listener which will be notified when a new distributed object
+        is created or destroyed.
+
+        Args:
+            listener_func: Function to be called when a distributed object is
+                created or destroyed.
+
+        Returns:
+            A registration id which is used as a key to remove the listener.
+        """
         is_smart = self._config.smart_routing
         codec = client_add_distributed_object_listener_codec
         request = codec.encode_request(is_smart)
@@ -229,9 +339,20 @@ class HazelcastClient:
         )
 
     async def remove_distributed_object_listener(self, registration_id: str) -> bool:
+        """Removes the specified distributed object listener.
+
+        Returns silently if there is no such listener added before.
+
+        Args:
+            registration_id: The id of the registered listener.
+
+        Returns:
+            ``True`` if registration is removed, ``False`` otherwise.
+        """
         return await self._listener_service.deregister_listener(registration_id)
 
     async def shutdown(self) -> None:
+        """Shuts down this HazelcastClient."""
         async with self._shutdown_lock:
             if self._internal_lifecycle_service.running:
                 self._internal_lifecycle_service.fire_lifecycle_event(LifecycleState.SHUTTING_DOWN)
@@ -244,18 +365,28 @@ class HazelcastClient:
 
     @property
     def name(self) -> str:
+        """Name of the client."""
         return self._name
 
     @property
     def lifecycle_service(self) -> LifecycleService:
+        """Lifecycle service allows you to check if the client is running and
+        add and remove lifecycle listeners.
+        """
         return self._lifecycle_service
 
     @property
     def partition_service(self) -> PartitionService:
+        """Partition service allows you to get partition count, introspect
+        the partition owners, and partition ids of keys.
+        """
         return self._partition_service
 
     @property
     def cluster_service(self) -> ClusterService:
+        """ClusterService: Cluster service allows you to get the list of
+        the cluster members and add and remove membership listeners.
+        """
         return self._cluster_service
 
     def _create_address_provider(self):
