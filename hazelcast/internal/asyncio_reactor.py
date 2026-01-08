@@ -136,7 +136,9 @@ class AsyncioConnection(Connection):
         self.local_address = Address(host, port)
         self._connect_timer_task = None
         if not self._connected:
-            self._connect_timer_task = self._loop.create_task(self._connect_retry_cb(0.01, self._sock, (address.host, address.port)))
+            self._connect_timer_task = self._loop.create_task(
+                self._connect_retry_cb(0.01, self._sock, (address.host, address.port))
+            )
 
     async def _connect_retry_cb(self, timeout, sock, address):
         await asyncio.sleep(timeout)
@@ -145,7 +147,9 @@ class AsyncioConnection(Connection):
             return
         self.connect(sock, address)
         if not self._connected:
-            self._connect_timer_task = self._loop.create_task(self._connect_retry_cb(timeout, sock, address))
+            self._connect_timer_task = self._loop.create_task(
+                self._connect_retry_cb(timeout, sock, address)
+            )
         elif self._close_task:
             self._close_task.cancel()
 
