@@ -396,15 +396,20 @@ class ConnectionManager:
         return connection
 
     async def _get_or_connect_to_member(self, member):
-        connection = self.active_connections.get(member.uuid, None)
-        if connection:
-            return connection
+        try:
+            connection = self.active_connections.get(member.uuid, None)
+            if connection:
+                return connection
 
-        translated = await self._translate_member_address(member)
-        connection = self._create_connection(translated)
-        await connection._create_task
-        response = self._authenticate(connection)
-        await self._on_auth(response, connection)
+            translated = await self._translate_member_address(member)
+            connection = self._create_connection(translated)
+            await connection._create_task
+            response = self._authenticate(connection)
+            await self._on_auth(response, connection)
+        except Exception as e:
+            _logger.exception("Connecting to member %(member)s", {"member": member})
+            return
+
         return connection
 
     def _create_connection(self, address):
