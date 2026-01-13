@@ -145,7 +145,11 @@ class AsyncioConnection(Connection):
         if self._connected and self._close_task:
             self._close_task.cancel()
             return
-        self.connect(sock, address)
+        try:
+            self.connect(sock, address)
+        except Exception:
+            # close task will handle closing the connection
+            return
         if not self._connected:
             self._connect_timer_task = self._loop.create_task(
                 self._connect_retry_cb(timeout, sock, address)
