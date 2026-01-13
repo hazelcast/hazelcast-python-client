@@ -298,9 +298,12 @@ class ConnectionManager:
             return
 
         if sync_start:
-            async with asyncio.TaskGroup() as tg:
-                for member in self._cluster_service.get_members():
-                    tg.create_task(self._get_or_connect_to_member(member))
+            try:
+                async with asyncio.TaskGroup() as tg:
+                    for member in self._cluster_service.get_members():
+                        tg.create_task(self._get_or_connect_to_member(member))
+            except Exception as e:
+                _logger.debug("Error during connection to all members: %s", str(e))
 
         self._start_connect_all_members_timer()
 
