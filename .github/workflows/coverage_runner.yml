@@ -35,6 +35,8 @@ jobs:
 
   run-tests:
     runs-on: ${{ matrix.os }}
+    permissions:
+      id-token: write
     needs: [check_for_membership, python-versions]
     if: github.event_name == 'push' || needs.check_for_membership.outputs.check-result == 'true' || github.event_name == 'workflow_dispatch'
     name: Run tests with Python ${{ matrix.python-version }} on ${{ matrix.os }}
@@ -78,8 +80,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.AWS_HAZELCAST_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
           aws-region: 'us-east-1'
 
       - name: Get Secrets
