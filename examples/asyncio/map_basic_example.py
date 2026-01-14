@@ -28,5 +28,5 @@ async def amain():
     await client.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(amain())
