@@ -121,6 +121,7 @@ Features
     config
     api/modules
     getting_started
+    getting_started_asyncio
     features
     configuration_overview
     serialization
