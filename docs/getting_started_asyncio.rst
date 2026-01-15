@@ -32,6 +32,9 @@ There are several options to run a Hazelcast cluster:
 
 Once the Hazelcast cluster is running, you can carry on with creating and starting the Hazelcast client.
 
+Working with the Hazelcast Client
+---------------------------------
+
 Creating and Starting Client
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

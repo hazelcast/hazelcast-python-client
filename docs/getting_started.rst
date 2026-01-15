@@ -6,6 +6,9 @@ Hazelcast Python client. It outlines the requirements, installation and
 configuration of the client, setting up a cluster, and provides a simple
 application that uses a distributed map in Python client.
 
+.. Note:: See :ref:`getting_started_asyncio:getting started - asyncio api (beta)` for getting started with the the asyncio API.
+
+
 Requirements
 ------------
 
