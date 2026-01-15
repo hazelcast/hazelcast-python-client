@@ -51,3 +51,4 @@ features:
 - Global Serialization
 - Connection Strategy
 - Connection Retry
+- Vector Collection (BETA)

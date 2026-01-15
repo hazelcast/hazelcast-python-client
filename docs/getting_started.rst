@@ -6,13 +6,16 @@ Hazelcast Python client. It outlines the requirements, installation and
 configuration of the client, setting up a cluster, and provides a simple
 application that uses a distributed map in Python client.
 
+.. Note:: See :ref:`getting_started_asyncio:getting started - asyncio api (beta)` for getting started with the the asyncio API.
+
+
 Requirements
 ------------
 
 - Windows, Linux/UNIX or Mac OS X
-- Python 3.7 or newer
-- Hazelcast 4.0 or newer
-- `Supported Java virtual machine <https://docs.hazelcast.com/hazelcast/latest/deploy/versioning-compatibility#supported-java-virtual-machines>`
+- Python 3.11 or newer
+- Hazelcast 5.0 or newer
+- `Supported Java virtual machine <https://docs.hazelcast.com/hazelcast/latest/deploy/versioning-compatibility#supported-java-virtual-machines>`__
 - Latest Hazelcast Python client
 
 Working with Hazelcast Clusters
@@ -48,7 +51,7 @@ There are following options to start a Hazelcast cluster easily:
 
   .. code:: bash
 
-      docker run -p 5701:5701 hazelcast/hazelcast:5.5.0
+      docker run -p 5701:5701 hazelcast/hazelcast:latest
 
 - You can use `Hazelcast CLI
   <https://docs.hazelcast.com/hazelcast/latest/getting-started/install-hazelcast#use-a-package-manager>`__.
@@ -393,9 +396,9 @@ on a cluster using the client.
     client = hazelcast.HazelcastClient()
 
     personnel_map = client.get_map("personnel-map")
-    personnel_map.put("Alice", "IT")
-    personnel_map.put("Bob", "IT")
-    personnel_map.put("Clark", "IT")
+    personnel_map.put("Alice", "IT").result()
+    personnel_map.put("Bob", "IT").result()
+    personnel_map.put("Clark", "IT").result()
 
     print("Added IT personnel. Printing all known personnel")
 
@@ -425,9 +428,9 @@ Now, run the following code.
     client = hazelcast.HazelcastClient()
 
     personnel_map = client.get_map("personnel-map")
-    personnel_map.put("Denise", "Sales")
-    personnel_map.put("Erwing", "Sales")
-    personnel_map.put("Faith", "Sales")
+    personnel_map.put("Denise", "Sales").result()
+    personnel_map.put("Erwing", "Sales").result()
+    personnel_map.put("Faith", "Sales").result()
 
     print("Added Sales personnel. Printing all known personnel")
 
@@ -461,7 +464,7 @@ our map lives in the cluster and no matter which client we use, we can
 access the whole map.
 
 You may wonder why we have used ``result()`` method over the
-``entry_set()`` method of the ``personnel_map``. This is because the
+``put()`` and  ``entry_set()`` methods of the ``personnel_map``. This is because the
 Hazelcast Python client is designed to be fully asynchronous. Every
 method call over distributed objects such as ``put()``, ``get()``,
 ``entry_set()``, etc. will return a ``Future`` object that is similar to

@@ -21,8 +21,8 @@ in-memory data store and computation platform that provides a wide
 variety of distributed data structures and concurrency primitives.
 
 Hazelcast Python client is a way to communicate to Hazelcast clusters
-and access the cluster data. The client provides a Future-based
-asynchronous API suitable for wide ranges of use cases.
+and access the cluster data. The client provides both a Future-based
+asynchronous API, and an asyncio API suitable for wide ranges of use cases.
 
 
 Overview
@@ -33,10 +33,10 @@ Usage
 
 .. code:: python
 
-    import hazelcast
+    from hazelcast import HazelcastClient
 
     # Connect to Hazelcast cluster.
-    client = hazelcast.HazelcastClient()
+    client = HazelcastClient()
 
     # Get or create the "distributed-map" on the cluster.
     distributed_map = client.get_map("distributed-map")
@@ -61,6 +61,44 @@ Usage
     # Shutdown the client.
     client.shutdown()
 
+Usage (Asyncio)
+~~~~~~~~~~~~~~~
+
+.. code:: python
+
+    import asyncio
+
+    from hazelcast.asyncio import HazelcastClient
+
+    async def amain():
+        # Connect to Hazelcast cluster.
+        client = await HazelcastClient.create_and_start()
+
+        # Get or create the "distributed-map" on the cluster.
+        distributed_map = await client.get_map("distributed-map")
+
+        # Put "key", "value" pair into the "distributed-map".
+        # And wait for the request to complete.
+        await distributed_map.set("key", "value")
+
+        # Try to get the value associated with the given key from the cluster
+        # and attach a callback to be executed once the response for the
+        # get request is received. Note that, the set request above was
+        # synchronous, since the result is awaited.
+        # Whereas the get request below is asynchronous.
+        get_future = asyncio.create_task(distributed_map.get("key"))
+        get_future.add_done_callback(lambda future: print("Future's value:", future.result()))
+
+        # Do other operations. The operations below won't wait for
+        # the get request above to complete.
+        map_size = await distributed_map.size()
+        print("Map size:", map_size)
+
+        # Shutdown the client.
+        await client.shutdown()
+
+
+    asyncio.run(amain())
 
 If you are using Hazelcast and the Python client on the same machine,
 the default configuration should work out-of-the-box. However,
@@ -72,9 +110,7 @@ Configuration
 
 .. code:: python
 
-    import hazelcast
-
-    client = hazelcast.HazelcastClient(
+    client = HazelcastClient(
         cluster_name="cluster-name",
         cluster_members=[
             "10.90.0.2:5701",
@@ -85,8 +121,21 @@ Configuration
         ]
     )
 
-    print("Connected to cluster")
-    client.shutdown()
+Configuration (Asyncio)
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code:: python
+
+    client = await HazelcastClient.create_and_start(
+        cluster_name="cluster-name",
+        cluster_members=[
+            "10.90.0.2:5701",
+            "10.90.0.3:5701",
+        ],
+        lifecycle_listeners=[
+            lambda state: print("Lifecycle event >>>", state),
+        ]
+    )
 
 
 See the API documentation of :class:`hazelcast.client.HazelcastClient`
@@ -121,6 +170,7 @@ Features
     config
     api/modules
     getting_started
+    getting_started_asyncio
     features
     configuration_overview
     serialization
