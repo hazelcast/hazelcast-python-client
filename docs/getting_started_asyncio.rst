@@ -3,10 +3,10 @@ Getting Started - Asyncio API (BETA)
 
 .. warning::
 
-    Asyncio API is BETA, do not use it in production.
+    Hazelcast's asyncio API is BETA. Do not use it in production.
 
-This chapter provides information on how to get started with the Hazelcast Python client, using its asyncio API.
-It outlines the requirements, installation, and provides a simple application that uses a distributed map in Python client.
+This chapter provides information on how to get started with the Hazelcast Python client using its asyncio API.
+It provides the requirements, installation instructions, and a simple application that uses a distributed map in a Python client.
 
 Requirements
 ------------
@@ -20,7 +20,7 @@ Requirements
 Working with Hazelcast Clusters
 -------------------------------
 
-Hazelcast Python client requires a working Hazelcast cluster to run.
+The Hazelcast Python client requires a working Hazelcast cluster to run.
 The cluster handles storage and manipulation of user data.
 
 There are several options to run a Hazelcast cluster:
@@ -38,7 +38,7 @@ Working with the Hazelcast Client
 Creating and Starting Client
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Asyncio client specific public API is exposed in the ``hazelcast.asyncio`` package.
+The asyncio client-specific public API is exposed in the ``hazelcast.asyncio`` package.
 Call the ``create_and_start`` method of the ``HazelcastClient`` class to create an instance and connect it to the cluster.
 
 .. code:: python
@@ -53,18 +53,18 @@ Call the ``create_and_start`` method of the ``HazelcastClient`` class to create 
 
     asyncio.run(amain())
 
-Hazelcast Client requires an event loop to be running.
-Also, any code that uses the ``await`` keyword must be put in an ``async`` function.
+The Hazelcast client requires an event loop to be running.
+Additionally, any code that uses the ``await`` keyword must be put in an ``async`` function.
 
 Configuring the Client
 ~~~~~~~~~~~~~~~~~~~~~~
 
-You must pass configuration options as keyword arguments to your client at the startup.
+You must pass configuration options as keyword arguments to your client at startup.
 
-This section describes some network options to cover common use cases in connecting the client to a cluster.
+This section describes some network options to cover common use cases for connecting the client to a cluster.
 See the :ref:`configuration_overview:configuration overview` section for information.
 
-It’s possible to omit the keyword arguments in order to use the default settings:
+You can omit the keyword arguments to use the default settings:
 
 .. code:: python
 
@@ -142,7 +142,7 @@ You just started a Hazelcast Python client instance.
 
 **Using a Map**
 
-Let’s manipulate a distributed map on a cluster using the client.
+Let's manipulate a distributed map on a cluster using the client.
 
 .. code:: python
 
@@ -220,8 +220,8 @@ Now, run the following code.
 This time you added only the sales employees but you got the list of all known employees including the ones in IT.
 That is because the map lives in the cluster and no matter which client you use, you can access the whole map.
 
-Note that, the ``await`` keyword causes the ``put`` methods to run serially.
-In order to run them concurrently, you can wrap them in tasks.
+Note that the ``await`` keyword causes the ``put`` methods to run serially.
+To run them concurrently, you can wrap them in tasks.
 Running the tasks in a ``TaskGroup`` makes sure the errors are handled, and all tasks are done:
 
 .. code:: python
