@@ -117,14 +117,8 @@ class SSLTest(HazelcastTestCase):
 
     def read_default_ca_config(self):
         with open(self.default_ca_xml, "r") as f:
-            xml_config = f.read()
-
-        keystore_path = get_abs_path(self.current_directory, "keystore.jks")
-        return xml_config % (keystore_path, keystore_path)
+            return f.read()
 
     def read_ssl_config(self):
         with open(self.hazelcast_ssl_xml, "r") as f:
-            xml_config = f.read()
-
-        keystore_path = get_abs_path(self.current_directory, "server1.keystore")
-        return xml_config % keystore_path
+            return f.read()
