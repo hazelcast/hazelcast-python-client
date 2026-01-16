@@ -49,7 +49,7 @@ images <https://hub.docker.com/r/hazelcast/hazelcast/>`__.
 
 .. code:: bash
 
-   docker run -p 5701:5701 hazelcast/hazelcast:5.3.0
+   docker run -p 5701:5701 hazelcast/hazelcast:latest
 
 You can also use our ZIP or TAR
 `distributions <https://hazelcast.com/open-source-projects/downloads/>`__.
@@ -240,7 +240,7 @@ License
 Copyright
 ---------
 
-Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
+Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
 
 Visit `hazelcast.com <https://hazelcast.com>`__ for more
 information.
