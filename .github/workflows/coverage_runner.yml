@@ -160,7 +160,7 @@ jobs:
         if: ${{ matrix.python-version == needs.python-versions.outputs.latest-python-version && matrix.os == 'ubuntu-latest' &&  github.event_name == 'pull_request_target' }}
         uses: codecov/codecov-action@v5
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true
           files: ./coverage.xml
           override_pr: ${{ github.event.pull_request.number }}
           fail_ci_if_error: true
@@ -169,7 +169,7 @@ jobs:
         if: ${{ matrix.python-version == needs.python-versions.outputs.latest-python-version && matrix.os == 'ubuntu-latest' &&  github.event_name == 'push' }}
         uses: codecov/codecov-action@v5
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true
           files: ./coverage.xml
           fail_ci_if_error: true
 
@@ -177,7 +177,7 @@ jobs:
         if: ${{ matrix.python-version == needs.python-versions.outputs.latest-python-version && matrix.os == 'ubuntu-latest' && github.event_name == 'workflow_dispatch' }}
         uses: codecov/codecov-action@v5
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true
           files: ./coverage.xml
           override_pr: ${{ github.event.inputs.pr_number }}
           fail_ci_if_error: true
