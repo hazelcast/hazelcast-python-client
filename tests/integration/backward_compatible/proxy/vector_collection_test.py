@@ -200,6 +200,7 @@ class VectorCollectionTest(SingleMemberTestCase):
 
     def test_backup_count_more_than_max_value_fail(self):
         skip_if_server_version_older_than(self, self.client, "5.6.0")
+        skip_if_client_version_older_than(self, "5.6.0")
         name = random_string()
         # check that the parameter is used by ensuring that it is validated on server side
         # there is no simple way to check number of backups
@@ -213,6 +214,7 @@ class VectorCollectionTest(SingleMemberTestCase):
 
     def test_backup_count_less_than_min_value_fail(self):
         skip_if_server_version_older_than(self, self.client, "5.6.0")
+        skip_if_client_version_older_than(self, "5.6.0")
         name = random_string()
         with self.assertRaises(hazelcast.errors.IllegalArgumentError):
             self.client.create_vector_collection_config(
@@ -240,6 +242,7 @@ class VectorCollectionTest(SingleMemberTestCase):
 
     def test_async_backup_count_more_than_max_value_fail(self):
         skip_if_server_version_older_than(self, self.client, "5.6.0")
+        skip_if_client_version_older_than(self, "5.6.0")
         name = random_string()
         # check that the parameter is used by ensuring that it is validated on server side
         # there is no simple way to check number of backups
@@ -253,6 +256,7 @@ class VectorCollectionTest(SingleMemberTestCase):
 
     def test_async_backup_count_less_than_min_value_fail(self):
         skip_if_server_version_older_than(self, self.client, "5.6.0")
+        skip_if_client_version_older_than(self, "5.6.0")
         name = random_string()
         with self.assertRaises(hazelcast.errors.IllegalArgumentError):
             self.client.create_vector_collection_config(
@@ -263,6 +267,7 @@ class VectorCollectionTest(SingleMemberTestCase):
 
     def test_sync_and_async_backup_count_more_than_max_value_fail(self):
         skip_if_server_version_older_than(self, self.client, "5.6.0")
+        skip_if_client_version_older_than(self, "5.6.0")
         name = random_string()
         with self.assertRaises(hazelcast.errors.IllegalArgumentError):
             self.client.create_vector_collection_config(
