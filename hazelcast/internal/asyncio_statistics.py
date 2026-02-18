@@ -182,7 +182,7 @@ class Statistics:
                 self._add_system_or_process_metric(
                     attributes, compressor, gauge_name, value, value_type
                 )
-            except:
+            except Exception:
                 _logger.exception("Error while collecting '%s'.", gauge_name)
 
         if not self._registered_process_gauges:
@@ -197,7 +197,7 @@ class Statistics:
                 self._add_system_or_process_metric(
                     attributes, compressor, gauge_name, value, value_type
                 )
-            except:
+            except Exception:
                 _logger.exception("Error while collecting '%s'.", gauge_name)
 
     def _add_system_or_process_metric(self, attributes, compressor, gauge_name, value, value_type):
@@ -343,7 +343,7 @@ class Statistics:
         try:
             self._add_metric(compressor, descriptor, value, value_type)
             self._add_attribute(attributes, metric, value, nc_name_with_prefix)
-        except:
+        except Exception:
             _logger.exception(
                 "Error while collecting %s metric for near cache '%s'.", metric, nc_name
             )
@@ -362,7 +362,7 @@ class Statistics:
         )
         try:
             self._add_metric(compressor, descriptor, value, value_type)
-        except:
+        except Exception:
             _logger.exception("Error while collecting '%s.%s'.", _TCP_METRICS_PREFIX, metric)
 
     def _add_metric(self, compressor, descriptor, value, value_type):

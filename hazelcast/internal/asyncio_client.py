@@ -64,7 +64,7 @@ class HazelcastClient:
 
         from hazelcast.asyncio import HazelcastClient
 
-        client = await HazelcastClient.crate_and_start(
+        client = await HazelcastClient.create_and_start(
             cluster_name="a-cluster",
         )
 
