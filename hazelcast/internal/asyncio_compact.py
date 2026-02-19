@@ -102,6 +102,7 @@ class CompactSchemaService:
             # is not known to be replicated yet. We should retry
             # sending it in a random member.
             await asyncio.sleep(self._invocation_retry_pause)
+            remaining_retries -= 1
 
         # We tried to send it a couple of times, but the member list
         # in our local and the member list returned by the initiator

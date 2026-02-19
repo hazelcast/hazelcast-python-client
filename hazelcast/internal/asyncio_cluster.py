@@ -134,6 +134,9 @@ class _InternalClusterService:
         self._listeners = {}
         self._member_list_snapshot = _EMPTY_SNAPSHOT
         self._initial_list_fetched = asyncio.Event()
+        # asyncio tasks are weakly referenced; keep strong refs until they finish.
+        # see: https://docs.python.org/3/library/asyncio-task.html#creating-tasks
+        self._close_tasks: typing.Set[asyncio.Task] = set()
 
     def start(self, connection_manager, membership_listeners):
         self._connection_manager = connection_manager
@@ -141,7 +144,7 @@ class _InternalClusterService:
             self.add_listener(*listener)
 
     def get_member(self, member_uuid):
-        check_not_none(uuid, "UUID must not be null")
+        check_not_none(member_uuid, "UUID must not be null")
         snapshot = self._member_list_snapshot
         return snapshot.members.get(member_uuid, None)
 
@@ -282,14 +285,18 @@ class _InternalClusterService:
         for dead_member in dead_members:
             connection = self._connection_manager.get_connection(dead_member.uuid)
             if connection:
-                connection.close_connection(
-                    None,
-                    TargetDisconnectedError(
-                        "The client has closed the connection to this member, "
-                        "after receiving a member left event from the cluster. "
-                        "%s" % connection
-                    ),
+                task = asyncio.create_task(
+                    connection.close_connection(
+                        None,
+                        TargetDisconnectedError(
+                            "The client has closed the connection to this member, "
+                            "after receiving a member left event from the cluster. "
+                            "%s" % connection
+                        ),
+                    )
                 )
+                self._close_tasks.add(task)
+                task.add_done_callback(self._close_tasks.discard)
 
         if (len(new_members) + len(dead_members)) > 0:
             if len(current_members) > 0:

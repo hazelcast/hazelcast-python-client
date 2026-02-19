@@ -140,7 +140,7 @@ class _InternalClusterService:
             self.add_listener(*listener)
 
     def get_member(self, member_uuid):
-        check_not_none(uuid, "UUID must not be null")
+        check_not_none(member_uuid, "UUID must not be null")
         snapshot = self._member_list_snapshot
         return snapshot.members.get(member_uuid, None)
 

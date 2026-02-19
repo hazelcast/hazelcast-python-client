@@ -390,7 +390,7 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
             key_data = self._to_data(key)
             value_data = self._to_data(document.value)
         except SchemaNotReplicatedError as e:
-            return await self._send_schema_and_retry(e, self.set, key, document)
+            return await self._send_schema_and_retry(e, self.put, key, document)
         document = copy.copy(document)
         document.value = value_data
         request = vector_collection_put_codec.encode_request(
@@ -409,7 +409,7 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
             key_data = self._to_data(key)
             value_data = self._to_data(document.value)
         except SchemaNotReplicatedError as e:
-            return await self._send_schema_and_retry(e, self.set, key, document)
+            return await self._send_schema_and_retry(e, self.put_if_absent, key, document)
         document.value = value_data
         request = vector_collection_put_if_absent_codec.encode_request(
             self.name,

@@ -53,6 +53,6 @@ class HazelcastCloudAddressProvider:
     async def refresh(self):
         """Refreshes the internal lookup table if necessary."""
         try:
-            self._private_to_public = self.cloud_discovery.discover_nodes()
+            self._private_to_public = await asyncio.to_thread(self.cloud_discovery.discover_nodes)
         except Exception as e:
             _logger.warning("Failed to load addresses from Hazelcast Cloud: %s", e)

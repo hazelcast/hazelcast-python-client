@@ -82,51 +82,54 @@ class ListenerService:
                         tg.create_task(task)
                 return registration_id
             except Exception:
-                await self.deregister_listener(registration_id)
+                await self._deregister_listener_unsafe(registration_id)
                 raise HazelcastError("Listener cannot be added")
 
     async def deregister_listener(self, user_registration_id):
         check_not_none(user_registration_id, "None user_registration_id is not allowed!")
         async with self._registration_lock:
-            listener_registration = self._active_registrations.pop(user_registration_id, None)
-            if not listener_registration:
-                return False
+            return await self._deregister_listener_unsafe(user_registration_id)
 
-            async def handle(inv: Invocation, conn: AsyncioConnection):
-                try:
-                    await inv.future
-                except Exception as e:
-                    if not isinstance(
-                        e, (HazelcastClientNotActiveError, IOError, TargetDisconnectedError)
-                    ):
-                        _logger.warning(
-                            "Deregistration of listener with ID %s has failed for address %s: %s",
-                            user_registration_id,
-                            conn.remote_address,
-                            e,
-                        )
+    async def _deregister_listener_unsafe(self, user_registration_id):
+        listener_registration = self._active_registrations.pop(user_registration_id, None)
+        if not listener_registration:
+            return False
 
-            async with asyncio.TaskGroup() as tg:
-                items = listener_registration.connection_registrations.items()
-                for connection, event_registration in items:
-                    # Remove local handler
-                    self.remove_event_handler(event_registration.correlation_id)
-                    # The rest is for deleting the remote registration
-                    server_registration_id = event_registration.server_registration_id
-                    deregister_request = listener_registration.encode_deregister_request(
-                        server_registration_id
+        async def handle(inv: Invocation, conn: AsyncioConnection):
+            try:
+                await inv.future
+            except Exception as e:
+                if not isinstance(
+                    e, (HazelcastClientNotActiveError, IOError, TargetDisconnectedError)
+                ):
+                    _logger.warning(
+                        "Deregistration of listener with ID %s has failed for address %s: %s",
+                        user_registration_id,
+                        conn.remote_address,
+                        e,
                     )
-                    if deregister_request is None:
-                        # None means no remote registration (e.g. for backup acks)
-                        continue
-                    invocation = Invocation(
-                        deregister_request, connection=connection, timeout=sys.maxsize, urgent=True
-                    )
-                    self._invocation_service.invoke(invocation)
-                    tg.create_task(handle(invocation, connection))
 
-            listener_registration.connection_registrations.clear()
-            return True
+        async with asyncio.TaskGroup() as tg:
+            items = listener_registration.connection_registrations.items()
+            for connection, event_registration in items:
+                # Remove local handler
+                self.remove_event_handler(event_registration.correlation_id)
+                # The rest is for deleting the remote registration
+                server_registration_id = event_registration.server_registration_id
+                deregister_request = listener_registration.encode_deregister_request(
+                    server_registration_id
+                )
+                if deregister_request is None:
+                    # None means no remote registration (e.g. for backup acks)
+                    continue
+                invocation = Invocation(
+                    deregister_request, connection=connection, timeout=sys.maxsize, urgent=True
+                )
+                self._invocation_service.invoke(invocation)
+                tg.create_task(handle(invocation, connection))
+
+        listener_registration.connection_registrations.clear()
+        return True
 
     def handle_client_message(self, message: InboundMessage, correlation_id: int):
         handler = self._event_handlers.get(correlation_id, None)
