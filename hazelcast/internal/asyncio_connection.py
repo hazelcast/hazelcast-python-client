@@ -473,6 +473,12 @@ class ConnectionManager:
     def _start_connect_all_members_timer(self):
         connecting_uuids = set()
 
+        async def connect_to_member(member):
+            try:
+                await self._get_or_connect_to_member(member)
+            except Exception:
+                _logger.debug("Error connecting to %s in reconnect timer", member, exc_info=True)
+
         async def run():
             await asyncio.sleep(1)
             if not self._lifecycle_service.running:
@@ -489,7 +495,7 @@ class ConnectionManager:
                     connecting_uuids.add(member_uuid)
                     if not self._lifecycle_service.running:
                         break
-                    tg.create_task(self._get_or_connect_to_member(member))
+                    tg.create_task(connect_to_member(member))
                     member_uuids.append(member_uuid)
 
             for item in member_uuids:
@@ -688,27 +694,31 @@ class ConnectionManager:
             self.active_connections[remote_uuid] = connection
             fire_connected_lifecycle_event = False
 
-        if is_initial_connection:
-            self._cluster_id = new_cluster_id
-            # In split brain, the client might connect to the one half
-            # of the cluster, and then later might reconnect to the
-            # other half, after the half it was connected to is
-            # completely dead. Since the cluster id is preserved in
-            # split brain scenarios, it is impossible to distinguish
-            # reconnection to the same cluster vs reconnection to the
-            # other half of the split brain. However, in the latter,
-            # we might need to send some state to the other half of
-            # the split brain (like Compact schemas). That forces us
-            # to send the client state to the cluster after the first
-            # cluster connection, regardless the cluster id is
-            # changed or not.
-            if self._established_initial_cluster_connection:
-                self._client_state = ClientState.CONNECTED_TO_CLUSTER
-                await self._initialize_on_cluster(new_cluster_id)
-            else:
-                fire_connected_lifecycle_event = True
-                self._established_initial_cluster_connection = True
-                self._client_state = ClientState.INITIALIZED_ON_CLUSTER
+            init_on_cluster = False
+            if is_initial_connection:
+                self._cluster_id = new_cluster_id
+                # In split brain, the client might connect to the one half
+                # of the cluster, and then later might reconnect to the
+                # other half, after the half it was connected to is
+                # completely dead. Since the cluster id is preserved in
+                # split brain scenarios, it is impossible to distinguish
+                # reconnection to the same cluster vs reconnection to the
+                # other half of the split brain. However, in the latter,
+                # we might need to send some state to the other half of
+                # the split brain (like Compact schemas). That forces us
+                # to send the client state to the cluster after the first
+                # cluster connection, regardless the cluster id is
+                # changed or not.
+                if self._established_initial_cluster_connection:
+                    self._client_state = ClientState.CONNECTED_TO_CLUSTER
+                    init_on_cluster = True
+                else:
+                    fire_connected_lifecycle_event = True
+                    self._established_initial_cluster_connection = True
+                    self._client_state = ClientState.INITIALIZED_ON_CLUSTER
+
+        if init_on_cluster:
+            await self._initialize_on_cluster(new_cluster_id)
 
         if fire_connected_lifecycle_event:
             self._lifecycle_service.fire_lifecycle_event(LifecycleState.CONNECTED)
