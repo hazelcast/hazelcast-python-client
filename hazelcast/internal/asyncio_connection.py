@@ -316,7 +316,9 @@ class ConnectionManager:
             )
             return
 
-        disconnected, removed, trigger_reconnection = await self._determine_connection_state(closed_connection, unsafe=unsafe)
+        disconnected, removed, trigger_reconnection = await self._determine_connection_state(
+            closed_connection, unsafe=unsafe
+        )
 
         if disconnected:
             self._lifecycle_service.fire_lifecycle_event(LifecycleState.DISCONNECTED)
@@ -341,7 +343,9 @@ class ConnectionManager:
                 closed_connection.remote_uuid,
             )
 
-    async def _determine_connection_state(self, closed_connection, unsafe=False) -> Tuple[bool, bool, bool]:
+    async def _determine_connection_state(
+        self, closed_connection, unsafe=False
+    ) -> Tuple[bool, bool, bool]:
         if unsafe:
             return self._determine_connection_state_unsafe(closed_connection)
         async with self._lock:
@@ -369,7 +373,6 @@ class ConnectionManager:
                     disconnected = True
 
         return disconnected, removed, trigger_reconnection
-
 
     def check_invocation_allowed(self):
         state = self._client_state
@@ -675,7 +678,9 @@ class ConnectionManager:
 
             if existing:
                 await connection.close_connection(
-                    "Duplicate connection to same member with UUID: %s" % remote_uuid, None, unsafe=True
+                    "Duplicate connection to same member with UUID: %s" % remote_uuid,
+                    None,
+                    unsafe=True,
                 )
                 return existing
 

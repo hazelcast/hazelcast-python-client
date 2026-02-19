@@ -73,6 +73,4 @@ class ProxyManager:
             return False
 
     def get_distributed_objects(self):
-        return to_list(
-            v for v in self._proxies.values() if not isinstance(v, asyncio.Future)
-        )
+        return to_list(v for v in self._proxies.values() if not isinstance(v, asyncio.Future))
