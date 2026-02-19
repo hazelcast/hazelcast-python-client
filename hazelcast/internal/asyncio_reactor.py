@@ -239,7 +239,7 @@ class AsyncioConnection(Connection):
             sock.setsockopt(level, option_name, value)
 
     def _create_ssl_context(self, config: Config):
-        ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
         protocol = config.ssl_protocol
         # Use only the configured protocol
         try:
