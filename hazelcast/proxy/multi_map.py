@@ -117,12 +117,15 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
                 uuid,
                 number_of_affected_entries,
             )
-            if event.event_type == EntryEventType.ADDED and added_func:
-                added_func(event)
-            elif event.event_type == EntryEventType.REMOVED and removed_func:
-                removed_func(event)
-            elif event.event_type == EntryEventType.CLEAR_ALL and clear_all_func:
-                clear_all_func(event)
+            if event.event_type == EntryEventType.ADDED:
+                if added_func:
+                    added_func(event)
+            elif event.event_type == EntryEventType.REMOVED:
+                if removed_func:
+                    removed_func(event)
+            elif event.event_type == EntryEventType.CLEAR_ALL:
+                if clear_all_func:
+                    clear_all_func(event)
 
         return self._register_listener(
             request,

@@ -69,6 +69,7 @@ class AsyncioConnection(Connection):
         self._preconn_buffers: list = []
         self._create_task: asyncio.Task | None = None
         self._close_task: asyncio.Task | None = None
+        self._connect_timer_task: asyncio.Task | None = None
         self._connected = False
         self._receive_buffer_size = _BUFFER_SIZE
         self._sock = None

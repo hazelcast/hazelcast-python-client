@@ -171,16 +171,21 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
                 uuid,
                 number_of_affected_entries,
             )
-            if event.event_type == EntryEventType.ADDED and added_func:
-                added_func(event)
-            elif event.event_type == EntryEventType.REMOVED and removed_func:
-                removed_func(event)
-            elif event.event_type == EntryEventType.UPDATED and updated_func:
-                updated_func(event)
-            elif event.event_type == EntryEventType.EVICTED and evicted_func:
-                evicted_func(event)
-            elif event.event_type == EntryEventType.CLEAR_ALL and clear_all_func:
-                clear_all_func(event)
+            if event.event_type == EntryEventType.ADDED:
+                if added_func:
+                    added_func(event)
+            elif event.event_type == EntryEventType.REMOVED:
+                if removed_func:
+                    removed_func(event)
+            elif event.event_type == EntryEventType.UPDATED:
+                if updated_func:
+                    updated_func(event)
+            elif event.event_type == EntryEventType.EVICTED:
+                if evicted_func:
+                    evicted_func(event)
+            elif event.event_type == EntryEventType.CLEAR_ALL:
+                if clear_all_func:
+                    clear_all_func(event)
 
         return self._register_listener(
             request,
