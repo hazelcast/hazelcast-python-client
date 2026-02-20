@@ -147,10 +147,10 @@ class _ObjectDataInput(ObjectDataInput):
         length = self.read_int()
         if length == NULL_ARRAY_LENGTH:
             return None
-        result = bytearray(length)
-        if length > 0:
-            self.read_into(result, 0, length)
-        return result.decode("utf-8")
+        self._check_available(self._pos, length)
+        result = self._buffer[self._pos : self._pos + length].decode("utf-8")
+        self._pos += length
+        return result
 
     def read_byte_array(self):
         length = self.read_int()

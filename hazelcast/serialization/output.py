@@ -202,8 +202,9 @@ class _ObjectDataOutput(ObjectDataOutput):
         self._pos = position
 
     def write_zero_bytes(self, count):
-        for _ in range(0, count):
-            self._write(0)
+        self._ensure_available(count)
+        self._buffer[self._pos : self._pos + count] = bytes(count)
+        self._pos += count
 
     def write_utf(self, val):
         self.write_string(val)
