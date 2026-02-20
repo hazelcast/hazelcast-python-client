@@ -163,28 +163,28 @@ class _ObjectDataInput(ObjectDataInput):
         return result
 
     def read_i8_array(self) -> typing.List[int]:
-        return self._read_array_fnc(self.read_byte)
+        return self._bulk_read(BYTE_SIZE_IN_BYTES, "b")
 
     def read_boolean_array(self):
-        return self._read_array_fnc(self.read_boolean)
+        return self._bulk_read(BOOLEAN_SIZE_IN_BYTES, "?")
 
     def read_char_array(self):
         return self._read_array_fnc(self.read_char)
 
     def read_int_array(self):
-        return self._read_array_fnc(self.read_int)
+        return self._bulk_read(INT_SIZE_IN_BYTES, "i")
 
     def read_long_array(self):
-        return self._read_array_fnc(self.read_long)
+        return self._bulk_read(LONG_SIZE_IN_BYTES, "q")
 
     def read_double_array(self):
-        return self._read_array_fnc(self.read_double)
+        return self._bulk_read(DOUBLE_SIZE_IN_BYTES, "d")
 
     def read_float_array(self):
-        return self._read_array_fnc(self.read_float)
+        return self._bulk_read(FLOAT_SIZE_IN_BYTES, "f")
 
     def read_short_array(self):
-        return self._read_array_fnc(self.read_short)
+        return self._bulk_read(SHORT_SIZE_IN_BYTES, "h")
 
     def read_string_array(self):
         return self._read_array_fnc(self.read_string)
@@ -215,7 +215,18 @@ class _ObjectDataInput(ObjectDataInput):
     def read_utf_array(self):
         return self.read_string_array()
 
-    # HELPERS
+    def _bulk_read(self, item_size, fmt_char):
+        length = self.read_int()
+        if length == NULL_ARRAY_LENGTH:
+            return None
+
+        nbytes = length * item_size
+        self._check_available(self._pos, nbytes)
+        endian = ">" if self._is_big_endian else "<"
+        result = list(struct.unpack_from(f"{endian}{length}{fmt_char}", self._buffer, self._pos))
+        self._pos += nbytes
+        return result
+
     def _check_available(self, position, size):
         if position < 0:
             raise ValueError
