@@ -5,7 +5,7 @@ import random
 import struct
 import time
 import uuid
-from typing import Coroutine
+from typing import Coroutine, Tuple
 
 from hazelcast import __version__
 from hazelcast.config import ReconnectMode
@@ -307,11 +307,8 @@ class ConnectionManager:
 
         self._start_connect_all_members_timer()
 
-    async def on_connection_close(self, closed_connection):
-        remote_uuid = closed_connection.remote_uuid
-        remote_address = closed_connection.remote_address
-
-        if not remote_address:
+    async def on_connection_close(self, closed_connection, unsafe=False):
+        if not closed_connection.remote_address:
             _logger.debug(
                 "Destroying %s, but it has no remote address, hence nothing is "
                 "removed from the connection dictionary",
@@ -319,25 +316,9 @@ class ConnectionManager:
             )
             return
 
-        disconnected = False
-        removed = False
-        trigger_reconnection = False
-        async with self._lock:
-            connection = self.active_connections.get(remote_uuid, None)
-            if connection == closed_connection:
-                self.active_connections.pop(remote_uuid, None)
-                removed = True
-                _logger.info(
-                    "Removed connection to %s:%s, connection: %s",
-                    remote_address,
-                    remote_uuid,
-                    connection,
-                )
-
-                if not self.active_connections:
-                    trigger_reconnection = True
-                    if self._client_state == ClientState.INITIALIZED_ON_CLUSTER:
-                        disconnected = True
+        disconnected, removed, trigger_reconnection = await self._determine_connection_state(
+            closed_connection, unsafe=unsafe
+        )
 
         if disconnected:
             self._lifecycle_service.fire_lifecycle_event(LifecycleState.DISCONNECTED)
@@ -359,8 +340,39 @@ class ConnectionManager:
             _logger.debug(
                 "Destroying %s, but there is no mapping for %s in the connection dictionary",
                 closed_connection,
-                remote_uuid,
+                closed_connection.remote_uuid,
             )
+
+    async def _determine_connection_state(
+        self, closed_connection, unsafe=False
+    ) -> Tuple[bool, bool, bool]:
+        if unsafe:
+            return self._determine_connection_state_unsafe(closed_connection)
+        async with self._lock:
+            return self._determine_connection_state_unsafe(closed_connection)
+
+    def _determine_connection_state_unsafe(self, closed_connection) -> Tuple[bool, bool, bool]:
+        remote_uuid = closed_connection.remote_uuid
+        disconnected = False
+        removed = False
+        trigger_reconnection = False
+        connection = self.active_connections.get(remote_uuid, None)
+        if connection == closed_connection:
+            self.active_connections.pop(remote_uuid, None)
+            removed = True
+            _logger.info(
+                "Removed connection to %s:%s, connection: %s",
+                closed_connection.remote_address,
+                remote_uuid,
+                connection,
+            )
+
+            if not self.active_connections:
+                trigger_reconnection = True
+                if self._client_state == ClientState.INITIALIZED_ON_CLUSTER:
+                    disconnected = True
+
+        return disconnected, removed, trigger_reconnection
 
     def check_invocation_allowed(self):
         state = self._client_state
@@ -464,6 +476,12 @@ class ConnectionManager:
     def _start_connect_all_members_timer(self):
         connecting_uuids = set()
 
+        async def connect_to_member(member):
+            try:
+                await self._get_or_connect_to_member(member)
+            except Exception:
+                _logger.debug("Error connecting to %s in reconnect timer", member, exc_info=True)
+
         async def run():
             await asyncio.sleep(1)
             if not self._lifecycle_service.running:
@@ -480,7 +498,7 @@ class ConnectionManager:
                     connecting_uuids.add(member_uuid)
                     if not self._lifecycle_service.running:
                         break
-                    tg.create_task(self._get_or_connect_to_member(member))
+                    tg.create_task(connect_to_member(member))
                     member_uuids.append(member_uuid)
 
             for item in member_uuids:
@@ -658,49 +676,54 @@ class ConnectionManager:
 
             existing = self.active_connections.get(remote_uuid, None)
 
-        if existing:
-            await connection.close_connection(
-                "Duplicate connection to same member with UUID: %s" % remote_uuid, None
-            )
-            return existing
+            if existing:
+                await connection.close_connection(
+                    "Duplicate connection to same member with UUID: %s" % remote_uuid,
+                    None,
+                    unsafe=True,
+                )
+                return existing
 
-        new_cluster_id = response["cluster_id"]
-        changed_cluster = self._cluster_id is not None and self._cluster_id != new_cluster_id
-        if changed_cluster:
-            await self._check_client_state_on_cluster_change(connection)
-            _logger.warning(
-                "Switching from current cluster: %s to new cluster: %s",
-                self._cluster_id,
-                new_cluster_id,
-            )
-            self._on_cluster_restart()
+            new_cluster_id = response["cluster_id"]
+            changed_cluster = self._cluster_id is not None and self._cluster_id != new_cluster_id
+            if changed_cluster:
+                await self._check_client_state_on_cluster_change(connection)
+                _logger.warning(
+                    "Switching from current cluster: %s to new cluster: %s",
+                    self._cluster_id,
+                    new_cluster_id,
+                )
+                self._on_cluster_restart()
 
-        async with self._lock:
             is_initial_connection = not self.active_connections
             self.active_connections[remote_uuid] = connection
             fire_connected_lifecycle_event = False
 
-        if is_initial_connection:
-            self._cluster_id = new_cluster_id
-            # In split brain, the client might connect to the one half
-            # of the cluster, and then later might reconnect to the
-            # other half, after the half it was connected to is
-            # completely dead. Since the cluster id is preserved in
-            # split brain scenarios, it is impossible to distinguish
-            # reconnection to the same cluster vs reconnection to the
-            # other half of the split brain. However, in the latter,
-            # we might need to send some state to the other half of
-            # the split brain (like Compact schemas). That forces us
-            # to send the client state to the cluster after the first
-            # cluster connection, regardless the cluster id is
-            # changed or not.
-            if self._established_initial_cluster_connection:
-                self._client_state = ClientState.CONNECTED_TO_CLUSTER
-                await self._initialize_on_cluster(new_cluster_id)
-            else:
-                fire_connected_lifecycle_event = True
-                self._established_initial_cluster_connection = True
-                self._client_state = ClientState.INITIALIZED_ON_CLUSTER
+            init_on_cluster = False
+            if is_initial_connection:
+                self._cluster_id = new_cluster_id
+                # In split brain, the client might connect to the one half
+                # of the cluster, and then later might reconnect to the
+                # other half, after the half it was connected to is
+                # completely dead. Since the cluster id is preserved in
+                # split brain scenarios, it is impossible to distinguish
+                # reconnection to the same cluster vs reconnection to the
+                # other half of the split brain. However, in the latter,
+                # we might need to send some state to the other half of
+                # the split brain (like Compact schemas). That forces us
+                # to send the client state to the cluster after the first
+                # cluster connection, regardless the cluster id is
+                # changed or not.
+                if self._established_initial_cluster_connection:
+                    self._client_state = ClientState.CONNECTED_TO_CLUSTER
+                    init_on_cluster = True
+                else:
+                    fire_connected_lifecycle_event = True
+                    self._established_initial_cluster_connection = True
+                    self._client_state = ClientState.INITIALIZED_ON_CLUSTER
+
+        if init_on_cluster:
+            await self._initialize_on_cluster(new_cluster_id)
 
         if fire_connected_lifecycle_event:
             self._lifecycle_service.fire_lifecycle_event(LifecycleState.CONNECTED)
@@ -777,7 +800,7 @@ class ConnectionManager:
             # we can operate on. In those scenarios, we rely on the fact that we will
             # reopen the connections.
             reason = "Connection does not belong to the cluster %s" % self._cluster_id
-            await connection.close_connection(reason, None)
+            await connection.close_connection(reason, None, unsafe=True)
             raise ValueError(reason)
 
     def _on_cluster_restart(self):
@@ -985,13 +1008,13 @@ class Connection:
         self._write(message.buf)
         return True
 
-    # Not named close to distinguish it from the asyncore.dispatcher.close.
-    async def close_connection(self, reason, cause):
+    async def close_connection(self, reason, cause, unsafe=False):
         """Closes the connection.
 
         Args:
             reason (str): The reason this connection is going to be closed. Is allowed to be None.
             cause (Exception): The exception responsible for closing this connection. Is allowed to be None.
+            unsafe (bool): Do not acquire a lock
         """
         if not self.live:
             return
@@ -1003,7 +1026,7 @@ class Connection:
             self._inner_close()
         except Exception:
             _logger.exception("Error while closing the the connection %s", self)
-        await self._connection_manager.on_connection_close(self)
+        await self._connection_manager.on_connection_close(self, unsafe=unsafe)
 
     def _log_close(self, reason, cause):
         msg = "%s closed. Reason: %s"

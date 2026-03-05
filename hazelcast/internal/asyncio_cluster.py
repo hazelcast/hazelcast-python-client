@@ -262,7 +262,7 @@ class _InternalClusterService:
                 if handler:
                     try:
                         handler(dead_member)
-                    except:
+                    except Exception:
                         _logger.exception("Exception in membership listener")
 
         for new_member in new_members:
@@ -270,7 +270,7 @@ class _InternalClusterService:
                 if handler:
                     try:
                         handler(new_member)
-                    except:
+                    except Exception:
                         _logger.exception("Exception in membership listener")
 
     def _detect_membership_events(self, previous_members, current_members):

@@ -543,7 +543,7 @@ class AsyncoreConnection(Connection, asyncore.dispatcher):
             self.socket.setsockopt(level, option_name, value)
 
     def _wrap_as_ssl_socket(self, config: Config, hostname: str):
-        ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
 
         protocol = config.ssl_protocol
 

@@ -279,23 +279,32 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
                 number_of_affected_entries,
             )
             if event.event_type == EntryEventType.ADDED:
-                added_func(event)
+                if added_func:
+                    added_func(event)
             elif event.event_type == EntryEventType.REMOVED:
-                removed_func(event)
+                if removed_func:
+                    removed_func(event)
             elif event.event_type == EntryEventType.UPDATED:
-                updated_func(event)
+                if updated_func:
+                    updated_func(event)
             elif event.event_type == EntryEventType.EVICTED:
-                evicted_func(event)
+                if evicted_func:
+                    evicted_func(event)
             elif event.event_type == EntryEventType.EVICT_ALL:
-                evict_all_func(event)
+                if evict_all_func:
+                    evict_all_func(event)
             elif event.event_type == EntryEventType.CLEAR_ALL:
-                clear_all_func(event)
+                if clear_all_func:
+                    clear_all_func(event)
             elif event.event_type == EntryEventType.MERGED:
-                merged_func(event)
+                if merged_func:
+                    merged_func(event)
             elif event.event_type == EntryEventType.EXPIRED:
-                expired_func(event)
+                if expired_func:
+                    expired_func(event)
             elif event.event_type == EntryEventType.LOADED:
-                loaded_func(event)
+                if loaded_func:
+                    loaded_func(event)
 
         return await self._register_listener(
             request,
