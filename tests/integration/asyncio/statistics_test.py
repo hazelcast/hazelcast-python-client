@@ -262,5 +262,5 @@ class StatisticsTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
         try:
             # Compatibility for <4.2.1 clients
             return s._get_os_and_runtime_stats()
-        except:
+        except Exception:
             return itertools.chain(s._registered_system_gauges, s._registered_process_gauges)

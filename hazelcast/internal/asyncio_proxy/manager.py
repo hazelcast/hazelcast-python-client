@@ -1,3 +1,4 @@
+import asyncio
 import typing
 
 from hazelcast.internal.asyncio_proxy.vector_collection import (
@@ -32,11 +33,24 @@ class ProxyManager:
 
     async def get_or_create(self, service_name, name, create_on_remote=True):
         ns = (service_name, name)
-        if ns in self._proxies:
-            return self._proxies[ns]
+        proxy = self._proxies.get(ns)
+        if proxy is not None:
+            if isinstance(proxy, asyncio.Future):
+                return await proxy
+            return proxy
 
-        proxy = await self._create_proxy(service_name, name, create_on_remote)
+        # allocate the proxy slot, so a task that tries to access the same proxy knows it's being created
+        fut = asyncio.get_running_loop().create_future()
+        self._proxies[ns] = fut
+        try:
+            proxy = await self._create_proxy(service_name, name, create_on_remote)
+        except BaseException as e:
+            self._proxies.pop(ns, None)
+            fut.set_exception(e)
+            raise
+        # replace the placeholder with the proxy
         self._proxies[ns] = proxy
+        fut.set_result(proxy)
         return proxy
 
     async def _create_proxy(self, service_name, name, create_on_remote) -> Proxy:
@@ -62,4 +76,4 @@ class ProxyManager:
             return False
 
     def get_distributed_objects(self):
-        return to_list(self._proxies.values())
+        return to_list(v for v in self._proxies.values() if not isinstance(v, asyncio.Future))
