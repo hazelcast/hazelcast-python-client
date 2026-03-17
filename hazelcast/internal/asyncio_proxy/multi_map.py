@@ -404,7 +404,7 @@ class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
             except SchemaNotReplicatedError as e:
                 return await self._send_schema_and_retry(e, self.put_all, multimap)
 
-        async with asyncio.TaskGroup() as tg:
+        async with asyncio.TaskGroup() as tg:  # type: ignore[attr-defined]
             for partition_id, entry_list in partition_map.items():
                 request = multi_map_put_all_codec.encode_request(self.name, entry_list)
                 tg.create_task(self._ainvoke_on_partition(request, partition_id))
