@@ -23,6 +23,7 @@ from hazelcast.protocol.codec import (
     dynamic_config_add_vector_collection_config_codec,
 )
 from hazelcast.internal.asyncio_proxy.manager import (
+    FLAKE_ID_GENERATOR_SERVICE,
     LIST_SERVICE,
     MAP_SERVICE,
     ProxyManager,
@@ -30,6 +31,7 @@ from hazelcast.internal.asyncio_proxy.manager import (
     VECTOR_SERVICE,
 )
 from hazelcast.internal.asyncio_proxy.base import Proxy
+from hazelcast.internal.asyncio_proxy.flake_id_generator import FlakeIdGenerator
 from hazelcast.internal.asyncio_proxy.list import List
 from hazelcast.internal.asyncio_proxy.map import Map
 from hazelcast.internal.asyncio_proxy.replicated_map import ReplicatedMap
@@ -285,6 +287,17 @@ class HazelcastClient:
             Distributed ReplicatedMap instance with the specified name.
         """
         return await self._proxy_manager.get_or_create(REPLICATED_MAP_SERVICE, name)
+
+    async def get_flake_id_generator(self, name: str) -> FlakeIdGenerator:
+        """Returns the FlakeIdGenerator instance with the specified name.
+
+        Args:
+            name: Name of the FlakeIdGenerator.
+
+        Returns:
+            FlakeIdGenerator instance with the specified name.
+        """
+        return await self._proxy_manager.get_or_create(FLAKE_ID_GENERATOR_SERVICE, name)
 
     async def create_vector_collection_config(
         self,

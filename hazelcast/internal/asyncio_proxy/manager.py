@@ -1,6 +1,7 @@
 import asyncio
 import typing
 
+from hazelcast.internal.asyncio_proxy.flake_id_generator import create_flake_id_generator_proxy
 from hazelcast.internal.asyncio_proxy.list import create_list_proxy
 from hazelcast.internal.asyncio_proxy.vector_collection import (
     VectorCollection,
@@ -13,6 +14,7 @@ from hazelcast.internal.asyncio_proxy.map import create_map_proxy
 from hazelcast.internal.asyncio_proxy.replicated_map import create_replicated_map_proxy
 from hazelcast.util import to_list
 
+FLAKE_ID_GENERATOR_SERVICE = "hz:impl:flakeIdGeneratorService"
 LIST_SERVICE = "hz:impl:listService"
 MAP_SERVICE = "hz:impl:mapService"
 REPLICATED_MAP_SERVICE = "hz:impl:replicatedMapService"
@@ -22,6 +24,7 @@ _proxy_init: typing.Dict[
     str,
     typing.Callable[[str, str, typing.Any], typing.Coroutine[typing.Any, typing.Any, typing.Any]],
 ] = {
+    FLAKE_ID_GENERATOR_SERVICE: create_flake_id_generator_proxy,
     LIST_SERVICE: create_list_proxy,
     MAP_SERVICE: create_map_proxy,
     REPLICATED_MAP_SERVICE: create_replicated_map_proxy,
