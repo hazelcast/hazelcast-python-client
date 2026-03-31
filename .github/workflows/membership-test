@@ -20,5 +20,7 @@ jobs:
   run-tests:
     needs: check_for_membership      
     steps:
+      - run: echo gh api "repos/${GITHUB_REPOSITORY}/collaborators/JackPGreen"
+      - run: gh api "repos/${GITHUB_REPOSITORY}/collaborators/JackPGreen"
       - run: echo hello-world
           
