@@ -1,5 +1,3 @@
-import typing
-
 from hazelcast.serialization.api import *
 from hazelcast.serialization.bits import *
 
@@ -157,28 +155,28 @@ class _ObjectDataOutput(ObjectDataOutput):
             self._pos += _len
 
     def write_signed_byte_array(self, val: typing.List[int]) -> None:
-        self._write_array_fnc(val, self.write_signed_byte)
+        self._bulk_write(val, BYTE_SIZE_IN_BYTES, "b")
 
     def write_boolean_array(self, val):
-        self._write_array_fnc(val, self.write_boolean)
+        self._bulk_write(val, BOOLEAN_SIZE_IN_BYTES, "?")
 
     def write_char_array(self, val):
         self._write_array_fnc(val, self.write_char)
 
     def write_int_array(self, val):
-        self._write_array_fnc(val, self.write_int)
+        self._bulk_write(val, INT_SIZE_IN_BYTES, "i")
 
     def write_long_array(self, val):
-        self._write_array_fnc(val, self.write_long)
+        self._bulk_write(val, LONG_SIZE_IN_BYTES, "q")
 
     def write_double_array(self, val):
-        self._write_array_fnc(val, self.write_double)
+        self._bulk_write(val, DOUBLE_SIZE_IN_BYTES, "d")
 
     def write_float_array(self, val):
-        self._write_array_fnc(val, self.write_float)
+        self._bulk_write(val, FLOAT_SIZE_IN_BYTES, "f")
 
     def write_short_array(self, val):
-        self._write_array_fnc(val, self.write_short)
+        self._bulk_write(val, SHORT_SIZE_IN_BYTES, "h")
 
     def write_string_array(self, val):
         self._write_array_fnc(val, self.write_string)
@@ -204,8 +202,9 @@ class _ObjectDataOutput(ObjectDataOutput):
         self._pos = position
 
     def write_zero_bytes(self, count):
-        for _ in range(0, count):
-            self._write(0)
+        self._ensure_available(count)
+        self._buffer[self._pos : self._pos + count] = bytes(count)
+        self._pos += count
 
     def write_utf(self, val):
         self.write_string(val)
@@ -213,7 +212,16 @@ class _ObjectDataOutput(ObjectDataOutput):
     def write_utf_array(self, val):
         self.write_string_array(val)
 
-    # HELPERS
+    def _bulk_write(self, val, item_size, fmt_char):
+        length = len(val) if val is not None else NULL_ARRAY_LENGTH
+        self.write_int(length)
+        if length > 0:
+            nbytes = length * item_size
+            self._ensure_available(nbytes)
+            endian = ">" if self._is_big_endian else "<"
+            struct.pack_into(f"{endian}{length}{fmt_char}", self._buffer, self._pos, *val)
+            self._pos += nbytes
+
     def _write_array_fnc(self, val, item_write_fnc):
         _len = len(val) if val is not None else NULL_ARRAY_LENGTH
         self.write_int(_len)
