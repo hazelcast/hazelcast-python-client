@@ -36,6 +36,7 @@ EntryEventCallable = typing.Callable[[EntryEvent[KeyType, ValueType]], None]
 
 default_thread_id = 0
 
+
 class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
     """A specialized map whose keys can be associated with multiple values.
 
@@ -157,7 +158,9 @@ class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
         except SchemaNotReplicatedError as e:
             return await self._send_schema_and_retry(e, self.contains_key, key)
 
-        request = multi_map_contains_key_codec.encode_request(self.name, key_data, default_thread_id)
+        request = multi_map_contains_key_codec.encode_request(
+            self.name, key_data, default_thread_id
+        )
         return await self._invoke_on_key(
             request, key_data, multi_map_contains_key_codec.decode_response
         )
@@ -201,7 +204,9 @@ class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
         except SchemaNotReplicatedError as e:
             return await self._send_schema_and_retry(e, self.contains_entry, key, value)
 
-        request = multi_map_contains_entry_codec.encode_request(self.name, key_data, value_data,  default_thread_id)
+        request = multi_map_contains_entry_codec.encode_request(
+            self.name, key_data, value_data, default_thread_id
+        )
         return await self._invoke_on_key(
             request, key_data, multi_map_contains_entry_codec.decode_response
         )
@@ -303,7 +308,9 @@ class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
         except SchemaNotReplicatedError as e:
             return await self._send_schema_and_retry(e, self.remove, key, value)
 
-        request = multi_map_remove_entry_codec.encode_request(self.name, key_data, value_data, default_thread_id)
+        request = multi_map_remove_entry_codec.encode_request(
+            self.name, key_data, value_data, default_thread_id
+        )
         return await self._invoke_on_key(
             request, key_data, multi_map_remove_entry_codec.decode_response
         )
@@ -365,7 +372,9 @@ class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
         except SchemaNotReplicatedError as e:
             return await self._send_schema_and_retry(e, self.put, key, value)
 
-        request = multi_map_put_codec.encode_request(self.name, key_data, value_data, default_thread_id)
+        request = multi_map_put_codec.encode_request(
+            self.name, key_data, value_data, default_thread_id
+        )
         return await self._invoke_on_key(request, key_data, multi_map_put_codec.decode_response)
 
     async def put_all(self, multimap: typing.Dict[KeyType, typing.Sequence[ValueType]]) -> None:
