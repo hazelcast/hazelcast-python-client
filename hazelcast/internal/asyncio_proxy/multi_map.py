@@ -34,6 +34,7 @@ from hazelcast.util import (
 
 EntryEventCallable = typing.Callable[[EntryEvent[KeyType, ValueType]], None]
 
+default_thread_id = 0
 
 class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
     """A specialized map whose keys can be associated with multiple values.
@@ -156,7 +157,7 @@ class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
         except SchemaNotReplicatedError as e:
             return await self._send_schema_and_retry(e, self.contains_key, key)
 
-        request = multi_map_contains_key_codec.encode_request(self.name, key_data, 0)
+        request = multi_map_contains_key_codec.encode_request(self.name, key_data, default_thread_id)
         return await self._invoke_on_key(
             request, key_data, multi_map_contains_key_codec.decode_response
         )
@@ -200,7 +201,7 @@ class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
         except SchemaNotReplicatedError as e:
             return await self._send_schema_and_retry(e, self.contains_entry, key, value)
 
-        request = multi_map_contains_entry_codec.encode_request(self.name, key_data, value_data, 0)
+        request = multi_map_contains_entry_codec.encode_request(self.name, key_data, value_data,  default_thread_id)
         return await self._invoke_on_key(
             request, key_data, multi_map_contains_entry_codec.decode_response
         )
@@ -239,7 +240,7 @@ class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
 
         Warning:
             The list is NOT backed by the multimap, so changes to the map are
-            list reflected in the collection, and vice-versa.
+            not reflected in the collection, and vice-versa.
 
         Args:
             key: The specified key.
@@ -257,7 +258,7 @@ class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
             data_list = multi_map_get_codec.decode_response(message)
             return deserialize_list_in_place(data_list, self._to_object)
 
-        request = multi_map_get_codec.encode_request(self.name, key_data, 0)
+        request = multi_map_get_codec.encode_request(self.name, key_data, default_thread_id)
         return await self._invoke_on_key(request, key_data, handler)
 
     async def key_set(self) -> typing.List[KeyType]:
@@ -295,14 +296,14 @@ class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
             operation, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
-        check_not_none(key, "value can't be None")
+        check_not_none(value, "value can't be None")
         try:
             key_data = self._to_data(key)
             value_data = self._to_data(value)
         except SchemaNotReplicatedError as e:
             return await self._send_schema_and_retry(e, self.remove, key, value)
 
-        request = multi_map_remove_entry_codec.encode_request(self.name, key_data, value_data, 0)
+        request = multi_map_remove_entry_codec.encode_request(self.name, key_data, value_data, default_thread_id)
         return await self._invoke_on_key(
             request, key_data, multi_map_remove_entry_codec.decode_response
         )
@@ -337,7 +338,7 @@ class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
         except SchemaNotReplicatedError as e:
             return await self._send_schema_and_retry(e, self.remove_all, key)
 
-        request = multi_map_remove_codec.encode_request(self.name, key_data, 0)
+        request = multi_map_remove_codec.encode_request(self.name, key_data, default_thread_id)
         return await self._invoke_on_key(request, key_data, handler)
 
     async def put(self, key: KeyType, value: ValueType) -> bool:
@@ -364,7 +365,7 @@ class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
         except SchemaNotReplicatedError as e:
             return await self._send_schema_and_retry(e, self.put, key, value)
 
-        request = multi_map_put_codec.encode_request(self.name, key_data, value_data, 0)
+        request = multi_map_put_codec.encode_request(self.name, key_data, value_data, default_thread_id)
         return await self._invoke_on_key(request, key_data, multi_map_put_codec.decode_response)
 
     async def put_all(self, multimap: typing.Dict[KeyType, typing.Sequence[ValueType]]) -> None:
@@ -454,7 +455,7 @@ class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
         except SchemaNotReplicatedError as e:
             return await self._send_schema_and_retry(e, self.value_count, key)
 
-        request = multi_map_value_count_codec.encode_request(self.name, key_data, 0)
+        request = multi_map_value_count_codec.encode_request(self.name, key_data, default_thread_id)
         return await self._invoke_on_key(
             request, key_data, multi_map_value_count_codec.decode_response
         )
