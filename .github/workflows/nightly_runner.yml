@@ -43,10 +43,15 @@ jobs:
         with:
           secret-ids: |
             HAZELCAST_ENTERPRISE_KEY,CN/HZ_LICENSE_KEY
+      - uses: hazelcast/docker-actions/get-jfrog-credentials@master
+        id: jfrog
+        with:
+          aws-role-to-assume: ${{ secrets.AWS_HAZELCAST_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
+          jfrog-oidc-provider-name: ${{ github.repository_owner }}-snapshot-internal
       - name: Run tests
         env:
-          HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ secrets.HZ_SNAPSHOT_INTERNAL_USERNAME }}
-          HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ secrets.HZ_SNAPSHOT_INTERNAL_PASSWORD }}
+          HZ_SNAPSHOT_INTERNAL_USERNAME: ${{ steps.jfrog.outputs.user }}
+          HZ_SNAPSHOT_INTERNAL_PASSWORD: ${{ steps.jfrog.outputs.token }}
         run: python run_tests.py
       - name: Upload remote controller logs on test failure
         uses: actions/upload-artifact@v4
