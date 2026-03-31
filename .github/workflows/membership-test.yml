@@ -7,6 +7,7 @@ on:
 jobs:
   check_for_membership:
     runs-on: ubuntu-latest
+    permissions: write-all
     name: Check membership of given user  
     outputs:
       check-result: ${{ steps.composite.outputs.check-result }}
@@ -20,6 +21,7 @@ jobs:
 
   run-tests:
     runs-on: ubuntu-latest
+    permissions: write-all
     needs: check_for_membership
     steps:
       - run: echo "gh api repos/${GITHUB_REPOSITORY}/collaborators/JackPGreen"
