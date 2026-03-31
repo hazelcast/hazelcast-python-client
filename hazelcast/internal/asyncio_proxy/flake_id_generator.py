@@ -89,6 +89,7 @@ class _AutoBatcher:
         self._request_in_air = False
 
     async def new_id(self) -> int:
+        loop = asyncio.get_running_loop()
         while True:
             block = self._block
             next_id = block.next_id()
@@ -101,7 +102,7 @@ class _AutoBatcher:
             if block is not self._block:
                 continue
 
-            future = asyncio.get_running_loop().create_future()
+            future = loop.create_future()
             self._id_queue.append(future)
             if not self._request_in_air:
                 self._request_in_air = True
