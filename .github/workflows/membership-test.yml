@@ -2,6 +2,7 @@ name: membership-test
 
 on:
   pull_request:
+  workflow_dispatch:
       
 jobs:
   check_for_membership:
@@ -18,7 +19,9 @@ jobs:
           token: ${{ github.token }}
 
   run-tests:
-    runs-on: ubuntu-slim
-    needs: check_for_membership      
+    runs-on: ubuntu-latest
+    needs: check_for_membership
     steps:
+      - run: echo "gh api repos/${GITHUB_REPOSITORY}/collaborators/JackPGreen"
+      - run: gh api "repos/${GITHUB_REPOSITORY}/collaborators/JackPGreen"
       - run: echo hello-world
