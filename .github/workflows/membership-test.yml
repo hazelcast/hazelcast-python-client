@@ -24,4 +24,6 @@ jobs:
     steps:
       - run: echo "gh api repos/${GITHUB_REPOSITORY}/collaborators/JackPGreen"
       - run: gh api "repos/${GITHUB_REPOSITORY}/collaborators/JackPGreen"
+        env:
+          GH_TOKEN: ${{ github.token }}
       - run: echo hello-world
