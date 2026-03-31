@@ -1,0 +1,24 @@
+name: membership-test
+
+on:
+  pull_request:
+      
+jobs:
+  check_for_membership:
+    runs-on: ubuntu-latest
+    name: Check membership of given user  
+    outputs:
+      check-result: ${{ steps.composite.outputs.check-result }}
+    steps: 
+      - name: Action for membership check
+        id: composite
+        uses: hazelcast/hazelcast-tpm/membership@main
+        with:
+          member-name: ${{ github.actor }}
+          token: ${{ github.token }}
+
+  run-tests:
+    needs: check_for_membership      
+    steps:
+      - run: echo hello-world
+          
