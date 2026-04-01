@@ -24,10 +24,10 @@ jobs:
     steps: 
       - name: Action for membership check
         id: composite
-        uses: hazelcast/hazelcast-tpm/membership@main
+        uses: JackPGreen/hazelcast-tpm/membership@revert-reduce-token-scope
         with:
           member-name: ${{ github.actor }}
-          token: ${{ github.token }}
+          token: ${{ secrets.GH_TOKEN }}
           
   python-versions:
     uses: ./.github/workflows/get-python-versions.yml
