@@ -23,6 +23,7 @@ from hazelcast.protocol.codec import (
     dynamic_config_add_vector_collection_config_codec,
 )
 from hazelcast.internal.asyncio_proxy.manager import (
+    EXECUTOR_SERVICE,
     LIST_SERVICE,
     MAP_SERVICE,
     ProxyManager,
@@ -30,6 +31,7 @@ from hazelcast.internal.asyncio_proxy.manager import (
     VECTOR_SERVICE,
 )
 from hazelcast.internal.asyncio_proxy.base import Proxy
+from hazelcast.internal.asyncio_proxy.executor import Executor
 from hazelcast.internal.asyncio_proxy.list import List
 from hazelcast.internal.asyncio_proxy.map import Map
 from hazelcast.internal.asyncio_proxy.replicated_map import ReplicatedMap
@@ -251,6 +253,17 @@ class HazelcastClient:
             await self.shutdown()
             raise
         _logger.info("Client started")
+
+    async def get_executor(self, name: str) -> Executor:
+        """Returns the executor instance with the specified name.
+
+        Args:
+            name: Name of the executor.
+
+        Returns:
+            Executor instance with the specified name.
+        """
+        return await self._proxy_manager.get_or_create(EXECUTOR_SERVICE, name)
 
     async def get_list(self, name: str) -> List[KeyType]:
         """Returns the distributed list instance with the specified name.
