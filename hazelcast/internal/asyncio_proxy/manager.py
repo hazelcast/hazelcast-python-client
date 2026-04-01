@@ -11,11 +11,13 @@ from hazelcast.internal.asyncio_invocation import Invocation
 from hazelcast.internal.asyncio_proxy.base import Proxy
 from hazelcast.internal.asyncio_proxy.map import create_map_proxy
 from hazelcast.internal.asyncio_proxy.replicated_map import create_replicated_map_proxy
+from hazelcast.internal.asyncio_proxy.ringbuffer import create_ringbuffer_proxy
 from hazelcast.util import to_list
 
 LIST_SERVICE = "hz:impl:listService"
 MAP_SERVICE = "hz:impl:mapService"
 REPLICATED_MAP_SERVICE = "hz:impl:replicatedMapService"
+RINGBUFFER_SERVICE = "hz:impl:ringbufferService"
 VECTOR_SERVICE = "hz:service:vector"
 
 _proxy_init: typing.Dict[
@@ -25,6 +27,7 @@ _proxy_init: typing.Dict[
     LIST_SERVICE: create_list_proxy,
     MAP_SERVICE: create_map_proxy,
     REPLICATED_MAP_SERVICE: create_replicated_map_proxy,
+    RINGBUFFER_SERVICE: create_ringbuffer_proxy,
     VECTOR_SERVICE: create_vector_collection_proxy,
 }
 
