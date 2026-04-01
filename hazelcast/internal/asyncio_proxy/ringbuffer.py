@@ -153,7 +153,7 @@ class Ringbuffer(PartitionSpecificProxy, typing.Generic[ItemType]):
         items: typing.Sequence[ItemType],
         overflow_policy: int = OVERFLOW_POLICY_OVERWRITE,
     ) -> int:
-        """Adds all of the item in the specified collection to the tail of the
+        """Adds all items in the specified collection to the tail of the
         Ringbuffer.
 
         This is likely to outperform multiple calls to :func:`add` due
@@ -194,7 +194,7 @@ class Ringbuffer(PartitionSpecificProxy, typing.Generic[ItemType]):
         """Reads one item from the Ringbuffer.
 
         If the sequence is one beyond the current tail, this call blocks until
-        an item  is added. Currently it isn't possible to control how long
+        an item  is added. Currently, it isn't possible to control how long
         this call is going to block.
 
         Args:
@@ -217,21 +217,20 @@ class Ringbuffer(PartitionSpecificProxy, typing.Generic[ItemType]):
         """Reads a batch of items from the Ringbuffer.
 
         If the number of available items after the first read item is smaller
-        than the ``max_count``, these items are returned. So it could be the
-        number of items read is smaller than the ``max_count``. If there are
-        less items available than ``min_count``, then this call blocks.
+        than ``max_count``, these items are returned. So, number of items
+        read may be smaller than ``max_count``. If there are
+        fewer items available than ``min_count``, then this call blocks.
 
         Warnings:
             These blocking calls consume server memory and if there are many
-            calls, it can be possible to see leaking memory or
-            ``OutOfMemoryError`` s on the server.
+            calls, an ``OutOfMemoryError`` may be thrown on server-side.
 
         Reading a batch of items is likely to perform better because less
         overhead is involved.
 
-        A filter can be provided to only select items that need to be read. If
+        A filter can be provided to select items that need to be read. If
         the filter is ``None``, all items are read. If the filter is not
-        ``None``, only items where the filter function returns true are
+        ``None``, items where the filter function returns true are
         returned. Using  filters is a good way to prevent getting items that
         are of no value to the receiver. This reduces the amount of IO and the
         number of operations being executed, and can result in a significant
