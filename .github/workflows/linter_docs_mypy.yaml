@@ -18,7 +18,7 @@ jobs:
     name: Run black to check the code style
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ needs.python-versions.outputs.latest-python-version }}
           
@@ -39,7 +39,7 @@ jobs:
     name: Generate documentation
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ needs.python-versions.outputs.latest-python-version }}
           
@@ -61,7 +61,7 @@ jobs:
     name: Run mypy to check type annotations
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ needs.python-versions.outputs.latest-python-version }}
           
