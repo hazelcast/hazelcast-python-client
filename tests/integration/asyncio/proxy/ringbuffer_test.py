@@ -20,9 +20,7 @@ class RingBufferTest(SingleMemberTestCase):
     def configure_cluster(cls):
         path = os.path.abspath(__file__)
         dir_path = os.path.dirname(path)
-        xml_path = os.path.join(
-            dir_path, "../../backward_compatible/proxy/hazelcast.xml"
-        )
+        xml_path = os.path.join(dir_path, "../../backward_compatible/proxy/hazelcast.xml")
         with open(xml_path) as f:
             return f.read()
 
@@ -136,9 +134,7 @@ class RingbufferReadManyTest(SingleMemberTestCase):
     def configure_cluster(cls):
         path = os.path.abspath(__file__)
         dir_path = os.path.dirname(path)
-        xml_path = os.path.join(
-            dir_path, "../../backward_compatible/proxy/hazelcast.xml"
-        )
+        xml_path = os.path.join(dir_path, "../../backward_compatible/proxy/hazelcast.xml")
         with open(xml_path) as f:
             return f.read()
 
