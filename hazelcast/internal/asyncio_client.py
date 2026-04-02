@@ -27,16 +27,18 @@ from hazelcast.internal.asyncio_proxy.manager import (
     MULTI_MAP_SERVICE,
     ProxyManager,
     REPLICATED_MAP_SERVICE,
+    TOPIC_SERVICE,
     VECTOR_SERVICE,
 )
 from hazelcast.internal.asyncio_proxy.list import List
 from hazelcast.internal.asyncio_proxy.map import Map
 from hazelcast.internal.asyncio_proxy.multi_map import MultiMap
 from hazelcast.internal.asyncio_proxy.replicated_map import ReplicatedMap
+from hazelcast.internal.asyncio_proxy.topic import Topic
 from hazelcast.internal.asyncio_reactor import AsyncioReactor
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.internal.asyncio_statistics import Statistics
-from hazelcast.types import KeyType, ValueType
+from hazelcast.types import KeyType, MessageType, ValueType
 from hazelcast.util import AtomicInteger, RoundRobinLB
 
 __all__ = ("HazelcastClient",)
@@ -296,6 +298,17 @@ class HazelcastClient:
             Distributed ReplicatedMap instance with the specified name.
         """
         return await self._proxy_manager.get_or_create(REPLICATED_MAP_SERVICE, name)
+
+    async def get_topic(self, name: str) -> Topic[MessageType]:
+        """Returns the distributed topic instance with the specified name.
+
+        Args:
+            name: Name of the distributed topic.
+
+        Returns:
+            Distributed topic instance with the specified name.
+        """
+        return await self._proxy_manager.get_or_create(TOPIC_SERVICE, name)
 
     async def create_vector_collection_config(
         self,

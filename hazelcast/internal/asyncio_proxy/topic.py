@@ -1,19 +1,19 @@
 import typing
 
-from hazelcast.future import Future
 from hazelcast.protocol.codec import (
     topic_add_message_listener_codec,
     topic_publish_codec,
     topic_publish_all_codec,
     topic_remove_message_listener_codec,
 )
-from hazelcast.proxy.base import PartitionSpecificProxy, TopicMessage
+from hazelcast.internal.asyncio_proxy.base import PartitionSpecificProxy
+from hazelcast.proxy.base import TopicMessage
 from hazelcast.serialization.compact import SchemaNotReplicatedError
 from hazelcast.types import MessageType
 from hazelcast.util import check_not_none
 
 
-class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]):
+class Topic(PartitionSpecificProxy, typing.Generic[MessageType]):
     """Hazelcast provides distribution mechanism for publishing messages that
     are delivered to multiple subscribers, which is also known as a
     publish/subscribe (pub/sub) messaging model.
@@ -25,11 +25,18 @@ class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]
 
     Messages are ordered, meaning that listeners(subscribers) will process the
     messages in the order they are actually published.
+
+    Example:
+        >>> my_topic = await client.get_topic("my_topic")
+        >>> await my_topic.publish("hello")
+
+    Warning:
+        Asyncio client topic proxy is not thread-safe, do not access it from other threads.
     """
 
-    def add_listener(
+    async def add_listener(
         self, on_message: typing.Callable[[TopicMessage[MessageType]], None] = None
-    ) -> Future[str]:
+    ) -> str:
         """Subscribes to this topic.
 
         When someone publishes a message on this topic, ``on_message`` function
@@ -51,14 +58,14 @@ class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]
             )
             on_message(item_event)
 
-        return self._register_listener(
+        return await self._register_listener(
             request,
             lambda r: codec.decode_response(r),
             lambda reg_id: topic_remove_message_listener_codec.encode_request(self.name, reg_id),
             lambda m: codec.handle(m, handle),
         )
 
-    def publish(self, message: MessageType) -> Future[None]:
+    async def publish(self, message: MessageType) -> None:
         """Publishes the message to all subscribers of this topic.
 
         Args:
@@ -67,12 +74,12 @@ class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]
         try:
             message_data = self._to_data(message)
         except SchemaNotReplicatedError as e:
-            return self._send_schema_and_retry(e, self.publish, message)
+            return await self._send_schema_and_retry(e, self.publish, message)
 
         request = topic_publish_codec.encode_request(self.name, message_data)
-        return self._invoke(request)
+        return await self._invoke(request)
 
-    def publish_all(self, messages: typing.Sequence[MessageType]) -> Future[None]:
+    async def publish_all(self, messages: typing.Sequence[MessageType]) -> None:
         """Publishes the messages to all subscribers of this topic.
 
         Args:
@@ -86,12 +93,12 @@ class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]
                 data = self._to_data(m)
                 topic_messages.append(data)
         except SchemaNotReplicatedError as e:
-            return self._send_schema_and_retry(e, self.publish_all, messages)
+            return await self._send_schema_and_retry(e, self.publish_all, messages)
 
         request = topic_publish_all_codec.encode_request(self.name, topic_messages)
-        return self._invoke(request)
+        return await self._invoke(request)
 
-    def remove_listener(self, registration_id: str) -> Future[bool]:
+    async def remove_listener(self, registration_id: str) -> bool:
         """Stops receiving messages for the given message listener.
 
         If the given listener already removed, this method does nothing.
@@ -102,49 +109,8 @@ class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]
         Returns:
             ``True`` if the listener is removed, ``False`` otherwise.
         """
-        return self._deregister_listener(registration_id)
-
-    def blocking(self) -> "BlockingTopic[MessageType]":
-        return BlockingTopic(self)
+        return await self._deregister_listener(registration_id)
 
 
-class BlockingTopic(Topic[MessageType]):
-    __slots__ = ("_wrapped", "name", "service_name")
-
-    def __init__(self, wrapped: Topic[MessageType]):
-        self.name = wrapped.name
-        self.service_name = wrapped.service_name
-        self._wrapped = wrapped
-
-    def add_listener(  # type: ignore[override]
-        self,
-        on_message: typing.Callable[[TopicMessage[MessageType]], None] = None,
-    ) -> str:
-        return self._wrapped.add_listener(on_message).result()
-
-    def publish(  # type: ignore[override]
-        self,
-        message: MessageType,
-    ) -> None:
-        return self._wrapped.publish(message).result()
-
-    def publish_all(  # type: ignore[override]
-        self,
-        messages: typing.Sequence[MessageType],
-    ) -> None:
-        return self._wrapped.publish_all(messages).result()
-
-    def remove_listener(  # type: ignore[override]
-        self,
-        registration_id: str,
-    ) -> bool:
-        return self._wrapped.remove_listener(registration_id).result()
-
-    def destroy(self) -> bool:
-        return self._wrapped.destroy()
-
-    def blocking(self) -> "BlockingTopic[MessageType]":
-        return self
-
-    def __repr__(self) -> str:
-        return self._wrapped.__repr__()
+async def create_topic_proxy(service_name, name, context):
+    return Topic(service_name, name, context)
