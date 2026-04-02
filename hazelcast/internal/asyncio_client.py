@@ -27,12 +27,14 @@ from hazelcast.internal.asyncio_proxy.manager import (
     MULTI_MAP_SERVICE,
     ProxyManager,
     REPLICATED_MAP_SERVICE,
+    RINGBUFFER_SERVICE,
     VECTOR_SERVICE,
 )
 from hazelcast.internal.asyncio_proxy.list import List
 from hazelcast.internal.asyncio_proxy.map import Map
 from hazelcast.internal.asyncio_proxy.multi_map import MultiMap
 from hazelcast.internal.asyncio_proxy.replicated_map import ReplicatedMap
+from hazelcast.internal.asyncio_proxy.ringbuffer import Ringbuffer
 from hazelcast.internal.asyncio_reactor import AsyncioReactor
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.internal.asyncio_statistics import Statistics
@@ -296,6 +298,17 @@ class HazelcastClient:
             Distributed ReplicatedMap instance with the specified name.
         """
         return await self._proxy_manager.get_or_create(REPLICATED_MAP_SERVICE, name)
+
+    async def get_ringbuffer(self, name: str) -> Ringbuffer:
+        """Returns the distributed Ringbuffer instance with the specified name.
+
+        Args:
+            name: Name of the distributed ringbuffer.
+
+        Returns:
+            Distributed Ringbuffer instance with the specified name.
+        """
+        return await self._proxy_manager.get_or_create(RINGBUFFER_SERVICE, name)
 
     async def create_vector_collection_config(
         self,
