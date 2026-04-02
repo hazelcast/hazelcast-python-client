@@ -24,6 +24,7 @@ from hazelcast.protocol.codec import (
 from hazelcast.internal.asyncio_proxy.manager import (
     LIST_SERVICE,
     MAP_SERVICE,
+    MULTI_MAP_SERVICE,
     ProxyManager,
     REPLICATED_MAP_SERVICE,
     RINGBUFFER_SERVICE,
@@ -31,6 +32,7 @@ from hazelcast.internal.asyncio_proxy.manager import (
 )
 from hazelcast.internal.asyncio_proxy.list import List
 from hazelcast.internal.asyncio_proxy.map import Map
+from hazelcast.internal.asyncio_proxy.multi_map import MultiMap
 from hazelcast.internal.asyncio_proxy.replicated_map import ReplicatedMap
 from hazelcast.internal.asyncio_proxy.ringbuffer import Ringbuffer
 from hazelcast.internal.asyncio_reactor import AsyncioReactor
@@ -273,6 +275,17 @@ class HazelcastClient:
             Distributed map instance with the specified name.
         """
         return await self._proxy_manager.get_or_create(MAP_SERVICE, name)
+
+    async def get_multi_map(self, name: str) -> MultiMap[KeyType, ValueType]:
+        """Returns the distributed MultiMap instance with the specified name.
+
+        Args:
+            name: Name of the distributed MultiMap.
+
+        Returns:
+            Distributed MultiMap instance with the specified name.
+        """
+        return await self._proxy_manager.get_or_create(MULTI_MAP_SERVICE, name)
 
     async def get_replicated_map(self, name: str) -> ReplicatedMap[KeyType, ValueType]:
         """Returns the distributed ReplicatedMap instance with the specified
