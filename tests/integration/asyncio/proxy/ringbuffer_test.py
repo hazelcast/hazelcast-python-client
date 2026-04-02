@@ -176,11 +176,6 @@ class RingbufferReadManyTest(SingleMemberTestCase):
         task = asyncio.create_task(self.ringbuffer.read_many(CAPACITY + 1, 1, CAPACITY))
         await asyncio.sleep(0.5)
         self.assertFalse(task.done())
-        task.cancel()
-        try:
-            await task
-        except asyncio.CancelledError:
-            pass
 
     async def test_when_min_count_items_are_not_available_then_blocks(self):
         await self.fill_ringbuffer()
@@ -188,11 +183,6 @@ class RingbufferReadManyTest(SingleMemberTestCase):
         task = asyncio.create_task(self.ringbuffer.read_many(CAPACITY - 1, 2, 3))
         await asyncio.sleep(0.5)
         self.assertFalse(task.done())
-        task.cancel()
-        try:
-            await task
-        except asyncio.CancelledError:
-            pass
 
     async def test_when_some_waiting_needed(self):
         await self.fill_ringbuffer()
