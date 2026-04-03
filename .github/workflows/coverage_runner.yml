@@ -24,7 +24,7 @@ jobs:
     steps: 
       - name: Action for membership check
         id: composite
-        uses: JackPGreen/hazelcast-tpm/membership@revert-reduce-token-scope-again
+        uses: JackPGreen/hazelcast-tpm/membership@reduce-token-scope-again
         with:
           member-name: ${{ github.actor }}
           token: ${{ secrets.GH_TOKEN }}
