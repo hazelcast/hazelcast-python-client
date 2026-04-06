@@ -381,7 +381,7 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
             operation, ``False`` otherwise.
         """
         check_not_none(key, "key can't be None")
-        check_not_none(key, "value can't be None")
+        check_not_none(value, "value can't be None")
         try:
             key_data = self._to_data(key)
             value_data = self._to_data(value)
