@@ -7,7 +7,7 @@ from hazelcast.internal.asyncio_cluster import ClusterService, _InternalClusterS
 from hazelcast.internal.asyncio_compact import CompactSchemaService
 from hazelcast.config import Config, IndexConfig
 from hazelcast.internal.asyncio_connection import ConnectionManager, DefaultAsyncioAddressProvider
-from hazelcast.core import DistributedObjectEvent, DistributedObjectInfo
+from hazelcast.core import DistributedObjectEvent
 from hazelcast.discovery import HazelcastCloudAddressProvider
 from hazelcast.errors import IllegalStateError, InvalidConfigurationError
 from hazelcast.internal.asyncio_invocation import InvocationService, Invocation
@@ -18,21 +18,21 @@ from hazelcast.near_cache import NearCacheManager
 from hazelcast.internal.asyncio_partition import PartitionService, InternalPartitionService
 from hazelcast.protocol.codec import (
     client_add_distributed_object_listener_codec,
-    client_get_distributed_objects_codec,
     client_remove_distributed_object_listener_codec,
     dynamic_config_add_vector_collection_config_codec,
 )
 from hazelcast.internal.asyncio_proxy.manager import (
     LIST_SERVICE,
     MAP_SERVICE,
+    MULTI_MAP_SERVICE,
     ProxyManager,
     REPLICATED_MAP_SERVICE,
     SET_SERVICE,
     VECTOR_SERVICE,
 )
-from hazelcast.internal.asyncio_proxy.base import Proxy
 from hazelcast.internal.asyncio_proxy.list import List
 from hazelcast.internal.asyncio_proxy.map import Map
+from hazelcast.internal.asyncio_proxy.multi_map import MultiMap
 from hazelcast.internal.asyncio_proxy.replicated_map import ReplicatedMap
 from hazelcast.internal.asyncio_proxy.set import Set
 from hazelcast.internal.asyncio_reactor import AsyncioReactor
@@ -275,6 +275,17 @@ class HazelcastClient:
             Distributed map instance with the specified name.
         """
         return await self._proxy_manager.get_or_create(MAP_SERVICE, name)
+
+    async def get_multi_map(self, name: str) -> MultiMap[KeyType, ValueType]:
+        """Returns the distributed MultiMap instance with the specified name.
+
+        Args:
+            name: Name of the distributed MultiMap.
+
+        Returns:
+            Distributed MultiMap instance with the specified name.
+        """
+        return await self._proxy_manager.get_or_create(MULTI_MAP_SERVICE, name)
 
     async def get_set(self, name: str) -> Set[KeyType]:
         """Returns the distributed set instance with the specified name.
