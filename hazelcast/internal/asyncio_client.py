@@ -26,6 +26,7 @@ from hazelcast.internal.asyncio_proxy.manager import (
     MAP_SERVICE,
     MULTI_MAP_SERVICE,
     ProxyManager,
+    QUEUE_SERVICE,
     RELIABLE_TOPIC_SERVICE,
     REPLICATED_MAP_SERVICE,
     RINGBUFFER_SERVICE,
@@ -34,6 +35,7 @@ from hazelcast.internal.asyncio_proxy.manager import (
 from hazelcast.internal.asyncio_proxy.list import List
 from hazelcast.internal.asyncio_proxy.map import Map
 from hazelcast.internal.asyncio_proxy.multi_map import MultiMap
+from hazelcast.internal.asyncio_proxy.queue import Queue
 from hazelcast.internal.asyncio_proxy.reliable_topic import ReliableTopic
 from hazelcast.internal.asyncio_proxy.replicated_map import ReplicatedMap
 from hazelcast.internal.asyncio_proxy.ringbuffer import Ringbuffer
@@ -288,6 +290,17 @@ class HazelcastClient:
             Distributed MultiMap instance with the specified name.
         """
         return await self._proxy_manager.get_or_create(MULTI_MAP_SERVICE, name)
+
+    async def get_queue(self, name: str) -> Queue[KeyType]:
+        """Returns the distributed queue instance with the specified name.
+
+        Args:
+            name: Name of the distributed queue.
+
+        Returns:
+            Distributed queue instance with the specified name.
+        """
+        return await self._proxy_manager.get_or_create(QUEUE_SERVICE, name)
 
     async def get_replicated_map(self, name: str) -> ReplicatedMap[KeyType, ValueType]:
         """Returns the distributed ReplicatedMap instance with the specified
