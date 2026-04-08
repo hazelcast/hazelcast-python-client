@@ -85,7 +85,6 @@ async def create_reliable_topic_proxy(service_name, name, context):
     return ReliableTopic(service_name, name, context, ringbuffer)
 
 
-
 _proxy_init: typing.Dict[
     str,
     typing.Callable[[str, str, typing.Any], typing.Coroutine[typing.Any, typing.Any, typing.Any]],

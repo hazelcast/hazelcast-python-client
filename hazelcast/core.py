@@ -20,8 +20,8 @@ class MemberInfo:
     def __init__(
         self,
         address: "Address",
-        member_uuid: uuid.UUID|None,
-        attributes: typing.Dict[str, str]|None,
+        member_uuid: uuid.UUID | None,
+        attributes: typing.Dict[str, str] | None,
         lite_member: bool,
         version: "MemberVersion",
         _,
