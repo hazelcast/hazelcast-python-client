@@ -26,15 +26,19 @@ from hazelcast.internal.asyncio_proxy.manager import (
     MAP_SERVICE,
     MULTI_MAP_SERVICE,
     ProxyManager,
+    QUEUE_SERVICE,
     REPLICATED_MAP_SERVICE,
     RINGBUFFER_SERVICE,
+    SET_SERVICE,
     VECTOR_SERVICE,
 )
 from hazelcast.internal.asyncio_proxy.list import List
 from hazelcast.internal.asyncio_proxy.map import Map
 from hazelcast.internal.asyncio_proxy.multi_map import MultiMap
+from hazelcast.internal.asyncio_proxy.queue import Queue
 from hazelcast.internal.asyncio_proxy.replicated_map import ReplicatedMap
 from hazelcast.internal.asyncio_proxy.ringbuffer import Ringbuffer
+from hazelcast.internal.asyncio_proxy.set import Set
 from hazelcast.internal.asyncio_reactor import AsyncioReactor
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.internal.asyncio_statistics import Statistics
@@ -286,6 +290,28 @@ class HazelcastClient:
             Distributed MultiMap instance with the specified name.
         """
         return await self._proxy_manager.get_or_create(MULTI_MAP_SERVICE, name)
+
+    async def get_queue(self, name: str) -> Queue[KeyType]:
+        """Returns the distributed queue instance with the specified name.
+
+        Args:
+            name: Name of the distributed queue.
+
+        Returns:
+            Distributed queue instance with the specified name.
+        """
+        return await self._proxy_manager.get_or_create(QUEUE_SERVICE, name)
+
+    async def get_set(self, name: str) -> Set[KeyType]:
+        """Returns the distributed set instance with the specified name.
+
+        Args:
+            name: Name of the distributed set.
+
+        Returns:
+            Distributed set instance with the specified name.
+        """
+        return await self._proxy_manager.get_or_create(SET_SERVICE, name)
 
     async def get_replicated_map(self, name: str) -> ReplicatedMap[KeyType, ValueType]:
         """Returns the distributed ReplicatedMap instance with the specified
