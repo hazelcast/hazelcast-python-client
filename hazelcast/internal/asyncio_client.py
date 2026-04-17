@@ -42,7 +42,7 @@ from hazelcast.internal.asyncio_proxy.set import Set
 from hazelcast.internal.asyncio_reactor import AsyncioReactor
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.internal.asyncio_statistics import Statistics
-from hazelcast.types import KeyType, ValueType
+from hazelcast.types import KeyType, ValueType, ItemType
 from hazelcast.util import AtomicInteger, RoundRobinLB
 
 __all__ = ("HazelcastClient",)
@@ -325,7 +325,7 @@ class HazelcastClient:
         """
         return await self._proxy_manager.get_or_create(REPLICATED_MAP_SERVICE, name)
 
-    async def get_ringbuffer(self, name: str) -> Ringbuffer:
+    async def get_ringbuffer(self, name: str) -> Ringbuffer[ItemType]:
         """Returns the distributed Ringbuffer instance with the specified name.
 
         Args:
