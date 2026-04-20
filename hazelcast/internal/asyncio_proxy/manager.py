@@ -103,4 +103,3 @@ _proxy_init: typing.Dict[
     SET_SERVICE: create_set_proxy,
     VECTOR_SERVICE: create_vector_collection_proxy,
 }
-
