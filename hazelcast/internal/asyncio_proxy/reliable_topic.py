@@ -82,6 +82,14 @@ class _MessageRunner:
         # See: https://docs.python.org/3/library/asyncio-task.html#asyncio.create_task
         self._task = asyncio.create_task(self._handle_next_batch())
 
+    def cancel(self):
+        """Sets the cancelled flag, cancels the running task, and removes
+        the runner registration.
+        """
+        self._cancelled = True
+        self._runners.pop(self._registration_id, None)
+        self._listener.on_cancel()
+
     async def _handle_next_batch(self):
         """Reads the next batch from the ringbuffer and processes the items."""
         if self._cancelled:
@@ -102,7 +110,6 @@ class _MessageRunner:
                 try:
                     message = result[i]
                     self._listener.store_sequence(result.get_sequence(i))
-
                     member = None
                     if message.publisher_address:
                         member = MemberInfo(
@@ -137,16 +144,6 @@ class _MessageRunner:
             # read_many request failed.
             if not await self._handle_internal_error(e):
                 self.cancel()
-
-    def cancel(self):
-        """Sets the cancelled flag, cancels the running task, and removes
-        the runner registration.
-        """
-        self._cancelled = True
-        self._runners.pop(self._registration_id, None)
-        # if self._task is not None and not self._task.done():
-        #     self._task.cancel()
-        self._listener.on_cancel()
 
     def _is_loss_tolerable(self, loss_count: int) -> bool:
         """Called when message loss is detected.
