@@ -77,9 +77,12 @@ class _MessageRunner:
         """
         if self._cancelled:
             return
-        self._task = asyncio.create_task(self._run_next_batch())
+        # The task is assigned to an instance variable to keep a reference.
+        # That ensures it is not garbage collected before done.
+        # See: https://docs.python.org/3/library/asyncio-task.html#asyncio.create_task
+        self._task = asyncio.create_task(self._handle_next_batch())
 
-    async def _run_next_batch(self):
+    async def _handle_next_batch(self):
         """Reads the next batch from the ringbuffer and processes the items."""
         if self._cancelled:
             return
