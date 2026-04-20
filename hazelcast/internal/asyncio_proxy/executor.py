@@ -85,11 +85,10 @@ class Executor(Proxy):
         except SchemaNotReplicatedError as e:
             return await self._send_schema_and_retry(e, self.execute_on_members, members, task)
 
-        uuid = uuid4()
         tasks = []
         async with asyncio.TaskGroup() as tg:  # type: ignore[attr-defined]
             tasks = [
-                tg.create_task(self._execute_on_member(uuid, task_data, member.uuid))
+                tg.create_task(self._execute_on_member(uuid4(), task_data, member.uuid))
                 for member in members
             ]
         return [task.result() for task in tasks]
