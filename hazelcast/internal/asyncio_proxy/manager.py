@@ -5,6 +5,7 @@ from hazelcast.internal.asyncio_proxy.list import create_list_proxy
 from hazelcast.internal.asyncio_proxy.multi_map import create_multi_map_proxy
 from hazelcast.internal.asyncio_proxy.queue import create_queue_proxy
 from hazelcast.internal.asyncio_proxy.set import create_set_proxy
+from hazelcast.internal.asyncio_proxy.topic import create_topic_proxy
 from hazelcast.internal.asyncio_proxy.vector_collection import (
     VectorCollection,
     create_vector_collection_proxy,
@@ -24,6 +25,7 @@ QUEUE_SERVICE = "hz:impl:queueService"
 REPLICATED_MAP_SERVICE = "hz:impl:replicatedMapService"
 RINGBUFFER_SERVICE = "hz:impl:ringbufferService"
 SET_SERVICE = "hz:impl:setService"
+TOPIC_SERVICE = "hz:impl:topicService"
 VECTOR_SERVICE = "hz:service:vector"
 
 _proxy_init: typing.Dict[
@@ -37,6 +39,7 @@ _proxy_init: typing.Dict[
     REPLICATED_MAP_SERVICE: create_replicated_map_proxy,
     RINGBUFFER_SERVICE: create_ringbuffer_proxy,
     SET_SERVICE: create_set_proxy,
+    TOPIC_SERVICE: create_topic_proxy,
     VECTOR_SERVICE: create_vector_collection_proxy,
 }
 

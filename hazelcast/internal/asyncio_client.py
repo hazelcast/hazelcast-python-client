@@ -30,6 +30,7 @@ from hazelcast.internal.asyncio_proxy.manager import (
     REPLICATED_MAP_SERVICE,
     RINGBUFFER_SERVICE,
     SET_SERVICE,
+    TOPIC_SERVICE,
     VECTOR_SERVICE,
 )
 from hazelcast.internal.asyncio_proxy.list import List
@@ -39,10 +40,11 @@ from hazelcast.internal.asyncio_proxy.queue import Queue
 from hazelcast.internal.asyncio_proxy.replicated_map import ReplicatedMap
 from hazelcast.internal.asyncio_proxy.ringbuffer import Ringbuffer
 from hazelcast.internal.asyncio_proxy.set import Set
+from hazelcast.internal.asyncio_proxy.topic import Topic
 from hazelcast.internal.asyncio_reactor import AsyncioReactor
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.internal.asyncio_statistics import Statistics
-from hazelcast.types import KeyType, ValueType, ItemType
+from hazelcast.types import KeyType, MessageType, ValueType, ItemType
 from hazelcast.util import AtomicInteger, RoundRobinLB
 
 __all__ = ("HazelcastClient",)
@@ -335,6 +337,17 @@ class HazelcastClient:
             Distributed Ringbuffer instance with the specified name.
         """
         return await self._proxy_manager.get_or_create(RINGBUFFER_SERVICE, name)
+
+    async def get_topic(self, name: str) -> Topic[MessageType]:
+        """Returns the distributed topic instance with the specified name.
+
+        Args:
+            name: Name of the distributed topic.
+
+        Returns:
+            Distributed topic instance with the specified name.
+        """
+        return await self._proxy_manager.get_or_create(TOPIC_SERVICE, name)
 
     async def create_vector_collection_config(
         self,
