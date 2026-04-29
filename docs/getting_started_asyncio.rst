@@ -1,9 +1,5 @@
-Getting Started - Asyncio API (BETA)
-====================================
-
-.. warning::
-
-    Hazelcast's asyncio API is BETA. Do not use it in production.
+Getting Started - Asyncio API
+=============================
 
 This chapter provides information on how to get started with the Hazelcast Python client using its asyncio API.
 It provides the requirements, installation instructions, and a simple application that uses a distributed map in a Python client.
