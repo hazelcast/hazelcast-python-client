@@ -7,9 +7,6 @@ Hazelcast Python Client
 .. image:: https://img.shields.io/static/v1?label=Github&message=Hazelcast%20Python%20client&style=flat&logo=github
     :target: https://github.com/hazelcast/hazelcast-python-client
     :alt: Github Repository
-.. image:: https://img.shields.io/badge/slack-chat-green.svg
-    :target: https://slack.hazelcast.com
-    :alt: Join the community on Slack
 .. image:: https://img.shields.io/pypi/l/hazelcast-python-client
     :target: https://github.com/hazelcast/hazelcast-python-client/blob/master/LICENSE.txt
     :alt: License

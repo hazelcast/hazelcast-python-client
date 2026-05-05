@@ -7,9 +7,6 @@ Hazelcast Python Client
 .. image:: https://img.shields.io/readthedocs/hazelcast
     :target: https://hazelcast.readthedocs.io
     :alt: Read the Docs
-.. image:: https://img.shields.io/badge/slack-chat-green.svg
-    :target: https://slack.hazelcast.com
-    :alt: Join the community on Slack
 .. image:: https://img.shields.io/pypi/l/hazelcast-python-client
     :target: https://github.com/hazelcast/hazelcast-python-client/blob/master/LICENSE.txt
     :alt: License
@@ -161,7 +158,6 @@ development/usage issues:
 -  `GitHub
    repository <https://github.com/hazelcast/hazelcast-python-client/issues/new>`__
 -  `Documentation <https://hazelcast.readthedocs.io>`__
--  `Slack <https://slack.hazelcast.com>`__
 
 Contributing
 ------------
