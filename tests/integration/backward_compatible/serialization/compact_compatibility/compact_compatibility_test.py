@@ -82,7 +82,7 @@ class InnerSerializer(CompactSerializer[InnerCompact]):
         writer.write_string("stringField", obj.string_field)
 
     def get_type_name(self) -> str:
-        return "com.hazelcast.serialization.compact.InnerCompact"
+        return "9a32d645-6fb1-4fa5-b867-30f9418a6a41.InnerCompact"
 
     def get_class(self):
         return InnerCompact
@@ -100,7 +100,7 @@ class OuterSerializer(CompactSerializer[OuterCompact]):
         writer.write_compact("innerField", obj.inner_field)
 
     def get_type_name(self) -> str:
-        return "com.hazelcast.serialization.compact.OuterCompact"
+        return "9a32d645-6fb1-4fa5-b867-30f9418a6a41.OuterCompact"
 
     def get_class(self):
         return OuterCompact
@@ -118,7 +118,7 @@ class CompactIncrementFunctionSerializer(CompactSerializer[CompactIncrementFunct
         pass
 
     def get_type_name(self) -> str:
-        return "com.hazelcast.serialization.compact.CompactIncrementFunction"
+        return "9a32d645-6fb1-4fa5-b867-30f9418a6a41.CompactIncrementFunction"
 
     def get_class(self):
         return CompactIncrementFunction
@@ -136,7 +136,7 @@ class CompactReturningFunctionSerializer(CompactSerializer[CompactReturningFunct
         pass
 
     def get_type_name(self) -> str:
-        return "com.hazelcast.serialization.compact.CompactReturningFunction"
+        return "9a32d645-6fb1-4fa5-b867-30f9418a6a41.CompactReturningFunction"
 
     def get_class(self):
         return CompactReturningFunction
@@ -154,7 +154,7 @@ class CompactReturningCallableSerializer(CompactSerializer[CompactReturningCalla
         pass
 
     def get_type_name(self) -> str:
-        return "com.hazelcast.serialization.compact.CompactReturningCallable"
+        return "9a32d645-6fb1-4fa5-b867-30f9418a6a41.CompactReturningCallable"
 
     def get_class(self):
         return CompactReturningCallable
@@ -172,7 +172,7 @@ class CompactPredicateSerializer(CompactSerializer[CompactPredicate]):
         pass
 
     def get_type_name(self) -> str:
-        return "com.hazelcast.serialization.compact.CompactPredicate"
+        return "9a32d645-6fb1-4fa5-b867-30f9418a6a41.CompactPredicate"
 
     def get_class(self):
         return CompactPredicate
@@ -190,7 +190,7 @@ class CompactReturningMapInterceptorSerializer(CompactSerializer[CompactReturnin
         pass
 
     def get_type_name(self) -> str:
-        return "com.hazelcast.serialization.compact.CompactReturningMapInterceptor"
+        return "9a32d645-6fb1-4fa5-b867-30f9418a6a41.CompactReturningMapInterceptor"
 
     def get_class(self):
         return CompactReturningMapInterceptor
@@ -216,7 +216,7 @@ class CompactReturningAggregatorSerializer(CompactSerializer[CompactReturningAgg
         pass
 
     def get_type_name(self) -> str:
-        return "com.hazelcast.serialization.compact.CompactReturningAggregator"
+        return "9a32d645-6fb1-4fa5-b867-30f9418a6a41.CompactReturningAggregator"
 
     def get_class(self):
         return CompactReturningAggregator
@@ -234,7 +234,7 @@ class CompactReturningEntryProcessorSerializer(CompactSerializer[CompactReturnin
         pass
 
     def get_type_name(self) -> str:
-        return "com.hazelcast.serialization.compact.CompactReturningEntryProcessor"
+        return "9a32d645-6fb1-4fa5-b867-30f9418a6a41.CompactReturningEntryProcessor"
 
     def get_class(self):
         return CompactReturningEntryProcessor
@@ -252,7 +252,7 @@ class CompactReturningProjectionSerializer(CompactSerializer[CompactReturningPro
         pass
 
     def get_type_name(self) -> str:
-        return "com.hazelcast.serialization.compact.CompactReturningProjection"
+        return "9a32d645-6fb1-4fa5-b867-30f9418a6a41.CompactReturningProjection"
 
     def get_class(self):
         return CompactReturningProjection
@@ -270,7 +270,7 @@ class CompactFilterSerializer(CompactSerializer[CompactFilter]):
         pass
 
     def get_type_name(self) -> str:
-        return "com.hazelcast.serialization.compact.CompactFilter"
+        return "9a32d645-6fb1-4fa5-b867-30f9418a6a41.CompactFilter"
 
     def get_class(self):
         return CompactFilter
@@ -1848,7 +1848,7 @@ class SqlCompactCompatibilityTest(CompactCompatibilityBase):
         OPTIONS (
             'keyFormat' = 'int',
             'valueFormat' = 'compact',
-            'valueCompactTypeName' = 'com.hazelcast.serialization.compact.InnerCompact'
+            'valueCompactTypeName' = '9a32d645-6fb1-4fa5-b867-30f9418a6a41.InnerCompact'
         )
         """
         ).result()

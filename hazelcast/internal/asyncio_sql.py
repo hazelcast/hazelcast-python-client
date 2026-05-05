@@ -1,10 +1,9 @@
 import asyncio
-import enum
 import logging
 import typing
 import uuid
 
-from hazelcast.errors import HazelcastError
+from hazelcast.protocol.codec import sql_execute_codec, sql_fetch_codec, sql_close_codec
 from hazelcast.internal.asyncio_invocation import Invocation, InvocationService
 from hazelcast.serialization.compact import SchemaNotReplicatedError, SchemaNotFoundError
 from hazelcast.sql import (
@@ -21,14 +20,8 @@ from hazelcast.sql import (
     _SqlStatement,
 )
 from hazelcast.util import (
-    UUIDUtil,
     to_millis,
-    check_true,
-    get_attr_name,
     try_to_get_error_message,
-    check_is_number,
-    check_is_int,
-    try_to_get_enum_value,
 )
 
 _logger = logging.getLogger(__name__)
@@ -78,10 +71,8 @@ class SqlService:
     demonstrates a typical usage pattern: ::
 
         client = await HazelcastClient.create_and_start()
-
         result = await client.sql.execute("SELECT * FROM person")
-
-        for row in result:
+        async for row in result:
             print(row.get_object("person_id"))
             print(row.get_object("name"))
             ...
@@ -173,119 +164,57 @@ class SqlService:
         )
 
 
-class _FutureProducingIterator(_IteratorBase):
+class _AsyncIterator(_IteratorBase):
     """An iterator that produces infinite stream of Futures. It is the
     responsibility of the user to either call them in blocking fashion,
     or call ``next`` only if the current call to next did not raise
-    ``StopIteration`` error (possibly with callback-based code).
+    ``StopAsyncIteration`` error (possibly with callback-based code).
     """
 
-    def __iter__(self):
+    def __aiter__(self):
         return self
 
-    def __next__(self):
-        return self._has_next().continue_with(self._has_next_continuation)
-
-    def _has_next_continuation(self, future):
-        """Based on the call to :func:`_has_next`, either
-        raises ``StopIteration`` error or gets the current row
-        and returns it.
-
-        Args:
-            future (hazelcast.future.Future):
-
-        Returns:
-            SqlRow:
-        """
-        has_next = future.result()
+    async def __anext__(self):
+        has_next = await self._has_next()
         if not has_next:
             # Iterator is exhausted, raise this to inform the user.
             # If the user continues to call next, we will continuously
             # raise this.
-            raise StopIteration
+            raise StopAsyncIteration
 
         row = self._get_current_row()
         self.position += 1
         return SqlRow(self.row_metadata, row)
 
-    def _has_next(self):
-        """Returns a Future indicating whether there are more rows
-        left to iterate.
-
-        Returns:
-            hazelcast.future.Future:
-        """
+    async def _has_next(self) -> bool:
         if self.position == self.row_count:
             # We exhausted the current page.
-
             if self.is_last:
                 # This was the last page, no row left
                 # on the server side.
-                return ImmediateFuture(False)
+                return False
 
             # It seems that there are some rows left on the server.
             # Fetch them, and then return.
-            return self.fetch_fn().continue_with(self._fetch_continuation)
+            page_fut = await self.fetch_fn()
+            page = await page_fut
+            self.on_next_page(page)
+            return await self._has_next()
 
         # There are some elements left in the current page.
-        return ImmediateFuture(True)
-
-    def _fetch_continuation(self, future):
-        """After a new page is fetched, updates the internal state
-        of the iterator and returns whether or not there are some
-        rows in the fetched page.
-
-        Args:
-            future (hazelcast.future.Future):
-
-        Returns:
-            hazelcast.future.Future:
-        """
-        page = future.result()
-        self.on_next_page(page)
-        return self._has_next()
+        return True
 
 
-class SqlResult(typing.Iterable[SqlRow]):
+class SqlResult(typing.AsyncIterable[SqlRow]):
     """SQL query result.
 
     Depending on the statement type it represents a stream of
     rows or an update count.
 
-    To iterate over the stream of rows, there are two possible options.
-
-    The first, and the easiest one is to iterate over the rows
-    in a blocking fashion. ::
-
-        result = client.sql.execute("SELECT ...").result()
-        for row in result:
+        result = await client.sql.execute("SELECT ...")
+        async for row in result:
             # Process the row.
             print(row)
-
-    The second option is to use the non-blocking API with callbacks. ::
-
-        future = client.sql.execute("SELECT ...")  # Future of SqlResult
-
-        def on_response(sql_result_future):
-            iterator = sql_result_future.result().iterator()
-
-            def on_next_row(row_future):
-                try:
-                    row = row_future.result()
-                    # Process the row.
-                    print(row)
-
-                    # Iterate over the next row.
-                    next(iterator).add_done_callback(on_next_row)
-                except StopIteration:
-                    # Exhausted the iterator. No more rows are left.
-                    pass
-
-            next(iterator).add_done_callback(on_next_row)
-
-        future.add_done_callback(on_response)
-
-    When in doubt, use the blocking API shown in the first code sample.
 
     Note that, iterators can be requested at most once per SqlResult.
 
@@ -294,12 +223,12 @@ class SqlResult(typing.Iterable[SqlRow]):
     It might also be used to cancel query execution on the server side
     if it is still active.
 
-    When the blocking API is used, one might also use ``with``
+    When the blocking API is used, one might also use ``async with``
     statement to automatically close the query even if an exception
     is thrown in the iteration. ::
 
-        with client.sql.execute("SELECT ...").result() as result:
-            for row in result:
+        async with await client.sql.execute("SELECT ...").result() as result:
+            async for row in result:
                 # Process the row.
                 print(row)
 
@@ -307,7 +236,8 @@ class SqlResult(typing.Iterable[SqlRow]):
     To get the number of rows updated by the query, use the
     :func:`update_count`. ::
 
-        update_count = client.sql.execute("UPDATE ...").result().update_count()
+        result = await client.sql.execute("UPDATE ...")
+        update_count = result.update_count()
 
     One does not have to call :func:`close` in this case, because the result
     will already be closed in the server-side.
@@ -322,10 +252,10 @@ class SqlResult(typing.Iterable[SqlRow]):
         self._execute_response = execute_response
         self._iterator_requested = False
         self._closed = self._is_closed(execute_response)
-        self._fetch_task: asyncio.Task|None = None
-        self._fetch_future: asyncio.Future|None = None
+        self._fetch_task: asyncio.Task | None = None
+        self._fetch_future: asyncio.Future | None = None
 
-    def iterator(self) -> typing.Iterator[SqlRow]:
+    def iterator(self) -> typing.AsyncIterator[SqlRow]:
         """Returns the iterator over the result rows.
 
         The iterator may be requested only once.
@@ -394,80 +324,62 @@ class SqlResult(typing.Iterable[SqlRow]):
                 "Query was cancelled by the user",
                 None,
             )
-
-            if not self._fetch_task:
+            if not self._fetch_future:
                 # Make sure that all subsequent fetches will fail.
-                self._fetch_future = Future()
+                # XXX:
+                self._fetch_future = asyncio.Future()
 
-            await self._on_fetch_error(error)
-
-            def wrap_error_on_failure(f):
-                # If the close request is failed somehow,
-                # wrap it in a HazelcastSqlError.
-                try:
-                    return f.result()
-                except Exception as e:
-                    raise self._sql_service.re_raise(e, self._connection)
-
+            self._on_fetch_error_unsafe(error)
             self._closed = True
             # Send the close request
             try:
                 await self._sql_service.close(self._connection, self._query_id)
             except Exception as e:
+                # If the close request is failed somehow,
+                # wrap it in a HazelcastSqlError.
                 raise self._sql_service.re_raise(e, self._connection)
 
-    def __iter__(self):
+    def __aiter__(self):
         return self._get_iterator()
 
-    async def _get_iterator(self):
+    def _get_iterator(self):
         response = self._execute_response
         if not response.row_metadata:
             # Can't get an iterator when we only have update count
             raise ValueError("This result contains only update count")
 
-        async with self._lock:
-            if self._iterator_requested:
-                # Can't get an iterator when we already get one
-                raise ValueError("Iterator can be requested only once")
+        if self._iterator_requested:
+            # Can't get an iterator when we already get one
+            raise ValueError("Iterator can be requested only once")
 
-            self._iterator_requested = True
-
-        iterator = _FutureProducingIterator(
+        self._iterator_requested = True
+        iterator = _AsyncIterator(
             response.row_metadata,
             self._fetch_next_page,
         )
-
         # Pass the first page information to the iterator
         iterator.on_next_page(response.row_page)
         return iterator
 
     async def _fetch_next_page(self):
-        """Fetches the next page, if there is no fetch request
-        in-flight.
-
-        Returns:
-            Future[_SqlPage]:
-        """
+        # Fetches the next page, if there is no fetch request in-flight.
         async with self._lock:
             if self._fetch_future:
                 # A fetch request is already in-flight, return it.
                 return self._fetch_future
 
+            future = asyncio.Future()
+            self._fetch_future = future
             self._fetch_task = asyncio.create_task(self._handle_fetch_response())
+            return future
 
     async def _handle_fetch_response(self):
-        """Handles the result of the fetch request, by either:
-
-        - setting it to exception, so that the future calls to
-          fetch fails immediately.
-        - setting it to next page, and setting self._fetch_future
-          to None so that the next fetch request might actually
-          try to fetch something from the server.
-
-        Args:
-            future (Future): The response from the server for
-            the fetch request.
-        """
+        # Handles the result of the fetch request, by either:
+        # - setting it to exception, so that the future calls to
+        #  fetch fails immediately.
+        # - setting it to next page, and setting self._fetch_future
+        #  to None so that the next fetch request might actually
+        # try to fetch something from the server.
         try:
             response = await self._sql_service.fetch(
                 self._connection, self._query_id, self._cursor_buffer_size
@@ -486,34 +398,26 @@ class SqlResult(typing.Iterable[SqlRow]):
                 return
 
             # The result contains the next page, as expected.
-            self._on_fetch_response(response["row_page"])
+            await self._on_fetch_response(response["row_page"])
         except Exception as e:
             # Something went bad, we couldn't get response from
             # the server, invocation failed.
             await self._on_fetch_error(self._sql_service.re_raise(e, self._connection))
 
     async def _on_fetch_error(self, error):
-        """Sets the fetch future with exception, but not resetting it
-        so that the next fetch request fails immediately.
-
-        Args:
-            error (Exception): The error.
-        """
+        # Sets the fetch future with exception, but not resetting it so that the next fetch request fails immediately.
         async with self._lock:
-            self._fetch_future.set_exception(error)
+            self._on_fetch_error_unsafe(error)
 
-    def _on_fetch_response(self, page):
-        """Sets the fetch future with the next page,
-        resets it, and if this is the last page,
-        marks the result as closed.
+    def _on_fetch_error_unsafe(self, error):
+        # Sets the fetch future with exception, but not resetting it so that the next fetch request fails immediately.
+        self._fetch_future.set_exception(error)
 
-        Args:
-            page (_SqlPage): The next page.
-        """
-        with self._lock:
+    async def _on_fetch_response(self, page):
+        # Sets the fetch future with the next page, resets it, and if this is the last page, marks the result as closed.
+        async with self._lock:
             future = self._fetch_future
             self._fetch_future = None
-
             if page.is_last:
                 # This is the last page, there is nothing
                 # more on the server.
@@ -525,35 +429,26 @@ class SqlResult(typing.Iterable[SqlRow]):
 
     @staticmethod
     def _is_closed(execute_response):
-        """Returns whether the result is already
-        closed or not.
-
-        Result might be closed if the first response
-
-        - contains the last page of the rowset (single page rowset)
-        - contains just the update count
-
-        Args:
-            execute_response (_ExecuteResponse): The first response
-
-        Returns:
-            bool: ``True`` if the result is already closed, ``False``
-            otherwise.
-        """
+        # Returns whether the result is already closed or not.
+        #
+        # Result might be closed if the first response
+        #
+        # - contains the last page of the rowset (single page rowset)
+        # - contains just the update count
         return (
             execute_response.row_metadata is None  # Just an update count
             or execute_response.row_page.is_last  # Single page result
         )
 
-    def __enter__(self):
+    async def __aenter__(self):
         # The response for the execute request is already
         # received. There is nothing more to do.
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    async def __aexit__(self, exc_type, exc_value, traceback):
         # Ignoring the possible exception details
         # since we close the query regardless of that.
-        self.close().result()
+        await self.close()
 
 
 class _InternalSqlService:
@@ -637,12 +532,12 @@ class _InternalSqlService:
                 connection,
                 query_id,
                 statement.cursor_buffer_size,
-                self._handle_execute_response(res, connection),
+                self._handle_execute_response(res),
             )
         except Exception as e:
-            self.re_raise(e, connection)
+            raise self.re_raise(e, connection)
 
-    async def fetch(self, connection, query_id, cursor_buffer_size) -> None:
+    async def fetch(self, connection, query_id, cursor_buffer_size):
         """Fetches the next page of the query execution.
 
         Args:
@@ -652,9 +547,6 @@ class _InternalSqlService:
             query_id (_SqlQueryId): Unique id of the query.
             cursor_buffer_size (int): Size of cursor buffer. Same as
                 the one used in the first execute request.
-
-        Returns:
-            Future: Decoded fetch response.
         """
         request = sql_fetch_codec.encode_request(query_id, cursor_buffer_size)
         invocation = Invocation(
@@ -662,7 +554,7 @@ class _InternalSqlService:
             connection=connection,
             response_handler=lambda m: sql_fetch_codec.decode_response(m, self._to_object),
         )
-        await self._invocation_service.ainvoke(invocation)
+        return await self._invocation_service.ainvoke(invocation)
 
     def get_client_id(self):
         """
@@ -746,7 +638,7 @@ class _InternalSqlService:
 
         return connection
 
-    def _handle_execute_response(self, response, connection):
+    def _handle_execute_response(self, response):
         response_error = response["error"]
         if response_error:
             # There is a server-side error sent to the client.
@@ -768,8 +660,3 @@ class _InternalSqlService:
 
         # Result only contains the update count.
         return _ExecuteResponse(None, None, response["update_count"])
-
-
-# These are imported at the bottom of the page to get rid of the
-# cyclic import errors.
-from hazelcast.protocol.codec import sql_execute_codec, sql_fetch_codec, sql_close_codec

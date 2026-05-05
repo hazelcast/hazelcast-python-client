@@ -12,6 +12,7 @@ from hazelcast.discovery import HazelcastCloudAddressProvider
 from hazelcast.errors import IllegalStateError, InvalidConfigurationError
 from hazelcast.internal.asyncio_invocation import InvocationService, Invocation
 from hazelcast.internal.asyncio_proxy.vector_collection import VectorCollection
+from hazelcast.internal.asyncio_sql import _InternalSqlService, SqlService
 from hazelcast.lifecycle import LifecycleService, LifecycleState, _InternalLifecycleService
 from hazelcast.internal.asyncio_listener import ClusterViewListenerService, ListenerService
 from hazelcast.near_cache import NearCacheManager
@@ -185,6 +186,13 @@ class HazelcastClient:
             self._near_cache_manager,
             self._send_state_to_cluster,
         )
+        self._internal_sql_service = _InternalSqlService(
+            self._connection_manager,
+            self._serialization_service,
+            self._invocation_service,
+            self._compact_schema_service.send_schema_and_retry,
+        )
+        self._sql_service = SqlService(self._internal_sql_service)
         self._load_balancer = self._init_load_balancer(config)
         self._listener_service = ListenerService(
             self,
@@ -465,6 +473,11 @@ class HazelcastClient:
         the cluster members and add and remove membership listeners.
         """
         return self._cluster_service
+
+    @property
+    def sql(self) -> SqlService:
+        """Returns a service to execute distributed SQL queries."""
+        return self._sql_service
 
     def _create_address_provider(self):
         config = self._config
