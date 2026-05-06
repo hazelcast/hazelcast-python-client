@@ -106,5 +106,6 @@ _proxy_init: typing.Dict[
     RELIABLE_TOPIC_SERVICE: create_reliable_topic_proxy,
     RINGBUFFER_SERVICE: create_ringbuffer_proxy,
     SET_SERVICE: create_set_proxy,
+    TOPIC_SERVICE: create_topic_proxy,
     VECTOR_SERVICE: create_vector_collection_proxy,
 }
