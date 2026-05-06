@@ -67,6 +67,12 @@ class Proxy(typing.Generic[BlockingProxyType], abc.ABC):
         self._invocation_service.invoke(invocation)
         return invocation.future
 
+    async def _ainvoke_on_target(
+        self, request, uuid, response_handler=_no_op_response_handler
+    ) -> typing.Any:
+        fut = self._invoke_on_target(request, uuid, response_handler)
+        return await fut
+
     async def _invoke_on_key(
         self, request, key_data, response_handler=_no_op_response_handler
     ) -> typing.Any:

@@ -15,7 +15,6 @@ NUM_IDS_IN_TASKS = 100000
 
 
 class FlakeIdGeneratorTest(SingleMemberTestCase):
-
     @classmethod
     def configure_client(cls, config):
         config["cluster_name"] = cls.cluster.id
@@ -88,7 +87,6 @@ class FlakeIdGeneratorTest(SingleMemberTestCase):
 
 
 class FlakeIdGeneratorIdOutOfRangeTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
-
     def setUp(self):
         self.rc = self.create_rc()
         self.cluster = self.create_cluster(self.rc, None)
@@ -135,4 +133,6 @@ class FlakeIdGeneratorIdOutOfRangeTest(unittest.IsolatedAsyncioTestCase, Hazelca
             instance_id,
         )
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, self.rc.executeOnController, cluster_id, script, Lang.JAVASCRIPT)
+        return await loop.run_in_executor(
+            None, self.rc.executeOnController, cluster_id, script, Lang.JAVASCRIPT
+        )
