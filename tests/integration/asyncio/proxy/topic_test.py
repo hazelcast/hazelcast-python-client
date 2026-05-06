@@ -81,3 +81,7 @@ class TopicTest(SingleMemberTestCase):
         messages = ["message1", None, "message3"]
         with self.assertRaises(AssertionError):
             await self.topic.publish_all(messages)
+
+    async def test_ensure_on_messsage_is_not_none(self):
+        with self.assertRaises(AssertionError):
+            await self.topic.add_listener(None)

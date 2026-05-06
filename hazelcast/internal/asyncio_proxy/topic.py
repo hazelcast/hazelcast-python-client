@@ -43,11 +43,12 @@ class Topic(PartitionSpecificProxy, typing.Generic[MessageType]):
         is called if provided.
 
         Args:
-            on_message: Function to be called when a message is published.
+            on_message: Function to be called when a message is published. This function must not block.
 
         Returns:
             A registration id which is used as a key to remove the listener.
         """
+        check_not_none(on_message, "on_message can't be None")
         codec = topic_add_message_listener_codec
         request = codec.encode_request(self.name, self._is_smart)
 

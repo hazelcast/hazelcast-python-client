@@ -41,6 +41,7 @@ class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]
         Returns:
             A registration id which is used as a key to remove the listener.
         """
+        check_not_none(on_message, "on_message can't be None")
         codec = topic_add_message_listener_codec
         request = codec.encode_request(self.name, self._is_smart)
 
