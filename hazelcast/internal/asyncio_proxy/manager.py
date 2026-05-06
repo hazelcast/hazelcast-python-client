@@ -1,10 +1,12 @@
 import asyncio
 import typing
 
+from hazelcast.internal.asyncio_proxy.executor import create_executor_proxy
 from hazelcast.internal.asyncio_proxy.list import create_list_proxy
 from hazelcast.internal.asyncio_proxy.multi_map import create_multi_map_proxy
 from hazelcast.internal.asyncio_proxy.queue import create_queue_proxy
 from hazelcast.internal.asyncio_proxy.set import create_set_proxy
+from hazelcast.internal.asyncio_proxy.topic import create_topic_proxy
 from hazelcast.internal.asyncio_proxy.vector_collection import (
     create_vector_collection_proxy,
 )
@@ -18,6 +20,7 @@ from hazelcast.proxy.reliable_topic import _RINGBUFFER_PREFIX
 from hazelcast.internal.asyncio_proxy.ringbuffer import create_ringbuffer_proxy
 from hazelcast.util import to_list
 
+EXECUTOR_SERVICE = "hz:impl:executorService"
 LIST_SERVICE = "hz:impl:listService"
 MAP_SERVICE = "hz:impl:mapService"
 MULTI_MAP_SERVICE = "hz:impl:multiMapService"
@@ -26,6 +29,7 @@ RELIABLE_TOPIC_SERVICE = "hz:impl:reliableTopicService"
 REPLICATED_MAP_SERVICE = "hz:impl:replicatedMapService"
 RINGBUFFER_SERVICE = "hz:impl:ringbufferService"
 SET_SERVICE = "hz:impl:setService"
+TOPIC_SERVICE = "hz:impl:topicService"
 VECTOR_SERVICE = "hz:service:vector"
 
 
@@ -93,6 +97,7 @@ _proxy_init: typing.Dict[
     str,
     typing.Callable[[str, str, typing.Any], typing.Coroutine[typing.Any, typing.Any, typing.Any]],
 ] = {
+    EXECUTOR_SERVICE: create_executor_proxy,
     LIST_SERVICE: create_list_proxy,
     MAP_SERVICE: create_map_proxy,
     MULTI_MAP_SERVICE: create_multi_map_proxy,

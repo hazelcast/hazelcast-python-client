@@ -86,9 +86,8 @@ class Executor(Proxy["BlockingExecutor"]):
             return self._send_schema_and_retry(e, self.execute_on_members, members, task)
 
         futures = []
-        uuid = uuid4()
         for member in members:
-            f = self._execute_on_member(uuid, task_data, member.uuid)
+            f = self._execute_on_member(uuid4(), task_data, member.uuid)
             futures.append(f)
 
         return future.combine_futures(futures)
