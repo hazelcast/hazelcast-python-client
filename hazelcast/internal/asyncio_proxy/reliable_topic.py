@@ -83,9 +83,7 @@ class _MessageRunner:
         self._task = asyncio.create_task(self._handle_next_batch())
 
     def cancel(self):
-        """Sets the cancelled flag, cancels the running task, and removes
-        the runner registration.
-        """
+        """Sets the canceled flag, and removes the runner registration."""
         self._cancelled = True
         self._runners.pop(self._registration_id, None)
         self._listener.on_cancel()
