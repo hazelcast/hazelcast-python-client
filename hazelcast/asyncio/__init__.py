@@ -17,3 +17,4 @@ from hazelcast.internal.asyncio_proxy.list import List
 from hazelcast.internal.asyncio_proxy.map import Map, EntryEventCallable
 from hazelcast.internal.asyncio_proxy.replicated_map import ReplicatedMap
 from hazelcast.internal.asyncio_proxy.vector_collection import VectorCollection
+from hazelcast.internal.asyncio_proxy.reliable_topic import ReliableTopic, ReliableMessageListener
