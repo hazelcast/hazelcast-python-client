@@ -83,5 +83,6 @@ class TopicTest(SingleMemberTestCase):
             await self.topic.publish_all(messages)
 
     async def test_ensure_on_messsage_is_not_none(self):
+        skip_if_client_version_older_than(self, "5.7.0")
         with self.assertRaises(AssertionError):
             await self.topic.add_listener(None)

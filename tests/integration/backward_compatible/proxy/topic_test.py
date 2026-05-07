@@ -81,5 +81,6 @@ class TopicTest(SingleMemberTestCase):
             self.topic.publish_all(messages)
 
     def test_ensure_on_messsage_is_not_none(self):
+        skip_if_client_version_older_than(self, "5.7.0")
         with self.assertRaises(AssertionError):
             self.topic.add_listener(None)
