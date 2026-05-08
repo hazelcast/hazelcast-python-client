@@ -12,6 +12,8 @@ __all__ = [
     "MultiMap",
     "PNCounter",
     "Queue",
+    "ReliableMessageListener",
+    "ReliableTopic",
     "ReplicatedMap",
     "Ringbuffer",
     "Set",
@@ -25,7 +27,6 @@ from hazelcast.internal.asyncio_proxy.map import Map, EntryEventCallable
 from hazelcast.internal.asyncio_proxy.multi_map import MultiMap
 from hazelcast.internal.asyncio_proxy.pn_counter import PNCounter
 from hazelcast.internal.asyncio_proxy.queue import Queue
-from hazelcast.internal.asyncio_proxy.replicated_map import ReplicatedMap
 from hazelcast.internal.asyncio_proxy.replicated_map import ReplicatedMap
 from hazelcast.internal.asyncio_proxy.ringbuffer import Ringbuffer
 from hazelcast.internal.asyncio_proxy.set import Set
