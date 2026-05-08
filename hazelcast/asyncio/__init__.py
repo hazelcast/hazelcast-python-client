@@ -9,6 +9,8 @@ __all__ = [
     "HazelcastClient",
     "List",
     "Map",
+    "ReliableMessageListener",
+    "ReliableTopic",
     "ReplicatedMap",
     "VectorCollection",
 ]
