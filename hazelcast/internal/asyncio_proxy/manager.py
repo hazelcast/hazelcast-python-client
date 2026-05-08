@@ -7,6 +7,7 @@ from hazelcast.internal.asyncio_proxy.multi_map import create_multi_map_proxy
 from hazelcast.internal.asyncio_proxy.pn_counter import create_pn_counter_proxy
 from hazelcast.internal.asyncio_proxy.queue import create_queue_proxy
 from hazelcast.internal.asyncio_proxy.set import create_set_proxy
+from hazelcast.internal.asyncio_proxy.topic import create_topic_proxy
 from hazelcast.internal.asyncio_proxy.vector_collection import (
     create_vector_collection_proxy,
 )
@@ -14,7 +15,9 @@ from hazelcast.protocol.codec import client_create_proxy_codec, client_destroy_p
 from hazelcast.internal.asyncio_invocation import Invocation
 from hazelcast.internal.asyncio_proxy.base import Proxy
 from hazelcast.internal.asyncio_proxy.map import create_map_proxy
+from hazelcast.internal.asyncio_proxy.reliable_topic import ReliableTopic
 from hazelcast.internal.asyncio_proxy.replicated_map import create_replicated_map_proxy
+from hazelcast.proxy.reliable_topic import _RINGBUFFER_PREFIX
 from hazelcast.internal.asyncio_proxy.ringbuffer import create_ringbuffer_proxy
 from hazelcast.util import to_list
 
@@ -23,27 +26,13 @@ LIST_SERVICE = "hz:impl:listService"
 MAP_SERVICE = "hz:impl:mapService"
 MULTI_MAP_SERVICE = "hz:impl:multiMapService"
 QUEUE_SERVICE = "hz:impl:queueService"
+RELIABLE_TOPIC_SERVICE = "hz:impl:reliableTopicService"
 REPLICATED_MAP_SERVICE = "hz:impl:replicatedMapService"
 RINGBUFFER_SERVICE = "hz:impl:ringbufferService"
 SET_SERVICE = "hz:impl:setService"
 PN_COUNTER_SERVICE = "hz:impl:PNCounterService"
+TOPIC_SERVICE = "hz:impl:topicService"
 VECTOR_SERVICE = "hz:service:vector"
-
-_proxy_init: typing.Dict[
-    str,
-    typing.Callable[[str, str, typing.Any], typing.Coroutine[typing.Any, typing.Any, typing.Any]],
-] = {
-    EXECUTOR_SERVICE: create_executor_proxy,
-    LIST_SERVICE: create_list_proxy,
-    MAP_SERVICE: create_map_proxy,
-    MULTI_MAP_SERVICE: create_multi_map_proxy,
-    QUEUE_SERVICE: create_queue_proxy,
-    REPLICATED_MAP_SERVICE: create_replicated_map_proxy,
-    RINGBUFFER_SERVICE: create_ringbuffer_proxy,
-    SET_SERVICE: create_set_proxy,
-    PN_COUNTER_SERVICE: create_pn_counter_proxy,
-    VECTOR_SERVICE: create_vector_collection_proxy,
-}
 
 
 class ProxyManager:
@@ -97,3 +86,29 @@ class ProxyManager:
 
     def get_distributed_objects(self):
         return to_list(v for v in self._proxies.values() if not isinstance(v, asyncio.Future))
+
+
+async def create_reliable_topic_proxy(service_name, name, context):
+    ringbuffer = await context.proxy_manager.get_or_create(
+        RINGBUFFER_SERVICE, _RINGBUFFER_PREFIX + name, create_on_remote=False
+    )
+    return ReliableTopic(service_name, name, context, ringbuffer)
+
+
+_proxy_init: typing.Dict[
+    str,
+    typing.Callable[[str, str, typing.Any], typing.Coroutine[typing.Any, typing.Any, typing.Any]],
+] = {
+    EXECUTOR_SERVICE: create_executor_proxy,
+    LIST_SERVICE: create_list_proxy,
+    MAP_SERVICE: create_map_proxy,
+    MULTI_MAP_SERVICE: create_multi_map_proxy,
+    QUEUE_SERVICE: create_queue_proxy,
+    PN_COUNTER_SERVICE: create_pn_counter_proxy,
+    REPLICATED_MAP_SERVICE: create_replicated_map_proxy,
+    RELIABLE_TOPIC_SERVICE: create_reliable_topic_proxy,
+    RINGBUFFER_SERVICE: create_ringbuffer_proxy,
+    SET_SERVICE: create_set_proxy,
+    TOPIC_SERVICE: create_topic_proxy,
+    VECTOR_SERVICE: create_vector_collection_proxy,
+}

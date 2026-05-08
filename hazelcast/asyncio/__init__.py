@@ -30,3 +30,4 @@ from hazelcast.internal.asyncio_proxy.replicated_map import ReplicatedMap
 from hazelcast.internal.asyncio_proxy.ringbuffer import Ringbuffer
 from hazelcast.internal.asyncio_proxy.set import Set
 from hazelcast.internal.asyncio_proxy.vector_collection import VectorCollection
+from hazelcast.internal.asyncio_proxy.reliable_topic import ReliableTopic, ReliableMessageListener
