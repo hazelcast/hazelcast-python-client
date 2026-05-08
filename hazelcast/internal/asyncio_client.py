@@ -11,6 +11,7 @@ from hazelcast.core import DistributedObjectEvent
 from hazelcast.discovery import HazelcastCloudAddressProvider
 from hazelcast.errors import IllegalStateError, InvalidConfigurationError
 from hazelcast.internal.asyncio_invocation import InvocationService, Invocation
+from hazelcast.internal.asyncio_proxy.pn_counter import PNCounter
 from hazelcast.internal.asyncio_proxy.vector_collection import VectorCollection
 from hazelcast.lifecycle import LifecycleService, LifecycleState, _InternalLifecycleService
 from hazelcast.internal.asyncio_listener import ClusterViewListenerService, ListenerService
@@ -34,6 +35,7 @@ from hazelcast.internal.asyncio_proxy.manager import (
     SET_SERVICE,
     TOPIC_SERVICE,
     VECTOR_SERVICE,
+    PN_COUNTER_SERVICE,
 )
 from hazelcast.internal.asyncio_proxy.base import Proxy
 from hazelcast.internal.asyncio_proxy.executor import Executor
@@ -364,6 +366,17 @@ class HazelcastClient:
             Distributed Ringbuffer instance with the specified name.
         """
         return await self._proxy_manager.get_or_create(RINGBUFFER_SERVICE, name)
+
+    async def get_pn_counter(self, name: str) -> PNCounter:
+        """Returns the PN Counter instance with the specified name.
+
+        Args:
+            name: Name of the PN Counter.
+
+        Returns:
+            Distributed PN Counter instance with the specified name.
+        """
+        return await self._proxy_manager.get_or_create(PN_COUNTER_SERVICE, name)
 
     async def get_topic(self, name: str) -> Topic[MessageType]:
         """Returns the distributed topic instance with the specified name.
