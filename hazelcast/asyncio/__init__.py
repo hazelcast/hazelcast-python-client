@@ -6,19 +6,31 @@ del warnings
 __all__ = [
     "EntryEventCallable",
     "FlakeIdGenerator",
+    "Executor",
     "HazelcastClient",
     "List",
     "Map",
     "ReliableMessageListener",
     "ReliableTopic",
+    "MultiMap",
+    "PNCounter",
+    "Queue",
     "ReplicatedMap",
+    "Ringbuffer",
+    "Set",
     "VectorCollection",
 ]
 
 from hazelcast.internal.asyncio_client import HazelcastClient
 from hazelcast.internal.asyncio_proxy.flake_id_generator import FlakeIdGenerator
+from hazelcast.internal.asyncio_proxy.executor import Executor
 from hazelcast.internal.asyncio_proxy.list import List
 from hazelcast.internal.asyncio_proxy.map import Map, EntryEventCallable
+from hazelcast.internal.asyncio_proxy.multi_map import MultiMap
+from hazelcast.internal.asyncio_proxy.pn_counter import PNCounter
+from hazelcast.internal.asyncio_proxy.queue import Queue
 from hazelcast.internal.asyncio_proxy.replicated_map import ReplicatedMap
+from hazelcast.internal.asyncio_proxy.ringbuffer import Ringbuffer
+from hazelcast.internal.asyncio_proxy.set import Set
 from hazelcast.internal.asyncio_proxy.vector_collection import VectorCollection
 from hazelcast.internal.asyncio_proxy.reliable_topic import ReliableTopic, ReliableMessageListener
