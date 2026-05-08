@@ -1,0 +1,605 @@
+import asyncio
+import os
+import unittest
+from asyncio import InvalidStateError
+
+from hazelcast.util import AtomicInteger
+
+from tests.hzrc.ttypes import Lang
+
+try:
+    from hazelcast.config import TopicOverloadPolicy
+    from hazelcast.errors import (
+        TopicOverloadError,
+        HazelcastClientNotActiveError,
+        TargetDisconnectedError,
+    )
+    from hazelcast.proxy.reliable_topic import ReliableMessageListener
+except ImportError:
+    # For backward compatibility. If we cannot import those, we won't
+    # be even referencing them in tests.
+    pass
+
+from tests.integration.asyncio.base import SingleMemberTestCase
+from tests.util import (
+    compare_client_version,
+    random_string,
+    event_collector,
+    get_current_timestamp,
+    skip_if_client_version_older_than,
+)
+
+CAPACITY = 10
+
+
+@unittest.skipIf(
+    compare_client_version("4.1") < 0, "Tests the features added in 4.1 version of the client"
+)
+class ReliableTopicTest(SingleMemberTestCase):
+    @classmethod
+    def configure_cluster(cls):
+        path = os.path.abspath(__file__)
+        dir_path = os.path.dirname(path)
+        with open(
+            os.path.join(dir_path, "../../backward_compatible/proxy/hazelcast_topic.xml")
+        ) as f:
+            return f.read()
+
+    @classmethod
+    def configure_client(cls, config):
+        config["cluster_name"] = cls.cluster.id
+        if not compare_client_version("4.1") < 0:
+            # Add these config elements only to the 4.1+ clients
+            # since the older versions do not know anything
+            # about them.
+            config["reliable_topics"] = {
+                "discard": {
+                    "overload_policy": TopicOverloadPolicy.DISCARD_NEWEST,
+                },
+                "overwrite": {
+                    "overload_policy": TopicOverloadPolicy.DISCARD_OLDEST,
+                },
+                "block": {
+                    "overload_policy": TopicOverloadPolicy.BLOCK,
+                },
+                "error": {
+                    "overload_policy": TopicOverloadPolicy.ERROR,
+                },
+            }
+        return config
+
+    async def asyncSetUp(self):
+        await super().asyncSetUp()
+        self.topics = []
+        self.topic = await self.get_topic(random_string())
+
+    async def asyncTearDown(self):
+        for topic in self.topics:
+            await topic.destroy()
+        await super().asyncTearDown()
+
+    async def test_add_listener_with_function(self):
+        topic = await self.get_topic(random_string())
+
+        collector = event_collector()
+        registration_id = await topic.add_listener(collector)
+        self.assertIsNotNone(registration_id)
+
+        await topic.publish("a")
+        await topic.publish("b")
+
+        await self.assertTrueEventually(
+            lambda: self.assertEqual(["a", "b"], list(map(lambda m: m.message, collector.events)))
+        )
+        pass
+
+    async def test_add_listener(self):
+        topic = await self.get_topic(random_string())
+
+        messages = []
+
+        on_cancel_call_count = AtomicInteger()
+
+        class Listener(ReliableMessageListener):
+            def on_message(self, message):
+                messages.append(message.message)
+
+            def retrieve_initial_sequence(self):
+                return -1
+
+            def store_sequence(self, sequence):
+                pass
+
+            def is_loss_tolerant(self):
+                return False
+
+            def is_terminal(self, error):
+                return False
+
+            def on_cancel(self):
+                on_cancel_call_count.add(1)
+
+        registration_id = await topic.add_listener(Listener())
+        self.assertIsNotNone(registration_id)
+
+        await topic.publish("a")
+        await topic.publish("b")
+
+        await self.assertTrueEventually(lambda: self.assertEqual(["a", "b"], messages))
+
+        self.assertEqual(0, on_cancel_call_count.get())
+
+    async def test_add_listener_with_retrieve_initial_sequence(self):
+        topic = await self.get_topic(random_string())
+
+        messages = []
+
+        class Listener(ReliableMessageListener):
+            def on_message(self, message):
+                messages.append(message.message)
+
+            def retrieve_initial_sequence(self):
+                return 5
+
+            def store_sequence(self, sequence):
+                pass
+
+            def is_loss_tolerant(self):
+                return False
+
+            def is_terminal(self, error):
+                return False
+
+        await topic.publish_all(range(10))
+
+        registration_id = await topic.add_listener(Listener())
+        self.assertIsNotNone(registration_id)
+
+        await self.assertTrueEventually(lambda: self.assertEqual(list(range(5, 10)), messages))
+
+    async def test_add_listener_with_store_sequence(self):
+        topic = await self.get_topic(random_string())
+
+        sequences = []
+
+        class Listener(ReliableMessageListener):
+            def on_message(self, message):
+                pass
+
+            def retrieve_initial_sequence(self):
+                return -1
+
+            def store_sequence(self, sequence):
+                sequences.append(sequence)
+
+            def is_loss_tolerant(self):
+                return False
+
+            def is_terminal(self, error):
+                return False
+
+        registration_id = await topic.add_listener(Listener())
+        self.assertIsNotNone(registration_id)
+
+        await topic.publish_all(["item-%s" % i for i in range(20)])
+
+        await self.assertTrueEventually(lambda: self.assertEqual(list(range(20)), sequences))
+
+    async def test_add_listener_with_loss_tolerant_listener_on_message_loss(self):
+        topic = await self.get_topic("overwrite")  # has capacity of 10
+
+        messages = []
+
+        class Listener(ReliableMessageListener):
+            def on_message(self, message):
+                messages.append(message.message)
+
+            def retrieve_initial_sequence(self):
+                return -1
+
+            def store_sequence(self, sequence):
+                pass
+
+            def is_loss_tolerant(self):
+                return True
+
+            def is_terminal(self, error):
+                return False
+
+        registration_id = await topic.add_listener(Listener())
+        self.assertIsNotNone(registration_id)
+
+        # will overwrite first 10 messages, hence they will be lost
+        await topic.publish_all(range(2 * CAPACITY))
+
+        await self.assertTrueEventually(
+            lambda: self.assertEqual(list(range(CAPACITY, 2 * CAPACITY)), messages)
+        )
+
+    async def test_add_listener_with_non_loss_tolerant_listener_on_message_loss(self):
+        topic = await self.get_topic("overwrite")  # has capacity of 10
+
+        messages = []
+
+        class Listener(ReliableMessageListener):
+            def on_message(self, message):
+                messages.append(message.message)
+
+            def retrieve_initial_sequence(self):
+                return -1
+
+            def store_sequence(self, sequence):
+                pass
+
+            def is_loss_tolerant(self):
+                return False
+
+            def is_terminal(self, error):
+                return False
+
+        registration_id = await topic.add_listener(Listener())
+        self.assertIsNotNone(registration_id)
+
+        # will overwrite first 10 messages, hence they will be lost
+        await topic.publish_all(range(2 * CAPACITY))
+
+        self.assertEqual(0, len(messages))
+
+        # Should be cancelled on message loss
+        await self.assertTrueEventually(lambda: self.assertEqual(0, len(topic._runners)))
+
+    async def test_add_listener_when_on_message_raises_error(self):
+        topic = await self.get_topic(random_string())
+
+        messages = []
+
+        on_cancel_call_count = AtomicInteger()
+
+        class Listener(ReliableMessageListener):
+            def on_message(self, message):
+                message = message.message
+                if message < 5:
+                    messages.append(message)
+                else:
+                    raise ValueError("expected")
+
+            def retrieve_initial_sequence(self):
+                return -1
+
+            def store_sequence(self, sequence):
+                pass
+
+            def is_loss_tolerant(self):
+                return False
+
+            def is_terminal(self, error):
+                return isinstance(error, ValueError)
+
+            def on_cancel(self) -> None:
+                on_cancel_call_count.add(1)
+
+        registration_id = await topic.add_listener(Listener())
+        self.assertIsNotNone(registration_id)
+
+        await topic.publish_all(range(10))
+
+        await self.assertTrueEventually(lambda: self.assertEqual(list(range(5)), messages))
+
+        # Should be cancelled since on_message raised error
+        await self.assertTrueEventually(lambda: self.assertEqual(0, len(topic._runners)))
+
+        if compare_client_version("5.4") >= 0:
+            self.assertEqual(1, on_cancel_call_count.get())
+
+    async def test_add_listener_when_on_message_and_is_terminal_raises_error(self):
+        topic = await self.get_topic(random_string())
+
+        messages = []
+
+        on_cancel_call_count = AtomicInteger()
+
+        class Listener(ReliableMessageListener):
+            def on_message(self, message):
+                message = message.message
+                if message < 5:
+                    messages.append(message)
+                else:
+                    raise ValueError("expected")
+
+            def retrieve_initial_sequence(self):
+                return -1
+
+            def store_sequence(self, sequence):
+                pass
+
+            def is_loss_tolerant(self):
+                return False
+
+            def is_terminal(self, error):
+                raise error
+
+            def on_cancel(self) -> None:
+                on_cancel_call_count.add(1)
+
+        registration_id = await topic.add_listener(Listener())
+        self.assertIsNotNone(registration_id)
+
+        await topic.publish_all(range(10))
+
+        await self.assertTrueEventually(lambda: self.assertEqual(list(range(5)), messages))
+
+        # Should be cancelled since on_message raised error
+        await self.assertTrueEventually(lambda: self.assertEqual(0, len(topic._runners)))
+
+        if compare_client_version("5.4") >= 0:
+            self.assertEqual(1, on_cancel_call_count.get())
+
+    async def test_add_listener_with_non_callable(self):
+        topic = await self.get_topic(random_string())
+        with self.assertRaises(TypeError):
+            await topic.add_listener(3)
+
+    async def test_remove_listener(self):
+        topic = await self.get_topic(random_string())
+
+        on_cancel_call_count = AtomicInteger()
+
+        class Listener(ReliableMessageListener):
+            def on_message(self, message) -> None:
+                pass
+
+            def retrieve_initial_sequence(self) -> int:
+                return -1
+
+            def store_sequence(self, sequence: int) -> None:
+                pass
+
+            def is_loss_tolerant(self) -> bool:
+                pass
+
+            def is_terminal(self, error: Exception) -> bool:
+                pass
+
+            def on_cancel(self) -> None:
+                on_cancel_call_count.add(1)
+
+        registration_id = await topic.add_listener(Listener())
+        self.assertTrue(await topic.remove_listener(registration_id))
+        if compare_client_version("5.4") >= 0:
+            self.assertEqual(1, on_cancel_call_count.get())
+
+    async def test_remove_listener_does_not_receive_messages_after_removal(self):
+        topic = await self.get_topic(random_string())
+
+        collector = event_collector()
+        registration_id = await topic.add_listener(collector)
+        self.assertTrue(await topic.remove_listener(registration_id))
+
+        await topic.publish_all(range(10))
+
+        self.assertEqual(0, len(collector.events))
+
+    async def test_remove_listener_twice(self):
+        topic = await self.get_topic(random_string())
+        registration_id = await topic.add_listener(lambda m: m)
+        self.assertTrue(await topic.remove_listener(registration_id))
+        self.assertFalse(await topic.remove_listener(registration_id))
+
+    async def test_publish_with_discard_newest_policy(self):
+        topic = await self.get_topic("discard")
+
+        collector = event_collector()
+        await topic.add_listener(collector)
+
+        for i in range(2 * CAPACITY):
+            await topic.publish(i)
+
+        await self.assertTrueEventually(lambda: self.assertEqual(CAPACITY, len(collector.events)))
+        self.assertEqual(list(range(CAPACITY)), await self.get_ringbuffer_data(topic))
+
+    async def test_publish_with_discard_oldest_policy(self):
+        topic = await self.get_topic("overwrite")
+
+        collector = event_collector()
+        await topic.add_listener(collector)
+
+        for i in range(2 * CAPACITY):
+            await topic.publish(i)
+
+        await self.assertTrueEventually(
+            lambda: self.assertEqual(2 * CAPACITY, len(collector.events))
+        )
+        self.assertEqual(list(range(CAPACITY, 2 * CAPACITY)), await self.get_ringbuffer_data(topic))
+
+    async def test_publish_with_block_policy(self):
+        topic = await self.get_topic("block")
+
+        collector = event_collector()
+        await topic.add_listener(collector)
+
+        for i in range(CAPACITY):
+            await topic.publish(i)
+
+        begin_time = get_current_timestamp()
+
+        for i in range(CAPACITY, 2 * CAPACITY):
+            await topic.publish(i)
+
+        time_passed = get_current_timestamp() - begin_time
+
+        # TTL is set in the XML config
+        self.assertTrue(time_passed >= 2.0)
+
+        await self.assertTrueEventually(
+            lambda: self.assertEqual(2 * CAPACITY, len(collector.events))
+        )
+        self.assertEqual(list(range(CAPACITY, CAPACITY * 2)), await self.get_ringbuffer_data(topic))
+
+    async def test_publish_with_error_policy(self):
+        topic = await self.get_topic("error")
+
+        collector = event_collector()
+        await topic.add_listener(collector)
+
+        for i in range(CAPACITY):
+            await topic.publish(i)
+
+        for i in range(CAPACITY, 2 * CAPACITY):
+            with self.assertRaises(TopicOverloadError):
+                await topic.publish(i)
+
+        await self.assertTrueEventually(lambda: self.assertEqual(CAPACITY, len(collector.events)))
+        self.assertEqual(list(range(CAPACITY)), await self.get_ringbuffer_data(topic))
+
+    async def test_publish_all_with_discard_newest_policy(self):
+        topic = await self.get_topic("discard")
+
+        collector = event_collector()
+        await topic.add_listener(collector)
+
+        await topic.publish_all(range(CAPACITY))
+        await topic.publish_all(range(CAPACITY, 2 * CAPACITY))
+
+        await self.assertTrueEventually(lambda: self.assertEqual(CAPACITY, len(collector.events)))
+        self.assertEqual(list(range(CAPACITY)), await self.get_ringbuffer_data(topic))
+
+    async def test_publish_all_with_discard_oldest_policy(self):
+        topic = await self.get_topic("overwrite")
+        collector = event_collector()
+        await topic.add_listener(collector)
+        await topic.publish_all(range(CAPACITY))
+        await topic.publish_all(range(CAPACITY, 2 * CAPACITY))
+        await self.assertTrueEventually(
+            lambda: self.assertEqual(2 * CAPACITY, len(collector.events))
+        )
+        self.assertEqual(list(range(CAPACITY, 2 * CAPACITY)), await self.get_ringbuffer_data(topic))
+
+    async def test_publish_all_with_block_policy(self):
+        topic = await self.get_topic("block")
+
+        collector = event_collector()
+        await topic.add_listener(collector)
+
+        await topic.publish_all(range(CAPACITY))
+
+        begin_time = get_current_timestamp()
+        await topic.publish_all(range(CAPACITY, 2 * CAPACITY))
+        time_passed = get_current_timestamp() - begin_time
+
+        # TTL is set in the XML config
+        self.assertTrue(time_passed >= 2.0)
+
+        await self.assertTrueEventually(
+            lambda: self.assertEqual(2 * CAPACITY, len(collector.events))
+        )
+        self.assertEqual(list(range(CAPACITY, CAPACITY * 2)), await self.get_ringbuffer_data(topic))
+
+    async def test_publish_all_with_error_policy(self):
+        topic = await self.get_topic("error")
+
+        collector = event_collector()
+        await topic.add_listener(collector)
+
+        await topic.publish_all(range(CAPACITY))
+
+        with self.assertRaises(TopicOverloadError):
+            await topic.publish_all(range(CAPACITY, 2 * CAPACITY))
+
+        await self.assertTrueEventually(lambda: self.assertEqual(CAPACITY, len(collector.events)))
+        self.assertEqual(list(range(CAPACITY)), await self.get_ringbuffer_data(topic))
+
+    async def test_durable_subscription(self):
+        topic = await self.get_topic(random_string())
+
+        class DurableListener(ReliableMessageListener):
+            def __init__(self):
+                self.objects = []
+                self.sequences = []
+                self.sequence = -1
+
+            def on_message(self, message):
+                self.objects.append(message.message)
+
+            def retrieve_initial_sequence(self):
+                if self.sequence == -1:
+                    return self.sequence
+
+                # +1 to read the next item
+                return self.sequence + 1
+
+            def store_sequence(self, sequence):
+                self.sequences.append(sequence)
+                self.sequence = sequence
+
+            def is_loss_tolerant(self):
+                return False
+
+            def is_terminal(self, error):
+                return True
+
+        listener = DurableListener()
+
+        registration_id = await topic.add_listener(listener)
+        await topic.publish("item1")
+
+        await self.assertTrueEventually(lambda: self.assertEqual(["item1"], listener.objects))
+
+        self.assertTrue(await topic.remove_listener(registration_id))
+
+        await topic.publish("item2")
+        await topic.publish("item3")
+
+        await topic.add_listener(listener)
+
+        def assertion():
+            self.assertEqual(["item1", "item2", "item3"], listener.objects)
+            self.assertEqual([0, 1, 2], listener.sequences)
+
+        await self.assertTrueEventually(assertion)
+
+    async def test_client_receives_when_server_publish_messages(self):
+        skip_if_client_version_older_than(self, "4.2.1")
+
+        topic_name = random_string()
+        topic = await self.get_topic(topic_name)
+
+        received_message_count = [0]
+
+        def listener(message):
+            self.assertIsNotNone(message.member)
+            received_message_count[0] += 1
+
+        await topic.add_listener(listener)
+
+        message_count = 10
+
+        script = """
+        var topic = instance_0.getReliableTopic("%s");
+        for (var i = 0; i < %d; i++) {
+            topic.publish(i);
+        }
+        """ % (
+            topic_name,
+            message_count,
+        )
+
+        self.rc.executeOnController(self.cluster.id, script, Lang.JAVASCRIPT)
+        await self.assertTrueEventually(
+            lambda: self.assertEqual(message_count, received_message_count[0])
+        )
+
+    async def get_ringbuffer_data(self, topic):
+        ringbuffer = topic._ringbuffer
+        head_sequence = await ringbuffer.head_sequence()
+        items = await ringbuffer.read_many(head_sequence, CAPACITY, CAPACITY)
+        return list(
+            map(
+                lambda m: topic._to_object(m.payload),
+                items,
+            )
+        )
+
+    async def get_topic(self, name):
+        topic = await self.client.get_reliable_topic(name)
+        self.topics.append(topic)
+        return topic
