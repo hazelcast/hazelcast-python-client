@@ -157,7 +157,7 @@ jobs:
 
       - name: Publish results to Codecov for PR coming from hazelcast organization
         if: ${{ matrix.python-version == needs.python-versions.outputs.latest-python-version && matrix.os == 'ubuntu-latest' &&  github.event_name == 'pull_request_target' }}
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           use_oidc: true
           files: ./coverage.xml
@@ -166,7 +166,7 @@ jobs:
 
       - name: Publish results to Codecov for Push
         if: ${{ matrix.python-version == needs.python-versions.outputs.latest-python-version && matrix.os == 'ubuntu-latest' &&  github.event_name == 'push' }}
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           use_oidc: true
           files: ./coverage.xml
@@ -174,7 +174,7 @@ jobs:
 
       - name: Publish result to Codecov for PR coming from community
         if: ${{ matrix.python-version == needs.python-versions.outputs.latest-python-version && matrix.os == 'ubuntu-latest' && github.event_name == 'workflow_dispatch' }}
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           use_oidc: true
           files: ./coverage.xml
