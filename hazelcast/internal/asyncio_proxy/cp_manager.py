@@ -2,9 +2,11 @@ from hazelcast.cp import (
     _without_default_group_name,
     _get_object_name_for_proxy,
     ATOMIC_LONG_SERVICE,
+    ATOMIC_REFERENCE_SERVICE,
 )
 from hazelcast.internal.asyncio_invocation import Invocation
 from hazelcast.internal.asyncio_proxy.atomic_long import AtomicLong
+from hazelcast.internal.asyncio_proxy.atomic_reference import AtomicReference
 from hazelcast.protocol.codec import cp_group_create_cp_group_codec
 
 
@@ -56,6 +58,26 @@ class CPSubsystem:
         """
         return await self._proxy_manager.get_or_create(ATOMIC_LONG_SERVICE, name)
 
+    async def get_atomic_reference(self, name: str) -> AtomicReference:
+        """Returns the distributed AtomicReference instance with given name.
+
+        The instance is created on CP Subsystem.
+
+        If no group name is given within the ``name`` argument, then the
+        AtomicLong instance will be created on the DEFAULT CP group.
+        If a group name is given, like
+        ``.get_atomic_reference("myRef@group1")``, the given group will be
+        initialized first, if not initialized already, and then the instance
+        will be created on this group.
+
+        Args:
+            name: Name of the AtomicReference.
+
+        Returns:
+            The AtomicReference proxy for the given name.
+        """
+        return await self._proxy_manager.get_or_create(ATOMIC_REFERENCE_SERVICE, name)
+
 
 class CPProxyManager:
     def __init__(self, context):
@@ -68,6 +90,8 @@ class CPProxyManager:
         group_id = await self._get_group_id(proxy_name)
         if service_name == ATOMIC_LONG_SERVICE:
             return AtomicLong(self._context, group_id, service_name, proxy_name, object_name)
+        elif service_name == ATOMIC_REFERENCE_SERVICE:
+            return AtomicReference(self._context, group_id, service_name, proxy_name, object_name)
 
         raise ValueError("Unknown service name: %s" % service_name)
 
