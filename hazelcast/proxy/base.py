@@ -266,7 +266,9 @@ class TopicMessage(typing.Generic[MessageType]):
 
     __slots__ = ("name", "message", "publish_time", "member")
 
-    def __init__(self, name: str, message: MessageType, publish_time: int, member: MemberInfo):
+    def __init__(
+        self, name: str, message: MessageType, publish_time: int, member: MemberInfo | None
+    ):
         self.name = name
         self.message = message
         self.publish_time = publish_time

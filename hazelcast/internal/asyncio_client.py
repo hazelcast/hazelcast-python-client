@@ -11,6 +11,7 @@ from hazelcast.core import DistributedObjectEvent
 from hazelcast.discovery import HazelcastCloudAddressProvider
 from hazelcast.errors import IllegalStateError, InvalidConfigurationError
 from hazelcast.internal.asyncio_invocation import InvocationService, Invocation
+from hazelcast.internal.asyncio_proxy.pn_counter import PNCounter
 from hazelcast.internal.asyncio_proxy.vector_collection import VectorCollection
 from hazelcast.lifecycle import LifecycleService, LifecycleState, _InternalLifecycleService
 from hazelcast.internal.asyncio_listener import ClusterViewListenerService, ListenerService
@@ -28,10 +29,13 @@ from hazelcast.internal.asyncio_proxy.manager import (
     MULTI_MAP_SERVICE,
     ProxyManager,
     QUEUE_SERVICE,
+    RELIABLE_TOPIC_SERVICE,
     REPLICATED_MAP_SERVICE,
     RINGBUFFER_SERVICE,
     SET_SERVICE,
+    TOPIC_SERVICE,
     VECTOR_SERVICE,
+    PN_COUNTER_SERVICE,
 )
 from hazelcast.internal.asyncio_proxy.base import Proxy
 from hazelcast.internal.asyncio_proxy.executor import Executor
@@ -39,13 +43,15 @@ from hazelcast.internal.asyncio_proxy.list import List
 from hazelcast.internal.asyncio_proxy.map import Map
 from hazelcast.internal.asyncio_proxy.multi_map import MultiMap
 from hazelcast.internal.asyncio_proxy.queue import Queue
+from hazelcast.internal.asyncio_proxy.reliable_topic import ReliableTopic
 from hazelcast.internal.asyncio_proxy.replicated_map import ReplicatedMap
 from hazelcast.internal.asyncio_proxy.ringbuffer import Ringbuffer
 from hazelcast.internal.asyncio_proxy.set import Set
+from hazelcast.internal.asyncio_proxy.topic import Topic
 from hazelcast.internal.asyncio_reactor import AsyncioReactor
 from hazelcast.serialization import SerializationServiceV1
 from hazelcast.internal.asyncio_statistics import Statistics
-from hazelcast.types import KeyType, ValueType, ItemType
+from hazelcast.types import KeyType, MessageType, ValueType, ItemType
 from hazelcast.util import AtomicInteger, RoundRobinLB
 
 __all__ = ("HazelcastClient",)
@@ -335,7 +341,18 @@ class HazelcastClient:
         """
         return await self._proxy_manager.get_or_create(REPLICATED_MAP_SERVICE, name)
 
-    async def get_ringbuffer(self, name: str) -> Ringbuffer[ItemType]:
+    async def get_reliable_topic(self, name: str) -> ReliableTopic:
+        """Returns the ReliableTopic instance with the specified name.
+
+        Args:
+            name: Name of the ReliableTopic.
+
+        Returns:
+            Distributed ReliableTopic instance with the specified name.
+        """
+        return await self._proxy_manager.get_or_create(RELIABLE_TOPIC_SERVICE, name)
+
+    async def get_ringbuffer(self, name: str) -> Ringbuffer:
         """Returns the distributed Ringbuffer instance with the specified name.
 
         Args:
@@ -345,6 +362,28 @@ class HazelcastClient:
             Distributed Ringbuffer instance with the specified name.
         """
         return await self._proxy_manager.get_or_create(RINGBUFFER_SERVICE, name)
+
+    async def get_pn_counter(self, name: str) -> PNCounter:
+        """Returns the PN Counter instance with the specified name.
+
+        Args:
+            name: Name of the PN Counter.
+
+        Returns:
+            Distributed PN Counter instance with the specified name.
+        """
+        return await self._proxy_manager.get_or_create(PN_COUNTER_SERVICE, name)
+
+    async def get_topic(self, name: str) -> Topic[MessageType]:
+        """Returns the distributed topic instance with the specified name.
+
+        Args:
+            name: Name of the distributed topic.
+
+        Returns:
+            Distributed topic instance with the specified name.
+        """
+        return await self._proxy_manager.get_or_create(TOPIC_SERVICE, name)
 
     async def create_vector_collection_config(
         self,

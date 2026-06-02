@@ -26,7 +26,7 @@ jobs:
         id: composite
         uses: hazelcast/hazelcast-tpm/membership@main
         with:
-          member-name: ${{ github.actor }}
+          member-name: ${{ github.triggering_actor }}
           token: ${{ secrets.GH_TOKEN }}
           
   python-versions:
@@ -50,7 +50,7 @@ jobs:
       
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           
@@ -79,7 +79,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v5
         with:
-          role-to-assume: ${{ secrets.AWS_HAZELCAST_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
+          role-to-assume: ${{ vars.AWS_HAZELCAST_OIDC_GITHUB_ACTIONS_ROLE_ARN }}
           aws-region: 'us-east-1'
 
       - name: Get Secrets
