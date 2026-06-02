@@ -91,10 +91,6 @@ class HazelcastClient:
     Warning:
         Asyncio client is not thread-safe, do not access it from other threads.
 
-    Warning:
-        Asyncio client is BETA.
-        Its public API may change until General Availability release.
-
     See the :class:`hazelcast.config.Config` documentation for the possible
     configuration options.
     """
