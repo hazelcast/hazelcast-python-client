@@ -4,6 +4,8 @@ warnings.warn("Asyncio API for Hazelcast Python Client is BETA. DO NOT use it in
 del warnings
 
 __all__ = [
+    "AtomicLong",
+    "CPSubsystem",
     "EntryEventCallable",
     "Executor",
     "HazelcastClient",
@@ -32,3 +34,5 @@ from hazelcast.internal.asyncio_proxy.ringbuffer import Ringbuffer
 from hazelcast.internal.asyncio_proxy.set import Set
 from hazelcast.internal.asyncio_proxy.vector_collection import VectorCollection
 from hazelcast.internal.asyncio_proxy.reliable_topic import ReliableTopic, ReliableMessageListener
+from hazelcast.internal.asyncio_proxy.cp_manager import CPSubsystem
+from hazelcast.internal.asyncio_proxy.atomic_long import AtomicLong
