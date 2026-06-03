@@ -1,6 +1,7 @@
 __all__ = [
     "AtomicLong",
     "CPSubsystem",
+    "CountDownLatch",
     "EntryEventCallable",
     "Executor",
     "HazelcastClient",
@@ -31,3 +32,4 @@ from hazelcast.internal.asyncio_proxy.vector_collection import VectorCollection
 from hazelcast.internal.asyncio_proxy.reliable_topic import ReliableTopic, ReliableMessageListener
 from hazelcast.internal.asyncio_proxy.cp_manager import CPSubsystem
 from hazelcast.internal.asyncio_proxy.atomic_long import AtomicLong
+from hazelcast.internal.asyncio_proxy.countdown_latch import CountDownLatch
