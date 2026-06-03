@@ -11,6 +11,7 @@ from hazelcast.core import DistributedObjectEvent
 from hazelcast.discovery import HazelcastCloudAddressProvider
 from hazelcast.errors import IllegalStateError, InvalidConfigurationError
 from hazelcast.internal.asyncio_invocation import InvocationService, Invocation
+from hazelcast.internal.asyncio_proxy.cp_manager import CPSubsystem
 from hazelcast.internal.asyncio_proxy.pn_counter import PNCounter
 from hazelcast.internal.asyncio_proxy.vector_collection import VectorCollection
 from hazelcast.internal.asyncio_sql import _InternalSqlService, SqlService
@@ -207,6 +208,7 @@ class HazelcastClient:
             self._compact_schema_service,
         )
         self._proxy_manager = ProxyManager(self._context)
+        self._cp_subsystem = CPSubsystem(self._context)
         self._lock_reference_id_generator = AtomicInteger(1)
         self._statistics = Statistics(
             self,
@@ -527,6 +529,11 @@ class HazelcastClient:
     def sql(self) -> SqlService:
         """Returns a service to execute distributed SQL queries."""
         return self._sql_service
+
+    @property
+    def cp_subsystem(self) -> CPSubsystem:
+        """CP Subsystem offers set of in-memory linearizable data structures."""
+        return self._cp_subsystem
 
     def _create_address_provider(self):
         config = self._config
