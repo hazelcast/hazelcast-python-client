@@ -671,30 +671,6 @@ class SqlServiceV5LiteMemberClusterTest(SingleMemberTestCase):
 
 class SqlServiceV5MixedClusterTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
 
-    # rc = None
-    # cluster = None
-    # is_v5_or_newer_server = None
-    # client = None
-    #
-    # @classmethod
-    # def setUpClass(cls):
-    #     cls.rc = cls.create_rc()
-    #     cls.is_v5_or_newer_server = compare_server_version_with_rc(cls.rc, "5.0") >= 0
-    #
-    #     cluster_config = (
-    #         LITE_MEMBER_CONFIG % JET_ENABLED_CONFIG
-    #         if cls.is_v5_or_newer_server
-    #         else LITE_MEMBER_CONFIG % ""
-    #     )
-    #     cls.cluster = cls.create_cluster(cls.rc, cluster_config)
-    #     cls.cluster.start_member()
-    #     cls.cluster.start_member()
-    #
-    #     script = """instance_0.getCluster().promoteLocalLiteMember();"""
-    #     cls.rc.executeOnController(cls.cluster.id, script, Lang.JAVASCRIPT)
-    #
-    #     cls.client = HazelcastClient(cluster_name=cls.cluster.id)
-
     @classmethod
     def setUpClass(cls):
         cls.rc = cls.create_rc()

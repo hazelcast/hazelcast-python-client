@@ -318,6 +318,9 @@ class SqlResult(typing.AsyncIterable[SqlRow]):
                 # Do nothing if the result is already closed.
                 return None
 
+            if self._fetch_task:
+                self._fetch_task.cancel()
+
             error = HazelcastSqlError(
                 self._sql_service.get_client_id(),
                 _SqlErrorCode.CANCELLED_BY_USER,
@@ -326,7 +329,6 @@ class SqlResult(typing.AsyncIterable[SqlRow]):
             )
             if not self._fetch_future:
                 # Make sure that all subsequent fetches will fail.
-                # XXX:
                 self._fetch_future = asyncio.Future()
 
             self._on_fetch_error_unsafe(error)
