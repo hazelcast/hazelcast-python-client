@@ -2,7 +2,8 @@ from hazelcast.cp import (
     _without_default_group_name,
     _get_object_name_for_proxy,
     ATOMIC_LONG_SERVICE,
-    ATOMIC_REFERENCE_SERVICE, COUNT_DOWN_LATCH_SERVICE,
+    ATOMIC_REFERENCE_SERVICE,
+    COUNT_DOWN_LATCH_SERVICE,
 )
 from hazelcast.internal.asyncio_invocation import Invocation
 from hazelcast.internal.asyncio_proxy.atomic_long import AtomicLong

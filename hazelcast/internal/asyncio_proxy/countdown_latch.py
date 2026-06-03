@@ -2,8 +2,13 @@ import uuid
 
 from hazelcast.errors import OperationTimeoutError
 from hazelcast.internal.asyncio_proxy.cp import BaseCPProxy
-from hazelcast.protocol.codec import count_down_latch_await_codec, count_down_latch_get_round_codec, \
-    count_down_latch_count_down_codec, count_down_latch_get_count_codec, count_down_latch_try_set_count_codec
+from hazelcast.protocol.codec import (
+    count_down_latch_await_codec,
+    count_down_latch_get_round_codec,
+    count_down_latch_count_down_codec,
+    count_down_latch_get_count_codec,
+    count_down_latch_try_set_count_codec,
+)
 from hazelcast.util import check_is_number, to_millis, check_is_int, check_true
 
 

@@ -13,7 +13,6 @@ inf = 2**31 - 1
 
 @pytest.mark.enterprise
 class CountDownLatchTest(CPTestCase):
-
     async def test_latch_in_another_group(self):
         latch = await self.get_latch()
         another_latch = await self.client.cp_subsystem.get_count_down_latch(
