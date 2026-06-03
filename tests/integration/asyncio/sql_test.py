@@ -670,7 +670,6 @@ class SqlServiceV5LiteMemberClusterTest(SingleMemberTestCase):
 
 
 class SqlServiceV5MixedClusterTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.rc = cls.create_rc()
