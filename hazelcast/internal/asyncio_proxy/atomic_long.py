@@ -244,7 +244,7 @@ class AtomicLong(BaseCPProxy):
         try:
             function_data = self._to_data(function)
         except SchemaNotReplicatedError as e:
-            return self._send_schema_and_retry(e, self.apply, function)
+            return await self._send_schema_and_retry(e, self.apply, function)
 
         codec = atomic_long_apply_codec
         request = codec.encode_request(self._group_id, self._object_name, function_data)
