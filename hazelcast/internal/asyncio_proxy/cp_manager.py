@@ -2,11 +2,12 @@ from hazelcast.cp import (
     _without_default_group_name,
     _get_object_name_for_proxy,
     ATOMIC_LONG_SERVICE,
-    ATOMIC_REFERENCE_SERVICE,
+    ATOMIC_REFERENCE_SERVICE, COUNT_DOWN_LATCH_SERVICE,
 )
 from hazelcast.internal.asyncio_invocation import Invocation
 from hazelcast.internal.asyncio_proxy.atomic_long import AtomicLong
 from hazelcast.internal.asyncio_proxy.atomic_reference import AtomicReference
+from hazelcast.internal.asyncio_proxy.countdown_latch import CountDownLatch
 from hazelcast.protocol.codec import cp_group_create_cp_group_codec
 
 
@@ -78,6 +79,26 @@ class CPSubsystem:
         """
         return await self._proxy_manager.get_or_create(ATOMIC_REFERENCE_SERVICE, name)
 
+    async def get_count_down_latch(self, name: str) -> CountDownLatch:
+        """Returns the distributed CountDownLatch instance with given name.
+
+        The instance is created on CP Subsystem.
+
+        If no group name is given within the ``name`` argument, then the
+        CountDownLatch instance will be created on the DEFAULT CP group.
+        If a group name is given, like
+        ``.get_count_down_latch("myLatch@group1")``, the given group will be
+        initialized first, if not initialized already, and then the instance
+        will be created on this group.
+
+        Args:
+            name: Name of the CountDownLatch.
+
+        Returns:
+            The CountDownLatch proxy for the given name.
+        """
+        return await self._proxy_manager.get_or_create(COUNT_DOWN_LATCH_SERVICE, name)
+
 
 class CPProxyManager:
     def __init__(self, context):
@@ -92,6 +113,8 @@ class CPProxyManager:
             return AtomicLong(self._context, group_id, service_name, proxy_name, object_name)
         elif service_name == ATOMIC_REFERENCE_SERVICE:
             return AtomicReference(self._context, group_id, service_name, proxy_name, object_name)
+        elif service_name == COUNT_DOWN_LATCH_SERVICE:
+            return CountDownLatch(self._context, group_id, service_name, proxy_name, object_name)
 
         raise ValueError("Unknown service name: %s" % service_name)
 
