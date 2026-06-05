@@ -4,12 +4,21 @@ from hazelcast.cp import (
     ATOMIC_LONG_SERVICE,
     ATOMIC_REFERENCE_SERVICE,
     COUNT_DOWN_LATCH_SERVICE,
+    SEMAPHORE_SERVICE,
 )
 from hazelcast.internal.asyncio_invocation import Invocation
 from hazelcast.internal.asyncio_proxy.atomic_long import AtomicLong
 from hazelcast.internal.asyncio_proxy.atomic_reference import AtomicReference
 from hazelcast.internal.asyncio_proxy.countdown_latch import CountDownLatch
-from hazelcast.protocol.codec import cp_group_create_cp_group_codec
+from hazelcast.internal.asyncio_proxy.semaphore import (
+    Semaphore,
+    SessionAwareSemaphore,
+    SessionlessSemaphore,
+)
+from hazelcast.protocol.codec import (
+    cp_group_create_cp_group_codec,
+    semaphore_get_semaphore_type_codec,
+)
 
 
 class CPSubsystem:
@@ -100,6 +109,25 @@ class CPSubsystem:
         """
         return await self._proxy_manager.get_or_create(COUNT_DOWN_LATCH_SERVICE, name)
 
+    async def get_semaphore(self, name: str) -> Semaphore:
+        """Returns the distributed Semaphore instance with given name.
+
+        The instance is created on CP Subsystem.
+
+        If no group name is given within the ``name`` argument, then the
+        Semaphore instance will be created on the DEFAULT CP group.
+        If a group name is given, like ``.get_semaphore("mySemaphore@group1")``,
+        the given group will be initialized first, if not initialized
+        already, and then the instance will be created on this group.
+
+        Args:
+            name: Name of the Semaphore
+
+        Returns:
+            The Semaphore proxy for the given name.
+        """
+        return await self._proxy_manager.get_or_create(SEMAPHORE_SERVICE, name)
+
 
 class CPProxyManager:
     def __init__(self, context):
@@ -116,8 +144,19 @@ class CPProxyManager:
             return AtomicReference(self._context, group_id, service_name, proxy_name, object_name)
         elif service_name == COUNT_DOWN_LATCH_SERVICE:
             return CountDownLatch(self._context, group_id, service_name, proxy_name, object_name)
+        elif service_name == SEMAPHORE_SERVICE:
+            return await self._create_semaphore(group_id, proxy_name, object_name)
 
         raise ValueError("Unknown service name: %s" % service_name)
+
+    async def _create_semaphore(self, group_id, proxy_name, object_name):
+        codec = semaphore_get_semaphore_type_codec
+        request = codec.encode_request(proxy_name)
+        invocation = Invocation(request, response_handler=codec.decode_response)
+        invocation_service = self._context.invocation_service
+        jdk_compatible = await invocation_service.ainvoke(invocation)
+        kls = SessionlessSemaphore if jdk_compatible else SessionAwareSemaphore
+        return kls(self._context, group_id, SEMAPHORE_SERVICE, proxy_name, object_name)
 
     async def _get_group_id(self, proxy_name):
         codec = cp_group_create_cp_group_codec
