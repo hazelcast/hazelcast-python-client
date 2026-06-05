@@ -15,6 +15,7 @@ __all__ = [
     "ReliableTopic",
     "ReplicatedMap",
     "Ringbuffer",
+    "Semaphore",
     "Set",
     "VectorCollection",
 ]
@@ -35,3 +36,4 @@ from hazelcast.internal.asyncio_proxy.cp_manager import CPSubsystem
 from hazelcast.internal.asyncio_proxy.atomic_long import AtomicLong
 from hazelcast.internal.asyncio_proxy.atomic_reference import AtomicReference
 from hazelcast.internal.asyncio_proxy.countdown_latch import CountDownLatch
+from hazelcast.internal.asyncio_proxy.semaphore import Semaphore
