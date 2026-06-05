@@ -75,7 +75,7 @@ class CPSubsystem:
         The instance is created on CP Subsystem.
 
         If no group name is given within the ``name`` argument, then the
-        AtomicLong instance will be created on the DEFAULT CP group.
+        AtomicReference instance will be created on the DEFAULT CP group.
         If a group name is given, like
         ``.get_atomic_reference("myRef@group1")``, the given group will be
         initialized first, if not initialized already, and then the instance
