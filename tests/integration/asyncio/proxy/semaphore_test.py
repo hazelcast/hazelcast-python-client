@@ -35,7 +35,7 @@ class SemaphoreTest(CPTestCase):
                 self.assertEqual(0, await another_semaphore.available_permits())
                 await semaphore.acquire()
                 self.assertEqual(0, await semaphore.available_permits())
-                self.assertEqual(0, await semaphore.available_permits())
+                self.assertEqual(0, await another_semaphore.available_permits())
 
     async def test_use_after_destroy(self):
         for semaphore_type in SEMAPHORE_TYPES:
@@ -233,7 +233,7 @@ class SemaphoreTest(CPTestCase):
         else:
             self.fail("expected IllegalStateError to be raised")
 
-    async def test_test_try_acquire(self):
+    async def test_try_acquire(self):
         for semaphore_type in SEMAPHORE_TYPES:
             with self.subTest(semaphore_type, semaphore_type=semaphore_type):
                 semaphore = await self.get_semaphore(semaphore_type, 5)

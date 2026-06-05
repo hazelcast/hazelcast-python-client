@@ -382,7 +382,7 @@ class SessionAwareSemaphore(Semaphore, SessionAwareCPProxy):
                 remaining_timeout = timeout - (time.time() - start)
                 if remaining_timeout <= 0:
                     return False
-                return self._do_try_acquire(
+                return await self._do_try_acquire(
                     current_thread_id, invocation_uuid, permits, remaining_timeout
                 )
             except WaitKeyCancelledError:
