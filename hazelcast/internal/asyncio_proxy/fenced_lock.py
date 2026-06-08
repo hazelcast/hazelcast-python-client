@@ -268,4 +268,3 @@ class FencedLock(SessionAwareCPProxy):
         codec = fenced_lock_get_lock_ownership_codec
         request = codec.encode_request(self._group_id, self._object_name)
         return await self._ainvoke(request, codec.decode_response)
-
