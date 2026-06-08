@@ -5,6 +5,7 @@ __all__ = [
     "CountDownLatch",
     "EntryEventCallable",
     "Executor",
+    "FencedLock",
     "HazelcastClient",
     "List",
     "Map",
@@ -37,3 +38,4 @@ from hazelcast.internal.asyncio_proxy.atomic_long import AtomicLong
 from hazelcast.internal.asyncio_proxy.atomic_reference import AtomicReference
 from hazelcast.internal.asyncio_proxy.countdown_latch import CountDownLatch
 from hazelcast.internal.asyncio_proxy.semaphore import Semaphore
+from hazelcast.internal.asyncio_proxy.fenced_lock import FencedLock
