@@ -1,9 +1,8 @@
-import warnings
-
-warnings.warn("Asyncio API for Hazelcast Python Client is BETA. DO NOT use it in production.")
-del warnings
-
 __all__ = [
+    "AtomicLong",
+    "AtomicReference",
+    "CPSubsystem",
+    "CountDownLatch",
     "EntryEventCallable",
     "FlakeIdGenerator",
     "Executor",
@@ -17,6 +16,7 @@ __all__ = [
     "Queue",
     "ReplicatedMap",
     "Ringbuffer",
+    "Semaphore",
     "Set",
     "VectorCollection",
 ]
@@ -34,3 +34,8 @@ from hazelcast.internal.asyncio_proxy.ringbuffer import Ringbuffer
 from hazelcast.internal.asyncio_proxy.set import Set
 from hazelcast.internal.asyncio_proxy.vector_collection import VectorCollection
 from hazelcast.internal.asyncio_proxy.reliable_topic import ReliableTopic, ReliableMessageListener
+from hazelcast.internal.asyncio_proxy.cp_manager import CPSubsystem
+from hazelcast.internal.asyncio_proxy.atomic_long import AtomicLong
+from hazelcast.internal.asyncio_proxy.atomic_reference import AtomicReference
+from hazelcast.internal.asyncio_proxy.countdown_latch import CountDownLatch
+from hazelcast.internal.asyncio_proxy.semaphore import Semaphore

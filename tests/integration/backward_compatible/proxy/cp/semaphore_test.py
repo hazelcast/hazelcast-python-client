@@ -38,7 +38,7 @@ class SemaphoreTest(CPTestCase):
         self.assertEqual(0, another_semaphore.available_permits())
         semaphore.acquire()
         self.assertEqual(0, semaphore.available_permits())
-        self.assertEqual(0, semaphore.available_permits())
+        self.assertEqual(0, another_semaphore.available_permits())
 
     @parameterized.expand(SEMAPHORE_TYPES)
     def test_use_after_destroy(self, semaphore_type):
@@ -258,7 +258,7 @@ class SemaphoreTest(CPTestCase):
             semaphore.release()
 
     @parameterized.expand(SEMAPHORE_TYPES)
-    def test_test_try_acquire(self, semaphore_type):
+    def test_try_acquire(self, semaphore_type):
         semaphore = self.get_semaphore(semaphore_type, 5)
         self.assertTrue(semaphore.try_acquire())
         self.assertEqual(4, semaphore.available_permits())

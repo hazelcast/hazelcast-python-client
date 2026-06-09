@@ -105,11 +105,6 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
 
     Warning:
         Asyncio client map proxy is not thread-safe, do not access it from other threads.
-
-    Warning:
-        Asyncio client is BETA.
-        Its public API may change until General Availability release.
-
     """
 
     def __init__(self, service_name, name, context):
