@@ -117,8 +117,58 @@ class SemaphoreTest(CPTestCase):
                 else:
                     self.fail("expected DistributedObjectDestroyedError to be raised")
 
-    # TODO: Implement test_acquire_blocks_until_someone_releases after lock context is implemented
-    # TODO: test_acquire_blocks_until_semaphore_is_destroyed after lock context is implemented
+    async def test_acquire_blocks_until_someone_releases(self):
+        for semaphore_type in SEMAPHORE_TYPES:
+            with self.subTest(semaphore_type, semaphore_type=semaphore_type):
+                semaphore = await self.get_semaphore(semaphore_type, 1)
+                event = asyncio.Event()
+                event2 = asyncio.Event()
+
+                async def run():
+                    await semaphore.acquire(1)
+                    event.set()
+                    await event2.wait()
+                    await asyncio.sleep(1)
+                    await semaphore.release()
+
+                t = asyncio.create_task(run())
+                await event.wait()
+                start = get_current_timestamp()
+                f = semaphore.acquire()
+                event2.set()
+                await f
+                self.assertGreaterEqual(get_current_timestamp() - start, 1)
+                await t
+
+    async def test_acquire_blocks_until_semaphore_is_destroyed(self):
+        for semaphore_type in SEMAPHORE_TYPES:
+            with self.subTest(semaphore_type, semaphore_type=semaphore_type):
+                semaphore = await self.get_semaphore(semaphore_type, 1)
+                event = asyncio.Event()
+                event2 = asyncio.Event()
+
+                async def run():
+                    await semaphore.acquire(1)
+                    event.set()
+                    await event2.wait()
+                    await asyncio.sleep(1)
+                    await semaphore.destroy()
+
+                t = asyncio.create_task(run())
+                await event.wait()
+                start = get_current_timestamp()
+                f = semaphore.acquire()
+                event2.set()
+
+                try:
+                    await f
+                except DistributedObjectDestroyedError:
+                    pass
+                else:
+                    self.fail("expected DistributedObjectDestroyedError to be raised")
+
+                self.assertGreaterEqual(get_current_timestamp() - start, 1)
+                await t
 
     async def test_available_permits(self):
         for semaphore_type in SEMAPHORE_TYPES:
