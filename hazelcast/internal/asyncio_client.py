@@ -27,6 +27,7 @@ from hazelcast.protocol.codec import (
 )
 from hazelcast.internal.asyncio_proxy.manager import (
     EXECUTOR_SERVICE,
+    FLAKE_ID_GENERATOR_SERVICE,
     LIST_SERVICE,
     MAP_SERVICE,
     MULTI_MAP_SERVICE,
@@ -42,6 +43,7 @@ from hazelcast.internal.asyncio_proxy.manager import (
 )
 from hazelcast.internal.asyncio_proxy.base import Proxy
 from hazelcast.internal.asyncio_proxy.executor import Executor
+from hazelcast.internal.asyncio_proxy.flake_id_generator import FlakeIdGenerator
 from hazelcast.internal.asyncio_proxy.list import List
 from hazelcast.internal.asyncio_proxy.map import Map
 from hazelcast.internal.asyncio_proxy.multi_map import MultiMap
@@ -354,6 +356,17 @@ class HazelcastClient:
         """
         return await self._proxy_manager.get_or_create(REPLICATED_MAP_SERVICE, name)
 
+    async def get_flake_id_generator(self, name: str) -> FlakeIdGenerator:
+        """Returns the FlakeIdGenerator instance with the specified name.
+
+        Args:
+            name: Name of the FlakeIdGenerator.
+
+        Returns:
+            FlakeIdGenerator instance with the specified name.
+        """
+        return await self._proxy_manager.get_or_create(FLAKE_ID_GENERATOR_SERVICE, name)
+
     async def get_reliable_topic(self, name: str) -> ReliableTopic:
         """Returns the ReliableTopic instance with the specified name.
 
@@ -365,7 +378,7 @@ class HazelcastClient:
         """
         return await self._proxy_manager.get_or_create(RELIABLE_TOPIC_SERVICE, name)
 
-    async def get_ringbuffer(self, name: str) -> Ringbuffer:
+    async def get_ringbuffer(self, name: str) -> Ringbuffer[ItemType]:
         """Returns the distributed Ringbuffer instance with the specified name.
 
         Args:
