@@ -251,4 +251,12 @@ def get_entry_listener_flags(**kwargs):
 
 
 def task_id():
+    # Builtin id function returns an integer which is guaranteed to be unique among existing objects.
+    # The returned id is derived from the memory location of the object in CPython (the only Python implementation we officially support).
+    # See: https://docs.python.org/3/library/functions.html#id
+    # The address space limit for 64bit systems is 52bits (AMD64) to 56bits (ARM64), so the id fits into a long comfortably:
+    # See: https://en.wikipedia.org/wiki/64-bit_computing#Limits_of_processors
+    # Since the task itself is an object, the id can be used as a pseudo-id for the task.
+    # When the task ends, the id can be assigned to another task, but that's not an issue.
+    # Since the task id is used to distinguish between running tasks. --YT
     return id(asyncio.current_task())

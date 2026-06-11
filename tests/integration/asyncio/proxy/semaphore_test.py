@@ -21,7 +21,7 @@ class SemaphoreTest(CPTestCase):
 
     async def asyncTearDown(self):
         if self.semaphore:
-            self.semaphore.destroy()
+            await self.semaphore.destroy()
         await super().asyncTearDown()
 
     async def test_semaphore_in_another_group(self):
