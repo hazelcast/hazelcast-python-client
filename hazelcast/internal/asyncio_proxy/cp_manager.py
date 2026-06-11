@@ -1,3 +1,5 @@
+import asyncio
+
 from hazelcast.cp import (
     _without_default_group_name,
     _get_object_name_for_proxy,
@@ -5,11 +7,13 @@ from hazelcast.cp import (
     ATOMIC_REFERENCE_SERVICE,
     COUNT_DOWN_LATCH_SERVICE,
     SEMAPHORE_SERVICE,
+    LOCK_SERVICE,
 )
 from hazelcast.internal.asyncio_invocation import Invocation
 from hazelcast.internal.asyncio_proxy.atomic_long import AtomicLong
 from hazelcast.internal.asyncio_proxy.atomic_reference import AtomicReference
 from hazelcast.internal.asyncio_proxy.countdown_latch import CountDownLatch
+from hazelcast.internal.asyncio_proxy.fenced_lock import FencedLock
 from hazelcast.internal.asyncio_proxy.semaphore import (
     Semaphore,
     SessionAwareSemaphore,
@@ -109,6 +113,25 @@ class CPSubsystem:
         """
         return await self._proxy_manager.get_or_create(COUNT_DOWN_LATCH_SERVICE, name)
 
+    async def get_lock(self, name: str) -> FencedLock:
+        """Returns the distributed FencedLock instance with given name.
+
+        The instance is created on CP Subsystem.
+
+        If no group name is given within the ``name`` argument, then the
+        FencedLock instance will be created on the DEFAULT CP group.
+        If a group name is given, like ``.get_lock("myLock@group1")``,
+        the given group will be initialized first, if not initialized
+        already, and then the instance will be created on this group.
+
+        Args:
+            name: Name of the FencedLock
+
+        Returns:
+            The FencedLock proxy for the given name.
+        """
+        return await self._proxy_manager.get_or_create(LOCK_SERVICE, name)
+
     async def get_semaphore(self, name: str) -> Semaphore:
         """Returns the distributed Semaphore instance with given name.
 
@@ -132,6 +155,8 @@ class CPSubsystem:
 class CPProxyManager:
     def __init__(self, context):
         self._context = context
+        self._lock_proxies = dict()  # proxy_name to FencedLock
+        self._mux = asyncio.Lock()  # Guards the _lock_proxies
 
     async def get_or_create(self, service_name, proxy_name):
         proxy_name = _without_default_group_name(proxy_name)
@@ -144,10 +169,25 @@ class CPProxyManager:
             return AtomicReference(self._context, group_id, service_name, proxy_name, object_name)
         elif service_name == COUNT_DOWN_LATCH_SERVICE:
             return CountDownLatch(self._context, group_id, service_name, proxy_name, object_name)
+        elif service_name == LOCK_SERVICE:
+            return await self._create_fenced_lock(group_id, proxy_name, object_name)
         elif service_name == SEMAPHORE_SERVICE:
             return await self._create_semaphore(group_id, proxy_name, object_name)
 
         raise ValueError("Unknown service name: %s" % service_name)
+
+    async def _create_fenced_lock(self, group_id, proxy_name, object_name):
+        async with self._mux:
+            proxy = self._lock_proxies.get(proxy_name, None)
+            if proxy:
+                if proxy.get_group_id() != group_id:
+                    self._lock_proxies.pop(proxy_name, None)
+                else:
+                    return proxy
+
+            proxy = FencedLock(self._context, group_id, LOCK_SERVICE, proxy_name, object_name)
+            self._lock_proxies[proxy_name] = proxy
+            return proxy
 
     async def _create_semaphore(self, group_id, proxy_name, object_name):
         codec = semaphore_get_semaphore_type_codec
