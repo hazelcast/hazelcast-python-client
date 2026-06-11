@@ -65,14 +65,20 @@ from hazelcast.protocol.codec import (
     map_set_with_max_idle_codec,
     map_remove_interceptor_codec,
     map_remove_all_codec,
-    map_add_near_cache_invalidation_listener_codec, map_force_unlock_codec, map_lock_codec, map_try_lock_codec,
-    map_is_locked_codec, map_unlock_codec,
+    map_add_near_cache_invalidation_listener_codec,
+    map_force_unlock_codec,
+    map_lock_codec,
+    map_try_lock_codec,
+    map_is_locked_codec,
+    map_unlock_codec,
 )
 from hazelcast.internal.asyncio_proxy.base import (
     Proxy,
     EntryEvent,
     EntryEventType,
-    get_entry_listener_flags, task_id, MAX_SIZE,
+    get_entry_listener_flags,
+    task_id,
+    MAX_SIZE,
 )
 from hazelcast.predicate import Predicate, _PagingPredicate
 from hazelcast.serialization.data import Data
