@@ -1,4 +1,4 @@
-Asyncio HazelcastClient API (BETA) Documentation
+Asyncio HazelcastClient API Documentation
 ================================================
 
 .. automodule:: hazelcast.asyncio

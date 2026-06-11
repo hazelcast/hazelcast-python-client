@@ -828,7 +828,7 @@ class SqlColumnTypesReadTest(SqlTestBase):
         self._create_mapping("JSON")
         self._populate_map(value_factory=value_factory)
 
-        result = self.execute(f"SELECT __key, this FROM {self.map_name}")
+        result = self.execute(f'SELECT __key, this FROM "{self.map_name}"')
         self._validate_result(result, SqlColumnType.JSON, value_factory)
 
     def _validate_rows(self, expected_type, value_factory=lambda key: key):
@@ -974,7 +974,7 @@ class SqlServiceV5MixedClusterTest(HazelcastTestCase):
 
         create_mapping_query = (
             """
-        CREATE MAPPING %s (
+        CREATE MAPPING "%s" (
             __key INT,
             this INT
         )
@@ -991,7 +991,7 @@ class SqlServiceV5MixedClusterTest(HazelcastTestCase):
 
         m = self.client.get_map(map_name).blocking()
         m.put(1, 1)
-        with self.client.sql.execute("SELECT this FROM %s" % map_name).result() as result:
+        with self.client.sql.execute('SELECT this FROM "%s"' % map_name).result() as result:
             rows = [row.get_object("this") for row in result]
 
         self.assertEqual(1, len(rows))

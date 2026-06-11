@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import unittest
 from typing import Awaitable
 
@@ -118,6 +119,41 @@ class SingleMemberTestCase(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
 
     async def asyncSetUp(self):
         self.client = await HazelcastClient.create_and_start(**self.configure_client({}))
+
+    async def asyncTearDown(self):
+        await self.client.shutdown()
+
+
+class CPTestCase(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
+
+    rc = None
+    cluster = None
+    client = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.rc = cls.create_rc()
+        cls.cluster = cls.create_cluster(cls.rc, cls.configure_cluster())
+        cls.cluster.start_member()
+        cls.cluster.start_member()
+        cls.cluster.start_member()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.rc.terminateCluster(cls.cluster.id)
+        cls.rc.exit()
+
+    @classmethod
+    def configure_cluster(cls):
+        path = os.path.abspath(__file__)
+        dir_path = os.path.dirname(path)
+        with open(
+            os.path.join(dir_path, "../backward_compatible/proxy/cp/hazelcast_cpsubsystem.xml")
+        ) as f:
+            return f.read()
+
+    async def asyncSetUp(self):
+        self.client = await HazelcastClient.create_and_start(cluster_name=self.cluster.id)
 
     async def asyncTearDown(self):
         await self.client.shutdown()
