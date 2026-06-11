@@ -248,3 +248,7 @@ def get_entry_listener_flags(**kwargs):
         if value:
             flags |= getattr(EntryEventType, key)
     return flags
+
+
+def task_id():
+    return id(asyncio.current_task())
