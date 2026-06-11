@@ -1,6 +1,7 @@
 import asyncio
 import itertools
 
+from hazelcast.errors import HazelcastError
 from hazelcast.internal.asyncio_proxy.base import EntryEventType
 from tests.integration.asyncio.base import SingleMemberTestCase
 from tests.util import (
@@ -114,9 +115,32 @@ class MultiMapTest(SingleMemberTestCase):
 
         self.assertCountEqual(await self.multi_map.entry_set(), entry_list)
 
+    async def test_force_unlock(self):
+        await self.multi_map.put("key", "value")
+        await self.multi_map.lock("key")
+
+        async def check_locked():
+            self.assertFalse(await self.multi_map.is_locked("key"))
+
+        asyncio.create_task(self.multi_map.force_unlock("key"))
+        await self.assertTrueEventually(check_locked)
+
+    async def test_is_locked(self):
+        await self.multi_map.put("key", "value")
+        self.assertFalse(await self.multi_map.is_locked("key"))
+        await self.multi_map.lock("key")
+        self.assertTrue(await self.multi_map.is_locked("key"))
+        await self.multi_map.unlock("key")
+        self.assertFalse(await self.multi_map.is_locked("key"))
+
     async def test_key_set(self):
         keys = list((await self.fill_map()).keys())
         self.assertCountEqual(await self.multi_map.key_set(), keys)
+
+    async def test_lock(self):
+        await self.multi_map.put("key", "value")
+        await asyncio.create_task(self.multi_map.lock("key"))
+        self.assertFalse(await self.multi_map.try_lock("key", timeout=0.01))
 
     async def test_put_get(self):
         self.assertTrue(await self.multi_map.put("key", "value1"))
@@ -161,8 +185,29 @@ class MultiMapTest(SingleMemberTestCase):
 
     async def test_size(self):
         await self.fill_map(5)
-
         self.assertEqual(25, await self.multi_map.size())
+
+    async def test_try_lock_when_unlocked(self):
+        self.assertTrue(await self.multi_map.try_lock("key"))
+        self.assertTrue(await self.multi_map.is_locked("key"))
+
+    async def test_try_lock_when_locked(self):
+        await asyncio.create_task(self.multi_map.lock("key"))
+        self.assertFalse(await self.multi_map.try_lock("key", timeout=0.1))
+
+    async def test_unlock(self):
+        await self.multi_map.lock("key")
+        self.assertTrue(await self.multi_map.is_locked("key"))
+        await self.multi_map.unlock("key")
+        self.assertFalse(await self.multi_map.is_locked("key"))
+
+    async def test_unlock_when_no_lock(self):
+        try:
+            await self.multi_map.unlock("key")
+        except HazelcastError:
+            pass
+        else:
+            self.fail("expected HazelcastError to be raised")
 
     async def test_value_count(self):
         await self.fill_map(key_count=1, value_count=10)
