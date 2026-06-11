@@ -214,7 +214,7 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
 
         Warning:
             The list is NOT backed by the map, so changes to the map are NOT
-            reflected in the list, and vice-versa.
+            reflected in the list, and vice versa.
 
         Returns:
             The list of key-value tuples in the multimap.
@@ -238,7 +238,7 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
 
         Warning:
             The list is NOT backed by the multimap, so changes to the map are
-            list reflected in the collection, and vice-versa.
+            list reflected in the collection, and vice versa.
 
         Args:
             key: The specified key.
@@ -313,7 +313,7 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
 
         Warning:
             The list is NOT backed by the map, so changes to the map are NOT
-            reflected in the list, and vice-versa.
+            reflected in the list, and vice versa.
 
         Returns:
             A list of the clone of the keys.
@@ -404,7 +404,7 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
 
         Warning:
             The returned list is NOT backed by the map, so changes to the map
-            are NOT reflected in the list, and vice-versa.
+            are NOT reflected in the list, and vice versa.
 
         Args:
             key: The key of the entries to remove.
@@ -548,7 +548,7 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
 
         Warning:
             The returned list is NOT backed by the map, so changes to the map
-            are NOT reflected in the list, and vice-versa.
+            are NOT reflected in the list, and vice versa.
 
         Returns:
             The list of values in the multimap.
