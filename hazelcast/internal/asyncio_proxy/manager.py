@@ -2,6 +2,7 @@ import asyncio
 import typing
 
 from hazelcast.internal.asyncio_proxy.executor import create_executor_proxy
+from hazelcast.internal.asyncio_proxy.flake_id_generator import create_flake_id_generator_proxy
 from hazelcast.internal.asyncio_proxy.list import create_list_proxy
 from hazelcast.internal.asyncio_proxy.multi_map import create_multi_map_proxy
 from hazelcast.internal.asyncio_proxy.pn_counter import create_pn_counter_proxy
@@ -22,6 +23,7 @@ from hazelcast.internal.asyncio_proxy.ringbuffer import create_ringbuffer_proxy
 from hazelcast.util import to_list
 
 EXECUTOR_SERVICE = "hz:impl:executorService"
+FLAKE_ID_GENERATOR_SERVICE = "hz:impl:flakeIdGeneratorService"
 LIST_SERVICE = "hz:impl:listService"
 MAP_SERVICE = "hz:impl:mapService"
 MULTI_MAP_SERVICE = "hz:impl:multiMapService"
@@ -100,6 +102,7 @@ _proxy_init: typing.Dict[
     typing.Callable[[str, str, typing.Any], typing.Coroutine[typing.Any, typing.Any, typing.Any]],
 ] = {
     EXECUTOR_SERVICE: create_executor_proxy,
+    FLAKE_ID_GENERATOR_SERVICE: create_flake_id_generator_proxy,
     LIST_SERVICE: create_list_proxy,
     MAP_SERVICE: create_map_proxy,
     MULTI_MAP_SERVICE: create_multi_map_proxy,

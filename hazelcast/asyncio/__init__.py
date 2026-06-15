@@ -4,15 +4,16 @@ __all__ = [
     "CPSubsystem",
     "CountDownLatch",
     "EntryEventCallable",
+    "FlakeIdGenerator",
     "Executor",
     "HazelcastClient",
     "List",
     "Map",
+    "ReliableMessageListener",
+    "ReliableTopic",
     "MultiMap",
     "PNCounter",
     "Queue",
-    "ReliableMessageListener",
-    "ReliableTopic",
     "ReplicatedMap",
     "Ringbuffer",
     "Semaphore",
@@ -21,6 +22,7 @@ __all__ = [
 ]
 
 from hazelcast.internal.asyncio_client import HazelcastClient
+from hazelcast.internal.asyncio_proxy.flake_id_generator import FlakeIdGenerator
 from hazelcast.internal.asyncio_proxy.executor import Executor
 from hazelcast.internal.asyncio_proxy.list import List
 from hazelcast.internal.asyncio_proxy.map import Map, EntryEventCallable
