@@ -6,7 +6,6 @@ from tests.util import random_string
 
 
 class MapTest(SingleMemberTestCase):
-
     @classmethod
     def configure_client(cls, config):
         config["cluster_name"] = cls.cluster.id
