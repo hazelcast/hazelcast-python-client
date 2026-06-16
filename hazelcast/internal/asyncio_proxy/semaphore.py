@@ -2,6 +2,7 @@ import time
 import uuid
 
 from hazelcast.errors import IllegalStateError, SessionExpiredError, WaitKeyCancelledError
+from hazelcast.internal.asyncio_proxy.base import task_id
 from hazelcast.internal.asyncio_proxy.cp import BaseCPProxy, SessionAwareCPProxy, _NO_SESSION_ID
 from hazelcast.protocol.codec import (
     semaphore_init_codec,
@@ -273,16 +274,12 @@ class Semaphore(BaseCPProxy):
 class SessionAwareSemaphore(Semaphore, SessionAwareCPProxy):
     async def acquire(self, permits=1):
         check_true(permits > 0, "Permits must be positive")
-        # TODO: replace 0 with the lock context once implemented:
-        current_thread_id = 0
         invocation_uuid = uuid.uuid4()
-        await self._do_acquire(current_thread_id, invocation_uuid, permits)
+        await self._do_acquire(task_id(), invocation_uuid, permits)
 
     async def drain_permits(self):
-        # TODO: replace 0 with the lock context once implemented:
-        current_thread_id = 0
         invocation_uuid = uuid.uuid4()
-        return await self._do_drain(current_thread_id, invocation_uuid)
+        return await self._do_drain(task_id(), invocation_uuid)
 
     async def release(self, permits=1):
         check_true(permits > 0, "Permits must be positive")
@@ -290,12 +287,10 @@ class SessionAwareSemaphore(Semaphore, SessionAwareCPProxy):
         if session_id == _NO_SESSION_ID:
             raise self._new_illegal_state_error()
 
-        # TODO: replace 0 with the lock context once implemented:
-        current_thread_id = 0
         invocation_uuid = uuid.uuid4()
 
         try:
-            await self._request_release(session_id, current_thread_id, invocation_uuid, permits)
+            await self._request_release(session_id, task_id(), invocation_uuid, permits)
         except SessionExpiredError as e:
             self._invalidate_session(session_id)
             raise self._new_illegal_state_error(e)
@@ -305,10 +300,8 @@ class SessionAwareSemaphore(Semaphore, SessionAwareCPProxy):
     async def try_acquire(self, permits=1, timeout=0):
         check_true(permits > 0, "Permits must be positive")
         timeout = max(0.0, timeout)
-        # TODO: replace 0 with the lock context once implemented:
-        current_thread_id = 0
         invocation_uuid = uuid.uuid4()
-        return await self._do_try_acquire(current_thread_id, invocation_uuid, permits, timeout)
+        return await self._do_try_acquire(task_id(), invocation_uuid, permits, timeout)
 
     async def _do_acquire(self, current_thread_id, invocation_uuid, permits):
         async def do_acquire_once(session_id):
@@ -350,13 +343,11 @@ class SessionAwareSemaphore(Semaphore, SessionAwareCPProxy):
         return await do_drain_once(session_id)
 
     async def _do_change_permits(self, delta):
-        # TODO: replace 0 with the lock context once implemented:
-        current_thread_id = 0
         invocation_uuid = uuid.uuid4()
 
         async def do_change_permits_once(session_id):
             try:
-                await self._request_change(session_id, current_thread_id, invocation_uuid, delta)
+                await self._request_change(session_id, task_id(), invocation_uuid, delta)
             except SessionExpiredError as e:
                 self._invalidate_session(session_id)
                 raise self._new_illegal_state_error(e)

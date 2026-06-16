@@ -8,6 +8,7 @@ from hazelcast.errors import (
     CPGroupDestroyedError,
 )
 from hazelcast.internal.asyncio_invocation import Invocation
+from hazelcast.internal.asyncio_proxy.base import task_id
 from hazelcast.protocol import RaftGroupId
 from hazelcast.protocol.codec import (
     cp_group_destroy_cp_object_codec,
@@ -115,8 +116,7 @@ class ProxySessionManager:
             if self._shutdown:
                 raise HazelcastClientNotActiveError("Session manager is already shut down!")
 
-            # TODO: replace 0 with the lock context once implemented
-            key = (group_id, 0)
+            key = (group_id, task_id())
             global_thread_id = self._thread_ids.get(key)
             if global_thread_id:
                 return global_thread_id

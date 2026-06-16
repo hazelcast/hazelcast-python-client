@@ -3,6 +3,7 @@ import os
 import time
 import unittest
 
+from hazelcast.errors import HazelcastError
 
 try:
     from hazelcast.aggregator import (
@@ -337,6 +338,18 @@ class MapTest(SingleMemberTestCase):
         await self.fill_map()
         await self.map.flush()
 
+    async def test_force_unlock(self):
+        await self.map.put("key", "value")
+        await self.map.lock("key")
+
+        task = asyncio.create_task(self.map.force_unlock("key"))
+
+        async def check_map_is_not_locked():
+            self.assertFalse(await self.map.is_locked("key"))
+
+        await self.assertTrueEventually(check_map_is_not_locked)
+        await task
+
     async def test_get_all(self):
         expected = await self.fill_map(1000)
         actual = await self.map.get_all(list(expected.keys()))
@@ -375,6 +388,14 @@ class MapTest(SingleMemberTestCase):
         await self.map.clear()
         self.assertTrue(await self.map.is_empty())
 
+    async def test_is_locked(self):
+        await self.map.put("key", "value")
+        self.assertFalse(await self.map.is_locked("key"))
+        await self.map.lock("key")
+        self.assertTrue(await self.map.is_locked("key"))
+        await self.map.unlock("key")
+        self.assertFalse(await self.map.is_locked("key"))
+
     async def test_key_set(self):
         keys = list((await self.fill_map()).keys())
         self.assertCountEqual(await self.map.key_set(), keys)
@@ -382,6 +403,11 @@ class MapTest(SingleMemberTestCase):
     async def test_key_set_with_predicate(self):
         await self.fill_map()
         self.assertEqual(await self.map.key_set(sql("this == 'value-1'")), ["key-1"])
+
+    async def test_lock(self):
+        await self.map.put("key", "value")
+        await asyncio.create_task(self.map.lock("key"))
+        self.assertFalse(await self.map.try_put("key", "new_value", timeout=0.01))
 
     async def test_put_all(self):
         m = {"key-%d" % x: "value-%d" % x for x in range(0, 1000)}
@@ -517,6 +543,46 @@ class MapTest(SingleMemberTestCase):
         await self.fill_map()
 
         self.assertEqual(10, await self.map.size())
+
+    async def test_try_lock_when_unlocked(self):
+        self.assertTrue(await self.map.try_lock("key"))
+        self.assertTrue(await self.map.is_locked("key"))
+
+    async def test_try_lock_when_locked(self):
+        await asyncio.create_task(self.map.lock("key"))
+        self.assertFalse(await self.map.try_lock("key", timeout=0.1))
+
+    async def test_try_put_when_unlocked(self):
+        self.assertTrue(await self.map.try_put("key", "value"))
+        self.assertEqual(await self.map.get("key"), "value")
+
+    async def test_try_put_when_locked(self):
+        await asyncio.create_task(self.map.lock("key"))
+        self.assertFalse(await self.map.try_put("key", "value", timeout=0.1))
+
+    async def test_try_remove_when_unlocked(self):
+        await self.map.put("key", "value")
+        self.assertTrue(await self.map.try_remove("key"))
+        self.assertIsNone(await self.map.get("key"))
+
+    async def test_try_remove_when_locked(self):
+        await self.map.put("key", "value")
+        await asyncio.create_task(self.map.lock("key"))
+        self.assertFalse(await self.map.try_remove("key", timeout=0.1))
+
+    async def test_unlock(self):
+        await self.map.lock("key")
+        self.assertTrue(await self.map.is_locked("key"))
+        await self.map.unlock("key")
+        self.assertFalse(await self.map.is_locked("key"))
+
+    async def test_unlock_when_no_lock(self):
+        try:
+            await self.map.unlock("key")
+        except HazelcastError:
+            pass
+        else:
+            self.fail("expected HazelcastError to be raised")
 
     async def test_values(self):
         values = list((await self.fill_map()).values())

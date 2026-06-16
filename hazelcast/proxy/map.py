@@ -348,7 +348,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
 
                 >>> employees = client.get_map("employees")
                 >>> employees.add_index(attributes=["age"]) # Sorted index for range queries
-                >>> employees.add_index(attributes=["active"], index_type=IndexType.HASH)) # Hash index for equality predicates
+                >>> employees.add_index(attributes=["active"], index_type=IndexType.HASH) # Hash index for equality predicates
 
         Index attribute should either have a getter method or be public.
         You should also make sure to add the indexes before adding
@@ -375,7 +375,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
                   possible values.
                 - **unique_key_transformation** (int|str): The transformation
                   is applied to every value extracted from the unique key
-                  attribue. Defaults to ``OBJECT``. See the
+                  attribute. Defaults to ``OBJECT``. See the
                   :class:`hazelcast.config.UniqueKeyTransformation` for
                   possible values.
         """
@@ -543,7 +543,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
 
         Warning:
             The list is NOT backed by the map, so changes to the map are NOT
-            reflected in the list, and vice-versa.
+            reflected in the list, and vice versa.
 
         Args:
             predicate: Predicate for the map to filter entries.
@@ -629,7 +629,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         Args:
             entry_processor: A stateful serializable object which represents
                 the EntryProcessor defined on server side. This object must
-                have a serializable EntryProcessor counter part registered
+                have a serializable EntryProcessor counterpart registered
                 on server side with the actual
                 ``com.hazelcast.map.EntryProcessor`` implementation.
             predicate: Predicate for filtering the entries.
@@ -679,7 +679,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             key: Specified key for the entry to be processed.
             entry_processor: A stateful serializable object which represents
                 the EntryProcessor defined on server side. This object must
-                have a serializable EntryProcessor counter part registered on
+                have a serializable EntryProcessor counterpart registered on
                 server side with the actual
                 ``com.hazelcast.map.EntryProcessor`` implementation.
 
@@ -706,7 +706,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
             keys: Collection of the keys for the entries to be processed.
             entry_processor: A stateful serializable object which represents
                 the EntryProcessor defined on server side. This object must
-                have a serializable EntryProcessor counter part registered on
+                have a serializable EntryProcessor counterpart registered on
                 server side with the actual
                 ``com.hazelcast.map.EntryProcessor`` implementation.
 
@@ -805,7 +805,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         Warning:
             The returned map is NOT backed by the original map, so changes to
             the original map are NOT reflected in the returned map, and
-            vice-versa.
+            vice versa.
 
         Warning:
             This method uses ``__hash__`` and ``__eq__`` methods of binary form
@@ -918,7 +918,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
 
         Warning:
             The list is NOT backed by the map, so changes to the map are NOT
-            reflected in the list, and vice-versa.
+            reflected in the list, and vice versa.
 
         Args:
             predicate: Predicate to filter the entries.
@@ -1624,7 +1624,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
 
         Warning:
             The list is NOT backed by the map, so changes to the map are NOT
-            reflected in the list, and vice-versa.
+            reflected in the list, and vice versa.
 
         Args:
             predicate: Predicate to filter the entries.
