@@ -63,6 +63,7 @@ class MapTest(SingleMemberTestCase):
     async def test_complete_with_error(self):
         from hazelcast.internal.asyncio_invocation import Invocation
         from hazelcast.protocol.codec import client_ping_codec
+
         req = client_ping_codec.encode_request()
         inv = Invocation(req)
         inv.future.cancel()
