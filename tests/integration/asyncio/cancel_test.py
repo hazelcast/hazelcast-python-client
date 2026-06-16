@@ -38,7 +38,6 @@ class MapTest(SingleMemberTestCase):
     async def test_cancel(self):
         async def keep_setting():
             for i in range(1000):
-                print(i)
                 await self.map.set("foo", i)
                 await asyncio.sleep(0)
 
@@ -51,7 +50,6 @@ class MapTest(SingleMemberTestCase):
     async def test_timeout(self):
         async def keep_setting():
             for i in range(1000):
-                print(i)
                 await self.map.set("foo", i)
                 await asyncio.sleep(0)
 
@@ -61,3 +59,11 @@ class MapTest(SingleMemberTestCase):
             pass
         value = await self.map.get("foo")
         self.assertGreater(value, 0)
+
+    async def test_complete_with_error(self):
+        from hazelcast.internal.asyncio_invocation import Invocation
+        from hazelcast.protocol.codec import client_ping_codec
+        req = client_ping_codec.encode_request()
+        inv = Invocation(req)
+        inv.future.cancel()
+        self.client._invocation_service._complete_with_error(inv, Exception("foo"))

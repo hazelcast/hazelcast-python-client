@@ -267,7 +267,8 @@ class InvocationService:
         self._pending.pop(correlation_id, None)
 
     def _complete_with_error(self, invocation, error):
-        invocation.future.set_exception(error)
+        if not invocation.future.cancelled():
+            invocation.future.set_exception(error)
         correlation_id = invocation.request.get_correlation_id()
         self._pending.pop(correlation_id, None)
 
