@@ -8,6 +8,7 @@ from hazelcast.errors import (
     WaitKeyCancelledError,
     LockAcquireLimitReachedError,
 )
+from hazelcast.internal.asyncio_proxy.base import task_id
 from hazelcast.internal.asyncio_proxy.cp import SessionAwareCPProxy
 from hazelcast.protocol.codec import (
     fenced_lock_unlock_codec,
@@ -50,24 +51,16 @@ class FencedLock(SessionAwareCPProxy):
         self._lock_session_ids = dict()  # thread-id to session id that has acquired the lock
 
     async def lock(self) -> int:
-        # TODO: port the docs once implemented
-        # TODO: replace 0 with the lock context once implemented
-        current_thread_id = 0
         invocation_uuid = uuid.uuid4()
-        return await self._do_lock(current_thread_id, invocation_uuid)
+        return await self._do_lock(task_id(), invocation_uuid)
 
     async def try_lock(self, timeout: float = 0) -> int:
-        # TODO: port the docs once implemented
-        # TODO: replace 0 with the lock context once implemented
-        current_thread_id = 0
         invocation_uuid = uuid.uuid4()
         timeout = max(0.0, timeout)
-        return await self._do_try_lock(current_thread_id, invocation_uuid, timeout)
+        return await self._do_try_lock(task_id(), invocation_uuid, timeout)
 
     async def unlock(self) -> None:
-        # TODO: port the docs once implemented
-        # TODO: replace 0 with the lock context once implemented
-        current_thread_id = 0
+        current_thread_id = task_id()
         session_id = self._get_session_id()
 
         # the order of the following checks is important
@@ -95,9 +88,7 @@ class FencedLock(SessionAwareCPProxy):
             raise e
 
     async def is_locked(self) -> bool:
-        # TODO: port the docs once implemented
-        # TODO: replace 0 with the lock context once implemented
-        current_thread_id = 0
+        current_thread_id = task_id()
         session_id = self._get_session_id()
         self._verify_locked_session_id_if_present(current_thread_id, session_id, False)
         f = await self._request_get_lock_ownership_state()
@@ -109,10 +100,8 @@ class FencedLock(SessionAwareCPProxy):
         self._verify_no_locked_session_id_present(current_thread_id)
         return state.is_locked()
 
-    async def is_locked_by_current_thread(self) -> bool:
-        # TODO: port the docs once implemented
-        # TODO: replace 0 with the lock context once implemented
-        current_thread_id = 0
+    async def is_locked_by_current_task(self) -> bool:
+        current_thread_id = task_id()
         session_id = self._get_session_id()
         self._verify_locked_session_id_if_present(current_thread_id, session_id, False)
         f = await self._request_get_lock_ownership_state()
@@ -126,9 +115,7 @@ class FencedLock(SessionAwareCPProxy):
         return locked_by_the_current_thread
 
     async def get_lock_count(self) -> int:
-        # TODO: port the docs once implemented
-        # TODO: replace 0 with the lock context once implemented
-        current_thread_id = 0
+        current_thread_id = task_id()
         session_id = self._get_session_id()
         self._verify_locked_session_id_if_present(current_thread_id, session_id, False)
         f = await self._request_get_lock_ownership_state()
@@ -159,7 +146,7 @@ class FencedLock(SessionAwareCPProxy):
                 raise IllegalMonitorStateError(
                     "Lock(%s) not acquired because the lock call on the CP group "
                     "is cancelled, possibly because of another indeterminate call "
-                    "from the same thread." % self._object_name
+                    "from the same task." % self._object_name
                 )
             except Exception as e:
                 self._release_session(session_id)
@@ -229,13 +216,13 @@ class FencedLock(SessionAwareCPProxy):
 
     def _new_lock_ownership_lost_error(self, lock_session_id):
         return LockOwnershipLostError(
-            "Current thread is not the owner of the Lock(%s) because its "
+            "Current task is not the owner of the Lock(%s) because its "
             "Session(%s) is closed by the server." % (self._proxy_name, lock_session_id)
         )
 
     def _new_illegal_monitor_state_error(self):
         return IllegalMonitorStateError(
-            "Current thread is not the owner of the Lock(%s)" % self._proxy_name
+            "Current task is not the owner of the Lock(%s)" % self._proxy_name
         )
 
     async def _request_lock(self, session_id, current_thread_id, invocation_uuid):

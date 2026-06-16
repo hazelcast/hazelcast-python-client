@@ -1,3 +1,5 @@
+import asyncio
+
 import pytest
 
 from hazelcast.errors import DistributedObjectDestroyedError, IllegalMonitorStateError
@@ -81,7 +83,25 @@ class FencedLockTest(CPTestCase):
         self.assertGreater(fence3, fence)
         self.assert_session_acquire_count(1)
 
-    # TODO: test_lock_when_locked_by_another_thread(self):
+    async def test_lock_when_locked_by_another_task(self):
+        async def valid_fence():
+            self.assert_valid_fence(await self.lock.lock())
+
+        task1 = asyncio.create_task(valid_fence())
+        await task1
+        await self.assert_lock(True, False, 1)
+        task2 = asyncio.create_task(self.lock.lock())
+        await asyncio.sleep(2)
+        self.assertFalse(task2.done())  # lock request made in task2 should not complete
+        self.assert_session_acquire_count(2)
+        await self.lock.destroy()
+
+        try:
+            await task2
+        except DistributedObjectDestroyedError:
+            pass
+        else:
+            self.fail("expected DistributedObjectDestroyedError to be raised")
 
     async def test_try_lock_when_free(self):
         self.assert_valid_fence(await self.lock.try_lock())
@@ -123,8 +143,20 @@ class FencedLockTest(CPTestCase):
         self.assertGreater(fence3, fence)
         self.assert_session_acquire_count(1)
 
-    # TODO: test_try_lock_when_locked_by_another_thread(self):
-    # TODO: test_try_lock_when_locked_by_another_thread_with_timeout(self):
+    async def test_try_lock_when_locked_by_another_task(self):
+        await asyncio.create_task(self.lock.try_lock())
+        self.assertFalse(await self.lock.try_lock())
+        await self.assert_lock(True, False, 1)
+        self.assert_session_acquire_count(1)
+
+    async def test_try_lock_when_locked_by_another_task_with_timeout(self):
+        async def valid_fence():
+            self.assert_valid_fence(await self.lock.try_lock())
+
+        await asyncio.create_task(valid_fence())
+        self.assert_not_valid_fence(await self.lock.try_lock(1))
+        await self.assert_lock(True, False, 1)
+        self.assert_session_acquire_count(1)
 
     async def test_unlock_when_free(self):
         try:
@@ -159,7 +191,18 @@ class FencedLockTest(CPTestCase):
         await self.assert_lock(False, False, 0)
         self.assert_session_acquire_count(0)
 
-    # TODO: test_unlock_when_locked_by_another_thread(self):
+    async def test_unlock_when_locked_by_another_task(self):
+        await asyncio.create_task(self.lock.lock())
+
+        try:
+            await self.lock.unlock()
+        except IllegalMonitorStateError:
+            pass
+        else:
+            self.fail("expected IllegalMonitorStateError to be raised")
+
+        await self.assert_lock(True, False, 1)
+        self.assert_session_acquire_count(1)
 
     async def test_is_locked_when_free(self):
         self.assertFalse(await self.lock.is_locked())
@@ -172,24 +215,30 @@ class FencedLockTest(CPTestCase):
         self.assertFalse(await self.lock.is_locked())
         self.assert_session_acquire_count(0)
 
-    # TODO: test_is_locked_when_locked_by_another_thread(self):
+    async def test_is_locked_when_locked_by_another_task(self):
+        await asyncio.create_task(self.lock.lock())
+        self.assertTrue(await self.lock.is_locked())
+        self.assert_session_acquire_count(1)
 
-    async def test_is_locked_by_current_thread_when_free(self):
-        self.assertFalse(await self.lock.is_locked_by_current_thread())
+    async def test_is_locked_by_current_task_when_free(self):
+        self.assertFalse(await self.lock.is_locked_by_current_task())
         self.assert_session_acquire_count(0)
 
-    async def test_is_locked_by_current_thread_when_locked_by_self(self):
+    async def test_is_locked_by_current_task_when_locked_by_self(self):
         await self.lock.lock()
-        self.assertTrue(await self.lock.is_locked_by_current_thread())
+        self.assertTrue(await self.lock.is_locked_by_current_task())
         await self.lock.unlock()
-        self.assertFalse(await self.lock.is_locked_by_current_thread())
+        self.assertFalse(await self.lock.is_locked_by_current_task())
         self.assert_session_acquire_count(0)
 
-    # TODO: def test_is_locked_by_current_thread_when_locked_by_another_thread(self):
+    async def test_is_locked_by_current_task_when_locked_by_another_task(self):
+        await asyncio.create_task(self.lock.lock())
+        self.assertFalse(await self.lock.is_locked_by_current_task())
+        self.assert_session_acquire_count(1)
 
-    async def assert_lock(self, is_locked, is_locked_by_current_thread, lock_count):
+    async def assert_lock(self, is_locked, is_locked_by_current_task, lock_count):
         self.assertEqual(is_locked, await self.lock.is_locked())
-        self.assertEqual(is_locked_by_current_thread, await self.lock.is_locked_by_current_thread())
+        self.assertEqual(is_locked_by_current_task, await self.lock.is_locked_by_current_task())
         self.assertEqual(lock_count, await self.lock.get_lock_count())
 
     def assert_valid_fence(self, fence):
