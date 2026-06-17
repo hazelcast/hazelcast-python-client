@@ -141,7 +141,7 @@ class SerializationServiceV1:
             out.write_int_big_endian(serializer.get_type_id())
             serializer.write(out, obj)
             return Data(out.to_byte_array())
-        except:
+        except Exception:
             handle_exception(sys.exc_info()[1], sys.exc_info()[2])
 
     def to_object(self, data):
@@ -169,7 +169,7 @@ class SerializationServiceV1:
                 else:
                     raise HazelcastInstanceNotActiveError()
             return serializer.read(inp)
-        except:
+        except Exception:
             handle_exception(sys.exc_info()[1], sys.exc_info()[2])
 
     def write_object(self, out, obj):
@@ -181,7 +181,7 @@ class SerializationServiceV1:
             serializer = self._registry.serializer_for(obj)
             out.write_int(serializer.get_type_id())
             serializer.write(out, obj)
-        except:
+        except Exception:
             handle_exception(sys.exc_info()[1], sys.exc_info()[2])
 
     def read_object(self, inp):
@@ -196,7 +196,7 @@ class SerializationServiceV1:
                 else:
                     raise HazelcastInstanceNotActiveError()
             return serializer.read(inp)
-        except:
+        except Exception:
             handle_exception(sys.exc_info()[1], sys.exc_info()[2])
 
     def _calculate_partitioning_hash(self, obj, partitioning_strategy):

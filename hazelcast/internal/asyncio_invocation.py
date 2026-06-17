@@ -253,20 +253,22 @@ class InvocationService:
         return True
 
     def _complete(self, invocation: Invocation, client_message: InboundMessage) -> None:
-        try:
-            result = invocation.response_handler(client_message)
-            invocation.future.set_result(result)
-        except SchemaNotFoundError as e:
-            self._fetch_schema_and_complete_again(e, invocation, client_message)
-            return
-        except Exception as e:
-            invocation.future.set_exception(e)
+        if not invocation.future.cancelled():
+            try:
+                result = invocation.response_handler(client_message)
+                invocation.future.set_result(result)
+            except SchemaNotFoundError as e:
+                self._fetch_schema_and_complete_again(e, invocation, client_message)
+                return
+            except Exception as e:
+                invocation.future.set_exception(e)
 
         correlation_id = invocation.request.get_correlation_id()
         self._pending.pop(correlation_id, None)
 
     def _complete_with_error(self, invocation, error):
-        invocation.future.set_exception(error)
+        if not invocation.future.cancelled():
+            invocation.future.set_exception(error)
         correlation_id = invocation.request.get_correlation_id()
         self._pending.pop(correlation_id, None)
 
