@@ -409,6 +409,45 @@ class MapTest(SingleMemberTestCase):
         await asyncio.create_task(self.map.lock("key"))
         self.assertFalse(await self.map.try_put("key", "new_value", timeout=0.01))
 
+    async def test_lock_context(self):
+        hold = asyncio.Event()
+        release = asyncio.Event()
+        key = "lock-context-key"
+
+        async def hold_lock():
+            async with self.map.lock_context(key):
+                hold.set()
+                await release.wait()
+
+        asyncio.create_task(hold_lock())
+        await hold.wait()
+        acquired = await self.map.try_lock(key)
+        self.assertFalse(acquired)
+        release.set()
+
+    async def test_lock_context_leased(self):
+        hold = asyncio.Event()
+        release = asyncio.Event()
+        key = "lock-context-key"
+        timeout = 1  # second
+
+        async def hold_lock():
+            async with self.map.lock_context(key, timeout):
+                hold.set()
+                await release.wait()
+
+        asyncio.create_task(hold_lock())
+        await hold.wait()
+        # the first try is not successful
+        acquired = await self.map.try_lock(key)
+        self.assertFalse(acquired)
+        await asyncio.sleep(timeout)
+        # the second try after the lease timeout succeeds
+        acquired = await self.map.try_lock(key)
+        self.assertTrue(acquired)
+        release.set()
+
+
     async def test_put_all(self):
         m = {"key-%d" % x: "value-%d" % x for x in range(0, 1000)}
         await self.map.put_all(m)
