@@ -3,6 +3,7 @@ import typing
 
 from collections import defaultdict
 
+from hazelcast.internal.asyncio_lock_context import LockContext
 from hazelcast.protocol.codec import (
     multi_map_add_entry_listener_codec,
     multi_map_add_entry_listener_to_key_codec,
@@ -642,6 +643,24 @@ class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
             self.name, key_data, task_id(), self._reference_id_generator.get_and_increment()
         )
         return await self._invoke_on_key(request, key_data)
+
+    def lock_context(self, key) -> LockContext:
+        """Creates a context that locks and unlocks the given key automatically.
+
+        Example:
+            >>> from hazelcast.asyncio import HazelcastClient
+            >>> client = await HazelcastClient.create_and_start()
+            >>> m = await client.get_multi_map("my-map")
+            >>> async with m.lock_context("my-key"):
+            ...     await m.set("my-key", "OK")
+
+        Args:
+            key: The key to automatically lock at the start of the context and unlock it at the end.
+
+        Returns:
+            ``LockContext``.
+        """
+        return LockContext(self, key)
 
 
 async def create_multi_map_proxy(service_name, name, context):
