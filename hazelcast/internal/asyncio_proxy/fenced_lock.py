@@ -51,15 +51,117 @@ class FencedLock(SessionAwareCPProxy):
         self._lock_session_ids = dict()  # thread-id to session id that has acquired the lock
 
     async def lock(self) -> int:
+        """Acquires the lock and returns the fencing token assigned to the
+        current task.
+
+        If the lock is acquired reentrantly, the same fencing token is returned,
+        or the ``lock()`` call can fail with ``LockAcquireLimitReachedError``
+        if the lock acquire limit is already reached.
+
+        If the lock is not available then the current task becomes disabled
+        for thread scheduling purposes and lies dormant until the lock has been
+        acquired.
+
+        Fencing tokens are monotonic numbers that are incremented each time
+        the lock switches from the free state to the acquired state. They are
+        simply used for ordering lock holders. A lock holder can pass
+        its fencing to the shared resource to fence off previous lock holders.
+        When this resource receives an operation, it can validate the fencing
+        token in the operation.
+
+        Consider the following scenario where the lock is free initially ::
+
+            lock = await client.cp_subsystem.get_lock("lock")
+            fence1 = await lock.lock()  # (1)
+            fence2 = await lock.lock()  # (2)
+            assert fence1 == fence2
+            await lock.unlock()
+            await lock.unlock()
+            fence3 = await lock.lock()  # (3)
+            assert fence3 > fence1
+
+        In this scenario, the lock is acquired by a task in the cluster. Then,
+        the same task reentrantly acquires the lock again. The fencing token
+        returned from the second acquire is equal to the one returned from the
+        first acquire, because of reentrancy. After the second acquire, the lock
+        is released 2 times, hence becomes free. There is a third lock acquire
+        here, which returns a new fencing token. Because this last lock acquire
+        is not reentrant, its fencing token is guaranteed to be larger than the
+        previous tokens, independent of the task that has acquired the lock.
+
+        Returns:
+            The fencing token.
+
+        Raises:
+            LockOwnershipLostError: If the underlying CP session was
+                closed before the client releases the lock
+            LockAcquireLimitReachedError: If the lock call is reentrant
+                and the configured lock acquire limit is already reached.
+        """
         invocation_uuid = uuid.uuid4()
         return await self._do_lock(task_id(), invocation_uuid)
 
     async def try_lock(self, timeout: float = 0) -> int:
+        """Acquires the lock if it is free within the given waiting time,
+        or already held by the current task at the time of invocation and,
+        the acquire limit is not exceeded, and returns the fencing token
+        assigned to the current task.
+
+        If the lock is acquired reentrantly, the same fencing token is returned.
+        If the lock acquire limit is exceeded, then this method immediately
+        returns :const:`INVALID_FENCE` that represents a failed lock attempt.
+
+        If the lock is not available then the current task becomes disabled
+        for scheduling purposes and lies dormant until the lock is
+        acquired by the current task or the specified waiting time elapses.
+
+        If the specified waiting time elapses, then :const:`INVALID_FENCE`
+        is returned. If the time is less than or equal to zero, the method does
+        not wait at all. By default, timeout is set to zero.
+
+        A typical usage idiom for this method would be ::
+
+            lock = await client.cp_subsystem.get_lock("lock")
+            fence = await lock.try_lock()
+            if fence != lock.INVALID_FENCE:
+                try:
+                    # manipulate the protected state
+                finally:
+                    await lock.unlock()
+            else:
+                # perform another action
+
+        This usage ensures that the lock is unlocked if it was acquired,
+        and doesn't try to unlock if the lock was not acquired.
+
+        See Also:
+            :func:`lock` function for more information about fences.
+
+        Args:
+            timeout: The maximum time to wait for the lock in seconds.
+
+        Returns:
+            The fencing token if the lock was acquired and
+            :const:`INVALID_FENCE` otherwise.
+
+        Raises:
+            LockOwnershipLostError: If the underlying CP session was
+                closed before the client releases the lock
+        """
         invocation_uuid = uuid.uuid4()
         timeout = max(0.0, timeout)
         return await self._do_try_lock(task_id(), invocation_uuid, timeout)
 
     async def unlock(self) -> None:
+        """Releases the lock if the lock is currently held by the current
+        task.
+
+        Raises:
+            LockOwnershipLostError: If the underlying CP session was
+                closed before the client releases the lock
+            IllegalMonitorStateError: If the lock is not held by
+                the current thread
+        """
         current_thread_id = task_id()
         session_id = self._get_session_id()
 
@@ -88,6 +190,16 @@ class FencedLock(SessionAwareCPProxy):
             raise e
 
     async def is_locked(self) -> bool:
+        """Returns whether this lock is locked or not.
+
+        Returns:
+            ``True`` if this lock is locked by any task in the cluster,
+            ``False`` otherwise.
+
+        Raises:
+            LockOwnershipLostError: If the underlying CP session was
+                closed before the client releases the lock
+        """
         current_thread_id = task_id()
         session_id = self._get_session_id()
         self._verify_locked_session_id_if_present(current_thread_id, session_id, False)
@@ -101,6 +213,16 @@ class FencedLock(SessionAwareCPProxy):
         return state.is_locked()
 
     async def is_locked_by_current_task(self) -> bool:
+        """Returns whether the lock is held by the current task or not.
+
+        Returns:
+            ``True`` if the lock is held by the current task, ``False``
+            otherwise.
+
+        Raises:
+            LockOwnershipLostError: If the underlying CP session was
+                closed before the client releases the lock
+        """
         current_thread_id = task_id()
         session_id = self._get_session_id()
         self._verify_locked_session_id_if_present(current_thread_id, session_id, False)
@@ -115,6 +237,17 @@ class FencedLock(SessionAwareCPProxy):
         return locked_by_the_current_thread
 
     async def get_lock_count(self) -> int:
+        """Returns the reentrant lock count if the lock is held by any task
+        in the cluster.
+
+        Returns:
+            The reentrant lock count if the lock is held by any task in the
+            cluster.
+
+        Raises:
+            LockOwnershipLostError: If the underlying CP session was
+                closed before the client releases the lock
+        """
         current_thread_id = task_id()
         session_id = self._get_session_id()
         self._verify_locked_session_id_if_present(current_thread_id, session_id, False)

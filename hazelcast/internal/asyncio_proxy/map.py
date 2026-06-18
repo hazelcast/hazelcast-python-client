@@ -6,6 +6,7 @@ from hazelcast.aggregator import Aggregator
 from hazelcast.config import IndexUtil, IndexType, IndexConfig
 from hazelcast.core import SimpleEntryView
 from hazelcast.internal.asyncio_invocation import Invocation
+from hazelcast.internal.asyncio_lock_context import LockContext
 from hazelcast.projection import Projection
 from hazelcast.protocol import PagingPredicateHolder
 from hazelcast.protocol.codec import (
@@ -122,16 +123,16 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         self,
         include_value: bool = False,
         key: KeyType = None,
-        predicate: Predicate = None,
-        added_func: EntryEventCallable = None,
-        removed_func: EntryEventCallable = None,
-        updated_func: EntryEventCallable = None,
-        evicted_func: EntryEventCallable = None,
-        evict_all_func: EntryEventCallable = None,
-        clear_all_func: EntryEventCallable = None,
-        merged_func: EntryEventCallable = None,
-        expired_func: EntryEventCallable = None,
-        loaded_func: EntryEventCallable = None,
+        predicate: Predicate | None = None,
+        added_func: EntryEventCallable | None = None,
+        removed_func: EntryEventCallable | None = None,
+        updated_func: EntryEventCallable | None = None,
+        evicted_func: EntryEventCallable | None = None,
+        evict_all_func: EntryEventCallable | None = None,
+        clear_all_func: EntryEventCallable | None = None,
+        merged_func: EntryEventCallable | None = None,
+        expired_func: EntryEventCallable | None = None,
+        loaded_func: EntryEventCallable | None = None,
     ) -> str:
         """Adds a continuous entry listener for this map.
 
@@ -317,10 +318,10 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
 
     async def add_index(
         self,
-        attributes: typing.Sequence[str] = None,
+        attributes: typing.Sequence[str] | None = None,
         index_type: typing.Union[int, str] = IndexType.SORTED,
-        name: str = None,
-        bitmap_index_options: typing.Dict[str, typing.Any] = None,
+        name: str | None = None,
+        bitmap_index_options: typing.Dict[str, typing.Any] | None = None,
     ) -> None:
         """Adds an index to this map for the specified entries so that queries
         can run faster.
@@ -329,7 +330,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
             Let's say your map values are Employee objects.
 
                 >>> class Employee(IdentifiedDataSerializable):
-                >>>     active = false
+                >>>     active = False
                 >>>     age = None
                 >>>     name = None
                 >>>     #other fields
@@ -405,7 +406,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._invoke(request, map_add_interceptor_codec.decode_response)
 
     async def aggregate(
-        self, aggregator: Aggregator[AggregatorResultType], predicate: Predicate = None
+        self, aggregator: Aggregator[AggregatorResultType], predicate: Predicate | None = None
     ) -> AggregatorResultType:
         """Applies the aggregation logic on map entries and filter the result
         with the predicate, if given.
@@ -527,7 +528,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._delete_internal(key_data)
 
     async def entry_set(
-        self, predicate: Predicate = None
+        self, predicate: Predicate | None = None
     ) -> typing.List[typing.Tuple[KeyType, ValueType]]:
         """Returns a list clone of the mappings contained in this map.
 
@@ -950,7 +951,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._invoke(request, handler)
 
     async def load_all(
-        self, keys: typing.Sequence[KeyType] = None, replace_existing_values: bool = True
+        self, keys: typing.Sequence[KeyType] | None = None, replace_existing_values: bool = True
     ) -> None:
         """Loads all keys from the store at server side or loads the given
         keys if provided.
@@ -974,7 +975,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         request = map_load_all_codec.encode_request(self.name, replace_existing_values)
         return await self._invoke(request)
 
-    async def lock(self, key: KeyType, lease_time: float = None) -> None:
+    async def lock(self, key: KeyType, lease_time: float | None = None) -> None:
         """Acquires the lock for the specified key infinitely or for the
         specified lease time if provided.
 
@@ -1022,7 +1023,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._invocation_service.ainvoke(invocation)
 
     async def project(
-        self, projection: Projection[ProjectionType], predicate: Predicate = None
+        self, projection: Projection[ProjectionType], predicate: Predicate | None = None
     ) -> ProjectionType:
         """Applies the projection logic on map entries and filter the result
         with the predicate, if given.
@@ -1066,7 +1067,11 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._invoke(request, handler)
 
     async def put(
-        self, key: KeyType, value: ValueType, ttl: float = None, max_idle: float = None
+        self,
+        key: KeyType,
+        value: ValueType,
+        ttl: float | None = None,
+        max_idle: float | None = None,
     ) -> typing.Optional[ValueType]:
         """Associates the specified value with the specified key in this map.
 
@@ -1145,7 +1150,11 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return None
 
     async def put_if_absent(
-        self, key: KeyType, value: ValueType, ttl: float = None, max_idle: float = None
+        self,
+        key: KeyType,
+        value: ValueType,
+        ttl: float | None = None,
+        max_idle: float | None = None,
     ) -> typing.Optional[ValueType]:
         """Associates the specified key with the given value if it is not
         already associated.
@@ -1197,7 +1206,11 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._put_if_absent_internal(key_data, value_data, ttl, max_idle)
 
     async def put_transient(
-        self, key: KeyType, value: ValueType, ttl: float = None, max_idle: float = None
+        self,
+        key: KeyType,
+        value: ValueType,
+        ttl: float | None = None,
+        max_idle: float | None = None,
     ) -> None:
         """Same as ``put``, but MapStore defined at the server side will not
         be called.
@@ -1413,7 +1426,11 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         return await self._replace_if_same_internal(key_data, old_value_data, new_value_data)
 
     async def set(
-        self, key: KeyType, value: ValueType, ttl: float = None, max_idle: float = None
+        self,
+        key: KeyType,
+        value: ValueType,
+        ttl: float | None = None,
+        max_idle: float | None = None,
     ) -> None:
         """Puts an entry into this map.
 
@@ -1477,7 +1494,9 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         request = map_size_codec.encode_request(self.name)
         return await self._invoke(request, map_size_codec.decode_response)
 
-    async def try_lock(self, key: KeyType, lease_time: float = None, timeout: float = 0) -> bool:
+    async def try_lock(
+        self, key: KeyType, lease_time: float | None = None, timeout: float = 0
+    ) -> bool:
         """Tries to acquire the lock for the specified key.
 
         When the lock is not available:
@@ -1591,7 +1610,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
         )
         return await self._invoke_on_key(request, key_data)
 
-    async def values(self, predicate: Predicate = None) -> typing.List[ValueType]:
+    async def values(self, predicate: Predicate | None = None) -> typing.List[ValueType]:
         """Returns a list clone of the values contained in this map or values
         of the entries which are filtered with the predicate if provided.
 
@@ -1643,6 +1662,24 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
             request = map_values_codec.encode_request(self.name)
 
         return await self._invoke(request, handler)
+
+    def lock_context(self, key) -> LockContext:
+        """Creates a context that locks and unlocks the given key automatically.
+
+        Example:
+            >>> from hazelcast.asyncio import HazelcastClient
+            >>> client = await HazelcastClient.create_and_start()
+            >>> m = await client.get_map("my-map")
+            >>> async with m.lock_context("my-key"):
+            ...     await m.set("my-key", "OK")
+
+        Args:
+            key: The key to automatically lock at the start of the context and unlock it at the end.
+
+        Returns:
+            ``LockContext``.
+        """
+        return LockContext(self, key)
 
     def _contains_key_internal(self, key_data):
         request = map_contains_key_codec.encode_request(self.name, key_data, task_id())

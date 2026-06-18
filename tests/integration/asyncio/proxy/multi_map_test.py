@@ -218,6 +218,22 @@ class MultiMapTest(SingleMemberTestCase):
         values = list((await self.fill_map()).values())
         self.assertCountEqual(list(await self.multi_map.values()), itertools.chain(*values))
 
+    async def test_lock_context(self):
+        hold = asyncio.Event()
+        release = asyncio.Event()
+        key = "lock-context-key"
+
+        async def hold_lock():
+            async with self.multi_map.lock_context(key):
+                hold.set()
+                await release.wait()
+
+        asyncio.create_task(hold_lock())
+        await hold.wait()
+        acquired = await self.multi_map.try_lock(key)
+        self.assertFalse(acquired)
+        release.set()
+
     def test_str(self):
         self.assertTrue(str(self.multi_map).startswith("MultiMap"))
 
