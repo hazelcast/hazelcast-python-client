@@ -16,7 +16,7 @@ class FencedLockTest(CPTestCase):
         self.lock = await self.client.cp_subsystem.get_lock(random_string())
         self.initial_acquire_count = self.get_initial_acquire_count()
 
-    async def tearDown(self):
+    async def asyncTearDown(self):
         await self.lock.destroy()
         await super().asyncTearDown()
 

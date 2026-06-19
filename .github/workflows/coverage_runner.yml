@@ -45,7 +45,7 @@ jobs:
           - ${{ needs.python-versions.outputs.earliest-python-version }}
           - ${{ needs.python-versions.outputs.latest-python-version }}
         os: [ ubuntu-latest, windows-latest ]
-        hz_version: [ "5.6.0" ]
+        hz_version: [ "5.7.0" ]
       fail-fast: false
       
     steps:
@@ -100,20 +100,17 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         working-directory: certs
         run: |
-          zip -r -j certs.jar $GITHUB_WORKSPACE/tests/integration/backward_compatible/ssl_tests/hostname_verification/*.p12
-          cp certs.jar ../hazelcast-enterprise-${{ matrix.hz_version }}-tests.jar            
+          cp $GITHUB_WORKSPACE/tests/integration/backward_compatible/ssl_tests/hostname_verification/*.p12 .
+          jar uf certs.jar *.p12
+          cp certs.jar ../hazelcast-enterprise-${{ matrix.hz_version }}-tests.jar
 
       - name: Create the test jar with certificates (Windows)
         if: matrix.os == 'windows-latest'
         working-directory: certs
         run: |
-          $compress = @{
-            Path = "../tests/integration/backward_compatible/ssl_tests/hostname_verification/*.p12"
-            CompressionLevel = "Fastest"
-            DestinationPath = "certs.jar"
-          }
-          Compress-Archive -Update @compress
-          cp certs.jar ../hazelcast-enterprise-${{ matrix.hz_version }}-tests.jar            
+          cp $Env:GITHUB_WORKSPACE/tests/integration/backward_compatible/ssl_tests/hostname_verification/*.p12 .
+          jar uf certs.jar *.p12
+          cp certs.jar ../hazelcast-enterprise-${{ matrix.hz_version }}-tests.jar
 
       - name: Download RCD (Linux)
         if: matrix.os == 'ubuntu-latest'
