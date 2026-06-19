@@ -108,7 +108,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         working-directory: certs
         run: |
-          cp $GITHUB_WORKSPACE/tests/integration/backward_compatible/ssl_tests/hostname_verification/*.p12 .
+          cp $Env:GITHUB_WORKSPACE/tests/integration/backward_compatible/ssl_tests/hostname_verification/*.p12 .
           jar uf certs.jar *.p12
           cp certs.jar ../hazelcast-enterprise-${{ matrix.hz_version }}-tests.jar
 
