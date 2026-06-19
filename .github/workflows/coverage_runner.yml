@@ -158,6 +158,8 @@ jobs:
           cat rcd-stdout.log
           echo "RCD STDERR:"
           cat rcd-stderr.log
+          echo "TEST JAR"
+          dir hazelcast-enterprise-5.7.0-tests.jar          
 
       - name: Publish results to Codecov for PR coming from hazelcast organization
         if: ${{ matrix.python-version == needs.python-versions.outputs.latest-python-version && matrix.os == 'ubuntu-latest' &&  github.event_name == 'pull_request_target' }}
