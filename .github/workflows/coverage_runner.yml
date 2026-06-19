@@ -100,7 +100,6 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         working-directory: certs
         run: |
-#          zip -r -j certs.jar $GITHUB_WORKSPACE/tests/integration/backward_compatible/ssl_tests/hostname_verification/*.p12
           cp $GITHUB_WORKSPACE/tests/integration/backward_compatible/ssl_tests/hostname_verification/*.p12 .
           jar uf certs.jar *.p12
           cp certs.jar ../hazelcast-enterprise-${{ matrix.hz_version }}-tests.jar
@@ -109,12 +108,6 @@ jobs:
         if: matrix.os == 'windows-latest'
         working-directory: certs
         run: |
-#          $compress = @{
-#            Path = "../hazelcast-enterprise-5.7.0-tests.jar"
-#            CompressionLevel = "Fastest"
-#            DestinationPath = "certs.jar"
-#          }
-#          Compress-Archive -Update @compress
           cp $GITHUB_WORKSPACE/tests/integration/backward_compatible/ssl_tests/hostname_verification/*.p12 .
           jar uf certs.jar *.p12
           cp certs.jar ../hazelcast-enterprise-${{ matrix.hz_version }}-tests.jar
