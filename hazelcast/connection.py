@@ -825,6 +825,7 @@ class _HeartbeatManager:
         """Starts sending periodic HeartBeat operations."""
 
         def _heartbeat():
+            _logger.debug("heartbeat")
             conn_manager = self._connection_manager
             if not conn_manager.live:
                 return
