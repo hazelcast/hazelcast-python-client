@@ -8,8 +8,8 @@ from hazelcast.internal.asyncio_compact import CompactSchemaService
 from hazelcast.config import Config, IndexConfig
 from hazelcast.internal.asyncio_connection import ConnectionManager, DefaultAsyncioAddressProvider
 from hazelcast.core import DistributedObjectEvent
-from hazelcast.discovery import HazelcastCloudAddressProvider
 from hazelcast.errors import IllegalStateError, InvalidConfigurationError
+from hazelcast.internal.asyncio_discovery import HazelcastCloudAddressProvider
 from hazelcast.internal.asyncio_invocation import InvocationService, Invocation
 from hazelcast.internal.asyncio_proxy.cp import ProxySessionManager
 from hazelcast.internal.asyncio_proxy.cp_manager import CPSubsystem
