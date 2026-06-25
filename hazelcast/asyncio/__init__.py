@@ -2,7 +2,6 @@ __all__ = [
     "AtomicLong",
     "AtomicReference",
     "CPSubsystem",
-    "ClusterService",
     "CountDownLatch",
     "EntryEventCallable",
     "Executor",
@@ -14,7 +13,6 @@ __all__ = [
     "Map",
     "MultiMap",
     "PNCounter",
-    "PartitionService",
     "Queue",
     "ReliableMessageListener",
     "ReliableTopic",
@@ -26,7 +24,7 @@ __all__ = [
     "VectorCollection",
 ]
 
-from hazelcast.internal.asyncio_client import HazelcastClient, PartitionService, ClusterService
+from hazelcast.internal.asyncio_client import HazelcastClient
 from hazelcast.internal.asyncio_proxy.flake_id_generator import FlakeIdGenerator
 from hazelcast.internal.asyncio_proxy.executor import Executor
 from hazelcast.internal.asyncio_proxy.list import List
