@@ -4,21 +4,23 @@ __all__ = [
     "CPSubsystem",
     "CountDownLatch",
     "EntryEventCallable",
-    "FlakeIdGenerator",
     "Executor",
     "FencedLock",
+    "FlakeIdGenerator",
     "HazelcastClient",
     "List",
+    "LockContext",
     "Map",
-    "ReliableMessageListener",
-    "ReliableTopic",
     "MultiMap",
     "PNCounter",
     "Queue",
+    "ReliableMessageListener",
+    "ReliableTopic",
     "ReplicatedMap",
     "Ringbuffer",
     "Semaphore",
     "Set",
+    "Topic",
     "VectorCollection",
 ]
 
@@ -41,3 +43,5 @@ from hazelcast.internal.asyncio_proxy.atomic_reference import AtomicReference
 from hazelcast.internal.asyncio_proxy.countdown_latch import CountDownLatch
 from hazelcast.internal.asyncio_proxy.semaphore import Semaphore
 from hazelcast.internal.asyncio_proxy.fenced_lock import FencedLock
+from hazelcast.internal.asyncio_proxy.topic import Topic
+from hazelcast.internal.asyncio_lock_context import LockContext
