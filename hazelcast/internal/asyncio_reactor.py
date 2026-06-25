@@ -10,7 +10,7 @@ from errno import errorcode
 from asyncio import AbstractEventLoop, transports, CancelledError
 
 from hazelcast.config import Config, SSLProtocol
-from hazelcast.errors import IllegalStateError, TargetDisconnectedError
+from hazelcast.errors import TargetDisconnectedError
 from hazelcast.internal.asyncio_connection import Connection
 from hazelcast.core import Address
 
