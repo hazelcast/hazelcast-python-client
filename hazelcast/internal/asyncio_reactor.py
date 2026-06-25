@@ -127,8 +127,8 @@ class AsyncioConnection(Connection):
             await self._connect_task
         except CancelledError:
             raise TargetDisconnectedError("connect_task")
-        except Exception:
-            raise IllegalStateError("connect_task")
+        except Exception as e:
+            raise IllegalStateError(f"connect_task: {e}")
 
     def handle_connect(self):
         self._connected = True
