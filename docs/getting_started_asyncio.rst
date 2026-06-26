@@ -116,10 +116,10 @@ and UUID to the ``stderr``.
 
 .. code:: text
 
-    INFO:hazelcast.lifecycle:HazelcastClient 5.6.0 is STARTING
-    INFO:hazelcast.lifecycle:HazelcastClient 5.6.0 is STARTED
+    INFO:hazelcast.lifecycle:HazelcastClient 5.7.0 is STARTING
+    INFO:hazelcast.lifecycle:HazelcastClient 5.7.0 is STARTED
     INFO:hazelcast.internal.asyncio_connection:Trying to connect to Address(host=127.0.0.1, port=5701)
-    INFO:hazelcast.lifecycle:HazelcastClient 5.6.0 is CONNECTED
+    INFO:hazelcast.lifecycle:HazelcastClient 5.7.0 is CONNECTED
     INFO:hazelcast.internal.asyncio_connection:Authenticated with server Address(host=127.0.0.1, port=5701):49c5407d-78f4-4611-a025-95f7afd0ab68, server version: 5.5.2, local address: Address(host=127.0.0.1, port=56134)
     INFO:hazelcast.internal.asyncio_cluster:
 
@@ -128,10 +128,10 @@ and UUID to the ``stderr``.
     }
 
     INFO:hazelcast.internal.asyncio_client:Client started
-    INFO:hazelcast.lifecycle:HazelcastClient 5.6.0 is SHUTTING_DOWN
+    INFO:hazelcast.lifecycle:HazelcastClient 5.7.0 is SHUTTING_DOWN
     INFO:hazelcast.internal.asyncio_connection:Removed connection to Address(host=127.0.0.1, port=5701):49c5407d-78f4-4611-a025-95f7afd0ab68, connection: <hazelcast.internal.asyncio_reactor.AsyncioConnection object at 0x7605c4aa8d70>
-    INFO:hazelcast.lifecycle:HazelcastClient 5.6.0 is DISCONNECTED
-    INFO:hazelcast.lifecycle:HazelcastClient 5.6.0 is SHUTDOWN
+    INFO:hazelcast.lifecycle:HazelcastClient 5.7.0 is DISCONNECTED
+    INFO:hazelcast.lifecycle:HazelcastClient 5.7.0 is SHUTDOWN
 
 Congratulations!
 You just started a Hazelcast Python client instance.
