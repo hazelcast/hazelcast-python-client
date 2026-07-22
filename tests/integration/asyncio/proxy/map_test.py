@@ -425,6 +425,17 @@ class MapTest(SingleMemberTestCase):
         self.assertFalse(acquired)
         release.set()
 
+    async def test_lock_context_reentrancy(self):
+        # nested lock context must be supported
+        key = "lock-context-key"
+
+        async def task():
+            async with self.map.lock_context(key):
+                async with self.map.lock_context(key):
+                    pass
+
+        await asyncio.create_task(task())
+
     async def test_put_all(self):
         m = {"key-%d" % x: "value-%d" % x for x in range(0, 1000)}
         await self.map.put_all(m)
