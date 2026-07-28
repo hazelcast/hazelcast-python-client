@@ -177,7 +177,7 @@ class _MinByAggregator(_AbstractAggregator[MapEntry[KeyType, ValueType]]):
         return 18
 
 
-def count(attribute_path: str = None) -> Aggregator[int]:
+def count(attribute_path: str | None = None) -> Aggregator[int]:
     """Creates an aggregator that counts the input values.
 
     Accepts ``None`` input values and ``None`` extracted values.
@@ -191,7 +191,7 @@ def count(attribute_path: str = None) -> Aggregator[int]:
     return _CountAggregator(attribute_path)
 
 
-def distinct(attribute_path: str = None) -> Aggregator[typing.Set[AggregatorResultType]]:
+def distinct(attribute_path: str | None = None) -> Aggregator[typing.Set[AggregatorResultType]]:
     """Creates an aggregator that calculates the distinct set of input values.
 
     Accepts ``None`` input values and ``None`` extracted values.
@@ -205,7 +205,7 @@ def distinct(attribute_path: str = None) -> Aggregator[typing.Set[AggregatorResu
     return _DistinctValuesAggregator(attribute_path)
 
 
-def double_avg(attribute_path: str = None) -> Aggregator[float]:
+def double_avg(attribute_path: str | None = None) -> Aggregator[float]:
     """Creates an aggregator that calculates the average of the input values.
 
     Does NOT accept ``None`` input values or ``None`` extracted values.
@@ -225,7 +225,7 @@ def double_avg(attribute_path: str = None) -> Aggregator[float]:
     return _DoubleAverageAggregator(attribute_path)
 
 
-def double_sum(attribute_path: str = None) -> Aggregator[float]:
+def double_sum(attribute_path: str | None = None) -> Aggregator[float]:
     """Creates an aggregator that calculates the sum of the input values.
 
     Does NOT accept ``None`` input values or ``None`` extracted values.
@@ -245,7 +245,7 @@ def double_sum(attribute_path: str = None) -> Aggregator[float]:
     return _DoubleSumAggregator(attribute_path)
 
 
-def fixed_point_sum(attribute_path: str = None) -> Aggregator[int]:
+def fixed_point_sum(attribute_path: str | None = None) -> Aggregator[int]:
     """Creates an aggregator that calculates the sum of the input values.
 
     Does NOT accept ``None`` input values or ``None`` extracted values.
@@ -263,7 +263,7 @@ def fixed_point_sum(attribute_path: str = None) -> Aggregator[int]:
     return _FixedPointSumAggregator(attribute_path)
 
 
-def floating_point_sum(attribute_path: str = None) -> Aggregator[float]:
+def floating_point_sum(attribute_path: str | None = None) -> Aggregator[float]:
     """Creates an aggregator that calculates the sum of the input values.
 
     Does NOT accept ``None`` input values or ``None`` extracted values.
@@ -281,7 +281,7 @@ def floating_point_sum(attribute_path: str = None) -> Aggregator[float]:
     return _FloatingPointSumAggregator(attribute_path)
 
 
-def int_avg(attribute_path: str = None) -> Aggregator[int]:
+def int_avg(attribute_path: str | None = None) -> Aggregator[int]:
     """Creates an aggregator that calculates the average of the input values.
 
     Does NOT accept ``None`` input values or ``None`` extracted values.
@@ -301,7 +301,7 @@ def int_avg(attribute_path: str = None) -> Aggregator[int]:
     return _IntegerAverageAggregator(attribute_path)
 
 
-def int_sum(attribute_path: str = None) -> Aggregator[int]:
+def int_sum(attribute_path: str | None = None) -> Aggregator[int]:
     """Creates an aggregator that calculates the sum of the input values.
 
     Does NOT accept ``None`` input values or ``None`` extracted values.
@@ -321,7 +321,7 @@ def int_sum(attribute_path: str = None) -> Aggregator[int]:
     return _IntegerSumAggregator(attribute_path)
 
 
-def long_avg(attribute_path: str = None) -> Aggregator[int]:
+def long_avg(attribute_path: str | None = None) -> Aggregator[int]:
     """Creates an aggregator that calculates the average of the input values.
 
     Does NOT accept ``None`` input values or ``None`` extracted values.
@@ -341,7 +341,7 @@ def long_avg(attribute_path: str = None) -> Aggregator[int]:
     return _LongAverageAggregator(attribute_path)
 
 
-def long_sum(attribute_path: str = None) -> Aggregator[int]:
+def long_sum(attribute_path: str | None = None) -> Aggregator[int]:
     """Creates an aggregator that calculates the sum of the input values.
 
     Does NOT accept ``None`` input values or ``None`` extracted values.
@@ -361,7 +361,7 @@ def long_sum(attribute_path: str = None) -> Aggregator[int]:
     return _LongSumAggregator(attribute_path)
 
 
-def max_(attribute_path: str = None) -> Aggregator[AggregatorResultType]:
+def max_(attribute_path: str | None = None) -> Aggregator[AggregatorResultType]:
     """Creates an aggregator that calculates the max of the input values.
 
     Accepts ``None`` input values and ``None`` extracted values.
@@ -381,7 +381,7 @@ def max_(attribute_path: str = None) -> Aggregator[AggregatorResultType]:
     return _MaxAggregator(attribute_path)
 
 
-def min_(attribute_path: str = None) -> Aggregator[AggregatorResultType]:
+def min_(attribute_path: str | None = None) -> Aggregator[AggregatorResultType]:
     """Creates an aggregator that calculates the min of the input values.
 
     Accepts ``None`` input values and ``None`` extracted values.
@@ -401,7 +401,7 @@ def min_(attribute_path: str = None) -> Aggregator[AggregatorResultType]:
     return _MinAggregator(attribute_path)
 
 
-def number_avg(attribute_path: str = None) -> Aggregator[float]:
+def number_avg(attribute_path: str | None = None) -> Aggregator[float]:
     """Creates an aggregator that calculates the average of the input values.
 
     Does NOT accept ``None`` input values or ``None`` extracted values.

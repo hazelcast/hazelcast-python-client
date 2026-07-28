@@ -35,7 +35,7 @@ class Future(typing.Generic[ResultType]):
         self._event.set()
         self._invoke_callbacks()
 
-    def set_exception(self, exception: Exception, traceback: types.TracebackType = None) -> None:
+    def set_exception(self, exception: Exception, traceback: types.TracebackType | None = None) -> None:
         """Sets the exception for this Future in case of errors.
 
         Args:

@@ -80,8 +80,8 @@ class Set(PartitionSpecificProxy, typing.Generic[ItemType]):
     async def add_listener(
         self,
         include_value: bool = False,
-        item_added_func: typing.Callable[[ItemEvent[ItemType]], None] = None,
-        item_removed_func: typing.Callable[[ItemEvent[ItemType]], None] = None,
+        item_added_func: typing.Callable[[ItemEvent[ItemType]], None] | None = None,
+        item_removed_func: typing.Callable[[ItemEvent[ItemType]], None] | None = None,
     ) -> str:
         """Adds an item listener for this container.
 

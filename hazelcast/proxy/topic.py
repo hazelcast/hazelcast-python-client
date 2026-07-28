@@ -28,7 +28,7 @@ class Topic(PartitionSpecificProxy["BlockingTopic"], typing.Generic[MessageType]
     """
 
     def add_listener(
-        self, on_message: typing.Callable[[TopicMessage[MessageType]], None] = None
+        self, on_message: typing.Callable[[TopicMessage[MessageType]], None] | None = None
     ) -> Future[str]:
         """Subscribes to this topic.
 
@@ -119,7 +119,7 @@ class BlockingTopic(Topic[MessageType]):
 
     def add_listener(  # type: ignore[override]
         self,
-        on_message: typing.Callable[[TopicMessage[MessageType]], None] = None,
+        on_message: typing.Callable[[TopicMessage[MessageType]], None] | None = None,
     ) -> str:
         return self._wrapped.add_listener(on_message).result()
 

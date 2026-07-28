@@ -78,7 +78,7 @@ class HazelcastClient:
 
     _CLIENT_ID = AtomicInteger()
 
-    def __init__(self, config: Config = None, **kwargs):
+    def __init__(self, config: Config | None = None, **kwargs):
         """The client can be configured either by:
 
         - providing a configuration object as the first parameter of the

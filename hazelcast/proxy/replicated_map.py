@@ -54,13 +54,13 @@ class ReplicatedMap(Proxy["BlockingReplicatedMap"], typing.Generic[KeyType, Valu
 
     def add_entry_listener(
         self,
-        key: KeyType = None,
-        predicate: Predicate = None,
-        added_func: EntryEventCallable = None,
-        removed_func: EntryEventCallable = None,
-        updated_func: EntryEventCallable = None,
-        evicted_func: EntryEventCallable = None,
-        clear_all_func: EntryEventCallable = None,
+        key: KeyType | None = None,
+        predicate: Predicate | None = None,
+        added_func: EntryEventCallable | None = None,
+        removed_func: EntryEventCallable | None = None,
+        updated_func: EntryEventCallable | None = None,
+        evicted_func: EntryEventCallable | None = None,
+        clear_all_func: EntryEventCallable | None = None,
     ) -> Future[str]:
         """Adds a continuous entry listener for this map.
 
@@ -466,13 +466,13 @@ class BlockingReplicatedMap(ReplicatedMap[KeyType, ValueType]):
 
     def add_entry_listener(  # type: ignore[override]
         self,
-        key: KeyType = None,
-        predicate: Predicate = None,
-        added_func: EntryEventCallable = None,
-        removed_func: EntryEventCallable = None,
-        updated_func: EntryEventCallable = None,
-        evicted_func: EntryEventCallable = None,
-        clear_all_func: EntryEventCallable = None,
+        key: KeyType | None = None,
+        predicate: Predicate | None = None,
+        added_func: EntryEventCallable | None = None,
+        removed_func: EntryEventCallable | None = None,
+        updated_func: EntryEventCallable | None = None,
+        evicted_func: EntryEventCallable | None = None,
+        clear_all_func: EntryEventCallable | None = None,
     ) -> str:
         return self._wrapped.add_entry_listener(
             key, predicate, added_func, removed_func, updated_func, evicted_func, clear_all_func

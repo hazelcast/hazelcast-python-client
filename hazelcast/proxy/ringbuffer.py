@@ -330,7 +330,7 @@ class Ringbuffer(PartitionSpecificProxy["BlockingRingbuffer"], typing.Generic[It
         return self._invoke(request, handler)
 
     def read_many(
-        self, start_sequence: int, min_count: int, max_count: int, filter: typing.Any = None
+        self, start_sequence: int, min_count: int, max_count: int, filter: typing.Any | None = None
     ) -> Future[ReadResult]:
         """Reads a batch of items from the Ringbuffer.
 
@@ -478,7 +478,7 @@ class BlockingRingbuffer(Ringbuffer[ItemType]):
         start_sequence: int,
         min_count: int,
         max_count: int,
-        filter: typing.Any = None,
+        filter: typing.Any | None = None,
     ) -> ReadResult:
         return self._wrapped.read_many(start_sequence, min_count, max_count, filter).result()
 

@@ -649,7 +649,7 @@ def true() -> Predicate:
     return _TruePredicate()
 
 
-def paging(predicate: Predicate, page_size: int, comparator: typing.Any = None) -> PagingPredicate:
+def paging(predicate: Predicate, page_size: int, comparator: typing.Any | None = None) -> PagingPredicate:
     """Creates a paging predicate with an inner predicate, page size and
     comparator. Results will be filtered via inner predicate and will be
     ordered via comparator if provided.

@@ -201,7 +201,7 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
         include_value: bool = False,
         include_vectors: bool = False,
         limit: int = 10,
-        hints: Dict[str, str] = None
+        hints: Dict[str, str] | None = None
     ) -> List[SearchResult]:
         """Returns the Documents closest to the given vector.
 
@@ -270,7 +270,7 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
         check_not_none(key, "key can't be None")
         return await self._delete_internal(key)
 
-    async def optimize(self, index_name: str = None) -> None:
+    async def optimize(self, index_name: str | None = None) -> None:
         """Optimize index by fully removing nodes marked for deletion, trimming neighbor sets
         to the advertised degree, and updating the entry node as necessary.
 
@@ -338,7 +338,7 @@ class VectorCollection(Proxy, typing.Generic[KeyType, ValueType]):
         include_value: bool = False,
         include_vectors: bool = False,
         limit: int = 10,
-        hints: Dict[str, str] = None
+        hints: Dict[str, str] | None = None
     ) -> asyncio.Future[List[SearchResult]]:
         def handler(message):
             results: List[
