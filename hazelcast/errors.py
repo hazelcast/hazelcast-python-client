@@ -11,7 +11,7 @@ def retryable(cls):
 class HazelcastError(Exception):
     """General HazelcastError class."""
 
-    def __init__(self, message: str = None, cause: Exception = None):
+    def __init__(self, message: str|None = None, cause: Exception|None = None):
         super(HazelcastError, self).__init__(message, cause)
 
     def __str__(self):

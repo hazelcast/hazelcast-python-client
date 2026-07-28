@@ -485,7 +485,7 @@ class MapEntry(typing.Generic[KeyType, ValueType]):
 
     __slots__ = ("_key", "_value")
 
-    def __init__(self, key: KeyType = None, value: ValueType = None):
+    def __init__(self, key: KeyType|None = None, value: ValueType|None = None):
         self._key = key
         self._value = value
 
