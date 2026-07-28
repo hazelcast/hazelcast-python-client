@@ -25,7 +25,6 @@ setup(
     long_description=long_description,
     url="https://github.com/hazelcast/hazelcast-python-client",
     author="Hazelcast Inc. Developers",
-    author_email="hazelcast@googlegroups.com",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
@@ -39,6 +38,7 @@ setup(
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
         "Programming Language :: Python :: 3.14",
+        "Programming Language :: Python :: 3.15",
         "Programming Language :: Python :: Implementation :: CPython",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],

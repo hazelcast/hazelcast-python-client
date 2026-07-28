@@ -409,11 +409,11 @@ def connect(
     config=None,
     *,
     dsn="",
-    user: str = None,
-    password: str = None,
-    host: str = None,
-    port: int = None,
-    cluster_name: str = None,
+    user: str | None = None,
+    password: str | None = None,
+    host: str | None = None,
+    port: int | None = None,
+    cluster_name: str | None = None,
 ) -> Connection:
     """Creates a new Connection to the cluster
 
@@ -521,14 +521,14 @@ _type_map = {
 
 
 def _make_config(
-    config: Config = None,
+    config: Config | None = None,
     *,
     dsn="",
-    user: str = None,
-    password: str = None,
-    host: str = None,
-    port: int = None,
-    cluster_name: str = None,
+    user: str | None = None,
+    password: str | None = None,
+    host: str | None = None,
+    port: int | None = None,
+    cluster_name: str | None = None,
 ) -> Config:
     kwargs_used = user or password or host or port or cluster_name
     if config is not None:

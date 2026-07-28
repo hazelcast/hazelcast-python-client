@@ -6,7 +6,7 @@ from hazelcast.core import Address
 class TokenProvider:
     """TokenProvider is a base class for token providers."""
 
-    def token(self, address: Address = None) -> bytes:
+    def token(self, address: Address | None = None) -> bytes:
         """Returns a token to be used for token-based authentication.
 
         Args:
@@ -15,7 +15,7 @@ class TokenProvider:
         Returns:
             token as a bytes object.
         """
-        pass
+        return bytes()
 
 
 class BasicTokenProvider(TokenProvider):
@@ -29,5 +29,5 @@ class BasicTokenProvider(TokenProvider):
         else:
             raise TypeError("token must be either a str or bytes object")
 
-    def token(self, address: Address = None) -> bytes:
+    def token(self, address: Address | None = None) -> bytes:
         return self._token

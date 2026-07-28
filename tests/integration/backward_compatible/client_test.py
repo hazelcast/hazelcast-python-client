@@ -20,8 +20,7 @@ class ClientTest(HazelcastTestCase):
         rc = self.create_rc()
         client_heartbeat_seconds = 4
 
-        cluster_config = (
-            """
+        cluster_config = """
         <hazelcast xmlns="http://www.hazelcast.com/schema/config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:schemaLocation="http://www.hazelcast.com/schema/config
@@ -29,9 +28,7 @@ class ClientTest(HazelcastTestCase):
             <properties>
                 <property name="hazelcast.client.max.no.heartbeat.seconds">%s</property>
             </properties>
-        </hazelcast>"""
-            % client_heartbeat_seconds
-        )
+        </hazelcast>""" % client_heartbeat_seconds
         cluster = self.create_cluster(rc, cluster_config)
         cluster.start_member()
 
@@ -114,9 +111,7 @@ class ClientLabelsTest(HazelcastTestCase):
                 result = client.getLabels().iterator().next();
                 break;
             }
-        }""" % str(
-            client_uuid
-        )
+        }""" % str(client_uuid)
         return self.rc.executeOnController(self.cluster.id, script, Lang.JAVASCRIPT).result
 
 

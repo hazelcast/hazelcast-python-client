@@ -15,16 +15,14 @@ for i in range(100):
     integers.set(i, i)
 
 # Create mapping for the integers. This needs to be done only once per map.
-client.sql.execute(
-    """
+client.sql.execute("""
 CREATE OR REPLACE MAPPING integers
 TYPE IMap
 OPTIONS (
   'keyFormat' = 'int',
   'valueFormat' = 'int'
 )
-    """
-).result()
+    """).result()
 
 # Fetch values in between (40, 50)
 result_future = client.sql.execute("SELECT * FROM integers WHERE this > ? AND this < ?", 40, 50)

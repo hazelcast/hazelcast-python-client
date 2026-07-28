@@ -78,8 +78,8 @@ class Queue(PartitionSpecificProxy["BlockingQueue"], typing.Generic[ItemType]):
     def add_listener(
         self,
         include_value: bool = False,
-        item_added_func: typing.Callable[[ItemEvent[ItemType]], None] = None,
-        item_removed_func: typing.Callable[[ItemEvent[ItemType]], None] = None,
+        item_added_func: typing.Callable[[ItemEvent[ItemType]], None] | None = None,
+        item_removed_func: typing.Callable[[ItemEvent[ItemType]], None] | None = None,
     ) -> Future[str]:
         """Adds an item listener for this queue. Listener will be notified for
          all queue add/remove events.
@@ -439,8 +439,8 @@ class BlockingQueue(Queue[ItemType]):
     def add_listener(  # type: ignore[override]
         self,
         include_value: bool = False,
-        item_added_func: typing.Callable[[ItemEvent[ItemType]], None] = None,
-        item_removed_func: typing.Callable[[ItemEvent[ItemType]], None] = None,
+        item_added_func: typing.Callable[[ItemEvent[ItemType]], None] | None = None,
+        item_removed_func: typing.Callable[[ItemEvent[ItemType]], None] | None = None,
     ) -> str:
         return self._wrapped.add_listener(
             include_value, item_added_func, item_removed_func

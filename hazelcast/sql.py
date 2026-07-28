@@ -110,7 +110,7 @@ class SqlService:
         cursor_buffer_size: int = _DEFAULT_CURSOR_BUFFER_SIZE,
         timeout: float = _TIMEOUT_NOT_SET,
         expected_result_type: int = SqlExpectedResultType.ANY,
-        schema: str = None
+        schema: str | None = None
     ) -> Future["SqlResult"]:
         """Executes an SQL statement.
 

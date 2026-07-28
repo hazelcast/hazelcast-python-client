@@ -590,13 +590,10 @@ class SqlResultTest(SqlTestBase):
         # Using a Portable that is not defined on the client-side.
         self._create_mapping_for_portable(666, 1, {})
 
-        script = (
-            """
+        script = """
         var m = instance_0.getMap("%s");
         m.put(1, new com.hazelcast.client.test.Employee(1, "Joe"));
-        """
-            % self.map_name
-        )
+        """ % self.map_name
 
         res = self.rc.executeOnController(self.cluster.id, script, Lang.JAVASCRIPT)
         self.assertTrue(res.success)
@@ -619,13 +616,10 @@ class SqlResultTest(SqlTestBase):
         # Using a Portable that is not defined on the client-side.
         self._create_mapping_for_portable(666, 1, {})
 
-        script = (
-            """
+        script = """
         var m = instance_0.getMap("%s");
         m.put(1, new com.hazelcast.client.test.Employee(1, "Joe"));
-        """
-            % self.map_name
-        )
+        """ % self.map_name
 
         res = self.rc.executeOnController(self.cluster.id, script, Lang.JAVASCRIPT)
         self.assertTrue(res.success)
@@ -972,8 +966,7 @@ class SqlServiceV5MixedClusterTest(HazelcastTestCase):
     def test_mixed_cluster(self):
         map_name = random_string()
 
-        create_mapping_query = (
-            """
+        create_mapping_query = """
         CREATE MAPPING "%s" (
             __key INT,
             this INT
@@ -983,9 +976,7 @@ class SqlServiceV5MixedClusterTest(HazelcastTestCase):
             'keyFormat' = 'int',
             'valueFormat' = 'int'
         )
-        """
-            % map_name
-        )
+        """ % map_name
 
         self.client.sql.execute(create_mapping_query).result()
 
@@ -1013,8 +1004,7 @@ class JetSqlTest(SqlTestBase):
                     break
 
     def test_federated_query(self):
-        query = (
-            """
+        query = """
         CREATE MAPPING "%s" (
             __key INT,
             name VARCHAR,
@@ -1025,19 +1015,14 @@ class JetSqlTest(SqlTestBase):
             'keyFormat' = 'int',
             'valueFormat' = 'json-flat'
         )
-        """
-            % self.map_name
-        )
+        """ % self.map_name
 
         self.execute(query)
 
-        insert_into_query = (
-            """
+        insert_into_query = """
         INSERT INTO "%s" (__key, name, age) 
         VALUES (1, 'John', 42)
-        """
-            % self.map_name
-        )
+        """ % self.map_name
 
         with self.execute(insert_into_query) as result:
             self.assertEqual(0, self.update_count(result))

@@ -93,7 +93,6 @@ from hazelcast.util import (
     deserialize_list_in_place,
 )
 
-
 EntryEventCallable = typing.Callable[[EntryEvent[KeyType, ValueType]], None]
 
 
@@ -122,7 +121,7 @@ class Map(Proxy, typing.Generic[KeyType, ValueType]):
     async def add_entry_listener(
         self,
         include_value: bool = False,
-        key: KeyType = None,
+        key: KeyType | None = None,
         predicate: Predicate | None = None,
         added_func: EntryEventCallable | None = None,
         removed_func: EntryEventCallable | None = None,

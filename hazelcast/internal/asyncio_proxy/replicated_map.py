@@ -58,13 +58,13 @@ class ReplicatedMap(Proxy, typing.Generic[KeyType, ValueType]):
 
     async def add_entry_listener(
         self,
-        key: KeyType = None,
-        predicate: Predicate = None,
-        added_func: EntryEventCallable = None,
-        removed_func: EntryEventCallable = None,
-        updated_func: EntryEventCallable = None,
-        evicted_func: EntryEventCallable = None,
-        clear_all_func: EntryEventCallable = None,
+        key: KeyType | None = None,
+        predicate: Predicate | None = None,
+        added_func: EntryEventCallable | None = None,
+        removed_func: EntryEventCallable | None = None,
+        updated_func: EntryEventCallable | None = None,
+        evicted_func: EntryEventCallable | None = None,
+        clear_all_func: EntryEventCallable | None = None,
     ) -> str:
         """Adds a continuous entry listener for this map.
 

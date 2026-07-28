@@ -29,6 +29,9 @@ class IOUtil:
     @staticmethod
     def write_big_decimal(out: ObjectDataOutput, value: decimal.Decimal) -> None:
         sign, digits, exponent = value.as_tuple()
+        if not type(exponent) == int:
+            # exponent may be an int, or n, N, F
+            raise ValueError(f"this decimal number cannot be stored: {value}")
         unscaled_value = int("".join([str(digit) for digit in digits]))
         if sign == 1:
             unscaled_value = -1 * unscaled_value

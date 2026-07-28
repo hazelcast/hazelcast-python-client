@@ -2,7 +2,6 @@ import os
 import time
 import unittest
 
-
 try:
     from hazelcast.aggregator import (
         count,

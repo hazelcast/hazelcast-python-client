@@ -212,7 +212,7 @@ class Ringbuffer(PartitionSpecificProxy, typing.Generic[ItemType]):
         return await self._invoke(request, handler)
 
     async def read_many(
-        self, start_sequence: int, min_count: int, max_count: int, filter: typing.Any = None
+        self, start_sequence: int, min_count: int, max_count: int, filter: typing.Any | None = None
     ) -> ReadResult:
         """Reads a batch of items from the Ringbuffer.
 

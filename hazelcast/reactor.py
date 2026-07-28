@@ -1,7 +1,4 @@
-try:
-    import asyncore
-except ImportError:
-    import hazelcast.asyncore as asyncore  # type: ignore
+import hazelcast.asyncore as asyncore  # type: ignore
 import errno
 import io
 import logging

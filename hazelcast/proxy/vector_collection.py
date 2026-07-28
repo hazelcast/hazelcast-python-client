@@ -202,7 +202,7 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         include_value: bool = False,
         include_vectors: bool = False,
         limit: int = 10,
-        hints: Dict[str, str] = None
+        hints: Dict[str, str] | None = None
     ) -> Future[List[SearchResult]]:
         """Returns the Documents closest to the given vector.
 
@@ -271,7 +271,7 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         check_not_none(key, "key can't be None")
         return self._delete_internal(key)
 
-    def optimize(self, index_name: str = None) -> Future[None]:
+    def optimize(self, index_name: str | None = None) -> Future[None]:
         """Optimize index by fully removing nodes marked for deletion, trimming neighbor sets
         to the advertised degree, and updating the entry node as necessary.
 
@@ -339,12 +339,12 @@ class VectorCollection(Proxy["BlockingVectorCollection"]):
         include_value: bool = False,
         include_vectors: bool = False,
         limit: int = 10,
-        hints: Dict[str, str] = None
+        hints: Dict[str, str] | None = None
     ) -> Future[List[SearchResult]]:
         def handler(message):
-            results: List[
-                SearchResult
-            ] = vector_collection_search_near_vector_codec.decode_response(message)
+            results: List[SearchResult] = (
+                vector_collection_search_near_vector_codec.decode_response(message)
+            )
             for result in results:
                 if result.key is not None:
                     result.key = self._to_object(result.key)
@@ -448,7 +448,7 @@ class BlockingVectorCollection:
         include_value: bool = False,
         include_vectors: bool = False,
         limit: int = 10,
-        hints: Dict[str, str] = None
+        hints: Dict[str, str] | None = None
     ) -> List[SearchResult]:
         future = self._wrapped.search_near_vector(
             vector,
@@ -477,7 +477,7 @@ class BlockingVectorCollection:
     def clear(self) -> None:
         return self._wrapped.clear().result()
 
-    def optimize(self, index_name: str = None) -> None:
+    def optimize(self, index_name: str | None = None) -> None:
         return self._wrapped.optimize(index_name).result()
 
     def size(self) -> int:

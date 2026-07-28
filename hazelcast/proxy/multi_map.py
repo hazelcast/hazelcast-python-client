@@ -52,10 +52,10 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
     def add_entry_listener(
         self,
         include_value: bool = False,
-        key: KeyType = None,
-        added_func: EntryEventCallable = None,
-        removed_func: EntryEventCallable = None,
-        clear_all_func: EntryEventCallable = None,
+        key: KeyType | None = None,
+        added_func: EntryEventCallable | None = None,
+        removed_func: EntryEventCallable | None = None,
+        clear_all_func: EntryEventCallable | None = None,
     ) -> Future[str]:
         """Adds an entry listener for this multimap.
 
@@ -326,7 +326,7 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
         request = multi_map_key_set_codec.encode_request(self.name)
         return self._invoke(request, handler)
 
-    def lock(self, key: KeyType, lease_time: float = None) -> Future[None]:
+    def lock(self, key: KeyType, lease_time: float | None = None) -> Future[None]:
         """Acquires the lock for the specified key infinitely or for the
         specified lease time if provided.
 
@@ -561,7 +561,9 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
         request = multi_map_values_codec.encode_request(self.name)
         return self._invoke(request, handler)
 
-    def try_lock(self, key: KeyType, lease_time: float = None, timeout: float = 0) -> Future[bool]:
+    def try_lock(
+        self, key: KeyType, lease_time: float | None = None, timeout: float = 0
+    ) -> Future[bool]:
         """Tries to acquire the lock for the specified key.
 
         When the lock is not available:
@@ -640,10 +642,10 @@ class BlockingMultiMap(MultiMap[KeyType, ValueType]):
     def add_entry_listener(  # type: ignore[override]
         self,
         include_value: bool = False,
-        key: KeyType = None,
-        added_func: EntryEventCallable = None,
-        removed_func: EntryEventCallable = None,
-        clear_all_func: EntryEventCallable = None,
+        key: KeyType | None = None,
+        added_func: EntryEventCallable | None = None,
+        removed_func: EntryEventCallable | None = None,
+        clear_all_func: EntryEventCallable | None = None,
     ) -> str:
         return self._wrapped.add_entry_listener(
             include_value, key, added_func, removed_func, clear_all_func
@@ -704,7 +706,7 @@ class BlockingMultiMap(MultiMap[KeyType, ValueType]):
     def lock(  # type: ignore[override]
         self,
         key: KeyType,
-        lease_time: float = None,
+        lease_time: float | None = None,
     ) -> None:
         return self._wrapped.lock(key, lease_time).result()
 
@@ -758,7 +760,7 @@ class BlockingMultiMap(MultiMap[KeyType, ValueType]):
     def try_lock(  # type: ignore[override]
         self,
         key: KeyType,
-        lease_time: float = None,
+        lease_time: float | None = None,
         timeout: float = 0,
     ) -> bool:
         return self._wrapped.try_lock(key, lease_time, timeout).result()

@@ -92,7 +92,6 @@ from hazelcast.util import (
     deserialize_list_in_place,
 )
 
-
 EntryEventCallable = typing.Callable[[EntryEvent[KeyType, ValueType]], None]
 
 
@@ -135,17 +134,17 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
     def add_entry_listener(
         self,
         include_value: bool = False,
-        key: KeyType = None,
-        predicate: Predicate = None,
-        added_func: EntryEventCallable = None,
-        removed_func: EntryEventCallable = None,
-        updated_func: EntryEventCallable = None,
-        evicted_func: EntryEventCallable = None,
-        evict_all_func: EntryEventCallable = None,
-        clear_all_func: EntryEventCallable = None,
-        merged_func: EntryEventCallable = None,
-        expired_func: EntryEventCallable = None,
-        loaded_func: EntryEventCallable = None,
+        key: KeyType | None = None,
+        predicate: Predicate | None = None,
+        added_func: EntryEventCallable | None = None,
+        removed_func: EntryEventCallable | None = None,
+        updated_func: EntryEventCallable | None = None,
+        evicted_func: EntryEventCallable | None = None,
+        evict_all_func: EntryEventCallable | None = None,
+        clear_all_func: EntryEventCallable | None = None,
+        merged_func: EntryEventCallable | None = None,
+        expired_func: EntryEventCallable | None = None,
+        loaded_func: EntryEventCallable | None = None,
     ) -> Future[str]:
         """Adds a continuous entry listener for this map.
 
@@ -324,10 +323,10 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
 
     def add_index(
         self,
-        attributes: typing.Sequence[str] = None,
+        attributes: typing.Sequence[str] | None = None,
         index_type: typing.Union[int, str] = IndexType.SORTED,
-        name: str = None,
-        bitmap_index_options: typing.Dict[str, typing.Any] = None,
+        name: str | None = None,
+        bitmap_index_options: typing.Dict[str, typing.Any] | None = None,
     ) -> Future[None]:
         """Adds an index to this map for the specified entries so that queries
         can run faster.
@@ -412,7 +411,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         return self._invoke(request, map_add_interceptor_codec.decode_response)
 
     def aggregate(
-        self, aggregator: Aggregator[AggregatorResultType], predicate: Predicate = None
+        self, aggregator: Aggregator[AggregatorResultType], predicate: Predicate | None = None
     ) -> Future[AggregatorResultType]:
         """Applies the aggregation logic on map entries and filter the result
         with the predicate, if given.
@@ -537,7 +536,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         return self._delete_internal(key_data)
 
     def entry_set(
-        self, predicate: Predicate = None
+        self, predicate: Predicate | None = None
     ) -> Future[typing.List[typing.Tuple[KeyType, ValueType]]]:
         """Returns a list clone of the mappings contained in this map.
 
@@ -620,7 +619,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         return self._invoke(request)
 
     def execute_on_entries(
-        self, entry_processor: typing.Any, predicate: Predicate = None
+        self, entry_processor: typing.Any, predicate: Predicate | None = None
     ) -> Future[typing.List[typing.Any]]:
         """Applies the user defined EntryProcessor to all the entries in the
         map or entries in the map which satisfies the predicate if provided.
@@ -912,7 +911,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         request = map_is_locked_codec.encode_request(self.name, key_data)
         return self._invoke_on_key(request, key_data, map_is_locked_codec.decode_response)
 
-    def key_set(self, predicate: Predicate = None) -> Future[typing.List[ValueType]]:
+    def key_set(self, predicate: Predicate | None = None) -> Future[typing.List[ValueType]]:
         """Returns a List clone of the keys contained in this map or the keys
         of the entries filtered with the predicate if provided.
 
@@ -966,7 +965,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         return self._invoke(request, handler)
 
     def load_all(
-        self, keys: typing.Sequence[KeyType] = None, replace_existing_values: bool = True
+        self, keys: typing.Sequence[KeyType] | None = None, replace_existing_values: bool = True
     ) -> Future[None]:
         """Loads all keys from the store at server side or loads the given
         keys if provided.
@@ -988,7 +987,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         request = map_load_all_codec.encode_request(self.name, replace_existing_values)
         return self._invoke(request)
 
-    def lock(self, key: KeyType, lease_time: float = None) -> Future[None]:
+    def lock(self, key: KeyType, lease_time: float | None = None) -> Future[None]:
         """Acquires the lock for the specified key infinitely or for the
         specified lease time if provided.
 
@@ -1038,7 +1037,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         return invocation.future
 
     def project(
-        self, projection: Projection[ProjectionType], predicate: Predicate = None
+        self, projection: Projection[ProjectionType], predicate: Predicate | None = None
     ) -> Future[ProjectionType]:
         """Applies the projection logic on map entries and filter the result
         with the predicate, if given.
@@ -1084,7 +1083,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         return self._invoke(request, handler)
 
     def put(
-        self, key: KeyType, value: ValueType, ttl: float = None, max_idle: float = None
+        self,
+        key: KeyType,
+        value: ValueType,
+        ttl: float | None = None,
+        max_idle: float | None = None,
     ) -> Future[typing.Optional[ValueType]]:
         """Associates the specified value with the specified key in this map.
 
@@ -1168,7 +1171,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         return combine_futures(futures)
 
     def put_if_absent(
-        self, key: KeyType, value: ValueType, ttl: float = None, max_idle: float = None
+        self,
+        key: KeyType,
+        value: ValueType,
+        ttl: float | None = None,
+        max_idle: float | None = None,
     ) -> Future[typing.Optional[ValueType]]:
         """Associates the specified key with the given value if it is not
         already associated.
@@ -1219,7 +1226,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         return self._put_if_absent_internal(key_data, value_data, ttl, max_idle)
 
     def put_transient(
-        self, key: KeyType, value: ValueType, ttl: float = None, max_idle: float = None
+        self,
+        key: KeyType,
+        value: ValueType,
+        ttl: float | None = None,
+        max_idle: float | None = None,
     ) -> Future[None]:
         """Same as ``put``, but MapStore defined at the server side will not
         be called.
@@ -1435,7 +1446,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         return self._replace_if_same_internal(key_data, old_value_data, new_value_data)
 
     def set(
-        self, key: KeyType, value: ValueType, ttl: float = None, max_idle: float = None
+        self,
+        key: KeyType,
+        value: ValueType,
+        ttl: float | None = None,
+        max_idle: float | None = None,
     ) -> Future[None]:
         """Puts an entry into this map.
 
@@ -1501,7 +1516,9 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         request = map_size_codec.encode_request(self.name)
         return self._invoke(request, map_size_codec.decode_response)
 
-    def try_lock(self, key: KeyType, lease_time: float = None, timeout: float = 0) -> Future[bool]:
+    def try_lock(
+        self, key: KeyType, lease_time: float | None = None, timeout: float = 0
+    ) -> Future[bool]:
         """Tries to acquire the lock for the specified key.
 
         When the lock is not available:
@@ -1618,7 +1635,7 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         )
         return self._invoke_on_key(request, key_data)
 
-    def values(self, predicate: Predicate = None) -> Future[typing.List[ValueType]]:
+    def values(self, predicate: Predicate | None = None) -> Future[typing.List[ValueType]]:
         """Returns a list clone of the values contained in this map or values
         of the entries which are filtered with the predicate if provided.
 
@@ -2014,17 +2031,17 @@ class BlockingMap(Map[KeyType, ValueType]):
     def add_entry_listener(  # type: ignore[override]
         self,
         include_value: bool = False,
-        key: KeyType = None,
-        predicate: Predicate = None,
-        added_func: EntryEventCallable = None,
-        removed_func: EntryEventCallable = None,
-        updated_func: EntryEventCallable = None,
-        evicted_func: EntryEventCallable = None,
-        evict_all_func: EntryEventCallable = None,
-        clear_all_func: EntryEventCallable = None,
-        merged_func: EntryEventCallable = None,
-        expired_func: EntryEventCallable = None,
-        loaded_func: EntryEventCallable = None,
+        key: KeyType | None = None,
+        predicate: Predicate | None = None,
+        added_func: EntryEventCallable | None = None,
+        removed_func: EntryEventCallable | None = None,
+        updated_func: EntryEventCallable | None = None,
+        evicted_func: EntryEventCallable | None = None,
+        evict_all_func: EntryEventCallable | None = None,
+        clear_all_func: EntryEventCallable | None = None,
+        merged_func: EntryEventCallable | None = None,
+        expired_func: EntryEventCallable | None = None,
+        loaded_func: EntryEventCallable | None = None,
     ) -> str:
         return self._wrapped.add_entry_listener(
             include_value,
@@ -2043,10 +2060,10 @@ class BlockingMap(Map[KeyType, ValueType]):
 
     def add_index(  # type: ignore[override]
         self,
-        attributes: typing.Sequence[str] = None,
+        attributes: typing.Sequence[str] | None = None,
         index_type: typing.Union[int, str] = IndexType.SORTED,
-        name: str = None,
-        bitmap_index_options: typing.Dict[str, typing.Any] = None,
+        name: str | None = None,
+        bitmap_index_options: typing.Dict[str, typing.Any] | None = None,
     ) -> None:
         return self._wrapped.add_index(attributes, index_type, name, bitmap_index_options).result()
 
@@ -2059,14 +2076,14 @@ class BlockingMap(Map[KeyType, ValueType]):
     def aggregate(  # type: ignore[override]
         self,
         aggregator: Aggregator[AggregatorResultType],
-        predicate: Predicate = None,
+        predicate: Predicate | None = None,
     ) -> AggregatorResultType:
         return self._wrapped.aggregate(aggregator, predicate).result()
 
     def clear(  # type: ignore[override]
         self,
     ) -> None:
-        return self._wrapped.clear().result()
+        self._wrapped.clear().result()
 
     def contains_key(  # type: ignore[override]
         self,
@@ -2088,7 +2105,7 @@ class BlockingMap(Map[KeyType, ValueType]):
 
     def entry_set(  # type: ignore[override]
         self,
-        predicate: Predicate = None,
+        predicate: Predicate | None = None,
     ) -> typing.List[typing.Tuple[KeyType, ValueType]]:
         return self._wrapped.entry_set(predicate).result()
 
@@ -2101,12 +2118,12 @@ class BlockingMap(Map[KeyType, ValueType]):
     def evict_all(  # type: ignore[override]
         self,
     ) -> None:
-        return self._wrapped.evict_all().result()
+        self._wrapped.evict_all().result()
 
     def execute_on_entries(  # type: ignore[override]
         self,
         entry_processor: typing.Any,
-        predicate: Predicate = None,
+        predicate: Predicate | None = None,
     ) -> typing.List[typing.Any]:
         return self._wrapped.execute_on_entries(entry_processor, predicate).result()
 
@@ -2166,28 +2183,28 @@ class BlockingMap(Map[KeyType, ValueType]):
 
     def key_set(  # type: ignore[override]
         self,
-        predicate: Predicate = None,
+        predicate: Predicate | None = None,
     ) -> typing.List[ValueType]:
         return self._wrapped.key_set(predicate).result()
 
     def load_all(  # type: ignore[override]
         self,
-        keys: typing.Sequence[KeyType] = None,
+        keys: typing.Sequence[KeyType] | None = None,
         replace_existing_values: bool = True,
     ) -> None:
-        return self._wrapped.load_all(keys, replace_existing_values).result()
+        self._wrapped.load_all(keys, replace_existing_values).result()
 
     def lock(  # type: ignore[override]
         self,
         key: KeyType,
-        lease_time: float = None,
+        lease_time: float | None = None,
     ) -> None:
         return self._wrapped.lock(key, lease_time).result()
 
     def project(  # type: ignore[override]
         self,
         projection: Projection[ProjectionType],
-        predicate: Predicate = None,
+        predicate: Predicate | None = None,
     ) -> ProjectionType:
         return self._wrapped.project(projection, predicate).result()
 
@@ -2195,8 +2212,8 @@ class BlockingMap(Map[KeyType, ValueType]):
         self,
         key: KeyType,
         value: ValueType,
-        ttl: float = None,
-        max_idle: float = None,
+        ttl: float | None = None,
+        max_idle: float | None = None,
     ) -> typing.Optional[ValueType]:
         return self._wrapped.put(key, value, ttl, max_idle).result()
 
@@ -2210,8 +2227,8 @@ class BlockingMap(Map[KeyType, ValueType]):
         self,
         key: KeyType,
         value: ValueType,
-        ttl: float = None,
-        max_idle: float = None,
+        ttl: float | None = None,
+        max_idle: float | None = None,
     ) -> typing.Optional[ValueType]:
         return self._wrapped.put_if_absent(key, value, ttl, max_idle).result()
 
@@ -2219,8 +2236,8 @@ class BlockingMap(Map[KeyType, ValueType]):
         self,
         key: KeyType,
         value: ValueType,
-        ttl: float = None,
-        max_idle: float = None,
+        ttl: float | None = None,
+        max_idle: float | None = None,
     ) -> None:
         return self._wrapped.put_transient(key, value, ttl, max_idle).result()
 
@@ -2271,8 +2288,8 @@ class BlockingMap(Map[KeyType, ValueType]):
         self,
         key: KeyType,
         value: ValueType,
-        ttl: float = None,
-        max_idle: float = None,
+        ttl: float | None = None,
+        max_idle: float | None = None,
     ) -> None:
         return self._wrapped.set(key, value, ttl, max_idle).result()
 
@@ -2291,7 +2308,7 @@ class BlockingMap(Map[KeyType, ValueType]):
     def try_lock(  # type: ignore[override]
         self,
         key: KeyType,
-        lease_time: float = None,
+        lease_time: float | None = None,
         timeout: float = 0,
     ) -> bool:
         return self._wrapped.try_lock(key, lease_time, timeout).result()
@@ -2319,7 +2336,7 @@ class BlockingMap(Map[KeyType, ValueType]):
 
     def values(  # type: ignore[override]
         self,
-        predicate: Predicate = None,
+        predicate: Predicate | None = None,
     ) -> typing.List[ValueType]:
         return self._wrapped.values(predicate).result()
 

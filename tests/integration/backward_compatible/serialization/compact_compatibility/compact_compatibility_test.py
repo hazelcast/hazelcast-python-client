@@ -1838,8 +1838,7 @@ class SqlCompactCompatibilityTest(CompactCompatibilityBase):
         self.map_name = random_string()
         self.map = self.client.get_map(self.map_name).blocking()
 
-        self.client.sql.execute(
-            f"""
+        self.client.sql.execute(f"""
         CREATE MAPPING "{self.map_name}" (
             __key INT,
             stringField VARCHAR
@@ -1850,8 +1849,7 @@ class SqlCompactCompatibilityTest(CompactCompatibilityBase):
             'valueFormat' = 'compact',
             'valueCompactTypeName' = 'com.hazelcast.serialization.compact.InnerCompact'
         )
-        """
-        ).result()
+        """).result()
 
     def tearDown(self) -> None:
         self.map.destroy()

@@ -61,10 +61,10 @@ class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
     async def add_entry_listener(
         self,
         include_value: bool = False,
-        key: KeyType = None,
-        added_func: EntryEventCallable = None,
-        removed_func: EntryEventCallable = None,
-        clear_all_func: EntryEventCallable = None,
+        key: KeyType | None = None,
+        added_func: EntryEventCallable | None = None,
+        removed_func: EntryEventCallable | None = None,
+        clear_all_func: EntryEventCallable | None = None,
     ) -> str:
         """Adds an entry listener for this multimap.
 
@@ -339,7 +339,7 @@ class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
         request = multi_map_key_set_codec.encode_request(self.name)
         return await self._invoke(request, handler)
 
-    async def lock(self, key: KeyType, lease_time: float = None) -> None:
+    async def lock(self, key: KeyType, lease_time: float | None = None) -> None:
         """Acquires the lock for the specified key infinitely or for the
         specified lease time if provided.
 
@@ -578,7 +578,9 @@ class MultiMap(Proxy, typing.Generic[KeyType, ValueType]):
         request = multi_map_values_codec.encode_request(self.name)
         return await self._invoke(request, handler)
 
-    async def try_lock(self, key: KeyType, lease_time: float = None, timeout: float = 0) -> bool:
+    async def try_lock(
+        self, key: KeyType, lease_time: float | None = None, timeout: float = 0
+    ) -> bool:
         """Tries to acquire the lock for the specified key.
 
         When the lock is not available:

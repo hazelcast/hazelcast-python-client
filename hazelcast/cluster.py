@@ -67,8 +67,8 @@ class ClusterService:
 
     def add_listener(
         self,
-        member_added: typing.Callable[[MemberInfo], None] = None,
-        member_removed: typing.Callable[[MemberInfo], None] = None,
+        member_added: typing.Callable[[MemberInfo], None] | None = None,
+        member_removed: typing.Callable[[MemberInfo], None] | None = None,
         fire_for_existing=False,
     ) -> str:
         """
@@ -105,7 +105,7 @@ class ClusterService:
         return self._service.remove_listener(registration_id)
 
     def get_members(
-        self, member_selector: typing.Callable[[MemberInfo], bool] = None
+        self, member_selector: typing.Callable[[MemberInfo], bool] | None = None
     ) -> typing.List[MemberInfo]:
         """
         Lists the current members in the cluster.

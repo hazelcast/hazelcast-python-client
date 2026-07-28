@@ -54,9 +54,7 @@ class ClientLabelsTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
                 result = client.getLabels().iterator().next();
                 break;
             }
-        }""" % str(
-            client_uuid
-        )
+        }""" % str(client_uuid)
         return self.rc.executeOnController(self.cluster.id, script, Lang.JAVASCRIPT).result
 
 

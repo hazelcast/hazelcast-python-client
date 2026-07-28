@@ -35,7 +35,7 @@ class Topic(PartitionSpecificProxy, typing.Generic[MessageType]):
     """
 
     async def add_listener(
-        self, on_message: typing.Callable[[TopicMessage[MessageType]], None] = None
+        self, on_message: typing.Callable[[TopicMessage[MessageType]], None] | None = None
     ) -> str:
         """Subscribes to this topic.
 

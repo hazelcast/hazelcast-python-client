@@ -33,8 +33,7 @@ class PersonSerializer(CompactSerializer[Person]):
 
 client = HazelcastClient(compact_serializers=[PersonSerializer()])
 
-client.sql.execute(
-    """
+client.sql.execute("""
 CREATE MAPPING IF NOT EXISTS persons (
     __key INT,
     name VARCHAR,
@@ -46,8 +45,7 @@ OPTIONS (
     'valueFormat' = 'compact',
     'valueCompactTypeName' = 'Person'
 )
-"""
-).result()
+""").result()
 
 
 persons = client.get_map("persons").blocking()

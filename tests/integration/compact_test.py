@@ -10,7 +10,6 @@ from hazelcast.serialization.api import CompactSerializer, CompactWriter, Compac
 from tests.base import HazelcastTestCase
 from tests.util import random_string
 
-
 # The tests under this file are meant to be not
 # run with the backward compatibility tests, as
 # they test implementation details through private
