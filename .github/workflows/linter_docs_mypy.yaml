@@ -18,12 +18,12 @@ jobs:
     name: Run black to check the code style
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ needs.python-versions.outputs.latest-python-version }}
           
       - name: Checkout to code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         
       - name: Install dependencies
         run: |
@@ -39,12 +39,12 @@ jobs:
     name: Generate documentation
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ needs.python-versions.outputs.latest-python-version }}
           
       - name: Checkout to code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         
       - name: Install dependencies
         run: |
@@ -61,12 +61,12 @@ jobs:
     name: Run mypy to check type annotations
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ needs.python-versions.outputs.latest-python-version }}
           
       - name: Checkout to code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         
       - name: Install dependencies
         run: |
