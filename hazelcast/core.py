@@ -1,4 +1,5 @@
 """Hazelcast Core objects and constants."""
+
 import json
 import typing
 import uuid
@@ -485,7 +486,7 @@ class MapEntry(typing.Generic[KeyType, ValueType]):
 
     __slots__ = ("_key", "_value")
 
-    def __init__(self, key: KeyType|None = None, value: ValueType|None = None):
+    def __init__(self, key: KeyType | None = None, value: ValueType | None = None):
         self._key = key
         self._value = value
 

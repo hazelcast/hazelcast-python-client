@@ -1,6 +1,7 @@
 """
 User API for Serialization.
 """
+
 import abc
 import datetime
 import decimal
@@ -15,7 +16,9 @@ class ObjectDataOutput:
     or arrays of them to series of bytes and write them on a stream.
     """
 
-    def write_from(self, buff: bytearray, offset: int|None = None, length: int|None = None) -> None:
+    def write_from(
+        self, buff: bytearray, offset: int | None = None, length: int | None = None
+    ) -> None:
         """Writes the content of the buffer to this output stream.
 
         Args:
@@ -237,7 +240,9 @@ class ObjectDataInput:
     reconstruct it to any of primitive types or arrays of them.
     """
 
-    def read_into(self, buff: bytearray, offset: int|None = None, length: int|None = None) -> bytearray:
+    def read_into(
+        self, buff: bytearray, offset: int | None = None, length: int | None = None
+    ) -> bytearray:
         """Reads the content of the buffer into an array of bytes.
 
         Args:

@@ -14,7 +14,6 @@ from tests.integration.asyncio.base import SingleMemberTestCase, HazelcastTestCa
 from tests.integration.backward_compatible.sql_test import Student, LITE_MEMBER_CONFIG
 from tests.util import random_string
 
-
 SERVER_CONFIG = """
 <hazelcast xmlns="http://www.hazelcast.com/schema/config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -459,13 +458,10 @@ class SqlResultTest(SqlTestBase):
         # Using a Portable that is not defined on the client-side.
         await self._create_mapping_for_portable(666, 1, {})
 
-        script = (
-            """
+        script = """
         var m = instance_0.getMap("%s");
         m.put(1, new com.hazelcast.client.test.Employee(1, "Joe"));
-        """
-            % self.map_name
-        )
+        """ % self.map_name
         res = await asyncio.get_running_loop().run_in_executor(
             None, self.rc.executeOnController, self.cluster.id, script, Lang.JAVASCRIPT
         )
@@ -701,8 +697,7 @@ class SqlServiceV5MixedClusterTest(unittest.IsolatedAsyncioTestCase, HazelcastTe
     async def test_mixed_cluster(self):
         map_name = random_string()
 
-        create_mapping_query = (
-            """
+        create_mapping_query = """
         CREATE MAPPING "%s" (
             __key INT,
             this INT
@@ -712,9 +707,7 @@ class SqlServiceV5MixedClusterTest(unittest.IsolatedAsyncioTestCase, HazelcastTe
             'keyFormat' = 'int',
             'valueFormat' = 'int'
         )
-        """
-            % map_name
-        )
+        """ % map_name
 
         await self.client.sql.execute(create_mapping_query)
         m = await self.client.get_map(map_name)
@@ -737,8 +730,7 @@ class JetSqlTest(SqlTestBase):
                 idx += 1
 
     async def test_federated_query(self):
-        query = (
-            """
+        query = """
         CREATE MAPPING "%s" (
             __key INT,
             name VARCHAR,
@@ -749,18 +741,13 @@ class JetSqlTest(SqlTestBase):
             'keyFormat' = 'int',
             'valueFormat' = 'json-flat'
         )
-        """
-            % self.map_name
-        )
+        """ % self.map_name
 
         await self.execute(query)
-        insert_into_query = (
-            """
+        insert_into_query = """
         INSERT INTO "%s" (__key, name, age) 
         VALUES (1, 'John', 42)
-        """
-            % self.map_name
-        )
+        """ % self.map_name
 
         async with await self.execute(insert_into_query) as result:
             self.assertEqual(0, self.update_count(result))

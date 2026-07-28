@@ -93,7 +93,6 @@ from hazelcast.util import (
     deserialize_list_in_place,
 )
 
-
 EntryEventCallable = typing.Callable[[EntryEvent[KeyType, ValueType]], None]
 
 

@@ -133,7 +133,9 @@ class TransactionalMap(TransactionalProxy, typing.Generic[KeyType, ValueType]):
         )
         return self._invoke(request, transactional_map_is_empty_codec.decode_response)
 
-    def put(self, key: KeyType, value: ValueType, ttl: float | None = None) -> typing.Optional[ValueType]:
+    def put(
+        self, key: KeyType, value: ValueType, ttl: float | None = None
+    ) -> typing.Optional[ValueType]:
         """Transactional implementation of
         :func:`Map.put(key, value, ttl) <hazelcast.proxy.map.Map.put>`
 

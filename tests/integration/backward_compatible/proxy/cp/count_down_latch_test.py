@@ -9,7 +9,6 @@ from hazelcast.util import AtomicInteger
 from tests.integration.backward_compatible.proxy.cp import CPTestCase
 from tests.util import get_current_timestamp, random_string
 
-
 inf = 2**31 - 1
 
 

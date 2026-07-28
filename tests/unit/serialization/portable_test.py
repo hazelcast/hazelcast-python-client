@@ -10,7 +10,6 @@ from hazelcast.serialization.api import Portable
 from hazelcast.serialization.portable.classdef import ClassDefinitionBuilder
 from tests.unit.serialization.identified_test import create_identified, SerializationV1Identified
 
-
 FACTORY_ID = 1
 
 

@@ -201,8 +201,7 @@ class StatisticsTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
         await client.shutdown()
 
     def get_metrics_blob(self, client_uuid):
-        script = (
-            """
+        script = """
         stats = instance_0.getOriginal().node.getClientEngine().getClientStatistics();
         keys = stats.keySet().toArray();
         for(i=0; i < keys.length; i++) {
@@ -210,15 +209,12 @@ class StatisticsTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
                 result = stats.get(keys[i]).metricsBlob();
                 break;
             }
-        }"""
-            % client_uuid
-        )
+        }""" % client_uuid
 
         return self.rc.executeOnController(self.cluster.id, script, Lang.JAVASCRIPT)
 
     def get_client_stats_from_server(self, client_uuid):
-        script = (
-            """
+        script = """
         stats = instance_0.getOriginal().node.getClientEngine().getClientStatistics();
         keys = stats.keySet().toArray();
         for(i=0; i < keys.length; i++) {
@@ -226,9 +222,7 @@ class StatisticsTest(unittest.IsolatedAsyncioTestCase, HazelcastTestCase):
                 result = stats.get(keys[i]).clientAttributes();
                 break;
             }
-        }"""
-            % client_uuid
-        )
+        }""" % client_uuid
 
         return self.rc.executeOnController(self.cluster.id, script, Lang.JAVASCRIPT)
 

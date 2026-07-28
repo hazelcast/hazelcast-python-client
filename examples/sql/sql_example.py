@@ -38,8 +38,7 @@ customers.set(2, Customer("John", 23, False))
 customers.set(3, Customer("Joe", 33, True))
 
 # Create mapping for the customers. This needs to be done only once per map.
-client.sql.execute(
-    """
+client.sql.execute("""
 CREATE MAPPING customers (
     __key INT,
     name VARCHAR,
@@ -53,8 +52,7 @@ OPTIONS (
   'valuePortableFactoryId' = '1',
   'valuePortableClassId' = '1'
 )
-    """
-).result()
+    """).result()
 
 # Project a single column that fits the criterion
 result = client.sql.execute("SELECT name FROM customers WHERE age < 35 AND is_active").result()

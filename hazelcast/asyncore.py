@@ -60,11 +60,7 @@ from errno import EALREADY, EINPROGRESS, EWOULDBLOCK, ECONNRESET, EINVAL, \
 _DISCONNECTED = frozenset({ECONNRESET, ENOTCONN, ESHUTDOWN, ECONNABORTED, EPIPE,
                            EBADF})
 
-try:
-    _d: dict = socket_map
-    del _d
-except NameError:
-    socket_map: dict = {}
+socket_map: dict = {}
 
 def _strerror(err):
     try:

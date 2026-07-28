@@ -92,7 +92,6 @@ from hazelcast.util import (
     deserialize_list_in_place,
 )
 
-
 EntryEventCallable = typing.Callable[[EntryEvent[KeyType, ValueType]], None]
 
 
@@ -1084,7 +1083,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         return self._invoke(request, handler)
 
     def put(
-        self, key: KeyType, value: ValueType, ttl: float | None = None, max_idle: float | None = None
+        self,
+        key: KeyType,
+        value: ValueType,
+        ttl: float | None = None,
+        max_idle: float | None = None,
     ) -> Future[typing.Optional[ValueType]]:
         """Associates the specified value with the specified key in this map.
 
@@ -1168,7 +1171,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         return combine_futures(futures)
 
     def put_if_absent(
-        self, key: KeyType, value: ValueType, ttl: float | None = None, max_idle: float | None = None
+        self,
+        key: KeyType,
+        value: ValueType,
+        ttl: float | None = None,
+        max_idle: float | None = None,
     ) -> Future[typing.Optional[ValueType]]:
         """Associates the specified key with the given value if it is not
         already associated.
@@ -1219,7 +1226,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         return self._put_if_absent_internal(key_data, value_data, ttl, max_idle)
 
     def put_transient(
-        self, key: KeyType, value: ValueType, ttl: float | None = None, max_idle: float | None = None
+        self,
+        key: KeyType,
+        value: ValueType,
+        ttl: float | None = None,
+        max_idle: float | None = None,
     ) -> Future[None]:
         """Same as ``put``, but MapStore defined at the server side will not
         be called.
@@ -1435,7 +1446,11 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         return self._replace_if_same_internal(key_data, old_value_data, new_value_data)
 
     def set(
-        self, key: KeyType, value: ValueType, ttl: float | None = None, max_idle: float | None = None
+        self,
+        key: KeyType,
+        value: ValueType,
+        ttl: float | None = None,
+        max_idle: float | None = None,
     ) -> Future[None]:
         """Puts an entry into this map.
 
@@ -1501,7 +1516,9 @@ class Map(Proxy["BlockingMap"], typing.Generic[KeyType, ValueType]):
         request = map_size_codec.encode_request(self.name)
         return self._invoke(request, map_size_codec.decode_response)
 
-    def try_lock(self, key: KeyType, lease_time: float | None = None, timeout: float = 0) -> Future[bool]:
+    def try_lock(
+        self, key: KeyType, lease_time: float | None = None, timeout: float = 0
+    ) -> Future[bool]:
         """Tries to acquire the lock for the specified key.
 
         When the lock is not available:
@@ -2066,7 +2083,7 @@ class BlockingMap(Map[KeyType, ValueType]):
     def clear(  # type: ignore[override]
         self,
     ) -> None:
-        return self._wrapped.clear().result()
+        self._wrapped.clear().result()
 
     def contains_key(  # type: ignore[override]
         self,
@@ -2101,7 +2118,7 @@ class BlockingMap(Map[KeyType, ValueType]):
     def evict_all(  # type: ignore[override]
         self,
     ) -> None:
-        return self._wrapped.evict_all().result()
+        self._wrapped.evict_all().result()
 
     def execute_on_entries(  # type: ignore[override]
         self,
@@ -2175,7 +2192,7 @@ class BlockingMap(Map[KeyType, ValueType]):
         keys: typing.Sequence[KeyType] | None = None,
         replace_existing_values: bool = True,
     ) -> None:
-        return self._wrapped.load_all(keys, replace_existing_values).result()
+        self._wrapped.load_all(keys, replace_existing_values).result()
 
     def lock(  # type: ignore[override]
         self,

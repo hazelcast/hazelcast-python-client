@@ -7,8 +7,7 @@ conn = connect(host="localhost", port=5701)
 cur = conn.cursor()
 
 # create a mapping
-cur.execute(
-    """
+cur.execute("""
     CREATE OR REPLACE MAPPING stocks (
         __key INT,
         operation_date DATE,
@@ -22,8 +21,7 @@ cur.execute(
       'keyFormat' = 'int',
       'valueFormat' = 'json-flat'
     )
-    """
-)
+    """)
 
 # add some data
 data = [

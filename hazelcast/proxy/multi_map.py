@@ -561,7 +561,9 @@ class MultiMap(Proxy["BlockingMultiMap"], typing.Generic[KeyType, ValueType]):
         request = multi_map_values_codec.encode_request(self.name)
         return self._invoke(request, handler)
 
-    def try_lock(self, key: KeyType, lease_time: float | None = None, timeout: float = 0) -> Future[bool]:
+    def try_lock(
+        self, key: KeyType, lease_time: float | None = None, timeout: float = 0
+    ) -> Future[bool]:
         """Tries to acquire the lock for the specified key.
 
         When the lock is not available:
