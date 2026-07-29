@@ -49,8 +49,16 @@ class MetricsCompatibilityTest(unittest.TestCase):
             ),
             2147483647,
         )
-
         actual_blob = compressor.generate_blob()
+        print("==== EXPECTED BLOB ====")
+        for i, x in enumerate(expected_blob):
+            print(i, x)
+        print("-----------------------")
+        print("====  ACTUAL BLOB  ====")
+        for i, x in enumerate(actual_blob):
+            print(i, x)
+        print("-----------------------")
+
         self.assertEqual(expected_blob, actual_blob)
 
 
