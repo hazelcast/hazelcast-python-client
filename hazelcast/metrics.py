@@ -258,6 +258,7 @@ class MetricsCompressor:
 
     def _write_metrics_dict(self):
         words = self._metrics_dict.get_words()
+        print("\n\n:", len(words), "words:", words)
         self._dict_buf.write_int(len(words))
 
         last_word_text = ""
@@ -352,6 +353,9 @@ class _Word:
     def __init__(self, word, dict_id):
         self.word = word
         self.dict_id = dict_id
+
+    def __repr__(self) -> str:
+        return f"<Word({self.dict_id}, {self.word})>"
 
 
 class _MetricsDictionary:
