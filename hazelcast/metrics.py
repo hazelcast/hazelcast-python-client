@@ -172,6 +172,7 @@ class MetricsCompressor:
         metrics_buf = self._metrics_buf.compress()
         print("\n\n=== len(dict_buf) = ", len(self._dict_buf.to_bytearray()), "\n")
         dict_buf = self._dict_buf.compress()
+        print("\n\n=== len(dict_buf) AC = ", len(dict_buf), "\n")
 
         complete_size = (
             _SIZE_VERSION
