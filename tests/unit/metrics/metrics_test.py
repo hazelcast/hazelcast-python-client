@@ -51,8 +51,14 @@ class MetricsCompatibilityTest(unittest.TestCase):
             2147483647,
         )
         actual_blob = compressor.generate_blob()
-        if sys.version_info.major == 3 and sys.version_info.minor > 13 and sys.platform == 'windows':
-            self.skipTest("Python 3.14 and up on Windows uses zlib-ng instead of zlib, which ends up with a different payload")
+        if (
+            sys.version_info.major == 3
+            and sys.version_info.minor > 13
+            and sys.platform == "windows"
+        ):
+            self.skipTest(
+                "Python 3.14 and up on Windows uses zlib-ng instead of zlib, which ends up with a different payload"
+            )
         self.assertEqual(expected_blob, actual_blob)
 
 
