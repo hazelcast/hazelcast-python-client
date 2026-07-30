@@ -170,9 +170,7 @@ class MetricsCompressor:
     def generate_blob(self):
         self._write_metrics_dict()
         metrics_buf = self._metrics_buf.compress()
-        print("\n\n=== len(dict_buf) = ", len(self._dict_buf.to_bytearray()), "\n")
         dict_buf = self._dict_buf.compress()
-        print("\n\n=== len(dict_buf) AC = ", len(dict_buf), "\n")
 
         complete_size = (
             _SIZE_VERSION
@@ -354,9 +352,6 @@ class _Word:
     def __init__(self, word, dict_id):
         self.word = word
         self.dict_id = dict_id
-
-    def __repr__(self) -> str:
-        return f"<Word({self.dict_id}, {self.word})>"
 
 
 class _MetricsDictionary:
