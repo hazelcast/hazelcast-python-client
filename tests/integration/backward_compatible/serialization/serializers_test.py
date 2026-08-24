@@ -3,9 +3,9 @@ import datetime
 import decimal
 import uuid
 
-from hazelcast import HazelcastClient
-from hazelcast.config import IntType
+from hazelcast import HazelcastClient, Int8, Int16, Int32, Int64, Float32, Float64
 from hazelcast.core import HazelcastJsonValue
+from hazelcast.number_types import BigInt
 from hazelcast.serialization import MAX_BYTE, MAX_SHORT, MAX_INT, MAX_LONG
 from tests.base import SingleMemberTestCase
 from tests.hzrc.ttypes import Lang
@@ -57,8 +57,8 @@ class SerializersLiveTest(SingleMemberTestCase):
         response = self.rc.executeOnController(self.cluster.id, script, Lang.JAVASCRIPT)
         return response.success
 
-    def create_new_map_with(self, default_int_type):
-        client = HazelcastClient(cluster_name=self.cluster.id, default_int_type=default_int_type)
+    def create_new_map(self):
+        client = HazelcastClient(cluster_name=self.cluster.id)
         self.disposables.append(lambda: client.shutdown())
         self.map = client.get_map(random_string()).blocking()
 
@@ -70,32 +70,32 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(value, response)
 
     def test_byte(self):
-        self.create_new_map_with(IntType.BYTE)
+        self.create_new_map()
         value = (1 << 7) - 1
-        self.map.set("key", value)
+        self.map.set("key", Int8(value))
         self.assertEqual(value, self.map.get("key"))
         response = int(self.get_from_server())
         self.assertEqual(value, response)
 
     def test_short(self):
-        self.create_new_map_with(IntType.SHORT)
+        self.create_new_map()
         value = -1 * (1 << 15)
-        self.map.set("key", value)
+        self.map.set("key", Int16(value))
         self.assertEqual(value, self.map.get("key"))
         response = int(self.get_from_server())
         self.assertEqual(value, response)
 
     def test_int(self):
         value = (1 << 31) - 1
-        self.map.set("key", value)
+        self.map.set("key", Int32(value))
         self.assertEqual(value, self.map.get("key"))
         response = int(self.get_from_server())
         self.assertEqual(value, response)
 
     def test_long(self):
-        self.create_new_map_with(IntType.LONG)
+        self.create_new_map()
         value = -1 * (1 << 63)
-        self.map.set("key", value)
+        self.map.set("key", Int64(value))
         self.assertEqual(value, self.map.get("key"))
         response = int(self.get_from_server())
         self.assertEqual(value, response)
@@ -103,6 +103,20 @@ class SerializersLiveTest(SingleMemberTestCase):
     def test_double(self):
         value = 123.0
         self.map.set("key", value)
+        self.assertEqual(value, self.map.get("key"))
+        response = float(self.get_from_server())
+        self.assertEqual(value, response)
+
+    def test_float32(self):
+        value = 123.0
+        self.map.set("key", Float32(value))
+        self.assertEqual(value, self.map.get("key"))
+        response = float(self.get_from_server())
+        self.assertEqual(value, response)
+
+    def test_float64(self):
+        value = 123.0
+        self.map.set("key", Float64(value))
         self.assertEqual(value, self.map.get("key"))
         response = float(self.get_from_server())
         self.assertEqual(value, response)
@@ -165,15 +179,14 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertTrue(response.startswith(value.strftime("%a %b %d %H:%M:%S")))
 
     def test_big_integer(self):
-        self.create_new_map_with(IntType.BIG_INT)
+        self.create_new_map()
         value = 1 << 128
-        self.map.set("key", value)
+        self.map.set("key", BigInt(value))
         self.assertEqual(value, self.map.get("key"))
         response = int(self.get_from_server())
         self.assertEqual(value, response)
 
     def test_variable_integer(self):
-        self.create_new_map_with(IntType.VAR)
         value = MAX_BYTE
         self.map.set("key", value)
         self.assertEqual(value, self.map.get("key"))

@@ -42,7 +42,7 @@ class ByteSerializer(BaseSerializer):
         return inp.read_byte()
 
     def write(self, out, obj):
-        out.write_byte(obj)
+        out.write_byte(int(obj))
 
     def get_type_id(self):
         return CONSTANT_TYPE_BYTE
@@ -63,7 +63,7 @@ class ShortSerializer(BaseSerializer):
         return inp.read_short()
 
     def write(self, out, obj):
-        out.write_short(obj)
+        out.write_short(int(obj))
 
     def get_type_id(self):
         return CONSTANT_TYPE_SHORT
@@ -74,7 +74,7 @@ class IntegerSerializer(BaseSerializer):
         return inp.read_int()
 
     def write(self, out, obj):
-        out.write_int(obj)
+        out.write_int(int(obj))
 
     def get_type_id(self):
         return CONSTANT_TYPE_INTEGER
@@ -85,7 +85,7 @@ class LongSerializer(BaseSerializer):
         return inp.read_long()
 
     def write(self, out, obj):
-        out.write_long(obj)
+        out.write_long(int(obj))
 
     def get_type_id(self):
         return CONSTANT_TYPE_LONG
@@ -95,7 +95,8 @@ class FloatSerializer(BaseSerializer):
     def read(self, inp):
         return inp.read_float()
 
-    # "write(self, out, obj)" is never called so not implemented here
+    def write(self, out, obj):
+        out.write_float(float(obj))
 
     def get_type_id(self):
         return CONSTANT_TYPE_FLOAT
@@ -106,7 +107,7 @@ class DoubleSerializer(BaseSerializer):
         return inp.read_double()
 
     def write(self, out, obj):
-        out.write_double(obj)
+        out.write_double(float(obj))
 
     def get_type_id(self):
         return CONSTANT_TYPE_DOUBLE
@@ -247,7 +248,7 @@ class BigIntegerSerializer(BaseSerializer):
         return IOUtil.read_big_integer(inp)
 
     def write(self, out, obj):
-        IOUtil.write_big_integer(out, obj)
+        IOUtil.write_big_integer(out, int(obj))
 
     def get_type_id(self):
         return JAVA_DEFAULT_TYPE_BIG_INTEGER

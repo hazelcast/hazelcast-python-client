@@ -37,7 +37,7 @@ except ImportError:
     pass
 
 from hazelcast.core import HazelcastJsonValue
-from hazelcast.config import IndexType, IntType
+from hazelcast.config import IndexType
 from hazelcast.errors import HazelcastError
 from hazelcast.predicate import greater_or_equal, less_or_equal, sql, paging, true
 from hazelcast.proxy.map import EntryEventType
@@ -842,7 +842,6 @@ class MapAggregatorsIntTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
         config["cluster_name"] = cls.cluster.id
-        config["default_int_type"] = IntType.INT
         return config
 
     def setUp(self):
@@ -945,7 +944,6 @@ class MapAggregatorsLongTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
         config["cluster_name"] = cls.cluster.id
-        config["default_int_type"] = IntType.LONG
         return config
 
     def setUp(self):

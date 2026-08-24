@@ -4,7 +4,8 @@ import unittest
 from os import path
 from parameterized import parameterized
 
-from hazelcast.config import IntType, Config
+from hazelcast.config import Config
+from hazelcast.number_types import BigInt, Int8, Int16, Int32
 from hazelcast.serialization import BE_INT, BE_FLOAT, SerializationServiceV1
 from hazelcast.serialization.api import StreamSerializer
 from hazelcast.serialization.input import _ObjectDataInput
@@ -49,12 +50,20 @@ class BinaryCompatibilityTest(unittest.TestCase):
         if skip_on_serialize(name):
             return
 
-        ss = self._create_serialization_service(
-            is_big_endian, OBJECT_KEY_TO_INT_TYPE.get(name, IntType.INT)
-        )
+        ss = self._create_serialization_service(is_big_endian)
         object_key = self._create_object_key(name, is_big_endian)
         from_binary = self.data_map[object_key]
-        serialized = ss.to_data(REFERENCE_OBJECTS[name])
+        value = REFERENCE_OBJECTS[name]
+        match name:
+            case "Byte":
+                value = Int8(value)
+            case "Short":
+                value = Int16(value)
+            case "Long":
+                value = Int64(value)
+            case "BigInteger":
+                value = BigInt(value)
+        serialized = ss.to_data(value)
         self.assertEqual(from_binary, serialized)
 
     @parameterized.expand(
@@ -67,11 +76,15 @@ class BinaryCompatibilityTest(unittest.TestCase):
         if skip_on_deserialize(name):
             return
 
-        ss = self._create_serialization_service(is_big_endian, IntType.INT)
+        ss = self._create_serialization_service(is_big_endian)
         object_key = self._create_object_key(name, is_big_endian)
         from_binary = self.data_map[object_key]
         deserialized = ss.to_object(from_binary)
-        self.assertTrue(is_equal(REFERENCE_OBJECTS[name], deserialized))
+        obj = REFERENCE_OBJECTS[name]
+        # bool is an instance of int, so need to exclude that specifically --YT
+        if not isinstance(deserialized, bool) and isinstance(deserialized, int):
+            obj = int(obj)
+        self.assertTrue(is_equal(obj, deserialized))
 
     @parameterized.expand(
         map(
@@ -83,11 +96,12 @@ class BinaryCompatibilityTest(unittest.TestCase):
         if skip_on_deserialize(name) or skip_on_serialize(name):
             return
 
-        ss = self._create_serialization_service(
-            is_big_endian, OBJECT_KEY_TO_INT_TYPE.get(name, IntType.INT)
-        )
+        ss = self._create_serialization_service(is_big_endian)
         obj = REFERENCE_OBJECTS[name]
-        data = ss.to_data(obj)
+        if name == 'BigInteger':
+            data = ss.to_data(BigInt(obj))
+        else:
+            data = ss.to_data(obj)
         deserialized = ss.to_object(data)
         self.assertTrue(is_equal(obj, deserialized))
 
@@ -102,7 +116,7 @@ class BinaryCompatibilityTest(unittest.TestCase):
         return "1-%s-%s" % (name, BinaryCompatibilityTest._convert_to_byte_order(is_big_endian))
 
     @staticmethod
-    def _create_serialization_service(is_big_endian, int_type):
+    def _create_serialization_service(is_big_endian):
         config = Config()
         config.custom_serializers = {
             CustomStreamSerializable: CustomStreamSerializer,
@@ -125,7 +139,6 @@ class BinaryCompatibilityTest(unittest.TestCase):
                 DATA_SERIALIZABLE_CLASS_ID: AnIdentifiedDataSerializable
             }
         }
-        config.default_int_type = int_type
         return SerializationServiceV1(config)
 
 
@@ -163,11 +176,3 @@ class CustomByteArraySerializer(StreamSerializer):
     def destroy(self):
         pass
 
-
-OBJECT_KEY_TO_INT_TYPE = {
-    "Byte": IntType.BYTE,
-    "Short": IntType.SHORT,
-    "Integer": IntType.INT,
-    "Long": IntType.LONG,
-    "BigInteger": IntType.BIG_INT,
-}

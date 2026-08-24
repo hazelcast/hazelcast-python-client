@@ -6,7 +6,6 @@ from hazelcast.config import (
     Config,
     SSLProtocol,
     ReconnectMode,
-    IntType,
     InMemoryFormat,
     EvictionPolicy,
     IndexConfig,
@@ -73,7 +72,6 @@ class ConfigTest(unittest.TestCase):
             "class_definitions": [CLASS_DEFINITION],
             "check_class_definition_errors": False,
             "is_big_endian": False,
-            "default_int_type": IntType.LONG,
             "global_serializer": GlobalSerializer,
             "custom_serializers": {CustomSerializable: CustomSerializer},
             "near_caches": {
@@ -151,7 +149,6 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual([CLASS_DEFINITION], config.class_definitions)
         self.assertFalse(config.check_class_definition_errors)
         self.assertFalse(config.is_big_endian)
-        self.assertEqual(IntType.LONG, config.default_int_type)
         self.assertEqual(GlobalSerializer, config.global_serializer)
         self.assertEqual({CustomSerializable: CustomSerializer}, config.custom_serializers)
 
@@ -618,22 +615,6 @@ class ConfigTest(unittest.TestCase):
 
         config.is_big_endian = False
         self.assertFalse(config.is_big_endian)
-
-    def test_default_int_type(self):
-        config = self.config
-        self.assertEqual(IntType.INT, config.default_int_type)
-
-        with self.assertRaises(TypeError):
-            config.default_int_type = None
-
-        config.default_int_type = IntType.BIG_INT
-        self.assertEqual(IntType.BIG_INT, config.default_int_type)
-
-        config.default_int_type = 0
-        self.assertEqual(0, config.default_int_type)
-
-        config.default_int_type = "INT"
-        self.assertEqual(IntType.INT, config.default_int_type)
 
     def test_global_serializer(self):
         config = self.config
