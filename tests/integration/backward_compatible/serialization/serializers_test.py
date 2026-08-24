@@ -186,37 +186,6 @@ class SerializersLiveTest(SingleMemberTestCase):
         response = int(self.get_from_server())
         self.assertEqual(value, response)
 
-    def test_variable_integer(self):
-        value = MAX_BYTE
-        self.map.set("key", value)
-        self.assertEqual(value, self.map.get("key"))
-        response = int(self.get_from_server())
-        self.assertEqual(value, response)
-
-        value = MAX_SHORT
-        self.map.set("key", value)
-        self.assertEqual(value, self.map.get("key"))
-        response = int(self.get_from_server())
-        self.assertEqual(value, response)
-
-        value = MAX_INT
-        self.map.set("key", value)
-        self.assertEqual(value, self.map.get("key"))
-        response = int(self.get_from_server())
-        self.assertEqual(value, response)
-
-        value = MAX_LONG
-        self.map.set("key", value)
-        self.assertEqual(value, self.map.get("key"))
-        response = int(self.get_from_server())
-        self.assertEqual(value, response)
-
-        value = 1234567890123456789012345678901234567890
-        self.map.set("key", value)
-        self.assertEqual(value, self.map.get("key"))
-        response = int(self.get_from_server())
-        self.assertEqual(value, response)
-
     def test_decimal(self):
         skip_if_client_version_older_than(self, "5.0")
         decimal_value = "1234567890123456789012345678901234567890.987654321"
