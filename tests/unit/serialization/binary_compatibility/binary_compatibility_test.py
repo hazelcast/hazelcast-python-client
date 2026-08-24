@@ -5,7 +5,7 @@ from os import path
 from parameterized import parameterized
 
 from hazelcast.config import Config
-from hazelcast.number_types import BigInt, Int8, Int16, Int32
+from hazelcast.number_types import BigInt, Int8, Int16, Int64
 from hazelcast.serialization import BE_INT, BE_FLOAT, SerializationServiceV1
 from hazelcast.serialization.api import StreamSerializer
 from hazelcast.serialization.input import _ObjectDataInput
