@@ -98,7 +98,7 @@ class BinaryCompatibilityTest(unittest.TestCase):
 
         ss = self._create_serialization_service(is_big_endian)
         obj = REFERENCE_OBJECTS[name]
-        if name == 'BigInteger':
+        if name == "BigInteger":
             data = ss.to_data(BigInt(obj))
         else:
             data = ss.to_data(obj)
@@ -175,4 +175,3 @@ class CustomByteArraySerializer(StreamSerializer):
 
     def destroy(self):
         pass
-

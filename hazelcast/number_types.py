@@ -6,7 +6,6 @@ from hazelcast.serialization.bits import MIN_BYTE, MAX_BYTE
 __all__ = "Int8", "Int16", "Int32", "Int64", "Float32", "Float64", "BigInt"
 
 
-
 class Int8:
     """Int8 represents an 8-bit signed integer
 
@@ -18,9 +17,13 @@ class Int8:
 
     def __init__(self, value: int):
         if not (self.MIN_VALUE <= value <= self.MAX_VALUE):
-            raise ValueError("{} value must be between {} and {}".format(
-                self.__class__.__name__, self.MIN_VALUE, self.MAX_VALUE,
-            ))
+            raise ValueError(
+                "{} value must be between {} and {}".format(
+                    self.__class__.__name__,
+                    self.MIN_VALUE,
+                    self.MAX_VALUE,
+                )
+            )
         self.value = value
 
     def __int__(self):
@@ -41,9 +44,13 @@ class Int16:
 
     def __init__(self, value: int):
         if not (self.MIN_VALUE <= value <= self.MAX_VALUE):
-            raise ValueError("{} value must be between {} and {}".format(
-                self.__class__.__name__, self.MIN_VALUE, self.MAX_VALUE,
-            ))
+            raise ValueError(
+                "{} value must be between {} and {}".format(
+                    self.__class__.__name__,
+                    self.MIN_VALUE,
+                    self.MAX_VALUE,
+                )
+            )
         self.value = value
 
     def __int__(self):
@@ -64,9 +71,13 @@ class Int32:
 
     def __init__(self, value: int):
         if not (self.MIN_VALUE <= value <= self.MAX_VALUE):
-            raise ValueError("{} value must be between {} and {}".format(
-                self.__class__.__name__, self.MIN_VALUE, self.MAX_VALUE,
-            ))
+            raise ValueError(
+                "{} value must be between {} and {}".format(
+                    self.__class__.__name__,
+                    self.MIN_VALUE,
+                    self.MAX_VALUE,
+                )
+            )
         self.value = value
 
     def __int__(self):
@@ -87,9 +98,13 @@ class Int64:
 
     def __init__(self, value: int):
         if not (self.MIN_VALUE <= value <= self.MAX_VALUE):
-            raise ValueError("{} value must be between {} and {}".format(
-                self.__class__.__name__, self.MIN_VALUE, self.MAX_VALUE,
-            ))
+            raise ValueError(
+                "{} value must be between {} and {}".format(
+                    self.__class__.__name__,
+                    self.MIN_VALUE,
+                    self.MAX_VALUE,
+                )
+            )
         self.value = value
 
     def __int__(self):
@@ -121,7 +136,7 @@ class Float32:
     Corresponds to Java ``float``.
     """
 
-    def __init__(self, value: float|int):
+    def __init__(self, value: float | int):
         self.value = float(value)
 
     def __float__(self):
@@ -137,7 +152,7 @@ class Float64:
     Corresponds to Java ``double``.
     """
 
-    def __init__(self, value: float|int):
+    def __init__(self, value: float | int):
         self.value = float(value)
 
     def __float__(self):
