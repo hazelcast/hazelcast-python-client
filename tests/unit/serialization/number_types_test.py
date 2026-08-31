@@ -1,3 +1,4 @@
+import sys
 import unittest
 
 from parameterized import parameterized
@@ -73,6 +74,8 @@ class NumberTypesTest(unittest.TestCase):
         ]
     )
     def test_float32_range(self, value, ok):
+        if (sys.version_info.major, sys.version_info.minor) < (3, 14):
+            self.skipTest("OverflowError is only raised for Python 3.14 and up")
         if ok:
             Float32(value)
         else:
