@@ -419,9 +419,6 @@ class SerializerRegistry:
         if isinstance(obj, str):
             return self.serializer_by_type_id(CONSTANT_TYPE_STRING)
 
-        if obj_type is int:
-            return self.serializer_by_type_id(CONSTANT_TYPE_INTEGER)
-
         return self._constant_type_dict.get(obj_type, None)
 
     def lookup_custom_serializer(self, obj_type):

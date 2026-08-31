@@ -903,7 +903,6 @@ REFERENCE_OBJECTS.update(
 
 _SKIP_ON_SERIALIZE = {
     "Character",
-    "Float",
     "boolean[]",
     "char[]",
     "double[]",

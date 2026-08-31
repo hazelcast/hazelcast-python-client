@@ -3,10 +3,9 @@ import datetime
 import decimal
 import uuid
 
-from hazelcast import HazelcastClient, Int8, Int16, Int32, Int64, Float32, Float64
+from hazelcast import HazelcastClient
 from hazelcast.core import HazelcastJsonValue
-from hazelcast.number_types import BigInt
-from hazelcast.serialization import MAX_BYTE, MAX_SHORT, MAX_INT, MAX_LONG
+from hazelcast.number_types import BigInt, Int8, Int16, Int32, Int64, Float32, Float64
 from tests.base import SingleMemberTestCase
 from tests.hzrc.ttypes import Lang
 from tests.util import (
