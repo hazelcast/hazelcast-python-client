@@ -8,19 +8,21 @@ __all__ = "Int8", "Int16", "Int32", "Int64", "Float32", "Float64", "BigInt"
 
 class Integer:
 
-    def __init_subclass__(cls, min_value: int|None=None, max_value: int|None=None, **kwargs):
-        cls.MIN_VALUE = min_value
-        cls.MAX_VALUE = max_value
+    def __init_subclass__(
+        cls, min_value: int | None = None, max_value: int | None = None, **kwargs
+    ):
+        cls.MIN_VALUE = min_value  # type: ignore[attr-defined]
+        cls.MAX_VALUE = max_value  # type: ignore[attr-defined]
         super().__init_subclass__(**kwargs)
 
     def __init__(self, value: int):
-        if self.MIN_VALUE is not None and self.MAX_VALUE is not None:
-            if not (self.MIN_VALUE <= value <= self.MAX_VALUE):
+        if self.MIN_VALUE is not None and self.MAX_VALUE is not None:  # type: ignore[attr-defined]
+            if not (self.MIN_VALUE <= value <= self.MAX_VALUE):  # type: ignore[attr-defined]
                 raise ValueError(
                     "{} value must be between {} and {}".format(
                         self.__class__.__name__,
-                        self.MIN_VALUE,
-                        self.MAX_VALUE,
+                        self.MIN_VALUE,  # type: ignore[attr-defined]
+                        self.MAX_VALUE,  # type: ignore[attr-defined]
                     )
                 )
         self.value = value
@@ -38,7 +40,6 @@ class Integer:
 
     def __hash__(self) -> int:
         return self.value.__hash__()
-
 
 
 class Int8(Integer, min_value=MIN_BYTE, max_value=MAX_BYTE):
@@ -73,7 +74,6 @@ class Int32(Integer, min_value=MIN_INT, max_value=MAX_INT):
         return self.value.__hash__()
 
 
-
 class Int64(Integer, min_value=MIN_LONG, max_value=MAX_LONG):
     """Int64 represents a 64-bit signed integer
 
@@ -95,9 +95,9 @@ class Float:
 
     def __init__(self, value: float | int):
         try:
-            struct.pack('f', value)
+            struct.pack("f", value)
         except OverflowError:
-            raise ValueError(f'{value} does not fit into float32')
+            raise ValueError(f"{value} does not fit into float32")
 
         self.value = float(value)
 
