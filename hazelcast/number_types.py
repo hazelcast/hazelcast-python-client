@@ -1,4 +1,5 @@
 import struct
+import sys
 
 from hazelcast.serialization import MIN_SHORT, MAX_SHORT, MIN_INT, MAX_INT, MIN_LONG, MAX_LONG
 from hazelcast.serialization.bits import MIN_BYTE, MAX_BYTE
@@ -93,27 +94,47 @@ class BigInt(Integer):
 
 class Float:
 
-    def __init__(self, value: float | int):
-        try:
-            struct.pack("f", value)
-        except OverflowError:
-            raise ValueError(f"{value} does not fit into float32")
+    # Python 3.14 raises an OverflowError if the value doesn't fit into 32bit float.
+    # Previous versions silently discard it.
+    if (sys.version_info.major, sys.version_info.minor) >= (3, 14):
+        def __init__(self, value: float | int):
+            try:
+                struct.pack("f", value)
+            except OverflowError:
+                raise ValueError(f"{value} does not fit into float32")
 
-        self.value = float(value)
+            self.value = float(value)
 
-    def __float__(self):
-        return self.value
+        def __float__(self):
+            return self.value
 
-    def __repr__(self) -> str:
-        return str(self.value)
+        def __repr__(self) -> str:
+            return str(self.value)
 
-    def __eq__(self, value: object, /) -> bool:
-        if not isinstance(value, self.__class__):
-            return False
-        return self.value == value.value
+        def __eq__(self, value: object, /) -> bool:
+            if not isinstance(value, self.__class__):
+                return False
+            return self.value == value.value
 
-    def __hash__(self) -> int:
-        return self.value.__hash__()
+        def __hash__(self) -> int:
+            return self.value.__hash__()
+    else:
+        def __init__(self, value: float | int):
+            self.value = float(value)
+
+        def __float__(self):
+            return self.value
+
+        def __repr__(self) -> str:
+            return str(self.value)
+
+        def __eq__(self, value: object, /) -> bool:
+            if not isinstance(value, self.__class__):
+                return False
+            return self.value == value.value
+
+        def __hash__(self) -> int:
+            return self.value.__hash__()
 
 
 class Float32(Float):
