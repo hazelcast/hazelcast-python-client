@@ -81,8 +81,6 @@ class NumberTypesTest(unittest.TestCase):
         else:
             self.assertRaises(ValueError, lambda: Float32(value))
 
-    @parameterized.expand(
-        [(1.100,), (-1.100,), (1e100,), (-1e100,)]
-    )
+    @parameterized.expand([(1.100,), (-1.100,), (1e100,), (-1e100,)])
     def test_float64_range(self, value):
         Float64(value)
