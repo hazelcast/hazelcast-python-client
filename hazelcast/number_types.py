@@ -94,11 +94,6 @@ class BigInt(Integer):
 class Float:
 
     def __init__(self, value: float | int):
-        try:
-            struct.pack("f", value)
-        except OverflowError:
-            raise ValueError(f"{value} does not fit into float32")
-
         self.value = float(value)
 
     def __float__(self):
@@ -122,6 +117,14 @@ class Float32(Float):
     Corresponds to Java ``float``.
     """
 
+    def __init__(self, value: float | int):
+        try:
+            struct.pack("f", value)
+        except OverflowError:
+            raise ValueError(f"{value} does not fit into float32")
+
+        super().__init__(value)
+
 
 class Float64(Float):
     """Float64 represents a 64-bit floating point number
@@ -130,7 +133,7 @@ class Float64(Float):
     """
 
     def __eq__(self, value: object, /) -> bool:
-        # special treatment, since float is stored as float32 by default
+        # special treatment, since float is stored as float64 by default
         if isinstance(value, self.__class__):
             return self.value == value.value
         if isinstance(value, float):
