@@ -5,7 +5,7 @@ from os import path
 from parameterized import parameterized
 
 from hazelcast.config import Config
-from hazelcast.number_types import BigInt, Int8, Int16, Int64, Float32
+from hazelcast.number_types import BigInt, Int8, Int16, Int64, Float32, Float64, Int32
 from hazelcast.serialization import BE_INT, BE_FLOAT, SerializationServiceV1
 from hazelcast.serialization.api import StreamSerializer
 from hazelcast.serialization.input import _ObjectDataInput
@@ -100,10 +100,23 @@ class BinaryCompatibilityTest(unittest.TestCase):
 
         ss = self._create_serialization_service(is_big_endian)
         obj = REFERENCE_OBJECTS[name]
-        if name == "BigInteger":
-            data = ss.to_data(BigInt(obj))
-        else:
-            data = ss.to_data(obj)
+        match name:
+            case "Byte":
+                data = ss.to_data(Int8(obj))
+            case "Short":
+                data = ss.to_data(Int16(obj))
+            case "Integer":
+                data = ss.to_data(Int32(obj))
+            case "Long":
+                data = ss.to_data(Int64(obj))
+            case "BigInteger":
+                data = ss.to_data(BigInt(obj))
+            case "Float":
+                data = ss.to_data(Float32(obj))
+            case "Double":
+                data = ss.to_data(Float64(obj))
+            case _:
+                data = ss.to_data(obj)
         deserialized = ss.to_object(data)
         self.assertTrue(is_equal(obj, deserialized))
 
