@@ -6,7 +6,8 @@ import uuid
 
 import typing
 
-from hazelcast.config import IntType, Config
+from hazelcast.number_types import Int16, Int8, Float32, Float64, Int32, Int64, BigInt
+from hazelcast.config import Config
 from hazelcast.errors import HazelcastInstanceNotActiveError, IllegalArgumentError
 from hazelcast.serialization.api import IdentifiedDataSerializable, Portable
 from hazelcast.serialization.compact import (
@@ -30,15 +31,6 @@ from hazelcast.serialization.serializer import *
 from hazelcast.util import re_raise
 
 DEFAULT_OUT_BUFFER_SIZE = 4 * 1024
-
-
-_int_type_to_type_id = {
-    IntType.BYTE: CONSTANT_TYPE_BYTE,
-    IntType.SHORT: CONSTANT_TYPE_SHORT,
-    IntType.INT: CONSTANT_TYPE_INTEGER,
-    IntType.LONG: CONSTANT_TYPE_LONG,
-    IntType.BIG_INT: JAVA_DEFAULT_TYPE_BIG_INTEGER,
-}
 
 
 def default_partition_strategy(key):
@@ -243,14 +235,16 @@ class SerializationServiceV1:
         self._registry.register_constant_serializer(self._data_serializer)
         self._registry.register_constant_serializer(self._portable_serializer)
         self._registry.register_constant_serializer(self._compact_stream_serializer)
-        self._registry.register_constant_serializer(ByteSerializer())
+        self._registry.register_constant_serializer(ByteSerializer(), Int8)
         self._registry.register_constant_serializer(BooleanSerializer(), bool)
         self._registry.register_constant_serializer(CharSerializer())
-        self._registry.register_constant_serializer(ShortSerializer())
+        self._registry.register_constant_serializer(ShortSerializer(), Int16)
         self._registry.register_constant_serializer(IntegerSerializer(), int)
-        self._registry.register_constant_serializer(LongSerializer())
-        self._registry.register_constant_serializer(FloatSerializer())
+        self._registry.register_constant_serializer(IntegerSerializer(), Int32)
+        self._registry.register_constant_serializer(LongSerializer(), Int64)
+        self._registry.register_constant_serializer(FloatSerializer(), Float32)
         self._registry.register_constant_serializer(DoubleSerializer(), float)
+        self._registry.register_constant_serializer(DoubleSerializer(), Float64)
         self._registry.register_constant_serializer(UuidSerializer(), uuid.UUID)
         self._registry.register_constant_serializer(StringSerializer(), str)
         # Arrays of primitives and String
@@ -264,7 +258,7 @@ class SerializationServiceV1:
         self._registry.register_constant_serializer(DoubleArraySerializer())
         self._registry.register_constant_serializer(StringArraySerializer())
         # EXTENSIONS
-        self._registry.register_constant_serializer(BigIntegerSerializer())
+        self._registry.register_constant_serializer(BigIntegerSerializer(), BigInt)
         self._registry.register_constant_serializer(BigDecimalSerializer(), decimal.Decimal)
         self._registry.register_constant_serializer(JavaClassSerializer())
         self._registry.register_constant_serializer(ArraySerializer())
@@ -348,7 +342,6 @@ class SerializerRegistry:
         self._type_dict: typing.Dict[typing.Type, StreamSerializer] = {}
 
         self._registration_lock = threading.RLock()
-        self._int_type_id = _int_type_to_type_id.get(config.default_int_type, None)
 
         self._compact_types = {c.get_class() for c in config.compact_serializers}
 
@@ -425,24 +418,6 @@ class SerializerRegistry:
 
         if isinstance(obj, str):
             return self.serializer_by_type_id(CONSTANT_TYPE_STRING)
-
-        # LOCATE NUMERIC TYPES
-        if obj_type is int:
-            type_id = self._int_type_id
-            if type_id is None:
-                # VAR size
-                if MIN_BYTE <= obj <= MAX_BYTE:
-                    type_id = CONSTANT_TYPE_BYTE
-                elif MIN_SHORT <= obj <= MAX_SHORT:
-                    type_id = CONSTANT_TYPE_SHORT
-                elif MIN_INT <= obj <= MAX_INT:
-                    type_id = CONSTANT_TYPE_INTEGER
-                elif MIN_LONG <= obj <= MAX_LONG:
-                    type_id = CONSTANT_TYPE_LONG
-                else:
-                    type_id = JAVA_DEFAULT_TYPE_BIG_INTEGER
-
-            return self.serializer_by_type_id(type_id)
 
         return self._constant_type_dict.get(obj_type, None)
 

@@ -20,46 +20,6 @@ from hazelcast.util import (
 )
 
 
-class IntType:
-    """Integer type options that can be used by serialization service."""
-
-    VAR = 0
-    """
-    Integer types will be serialized as 8, 16, 32, 64 bit integers
-    or as Java BigInteger according to their value. This option may
-    cause problems when the Python client is used in conjunction with
-    statically typed language clients such as Java or .NET.
-    """
-
-    BYTE = 1
-    """
-    Integer types will be serialized as a 8 bit integer(as Java byte)
-    """
-
-    SHORT = 2
-    """
-    Integer types will be serialized as a 16 bit integer(as Java short)
-    """
-
-    INT = 3
-    """
-    Integer types will be serialized as a 32 bit integer(as Java int)
-    """
-
-    LONG = 4
-    """
-    Integer types will be serialized as a 64 bit integer(as Java long)
-    """
-
-    BIG_INT = 5
-    """
-    Integer types will be serialized as Java BigInteger. This option can
-    handle integer types which are less than -2^63 or greater than or
-    equal to 2^63. However, when this option is set, serializing/de-serializing
-    integer types is costly.
-    """
-
-
 class EvictionPolicy:
     """Near Cache eviction policy options."""
 
@@ -309,7 +269,6 @@ class Config:
         "_class_definitions",
         "_check_class_definition_errors",
         "_is_big_endian",
-        "_default_int_type",
         "_global_serializer",
         "_custom_serializers",
         "_near_caches",
@@ -370,7 +329,6 @@ class Config:
         self._class_definitions: typing.List[ClassDefinition] = []
         self._check_class_definition_errors: bool = True
         self._is_big_endian: bool = True
-        self._default_int_type: int = IntType.INT
         self._global_serializer: typing.Optional[typing.Type[StreamSerializer]] = None
         self._custom_serializers: typing.Dict[
             typing.Type[typing.Any], typing.Type[StreamSerializer]
@@ -1020,19 +978,6 @@ class Config:
             raise TypeError("is_big_endian must be a boolean")
 
         self._is_big_endian = value
-
-    @property
-    def default_int_type(self) -> int:
-        """Defines how the ``int`` type is represented on the member side.
-
-        By default, it is serialized as ``INT`` (``32`` bits). See the
-        :class:`hazelcast.config.IntType` for possible values.
-        """
-        return self._default_int_type
-
-    @default_int_type.setter
-    def default_int_type(self, value: typing.Union[int, str]) -> None:
-        self._default_int_type = try_to_get_enum_value(value, IntType)
 
     @property
     def global_serializer(self) -> typing.Optional[typing.Type[StreamSerializer]]:

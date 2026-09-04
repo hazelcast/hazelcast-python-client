@@ -7,7 +7,6 @@ Configuration API Documentation
 .. autoclass:: NearCacheConfig
 .. autoclass:: FlakeIdGeneratorConfig
 .. autoclass:: ReliableTopicConfig
-.. autoclass:: IntType
 .. autoclass:: EvictionPolicy
 .. autoclass:: InMemoryFormat
 .. autoclass:: SSLProtocol

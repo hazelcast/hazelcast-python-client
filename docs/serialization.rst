@@ -20,8 +20,8 @@ Java server side.
 Python            Java
 ================= ================================================
 bool              Boolean
-int               Byte, Short, Integer, Long, java.math.BigInteger
-float             Float, Double
+int               Integer
+float             Double
 str               String
 bytearray         byte[]
 list              java.util.ArrayList
@@ -29,12 +29,14 @@ datetime.date     java.time.LocalDate
 datetime.time     java.time.LocalTime
 datetime.datetime java.time.OffsetDateTime
 decimal.Decimal   java.math.BigDecimal
+hazelcast.Int8    Byte
+hazelcast.Int16   Short
+hazelcast.Int32   Integer
+hazelcast.Int64   Long
+hazelcast.BigInt  java.math.BigInteger
+hazelcast.Float32 Float
+hazelcast.Float64 Double
 ================= ================================================
-
-
-.. Note:: An ``int`` is serialized as ``Integer`` by
-    default. You can configure this behavior using the
-    ``default_int_type`` argument.
 
 Arrays of the above types can be serialized as ``boolean[]``,
 ``byte[]``, ``short[]``, ``int[]``, ``float[]``, ``double[]``,
