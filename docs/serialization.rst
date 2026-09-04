@@ -21,7 +21,7 @@ Python            Java
 ================= ================================================
 bool              Boolean
 int               Integer
-float             Float, Double
+float             Double
 str               String
 bytearray         byte[]
 list              java.util.ArrayList
@@ -33,7 +33,7 @@ hazelcast.Int8    Byte
 hazelcast.Int16   Short
 hazelcast.Int32   Integer
 hazelcast.Int64   Long
-hazelcast.BIgInt  java.math.BigInteger
+hazelcast.BigInt  java.math.BigInteger
 hazelcast.Float32 Float
 hazelcast.Float64 Double
 ================= ================================================

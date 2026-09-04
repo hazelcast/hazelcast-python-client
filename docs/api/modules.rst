@@ -20,4 +20,5 @@ API Documentation
     sql
     transaction
     util
+    number_types
 
