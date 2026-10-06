@@ -5,7 +5,6 @@ import uuid
 
 from hazelcast import HazelcastClient
 from hazelcast.core import HazelcastJsonValue
-from hazelcast.number_types import BigInt, Int8, Int16, Int32, Int64, Float32, Float64
 from tests.base import SingleMemberTestCase
 from tests.hzrc.ttypes import Lang
 from tests.util import (
@@ -15,6 +14,11 @@ from tests.util import (
     skip_if_server_version_older_than,
 )
 
+try:
+    from hazelcast.number_types import BigInt, Int8, Int16, Int32, Int64, Float32, Float64
+except ImportError:
+    # number_types are introduced in v6.0.0
+    pass
 
 class SerializersLiveTest(SingleMemberTestCase):
     @classmethod
@@ -69,6 +73,7 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(value, response)
 
     def test_byte(self):
+        skip_if_client_version_older_than(self, "6.0")
         self.create_new_map()
         value = (1 << 7) - 1
         self.map.set("key", Int8(value))
@@ -77,6 +82,7 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(value, response)
 
     def test_short(self):
+        skip_if_client_version_older_than(self, "6.0")
         self.create_new_map()
         value = -1 * (1 << 15)
         self.map.set("key", Int16(value))
@@ -85,6 +91,7 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(value, response)
 
     def test_int(self):
+        skip_if_client_version_older_than(self, "6.0")
         value = (1 << 31) - 1
         self.map.set("key", Int32(value))
         self.assertEqual(value, self.map.get("key"))
@@ -92,6 +99,7 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(value, response)
 
     def test_long(self):
+        skip_if_client_version_older_than(self, "6.0")
         self.create_new_map()
         value = -1 * (1 << 63)
         self.map.set("key", Int64(value))
@@ -107,6 +115,7 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(value, response)
 
     def test_float32(self):
+        skip_if_client_version_older_than(self, "6.0")
         value = 123.0
         self.map.set("key", Float32(value))
         self.assertEqual(value, self.map.get("key"))
@@ -114,6 +123,7 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertEqual(value, response)
 
     def test_float64(self):
+        skip_if_client_version_older_than(self, "6.0")
         value = 123.0
         self.map.set("key", Float64(value))
         self.assertEqual(value, self.map.get("key"))
@@ -178,6 +188,7 @@ class SerializersLiveTest(SingleMemberTestCase):
         self.assertTrue(response.startswith(value.strftime("%a %b %d %H:%M:%S")))
 
     def test_big_integer(self):
+        skip_if_client_version_older_than(self, "6.0")
         self.create_new_map()
         value = 1 << 128
         self.map.set("key", BigInt(value))
