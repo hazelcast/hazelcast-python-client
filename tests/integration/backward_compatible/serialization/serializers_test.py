@@ -20,6 +20,7 @@ except ImportError:
     # number_types are introduced in v6.0.0
     pass
 
+
 class SerializersLiveTest(SingleMemberTestCase):
     @classmethod
     def configure_client(cls, config):
