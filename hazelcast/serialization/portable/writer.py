@@ -192,12 +192,6 @@ class DefaultPortableWriter(PortableWriter):
         self._raw = True
         return self._out
 
-    def write_utf(self, field_name, value):
-        self.write_string(field_name, value)
-
-    def write_utf_array(self, field_name, values):
-        self.write_string_array(field_name, values)
-
     def _write_nullable_field(self, field_name: str, field_type: FieldType, value, func):
         self._set_position(field_name, field_type)
         is_none = value is None
@@ -435,12 +429,6 @@ class ClassDefinitionWriter(PortableWriter):
 
     def get_raw_data_output(self):
         return EmptyObjectDataOutput()
-
-    def write_utf(self, field_name, value):
-        self.write_string(field_name, value)
-
-    def write_utf_array(self, field_name, values):
-        self.write_string_array(field_name, values)
 
     def _create_nested_class_def(self, portable, nested_builder):
         _writer = ClassDefinitionWriter(self.portable_context, class_def_builder=nested_builder)

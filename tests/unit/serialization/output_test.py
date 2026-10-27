@@ -224,17 +224,6 @@ class OutputTestCase(unittest.TestCase):
         )
         self.assertEqual(17, out.position())
 
-    def test_write_utf(self):
-        out = _ObjectDataOutput(10, None)
-        out.write_utf("a")
-        out.write_utf(None)
-        out.write_utf("👹")
-        self.assertEqual(
-            bytearray([0, 0, 0, 1, 97, 255, 255, 255, 255, 0, 0, 0, 4, 240, 159, 145, 185]),
-            out.to_byte_array(),
-        )
-        self.assertEqual(17, out.position())
-
     def test_write_bytes(self):
         out = _ObjectDataOutput(10, None)
         out.write_bytes("a")
@@ -343,18 +332,6 @@ class OutputTestCase(unittest.TestCase):
         out = _ObjectDataOutput(1, None)
         out.write_string_array(["a", "👹"])
         out.write_string_array(None)
-        self.assertEqual(
-            bytearray(
-                [0, 0, 0, 2, 0, 0, 0, 1, 97, 0, 0, 0, 4, 240, 159, 145, 185, 255, 255, 255, 255]
-            ),
-            out.to_byte_array(),
-        )
-        self.assertEqual(21, out.position())
-
-    def test_write_utf_array(self):
-        out = _ObjectDataOutput(1, None)
-        out.write_utf_array(["a", "👹"])
-        out.write_utf_array(None)
         self.assertEqual(
             bytearray(
                 [0, 0, 0, 2, 0, 0, 0, 1, 97, 0, 0, 0, 4, 240, 159, 145, 185, 255, 255, 255, 255]
