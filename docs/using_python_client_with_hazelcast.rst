@@ -808,11 +808,6 @@ After that, once Client-1 comes back alive, its write request will be
 rejected by the external service, and only Client-2 will be able to
 safely talk to it.
 
-.. figure:: https://docs.hazelcast.com/hazelcast/latest/_images/FencedLock.png
-   :alt: CP Fenced Lock diagram
-
-   CP Fenced Lock diagram
-
 You can read more about the fencing token idea in Martin Kleppmann’s
 “How to do distributed locking” blog post and Google’s Chubby paper.
 
