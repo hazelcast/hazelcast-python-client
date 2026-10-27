@@ -262,12 +262,6 @@ class DefaultPortableReader(PortableReader):
             _read_portable_timestamp_with_timezone,
         )
 
-    def read_utf(self, field_name):
-        return self.read_string(field_name)
-
-    def read_utf_array(self, field_name):
-        return self.read_string_array(field_name)
-
     def _read_nullable_field(self, field_name, field_type, func):
         current_pos = self._in.position()
         try:
@@ -615,12 +609,6 @@ class MorphingPortableReader(DefaultPortableReader):
             FieldType.PORTABLE_ARRAY,
             super().read_portable_array,
         )
-
-    def read_utf(self, field_name):
-        return self.read_string(field_name)
-
-    def read_utf_array(self, field_name):
-        return self.read_string_array(field_name)
 
     def read_decimal_array(self, field_name):
         return self._validate_type_compatibility_and_read(
