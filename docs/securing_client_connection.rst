@@ -66,6 +66,7 @@ configuration and then go over the configuration options one by one:
 
     ``open /Applications/Python\ 3.9/Install\ Certificates.command``
 
+
 Enabling TLS/SSL
 ^^^^^^^^^^^^^^^^
 
