@@ -364,27 +364,6 @@ class ClassDefinitionBuilder:
         self._add_field_by_type(field_name, FieldType.STRING, self.version)
         return self
 
-    def add_utf_field(self, field_name: str) -> "ClassDefinitionBuilder":
-        """Adds the field with the string type to the
-        class definition.
-
-        Args:
-            field_name: Name of the field to add.
-
-        Returns:
-            Itself for chaining.
-
-        Raises:
-            HazelcastSerializationError: If this method is called
-                after :func:`build` or a field with the same
-                name is already registered.
-
-        .. deprecated:: 4.1
-            This method is deprecated and will be removed in the
-            next major version. Use :func:`add_string_field` instead.
-        """
-        return self.add_string_field(field_name)
-
     def add_decimal_field(self, field_name: str) -> "ClassDefinitionBuilder":
         """Adds the field with the decimal type to the
         class definition.
@@ -665,27 +644,6 @@ class ClassDefinitionBuilder:
         """
         self._add_field_by_type(field_name, FieldType.STRING_ARRAY, self.version)
         return self
-
-    def add_utf_array_field(self, field_name: str) -> "ClassDefinitionBuilder":
-        """Adds the field with the string array type to the
-        class definition.
-
-        Args:
-            field_name: Name of the field to add.
-
-        Returns:
-            Itself for chaining.
-
-        Raises:
-            HazelcastSerializationError: If this method is called
-                after :func:`build` or a field with the same
-                name is already registered.
-
-        .. deprecated:: 4.1
-            This method is deprecated and will be removed in the
-            next major version. Use :func:`add_string_array_field` instead.
-        """
-        return self.add_string_array_field(field_name)
 
     def add_decimal_array_field(self, field_name: str) -> "ClassDefinitionBuilder":
         """Adds the field with the decimal array type to the

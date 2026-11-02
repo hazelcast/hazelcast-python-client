@@ -209,12 +209,6 @@ class _ObjectDataInput(ObjectDataInput):
             return "BIG_ENDIAN"
         return "LITTLE_ENDIAN"
 
-    def read_utf(self):
-        return self.read_string()
-
-    def read_utf_array(self):
-        return self.read_string_array()
-
     def _bulk_read(self, item_size, fmt_char):
         length = self.read_int()
         if length == NULL_ARRAY_LENGTH:

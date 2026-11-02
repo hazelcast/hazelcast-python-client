@@ -118,18 +118,6 @@ class ObjectDataOutput:
         """
         raise NotImplementedError()
 
-    def write_utf(self, val: str) -> None:
-        """Writes UTF-8 string to this output stream.
-
-        .. deprecated:: 4.1
-            This method is deprecated and will be removed in the
-            next major version. Use :func:`write_string` instead.
-
-        Args:
-            val: The UTF-8 string to be written.
-        """
-        raise NotImplementedError()
-
     def write_byte_array(self, val: bytearray) -> None:
         """Writes a byte array to this output stream.
 
@@ -196,18 +184,6 @@ class ObjectDataOutput:
 
     def write_string_array(self, val: typing.Sequence[str]) -> None:
         """Writes a UTF-8 String array to this output stream.
-
-        Args:
-            val: The UTF-8 String array to be written.
-        """
-        raise NotImplementedError()
-
-    def write_utf_array(self, val: typing.Sequence[str]) -> None:
-        """Writes a UTF-8 String array to this output stream.
-
-        .. deprecated:: 4.1
-            This method is deprecated and will be removed in the
-            next major version. Use :func:`write_string_array` instead.
 
         Args:
             val: The UTF-8 String array to be written.
@@ -354,18 +330,6 @@ class ObjectDataInput:
         """
         raise NotImplementedError()
 
-    def read_utf(self) -> str:
-        """Reads a UTF-8 string from input stream and returns it.
-
-        .. deprecated:: 4.1
-            This method is deprecated and will be removed in the
-            next major version. Use :func:`read_string` instead.
-
-        Returns:
-            The UTF-8 string read.
-        """
-        raise NotImplementedError()
-
     def read_byte_array(self) -> bytearray:
         """Reads a byte array from input stream and returns it.
 
@@ -432,18 +396,6 @@ class ObjectDataInput:
 
     def read_string_array(self) -> typing.List[str]:
         """Reads a UTF-8 string array from input stream and returns it.
-
-        Returns:
-            The UTF-8 string array read.
-        """
-        raise NotImplementedError()
-
-    def read_utf_array(self) -> typing.List[str]:
-        """Reads a UTF-8 string array from input stream and returns it.
-
-        .. deprecated:: 4.1
-            This method is deprecated and will be removed in the
-            next major version. Use :func:`read_string_array` instead.
 
         Returns:
             The UTF-8 string array read.
@@ -702,21 +654,6 @@ class PortableReader:
         """
         raise NotImplementedError()
 
-    def read_utf(self, field_name: str) -> str:
-        """Reads a UTF-8 String.
-
-        .. deprecated:: 4.1
-            This method is deprecated and will be removed in the
-            next major version. Use :func:`read_string` instead.
-
-        Args:
-            field_name: Name of the field.
-
-        Returns:
-            The UTF-8 String read.
-        """
-        raise NotImplementedError()
-
     def read_boolean(self, field_name: str) -> bool:
         """Reads a primitive bool.
 
@@ -948,21 +885,6 @@ class PortableReader:
         """
         raise NotImplementedError()
 
-    def read_utf_array(self, field_name: str) -> typing.List[str]:
-        """Reads a UTF-8 String array.
-
-        .. deprecated:: 4.1
-            This method is deprecated and will be removed in the
-            next major version. Use :func:`read_string_array` instead.
-
-        Args:
-            field_name: Name of the field.
-
-        Returns:
-            The UTF-8 String array read.
-        """
-        raise NotImplementedError()
-
     def read_decimal_array(self, field_name: str) -> typing.List[decimal.Decimal]:
         """Reads a decimal array.
 
@@ -1066,19 +988,6 @@ class PortableWriter:
 
     def write_string(self, field_name: str, value: str) -> None:
         """Writes an UTF string.
-
-        Args:
-            field_name: Name of the field.
-            value: UTF string value to be written.
-        """
-        raise NotImplementedError()
-
-    def write_utf(self, field_name: str, value: str) -> None:
-        """Writes an UTF string.
-
-        .. deprecated:: 4.1
-            This method is deprecated and will be removed in the
-            next major version. Use :func:`write_string` instead.
 
         Args:
             field_name: Name of the field.
@@ -1279,19 +1188,6 @@ class PortableWriter:
 
     def write_string_array(self, field_name: str, values: typing.Sequence[str]) -> None:
         """Writes a UTF-8 String array.
-
-        Args:
-            field_name: Name of the field.
-            values: UTF-8 String array to be written.
-        """
-        raise NotImplementedError()
-
-    def write_utf_array(self, field_name: str, values: typing.Sequence[str]) -> None:
-        """Writes a UTF-8 String array.
-
-        .. deprecated:: 4.1
-            This method is deprecated and will be removed in the
-            next major version. Use :func:`write_string_array` instead.
 
         Args:
             field_name: Name of the field.

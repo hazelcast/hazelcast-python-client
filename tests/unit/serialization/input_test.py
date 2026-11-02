@@ -236,15 +236,6 @@ class InputTestCase(unittest.TestCase):
         with self.assertRaises(EOFError):
             inp.read_string()
 
-    def test_read_utf(self):
-        inp = _ObjectDataInput(bytearray([0, 0, 0, 3, 97, 98, 99, 0, 0, 0, 4, 240, 159, 145, 185]))
-        self.assertEqual("abc", inp.read_utf())
-        self.assertEqual("👹", inp.read_utf())
-        self.assertEqual(15, inp.position())
-
-        with self.assertRaises(EOFError):
-            inp.read_utf()
-
     def test_read_byte_array(self):
         b = bytearray([0, 0, 0, 10] + list(range(10)))
         inp = _ObjectDataInput(b)
@@ -344,12 +335,3 @@ class InputTestCase(unittest.TestCase):
 
         with self.assertRaises(EOFError):
             inp.read_string_array()
-
-    def test_read_utf_array(self):
-        b = bytearray([0, 0, 0, 1, 0, 0, 0, 3, 97, 98, 99])
-        inp = _ObjectDataInput(b)
-        self.assertEqual(["abc"], inp.read_utf_array())
-        self.assertEqual(len(b), inp.position())
-
-        with self.assertRaises(EOFError):
-            inp.read_utf_array()

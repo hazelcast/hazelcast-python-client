@@ -206,12 +206,6 @@ class _ObjectDataOutput(ObjectDataOutput):
         self._buffer[self._pos : self._pos + count] = bytes(count)
         self._pos += count
 
-    def write_utf(self, val):
-        self.write_string(val)
-
-    def write_utf_array(self, val):
-        self.write_string_array(val)
-
     def _bulk_write(self, val, item_size, fmt_char):
         length = len(val) if val is not None else NULL_ARRAY_LENGTH
         self.write_int(length)
@@ -312,10 +306,4 @@ class EmptyObjectDataOutput(ObjectDataOutput):
         raise NotImplementedError("to_byte_array not implemented")
 
     def get_byte_order(self):
-        pass
-
-    def write_utf(self, val):
-        pass
-
-    def write_utf_array(self, val):
         pass
